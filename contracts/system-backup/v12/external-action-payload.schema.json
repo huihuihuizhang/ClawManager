@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/external-action-payload.schema.json",
+  "title": "Persisted system backup external-action payload",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "public_id", "target_type", "target_public_id", "action_type", "logical_action_hash", "action_key", "canonical_payload_base64", "payload_sha256", "content_length", "final_key", "conditional_create", "dispatch_generation", "dispatch_deadline", "state", "send_attempt_count", "observe_attempt_count", "row_version", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": "system-backup-external-action.v1" },
+    "public_id": { "type": "string", "pattern": "^sxa_[A-Za-z0-9_-]+$" },
+    "target_type": { "enum": ["backup", "prune_item"] },
+    "target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "operation_public_id": { "type": ["string", "null"], "maxLength": 128 },
+    "action_type": { "enum": ["manifest_put", "marker_put", "acceptance_put", "catalog_registration_append", "catalog_tombstone_append"] },
+    "logical_action_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "action_key": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "canonical_payload_base64": { "type": "string", "contentEncoding": "base64", "maxLength": 349528 },
+    "payload_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "content_length": { "type": "integer", "minimum": 1, "maximum": 262144 },
+    "final_key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "conditional_create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "value"],
+      "properties": { "mode": { "const": "if_none_match" }, "value": { "const": "*" } }
+    },
+    "dispatch_generation": { "type": "integer", "minimum": 1 },
+    "dispatch_deadline": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "state": { "enum": ["request_sent", "provider_unreachable", "confirmed_present", "confirmed_absent", "conflict"] },
+    "send_attempt_count": { "type": "integer", "minimum": 0 },
+    "observe_attempt_count": { "type": "integer", "minimum": 0 },
+    "last_checked_at": { "type": ["string", "null"], "format": "date-time" },
+    "observed_version": { "type": ["string", "null"], "maxLength": 256 },
+    "observed_checksum": { "oneOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] },
+    "provider_proof_evidence_id": { "type": ["string", "null"], "pattern": "^sev_[A-Za-z0-9_-]+$" },
+    "row_version": { "type": "integer", "minimum": 1 },
+    "created_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "updated_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" }
+  },
+  "allOf": [
+    { "if": { "properties": { "target_type": { "const": "backup" } }, "required": ["target_type"] }, "then": { "properties": { "action_type": { "enum": ["manifest_put", "marker_put", "acceptance_put", "catalog_registration_append"] } } } },
+    { "if": { "properties": { "target_type": { "const": "prune_item" } }, "required": ["target_type"] }, "then": { "properties": { "action_type": { "const": "catalog_tombstone_append" } } } }
+  ],
+  "x-persistence": "The exact canonical payload is immutable before request_sent. Credential envelopes and replayable credentials are forbidden from this row.",
+  "x-unresolved-guard": "At most one backup action may be request_sent or provider_unreachable; enforce with a database unique generated guard.",
+  "x-forbidden-fields": ["credential", "credential_envelope", "presigned_url", "authorization"]
+}

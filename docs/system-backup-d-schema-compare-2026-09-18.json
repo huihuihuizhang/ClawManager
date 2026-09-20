@@ -1,0 +1,65 @@
+{
+  "kind": "system_backup_d_schema_comparison_report",
+  "contract_version": "system-backup-plan.v12",
+  "status": "local_comparison_unreviewed",
+  "run_namespace": "sbk-mig-260918004219-404d",
+  "run_namespace_uid": "bd75b2fb-10c3-4572-8855-8d796a861481",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:0049b22e88195c06eae7ddad5b7ec268b5c677cf3851906222517164ad3b7ec6",
+  "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "migration_replay": {
+    "range": "001..077",
+    "applied": 90,
+    "exact_filenames": true,
+    "key_d_columns": "blob/blob/blob/char"
+  },
+  "capture_sql_sha256": "842f341e29f0b1123414328e4910a5fd350135854434db4aff8f8f2c3f6a4a38",
+  "captures": {
+    "fresh": {
+      "records_sha256": "552de218e7ebb31faad6a555cba71a936a15fbdba3b283af8f730fa1068e790d",
+      "record_count": 3092,
+      "canonical_schema_hash": "a0cea874cd2c1dddb0740c7bfd066954e70e400fa38251f145aa2006711907e3",
+      "object_count": 95
+    },
+    "live": {
+      "records_sha256": "64bb2218542404727552ce753cb9789e79c452c0da0ed5494b7101f4c8296c60",
+      "record_count": 3090,
+      "canonical_schema_hash": "dc9ade79bb9a67ceb1def9aa4ca5c89da005936ae175789e9cfa91a48d476974",
+      "object_count": 95
+    }
+  },
+  "d_comparison": {
+    "owner": "D",
+    "table_count": 41,
+    "compared": ["columns", "indexes", "foreign_keys"],
+    "difference_count": 0,
+    "matched": true
+  },
+  "cross_owner_observation": {
+    "owner": "A",
+    "table": "users",
+    "live_missing_column": "local_username_key",
+    "live_missing_index": "uk_users_local_username",
+    "fresh_definition_source": "backend/internal/db/migrations/049_add_ldap_login_alias.sql",
+    "cause": "undetermined_at_capture",
+    "post_capture_follow_up": {
+      "cause": "049 was recorded in the live database on 2026-08-28 before the local-only username constraint was added to that same filename on 2026-08-31",
+      "remediation_migration": "backend/internal/db/migrations/078_reconcile_local_username_key.sql",
+      "live_applied_at": "2026-09-18 01:54:33",
+      "live_column_extra": "STORED GENERATED",
+      "live_unique_index_non_unique": 0,
+      "duplicate_local_username_groups": 0,
+      "post_remediation_full_schema_hash_recaptured": false
+    }
+  },
+  "cleanup": {
+    "temporary_namespace": "reported_cleaned_with_matching_uid",
+    "local_raw_tsv": "verified_deleted",
+    "remote_raw_tsv": "pending_user_cleanup"
+  },
+  "limitations": [
+    "This compares observed D columns, indexes and foreign keys with a fresh replay, not migration SQL bytes.",
+    "The capture SQL does not cover CHECK constraints or table options.",
+    "This report does not freeze the contract or satisfy the P0-0a/P0-0b gates."
+  ]
+}

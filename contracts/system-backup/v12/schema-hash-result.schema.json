@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema-hash-result.schema.json",
+  "title": "System backup deterministic schema hash result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "contract_version", "algorithm", "hash", "canonical_bytes_length", "object_count", "object_counts"],
+  "properties": {
+    "kind": { "const": "system_backup_schema_hash_result" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "algorithm": { "const": "sha256-information-schema-canonical-v1" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "canonical_bytes_length": { "type": "integer", "minimum": 1 },
+    "object_count": { "type": "integer", "minimum": 0 },
+    "object_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["table", "view", "trigger", "routine", "mysql_event"],
+      "properties": {
+        "table": { "type": "integer", "minimum": 0 },
+        "view": { "type": "integer", "minimum": 0 },
+        "trigger": { "type": "integer", "minimum": 0 },
+        "routine": { "type": "integer", "minimum": 0 },
+        "mysql_event": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "x-invariants": [
+    "object_count equals the sum of object_counts",
+    "this deterministic result is not live gate evidence without separately authenticated installation identity, capture time, command, result and cleanup proof",
+    "a synthetic result never satisfies schema_hash_evidence_present"
+  ]
+}

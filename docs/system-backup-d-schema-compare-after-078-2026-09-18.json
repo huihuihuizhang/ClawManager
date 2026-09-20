@@ -1,0 +1,39 @@
+{
+  "kind": "system_backup_d_schema_comparison_after_078",
+  "date": "2026-09-18",
+  "source": "user_supplied_remote_command_output",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918054623-3b6c",
+  "test_namespace_uid": "fa1bedea-67a2-4419-90ae-b5dd29391d3b",
+  "app_image_digest": "sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image_digest": "sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "fresh_migration_replay": {
+    "range": "001..078",
+    "applied_files": 91,
+    "exact_filenames": true,
+    "d_key_column_types": ["blob", "blob", "blob", "char"]
+  },
+  "comparison_mode": "sorted_raw_metadata_records_no_node",
+  "schema_capture_sorted_sha256": {
+    "fresh": "4a33c7d77de4aafd0f3303ed31faf9c0491f0508cdb0840bca88e54754ee3a8a",
+    "live": "4a33c7d77de4aafd0f3303ed31faf9c0491f0508cdb0840bca88e54754ee3a8a"
+  },
+  "ddl_capture_sorted_sha256": {
+    "fresh": "eb8f30a8fb47a53f4efc42774782d9c3d9973e96cbdc50a2d44fbec70afa184e",
+    "live": "eb8f30a8fb47a53f4efc42774782d9c3d9973e96cbdc50a2d44fbec70afa184e"
+  },
+  "schema_records_identical": true,
+  "ddl_records_identical": true,
+  "canonical_schema_hash_computed": false,
+  "raw_capture_cleanup": "reported_deleted",
+  "namespace_cleanup": "confirmed_same_uid",
+  "result": "pass",
+  "limits": [
+    "The hashes identify C-locale sorted raw MySQL metadata records, not the v12 canonical schema-hash result.",
+    "This proves equality for the selected metadata fields under the same MySQL 8.4.8 capture SQL; physical attributes outside those queries remain unexamined.",
+    "The user supplied summary output only; raw records were deleted by the remote script and are unavailable for independent parser replay.",
+    "The result does not register or approve live schema-hash evidence and does not freeze P0-0a or complete P0-0b."
+  ]
+}

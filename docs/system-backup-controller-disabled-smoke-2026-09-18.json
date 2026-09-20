@@ -1,0 +1,43 @@
+{
+  "kind": "system_backup_controller_disabled_smoke_report",
+  "contract_version": "system-backup-plan.v12",
+  "status": "isolated_test_observed",
+  "run_namespace": "sbk-ctrl-260918013158-76a1",
+  "run_namespace_uid": "e3bf715c-882f-40dd-a313-1cef3e6e835d",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:0049b22e88195c06eae7ddad5b7ec268b5c677cf3851906222517164ad3b7ec6",
+  "controller_binary_present": true,
+  "rbac": {
+    "source": "deployments/k8s/system-backup-controller.yaml",
+    "service_account": "clawmanager-system-backup-controller",
+    "lease_create_in_namespace": "allowed",
+    "fixed_leader_lease_get_update_patch": "allowed",
+    "other_lease_get_update_patch": "denied",
+    "lease_list_watch_delete": "denied",
+    "secrets_get": "denied",
+    "pods_create": "denied",
+    "jobs_create": "denied",
+    "rolebindings_create": "denied",
+    "nodes_get": "denied",
+    "matched": true
+  },
+  "disabled_process": {
+    "feature_gate": false,
+    "service_account_token_mounted": false,
+    "database_endpoint": "127.0.0.1:1",
+    "database_credentials_provided": false,
+    "healthz": "ok",
+    "readyz": "disabled",
+    "lease_created": false,
+    "matched": true
+  },
+  "cleanup": {
+    "temporary_namespace": "reported_cleaned_with_matching_uid",
+    "raw_test_files": "none_created"
+  },
+  "limitations": [
+    "This tests an isolated temporary namespace and disabled controller process, not the combined installation.",
+    "kubectl auth can-i verifies authorization, not live Lease create/update/patch behavior under the Pod token.",
+    "Enabled-mode database grants, dependency readiness, leader election and claim takeover are not tested.",
+    "The default-deny NetworkPolicy was created but its enforcement was not independently verified."
+  ]
+}

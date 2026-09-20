@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/artifact-common.schema.json",
+  "title": "System backup artifact common definitions",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Timestamp": { "type": "string", "format": "date-time" },
+    "ImmutableLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "identity_hash", "key", "version"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "identity_hash": { "$ref": "#/$defs/Sha256" },
+        "key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "Signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_purpose", "key_id", "key_version", "domain_separator", "protected_header", "value"],
+      "properties": {
+        "algorithm": { "type": "string", "minLength": 1, "maxLength": 32, "x-freeze-blocker": "A must select the signing algorithm before freeze" },
+        "key_purpose": { "enum": ["capture_certificate", "acceptance_record", "catalog_record"] },
+        "key_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "key_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "domain_separator": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "protected_header": { "type": "string", "minLength": 1, "maxLength": 2048, "description": "Base64url encoded protected header without padding." },
+        "value": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "Base64url encoded signature without padding." }
+      },
+      "x-canonicalization": "Signature input is the UTF-8 JCS canonical bytes of payload only. The signature field is excluded."
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "category", "disqualifying"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$" },
+        "category": { "$ref": "status-failure-enums.schema.json#/$defs/WarningCategory" },
+        "disqualifying": { "type": "boolean" },
+        "details_hash": { "oneOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] }
+      }
+    },
+    "PartSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "consistency", "checkpoint_type", "checkpoint_hash", "captured_at", "objects", "bytes", "ciphertext_sha256", "evidence_ids"],
+      "properties": {
+        "required": { "const": true },
+        "status": { "const": "completed" },
+        "consistency": { "enum": ["strong", "bounded", "weak"] },
+        "checkpoint_type": { "enum": ["mysql_transaction", "redis_rdb", "redis_scan_window", "csi_snapshot", "object_version_copy", "gate_staging"] },
+        "checkpoint_hash": { "$ref": "#/$defs/Sha256" },
+        "captured_at": { "$ref": "#/$defs/Timestamp" },
+        "objects": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "ciphertext_sha256": { "$ref": "#/$defs/Sha256" },
+        "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^sev_[A-Za-z0-9_-]+$" } }
+      }
+    }
+  }
+}

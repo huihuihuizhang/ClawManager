@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/status-failure-enums.schema.json",
+  "title": "System backup status and failure enums",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "TaskType": { "type": "string", "enum": ["backup", "drill", "preflight", "artifact_verify"] },
+    "ActorType": { "type": "string", "enum": ["admin", "system"] },
+    "BackupStatus": { "type": "string", "enum": ["pending", "preparing", "ready_for_capture", "acquiring_gate", "capturing", "validating", "publishing", "finalization_unknown", "canceling", "succeeded", "failed", "canceled"] },
+    "DrillStatus": { "type": "string", "enum": ["pending", "preflighting", "provisioning", "restoring", "normalizing", "verifying", "canceling", "succeeded", "failed", "canceled"] },
+    "SimpleTaskStatus": { "type": "string", "enum": ["pending", "running", "canceling", "succeeded", "failed", "canceled"] },
+    "OperationStatus": { "type": "string", "enum": ["pending", "running", "succeeded", "failed"] },
+    "OperationType": { "type": "string", "enum": ["cancel", "cleanup", "ownership_resolution", "provider_proof_register", "finalization_resolution", "manual_hold_update", "config_update", "promotion_create", "promotion_revoke", "catalog_scan", "catalog_import", "prune_execute", "prune_retry", "artifact_health_reconcile", "orphan_gc", "control_metadata_gc", "evidence_gc"] },
+    "OperationTargetType": { "type": "string", "enum": ["backup", "backup_staging", "external_action", "drill", "restore_resource", "preflight", "artifact_verify", "catalog_scan", "catalog_import", "prune_run", "promotion", "matrix", "system"] },
+    "AttemptPhase": { "type": "string", "enum": ["capture", "secret_capture", "publish", "restore", "normalize", "verify", "preflight"] },
+    "AttemptStatus": { "type": "string", "enum": ["preparing", "running", "sealed", "succeeded", "failed", "canceled"] },
+    "PendingReason": { "type": "string", "enum": ["none", "global_capture_queue", "kill_switch", "dependency_backoff"] },
+    "AttentionReason": { "type": "string", "enum": ["none", "external_result_unknown"] },
+    "PartResultStatus": { "type": "string", "enum": ["completed", "failed", "canceled"] },
+    "WarningCategory": { "type": "string", "enum": ["data-integrity-warning", "consistency-warning", "operational-warning", "unsupported-evidence-warning"] },
+    "CheckClassification": { "type": "string", "enum": ["validation", "permission", "capacity", "network_timeout", "rate_limited", "dependency", "transient_provider", "permanent_provider", "integrity", "coordination", "internal"] },
+    "FailureCategory": {
+      "type": "string",
+      "enum": [
+        "none", "canceled_by_actor", "canceled_by_shutdown", "validation_failed", "permission_denied", "not_found", "not_ready", "conflict_active_job", "unsupported_runner_p1", "unsupported_profile_p1", "unsupported_datasource_p1", "unsupported_schema", "backup_target_risk_rejected", "isolation_invalid", "writer_registry_drift", "quiesce_timeout", "quiesce_resume_failed", "capacity_exceeded", "deadline_exceeded", "preflight_failed", "normalization_failed", "control_evidence_invalid", "artifact_unavailable", "artifact_conflict", "checksum_mismatch", "signature_invalid", "encryption_key_unavailable", "kek_permission_denied", "signing_key_unavailable", "finalizer_request_unavailable", "catalog_unavailable", "catalog_conflict", "catalog_tombstone_failed", "secret_bundle_failed", "redaction_failed", "audit_failed", "evidence_incomplete", "staging_cleanup_failed", "cleanup_unsafe_target", "confirmation_invalid", "fencing_token_lost", "coordination_invalid", "artifact_delete_failed", "runner_failed", "internal_error"
+      ]
+    },
+    "ApiOnlyCode": { "type": "string", "enum": ["authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "idempotency_conflict", "state_conflict", "version_conflict", "commit_started", "payload_too_large", "range_not_satisfiable", "rate_limited", "logs_expired", "idempotency_expired"] }
+  }
+}

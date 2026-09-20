@@ -1,0 +1,26 @@
+{
+  "kind": "d_only_controller_enabled_preflight_observation",
+  "date": "2026-09-18",
+  "context": "kubernetes-admin@kubernetes",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:0049b22e88195c06eae7ddad5b7ec268b5c677cf3851906222517164ad3b7ec6",
+  "controller_binary_available": true,
+  "schema_migrations_rows": 93,
+  "embedded_catalog_file_count": 90,
+  "embedded_filenames_registered": "unverified",
+  "installation_state_rows": 0,
+  "active_config_rows": 0,
+  "dedicated_db_secret_exists": false,
+  "controller_deployment_exists": false,
+  "result": "blocked",
+  "blockers": [
+    "installation_state_absent",
+    "active_config_absent",
+    "dedicated_db_secret_absent"
+  ],
+  "notes": [
+    "The initial preflight script incorrectly required exactly 90 schema_migrations rows. The controller checks that its 90 embedded filenames are registered and accepts additional rows. The script was corrected after this observation.",
+    "The dedicated database account and its grants were not tested. The controller was not enabled or deployed."
+  ]
+}

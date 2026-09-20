@@ -1,0 +1,41 @@
+{
+  "kind": "system_backup_d_ddl_comparison_report",
+  "contract_version": "system-backup-plan.v12",
+  "status": "local_comparison_unreviewed",
+  "run_namespace": "sbk-mig-260918010551-6ba8",
+  "run_namespace_uid": "c3247b22-7d7f-4ea0-a5d7-a94376984330",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:0049b22e88195c06eae7ddad5b7ec268b5c677cf3851906222517164ad3b7ec6",
+  "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "migration_replay": {
+    "range": "001..077",
+    "applied": 90,
+    "exact_filenames": true,
+    "key_d_columns": "blob/blob/blob/char"
+  },
+  "capture_sql": "scripts/system-backup-d-ddl-capture.mysql.sql",
+  "capture_sql_sha256": "ae8b800ee981750ce5c0b58652bf2b440f90ea38cd0fe2f4b059666df6c59032",
+  "fresh_records_sha256": "ea2bd922e79fb19e857244f08aa3bfaa674b1ef3c4bdb8879145ba81f2c97a9e",
+  "live_records_sha256": "ea2bd922e79fb19e857244f08aa3bfaa674b1ef3c4bdb8879145ba81f2c97a9e",
+  "fresh_record_count": 360,
+  "live_record_count": 360,
+  "d_comparison": {
+    "table_count": 41,
+    "fresh_check_count": 265,
+    "live_check_count": 265,
+    "compared_table_options": ["engine", "table_collation", "row_format", "create_options", "table_comment"],
+    "compared_check_fields": ["name", "clause", "enforced"],
+    "difference_count": 0,
+    "matched": true
+  },
+  "cleanup": {
+    "temporary_namespace": "reported_cleaned_with_matching_uid",
+    "local_raw_tsv": "verified_deleted",
+    "remote_raw_tsv": "pending_user_cleanup"
+  },
+  "limitations": [
+    "This compares observed D metadata with a fresh replay, not migration SQL bytes.",
+    "AUTO_INCREMENT counters and physical attributes outside the selected TABLES fields are not compared.",
+    "This report does not freeze the contract or satisfy the P0-0a/P0-0b gates."
+  ]
+}

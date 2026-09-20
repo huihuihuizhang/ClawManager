@@ -1,0 +1,29 @@
+{
+  "kind": "d_only_controller_enabled_preflight_observation",
+  "date": "2026-09-18",
+  "context": "kubernetes-admin@kubernetes",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:c8265826ac6a7d58f6df0f15655b73ddd14c7880458bfa30e49ee85efd0028d9",
+  "controller_binary_available": true,
+  "schema_migrations_rows": 94,
+  "expected_catalog_files": 91,
+  "expected_filenames_registered": true,
+  "runtime_embedded_catalog_valid": false,
+  "installation_state_rows": 0,
+  "active_config_rows": 0,
+  "dedicated_db_secret_exists": false,
+  "controller_deployment_exists": false,
+  "result": "blocked",
+  "blockers": [
+    "runtime_embedded_catalog_mismatch",
+    "installation_state_absent",
+    "active_config_absent",
+    "dedicated_db_secret_absent"
+  ],
+  "notes": [
+    "The user identified this image as the rebuild for the 049 correction with migration 078.",
+    "A later read-only probe on the same image confirmed all 91 expected filenames are registered but the controller binary returns catalog_mismatch before attempting a database connection.",
+    "The dedicated database account and grants were not tested. The controller was not enabled or deployed."
+  ]
+}

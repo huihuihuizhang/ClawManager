@@ -1,0 +1,16 @@
+{
+  "kind": "system_backup_dto_parity",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "schema_sources": [
+    "contracts/system-backup/v12/task-operation.schema.json",
+    "contracts/system-backup/v12/admin-mutation-requests.schema.json",
+    "contracts/system-backup/v12/admin-control-resources.schema.json",
+    "contracts/system-backup/v12/admin-activity-resources.schema.json",
+    "contracts/system-backup/v12/admin-task-detail-resources.schema.json"
+  ],
+  "enum_source": "contracts/system-backup/v12/status-failure-enums.schema.json",
+  "go_snapshot": "backend/internal/systembackupcontract/types.go",
+  "typescript_snapshot": "frontend/src/types/systemBackupContract.ts",
+  "check": "node scripts/system-backup-contract-artifacts.test.mjs"
+}

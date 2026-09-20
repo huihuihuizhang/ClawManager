@@ -1,0 +1,63 @@
+{
+  "kind": "system_backup_admin_operation_errors",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "profiles": [
+    { "profile_id": "read_root", "codes": ["authentication_required", "permission_denied", "rate_limited", "internal_error"] },
+    { "profile_id": "read_detail", "codes": ["authentication_required", "permission_denied", "not_found", "rate_limited", "internal_error"] },
+    { "profile_id": "read_child_list", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "rate_limited", "internal_error"] },
+    { "profile_id": "read_logs", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "logs_expired", "rate_limited", "internal_error"] },
+    { "profile_id": "read_artifact_detail", "codes": ["authentication_required", "permission_denied", "not_found", "not_ready", "artifact_unavailable", "rate_limited", "internal_error"] },
+    { "profile_id": "read_evidence", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "range_not_satisfiable", "artifact_unavailable", "rate_limited", "internal_error"] },
+    { "profile_id": "task_create", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "unsupported_runner_p1", "unsupported_profile_p1", "unsupported_datasource_p1", "unsupported_schema", "backup_target_risk_rejected", "capacity_exceeded", "idempotency_conflict", "conflict_active_job", "artifact_conflict", "catalog_conflict", "isolation_invalid", "state_conflict", "idempotency_expired", "payload_too_large", "rate_limited", "not_ready", "artifact_unavailable", "encryption_key_unavailable", "signing_key_unavailable", "catalog_unavailable", "internal_error"] },
+    { "profile_id": "catalog_create", "codes": ["validation_failed", "authentication_required", "permission_denied", "unsupported_schema", "capacity_exceeded", "idempotency_conflict", "artifact_conflict", "catalog_conflict", "checksum_mismatch", "signature_invalid", "idempotency_expired", "payload_too_large", "rate_limited", "artifact_unavailable", "catalog_unavailable", "internal_error"] },
+    { "profile_id": "cancel_backup", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "commit_started", "idempotency_expired", "rate_limited", "internal_error"] },
+    { "profile_id": "cancel_task", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "internal_error"] },
+    { "profile_id": "cleanup", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "idempotency_conflict", "cleanup_unsafe_target", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "not_ready", "internal_error"] },
+    { "profile_id": "config_mutation", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "internal_error"] },
+    { "profile_id": "provider_proof", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "idempotency_conflict", "checksum_mismatch", "signature_invalid", "state_conflict", "idempotency_expired", "payload_too_large", "rate_limited", "internal_error"] },
+    { "profile_id": "strong_resolution", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "not_ready", "finalizer_request_unavailable", "internal_error"] },
+    { "profile_id": "manual_hold", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "internal_error"] },
+    { "profile_id": "prune_dry_run", "codes": ["validation_failed", "authentication_required", "permission_denied", "idempotency_conflict", "conflict_active_job", "state_conflict", "idempotency_expired", "rate_limited", "not_ready", "catalog_unavailable", "internal_error"] },
+    { "profile_id": "prune_confirmation", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "not_found", "idempotency_conflict", "confirmation_invalid", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "not_ready", "internal_error"] },
+    { "profile_id": "prune_execute_retry", "codes": ["validation_failed", "authentication_required", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed", "permission_denied", "not_found", "idempotency_conflict", "conflict_active_job", "confirmation_invalid", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "not_ready", "catalog_unavailable", "internal_error"] },
+    { "profile_id": "promotion_create", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "not_ready", "internal_error"] },
+    { "profile_id": "promotion_revoke", "codes": ["validation_failed", "authentication_required", "permission_denied", "not_found", "idempotency_conflict", "state_conflict", "version_conflict", "idempotency_expired", "rate_limited", "internal_error"] }
+  ],
+  "assignments": [
+    { "profile_id": "read_root", "operation_ids": ["getSystemBackupOverview", "getSystemBackupConfig", "listSystemBackupConfigVersions", "listSystemBackupCatalogScans", "listSystemBackupCatalogRecords", "listSystemBackupCatalogImports", "listSystemBackups", "listSystemBackupArtifactVerifications", "listSystemRestoreDrills", "listSystemBackupPreflights", "listSystemBackupPruneRuns", "listSystemBackupOperations", "listSystemBackupPromotions"] },
+    { "profile_id": "read_detail", "operation_ids": ["getSystemBackupOperation", "getSystemBackupConfigVersion", "getSystemBackupCatalogScan", "getSystemBackupCatalogRecord", "getSystemBackupCatalogImport", "getSystemBackup", "getSystemBackupArtifactVerification", "getSystemRestoreDrill", "getSystemBackupPreflight", "getSystemBackupPruneRun"] },
+    { "profile_id": "read_child_list", "operation_ids": ["listSystemBackupEvents", "listSystemBackupStagingResources", "listSystemBackupArtifactVerificationEvents", "listSystemRestoreDrillEvents", "listSystemRestoreDrillResources", "listSystemBackupPreflightEvents", "listSystemBackupPruneItems", "listSystemBackupPruneEvents"] },
+    { "profile_id": "read_logs", "operation_ids": ["listSystemBackupLogs", "listSystemBackupArtifactVerificationLogs", "listSystemRestoreDrillLogs", "listSystemBackupPreflightLogs"] },
+    { "profile_id": "read_artifact_detail", "operation_ids": ["getSystemBackupManifest", "getSystemBackupPreflightRestoreDiff"] },
+    { "profile_id": "read_evidence", "operation_ids": ["getSystemBackupEvidence"] },
+    { "profile_id": "task_create", "operation_ids": ["verifyImportedSystemBackupArtifact", "createImportedSystemRestoreDrill", "createSystemBackup", "verifySystemBackupArtifact", "createSystemRestoreDrill", "createSystemBackupPreflight"] },
+    { "profile_id": "catalog_create", "operation_ids": ["createSystemBackupCatalogScan", "createSystemBackupCatalogImport"] },
+    { "profile_id": "cancel_backup", "operation_ids": ["cancelSystemBackup"] },
+    { "profile_id": "cancel_task", "operation_ids": ["cancelSystemBackupArtifactVerification", "cancelSystemRestoreDrill", "cancelSystemBackupPreflight"] },
+    { "profile_id": "cleanup", "operation_ids": ["cleanupSystemBackupStaging", "cleanupSystemRestoreDrill"] },
+    { "profile_id": "config_mutation", "operation_ids": ["updateSystemBackupConfig", "rollbackSystemBackupConfig"] },
+    { "profile_id": "provider_proof", "operation_ids": ["registerSystemBackupProviderProof"] },
+    { "profile_id": "strong_resolution", "operation_ids": ["resolveSystemBackupFinalization", "resolveSystemBackupStagingOwnership", "resolveSystemRestoreDrillResourceOwnership"] },
+    { "profile_id": "manual_hold", "operation_ids": ["updateSystemBackupManualHold"] },
+    { "profile_id": "prune_dry_run", "operation_ids": ["createSystemBackupPruneDryRun"] },
+    { "profile_id": "prune_confirmation", "operation_ids": ["issueSystemBackupPruneConfirmation"] },
+    { "profile_id": "prune_execute_retry", "operation_ids": ["executeSystemBackupPrune", "retrySystemBackupPrune"] },
+    { "profile_id": "promotion_create", "operation_ids": ["createSystemBackupPromotion"] },
+    { "profile_id": "promotion_revoke", "operation_ids": ["revokeSystemBackupPromotion"] }
+  ],
+  "x-invariants": [
+    "every OpenAPI operation is assigned to exactly one profile",
+    "profile membership closes the set of API error codes for that operation; A, B and C retain ownership of when their domain failures occur",
+    "strong-auth codes appear only on operations whose policy has required or conditional recent strong authentication",
+    "commit_started is exposed only by cancelSystemBackup",
+    "logs_expired is exposed only by log collection routes and range_not_satisfiable only by the evidence byte-range route",
+    "failures after an asynchronous request is accepted are represented on the task or operation resource and are not retroactively emitted as create-request HTTP errors"
+  ],
+  "x-review-blockers": [
+    "A must review strong-auth code membership without changing D's error envelope",
+    "B must review catalog, checksum and artifact code membership without adding transport fields",
+    "C must review runner, isolation, cleanup and finalizer code membership without adding transport fields",
+    "at least one non-D owner must approve the operation-to-profile assignments before freeze"
+  ]
+}

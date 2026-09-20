@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-control-resources.schema.json",
+  "title": "System backup D-owned Admin control resources",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "MatrixKey": { "type": "string", "enum": ["k8s-cluster", "k3s-cluster", "k8s-single-node", "k3s-single-node"] },
+    "HealthState": { "type": "string", "enum": ["healthy", "degraded", "unknown", "stale"] },
+    "ConfigReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "identity_hash", "version"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "artifact_write", "artifact_read", "artifact_delete", "artifact_upload_issuer", "artifact_ca",
+            "evidence_store", "evidence_write", "evidence_read", "evidence_delete", "evidence_ca", "evidence_kek",
+            "kek", "capture_signing", "acceptance_signing", "catalog_signing", "catalog_read", "catalog_append",
+            "catalog_snapshot", "nonce_hmac", "status_relay"
+          ]
+        },
+        "identity_hash": { "$ref": "#/$defs/Sha256" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "x-invariant": "identity_hash identifies the configured logical ref after redaction; raw credentials, tokens, private keys, secret values and arbitrary URIs are forbidden"
+    },
+    "RegistryReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_kind", "version", "sha256"],
+      "properties": {
+        "registry_kind": {
+          "type": "string",
+          "enum": ["parts", "redis_sources", "failure_domains", "disaster_identity_mapping", "source_writers", "rbac_bindings", "secret_allowlist", "strong_auth_issuers", "provider_proof_issuers"]
+        },
+        "version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "DurationConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controller_claim_ttl_seconds", "controller_claim_heartbeat_seconds", "controller_reconcile_interval_seconds",
+        "mutation_lease_ttl_seconds", "mutation_lease_heartbeat_seconds", "artifact_lease_ttl_seconds", "artifact_lease_heartbeat_seconds",
+        "gate_acquisition_timeout_seconds", "quiesce_max_hold_seconds", "maintenance_lock_ttl_seconds",
+        "watchdog_db_unavailable_grace_seconds", "watchdog_safety_margin_seconds", "staging_retention_seconds",
+        "retention_seconds", "prune_candidate_ttl_seconds", "confirmation_ttl_seconds", "logs_retention_seconds",
+        "evidence_retention_seconds", "promotion_health_max_age_seconds", "task_cancel_deadline_seconds",
+        "cleanup_deadline_seconds", "retry_initial_backoff_seconds", "retry_max_backoff_seconds", "orphan_safety_window_seconds",
+        "artifact_health_interval_seconds", "catalog_scan_interval_seconds", "catalog_scan_deadline_seconds",
+        "provider_consistency_window_seconds", "redis_clock_skew_seconds", "strong_auth_max_age_seconds",
+        "strong_auth_clock_skew_seconds", "provider_proof_max_age_seconds", "capture_certificate_ttl_seconds",
+        "finalization_resolution_grace_seconds", "recovery_point_objective_seconds", "first_enable_recovery_alert_grace_seconds",
+        "control_metadata_retention_seconds", "backup_task_deadline_seconds", "drill_task_deadline_seconds",
+        "preflight_task_deadline_seconds", "artifact_verify_task_deadline_seconds", "operation_deadline_seconds",
+        "finalization_resolution_deadline_seconds", "prune_operation_deadline_seconds"
+      ],
+      "properties": {
+        "controller_claim_ttl_seconds": { "type": "integer", "minimum": 15, "default": 30, "maximum": 300 },
+        "controller_claim_heartbeat_seconds": { "type": "integer", "minimum": 5, "default": 10, "maximum": 100 },
+        "controller_reconcile_interval_seconds": { "type": "integer", "minimum": 1, "default": 10, "maximum": 60 },
+        "mutation_lease_ttl_seconds": { "type": "integer", "minimum": 6, "default": 30, "maximum": 120 },
+        "mutation_lease_heartbeat_seconds": { "type": "integer", "minimum": 2, "default": 10, "maximum": 40 },
+        "artifact_lease_ttl_seconds": { "type": "integer", "minimum": 15, "default": 60, "maximum": 300 },
+        "artifact_lease_heartbeat_seconds": { "type": "integer", "minimum": 5, "default": 20, "maximum": 100 },
+        "gate_acquisition_timeout_seconds": { "type": "integer", "minimum": 10, "default": 60, "maximum": 600 },
+        "quiesce_max_hold_seconds": { "type": "integer", "minimum": 30, "default": 600, "maximum": 3600 },
+        "maintenance_lock_ttl_seconds": { "type": "integer", "minimum": 65, "default": 900, "maximum": 7200 },
+        "watchdog_db_unavailable_grace_seconds": { "type": "integer", "minimum": 5, "default": 15, "maximum": 60 },
+        "watchdog_safety_margin_seconds": { "type": "integer", "minimum": 5, "default": 10, "maximum": 60 },
+        "staging_retention_seconds": { "type": "integer", "minimum": 3600, "default": 86400, "maximum": 604800 },
+        "retention_seconds": { "type": "integer", "minimum": 86400, "default": 2592000, "maximum": 31536000 },
+        "prune_candidate_ttl_seconds": { "type": "integer", "minimum": 3600, "default": 86400, "maximum": 604800 },
+        "confirmation_ttl_seconds": { "type": "integer", "minimum": 60, "default": 900, "maximum": 3600 },
+        "logs_retention_seconds": { "type": "integer", "minimum": 3600, "default": 604800, "maximum": 2592000 },
+        "evidence_retention_seconds": { "type": "integer", "minimum": 86400, "default": 2592000, "maximum": 31536000 },
+        "promotion_health_max_age_seconds": { "type": "integer", "minimum": 60, "default": 3600, "maximum": 86400 },
+        "task_cancel_deadline_seconds": { "type": "integer", "minimum": 10, "default": 120, "maximum": 1800 },
+        "cleanup_deadline_seconds": { "type": "integer", "minimum": 60, "default": 3600, "maximum": 21600 },
+        "retry_initial_backoff_seconds": { "type": "integer", "minimum": 1, "default": 5, "maximum": 60 },
+        "retry_max_backoff_seconds": { "type": "integer", "minimum": 5, "default": 60, "maximum": 600 },
+        "orphan_safety_window_seconds": { "type": "integer", "minimum": 300, "default": 3600, "maximum": 86400 },
+        "artifact_health_interval_seconds": { "type": "integer", "minimum": 300, "default": 3600, "maximum": 86400 },
+        "catalog_scan_interval_seconds": { "type": "integer", "minimum": 300, "default": 3600, "maximum": 86400 },
+        "catalog_scan_deadline_seconds": { "type": "integer", "minimum": 60, "default": 1800, "maximum": 21600 },
+        "provider_consistency_window_seconds": { "type": "integer", "minimum": 1, "default": 30, "maximum": 600 },
+        "redis_clock_skew_seconds": { "type": "integer", "minimum": 0, "default": 5, "maximum": 60 },
+        "strong_auth_max_age_seconds": { "type": "integer", "minimum": 60, "default": 300, "maximum": 900 },
+        "strong_auth_clock_skew_seconds": { "type": "integer", "minimum": 0, "default": 30, "maximum": 120 },
+        "provider_proof_max_age_seconds": { "type": "integer", "minimum": 60, "default": 900, "maximum": 3600 },
+        "capture_certificate_ttl_seconds": { "type": "integer", "minimum": 3600, "default": 28800, "maximum": 86400 },
+        "finalization_resolution_grace_seconds": { "type": "integer", "minimum": 60, "default": 900, "maximum": 3600 },
+        "recovery_point_objective_seconds": { "type": "integer", "minimum": 3600, "default": 86400, "maximum": 2592000 },
+        "first_enable_recovery_alert_grace_seconds": { "type": "integer", "minimum": 0, "default": 86400, "maximum": 604800 },
+        "control_metadata_retention_seconds": { "type": "integer", "minimum": 2592000, "default": 31536000, "maximum": 157680000 },
+        "backup_task_deadline_seconds": { "type": "integer", "minimum": 600, "default": 21600, "maximum": 43200 },
+        "drill_task_deadline_seconds": { "type": "integer", "minimum": 600, "default": 21600, "maximum": 43200 },
+        "preflight_task_deadline_seconds": { "type": "integer", "minimum": 60, "default": 3600, "maximum": 7200 },
+        "artifact_verify_task_deadline_seconds": { "type": "integer", "minimum": 300, "default": 7200, "maximum": 21600 },
+        "operation_deadline_seconds": { "type": "integer", "minimum": 60, "default": 7200, "maximum": 86400 },
+        "finalization_resolution_deadline_seconds": { "type": "integer", "minimum": 60, "default": 3600, "maximum": 86400 },
+        "prune_operation_deadline_seconds": { "type": "integer", "minimum": 60, "default": 21600, "maximum": 86400 }
+      }
+    },
+    "CapacityConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control_metadata_capacity_bytes", "staging_capacity_bytes", "max_artifact_bytes", "max_index_bytes", "max_plaintext_buffer_bytes", "max_source_items", "minimum_capture_throughput_bytes_per_second", "source_size_safety_factor", "max_log_bytes", "max_log_lines", "log_chunk_bytes", "log_chunk_lines"],
+      "properties": {
+        "control_metadata_capacity_bytes": { "type": "integer", "minimum": 1073741824, "default": 10737418240, "maximum": 1099511627776 },
+        "staging_capacity_bytes": { "type": "integer", "minimum": 1073741824, "default": 21474836480, "maximum": 1099511627776 },
+        "max_artifact_bytes": { "type": "integer", "minimum": 1048576, "default": 17179869184, "maximum": 966367641600 },
+        "max_index_bytes": { "type": "integer", "minimum": 1048576, "default": 536870912, "maximum": 8589934592 },
+        "max_plaintext_buffer_bytes": { "type": "integer", "minimum": 1048576, "default": 67108864, "maximum": 268435456 },
+        "max_source_items": { "type": "integer", "minimum": 1, "default": 5000000, "maximum": 100000000 },
+        "minimum_capture_throughput_bytes_per_second": { "type": "integer", "minimum": 1048576, "default": 52428800, "maximum": 1073741824 },
+        "source_size_safety_factor": { "type": "number", "minimum": 1, "default": 1.25, "maximum": 2 },
+        "max_log_bytes": { "type": "integer", "minimum": 1048576, "default": 67108864, "maximum": 1073741824 },
+        "max_log_lines": { "type": "integer", "minimum": 1000, "default": 100000, "maximum": 1000000 },
+        "log_chunk_bytes": { "type": "integer", "minimum": 4096, "default": 1048576, "maximum": 1048576 },
+        "log_chunk_lines": { "type": "integer", "minimum": 1, "default": 1000, "maximum": 1000 }
+      }
+    },
+    "ConcurrencyConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_concurrent_drills", "max_concurrent_preflights", "max_concurrent_artifact_verifications", "max_pending_tasks", "max_auto_attempts"],
+      "properties": {
+        "max_concurrent_drills": { "type": "integer", "minimum": 1, "default": 1, "maximum": 10 },
+        "max_concurrent_preflights": { "type": "integer", "minimum": 1, "default": 2, "maximum": 20 },
+        "max_concurrent_artifact_verifications": { "type": "integer", "minimum": 1, "default": 1, "maximum": 10 },
+        "max_pending_tasks": { "type": "integer", "minimum": 1, "default": 100, "maximum": 1000 },
+        "max_auto_attempts": { "type": "integer", "minimum": 1, "default": 3, "maximum": 10 }
+      }
+    },
+    "PreflightLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_timeout_seconds", "provider_qps", "max_scan_bytes", "max_scan_items"],
+      "properties": {
+        "query_timeout_seconds": { "type": "integer", "minimum": 5, "default": 30, "maximum": 300 },
+        "provider_qps": { "type": "integer", "minimum": 1, "default": 20, "maximum": 200 },
+        "max_scan_bytes": { "type": "integer", "minimum": 1073741824, "default": 10737418240, "maximum": 107374182400 },
+        "max_scan_items": { "type": "integer", "minimum": 1000, "default": 1000000, "maximum": 10000000 }
+      }
+    },
+    "ConfigValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "alert_profile", "minimum_recovery_points", "durations", "capacity", "concurrency", "preflight_limits", "registries", "references"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "alert_profile": { "type": "string", "enum": ["production", "development"], "default": "production" },
+        "minimum_recovery_points": { "type": "integer", "minimum": 1, "default": 1, "maximum": 100 },
+        "durations": { "$ref": "#/$defs/DurationConfig" },
+        "capacity": { "$ref": "#/$defs/CapacityConfig" },
+        "concurrency": { "$ref": "#/$defs/ConcurrencyConfig" },
+        "preflight_limits": { "$ref": "#/$defs/PreflightLimits" },
+        "registries": { "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true, "items": { "$ref": "#/$defs/RegistryReference" } },
+        "references": { "type": "array", "minItems": 20, "maxItems": 20, "uniqueItems": true, "items": { "$ref": "#/$defs/ConfigReference" } }
+      },
+      "x-max-jcs-utf8-bytes": 262144,
+      "x-invariants": [
+        "registries contain every RegistryReference.registry_kind exactly once and references contain every ConfigReference.purpose exactly once",
+        "heartbeat values are no greater than one third of their TTL",
+        "maintenance lock TTL covers quiesce hold, watchdog margin and two controller claim TTLs",
+        "evidence retention is no shorter than artifact retention and control metadata retention covers artifact, evidence, logs and strong-auth nonce retention",
+        "staging capacity is at least ceil(max artifact bytes times 1.10) plus max index bytes",
+        "log chunk byte and line limits do not exceed their per-task totals; max_auto_attempts counts the initial attempt",
+        "capture certificate expiry is later than every backup task deadline"
+      ]
+    },
+    "ConfigUpdateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_version", "change_reason", "config"],
+      "properties": {
+        "expected_version": { "type": "integer", "minimum": 1 },
+        "change_reason": { "$ref": "admin-api-common.schema.json#/$defs/ActorReason" },
+        "config": { "$ref": "#/$defs/ConfigValues" }
+      },
+      "x-max-jcs-utf8-bytes": 262144,
+      "x-forbidden-fields": ["strong_auth_proof", "credential", "secret", "token", "private_key", "uri"],
+      "x-invariant": "the server derives security-boundary and protection-reduction classification from the current and proposed canonical config; A-owned proof/nonce stays in authentication transport"
+    },
+    "ConfigResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "origin_installation_id", "version", "row_version", "active", "effective_enabled", "config", "created_by", "change_reason", "created_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-config.v1" },
+        "origin_installation_id": { "$ref": "admin-api-common.schema.json#/$defs/InstallationId" },
+        "version": { "type": "integer", "minimum": 1 },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "active": { "type": "boolean" },
+        "effective_enabled": { "type": "boolean" },
+        "config": { "$ref": "#/$defs/ConfigValues" },
+        "created_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "change_reason": { "$ref": "admin-api-common.schema.json#/$defs/ActorReason" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "FailureDomainShortage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_failure_domain_id", "minimum_recovery_points", "eligible_usable_recovery_points"],
+      "properties": {
+        "target_failure_domain_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "minimum_recovery_points": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "eligible_usable_recovery_points": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "OverviewResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "origin_installation_id", "config_version", "effective_enabled", "monitoring_armed", "monitoring_armed_reason", "matrix", "backup_recovery_readiness", "baseline_present", "controller_health", "database_health", "artifact_target_health", "evidence_store_health", "catalog_health", "source_writer_state", "active_task_count", "active_operation_count", "finalization_unknown_count", "cleanup_backlog_count", "ownership_resolution_backlog_count", "shortage_failure_domains", "observed_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-overview.v1" },
+        "origin_installation_id": { "$ref": "admin-api-common.schema.json#/$defs/InstallationId" },
+        "config_version": { "type": "integer", "minimum": 1 },
+        "effective_enabled": { "type": "boolean" },
+        "monitoring_armed": { "type": "boolean" },
+        "monitoring_armed_reason": { "type": "string", "enum": ["none", "deployment_required", "previously_enabled"] },
+        "matrix": { "$ref": "#/$defs/MatrixKey" },
+        "backup_recovery_readiness": { "type": "boolean" },
+        "baseline_present": { "type": "boolean" },
+        "controller_health": { "$ref": "#/$defs/HealthState" },
+        "database_health": { "$ref": "#/$defs/HealthState" },
+        "artifact_target_health": { "$ref": "#/$defs/HealthState" },
+        "evidence_store_health": { "$ref": "#/$defs/HealthState" },
+        "catalog_health": { "$ref": "#/$defs/HealthState" },
+        "source_writer_state": { "type": "string", "enum": ["clean", "drift", "unknown"] },
+        "active_task_count": { "type": "integer", "minimum": 0 },
+        "active_operation_count": { "type": "integer", "minimum": 0 },
+        "finalization_unknown_count": { "type": "integer", "minimum": 0 },
+        "cleanup_backlog_count": { "type": "integer", "minimum": 0 },
+        "ownership_resolution_backlog_count": { "type": "integer", "minimum": 0 },
+        "shortage_failure_domains": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/FailureDomainShortage" } },
+        "observed_at": { "type": "string", "format": "date-time" }
+      },
+      "x-invariant": "overview only aggregates persisted authoritative state; it does not infer owner health from process cache or Prometheus"
+    },
+    "PruneRunResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "status", "retryable", "config_version", "older_than", "candidate_hash", "candidate_count", "candidate_bytes", "candidate_expires_at", "confirmation_status", "confirmation_expires_at", "planned_items", "blocked_items", "deleting_items", "deleted_items", "delete_failed_items", "failure_category", "row_version", "started_at", "execution_started_at", "execution_finished_at", "finished_at", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-prune-run.v1" },
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" },
+        "status": { "type": "string", "enum": ["planning", "dry_run_created", "executing", "partial_failed", "succeeded", "failed", "expired"] },
+        "retryable": { "type": "boolean" },
+        "config_version": { "type": "integer", "minimum": 1 },
+        "older_than": { "type": "string", "format": "date-time" },
+        "candidate_hash": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] },
+        "candidate_count": { "type": ["integer", "null"], "minimum": 0, "maximum": 1000000 },
+        "candidate_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "candidate_expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "confirmation_status": { "type": "string", "enum": ["none", "issued", "consumed", "expired"] },
+        "confirmation_expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "planned_items": { "type": "integer", "minimum": 0 },
+        "blocked_items": { "type": "integer", "minimum": 0 },
+        "deleting_items": { "type": "integer", "minimum": 0 },
+        "deleted_items": { "type": "integer", "minimum": 0 },
+        "delete_failed_items": { "type": "integer", "minimum": 0 },
+        "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "execution_started_at": { "type": ["string", "null"], "format": "date-time" },
+        "execution_finished_at": { "type": ["string", "null"], "format": "date-time" },
+        "finished_at": { "type": ["string", "null"], "format": "date-time" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "planning" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "candidate_hash": { "type": "null" },
+              "candidate_count": { "type": "null" },
+              "candidate_bytes": { "type": "null" },
+              "candidate_expires_at": { "type": "null" }
+            }
+          },
+          "else": {
+            "properties": {
+              "candidate_hash": { "$ref": "#/$defs/Sha256" },
+              "candidate_count": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+              "candidate_bytes": { "type": "integer", "minimum": 0 },
+              "candidate_expires_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      ],
+      "x-invariant": "candidate identity and counts are immutable after planning; item details are available only from the paginated items route"
+    },
+    "PruneConfirmationResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "prune_run_public_id", "confirmation_id", "status", "candidate_hash", "candidate_count", "candidate_bytes", "cutoff_at", "config_version", "expires_at", "consumed_at", "prune_run_row_version"],
+      "properties": {
+        "schema_version": { "const": "system-backup-prune-confirmation.v1" },
+        "prune_run_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" },
+        "confirmation_id": { "$ref": "admin-api-common.schema.json#/$defs/Uuid128" },
+        "status": { "type": "string", "enum": ["issued", "consumed", "expired"] },
+        "candidate_hash": { "$ref": "#/$defs/Sha256" },
+        "candidate_count": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "candidate_bytes": { "type": "integer", "minimum": 0 },
+        "cutoff_at": { "type": "string", "format": "date-time" },
+        "config_version": { "type": "integer", "minimum": 1 },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "consumed_at": { "type": ["string", "null"], "format": "date-time" },
+        "prune_run_row_version": { "type": "integer", "minimum": 1 }
+      },
+      "x-invariant": "an idempotent replay returns the original confirmation ID and its current status; the ID is actor, candidate, cutoff and config-version bound"
+    },
+    "ConfigResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/ConfigResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    },
+    "PruneRunResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/PruneRunResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    }
+  },
+  "x-owner-boundaries": {
+    "A": "strong-auth proof, nonce and issuer payloads remain external; this schema carries only a redacted issuer registry version/hash",
+    "B": "source and restore implementation fields are not represented in these D control-plane views",
+    "C": "artifact, evidence, catalog and key provider internals remain external; config exposes only redacted identity hashes and versions"
+  }
+}

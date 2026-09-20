@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/manifest-system-backup-v1.schema.json",
+  "title": "system-backup.v1 manifest",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "app_version", "git_commit", "generated_at", "origin_installation_id", "backup_public_id", "attempt_no", "orchestrator", "deployment_profile", "runner_type", "task_purpose", "migration_catalog_hash", "schema_hash", "capture_context_hash", "capture_certificate_hash", "target", "kek_recovery", "consistency", "precommit_eligibility", "parts", "artifact_index", "commit_marker", "control_evidence", "secret_policy", "schema_object_coverage", "config_recovery", "business_summaries", "warnings"],
+  "properties": {
+    "schema_version": { "const": "system-backup.v1" },
+    "app_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "git_commit": { "type": "string", "pattern": "^[0-9a-f]{7,64}$" },
+    "generated_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "origin_installation_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "backup_public_id": { "type": "string", "pattern": "^sbk_[A-Za-z0-9_-]+$" },
+    "attempt_no": { "type": "integer", "minimum": 1 },
+    "orchestrator": { "enum": ["kubernetes", "k3s"] },
+    "deployment_profile": { "enum": ["cluster", "single-node"] },
+    "runner_type": { "const": "kubernetes" },
+    "task_purpose": { "enum": ["acceptance", "functional_test"] },
+    "migration_catalog_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "schema_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "capture_context_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "capture_certificate_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_class", "failure_domain_id", "risks", "attestation_id", "attestation_hash"],
+      "properties": {
+        "target_class": { "enum": ["dr-ready-external", "same-cluster-copy"] },
+        "failure_domain_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "risks": { "type": "array", "uniqueItems": true, "items": { "enum": ["source_overlap", "same_failure_domain", "artifact_credential_source_dependent", "kek_source_dependent", "signing_key_source_dependent", "catalog_source_dependent", "attestation_missing", "attestation_expired", "conditional_commit_unavailable", "transport_unverified", "broad_egress", "provider_capability_degraded"] } },
+        "attestation_id": { "type": ["string", "null"], "maxLength": 128 },
+        "attestation_hash": { "oneOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] }
+      }
+    },
+    "kek_recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "key_id", "key_version", "source_independent", "recovery_proof_hash"],
+      "properties": {
+        "provider": { "enum": ["external-kms", "external-secret", "k8s-secret"] },
+        "key_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "key_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "source_independent": { "type": "boolean" },
+        "recovery_proof_hash": { "oneOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] }
+      }
+    },
+    "consistency": { "enum": ["strong", "bounded", "weak"] },
+    "precommit_eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_parts_complete", "required_verifiers_complete", "disqualifier_codes", "inputs_hash"],
+      "properties": {
+        "required_parts_complete": { "const": true },
+        "required_verifiers_complete": { "const": true },
+        "disqualifier_codes": { "type": "array", "uniqueItems": true, "items": { "enum": ["functional_test", "consistency_not_strong", "disqualifying_warning", "target_not_external", "target_risk", "attestation_invalid", "kek_not_recoverable"] } },
+        "inputs_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      }
+    },
+    "parts": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "mysql": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" },
+        "redis": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" },
+        "object_storage": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" },
+        "workspace": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" },
+        "deployment_resources": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" },
+        "secret_bundle": { "$ref": "artifact-common.schema.json#/$defs/PartSummary" }
+      }
+    },
+    "artifact_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "checksum"],
+      "properties": { "path": { "const": "artifact-index.json" }, "checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" } }
+    },
+    "commit_marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "schema_version"],
+      "properties": { "path": { "const": "_COMMITTED" }, "schema_version": { "const": "system-backup-committed.v1" } }
+    },
+    "control_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "schema_version", "checksum"],
+      "properties": {
+        "path": { "const": "control/evidence.json.enc" },
+        "schema_version": { "const": "system-backup-control-evidence.v1" },
+        "checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      }
+    },
+    "secret_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_version", "registry_hash", "required_entries", "captured_entries"],
+      "properties": {
+        "registry_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "registry_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "required_entries": { "type": "integer", "minimum": 0 },
+        "captured_entries": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "schema_object_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_version", "registry_hash", "covered", "excluded"],
+      "properties": {
+        "registry_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "registry_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "covered": { "type": "integer", "minimum": 0 },
+        "excluded": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "config_recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["config_version", "snapshot_hash", "redacted_parameters"],
+      "properties": {
+        "config_version": { "type": "integer", "minimum": 1 },
+        "snapshot_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "redacted_parameters": { "type": "object", "maxProperties": 64, "x-freeze-blocker": "Replace with the closed recovery-parameter schema before freeze" }
+      }
+    },
+    "business_summaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["users", "instances", "ai_gateway", "teams", "resources", "skill_hub"],
+      "properties": {
+        "users": { "$ref": "#/$defs/BusinessSummary" },
+        "instances": { "$ref": "#/$defs/BusinessSummary" },
+        "ai_gateway": { "$ref": "#/$defs/BusinessSummary" },
+        "teams": { "$ref": "#/$defs/BusinessSummary" },
+        "resources": { "$ref": "#/$defs/BusinessSummary" },
+        "skill_hub": { "$ref": "#/$defs/BusinessSummary" }
+      }
+    },
+    "warnings": { "type": "array", "items": { "$ref": "artifact-common.schema.json#/$defs/Warning" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "task_purpose": { "const": "acceptance" } }, "required": ["task_purpose"] },
+      "then": { "properties": { "parts": { "required": ["mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"] } } }
+    }
+  ],
+  "$defs": {
+    "BusinessSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objects", "rows", "bytes", "verifier_summary_hash"],
+      "properties": {
+        "objects": { "type": "integer", "minimum": 0 },
+        "rows": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "verifier_summary_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      }
+    }
+  },
+  "x-canonicalization": "UTF-8 JCS; maximum 256 KiB; immutable after generation.",
+  "x-forbidden-fields": ["manifest_checksum", "staging_cleanup", "acceptance_eligible"]
+}

@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/verifier-contract.schema.json",
+  "title": "System backup verifier result envelope",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "target_type", "target_public_id", "attempt_no", "category", "mode", "checks"],
+  "properties": {
+    "schema_version": { "const": "system-backup-verifier-result.v1" },
+    "target_type": { "enum": ["backup", "drill", "preflight", "artifact_verify", "catalog_import", "promotion", "cleanup", "prune_run"] },
+    "target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "attempt_no": { "type": ["integer", "null"], "minimum": 1 },
+    "category": { "enum": ["users", "instances", "ai_gateway", "teams", "resources", "skill_hub", "control_plane", "artifact", "catalog", "isolation", "cleanup", "prune", "promotion"] },
+    "mode": { "enum": ["backup_validate", "restore_validate", "preflight_diff", "artifact_health", "artifact_full", "catalog_import", "cleanup_verify", "prune_verify", "promotion_validate"] },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Check" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "category": { "const": "resources" }, "mode": { "const": "backup_validate" } }, "required": ["category", "mode"] },
+      "then": { "properties": { "checks": { "items": { "$ref": "#/$defs/ResourcesBackupCheck" } } } }
+    },
+    {
+      "if": { "properties": { "category": { "const": "control_plane" }, "mode": { "const": "restore_validate" } }, "required": ["category", "mode"] },
+      "then": { "properties": { "checks": { "items": { "$ref": "#/$defs/ControlExclusionCheck" } } } }
+    }
+  ],
+  "$defs": {
+    "ControlExclusionCheck": {
+      "allOf": [
+        { "$ref": "#/$defs/Check" },
+        { "properties": {
+          "id": { "enum": [
+            "control_plane.empty.system_artifact_lease_states", "control_plane.empty.system_artifact_leases",
+            "control_plane.empty.system_backup_alert_states", "control_plane.empty.system_backup_artifact_verifications",
+            "control_plane.empty.system_backup_attempts", "control_plane.empty.system_backup_check_results",
+            "control_plane.empty.system_backup_compact_tombstones", "control_plane.empty.system_backup_configs",
+            "control_plane.empty.system_backup_dependency_health", "control_plane.empty.system_backup_events",
+            "control_plane.empty.system_backup_evidence", "control_plane.empty.system_backup_evidence_chunks",
+            "control_plane.empty.system_backup_external_actions", "control_plane.empty.system_backup_installation_state",
+            "control_plane.empty.system_backup_job_observations", "control_plane.empty.system_backup_log_chunks",
+            "control_plane.empty.system_backup_operations", "control_plane.empty.system_backup_preflights",
+            "control_plane.empty.system_backup_promotions", "control_plane.empty.system_backup_provider_capabilities",
+            "control_plane.empty.system_backup_prune_items", "control_plane.empty.system_backup_prune_runs",
+            "control_plane.empty.system_backup_source_writer_check_states", "control_plane.empty.system_backup_staging_resources",
+            "control_plane.empty.system_backup_strong_auth_nonces", "control_plane.empty.system_backups",
+            "control_plane.empty.system_maintenance_locks", "control_plane.empty.system_maintenance_mutation_leases",
+            "control_plane.empty.system_maintenance_participants", "control_plane.empty.system_restore_drill_resources",
+            "control_plane.empty.system_restore_drills"
+          ] },
+          "expected": { "$ref": "#/$defs/ResourcesCountValue" },
+          "actual": { "$ref": "#/$defs/ResourcesCountValue" }
+        } }
+      ]
+    },
+    "ResourcesDigestValue": {
+      "type": "object", "additionalProperties": false, "required": ["hash"],
+      "properties": { "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+    },
+    "ResourcesCountValue": {
+      "type": "object", "additionalProperties": false, "required": ["rows"],
+      "properties": { "rows": { "type": "integer", "minimum": 0 } }
+    },
+    "ResourcesAuditCutoffValue": {
+      "type": "object", "additionalProperties": false, "required": ["max_id"],
+      "properties": { "max_id": { "type": ["integer", "null"], "minimum": 0 } }
+    },
+    "ResourcesBackupCheck": {
+      "allOf": [
+        { "$ref": "#/$defs/Check" },
+        { "oneOf": [
+          { "properties": { "id": { "enum": ["resources.checkpoint", "resources.capture_context"] }, "expected": { "$ref": "#/$defs/ResourcesDigestValue" }, "actual": { "$ref": "#/$defs/ResourcesDigestValue" } } },
+          { "properties": { "id": { "enum": ["resources.table_count.audit_logs", "resources.table_count.egress_private_exceptions", "resources.table_count.northbound_admin_settings", "resources.table_count.northbound_settings_audit", "resources.table_count.security_scan_configs", "resources.table_count.security_scan_job_items", "resources.table_count.security_scan_jobs", "resources.table_count.security_scan_reports", "resources.table_count.system_image_settings"] }, "expected": { "$ref": "#/$defs/ResourcesCountValue" }, "actual": { "$ref": "#/$defs/ResourcesCountValue" } } },
+          { "properties": { "id": { "const": "resources.audit_cutoff" }, "expected": { "$ref": "#/$defs/ResourcesAuditCutoffValue" }, "actual": { "$ref": "#/$defs/ResourcesAuditCutoffValue" } } }
+        ] }
+      ]
+    },
+    "Check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "skip_reason", "expected", "actual", "evidence_ref", "warning_code", "check_classification", "failure_category"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$" },
+        "status": { "enum": ["passed", "warning", "failed", "skipped"] },
+        "skip_reason": { "type": ["string", "null"], "enum": ["optional", "not_applicable", null] },
+        "expected": { "type": "object", "maxProperties": 128, "x-owner-schema-required": true },
+        "actual": { "type": "object", "maxProperties": 128, "x-owner-schema-required": true },
+        "evidence_ref": { "type": ["string", "null"], "pattern": "^sev_[A-Za-z0-9_-]+$" },
+        "warning_code": { "type": ["string", "null"], "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$" },
+        "check_classification": { "oneOf": [{ "$ref": "status-failure-enums.schema.json#/$defs/CheckClassification" }, { "type": "null" }] },
+        "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "skipped" } }, "required": ["status"] }, "then": { "properties": { "skip_reason": { "enum": ["optional", "not_applicable"] }, "warning_code": { "type": "null" }, "check_classification": { "type": "null" }, "failure_category": { "const": "none" } } } },
+        { "if": { "properties": { "status": { "enum": ["passed", "warning", "failed"] } }, "required": ["status"] }, "then": { "properties": { "skip_reason": { "type": "null" } } } },
+        { "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] }, "then": { "properties": { "check_classification": { "$ref": "status-failure-enums.schema.json#/$defs/CheckClassification" }, "failure_category": { "not": { "const": "none" } }, "warning_code": { "type": "null" } } } },
+        { "if": { "properties": { "status": { "enum": ["passed", "warning"] } }, "required": ["status"] }, "then": { "properties": { "check_classification": { "type": "null" }, "failure_category": { "const": "none" } } } },
+        { "if": { "properties": { "status": { "const": "warning" } }, "required": ["status"] }, "then": { "properties": { "warning_code": { "type": "string" } } } },
+        { "if": { "properties": { "status": { "const": "passed" } }, "required": ["status"] }, "then": { "properties": { "warning_code": { "type": "null" } } } }
+      ]
+    }
+  },
+  "x-aggregate-order": ["failed", "warning", "passed", "skipped"],
+  "x-aggregate-persistence": "No top-level status, warnings or errors are persisted; aggregate is derived from checks.",
+  "x-mode-category-matrix": {
+    "backup_validate": ["users", "instances", "ai_gateway", "teams", "resources", "skill_hub", "control_plane"],
+    "restore_validate": ["users", "instances", "ai_gateway", "teams", "resources", "skill_hub", "control_plane"],
+    "preflight_diff": ["users", "instances", "ai_gateway", "teams", "resources", "skill_hub", "control_plane", "isolation"],
+    "artifact_health": ["artifact"],
+    "artifact_full": ["artifact"],
+    "catalog_import": ["catalog", "artifact"],
+    "cleanup_verify": ["cleanup"],
+    "prune_verify": ["prune"],
+    "promotion_validate": ["promotion"]
+  },
+  "x-owner-check-registries": {
+    "A": { "status": "pending_owner_submission", "categories": ["users", "ai_gateway"] },
+    "B": { "status": "pending_owner_submission", "categories": ["instances"] },
+    "C": { "status": "pending_owner_submission", "categories": ["teams", "skill_hub", "artifact", "catalog"] },
+    "D": { "status": "draft", "categories": ["resources", "control_plane", "isolation", "cleanup", "prune", "promotion"], "resources_backup_validate": { "check_schema": "#/$defs/ResourcesBackupCheck", "required_check_count": 12, "required_proof": "B-owned capture certificate and dump content proof binding source and dump metadata to one checkpoint and capture context", "failure_mapping": { "mismatch": { "check_classification": "integrity", "failure_category": "validation_failed", "retryable": false }, "missing_or_unverified_proof": { "failure_category": "evidence_incomplete", "retryable": false } } }, "control_plane_restore_validate": { "check_schema": "#/$defs/ControlExclusionCheck", "required_check_count": 31, "required_proof": "B-owned isolated target identity, completed normalization boundary and separate SELECT-only verifier credential", "failure_mapping": { "nonempty_control_table": { "check_classification": "integrity", "failure_category": "normalization_failed", "retryable": false }, "missing_or_unverified_target_proof": { "failure_category": "evidence_incomplete", "retryable": false } } } }
+  },
+  "x-freeze-blockers": [
+    "Each owner must supply unique check IDs, warning mappings and closed expected/actual schemas for its categories.",
+    "Every failed check must map to one failure category and retryability decision without duplicate phase ordinal.",
+    "A non-implementation owner must approve the shared envelope and mode/category matrix."
+  ]
+}

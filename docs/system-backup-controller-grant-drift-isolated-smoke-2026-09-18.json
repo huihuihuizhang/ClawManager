@@ -1,0 +1,41 @@
+{
+  "kind": "d_only_controller_grant_drift_isolated_smoke_observation",
+  "date": "2026-09-18",
+  "source": "user_supplied_remote_command_output",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918055411-6ebe",
+  "test_namespace_uid": "e204ed8f-e8bb-4ecf-ae20-078ffbf77836",
+  "app_image_digest": "sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image_digest": "sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "fresh_migration_replay": {
+    "range": "001..078",
+    "applied_files": 91,
+    "exact_filenames": true,
+    "d_key_column_types": ["blob", "blob", "blob", "char"]
+  },
+  "controller": {
+    "dedicated_database_user_probe": "positive_and_negative_pass",
+    "initial_replicas": 2,
+    "initial_leaders": 1,
+    "initial_standbys": 1,
+    "first_enable_once": "pass",
+    "leader_pod_deletion_failover": "pass",
+    "same_digest_rolling_restart": "both_pods_replaced",
+    "deployment_kill_switch": "disabled_after_enable",
+    "monitoring_armed_after_kill_switch": true,
+    "required_select_grant_revoked": "both_replicas_not_ready",
+    "required_select_grant_restored": "two_replicas_ready_one_leader_one_standby",
+    "installation_projection_after_grant_drift": "unchanged"
+  },
+  "result": "pass",
+  "namespace_cleanup": "confirmed_same_uid",
+  "limits": [
+    "The evidence is the user-supplied summary output; raw readiness responses, MySQL grants and controller logs were not retained.",
+    "The test used an empty task and operation set and did not run a backup or restore Job.",
+    "The grant changes affected only the run-created sbk_controller account in the throwaway MySQL Pod.",
+    "Recovery included a same-digest Deployment restart and does not establish automatic recovery without restart.",
+    "Existing-installation credentials, cross-owner permissions and version-to-version upgrade were not exercised."
+  ]
+}

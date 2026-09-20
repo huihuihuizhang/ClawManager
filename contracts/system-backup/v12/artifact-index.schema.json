@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/artifact-index.schema.json",
+  "title": "System backup public artifact index",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "backup_public_id", "attempt_no", "capture_context_hash", "entries"],
+  "properties": {
+    "schema_version": { "const": "system-backup-artifact-index.v1" },
+    "backup_public_id": { "type": "string", "pattern": "^sbk_[A-Za-z0-9_-]+$" },
+    "attempt_no": { "type": "integer", "minimum": 1 },
+    "capture_context_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "entries": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "content_role", "size", "sha256", "framing_version"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "not": { "enum": ["artifact-index.json", "manifest.json", "_COMMITTED", "_ACCEPTANCE"] }
+          },
+          "content_role": { "enum": ["encrypted_payload", "envelope", "control_evidence"] },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+          "framing_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+        }
+      }
+    }
+  },
+  "x-ordering": "entries are sorted by path using Unicode code point order",
+  "x-confidentiality": "Paths expose ciphertext object names only; source object keys and workspace paths remain inside encrypted indexes."
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "d_only_controller_enabled_preflight_observation",
+  "date": "2026-09-18",
+  "context": "kubernetes-admin@kubernetes",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "controller_binary_available": true,
+  "runtime_embedded_catalog_valid": true,
+  "expected_catalog_files": 91,
+  "expected_filenames_registered": true,
+  "schema_migrations_rows": 94,
+  "installation_state_rows": 0,
+  "active_config_rows": 0,
+  "dedicated_db_secret_exists": false,
+  "controller_deployment_exists": false,
+  "result": "blocked",
+  "blockers": [
+    "installation_state_absent",
+    "active_config_absent",
+    "dedicated_db_secret_absent"
+  ],
+  "notes": [
+    "The preflight's previous pinned image digest was stale; the script default was updated to this new immutable image digest after this observation.",
+    "Runtime catalog validation passed using a dummy password and 127.0.0.1:1 inside the app Pod. No live database connection was made by the runtime probe.",
+    "The dedicated database account and its grants were not tested. The controller was not enabled or deployed."
+  ]
+}

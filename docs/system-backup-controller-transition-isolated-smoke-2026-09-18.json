@@ -1,0 +1,44 @@
+{
+  "kind": "d_only_controller_transition_isolated_smoke_observation",
+  "date": "2026-09-18",
+  "source": "user_supplied_remote_command_output",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918031415-0ae4",
+  "test_namespace_uid": "0e8dd66d-4319-43c7-893e-ab706a64ad0d",
+  "app_image_digest": "sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image_digest": "sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "fresh_migration_replay": {
+    "range": "001..078",
+    "applied_files": 91,
+    "exact_filenames": true,
+    "d_key_column_types": ["blob", "blob", "blob", "char"]
+  },
+  "dedicated_database_user": {
+    "registered_migrations_read": "allowed",
+    "current_user": "sbk_controller",
+    "current_role": "NONE",
+    "users_select": "denied",
+    "schema_migrations_delete": "denied"
+  },
+  "controller": {
+    "initial_replicas": 2,
+    "initial_leaders": 1,
+    "initial_standbys": 1,
+    "initial_effective_enabled": false,
+    "first_enable_once": "pass",
+    "leader_pod_deletion_failover": "pass",
+    "installation_projection_after_failover": "unchanged",
+    "deployment_kill_switch": "disabled_after_enable",
+    "monitoring_armed_after_kill_switch": true
+  },
+  "result": "pass",
+  "namespace_cleanup": "confirmed_same_uid",
+  "limits": [
+    "The evidence is the user-supplied summary output; raw database rows, Lease events and controller logs were not retained.",
+    "The test used an empty task and operation set and did not run a backup or restore Job.",
+    "The disposable config row was modified in place by the test fixture; production config versioning and Admin mutation were not exercised.",
+    "Rolling restart, version-to-version upgrade and existing-installation credentials were not exercised."
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-operation-policy.schema.json",
+  "title": "System backup Admin operation policy registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "contract_version", "status", "middleware", "permissions", "built_in_roles", "operations", "error_status_map", "x-invariants", "x-freeze-blockers"],
+  "properties": {
+    "kind": { "const": "system_backup_admin_operation_policy" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "status": { "const": "draft" },
+    "middleware": {
+      "type": "array",
+      "prefixItems": [{ "const": "Auth" }, { "const": "SetUserInfo" }, { "const": "NewAdminAuth" }],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "permissions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/Permission" },
+      "uniqueItems": true
+    },
+    "built_in_roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["viewer", "operator", "config_admin", "security_admin"],
+      "properties": {
+        "viewer": { "type": "array", "items": { "$ref": "#/$defs/Permission" }, "uniqueItems": true },
+        "operator": { "type": "array", "items": { "$ref": "#/$defs/Permission" }, "uniqueItems": true },
+        "config_admin": { "type": "array", "items": { "$ref": "#/$defs/Permission" }, "uniqueItems": true },
+        "security_admin": { "type": "array", "items": { "$ref": "#/$defs/Permission" }, "uniqueItems": true }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/OperationPolicy" }
+    },
+    "error_status_map": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ErrorStatus" }
+    },
+    "x-invariants": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "x-freeze-blockers": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "$defs": {
+    "Permission": {
+      "enum": ["system_backup.read", "system_backup.operate", "system_backup.configure", "system_backup.security_configure", "system_backup.destructive"]
+    },
+    "ConditionalPermission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when", "required_permissions"],
+      "properties": {
+        "when": {
+          "enum": [
+            "evidence_classification_confidential",
+            "evidence_classification_sensitive",
+            "config_security_boundary_change",
+            "config_protection_reduction",
+            "manual_hold_set_true",
+            "manual_hold_set_false"
+          ]
+        },
+        "required_permissions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/Permission" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "OperationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "method", "path", "required_permissions", "conditional_permissions", "recent_strong_auth", "strong_auth_condition", "idempotency_required", "kill_switch", "success_http_status", "completion_mode"],
+      "properties": {
+        "operation_id": { "type": "string", "minLength": 1 },
+        "method": { "enum": ["GET", "POST", "PUT"] },
+        "path": { "type": "string", "pattern": "^/admin/system-" },
+        "required_permissions": { "type": "array", "items": { "$ref": "#/$defs/Permission" }, "uniqueItems": true },
+        "conditional_permissions": { "type": "array", "items": { "$ref": "#/$defs/ConditionalPermission" } },
+        "recent_strong_auth": { "enum": ["none", "required", "conditional"] },
+        "strong_auth_condition": {
+          "enum": [null, "always", "security_boundary_or_protection_reduction", "releases_last_recovery_point_hold"]
+        },
+        "idempotency_required": { "type": "boolean" },
+        "kill_switch": { "enum": ["allowed_when_disabled", "requires_effective_enabled"] },
+        "success_http_status": { "enum": [200, 201, 202] },
+        "completion_mode": { "enum": ["synchronous", "asynchronous"] }
+      }
+    },
+    "ErrorStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "http_status"],
+      "properties": {
+        "code": { "$ref": "admin-api-common.schema.json#/$defs/ApiErrorCode" },
+        "http_status": { "enum": [400, 401, 403, 404, 409, 410, 413, 416, 422, 429, 500, 503] }
+      }
+    }
+  },
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft"
+}

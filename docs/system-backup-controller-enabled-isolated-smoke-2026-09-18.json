@@ -1,0 +1,42 @@
+{
+  "kind": "d_only_controller_enabled_isolated_smoke_observation",
+  "date": "2026-09-18",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918025423-574a",
+  "test_namespace_uid": "70c935c5-fe1b-461d-9200-987da7a47df7",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "fresh_migration_replay": {
+    "range": "001..078",
+    "applied_files": 91,
+    "exact_filenames": true,
+    "d_key_column_types": ["blob", "blob", "blob", "char"]
+  },
+  "dedicated_database_user": {
+    "registered_migrations_read": "allowed",
+    "current_user": "sbk_controller",
+    "current_role": "NONE",
+    "users_select": "denied",
+    "schema_migrations_delete": "denied",
+    "runtime_grant_probe": "accepted"
+  },
+  "controller": {
+    "process_gate": "enabled",
+    "new_work_gate": "disabled",
+    "active_config_enabled": false,
+    "replicas": 2,
+    "leaders": 1,
+    "standbys": 1,
+    "lease_holder": "one_controller_pod",
+    "first_enabled_at": "unset"
+  },
+  "result": "pass",
+  "namespace_cleanup": "confirmed_same_uid",
+  "limits": [
+    "The test did not turn on effective backup work, run a backup or restore Job, or test first-enable CAS.",
+    "The test did not exercise leader failover or rolling upgrade.",
+    "The throwaway sbk_controller account and Secret do not establish the grants or credentials of the existing installation."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "kind": "system_backup_schema_hash_live_evidence",
+  "contract_version": "system-backup-plan.v12",
+  "status": "candidate",
+  "installation_identity_hash": "a88b9dcf73776853ff36887f705a156b3ffdf4db12ab2497c614ffa6f814079b",
+  "installation_identity_version": "k8s-namespace-uid-v1",
+  "capture_started_at": "2026-09-17T08:55:42Z",
+  "capture_finished_at": "2026-09-17T08:55:53Z",
+  "capture_method": "mysql-batch-raw-no-column-names-v1",
+  "capture_sql_sha256": "842f341e29f0b1123414328e4910a5fd350135854434db4aff8f8f2c3f6a4a38",
+  "capture_records_sha256": "64bb2218542404727552ce753cb9789e79c452c0da0ed5494b7101f4c8296c60",
+  "capture_record_count": 3090,
+  "server_context_hash": "61ed0563a7d33809ddbd0946986e3bdd3f22ad3b4863b83f2c609b1a7b75774e",
+  "inventory_snapshot_sha256": "498ba007c0ceed8dda90eb2e9327f5d09dbf29721a90fa0dc1015d023ff53abc",
+  "migration_catalog_hash": "bd2cb7414daa6740b9c452f6041a3ad59294c95cd24051bb9e41214fec44759f",
+  "result": {
+    "kind": "system_backup_schema_hash_result",
+    "contract_version": "system-backup-plan.v12",
+    "algorithm": "sha256-information-schema-canonical-v1",
+    "hash": "dc9ade79bb9a67ceb1def9aa4ca5c89da005936ae175789e9cfa91a48d476974",
+    "canonical_bytes_length": 606733,
+    "object_count": 95,
+    "object_counts": {
+      "mysql_event": 0,
+      "routine": 0,
+      "table": 95,
+      "trigger": 0,
+      "view": 0
+    }
+  },
+  "inventory_comparison": {
+    "expected_object_count": 95,
+    "observed_object_count": 95,
+    "observed_object_keys_hash": "c9b061c2cca2396560a54bfd54e3ff20b183f864779f80fdabb234f9458d0f32",
+    "missing_object_keys": [],
+    "unexpected_object_keys": [],
+    "matched": true
+  },
+  "records_cleanup": {
+    "path_hash": "6dd96c2b611ae597cbab57348c818d378f53ca26e0195444868df26acc2b819a",
+    "status": "verified",
+    "deleted_at": "2026-09-17T08:59:18.569Z",
+    "verified_absent": true
+  },
+  "registered_evidence": null,
+  "required_reviewers": [
+    "A",
+    "B",
+    "C"
+  ],
+  "approved_reviewers": []
+}

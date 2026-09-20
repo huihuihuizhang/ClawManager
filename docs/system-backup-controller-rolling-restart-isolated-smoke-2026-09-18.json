@@ -1,0 +1,39 @@
+{
+  "kind": "d_only_controller_rolling_restart_isolated_smoke_observation",
+  "date": "2026-09-18",
+  "source": "user_supplied_remote_command_output",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918032433-1a8a",
+  "test_namespace_uid": "e76d6cbd-fd35-4387-9cc9-b2171fda316b",
+  "app_image_digest": "sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image_digest": "sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "fresh_migration_replay": {
+    "range": "001..078",
+    "applied_files": 91,
+    "exact_filenames": true,
+    "d_key_column_types": ["blob", "blob", "blob", "char"]
+  },
+  "dedicated_database_user_probe": "positive_and_negative_pass",
+  "controller": {
+    "initial_replicas": 2,
+    "initial_leaders": 1,
+    "initial_standbys": 1,
+    "first_enable_once": "pass",
+    "leader_pod_deletion_failover": "pass",
+    "same_digest_rolling_restart": "both_pods_replaced",
+    "installation_projection_after_restart": "unchanged",
+    "deployment_kill_switch": "disabled_after_enable",
+    "monitoring_armed_after_kill_switch": true
+  },
+  "result": "pass",
+  "namespace_cleanup": "confirmed_same_uid",
+  "limits": [
+    "The evidence is the user-supplied summary output; raw database rows, Lease events and controller logs were not retained.",
+    "The test used an empty task and operation set and did not run a backup or restore Job.",
+    "The rolling restart used the same immutable image digest and does not establish version-to-version upgrade behavior.",
+    "The disposable config row was modified in place by the test fixture; production config versioning and Admin mutation were not exercised.",
+    "Existing-installation credentials and cross-owner integration were not exercised."
+  ]
+}

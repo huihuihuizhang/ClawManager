@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/metrics-alert-registry.schema.json",
+  "title": "System backup metrics and alert registry",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "contract_version", "status", "source", "metrics", "alerts"],
+  "properties": {
+    "registry_version": { "const": "system-backup-metrics-alerts.v1" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "status": { "enum": ["draft", "frozen"] },
+    "source": { "$ref": "#/$defs/Source" },
+    "metrics": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/Metric" } },
+    "alerts": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/Alert" } }
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan", "section", "metric_count", "alert_count"],
+      "properties": {
+        "plan": { "const": "docs/system-backup-restore-division-plan.md" },
+        "section": { "const": "15" },
+        "metric_count": { "type": "integer", "minimum": 1 },
+        "alert_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "help", "labels", "aggregation", "no_data", "buckets"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^clawmanager_system_backup_[a-z0-9_]+$" },
+        "type": { "enum": ["counter", "gauge", "histogram"] },
+        "help": { "type": "string", "minLength": 16, "maxLength": 512 },
+        "labels": { "type": "array", "maxItems": 6, "uniqueItems": true, "items": { "$ref": "#/$defs/AllowedLabel" } },
+        "aggregation": { "enum": ["sum", "max", "min", "latest_success", "boolean", "one_hot_worst_health", "one_hot_worst_capability", "observe"] },
+        "no_data": { "enum": ["zero", "timestamp_zero", "one_hot_unknown", "not_emitted"] },
+        "buckets": { "type": "array", "uniqueItems": true, "items": { "type": "number", "exclusiveMinimum": 0 } }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "histogram" } }, "required": ["type"] }, "then": { "properties": { "buckets": { "minItems": 1 } } } },
+        { "if": { "properties": { "type": { "enum": ["counter", "gauge"] } }, "required": ["type"] }, "then": { "properties": { "buckets": { "maxItems": 0 } } } }
+      ]
+    },
+    "AllowedLabel": {
+      "enum": ["operation_type", "task_type", "task_purpose", "preflight_mode", "verification_scope", "status", "metric_result", "profile", "alert_profile", "runner", "part", "provider", "provider_role", "capability", "capability_state", "matrix", "gate_state", "participant_state", "cleanup_status", "resource_lifecycle", "artifact_state", "health_state", "health_reason", "failure_category", "warning_category", "key_purpose", "catalog_record_type", "external_action_type", "external_action_state", "budget_dimension", "dependency_kind"]
+    },
+    "Alert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "expression_language", "expression", "severity", "for_seconds", "threshold_source", "dedupe_key", "recovery_condition", "missing_series", "counter_reset", "runbook", "profiles", "fixed_clock_cases"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$" },
+        "expression_language": { "enum": ["promql", "controller_state"] },
+        "expression": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "severity": { "enum": ["critical", "warning", "info"] },
+        "for_seconds": { "type": "integer", "minimum": 0 },
+        "threshold_source": { "enum": ["immutable_task_config", "current_system_config", "contract_default"] },
+        "dedupe_key": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/AllowedLabel" } },
+        "recovery_condition": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "missing_series": { "enum": ["healthy_zero", "unknown", "firing", "not_applicable"] },
+        "counter_reset": { "enum": ["not_applicable", "prometheus_increase", "persisted_state_not_reset_by_restart"] },
+        "runbook": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_./-]{0,255}$" },
+        "profiles": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["production", "development"] } },
+        "fixed_clock_cases": { "type": "array", "minItems": 2, "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/AlertFixedClockCase" } }
+      }
+    },
+    "AlertFixedClockCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case", "clock_unix_seconds", "condition_result", "condition_true_since_unix_seconds", "expected_firing"],
+      "properties": {
+        "case": { "enum": ["recovered", "before_for", "at_for"] },
+        "clock_unix_seconds": { "type": "integer", "minimum": 0 },
+        "condition_result": { "type": "boolean" },
+        "condition_true_since_unix_seconds": { "type": ["integer", "null"], "minimum": 0 },
+        "expected_firing": { "type": "boolean" }
+      }
+    }
+  },
+  "x-registry-instance": "metrics-alert-registry.json",
+  "x-metric-prefix": "clawmanager_system_backup_",
+  "x-forbidden-labels": ["operation_public_id", "task_public_id", "request_id", "uri", "object_key", "user_id", "failure_domain_id", "key_digest", "error_message"],
+  "x-aggregation-rules": {
+    "current_backlog_candidates_points_objects": "sum within the declared label set",
+    "oldest_queue_current_age": "maximum age",
+    "last_success_timestamp": "maximum successful timestamp, or zero when never successful",
+    "expiry_and_protection_margin": "minimum across active protected identities",
+    "boolean": "zero or one",
+    "health": "derive stale, then one-hot worst by degraded > stale > unknown > healthy",
+    "capability": "one-hot worst by unsupported > degraded > unknown > supported"
+  },
+  "x-alert-requirements": ["expression_language", "threshold_source", "duration", "severity", "dedupe_key", "recovery_condition", "missing_series", "counter_reset", "runbook", "profiles", "fixed_clock_cases"],
+  "x-freeze-blockers": [
+    "Parse and execute registry expressions against the production-selected PromQL and controller-state evaluator implementations; dependency installation is not performed by this draft toolchain.",
+    "Obtain A/B cross-review of the D-owned metric names, label sets, aggregation semantics and alert policy without transferring collector ownership.",
+    "Owner collectors supply observations only; they cannot add labels, metric names or alert semantics outside this registry."
+  ]
+}

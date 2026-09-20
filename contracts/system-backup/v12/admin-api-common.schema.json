@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-api-common.schema.json",
+  "title": "System backup Admin API common wire types",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "IdempotencyKey": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "RequestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "Cursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "x-max-utf8-bytes": 4096,
+      "x-opaque": true
+    },
+    "NullableCursor": {
+      "anyOf": [
+        { "$ref": "#/$defs/Cursor" },
+        { "type": "null" }
+      ]
+    },
+    "PageLimit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 50
+    },
+    "LogPageLimit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 50
+    },
+    "Location": {
+      "type": "string",
+      "pattern": "^/api/v1/admin/system-[A-Za-z0-9_./{}:-]+$",
+      "maxLength": 512
+    },
+    "RetryAfterSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "InstallationId": { "type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$" },
+    "BackupPublicId": { "type": "string", "pattern": "^sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "CatalogImportPublicId": { "type": "string", "pattern": "^sci_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "CatalogScanPublicId": { "type": "string", "pattern": "^scs_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "CatalogRecordPublicId": { "type": "string", "pattern": "^scr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "DrillPublicId": { "type": "string", "pattern": "^sdr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "PreflightPublicId": { "type": "string", "pattern": "^spf_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "ArtifactVerificationPublicId": { "type": "string", "pattern": "^sav_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "PruneRunPublicId": { "type": "string", "pattern": "^spr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "PruneItemPublicId": { "type": "string", "pattern": "^spi_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "OperationPublicId": { "type": "string", "pattern": "^sop_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "BackupStagingPublicId": { "type": "string", "pattern": "^sbs_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "RestoreResourcePublicId": { "type": "string", "pattern": "^srr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "EvidencePublicId": { "type": "string", "pattern": "^sev_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "ExternalActionPublicId": { "type": "string", "pattern": "^sxa_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "PromotionPublicId": { "type": "string", "pattern": "^spm_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "Uuid128": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "RowVersion": { "type": "integer", "minimum": 1 },
+    "ActorReason": { "type": ["string", "null"], "maxLength": 512, "x-max-utf8-bytes": 512, "x-redacted-before-persist": true },
+    "ListConsistency": {
+      "type": "string",
+      "enum": ["stable_cutoff", "eventual"],
+      "description": "stable_cutoff is valid only for immutable filters bound into the cursor; mutable status/failure filters must return eventual."
+    },
+    "ApiErrorCode": {
+      "type": "string",
+      "enum": [
+        "validation_failed",
+        "authentication_required",
+        "strong_auth_required",
+        "strong_auth_expired",
+        "strong_auth_invalid_issuer",
+        "strong_auth_invalid",
+        "strong_auth_replayed",
+        "permission_denied",
+        "not_found",
+        "unsupported_runner_p1",
+        "unsupported_profile_p1",
+        "unsupported_datasource_p1",
+        "unsupported_schema",
+        "backup_target_risk_rejected",
+        "capacity_exceeded",
+        "idempotency_conflict",
+        "conflict_active_job",
+        "artifact_conflict",
+        "catalog_conflict",
+        "confirmation_invalid",
+        "isolation_invalid",
+        "cleanup_unsafe_target",
+        "checksum_mismatch",
+        "signature_invalid",
+        "state_conflict",
+        "version_conflict",
+        "commit_started",
+        "payload_too_large",
+        "range_not_satisfiable",
+        "rate_limited",
+        "not_ready",
+        "artifact_unavailable",
+        "encryption_key_unavailable",
+        "signing_key_unavailable",
+        "finalizer_request_unavailable",
+        "catalog_unavailable",
+        "internal_error",
+        "logs_expired",
+        "idempotency_expired"
+      ]
+    },
+    "FieldViolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "reason"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_]*$" }
+      }
+    },
+    "ErrorDetails": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "reason": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-z][a-z0-9_]*$" },
+        "field_violations": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/FieldViolation" } },
+        "resource_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "original_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "expected_version": { "type": "integer", "minimum": 1 },
+        "current_version": { "type": "integer", "minimum": 1 },
+        "terminal_status": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "retry_after_seconds": { "type": "integer", "minimum": 1 }
+      },
+      "x-max-jcs-utf8-bytes": 65536,
+      "x-redacted-before-response": true
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "details", "request_id"],
+      "properties": {
+        "code": { "$ref": "#/$defs/ApiErrorCode" },
+        "message": { "type": "string", "maxLength": 2048 },
+        "details": { "$ref": "#/$defs/ErrorDetails" },
+        "request_id": { "$ref": "#/$defs/RequestId" }
+      }
+    }
+  },
+  "x-invariants": [
+    "route IDs use the exact public resource prefix plus canonical lowercase UUID and never accept database IDs",
+    "idempotency_key and request_id are handler-bounded ASCII and are never copied into Kubernetes labels",
+    "cursor binds resource type, sort key, filters, direction and limit and is rejected when any binding changes",
+    "mutable status or failure filters always return consistency=eventual",
+    "error details and message are redacted before serialization and never contain raw runner or provider errors",
+    "retryability is a task or operation field and is not duplicated in the API error envelope"
+  ]
+}

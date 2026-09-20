@@ -1,0 +1,169 @@
+# D-owned P0-0b controller skeleton. It is intentionally separate from the
+# combined installation manifests until schema/capability/cross-owner gates
+# pass. The feature gate defaults to false and this ServiceAccount can only
+# participate in its namespaced leader Lease.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: clawmanager-system-backup-controller
+  namespace: clawmanager-system
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: clawmanager-system-backup-controller-leader
+  namespace: clawmanager-system
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    resourceNames: ["clawmanager-system-backup-controller"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: clawmanager-system-backup-controller-leader
+  namespace: clawmanager-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: clawmanager-system-backup-controller-leader
+subjects:
+  - kind: ServiceAccount
+    name: clawmanager-system-backup-controller
+    namespace: clawmanager-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clawmanager-system-backup-controller
+  namespace: clawmanager-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: clawmanager-system-backup-controller
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: clawmanager-system-backup-controller
+    spec:
+      serviceAccountName: clawmanager-system-backup-controller
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: ghcr.io/yuan-lab-llm/clawmanager:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/usr/local/bin/clawreef-system-backup-controller"]
+          ports:
+            - name: health
+              containerPort: 9003
+          env:
+            # Safe default: the pod is healthy/ready but performs no DB or K8s
+            # coordination until an operator explicitly enables the gate.
+            - name: SYSTEM_BACKUP_CONTROLLER_ENABLED
+              value: "false"
+            # New-work kill switch. Deadline-only reconciliation remains active
+            # when the controller process is enabled and this value is false.
+            - name: SYSTEM_BACKUP_ENABLED
+              value: "false"
+            - name: SYSTEM_BACKUP_REQUIRED
+              value: "false"
+            - name: SYSTEM_BACKUP_CONTROLLER_HEALTH_ADDRESS
+              value: ":9003"
+            - name: SYSTEM_BACKUP_CONTROLLER_LEADER_LEASE_NAME
+              value: "clawmanager-system-backup-controller"
+            # Must be replaced with the stable installation identity already
+            # present in system_backup_installation_state before enabling.
+            - name: SYSTEM_BACKUP_ORIGIN_INSTALLATION_ID
+              value: ""
+            - name: SYSTEM_BACKUP_CONTROLLER_BOOTSTRAP_INTERVAL
+              value: "10s"
+            - name: SYSTEM_BACKUP_CONTROLLER_SWEEP_LIMIT
+              value: "100"
+            - name: CLAWMANAGER_LEADER_ELECTION
+              value: "true"
+            - name: CLAWMANAGER_LEADER_LEASE_DURATION
+              value: "15"
+            - name: CLAWMANAGER_LEADER_RENEW_DEADLINE
+              value: "10"
+            - name: CLAWMANAGER_LEADER_RETRY_PERIOD
+              value: "2"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_MODE
+              value: "incluster"
+            - name: DB_HOST
+              value: "mysql"
+            - name: DB_PORT
+              value: "3306"
+            # The dedicated DB user and Secret must be provisioned separately
+            # before enabling. With the gate off, the optional Secret may be
+            # absent; with the gate on, startup rejects missing credentials.
+            # The direct-grant matrix is in database_grants.go.
+            - name: DB_USER
+              value: "sbk_controller"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clawmanager-system-backup-controller-db
+                  key: password
+                  optional: true
+            - name: DB_NAME
+              value: "clawmanager"
+            - name: DB_MAX_OPEN_CONNS
+              value: "5"
+            - name: DB_MAX_IDLE_CONNS
+              value: "2"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 2
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      # 30s worker stop timeout + 5s health-server shutdown + scheduling margin.
+      terminationGracePeriodSeconds: 45

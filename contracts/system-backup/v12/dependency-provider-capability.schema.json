@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dependency-provider-capability.schema.json",
+  "title": "System backup D-owned dependency health and provider capability projections",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_id", "sha256"],
+      "properties": {
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "NullableEvidenceReference": { "anyOf": [{ "$ref": "#/$defs/EvidenceReference" }, { "type": "null" }] },
+    "OwnerTargetReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner_target_type", "owner_target_public_id"],
+      "properties": {
+        "owner_target_type": { "type": "string", "enum": ["backup", "catalog_import", "promotion", "system"] },
+        "owner_target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "allOf": [
+        { "if": { "properties": { "owner_target_type": { "const": "backup" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "catalog_import" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "promotion" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "system" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$" } } } }
+      ]
+    },
+    "DependencyKind": { "type": "string", "enum": ["artifact_credential", "ca", "kek", "signing", "catalog", "evidence", "attestation"] },
+    "ObservedHealth": { "type": "string", "enum": ["healthy", "degraded", "unknown"] },
+    "EffectiveHealth": { "type": "string", "enum": ["healthy", "degraded", "unknown", "stale"] },
+    "HealthReason": {
+      "type": "string",
+      "enum": ["none", "provider_unavailable", "credential_unavailable", "ca_unavailable", "kek_unavailable", "signing_key_unavailable", "signature_invalid", "key_compromised", "acceptance_invalid", "catalog_unavailable", "evidence_unavailable", "attestation_invalid", "attestation_expired", "artifact_corrupt", "catalog_tombstoned", "delete_failed", "cleanup_residual_data", "finalization_pending", "verification_inconclusive"]
+    },
+    "DependencyHealthRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "dependency_kind", "identity_hash", "identity_version", "owner", "observed_health", "health_reason", "observed_immutable_version", "observed_checksum", "checked_at", "expires_at", "protected_until", "evidence", "row_version", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-dependency-health.v1" },
+        "dependency_kind": { "$ref": "#/$defs/DependencyKind" },
+        "identity_hash": { "$ref": "#/$defs/Sha256" },
+        "identity_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "owner": { "$ref": "#/$defs/OwnerTargetReference" },
+        "observed_health": { "$ref": "#/$defs/ObservedHealth" },
+        "health_reason": { "$ref": "#/$defs/HealthReason" },
+        "observed_immutable_version": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
+        "observed_checksum": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "protected_until": { "type": ["string", "null"], "format": "date-time" },
+        "evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "observed_health": { "const": "healthy" } }, "required": ["observed_health"] }, "then": { "properties": { "health_reason": { "const": "none" } } }, "else": { "not": { "properties": { "health_reason": { "const": "none" } }, "required": ["health_reason"] } } },
+        { "if": { "properties": { "observed_immutable_version": { "type": "null" } }, "required": ["observed_immutable_version"] }, "then": { "properties": { "observed_checksum": { "type": "null" } } }, "else": { "properties": { "observed_checksum": { "$ref": "#/$defs/Sha256" } } } }
+      ],
+      "x-unique-key": ["dependency_kind", "identity_hash", "identity_version", "owner.owner_target_type", "owner.owner_target_public_id"],
+      "x-invariants": [
+        "expires_at is later than checked_at and is computed from the authoritative observation validity window",
+        "protected_until is nullable only when no artifact, catalog import or active promotion protects this exact identity",
+        "rows update only by row-version CAS; a missing, conflicting or expired row never derives healthy"
+      ]
+    },
+    "DependencyHealthProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record", "evaluated_at", "effective_health"],
+      "properties": {
+        "record": { "$ref": "#/$defs/DependencyHealthRecord" },
+        "evaluated_at": { "type": "string", "format": "date-time" },
+        "effective_health": { "$ref": "#/$defs/EffectiveHealth" }
+      },
+      "x-derived-rule": "effective_health is stale iff database evaluated_at is at or after expires_at; otherwise it equals observed_health"
+    },
+    "ProviderRole": { "type": "string", "enum": ["artifact", "catalog", "evidence"] },
+    "ArtifactCapabilityCode": { "type": "string", "enum": ["conditional_create", "checksum_bound_request", "scoped_upload_credential", "scoped_read_credential", "scoped_delete_credential", "multipart_resume", "object_checksum", "version_listing", "delete_marker_listing", "strong_read_after_write", "tls_verified"] },
+    "CatalogCapabilityCode": { "type": "string", "enum": ["conditional_create", "checksum_bound_request", "scoped_read_credential", "scoped_append_credential", "strong_read_after_write", "provider_snapshot_listing", "inventory_manifest_listing", "versioned_absence_proof", "tls_verified"] },
+    "EvidenceCapabilityCode": { "type": "string", "enum": ["conditional_create", "checksum_bound_request", "scoped_read_credential", "scoped_write_credential", "scoped_delete_credential", "object_checksum", "strong_read_after_write", "versioned_absence_proof", "tls_verified"] },
+    "CapabilityCode": {
+      "type": "string",
+      "enum": ["conditional_create", "checksum_bound_request", "scoped_upload_credential", "scoped_read_credential", "scoped_delete_credential", "multipart_resume", "object_checksum", "version_listing", "delete_marker_listing", "strong_read_after_write", "tls_verified", "scoped_append_credential", "provider_snapshot_listing", "inventory_manifest_listing", "versioned_absence_proof", "scoped_write_credential"]
+    },
+    "CapabilityStatus": { "type": "string", "enum": ["supported", "degraded", "unsupported"] },
+    "EffectiveCapabilityState": { "type": "string", "enum": ["supported", "degraded", "unsupported", "unknown"] },
+    "CapabilityReasonCode": { "type": "string", "enum": ["none", "probe_failed", "provider_unavailable", "credential_unavailable", "permission_denied", "unsupported_api", "response_invalid", "version_drift", "internal"] },
+    "EffectiveCapabilityReasonCode": { "type": "string", "enum": ["none", "missing", "expired", "probe_failed", "provider_unavailable", "credential_unavailable", "permission_denied", "unsupported_api", "response_invalid", "version_drift", "internal"] },
+    "ProviderCapabilityRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "provider_role", "provider_identity_hash", "provider_ref_version", "capability_code", "status", "capability_reason_code", "observed_provider_version", "checked_at", "expires_at", "evidence", "claim_owner", "claim_expires_at", "next_reconcile_at", "row_version", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-provider-capability.v1" },
+        "provider_role": { "$ref": "#/$defs/ProviderRole" },
+        "provider_identity_hash": { "$ref": "#/$defs/Sha256" },
+        "provider_ref_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "capability_code": { "$ref": "#/$defs/CapabilityCode" },
+        "status": { "$ref": "#/$defs/CapabilityStatus" },
+        "capability_reason_code": { "$ref": "#/$defs/CapabilityReasonCode" },
+        "observed_provider_version": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "claim_owner": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+        "claim_expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "next_reconcile_at": { "type": "string", "format": "date-time" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "provider_role": { "const": "artifact" } }, "required": ["provider_role"] }, "then": { "properties": { "capability_code": { "$ref": "#/$defs/ArtifactCapabilityCode" } } } },
+        { "if": { "properties": { "provider_role": { "const": "catalog" } }, "required": ["provider_role"] }, "then": { "properties": { "capability_code": { "$ref": "#/$defs/CatalogCapabilityCode" } } } },
+        { "if": { "properties": { "provider_role": { "const": "evidence" } }, "required": ["provider_role"] }, "then": { "properties": { "capability_code": { "$ref": "#/$defs/EvidenceCapabilityCode" } } } },
+        { "if": { "properties": { "status": { "const": "supported" } }, "required": ["status"] }, "then": { "properties": { "capability_reason_code": { "const": "none" } } }, "else": { "not": { "properties": { "capability_reason_code": { "const": "none" } }, "required": ["capability_reason_code"] } } },
+        { "if": { "properties": { "claim_owner": { "type": "null" } }, "required": ["claim_owner"] }, "then": { "properties": { "claim_expires_at": { "type": "null" } } }, "else": { "properties": { "claim_expires_at": { "type": "string", "format": "date-time" } } } }
+      ],
+      "x-unique-key": ["provider_role", "provider_identity_hash", "provider_ref_version", "capability_code"],
+      "x-invariants": [
+        "expires_at is the minimum of checked_at plus artifact_health_interval and any finite probe credential or CA validity",
+        "supported is produced only by a complete positive probe; deterministic API or version absence is unsupported; temporary probe failures are degraded",
+        "rows update only by row-version CAS and claim ownership never changes capability status without a completed probe"
+      ]
+    },
+    "ProviderCapabilityProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_role", "provider_identity_hash", "provider_ref_version", "capability_code", "record", "evaluated_at", "effective_state", "effective_reason_code"],
+      "properties": {
+        "provider_role": { "$ref": "#/$defs/ProviderRole" },
+        "provider_identity_hash": { "$ref": "#/$defs/Sha256" },
+        "provider_ref_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "capability_code": { "$ref": "#/$defs/CapabilityCode" },
+        "record": { "anyOf": [{ "$ref": "#/$defs/ProviderCapabilityRecord" }, { "type": "null" }] },
+        "evaluated_at": { "type": "string", "format": "date-time" },
+        "effective_state": { "$ref": "#/$defs/EffectiveCapabilityState" },
+        "effective_reason_code": { "$ref": "#/$defs/EffectiveCapabilityReasonCode" }
+      },
+      "allOf": [
+        { "if": { "properties": { "effective_state": { "const": "supported" } }, "required": ["effective_state"] }, "then": { "properties": { "effective_reason_code": { "const": "none" }, "record": { "$ref": "#/$defs/ProviderCapabilityRecord" } } }, "else": { "not": { "properties": { "effective_reason_code": { "const": "none" } }, "required": ["effective_reason_code"] } } },
+        { "if": { "properties": { "record": { "type": "null" } }, "required": ["record"] }, "then": { "properties": { "effective_state": { "const": "unknown" }, "effective_reason_code": { "const": "missing" } } } }
+      ],
+      "x-derived-rule": "an exact unexpired record reuses status and reason; a missing record or an identity/ref mismatch is unknown/missing; an expired record is unknown/expired"
+    }
+  },
+  "x-capability-groups": {
+    "absence_proof_any_of": ["strong_read_after_write", "versioned_absence_proof"],
+    "full_discovery_any_of": ["provider_snapshot_listing", "inventory_manifest_listing"]
+  },
+  "x-owner-boundaries": {
+    "A": "audit and security assessment content remains registered evidence; this schema stores only typed evidence identity and checksum",
+    "B": "restore target and workload health checks are not defined here; B may submit bounded observations through the frozen verifier boundary",
+    "C": "provider adapters and probe implementations remain C-owned; D persists exact-ref results and derives expiry without inventing probe success"
+  }
+}

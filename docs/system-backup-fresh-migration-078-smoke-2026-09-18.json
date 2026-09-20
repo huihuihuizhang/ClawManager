@@ -1,0 +1,21 @@
+{
+  "kind": "d_only_fresh_migration_smoke_observation",
+  "date": "2026-09-18",
+  "context": "kubernetes-admin@kubernetes",
+  "source_namespace": "clawmanager-zhanghui08-system",
+  "test_namespace": "sbk-mig-260918023925-2e52",
+  "test_namespace_uid": "c07a13df-7fb3-4502-9ffa-b36922ac331f",
+  "app_image": "10.130.14.23:5000/clawmanager@sha256:4f8ed9600eff963103feec1fcc23f37397ef48ce3961e7542c41e4e0faed7cdd",
+  "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "mysql_version": "8.4.8",
+  "migration_range": "001..078",
+  "applied_migration_files": 91,
+  "exact_migration_filenames": true,
+  "d_key_column_types": ["blob", "blob", "blob", "char"],
+  "result": "pass",
+  "namespace_cleanup": "confirmed_same_uid",
+  "limits": [
+    "This does not prove enabled controller bootstrap, dedicated database grants, leader election, or restore job execution.",
+    "This does not replace the live installation's schema-hash review or A/B/C approvals."
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema-hash-observation.schema.json",
+  "title": "System backup information_schema observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "contract_version", "algorithm", "server_version", "sql_mode", "objects"],
+  "properties": {
+    "kind": { "const": "system_backup_information_schema_observation" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "algorithm": { "const": "sha256-information-schema-canonical-v1" },
+    "server_version": { "type": ["string", "null"], "minLength": 1 },
+    "sql_mode": { "type": ["string", "null"] },
+    "objects": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/Table" },
+          { "$ref": "#/$defs/NonTable" }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "NullableString": { "type": ["string", "null"] },
+    "Column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ordinal_position", "normalized_type", "nullable", "default", "character_set", "collation", "extra", "generation_expression"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "ordinal_position": { "type": "integer", "minimum": 1 },
+        "normalized_type": { "type": "string", "minLength": 1 },
+        "nullable": { "type": "boolean" },
+        "default": { "$ref": "#/$defs/NullableString" },
+        "character_set": { "$ref": "#/$defs/NullableString" },
+        "collation": { "$ref": "#/$defs/NullableString" },
+        "extra": { "type": "string" },
+        "generation_expression": { "$ref": "#/$defs/NullableString" }
+      }
+    },
+    "IndexColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal_position", "column_name", "expression", "prefix_length", "sort_direction"],
+      "properties": {
+        "ordinal_position": { "type": "integer", "minimum": 1 },
+        "column_name": { "$ref": "#/$defs/NullableString" },
+        "expression": { "$ref": "#/$defs/NullableString" },
+        "prefix_length": { "type": ["integer", "null"], "minimum": 1 },
+        "sort_direction": { "enum": ["asc", "desc", null] }
+      },
+      "oneOf": [
+        { "properties": { "column_name": { "type": "string" }, "expression": { "type": "null" } } },
+        { "properties": { "column_name": { "type": "null" }, "expression": { "type": "string" } } }
+      ]
+    },
+    "Index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "index_type", "visible", "columns"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["primary", "unique", "ordinary"] },
+        "index_type": { "type": "string", "minLength": 1 },
+        "visible": { "type": ["boolean", "null"] },
+        "columns": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/IndexColumn" } }
+      }
+    },
+    "ForeignKeyColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal_position", "column_name", "referenced_column_name"],
+      "properties": {
+        "ordinal_position": { "type": "integer", "minimum": 1 },
+        "column_name": { "type": "string", "minLength": 1 },
+        "referenced_column_name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ForeignKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "referenced_table_name", "update_rule", "delete_rule", "match_option", "columns"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "referenced_table_name": { "type": "string", "minLength": 1 },
+        "update_rule": { "type": "string", "minLength": 1 },
+        "delete_rule": { "type": "string", "minLength": 1 },
+        "match_option": { "type": "string", "minLength": 1 },
+        "columns": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ForeignKeyColumn" } }
+      }
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_type", "name", "columns", "indexes", "foreign_keys"],
+      "properties": {
+        "object_type": { "const": "table" },
+        "name": { "type": "string", "minLength": 1 },
+        "columns": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Column" } },
+        "indexes": { "type": "array", "items": { "$ref": "#/$defs/Index" } },
+        "foreign_keys": { "type": "array", "items": { "$ref": "#/$defs/ForeignKey" } }
+      }
+    },
+    "NonTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_type", "name", "definition"],
+      "properties": {
+        "object_type": { "enum": ["view", "trigger", "routine", "mysql_event"] },
+        "name": { "type": "string", "minLength": 1 },
+        "definition": { "type": "string" }
+      }
+    }
+  },
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "x-canonicalization": {
+    "root": "hash the UTF-8 bytes of canonical JSON containing exactly algorithm and sorted objects",
+    "object_order": "object_type then name, compared by Unicode code point",
+    "table_order": "columns by ordinal_position; indexes and foreign keys by name; nested columns by ordinal_position",
+    "non_table_definition": "normalize CRLF and bare CR to LF, then store SHA-256 lowercase hex; do not otherwise rewrite definition bytes",
+    "server_context": "server_version and sql_mode are copied into each non-table canonical record and omitted from table records"
+  },
+  "x-validation-invariants": [
+    "object type plus name is unique",
+    "column and nested ordinal positions are unique and contiguous from 1",
+    "table column names, index names and foreign-key names are unique within their parent",
+    "PRIMARY is the only valid name for a primary index",
+    "non-table observations require non-null server_version and sql_mode",
+    "database/schema name, capture time, credentials and business rows are outside the hash"
+  ]
+}

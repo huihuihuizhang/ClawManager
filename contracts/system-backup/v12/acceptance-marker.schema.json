@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/acceptance-marker.schema.json",
+  "title": "System backup signed _ACCEPTANCE record",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payload", "signature"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "backup_public_id", "attempt_no", "manifest_checksum", "marker_checksum", "staging_cleanup_evidence_id", "staging_cleanup_evidence_hash", "local_acceptance", "local_reason_codes", "local_reason_codes_hash", "decision_at", "config_version", "signing_key"],
+      "properties": {
+        "schema_version": { "const": "system-backup-acceptance.v1" },
+        "backup_public_id": { "type": "string", "pattern": "^sbk_[A-Za-z0-9_-]+$" },
+        "attempt_no": { "type": "integer", "minimum": 1 },
+        "manifest_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "marker_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "staging_cleanup_evidence_id": { "type": "string", "pattern": "^sev_[A-Za-z0-9_-]+$" },
+        "staging_cleanup_evidence_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "local_acceptance": { "type": "boolean" },
+        "local_reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["eligible", "consistency_not_strong", "disqualifying_warning", "target_not_external", "target_risk", "attestation_invalid", "kek_not_recoverable"] }
+        },
+        "local_reason_codes_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "decision_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+        "config_version": { "type": "integer", "minimum": 1 },
+        "signing_key": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["purpose", "key_id", "key_version"],
+          "properties": {
+            "purpose": { "const": "acceptance_record" },
+            "key_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "key_version": { "type": "string", "minLength": 1, "maxLength": 128 }
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "local_acceptance": { "const": true } }, "required": ["local_acceptance"] }, "then": { "properties": { "local_reason_codes": { "const": ["eligible"] } } } },
+        { "if": { "properties": { "local_acceptance": { "const": false } }, "required": ["local_acceptance"] }, "then": { "properties": { "local_reason_codes": { "not": { "contains": { "const": "eligible" } } } } } }
+      ]
+    },
+    "signature": {
+      "allOf": [
+        { "$ref": "artifact-common.schema.json#/$defs/Signature" },
+        { "properties": { "key_purpose": { "const": "acceptance_record" } } }
+      ]
+    }
+  },
+  "x-canonicalization": "Signature input is UTF-8 JCS(payload); signature is excluded. Object checksum is SHA-256 of UTF-8 JCS({payload,signature}).",
+  "x-ordering": "local_reason_codes are sorted by Unicode code point order before hashing and signing.",
+  "x-forbidden-local-reasons": ["task_not_succeeded", "artifact_not_committed", "required_part_failed", "required_verifier_failed", "staging_cleanup_failed", "catalog_unavailable", "manifest_drift", "isolation_invalid", "evidence_incomplete"]
+}

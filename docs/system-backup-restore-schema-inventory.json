@@ -1,0 +1,1434 @@
+{
+  "kind": "ownership_inventory_only",
+  "plan_version": "system-backup-plan.v12",
+  "plan_source": "docs/system-backup-restore-division-plan.md",
+  "summary": {
+    "plan_business_tables": 94,
+    "plan_control_tables": 32,
+    "plan_control_without_inventory": 3,
+    "inventoried_objects": 95,
+    "migration_objects": 91,
+    "without_migration": 3,
+    "unassigned": 0,
+    "repository_runtime_create": 9,
+    "repository_runtime_alter": 3,
+    "deployment_bootstrap_create": 22
+  },
+  "gaps": {
+    "plan_control_without_inventory": [
+      "system_backup_catalog_imports",
+      "system_backup_catalog_records",
+      "system_backup_catalog_scan_states"
+    ],
+    "without_migration": [
+      "chat_messages",
+      "chat_sessions",
+      "risk_rules"
+    ],
+    "unassigned": [],
+    "repository_runtime_create": [
+      "audit_events",
+      "chat_messages",
+      "chat_sessions",
+      "cost_records",
+      "enterprise_auth_settings",
+      "llm_models",
+      "model_invocations",
+      "risk_hits",
+      "risk_rules"
+    ],
+    "repository_runtime_alter": [
+      "enterprise_auth_settings",
+      "llm_models",
+      "model_invocations"
+    ],
+    "deployment_bootstrap_create": [
+      "backup_schedules",
+      "backups",
+      "instance_agents",
+      "instance_commands",
+      "instance_config_revisions",
+      "instance_desired_state",
+      "instance_runtime_status",
+      "instance_skills",
+      "instance_usage",
+      "instances",
+      "openclaw_config_bundle_items",
+      "openclaw_config_bundle_skills",
+      "openclaw_config_bundles",
+      "openclaw_config_resources",
+      "openclaw_injection_snapshots",
+      "persistent_volumes",
+      "skill_blobs",
+      "skill_scan_results",
+      "skill_versions",
+      "skills",
+      "user_quotas",
+      "users"
+    ]
+  },
+  "objects": [
+    {
+      "object_type": "table",
+      "name": "audit_events",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/028_add_ai_gateway_runtime_attribution.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/audit_event_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "audit_logs",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "backup_schedules",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "backups",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "chat_messages",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [],
+      "repository_create_sources": [
+        "backend/internal/repository/chat_message_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "chat_sessions",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [],
+      "repository_create_sources": [
+        "backend/internal/repository/chat_session_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "cost_records",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/028_add_ai_gateway_runtime_attribution.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/cost_record_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "custom_team_templates",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/046_add_custom_team_templates.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "egress_private_exceptions",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/044_add_egress_private_exceptions.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "enterprise_auth_settings",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/050_add_enterprise_auth_settings.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/enterprise_auth_setting_repository.go"
+      ],
+      "repository_alter_sources": [
+        "backend/internal/repository/enterprise_auth_setting_repository.go"
+      ],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_agents",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/007_add_instance_agent_control_plane.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_commands",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/007_add_instance_agent_control_plane.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_config_revisions",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/007_add_instance_agent_control_plane.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_desired_state",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/007_add_instance_agent_control_plane.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_external_access",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/027_add_instance_external_access.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_gateway_token_aliases",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/038_add_instance_gateway_token_aliases.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_runtime_bindings",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_runtime_status",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/007_add_instance_agent_control_plane.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_skills",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/008_add_skill_management.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instance_usage",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "instances",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "llm_models",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/045_add_llm_model_reasoning_control.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/llm_model_repository.go"
+      ],
+      "repository_alter_sources": [
+        "backend/internal/repository/llm_model_repository.go"
+      ],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "model_invocations",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/028_add_ai_gateway_runtime_attribution.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/model_invocation_repository.go"
+      ],
+      "repository_alter_sources": [
+        "backend/internal/repository/model_invocation_repository.go"
+      ],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_admin_settings",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/057_add_northbound_admin_settings.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_auth_challenges",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/045_add_northbound_api.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_caller_policies",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/057_add_northbound_admin_settings.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_operations",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/045_add_northbound_api.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_sessions",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/045_add_northbound_api.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_settings_audit",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/057_add_northbound_admin_settings.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "openclaw_config_bundle_items",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/006_add_openclaw_config_center.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "openclaw_config_bundle_skills",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/022_add_openclaw_config_bundle_skills.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "openclaw_config_bundles",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/006_add_openclaw_config_center.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "openclaw_config_resources",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/006_add_openclaw_config_center.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "openclaw_injection_snapshots",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/006_add_openclaw_config_center.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "persistent_volumes",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "risk_hits",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [
+        "backend/internal/db/migrations/028_add_ai_gateway_runtime_attribution.sql"
+      ],
+      "repository_create_sources": [
+        "backend/internal/repository/risk_hit_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "risk_rules",
+      "owner": "A",
+      "category": "ai_gateway",
+      "migration_sources": [],
+      "repository_create_sources": [
+        "backend/internal/repository/risk_rule_repository.go"
+      ],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "runtime_pods",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "runtime_rollouts",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "runtime_upgrade_audits",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/058_add_openclaw_runtime_upgrade_safety.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "runtime_upgrade_items",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/058_add_openclaw_runtime_upgrade_safety.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "schema_migrations",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": "migration_runner_bookkeeping"
+    },
+    {
+      "object_type": "table",
+      "name": "security_scan_configs",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/063_add_security_scan_tables.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "security_scan_job_items",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/063_add_security_scan_tables.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "security_scan_jobs",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/063_add_security_scan_tables.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "security_scan_reports",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/063_add_security_scan_tables.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_blobs",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/008_add_skill_management.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_hub_tag_assignments",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_skill_hub.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_hub_tags",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_skill_hub.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_package_materialize_jobs",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/039_add_skill_package_materialize.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_scan_results",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/008_add_skill_management.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skill_versions",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/008_add_skill_management.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "skills",
+      "owner": "C",
+      "category": "skill_hub",
+      "migration_sources": [
+        "backend/internal/db/migrations/008_add_skill_management.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_artifact_lease_states",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_artifact_leases",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_alert_states",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_artifact_verifications",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_attempts",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_check_results",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/072_add_system_backup_check_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_compact_tombstones",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_configs",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_dependency_health",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_events",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_evidence",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_evidence_chunks",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_external_actions",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/071_add_system_backup_external_action_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_installation_state",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_job_observations",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/076_add_system_backup_job_observations.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_log_chunks",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_operations",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_preflights",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_promotions",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/069_add_system_backup_promotion_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_provider_capabilities",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_prune_items",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/070_add_system_backup_prune_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_prune_runs",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/070_add_system_backup_prune_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_source_writer_check_states",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/072_add_system_backup_check_authority.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_staging_resources",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/073_add_system_backup_staging_resources.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_strong_auth_nonces",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/075_add_system_backup_strong_auth_nonces.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backups",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_image_settings",
+      "owner": "D",
+      "category": "resources",
+      "migration_sources": [
+        "backend/internal/db/migrations/003_add_system_image_settings.sql",
+        "backend/internal/db/migrations/064_reconcile_system_image_settings_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_maintenance_locks",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_maintenance_mutation_leases",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_maintenance_participants",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/074_add_system_maintenance_participants.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_restore_drill_resources",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/077_add_system_restore_drill_resources.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_restore_drills",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_event_outbox",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/036_add_team_event_outbox.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_events",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/014_add_team_mvp.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_members",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/014_add_team_mvp.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_tasks",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/014_add_team_mvp.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_work_items",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/035_harden_team_event_protocol.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "team_workflow_phases",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/037_add_team_workflow_ledger.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "teams",
+      "owner": "C",
+      "category": "teams",
+      "migration_sources": [
+        "backend/internal/db/migrations/014_add_team_mvp.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "user_quotas",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "users",
+      "owner": "A",
+      "category": "users",
+      "migration_sources": [
+        "backend/internal/db/migrations/001_init_schema.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [
+        "deployments/k3s/cluster/clawmanager.yaml",
+        "deployments/k3s/single-node/clawmanager.yaml",
+        "deployments/k8s/cluster/clawmanager.yaml",
+        "deployments/k8s/single-node/clawmanager.yaml"
+      ],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "workspace_file_audits",
+      "owner": "B",
+      "category": "instances",
+      "migration_sources": [
+        "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    }
+  ]
+}

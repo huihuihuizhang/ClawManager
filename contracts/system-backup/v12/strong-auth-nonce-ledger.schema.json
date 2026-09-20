@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/strong-auth-nonce-ledger.schema.json",
+  "title": "D-owned consumed strong-auth nonce ledger",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "origin_installation_id", "issuer_sha256", "subject_sha256", "session_sha256", "nonce_hmac", "nonce_hmac_key_version", "endpoint", "request_hash", "idempotency_key", "authenticated_at", "expires_at", "consumed_at", "operation_public_id", "response_sha256", "audit_log_id", "retain_until", "created_at"],
+  "properties": {
+    "schema_version": { "const": "system-backup-strong-auth-nonce.v1" },
+    "origin_installation_id": { "type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$" },
+    "issuer_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "subject_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "session_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "nonce_hmac": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "nonce_hmac_key_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "endpoint": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]{0,127}$", "description": "OpenAPI operation ID, never the raw URL." },
+    "request_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "idempotency_key": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{16,128}$" },
+    "authenticated_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp", "description": "Server-side proof acceptance time, not a client-provided issued-at value." },
+    "expires_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "consumed_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "operation_public_id": { "type": ["string", "null"], "pattern": "^sop_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "response_sha256": { "oneOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] },
+    "audit_log_id": { "type": "integer", "minimum": 1 },
+    "retain_until": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "created_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" }
+  },
+  "oneOf": [
+    { "properties": { "operation_public_id": { "type": "string" }, "response_sha256": { "type": "null" } } },
+    { "properties": { "operation_public_id": { "type": "null" }, "response_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" } } }
+  ],
+  "x-consumption-rule": "Insert the consumed nonce with the target mutation or immutable failed response and the audit intent in one database transaction; pre-transaction auth, validation and readiness failures create no row.",
+  "x-replay-rule": "A-owned proof verifier must compute and check the nonce HMAC under every retained historical key version before consuming; the unique (nonce_hmac, nonce_hmac_key_version) key is only the per-version database guard.",
+  "x-retention-rule": "retain_until must cover control metadata retention, and historical HMAC key material remains available until the last row using its version passes retention.",
+  "x-pending-owner-contract": "A-owned strong_auth_proof_nonce wire schema, issuer rules and cross-version verifier are still missing; this ledger does not define or approve them.",
+  "x-forbidden-fields": ["proof", "raw_nonce", "nonce_key_material", "credential", "session_token", "raw_subject"]
+}

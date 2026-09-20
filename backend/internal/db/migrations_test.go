@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -661,6 +662,546 @@ func TestMigration050IncludesLDAPTLSCertificateSettings(t *testing.T) {
 	} {
 		if !strings.Contains(sql, required) {
 			t.Fatalf("migration 050 must contain %s", required)
+		}
+	}
+}
+
+func TestMigration063CreatesSecurityScanSchema(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/063_add_security_scan_tables.sql")
+	if err != nil {
+		t.Fatalf("read migration 063: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 4 {
+		t.Fatalf("migration 063 must contain exactly four statements, got %d", len(statements))
+	}
+
+	tables := []string{
+		"security_scan_configs",
+		"security_scan_jobs",
+		"security_scan_job_items",
+		"security_scan_reports",
+	}
+	for i, table := range tables {
+		if !strings.Contains(statements[i], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 063 statement %d must create %s idempotently", i+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"quick_analyzers_json LONGTEXT NOT NULL",
+		"deep_analyzers_json LONGTEXT NOT NULL",
+		"idx_security_scan_jobs_status (status, created_at)",
+		"idx_security_scan_jobs_asset_type (asset_type, created_at)",
+		"FOREIGN KEY (job_id) REFERENCES security_scan_jobs(id) ON DELETE CASCADE",
+		"uk_security_scan_job_items_job_asset (job_id, asset_type, asset_id)",
+		"idx_security_scan_job_items_job (job_id, status)",
+		"uk_security_scan_reports_job (job_id)",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 063 missing %q", required)
+		}
+	}
+
+	if got := strings.Count(sql, "FOREIGN KEY (job_id) REFERENCES security_scan_jobs(id) ON DELETE CASCADE"); got != 2 {
+		t.Fatalf("migration 063 must define exactly two cascading job foreign keys, got %d", got)
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 063 must preserve existing security scan data; found %q", destructive)
+		}
+	}
+}
+
+func TestMigration064OwnsSystemImageSettingsSchema(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/064_reconcile_system_image_settings_schema.sql")
+	if err != nil {
+		t.Fatalf("read migration 064: %v", err)
+	}
+
+	sql := string(raw)
+	for _, required := range []string{
+		"CREATE TABLE IF NOT EXISTS system_image_settings",
+		"runtime_type ENUM('desktop', 'shell', 'gateway') NOT NULL DEFAULT 'desktop'",
+		"runtime_variant VARCHAR(32) NOT NULL DEFAULT ''",
+		"is_enabled BOOLEAN NOT NULL DEFAULT TRUE",
+		"information_schema.COLUMNS",
+		"ALTER TABLE system_image_settings ADD COLUMN runtime_type",
+		"ALTER TABLE system_image_settings ADD COLUMN runtime_variant",
+		"ALTER TABLE system_image_settings ADD COLUMN is_enabled",
+		"MODIFY COLUMN runtime_type ENUM('desktop', 'shell', 'gateway')",
+		"HAVING COUNT(*) = 1",
+		"SUM(COLUMN_NAME = 'instance_type') = 1",
+		"ALTER TABLE system_image_settings DROP INDEX",
+		"CREATE INDEX idx_instance_type ON system_image_settings (instance_type)",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 064 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 064 must preserve system image rows; found %q", destructive)
+		}
+	}
+}
+
+func TestMigration065CreatesSystemBackupControlMetadataCore(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/065_add_system_backup_control_metadata_core.sql")
+	if err != nil {
+		t.Fatalf("read migration 065: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	tables := []string{
+		"system_backup_installation_state",
+		"system_backup_evidence",
+		"system_backup_evidence_chunks",
+		"system_backup_log_chunks",
+		"system_backup_dependency_health",
+		"system_backup_provider_capabilities",
+		"system_backup_compact_tombstones",
+	}
+	if len(statements) != len(tables) {
+		t.Fatalf("migration 065 must contain exactly %d statements, got %d", len(tables), len(statements))
+	}
+	for i, table := range tables {
+		if !strings.Contains(statements[i], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 065 statement %d must create %s idempotently", i+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_installation_origin (origin_installation_id)",
+		"CONSTRAINT chk_sb_installation_monitoring CHECK",
+		"UNIQUE KEY uk_sb_evidence_public_id (public_id)",
+		"UNIQUE KEY uk_sb_evidence_public_owner_type (public_id, owner_target_public_id, evidence_type)",
+		"CONSTRAINT chk_sb_evidence_owner_id CHECK",
+		"CONSTRAINT chk_sb_evidence_failure CHECK",
+		"CONSTRAINT chk_sb_evidence_storage CHECK",
+		"CONSTRAINT chk_sb_evidence_encryption CHECK",
+		"content_size_bytes <= 1073741824",
+		"UNIQUE KEY uk_sb_evidence_chunk (evidence_id, chunk_index)",
+		"FOREIGN KEY (evidence_id) REFERENCES system_backup_evidence(id) ON DELETE CASCADE",
+		"UNIQUE KEY uk_sb_log_chunk (task_type, task_public_id, job_uid, job_generation, chunk_sequence)",
+		"FOREIGN KEY (redacted_evidence_id) REFERENCES system_backup_evidence(id) ON DELETE RESTRICT",
+		"UNIQUE KEY uk_sb_dependency_identity (dependency_kind, identity_hash, identity_version, owner_target_type, owner_target_public_id)",
+		"UNIQUE KEY uk_sb_provider_capability (provider_role, provider_identity_hash, provider_ref_version, capability_code)",
+		"CONSTRAINT chk_sb_provider_role_code CHECK",
+		"UNIQUE KEY uk_sb_tombstone_source (origin_installation_id, source_type, source_public_id)",
+		"UNIQUE KEY uk_sb_tombstone_idempotency (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"CONSTRAINT chk_sb_tombstone_retention CHECK",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 065 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 065 must be additive; found %q", destructive)
+		}
+	}
+}
+
+func TestMigration066CreatesConfigAndOperationAuthorities(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/066_add_system_backup_config_and_operations.sql")
+	if err != nil {
+		t.Fatalf("read migration 066: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 7 {
+		t.Fatalf("migration 066 must contain two creates and five idempotent FK statements, got %d", len(statements))
+	}
+	if !strings.Contains(statements[0], "CREATE TABLE IF NOT EXISTS system_backup_configs") {
+		t.Fatalf("migration 066 statement 1 must create system_backup_configs")
+	}
+	if !strings.Contains(statements[1], "CREATE TABLE IF NOT EXISTS system_backup_operations") {
+		t.Fatalf("migration 066 statement 2 must create system_backup_operations")
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_config_version (origin_installation_id, version)",
+		"UNIQUE KEY uk_sb_config_snapshot (origin_installation_id, version, config_sha256, config_size_bytes)",
+		"FOREIGN KEY (origin_installation_id, copied_from_version) REFERENCES system_backup_configs(origin_installation_id, version) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_config_durations_1 CHECK",
+		"CONSTRAINT chk_sb_config_durations_2 CHECK",
+		"CONSTRAINT chk_sb_config_capacity CHECK",
+		"CONSTRAINT chk_sb_config_relationships CHECK",
+		"controller_claim_heartbeat_seconds * 3 <= controller_claim_ttl_seconds",
+		"staging_capacity_bytes * 10 >= max_artifact_bytes * 11 + max_index_bytes * 10",
+		"capture_certificate_ttl_seconds > backup_task_deadline_seconds",
+		"provider_proof_issuers_registry_sha256",
+		"status_relay_ref_version",
+		"UNIQUE KEY uk_sb_operation_idempotency (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"UNIQUE KEY uk_sb_operation_origin_public (origin_installation_id, public_id)",
+		"retry_of_operation_public_id CHAR(40) CHARACTER SET ascii COLLATE ascii_bin NULL",
+		"KEY idx_sb_operation_retry (origin_installation_id, retry_of_operation_public_id)",
+		"FOREIGN KEY (origin_installation_id, retry_of_operation_public_id) REFERENCES system_backup_operations(origin_installation_id, public_id) ON DELETE RESTRICT",
+		"retry_of_operation_public_id <> public_id",
+		"CONSTRAINT chk_sb_operation_target_id CHECK",
+		"external_action_public_ids_canonical_json BLOB NOT NULL",
+		"external_action_public_ids_size_bytes = OCTET_LENGTH(external_action_public_ids_canonical_json)",
+		"CONSTRAINT chk_sb_operation_result CHECK",
+		"CONSTRAINT chk_sb_operation_sync_terminal CHECK",
+		"CONSTRAINT chk_sb_operation_failure CHECK",
+		"CONSTRAINT chk_sb_operation_claim CHECK",
+		"CONSTRAINT chk_sb_operation_reconcile CHECK",
+		"FOREIGN KEY (redacted_response_evidence_id) REFERENCES system_backup_evidence(id) ON DELETE RESTRICT",
+		"FOREIGN KEY (origin_installation_id, result_config_version) REFERENCES system_backup_configs(origin_installation_id, version) ON DELETE RESTRICT",
+		"CONSTRAINT_NAME = 'fk_sb_installation_active_config'",
+		"ALTER TABLE system_backup_installation_state ADD CONSTRAINT fk_sb_installation_active_config",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 066 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	if strings.Contains(sql, "retry_of_operation_id") {
+		t.Fatal("migration 066 must not use an auto-increment ID in a CHECK constraint")
+	}
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 066 must preserve existing rows; found %q", destructive)
+		}
+	}
+}
+
+func TestMigration067CreatesTaskExecutionAuthorities(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/067_add_system_backup_task_execution_core.sql")
+	if err != nil {
+		t.Fatalf("read migration 067: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 5 {
+		t.Fatalf("migration 067 must contain five additive CREATE TABLE statements, got %d", len(statements))
+	}
+	for index, table := range []string{
+		"system_backups",
+		"system_restore_drills",
+		"system_backup_preflights",
+		"system_backup_artifact_verifications",
+		"system_backup_attempts",
+	} {
+		if !strings.Contains(statements[index], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 067 statement %d must create %s", index+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_backup_create (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"UNIQUE KEY uk_sb_backup_origin_public (origin_installation_id, public_id)",
+		"UNIQUE KEY uk_sb_backup_origin_matrix (origin_installation_id, public_id, matrix_key)",
+		"UNIQUE KEY uk_sb_backup_origin_registration (origin_installation_id, public_id, artifact_registration_id, artifact_registration_hash)",
+		"CONSTRAINT chk_sb_backup_cancel CHECK",
+		"CONSTRAINT chk_sb_backup_commit CHECK",
+		"status = 'finalization_unknown' AND failure_category = 'none' AND finished_at IS NULL AND retryable = FALSE",
+		"CONSTRAINT chk_sb_backup_artifact CHECK",
+		"CONSTRAINT chk_sb_backup_eligibility CHECK",
+		"UNIQUE KEY uk_sb_drill_create (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"UNIQUE KEY uk_sb_drill_local_source (origin_installation_id, public_id, local_source_backup_public_id)",
+		"CONSTRAINT chk_sb_drill_cleanup CHECK",
+		"CONSTRAINT chk_sb_drill_eligibility CHECK",
+		"UNIQUE KEY uk_sb_preflight_create (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"CONSTRAINT chk_sb_preflight_mode CHECK",
+		"UNIQUE KEY uk_sb_verify_create (origin_installation_id, actor_type, actor_id, endpoint, idempotency_key)",
+		"CONSTRAINT chk_sb_verify_usable CHECK",
+		"CONSTRAINT chk_sb_verify_result CHECK",
+		"UNIQUE KEY uk_sb_attempt_unit (target_type, target_public_id, attempt_no, phase)",
+		"CONSTRAINT chk_sb_attempt_phase CHECK",
+		"CONSTRAINT chk_sb_attempt_sealed CHECK",
+		"status <> 'sealed' AND NOT (status = 'succeeded' AND target_type = 'backup' AND phase IN ('capture', 'secret_capture'))",
+		"CONSTRAINT chk_sb_attempt_status CHECK",
+		"FOREIGN KEY (origin_installation_id, config_version, config_snapshot_sha256, config_snapshot_size_bytes) REFERENCES system_backup_configs(origin_installation_id, version, config_sha256, config_size_bytes) ON DELETE RESTRICT",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 067 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 067 must preserve existing rows; found %q", destructive)
+		}
+	}
+}
+
+func TestMigration069CreatesPromotionAuthority(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/069_add_system_backup_promotion_authority.sql")
+	if err != nil {
+		t.Fatalf("read migration 069: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 1 || !strings.Contains(statements[0], "CREATE TABLE IF NOT EXISTS system_backup_promotions") {
+		t.Fatalf("migration 069 must contain one additive system_backup_promotions CREATE TABLE statement")
+	}
+
+	sql := statements[0]
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_promotion_active (origin_installation_id, matrix_key, active_guard)",
+		"FOREIGN KEY (origin_installation_id, backup_public_id, matrix_key) REFERENCES system_backups(origin_installation_id, public_id, matrix_key) ON DELETE RESTRICT",
+		"FOREIGN KEY (origin_installation_id, drill_public_id, backup_public_id) REFERENCES system_restore_drills(origin_installation_id, public_id, local_source_backup_public_id) ON DELETE RESTRICT",
+		"FOREIGN KEY (drill_evidence_public_id) REFERENCES system_backup_evidence(public_id) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_promotion_creation_health CHECK",
+		"CONSTRAINT chk_sb_promotion_registration CHECK",
+		"CONSTRAINT chk_sb_promotion_lifecycle CHECK",
+		"record_status = 'superseded' AND superseded_by_public_id IS NOT NULL",
+		"record_status = 'revoked' AND superseded_by_public_id IS NULL",
+		"OCTET_LENGTH(revoked_reason) BETWEEN 1 AND 512",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 069 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, forbidden := range []string{"CURRENT_HEALTH", "PROVIDER_PAYLOAD", "CREDENTIAL_VALUE", "DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, forbidden) {
+			t.Fatalf("migration 069 must keep derived or owner payload state external; found %q", forbidden)
+		}
+	}
+}
+
+func TestMigration070CreatesPruneAuthority(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/070_add_system_backup_prune_authority.sql")
+	if err != nil {
+		t.Fatalf("read migration 070: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 2 {
+		t.Fatalf("migration 070 must contain two additive CREATE TABLE statements, got %d", len(statements))
+	}
+	for index, table := range []string{"system_backup_prune_runs", "system_backup_prune_items"} {
+		if !strings.Contains(statements[index], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 070 statement %d must create %s", index+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_prune_run_create (origin_installation_id, create_actor_type, create_actor_id, create_endpoint, create_idempotency_key)",
+		"UNIQUE KEY uk_sb_prune_run_confirmation_id (origin_installation_id, confirmation_id)",
+		"UNIQUE KEY uk_sb_prune_run_confirmation (origin_installation_id, confirmation_actor_id, confirmation_endpoint, confirmation_idempotency_key)",
+		"CONSTRAINT chk_sb_prune_run_candidate CHECK",
+		"CONSTRAINT chk_sb_prune_run_confirmation CHECK",
+		"confirmation_candidate_hash = candidate_hash",
+		"confirmation_cutoff_at = older_than",
+		"confirmation_config_version = config_version",
+		"CONSTRAINT chk_sb_prune_run_retry CHECK",
+		"CONSTRAINT chk_sb_prune_run_status CHECK",
+		"UNIQUE KEY uk_sb_prune_item_origin_public (origin_installation_id, public_id)",
+		"UNIQUE KEY uk_sb_prune_item_plan (prune_run_id, artifact_public_id, item_type, canonical_location_hash, immutable_version_sentinel)",
+		"FOREIGN KEY (origin_installation_id, artifact_public_id, artifact_registration_id, artifact_registration_hash) REFERENCES system_backups(origin_installation_id, public_id, artifact_registration_id, artifact_registration_hash) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_prune_item_kind CHECK",
+		"CONSTRAINT chk_sb_prune_item_location CHECK",
+		"canonical_location_size_bytes = OCTET_LENGTH(canonical_location_key)",
+		"canonical_location_hash = SHA2(canonical_location_key, 256)",
+		"CONSTRAINT chk_sb_prune_item_blocked CHECK",
+		"CONSTRAINT chk_sb_prune_item_status CHECK",
+		"status = 'blocked_by_delete' AND external_action_public_id IS NULL",
+		"status <> 'blocked_by_delete' AND external_action_public_id IS NOT NULL",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 070 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, forbidden := range []string{"STRONG_AUTH_PROOF", "PROVIDER_PAYLOAD", "PROVIDER_LOCATOR", "CATALOG_PAYLOAD", "CREDENTIAL_VALUE", "DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, forbidden) {
+			t.Fatalf("migration 070 must keep owner payloads and provider execution external; found %q", forbidden)
+		}
+	}
+}
+
+func TestMigration071CreatesExternalActionAuthority(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/071_add_system_backup_external_action_authority.sql")
+	if err != nil {
+		t.Fatalf("read migration 071: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 11 {
+		t.Fatalf("migration 071 must contain one create and ten idempotent FK statements, got %d", len(statements))
+	}
+	if !strings.Contains(statements[0], "CREATE TABLE IF NOT EXISTS system_backup_external_actions") {
+		t.Fatalf("migration 071 statement 1 must create system_backup_external_actions")
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_external_action_identity (target_type, target_public_id, action_type, action_key)",
+		"UNIQUE KEY uk_sb_external_action_unresolved_backup (origin_installation_id, unresolved_backup_guard)",
+		"GENERATED ALWAYS AS (CASE WHEN target_type = 'backup' AND state IN ('request_sent', 'provider_unreachable') THEN target_public_id ELSE NULL END) STORED",
+		"FOREIGN KEY (origin_installation_id, backup_target_public_id) REFERENCES system_backups(origin_installation_id, public_id) ON DELETE RESTRICT",
+		"FOREIGN KEY (origin_installation_id, prune_item_target_public_id) REFERENCES system_backup_prune_items(origin_installation_id, public_id) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_external_action_type CHECK",
+		"CONSTRAINT chk_sb_external_action_payload CHECK",
+		"payload_sha256 = SHA2(canonical_payload_bytes, 256)",
+		"content_length = OCTET_LENGTH(canonical_payload_bytes)",
+		"CONSTRAINT chk_sb_external_action_keys CHECK",
+		"FOREIGN KEY (provider_proof_evidence_public_id, provider_proof_target_public_id, provider_proof_evidence_type) REFERENCES system_backup_evidence(public_id, owner_target_public_id, evidence_type) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_external_action_state CHECK",
+		"observed_checksum = payload_sha256",
+		"observed_checksum <> payload_sha256",
+		"state = 'confirmed_absent' AND last_checked_at IS NOT NULL AND last_checked_at >= dispatch_deadline",
+		"CONSTRAINT_NAME = 'fk_sb_backup_finalization_action'",
+		"ALTER TABLE system_backups ADD CONSTRAINT fk_sb_backup_finalization_action",
+		"CONSTRAINT_NAME = 'fk_sb_prune_item_external_action'",
+		"ALTER TABLE system_backup_prune_items ADD CONSTRAINT fk_sb_prune_item_external_action",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 071 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, forbidden := range []string{"CREDENTIAL_ENVELOPE", "PRESIGNED_URL", "AUTHORIZATION", "OPAQUE_CREDENTIAL", "DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, forbidden) {
+			t.Fatalf("migration 071 must persist immutable non-secret requests without implementing provider dispatch; found %q", forbidden)
+		}
+	}
+}
+
+func TestMigration072CreatesCheckAuthorities(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/072_add_system_backup_check_authority.sql")
+	if err != nil {
+		t.Fatalf("read migration 072: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 2 {
+		t.Fatalf("migration 072 must contain two additive CREATE TABLE statements, got %d", len(statements))
+	}
+	for index, table := range []string{"system_backup_source_writer_check_states", "system_backup_check_results"} {
+		if !strings.Contains(statements[index], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 072 statement %d must create %s", index+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"UNIQUE KEY uk_sb_writer_check_config (origin_installation_id, config_version)",
+		"FOREIGN KEY (origin_installation_id, config_version) REFERENCES system_backup_configs(origin_installation_id, version) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_writer_check_hashes CHECK",
+		"CONSTRAINT chk_sb_writer_check_result CHECK",
+		"check_state = 'clean' AND reason_code = 'none' AND difference_count = 0 AND last_success_at IS NOT NULL AND last_success_at = checked_at",
+		"check_state = 'drift' AND reason_code IN ('identity_mismatch', 'writer_missing', 'writer_unregistered', 'policy_mismatch') AND difference_count >= 1",
+		"CONSTRAINT chk_sb_writer_check_claim CHECK",
+		"UNIQUE KEY uk_sb_check_result_identity (target_type, target_public_id, attempt_no_sentinel, mode, category, check_code)",
+		"FOREIGN KEY (origin_installation_id, backup_target_public_id) REFERENCES system_backups(origin_installation_id, public_id) ON DELETE RESTRICT",
+		"FOREIGN KEY (origin_installation_id, cleanup_target_public_id, cleanup_operation_type) REFERENCES system_backup_operations(origin_installation_id, public_id, operation_type) ON DELETE RESTRICT",
+		"CONSTRAINT chk_sb_check_result_target CHECK",
+		"mode = 'backup_validate' AND attempt_no IS NOT NULL AND attempt_no >= 1",
+		"CONSTRAINT chk_sb_check_result_category CHECK",
+		"CONSTRAINT chk_sb_check_result_payload CHECK",
+		"expected_canonical_json BLOB NOT NULL",
+		"actual_canonical_json BLOB NOT NULL",
+		"expected_sha256 = SHA2(expected_canonical_json, 256)",
+		"actual_sha256 = SHA2(actual_canonical_json, 256)",
+		"JSON_LENGTH(CONVERT(expected_canonical_json USING utf8mb4)) <= 128",
+		"CONSTRAINT chk_sb_check_result_status CHECK",
+		"status = 'warning' AND skip_reason IS NULL AND warning_code IS NOT NULL",
+		"status = 'failed' AND skip_reason IS NULL AND warning_code IS NULL AND check_classification IS NOT NULL AND failure_category <> 'none'",
+		"evidence_public_id IS NOT NULL AND evidence_sha256 IS NOT NULL",
+		"CONSTRAINT chk_sb_check_result_evidence CHECK",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 072 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, forbidden := range []string{"RAW_WRITER_INVENTORY", "CHECK_REGISTRY_JSON", "PROVIDER_PAYLOAD", "CREDENTIAL_VALUE", "DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, forbidden) {
+			t.Fatalf("migration 072 must keep owner discovery and verifier registries external; found %q", forbidden)
+		}
+	}
+}
+
+func TestMigration068CreatesCoordinationAndObservabilityAuthorities(t *testing.T) {
+	raw, err := embeddedMigrations.ReadFile("migrations/068_add_system_backup_coordination_observability.sql")
+	if err != nil {
+		t.Fatalf("read migration 068: %v", err)
+	}
+
+	statements := splitSQLStatements(string(raw))
+	if len(statements) != 6 {
+		t.Fatalf("migration 068 must contain six additive CREATE TABLE statements, got %d", len(statements))
+	}
+	for index, table := range []string{
+		"system_backup_events",
+		"system_backup_alert_states",
+		"system_artifact_lease_states",
+		"system_artifact_leases",
+		"system_maintenance_locks",
+		"system_maintenance_mutation_leases",
+	} {
+		if !strings.Contains(statements[index], "CREATE TABLE IF NOT EXISTS "+table) {
+			t.Fatalf("migration 068 statement %d must create %s", index+1, table)
+		}
+	}
+
+	sql := strings.Join(statements, "\n")
+	for _, required := range []string{
+		"KEY idx_sb_event_cursor (target_type, target_public_id, created_at, id)",
+		"CONSTRAINT chk_sb_event_type CHECK",
+		"CONSTRAINT chk_sb_event_task_status CHECK",
+		"CONSTRAINT chk_sb_event_details CHECK",
+		"UNIQUE KEY uk_sb_alert_scope (origin_installation_id, rule_key, matrix_key, task_type, task_purpose)",
+		"CONSTRAINT chk_sb_alert_sequence CHECK",
+		"CONSTRAINT chk_sb_alert_lifecycle CHECK",
+		"UNIQUE KEY uk_sb_artifact_lease_mode (origin_installation_id, source_artifact_type, source_public_id, generation, lease_mode)",
+		"UNIQUE KEY uk_sb_artifact_lease_holder (origin_installation_id, source_artifact_type, source_public_id, holder_type, holder_public_id)",
+		"UNIQUE KEY uk_sb_artifact_delete_guard (origin_installation_id, delete_source_guard)",
+		"CONSTRAINT chk_sb_artifact_lease_holder CHECK",
+		"FOREIGN KEY (origin_installation_id, source_artifact_type, source_public_id, lease_generation, lease_mode) REFERENCES system_artifact_lease_states(origin_installation_id, source_artifact_type, source_public_id, generation, lease_mode) ON DELETE RESTRICT ON UPDATE RESTRICT",
+		"UNIQUE KEY uk_sb_maintenance_gate (origin_installation_id, scope)",
+		"CONSTRAINT chk_sb_maintenance_idle CHECK",
+		"CONSTRAINT chk_sb_maintenance_fence CHECK",
+		"TIMESTAMPDIFF(MICROSECOND, heartbeat_at, lease_expires_at) <= lock_ttl_seconds * 1000000",
+		"FOREIGN KEY (origin_installation_id, scope) REFERENCES system_maintenance_locks(origin_installation_id, scope) ON DELETE RESTRICT",
+		"TIMESTAMPDIFF(MICROSECOND, heartbeat_at, expires_at) <= lease_ttl_seconds * 1000000",
+	} {
+		if !strings.Contains(sql, required) {
+			t.Fatalf("migration 068 missing %q", required)
+		}
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, destructive := range []string{"DROP TABLE", "TRUNCATE", "DELETE FROM"} {
+		if strings.Contains(upperSQL, destructive) {
+			t.Fatalf("migration 068 must preserve existing rows; found %q", destructive)
+		}
+	}
+}
+
+func TestSystemImageSettingRepositoryHasNoRuntimeDDL(t *testing.T) {
+	raw, err := os.ReadFile("../repository/system_image_setting_repository.go")
+	if err != nil {
+		t.Fatalf("read system image setting repository: %v", err)
+	}
+
+	source := strings.ToUpper(string(raw))
+	for _, forbidden := range []string{"CREATE TABLE", "ALTER TABLE", "CREATE INDEX", "INFORMATION_SCHEMA"} {
+		if strings.Contains(source, forbidden) {
+			t.Fatalf("system image setting repository must not own runtime DDL; found %q", forbidden)
 		}
 	}
 }

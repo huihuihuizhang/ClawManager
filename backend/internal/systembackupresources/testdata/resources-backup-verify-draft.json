@@ -1,0 +1,43 @@
+{
+  "kind": "resources-backup-verify-offline-fixture",
+  "contract_version": "system-backup-plan.v12",
+  "proof": "synthetic-test-only",
+  "source": {
+    "checkpoint_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "capture_context_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidence_ref": "sev_fixture_source",
+    "snapshot": {
+      "audit_max_id": 7,
+      "tables": [
+        { "table": "audit_logs", "rows": 1 },
+        { "table": "egress_private_exceptions", "rows": 1 },
+        { "table": "northbound_admin_settings", "rows": 1 },
+        { "table": "northbound_settings_audit", "rows": 1 },
+        { "table": "security_scan_configs", "rows": 1 },
+        { "table": "security_scan_job_items", "rows": 1 },
+        { "table": "security_scan_jobs", "rows": 1 },
+        { "table": "security_scan_reports", "rows": 1 },
+        { "table": "system_image_settings", "rows": 1 }
+      ]
+    }
+  },
+  "dump": {
+    "checkpoint_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "capture_context_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidence_ref": "sev_fixture_dump",
+    "snapshot": {
+      "audit_max_id": 7,
+      "tables": [
+        { "table": "audit_logs", "rows": 1 },
+        { "table": "egress_private_exceptions", "rows": 1 },
+        { "table": "northbound_admin_settings", "rows": 1 },
+        { "table": "northbound_settings_audit", "rows": 1 },
+        { "table": "security_scan_configs", "rows": 1 },
+        { "table": "security_scan_job_items", "rows": 1 },
+        { "table": "security_scan_jobs", "rows": 1 },
+        { "table": "security_scan_reports", "rows": 1 },
+        { "table": "system_image_settings", "rows": 1 }
+      ]
+    }
+  }
+}

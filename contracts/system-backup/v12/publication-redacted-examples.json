@@ -1,0 +1,103 @@
+{
+  "kind": "system_backup_publication_redacted_examples",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "examples": {
+    "artifact_index": {
+      "schema_version": "system-backup-artifact-index.v1",
+      "backup_public_id": "sbk_example01",
+      "attempt_no": 1,
+      "capture_context_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "entries": [
+        { "path": "mysql/part-00001.enc", "content_role": "encrypted_payload", "size": 4096, "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "framing_version": "aes-gcm-chunked.v1" },
+        { "path": "restore-metadata/envelope.json", "content_role": "envelope", "size": 512, "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "framing_version": "envelope.v1" }
+      ]
+    },
+    "committed": {
+      "artifact_index_checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "backup_public_id": "sbk_example01",
+      "manifest_checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "schema_version": "system-backup-committed.v1"
+    },
+    "acceptance": {
+      "payload": {
+        "schema_version": "system-backup-acceptance.v1",
+        "backup_public_id": "sbk_example01",
+        "attempt_no": 1,
+        "manifest_checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "marker_checksum": "e1d1d95ebad9ace809d3200d04c72376ac8e3cff111f565c58da2dc6b8650f75",
+        "staging_cleanup_evidence_id": "sev_example_cleanup",
+        "staging_cleanup_evidence_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "local_acceptance": true,
+        "local_reason_codes": ["eligible"],
+        "local_reason_codes_hash": "2654f73bffcbf548541f1f09e0bf75eee7644095e9eafddf1219d38d3ca66690",
+        "decision_at": "2026-09-15T01:30:00Z",
+        "config_version": 3,
+        "signing_key": { "purpose": "acceptance_record", "key_id": "acceptance-key-example", "key_version": "7" }
+      },
+      "signature": {
+        "algorithm": "owner-review-pending",
+        "key_purpose": "acceptance_record",
+        "key_id": "acceptance-key-example",
+        "key_version": "7",
+        "domain_separator": "clawmanager.system-backup.acceptance.v1",
+        "protected_header": "ZXhhbXBsZQ",
+        "value": "c3ludGhldGljLXNpZ25hdHVyZQ"
+      }
+    },
+    "external_action": {
+      "schema_version": "system-backup-external-action.v1",
+      "public_id": "sxa_example01",
+      "target_type": "backup",
+      "target_public_id": "sbk_example01",
+      "operation_public_id": null,
+      "action_type": "marker_put",
+      "logical_action_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "action_key": "backup:sbk_example01:1:marker_put",
+      "canonical_payload_base64": "eyJhcnRpZmFjdF9pbmRleF9jaGVja3N1bSI6ImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJiYWNrdXBfcHVibGljX2lkIjoic2JrX2V4YW1wbGUwMSIsIm1hbmlmZXN0X2NoZWNrc3VtIjoiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYiIsInNjaGVtYV92ZXJzaW9uIjoic3lzdGVtLWJhY2t1cC1jb21taXR0ZWQudjEifQ==",
+      "payload_sha256": "e1d1d95ebad9ace809d3200d04c72376ac8e3cff111f565c58da2dc6b8650f75",
+      "content_length": 262,
+      "final_key": "example-root/installation_example/sbk_example01/1/_COMMITTED",
+      "conditional_create": { "mode": "if_none_match", "value": "*" },
+      "dispatch_generation": 1,
+      "dispatch_deadline": "2026-09-15T01:35:00Z",
+      "state": "request_sent",
+      "send_attempt_count": 0,
+      "observe_attempt_count": 0,
+      "last_checked_at": null,
+      "observed_version": null,
+      "observed_checksum": null,
+      "provider_proof_evidence_id": null,
+      "row_version": 1,
+      "created_at": "2026-09-15T01:30:00Z",
+      "updated_at": "2026-09-15T01:30:00Z"
+    },
+    "finalizer_request": {
+      "schema_version": "system-backup-provider-finalizer-request.v1",
+      "logical_action_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "action_type": "marker_put",
+      "key": "example-root/installation_example/sbk_example01/1/_COMMITTED",
+      "canonical_payload_base64": "eyJhcnRpZmFjdF9pbmRleF9jaGVja3N1bSI6ImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJiYWNrdXBfcHVibGljX2lkIjoic2JrX2V4YW1wbGUwMSIsIm1hbmlmZXN0X2NoZWNrc3VtIjoiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYiIsInNjaGVtYV92ZXJzaW9uIjoic3lzdGVtLWJhY2t1cC1jb21taXR0ZWQudjEifQ==",
+      "payload_sha256": "e1d1d95ebad9ace809d3200d04c72376ac8e3cff111f565c58da2dc6b8650f75",
+      "content_length": 262,
+      "content_type": "application/json",
+      "dispatch_generation": 1,
+      "dispatch_deadline": "2026-09-15T01:35:00Z",
+      "conditional_create": { "mode": "if_none_match", "value": "*" },
+      "credential_envelope": {
+        "schema_version": "system-backup-finalizer-credential-envelope.v1",
+        "issuer": "credential-issuer-example",
+        "subject": "controller-task-example",
+        "audience": "artifact-provider-example",
+        "logical_action_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "allowed_key": "example-root/installation_example/sbk_example01/1/_COMMITTED",
+        "allowed_payload_sha256": "e1d1d95ebad9ace809d3200d04c72376ac8e3cff111f565c58da2dc6b8650f75",
+        "allowed_content_length": 262,
+        "dispatch_generation": 1,
+        "not_before": "2026-09-15T01:29:55Z",
+        "expires_at": "2026-09-15T01:35:00Z",
+        "opaque_credential": "synthetic-non-replayable-example"
+      }
+    }
+  }
+}

@@ -5162,21 +5162,6 @@ data:
       INDEX idx_instance_recorded (instance_id, recorded_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-    CREATE TABLE IF NOT EXISTS audit_logs (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT,
-      action VARCHAR(100) NOT NULL,
-      resource_type VARCHAR(50) NOT NULL,
-      resource_id INT,
-      details JSON,
-      ip_address VARCHAR(45),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-      INDEX idx_user_id (user_id),
-      INDEX idx_action (action),
-      INDEX idx_created_at (created_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
     INSERT INTO users (username, email, password_hash, role, is_active)
     SELECT 'admin', 'admin@clawmanager.local', '$2a$10$pbenze514mwv3pvQySQBVOsF5J4DBXL2kVo1hLa8JFhQu5x3AKvBi', 'admin', TRUE
     WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
@@ -5189,34 +5174,12 @@ data:
     USE clawmanager;
     ALTER TABLE instances
     MODIFY COLUMN type ENUM('openclaw', 'ubuntu', 'debian', 'centos', 'custom', 'webtop', 'hermes') DEFAULT 'ubuntu';
-  003_add_system_image_settings.sql: |
-    USE clawmanager;
-    CREATE TABLE IF NOT EXISTS system_image_settings (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      instance_type VARCHAR(50) NOT NULL,
-      runtime_type ENUM('desktop', 'shell') NOT NULL DEFAULT 'desktop',
-      display_name VARCHAR(255) NOT NULL,
-      image VARCHAR(500) NOT NULL,
-      is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      INDEX idx_instance_type (instance_type)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   004_fix_seeded_admin_password.sql: |
     USE clawmanager;
     UPDATE users
     SET password_hash = '$2a$10$pbenze514mwv3pvQySQBVOsF5J4DBXL2kVo1hLa8JFhQu5x3AKvBi'
     WHERE username = 'admin'
       AND password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrzL9wGC3qD3Q.ZHqQH6t3q7l1L5uG';
-  005_update_openclaw_default_image.sql: |
-    USE clawmanager;
-    UPDATE system_image_settings
-    SET image = 'ghcr.io/yuan-lab-llm/agentsruntime/openclaw:latest'
-    WHERE instance_type = 'openclaw'
-      AND image IN (
-        'ericpearlee/openclaw:v2026.3.24',
-        'ghcr.io/yuan-lab-llm/clawmanager-openclaw-image/openclaw:latest'
-      );
   006_add_openclaw_config_center.sql: |
     USE clawmanager;
     SET @openclaw_snapshot_column_exists = (
@@ -5527,32 +5490,6 @@ data:
     USE clawmanager;
     ALTER TABLE instances
     MODIFY COLUMN type ENUM('openclaw', 'ubuntu', 'debian', 'centos', 'custom', 'webtop', 'hermes') DEFAULT 'ubuntu';
-  012_update_agents_runtime_default_images.sql: |
-    USE clawmanager;
-    UPDATE system_image_settings
-    SET image = 'ghcr.io/yuan-lab-llm/agentsruntime/openclaw:latest'
-    WHERE instance_type = 'openclaw'
-      AND image IN (
-        'ericpearlee/openclaw:v2026.3.24',
-        'ghcr.io/yuan-lab-llm/clawmanager-openclaw-image/openclaw:latest'
-      );
-
-    UPDATE system_image_settings
-    SET image = 'ghcr.io/yuan-lab-llm/agentsruntime/hermes:latest'
-    WHERE instance_type = 'hermes'
-      AND image IN (
-        'registry.example.com/hermes-webtop:latest',
-        'lscr.io/linuxserver/webtop:ubuntu-xfce'
-      );
-  013_normalize_agents_runtime_image_names.sql: |
-    USE clawmanager;
-    UPDATE system_image_settings
-    SET image = 'ghcr.io/yuan-lab-llm/agentsruntime/openclaw:latest'
-    WHERE image = 'ghcr.io/Yuan-lab-LLM/AgentsRuntime/openclaw:latest';
-
-    UPDATE system_image_settings
-    SET image = 'ghcr.io/yuan-lab-llm/agentsruntime/hermes:latest'
-    WHERE image = 'ghcr.io/Yuan-lab-LLM/AgentsRuntime/hermes:latest';
   019_add_instance_runtime_type.sql: |
     USE clawmanager;
     SET @instance_runtime_type_column_exists = (
@@ -5570,103 +5507,6 @@ data:
     PREPARE instance_runtime_type_column_stmt FROM @instance_runtime_type_column_sql;
     EXECUTE instance_runtime_type_column_stmt;
     DEALLOCATE PREPARE instance_runtime_type_column_stmt;
-  020_add_system_image_runtime_type.sql: |
-    USE clawmanager;
-    SET @system_image_runtime_type_column_exists = (
-      SELECT COUNT(*)
-      FROM information_schema.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'system_image_settings'
-        AND COLUMN_NAME = 'runtime_type'
-    );
-    SET @system_image_runtime_type_column_sql = IF(
-      @system_image_runtime_type_column_exists = 0,
-      'ALTER TABLE system_image_settings ADD COLUMN runtime_type ENUM(''desktop'', ''shell'') NOT NULL DEFAULT ''desktop'' AFTER instance_type',
-      'SELECT 1'
-    );
-    PREPARE system_image_runtime_type_column_stmt FROM @system_image_runtime_type_column_sql;
-    EXECUTE system_image_runtime_type_column_stmt;
-    DEALLOCATE PREPARE system_image_runtime_type_column_stmt;
-  021_add_openclaw_shell_runtime_image.sql: |
-    USE clawmanager;
-    SET @system_image_is_enabled_column_exists = (
-      SELECT COUNT(*)
-      FROM information_schema.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'system_image_settings'
-        AND COLUMN_NAME = 'is_enabled'
-    );
-    SET @system_image_is_enabled_column_sql = IF(
-      @system_image_is_enabled_column_exists = 0,
-      'ALTER TABLE system_image_settings ADD COLUMN is_enabled BOOLEAN NOT NULL DEFAULT TRUE',
-      'SELECT 1'
-    );
-    PREPARE system_image_is_enabled_column_stmt FROM @system_image_is_enabled_column_sql;
-    EXECUTE system_image_is_enabled_column_stmt;
-    DEALLOCATE PREPARE system_image_is_enabled_column_stmt;
-
-    SET @system_image_unique_instance_type_index_name = (
-      SELECT INDEX_NAME
-      FROM information_schema.STATISTICS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'system_image_settings'
-        AND COLUMN_NAME = 'instance_type'
-        AND NON_UNIQUE = 0
-        AND INDEX_NAME <> 'PRIMARY'
-      LIMIT 1
-    );
-    SET @system_image_unique_instance_type_index_sql = IF(
-      @system_image_unique_instance_type_index_name IS NOT NULL,
-      CONCAT(
-        'ALTER TABLE system_image_settings DROP INDEX `',
-        REPLACE(@system_image_unique_instance_type_index_name, '`', '``'),
-        '`'
-      ),
-      'SELECT 1'
-    );
-    PREPARE system_image_unique_instance_type_index_stmt FROM @system_image_unique_instance_type_index_sql;
-    EXECUTE system_image_unique_instance_type_index_stmt;
-    DEALLOCATE PREPARE system_image_unique_instance_type_index_stmt;
-
-    INSERT INTO system_image_settings (instance_type, runtime_type, display_name, image, is_enabled)
-    SELECT
-      'openclaw',
-      'desktop',
-      'OpenClaw Desktop',
-      'ghcr.io/yuan-lab-llm/agentsruntime/openclaw:latest',
-      TRUE
-    WHERE NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'openclaw'
-        AND runtime_type = 'desktop'
-    )
-    AND NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'openclaw'
-        AND is_enabled = FALSE
-    );
-
-    INSERT INTO system_image_settings (instance_type, runtime_type, display_name, image, is_enabled)
-    SELECT
-      'openclaw',
-      'shell',
-      'OpenClaw Lite',
-      'ghcr.io/yuan-lab-llm/agentsruntime/openclaw-lite:latest',
-      TRUE
-    WHERE NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'openclaw'
-        AND runtime_type = 'shell'
-    )
-    AND NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'openclaw'
-        AND is_enabled = FALSE
-    );
   022_add_openclaw_config_bundle_skills.sql: |
     USE clawmanager;
     CREATE TABLE IF NOT EXISTS openclaw_config_bundle_skills (
@@ -5688,39 +5528,6 @@ data:
         updated_at = CURRENT_TIMESTAMP
     WHERE type IN ('openclaw', 'ubuntu', 'webtop', 'hermes')
       AND mount_path IN ('/data', '/home/user/data', '/config/.hermes');
-  031_add_hermes_lite_runtime_image.sql: |
-    USE clawmanager;
-    UPDATE system_image_settings
-    SET
-      image = 'ghcr.io/yuan-lab-llm/agentsruntime/hermes-lite:latest',
-      display_name = 'Hermes Lite',
-      is_enabled = TRUE
-    WHERE instance_type = 'hermes'
-      AND runtime_type = 'shell'
-      AND image IN (
-        'ghcr.io/yuan-lab-llm/agentsruntime/hermes-shell:latest',
-        'registry.example.com/your-custom-shell-image:latest'
-      );
-
-    INSERT INTO system_image_settings (instance_type, runtime_type, display_name, image, is_enabled)
-    SELECT
-      'hermes',
-      'shell',
-      'Hermes Lite',
-      'ghcr.io/yuan-lab-llm/agentsruntime/hermes-lite:latest',
-      TRUE
-    WHERE NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'hermes'
-        AND runtime_type = 'shell'
-    )
-    AND NOT EXISTS (
-      SELECT 1
-      FROM system_image_settings
-      WHERE instance_type = 'hermes'
-        AND is_enabled = FALSE
-    );
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

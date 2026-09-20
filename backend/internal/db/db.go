@@ -42,18 +42,46 @@ func Connect(cfg config.DatabaseConfig) (db.Session, error) {
 	return session, nil
 }
 
+// ConnectSystemBackupController opens only the D-owned controller session.
+// The MySQL driver applies time_zone on every newly opened pooled connection;
+// a one-time SET after Open would configure only one connection.
+func ConnectSystemBackupController(cfg config.DatabaseConfig) (db.Session, error) {
+	session, err := connectWithOptions(cfg, systemBackupControllerOptions())
+	if err != nil {
+		return nil, err
+	}
+	Session = session
+	log.Println("System backup controller database connected successfully (migrations disabled, UTC sessions)")
+	return session, nil
+}
+
+func systemBackupControllerOptions() map[string]string {
+	return map[string]string{
+		"loc":       "UTC",
+		"time_zone": "'+00:00'",
+	}
+}
+
 func connect(cfg config.DatabaseConfig) (db.Session, error) {
+	return connectWithOptions(cfg, nil)
+}
+
+func connectWithOptions(cfg config.DatabaseConfig, additionalOptions map[string]string) (db.Session, error) {
 	hostPort := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	options := map[string]string{
+		"charset":   "utf8mb4",
+		"collation": "utf8mb4_unicode_ci",
+		"parseTime": "true",
+	}
+	for key, value := range additionalOptions {
+		options[key] = value
+	}
 	settings := mysql.ConnectionURL{
 		Host:     hostPort,
 		User:     cfg.User,
 		Password: cfg.Password,
 		Database: cfg.Database,
-		Options: map[string]string{
-			"charset":   "utf8mb4",
-			"collation": "utf8mb4_unicode_ci",
-			"parseTime": "true",
-		},
+		Options:  options,
 	}
 
 	session, err := mysql.Open(settings)

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/source-writer-check-state.schema.json",
+  "title": "System backup source-writer check state",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "origin_installation_id", "config_version", "registry_version", "registry_hash", "check_state", "reason_code", "observed_inventory_hashes", "difference_count", "checked_at", "expires_at", "row_version"],
+  "properties": {
+    "schema_version": { "const": "system-backup-source-writer-check-state.v1" },
+    "origin_installation_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "config_version": { "type": "integer", "minimum": 1 },
+    "registry_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "registry_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "check_state": { "enum": ["clean", "drift", "unknown"] },
+    "reason_code": { "enum": ["none", "registry_invalid", "inventory_unavailable", "permission_denied", "identity_mismatch", "writer_missing", "writer_unregistered", "policy_mismatch", "timeout", "internal"] },
+    "observed_inventory_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mysql", "redis", "object", "workspace", "runtime"],
+      "properties": {
+        "mysql": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "redis": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "object": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "workspace": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "runtime": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "difference_count": { "type": "integer", "minimum": 0 },
+    "evidence_id": { "type": ["string", "null"], "pattern": "^sev_[A-Za-z0-9_-]+$" },
+    "checked_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "last_success_at": { "type": ["string", "null"], "format": "date-time" },
+    "row_version": { "type": "integer", "minimum": 1 }
+  },
+  "allOf": [
+    { "if": { "properties": { "check_state": { "const": "clean" } }, "required": ["check_state"] }, "then": { "properties": { "reason_code": { "const": "none" }, "difference_count": { "const": 0 } } } },
+    { "if": { "properties": { "check_state": { "const": "drift" } }, "required": ["check_state"] }, "then": { "properties": { "reason_code": { "enum": ["identity_mismatch", "writer_missing", "writer_unregistered", "policy_mismatch"] }, "difference_count": { "minimum": 1 } } } },
+    { "if": { "properties": { "check_state": { "const": "unknown" } }, "required": ["check_state"] }, "then": { "properties": { "reason_code": { "enum": ["registry_invalid", "inventory_unavailable", "permission_denied", "timeout", "internal"] } } } }
+  ]
+}

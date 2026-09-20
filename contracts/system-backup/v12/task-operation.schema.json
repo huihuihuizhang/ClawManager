@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/task-operation.schema.json",
+  "title": "System backup task and operation DTOs",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "TaskStatus": {
+      "anyOf": [
+        { "$ref": "status-failure-enums.schema.json#/$defs/BackupStatus" },
+        { "$ref": "status-failure-enums.schema.json#/$defs/DrillStatus" },
+        { "$ref": "status-failure-enums.schema.json#/$defs/SimpleTaskStatus" }
+      ]
+    },
+    "Task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "origin_installation_id", "task_type", "actor_type", "actor_id", "endpoint", "idempotency_key", "request_hash", "request_id", "status", "pending_reason", "attention_reason", "can_cancel", "config_version", "retryable", "failure_category", "row_version", "deadline_at", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-task.v1" },
+        "public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "origin_installation_id": { "$ref": "admin-api-common.schema.json#/$defs/InstallationId" },
+        "task_type": { "$ref": "status-failure-enums.schema.json#/$defs/TaskType" },
+        "actor_type": { "$ref": "status-failure-enums.schema.json#/$defs/ActorType" },
+        "actor_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "endpoint": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "idempotency_key": { "$ref": "admin-api-common.schema.json#/$defs/IdempotencyKey" },
+        "request_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "request_id": { "$ref": "admin-api-common.schema.json#/$defs/RequestId" },
+        "retry_of_public_id": { "type": ["string", "null"], "maxLength": 128 },
+        "status": { "$ref": "#/$defs/TaskStatus" },
+        "pending_reason": { "$ref": "status-failure-enums.schema.json#/$defs/PendingReason" },
+        "attention_reason": { "$ref": "status-failure-enums.schema.json#/$defs/AttentionReason" },
+        "can_cancel": { "type": "boolean" },
+        "config_version": { "type": "integer", "minimum": 1 },
+        "retryable": { "type": "boolean" },
+        "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" },
+        "failure_message": { "type": ["string", "null"], "maxLength": 2048 },
+        "heartbeat_at": { "type": ["string", "null"], "format": "date-time" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "next_reconcile_at": { "type": ["string", "null"], "format": "date-time" },
+        "deadline_at": { "type": "string", "format": "date-time" },
+        "started_at": { "type": ["string", "null"], "format": "date-time" },
+        "finished_at": { "type": ["string", "null"], "format": "date-time" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "task_type": { "const": "backup" } }, "required": ["task_type"] }, "then": { "properties": { "status": { "$ref": "status-failure-enums.schema.json#/$defs/BackupStatus" } } } },
+        { "if": { "properties": { "task_type": { "const": "drill" } }, "required": ["task_type"] }, "then": { "properties": { "status": { "$ref": "status-failure-enums.schema.json#/$defs/DrillStatus" } } } },
+        { "if": { "properties": { "task_type": { "enum": ["preflight", "artifact_verify"] } }, "required": ["task_type"] }, "then": { "properties": { "status": { "$ref": "status-failure-enums.schema.json#/$defs/SimpleTaskStatus" } } } }
+      ]
+    },
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "origin_installation_id", "operation_type", "target_type", "target_public_id", "actor_type", "actor_id", "endpoint", "idempotency_key", "request_hash", "status", "retryable", "failure_category", "row_version", "deadline_at", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-operation.v1" },
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/OperationPublicId" },
+        "origin_installation_id": { "$ref": "admin-api-common.schema.json#/$defs/InstallationId" },
+        "operation_type": { "$ref": "status-failure-enums.schema.json#/$defs/OperationType" },
+        "target_type": { "$ref": "status-failure-enums.schema.json#/$defs/OperationTargetType" },
+        "target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "actor_type": { "$ref": "status-failure-enums.schema.json#/$defs/ActorType" },
+        "actor_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "endpoint": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "idempotency_key": { "$ref": "admin-api-common.schema.json#/$defs/IdempotencyKey" },
+        "request_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "status": { "$ref": "status-failure-enums.schema.json#/$defs/OperationStatus" },
+        "result_resource_public_id": { "type": ["string", "null"], "maxLength": 128 },
+        "result_config_version": { "type": ["integer", "null"], "minimum": 1 },
+        "retryable": { "type": "boolean" },
+        "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" },
+        "failure_message": { "type": ["string", "null"], "maxLength": 2048 },
+        "http_status": { "type": ["integer", "null"], "minimum": 100, "maximum": 599 },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "deadline_at": { "type": "string", "format": "date-time" },
+        "started_at": { "type": ["string", "null"], "format": "date-time" },
+        "finished_at": { "type": ["string", "null"], "format": "date-time" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "target_type": { "const": "backup" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "backup_staging" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupStagingPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "external_action" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ExternalActionPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "drill" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "restore_resource" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/RestoreResourcePublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "preflight" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "artifact_verify" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ArtifactVerificationPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "catalog_scan" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogScanPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "catalog_import" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "prune_run" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "promotion" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" } } } },
+        { "if": { "properties": { "target_type": { "const": "matrix" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "type": "string", "enum": ["k8s-cluster", "k3s-cluster", "k8s-single-node", "k3s-single-node"] } } } },
+        { "if": { "properties": { "target_type": { "const": "system" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/InstallationId" } } } }
+      ]
+    },
+    "TaskList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/Task" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    },
+    "OperationList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/Operation" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    }
+  }
+}
