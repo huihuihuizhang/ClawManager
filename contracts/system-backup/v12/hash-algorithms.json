@@ -1,0 +1,39 @@
+{
+  "kind": "system_backup_hash_algorithms",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "migration_catalog_hash": {
+    "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
+    "digest_encoding": "lowercase_hex",
+    "ordering": "migration filename ascending by Unicode code point",
+    "framing": "SHA-256 domain prefix system-backup-migration-catalog.v1 followed by repeated unsigned 64-bit big-endian byte length plus UTF-8 filename bytes, then unsigned 64-bit big-endian byte length plus UTF-8 SQL content bytes",
+    "line_endings": "CRLF and bare CR in SQL content are normalized to LF before UTF-8 framing; all other content bytes, including the final newline, are preserved"
+  },
+  "schema_hash": {
+    "algorithm": "sha256-information-schema-canonical-v1",
+    "digest_encoding": "lowercase_hex",
+    "observation_schema": "contracts/system-backup/v12/schema-hash-observation.schema.json",
+    "result_schema": "contracts/system-backup/v12/schema-hash-result.schema.json",
+    "live_evidence_schema": "contracts/system-backup/v12/schema-hash-live-evidence.schema.json",
+    "mysql_capture_query": "contracts/system-backup/v12/schema-hash-capture.mysql.sql",
+    "canonicalizer": "scripts/system-backup-schema-hash.mjs",
+    "live_evidence_builder": "scripts/system-backup-schema-hash-evidence.mjs",
+    "ordering": "object_type then object_name; nested table columns, indexes and foreign keys use ordinal positions and stable names",
+    "tables": [
+      "column name",
+      "ordinal position",
+      "normalized database type",
+      "nullable",
+      "default",
+      "character set",
+      "collation",
+      "primary key",
+      "unique indexes",
+      "ordinary indexes",
+      "foreign keys"
+    ],
+    "non_table_objects": "include server version, SQL mode, object type/name and SHA-256 of the database-returned definition after CRLF/CR are normalized to LF; do not otherwise rewrite case, whitespace, quoted identifiers, strings or DEFINER",
+    "canonical_bytes": "UTF-8 canonical JSON containing exactly algorithm and normalized sorted objects; capture time, database/schema name, credentials and business rows are excluded",
+    "status": "canonicalizer, deterministic result and fail-closed reviewed-evidence input draft; authenticated live evidence pending"
+  }
+}

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -59,6 +60,9 @@ func NewSkillPackageMaterializeService(jobRepo repository.SkillPackageMaterializ
 }
 
 func (m *SkillPackageMaterializeService) Enqueue(ctx context.Context, req EnqueueMaterializeRequest) (*models.SkillPackageMaterializeJob, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if m == nil || m.jobRepo == nil {
 		return nil, fmt.Errorf("skill package materialize service is not configured")
 	}
@@ -78,6 +82,9 @@ func (m *SkillPackageMaterializeService) Enqueue(ctx context.Context, req Enqueu
 			return existing, nil
 		}
 		if strings.EqualFold(strings.TrimSpace(existing.Status), MaterializeJobStatusFailed) {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 			if err := m.jobRepo.RequeueExisting(existing.ID, req.BlobID, contentHash, workspaceDir); err != nil {
 				return nil, err
 			}
@@ -98,6 +105,9 @@ func (m *SkillPackageMaterializeService) Enqueue(ctx context.Context, req Enqueu
 				return nil, err
 			} else if existing != nil {
 				if !strings.EqualFold(strings.TrimSpace(existing.Status), MaterializeJobStatusSucceeded) {
+					if err := ctx.Err(); err != nil {
+						return nil, err
+					}
 					if err := m.jobRepo.MarkSucceeded(existing.ID); err != nil {
 						return nil, err
 					}
@@ -122,10 +132,16 @@ func (m *SkillPackageMaterializeService) Enqueue(ctx context.Context, req Enqueu
 			if job.TriggerSource == "" {
 				job.TriggerSource = MaterializeTriggerSync
 			}
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 			if err := m.jobRepo.Create(job); err != nil {
 				return nil, err
 			}
 			if !strings.EqualFold(strings.TrimSpace(job.Status), MaterializeJobStatusSucceeded) {
+				if err := ctx.Err(); err != nil {
+					return nil, err
+				}
 				if err := m.jobRepo.MarkSucceeded(job.ID); err != nil {
 					return nil, err
 				}
@@ -153,6 +169,9 @@ func (m *SkillPackageMaterializeService) Enqueue(ctx context.Context, req Enqueu
 		IdempotencyKey: idempotencyKey,
 		TriggerSource:  trigger,
 	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if err := m.jobRepo.Create(job); err != nil {
 		return nil, err
 	}
@@ -167,6 +186,9 @@ func (m *SkillPackageMaterializeService) ReleaseToPending(id int) error {
 }
 
 func (m *SkillPackageMaterializeService) ClaimNextPending(ctx context.Context, limit int) ([]models.SkillPackageMaterializeJob, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if m == nil || m.jobRepo == nil {
 		return nil, fmt.Errorf("skill package materialize service is not configured")
 	}
@@ -174,6 +196,9 @@ func (m *SkillPackageMaterializeService) ClaimNextPending(ctx context.Context, l
 }
 
 func (m *SkillPackageMaterializeService) ProcessJob(ctx context.Context, jobID int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if m == nil || m.jobRepo == nil || m.worker == nil {
 		return fmt.Errorf("skill package materialize service is not configured")
 	}
@@ -183,6 +208,9 @@ func (m *SkillPackageMaterializeService) ProcessJob(ctx context.Context, jobID i
 	}
 	if job == nil {
 		return fmt.Errorf("materialize job not found")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	if strings.EqualFold(strings.TrimSpace(job.Status), MaterializeJobStatusPending) {
 		if err := m.jobRepo.MarkRunning(jobID); err != nil {
@@ -197,7 +225,16 @@ func (m *SkillPackageMaterializeService) ProcessJob(ctx context.Context, jobID i
 		}
 	}
 
+	if !strings.EqualFold(strings.TrimSpace(job.Status), MaterializeJobStatusRunning) {
+		return fmt.Errorf("materialize job %d is not running", job.ID)
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	blob, err := m.worker.materializeSkillPackageFromWorkspace(ctx, job.InstanceID, job.WorkspaceDir, job.ContentHash, job.BlobID)
+	if cancelErr := materializeCancellation(ctx, err); cancelErr != nil {
+		return cancelErr
+	}
 	if err != nil {
 		retryable := !strings.Contains(strings.ToLower(err.Error()), "md5 mismatch")
 		if markErr := m.jobRepo.MarkFailed(job.ID, err.Error(), retryable); markErr != nil {
@@ -206,12 +243,30 @@ func (m *SkillPackageMaterializeService) ProcessJob(ctx context.Context, jobID i
 		return err
 	}
 	if err := m.worker.syncSkillRecordFromBlob(job.SkillID, blob); err != nil {
+		if cancelErr := materializeCancellation(ctx, err); cancelErr != nil {
+			return cancelErr
+		}
 		if markErr := m.jobRepo.MarkFailed(job.ID, err.Error(), true); markErr != nil {
 			return markErr
 		}
 		return err
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	return m.jobRepo.MarkSucceeded(job.ID)
+}
+
+// Cancellation is an interrupted attempt, not a business failure. The worker
+// returns the claim to pending after ProcessJob has finished all local writes.
+func materializeCancellation(ctx context.Context, err error) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+	return nil
 }
 
 func (m *SkillPackageMaterializeService) RetryJob(skillID int) error {
@@ -222,6 +277,9 @@ func (m *SkillPackageMaterializeService) RetryJob(skillID int) error {
 }
 
 func (m *SkillPackageMaterializeService) BackfillOnce(ctx context.Context, limit int) (int, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
 	if m == nil || m.jobRepo == nil {
 		return 0, fmt.Errorf("skill package materialize service is not configured")
 	}

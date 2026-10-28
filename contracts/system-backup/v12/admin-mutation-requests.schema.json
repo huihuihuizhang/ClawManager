@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-mutation-requests.schema.json",
+  "title": "System backup D-owned Admin mutation business bodies",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "CancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "CleanupRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retry_of_operation_public_id"],
+      "properties": {
+        "retry_of_operation_public_id": {
+          "anyOf": [
+            { "$ref": "admin-api-common.schema.json#/$defs/OperationPublicId" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "x-invariant": "non-null retry operation must be a failed cleanup for the same target and endpoint; only unfinished resource lifecycle steps may rerun"
+    },
+    "ConfigRollbackRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rollback_from_version", "expected_version", "change_reason"],
+      "properties": {
+        "rollback_from_version": { "type": "integer", "minimum": 1 },
+        "expected_version": { "type": "integer", "minimum": 1 },
+        "change_reason": { "$ref": "admin-api-common.schema.json#/$defs/ActorReason" }
+      },
+      "x-invariants": [
+        "rollback creates a new monotonic config version and never reactivates the old row",
+        "change_reason is non-null and non-empty when server-side comparison finds a protection reduction",
+        "strong_auth_proof is authentication transport owned by A and is excluded from this business body and request hash"
+      ]
+    },
+    "FinalizationResolutionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_action_public_id", "expected_backup_row_version", "provider_proof_evidence_public_id"],
+      "properties": {
+        "external_action_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ExternalActionPublicId" },
+        "expected_backup_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "provider_proof_evidence_public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" }
+      },
+      "x-forbidden-fields": ["uri", "location", "credential", "force", "observed_state", "free_text_result"],
+      "x-invariant": "server reloads the unique unresolved action and registered immutable proof, verifies owner/expiry/signature and derives the result without a live-provider hidden prerequisite"
+    },
+    "OwnershipResolutionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_resource_row_version", "provider_proof_evidence_public_id"],
+      "properties": {
+        "expected_resource_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "provider_proof_evidence_public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" }
+      },
+      "x-forbidden-fields": ["uri", "location", "credential", "force", "observed_state", "free_text_result"],
+      "x-invariant": "server derives the staging or restore-resource transition from the registered owner-matched proof and never accepts a client-selected terminal state"
+    },
+    "ManualHoldUpdateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manual_hold", "expected_backup_row_version", "reason"],
+      "properties": {
+        "manual_hold": { "type": "boolean" },
+        "expected_backup_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "reason": { "$ref": "admin-api-common.schema.json#/$defs/ActorReason" }
+      },
+      "x-invariants": [
+        "server reads the current hold and protected-set state before selecting operate versus destructive permission",
+        "reason is non-null and non-empty and recent strong authentication is required when releasing the last recovery-point hold",
+        "a successful release does not delete immediately and only permits a later independent prune dry-run"
+      ]
+    },
+    "PromotionCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backup_public_id", "drill_public_id", "expected_backup_row_version", "expected_drill_row_version", "expected_prune_guard_version", "expected_active_promotion_public_id", "expected_active_promotion_row_version"],
+      "properties": {
+        "backup_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" },
+        "drill_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" },
+        "expected_backup_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "expected_drill_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "expected_prune_guard_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "expected_active_promotion_public_id": {
+          "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" }, { "type": "null" }]
+        },
+        "expected_active_promotion_row_version": {
+          "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/RowVersion" }, { "type": "null" }]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "expected_active_promotion_public_id": { "type": "null" } }, "required": ["expected_active_promotion_public_id"] },
+          "then": { "properties": { "expected_active_promotion_row_version": { "type": "null" } } },
+          "else": { "properties": { "expected_active_promotion_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" } } }
+        }
+      ],
+      "x-forbidden-fields": ["matrix_key", "origin_installation_id", "acceptance_ready", "current_health", "force"],
+      "x-invariant": "matrix and all acceptance/health/cleanup/source-link facts are server-derived in one transaction before active-row CAS"
+    },
+    "PromotionRevokeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_promotion_public_id", "expected_promotion_row_version", "reason"],
+      "properties": {
+        "expected_promotion_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" },
+        "expected_promotion_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 512, "x-max-utf8-bytes": 512, "x-redacted-before-persist": true }
+      },
+      "x-invariant": "matrix_key is the typed path parameter and the server verifies it against the current installation before revocation"
+    },
+    "PruneConfirmationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_prune_run_row_version"],
+      "properties": {
+        "expected_prune_run_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" }
+      },
+      "x-invariant": "server consumes the A-owned recent strong-auth proof and creates the actor-bound confirmation in the same transaction"
+    },
+    "PruneExecuteRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prune_run_public_id", "confirmation_id", "expected_prune_run_row_version"],
+      "properties": {
+        "prune_run_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" },
+        "confirmation_id": { "$ref": "admin-api-common.schema.json#/$defs/Uuid128" },
+        "expected_prune_run_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" }
+      },
+      "x-invariant": "confirmation consumption, complete candidate/guard recheck and first deleting CAS are one transaction even when validation fails after proof verification"
+    },
+    "PruneRetryRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_prune_run_row_version"],
+      "properties": {
+        "expected_prune_run_row_version": { "$ref": "admin-api-common.schema.json#/$defs/RowVersion" }
+      },
+      "x-invariant": "retry uses a new A-owned strong-auth proof and only the original immutable candidate set; it cannot add or recreate successful items"
+    }
+  },
+  "x-request-hash-excluded-transport": ["request_id", "idempotency_key", "strong_auth_proof"],
+  "x-owner-boundaries": {
+    "A": "strong_auth_proof and nonce schema remain pending_owner_submission and are not defined here",
+    "B": "staging and restore-resource provider identity fields remain in B-owned resource contracts and are not accepted in these request bodies",
+    "C": "provider evidence payload and external-action/provider internals remain in C/A-owned contracts; D accepts only registered public IDs"
+  }
+}

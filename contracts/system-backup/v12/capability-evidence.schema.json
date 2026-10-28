@@ -1,0 +1,1049 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/capability-evidence.schema.json",
+  "title": "A-owned provider capability spike evidence",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider_role",
+    "provider_identity_hash",
+    "provider_ref_version",
+    "observed_provider_version",
+    "probe_started_at",
+    "probe_finished_at",
+    "probe_scope_hash",
+    "capabilities",
+    "redaction",
+    "cleanup"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "system-backup-capability-evidence.v1"
+    },
+    "provider_role": {
+      "enum": [
+        "artifact",
+        "catalog",
+        "evidence",
+        "kms",
+        "secret",
+        "signing"
+      ]
+    },
+    "provider_identity_hash": {
+      "$ref": "#/$defs/Sha256"
+    },
+    "provider_ref_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "observed_provider_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128
+    },
+    "probe_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "probe_finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "probe_scope_hash": {
+      "$ref": "#/$defs/Sha256"
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/Capability"
+      }
+    },
+    "redaction": {
+      "$ref": "#/$defs/Redaction"
+    },
+    "cleanup": {
+      "$ref": "#/$defs/Cleanup"
+    }
+  },
+  "$defs": {
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_code",
+        "status",
+        "reason_code",
+        "request_scope_hash",
+        "response_shape_hash",
+        "checked_at",
+        "expires_at"
+      ],
+      "properties": {
+        "capability_code": {
+          "type": "string",
+          "enum": [
+            "conditional_create",
+            "checksum_bound_request",
+            "scoped_upload_credential",
+            "scoped_read_credential",
+            "scoped_delete_credential",
+            "multipart_resume",
+            "object_checksum",
+            "version_listing",
+            "delete_marker_listing",
+            "strong_read_after_write",
+            "tls_verified",
+            "scoped_append_credential",
+            "provider_snapshot_listing",
+            "inventory_manifest_listing",
+            "versioned_absence_proof",
+            "scoped_write_credential",
+            "generate_data_key",
+            "unwrap_data_key",
+            "identity_scope",
+            "identity_revocation",
+            "version_retention",
+            "exact_version_read",
+            "resource_version_guard",
+            "uid_guard",
+            "aes256_kw",
+            "purpose_key_separation",
+            "historic_verification",
+            "key_rotation",
+            "scoped_signer",
+            "policy_separation"
+          ]
+        },
+        "status": {
+          "enum": [
+            "supported",
+            "degraded",
+            "unsupported"
+          ]
+        },
+        "reason_code": {
+          "enum": [
+            "none",
+            "probe_failed",
+            "provider_unavailable",
+            "credential_unavailable",
+            "permission_denied",
+            "unsupported_api",
+            "response_invalid",
+            "version_drift",
+            "internal"
+          ]
+        },
+        "request_scope_hash": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "response_shape_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "supported"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_code": {
+                "const": "none"
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unsupported"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "reason_code": {
+                  "const": "unsupported_api"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "reason_code": {
+                  "enum": [
+                    "probe_failed",
+                    "provider_unavailable",
+                    "credential_unavailable",
+                    "permission_denied",
+                    "response_invalid",
+                    "version_drift",
+                    "internal"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "x-status-reason-rule": "supported requires none; unsupported requires deterministic API/version incompatibility reported as unsupported_api; all other known failure reasons require degraded. Version drift alone is inconclusive."
+    },
+    "Redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applied",
+        "removed_field_classes",
+        "raw_material_present"
+      ],
+      "properties": {
+        "applied": {
+          "const": true
+        },
+        "removed_field_classes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "credential",
+              "secret",
+              "token",
+              "private_key",
+              "uri",
+              "raw_response",
+              "raw_log"
+            ]
+          }
+        },
+        "raw_material_present": {
+          "const": false
+        }
+      }
+    },
+    "Cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "owner_marker",
+        "temporary_artifacts_removed",
+        "verified_at"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^cap-[A-Za-z0-9._:-]{8,96}$"
+        },
+        "owner_marker": {
+          "type": "string",
+          "pattern": "^A:[A-Za-z0-9._:-]{4,96}$"
+        },
+        "temporary_artifacts_removed": {
+          "const": true
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "x-evidence-rules": [
+    "A capability is supported only after a complete positive probe with the exact typed provider identity and ref version.",
+    "Temporary failures are degraded; deterministic absence or unsupported APIs are unsupported; missing or expired persistence later derives unknown.",
+    "The evidence records hashes and bounded response shapes only. It never records endpoint URLs, credentials, secret material, raw provider responses or raw logs.",
+    "A probe must retain a run ID and owner marker and prove removal of every temporary artifact before handoff.",
+    "Each checked_at is inside the probe window. expires_at must be later than checked_at and no later than the earliest policy TTL, credential expiry and provider proof validity; receiver supplies that trusted upper bound and rechecks using database time. Missing, conflicting or expired evidence cannot derive supported.",
+    "Artifact/catalog/evidence capability codes map identically to D ProviderCapabilityRecord; reason_code maps to capability_reason_code and expires_at is copied without extension. KMS/secret/signing spikes never create these provider rows or independently prove complete dependency health."
+  ],
+  "x-required-capability-groups": {
+    "absence_proof_any_of": [
+      "strong_read_after_write",
+      "versioned_absence_proof"
+    ],
+    "full_discovery_any_of": [
+      "provider_snapshot_listing",
+      "inventory_manifest_listing"
+    ]
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "artifact"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "conditional_create",
+                    "checksum_bound_request",
+                    "scoped_upload_credential",
+                    "scoped_read_credential",
+                    "scoped_delete_credential",
+                    "multipart_resume",
+                    "object_checksum",
+                    "version_listing",
+                    "delete_marker_listing",
+                    "strong_read_after_write",
+                    "tls_verified"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "catalog"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "conditional_create",
+                    "checksum_bound_request",
+                    "scoped_read_credential",
+                    "scoped_append_credential",
+                    "strong_read_after_write",
+                    "provider_snapshot_listing",
+                    "inventory_manifest_listing",
+                    "versioned_absence_proof",
+                    "tls_verified"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "evidence"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "conditional_create",
+                    "checksum_bound_request",
+                    "scoped_read_credential",
+                    "scoped_write_credential",
+                    "scoped_delete_credential",
+                    "object_checksum",
+                    "strong_read_after_write",
+                    "versioned_absence_proof",
+                    "tls_verified"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "kms"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "generate_data_key",
+                    "unwrap_data_key",
+                    "identity_scope",
+                    "identity_revocation",
+                    "version_retention"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "secret"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "exact_version_read",
+                    "resource_version_guard",
+                    "uid_guard",
+                    "aes256_kw",
+                    "identity_revocation"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_role": {
+            "const": "signing"
+          }
+        },
+        "required": [
+          "provider_role"
+        ]
+      },
+      "then": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "properties": {
+                "capability_code": {
+                  "enum": [
+                    "purpose_key_separation",
+                    "historic_verification",
+                    "key_rotation",
+                    "scoped_signer",
+                    "policy_separation"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "conditional_create"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "checksum_bound_request"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_upload_credential"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_read_credential"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_delete_credential"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "multipart_resume"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "object_checksum"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "version_listing"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "delete_marker_listing"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "strong_read_after_write"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "tls_verified"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_append_credential"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "provider_snapshot_listing"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "inventory_manifest_listing"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "versioned_absence_proof"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_write_credential"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "generate_data_key"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "unwrap_data_key"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "identity_scope"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "identity_revocation"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "version_retention"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "exact_version_read"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "resource_version_guard"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "uid_guard"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "aes256_kw"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "purpose_key_separation"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "historic_verification"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "key_rotation"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "scoped_signer"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "capabilities": {
+          "contains": {
+            "properties": {
+              "capability_code": {
+                "const": "policy_separation"
+              }
+            },
+            "required": [
+              "capability_code"
+            ]
+          },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/strong-auth-proof-nonce.schema.json",
+  "title": "A-owned strong-auth proof and nonce transport",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "payload",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "system-backup-strong-auth-proof.v1"
+    },
+    "payload": {
+      "$ref": "#/$defs/ProofPayload"
+    },
+    "signature": {
+      "$ref": "#/$defs/ProofSignature"
+    }
+  },
+  "$defs": {
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ProofPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issuer",
+        "audience",
+        "subject",
+        "session",
+        "auth_time",
+        "expires_at",
+        "method",
+        "nonce",
+        "endpoint",
+        "request_hash",
+        "idempotency_key",
+        "acr",
+        "amr"
+      ],
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "audience": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "session": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "auth_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "method": {
+          "enum": [
+            "webauthn",
+            "totp",
+            "oidc_mfa"
+          ]
+        },
+        "nonce": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,256}$"
+        },
+        "endpoint": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]{0,127}$"
+        },
+        "request_hash": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{16,128}$"
+        },
+        "acr": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "amr": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "method": {
+                "const": "oidc_mfa"
+              }
+            },
+            "required": [
+              "method"
+            ]
+          },
+          "then": {
+            "required": [
+              "acr",
+              "amr"
+            ],
+            "properties": {
+              "acr": {
+                "type": "string",
+                "minLength": 1
+              },
+              "amr": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "method": {
+                "const": "webauthn"
+              }
+            },
+            "required": [
+              "method"
+            ]
+          },
+          "then": {
+            "properties": {
+              "amr": {
+                "contains": {
+                  "const": "webauthn"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ProofSignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "algorithm",
+        "key_id",
+        "key_version",
+        "domain_separator",
+        "protected_header",
+        "value"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "jws",
+            "cose"
+          ]
+        },
+        "algorithm": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "key_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "key_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "domain_separator": {
+          "const": "clawmanager.system-backup.strong-auth.v1"
+        },
+        "protected_header": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "maxLength": 4096
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "maxLength": 4096
+        }
+      }
+    }
+  },
+  "x-canonicalization": "The signature covers UTF-8 JCS canonical bytes of payload only; schema_version and signature are excluded from the signed input.",
+  "x-verification-rules": [
+    "The server verifies issuer, audience, subject, session, method, auth_time, expiry, endpoint, request_hash and idempotency_key against the current request and trusted issuer registry.",
+    "auth_time must be within strong_auth_max_age_seconds plus the fixed clock-skew allowance; expires_at must cover the current transaction.",
+    "The server derives nonce_hmac with the configured HMAC key and checks every retained historical key version before consuming the nonce.",
+    "Nonce consumption, redacted audit intent and the target mutation or immutable failed response commit in one database transaction.",
+    "Required nonce-HMAC versions come from persisted config history union all ledger versions in control retention, never from the successfully resolved material map. D supplies and transactionally revalidates the snapshot; A rejects missing/duplicate/unresolved versions."
+  ],
+  "x-forbidden-fields": [
+    "raw_secret",
+    "password",
+    "session_token",
+    "private_key",
+    "nonce_key_material"
+  ],
+  "x-local-signature-profile": {
+    "implementation": "Ed25519JWSVerifier",
+    "format": "jws",
+    "algorithm": "EdDSA",
+    "key_purpose": "strong_auth_issuer",
+    "protected_header_fields": [
+      "alg",
+      "key_version",
+      "kid",
+      "purpose",
+      "typ"
+    ],
+    "protected_header_encoding": "UTF-8 JCS of exactly those ASCII property names; base64url without padding",
+    "protected_header_bindings": {
+      "alg": "EdDSA",
+      "key_version": "trusted immutable key version",
+      "kid": "trusted key ID",
+      "purpose": "strong_auth_issuer",
+      "typ": "clawmanager.system-backup.strong-auth.v1"
+    },
+    "signing_input": "ASCII protected_header + dot + base64url(UTF-8 JCS payload); Ed25519 verifies these bytes",
+    "other_profiles": "ES256/COSE and other issuer profiles require their own reviewed adapters; the local adapter rejects them."
+  },
+  "x-trusted-issuer-policy": "Trusted registry supplies allowed methods, OIDC ACR and AMR. Reject missing issuer policy, disallowed method, OIDC ACR outside its allowlist and any AMR outside its allowlist. Policy and keys never come from the submitted proof."
+}

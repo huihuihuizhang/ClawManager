@@ -1,0 +1,1345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "producer-authority.schema.json",
+  "title": "D system producer authority C1 review draft (internal records, not bearer credentials)",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "x-revision": "C1",
+  "x-authority": "Validated JSON is data only. Handles, authenticated principals, call snapshots and publication claims are server-private and cannot be decoded from these records.",
+  "$ref": "#/$defs/ResultRequest",
+  "$defs": {
+    "Hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "EvidenceID": {
+      "type": "string",
+      "pattern": "^sev_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "ID": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "Installation": {
+      "type": "string",
+      "pattern": "^installation_[A-Za-z0-9_-]{1,115}$"
+    },
+    "Counter": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,19}$",
+      "x-maximum": "18446744073709551615"
+    },
+    "ZeroCounter": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$",
+      "x-maximum": "18446744073709551615"
+    },
+    "Timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$",
+      "format": "date-time",
+      "x-sql": "DATETIME(6), valid calendar dates 1000..9999, UTC; no leap seconds or rounding"
+    },
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "x-max-utf8-bytes": 1024
+    },
+    "NullableText": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "NullableHash": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Hash"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "NullableTime": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Role": {
+      "enum": [
+        "artifact",
+        "catalog",
+        "evidence",
+        "kms",
+        "secret",
+        "signing"
+      ]
+    },
+    "Purpose": {
+      "enum": [
+        "capability_probe",
+        "dependency_check"
+      ]
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "server_uuid",
+        "database",
+        "installation"
+      ],
+      "properties": {
+        "server_uuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "database": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-max-utf8-bytes": 256
+        },
+        "installation": {
+          "$ref": "#/$defs/Installation"
+        }
+      }
+    },
+    "Admission": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scenario",
+            "deployment_admission_id",
+            "candidate_hash",
+            "registry_set_hash",
+            "ref_set_hash",
+            "policy_hash",
+            "channel_profile_hash"
+          ],
+          "properties": {
+            "scenario": {
+              "const": "unconfigured"
+            },
+            "deployment_admission_id": {
+              "$ref": "#/$defs/ID"
+            },
+            "candidate_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "registry_set_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "ref_set_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "policy_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "channel_profile_hash": {
+              "$ref": "#/$defs/Hash"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scenario",
+            "check_admission_id",
+            "config_version",
+            "config_hash",
+            "registry_set_hash",
+            "ref_set_hash",
+            "policy_hash",
+            "channel_profile_hash"
+          ],
+          "properties": {
+            "scenario": {
+              "enum": [
+                "disabled",
+                "enabled"
+              ]
+            },
+            "check_admission_id": {
+              "$ref": "#/$defs/ID"
+            },
+            "config_version": {
+              "$ref": "#/$defs/Counter"
+            },
+            "config_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "registry_set_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "ref_set_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "policy_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "channel_profile_hash": {
+              "$ref": "#/$defs/Hash"
+            }
+          }
+        }
+      ]
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_owner",
+        "evaluator_profile_hash",
+        "role",
+        "identity_hash",
+        "ref_version",
+        "probe_scope_hash",
+        "result_slots"
+      ],
+      "properties": {
+        "evaluator_owner": {
+          "enum": [
+            "A",
+            "C"
+          ]
+        },
+        "evaluator_profile_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "ref_version": {
+          "$ref": "#/$defs/ProviderVersion"
+        },
+        "probe_scope_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "result_slots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ID"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "artifact",
+                  "catalog",
+                  "evidence"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evaluator_owner": {
+                "const": "C"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "evaluator_owner": {
+                "const": "A"
+              }
+            }
+          }
+        }
+      ],
+      "x-invariant": "Target and sorted complete result_slots come from authenticated evaluator admission, never the request body. Role capability slots match a-capability-role-mapping.json; dependency slots are separately approved A evaluator kinds."
+    },
+    "Host": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "workload_identity_hash"
+          ],
+          "properties": {
+            "kind": {
+              "const": "service"
+            },
+            "workload_identity_hash": {
+              "$ref": "#/$defs/Hash"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "workload_identity_hash",
+            "cluster_identity_hash",
+            "namespace_uid",
+            "job_uid",
+            "generation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "job"
+            },
+            "workload_identity_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "cluster_identity_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "namespace_uid": {
+              "$ref": "#/$defs/ID"
+            },
+            "job_uid": {
+              "$ref": "#/$defs/ID"
+            },
+            "generation": {
+              "$ref": "#/$defs/Counter"
+            }
+          }
+        }
+      ],
+      "x-invariant": "Host choice remains unapproved. Job requires B identity and termination review; service also needs A/C authenticated deployment admission."
+    },
+    "DomainRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "epoch",
+        "row_version",
+        "state",
+        "issuer_identity_hash",
+        "admission",
+        "admission_expires_at",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "epoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "row_version": {
+          "$ref": "#/$defs/Counter"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "closed",
+            "revoked"
+          ]
+        },
+        "issuer_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "admission_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "x-invariant": "One domain coordination row per scope; epoch monotonically increases on invalidation/reissue, never deleted or reused. No FK to installation/config: an unconfigured installation must stay uncreated. Orphan config rows reject unconfigured admission."
+    },
+    "GrantRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "grant_id",
+        "generation",
+        "domain_epoch",
+        "row_version",
+        "state",
+        "subject_identity_hash",
+        "issuer_identity_hash",
+        "host",
+        "admission",
+        "purpose",
+        "target",
+        "lease_expires_at",
+        "authorization_expires_at",
+        "created_at"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "domain_epoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "row_version": {
+          "$ref": "#/$defs/Counter"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "revoked",
+            "superseded"
+          ]
+        },
+        "subject_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "issuer_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "host": {
+          "$ref": "#/$defs/Host"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Purpose"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "lease_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "authorization_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "x-invariant": "Expired is derived from database time; cannot renew at/after expiry. Renew increments row_version and invalidates every earlier call snapshot. Generation never reused; takeover creates a new grant/run."
+    },
+    "RunRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "run_id",
+        "grant_id",
+        "grant_generation",
+        "target_hash",
+        "target_generation",
+        "input_hash",
+        "evidence_id",
+        "owner_write_expires_at",
+        "observed_at",
+        "observation_expires_at",
+        "state",
+        "row_version"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "target_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "target_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "input_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "evidence_id": {
+          "$ref": "#/$defs/EvidenceID"
+        },
+        "owner_write_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/NullableTime"
+        },
+        "observation_expires_at": {
+          "$ref": "#/$defs/NullableTime"
+        },
+        "state": {
+          "enum": [
+            "acquired",
+            "pending",
+            "published",
+            "committed",
+            "superseded"
+          ]
+        },
+        "row_version": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "x-invariant": "Evidence ID is reserved at acquire but authorizes nothing. observed_at/observation_expires_at are both null at acquire and atomically fixed by authenticated probe output before pending; immutable afterward. owner_write_expires_at never extends, including renewal/takeover."
+    },
+    "TargetRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "target_hash",
+        "target",
+        "generation",
+        "current_run_id",
+        "result_version",
+        "row_version"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "target_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "current_run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "result_version": {
+          "$ref": "#/$defs/ZeroCounter"
+        },
+        "row_version": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "x-invariant": "Persistent target-generation fence independent of result rows. New accepted run advances generation; results CAS generation + current_run_id + result_version. Zero result_version means no result ever committed, not an unguarded overwrite."
+    },
+    "EvidenceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "owner_type",
+        "owner_id",
+        "evidence_type",
+        "classification",
+        "manifest_hash",
+        "content_hash",
+        "content_bytes",
+        "object_hash",
+        "object_bytes",
+        "store_identity_hash",
+        "store_ref_version",
+        "relative_key_hash",
+        "immutable_version",
+        "kek_identity_hash",
+        "kek_version",
+        "write_identity_hash",
+        "write_ref_version",
+        "recovery_profile_hash"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/EvidenceID"
+        },
+        "owner_type": {
+          "const": "system"
+        },
+        "owner_id": {
+          "$ref": "#/$defs/Installation"
+        },
+        "evidence_type": {
+          "const": "capability_snapshot"
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "sensitive"
+          ]
+        },
+        "manifest_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "content_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "content_bytes": {
+          "$ref": "#/$defs/Counter"
+        },
+        "object_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "object_bytes": {
+          "$ref": "#/$defs/Counter"
+        },
+        "store_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "store_ref_version": {
+          "$ref": "#/$defs/RefVersion"
+        },
+        "relative_key_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "immutable_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "kek_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "kek_version": {
+          "$ref": "#/$defs/RefVersion"
+        },
+        "write_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "write_ref_version": {
+          "$ref": "#/$defs/RefVersion"
+        },
+        "recovery_profile_hash": {
+          "$ref": "#/$defs/Hash"
+        }
+      }
+    },
+    "HistoricalBindingRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "run_id",
+        "grant_id",
+        "grant_generation",
+        "domain_epoch",
+        "admission",
+        "target_hash",
+        "input_hash",
+        "evidence",
+        "relative_key",
+        "owner_write_expires_at",
+        "observed_at",
+        "observation_expires_at",
+        "retention_expires_at",
+        "retention_policy_hash",
+        "created_at"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "domain_epoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "target_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "input_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "evidence": {
+          "$ref": "#/$defs/EvidenceBinding"
+        },
+        "relative_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "x-max-utf8-bytes": 4096
+        },
+        "owner_write_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "observation_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "retention_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "retention_policy_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "x-invariant": "Immutable pending-time record (immutable_version normally null); actual version is stored on evidence publication and bound by ResultRequest. Original encrypted bytes and exact deterministic key survive revocation/bootstrap. Retention holds are separate references, never edits to owner deadline."
+    },
+    "ProviderObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "status",
+        "reason",
+        "observed_version"
+      ],
+      "properties": {
+        "slot": {
+          "$ref": "#/$defs/ID"
+        },
+        "status": {
+          "enum": [
+            "supported",
+            "degraded",
+            "unsupported"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "none",
+            "probe_failed",
+            "provider_unavailable",
+            "credential_unavailable",
+            "permission_denied",
+            "unsupported_api",
+            "response_invalid",
+            "version_drift",
+            "internal"
+          ]
+        },
+        "observed_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderVersion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "supported"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "const": "none"
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unsupported"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": {
+                  "const": "unsupported_api"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "reason": {
+                  "enum": [
+                    "probe_failed",
+                    "provider_unavailable",
+                    "credential_unavailable",
+                    "permission_denied",
+                    "response_invalid",
+                    "version_drift",
+                    "internal"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DependencyObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "status",
+        "reason",
+        "observed_version",
+        "observed_checksum"
+      ],
+      "properties": {
+        "slot": {
+          "enum": [
+            "artifact_credential",
+            "ca",
+            "kek",
+            "signing",
+            "catalog",
+            "evidence",
+            "attestation"
+          ]
+        },
+        "status": {
+          "enum": [
+            "healthy",
+            "degraded",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "none",
+            "provider_unavailable",
+            "credential_unavailable",
+            "ca_unavailable",
+            "kek_unavailable",
+            "signing_key_unavailable",
+            "signature_invalid",
+            "key_compromised",
+            "acceptance_invalid",
+            "catalog_unavailable",
+            "evidence_unavailable",
+            "attestation_invalid",
+            "attestation_expired",
+            "artifact_corrupt",
+            "catalog_tombstoned",
+            "delete_failed",
+            "cleanup_residual_data",
+            "finalization_pending",
+            "verification_inconclusive"
+          ]
+        },
+        "observed_version": {
+          "$ref": "#/$defs/NullableText"
+        },
+        "observed_checksum": {
+          "$ref": "#/$defs/NullableHash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "healthy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "const": "none"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "reason": {
+                  "const": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "observed_version": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observed_checksum": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "observed_checksum": {
+                "$ref": "#/$defs/Hash"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Results": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "observations"
+          ],
+          "properties": {
+            "kind": {
+              "const": "provider"
+            },
+            "observations": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/ProviderObservation"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "observations"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dependency"
+            },
+            "observations": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/DependencyObservation"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ResultRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "scope",
+        "grant_id",
+        "grant_generation",
+        "run_id",
+        "domain_epoch",
+        "admission",
+        "purpose",
+        "target",
+        "input_hash",
+        "request_key",
+        "target_generation",
+        "expected_result_version",
+        "evidence",
+        "expected_evidence_version",
+        "observed_at",
+        "observation_expires_at",
+        "results"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "system-backup-producer-result.c1"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "domain_epoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Purpose"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "input_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "request_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{16,128}$"
+        },
+        "target_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "expected_result_version": {
+          "$ref": "#/$defs/ZeroCounter"
+        },
+        "evidence": {
+          "$ref": "#/$defs/EvidenceBinding"
+        },
+        "expected_evidence_version": {
+          "$ref": "#/$defs/Counter"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "observation_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "results": {
+          "$ref": "#/$defs/Results"
+        }
+      },
+      "x-invariant": "Complete normalized request digest includes every field. Authenticated inputs must match locked records. SQL additionally validates current clock, ready/retention/GC, manifest, claim, evaluator, config and all CAS; syntax validation does not authorize submission."
+    },
+    "ReceiptRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "receipt_key_hash",
+        "request_hash",
+        "request",
+        "result_version",
+        "committed_at",
+        "retention_expires_at",
+        "charged_bytes"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "receipt_key_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "request_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "request": {
+          "$ref": "#/$defs/ResultRequest"
+        },
+        "result_version": {
+          "$ref": "#/$defs/Counter"
+        },
+        "committed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "retention_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "charged_bytes": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "x-invariant": "Immutable historical fact; stored request is canonical bytes, no credential/handle. Independent receipt-read authorization required when original execution authority is no longer valid. Same-key replay must not charge or update result timestamps."
+    },
+    "CommandExpected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant_id",
+        "grant_generation",
+        "grant_row_version",
+        "run_id",
+        "target_generation"
+      ],
+      "properties": {
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "grant_row_version": {
+          "$ref": "#/$defs/Counter"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "target_generation": {
+          "$ref": "#/$defs/Counter"
+        }
+      }
+    },
+    "CommandNext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant_id",
+        "grant_generation",
+        "run_id",
+        "evidence_id",
+        "subject_identity_hash",
+        "issuer_identity_hash",
+        "host",
+        "admission",
+        "purpose",
+        "input_hash",
+        "authorization_expires_at",
+        "owner_write_expires_at"
+      ],
+      "properties": {
+        "grant_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "grant_generation": {
+          "$ref": "#/$defs/Counter"
+        },
+        "run_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "evidence_id": {
+          "$ref": "#/$defs/EvidenceID"
+        },
+        "subject_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "issuer_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "host": {
+          "$ref": "#/$defs/Host"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Purpose"
+        },
+        "input_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "authorization_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "owner_write_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "CommandRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "scope",
+        "actor_identity_hash",
+        "command",
+        "request_key",
+        "target",
+        "expected_domain_epoch",
+        "expected_target_generation",
+        "expected",
+        "next",
+        "lease_expires_at",
+        "termination_decision_hash"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "system-backup-producer-command.c1"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "actor_identity_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "command": {
+          "enum": [
+            "acquire",
+            "renew",
+            "revoke",
+            "takeover"
+          ]
+        },
+        "request_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{16,128}$"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "expected_domain_epoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "expected_target_generation": {
+          "$ref": "#/$defs/ZeroCounter"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandExpected"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandNext"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lease_expires_at": {
+          "$ref": "#/$defs/NullableTime"
+        },
+        "termination_decision_hash": {
+          "$ref": "#/$defs/NullableHash"
+        }
+      },
+      "x-invariant": "Acquire requires independently provisioned open domain, next and lease, no expected or termination decision. Renew requires expected and lease only; revoke expected only; takeover expected+next+lease and authenticated termination decision OR authoritative old expiry. actor_identity_hash is matched against sealed principal, never authentication."
+    },
+    "CommandReceiptRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "receipt_key_hash",
+        "request_hash",
+        "request",
+        "outcome",
+        "committed_at",
+        "retention_expires_at",
+        "charged_bytes"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "receipt_key_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "request_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "request": {
+          "$ref": "#/$defs/CommandRequest"
+        },
+        "outcome": {
+          "$ref": "#/$defs/CommandExpected"
+        },
+        "committed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "retention_expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "charged_bytes": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "x-invariant": "Same-key original receipt remains readable only under current independent authority; its outcome is not an execution handle. Domain provisioning/reissue is a separate authenticated deployment operation, not an Acquire side effect."
+    },
+    "ReferenceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "evidence_id",
+        "reference_kind",
+        "reference_key_hash",
+        "protected_until",
+        "created_at"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "evidence_id": {
+          "$ref": "#/$defs/EvidenceID"
+        },
+        "reference_kind": {
+          "enum": [
+            "producer_result",
+            "producer_receipt",
+            "bootstrap_candidate",
+            "hold"
+          ]
+        },
+        "reference_key_hash": {
+          "$ref": "#/$defs/Hash"
+        },
+        "protected_until": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "x-invariant": "Additional producer references, not the complete legacy reference universe. GC must enumerate all existing owner policies plus these ranges; unknown mapping blocks deletion. An explicit hold uses a reviewed finite protected_until and may be extended under separate authority."
+    },
+    "RefVersion": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "ProviderVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "x-max-utf8-bytes": 512
+    }
+  }
+}

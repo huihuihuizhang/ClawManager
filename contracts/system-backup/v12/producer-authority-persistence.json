@@ -1,0 +1,114 @@
+{
+  "kind": "system_backup_producer_persistence",
+  "contract_version": "system-backup-plan.v12",
+  "revision": "C1",
+  "status": "draft_not_migration",
+  "owner": "D",
+  "schema": "producer-authority.schema.json",
+  "migration_number": null,
+  "embedded_catalog_changed": false,
+  "inventory_changed": false,
+  "approved_reviewers": [],
+  "sql_profile": "MySQL 8.0/8.4 InnoDB, strict SQL mode, session UTC, RepeatableRead current reads; exact DDL and execution plans require A/C review plus real MySQL before catalog admission",
+  "column_conventions": {
+    "scope_key": "BINARY(32) NOT NULL, producer scope digest; all loads also compare exact Scope canonical bytes to defeat hash-key mismatch",
+    "scope_bytes": "VARBINARY(1024) NOT NULL, canonical Scope; retained on domain and all history/receipts",
+    "hash": "BINARY(32) NOT NULL; lowercase hex only in JSON projection",
+    "id": "VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL; ID regex excludes spaces so SQL pad semantics cannot alias accepted IDs",
+    "evidence_id": "VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL; exactly EvidenceID pattern and same SQL type/collation as referenced existing evidence public_id must be verified when writing DDL",
+    "counter": "BIGINT UNSIGNED NOT NULL CHECK(value>0); refuse overflow rather than wrap",
+    "zero_counter": "BIGINT UNSIGNED NOT NULL; zero means no result/no previous target, never wildcard",
+    "time": "DATETIME(6) NOT NULL, UTC microseconds; nullable only where explicitly listed",
+    "record_bytes": "MEDIUMBLOB NOT NULL, typed-frame canonical record, OCTET_LENGTH <= table record_max_bytes. Mandatory decode/schema/semantic check plus exact correspondence to indexed columns on every load. Not a second permissive authority source. No raw credential or plaintext evidence.",
+    "record_sha256": "BINARY(32) NOT NULL, SHA256(record_bytes), integrity check only, not authentication",
+    "record_storage": "Every schema field is retained in record_bytes. Listed columns are typed/indexed projections and MUST agree with the full record; additional columns are derived keys. Updates regenerate complete canonical bytes and digest in the same CAS. Immutable tables reject byte changes."
+  },
+  "tables": [
+    {
+      "name":"system_backup_producer_domains","definition":"DomainRecord","lock_layer":"L1","record_max_bytes":16384,
+      "columns":{"scope_key":"scope_key","scope_bytes":"scope_bytes","epoch":"counter","row_version":"counter","state":"ENUM(open,closed,revoked) NOT NULL","admission_expires_at":"time","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key"],"unique_keys":[],"indexes":[["state","admission_expires_at","scope_key"]],"foreign_keys":[],
+      "checks":["epoch>0 AND row_version>0","record length bound and exact scope/column correspondence"],
+      "lifecycle":"Provision by independent trusted deployment admission, lock installation/config prefix first; config absence enforced even if orphan config exists. Preserve scope key and monotonically advance epoch forever. Bootstrap closes unconfigured epoch atomically. No FK that creates installation/config."
+    },
+    {
+      "name":"system_backup_producer_grants","definition":"GrantRecord","lock_layer":"L4","record_max_bytes":32768,
+      "columns":{"scope_key":"scope_key","grant_id":"id","generation":"counter","domain_epoch":"counter","row_version":"counter","state":"ENUM(active,revoked,superseded) NOT NULL","subject_identity_hash":"hash","lease_expires_at":"time","authorization_expires_at":"time","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","grant_id"],"unique_keys":[["scope_key","grant_id","generation"]],"indexes":[["scope_key","state","lease_expires_at","grant_id"]],
+      "foreign_keys":[{"columns":["scope_key"],"table":"system_backup_producer_domains","references":["scope_key"],"delete":"RESTRICT","update":"RESTRICT"}],
+      "checks":["generation>0 AND domain_epoch>0 AND row_version>0","lease_expires_at<=authorization_expires_at"],
+      "lifecycle":"Grant ID never reused. domain_epoch is a snapshot, intentionally not a FK to mutable current epoch. Every live operation locks/compares current domain epoch; renewal only before lease expiry with exact CAS."
+    },
+    {
+      "name":"system_backup_producer_runs","definition":"RunRecord","lock_layer":"L4","record_max_bytes":16384,
+      "columns":{"scope_key":"scope_key","run_id":"id","grant_id":"id","grant_generation":"counter","target_hash":"hash","target_generation":"counter","evidence_id":"evidence_id","owner_write_expires_at":"time","observed_at":"DATETIME(6) NULL","observation_expires_at":"DATETIME(6) NULL","state":"ENUM(acquired,pending,published,committed,superseded) NOT NULL","row_version":"counter","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","run_id"],"unique_keys":[["evidence_id"],["scope_key","grant_id","grant_generation"],["scope_key","run_id","evidence_id"]],"indexes":[["scope_key","target_hash","target_generation"],["scope_key","state","owner_write_expires_at","run_id"]],
+      "foreign_keys":[{"columns":["scope_key","grant_id","grant_generation"],"table":"system_backup_producer_grants","references":["scope_key","grant_id","generation"],"delete":"RESTRICT","update":"RESTRICT"}],
+      "checks":["row_version>0 AND target_generation>0","(observed_at IS NULL AND observation_expires_at IS NULL AND state IN (acquired,superseded)) OR (observed_at IS NOT NULL AND observation_expires_at IS NOT NULL AND observed_at<observation_expires_at)"],
+      "lifecycle":"One run/evidence per grant. Reserve evidence ID before pending without FK to not-yet-created evidence. Generation comes from target CAS. Only acquired->pending fixes observation; later changes preserve original dates/deadline."
+    },
+    {
+      "name":"system_backup_producer_targets","definition":"TargetRecord","lock_layer":"L5","record_max_bytes":16384,
+      "columns":{"scope_key":"scope_key","target_hash":"hash","generation":"counter","current_run_id":"id","result_version":"zero_counter","row_version":"counter","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","target_hash"],"unique_keys":[],"indexes":[],
+      "foreign_keys":[{"columns":["scope_key"],"table":"system_backup_producer_domains","references":["scope_key"],"delete":"RESTRICT","update":"RESTRICT"}],
+      "checks":["generation>0 AND row_version>0"],
+      "lifecycle":"No physical current_run FK: avoids insert cycle/backward FK lock. Transaction validates exact run/target relation after run keys locked at L4. Keep generation fence even after historical GC. Never reset result_version when a new run starts."
+    },
+    {
+      "name":"system_backup_producer_evidence_bindings","definition":"HistoricalBindingRecord","lock_layer":"L4","record_max_bytes":32768,
+      "columns":{"scope_key":"scope_key","scope_bytes":"scope_bytes","run_id":"id","evidence_id":"evidence_id","grant_id":"id","grant_generation":"counter","owner_write_expires_at":"time","observation_expires_at":"time","retention_expires_at":"time","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","evidence_id"],"unique_keys":[["evidence_id"],["scope_key","run_id"]],"indexes":[["scope_key","owner_write_expires_at","evidence_id"]],
+      "foreign_keys":[{"columns":["scope_key","run_id","evidence_id"],"table":"system_backup_producer_runs","references":["scope_key","run_id","evidence_id"],"delete":"RESTRICT","update":"RESTRICT"}],
+      "checks":["observation_expires_at>observed_at in validated record","retention_expires_at>=owner_write_expires_at"],
+      "lifecycle":"New row key locked L4, inserted atomically with pending/chunks at L8 after referenced run already locked. No FK to mutable config/epoch or evidence: GC may clear evidence payload but cannot remove historical binding until reviewed retention/references permit. SQL transaction checks exact evidence ownership. immutable_version in original binding stays null; observed immutable version belongs to evidence and result receipt."
+    },
+    {
+      "name":"system_backup_producer_result_receipts","definition":"ReceiptRecord","lock_layer":"L3","record_max_bytes":98304,
+      "columns":{"scope_key":"scope_key","scope_bytes":"scope_bytes","receipt_key_hash":"hash","request_hash":"hash","run_id":"id","evidence_id":"evidence_id","target_hash":"hash","result_version":"counter","committed_at":"time","retention_expires_at":"time","charged_bytes":"counter","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","receipt_key_hash"],"unique_keys":[["scope_key","target_hash","result_version"]],"indexes":[["scope_key","run_id","receipt_key_hash"],["scope_key","evidence_id","receipt_key_hash"],["scope_key","retention_expires_at","receipt_key_hash"]],"foreign_keys":[],
+      "checks":["result_version>0 AND charged_bytes>0","canonical stored request rehash matches request_hash and receipt_key_hash"],
+      "lifecycle":"Immutable, independent historical auth/read. No FK to mutable authorization/config; logical run/evidence binding checked under L4/L8. No upsert that changes bytes. Keep until idempotency/authorization/observation horizons plus configured receipt retention expire and all holds clear."
+    },
+    {
+      "name":"system_backup_producer_command_receipts","definition":"CommandReceiptRecord","lock_layer":"L3","record_max_bytes":65536,
+      "columns":{"scope_key":"scope_key","scope_bytes":"scope_bytes","receipt_key_hash":"hash","request_hash":"hash","committed_at":"time","retention_expires_at":"time","charged_bytes":"counter","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","receipt_key_hash"],"unique_keys":[],"indexes":[["scope_key","retention_expires_at","receipt_key_hash"]],"foreign_keys":[],
+      "checks":["charged_bytes>0","canonical command rehash matches request_hash and receipt_key_hash"],
+      "lifecycle":"Acquire/renew/revoke/takeover have separate domain-separated keys bound to authenticated actor; immutable same-request replay never performs a second lease mutation or capacity charge. Authenticated deployment-domain provisioning has its own reviewed deployment receipt, never an implicit Acquire fallback."
+    },
+    {
+      "name":"system_backup_producer_evidence_refs","definition":"ReferenceRecord","lock_layer":"L5","record_max_bytes":8192,
+      "columns":{"scope_key":"scope_key","evidence_id":"evidence_id","reference_kind":"ENUM(producer_result,producer_receipt,bootstrap_candidate,hold) NOT NULL","reference_key_hash":"hash","protected_until":"time","record_bytes":"record_bytes","record_sha256":"hash"},
+      "primary_key":["scope_key","evidence_id","reference_kind","reference_key_hash"],"unique_keys":[],"indexes":[["scope_key","protected_until","evidence_id"]],"foreign_keys":[],
+      "checks":["exact validated ReferenceRecord and scope/evidence mapping"],
+      "lifecycle":"Missing reference range locked at L5; new reference only inserted after L8 evidence readiness and no GC claim check. No backward evidence FK lock during L5. Holds can extend only via independent management authority and CAS/old protected_until comparison."
+    }
+  ],
+  "result_projection": {
+    "unconfigured": "Commit candidate results to producer target/result receipt/references only. Never write live provider/dependency success projections or create installation/config. Bootstrap reads exact reviewed candidate receipt/evidence, rechecks original observation, and closes domain; no implicit permission conversion.",
+    "configured": "Require exact active installation/current config matching disabled/enabled admission. Provider roles map to all admitted capability slots; A dependency roles map only admitted dependency kinds. Lock legacy unique keys/ranges at L5, then atomically update complete result set with target/result CAS and evidence refs. disabled checks cannot change enabled state.",
+    "legacy_key_aliases": "Legacy provider/dependency projection unique keys omit probe_scope/profile. Different target scopes may alias one legacy slot. Configured admission must designate one canonical target key per legacy projection slot; lock and recheck that config-owned mapping at L1/L5. Other scopes remain candidate receipts only and cannot overwrite live projections. No last-writer-wins across target keys.",
+    "evaluator": "Authenticated profile selects full sorted set; provider all codes from a-capability-role-mapping.json. KMS -> kek; signing -> signing; Secret requires A explicit admitted dependency-kind set (no default auto projection). A evaluator attestation is independently checked, evidence-ready alone never implies healthy."
+  },
+  "capacity": {
+    "profile": "producer-reservation.c1, conservative admission reservation, not an estimate of exact InnoDB physical bytes",
+    "rounding_bytes": 4096,
+    "fixed_transaction_bytes": 65536,
+    "new_row_cost": "65536 + ceil(record_max_bytes/4096)*4096 per retained row, independent of shorter actual payload; total additionally includes 65536 per transaction and existing evidence/chunk/audit/projection admission costs exactly once",
+    "mutation_cost": "Every retained command receipt (including renewal/revoke) is charged. In-place updates to already fully reserved record bounds add no new row cost; new revisions stored separately are charged as new rows. Fresh evidence/refs and expanded result sets charged before inserts.",
+    "reserve": "Use same existing metadata reservation id=1 under L6; arithmetic checked for uint64/int64 overflow before SQL; within configured metadata budget and physical headroom. Pinned collector identity and original sample must still be <=5s old after waits and at final guard.",
+    "replay": "Read-only exact receipt replay has zero charge and no timestamp refresh. New mutation after replay never inherits the prior charge or authority.",
+    "release": "No automatic reset from a newer report. Do not decrement for producer GC until a separately reviewed reconciliation can prove deletion and physical accounting. Conservative reservations may exhaust budget; block safely and report capacity_unavailable.",
+    "failure": "Rollback reservation with all local state on admission/CAS/audit/guard failure. Revocation safety must not depend on ability to allocate a new command receipt: independent domain epoch close/revocation record is preallocated by deployment admission; its emergency path needs A deployment-review evidence before runtime."
+  },
+  "references_and_gc": {
+    "scope": "All existing task/config/catalog/promotion/log/evidence-reference owner policies remain required. New table does not replace them.",
+    "range": "At L5 lock producer refs by (scope_key,evidence_id) prefix including empty range, target/projection slots and legacy refs/holds in stable order, then evidence L8. New refs require same locks and reject GC claim/deleting/deleted.",
+    "pending_unknown": "Never delete history, original ciphertext or pending/write_unknown solely on retention expiry. Independent resolution and proof that no writes/references remain required; inability to prove holds the bytes and capacity.",
+    "result_refs": "Current configured result and live bootstrap candidate reference keep evidence through original observation/required retention. Immutable receipt refs keep it through receipt retention. Replacing result retires only its own reference, not receipt/hold references.",
+    "history": "Keep domain and target generation tombstones permanently. Purging historical rows requires expired write/observation/receipt horizons, resolved storage state, no claim/ref/hold and no child FK; preserve compact replay tombstones before deleting receipts. Tombstone format and purge implementation require separate review; until then retain all receipts/history.",
+    "sidecar": "All eight tables are excluded control objects from resources backup/restore; only redacted aggregate integrity/retention summaries may enter sidecar. No raw admission identity, requests, credential material or original evidence body exported."
+  },
+  "required_mysql_checks": ["complete proposed DDL/legacy FK collation compatibility", "empty scope/receipt/ref range races", "target+legacy slot mapping races", "bootstrap epoch invalidation", "capacity and audit waits past expiry", "final write wait then UTC recheck", "deadlock retry same key", "commit response loss and locking readback", "FK retention deletion order", "EXPLAIN keyed bounded recovery/GC scans"]
+}

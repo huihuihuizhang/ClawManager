@@ -1818,6 +1818,13 @@ func (s *skillService) promoteSkillToUploadedLibrary(skill *models.Skill) error 
 }
 
 func (s *skillService) recordScan(blob *models.SkillBlob, dir *extractedSkillDirectory) error {
+	return s.recordScanContext(context.Background(), blob, dir)
+}
+
+func (s *skillService) recordScanContext(ctx context.Context, blob *models.SkillBlob, dir *extractedSkillDirectory) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if s.scanner == nil {
 		return s.markSkillScanFailed(blob, fmt.Errorf("skill scanner is not configured"))
 	}
@@ -1828,7 +1835,10 @@ func (s *skillService) recordScan(blob *models.SkillBlob, dir *extractedSkillDir
 	if err != nil {
 		return fmt.Errorf("failed to prepare skill archive for scanning: %w", err)
 	}
-	riskLevel, findings, summary, err := s.scanner.ScanArchive(context.Background(), blob.FileName, archiveBytes, nil)
+	riskLevel, findings, summary, err := s.scanner.ScanArchive(ctx, blob.FileName, archiveBytes, nil)
+	if cancelErr := materializeCancellation(ctx, err); cancelErr != nil {
+		return cancelErr
+	}
 	if err != nil {
 		return s.markSkillScanFailed(blob, err)
 	}
@@ -1848,6 +1858,9 @@ func (s *skillService) recordScan(blob *models.SkillBlob, dir *extractedSkillDir
 	blob.RiskLevel = riskLevel
 	blob.LastScannedAt = &scannedAt
 	blob.LastScanResultID = &result.ID
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if err := s.repo.UpdateBlob(blob); err != nil {
 		return err
 	}

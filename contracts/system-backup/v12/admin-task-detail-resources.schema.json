@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-task-detail-resources.schema.json",
+  "title": "System backup D-owned task detail projections",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "NullableSha256": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_id", "sha256"],
+      "properties": {
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "NullableEvidenceReference": { "anyOf": [{ "$ref": "#/$defs/EvidenceReference" }, { "type": "null" }] },
+    "SourceArtifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_artifact_type", "source_public_id"],
+      "properties": {
+        "source_artifact_type": { "type": "string", "enum": ["backup", "catalog_import"] },
+        "source_public_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "allOf": [
+        { "if": { "properties": { "source_artifact_type": { "const": "backup" } }, "required": ["source_artifact_type"] }, "then": { "properties": { "source_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } } },
+        { "if": { "properties": { "source_artifact_type": { "const": "catalog_import" } }, "required": ["source_artifact_type"] }, "then": { "properties": { "source_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" } } } }
+      ]
+    },
+    "ExecutionProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current_attempt_number", "current_phase", "job_generation", "last_business_progress_at"],
+      "properties": {
+        "current_attempt_number": { "type": ["integer", "null"], "minimum": 1 },
+        "current_phase": { "type": ["string", "null"], "enum": ["capture", "secret_capture", "publish", "restore", "normalize", "verify", "preflight", null] },
+        "job_generation": { "type": ["integer", "null"], "minimum": 1 },
+        "last_business_progress_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "x-invariant": "projection is rebuilt from authoritative attempt and observation rows; heartbeat alone never changes business progress"
+    },
+    "VerifierSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aggregate_status", "passed", "warning", "failed", "skipped", "report_evidence"],
+      "properties": {
+        "aggregate_status": { "type": "string", "enum": ["passed", "warning", "failed", "skipped"] },
+        "passed": { "type": "integer", "minimum": 0 },
+        "warning": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "report_evidence": { "$ref": "#/$defs/NullableEvidenceReference" }
+      },
+      "x-invariant": "aggregate is derived from owner-submitted check rows using failed greater than warning greater than passed greater than skipped; owner expected/actual payloads remain outside this view"
+    },
+    "EligibilityReason": {
+      "type": "string",
+      "enum": ["eligible", "functional_test", "task_not_succeeded", "artifact_not_committed", "required_part_failed", "required_verifier_failed", "staging_cleanup_failed", "consistency_not_strong", "disqualifying_warning", "target_not_external", "target_risk", "attestation_invalid", "kek_not_recoverable", "catalog_unavailable", "source_backup_not_eligible", "source_artifact_unusable", "manifest_drift", "isolation_invalid", "evidence_incomplete"]
+    },
+    "ArtifactState": { "type": "string", "enum": ["staging", "committed", "deleting", "delete_failed", "deleted", "corrupt"] },
+    "ArtifactUnusableReason": { "type": "string", "enum": ["none", "not_committed", "finalization_pending", "deleting", "delete_failed", "deleted", "corrupt", "provider_unavailable", "credential_unavailable", "kek_unavailable", "evidence_unavailable", "verification_inconclusive"] },
+    "ImportUnusableReason": { "type": "string", "enum": ["none", "verification_pending", "catalog_tombstoned", "corrupt", "acceptance_invalid", "provider_unavailable", "credential_unavailable", "kek_unavailable", "signing_key_unavailable", "catalog_unavailable", "evidence_unavailable", "verification_inconclusive"] },
+    "NullableArtifactChecksumSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "index", "marker", "acceptance", "catalog"],
+      "properties": {
+        "manifest": { "$ref": "#/$defs/NullableSha256" },
+        "index": { "$ref": "#/$defs/NullableSha256" },
+        "marker": { "$ref": "#/$defs/NullableSha256" },
+        "acceptance": { "$ref": "#/$defs/NullableSha256" },
+        "catalog": { "$ref": "#/$defs/NullableSha256" }
+      }
+    },
+    "BackupDetailResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task", "execution", "task_purpose", "source_orchestrator", "source_profile", "matrix", "datasource_topology", "runner", "requested_parts", "artifact_state", "artifact_usable", "artifact_unusable_reason", "artifact_committed_at", "acceptance_ready", "acceptance_eligible", "eligibility_reason_codes", "eligibility_decision_hash", "target_class", "target_risks", "target_failure_domain_id", "consistency", "checksums", "artifact_registration_id", "artifact_registration_hash", "verifier_summary", "manual_hold", "manual_hold_reason", "manual_hold_actor", "manual_hold_at", "promotion_hold", "bytes", "prune_guard_version"],
+      "properties": {
+        "schema_version": { "const": "system-backup-backup-detail.v1" },
+        "task": { "allOf": [{ "$ref": "task-operation.schema.json#/$defs/Task" }, { "properties": { "task_type": { "const": "backup" } } }] },
+        "execution": { "$ref": "#/$defs/ExecutionProjection" },
+        "task_purpose": { "type": "string", "enum": ["acceptance", "functional_test"] },
+        "source_orchestrator": { "type": "string", "enum": ["kubernetes", "k3s"] },
+        "source_profile": { "type": "string", "enum": ["cluster", "single-node"] },
+        "matrix": { "$ref": "admin-control-resources.schema.json#/$defs/MatrixKey" },
+        "datasource_topology": { "type": "string", "enum": ["in_cluster"] },
+        "runner": { "type": "string", "enum": ["k8s", "k3s"] },
+        "requested_parts": { "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true, "items": { "enum": ["mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"] } },
+        "artifact_state": { "$ref": "#/$defs/ArtifactState" },
+        "artifact_usable": { "type": "boolean" },
+        "artifact_unusable_reason": { "$ref": "#/$defs/ArtifactUnusableReason" },
+        "artifact_committed_at": { "type": ["string", "null"], "format": "date-time" },
+        "acceptance_ready": { "type": "boolean" },
+        "acceptance_eligible": { "type": "boolean" },
+        "eligibility_reason_codes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/EligibilityReason" } },
+        "eligibility_decision_hash": { "$ref": "#/$defs/NullableSha256" },
+        "target_class": { "type": "string", "enum": ["dr-ready-external", "same-cluster-copy"] },
+        "target_risks": { "type": "array", "maxItems": 12, "uniqueItems": true, "items": { "enum": ["source_overlap", "same_failure_domain", "artifact_credential_source_dependent", "kek_source_dependent", "signing_key_source_dependent", "catalog_source_dependent", "attestation_missing", "attestation_expired", "conditional_commit_unavailable", "transport_unverified", "broad_egress", "provider_capability_degraded"] } },
+        "target_failure_domain_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "consistency": { "type": "string", "enum": ["strong", "bounded", "weak"] },
+        "checksums": { "$ref": "#/$defs/NullableArtifactChecksumSet" },
+        "artifact_registration_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+        "artifact_registration_hash": { "$ref": "#/$defs/NullableSha256" },
+        "verifier_summary": { "$ref": "#/$defs/VerifierSummary" },
+        "manual_hold": { "type": "boolean" },
+        "manual_hold_reason": { "type": ["string", "null"], "maxLength": 512, "x-redacted-before-response": true },
+        "manual_hold_actor": { "type": ["string", "null"], "maxLength": 128 },
+        "manual_hold_at": { "type": ["string", "null"], "format": "date-time" },
+        "promotion_hold": { "type": "boolean" },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "prune_guard_version": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        { "if": { "properties": { "artifact_usable": { "const": true } }, "required": ["artifact_usable"] }, "then": { "properties": { "artifact_unusable_reason": { "const": "none" } } }, "else": { "not": { "properties": { "artifact_unusable_reason": { "const": "none" } }, "required": ["artifact_unusable_reason"] } } },
+        { "if": { "properties": { "acceptance_eligible": { "const": true } }, "required": ["acceptance_eligible"] }, "then": { "properties": { "eligibility_reason_codes": { "const": ["eligible"] }, "eligibility_decision_hash": { "$ref": "#/$defs/Sha256" }, "artifact_registration_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "artifact_registration_hash": { "$ref": "#/$defs/Sha256" } } }, "else": { "properties": { "eligibility_reason_codes": { "not": { "contains": { "const": "eligible" } } } } } },
+        { "if": { "properties": { "acceptance_ready": { "const": true } }, "required": ["acceptance_ready"] }, "then": { "properties": { "artifact_usable": { "const": true }, "acceptance_eligible": { "const": true } } } },
+        { "if": { "properties": { "artifact_registration_id": { "type": "null" } }, "required": ["artifact_registration_id"] }, "then": { "properties": { "artifact_registration_hash": { "type": "null" } } }, "else": { "properties": { "artifact_registration_hash": { "$ref": "#/$defs/Sha256" } } } },
+        { "if": { "properties": { "manual_hold": { "const": false } }, "required": ["manual_hold"] }, "then": { "properties": { "manual_hold_reason": { "type": "null" }, "manual_hold_actor": { "type": "null" }, "manual_hold_at": { "type": "null" } } }, "else": { "properties": { "manual_hold_reason": { "type": "string", "minLength": 1, "maxLength": 512 }, "manual_hold_actor": { "type": "string", "minLength": 1, "maxLength": 128 }, "manual_hold_at": { "type": "string", "format": "date-time" } } } }
+      ],
+      "x-invariant": "manifest bytes remain the manifest contract; this view may place terminal database eligibility beside its checksum but never injects post-commit facts into manifest fields"
+    },
+    "DrillDetailResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task", "execution", "source", "source_checksums", "task_purpose", "target_profile", "restore_target_config_hash", "cleanup_policy", "cleanup_status", "cleanup_failure_code", "preflight_evidence", "diff_evidence", "verifier_summary", "consistency", "acceptance_eligible", "eligibility_reason_codes", "eligibility_decision_hash"],
+      "properties": {
+        "schema_version": { "const": "system-backup-drill-detail.v1" },
+        "task": { "allOf": [{ "$ref": "task-operation.schema.json#/$defs/Task" }, { "properties": { "task_type": { "const": "drill" } } }] },
+        "execution": { "$ref": "#/$defs/ExecutionProjection" },
+        "source": { "$ref": "#/$defs/SourceArtifactReference" },
+        "source_checksums": { "$ref": "#/$defs/NullableArtifactChecksumSet" },
+        "task_purpose": { "type": "string", "enum": ["acceptance", "functional_test"] },
+        "target_profile": { "type": "string", "enum": ["cluster", "single-node"] },
+        "restore_target_config_hash": { "$ref": "#/$defs/Sha256" },
+        "cleanup_policy": { "type": "string", "enum": ["delete-on-success", "retain-always"] },
+        "cleanup_status": { "type": "string", "enum": ["not_started", "pending", "running", "succeeded", "failed", "partial_failed", "retained"] },
+        "cleanup_failure_code": { "type": "string", "enum": ["none", "deadline_exceeded", "provider_unavailable", "permission_denied", "identity_mismatch", "checksum_mismatch", "ownership_unknown", "residual_data", "internal"] },
+        "preflight_evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "diff_evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "verifier_summary": { "$ref": "#/$defs/VerifierSummary" },
+        "consistency": { "type": ["string", "null"], "enum": ["strong", "bounded", "weak", null] },
+        "acceptance_eligible": { "type": "boolean" },
+        "eligibility_reason_codes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/EligibilityReason" } },
+        "eligibility_decision_hash": { "$ref": "#/$defs/NullableSha256" }
+      },
+      "allOf": [
+        { "if": { "properties": { "cleanup_status": { "enum": ["failed", "partial_failed"] } }, "required": ["cleanup_status"] }, "then": { "not": { "properties": { "cleanup_failure_code": { "const": "none" } }, "required": ["cleanup_failure_code"] } }, "else": { "properties": { "cleanup_failure_code": { "const": "none" } } } },
+        {
+          "if": { "properties": { "acceptance_eligible": { "const": true } }, "required": ["acceptance_eligible"] },
+          "then": { "properties": { "task_purpose": { "const": "acceptance" }, "cleanup_policy": { "const": "delete-on-success" }, "cleanup_status": { "const": "succeeded" }, "eligibility_reason_codes": { "const": ["eligible"] }, "eligibility_decision_hash": { "$ref": "#/$defs/Sha256" } } },
+          "else": { "properties": { "eligibility_reason_codes": { "not": { "contains": { "const": "eligible" } } } } }
+        }
+      ],
+      "x-invariant": "restore target content and resource inventory remain B-owned; D exposes only the immutable config hash, aggregate cleanup status and registered evidence references"
+    },
+    "PreflightDetailResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task", "execution", "source", "source_checksums", "preflight_mode", "target_profile", "restore_target_config_hash", "artifact_compatibility", "report_evidence", "diff_evidence", "report_validity_reason", "verifier_summary"],
+      "properties": {
+        "schema_version": { "const": "system-backup-preflight-detail.v1" },
+        "task": { "allOf": [{ "$ref": "task-operation.schema.json#/$defs/Task" }, { "properties": { "task_type": { "const": "preflight" } } }] },
+        "execution": { "$ref": "#/$defs/ExecutionProjection" },
+        "source": { "$ref": "#/$defs/SourceArtifactReference" },
+        "source_checksums": { "$ref": "#/$defs/NullableArtifactChecksumSet" },
+        "preflight_mode": { "type": "string", "enum": ["production_readonly", "functional_test"] },
+        "target_profile": { "type": "string", "enum": ["cluster", "single-node"] },
+        "restore_target_config_hash": { "$ref": "#/$defs/Sha256" },
+        "artifact_compatibility": { "type": "string", "enum": ["supported", "compatible_with_warnings", "unsupported"] },
+        "report_evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "diff_evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "report_validity_reason": { "type": "string", "enum": ["pending", "valid", "functional_test_only", "source_changed", "dependency_unhealthy", "report_expired", "evidence_unavailable", "incomplete"] },
+        "verifier_summary": { "$ref": "#/$defs/VerifierSummary" }
+      },
+      "x-invariant": "functional-test reports are never valid inputs for promotion or a future production restore execute path"
+    },
+    "ArtifactVerificationDetailResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task", "execution", "verification_scope", "source", "observed_checksums", "health_report_evidence", "artifact_state_before", "artifact_state_after", "usable_before", "usable_after", "unusable_reason_before", "unusable_reason_after", "decision_reason", "verifier_summary"],
+      "properties": {
+        "schema_version": { "const": "system-backup-artifact-verification-detail.v1" },
+        "task": { "allOf": [{ "$ref": "task-operation.schema.json#/$defs/Task" }, { "properties": { "task_type": { "const": "artifact_verify" } } }] },
+        "execution": { "$ref": "#/$defs/ExecutionProjection" },
+        "verification_scope": { "type": "string", "enum": ["health", "full"] },
+        "source": { "$ref": "#/$defs/SourceArtifactReference" },
+        "observed_checksums": { "$ref": "#/$defs/NullableArtifactChecksumSet" },
+        "health_report_evidence": { "$ref": "#/$defs/NullableEvidenceReference" },
+        "artifact_state_before": { "anyOf": [{ "$ref": "#/$defs/ArtifactState" }, { "type": "null" }] },
+        "artifact_state_after": { "anyOf": [{ "$ref": "#/$defs/ArtifactState" }, { "type": "null" }] },
+        "usable_before": { "type": "boolean" },
+        "usable_after": { "type": "boolean" },
+        "unusable_reason_before": { "type": "string", "enum": ["none", "not_committed", "finalization_pending", "deleting", "delete_failed", "deleted", "corrupt", "verification_pending", "catalog_tombstoned", "acceptance_invalid", "provider_unavailable", "credential_unavailable", "kek_unavailable", "signing_key_unavailable", "catalog_unavailable", "evidence_unavailable", "verification_inconclusive"] },
+        "unusable_reason_after": { "type": "string", "enum": ["none", "not_committed", "finalization_pending", "deleting", "delete_failed", "deleted", "corrupt", "verification_pending", "catalog_tombstoned", "acceptance_invalid", "provider_unavailable", "credential_unavailable", "kek_unavailable", "signing_key_unavailable", "catalog_unavailable", "evidence_unavailable", "verification_inconclusive"] },
+        "decision_reason": { "type": "string", "enum": ["pending", "unchanged", "restored_usable", "marked_unusable", "marked_corrupt", "catalog_tombstoned", "verification_inconclusive"] },
+        "verifier_summary": { "$ref": "#/$defs/VerifierSummary" }
+      },
+      "allOf": [
+        { "if": { "properties": { "source": { "properties": { "source_artifact_type": { "const": "backup" } }, "required": ["source_artifact_type"] } }, "required": ["source"] }, "then": { "properties": { "artifact_state_before": { "$ref": "#/$defs/ArtifactState" }, "artifact_state_after": { "$ref": "#/$defs/ArtifactState" } } }, "else": { "properties": { "artifact_state_before": { "type": "null" }, "artifact_state_after": { "type": "null" } } } },
+        { "if": { "properties": { "usable_after": { "const": true } }, "required": ["usable_after"] }, "then": { "properties": { "unusable_reason_after": { "const": "none" } } }, "else": { "not": { "properties": { "unusable_reason_after": { "const": "none" } }, "required": ["unusable_reason_after"] } } }
+      ],
+      "x-invariant": "only a full verification of the same immutable version may restore a temporarily unusable artifact; historical eligibility is never rewritten"
+    }
+  },
+  "x-owner-boundaries": {
+    "A": "check content, audit and redaction decisions remain external; D stores only aggregate counts and registered evidence references",
+    "B": "restore target config and resource inventory are represented only by an immutable hash or separate owner route",
+    "C": "artifact/catalog locators, credentials and signed record bodies are not embedded; D exposes checksums, lifecycle projections and registered IDs only"
+  }
+}

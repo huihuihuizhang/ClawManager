@@ -1,0 +1,3512 @@
+{
+  "kind": "system_backup_producer_vectors",
+  "contract_version": "system-backup-plan.v12",
+  "revision": "C1",
+  "status": "draft",
+  "synthetic": true,
+  "production_authorization": false,
+  "encoding": [
+    {
+      "id": "E0",
+      "value": null,
+      "hex": "6e",
+      "domain": "system-backup-producer-test.c1",
+      "sha256": "ec5c72c5e8d2caef33b58a664d0a16934697559a31a2b494957f36db32f8dbf0"
+    },
+    {
+      "id": "E1",
+      "value": {},
+      "hex": "6f0000000000000000",
+      "domain": "system-backup-producer-test.c1",
+      "sha256": "0f61f6af4ecfb09e8a7dd3a701f60a61700ebdbbff2c711064b09996345ecb8d"
+    },
+    {
+      "id": "E2",
+      "value": [],
+      "hex": "610000000000000000",
+      "domain": "system-backup-producer-test.c1",
+      "sha256": "e39e53436c7f09620d561a70ffe419d4c2ac6bf22842745dd7137b0724eddd37"
+    },
+    {
+      "id": "E3",
+      "value": {
+        "a": null
+      },
+      "hex": "6f0000000000000001730000000000000001616e",
+      "domain": "system-backup-producer-test.c1",
+      "sha256": "1423cf26f93fc668a475a66f8ca70dba3de9b5b8a25af2a463b4c14e5035ad7d"
+    },
+    {
+      "id": "E4",
+      "value": {
+        "a": "中文",
+        "b": [
+          "1",
+          null,
+          true,
+          false
+        ]
+      },
+      "hex": "6f000000000000000273000000000000000161730000000000000006e4b8ade6968773000000000000000162610000000000000004730000000000000001316e7466",
+      "domain": "system-backup-producer-test.c1",
+      "sha256": "425dcc6bea9aa1782e1a4b1e9845232831a78d108f678d223250e82e39fdbdfd"
+    }
+  ],
+  "positive": [
+    {
+      "id": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "delete_marker_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "multipart_resume",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_upload_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "version_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "key": "6e2c1ba85dc16e650905b991cd56ab594e5a4843b4ecd23270aa0b20fb852ee7",
+        "request": "68587c7e3da53a328ef9f37678cc12b7e3228afa0931133cd97e5f375297053f"
+      }
+    },
+    {
+      "id": "unconfigured_catalog",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "catalog",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "inventory_manifest_listing",
+            "provider_snapshot_listing",
+            "scoped_append_credential",
+            "scoped_read_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "inventory_manifest_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "provider_snapshot_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_append_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "fe2a24ef64f921f3819359bbe296c5b5392dd9a7af441f9382b837536e99edb2",
+        "key": "b6b8323cc48c2141ce10f889f1837d313c228cacb1f8afb6001fe2f3f2e1eb72",
+        "request": "450f50922275bd985bee504c47c69dd8431cd15bb98e9e5cedbb6ca571e33905"
+      }
+    },
+    {
+      "id": "unconfigured_evidence",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "evidence",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_write_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_write_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "86467a927b3fbec3b8ee22a5b83d9d1f87ce3cf1d9f5d5be540e73e021fc49a1",
+        "key": "df91685cce2bb8e6cc17c445f860816f530996d7751f2c1f704adb43d4d83058",
+        "request": "f30617493b3a10af060c514959de578fd601547343eb2bc46998875a845ca919"
+      }
+    },
+    {
+      "id": "unconfigured_kms",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "kms",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "8ba059d6e9d6245404cc4bb53486941012138f39b72fef90dc5f7c9225425075",
+        "key": "c2c1f0b3600175a4d5e8e91258e214361647d2a4a10a2e45a7123076346b14f4",
+        "request": "216fbc41496bd96c039f68a500e32b3c50c35187c1e6e545c2ac9997923d4596"
+      }
+    },
+    {
+      "id": "unconfigured_secret",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "secret",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "496d4c1551d129c2d1cf0e759f11f8f81b92427888413436c722346bf2506575",
+        "key": "2803128afec0bf7f380a78908404322039aab9683a5481e05b3fc89463976cec",
+        "request": "f8313c409fbceeaa10e3d016166e30d593aa834319ed31c855382fd18228c803"
+      }
+    },
+    {
+      "id": "unconfigured_signing",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "signing",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "signing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "signing",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "94b8dee409d6152d0e5b68c1e82f391e09dfa73fa6cf9f8f2cd786ebd5950547",
+        "key": "fcd0b81d65f46c6f15ff2c15cdef561a9aed632250097807c1c069a34fb35705",
+        "request": "aac3c6173a603f1936234c0b4ceef6f408eebeba0b1a26299b03e063e66ba331"
+      }
+    },
+    {
+      "id": "disabled_artifact",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "delete_marker_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "multipart_resume",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_upload_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "version_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "key": "6e2c1ba85dc16e650905b991cd56ab594e5a4843b4ecd23270aa0b20fb852ee7",
+        "request": "bfaf6e3409bbaecfdc0446d12a4251a62d5e989c080dc0e836fe73db6b23a93b"
+      }
+    },
+    {
+      "id": "disabled_catalog",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "catalog",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "inventory_manifest_listing",
+            "provider_snapshot_listing",
+            "scoped_append_credential",
+            "scoped_read_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "inventory_manifest_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "provider_snapshot_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_append_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "fe2a24ef64f921f3819359bbe296c5b5392dd9a7af441f9382b837536e99edb2",
+        "key": "b6b8323cc48c2141ce10f889f1837d313c228cacb1f8afb6001fe2f3f2e1eb72",
+        "request": "78b8c34c7349b02caf1f8a55b54fed5de22e97dd938f7369a8fc545e9e21c0ee"
+      }
+    },
+    {
+      "id": "disabled_evidence",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "evidence",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_write_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_write_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "86467a927b3fbec3b8ee22a5b83d9d1f87ce3cf1d9f5d5be540e73e021fc49a1",
+        "key": "df91685cce2bb8e6cc17c445f860816f530996d7751f2c1f704adb43d4d83058",
+        "request": "f666806b107c0e960415cf29e8babc5e64ac6191bc5a0c8da4aac814ce6e1d4c"
+      }
+    },
+    {
+      "id": "disabled_kms",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "kms",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "8ba059d6e9d6245404cc4bb53486941012138f39b72fef90dc5f7c9225425075",
+        "key": "c2c1f0b3600175a4d5e8e91258e214361647d2a4a10a2e45a7123076346b14f4",
+        "request": "b997e1a5df49b19586be52920463cb036554e53c3bde6f61406345abb6e2cfea"
+      }
+    },
+    {
+      "id": "disabled_secret",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "secret",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "496d4c1551d129c2d1cf0e759f11f8f81b92427888413436c722346bf2506575",
+        "key": "2803128afec0bf7f380a78908404322039aab9683a5481e05b3fc89463976cec",
+        "request": "be844928e4897b6929545faec9362d5c5c1a19b74d90a47b66eb5e4b6fb05362"
+      }
+    },
+    {
+      "id": "disabled_signing",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "disabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "signing",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "signing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "signing",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "94b8dee409d6152d0e5b68c1e82f391e09dfa73fa6cf9f8f2cd786ebd5950547",
+        "key": "fcd0b81d65f46c6f15ff2c15cdef561a9aed632250097807c1c069a34fb35705",
+        "request": "cedf42a54c09617fa9514700fddc7840e805c87e50944bda78d333a132193d9b"
+      }
+    },
+    {
+      "id": "enabled_artifact",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "delete_marker_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "multipart_resume",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_upload_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "version_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "key": "6e2c1ba85dc16e650905b991cd56ab594e5a4843b4ecd23270aa0b20fb852ee7",
+        "request": "8275ecc9ae7b88262edfe8beebffc3b0830cbaef8c6d062a5ee2806e75af13b5"
+      }
+    },
+    {
+      "id": "enabled_catalog",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "catalog",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "inventory_manifest_listing",
+            "provider_snapshot_listing",
+            "scoped_append_credential",
+            "scoped_read_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "inventory_manifest_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "provider_snapshot_listing",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_append_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "fe2a24ef64f921f3819359bbe296c5b5392dd9a7af441f9382b837536e99edb2",
+        "key": "b6b8323cc48c2141ce10f889f1837d313c228cacb1f8afb6001fe2f3f2e1eb72",
+        "request": "2b1a211198b6f032c81935640b4995ea3c19d69d999fd6ac02b86e4871a643b5"
+      }
+    },
+    {
+      "id": "enabled_evidence",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "evidence",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_write_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "versioned_absence_proof"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "provider",
+          "observations": [
+            {
+              "slot": "checksum_bound_request",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "conditional_create",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "object_checksum",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_delete_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_read_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "scoped_write_credential",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "strong_read_after_write",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "tls_verified",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            },
+            {
+              "slot": "versioned_absence_proof",
+              "status": "supported",
+              "reason": "none",
+              "observed_version": "provider-v1"
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "86467a927b3fbec3b8ee22a5b83d9d1f87ce3cf1d9f5d5be540e73e021fc49a1",
+        "key": "df91685cce2bb8e6cc17c445f860816f530996d7751f2c1f704adb43d4d83058",
+        "request": "458fe22443d3d8572c481f07d0fc98f49ad878a2fc6b4fca65c0d534f46453a7"
+      }
+    },
+    {
+      "id": "enabled_kms",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "kms",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "8ba059d6e9d6245404cc4bb53486941012138f39b72fef90dc5f7c9225425075",
+        "key": "c2c1f0b3600175a4d5e8e91258e214361647d2a4a10a2e45a7123076346b14f4",
+        "request": "ad0e65f554551ae16bbd478ac7b0d971c95180742fbb3c510ea83ed0cd791608"
+      }
+    },
+    {
+      "id": "enabled_secret",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "secret",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "kek"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "kek",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "496d4c1551d129c2d1cf0e759f11f8f81b92427888413436c722346bf2506575",
+        "key": "2803128afec0bf7f380a78908404322039aab9683a5481e05b3fc89463976cec",
+        "request": "2e04af8f073d2648144d16e912d952fc9a7b8b991314666f7ed59680cb12a721"
+      }
+    },
+    {
+      "id": "enabled_signing",
+      "definition": "ResultRequest",
+      "value": {
+        "schema_version": "system-backup-producer-result.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "enabled",
+          "check_admission_id": "synthetic_check",
+          "config_version": "7",
+          "config_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "dependency_check",
+        "target": {
+          "evaluator_owner": "A",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "signing",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "signing"
+          ]
+        },
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "request_key": "synthetic-request-0001",
+        "target_generation": "1",
+        "expected_result_version": "0",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": "object-v1",
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "expected_evidence_version": "3",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "results": {
+          "kind": "dependency",
+          "observations": [
+            {
+              "slot": "signing",
+              "status": "healthy",
+              "reason": "none",
+              "observed_version": null,
+              "observed_checksum": null
+            }
+          ]
+        }
+      },
+      "hashes": {
+        "scope": "4718ec3ab0baf71b884024c8198d1e7d8ee87b3a1f4fbe49f404b85309d052f6",
+        "target": "94b8dee409d6152d0e5b68c1e82f391e09dfa73fa6cf9f8f2cd786ebd5950547",
+        "key": "fcd0b81d65f46c6f15ff2c15cdef561a9aed632250097807c1c069a34fb35705",
+        "request": "82f4a411064895bc7f05337160fa10f9a6823f37581021a97b11b9d96585981f"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "id": "acquire",
+      "definition": "CommandRequest",
+      "value": {
+        "schema_version": "system-backup-producer-command.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "actor_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "command": "acquire",
+        "request_key": "synthetic-acquire-0001",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "expected_domain_epoch": "1",
+        "expected_target_generation": "0",
+        "expected": null,
+        "next": {
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "run_id": "synthetic_run_1",
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "subject_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "host": {
+            "kind": "service",
+            "workload_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "admission": {
+            "scenario": "unconfigured",
+            "deployment_admission_id": "synthetic_deployment",
+            "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+            "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+            "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+            "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "purpose": "capability_probe",
+          "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "authorization_expires_at": "2026-09-30T01:10:00.000001Z",
+          "owner_write_expires_at": "2026-09-30T01:04:00.000001Z"
+        },
+        "lease_expires_at": "2026-09-30T01:03:00.000001Z",
+        "termination_decision_hash": null
+      },
+      "hashes": {
+        "key": "f7ec52922acd53315914ea0f23f3258fac7e053b40c2e2cda0223f136872d56f",
+        "request": "9b84a7acf8c20ea861b40a8eea4338513caf496ece94f0e05eacbd2ca3839644"
+      }
+    },
+    {
+      "id": "renew",
+      "definition": "CommandRequest",
+      "value": {
+        "schema_version": "system-backup-producer-command.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "actor_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "command": "renew",
+        "request_key": "synthetic-renew-0001",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "expected_domain_epoch": "1",
+        "expected_target_generation": "1",
+        "expected": {
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "grant_row_version": "1",
+          "run_id": "synthetic_run_1",
+          "target_generation": "1"
+        },
+        "next": null,
+        "lease_expires_at": "2026-09-30T01:03:00.000001Z",
+        "termination_decision_hash": null
+      },
+      "hashes": {
+        "key": "d118d4d71b7c73e55a2eab48784c0217f5fce4e05de6ad84e1dd8f13a70966e9",
+        "request": "6bd4b28f98445904716dac52fe4c4f9bf34644227845ea2e1cd86a14755637aa"
+      }
+    },
+    {
+      "id": "revoke",
+      "definition": "CommandRequest",
+      "value": {
+        "schema_version": "system-backup-producer-command.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "actor_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "command": "revoke",
+        "request_key": "synthetic-revoke-0001",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "expected_domain_epoch": "1",
+        "expected_target_generation": "1",
+        "expected": {
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "grant_row_version": "1",
+          "run_id": "synthetic_run_1",
+          "target_generation": "1"
+        },
+        "next": null,
+        "lease_expires_at": null,
+        "termination_decision_hash": null
+      },
+      "hashes": {
+        "key": "c613edb539188ed80c4f78b2cdca5843908c9c66517713528c64b713ce65f997",
+        "request": "12452cc68b80160855e8675461b3878db1c009d24a7263d5be310a3b287352b9"
+      }
+    },
+    {
+      "id": "takeover",
+      "definition": "CommandRequest",
+      "value": {
+        "schema_version": "system-backup-producer-command.c1",
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "actor_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "command": "takeover",
+        "request_key": "synthetic-takeover-0001",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "expected_domain_epoch": "1",
+        "expected_target_generation": "1",
+        "expected": {
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "grant_row_version": "1",
+          "run_id": "synthetic_run_1",
+          "target_generation": "1"
+        },
+        "next": {
+          "grant_id": "synthetic_grant_2",
+          "grant_generation": "2",
+          "run_id": "synthetic_run_2",
+          "evidence_id": "sev_22222222-2222-4333-8444-555555555555",
+          "subject_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "host": {
+            "kind": "service",
+            "workload_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "admission": {
+            "scenario": "unconfigured",
+            "deployment_admission_id": "synthetic_deployment",
+            "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+            "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+            "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+            "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "purpose": "capability_probe",
+          "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "authorization_expires_at": "2026-09-30T01:10:00.000001Z",
+          "owner_write_expires_at": "2026-09-30T01:04:00.000001Z"
+        },
+        "lease_expires_at": "2026-09-30T01:03:00.000001Z",
+        "termination_decision_hash": null
+      },
+      "hashes": {
+        "key": "04fc219d3c42bd0da9a3859805ac739694d76e94d999e1a75ed25771fb875ed6",
+        "request": "113a20df3b8ec3c84a7a50b9c51f1175db3f508f5a496d5ec23d80b758123aa7"
+      }
+    }
+  ],
+  "records": [
+    {
+      "definition": "DomainRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "epoch": "1",
+        "row_version": "1",
+        "state": "open",
+        "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "admission_expires_at": "2026-09-30T01:10:00.000001Z",
+        "created_at": "2026-09-30T01:00:01.000001Z",
+        "updated_at": "2026-09-30T01:00:01.000001Z"
+      }
+    },
+    {
+      "definition": "GrantRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "grant_id": "synthetic_grant_1",
+        "generation": "1",
+        "domain_epoch": "1",
+        "row_version": "1",
+        "state": "active",
+        "subject_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "service",
+          "workload_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "lease_expires_at": "2026-09-30T01:03:00.000001Z",
+        "authorization_expires_at": "2026-09-30T01:10:00.000001Z",
+        "created_at": "2026-09-30T01:00:01.000001Z"
+      }
+    },
+    {
+      "definition": "RunRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "run_id": "synthetic_run_1",
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "target_hash": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "target_generation": "1",
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "owner_write_expires_at": "2026-09-30T01:04:00.000001Z",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "state": "pending",
+        "row_version": "2"
+      }
+    },
+    {
+      "definition": "TargetRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "target_hash": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "target": {
+          "evaluator_owner": "C",
+          "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "role": "artifact",
+          "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ref_version": "provider-v1",
+          "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "result_slots": [
+            "checksum_bound_request",
+            "conditional_create",
+            "delete_marker_listing",
+            "multipart_resume",
+            "object_checksum",
+            "scoped_delete_credential",
+            "scoped_read_credential",
+            "scoped_upload_credential",
+            "strong_read_after_write",
+            "tls_verified",
+            "version_listing"
+          ]
+        },
+        "generation": "1",
+        "current_run_id": "synthetic_run_1",
+        "result_version": "0",
+        "row_version": "1"
+      }
+    },
+    {
+      "definition": "HistoricalBindingRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "run_id": "synthetic_run_1",
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "domain_epoch": "1",
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "target_hash": "eb6a7278e3421444654426aaac81a3936549d96b603969996f3ffa080b7ed299",
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence": {
+          "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+          "owner_type": "system",
+          "owner_id": "installation_synthetic",
+          "evidence_type": "capability_snapshot",
+          "classification": "internal",
+          "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+          "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "content_bytes": "9000",
+          "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "object_bytes": "9400",
+          "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+          "store_ref_version": "store-v1",
+          "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+          "immutable_version": null,
+          "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kek_version": "kek-v1",
+          "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "write_ref_version": "write-v1",
+          "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "relative_key": "evidence/installation_synthetic/fixture.enc",
+        "owner_write_expires_at": "2026-09-30T01:04:00.000001Z",
+        "observed_at": "2026-09-30T01:00:00.000001Z",
+        "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+        "retention_expires_at": "2026-10-30T01:00:00.000001Z",
+        "retention_policy_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "created_at": "2026-09-30T01:00:01.000001Z"
+      }
+    },
+    {
+      "definition": "ReceiptRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "receipt_key_hash": "6e2c1ba85dc16e650905b991cd56ab594e5a4843b4ecd23270aa0b20fb852ee7",
+        "request_hash": "68587c7e3da53a328ef9f37678cc12b7e3228afa0931133cd97e5f375297053f",
+        "request": {
+          "schema_version": "system-backup-producer-result.c1",
+          "scope": {
+            "server_uuid": "11111111-2222-4333-8444-555555555555",
+            "database": "synthetic_backup",
+            "installation": "installation_synthetic"
+          },
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "run_id": "synthetic_run_1",
+          "domain_epoch": "1",
+          "admission": {
+            "scenario": "unconfigured",
+            "deployment_admission_id": "synthetic_deployment",
+            "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+            "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+            "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+            "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "purpose": "capability_probe",
+          "target": {
+            "evaluator_owner": "C",
+            "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "role": "artifact",
+            "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "ref_version": "provider-v1",
+            "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "result_slots": [
+              "checksum_bound_request",
+              "conditional_create",
+              "delete_marker_listing",
+              "multipart_resume",
+              "object_checksum",
+              "scoped_delete_credential",
+              "scoped_read_credential",
+              "scoped_upload_credential",
+              "strong_read_after_write",
+              "tls_verified",
+              "version_listing"
+            ]
+          },
+          "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "request_key": "synthetic-request-0001",
+          "target_generation": "1",
+          "expected_result_version": "0",
+          "evidence": {
+            "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+            "owner_type": "system",
+            "owner_id": "installation_synthetic",
+            "evidence_type": "capability_snapshot",
+            "classification": "internal",
+            "manifest_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+            "content_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+            "content_bytes": "9000",
+            "object_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+            "object_bytes": "9400",
+            "store_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+            "store_ref_version": "store-v1",
+            "relative_key_hash": "cbcfda2140404642d43d913681769c15f4bc1252bd1addf6cb01ce29ff217abf",
+            "immutable_version": "object-v1",
+            "kek_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kek_version": "kek-v1",
+            "write_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "write_ref_version": "write-v1",
+            "recovery_profile_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          "expected_evidence_version": "3",
+          "observed_at": "2026-09-30T01:00:00.000001Z",
+          "observation_expires_at": "2026-09-30T01:05:00.000001Z",
+          "results": {
+            "kind": "provider",
+            "observations": [
+              {
+                "slot": "checksum_bound_request",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "conditional_create",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "delete_marker_listing",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "multipart_resume",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "object_checksum",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "scoped_delete_credential",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "scoped_read_credential",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "scoped_upload_credential",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "strong_read_after_write",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "tls_verified",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              },
+              {
+                "slot": "version_listing",
+                "status": "supported",
+                "reason": "none",
+                "observed_version": "provider-v1"
+              }
+            ]
+          }
+        },
+        "result_version": "1",
+        "committed_at": "2026-09-30T01:00:01.000001Z",
+        "retention_expires_at": "2026-10-30T01:00:00.000001Z",
+        "charged_bytes": "393216"
+      }
+    },
+    {
+      "definition": "CommandReceiptRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "receipt_key_hash": "f7ec52922acd53315914ea0f23f3258fac7e053b40c2e2cda0223f136872d56f",
+        "request_hash": "9b84a7acf8c20ea861b40a8eea4338513caf496ece94f0e05eacbd2ca3839644",
+        "request": {
+          "schema_version": "system-backup-producer-command.c1",
+          "scope": {
+            "server_uuid": "11111111-2222-4333-8444-555555555555",
+            "database": "synthetic_backup",
+            "installation": "installation_synthetic"
+          },
+          "actor_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "command": "acquire",
+          "request_key": "synthetic-acquire-0001",
+          "target": {
+            "evaluator_owner": "C",
+            "evaluator_profile_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "role": "artifact",
+            "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "ref_version": "provider-v1",
+            "probe_scope_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "result_slots": [
+              "checksum_bound_request",
+              "conditional_create",
+              "delete_marker_listing",
+              "multipart_resume",
+              "object_checksum",
+              "scoped_delete_credential",
+              "scoped_read_credential",
+              "scoped_upload_credential",
+              "strong_read_after_write",
+              "tls_verified",
+              "version_listing"
+            ]
+          },
+          "expected_domain_epoch": "1",
+          "expected_target_generation": "0",
+          "expected": null,
+          "next": {
+            "grant_id": "synthetic_grant_1",
+            "grant_generation": "1",
+            "run_id": "synthetic_run_1",
+            "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+            "subject_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "host": {
+              "kind": "service",
+              "workload_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "admission": {
+              "scenario": "unconfigured",
+              "deployment_admission_id": "synthetic_deployment",
+              "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+              "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+              "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+              "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "purpose": "capability_probe",
+            "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "authorization_expires_at": "2026-09-30T01:10:00.000001Z",
+            "owner_write_expires_at": "2026-09-30T01:04:00.000001Z"
+          },
+          "lease_expires_at": "2026-09-30T01:03:00.000001Z",
+          "termination_decision_hash": null
+        },
+        "outcome": {
+          "grant_id": "synthetic_grant_1",
+          "grant_generation": "1",
+          "grant_row_version": "1",
+          "run_id": "synthetic_run_1",
+          "target_generation": "1"
+        },
+        "committed_at": "2026-09-30T01:00:01.000001Z",
+        "retention_expires_at": "2026-10-30T01:00:00.000001Z",
+        "charged_bytes": "425984"
+      }
+    },
+    {
+      "definition": "ReferenceRecord",
+      "value": {
+        "scope": {
+          "server_uuid": "11111111-2222-4333-8444-555555555555",
+          "database": "synthetic_backup",
+          "installation": "installation_synthetic"
+        },
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "reference_kind": "producer_receipt",
+        "reference_key_hash": "6e2c1ba85dc16e650905b991cd56ab594e5a4843b4ecd23270aa0b20fb852ee7",
+        "protected_until": "2026-10-30T01:00:00.000001Z",
+        "created_at": "2026-09-30T01:00:01.000001Z"
+      }
+    }
+  ],
+  "negative": [
+    {
+      "id": "unknown_field",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "allow"
+      ],
+      "value": true,
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "case_alias",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "Scope"
+      ],
+      "value": {
+        "server_uuid": "11111111-2222-4333-8444-555555555555",
+        "database": "synthetic_backup",
+        "installation": "installation_synthetic"
+      },
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "zero_config",
+      "source": "disabled_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "admission",
+        "config_version"
+      ],
+      "value": "0",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "fake_config_unconfigured",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "admission",
+        "config_version"
+      ],
+      "value": "1",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "disabled_inherits_deployment",
+      "source": "disabled_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "admission",
+        "deployment_admission_id"
+      ],
+      "value": "synthetic",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "scope_owner_mismatch",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "scope",
+        "installation"
+      ],
+      "value": "installation_other",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "fake_task_owner",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "evidence",
+        "owner_type"
+      ],
+      "value": "task",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "missing_ref",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "evidence",
+        "store_ref_version"
+      ],
+      "value": null,
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "missing_object_version",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "evidence",
+        "immutable_version"
+      ],
+      "value": null,
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "wrong_evidence_id",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "evidence",
+        "evidence_id"
+      ],
+      "value": "arbitrary",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "noncanonical_integer",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "grant_generation"
+      ],
+      "value": "01",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "integer_overflow",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "grant_generation"
+      ],
+      "value": "18446744073709551616",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "numeric_integer",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "grant_generation"
+      ],
+      "value": 1,
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "non_utc",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "observed_at"
+      ],
+      "value": "2026-09-30T09:00:00.000001+08:00",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "lost_microseconds",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "observed_at"
+      ],
+      "value": "2026-09-30T01:00:00.000Z",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "bad_calendar",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "observed_at"
+      ],
+      "value": "2026-02-30T01:00:00.000001Z",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "expiry_equal",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "observation_expires_at"
+      ],
+      "value": "2026-09-30T01:00:00.000001Z",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "hash_uppercase",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "evidence",
+        "content_hash"
+      ],
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "lone_surrogate",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "target",
+        "ref_version"
+      ],
+      "value": "bad\ud800",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "extra_capability",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "target",
+        "result_slots"
+      ],
+      "value": [
+        "arbitrary"
+      ],
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "duplicate_result",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "results",
+        "observations",
+        1
+      ],
+      "value": {
+        "slot": "checksum_bound_request",
+        "status": "supported",
+        "reason": "none",
+        "observed_version": "provider-v1"
+      },
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "missing_result",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "results",
+        "observations"
+      ],
+      "value": [
+        {
+          "slot": "conditional_create",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "delete_marker_listing",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "multipart_resume",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "object_checksum",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "scoped_delete_credential",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "scoped_read_credential",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "scoped_upload_credential",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "strong_read_after_write",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "tls_verified",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        },
+        {
+          "slot": "version_listing",
+          "status": "supported",
+          "reason": "none",
+          "observed_version": "provider-v1"
+        }
+      ],
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "sorted_slots",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "target",
+        "result_slots"
+      ],
+      "value": [
+        "version_listing",
+        "tls_verified",
+        "strong_read_after_write",
+        "scoped_upload_credential",
+        "scoped_read_credential",
+        "scoped_delete_credential",
+        "object_checksum",
+        "multipart_resume",
+        "delete_marker_listing",
+        "conditional_create",
+        "checksum_bound_request"
+      ],
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "wrong_evaluator",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "target",
+        "evaluator_owner"
+      ],
+      "value": "A",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "wrong_purpose",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "purpose"
+      ],
+      "value": "dependency_check",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "healthy_from_upload",
+      "source": "unconfigured_kms",
+      "definition": "ResultRequest",
+      "path": [
+        "results",
+        "kind"
+      ],
+      "value": "provider",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "supported_wrong_reason",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "results",
+        "observations",
+        0,
+        "reason"
+      ],
+      "value": "probe_failed",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "unsupported_wrong_reason",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "results",
+        "observations",
+        0,
+        "status"
+      ],
+      "value": "unsupported",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "missing_required",
+      "source": "unconfigured_artifact",
+      "definition": "ResultRequest",
+      "path": [
+        "input_hash"
+      ],
+      "value": null,
+      "remove": true,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "renew_missing_expected",
+      "source": "renew",
+      "definition": "CommandRequest",
+      "path": [
+        "expected"
+      ],
+      "value": null,
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "renew_extends_owner",
+      "source": "renew",
+      "definition": "CommandRequest",
+      "path": [
+        "next"
+      ],
+      "value": {
+        "grant_id": "synthetic_grant_1",
+        "grant_generation": "1",
+        "run_id": "synthetic_run_1",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "issuer_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "service",
+          "workload_identity_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "admission": {
+          "scenario": "unconfigured",
+          "deployment_admission_id": "synthetic_deployment",
+          "candidate_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "registry_set_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "ref_set_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "policy_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+          "channel_profile_hash": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "purpose": "capability_probe",
+        "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "authorization_expires_at": "2026-09-30T01:10:00.000001Z",
+        "owner_write_expires_at": "2026-09-30T01:04:00.000001Z"
+      },
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "revoke_has_lease",
+      "source": "revoke",
+      "definition": "CommandRequest",
+      "path": [
+        "lease_expires_at"
+      ],
+      "value": "2026-09-30T01:03:00.000001Z",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "takeover_reuses_run",
+      "source": "takeover",
+      "definition": "CommandRequest",
+      "path": [
+        "next",
+        "run_id"
+      ],
+      "value": "synthetic_run_1",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "acquire_wrong_actor",
+      "source": "acquire",
+      "definition": "CommandRequest",
+      "path": [
+        "actor_identity_hash"
+      ],
+      "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "remove": false,
+      "expected": "reject_static_contract"
+    },
+    {
+      "id": "target_cas_mismatch",
+      "source": "renew",
+      "definition": "CommandRequest",
+      "path": [
+        "expected_target_generation"
+      ],
+      "value": "2",
+      "remove": false,
+      "expected": "reject_static_contract"
+    }
+  ],
+  "runtime": [
+    {
+      "id": "V01",
+      "owners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "cases": [
+        "six roles cross-installation/ref/purpose/run substitution",
+        "same certificate new generation",
+        "old task/download/gc/recovery credentials exchanged for producer",
+        "fixed snapshot recheck during content/Wrap/STS"
+      ],
+      "expected": "deny without result, no reusable capability from record JSON",
+      "environment": "real identity adapters and providers",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V02",
+      "owners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "cases": [
+        "candidate store used as its own trust root",
+        "no independent evidence channel",
+        "orphan config with absent installation",
+        "disabled checks attempt enable",
+        "small external evidence <=8192 bytes"
+      ],
+      "expected": "reject circular/missing admission; no installation/config mutation; small bodies exact encrypted external only after A reviewed adapter, no padding or inline fallback",
+      "environment": "independent channel and deployment validation",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V03",
+      "owners": [
+        "D",
+        "A",
+        "C"
+      ],
+      "cases": [
+        "two empty-index bootstrap transactions",
+        "bootstrap races acquire/pending/result",
+        "config disable/switch and domain reissue",
+        "two candidate installations"
+      ],
+      "expected": "one accepted linearization; old epoch cannot commit; loser same-key retry only after confirmed rollback; unconfigured results stay candidate receipts",
+      "environment": "real MySQL complete production DDL",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V04",
+      "owners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "cases": [
+        "revoke/takeover during content/Wrap/STS/PUT/ready/result",
+        "late external PUT after bootstrap",
+        "claim commit response lost"
+      ],
+      "expected": "no stale producer success; preserve original pending bytes/history; no private claim until commit confirmed",
+      "environment": "real provider and SQL fault injection",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V05",
+      "owners": [
+        "D",
+        "A"
+      ],
+      "cases": [
+        "capacity/audit row locks held beyond lease and report age",
+        "final conditional write blocked across deadline",
+        "renew while remote call pending",
+        "shortened identity deadline"
+      ],
+      "expected": "fresh final UTC rollback; old snapshot invalid; no report refresh at final guard",
+      "environment": "real MySQL lock waits plus A adapters",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V06",
+      "owners": [
+        "D",
+        "A",
+        "C"
+      ],
+      "cases": [
+        "same key same digest replay",
+        "same key different digest",
+        "expired/revoked handle receipt read",
+        "authorized independent receipt read",
+        "old run late after newer run",
+        "different scope aliases same legacy projection slot"
+      ],
+      "expected": "immutable original receipt/no recharge/no time refresh; conflict or auth deny; old run/alias cannot overwrite",
+      "environment": "real MySQL uniqueness and authority",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V07",
+      "owners": [
+        "D",
+        "A",
+        "C"
+      ],
+      "cases": [
+        "owner/hash/ref/version/evidence CAS mismatch",
+        "GC vs new reference with initially empty range",
+        "result set partial failure",
+        "capacity insufficient",
+        "intent/result audit failure"
+      ],
+      "expected": "atomic rollback of target/projections/refs/receipts/charge; evidence original state retained",
+      "environment": "real MySQL indexes/FK/audit full schema",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V08",
+      "owners": [
+        "D",
+        "A",
+        "C"
+      ],
+      "cases": [
+        "PUT response lost",
+        "commit disconnect before/after server commit",
+        "ordinary snapshot says receipt absent while original commit blocked",
+        "confirmed deadlock retry"
+      ],
+      "expected": "same original key/run/evidence and ciphertext; lock key before retry decision; no double charge or second encryption",
+      "environment": "real MySQL network and provider fault injection",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V09",
+      "owners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "cases": [
+        "revoked producer but write deadline not reached",
+        "config switched/bootstrap closed old epoch",
+        "404 then late exact object",
+        "wrong hash/size/version"
+      ],
+      "expected": "wait fixed write cutoff and claim expiry; independent Stat only; unknown on 404; matching ready only evidence, no health/observation refresh",
+      "environment": "independent recovery identity plus exact-object proofs",
+      "status": "not_run",
+      "evidence": null
+    },
+    {
+      "id": "V10",
+      "owners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "conditional_owners": {
+        "job": [
+          "B"
+        ]
+      },
+      "cases": [
+        "real deployment/work/recovery identity and ACL",
+        "PUT vs Stat vs Range/List/Delete/Unwrap restrictions",
+        "STS expiry/revocation profile",
+        "Job UID/generation/cancel if selected",
+        "retention/ref scan execution plan and cleanup"
+      ],
+      "expected": "real server-side isolation and deadlines; source fingerprints plus run-owned cleanup; unreviewed host/provider rejects",
+      "environment": "deployed provider/host and bounded SQL scans",
+      "status": "not_run",
+      "evidence": null
+    }
+  ]
+}

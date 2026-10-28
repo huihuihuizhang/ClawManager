@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/committed-marker.schema.json",
+  "title": "System backup _COMMITTED marker",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "backup_public_id", "manifest_checksum", "artifact_index_checksum"],
+  "properties": {
+    "schema_version": { "const": "system-backup-committed.v1" },
+    "backup_public_id": { "type": "string", "pattern": "^sbk_[A-Za-z0-9_-]+$" },
+    "manifest_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "artifact_index_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+  },
+  "x-canonicalization": "UTF-8 JCS. The marker object's checksum is external and must never be inserted into this object."
+}

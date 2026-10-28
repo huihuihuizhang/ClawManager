@@ -1,0 +1,138 @@
+{
+  "kind": "system_backup_evidence_chunk_log_redacted_examples",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "evidence_records": [
+    {
+      "schema_version": "system-backup-evidence.v1",
+      "public_id": "sev_11111111-1111-4111-8111-111111111111",
+      "owner": {
+        "owner_target_type": "backup",
+        "owner_target_public_id": "sbk_11111111-1111-4111-8111-111111111111"
+      },
+      "evidence_type": "verifier_report",
+      "storage_state": "ready",
+      "evidence_failure_code": "none",
+      "storage_ref": {
+        "provider_role": "evidence",
+        "identity_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "ref_version": "evidence-store-ref-example",
+        "relative_key": "installation_example/backup/sbk_11111111-1111-4111-8111-111111111111/sev_11111111-1111-4111-8111-111111111111/report.bin",
+        "relative_key_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "immutable_version": "object-version-example"
+      },
+      "inline_payload_base64": null,
+      "content_checksum": "3333333333333333333333333333333333333333333333333333333333333333",
+      "content_size_bytes": 2097152,
+      "object_checksum": "4444444444444444444444444444444444444444444444444444444444444444",
+      "object_size_bytes": 2097280,
+      "plaintext_chunk_size_bytes": 1048576,
+      "chunk_count": 2,
+      "chunk_list_root": "5555555555555555555555555555555555555555555555555555555555555555",
+      "media_type": "application/json",
+      "encryption": "envelope_v1",
+      "encryption_envelope": {
+        "framing_version": "system-backup-evidence-envelope.v1",
+        "kek_identity_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+        "kek_version": "evidence-kek-version-example",
+        "envelope_hash": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "redaction_classification": "confidential",
+      "observed_health": "healthy",
+      "claim_owner": null,
+      "claim_expires_at": null,
+      "next_reconcile_at": null,
+      "last_checked_at": "2026-09-15T05:00:00Z",
+      "expires_at": "2026-10-15T05:00:00Z",
+      "protected_until": "2026-10-15T05:00:00Z",
+      "row_version": 4,
+      "created_at": "2026-09-15T04:58:00Z",
+      "updated_at": "2026-09-15T05:00:00Z"
+    },
+    {
+      "schema_version": "system-backup-evidence.v1",
+      "public_id": "sev_22222222-2222-4222-8222-222222222222",
+      "owner": {
+        "owner_target_type": "backup",
+        "owner_target_public_id": "sbk_11111111-1111-4111-8111-111111111111"
+      },
+      "evidence_type": "job_log_chunk",
+      "storage_state": "inline",
+      "evidence_failure_code": "none",
+      "storage_ref": null,
+      "inline_payload_base64": "c3ludGhldGljLXJlZGFjdGVkLWxvZw==",
+      "content_checksum": "8ba36735bb711ed745b7fcdc6396ff9a532e4cad8ada528dbcc0abf30261bd1c",
+      "content_size_bytes": 22,
+      "object_checksum": null,
+      "object_size_bytes": null,
+      "plaintext_chunk_size_bytes": null,
+      "chunk_count": 0,
+      "chunk_list_root": null,
+      "media_type": "text/plain",
+      "encryption": "none",
+      "encryption_envelope": null,
+      "redaction_classification": "internal",
+      "observed_health": "healthy",
+      "claim_owner": null,
+      "claim_expires_at": null,
+      "next_reconcile_at": null,
+      "last_checked_at": "2026-09-15T05:01:00Z",
+      "expires_at": "2026-09-22T05:01:00Z",
+      "protected_until": null,
+      "row_version": 2,
+      "created_at": "2026-09-15T05:00:30Z",
+      "updated_at": "2026-09-15T05:01:00Z"
+    }
+  ],
+  "evidence_chunks": [
+    {
+      "evidence_public_id": "sev_11111111-1111-4111-8111-111111111111",
+      "chunk_index": 0,
+      "plaintext_offset": 0,
+      "plaintext_length": 1048576,
+      "plaintext_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "object_frame_offset": 0,
+      "object_frame_length": 1048640,
+      "ciphertext_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "gcm_nonce_base64url": "AAAAAAAAAAAAAAAA",
+      "gcm_tag_base64url": "BBBBBBBBBBBBBBBBBBBBBB"
+    },
+    {
+      "evidence_public_id": "sev_11111111-1111-4111-8111-111111111111",
+      "chunk_index": 1,
+      "plaintext_offset": 1048576,
+      "plaintext_length": 1048576,
+      "plaintext_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "object_frame_offset": 1048640,
+      "object_frame_length": 1048640,
+      "ciphertext_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "gcm_nonce_base64url": "CCCCCCCCCCCCCCCC",
+      "gcm_tag_base64url": "DDDDDDDDDDDDDDDDDDDDDD"
+    }
+  ],
+  "log_chunk": {
+    "schema_version": "system-backup-log-chunk.v1",
+    "task": {
+      "task_type": "backup",
+      "task_public_id": "sbk_11111111-1111-4111-8111-111111111111"
+    },
+    "attempt_number": 1,
+    "phase": "verify",
+    "job_uid": "job-uid-example",
+    "job_generation": 1,
+    "chunk_sequence": 0,
+    "first_log_at": "2026-09-15T05:00:30Z",
+    "last_log_at": "2026-09-15T05:00:30Z",
+    "line_count": 1,
+    "redacted_evidence": {
+      "public_id": "sev_22222222-2222-4222-8222-222222222222",
+      "sha256": "8ba36735bb711ed745b7fcdc6396ff9a532e4cad8ada528dbcc0abf30261bd1c"
+    },
+    "ingest_status": "ready",
+    "log_ingest_failure_code": "none",
+    "available_until": "2026-09-22T05:01:00Z",
+    "row_version": 2,
+    "created_at": "2026-09-15T05:00:30Z",
+    "updated_at": "2026-09-15T05:01:00Z"
+  }
+}

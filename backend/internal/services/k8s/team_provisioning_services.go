@@ -4,5 +4,5 @@ package k8s
 // provisioning dependencies coherent without replacing the process-wide client.
 func NewTeamProvisioningServices(client *Client) (*PVCService, *SecretService, *ConfigMapService) {
 	ns := &NamespaceService{client: client}
-	return &PVCService{client: client, namespaceService: ns}, &SecretService{client: client, namespaceService: ns}, &ConfigMapService{client: client, namespaceService: ns}
+	return &PVCService{client: client, namespaceService: ns}, &SecretService{client: client, namespaceService: ns, store: NewSecretStore(client)}, &ConfigMapService{client: client, namespaceService: ns}
 }

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/runner-data-interfaces.schema.json",
+  "title": "System backup runner and data-module interfaces",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Interface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "method", "request", "result", "authority"],
+      "properties": {
+        "name": { "enum": ["Runner", "Collector", "Normalizer", "Verifier", "BackupArtifactStore"] },
+        "method": { "type": "string", "minLength": 1 },
+        "request": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 },
+        "authority": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "RequestContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task_public_id", "attempt_no", "phase", "config_snapshot", "deadline_at", "cancel_requested"],
+      "properties": {
+        "schema_version": { "const": "system-backup-module-request.v1" },
+        "task_public_id": { "type": "string", "minLength": 1 },
+        "attempt_no": { "type": "integer", "minimum": 1 },
+        "phase": { "$ref": "status-failure-enums.schema.json#/$defs/AttemptPhase" },
+        "config_snapshot": { "type": "object" },
+        "deadline_at": { "type": "string", "format": "date-time" },
+        "cancel_requested": { "type": "boolean" }
+      }
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "category", "disqualifying"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$" },
+        "category": { "$ref": "status-failure-enums.schema.json#/$defs/WarningCategory" },
+        "disqualifying": { "type": "boolean" },
+        "message": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "PartResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "part", "category", "status", "checkpoint", "statistics", "warnings", "evidence_ids", "failure_category"],
+      "properties": {
+        "schema_version": { "const": "system-backup-part-result.v1" },
+        "part": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "status": { "$ref": "status-failure-enums.schema.json#/$defs/PartResultStatus" },
+        "checkpoint": { "type": ["object", "null"] },
+        "statistics": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "warnings": { "type": "array", "items": { "$ref": "#/$defs/Warning" } },
+        "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^sev_[A-Za-z0-9_-]+$" } },
+        "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" }
+      }
+    }
+  },
+  "x-interfaces": [
+    { "name": "Runner", "method": "Run", "request": "RunnerRequest", "result": "RunnerResult", "authority": "Executes one frozen attempt phase and reports through status relay; it never mutates the task state directly." },
+    { "name": "Collector", "method": "Capture", "request": "CaptureRequest", "result": "PartResult", "authority": "Writes only task-owned staging and never mutates another owner result or the task state." },
+    { "name": "Normalizer", "method": "Normalize", "request": "NormalizationRequest", "result": "NormalizationResult", "authority": "Runs only with restore-write authority against the isolated target." },
+    { "name": "Verifier", "method": "Verify", "request": "VerifyRequest", "result": "VerifierResult", "authority": "Receives a separately credentialed read-only target and cannot perform DDL or DML." },
+    { "name": "BackupArtifactStore", "method": "Open|Stat|PutCandidate|DeleteCandidate", "request": "Typed provider request", "result": "Immutable object observation", "authority": "Candidate/read operations only; final keys and catalog append require the controller provider adapter and a persisted external action." }
+  ]
+}

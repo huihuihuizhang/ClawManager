@@ -12,8 +12,13 @@ import (
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	authService       services.AuthService
-	desktopLogoutHook func(context.Context, int) error
+	authService            services.AuthService
+	desktopLogoutHook      func(context.Context, int) error
+	systemBackupLogoutHook func(context.Context, int) error
+}
+
+func (h *AuthHandler) SetSystemBackupLogoutHook(hook func(context.Context, int) error) {
+	h.systemBackupLogoutHook = hook
 }
 
 func (h *AuthHandler) SetDesktopLogoutHook(hook func(context.Context, int) error) {
@@ -73,7 +78,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.authService.Login(req.Username, req.Password)
+	var tokenPair *services.TokenPair
+	var err error
+	if scoped, ok := h.authService.(services.RequestAuthService); ok {
+		tokenPair, err = scoped.LoginContext(c.Request.Context(), req.Username, req.Password)
+	} else {
+		tokenPair, err = h.authService.Login(req.Username, req.Password)
+	}
 	if err != nil {
 		utils.HandleError(c, err)
 		return
@@ -90,7 +101,13 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.authService.RefreshToken(req.RefreshToken)
+	var tokenPair *services.TokenPair
+	var err error
+	if scoped, ok := h.authService.(services.RequestAuthService); ok {
+		tokenPair, err = scoped.RefreshTokenContext(c.Request.Context(), req.RefreshToken)
+	} else {
+		tokenPair, err = h.authService.RefreshToken(req.RefreshToken)
+	}
 	if err != nil {
 		utils.HandleError(c, err)
 		return
@@ -101,6 +118,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 // Logout handles user logout
 func (h *AuthHandler) Logout(c *gin.Context) {
+	if h.systemBackupLogoutHook != nil {
+		if err := h.systemBackupLogoutHook(c.Request.Context(), c.GetInt("userID")); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "system_backup_session_revocation_unavailable"})
+			return
+		}
+	}
 	if h.desktopLogoutHook != nil {
 		if err := h.desktopLogoutHook(c.Request.Context(), c.GetInt("userID")); err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "desktop_session_revocation_unavailable"})

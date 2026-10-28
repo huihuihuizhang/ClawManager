@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-operation-errors.schema.json",
+  "title": "System backup Admin API operation error profiles",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "contract_version", "status", "profiles", "assignments", "x-invariants", "x-review-blockers"],
+  "properties": {
+    "kind": { "const": "system_backup_admin_operation_errors" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "status": { "const": "draft" },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "codes"],
+        "properties": {
+          "profile_id": { "$ref": "#/$defs/ProfileId" },
+          "codes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "admin-api-common.schema.json#/$defs/ApiErrorCode" }
+          }
+        }
+      }
+    },
+    "assignments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "operation_ids"],
+        "properties": {
+          "profile_id": { "$ref": "#/$defs/ProfileId" },
+          "operation_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]+$" }
+          }
+        }
+      }
+    },
+    "x-invariants": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "x-review-blockers": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+  },
+  "$defs": {
+    "ProfileId": {
+      "type": "string",
+      "enum": [
+        "read_root", "read_detail", "read_child_list", "read_logs", "read_artifact_detail", "read_evidence",
+        "task_create", "catalog_create", "cancel_backup", "cancel_task", "cleanup", "config_mutation",
+        "provider_proof", "strong_resolution", "manual_hold", "prune_dry_run", "prune_confirmation",
+        "prune_execute_retry", "promotion_create", "promotion_revoke"
+      ]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "d_download_admission_public_vector",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "source": "synthetic public facts; not a receipt, MFA source, SQL execution or production approval",
+  "operation": {
+    "schema_version": "system-backup-operation.v1",
+    "public_id": "sop_00000000-0000-4000-8000-000000000001",
+    "origin_installation_id": "installation_test",
+    "operation_type": "evidence_download_admission",
+    "target_type": "evidence",
+    "target_public_id": "sev_00000000-0000-4000-8000-000000000002",
+    "actor_type": "admin",
+    "actor_id": "42",
+    "endpoint": "getSystemBackupEvidence",
+    "idempotency_key": "download-admission-vector-key",
+    "request_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "succeeded",
+    "result_resource_public_id": null,
+    "result_config_version": null,
+    "retryable": false,
+    "failure_category": "none",
+    "failure_message": null,
+    "http_status": 200,
+    "row_version": 1,
+    "deadline_at": "2026-10-19T02:00:00.000002Z",
+    "started_at": "2026-10-19T02:00:00.000001Z",
+    "finished_at": "2026-10-19T02:00:00.000001Z",
+    "created_at": "2026-10-19T02:00:00.000001Z",
+    "updated_at": "2026-10-19T02:00:00.000001Z"
+  }
+}

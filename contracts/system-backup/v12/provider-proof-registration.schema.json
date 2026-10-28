@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/provider-proof-registration.schema.json",
+  "title": "A-owned provider-proof registration request",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "idempotency_key",
+    "target",
+    "proof",
+    "expected_row_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "system-backup-provider-proof-registration.v1"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{16,128}$"
+    },
+    "target": {
+      "$ref": "#/$defs/Target"
+    },
+    "proof": {
+      "$ref": "#/$defs/Proof"
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "$defs": {
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_type",
+        "target_public_id"
+      ],
+      "properties": {
+        "target_type": {
+          "enum": [
+            "external_action",
+            "backup_staging",
+            "restore_resource"
+          ]
+        },
+        "target_public_id": {
+          "type": "string",
+          "pattern": "^(sxa|sbs|srr)_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "target_type": {
+                "const": "external_action"
+              }
+            },
+            "required": [
+              "target_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "target_public_id": {
+                "pattern": "^sxa_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_type": {
+                "const": "backup_staging"
+              }
+            },
+            "required": [
+              "target_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "target_public_id": {
+                "pattern": "^sbs_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_type": {
+                "const": "restore_resource"
+              }
+            },
+            "required": [
+              "target_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "target_public_id": {
+                "pattern": "^srr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proof_type",
+        "issuer",
+        "provider_identity_hash",
+        "location_hash",
+        "action_key_hash",
+        "resource_uid",
+        "resource_version",
+        "observed_version",
+        "observed_checksum",
+        "content_length",
+        "observed_state",
+        "issued_at",
+        "expires_at",
+        "signed_proof_base64"
+      ],
+      "properties": {
+        "proof_type": {
+          "enum": [
+            "provider_presence",
+            "provider_absence",
+            "ownership"
+          ]
+        },
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\S"
+        },
+        "provider_identity_hash": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "location_hash": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "action_key_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resource_uid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\S"
+        },
+        "resource_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\S"
+        },
+        "observed_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\S"
+        },
+        "observed_checksum": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_length": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "observed_state": {
+          "enum": [
+            "absent",
+            "present_unsealed",
+            "present_sealed"
+          ]
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "signed_proof_base64": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "maxLength": 10924,
+          "minLength": 4,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "proof_type": {
+                "const": "provider_absence"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observed_state": {
+                "const": "absent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "proof_type": {
+                "const": "provider_presence"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observed_state": {
+                "enum": [
+                  "present_unsealed",
+                  "present_sealed"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": {
+              "target_type": {
+                "const": "external_action"
+              }
+            }
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proof": {
+            "properties": {
+              "proof_type": {
+                "enum": [
+                  "provider_presence",
+                  "provider_absence"
+                ]
+              },
+              "action_key_hash": {
+                "$ref": "#/$defs/Sha256"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": {
+              "target_type": {
+                "enum": [
+                  "backup_staging",
+                  "restore_resource"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proof": {
+            "properties": {
+              "proof_type": {
+                "const": "ownership"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": {
+              "target_type": {
+                "const": "backup_staging"
+              }
+            }
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proof": {
+            "properties": {
+              "observed_state": {
+                "enum": [
+                  "absent",
+                  "present_unsealed",
+                  "present_sealed"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": {
+              "target_type": {
+                "const": "restore_resource"
+              }
+            }
+          }
+        },
+        "required": [
+          "target"
+        ]
+      },
+      "then": {
+        "properties": {
+          "proof": {
+            "properties": {
+              "observed_state": {
+                "enum": [
+                  "absent",
+                  "present_unsealed"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "x-registration-rules": [
+    "The request is accepted only for system_backup.destructive with recent strong authentication and an idempotency key.",
+    "The server verifies the trusted provider issuer, signed bytes, target identity, location/action-key hash, observed version, checksum, length, time window and expected row version.",
+    "The proof is persisted as a redacted internal inline provider_presence_proof, provider_absence_proof or ownership_proof evidence record; registration never changes the target conclusion by itself.",
+    "A plain provider URI, credential, presigned URL, provider free-text error or client-supplied success flag is forbidden."
+  ],
+  "x-forbidden-fields": [
+    "uri",
+    "credential",
+    "authorization",
+    "presigned_url",
+    "provider_error",
+    "force_success"
+  ],
+  "x-runtime-validation": [
+    "Canonical padded base64 must decode to 1..8192 bytes (contentEncoding is annotation only).",
+    "issued_at <= database now + configured skew; expires_at > database now and expires_at <= issued_at + max_age; recheck inside the registration transaction.",
+    "The trusted issuer adapter authenticates installation audience, signed target and all envelope fields; signature failure=signature_invalid, authenticated identity/checksum/length mismatch=checksum_mismatch, target row drift=version_conflict; schema/issuer/expiry failure=validation_failed. No provider free-text or wrapped cause is returned."
+  ]
+}

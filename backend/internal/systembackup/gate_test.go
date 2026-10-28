@@ -48,7 +48,7 @@ func fixtureDatabase(t *testing.T) *sql.DB {
 func controlDB(t *testing.T) *sql.DB {
 	t.Helper()
 	db := fixtureDatabase(t)
-	for _, file := range []string{"079_add_system_backup_control.sql", "080_add_backup_dependency_health.sql", "081_add_backup_controller_coordination.sql", "082_add_backup_attempt_request.sql", "083_add_backup_strong_auth_nonce.sql", "084_add_backup_external_actions.sql", "085_add_backup_capture_coordination.sql", "086_add_backup_capture_abort.sql", "087_add_backup_stage_resources.sql", "088_add_backup_core_publication.sql", "089_add_backup_gate_admission.sql", "090_add_backup_restore_job_executions.sql", "091_add_backup_job_send_intents.sql", "092_allow_owned_backup_restore_workspaces.sql"} {
+	for _, file := range []string{"079_add_system_backup_control.sql", "080_add_backup_dependency_health.sql", "081_add_backup_controller_coordination.sql", "082_add_backup_attempt_request.sql", "083_add_backup_strong_auth_nonce.sql", "084_add_backup_external_actions.sql", "085_add_backup_capture_coordination.sql", "086_add_backup_capture_abort.sql", "087_add_backup_stage_resources.sql", "088_add_backup_core_publication.sql", "089_add_backup_gate_admission.sql", "090_add_backup_restore_job_executions.sql", "091_add_backup_job_send_intents.sql", "092_allow_owned_backup_restore_workspaces.sql", "111_backup_engine_selection.sql"} {
 		directory := os.Getenv("TEST_SYSTEM_BACKUP_MIGRATIONS_DIR")
 		if directory == "" {
 			directory = "../db/migrations"

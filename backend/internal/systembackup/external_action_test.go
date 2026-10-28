@@ -153,6 +153,16 @@ func TestFinalWriteAdoptsResponseLossAndDoesNotDispatchAfterDeadline(t *testing.
 	if done, err := d.Tick(ctx, s, l, x, a); err != nil || !done || p.puts != 1 {
 		t.Fatal("successful action dispatched again", done, err, p.puts)
 	}
+	indexRequest := r
+	indexRequest.Type = "index_put"
+	indexRequest.Key = artifactPrefix(s.InstallationID, x.ID) + "index.json"
+	indexAction, _, err := s.PrepareExternalAction(ctx, l, x, indexRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.ResolveExternalAction(ctx, l, x, indexAction, "confirmed_present", ObjectReference{Key: indexAction.Request.Key, VersionID: "index-v1", Bytes: int64(len(indexAction.Request.Payload)), SHA256: indexAction.Request.SHA256}); err != nil {
+		t.Fatal(err)
+	}
 	r.Type = "marker_put"
 	r.Key = artifactPrefix(s.InstallationID, x.ID) + "_COMMITTED"
 	a, x, err = s.PrepareExternalAction(ctx, l, x, r)

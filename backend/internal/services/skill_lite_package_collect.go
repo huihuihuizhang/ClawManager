@@ -52,6 +52,9 @@ func resolveLiteWorkspaceDir(instanceSkill *models.InstanceSkill, skill *models.
 }
 
 func (s *skillService) persistDiscoveredSkillPackage(ctx context.Context, instanceID int, dir extractedSkillDirectory, contentMD5 string, existingBlob *models.SkillBlob) (*models.SkillBlob, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if s == nil || s.storage == nil {
 		return nil, fmt.Errorf("object storage is not configured")
 	}
@@ -83,7 +86,13 @@ func (s *skillService) persistDiscoveredSkillPackage(ctx context.Context, instan
 			ScanStatus:  "pending",
 			RiskLevel:   skillRiskUnknown,
 		}
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if err := s.storage.PutObject(ctx, blob.ObjectKey, archiveBytes, blob.MediaType); err != nil {
+			return nil, err
+		}
+		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 		if err := s.repo.CreateBlob(blob); err != nil {
@@ -95,7 +104,13 @@ func (s *skillService) persistDiscoveredSkillPackage(ctx context.Context, instan
 		blob.MediaType = "application/zip"
 		blob.SizeBytes = int64(len(archiveBytes))
 		blob.ArchiveHash = archiveHash
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if err := s.storage.PutObject(ctx, blob.ObjectKey, archiveBytes, blob.MediaType); err != nil {
+			return nil, err
+		}
+		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 		if err := s.repo.UpdateBlob(blob); err != nil {
@@ -104,11 +119,17 @@ func (s *skillService) persistDiscoveredSkillPackage(ctx context.Context, instan
 	}
 
 	if blob.LastScanResultID == nil || !strings.EqualFold(strings.TrimSpace(blob.ScanStatus), "completed") {
-		if err := s.recordScan(blob, &dir); err != nil {
+		if err := s.recordScanContext(ctx, blob, &dir); err != nil {
+			if cancelErr := materializeCancellation(ctx, err); cancelErr != nil {
+				return nil, cancelErr
+			}
 			blob.ScanStatus = "failed"
 			blob.UpdatedAt = timeNowUTC()
 			_ = s.repo.UpdateBlob(blob)
 		}
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	updated, err := s.repo.GetBlobByID(blob.ID)
 	if err != nil {
@@ -121,6 +142,9 @@ func (s *skillService) persistDiscoveredSkillPackage(ctx context.Context, instan
 }
 
 func (s *skillService) materializeSkillPackageFromWorkspace(ctx context.Context, instanceID int, workspaceDir, expectedMD5 string, targetBlobID int) (*models.SkillBlob, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	instance, err := s.instanceRepo.GetByID(instanceID)
 	if err != nil {
 		return nil, err
@@ -137,6 +161,9 @@ func (s *skillService) materializeSkillPackageFromWorkspace(ctx context.Context,
 		return nil, err
 	}
 
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	var existingBlob *models.SkillBlob
 	if targetBlobID > 0 {
 		existingBlob, err = s.repo.GetBlobByID(targetBlobID)

@@ -10,14 +10,28 @@ import (
 )
 
 func TestSkillPackageMaterializeWorkerReleasesWhenInstanceLimitReached(t *testing.T) {
+	unblock := make(chan struct{})
 	repo := &workerMaterializeJobRepoStub{
+		onRelease: func() { close(unblock) },
 		jobs: []models.SkillPackageMaterializeJob{
 			{ID: 1, InstanceID: 9, Status: MaterializeJobStatusRunning},
 			{ID: 2, InstanceID: 9, Status: MaterializeJobStatusRunning},
 			{ID: 3, InstanceID: 9, Status: MaterializeJobStatusRunning},
 		},
 	}
-	service := NewSkillPackageMaterializeService(repo, nil, stubMaterializer{})
+	// Hold admitted jobs until the excess claim is released. Fast no-op jobs
+	// can finish before admission and do not test a concurrent instance limit.
+	service := NewSkillPackageMaterializeService(repo, nil, cancellationMaterializer{
+		materialize: func(context.Context) (*models.SkillBlob, error) {
+			select {
+			case <-unblock:
+			case <-time.After(3 * time.Second):
+				t.Error("excess claim was not released")
+			}
+			return &models.SkillBlob{}, nil
+		},
+		sync: func() error { return nil },
+	})
 	worker := NewSkillPackageMaterializeWorker(service, time.Second, 3, 5, 2, true)
 
 	worker.processBatch(context.Background())
@@ -36,8 +50,9 @@ func (stubMaterializer) materializeSkillPackageFromWorkspace(context.Context, in
 func (stubMaterializer) syncSkillRecordFromBlob(int, *models.SkillBlob) error { return nil }
 
 type workerMaterializeJobRepoStub struct {
-	jobs     []models.SkillPackageMaterializeJob
-	released int
+	jobs      []models.SkillPackageMaterializeJob
+	released  int
+	onRelease func()
 }
 
 func (s *workerMaterializeJobRepoStub) Create(*models.SkillPackageMaterializeJob) error { return nil }
@@ -61,6 +76,9 @@ func (s *workerMaterializeJobRepoStub) MarkFailed(int, string, bool) error { ret
 func (s *workerMaterializeJobRepoStub) MarkRunning(int) error              { return nil }
 func (s *workerMaterializeJobRepoStub) ReleaseToPending(int) error {
 	s.released++
+	if s.onRelease != nil {
+		s.onRelease()
+	}
 	return nil
 }
 func (s *workerMaterializeJobRepoStub) ResetForRetry(int) error { return nil }

@@ -1,0 +1,909 @@
+{
+  "kind": "system_backup_a_object_fixture_policies",
+  "status": "draft",
+  "contract_version": "system-backup-plan.v12",
+  "scope": "Executable synthetic projected-row contract vectors, not full SQL rows or production collector/normalizer output. Field lengths on fixture-only TEXT projections are bounded test limits. Raw passwords, keys and provider locations are never included. Remaining columns require P0a collector coverage.",
+  "policies": [
+    {
+      "name": "audit_events",
+      "normalizer_id": "ai_gateway.audit_events.normalize.v1",
+      "verifier_id": "ai_gateway.audit_events.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "invocation_id",
+          "event_type",
+          "message",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "invocation_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "event_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "details": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "invocation_id": "model_invocations"
+      },
+      "redacted_fields": [
+        "message",
+        "details"
+      ],
+      "normalize_set": {},
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "chat_messages",
+      "normalizer_id": "ai_gateway.chat_messages.normalize.v1",
+      "verifier_id": "ai_gateway.chat_messages.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "instance_id",
+          "invocation_id",
+          "session_id",
+          "role",
+          "content"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "instance_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "invocation_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "instance_id": "instances",
+        "invocation_id": "model_invocations",
+        "session_id": "chat_sessions"
+      },
+      "redacted_fields": [
+        "content"
+      ],
+      "normalize_set": {},
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "chat_sessions",
+      "normalizer_id": "ai_gateway.chat_sessions.normalize.v1",
+      "verifier_id": "ai_gateway.chat_sessions.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "instance_id",
+          "session_id",
+          "last_trace_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "instance_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "last_trace_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "instance_id": "instances",
+        "session_id": "chat_sessions"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "last_trace_id": null
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "cost_records",
+      "normalizer_id": "ai_gateway.cost_records.normalize.v1",
+      "verifier_id": "ai_gateway.cost_records.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "invocation_id",
+          "model_id",
+          "total_tokens",
+          "currency",
+          "estimated_cost"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "invocation_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "model_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "total_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16
+          },
+          "estimated_cost": {
+            "type": "string",
+            "pattern": "^[0-9]{1,10}\\.[0-9]{8}$"
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "invocation_id": "model_invocations",
+        "model_id": "llm_models"
+      },
+      "redacted_fields": [],
+      "normalize_set": {},
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "enterprise_auth_settings",
+      "normalizer_id": "users.enterprise_auth_settings.normalize.v1",
+      "verifier_id": "users.enterprise_auth_settings.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "provider",
+          "enabled",
+          "updated_by",
+          "ldap_bind_password_ciphertext",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "updated_by": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "ldap_bind_password_ciphertext": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "references": {
+        "updated_by": "users"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "enabled": false,
+        "ldap_bind_password_ciphertext": ""
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [
+        "ldap_bind_password_ciphertext"
+      ],
+      "expected_secret_versions": {
+        "ldap_bind_password_ciphertext": "fixture-version-1"
+      }
+    },
+    {
+      "name": "instance_gateway_token_aliases",
+      "normalizer_id": "ai_gateway.instance_gateway_token_aliases.normalize.v1",
+      "verifier_id": "ai_gateway.instance_gateway_token_aliases.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "instance_id",
+          "token_hash",
+          "expires_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "instance_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "token_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "references": {
+        "instance_id": "instances"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "expires_at": "2026-09-20T01:20:00Z"
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "llm_models",
+      "normalizer_id": "ai_gateway.llm_models.normalize.v1",
+      "verifier_id": "ai_gateway.llm_models.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "display_name",
+          "provider_type",
+          "is_active",
+          "api_key"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "provider_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "api_key_secret_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        }
+      },
+      "references": {
+        "id": "llm_models"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "is_active": false,
+        "api_key": null,
+        "api_key_secret_ref": null
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [
+        "api_key"
+      ],
+      "expected_secret_versions": {
+        "api_key": "fixture-version-1"
+      }
+    },
+    {
+      "name": "model_invocations",
+      "normalizer_id": "ai_gateway.model_invocations.normalize.v1",
+      "verifier_id": "ai_gateway.model_invocations.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "instance_id",
+          "model_id",
+          "status",
+          "request_payload",
+          "response_payload",
+          "total_tokens"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "instance_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "model_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "failed",
+              "blocked"
+            ]
+          },
+          "request_payload": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "response_payload": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "total_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "references": {
+        "id": "model_invocations",
+        "user_id": "users",
+        "instance_id": "instances",
+        "model_id": "llm_models"
+      },
+      "redacted_fields": [
+        "request_payload",
+        "response_payload"
+      ],
+      "normalize_set": {},
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "northbound_auth_challenges",
+      "normalizer_id": "users.northbound_auth_challenges.normalize.v1",
+      "verifier_id": "users.northbound_auth_challenges.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "nonce_hash",
+          "expires_at",
+          "used_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "status": {
+            "enum": [
+              "issued",
+              "processing",
+              "consumed",
+              "expired"
+            ]
+          },
+          "nonce_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "references": {},
+      "redacted_fields": [],
+      "normalize_set": {
+        "status": "expired",
+        "expires_at": "2026-09-20T01:20:00Z",
+        "used_at": "2026-09-20T01:20:00Z"
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "northbound_caller_policies",
+      "normalizer_id": "users.northbound_caller_policies.normalize.v1",
+      "verifier_id": "users.northbound_caller_policies.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "user_id",
+          "enabled",
+          "scopes_json",
+          "updated_by"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "scopes_json": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "lite-instances:read",
+                "pro-instances:read"
+              ]
+            }
+          },
+          "updated_by": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "updated_by": "users"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "enabled": false
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "northbound_sessions",
+      "normalizer_id": "users.northbound_sessions.normalize.v1",
+      "verifier_id": "users.northbound_sessions.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "status",
+          "refresh_token_hash",
+          "refresh_expires_at",
+          "access_expires_at",
+          "revoked_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "status": {
+            "enum": [
+              "active",
+              "revoked",
+              "expired"
+            ]
+          },
+          "refresh_token_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "refresh_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "access_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revoked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "references": {
+        "user_id": "users"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "status": "revoked",
+        "refresh_expires_at": "2026-09-20T01:20:00Z",
+        "access_expires_at": "2026-09-20T01:20:00Z",
+        "revoked_at": "2026-09-20T01:20:00Z"
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "risk_hits",
+      "normalizer_id": "ai_gateway.risk_hits.normalize.v1",
+      "verifier_id": "ai_gateway.risk_hits.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "invocation_id",
+          "rule_id",
+          "match_summary"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "invocation_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "rule_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "match_summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "references": {
+        "user_id": "users",
+        "invocation_id": "model_invocations",
+        "rule_id": "risk_rules"
+      },
+      "redacted_fields": [
+        "match_summary"
+      ],
+      "normalize_set": {},
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "risk_rules",
+      "normalizer_id": "ai_gateway.risk_rules.normalize.v1",
+      "verifier_id": "ai_gateway.risk_rules.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "rule_id",
+          "action",
+          "is_enabled",
+          "pattern"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "rule_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "action": {
+            "enum": [
+              "allow",
+              "route_secure_model",
+              "block"
+            ]
+          },
+          "is_enabled": {
+            "type": "boolean"
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        }
+      },
+      "references": {
+        "rule_id": "risk_rules"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "is_enabled": false
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "user_quotas",
+      "normalizer_id": "users.user_quotas.normalize.v1",
+      "verifier_id": "users.user_quotas.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "user_id",
+          "max_instances",
+          "max_cpu_cores",
+          "max_memory_gb",
+          "max_storage_gb",
+          "max_gpu_count"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "max_instances": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "max_cpu_cores": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "max_memory_gb": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "max_storage_gb": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "max_gpu_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        }
+      },
+      "references": {
+        "user_id": "users"
+      },
+      "redacted_fields": [],
+      "normalize_set": {},
+      "capacity_limits": {
+        "max_instances": 10,
+        "max_cpu_cores": 40,
+        "max_memory_gb": 100,
+        "max_storage_gb": 500,
+        "max_gpu_count": 2
+      },
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    },
+    {
+      "name": "users",
+      "normalizer_id": "users.users.normalize.v1",
+      "verifier_id": "users.users.verify.v1",
+      "input_projection_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username",
+          "role",
+          "is_active",
+          "password_hash"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "role": {
+            "enum": [
+              "admin",
+              "user"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "password_hash": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        }
+      },
+      "references": {
+        "id": "users"
+      },
+      "redacted_fields": [],
+      "normalize_set": {
+        "is_active": false,
+        "password_hash": "!system-backup-password-reset-required!"
+      },
+      "capacity_limits": {},
+      "secret_ref_fields": [],
+      "expected_secret_versions": {}
+    }
+  ]
+}

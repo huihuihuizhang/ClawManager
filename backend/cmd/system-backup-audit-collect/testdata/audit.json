@@ -1,0 +1,99 @@
+{
+  "server_uuid": "11111111-2222-3333-4444-555555555555",
+  "database": "isolated_test",
+  "operation": {
+    "id": 11,
+    "public_id": "sop_11111111-2222-3333-4444-555555555555",
+    "installation_id": "installation_live_test",
+    "actor_id": "42",
+    "operation_type": "evidence_download_admission",
+    "endpoint": "getSystemBackupEvidence",
+    "status": "succeeded",
+    "idempotency_key": "a-live-fixed-test-001",
+    "request_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "evidence_id": "sev_11111111-2222-3333-4444-555555555555"
+  },
+  "admission": {
+    "operation_id": 11,
+    "operation_public_id": "sop_11111111-2222-3333-4444-555555555555",
+    "installation_id": "installation_live_test",
+    "evidence_id": "sev_11111111-2222-3333-4444-555555555555",
+    "intent_audit_id": 12,
+    "body": {
+      "operation_public_id": "sop_11111111-2222-3333-4444-555555555555",
+      "origin_installation_id": "installation_live_test",
+      "evidence_id": "sev_11111111-2222-3333-4444-555555555555",
+      "evidence_row_version": 7,
+      "request_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "claim_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "range_present": false,
+      "range_start": 0,
+      "range_end": 16,
+      "schema_version": "system-backup-evidence-download-admission.v1",
+      "intent_audit_id": 12,
+      "subject_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "session_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "admitted_at": "2026-10-21T08:00:01Z",
+      "claim_expires_at": "2026-10-21T08:00:31Z"
+    },
+    "size_bytes": 832,
+    "sha256": "2cafb4059aca26555ce288cc2b4f6497e28641a833564ea073f799749aabd8fe"
+  },
+  "intent": {
+    "id": 12,
+    "user_id": 42,
+    "action": "system_backup.evidence_download.intent",
+    "resource_type": "system_backup",
+    "resource_id": null,
+    "body": {
+      "operation_public_id": "sop_11111111-2222-3333-4444-555555555555",
+      "origin_installation_id": "installation_live_test",
+      "evidence_id": "sev_11111111-2222-3333-4444-555555555555",
+      "evidence_row_version": 7,
+      "request_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "claim_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "range_present": false,
+      "range_start": 0,
+      "range_end": 16,
+      "schema_version": "system-backup-evidence-download-intent.v1",
+      "manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "intent_at": "2026-10-21T08:00:00Z"
+    }
+  },
+  "result": {
+    "id": 13,
+    "user_id": 42,
+    "action": "system_backup.evidence_download.result",
+    "resource_type": "system_backup",
+    "resource_id": null,
+    "body": {
+      "operation_public_id": "sop_11111111-2222-3333-4444-555555555555",
+      "origin_installation_id": "installation_live_test",
+      "evidence_id": "sev_11111111-2222-3333-4444-555555555555",
+      "evidence_row_version": 7,
+      "request_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "claim_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "range_present": false,
+      "range_start": 0,
+      "range_end": 16,
+      "schema_version": "system-backup-evidence-download-result.v1",
+      "intent_audit_id": 12,
+      "outcome": "local_write_complete",
+      "bytes_written": 17,
+      "result_at": "2026-10-21T08:00:02Z",
+      "retain_until": "2026-11-21T08:00:00Z"
+    }
+  },
+  "result_link": {
+    "operation_id": 11,
+    "operation_public_id": "sop_11111111-2222-3333-4444-555555555555",
+    "installation_id": "installation_live_test",
+    "evidence_id": "sev_11111111-2222-3333-4444-555555555555",
+    "intent_audit_id": 12,
+    "result_audit_id": 13,
+    "size_bytes": 622,
+    "sha256": "4e6a0a7cdf83908ccd20b70feee15af01846f6c5b261dd0f942e39e7e8215dde"
+  },
+  "nonce_count": 1
+}

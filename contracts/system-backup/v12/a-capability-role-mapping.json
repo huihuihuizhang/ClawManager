@@ -1,0 +1,104 @@
+{
+  "kind": "system_backup_a_capability_projection",
+  "status": "draft",
+  "contract_version": "system-backup-plan.v12",
+  "codes_by_role": {
+    "artifact": [
+      "conditional_create",
+      "checksum_bound_request",
+      "scoped_upload_credential",
+      "scoped_read_credential",
+      "scoped_delete_credential",
+      "multipart_resume",
+      "object_checksum",
+      "version_listing",
+      "delete_marker_listing",
+      "strong_read_after_write",
+      "tls_verified"
+    ],
+    "catalog": [
+      "conditional_create",
+      "checksum_bound_request",
+      "scoped_read_credential",
+      "scoped_append_credential",
+      "strong_read_after_write",
+      "provider_snapshot_listing",
+      "inventory_manifest_listing",
+      "versioned_absence_proof",
+      "tls_verified"
+    ],
+    "evidence": [
+      "conditional_create",
+      "checksum_bound_request",
+      "scoped_read_credential",
+      "scoped_write_credential",
+      "scoped_delete_credential",
+      "object_checksum",
+      "strong_read_after_write",
+      "versioned_absence_proof",
+      "tls_verified"
+    ],
+    "kms": [
+      "generate_data_key",
+      "unwrap_data_key",
+      "identity_scope",
+      "identity_revocation",
+      "version_retention"
+    ],
+    "secret": [
+      "exact_version_read",
+      "resource_version_guard",
+      "uid_guard",
+      "aes256_kw",
+      "identity_revocation"
+    ],
+    "signing": [
+      "purpose_key_separation",
+      "historic_verification",
+      "key_rotation",
+      "scoped_signer",
+      "policy_separation"
+    ]
+  },
+  "provider_row_roles": [
+    "artifact",
+    "catalog",
+    "evidence"
+  ],
+  "field_mapping": {
+    "provider_role": "provider_role",
+    "provider_identity_hash": "provider_identity_hash",
+    "provider_ref_version": "provider_ref_version",
+    "observed_provider_version": "observed_provider_version",
+    "capabilities[].capability_code": "capability_code",
+    "capabilities[].status": "status",
+    "capabilities[].reason_code": "capability_reason_code",
+    "capabilities[].checked_at": "checked_at",
+    "capabilities[].expires_at": "expires_at"
+  },
+  "non_provider_roles": {
+    "kms": "Input to independently evaluated kek dependency health; no automatic healthy row.",
+    "secret": "Input to Secret bundle/KEK capability checks; no provider row and no automatic dependency-health projection.",
+    "signing": "Input to independently evaluated signing dependency health; no automatic healthy row."
+  },
+  "persistence_owner": "D must bind authenticated installation/identity, exact version, registered evidence, lease/CAS and database time; A validation never inserts a row or registers evidence.",
+  "expiry_policy": "min(checked_at + trusted MaxValidity, trusted dependency ValidUntil, provider proof validity); never extend on ingestion; missing or expired observations derive unknown.",
+  "reasons_by_status": {
+    "supported": [
+      "none"
+    ],
+    "unsupported": [
+      "unsupported_api"
+    ],
+    "degraded": [
+      "probe_failed",
+      "provider_unavailable",
+      "credential_unavailable",
+      "permission_denied",
+      "response_invalid",
+      "version_drift",
+      "internal"
+    ]
+  },
+  "status_reason_policy": "Only confirmed deterministic API/version incompatibility uses unsupported_api. Version drift without this proof remains degraded/version_drift. Reject contradictory pairs; never silently relabel an observation."
+}

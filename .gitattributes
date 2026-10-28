@@ -1,2 +1,18 @@
 *.sh text eol=lf
 docs/system-backup/reference/v12/*.md -text
+# Backup contracts and migration pins hash exact bytes on Windows and Linux.
+contracts/system-backup/** text eol=lf
+backend/internal/db/migrations/*.sql text eol=lf
+backend/internal/systembackup*/**/*.go text eol=lf
+backend/internal/systembackup*/**/*.json text eol=lf
+backend/internal/systembackup*/**/*.sql text eol=lf
+backend/internal/systembackup*/**/*.pem text eol=lf
+backend/internal/migrationcatalog/*.go text eol=lf
+backend/internal/migrationcoord/*.go text eol=lf
+docs/backup-team-integration/** text eol=lf
+docs/evidence/*.json text eol=lf
+docs/system-backup-*-proposal-*.sql text eol=lf
+# Referenced source SQL retains its published bytes, including final blank lines.
+contracts/system-backup/v12/producer-authority-candidate.sql whitespace=-blank-at-eof
+docs/backup-team-integration/reference/system-backup-d-download-admission-schema-proposal-20261019.sql whitespace=-blank-at-eof
+docs/system-backup-d-download-admission-schema-proposal-20261019.sql whitespace=-blank-at-eof

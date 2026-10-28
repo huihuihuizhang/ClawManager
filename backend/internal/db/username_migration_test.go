@@ -130,6 +130,15 @@ func (c *usernameMigrationConn) QueryContext(_ context.Context, query string, ar
 	if query == "SELECT DATABASE() AS name" {
 		return &usernameMigrationRows{columns: []string{"name"}, values: [][]driver.Value{{"username_migration_test"}}}, nil
 	}
+	if strings.Contains(query, "SELECT CONCAT('cm:migrate:'") {
+		return &usernameMigrationRows{columns: []string{"lock_name"}, values: [][]driver.Value{{"cm:migrate:fixture"}}}, nil
+	}
+	if strings.Contains(query, "SELECT RELEASE_LOCK(") {
+		return &usernameMigrationRows{columns: []string{"released"}, values: [][]driver.Value{{int64(1)}}}, nil
+	}
+	if strings.Contains(query, "information_schema.TABLES") {
+		return &usernameMigrationRows{columns: []string{"present"}, values: [][]driver.Value{{int64(0)}}}, nil
+	}
 	if strings.Contains(query, "SELECT GET_LOCK(") {
 		return &usernameMigrationRows{columns: []string{"locked"}, values: [][]driver.Value{{int64(1)}}}, nil
 	}

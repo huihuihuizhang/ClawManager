@@ -1,0 +1,118 @@
+{
+  "kind": "a_config_canonical_maintenance_digest_vectors",
+  "profile_id": "a-config-canonical-maintenance-digests.v1",
+  "date": "2026-10-15",
+  "synthetic": true,
+  "accepted_as_original_or_grant": false,
+  "runtime_parity": false,
+  "vectors": [
+    {
+      "name": "actor",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-maintenance-actor.v1",
+        "issuer": "https://maintenance-issuer.example",
+        "subject": "operator:alice"
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.config-canonical-maintenance-actor.v1\",\"issuer\":\"https://maintenance-issuer.example\",\"subject\":\"operator:alice\"}",
+      "sha256": "6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94"
+    },
+    {
+      "name": "actor_unicode",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-maintenance-actor.v1",
+        "issuer": "https://maintenance-issuer.example",
+        "subject": "operator:测试"
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.config-canonical-maintenance-actor.v1\",\"issuer\":\"https://maintenance-issuer.example\",\"subject\":\"operator:测试\"}",
+      "sha256": "209c9d3c3d7aa6b24735f2296058806184b12f2fb91af523aadb462f83fc2b90"
+    },
+    {
+      "name": "grant",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-maintenance-grant.v1",
+        "issuer": "https://maintenance-issuer.example",
+        "grant_id": "grant_synthetic_001"
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.config-canonical-maintenance-grant.v1\",\"grant_id\":\"grant_synthetic_001\",\"issuer\":\"https://maintenance-issuer.example\"}",
+      "sha256": "d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8"
+    },
+    {
+      "name": "request",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-backfill-request.v1",
+        "target_server_uuid": "12345678-1234-1234-1234-123456789abc",
+        "target_database": "synthetic_db",
+        "origin_installation_id": "installation_synthetic",
+        "maintenance_actor_sha256": "6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94",
+        "action": "config_canonical_backfill",
+        "grant_identity_sha256": "d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8",
+        "grant_version": "v1",
+        "config_version": 7,
+        "original_config_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "original_config_size_bytes": 8192,
+        "expected_row_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "source_provenance_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "schema_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "catalog_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "migration_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+        "reason": "synthetic canonical backfill"
+      },
+      "canonical_utf8": "{\"action\":\"config_canonical_backfill\",\"catalog_sha256\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"config_version\":7,\"domain\":\"clawmanager.system-backup.config-canonical-backfill-request.v1\",\"expected_row_sha256\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"grant_identity_sha256\":\"d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8\",\"grant_version\":\"v1\",\"maintenance_actor_sha256\":\"6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94\",\"migration_sha256\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"origin_installation_id\":\"installation_synthetic\",\"original_config_sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"original_config_size_bytes\":8192,\"reason\":\"synthetic canonical backfill\",\"schema_sha256\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"source_provenance_sha256\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"target_database\":\"synthetic_db\",\"target_server_uuid\":\"12345678-1234-1234-1234-123456789abc\"}",
+      "sha256": "73ac33a9c486b1e2ab90b8668ee38a331ee1947f8ac98493339f5f205f83c171"
+    },
+    {
+      "name": "request_grant_v2",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-backfill-request.v1",
+        "target_server_uuid": "12345678-1234-1234-1234-123456789abc",
+        "target_database": "synthetic_db",
+        "origin_installation_id": "installation_synthetic",
+        "maintenance_actor_sha256": "6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94",
+        "action": "config_canonical_backfill",
+        "grant_identity_sha256": "d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8",
+        "grant_version": "v2",
+        "config_version": 7,
+        "original_config_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "original_config_size_bytes": 8192,
+        "expected_row_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "source_provenance_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "schema_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "catalog_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "migration_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+        "reason": "synthetic canonical backfill"
+      },
+      "canonical_utf8": "{\"action\":\"config_canonical_backfill\",\"catalog_sha256\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"config_version\":7,\"domain\":\"clawmanager.system-backup.config-canonical-backfill-request.v1\",\"expected_row_sha256\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"grant_identity_sha256\":\"d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8\",\"grant_version\":\"v2\",\"maintenance_actor_sha256\":\"6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94\",\"migration_sha256\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"origin_installation_id\":\"installation_synthetic\",\"original_config_sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"original_config_size_bytes\":8192,\"reason\":\"synthetic canonical backfill\",\"schema_sha256\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"source_provenance_sha256\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"target_database\":\"synthetic_db\",\"target_server_uuid\":\"12345678-1234-1234-1234-123456789abc\"}",
+      "sha256": "65b37f3762ceb531a490d96d26bce568e3ac242d37fe33401902570b7c6b804f"
+    },
+    {
+      "name": "request_other_target",
+      "input": {
+        "domain": "clawmanager.system-backup.config-canonical-backfill-request.v1",
+        "target_server_uuid": "12345678-1234-1234-1234-123456789abc",
+        "target_database": "synthetic_other",
+        "origin_installation_id": "installation_synthetic",
+        "maintenance_actor_sha256": "6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94",
+        "action": "config_canonical_backfill",
+        "grant_identity_sha256": "d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8",
+        "grant_version": "v1",
+        "config_version": 7,
+        "original_config_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "original_config_size_bytes": 8192,
+        "expected_row_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "source_provenance_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "schema_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "catalog_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "migration_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+        "reason": "synthetic canonical backfill"
+      },
+      "canonical_utf8": "{\"action\":\"config_canonical_backfill\",\"catalog_sha256\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"config_version\":7,\"domain\":\"clawmanager.system-backup.config-canonical-backfill-request.v1\",\"expected_row_sha256\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"grant_identity_sha256\":\"d05a9f05f054f0dc4741f868be2194b727a711041b4e99d4475b25018ee93aa8\",\"grant_version\":\"v1\",\"maintenance_actor_sha256\":\"6b5ab896e3ca89fe4f1a90ad9ba8f6dd6f9239e4dac5dc23e8f5a9b7b3455b94\",\"migration_sha256\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"origin_installation_id\":\"installation_synthetic\",\"original_config_sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"original_config_size_bytes\":8192,\"reason\":\"synthetic canonical backfill\",\"schema_sha256\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"source_provenance_sha256\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"target_database\":\"synthetic_other\",\"target_server_uuid\":\"12345678-1234-1234-1234-123456789abc\"}",
+      "sha256": "7b175105e170853df828e54900cb49e3a6237b91f9e874c081e77cffd6bb077a"
+    }
+  ],
+  "invariants": {
+    "actor_scope_excludes_session_key_grant_rotation": true,
+    "grant_version_changes_request_hash": true,
+    "target_changes_request_hash": true,
+    "raw_canonical_or_proof_included": false
+  }
+}

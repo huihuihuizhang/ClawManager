@@ -205,9 +205,10 @@ func TestSixRealSourcesPublishAndDataOnlyRestore(t *testing.T) {
 	} else {
 		report, e = RestorePublishedData(ctx, external, recovered, wrapper, run, restoreTarget, budget)
 	}
-	if e != nil || report.Status != "succeeded" || report.Phase != "complete" || report.AcceptanceEligible || len(report.SQL.Tables) != 75 || len(report.HistoryParts) != 2 {
+	if e != nil || report.Status != "succeeded" || report.Phase != "complete" || report.AcceptanceEligible || len(report.HistoryParts) != 2 {
 		t.Fatal("data restore runner", report.Phase, e)
 	}
+	requireFullBusinessCoverage(t, report.SQL)
 	t.Logf("restored and read back: files=%d objects=%d redis=%d", report.VerifiedFileCount, report.VerifiedObjectCount, report.VerifiedRedisCount)
 	if os.Getenv("TEST_SYSTEM_BACKUP_LARGE_SMOKE") == "1" {
 		if report.SQL.Tables["team_events"] != 100000 || report.VerifiedObjectCount != 10001 || report.VerifiedRedisCount != 100001 || report.VerifiedFileCount < 2050 {

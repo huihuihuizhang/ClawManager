@@ -25,6 +25,8 @@ import RiskRulesPage from '../pages/admin/RiskRulesPage';
 import ModelManagementPage from '../pages/admin/ModelManagementPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
 import BackupsPage from '../pages/admin/backups/TeamDataBackupsPage';
+import SystemBackupTasksPage from '../pages/admin/backups/BackupsPage';
+import BackupControlRecordsPage from '../pages/admin/backups/SystemBackupsPage';
 import NorthboundSettingsPage from '../pages/admin/NorthboundSettingsPage';
 import RuntimePodsPage from '../pages/admin/RuntimePodsPage';
 import UserSettingsPage from '../pages/settings/UserSettingsPage';
@@ -280,6 +282,9 @@ function AppRoutes() {
 
       {/* Admin Routes */}
       <Route path="/admin/backups" element={<AdminRoute><BackupsPage /></AdminRoute>} />
+      <Route path="/admin/backups/system" element={<AdminRoute><SystemBackupTasksPage /></AdminRoute>} />
+      <Route path="/admin/backups/system/:id" element={<AdminRoute><SystemBackupTasksPage /></AdminRoute>} />
+      <Route path="/admin/backups/records" element={<AdminRoute><BackupControlRecordsPage /></AdminRoute>} />
       <Route path="/admin/backups/:id" element={<AdminRoute><BackupsPage /></AdminRoute>} />
       <Route
         path="/admin"

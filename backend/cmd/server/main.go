@@ -27,6 +27,7 @@ import (
 	"clawreef/internal/services/k8s"
 	"clawreef/internal/services/leader"
 	"clawreef/internal/systembackup"
+	"clawreef/internal/systembackupapi"
 	"clawreef/internal/teamtemplate"
 
 	"github.com/gin-gonic/gin"
@@ -116,7 +117,25 @@ func main() {
 	if enterpriseAuthManager.Status(context.Background()).Enabled {
 		log.Printf("Enterprise LDAP authentication enabled")
 	}
-	authService := services.NewAuthService(userRepo, cfg.JWT, enterpriseAuthManager, services.WithEnterpriseAuthPolicy(cfg.Auth.Enterprise), services.WithQuotaRepository(quotaRepo))
+	backupDatabase := database
+	if os.Getenv("SYSTEM_BACKUP_READ_SESSIONS_ENABLED") == "true" {
+		backupDatabase, err = db.OpenSystemBackupRead(cfg.Database)
+		if err != nil {
+			log.Fatal("system backup UTC session pool unavailable")
+		}
+		defer backupDatabase.Close()
+	}
+	backupSessionSQL, _ := backupDatabase.Driver().(*sql.DB)
+	backupSessions, err := backupSessionRecorder(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
+	if err != nil {
+		log.Fatal("system backup session enrollment configuration invalid")
+	}
+	authOptions := []services.AuthServiceOption{services.WithEnterpriseAuthPolicy(cfg.Auth.Enterprise), services.WithQuotaRepository(quotaRepo)}
+	if backupSessions != nil {
+		authOptions = append(authOptions, services.WithSystemBackupSessions(backupSessions))
+	}
+	authService := services.NewAuthService(userRepo, cfg.JWT, enterpriseAuthManager, authOptions...)
+
 	quotaService := services.NewQuotaService(quotaRepo)
 	userService := services.NewUserService(userRepo, quotaRepo)
 	systemImageSettingService := services.NewSystemImageSettingService(systemImageSettingRepo)
@@ -282,6 +301,9 @@ func main() {
 	// Initialize handlers
 	versionHandler := handlers.NewVersionHandler()
 	authHandler := handlers.NewAuthHandler(authService)
+	if backupSessions != nil {
+		authHandler.SetSystemBackupLogoutHook(backupSessions.RevokeUserSessions)
+	}
 	enterpriseAuthHandler := handlers.NewEnterpriseAuthHandler(enterpriseAuthManager, enterpriseAuthManager)
 	userHandler := handlers.NewUserHandler(userService, quotaService, enterpriseAuthManager)
 	instanceHandler := handlers.NewInstanceHandler(
@@ -494,7 +516,9 @@ func main() {
 		go browserWorkerService.Run(ctx, 30*time.Second)
 		log.Printf("Starting leader-only background loops (identity=%s)", cfg.LeaderElection.Identity)
 		syncService.Start()
-		materializeWorker.Start()
+		if err := materializeWorker.StartContext(ctx); err != nil {
+			log.Printf("Skill materialize worker could not start: %v", err)
+		}
 		teamService.StartBackground(ctx)
 		if reconciler, ok := instanceService.(interface {
 			RunPendingDeletionReconciler(context.Context, time.Duration)
@@ -518,7 +542,11 @@ func main() {
 	}
 	stopBackground := func() {
 		log.Printf("Stopping leader-only background loops (identity=%s)", cfg.LeaderElection.Identity)
-		materializeWorker.Stop()
+		drainCtx, cancelDrain := context.WithTimeout(context.Background(), 10*time.Second)
+		if err := materializeWorker.StopAndWait(drainCtx); err != nil {
+			log.Printf("Skill materialize shutdown is not confirmed: %v", err)
+		}
+		cancelDrain()
 		if northboundOperationWorker != nil {
 			northboundOperationWorker.Stop()
 		}
@@ -950,6 +978,20 @@ func main() {
 		backupAdmin := api.Group("/admin/system-backup")
 		backupAdmin.Use(middleware.Auth(), middleware.SetUserInfo(userRepo), middleware.NewAdminAuth(userRepo))
 		backupHandler.Register(backupAdmin)
+		// Versioned control history uses its own pinned read authority. It never
+		// replaces the working Team-data or legacy task execution endpoints.
+		if live, readErr := loadLiveBackupRead(backupSessionSQL, backupSessions, os.Getenv); live != nil {
+			if readErr != nil {
+				log.Println("Versioned backup history unavailable; read authority not ready")
+			}
+			live.tasks = systembackupapi.NewHandler(linkedSystemBackupTaskApplication(backupSessionSQL, backupSessions))
+			versionedAdmin := api.Group("/admin")
+			versionedAdmin.Use(middleware.Auth(), middleware.SetUserInfo(userRepo), middleware.NewAdminAuth(userRepo))
+			registerBackupReadLive(versionedAdmin, live)
+			registerBackupTaskMutations(versionedAdmin, live.tasks)
+		} else if readErr != nil {
+			log.Println("Versioned backup history disabled: invalid read switch")
+		}
 		var teamDataBackup *systembackup.TeamDataService
 		if path := strings.TrimSpace(os.Getenv("SYSTEM_TEAM_DATA_BACKUP_CONFIG")); path != "" {
 			setupCtx, setupCancel := context.WithTimeout(leaderCtx, 20*time.Second)

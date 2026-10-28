@@ -6,10 +6,8 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"strings"
-	"time"
 
 	"clawreef/internal/config"
 	"github.com/go-ldap/ldap/v3"
@@ -51,15 +49,18 @@ func (a *LDAPAuthenticator) AuthenticateByIdentity(ctx context.Context, external
 	}
 	defer conn.Close()
 	if err := a.bindService(conn); err != nil {
-		return nil, err
+		return nil, ldapRequestError(ctx, err)
 	}
 	entry, err := a.searchUserByDN(conn, externalID)
 	if err != nil {
-		return nil, err
+		return nil, ldapRequestError(ctx, err)
 	}
 	role := a.roleForUser(conn, entry.DN)
 	if err := conn.Bind(entry.DN, password); err != nil {
-		return nil, ErrEnterpriseInvalidCredentials
+		return nil, ldapRequestError(ctx, ErrEnterpriseInvalidCredentials)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return &EnterpriseUser{
 		Provider:   AuthProviderLDAP,
@@ -85,7 +86,7 @@ func (a *LDAPAuthenticator) ListUsers(ctx context.Context, options ...LDAPListOp
 	}
 	defer conn.Close()
 	if err := a.bindService(conn); err != nil {
-		return nil, err
+		return nil, ldapRequestError(ctx, err)
 	}
 
 	option := LDAPListOptions{}
@@ -97,7 +98,7 @@ func (a *LDAPAuthenticator) ListUsers(ctx context.Context, options ...LDAPListOp
 	request := ldap.NewSearchRequest(a.cfg.BaseDN, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, ldapSearchLimit(option.Limit), 10, false, filter, attributes, nil)
 	entries, err := conn.SearchWithPaging(request, 500)
 	if err != nil {
-		return nil, fmt.Errorf("%w: ldap user search failed: %v", ErrEnterpriseUnavailable, err)
+		return nil, ldapRequestError(ctx, fmt.Errorf("%w: ldap user search failed: %v", ErrEnterpriseUnavailable, err))
 	}
 	adminMembers, useAdminMembers := a.adminMemberSet(conn)
 	users := make([]LDAPDirectoryUser, 0, len(entries.Entries))
@@ -115,6 +116,9 @@ func (a *LDAPAuthenticator) ListUsers(ctx context.Context, options ...LDAPListOp
 			item.Error = "ldap entry has no username attribute"
 		}
 		users = append(users, item)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return users, nil
 }
@@ -223,31 +227,17 @@ type ldapUserEntry struct {
 }
 
 func (a *LDAPAuthenticator) dial(ctx context.Context) (*ldap.Conn, error) {
+	if ctx == nil {
+		return nil, context.Canceled
+	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	scheme := "ldap"
-	if a.cfg.UseTLS {
-		scheme = "ldaps"
-	}
-	address := fmt.Sprintf("%s://%s:%d", scheme, a.cfg.Host, a.cfg.Port)
-	dialer := &net.Dialer{Timeout: 5 * time.Second}
 	tlsConfig, err := a.tlsConfig()
 	if err != nil {
 		return nil, fmt.Errorf("%w: ldap tls config failed: %v", ErrEnterpriseUnavailable, err)
 	}
-	conn, err := ldap.DialURL(address, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(tlsConfig))
-	if err != nil {
-		return nil, fmt.Errorf("%w: ldap dial failed: %v", ErrEnterpriseUnavailable, err)
-	}
-
-	if a.cfg.StartTLS {
-		if err := conn.StartTLS(tlsConfig); err != nil {
-			conn.Close()
-			return nil, fmt.Errorf("%w: ldap starttls failed: %v", ErrEnterpriseUnavailable, err)
-		}
-	}
-	return conn, nil
+	return dialLDAPRequest(ctx, a.cfg, tlsConfig)
 }
 
 func (a *LDAPAuthenticator) validateConfig() error {

@@ -1,0 +1,56 @@
+{
+  "kind": "system_backup_registry_enums",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "object_type": [
+    "table",
+    "view",
+    "trigger",
+    "routine",
+    "mysql_event"
+  ],
+  "owner": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "category": [
+    "users",
+    "ai_gateway",
+    "instances",
+    "teams",
+    "skill_hub",
+    "resources",
+    "system_backup"
+  ],
+  "data_classification": [
+    "public",
+    "internal",
+    "confidential",
+    "secret"
+  ],
+  "backup_strategy": [
+    "mysql_dump",
+    "metadata_only",
+    "exclude"
+  ],
+  "restore_strategy": [
+    "restore",
+    "normalize",
+    "reference_only",
+    "exclude"
+  ],
+  "excluded_reason": [
+    "platform_bootstrap",
+    "derived_runtime_state",
+    "external_unmanaged",
+    "unsupported_p0",
+    "sensitive_never_backup"
+  ],
+  "decision_status": [
+    "pending_owner_review",
+    "owner_recorded",
+    "frozen"
+  ]
+}

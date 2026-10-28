@@ -1,0 +1,44 @@
+{
+  "synthetic": true,
+  "manifest": {
+    "identity": {
+      "installation_id": "installation_test",
+      "evidence_public_id": "sev_11111111-2222-4333-8444-555555555555",
+      "owner_target_type": "backup",
+      "owner_target_public_id": "sbk_11111111-2222-4333-8444-555555555555",
+      "evidence_type": "verifier_report",
+      "media_type": "text/plain",
+      "redaction_classification": "sensitive",
+      "content_checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "content_size_bytes": 8193
+    },
+    "key": {
+      "kek_identity_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "kek_version": "v1"
+    },
+    "envelope_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "object_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "object_size_bytes": 8477,
+    "header_size_bytes": 256,
+    "chunk_list_root": "fdc267e47a72d4ebf65ff263044cb3a95f01c237fc62652fd5ce25830d941fc8",
+    "chunks": [
+      {
+        "evidence_public_id": "sev_11111111-2222-4333-8444-555555555555",
+        "chunk_index": 0,
+        "plaintext_offset": 0,
+        "plaintext_length": 8193,
+        "plaintext_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "object_frame_offset": 256,
+        "object_frame_length": 8221,
+        "ciphertext_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "gcm_nonce_base64url": "AQEBAQEBAQEBAQEB",
+        "gcm_tag_base64url": "AgICAgICAgICAgICAgICAg"
+      }
+    ]
+  },
+  "manifest_canonical_utf8": "{\"chunk_list_root\":\"fdc267e47a72d4ebf65ff263044cb3a95f01c237fc62652fd5ce25830d941fc8\",\"chunks\":[{\"chunk_index\":0,\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"evidence_public_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"gcm_nonce_base64url\":\"AQEBAQEBAQEBAQEB\",\"gcm_tag_base64url\":\"AgICAgICAgICAgICAgICAg\",\"object_frame_length\":8221,\"object_frame_offset\":256,\"plaintext_length\":8193,\"plaintext_offset\":0,\"plaintext_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"envelope_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"header_size_bytes\":256,\"identity\":{\"content_checksum\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"content_size_bytes\":8193,\"evidence_public_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"evidence_type\":\"verifier_report\",\"installation_id\":\"installation_test\",\"media_type\":\"text/plain\",\"owner_target_public_id\":\"sbk_11111111-2222-4333-8444-555555555555\",\"owner_target_type\":\"backup\",\"redaction_classification\":\"sensitive\"},\"key\":{\"kek_identity_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"kek_version\":\"v1\"},\"object_checksum\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"object_size_bytes\":8477}",
+  "manifest_sha256": "447dc09e48d3ae0573564efffad3e0d1a33e2889782d8e92f345b2f185c7316b",
+  "idempotency_key": "download_key_0123456789",
+  "request_canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"447dc09e48d3ae0573564efffad3e0d1a33e2889782d8e92f345b2f185c7316b\",\"origin_installation_id\":\"installation_test\",\"range_end\":8192,\"range_present\":false,\"range_start\":0,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+  "request_sha256": "c43d8405ea65807efbbc3088ef82ab84324e97b112561b79d5c319632bf6b38f"
+}

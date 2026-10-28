@@ -1,0 +1,162 @@
+{
+  "kind": "system_backup_control_evidence_sidecar_redacted_example",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "example": {
+    "schema_version": "system-backup-control-evidence.v1",
+    "contract_version": "system-backup-plan.v12",
+    "origin_installation_id": "installation_example",
+    "backup_public_id": "sbk_11111111-1111-4111-8111-111111111111",
+    "attempt_no": 1,
+    "generated_at": "2026-09-15T05:00:00Z",
+    "coverage_started_at": "2026-08-15T05:00:00Z",
+    "coverage_ended_at": "2026-09-15T04:59:59Z",
+    "control_exclusion": {
+      "schema_registry_version": "system-backup-schema-registry.v1",
+      "schema_registry_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "excluded_control_object_count": 31,
+      "excluded_control_object_names_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "exclusion_check_evidence": {
+        "public_id": "sev_11111111-1111-4111-8111-111111111111",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    },
+    "redaction_proof": {
+      "registry_version": "redaction-registry-example",
+      "registry_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "applied": true,
+      "rejected_records": 0,
+      "redaction_check_evidence": {
+        "public_id": "sev_22222222-2222-4222-8222-222222222222",
+        "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+      }
+    },
+    "record_groups": {
+      "task_terminal": {
+        "group": "task_terminal",
+        "record_count": 5,
+        "first_recorded_at": "2026-08-20T01:00:00Z",
+        "last_recorded_at": "2026-09-14T01:00:00Z",
+        "rolling_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+        "evidence_refs": []
+      },
+      "operation_terminal": {
+        "group": "operation_terminal",
+        "record_count": 7,
+        "first_recorded_at": "2026-08-20T01:01:00Z",
+        "last_recorded_at": "2026-09-14T01:01:00Z",
+        "rolling_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+        "evidence_refs": []
+      },
+      "event": {
+        "group": "event",
+        "record_count": 23,
+        "first_recorded_at": "2026-08-20T01:00:00Z",
+        "last_recorded_at": "2026-09-14T01:02:00Z",
+        "rolling_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+        "evidence_refs": []
+      },
+      "audit": {
+        "group": "audit",
+        "record_count": 9,
+        "first_recorded_at": "2026-08-20T01:00:00Z",
+        "last_recorded_at": "2026-09-14T01:03:00Z",
+        "rolling_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+        "evidence_refs": [
+          {
+            "public_id": "sev_33333333-3333-4333-8333-333333333333",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "promotion": {
+        "group": "promotion",
+        "record_count": 1,
+        "first_recorded_at": "2026-09-10T01:00:00Z",
+        "last_recorded_at": "2026-09-10T01:00:00Z",
+        "rolling_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence_refs": [
+          {
+            "public_id": "sev_44444444-4444-4444-8444-444444444444",
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      },
+      "dependency_health": {
+        "group": "dependency_health",
+        "record_count": 7,
+        "first_recorded_at": "2026-09-14T01:00:00Z",
+        "last_recorded_at": "2026-09-15T04:00:00Z",
+        "rolling_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "evidence_refs": []
+      },
+      "provider_capability": {
+        "group": "provider_capability",
+        "record_count": 0,
+        "first_recorded_at": null,
+        "last_recorded_at": null,
+        "rolling_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "evidence_refs": []
+      },
+      "alert_state": {
+        "group": "alert_state",
+        "record_count": 2,
+        "first_recorded_at": "2026-09-14T02:00:00Z",
+        "last_recorded_at": "2026-09-15T03:00:00Z",
+        "rolling_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "evidence_refs": []
+      },
+      "installation_state": {
+        "group": "installation_state",
+        "record_count": 1,
+        "first_recorded_at": "2026-08-15T05:00:00Z",
+        "last_recorded_at": "2026-08-15T05:00:00Z",
+        "rolling_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "evidence_refs": []
+      }
+    },
+    "owner_sections": {
+      "A": {
+        "owner": "A",
+        "status": "incomplete",
+        "reason": "evidence_missing",
+        "verifier_summary_hash": null,
+        "evidence_refs": []
+      },
+      "B": {
+        "owner": "B",
+        "status": "incomplete",
+        "reason": "evidence_missing",
+        "verifier_summary_hash": null,
+        "evidence_refs": []
+      },
+      "C": {
+        "owner": "C",
+        "status": "incomplete",
+        "reason": "evidence_missing",
+        "verifier_summary_hash": null,
+        "evidence_refs": []
+      },
+      "D": {
+        "owner": "D",
+        "status": "complete",
+        "reason": "none",
+        "verifier_summary_hash": "1212121212121212121212121212121212121212121212121212121212121212",
+        "evidence_refs": [
+          {
+            "public_id": "sev_55555555-5555-4555-8555-555555555555",
+            "sha256": "1313131313131313131313131313131313131313131313131313131313131313"
+          }
+        ]
+      }
+    },
+    "warnings": [
+      {
+        "code": "owner_evidence_incomplete",
+        "category": "unsupported-evidence-warning",
+        "disqualifying": true,
+        "details_hash": "1414141414141414141414141414141414141414141414141414141414141414"
+      }
+    ]
+  }
+}

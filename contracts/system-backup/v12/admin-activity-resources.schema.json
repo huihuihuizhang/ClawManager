@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-activity-resources.schema.json",
+  "title": "System backup D-owned activity and lifecycle Admin resources",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "CoreEventType": {
+      "type": "string",
+      "enum": [
+        "task_status_changed", "attempt_started", "attempt_finished", "gate_changed", "participant_changed",
+        "artifact_committed", "artifact_health_changed", "external_action_changed", "evidence_changed",
+        "log_persistence_changed", "provider_capability_changed", "dependency_health_changed", "catalog_scan_changed",
+        "catalog_record_changed", "cleanup_changed", "ownership_resolved", "prune_changed", "promotion_changed",
+        "operation_finished"
+      ]
+    },
+    "EventType": {
+      "anyOf": [
+        { "$ref": "#/$defs/CoreEventType" },
+        { "type": "string", "pattern": "^diagnostic\\.[a-d]\\.[a-z0-9_-]{1,64}$", "maxLength": 160 }
+      ]
+    },
+    "EventDetails": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 9,
+      "properties": {
+        "previous_status": { "type": ["string", "null"], "maxLength": 64 },
+        "current_status": { "type": ["string", "null"], "maxLength": 64 },
+        "reason": { "type": ["string", "null"], "maxLength": 128, "pattern": "^[a-z][a-z0-9_]*$" },
+        "attempt_number": { "type": ["integer", "null"], "minimum": 1 },
+        "operation_public_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/OperationPublicId" }, { "type": "null" }] },
+        "evidence_public_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" }, { "type": "null" }] },
+        "truncated": { "type": "boolean" },
+        "original_size": { "type": ["integer", "null"], "minimum": 0 },
+        "content_hash": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] }
+      },
+      "x-max-jcs-utf8-bytes": 65536,
+      "x-redacted-before-persist": true
+    },
+    "EventResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "target_type", "target_public_id", "event_type", "level", "task_status", "message", "details", "request_id", "created_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-event.v1" },
+        "target_type": { "type": "string", "enum": ["backup", "drill", "preflight", "artifact_verify", "catalog_import", "promotion", "cleanup", "prune_run", "catalog_scan", "catalog_record", "operation", "system"] },
+        "target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "event_type": { "$ref": "#/$defs/EventType" },
+        "level": { "type": "string", "enum": ["info", "warning", "error", "critical"] },
+        "task_status": { "anyOf": [{ "$ref": "task-operation.schema.json#/$defs/TaskStatus" }, { "type": "null" }] },
+        "message": { "type": "string", "maxLength": 2048, "x-redacted-before-persist": true },
+        "details": { "anyOf": [{ "$ref": "#/$defs/EventDetails" }, { "type": "null" }] },
+        "request_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/RequestId" }, { "type": "null" }] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "target_type": { "const": "backup" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" }, "task_status": { "anyOf": [{ "$ref": "status-failure-enums.schema.json#/$defs/BackupStatus" }, { "type": "null" }] } } } },
+        { "if": { "properties": { "target_type": { "const": "drill" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" }, "task_status": { "anyOf": [{ "$ref": "status-failure-enums.schema.json#/$defs/DrillStatus" }, { "type": "null" }] } } } },
+        { "if": { "properties": { "target_type": { "const": "preflight" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" }, "task_status": { "anyOf": [{ "$ref": "status-failure-enums.schema.json#/$defs/SimpleTaskStatus" }, { "type": "null" }] } } } },
+        { "if": { "properties": { "target_type": { "const": "artifact_verify" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ArtifactVerificationPublicId" }, "task_status": { "anyOf": [{ "$ref": "status-failure-enums.schema.json#/$defs/SimpleTaskStatus" }, { "type": "null" }] } } } },
+        { "if": { "properties": { "target_type": { "const": "catalog_import" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "const": "promotion" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "const": "prune_run" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "const": "catalog_scan" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogScanPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "const": "catalog_record" } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogRecordPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "enum": ["operation", "cleanup"] } }, "required": ["target_type"] }, "then": { "properties": { "target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/OperationPublicId" }, "task_status": { "type": "null" } } } },
+        { "if": { "properties": { "target_type": { "const": "system" } }, "required": ["target_type"] }, "then": { "properties": { "task_status": { "type": "null" } } } }
+      ],
+      "x-invariant": "events are an ordered diagnostic projection and never become a second authority for task, operation, eligibility or lifecycle state"
+    },
+    "EventResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/EventResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    },
+    "LogEntryResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task_type", "task_public_id", "attempt_number", "phase", "job_generation", "chunk_sequence", "line_index", "timestamp", "stream", "level", "message"],
+      "properties": {
+        "schema_version": { "const": "system-backup-log-entry.v1" },
+        "task_type": { "$ref": "status-failure-enums.schema.json#/$defs/TaskType" },
+        "task_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "attempt_number": { "type": "integer", "minimum": 1 },
+        "phase": { "type": "string", "enum": ["capture", "secret_capture", "publish", "restore", "normalize", "verify", "preflight"] },
+        "job_generation": { "type": "integer", "minimum": 1 },
+        "chunk_sequence": { "type": "integer", "minimum": 0 },
+        "line_index": { "type": "integer", "minimum": 0 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "stream": { "type": "string", "enum": ["stdout", "stderr"] },
+        "level": { "type": "string", "enum": ["info", "warning", "error", "unknown"] },
+        "message": { "type": "string", "maxLength": 8192, "x-redacted-before-response": true }
+      },
+      "allOf": [
+        { "if": { "properties": { "task_type": { "const": "backup" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" }, "phase": { "enum": ["capture", "secret_capture", "publish"] } } } },
+        { "if": { "properties": { "task_type": { "const": "drill" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" }, "phase": { "enum": ["restore", "normalize", "verify"] } } } },
+        { "if": { "properties": { "task_type": { "const": "preflight" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" }, "phase": { "const": "preflight" } } } },
+        { "if": { "properties": { "task_type": { "const": "artifact_verify" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ArtifactVerificationPublicId" }, "phase": { "const": "verify" } } } }
+      ],
+      "x-invariant": "the API returns only already-redacted persisted log lines; it does not stream live Job output or expose the evidence object location"
+    },
+    "LogEntryResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/LogEntryResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    },
+    "PruneItemResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "prune_run_public_id", "artifact_public_id", "item_type", "status", "locator_hash", "immutable_version", "catalog_record_hash", "bytes", "last_operation_public_id", "attempt", "item_failure_code", "external_action_public_id", "row_version", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-prune-item.v1" },
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneItemPublicId" },
+        "prune_run_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" },
+        "artifact_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" },
+        "item_type": { "type": "string", "enum": ["object_version", "delete_marker", "catalog_tombstone"] },
+        "status": { "type": "string", "enum": ["planned", "blocked_by_delete", "deleting", "deleted", "delete_failed"] },
+        "locator_hash": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] },
+        "immutable_version": { "type": ["string", "null"], "maxLength": 256 },
+        "catalog_record_hash": { "anyOf": [{ "$ref": "#/$defs/Sha256" }, { "type": "null" }] },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "last_operation_public_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/OperationPublicId" }, { "type": "null" }] },
+        "attempt": { "type": "integer", "minimum": 0 },
+        "item_failure_code": { "type": "string", "enum": ["none", "deadline_exceeded", "provider_unavailable", "permission_denied", "identity_mismatch", "checksum_mismatch", "catalog_conflict", "internal"] },
+        "external_action_public_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/ExternalActionPublicId" }, { "type": "null" }] },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "item_type": { "const": "catalog_tombstone" } }, "required": ["item_type"] },
+          "then": {
+            "properties": {
+              "locator_hash": { "type": "null" },
+              "immutable_version": { "type": "null" },
+              "catalog_record_hash": { "$ref": "#/$defs/Sha256" }
+            }
+          },
+          "else": {
+            "properties": {
+              "locator_hash": { "$ref": "#/$defs/Sha256" },
+              "immutable_version": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "catalog_record_hash": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "blocked_by_delete" } }, "required": ["status"] },
+          "then": { "properties": { "item_type": { "const": "catalog_tombstone" } } }
+        },
+        {
+          "if": { "properties": { "item_type": { "const": "catalog_tombstone" } }, "required": ["item_type"] },
+          "else": { "properties": { "external_action_public_id": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "delete_failed" } }, "required": ["status"] },
+          "then": { "not": { "properties": { "item_failure_code": { "const": "none" } }, "required": ["item_failure_code"] } },
+          "else": { "properties": { "item_failure_code": { "const": "none" } } }
+        }
+      ],
+      "x-state-transitions": ["planned->deleting", "blocked_by_delete->planned", "deleting->deleted|delete_failed", "delete_failed->deleting"],
+      "x-invariant": "provider location is exposed only as a canonical hash; retries preserve the original item identity and never recreate deleted items"
+    },
+    "PruneItemResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/PruneItemResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    },
+    "PromotionHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "artifact_access", "kek", "signature", "catalog", "evidence", "attestation", "current_health", "observed_at"],
+      "properties": {
+        "artifact": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "artifact_access": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "kek": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "signature": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "catalog": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "evidence": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "attestation": { "$ref": "admin-control-resources.schema.json#/$defs/HealthState" },
+        "current_health": { "type": "string", "enum": ["healthy", "degraded", "unknown"] },
+        "observed_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              { "properties": { "artifact": { "enum": ["degraded", "stale"] } }, "required": ["artifact"] },
+              { "properties": { "artifact_access": { "enum": ["degraded", "stale"] } }, "required": ["artifact_access"] },
+              { "properties": { "kek": { "enum": ["degraded", "stale"] } }, "required": ["kek"] },
+              { "properties": { "signature": { "enum": ["degraded", "stale"] } }, "required": ["signature"] },
+              { "properties": { "catalog": { "enum": ["degraded", "stale"] } }, "required": ["catalog"] },
+              { "properties": { "evidence": { "enum": ["degraded", "stale"] } }, "required": ["evidence"] },
+              { "properties": { "attestation": { "enum": ["degraded", "stale"] } }, "required": ["attestation"] }
+            ]
+          },
+          "then": { "properties": { "current_health": { "const": "degraded" } } }
+        },
+        {
+          "if": {
+            "properties": {
+              "artifact": { "const": "healthy" },
+              "artifact_access": { "const": "healthy" },
+              "kek": { "const": "healthy" },
+              "signature": { "const": "healthy" },
+              "catalog": { "const": "healthy" },
+              "evidence": { "const": "healthy" },
+              "attestation": { "const": "healthy" }
+            },
+            "required": ["artifact", "artifact_access", "kek", "signature", "catalog", "evidence", "attestation"]
+          },
+          "then": { "properties": { "current_health": { "const": "healthy" } } }
+        },
+        {
+          "if": {
+            "allOf": [
+              {
+                "not": {
+                  "anyOf": [
+                    { "properties": { "artifact": { "enum": ["degraded", "stale"] } }, "required": ["artifact"] },
+                    { "properties": { "artifact_access": { "enum": ["degraded", "stale"] } }, "required": ["artifact_access"] },
+                    { "properties": { "kek": { "enum": ["degraded", "stale"] } }, "required": ["kek"] },
+                    { "properties": { "signature": { "enum": ["degraded", "stale"] } }, "required": ["signature"] },
+                    { "properties": { "catalog": { "enum": ["degraded", "stale"] } }, "required": ["catalog"] },
+                    { "properties": { "evidence": { "enum": ["degraded", "stale"] } }, "required": ["evidence"] },
+                    { "properties": { "attestation": { "enum": ["degraded", "stale"] } }, "required": ["attestation"] }
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "properties": {
+                    "artifact": { "const": "healthy" },
+                    "artifact_access": { "const": "healthy" },
+                    "kek": { "const": "healthy" },
+                    "signature": { "const": "healthy" },
+                    "catalog": { "const": "healthy" },
+                    "evidence": { "const": "healthy" },
+                    "attestation": { "const": "healthy" }
+                  },
+                  "required": ["artifact", "artifact_access", "kek", "signature", "catalog", "evidence", "attestation"]
+                }
+              }
+            ]
+          },
+          "then": { "properties": { "current_health": { "const": "unknown" } } }
+        }
+      ],
+      "x-invariant": "all seven groups healthy yields healthy; any degraded or stale group yields degraded; otherwise current health is unknown"
+    },
+    "PromotionResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "origin_installation_id", "matrix", "record_status", "backup_public_id", "drill_public_id", "manifest_checksum", "acceptance_checksum", "artifact_registration_id", "artifact_registration_hash", "eligibility_decision_hash", "drill_evidence_public_id", "drill_evidence_hash", "health", "created_by", "created_at", "superseded_by_public_id", "superseded_at", "revoked_by", "revoked_reason", "revoked_at", "row_version"],
+      "properties": {
+        "schema_version": { "const": "system-backup-promotion.v1" },
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" },
+        "origin_installation_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "matrix": { "$ref": "admin-control-resources.schema.json#/$defs/MatrixKey" },
+        "record_status": { "type": "string", "enum": ["active", "superseded", "revoked"] },
+        "backup_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" },
+        "drill_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" },
+        "manifest_checksum": { "$ref": "#/$defs/Sha256" },
+        "acceptance_checksum": { "$ref": "#/$defs/Sha256" },
+        "artifact_registration_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "artifact_registration_hash": { "$ref": "#/$defs/Sha256" },
+        "eligibility_decision_hash": { "$ref": "#/$defs/Sha256" },
+        "drill_evidence_public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "drill_evidence_hash": { "$ref": "#/$defs/Sha256" },
+        "health": { "$ref": "#/$defs/PromotionHealth" },
+        "created_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "superseded_by_public_id": { "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" }, { "type": "null" }] },
+        "superseded_at": { "type": ["string", "null"], "format": "date-time" },
+        "revoked_by": { "type": ["string", "null"], "maxLength": 128 },
+        "revoked_reason": { "type": ["string", "null"], "maxLength": 512, "x-redacted-before-response": true },
+        "revoked_at": { "type": ["string", "null"], "format": "date-time" },
+        "row_version": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "record_status": { "const": "active" } }, "required": ["record_status"] },
+          "then": {
+            "properties": {
+              "superseded_by_public_id": { "type": "null" },
+              "superseded_at": { "type": "null" },
+              "revoked_by": { "type": "null" },
+              "revoked_reason": { "type": "null" },
+              "revoked_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "record_status": { "const": "superseded" } }, "required": ["record_status"] },
+          "then": {
+            "properties": {
+              "superseded_by_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" },
+              "superseded_at": { "type": "string", "format": "date-time" },
+              "revoked_by": { "type": "null" },
+              "revoked_reason": { "type": "null" },
+              "revoked_at": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "record_status": { "const": "revoked" } }, "required": ["record_status"] },
+          "then": {
+            "properties": {
+              "superseded_by_public_id": { "type": "null" },
+              "superseded_at": { "type": "null" },
+              "revoked_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "revoked_reason": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "revoked_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      ],
+      "x-invariant": "health is derived at read time from authoritative rows and is not copied into the immutable promotion record"
+    },
+    "PromotionResourceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/PromotionResource" } },
+        "next_cursor": { "$ref": "admin-api-common.schema.json#/$defs/NullableCursor" },
+        "consistency": { "$ref": "admin-api-common.schema.json#/$defs/ListConsistency" }
+      }
+    }
+  },
+  "x-owner-boundaries": {
+    "A": "redaction and audit decisions stay A-owned; D exposes only the closed redacted event/log wire and registered evidence IDs",
+    "B": "restore and staging resource payloads are not defined here",
+    "C": "artifact/catalog provider locations and record bytes are not exposed; prune items carry only immutable identity hashes and bounded versions"
+  }
+}

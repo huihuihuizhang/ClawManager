@@ -1,0 +1,47 @@
+{
+  "profile": "a-config-operation-response.v1",
+  "contract_version": "system-backup-plan.v12",
+  "purpose": "Synthetic codec parity only; no operation, authority, runtime grant or historical source",
+  "vectors": [
+    {
+      "name": "updateSystemBackupConfig",
+      "policy": {
+        "InstallationID": "installation_operation_codec",
+        "OperationPublicID": "sop_12345678-1234-1234-1234-123456789aba",
+        "Endpoint": "updateSystemBackupConfig",
+        "IdempotencyKey": "operation_key_0123456789",
+        "RequestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ActorID": 42,
+        "Version": 4,
+        "RowVersion": 1,
+        "CreatedAt": "2026-10-15T00:00:00.123456Z",
+        "StartedAt": "2026-10-15T00:00:00.223456Z",
+        "FinishedAt": "2026-10-15T00:00:00.323456Z",
+        "UpdatedAt": "2026-10-15T00:00:00.423456Z",
+        "DeadlineAt": "2026-10-15T00:01:00.123456Z"
+      },
+      "canonical": "{\"actor_id\":\"42\",\"actor_type\":\"admin\",\"created_at\":\"2026-10-15T00:00:00.123456Z\",\"deadline_at\":\"2026-10-15T00:01:00.123456Z\",\"endpoint\":\"updateSystemBackupConfig\",\"failure_category\":\"none\",\"failure_message\":null,\"finished_at\":\"2026-10-15T00:00:00.323456Z\",\"http_status\":200,\"idempotency_key\":\"operation_key_0123456789\",\"operation_type\":\"config_update\",\"origin_installation_id\":\"installation_operation_codec\",\"public_id\":\"sop_12345678-1234-1234-1234-123456789aba\",\"request_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"result_config_version\":4,\"result_resource_public_id\":null,\"retryable\":false,\"row_version\":1,\"schema_version\":\"system-backup-operation.v1\",\"started_at\":\"2026-10-15T00:00:00.223456Z\",\"status\":\"succeeded\",\"target_public_id\":\"installation_operation_codec\",\"target_type\":\"system\",\"updated_at\":\"2026-10-15T00:00:00.423456Z\"}",
+      "sha256": "5dac6c683bfc9dff41aae20babb0d88cf1cd89cee3faaec07fc290defb9b80e1"
+    },
+    {
+      "name": "rollbackSystemBackupConfig",
+      "policy": {
+        "InstallationID": "installation_operation_codec",
+        "OperationPublicID": "sop_12345678-1234-1234-1234-123456789abb",
+        "Endpoint": "rollbackSystemBackupConfig",
+        "IdempotencyKey": "operation_key_0123456789",
+        "RequestHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ActorID": 42,
+        "Version": 5,
+        "RowVersion": 1,
+        "CreatedAt": "2026-10-15T00:00:00.123456Z",
+        "StartedAt": "2026-10-15T00:00:00.223456Z",
+        "FinishedAt": "2026-10-15T00:00:00.323456Z",
+        "UpdatedAt": "2026-10-15T00:00:00.423456Z",
+        "DeadlineAt": "2026-10-15T00:01:00.123456Z"
+      },
+      "canonical": "{\"actor_id\":\"42\",\"actor_type\":\"admin\",\"created_at\":\"2026-10-15T00:00:00.123456Z\",\"deadline_at\":\"2026-10-15T00:01:00.123456Z\",\"endpoint\":\"rollbackSystemBackupConfig\",\"failure_category\":\"none\",\"failure_message\":null,\"finished_at\":\"2026-10-15T00:00:00.323456Z\",\"http_status\":200,\"idempotency_key\":\"operation_key_0123456789\",\"operation_type\":\"config_update\",\"origin_installation_id\":\"installation_operation_codec\",\"public_id\":\"sop_12345678-1234-1234-1234-123456789abb\",\"request_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"result_config_version\":5,\"result_resource_public_id\":null,\"retryable\":false,\"row_version\":1,\"schema_version\":\"system-backup-operation.v1\",\"started_at\":\"2026-10-15T00:00:00.223456Z\",\"status\":\"succeeded\",\"target_public_id\":\"installation_operation_codec\",\"target_type\":\"system\",\"updated_at\":\"2026-10-15T00:00:00.423456Z\"}",
+      "sha256": "24c46d6a1034ddec92e430ec4f04bded5793310deedb05b1626b47fc86cbbbfa"
+    }
+  ]
+}

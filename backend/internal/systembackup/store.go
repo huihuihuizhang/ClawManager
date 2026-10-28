@@ -28,6 +28,9 @@ func (s Store) Bootstrap(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if _, err := s.DB.ExecContext(ctx, "INSERT IGNORE INTO system_backup_v2_engine_bindings(scope) VALUES(?)", engineSelectionScope); err != nil {
+		return err
+	}
 	var actual string
 	if err = s.DB.QueryRowContext(ctx, "SELECT origin_installation_id FROM system_backup_installation_state WHERE singleton_id=1").Scan(&actual); err != nil {
 		return err
@@ -182,6 +185,10 @@ func (s Store) Create(ctx context.Context, actor int, key string, r CreateTaskRe
 		return zero, false, err
 	}
 	defer tx.Rollback()
+	engineErr := lockEngine(ctx, tx, engineSelectionScope, LegacyEngine)
+	if engineErr != nil && !errors.Is(engineErr, ErrEngineConflict) {
+		return Task{}, false, engineErr
+	}
 	// This installation lock also serializes admission and config changes.
 	var version uint64
 	var identity string
@@ -202,6 +209,9 @@ func (s Store) Create(ctx context.Context, actor int, key string, r CreateTaskRe
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
 		return zero, false, err
+	}
+	if engineErr != nil {
+		return zero, false, engineErr
 	}
 	if version == 0 {
 		return zero, false, errors.New("not_ready")
@@ -428,6 +438,9 @@ func (s Store) cancelTx(ctx context.Context, tx *sql.Tx, id string, expected uin
 }
 
 func PublicError(err error) string {
+	if errors.Is(err, ErrEngineConflict) {
+		return "not_ready"
+	}
 	if errors.Is(err, ErrFence) {
 		return "fencing_token_lost"
 	}

@@ -56,12 +56,28 @@ func Connect(cfg config.DatabaseConfig) (db.Session, error) {
 	return session, nil
 }
 
-func connect(cfg config.DatabaseConfig) (db.Session, error) {
+// OpenSystemBackupRead owns an independent UTC pool; business startup and SQL
+// fencing are identical to the normal connection path. No migrations or globals.
+func OpenSystemBackupRead(cfg config.DatabaseConfig) (db.Session, error) {
+	return connectWithOptions(cfg, systemBackupReadOptions())
+}
+func systemBackupReadOptions() map[string]string {
+	return map[string]string{"loc": "UTC", "time_zone": "'+00:00'"}
+}
+
+func connect(cfg config.DatabaseConfig) (db.Session, error) { return connectWithOptions(cfg, nil) }
+
+func connectWithOptions(cfg config.DatabaseConfig, extra map[string]string) (db.Session, error) {
+
 	// P0 restored databases are data-only drill targets. Every official business
 	// process uses this connection path; none may start consumers, retry Owner
 	// operations, reconcile upgrades, seed data or migrate a restored copy.
-	if regexp.MustCompile(`^cm_restore_[a-f0-9]{32}$`).MatchString(cfg.Database) {
+	if regexp.MustCompile(`^cm_(restore|import)_[a-f0-9]{32}$`).MatchString(cfg.Database) {
 		return nil, fmt.Errorf("isolated restore databases cannot run business services")
+	}
+	options := map[string]string{"charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "parseTime": "true"}
+	for key, value := range extra {
+		options[key] = value
 	}
 	hostPort := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	settings := mysql.ConnectionURL{
@@ -69,11 +85,7 @@ func connect(cfg config.DatabaseConfig) (db.Session, error) {
 		User:     cfg.User,
 		Password: cfg.Password,
 		Database: cfg.Database,
-		Options: map[string]string{
-			"charset":   "utf8mb4",
-			"collation": "utf8mb4_unicode_ci",
-			"parseTime": "true",
-		},
+		Options:  options,
 	}
 
 	var session db.Session
@@ -101,6 +113,15 @@ func connect(cfg config.DatabaseConfig) (db.Session, error) {
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+	if pool, ok := session.Driver().(*sql.DB); ok {
+		checkCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		err := checkBackupControlSchema(checkCtx, pool)
+		cancel()
+		if err != nil {
+			session.Close()
+			return nil, err
+		}
 	}
 	maxOpenConns := cfg.MaxOpenConns
 	if maxOpenConns < 0 {

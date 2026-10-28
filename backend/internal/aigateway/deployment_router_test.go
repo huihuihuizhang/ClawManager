@@ -2,6 +2,7 @@ package aigateway
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"testing"
@@ -91,14 +92,30 @@ func TestAutoDeploymentRoutingDoesNotTrustExpiredPerformanceSamples(t *testing.T
 	prepared, candidates := deploymentRoutingFixture()
 	old := time.Now().UTC().Add(-deploymentHealthSampleTTL - time.Minute).UnixMilli()
 	now := time.Now().UTC().UnixMilli()
-	gateway := &service{deploymentStore: &routingDeploymentStore{snapshots: map[int]services.GatewayDeploymentSnapshot{
+	audit := &stubAuditEventService{}
+	gateway := &service{auditEventService: audit, deploymentStore: &routingDeploymentStore{snapshots: map[int]services.GatewayDeploymentSnapshot{
 		1: {DeploymentID: 1, State: "healthy", EWMATTFTMs: 1, EWMALatencyMs: 1, EWMATokensPerSecond: 10000, Samples: 20, LastSuccessMs: old},
 		2: {DeploymentID: 2, State: "healthy", EWMATTFTMs: 400, EWMALatencyMs: 2000, EWMATokensPerSecond: 40, Samples: 20, LastSuccessMs: now},
 	}}}
 
-	ordered := gateway.orderAutoDeployments(t.Context(), prepared, candidates)
-	if ordered[0].ID != 2 {
-		t.Fatalf("expired performance sample remained authoritative: %#v", ordered)
+	gateway.orderAutoDeployments(t.Context(), prepared, candidates)
+	if len(audit.events) != 1 || audit.events[0].Details == nil {
+		t.Fatal("routing scores were not observed")
+	}
+	var details deploymentRoutingDetails
+	if err := json.Unmarshal([]byte(*audit.events[0].Details), &details); err != nil {
+		t.Fatal(err)
+	}
+	scores := map[int]deploymentRouteScore{}
+	for _, item := range details.Candidates {
+		scores[item.DeploymentID] = item
+	}
+	stale, fresh := scores[1], scores[2]
+	// Bounded exploration may intentionally probe an unknown deployment in
+	// 5% of time buckets. Check expired evidence itself, not that unrelated
+	// exploration decision, so this regression is independent of wall clock.
+	if len(scores) != 2 || stale.State != "unknown" || stale.EWMATTFTMs != 0 || stale.EWMALatencyMs != 0 || stale.EWMATokensPerSecond != 0 || stale.Score <= fresh.Score {
+		t.Fatalf("expired performance sample remained authoritative: %+v", details.Candidates)
 	}
 }
 

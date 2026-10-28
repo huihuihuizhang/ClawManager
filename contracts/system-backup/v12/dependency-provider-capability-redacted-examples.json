@@ -1,0 +1,108 @@
+{
+  "kind": "system_backup_dependency_provider_capability_redacted_examples",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "dependency_health_projection": {
+    "record": {
+      "schema_version": "system-backup-dependency-health.v1",
+      "dependency_kind": "artifact_credential",
+      "identity_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "identity_version": "credential-version-example",
+      "owner": {
+        "owner_target_type": "backup",
+        "owner_target_public_id": "sbk_11111111-1111-4111-8111-111111111111"
+      },
+      "observed_health": "healthy",
+      "health_reason": "none",
+      "observed_immutable_version": "object-version-example",
+      "observed_checksum": "2222222222222222222222222222222222222222222222222222222222222222",
+      "checked_at": "2026-09-15T02:00:00Z",
+      "expires_at": "2026-09-15T02:30:00Z",
+      "protected_until": "2026-10-15T02:00:00Z",
+      "evidence": {
+        "public_id": "sev_22222222-2222-4222-8222-222222222222",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "row_version": 4,
+      "created_at": "2026-09-15T01:00:00Z",
+      "updated_at": "2026-09-15T02:00:00Z"
+    },
+    "evaluated_at": "2026-09-15T02:31:00Z",
+    "effective_health": "stale"
+  },
+  "provider_capability_records": [
+    {
+      "schema_version": "system-backup-provider-capability.v1",
+      "provider_role": "artifact",
+      "provider_identity_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "provider_ref_version": "artifact-ref-example",
+      "capability_code": "conditional_create",
+      "status": "supported",
+      "capability_reason_code": "none",
+      "observed_provider_version": "synthetic-s3-version",
+      "checked_at": "2026-09-15T03:00:00Z",
+      "expires_at": "2026-09-15T03:30:00Z",
+      "evidence": {
+        "public_id": "sev_33333333-3333-4333-8333-333333333333",
+        "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "claim_owner": null,
+      "claim_expires_at": null,
+      "next_reconcile_at": "2026-09-15T03:30:00Z",
+      "row_version": 3,
+      "created_at": "2026-09-15T01:00:00Z",
+      "updated_at": "2026-09-15T03:00:00Z"
+    },
+    {
+      "schema_version": "system-backup-provider-capability.v1",
+      "provider_role": "catalog",
+      "provider_identity_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+      "provider_ref_version": "catalog-ref-example",
+      "capability_code": "provider_snapshot_listing",
+      "status": "degraded",
+      "capability_reason_code": "probe_failed",
+      "observed_provider_version": null,
+      "checked_at": "2026-09-15T03:00:00Z",
+      "expires_at": "2026-09-15T03:30:00Z",
+      "evidence": null,
+      "claim_owner": "controller-example",
+      "claim_expires_at": "2026-09-15T03:01:00Z",
+      "next_reconcile_at": "2026-09-15T03:05:00Z",
+      "row_version": 5,
+      "created_at": "2026-09-15T01:00:00Z",
+      "updated_at": "2026-09-15T03:00:00Z"
+    },
+    {
+      "schema_version": "system-backup-provider-capability.v1",
+      "provider_role": "evidence",
+      "provider_identity_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+      "provider_ref_version": "evidence-ref-example",
+      "capability_code": "scoped_write_credential",
+      "status": "supported",
+      "capability_reason_code": "none",
+      "observed_provider_version": "synthetic-s3-version",
+      "checked_at": "2026-09-15T03:00:00Z",
+      "expires_at": "2026-09-15T03:30:00Z",
+      "evidence": {
+        "public_id": "sev_44444444-4444-4444-8444-444444444444",
+        "sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      "claim_owner": null,
+      "claim_expires_at": null,
+      "next_reconcile_at": "2026-09-15T03:30:00Z",
+      "row_version": 2,
+      "created_at": "2026-09-15T01:00:00Z",
+      "updated_at": "2026-09-15T03:00:00Z"
+    }
+  ],
+  "missing_provider_capability_projection": {
+    "provider_role": "artifact",
+    "provider_identity_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+    "provider_ref_version": "unobserved-ref-example",
+    "capability_code": "tls_verified",
+    "record": null,
+    "evaluated_at": "2026-09-15T04:00:00Z",
+    "effective_state": "unknown",
+    "effective_reason_code": "missing"
+  }
+}

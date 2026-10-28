@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "control-evidence-sidecar.schema.json",
+  "title": "System backup encrypted redacted control-evidence sidecar",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "contract_version", "origin_installation_id", "backup_public_id", "attempt_no", "generated_at", "coverage_started_at", "coverage_ended_at", "control_exclusion", "redaction_proof", "record_groups", "owner_sections", "warnings"],
+  "properties": {
+    "schema_version": { "const": "system-backup-control-evidence.v1" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "origin_installation_id": { "type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$" },
+    "backup_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" },
+    "attempt_no": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "coverage_started_at": { "type": "string", "format": "date-time" },
+    "coverage_ended_at": { "type": "string", "format": "date-time" },
+    "control_exclusion": { "$ref": "#/$defs/ControlExclusionProof" },
+    "redaction_proof": { "$ref": "#/$defs/RedactionProof" },
+    "record_groups": { "$ref": "#/$defs/RecordGroups" },
+    "owner_sections": { "$ref": "#/$defs/OwnerSections" },
+    "warnings": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "$ref": "artifact-common.schema.json#/$defs/Warning" } }
+  },
+  "$defs": {
+    "Sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_id", "sha256"],
+      "properties": {
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      }
+    },
+    "ControlExclusionProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_registry_version", "schema_registry_hash", "excluded_control_object_count", "excluded_control_object_names_hash", "exclusion_check_evidence"],
+      "properties": {
+        "schema_registry_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "schema_registry_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "excluded_control_object_count": { "type": "integer", "minimum": 1 },
+        "excluded_control_object_names_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "exclusion_check_evidence": { "$ref": "#/$defs/EvidenceReference" }
+      },
+      "x-invariant": "the sorted control-object name set is hashed, while raw table rows and per-record identifiers never enter this proof"
+    },
+    "RedactionProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_version", "registry_hash", "applied", "rejected_records", "redaction_check_evidence"],
+      "properties": {
+        "registry_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "registry_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "applied": { "const": true },
+        "rejected_records": { "const": 0 },
+        "redaction_check_evidence": { "$ref": "#/$defs/EvidenceReference" }
+      },
+      "x-invariant": "any redaction rejection fails the task before publication, so a published sidecar always records zero rejected records"
+    },
+    "RecordGroupName": {
+      "type": "string",
+      "enum": ["task_terminal", "operation_terminal", "event", "audit", "promotion", "dependency_health", "provider_capability", "alert_state", "installation_state"]
+    },
+    "RecordGroupSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["group", "record_count", "first_recorded_at", "last_recorded_at", "rolling_hash", "evidence_refs"],
+      "properties": {
+        "group": { "$ref": "#/$defs/RecordGroupName" },
+        "record_count": { "type": "integer", "minimum": 0 },
+        "first_recorded_at": { "type": ["string", "null"], "format": "date-time" },
+        "last_recorded_at": { "type": ["string", "null"], "format": "date-time" },
+        "rolling_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "evidence_refs": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/EvidenceReference" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "record_count": { "const": 0 } }, "required": ["record_count"] }, "then": { "properties": { "first_recorded_at": { "type": "null" }, "last_recorded_at": { "type": "null" } } }, "else": { "properties": { "first_recorded_at": { "type": "string", "format": "date-time" }, "last_recorded_at": { "type": "string", "format": "date-time" } } } }
+      ],
+      "x-rolling-hash": "sha256 over the length-prefixed ordered sequence of each already-redacted record canonical hash; an empty group hashes the empty sequence"
+    },
+    "RecordGroups": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_terminal", "operation_terminal", "event", "audit", "promotion", "dependency_health", "provider_capability", "alert_state", "installation_state"],
+      "properties": {
+        "task_terminal": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "task_terminal" } } }] },
+        "operation_terminal": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "operation_terminal" } } }] },
+        "event": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "event" } } }] },
+        "audit": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "audit" } } }] },
+        "promotion": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "promotion" } } }] },
+        "dependency_health": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "dependency_health" } } }] },
+        "provider_capability": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "provider_capability" } } }] },
+        "alert_state": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "alert_state" } } }] },
+        "installation_state": { "allOf": [{ "$ref": "#/$defs/RecordGroupSummary" }, { "properties": { "group": { "const": "installation_state" } } }] }
+      }
+    },
+    "OwnerEvidenceStatus": { "type": "string", "enum": ["complete", "incomplete", "not_applicable"] },
+    "OwnerEvidenceReason": { "type": "string", "enum": ["none", "evidence_missing", "owner_check_failed", "redaction_failed", "capacity_exceeded"] },
+    "OwnerEvidenceSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "status", "reason", "verifier_summary_hash", "evidence_refs"],
+      "properties": {
+        "owner": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "status": { "$ref": "#/$defs/OwnerEvidenceStatus" },
+        "reason": { "$ref": "#/$defs/OwnerEvidenceReason" },
+        "verifier_summary_hash": { "anyOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] },
+        "evidence_refs": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "$ref": "#/$defs/EvidenceReference" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "complete" } }, "required": ["status"] }, "then": { "properties": { "reason": { "const": "none" }, "verifier_summary_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }, "evidence_refs": { "minItems": 1 } } } },
+        { "if": { "properties": { "status": { "const": "not_applicable" } }, "required": ["status"] }, "then": { "properties": { "reason": { "const": "none" }, "verifier_summary_hash": { "type": "null" }, "evidence_refs": { "maxItems": 0 } } } },
+        { "if": { "properties": { "status": { "const": "incomplete" } }, "required": ["status"] }, "then": { "not": { "properties": { "reason": { "const": "none" } }, "required": ["reason"] } } }
+      ],
+      "x-invariant": "D copies only registered evidence identity/checksum and a canonical verifier-summary hash; owner payloads stay in their owner schemas"
+    },
+    "OwnerSections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C", "D"],
+      "properties": {
+        "A": { "allOf": [{ "$ref": "#/$defs/OwnerEvidenceSection" }, { "properties": { "owner": { "const": "A" } } }] },
+        "B": { "allOf": [{ "$ref": "#/$defs/OwnerEvidenceSection" }, { "properties": { "owner": { "const": "B" } } }] },
+        "C": { "allOf": [{ "$ref": "#/$defs/OwnerEvidenceSection" }, { "properties": { "owner": { "const": "C" } } }] },
+        "D": { "allOf": [{ "$ref": "#/$defs/OwnerEvidenceSection" }, { "properties": { "owner": { "const": "D" } } }] }
+      }
+    }
+  },
+  "x-artifact-path": "control/evidence.json.enc",
+  "x-encryption": "The canonical JSON bytes are encrypted as an artifact payload before persistence; plaintext is never stored in the artifact index or manifest.",
+  "x-checksum-boundary": "The artifact index and manifest checksum the complete encrypted sidecar bytes; this payload contains no self-checksum field.",
+  "x-restore-behavior": "P0 restore verifies this sidecar read-only and never imports its historical rows into the destination control database.",
+  "x-owner-boundaries": {
+    "A": "audit/redaction rules and evidence bodies remain A-owned; D stores only hashes, counts and registered evidence references",
+    "B": "workload and restore evidence bodies remain B-owned and are not embedded",
+    "C": "artifact/catalog probe bodies and locators remain C-owned and are not embedded"
+  }
+}

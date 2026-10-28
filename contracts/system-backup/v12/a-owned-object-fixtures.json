@@ -1,0 +1,2075 @@
+{
+  "kind": "system_backup_a_owned_object_fixtures",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "fixture_policy": {
+    "snapshot_cutoff": "2026-09-20T01:20:00Z",
+    "empty_case": "zero rows with a valid empty snapshot checksum",
+    "redaction_case": "one synthetic row with secret/token/content values replaced by typed redaction markers",
+    "abnormal_case": "reference or state drift is rejected with a bounded failure classification",
+    "forbidden": [
+      "secret plaintext",
+      "password hash",
+      "token material",
+      "provider URI",
+      "raw provider response"
+    ],
+    "scope": "Executable synthetic projected-row contract vectors, not full SQL rows or production collector/normalizer output. Field lengths on fixture-only TEXT projections are bounded test limits. Raw passwords, keys and provider locations are never included. Remaining columns require P0a collector coverage.",
+    "checksum": "sha256 of UTF-8 JSON with recursively sorted ASCII object keys; arrays keep order; decimal monetary values are strings. This is a synthetic row checksum, not schema_hash.",
+    "target_policy": "Synthetic least-privilege target allows user role and two read scopes only. Each real restore must bind reviewed target policy, identity mappings and exact secret versions; disabling credentials never authorizes writes to a live installation."
+  },
+  "objects": [
+    {
+      "name": "audit_events",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "invocation_reference_drift",
+      "normalizer_id": "ai_gateway.audit_events.normalize.v1",
+      "verifier_id": "ai_gateway.audit_events.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 13,
+              "user_id": 7,
+              "invocation_id": 9,
+              "event_type": "synthetic.completed",
+              "message": "SYNTHETIC_MESSAGE",
+              "details": "SYNTHETIC_DETAILS"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 13,
+                "user_id": 107,
+                "invocation_id": 109,
+                "event_type": "synthetic.completed",
+                "message": "[REDACTED]",
+                "details": "[REDACTED]"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "571277d8c1a948d238ab35794590ff92cec8d7e8b81f8635b0b4b56e9ea61549"
+        },
+        {
+          "name": "invocation_reference_drift",
+          "input_rows": [
+            {
+              "id": 13,
+              "user_id": 7,
+              "invocation_id": 999,
+              "event_type": "synthetic.completed",
+              "message": "SYNTHETIC_MESSAGE",
+              "details": "SYNTHETIC_DETAILS"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "chat_messages",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "session_reference_drift",
+      "normalizer_id": "ai_gateway.chat_messages.normalize.v1",
+      "verifier_id": "ai_gateway.chat_messages.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 16,
+              "user_id": 7,
+              "instance_id": 8,
+              "invocation_id": 9,
+              "session_id": "source-session",
+              "role": "user",
+              "content": "SYNTHETIC_CONTENT"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 16,
+                "user_id": 107,
+                "instance_id": 108,
+                "invocation_id": 109,
+                "session_id": "restored-session-15",
+                "role": "user",
+                "content": "[REDACTED]"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "27e07f6908e7c02a2bbf6e604f2f2de888d3af99664177abf35088c3e37fde94"
+        },
+        {
+          "name": "session_reference_drift",
+          "input_rows": [
+            {
+              "id": 16,
+              "user_id": 7,
+              "instance_id": 8,
+              "invocation_id": 9,
+              "session_id": "missing-session",
+              "role": "user",
+              "content": "SYNTHETIC_CONTENT"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "chat_sessions",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "active_session_not_resumable",
+      "normalizer_id": "ai_gateway.chat_sessions.normalize.v1",
+      "verifier_id": "ai_gateway.chat_sessions.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 15,
+              "user_id": 7,
+              "instance_id": 8,
+              "session_id": "source-session",
+              "last_trace_id": "source-live-cursor"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 15,
+                "user_id": 107,
+                "instance_id": 108,
+                "session_id": "restored-session-15",
+                "last_trace_id": null
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "58dff80d5e48d1180ec2ef404945a0c9d98e8b12439924777b8234033991a44c"
+        },
+        {
+          "name": "active_session_not_resumable",
+          "input_rows": [
+            {
+              "id": 15,
+              "user_id": 7,
+              "instance_id": 8,
+              "session_id": "source-session",
+              "last_trace_id": "source-live-cursor"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 15,
+                "user_id": 107,
+                "instance_id": 108,
+                "session_id": "restored-session-15",
+                "last_trace_id": null
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "58dff80d5e48d1180ec2ef404945a0c9d98e8b12439924777b8234033991a44c"
+        }
+      ]
+    },
+    {
+      "name": "cost_records",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "aggregate_reference_drift",
+      "normalizer_id": "ai_gateway.cost_records.normalize.v1",
+      "verifier_id": "ai_gateway.cost_records.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 14,
+              "user_id": 7,
+              "invocation_id": 9,
+              "model_id": 5,
+              "total_tokens": 12,
+              "currency": "USD",
+              "estimated_cost": "0.00002000"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 14,
+                "user_id": 107,
+                "invocation_id": 109,
+                "model_id": 105,
+                "total_tokens": 12,
+                "currency": "USD",
+                "estimated_cost": "0.00002000"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "df5ae83f37672ecc544835c521e4419b37eae55a5eb429a0453c10fdace48ff8"
+        },
+        {
+          "name": "aggregate_reference_drift",
+          "input_rows": [
+            {
+              "id": 14,
+              "user_id": 7,
+              "invocation_id": 999,
+              "model_id": 5,
+              "total_tokens": 12,
+              "currency": "USD",
+              "estimated_cost": "0.00002000"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "enterprise_auth_settings",
+      "classification": "secret",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "secret_ref_version_drift",
+      "normalizer_id": "users.enterprise_auth_settings.normalize.v1",
+      "verifier_id": "users.enterprise_auth_settings.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {
+              "ldap_bind_password_ciphertext": {
+                "ref_kind": "external_secret",
+                "purpose": "secret_bundle_part",
+                "identity_hash": "abababababababababababababababababababababababababababababababab",
+                "identity_version": "fixture-version-1",
+                "provider_identity_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                "scope_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                "description_redacted": "redacted Kubernetes Secret key reference for secret bundle fixture",
+                "read_mode": "exact_version_only"
+              }
+            }
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 1,
+              "provider": "ldap",
+              "enabled": true,
+              "updated_by": 7,
+              "ldap_bind_password_ciphertext": "SYNTHETIC_REDACTED_CIPHERTEXT",
+              "version": 1
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {
+              "ldap_bind_password_ciphertext": {
+                "ref_kind": "external_secret",
+                "purpose": "secret_bundle_part",
+                "identity_hash": "abababababababababababababababababababababababababababababababab",
+                "identity_version": "fixture-version-1",
+                "provider_identity_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                "scope_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                "description_redacted": "redacted Kubernetes Secret key reference for secret bundle fixture",
+                "read_mode": "exact_version_only"
+              }
+            }
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 1,
+                "provider": "ldap",
+                "enabled": false,
+                "updated_by": 107,
+                "ldap_bind_password_ciphertext": "",
+                "version": 1
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "5068568b5c112f19697da7b3b2d8b1a1d9c3444cc8a3fe067c0fe5cd72b673ad"
+        },
+        {
+          "name": "secret_ref_version_drift",
+          "input_rows": [
+            {
+              "id": 1,
+              "provider": "ldap",
+              "enabled": true,
+              "updated_by": 7,
+              "ldap_bind_password_ciphertext": "SYNTHETIC_REDACTED_CIPHERTEXT",
+              "version": 1
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {
+              "ldap_bind_password_ciphertext": {
+                "ref_kind": "external_secret",
+                "purpose": "secret_bundle_part",
+                "identity_hash": "abababababababababababababababababababababababababababababababab",
+                "identity_version": "fixture-version-2",
+                "provider_identity_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                "scope_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                "description_redacted": "redacted Kubernetes Secret key reference for secret bundle fixture",
+                "read_mode": "exact_version_only"
+              }
+            }
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "instance_gateway_token_aliases",
+      "classification": "secret",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "active_alias_rejected",
+      "normalizer_id": "ai_gateway.instance_gateway_token_aliases.normalize.v1",
+      "verifier_id": "ai_gateway.instance_gateway_token_aliases.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 20,
+              "instance_id": 8,
+              "token_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "expires_at": "2026-09-20T02:00:00Z"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 20,
+                "instance_id": 108,
+                "token_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "expires_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "9430d60bbdec5ff1194ae257169518ddc62bfdcb923566a60f1af5113542602c"
+        },
+        {
+          "name": "active_alias_rejected",
+          "input_rows": [
+            {
+              "id": 20,
+              "instance_id": 8,
+              "token_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "expires_at": "2026-09-20T02:00:00Z"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 20,
+                "instance_id": 108,
+                "token_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "expires_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "9430d60bbdec5ff1194ae257169518ddc62bfdcb923566a60f1af5113542602c"
+        }
+      ]
+    },
+    {
+      "name": "llm_models",
+      "classification": "secret",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "secret_ref_missing",
+      "normalizer_id": "ai_gateway.llm_models.normalize.v1",
+      "verifier_id": "ai_gateway.llm_models.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {
+              "api_key": {
+                "ref_kind": "external_secret",
+                "purpose": "secret_bundle_part",
+                "identity_hash": "abababababababababababababababababababababababababababababababab",
+                "identity_version": "fixture-version-1",
+                "provider_identity_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                "scope_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                "description_redacted": "redacted Kubernetes Secret key reference for secret bundle fixture",
+                "read_mode": "exact_version_only"
+              }
+            }
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 5,
+              "display_name": "synthetic-model",
+              "provider_type": "openai",
+              "is_active": true,
+              "api_key": "SYNTHETIC_REDACTED_KEY",
+              "api_key_secret_ref": "SYNTHETIC_REDACTED_REF"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {
+              "api_key": {
+                "ref_kind": "external_secret",
+                "purpose": "secret_bundle_part",
+                "identity_hash": "abababababababababababababababababababababababababababababababab",
+                "identity_version": "fixture-version-1",
+                "provider_identity_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+                "scope_hash": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+                "description_redacted": "redacted Kubernetes Secret key reference for secret bundle fixture",
+                "read_mode": "exact_version_only"
+              }
+            }
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 105,
+                "display_name": "synthetic-model",
+                "provider_type": "openai",
+                "is_active": false,
+                "api_key": null,
+                "api_key_secret_ref": null
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "d384d46cba095967a1de9d4c2bf93eb6a6ffae7bac2c11aed11d9f6bc4fafac9"
+        },
+        {
+          "name": "secret_ref_missing",
+          "input_rows": [
+            {
+              "id": 5,
+              "display_name": "synthetic-model",
+              "provider_type": "openai",
+              "is_active": true,
+              "api_key": "SYNTHETIC_REDACTED_KEY"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "model_invocations",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "provider_payload_redaction_failed",
+      "normalizer_id": "ai_gateway.model_invocations.normalize.v1",
+      "verifier_id": "ai_gateway.model_invocations.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 9,
+              "user_id": 7,
+              "instance_id": 8,
+              "model_id": 5,
+              "status": "completed",
+              "request_payload": "SYNTHETIC_REQUEST",
+              "response_payload": "SYNTHETIC_RESPONSE",
+              "total_tokens": 12
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 109,
+                "user_id": 107,
+                "instance_id": 108,
+                "model_id": 105,
+                "status": "completed",
+                "request_payload": "[REDACTED]",
+                "response_payload": "[REDACTED]",
+                "total_tokens": 12
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "37fb32eb1b4694e0433193df1cd0742c2ee1ffbe2a62c9b4e39af5b62fc277ca"
+        },
+        {
+          "name": "provider_payload_redaction_failed",
+          "input_rows": [
+            {
+              "id": 9,
+              "user_id": 7,
+              "instance_id": 8,
+              "model_id": 5,
+              "status": "completed",
+              "request_payload": "SYNTHETIC_REQUEST",
+              "response_payload": {
+                "unexpected": "SYNTHETIC"
+              },
+              "total_tokens": 12
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "northbound_auth_challenges",
+      "classification": "secret",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "unconsumed_challenge_normalized",
+      "normalizer_id": "users.northbound_auth_challenges.normalize.v1",
+      "verifier_id": "users.northbound_auth_challenges.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 17,
+              "status": "issued",
+              "nonce_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "expires_at": "2026-09-20T02:00:00Z",
+              "used_at": null
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 17,
+                "status": "expired",
+                "nonce_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "expires_at": "2026-09-20T01:20:00Z",
+                "used_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "1b35fcf0584abf1e800a1c5d3d2f6c5aaf9a865c17aa6f0e9be61c482bac81a3"
+        },
+        {
+          "name": "unconsumed_challenge_normalized",
+          "input_rows": [
+            {
+              "id": 17,
+              "status": "issued",
+              "nonce_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "expires_at": "2026-09-20T02:00:00Z",
+              "used_at": null
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 17,
+                "status": "expired",
+                "nonce_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "expires_at": "2026-09-20T01:20:00Z",
+                "used_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "1b35fcf0584abf1e800a1c5d3d2f6c5aaf9a865c17aa6f0e9be61c482bac81a3"
+        }
+      ]
+    },
+    {
+      "name": "northbound_caller_policies",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "unknown_scope_rejected",
+      "normalizer_id": "users.northbound_caller_policies.normalize.v1",
+      "verifier_id": "users.northbound_caller_policies.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "user_id": 7,
+              "enabled": true,
+              "scopes_json": [
+                "lite-instances:read"
+              ],
+              "updated_by": 7
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "user_id": 107,
+                "enabled": false,
+                "scopes_json": [
+                  "lite-instances:read"
+                ],
+                "updated_by": 107
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "0cde7e12dae42e40bdb13eab54b54da15ebf569a8985745de8cb101ca74b5495"
+        },
+        {
+          "name": "unknown_scope_rejected",
+          "input_rows": [
+            {
+              "user_id": 7,
+              "enabled": true,
+              "scopes_json": [
+                "unknown:root"
+              ],
+              "updated_by": 7
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "northbound_sessions",
+      "classification": "secret",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "active_refresh_session_revoked",
+      "normalizer_id": "users.northbound_sessions.normalize.v1",
+      "verifier_id": "users.northbound_sessions.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 18,
+              "user_id": 7,
+              "status": "active",
+              "refresh_token_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "refresh_expires_at": "2026-09-20T02:00:00Z",
+              "access_expires_at": "2026-09-20T01:30:00Z",
+              "revoked_at": null
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 18,
+                "user_id": 107,
+                "status": "revoked",
+                "refresh_token_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "refresh_expires_at": "2026-09-20T01:20:00Z",
+                "access_expires_at": "2026-09-20T01:20:00Z",
+                "revoked_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "7143d149738392a5ee1f5bee7b11210125de45e40daad97605205b2440a6c24e"
+        },
+        {
+          "name": "active_refresh_session_revoked",
+          "input_rows": [
+            {
+              "id": 18,
+              "user_id": 7,
+              "status": "active",
+              "refresh_token_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "refresh_expires_at": "2026-09-20T02:00:00Z",
+              "access_expires_at": "2026-09-20T01:30:00Z",
+              "revoked_at": null
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 18,
+                "user_id": 107,
+                "status": "revoked",
+                "refresh_token_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "refresh_expires_at": "2026-09-20T01:20:00Z",
+                "access_expires_at": "2026-09-20T01:20:00Z",
+                "revoked_at": "2026-09-20T01:20:00Z"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "7143d149738392a5ee1f5bee7b11210125de45e40daad97605205b2440a6c24e"
+        }
+      ]
+    },
+    {
+      "name": "risk_hits",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "rule_reference_drift",
+      "normalizer_id": "ai_gateway.risk_hits.normalize.v1",
+      "verifier_id": "ai_gateway.risk_hits.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 19,
+              "user_id": 7,
+              "invocation_id": 9,
+              "rule_id": "rule-source",
+              "match_summary": "SYNTHETIC_MATCH"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 19,
+                "user_id": 107,
+                "invocation_id": 109,
+                "rule_id": "rule-target-12",
+                "match_summary": "[REDACTED]"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "5b214f6185b5c5196ce40c0a8a896dc5e7a03786b9e030054e1583f4b943cafc"
+        },
+        {
+          "name": "rule_reference_drift",
+          "input_rows": [
+            {
+              "id": 19,
+              "user_id": 7,
+              "invocation_id": 9,
+              "rule_id": "missing-rule",
+              "match_summary": "SYNTHETIC_MATCH"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "risk_rules",
+      "classification": "internal",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "unsupported_action_rejected",
+      "normalizer_id": "ai_gateway.risk_rules.normalize.v1",
+      "verifier_id": "ai_gateway.risk_rules.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 12,
+              "rule_id": "rule-source",
+              "action": "block",
+              "is_enabled": true,
+              "pattern": "SYNTHETIC_PATTERN"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 12,
+                "rule_id": "rule-target-12",
+                "action": "block",
+                "is_enabled": false,
+                "pattern": "SYNTHETIC_PATTERN"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "077a6746ef90772a6f0e9faf9f303fca6160b27a330ad952d3a3c7c820390cb3"
+        },
+        {
+          "name": "unsupported_action_rejected",
+          "input_rows": [
+            {
+              "id": 12,
+              "rule_id": "rule-source",
+              "action": "execute_shell",
+              "is_enabled": true,
+              "pattern": "SYNTHETIC_PATTERN"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "user_quotas",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "target_capacity_exceeded",
+      "normalizer_id": "users.user_quotas.normalize.v1",
+      "verifier_id": "users.user_quotas.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 1,
+              "user_id": 7,
+              "max_instances": 3,
+              "max_cpu_cores": 4,
+              "max_memory_gb": 8,
+              "max_storage_gb": 20,
+              "max_gpu_count": 0
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 1,
+                "user_id": 107,
+                "max_instances": 3,
+                "max_cpu_cores": 4,
+                "max_memory_gb": 8,
+                "max_storage_gb": 20,
+                "max_gpu_count": 0
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "a9045ad6819024aac2fc23eb8b216fd68ae8d7ee1e60a10844d27d94c1a648c7"
+        },
+        {
+          "name": "target_capacity_exceeded",
+          "input_rows": [
+            {
+              "id": 1,
+              "user_id": 7,
+              "max_instances": 11,
+              "max_cpu_cores": 4,
+              "max_memory_gb": 8,
+              "max_storage_gb": 20,
+              "max_gpu_count": 0
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "classification": "confidential",
+      "empty_rows": 0,
+      "redacted_rows": 1,
+      "abnormal_case": "identity_mapping_conflict",
+      "normalizer_id": "users.users.normalize.v1",
+      "verifier_id": "users.users.verify.v1",
+      "cases": [
+        {
+          "name": "empty",
+          "input_rows": [],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [],
+            "can_resume_source_execution": false
+          },
+          "normalized_rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "name": "redacted_historical",
+          "input_rows": [
+            {
+              "id": 7,
+              "username": "synthetic-user",
+              "role": "user",
+              "is_active": true,
+              "password_hash": "SYNTHETIC_REDACTED_HASH"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected": {
+            "rows": [
+              {
+                "id": 107,
+                "username": "synthetic-user",
+                "role": "user",
+                "is_active": false,
+                "password_hash": "!system-backup-password-reset-required!"
+              }
+            ],
+            "can_resume_source_execution": false
+          },
+      "normalized_rows_sha256": "2eb1e3f1eade2deec3b1d497b99071f2e09e570a89e4fd915e58ea164dc162e7"
+        },
+        {
+          "name": "identity_mapping_conflict",
+          "input_rows": [
+            {
+              "id": 7,
+              "username": "synthetic-user",
+              "role": "root",
+              "is_active": true,
+              "password_hash": "SYNTHETIC_REDACTED_HASH"
+            }
+          ],
+          "context": {
+            "mappings": {
+              "users": {
+                "7": 107
+              },
+              "instances": {
+                "8": 108
+              },
+              "llm_models": {
+                "5": 105
+              },
+              "model_invocations": {
+                "9": 109
+              },
+              "chat_sessions": {
+                "source-session": "restored-session-15"
+              },
+              "risk_rules": {
+                "rule-source": "rule-target-12"
+              }
+            },
+            "secret_refs": {}
+          },
+          "expected_failure": "normalization_failed"
+        }
+      ]
+    }
+  ]
+}

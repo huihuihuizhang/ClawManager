@@ -12,12 +12,15 @@ import (
 // Close only the short admission row before waiting for complete-request
 // locks. Existing units keep an idle gate and can finish their nested SQL;
 // newly arriving units cannot keep extending the drain indefinitely.
-func (g Gate) closeAdmission(ctx context.Context, scope, owner string, acquire time.Duration) error {
+func (g Gate) closeAdmission(ctx context.Context, scope, owner, engine string, acquire time.Duration) error {
 	tx, err := g.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	if err := lockEngine(ctx, tx, scope, engine); err != nil {
+		return err
+	}
 	var prior sql.NullString
 	var until sql.NullTime
 	var now time.Time

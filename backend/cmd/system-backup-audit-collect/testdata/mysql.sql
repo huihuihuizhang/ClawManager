@@ -1,0 +1,6 @@
+-- Synthetic selected-column fixture only; this is NOT an application migration.
+CREATE TABLE system_backup_v2_operations (id BIGINT PRIMARY KEY, public_id VARCHAR(64), origin_installation_id VARCHAR(128), actor_id VARCHAR(128), operation_type VARCHAR(64), endpoint VARCHAR(64), status VARCHAR(32), idempotency_key VARCHAR(128), request_hash CHAR(64), target_public_id VARCHAR(64));
+CREATE TABLE system_backup_v2_download_admission_receipts (operation_id BIGINT, operation_public_id VARCHAR(64), origin_installation_id VARCHAR(128), evidence_public_id VARCHAR(64), intent_audit_id BIGINT, receipt_size_bytes BIGINT, receipt_sha256 CHAR(64), receipt_canonical_json LONGTEXT);
+CREATE TABLE audit_logs (id BIGINT PRIMARY KEY, user_id BIGINT, action VARCHAR(128), resource_type VARCHAR(64), resource_id BIGINT NULL, details JSON);
+CREATE TABLE system_backup_v2_download_result_receipts (operation_id BIGINT, operation_public_id VARCHAR(64), origin_installation_id VARCHAR(128), evidence_public_id VARCHAR(64), intent_audit_id BIGINT, result_audit_id BIGINT, result_size_bytes BIGINT, result_sha256 CHAR(64));
+CREATE TABLE system_backup_v2_strong_auth_nonces (operation_id BIGINT, audit_log_id BIGINT, origin_installation_id VARCHAR(128), endpoint VARCHAR(64), idempotency_key VARCHAR(128), request_hash CHAR(64), subject_sha256 CHAR(64), session_sha256 CHAR(64));

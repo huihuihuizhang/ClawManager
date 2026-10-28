@@ -1,0 +1,1509 @@
+{
+  "kind": "synthetic_provider_proof_parity",
+  "status": "draft",
+  "now": "2026-09-20T01:02:00Z",
+  "max_age_seconds": 300,
+  "clock_skew_seconds": 30,
+  "cases": [
+    {
+      "name": "external_action/provider_presence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "external_action/provider_presence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "external_action/provider_presence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "external_action/provider_absence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "external_action/provider_absence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "external_action/provider_absence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "external_action/ownership/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "external_action/ownership/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "external_action/ownership/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_presence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_presence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_presence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_absence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_absence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/provider_absence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "backup_staging/ownership/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "backup_staging/ownership/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "backup_staging/ownership/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "backup_staging",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "restore_resource/provider_presence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/provider_presence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/provider_presence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/provider_absence/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/provider_absence/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/provider_absence/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_absence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "restore_resource/ownership/absent",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "absent",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "restore_resource/ownership/present_unsealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_unsealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "restore_resource/ownership/present_sealed",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "restore_resource",
+          "target_public_id": "srr_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "ownership",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "non-uuid",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_x"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "wrong-prefix",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sbs_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "missing-action-key",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": null,
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "issuer-256-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "issuer-257-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "issuer-blank",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": " ",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "resource_uid-256-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "resource_uid-257-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "resource_uid-blank",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": " ",
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "resource_version-256-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "resource_version-257-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "resource_version-blank",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": " ",
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "observed_version-256-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "observed_version-257-unicode",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中中",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "observed_version-blank",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": " ",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    },
+    {
+      "name": "already-expired-within-skew",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:01:50Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": false
+    },
+    {
+      "name": "expires-at-now",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:02:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": false
+    },
+    {
+      "name": "over-max-age-within-skew",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:06:20Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": false
+    },
+    {
+      "name": "exact-max-age",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:06:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "future-outside-skew",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:02:31Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "cHJvdmlkZXItcHJvb2YtcmVkYWN0ZWQ="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": false
+    },
+    {
+      "name": "8192-byte-proof",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": true
+    },
+    {
+      "name": "8193-byte-proof",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": true,
+      "runtime_valid": false
+    },
+    {
+      "name": "invalid-base64",
+      "registration": {
+        "schema_version": "system-backup-provider-proof-registration.v1",
+        "idempotency_key": "idem-provider-proof-20260920-0001",
+        "target": {
+          "target_type": "external_action",
+          "target_public_id": "sxa_11111111-1111-4111-8111-111111111111"
+        },
+        "proof": {
+          "proof_type": "provider_presence",
+          "issuer": "artifact-provider-issuer-v1",
+          "provider_identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "location_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "action_key_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "resource_uid": null,
+          "resource_version": null,
+          "observed_version": "object-version-redacted",
+          "observed_checksum": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "content_length": 4096,
+          "observed_state": "present_sealed",
+          "issued_at": "2026-09-20T01:01:00Z",
+          "expires_at": "2026-09-20T01:03:00Z",
+          "signed_proof_base64": "%%%%"
+        },
+        "expected_row_version": 3
+      },
+      "schema_valid": false,
+      "runtime_valid": false
+    }
+  ]
+}

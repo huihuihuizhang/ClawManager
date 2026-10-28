@@ -1,0 +1,143 @@
+{
+  "kind": "system_backup_a_capability_status_reason_vectors",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "scope": "Synthetic observation mutations for A evidence and D provider records, not authenticated provider evidence.",
+  "cases": [
+    {
+      "status": "supported",
+      "reason_code": "none",
+      "valid": true
+    },
+    {
+      "status": "supported",
+      "reason_code": "probe_failed",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "provider_unavailable",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "credential_unavailable",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "permission_denied",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "unsupported_api",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "response_invalid",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "version_drift",
+      "valid": false
+    },
+    {
+      "status": "supported",
+      "reason_code": "internal",
+      "valid": false
+    },
+    {
+      "status": "degraded",
+      "reason_code": "none",
+      "valid": false
+    },
+    {
+      "status": "degraded",
+      "reason_code": "probe_failed",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "provider_unavailable",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "credential_unavailable",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "permission_denied",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "unsupported_api",
+      "valid": false
+    },
+    {
+      "status": "degraded",
+      "reason_code": "response_invalid",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "version_drift",
+      "valid": true
+    },
+    {
+      "status": "degraded",
+      "reason_code": "internal",
+      "valid": true
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "none",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "probe_failed",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "provider_unavailable",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "credential_unavailable",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "permission_denied",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "unsupported_api",
+      "valid": true
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "response_invalid",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "version_drift",
+      "valid": false
+    },
+    {
+      "status": "unsupported",
+      "reason_code": "internal",
+      "valid": false
+    }
+  ]
+}

@@ -1,0 +1,394 @@
+{
+  "kind": "system_backup_skill_hub_policy_draft",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "scope": "Draft review input, not runtime authorization or source-writer admission. systembackupskillhub implements candidate normalization, empty-target transactional SQL restore with mandatory authority/fencing hooks, bounded read-only SQL verification, versioned object transfer with bounded allowlisted metadata, metadata-aware restore verification and bounded candidate indexes. Public Runner wire adapters and production authority/evidence integration remain pending. Model-field parity does not establish live schema coverage.",
+  "policies": [
+    {
+      "name": "instance_skills",
+      "model_file": "backend/internal/models/skill.go",
+      "model_type": "InstanceSkill",
+      "fields": [
+        "id",
+        "instance_id",
+        "skill_id",
+        "skill_version_id",
+        "source_type",
+        "install_path",
+        "workspace_dir",
+        "observed_hash",
+        "status",
+        "last_seen_at",
+        "removed_at",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "instance_id": "instances",
+        "skill_id": "skills",
+        "skill_version_id": "skill_versions"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [
+        "install_path",
+        "workspace_dir"
+      ],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "install_path",
+        "workspace_dir"
+      ]
+    },
+    {
+      "name": "skill_blobs",
+      "model_file": "backend/internal/models/skill.go",
+      "model_type": "SkillBlob",
+      "fields": [
+        "id",
+        "content_hash",
+        "archive_hash",
+        "object_key",
+        "file_name",
+        "media_type",
+        "size_bytes",
+        "scan_status",
+        "risk_level",
+        "last_scanned_at",
+        "last_scan_result_id",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "last_scan_result_id": "skill_scan_results"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [
+        "object_key"
+      ],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "object_key",
+        "file_name"
+      ]
+    },
+    {
+      "name": "skill_hub_tag_assignments",
+      "model_file": "backend/internal/models/skill_hub_tag.go",
+      "model_type": "SkillHubTagAssignment",
+      "fields": [
+        "id",
+        "skill_id",
+        "tag_id",
+        "created_at"
+      ],
+      "references": {
+        "skill_id": "skills",
+        "tag_id": "skill_hub_tags"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": []
+    },
+    {
+      "name": "skill_hub_tags",
+      "model_file": "backend/internal/models/skill_hub_tag.go",
+      "model_type": "SkillHubTag",
+      "fields": [
+        "id",
+        "tag_key",
+        "name",
+        "description",
+        "sort_order",
+        "admin_only",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {},
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "name",
+        "description"
+      ]
+    },
+    {
+      "name": "skill_package_materialize_jobs",
+      "model_file": "backend/internal/models/skill_package_materialize_job.go",
+      "model_type": "SkillPackageMaterializeJob",
+      "fields": [
+        "id",
+        "instance_id",
+        "skill_id",
+        "blob_id",
+        "workspace_dir",
+        "content_hash",
+        "status",
+        "attempt_count",
+        "max_attempts",
+        "last_error",
+        "idempotency_key",
+        "trigger_source",
+        "started_at",
+        "finished_at",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "instance_id": "instances",
+        "skill_id": "skills",
+        "blob_id": "skill_blobs"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [
+        "workspace_dir"
+      ],
+      "state_normalization": {
+        "field": "status",
+        "allowed_source_values": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "mapping": {
+          "pending": "cancelled",
+          "running": "cancelled",
+          "succeeded": "succeeded",
+          "failed": "failed",
+          "cancelled": "cancelled"
+        }
+      },
+      "evidence_redacted_fields": [
+        "workspace_dir",
+        "last_error",
+        "idempotency_key"
+      ]
+    },
+    {
+      "name": "skill_scan_results",
+      "model_file": "backend/internal/models/skill.go",
+      "model_type": "SkillScanResult",
+      "fields": [
+        "id",
+        "blob_id",
+        "engine",
+        "risk_level",
+        "status",
+        "summary",
+        "findings_json",
+        "scanned_at",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "blob_id": "skill_blobs"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "summary",
+        "findings_json"
+      ]
+    },
+    {
+      "name": "skill_versions",
+      "model_file": "backend/internal/models/skill.go",
+      "model_type": "SkillVersion",
+      "fields": [
+        "id",
+        "skill_id",
+        "blob_id",
+        "version_no",
+        "manifest_json",
+        "source_type",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "skill_id": "skills",
+        "blob_id": "skill_blobs"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "manifest_json"
+      ]
+    },
+    {
+      "name": "skills",
+      "model_file": "backend/internal/models/skill.go",
+      "model_type": "Skill",
+      "fields": [
+        "id",
+        "user_id",
+        "skill_key",
+        "name",
+        "description",
+        "current_version_id",
+        "source_type",
+        "status",
+        "visibility",
+        "published_at",
+        "published_by",
+        "risk_level",
+        "last_scanned_at",
+        "last_scan_result_id",
+        "created_at",
+        "updated_at"
+      ],
+      "references": {
+        "user_id": "users",
+        "published_by": "users",
+        "current_version_id": "skill_versions",
+        "last_scan_result_id": "skill_scan_results"
+      },
+      "identity_policy": "shared_restore_mapping",
+      "object_fields": [],
+      "workspace_fields": [],
+      "state_normalization": null,
+      "evidence_redacted_fields": [
+        "name",
+        "description"
+      ]
+    }
+  ],
+  "writer_groups": [
+    {
+      "source": "backend/internal/services/skill_service.go",
+      "methods": [
+        "ImportArchive",
+        "UpdateSkill",
+        "DeleteSkill",
+        "AttachSkillToInstance",
+        "ListInstanceSkills",
+        "reconcileRemovedInstanceSkillsFromCommands",
+        "recordScan",
+        "recordScanContext",
+        "RemoveSkillFromInstance",
+        "SyncAgentSkills",
+        "UploadAgentSkillPackage",
+        "ensureBlobObject",
+        "requestSkillPackageCollection",
+        "markSkillScanFailed"
+      ],
+      "protection": "pending",
+      "note": "ListInstanceSkills reconciles removed bindings and therefore writes; scan completion and upload callbacks must participate."
+    },
+    {
+      "source": "backend/internal/services/skill_hub_service.go",
+      "methods": [
+        "PublishToHub",
+        "UnpublishFromHub",
+        "UpdateHubTags",
+        "ImportInstanceSkillToLibrary",
+        "RetrySkillPackageCollection",
+        "PublishFromInstance",
+        "RestoreInstanceSkill",
+        "SaveBackInstanceSkillToLibrary",
+        "SaveForeignInstanceSkillToMyLibrary",
+        "PublishSkillAsNew",
+        "ImportHubArchive"
+      ],
+      "protection": "pending",
+      "note": "Inventory includes indirect calls; service/worker boundaries, not HTTP verb classification, must enforce the gate."
+    },
+    {
+      "source": "backend/internal/services/skill_package_materialize_service.go",
+      "methods": [
+        "Enqueue",
+        "ReleaseToPending",
+        "ClaimNextPending",
+        "ProcessJob",
+        "RetryJob",
+        "BackfillOnce"
+      ],
+      "protection": "pending",
+      "note": "Cover initial backfill, claim, retries, object publication, scan completion and final SQL commit."
+    },
+    {
+      "source": "backend/internal/services/skill_package_materialize_worker.go",
+      "methods": [
+        "Start",
+        "StartContext",
+        "Stop",
+        "StopAndWait",
+        "processBatch"
+      ],
+      "protection": "pending",
+      "note": "StopAndWait cancels and joins local backfill/jobs/claim cleanup; timeout or cleanup error cannot confirm drain. Distributed gate, commit fencing and participant ACK remain pending."
+    },
+    {
+      "source": "backend/internal/services/skill_runtime_sync.go",
+      "methods": [
+        "SyncRuntimeAgentSkillsReport",
+        "RequestLiteSkillInventorySync",
+        "syncRuntimeSkillsFromWorkspace",
+        "completePendingSkillInventorySync"
+      ],
+      "protection": "pending",
+      "note": "Coordinate runtime/workspace writers with B, including delayed reports and command completion."
+    },
+    {
+      "source": "backend/internal/services/skill_import.go",
+      "methods": [
+        "ImportHubArchiveWithDecisions",
+        "importDirectory",
+        "importDirectoryWithOptions",
+        "recordImportScan"
+      ],
+      "protection": "pending",
+      "note": "Import options can create object/blob/version/skill rows and persist scan failures; protect the complete publication sequence."
+    },
+    {
+      "source": "backend/internal/services/skill_lite_package_collect.go",
+      "methods": [
+        "persistDiscoveredSkillPackage",
+        "materializeSkillPackageFromWorkspace",
+        "syncSkillRecordFromBlob"
+      ],
+      "protection": "pending",
+      "note": "Workspace collection writes object content and blob/skill rows; a canceled SQL operation does not prove object upload has stopped."
+    },
+    {
+      "source": "backend/internal/services/instance_command_service.go",
+      "methods": [
+        "MarkFinished",
+        "markUninstalledSkillRemoved"
+      ],
+      "protection": "pending",
+      "note": "B-owned command completion directly writes instance_skills; late completion callbacks require the same capture gate."
+    },
+    {
+      "source": "backend/internal/services/security_scan_service.go",
+      "methods": [
+        "StartScan",
+        "RescanSkill",
+        "runJob",
+        "scanBlob"
+      ],
+      "protection": "pending",
+      "note": "D-owned security scans write skill_blobs, skills and skill_scan_results asynchronously; pause and drain before capture, never replay during drill."
+    },
+    {
+      "source": "backend/internal/handlers/workspace_file_handler.go",
+      "methods": [
+        "Delete",
+        "syncSkillDeletionFromWorkspacePath"
+      ],
+      "protection": "pending",
+      "note": "B-owned workspace deletion directly marks instance_skills removed; coordinate file mutation and database binding updates."
+    }
+  ]
+}

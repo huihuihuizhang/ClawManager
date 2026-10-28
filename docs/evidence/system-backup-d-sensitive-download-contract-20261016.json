@@ -1,0 +1,160 @@
+{
+  "kind": "d_sensitive_download_admission_decision.v1",
+  "contract_version": "system-backup-plan.v12",
+  "status": "d_semantics_confirmed_shared_amendments_pending_review",
+  "decision_owner": "D",
+  "production_approval": false,
+  "runtime_adapter_enabled": false,
+  "migration_catalog_modified": false,
+  "a_candidate": "docs/evidence/a-sensitive-download-admission-candidate-20261016.json",
+  "a_candidate_sha256": "b3c05f3688edf66b0fb7b133ed745958d7f7396c79a546631ad1f14bdc0b9614",
+  "endpoint": {
+    "operation_id": "getSystemBackupEvidence",
+    "method": "GET",
+    "path": "/admin/system-backup-evidence/{id}",
+    "request_body": null,
+    "strong_auth_and_idempotency_required_for": ["confidential", "sensitive"],
+    "required_permissions": {
+      "public_internal": ["system_backup.read"],
+      "confidential": ["system_backup.read", "system_backup.operate"],
+      "sensitive": ["system_backup.read", "system_backup.security_configure"]
+    },
+    "kill_switch": "allowed_when_disabled",
+    "success_stream_http_status": [200, 206],
+    "cache_control": "no-store",
+    "operation_id_response_header": "X-System-Backup-Operation-Id"
+  },
+  "policy_amendment": {
+    "recent_strong_auth": "conditional",
+    "strong_auth_condition": "evidence_classification_confidential_or_sensitive",
+    "idempotency_required": false,
+    "idempotency_condition": "evidence_classification_confidential_or_sensitive",
+    "interpretation": "idempotency_required remains the unconditional requirement; the new condition requires the header whenever true. Add this optional condition to the policy schema before use; absence means no additional conditional requirement, never bypass a true condition"
+  },
+  "operation": {
+    "schema_version": "system-backup-operation.v1",
+    "operation_type": "evidence_download_admission",
+    "target_type": "evidence",
+    "target_public_id_pattern": "^sev_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    "actor_type": "admin",
+    "actor_id": "current authenticated user ID as exact decimal string",
+    "endpoint": "getSystemBackupEvidence",
+    "status": "succeeded",
+    "retryable": false,
+    "failure_category": "none",
+    "failure_message": null,
+    "http_status": 200,
+    "result_resource_public_id": null,
+    "result_config_version": null,
+    "row_version": 1,
+    "times": "created_at=started_at=finished_at=updated_at=final SQL UTC; deadline_at=minimum original admission deadline, strictly later",
+    "success_means": "confirmed atomic admission only; never provider read, bytes written or client receipt",
+    "public_representation": "complete Operation through existing authorized operation detail/list; GET download body remains evidence bytes",
+    "private_receipt_is_not_public_response": true,
+    "redacted_response": "exact bounded JCS bytes of the complete public Operation, independent from the private claim receipt; never claim that GET returned this JSON"
+  },
+  "signed_request": {
+    "domain": "clawmanager.system-backup.evidence-download-request.v1",
+    "closed_fields": ["domain", "endpoint", "origin_installation_id", "evidence_id", "subject", "session", "manifest_sha256", "range_present", "range_start", "range_end"],
+    "hash": "lowercase SHA-256 over UTF-8 RFC 8785 JCS, no BOM or trailing newline",
+    "manifest_hash": "SHA-256 of the existing immutable evidence Manifest canonical bytes, including identity, key reference, envelope/object hashes, sizes, chunk root and complete ordered chunks; not a caller hash or content hash alone",
+    "subject_session": "exact authenticated RegistrationActor.Subject and RegistrationActor.Session, equal to ProofPayload subject/session; session is the existing digest, never bearer bytes",
+    "range": "existing parseRange against locked manifest ContentSize; zero-based inclusive safe integers; normalized open/suffix/closed ranges with equal offsets hash equally; absent versus explicit full range differ by range_present",
+    "empty_content": "range_start=range_end=0 only when Range is absent and ContentSize=0, matching the existing parser; Range on empty content rejects",
+    "idempotency_key": "exact single Idempotency-Key header, 16..128 ASCII; separately bound in signed ProofPayload and operation unique key, not a request-body field",
+    "claim_binding": "server random claim is excluded from pre-signing request; same-transaction immutable receipt binds claim digest and exact admitted evidence row version to nonce.operation_id",
+    "forbidden_client_authority": ["installation", "subject", "session", "manifest_sha256", "request_hash", "claim", "owner", "provider_ref", "object_uri"],
+    "invalid_transport": "reject duplicate proof/key/Range headers, multiple ranges, malformed integers, unsafe offsets, invalid Unicode and unknown JSON proof fields before mutation"
+  },
+  "receipt": {
+    "schema_version": "system-backup-evidence-download-admission.v1",
+    "immutable_closed_fields": ["schema_version", "operation_public_id", "origin_installation_id", "evidence_id", "evidence_row_version", "subject_sha256", "session_sha256", "request_hash", "claim_sha256", "claim_expires_at", "manifest_sha256", "range_present", "range_start", "range_end", "admitted_at", "intent_audit_id"],
+    "encoding": "UTF-8 JCS; SHA-256 and byte length stored and verified independently; maximum 8192 bytes",
+    "claim_sha256": "SHA-256 over exact ASCII server claim, used only for binding, never as a transferable capability",
+    "storage": "new immutable installation-scoped receipt keyed by operation, with inline public Operation snapshot separately retained; no provider I/O inside admission transaction",
+    "joins": "operation, target evidence, receipt and nonce installation must agree; receipt operation/target/audit identities and public Operation bytes must match independent SQL rows",
+    "forbidden": ["raw_claim", "raw_nonce", "proof", "bearer", "provider_locator", "plaintext_evidence", "secret_material"]
+  },
+  "transaction": {
+    "owner": "D SQL registry owns one RepeatableRead *sql.Tx and alone commits; A verifier borrows the exact tx and cannot begin/commit/retry it",
+    "database": "validate server UUID, database and UTC before locking",
+    "lock_order": [
+      "L0 all installation rows and missing ranges, ordered, shared with existing nonce/config writers",
+      "L1 current installation/config and immutable required historical nonce-key version snapshot",
+      "L2 user, live session, credential/revocation and current owner/RBAC authority",
+      "L3 exact actor/endpoint/key operation and receipt keys, including missing ranges",
+      "L4 owner/task facts needed by the existing evidence policy",
+      "L5 target references/holds and every historical nonce HMAC candidate in stable order",
+      "L6 physical metadata reservation id=1 with pre-pinned bounded report",
+      "L7 intent audit INSERT with actual insert ID",
+      "L8 exact evidence row/chunks plus preselected new receipt/response slots; claim CAS and persist operation/receipt/nonce only against prelocked keys",
+      "L10 final guards and fresh SQL UTC after callbacks and last write; commit with no external I/O"
+    ],
+    "existing_callback_limitation": "AuthorizeSensitiveDownload after evidence lock must receive a sealed prelocked prefix; it must not acquire L0-L7 afterward. Extend registry preparation before evidence lock, do not graft a standalone nonce transaction onto the current callback",
+    "audit_api": "AuditIntent(ctx,*sql.Tx,Audit) (int64,error): one affected INSERT, actual sql.Result.LastInsertId, bounded by audit_logs INT PK, verify exact stored actor/action/evidence/claim-digest/range/time in that tx; no MAX/latest query or second intent INSERT",
+    "atomic_effects": ["intent audit", "claim CAS", "admission operation", "immutable receipt and exact public Operation snapshot", "nonce consumption", "metadata reservation accounting"],
+    "nonce": {
+      "operation_id": "exact inserted admission operation primary key",
+      "response_sha256": null,
+      "audit_log_id": "exact verified intent INSERT ID",
+      "key_versions": "persisted config history union all retained ledger versions including active; reject empty, duplicate, unresolved, removed or changed version snapshot",
+      "cross_version_check": "A computes all candidate HMACs; D checks every candidate with current locking reads before insert under active key. All consumers and key-history changes share L0 serialization; per-version UNIQUE alone is insufficient",
+      "no_row_on_failure": "this download protocol rolls back on every rejection; do not persist an immutable-failure nonce as a stand-in for admission"
+    },
+    "final_guards": ["current session/credential/revocation", "current RBAC and owner", "same config and complete HMAC history snapshot", "original proof expiry", "same manifest/classification and exact claim/row-version CAS", "claim expiry", "physical reserved capacity", "context live", "fresh monotonic SQL UTC after last callback and last write"],
+    "original_deadlines": "never extend proof/session/claim/config/material deadlines during rechecks; require final SQL UTC strictly before their minimum",
+    "rollback": "all atomic effects absent; original proof may be retried only while valid and after fresh current checks",
+    "commit_unknown": "no provider Stat/read, plaintext, operation success header or automatic retry; later exact authorized receipt lookup is diagnostic only and cannot resume streaming"
+  },
+  "replay": {
+    "scope": ["origin_installation_id", "actor_type", "actor_id", "endpoint", "idempotency_key"],
+    "same_key_same_hash": "409 idempotency_conflict, no resend or second nonce, after current authentication and scope checks",
+    "same_key_different_hash": "409 idempotency_conflict, no changes",
+    "new_key_consumed_nonce_any_retained_version": "401 strong_auth_replayed",
+    "expired_retained_idempotency_marker": "410 idempotency_expired, never recycle key while a retained marker exists",
+    "new_attempt": "fresh key and fresh proof/nonce; must pass current authorization and exact evidence claim/readiness; no automatic retries after partial send"
+  },
+  "error_precedence": "establish live authentication/current target permission, classification, transport and non-consuming proof signature/issuer/binding/expiry validity first; then an authorized existing key yields idempotency_conflict or idempotency_expired before nonce replay lookup. Missing or expired proof never becomes a successful idempotency replay. All final guards still apply before any new admission",
+  "error_mapping": {
+    "malformed_or_duplicate_headers_or_missing_required_key": [400, "validation_failed"],
+    "missing_live_auth": [401, "authentication_required"],
+    "missing_proof": [401, "strong_auth_required"],
+    "expired_proof": [401, "strong_auth_expired"],
+    "invalid_issuer": [401, "strong_auth_invalid_issuer"],
+    "invalid_or_mismatched_proof": [401, "strong_auth_invalid"],
+    "nonce_replay": [401, "strong_auth_replayed"],
+    "current_permission_denied": [403, "permission_denied"],
+    "authorized_target_absent": [404, "not_found"],
+    "key_conflict": [409, "idempotency_conflict"],
+    "active_claim_or_changed_manifest": [409, "state_conflict"],
+    "claim_row_cas_failure": [409, "version_conflict"],
+    "idempotency_marker_expired": [410, "idempotency_expired"],
+    "invalid_range": [416, "range_not_satisfiable"],
+    "physical_capacity_exhausted": [422, "capacity_exceeded"],
+    "missing_material_schema_adapter_or_uncertain_commit": [503, "not_ready"],
+    "provider_read_failure_before_headers": [503, "artifact_unavailable"],
+    "audit_or_internal_integrity_failure": [500, "internal_error"]
+  },
+  "after_commit": {
+    "checks": "recheck current session/RBAC/owner/claim before provider access and again before first plaintext; retain existing bounded read and range checks",
+    "result_audit": "separate append linked to operation, claim digest and intent ID: read_failed, rejected, disconnected or local_write_completed; never mutate consumed nonce/admission or assert client receipt",
+    "failure_after_headers": "terminate stream and record result; cannot replace already emitted bytes with JSON error",
+    "result_audit_failure": "send failure to existing durable failure reporting path; never erase admission or permit replay"
+  },
+  "lifecycle": {
+    "retain_until": "freeze one group deadline no earlier than max(admitted_at + current control_metadata_retention_seconds, existing target protected_until, required idempotency/nonce/audit retention deadlines); later config cannot shorten it",
+    "group": ["operation and exact public snapshot", "private receipt", "consumed nonce", "intent and linked result audits", "idempotency conflict marker"],
+    "references": "RESTRICT same-installation links prevent deleting operation/audit anchors while nonce or receipt survives; target holds/reference lifecycle must prevent dangling admission references, not create immortal evidence",
+    "historical_keys": "retain every referenced nonce-HMAC key until the last referring ledger row passes retention; missing old material fails closed",
+    "capacity": "reserve and finally recheck actual shared physical metadata capacity for the entire atomic group before INSERT, including audit/nonce/receipt/index overhead; JSON payload length or INFORMATION_SCHEMA estimates alone are insufficient",
+    "grants_gc": "runtime receipt writer has exact INSERT/SELECT and no receipt UPDATE/DELETE; reviewed GC alone removes eligible groups after holds/retention/reference checks, preserving conflict markers for their required lifetime"
+  },
+  "required_shared_amendments": [
+    "admin-operation-policy schema/registry: conditional recent strong auth and conditional idempotency for confidential/sensitive GET",
+    "admin.openapi.json: optional wire Idempotency-Key required by classification, proof transport, Range, binary 200/206, success operation ID header and exact error profile",
+    "status-failure-enums, task-operation DTO and readers: evidence_download_admission/evidence with sev_ target; complete public Operation, independent private receipt",
+    "strong-auth nonce/proof schema: indirect claim binding, all-version transaction locks, admission result anchor and diagnostic-only retries",
+    "new append-only reviewed SQL migration: operation enums/CHECKs, immutable receipt/snapshot and same-installation FK/retention/capacity/grants; never edit published 066/075 or renumber 081/082 proposals"
+  ],
+  "review_boundary": "D confirms these interface and transaction decisions now. Shared OpenAPI/DTO/enums/evidence/schema amendments still need recorded A/B/C reviews under the existing registry; no approved_reviewers are fabricated. A can implement/test candidates against this exact decision before formal runtime activation."
+}

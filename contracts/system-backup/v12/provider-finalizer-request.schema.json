@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/provider-finalizer-request.schema.json",
+  "title": "Provider-native finalizer create-if-absent request",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "logical_action_hash", "action_type", "key", "canonical_payload_base64", "payload_sha256", "content_length", "content_type", "dispatch_generation", "dispatch_deadline", "conditional_create", "credential_envelope"],
+  "properties": {
+    "schema_version": { "const": "system-backup-provider-finalizer-request.v1" },
+    "logical_action_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "action_type": { "enum": ["manifest_put", "marker_put", "acceptance_put"] },
+    "key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "canonical_payload_base64": { "type": "string", "contentEncoding": "base64", "maxLength": 349528 },
+    "payload_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "content_length": { "type": "integer", "minimum": 1, "maximum": 262144 },
+    "content_type": { "const": "application/json" },
+    "dispatch_generation": { "type": "integer", "minimum": 1 },
+    "dispatch_deadline": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "conditional_create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "value"],
+      "properties": { "mode": { "const": "if_none_match" }, "value": { "const": "*" } }
+    },
+    "credential_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "issuer", "subject", "audience", "logical_action_hash", "allowed_key", "allowed_payload_sha256", "allowed_content_length", "dispatch_generation", "not_before", "expires_at", "opaque_credential"],
+      "properties": {
+        "schema_version": { "const": "system-backup-finalizer-credential-envelope.v1" },
+        "issuer": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "audience": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "logical_action_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "allowed_key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "allowed_payload_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "allowed_content_length": { "type": "integer", "minimum": 1, "maximum": 262144 },
+        "dispatch_generation": { "type": "integer", "minimum": 1 },
+        "not_before": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+        "expires_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+        "opaque_credential": { "type": "string", "minLength": 1, "maxLength": 16384, "writeOnly": true }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "action_type": { "const": "manifest_put" } }, "required": ["action_type"] }, "then": { "properties": { "key": { "pattern": "(^|/)manifest\\.json$" } } } },
+    { "if": { "properties": { "action_type": { "const": "marker_put" } }, "required": ["action_type"] }, "then": { "properties": { "key": { "pattern": "(^|/)_COMMITTED$" } } } },
+    { "if": { "properties": { "action_type": { "const": "acceptance_put" } }, "required": ["action_type"] }, "then": { "properties": { "key": { "pattern": "(^|/)_ACCEPTANCE$" } } } }
+  ],
+  "x-request-binding": "The provider must enforce exact key, SHA-256, content length, expiry and create-if-absent. Envelope rotation may change only credential_envelope and dispatch_generation.",
+  "x-response-semantics": "Created is success. Precondition failure requires exact Stat/Open comparison: identical immutable bytes are idempotent success; different bytes are conflict."
+}

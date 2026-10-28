@@ -21,7 +21,7 @@ func BackupRequestBoundary(pool *sql.DB, scope string) gin.HandlerFunc {
 func backupRequestBoundary(scope string, acquire func(context.Context) (func(), error)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.FullPath()
-		if scope == "" || strings.HasPrefix(path, "/api/v1/admin/system-backup/") || (c.Request.Method == http.MethodGet && path == "/api/v1/version") {
+		if scope == "" || strings.HasPrefix(path, "/api/v1/admin/system-backup/") || backupRecordControlRoute(c.Request.Method, path) || (c.Request.Method == http.MethodGet && path == "/api/v1/version") {
 			c.Next()
 			return
 		}
@@ -41,4 +41,25 @@ func backupRequestBoundary(scope string, acquire func(context.Context) (func(), 
 		defer release()
 		c.Next()
 	}
+}
+
+// FullPath is Gin's registered route, never the user-supplied URL. Keep this
+// closed: an unknown suffix must not bypass admission during maintenance.
+func backupRecordControlRoute(method, path string) bool {
+	if method == http.MethodPost {
+		return path == "/api/v1/admin/system-backups" || path == "/api/v1/admin/system-backup-preflights"
+	}
+	if method != http.MethodGet {
+		return false
+	}
+	switch path {
+	case "/api/v1/admin/system-backup-overview", "/api/v1/admin/system-backup-config", "/api/v1/admin/system-backup-config/versions", "/api/v1/admin/system-backup-config/versions/:version", "/api/v1/admin/system-backup-operations", "/api/v1/admin/system-backup-operations/:id", "/api/v1/admin/system-backup-catalog-scans", "/api/v1/admin/system-backup-catalog-records", "/api/v1/admin/system-backup-catalog-imports", "/api/v1/admin/system-backup-prune-runs", "/api/v1/admin/system-backup-promotions", "/api/v1/admin/system-backups/:id/manifest":
+		return true
+	}
+	for _, base := range []string{"/api/v1/admin/system-backups", "/api/v1/admin/system-restore-drills", "/api/v1/admin/system-backup-preflights", "/api/v1/admin/system-backup-artifact-verifications"} {
+		if path == base || path == base+"/:id" || path == base+"/:id/events" || path == base+"/:id/logs" {
+			return true
+		}
+	}
+	return false
 }

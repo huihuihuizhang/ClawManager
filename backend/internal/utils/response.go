@@ -113,6 +113,10 @@ func HandleError(c *gin.Context, err error) {
 	}
 
 	switch errStr {
+	case "system_backup_session_rejected":
+		Error(c, http.StatusUnauthorized, errStr)
+	case "system_backup_session_unavailable":
+		Error(c, http.StatusServiceUnavailable, errStr)
 	case "invalid generation limits or request body", "output token limit must be between 1 and 2147483647", "conflicting output token limits", "conflicting completion counts", "invalid completion count", "provider protocol or completion count is not supported", "quality tier must be between 0 (unclassified) and 4 (reasoning)":
 		Error(c, http.StatusBadRequest, errStr)
 	case "no eligible model for automatic routing":

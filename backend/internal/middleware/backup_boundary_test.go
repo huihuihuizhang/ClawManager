@@ -15,11 +15,12 @@ func TestBackupBoundaryBlocksReadsWithSideEffectsAndPreservesControl(t *testing.
 	r.Use(backupRequestBoundary("installation", func(context.Context) (func(), error) { return nil, backupgate.ErrMaintenance }))
 	r.GET("/api/v1/version", func(c *gin.Context) { c.Status(204) })
 	r.GET("/api/v1/admin/system-backup/overview", func(c *gin.Context) { c.Status(204) })
+	r.GET("/api/v1/admin/system-backups/:id/events", func(c *gin.Context) { c.Status(204) })
 	r.GET("/api/v1/teams/:id/files", func(c *gin.Context) { t.Error("business handler entered maintenance"); c.Status(204) })
 	for _, tc := range []struct {
 		path   string
 		status int
-	}{{"/api/v1/version", 204}, {"/api/v1/admin/system-backup/overview", 204}, {"/api/v1/teams/1/files", 503}, {"/api/v1/admin/system-backup/unknown", 503}} {
+	}{{"/api/v1/version", 204}, {"/api/v1/admin/system-backup/overview", 204}, {"/api/v1/admin/system-backups/task/events", 204}, {"/api/v1/admin/system-backups/task/unknown", 503}, {"/api/v1/teams/1/files", 503}, {"/api/v1/admin/system-backup/unknown", 503}} {
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, httptest.NewRequest("GET", tc.path, nil))
 		if w.Code != tc.status {

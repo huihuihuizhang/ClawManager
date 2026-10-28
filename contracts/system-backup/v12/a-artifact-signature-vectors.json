@@ -1,0 +1,10 @@
+{
+  "kind": "synthetic_artifact_acceptance_signature_vector",
+  "status": "draft",
+  "profile": "Ed25519 JWS over protected_header + '.' + base64url(UTF-8 JCS(payload)); signature envelope excluded",
+  "source": "publication-redacted-examples.json#/examples/acceptance",
+  "public_key_base64url": "iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+  "payload_sha256": "b4c514dd26987c88ea6965157fab375d93bbb3271a6e5d2a5ed61f2f19f6e38a",
+  "signing_input_sha256": "5f30e6766f750a024733c2152b7da00eb82c455a7ca3f750e52835ff4364e7d0",
+  "signature_base64url": "lIjre1m3weviYUqm14L65r6OQezNMm_r30OgUegvrg16cIJpfUI_bWzp2C7U-2Z_Kh9yMP-cvsddFeSTRYH4Cg"
+}

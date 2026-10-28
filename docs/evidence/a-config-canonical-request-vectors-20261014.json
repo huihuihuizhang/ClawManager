@@ -1,0 +1,271 @@
+{
+  "kind": "a_config_mutation_request_hash_vectors",
+  "profile": "a-config-mutation-request-hash.v1",
+  "status": "A-reviewed implementation supplement; not historical config or runtime parity",
+  "vectors": [
+    {
+      "synthetic": true,
+      "accepted_as_historical_source": false,
+      "input": {
+        "domain": "clawmanager.system-backup.config-mutation.v1",
+        "origin_installation_id": "installation_example",
+        "actor_type": "admin",
+        "actor_id": "7",
+        "endpoint": "updateSystemBackupConfig",
+        "method": "PUT",
+        "request": {
+          "expected_version": 3,
+          "change_reason": "synthetic config write vector",
+          "config": {
+            "enabled": false,
+            "alert_profile": "production",
+            "minimum_recovery_points": 1,
+            "durations": {
+              "controller_claim_ttl_seconds": 30,
+              "controller_claim_heartbeat_seconds": 10,
+              "controller_reconcile_interval_seconds": 10,
+              "mutation_lease_ttl_seconds": 30,
+              "mutation_lease_heartbeat_seconds": 10,
+              "artifact_lease_ttl_seconds": 60,
+              "artifact_lease_heartbeat_seconds": 20,
+              "gate_acquisition_timeout_seconds": 60,
+              "quiesce_max_hold_seconds": 600,
+              "maintenance_lock_ttl_seconds": 900,
+              "watchdog_db_unavailable_grace_seconds": 15,
+              "watchdog_safety_margin_seconds": 10,
+              "staging_retention_seconds": 86400,
+              "retention_seconds": 2592000,
+              "prune_candidate_ttl_seconds": 86400,
+              "confirmation_ttl_seconds": 900,
+              "logs_retention_seconds": 604800,
+              "evidence_retention_seconds": 2592000,
+              "promotion_health_max_age_seconds": 3600,
+              "task_cancel_deadline_seconds": 120,
+              "cleanup_deadline_seconds": 3600,
+              "retry_initial_backoff_seconds": 5,
+              "retry_max_backoff_seconds": 60,
+              "orphan_safety_window_seconds": 3600,
+              "artifact_health_interval_seconds": 3600,
+              "catalog_scan_interval_seconds": 3600,
+              "catalog_scan_deadline_seconds": 1800,
+              "provider_consistency_window_seconds": 30,
+              "redis_clock_skew_seconds": 5,
+              "strong_auth_max_age_seconds": 300,
+              "strong_auth_clock_skew_seconds": 30,
+              "provider_proof_max_age_seconds": 900,
+              "capture_certificate_ttl_seconds": 28800,
+              "finalization_resolution_grace_seconds": 900,
+              "recovery_point_objective_seconds": 86400,
+              "first_enable_recovery_alert_grace_seconds": 86400,
+              "control_metadata_retention_seconds": 31536000,
+              "backup_task_deadline_seconds": 21600,
+              "drill_task_deadline_seconds": 21600,
+              "preflight_task_deadline_seconds": 3600,
+              "artifact_verify_task_deadline_seconds": 7200,
+              "operation_deadline_seconds": 7200,
+              "finalization_resolution_deadline_seconds": 3600,
+              "prune_operation_deadline_seconds": 21600
+            },
+            "capacity": {
+              "control_metadata_capacity_bytes": 10737418240,
+              "staging_capacity_bytes": 21474836480,
+              "max_artifact_bytes": 17179869184,
+              "max_index_bytes": 536870912,
+              "max_plaintext_buffer_bytes": 67108864,
+              "max_source_items": 5000000,
+              "minimum_capture_throughput_bytes_per_second": 52428800,
+              "source_size_safety_factor": 1.25,
+              "max_log_bytes": 67108864,
+              "max_log_lines": 100000,
+              "log_chunk_bytes": 1048576,
+              "log_chunk_lines": 1000
+            },
+            "concurrency": {
+              "max_concurrent_drills": 1,
+              "max_concurrent_preflights": 2,
+              "max_concurrent_artifact_verifications": 1,
+              "max_pending_tasks": 100,
+              "max_auto_attempts": 3
+            },
+            "preflight_limits": {
+              "query_timeout_seconds": 30,
+              "provider_qps": 20,
+              "max_scan_bytes": 10737418240,
+              "max_scan_items": 1000000
+            },
+            "registries": [
+              {
+                "registry_kind": "parts",
+                "version": "parts-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "redis_sources",
+                "version": "redis-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "failure_domains",
+                "version": "domains-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "disaster_identity_mapping",
+                "version": "mapping-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "source_writers",
+                "version": "writers-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "rbac_bindings",
+                "version": "rbac-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "secret_allowlist",
+                "version": "allowlist-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "strong_auth_issuers",
+                "version": "auth-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "registry_kind": "provider_proof_issuers",
+                "version": "proof-v1",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "references": [
+              {
+                "purpose": "artifact_write",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "artifact_read",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "artifact_delete",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "artifact_upload_issuer",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "artifact_ca",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_store",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_write",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_read",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_delete",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_ca",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "evidence_kek",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "kek",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "capture_signing",
+                "identity_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "version": "v1"
+              },
+              {
+                "purpose": "acceptance_signing",
+                "identity_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "version": "v1"
+              },
+              {
+                "purpose": "catalog_signing",
+                "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "version": "v1"
+              },
+              {
+                "purpose": "catalog_read",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "catalog_append",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "catalog_snapshot",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "nonce_hmac",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              },
+              {
+                "purpose": "status_relay",
+                "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "version": "v1"
+              }
+            ]
+          }
+        }
+      },
+      "canonical_utf8": "{\"actor_id\":\"7\",\"actor_type\":\"admin\",\"domain\":\"clawmanager.system-backup.config-mutation.v1\",\"endpoint\":\"updateSystemBackupConfig\",\"method\":\"PUT\",\"origin_installation_id\":\"installation_example\",\"request\":{\"change_reason\":\"synthetic config write vector\",\"config\":{\"alert_profile\":\"production\",\"capacity\":{\"control_metadata_capacity_bytes\":10737418240,\"log_chunk_bytes\":1048576,\"log_chunk_lines\":1000,\"max_artifact_bytes\":17179869184,\"max_index_bytes\":536870912,\"max_log_bytes\":67108864,\"max_log_lines\":100000,\"max_plaintext_buffer_bytes\":67108864,\"max_source_items\":5000000,\"minimum_capture_throughput_bytes_per_second\":52428800,\"source_size_safety_factor\":1.25,\"staging_capacity_bytes\":21474836480},\"concurrency\":{\"max_auto_attempts\":3,\"max_concurrent_artifact_verifications\":1,\"max_concurrent_drills\":1,\"max_concurrent_preflights\":2,\"max_pending_tasks\":100},\"durations\":{\"artifact_health_interval_seconds\":3600,\"artifact_lease_heartbeat_seconds\":20,\"artifact_lease_ttl_seconds\":60,\"artifact_verify_task_deadline_seconds\":7200,\"backup_task_deadline_seconds\":21600,\"capture_certificate_ttl_seconds\":28800,\"catalog_scan_deadline_seconds\":1800,\"catalog_scan_interval_seconds\":3600,\"cleanup_deadline_seconds\":3600,\"confirmation_ttl_seconds\":900,\"control_metadata_retention_seconds\":31536000,\"controller_claim_heartbeat_seconds\":10,\"controller_claim_ttl_seconds\":30,\"controller_reconcile_interval_seconds\":10,\"drill_task_deadline_seconds\":21600,\"evidence_retention_seconds\":2592000,\"finalization_resolution_deadline_seconds\":3600,\"finalization_resolution_grace_seconds\":900,\"first_enable_recovery_alert_grace_seconds\":86400,\"gate_acquisition_timeout_seconds\":60,\"logs_retention_seconds\":604800,\"maintenance_lock_ttl_seconds\":900,\"mutation_lease_heartbeat_seconds\":10,\"mutation_lease_ttl_seconds\":30,\"operation_deadline_seconds\":7200,\"orphan_safety_window_seconds\":3600,\"preflight_task_deadline_seconds\":3600,\"promotion_health_max_age_seconds\":3600,\"provider_consistency_window_seconds\":30,\"provider_proof_max_age_seconds\":900,\"prune_candidate_ttl_seconds\":86400,\"prune_operation_deadline_seconds\":21600,\"quiesce_max_hold_seconds\":600,\"recovery_point_objective_seconds\":86400,\"redis_clock_skew_seconds\":5,\"retention_seconds\":2592000,\"retry_initial_backoff_seconds\":5,\"retry_max_backoff_seconds\":60,\"staging_retention_seconds\":86400,\"strong_auth_clock_skew_seconds\":30,\"strong_auth_max_age_seconds\":300,\"task_cancel_deadline_seconds\":120,\"watchdog_db_unavailable_grace_seconds\":15,\"watchdog_safety_margin_seconds\":10},\"enabled\":false,\"minimum_recovery_points\":1,\"preflight_limits\":{\"max_scan_bytes\":10737418240,\"max_scan_items\":1000000,\"provider_qps\":20,\"query_timeout_seconds\":30},\"references\":[{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"artifact_write\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"artifact_read\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"artifact_delete\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"artifact_upload_issuer\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"artifact_ca\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_store\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_write\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_read\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_delete\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_ca\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"evidence_kek\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"kek\",\"version\":\"v1\"},{\"identity_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"purpose\":\"capture_signing\",\"version\":\"v1\"},{\"identity_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"purpose\":\"acceptance_signing\",\"version\":\"v1\"},{\"identity_hash\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"purpose\":\"catalog_signing\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"catalog_read\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"catalog_append\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"catalog_snapshot\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"nonce_hmac\",\"version\":\"v1\"},{\"identity_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"purpose\":\"status_relay\",\"version\":\"v1\"}],\"registries\":[{\"registry_kind\":\"parts\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"parts-v1\"},{\"registry_kind\":\"redis_sources\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"redis-v1\"},{\"registry_kind\":\"failure_domains\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"domains-v1\"},{\"registry_kind\":\"disaster_identity_mapping\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"mapping-v1\"},{\"registry_kind\":\"source_writers\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"writers-v1\"},{\"registry_kind\":\"rbac_bindings\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"rbac-v1\"},{\"registry_kind\":\"secret_allowlist\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"allowlist-v1\"},{\"registry_kind\":\"strong_auth_issuers\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"auth-v1\"},{\"registry_kind\":\"provider_proof_issuers\",\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"proof-v1\"}]},\"expected_version\":3}}",
+      "request_sha256": "affb234effd3eb289b50e450c9c6ee0a66d23f1f0041d0508995e7147e7d4a1c"
+    },
+    {
+      "synthetic": true,
+      "accepted_as_historical_source": false,
+      "input": {
+        "domain": "clawmanager.system-backup.config-mutation.v1",
+        "origin_installation_id": "installation_example",
+        "actor_type": "admin",
+        "actor_id": "7",
+        "endpoint": "rollbackSystemBackupConfig",
+        "method": "POST",
+        "request": {
+          "rollback_from_version": 2,
+          "expected_version": 3,
+          "change_reason": "synthetic config rollback vector"
+        }
+      },
+      "canonical_utf8": "{\"actor_id\":\"7\",\"actor_type\":\"admin\",\"domain\":\"clawmanager.system-backup.config-mutation.v1\",\"endpoint\":\"rollbackSystemBackupConfig\",\"method\":\"POST\",\"origin_installation_id\":\"installation_example\",\"request\":{\"change_reason\":\"synthetic config rollback vector\",\"expected_version\":3,\"rollback_from_version\":2}}",
+      "request_sha256": "2e9503c89ac177a36417ba69bf655b67d998e955cfa3c4e342efe489f4d97709"
+    }
+  ]
+}

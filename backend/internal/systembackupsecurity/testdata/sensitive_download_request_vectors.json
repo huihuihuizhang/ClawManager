@@ -1,0 +1,103 @@
+{
+  "kind": "a_sensitive_download_request_vectors.v1",
+  "contract_decision": "docs/evidence/system-backup-d-sensitive-download-contract-20261016.json",
+  "contract_decision_sha256": "8b14d0804e9bfb4b5169bc585fd1aa50d38877b61b228984184c7427d73d8eac",
+  "synthetic": true,
+  "vectors": [
+    {
+      "name": "absent",
+      "content_size": 100,
+      "idempotency_key": "download_key_0123456789",
+      "input": {
+        "domain": "clawmanager.system-backup.evidence-download-request.v1",
+        "endpoint": "getSystemBackupEvidence",
+        "origin_installation_id": "installation_test",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject": "user:42",
+        "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "range_present": false,
+        "range_start": 0,
+        "range_end": 99
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"origin_installation_id\":\"installation_test\",\"range_end\":99,\"range_present\":false,\"range_start\":0,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+      "sha256": "41c22fc306195438b0206302361238e8014583a0771ff2b2fd83a21cb205c6df"
+    },
+    {
+      "name": "explicit-full",
+      "content_size": 100,
+      "idempotency_key": "download_key_0123456789",
+      "input": {
+        "domain": "clawmanager.system-backup.evidence-download-request.v1",
+        "endpoint": "getSystemBackupEvidence",
+        "origin_installation_id": "installation_test",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject": "user:42",
+        "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "range_present": true,
+        "range_start": 0,
+        "range_end": 99
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"origin_installation_id\":\"installation_test\",\"range_end\":99,\"range_present\":true,\"range_start\":0,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+      "sha256": "ef6bd404d1084a6c781949305abfaf33ffa496a5822ffc92cb75b78480b93838"
+    },
+    {
+      "name": "tail",
+      "content_size": 100,
+      "idempotency_key": "download_key_0123456789",
+      "input": {
+        "domain": "clawmanager.system-backup.evidence-download-request.v1",
+        "endpoint": "getSystemBackupEvidence",
+        "origin_installation_id": "installation_test",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject": "user:42",
+        "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "range_present": true,
+        "range_start": 31,
+        "range_end": 99
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"origin_installation_id\":\"installation_test\",\"range_end\":99,\"range_present\":true,\"range_start\":31,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+      "sha256": "c8e9ffc58c2598833ac4f90969bb677a84aeaf7b87520c00bdf4fad7c127f018"
+    },
+    {
+      "name": "empty-canonical-only",
+      "content_size": 0,
+      "idempotency_key": "download_key_0123456789",
+      "input": {
+        "domain": "clawmanager.system-backup.evidence-download-request.v1",
+        "endpoint": "getSystemBackupEvidence",
+        "origin_installation_id": "installation_test",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject": "user:42",
+        "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "range_present": false,
+        "range_start": 0,
+        "range_end": 0
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"origin_installation_id\":\"installation_test\",\"range_end\":0,\"range_present\":false,\"range_start\":0,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+      "sha256": "39b0869d3ad54d4280fd47ec5687076729416331c75338d92972a00f62ed9e1e"
+    },
+    {
+      "name": "safe-integer-tail",
+      "content_size": 9007199254740991,
+      "idempotency_key": "download_key_0123456789",
+      "input": {
+        "domain": "clawmanager.system-backup.evidence-download-request.v1",
+        "endpoint": "getSystemBackupEvidence",
+        "origin_installation_id": "installation_test",
+        "evidence_id": "sev_11111111-2222-4333-8444-555555555555",
+        "subject": "user:42",
+        "session": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "range_present": true,
+        "range_start": 9007199254740989,
+        "range_end": 9007199254740990
+      },
+      "canonical_utf8": "{\"domain\":\"clawmanager.system-backup.evidence-download-request.v1\",\"endpoint\":\"getSystemBackupEvidence\",\"evidence_id\":\"sev_11111111-2222-4333-8444-555555555555\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"origin_installation_id\":\"installation_test\",\"range_end\":9007199254740990,\"range_present\":true,\"range_start\":9007199254740989,\"session\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"subject\":\"user:42\"}",
+      "sha256": "2148fa2579e5079669dcf9d7fbfb69713071b5e6209af3f08fbd02242084e292"
+    }
+  ]
+}

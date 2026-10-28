@@ -25,6 +25,8 @@ type SkillPackageMaterializeJobRepository interface {
 	Create(job *models.SkillPackageMaterializeJob) error
 	GetByID(id int) (*models.SkillPackageMaterializeJob, error)
 	GetByIdempotencyKey(key string) (*models.SkillPackageMaterializeJob, error)
+	// On partial failure, returns acknowledged claims alongside the error so
+	// callers can release them. An error must never imply an empty claim set.
 	ClaimNextPending(ctx context.Context, limit int) ([]models.SkillPackageMaterializeJob, error)
 	MarkSucceeded(id int) error
 	MarkFailed(id int, errMsg string, retryable bool) error
@@ -145,22 +147,28 @@ func (r *skillPackageMaterializeJobRepository) ClaimNextPending(ctx context.Cont
 			    updated_at = ?
 			WHERE id = ? AND status = 'pending'`, now, now, id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to claim materialize job %d: %w", id, err)
+			return claimed, fmt.Errorf("failed to claim materialize job %d: %w", id, err)
 		}
 		affected, err := res.RowsAffected()
 		if err != nil {
-			return nil, fmt.Errorf("failed to read claim rows affected for job %d: %w", id, err)
+			return claimed, fmt.Errorf("failed to read claim rows affected for job %d: %w", id, err)
 		}
 		if affected == 0 {
 			continue
 		}
 		item, err := r.GetByID(id)
 		if err != nil {
-			return nil, err
+			// The UPDATE was acknowledged. Preserve this claim for the caller's
+			// cleanup even if loading its details failed. Do not guess ownership
+			// for UPDATE/RowsAffected errors above.
+			claimed = append(claimed, models.SkillPackageMaterializeJob{ID: id})
+			return claimed, err
 		}
-		if item != nil {
-			claimed = append(claimed, *item)
+		if item == nil {
+			claimed = append(claimed, models.SkillPackageMaterializeJob{ID: id})
+			return claimed, fmt.Errorf("claimed materialize job %d disappeared", id)
 		}
+		claimed = append(claimed, *item)
 	}
 	return claimed, nil
 }

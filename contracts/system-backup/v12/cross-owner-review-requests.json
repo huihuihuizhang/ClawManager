@@ -1,0 +1,67 @@
+{
+  "kind": "system_backup_cross_owner_review_requests",
+  "contract_version": "system-backup-plan.v12",
+  "status": "draft",
+  "schema_policy_submissions": {
+    "A": ["table:audit_events", "table:chat_messages", "table:chat_sessions", "table:cost_records", "table:enterprise_auth_settings", "table:instance_gateway_token_aliases", "table:llm_models", "table:model_invocations", "table:northbound_auth_challenges", "table:northbound_caller_policies", "table:northbound_sessions", "table:risk_hits", "table:risk_rules", "table:user_quotas", "table:users"],
+    "B": ["table:backup_schedules", "table:backups", "table:instance_agents", "table:instance_browser_workers", "table:instance_commands", "table:instance_config_revisions", "table:instance_desired_state", "table:instance_external_access", "table:instance_runtime_bindings", "table:instance_runtime_status", "table:instance_usage", "table:instances", "table:northbound_operations", "table:openclaw_config_bundle_items", "table:openclaw_config_bundle_skills", "table:openclaw_config_bundles", "table:openclaw_config_resources", "table:openclaw_injection_snapshots", "table:persistent_volumes", "table:runtime_pods", "table:runtime_rollouts", "table:runtime_upgrade_audits", "table:runtime_upgrade_items", "table:workspace_file_audits"],
+    "C": ["table:custom_team_templates", "table:instance_skills", "table:skill_blobs", "table:skill_hub_tag_assignments", "table:skill_hub_tags", "table:skill_package_materialize_jobs", "table:skill_scan_results", "table:skill_versions", "table:skills", "table:team_event_outbox", "table:team_events", "table:team_members", "table:team_tasks", "table:team_work_items", "table:team_workflow_phases", "table:teams"]
+  },
+  "d_owned_object_reviews": {
+    "A": ["table:audit_logs", "table:egress_private_exceptions", "table:northbound_admin_settings", "table:northbound_settings_audit", "table:schema_migrations", "table:security_scan_configs", "table:security_scan_jobs", "table:system_backup_v2_admin_revocations", "table:system_backup_v2_admin_sessions", "table:system_backup_v2_metadata_reservations", "table:system_backup_v2_totp_credentials", "table:system_backup_v2_alert_states", "table:system_backup_v2_artifact_verifications", "table:system_backup_v2_attempts", "table:system_backup_v2_check_results", "table:system_backup_v2_compact_tombstones", "table:system_backup_v2_configs", "table:system_backup_v2_dependency_health", "table:system_backup_v2_events", "table:system_backup_v2_evidence", "table:system_backup_v2_evidence_chunks", "table:system_backup_v2_external_actions", "table:system_backup_v2_installation_state", "table:system_backup_v2_log_chunks", "table:system_backup_v2_operations", "table:system_backup_v2_preflights", "table:system_backup_v2_promotions", "table:system_backup_v2_provider_capabilities", "table:system_backup_v2_prune_runs", "table:system_backup_v2_source_writer_check_states", "table:system_backup_v2_job_observations", "table:system_backup_v2_staging_resources", "table:system_backup_v2_strong_auth_nonces", "table:system_backup_v2_backups", "table:system_backup_v2_maintenance_locks", "table:system_backup_v2_maintenance_mutation_leases", "table:system_backup_v2_maintenance_participants", "table:system_backup_v2_restore_drill_resources", "table:system_backup_v2_restore_drills"],
+    "B": ["table:egress_private_exceptions", "table:northbound_admin_settings", "table:northbound_settings_audit", "table:system_backup_v2_artifact_lease_states", "table:system_backup_v2_artifact_leases", "table:system_backup_v2_alert_states", "table:system_backup_v2_artifact_verifications", "table:system_backup_v2_attempts", "table:system_backup_v2_check_results", "table:system_backup_v2_configs", "table:system_backup_v2_dependency_health", "table:system_backup_v2_events", "table:system_backup_v2_evidence", "table:system_backup_v2_installation_state", "table:system_backup_v2_log_chunks", "table:system_backup_v2_operations", "table:system_backup_v2_preflights", "table:system_backup_v2_promotions", "table:system_backup_v2_provider_capabilities", "table:system_backup_v2_source_writer_check_states", "table:system_backup_v2_job_observations", "table:system_backup_v2_staging_resources", "table:system_backup_v2_backups", "table:system_image_settings", "table:system_backup_v2_maintenance_locks", "table:system_backup_v2_maintenance_mutation_leases", "table:system_backup_v2_maintenance_participants", "table:system_backup_v2_restore_drill_resources", "table:system_backup_v2_restore_drills"],
+    "C": ["table:security_scan_configs", "table:security_scan_job_items", "table:security_scan_jobs", "table:security_scan_reports", "table:system_backup_v2_artifact_lease_states", "table:system_backup_v2_artifact_leases", "table:system_backup_v2_alert_states", "table:system_backup_v2_artifact_verifications", "table:system_backup_v2_attempts", "table:system_backup_v2_check_results", "table:system_backup_v2_configs", "table:system_backup_v2_dependency_health", "table:system_backup_v2_events", "table:system_backup_v2_evidence", "table:system_backup_v2_evidence_chunks", "table:system_backup_v2_external_actions", "table:system_backup_v2_operations", "table:system_backup_v2_preflights", "table:system_backup_v2_promotions", "table:system_backup_v2_provider_capabilities", "table:system_backup_v2_prune_items", "table:system_backup_v2_prune_runs", "table:system_backup_v2_source_writer_check_states", "table:system_backup_v2_job_observations", "table:system_backup_v2_staging_resources", "table:system_backup_v2_backups", "table:system_backup_v2_maintenance_locks", "table:system_backup_v2_maintenance_mutation_leases", "table:system_backup_v2_maintenance_participants", "table:system_backup_v2_restore_drill_resources", "table:system_backup_v2_restore_drills"]
+  },
+  "c_owned_object_reviews": {
+    "A": [
+      "table:instance_skills",
+      "table:skill_blobs",
+      "table:skill_hub_tag_assignments",
+      "table:skill_hub_tags",
+      "table:skill_package_materialize_jobs",
+      "table:skill_scan_results",
+      "table:skill_versions",
+      "table:skills"
+    ],
+    "B": [
+      "table:instance_skills",
+      "table:skill_package_materialize_jobs",
+      "table:skills"
+    ],
+    "D": [
+      "table:instance_skills",
+      "table:skill_blobs",
+      "table:skill_hub_tag_assignments",
+      "table:skill_hub_tags",
+      "table:skill_package_materialize_jobs",
+      "table:skill_scan_results",
+      "table:skill_versions",
+      "table:skills"
+    ]
+  },
+  "public_contract_reviews": [
+    { "artifact_ids": ["producer_authority"], "required_reviewers": ["A", "C"], "approved_reviewers": [], "conditional_reviewers": { "job_host": ["B"] } },
+    { "artifact_ids": ["hash_algorithms"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["status_failure_enums", "task_operation_dto"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["admin_openapi"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["runner_collector_normalizer_interfaces"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["source_writer_check_state"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["manifest_system_backup_v1", "artifact_index", "provider_finalizer_request", "committed_marker", "acceptance_marker", "external_action_payload"], "required_reviewers": ["A", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["control_evidence_sidecar"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["evidence_chunk_log"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["staging_resource_lifecycle"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["maintenance_participant_state"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["strong_auth_nonce_ledger"], "required_reviewers": ["A"], "approved_reviewers": [] },
+    { "artifact_ids": ["strong_auth_proof_nonce"], "required_reviewers": ["D"], "approved_reviewers": [] },
+    { "artifact_ids": ["provider_proof_registration"], "required_reviewers": ["C", "D"], "approved_reviewers": [] },
+    { "artifact_ids": ["secret_ref"], "required_reviewers": ["B", "C", "D"], "approved_reviewers": [] },
+    { "artifact_ids": ["capability_evidence"], "required_reviewers": ["B", "C", "D"], "approved_reviewers": [] },
+    { "artifact_ids": ["job_observation_cursor"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["restore_drill_resource_lifecycle"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["installation_state", "compact_tombstone", "metrics_alert_registry"], "required_reviewers": ["A", "B"], "approved_reviewers": [] },
+    { "artifact_ids": ["dependency_provider_capability"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["verifier_contract"], "required_reviewers": ["A", "B", "C"], "approved_reviewers": [] },
+    { "artifact_ids": ["audit_cursor_redacted_examples"], "required_reviewers": ["A"], "approved_reviewers": [] }
+  ],
+  "approval_evidence": []
+}

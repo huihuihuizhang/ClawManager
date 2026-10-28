@@ -1,0 +1,60 @@
+{
+  "status": "module_port_verified_activation_incomplete",
+  "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
+  "backup_source": "8ef5fa7fd4df45f6306e910705db01f589266ba7",
+  "migration_count": 159,
+  "checks": {
+    "backend_all": {
+      "result": "passed",
+      "local_log_sha256": "d6c27ce1c660c8471ee453545f5d23f75a9de7de0ef2e92ac48ce6e17bcc4f5e",
+      "boundary": "unit suite; opt-in platform tests may skip"
+    },
+    "real_mysql_schema": {
+      "result": "passed",
+      "local_log_sha256": "6cf43cae545f4a56185e08cee25a26481d212d1700295ea7881c670d522e275f",
+      "boundary": "real MySQL fresh/current Team baseline/double startup/schema coverage"
+    },
+    "real_mysql_copy_import": {
+      "result": "passed",
+      "local_log_sha256": "6bb0083dd5b19099f965b9ef326cd67e671381d9f9c1188f57d0726c1c993c41",
+      "boundary": "real source schema, interruption after rename, resume, row/history preservation, unknown schema/nonisolated rejection, capture exclusion"
+    },
+    "new_command_entrypoints": {
+      "result": "passed",
+      "local_log_sha256": "50f82892170bce0f836206ed9e6d0be65b7c4639801c55995ec45bfb4ae674ca",
+      "boundary": "new CLI/control/auth/router tests; source opt-in platform cases may skip"
+    },
+    "relay": {
+      "result": "passed",
+      "local_log_sha256": "73be85a4fc43f41d0c092d8b5e4ad6c49a9053f2d323d56c5e3d442cb49b5e2e",
+      "boundary": "new peer mTLS/locked binding/dispatch/deadline tests"
+    },
+    "frontend_build": {
+      "result": "passed",
+      "local_log_sha256": "8c6307560a4eec8ce20ec7bf9d6e5c43a206b084b2696e9c5fadc269d2e992f9",
+      "boundary": "production frontend compilation"
+    },
+    "backup_browser": {
+      "result": "passed",
+      "local_log_sha256": "f5af7b45333c223592622c8c44a921590892abd881aa02aa509262fb8a45af21",
+      "boundary": "actual Chrome pages; fixture HTTP; no model or real backend acceptance"
+    },
+    "real_storage": {
+      "result": "passed",
+      "local_log_sha256": "b4b24b0e3d701578258f4658ad2ab98b1b5c0d66be3ee41cd0b475f2bb55607c",
+      "boundary": "real SQL/Redis/MinIO/files; controlled Kubernetes boundary and fixture object administrator"
+    }
+  },
+  "not_accepted": [
+    "production v2 task writer/details/runner and remote shared-gate adapter",
+    "v2 current-data registry and complete restore acceptance",
+    "production grants/TLS/Broker/download deployment",
+    "final image/live environment and rollback"
+  ],
+  "publication": "code branch only; no server mutation or new engine activation",
+  "credential_pattern_scan": {
+    "files": 1062,
+    "result": "no matched private-key/GitHub/AWS credentials",
+    "exception": "relay_peer_test.go deliberately rejects an invalid one-byte AA== PEM literal; it is not a key"
+  }
+}

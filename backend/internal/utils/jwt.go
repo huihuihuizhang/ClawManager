@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -16,8 +18,13 @@ type TokenClaims struct {
 
 // GenerateToken generates a new JWT token
 func GenerateToken(claims TokenClaims, secret string, expiry time.Duration) (string, error) {
+	id := make([]byte, 16)
+	if _, err := rand.Read(id); err != nil {
+		return "", errors.New("token generation unavailable")
+	}
 	now := time.Now()
 	claims.RegisteredClaims = jwt.RegisteredClaims{
+		ID:        hex.EncodeToString(id),
 		IssuedAt:  jwt.NewNumericDate(now),
 		ExpiresAt: jwt.NewNumericDate(now.Add(expiry)),
 	}

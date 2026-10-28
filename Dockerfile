@@ -46,7 +46,15 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
     -o /out/clawreef-server ./cmd/server \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/clawreef-northbound-gateway ./cmd/northbound-gateway \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-controller ./cmd/system-backup-controller \
-    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-artifact ./cmd/system-backup-artifact
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-artifact ./cmd/system-backup-artifact \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/clawmanager-secret-broker ./cmd/secret-broker \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-import ./cmd/system-backup-import \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-migrate ./cmd/system-backup-migrate \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-bootstrap ./cmd/system-backup-bootstrap \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-registration ./cmd/system-backup-registration \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-controller-grants ./cmd/system-backup-controller-grants \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-v2-controller ./cmd/system-backup-v2-controller \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-audit-collect ./cmd/system-backup-audit-collect
 
 FROM nginx:1.27-alpine
 
@@ -60,6 +68,14 @@ COPY --from=backend-builder /out/clawreef-server /usr/local/bin/clawreef-server
 COPY --from=backend-builder /out/clawreef-northbound-gateway /usr/local/bin/clawreef-northbound-gateway
 COPY --from=backend-builder /out/system-backup-controller /usr/local/bin/system-backup-controller
 COPY --from=backend-builder /out/system-backup-artifact /usr/local/bin/system-backup-artifact
+COPY --from=backend-builder /out/clawmanager-secret-broker /usr/local/bin/clawmanager-secret-broker
+COPY --from=backend-builder /out/system-backup-import /usr/local/bin/system-backup-import
+COPY --from=backend-builder /out/system-backup-migrate /usr/local/bin/system-backup-migrate
+COPY --from=backend-builder /out/system-backup-bootstrap /usr/local/bin/system-backup-bootstrap
+COPY --from=backend-builder /out/system-backup-registration /usr/local/bin/system-backup-registration
+COPY --from=backend-builder /out/system-backup-controller-grants /usr/local/bin/system-backup-controller-grants
+COPY --from=backend-builder /out/system-backup-v2-controller /usr/local/bin/system-backup-v2-controller
+COPY --from=backend-builder /out/system-backup-audit-collect /usr/local/bin/system-backup-audit-collect
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 COPY --from=hermes-desktop-builder /app/frontend/public/hermes-desktop-web /usr/share/nginx/html/hermes-desktop-web
 COPY deployments/nginx/nginx.conf /etc/nginx/nginx.conf

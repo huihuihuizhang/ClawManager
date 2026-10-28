@@ -19,9 +19,7 @@ var embeddedMigrations embed.FS
 
 const schemaMigrationsTable = "schema_migrations"
 
-func applyEmbeddedMigrations(session db.Session) error {
-	// Startup precedes leader election. Serialize migrations across App replicas
-	// using a dedicated connection; pooled GET_LOCK/RELEASE_LOCK is unsafe.
+func applyEmbeddedMigrations(session db.Session) (result error) {
 	driver, ok := session.Driver().(*sql.DB)
 	if !ok {
 		return fmt.Errorf("migration lock requires MySQL SQL driver")
@@ -30,25 +28,35 @@ func applyEmbeddedMigrations(session db.Session) error {
 	defer cancel()
 	conn, err := driver.Conn(ctx)
 	if err != nil {
-		return fmt.Errorf("migration lock connection: %w", err)
+		return err
 	}
 	defer conn.Close()
-	var acquired sql.NullInt64
-	if err = conn.QueryRowContext(ctx, "SELECT GET_LOCK(CONCAT('cm:migrate:',MD5(DATABASE())),30)").Scan(&acquired); err != nil || !acquired.Valid || acquired.Int64 != 1 {
-		return fmt.Errorf("migration lock unavailable: %v", err)
+	release, err := acquireMigrationLocks(ctx, conn)
+	if err != nil {
+		return err
 	}
 	defer func() {
-		release, stop := context.WithTimeout(context.Background(), 5*time.Second)
-		defer stop()
-		_, _ = conn.ExecContext(release, "SELECT RELEASE_LOCK(CONCAT('cm:migrate:',MD5(DATABASE())))")
+		if err := release(); err != nil && result == nil {
+			result = err
+		}
 	}()
 	return applyEmbeddedMigrationsLocked(conn)
 }
 
 func applyEmbeddedMigrationsLocked(conn *sql.Conn) error {
+	return applyEmbeddedMigrationsLockedContext(context.Background(), conn)
+}
+
+func applyEmbeddedMigrationsLockedContext(ctx context.Context, conn *sql.Conn) error {
 	optionalReady := true
-	if err := ensureSchemaMigrationsTable(conn); err != nil {
+	var ledgerExists int
+	if err := conn.QueryRowContext(ctx, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='schema_migrations'").Scan(&ledgerExists); err != nil {
 		return err
+	}
+	if ledgerExists == 0 {
+		if err := ensureSchemaMigrationsTable(conn); err != nil {
+			return err
+		}
 	}
 
 	applied, err := listAppliedMigrations(conn)
@@ -71,6 +79,9 @@ func applyEmbeddedMigrationsLocked(conn *sql.Conn) error {
 		if _, ok := applied[entry.Name()]; ok {
 			continue
 		}
+		if err := assertBackupCaptureIdle(ctx, conn); err != nil {
+			return err
+		}
 		if entry.Name() == "063_unique_usernames.sql" {
 			if err := checkUniqueUsernames(conn); err != nil {
 				return fmt.Errorf("cannot apply migration %s: %w", entry.Name(), err)
@@ -85,7 +96,7 @@ func applyEmbeddedMigrationsLocked(conn *sql.Conn) error {
 		statements := splitSQLStatements(string(rawSQL))
 		optionalFailed := false
 		for idx, statement := range statements {
-			statementCtx := context.Background()
+			statementCtx := ctx
 			stop := func() {}
 			if entry.Name() == "067_add_northbound_owner_records.sql" {
 				statementCtx, stop = context.WithTimeout(statementCtx, 30*time.Second)
@@ -113,7 +124,7 @@ func applyEmbeddedMigrationsLocked(conn *sql.Conn) error {
 			}
 		}
 
-		if _, err := conn.ExecContext(context.Background(),
+		if _, err := conn.ExecContext(ctx,
 			fmt.Sprintf("INSERT INTO %s (filename, applied_at) VALUES (?, ?)", schemaMigrationsTable),
 			entry.Name(),
 			time.Now().UTC(),

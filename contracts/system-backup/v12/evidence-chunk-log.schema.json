@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evidence-chunk-log.schema.json",
+  "title": "System backup D-owned evidence, evidence-chunk and redacted log persistence",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "$defs": {
+    "Sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_id", "sha256"],
+      "properties": {
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "OwnerTargetReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner_target_type", "owner_target_public_id"],
+      "properties": {
+        "owner_target_type": { "type": "string", "enum": ["backup", "backup_staging", "external_action", "drill", "restore_resource", "preflight", "artifact_verify", "catalog_scan", "catalog_record", "catalog_import", "prune_run", "promotion", "system"] },
+        "owner_target_public_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "allOf": [
+        { "if": { "properties": { "owner_target_type": { "const": "backup" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "backup_staging" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupStagingPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "external_action" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ExternalActionPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "drill" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "restore_resource" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/RestoreResourcePublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "preflight" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "artifact_verify" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ArtifactVerificationPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "catalog_scan" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogScanPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "catalog_record" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogRecordPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "catalog_import" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "prune_run" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PruneRunPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "promotion" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PromotionPublicId" } } } },
+        { "if": { "properties": { "owner_target_type": { "const": "system" } }, "required": ["owner_target_type"] }, "then": { "properties": { "owner_target_public_id": { "type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$" } } } }
+      ]
+    },
+    "EvidenceType": { "type": "string", "enum": ["verifier_report", "cleanup_result", "provider_presence_proof", "provider_absence_proof", "provider_deletion_receipt", "ownership_proof", "capability_snapshot", "catalog_scan_receipt", "failure_domain_attestation", "promotion_release_bundle", "job_log_chunk", "diagnostic"] },
+    "StorageState": { "type": "string", "enum": ["inline", "pending", "write_unknown", "write_failed", "ready", "deleting", "delete_failed", "deleted"] },
+    "EvidenceFailureCode": { "type": "string", "enum": ["none", "redaction_failed", "capacity_exceeded", "provider_unavailable", "permission_denied", "checksum_mismatch", "encryption_key_unavailable", "deadline_exceeded", "internal"] },
+    "MediaType": { "type": "string", "enum": ["application/json", "application/jose", "application/cbor", "text/plain"] },
+    "Encryption": { "type": "string", "enum": ["none", "envelope_v1"] },
+    "RedactionClassification": { "type": "string", "enum": ["public", "internal", "confidential", "sensitive"] },
+    "ObservedHealth": { "type": "string", "enum": ["healthy", "degraded", "unknown"] },
+    "TypedStorageReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_role", "identity_hash", "ref_version", "relative_key", "relative_key_hash", "immutable_version"],
+      "properties": {
+        "provider_role": { "const": "evidence" },
+        "identity_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "ref_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "relative_key": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$", "minLength": 1, "maxLength": 1024 },
+        "relative_key_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "immutable_version": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 }
+      },
+      "x-invariant": "relative_key is server-derived below the configured evidence root, contains no scheme or authority, has no dot segments and is never accepted from an Admin request"
+    },
+    "EncryptionEnvelopeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framing_version", "kek_identity_hash", "kek_version", "envelope_hash"],
+      "properties": {
+        "framing_version": { "const": "system-backup-evidence-envelope.v1" },
+        "kek_identity_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "kek_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "envelope_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      },
+      "x-owner-review": "A must review the framing/AAD and key separation contract; D stores only the immutable envelope reference"
+    },
+    "EvidenceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "public_id", "owner", "evidence_type", "storage_state", "evidence_failure_code", "storage_ref", "inline_payload_base64", "content_checksum", "content_size_bytes", "object_checksum", "object_size_bytes", "plaintext_chunk_size_bytes", "chunk_count", "chunk_list_root", "media_type", "encryption", "encryption_envelope", "redaction_classification", "observed_health", "claim_owner", "claim_expires_at", "next_reconcile_at", "last_checked_at", "expires_at", "protected_until", "row_version", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-evidence.v1" },
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "owner": { "$ref": "#/$defs/OwnerTargetReference" },
+        "evidence_type": { "$ref": "#/$defs/EvidenceType" },
+        "storage_state": { "$ref": "#/$defs/StorageState" },
+        "evidence_failure_code": { "$ref": "#/$defs/EvidenceFailureCode" },
+        "storage_ref": { "anyOf": [{ "$ref": "#/$defs/TypedStorageReference" }, { "type": "null" }] },
+        "inline_payload_base64": { "type": ["string", "null"], "contentEncoding": "base64", "maxLength": 10924, "x-max-decoded-bytes": 8192 },
+        "content_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "content_size_bytes": { "type": "integer", "minimum": 0, "maximum": 1073741824 },
+        "object_checksum": { "anyOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] },
+        "object_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "plaintext_chunk_size_bytes": { "type": ["integer", "null"], "minimum": 1, "maximum": 1048576 },
+        "chunk_count": { "type": "integer", "minimum": 0 },
+        "chunk_list_root": { "anyOf": [{ "$ref": "artifact-common.schema.json#/$defs/Sha256" }, { "type": "null" }] },
+        "media_type": { "$ref": "#/$defs/MediaType" },
+        "encryption": { "$ref": "#/$defs/Encryption" },
+        "encryption_envelope": { "anyOf": [{ "$ref": "#/$defs/EncryptionEnvelopeReference" }, { "type": "null" }] },
+        "redaction_classification": { "$ref": "#/$defs/RedactionClassification" },
+        "observed_health": { "$ref": "#/$defs/ObservedHealth" },
+        "claim_owner": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+        "claim_expires_at": { "type": ["string", "null"], "format": "date-time" },
+        "next_reconcile_at": { "type": ["string", "null"], "format": "date-time" },
+        "last_checked_at": { "type": ["string", "null"], "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "protected_until": { "type": ["string", "null"], "format": "date-time" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "storage_state": { "enum": ["inline", "pending", "ready", "deleting", "deleted"] } }, "required": ["storage_state"] }, "then": { "properties": { "evidence_failure_code": { "const": "none" } } } },
+        { "if": { "properties": { "storage_state": { "const": "write_unknown" } }, "required": ["storage_state"] }, "then": { "properties": { "evidence_failure_code": { "enum": ["provider_unavailable", "deadline_exceeded"] } } } },
+        { "if": { "properties": { "storage_state": { "const": "write_failed" } }, "required": ["storage_state"] }, "then": { "not": { "properties": { "evidence_failure_code": { "const": "none" } }, "required": ["evidence_failure_code"] } } },
+        { "if": { "properties": { "storage_state": { "const": "delete_failed" } }, "required": ["storage_state"] }, "then": { "properties": { "evidence_failure_code": { "enum": ["provider_unavailable", "permission_denied", "checksum_mismatch", "deadline_exceeded", "internal"] } } } },
+        { "if": { "properties": { "storage_state": { "const": "inline" } }, "required": ["storage_state"] }, "then": { "properties": { "storage_ref": { "type": "null" }, "inline_payload_base64": { "type": "string", "minLength": 1, "maxLength": 10924 }, "object_checksum": { "type": "null" }, "object_size_bytes": { "type": "null" }, "plaintext_chunk_size_bytes": { "type": "null" }, "chunk_count": { "const": 0 }, "chunk_list_root": { "type": "null" } } }, "else": { "properties": { "storage_ref": { "$ref": "#/$defs/TypedStorageReference" }, "inline_payload_base64": { "type": "null" } } } },
+        { "if": { "properties": { "storage_state": { "enum": ["ready", "deleting", "delete_failed", "deleted"] } }, "required": ["storage_state"] }, "then": { "properties": { "storage_ref": { "allOf": [{ "$ref": "#/$defs/TypedStorageReference" }, { "properties": { "immutable_version": { "type": "string", "minLength": 1, "maxLength": 256 } } }] }, "object_checksum": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }, "object_size_bytes": { "type": "integer", "minimum": 0 }, "plaintext_chunk_size_bytes": { "const": 1048576 }, "chunk_count": { "type": "integer", "minimum": 1 }, "chunk_list_root": { "$ref": "artifact-common.schema.json#/$defs/Sha256" } } } },
+        { "if": { "properties": { "encryption": { "const": "none" } }, "required": ["encryption"] }, "then": { "properties": { "encryption_envelope": { "type": "null" } } }, "else": { "properties": { "encryption_envelope": { "$ref": "#/$defs/EncryptionEnvelopeReference" } } } },
+        { "if": { "properties": { "redaction_classification": { "enum": ["confidential", "sensitive"] } }, "required": ["redaction_classification"] }, "then": { "properties": { "encryption": { "const": "envelope_v1" } } } },
+        { "if": { "properties": { "claim_owner": { "type": "null" } }, "required": ["claim_owner"] }, "then": { "properties": { "claim_expires_at": { "type": "null" } } }, "else": { "properties": { "claim_expires_at": { "type": "string", "format": "date-time" } } } }
+      ],
+      "x-state-transitions": ["pending->ready|write_unknown|write_failed", "write_unknown->ready|write_failed", "ready->deleting", "deleting->deleted|delete_failed", "delete_failed->deleting"],
+      "x-invariants": [
+        "inline is terminal storage and never transitions to an external state; external intents are persisted before issuing a conditional-create grant",
+        "effective health becomes stale only when database current time reaches expires_at",
+        "job_log_chunk evidence cannot be referenced by verifier reports, dependency health, promotion or acceptance",
+        "Admin callers submit only the evidence public ID; storage keys, roots, credentials and provider endpoints never enter public request or response bodies"
+      ]
+    },
+    "EvidenceChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_public_id", "chunk_index", "plaintext_offset", "plaintext_length", "plaintext_sha256", "object_frame_offset", "object_frame_length", "ciphertext_sha256", "gcm_nonce_base64url", "gcm_tag_base64url"],
+      "properties": {
+        "evidence_public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "chunk_index": { "type": "integer", "minimum": 0 },
+        "plaintext_offset": { "type": "integer", "minimum": 0 },
+        "plaintext_length": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "plaintext_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "object_frame_offset": { "type": "integer", "minimum": 0 },
+        "object_frame_length": { "type": "integer", "minimum": 1 },
+        "ciphertext_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "gcm_nonce_base64url": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,64}$" },
+        "gcm_tag_base64url": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,64}$" }
+      },
+      "x-unique-key": ["evidence_public_id", "chunk_index"],
+      "x-invariants": [
+        "chunk indexes start at zero and are contiguous; plaintext and object-frame offsets equal the preceding offset plus length",
+        "the ordered JCS list of all rows hashes to EvidenceRecord.chunk_list_root",
+        "nonce and tag sizes plus AAD composition are fixed by the A-reviewed evidence-envelope framing contract"
+      ]
+    },
+    "TaskReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_type", "task_public_id"],
+      "properties": {
+        "task_type": { "type": "string", "enum": ["backup", "drill", "preflight", "artifact_verify"] },
+        "task_public_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "allOf": [
+        { "if": { "properties": { "task_type": { "const": "backup" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } } },
+        { "if": { "properties": { "task_type": { "const": "drill" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/DrillPublicId" } } } },
+        { "if": { "properties": { "task_type": { "const": "preflight" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" } } } },
+        { "if": { "properties": { "task_type": { "const": "artifact_verify" } }, "required": ["task_type"] }, "then": { "properties": { "task_public_id": { "$ref": "admin-api-common.schema.json#/$defs/ArtifactVerificationPublicId" } } } }
+      ]
+    },
+    "LogIngestStatus": { "type": "string", "enum": ["pending", "ready", "failed"] },
+    "LogIngestFailureCode": { "type": "string", "enum": ["none", "source_unavailable", "redaction_failed", "evidence_write_failed", "sequence_conflict", "capacity_exceeded", "internal"] },
+    "LogChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "task", "attempt_number", "phase", "job_uid", "job_generation", "chunk_sequence", "first_log_at", "last_log_at", "line_count", "redacted_evidence", "ingest_status", "log_ingest_failure_code", "available_until", "row_version", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "const": "system-backup-log-chunk.v1" },
+        "task": { "$ref": "#/$defs/TaskReference" },
+        "attempt_number": { "type": "integer", "minimum": 1 },
+        "phase": { "type": "string", "enum": ["capture", "secret_capture", "publish", "restore", "normalize", "verify", "preflight"] },
+        "job_uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "job_generation": { "type": "integer", "minimum": 1 },
+        "chunk_sequence": { "type": "integer", "minimum": 0 },
+        "first_log_at": { "type": ["string", "null"], "format": "date-time" },
+        "last_log_at": { "type": ["string", "null"], "format": "date-time" },
+        "line_count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "redacted_evidence": { "anyOf": [{ "$ref": "#/$defs/EvidenceReference" }, { "type": "null" }] },
+        "ingest_status": { "$ref": "#/$defs/LogIngestStatus" },
+        "log_ingest_failure_code": { "$ref": "#/$defs/LogIngestFailureCode" },
+        "available_until": { "type": "string", "format": "date-time" },
+        "row_version": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        { "if": { "properties": { "ingest_status": { "enum": ["pending", "ready"] } }, "required": ["ingest_status"] }, "then": { "properties": { "log_ingest_failure_code": { "const": "none" } } }, "else": { "not": { "properties": { "log_ingest_failure_code": { "const": "none" } }, "required": ["log_ingest_failure_code"] } } },
+        { "if": { "properties": { "ingest_status": { "const": "pending" } }, "required": ["ingest_status"] }, "then": { "properties": { "first_log_at": { "type": "null" }, "last_log_at": { "type": "null" }, "line_count": { "const": 0 }, "redacted_evidence": { "type": "null" } } } },
+        { "if": { "properties": { "ingest_status": { "const": "ready" } }, "required": ["ingest_status"] }, "then": { "properties": { "first_log_at": { "type": "string", "format": "date-time" }, "last_log_at": { "type": "string", "format": "date-time" }, "line_count": { "type": "integer", "minimum": 1, "maximum": 1000 }, "redacted_evidence": { "$ref": "#/$defs/EvidenceReference" } } } }
+      ],
+      "x-unique-key": ["task.task_type", "task.task_public_id", "job_uid", "job_generation", "chunk_sequence"],
+      "x-invariants": [
+        "redacted_evidence references only an EvidenceRecord with evidence_type=job_log_chunk and matching task owner",
+        "only ready chunks are returned by the logs API; payload expiry does not delete the retained control-metadata index",
+        "raw stdout/stderr and failed-redaction lines are never persisted in this row or its evidence"
+      ]
+    }
+  },
+  "x-owner-boundaries": {
+    "A": "redaction classification, framing/AAD and safe-line decisions remain A-owned; D persists only the frozen result and hashes",
+    "B": "JobObserver source reads, sequence production and workload ownership remain B-owned; D validates the closed report before persistence",
+    "C": "evidence provider requests and immutable-version proofs remain C-owned; D stores a server-derived relative key and typed provider identity without endpoint or credential"
+  }
+}

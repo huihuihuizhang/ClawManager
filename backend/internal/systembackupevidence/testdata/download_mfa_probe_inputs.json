@@ -1,0 +1,334 @@
+{
+  "kind": "a_download_mfa_probe_inputs.v1",
+  "catalog_sha256": "0a2fc9ee709ffe6935679ed0923414f0607b2d34bf55ba615e7f431f8411bffe",
+  "migration_files": [
+    "001_init_schema.sql",
+    "002_add_webtop_instance_type.sql",
+    "003_add_system_image_settings.sql",
+    "004_fix_seeded_admin_password.sql",
+    "005_update_openclaw_default_image.sql",
+    "006_add_openclaw_config_center.sql",
+    "007_add_instance_agent_control_plane.sql",
+    "008_add_skill_management.sql",
+    "009_cpu_cores_decimal.sql",
+    "010_add_instance_environment_overrides.sql",
+    "011_add_hermes_instance_type.sql",
+    "012_update_agents_runtime_default_images.sql",
+    "013_normalize_agents_runtime_image_names.sql",
+    "014_add_team_mvp.sql",
+    "015_add_team_member_description.sql",
+    "016_release_deleted_team_names.sql",
+    "017_add_team_member_runtime_state.sql",
+    "018_add_team_member_runtime_type.sql",
+    "019_add_instance_runtime_type.sql",
+    "020_add_system_image_runtime_type.sql",
+    "021_add_openclaw_shell_runtime_image.sql",
+    "022_add_openclaw_config_bundle_skills.sql",
+    "023_add_runtime_pool_v2.sql",
+    "023_add_skill_hub.sql",
+    "023_normalize_runtime_config_mounts.sql",
+    "024_add_gateway_runtime_type.sql",
+    "025_add_instance_mode.sql",
+    "027_add_instance_external_access.sql",
+    "028_add_ai_gateway_runtime_attribution.sql",
+    "029_add_short_external_access_links.sql",
+    "030_add_external_access_password_value.sql",
+    "031_add_hermes_lite_runtime_image.sql",
+    "032_add_team_member_instance_mode.sql",
+    "033_system_image_gateway_runtime_type.sql",
+    "034_update_lite_default_images.sql",
+    "035_harden_team_event_protocol.sql",
+    "036_add_team_event_outbox.sql",
+    "037_add_team_workflow_ledger.sql",
+    "038_add_instance_gateway_token_aliases.sql",
+    "039_add_skill_package_materialize.sql",
+    "040_fix_injected_skill_provenance.sql",
+    "041_add_session_usage_indexes.sql",
+    "042_add_skill_summary_status.sql",
+    "042_add_team_review_contract.sql",
+    "043_add_external_access_workspace_scope.sql",
+    "043_drop_skill_summary_status.sql",
+    "044_add_egress_private_exceptions.sql",
+    "044_add_workbuddy_instance_type.sql",
+    "045_add_llm_model_reasoning_control.sql",
+    "045_add_northbound_api.sql",
+    "045_add_opencode_instance_type.sql",
+    "046_add_custom_team_templates.sql",
+    "046_add_enterprise_auth_identity.sql",
+    "046_add_opencode_lite_runtime.sql",
+    "047_add_deepseek_harness_runtime.sql",
+    "047_add_instance_owner.sql",
+    "048_add_workbuddy_instance_type.sql",
+    "048_fix_instance_type_enum.sql",
+    "049_add_ldap_login_alias.sql",
+    "049_add_opencode_instance_type.sql",
+    "050_add_enterprise_auth_settings.sql",
+    "050_update_workbuddy_windows_runtime.sql",
+    "051_add_codex_and_claude_code_instance_types.sql",
+    "052_add_instance_pvc_name.sql",
+    "053_add_instance_runtime_variant.sql",
+    "054_add_system_image_runtime_variant.sql",
+    "055_reconcile_instance_type_enum.sql",
+    "056_add_llm_provider_models.sql",
+    "057_add_northbound_admin_settings.sql",
+    "058_add_openclaw_runtime_upgrade_safety.sql",
+    "058_enable_deepseek_harness_pro.sql",
+    "059_pin_openclaw_2026_8_1_images.sql",
+    "060_allow_terminal_runtime_upgrade_instance_deletion.sql",
+    "061_persist_runtime_upgrade_source_identity.sql",
+    "062_follow_openclaw_latest_images.sql",
+    "063_add_security_scan_tables.sql",
+    "063_unique_usernames.sql",
+    "064_add_instance_browser_workers.sql",
+    "064_reconcile_system_image_settings_schema.sql",
+    "096_backup_v2_add_system_backup_control_metadata_core.sql",
+    "097_backup_v2_add_system_backup_config_and_operations.sql",
+    "098_backup_v2_add_system_backup_task_execution_core.sql",
+    "099_backup_v2_add_system_backup_coordination_observability.sql",
+    "100_backup_v2_add_system_backup_promotion_authority.sql",
+    "101_backup_v2_add_system_backup_prune_authority.sql",
+    "102_backup_v2_add_system_backup_external_action_authority.sql",
+    "103_backup_v2_add_system_backup_check_authority.sql",
+    "104_backup_v2_add_system_backup_staging_resources.sql",
+    "105_backup_v2_add_system_maintenance_participants.sql",
+    "106_backup_v2_add_system_backup_strong_auth_nonces.sql",
+    "107_backup_v2_add_system_backup_job_observations.sql",
+    "108_backup_v2_add_system_restore_drill_resources.sql",
+    "078_reconcile_local_username_key.sql",
+    "079_add_a_owned_chat_and_risk_tables.sql",
+    "109_backup_v2_add_system_backup_registration_runtime.sql",
+    "110_backup_v2_fix_system_backup_prune_item_identity.sql"
+  ],
+  "canonical_ddl": "-- D review proposal for migration 081. NOT in the migration runner/catalog.\n-- Reconcile number/installed ledger and review exact SQL before promotion.\n-- Published migration 066 stays byte-for-byte unchanged. No backfill/seed.\n-- NULL old rows preserve read failure until an independently authorized writer\n-- verifies their original version-bound bytes against every stored field.\nALTER TABLE system_backup_v2_configs\n  ADD COLUMN canonical_config_json MEDIUMBLOB NULL AFTER config_size_bytes,\n  ADD CONSTRAINT sbv2_chk_sb_config_canonical_json CHECK (\n    canonical_config_json IS NULL OR (\n      OCTET_LENGTH(canonical_config_json) = config_size_bytes\n      AND JSON_VALID(CONVERT(canonical_config_json USING utf8mb4))\n    )\n  );\n-- JSON validity/length do not prove UTF-8 JCS, checksum or provenance. Those\n-- are mandatory application transaction guards, not claimed by this CHECK.\n",
+  "canonical_sha256": "14db3b88263f0ab3e31e293aa0351bb08da23464d4a0fee8854263d56354cce1",
+  "ownership_ddl": "-- D candidate only: NOT a numbered migration, approval or production activation.\n-- Reviewed numbered append must follow the actual target ledger, not assume 083.\n-- No UPDATE/backfill of existing evidence installation ownership is authorized.\n-- Existing NULL rows stay inaccessible to this new admission path until their\n-- owner/install relationship is independently established by a reviewed writer.\n-- MySQL DDL has implicit commits: deploy only as an inspected migration, never\n-- inside a download admission transaction. No grants or triggers are installed.\n\nALTER TABLE system_backup_v2_evidence\n  ADD COLUMN origin_installation_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL,\n  ADD UNIQUE KEY uk_sb_evidence_installation_id_public (origin_installation_id,id,public_id),\n  ADD CONSTRAINT sbv2_fk_sb_evidence_installation FOREIGN KEY (origin_installation_id)\n    REFERENCES system_backup_v2_installation_state(origin_installation_id) ON DELETE RESTRICT;\n\nALTER TABLE system_backup_v2_operations\n  MODIFY COLUMN operation_type ENUM('cancel', 'cleanup', 'ownership_resolution', 'provider_proof_register', 'finalization_resolution', 'manual_hold_update', 'config_update', 'promotion_create', 'promotion_revoke', 'catalog_scan', 'catalog_import', 'prune_execute', 'prune_retry', 'artifact_health_reconcile', 'orphan_gc', 'control_metadata_gc', 'evidence_gc', 'evidence_download_admission') NOT NULL,\n  MODIFY COLUMN target_type ENUM('backup', 'backup_staging', 'external_action', 'drill', 'restore_resource', 'preflight', 'artifact_verify', 'catalog_scan', 'catalog_import', 'prune_run', 'promotion', 'matrix', 'system', 'evidence') NOT NULL,\n  ADD COLUMN download_evidence_id BIGINT UNSIGNED NULL,\n  ADD UNIQUE KEY uk_sb_operation_installation_id (origin_installation_id,id),\n  ADD UNIQUE KEY uk_sb_operation_download_binding (origin_installation_id,id,public_id,download_evidence_id),\n  ADD CONSTRAINT sbv2_fk_sb_operation_download_evidence\n    FOREIGN KEY (origin_installation_id,download_evidence_id,target_public_id)\n    REFERENCES system_backup_v2_evidence(origin_installation_id,id,public_id) ON DELETE RESTRICT,\n  DROP CHECK sbv2_chk_sb_operation_target_id,\n  ADD CONSTRAINT sbv2_chk_sb_operation_target_id CHECK (\n    (target_type = 'backup' AND target_public_id REGEXP '^sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'backup_staging' AND target_public_id REGEXP '^sbs_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'external_action' AND target_public_id REGEXP '^sxa_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'drill' AND target_public_id REGEXP '^sdr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'restore_resource' AND target_public_id REGEXP '^srr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'preflight' AND target_public_id REGEXP '^spf_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'artifact_verify' AND target_public_id REGEXP '^sav_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'catalog_scan' AND target_public_id REGEXP '^scs_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'catalog_import' AND target_public_id REGEXP '^sci_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'prune_run' AND target_public_id REGEXP '^spr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'promotion' AND target_public_id REGEXP '^spm_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n    OR (target_type = 'matrix' AND target_public_id IN ('k8s-cluster', 'k3s-cluster', 'k8s-single-node', 'k3s-single-node'))\n    OR (target_type = 'system' AND target_public_id = origin_installation_id AND target_public_id REGEXP '^installation_')\n    OR (target_type = 'evidence' AND target_public_id REGEXP '^sev_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')\n  ),\n  ADD CONSTRAINT sbv2_chk_sb_operation_download_admission CHECK (\n    (operation_type <> 'evidence_download_admission' AND download_evidence_id IS NULL AND target_type <> 'evidence')\n    OR (operation_type = 'evidence_download_admission'\n      AND download_evidence_id IS NOT NULL AND target_type = 'evidence'\n      AND actor_type = 'admin' AND endpoint = 'getSystemBackupEvidence'\n      AND status = 'succeeded' AND retryable = FALSE AND failure_category = 'none'\n      AND failure_message IS NULL AND http_status IS NOT NULL AND http_status = 200\n      AND result_resource_public_id IS NULL AND result_config_version IS NULL\n      AND retry_of_operation_public_id IS NULL AND row_version = 1\n      AND redacted_response_evidence_id IS NULL AND redacted_response_sha256 IS NULL\n      AND external_action_public_ids_canonical_json = _binary'[]'\n      AND external_action_public_ids_size_bytes = 2\n      AND external_action_public_ids_sha256 = '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'\n      AND claim_owner IS NULL AND claim_expires_at IS NULL AND next_reconcile_at IS NULL\n      AND started_at IS NOT NULL AND finished_at IS NOT NULL\n      AND started_at = created_at AND finished_at = created_at AND updated_at = created_at)\n  );\n\n-- Strengthen the existing nonce operation FK for EVERY non-NULL operation link.\n-- Reject legacy cross-installation links; never silently repair them.\nALTER TABLE system_backup_v2_strong_auth_nonces\n  ADD CONSTRAINT sbv2_fk_sb_auth_nonce_operation_installation\n    FOREIGN KEY (origin_installation_id,operation_id)\n    REFERENCES system_backup_v2_operations(origin_installation_id,id) ON DELETE RESTRICT;\n\n-- One immutable row contains independently hashed private receipt and public\n-- Operation bytes. Public readers must SELECT ONLY the public projection after\n-- current A authorization; never serialize this table or SELECT * into a DTO.\n-- No raw nonce/proof/claim/session/bearer/provider locator is stored here.\nCREATE TABLE system_backup_v2_download_admission_receipts (\n  operation_id BIGINT UNSIGNED NOT NULL,\n  origin_installation_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  operation_public_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_id BIGINT UNSIGNED NOT NULL,\n  evidence_public_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  intent_audit_id INT NOT NULL,\n  schema_version VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL\n    DEFAULT 'system-backup-evidence-download-admission.v1',\n  receipt_canonical_json BLOB NOT NULL,\n  receipt_size_bytes INT UNSIGNED NOT NULL,\n  receipt_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  operation_canonical_json BLOB NOT NULL,\n  operation_size_bytes INT UNSIGNED NOT NULL,\n  operation_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  admitted_at DATETIME(6) NOT NULL,\n  claim_expires_at DATETIME(6) NOT NULL,\n  deadline_at DATETIME(6) NOT NULL,\n  retain_until DATETIME(6) NOT NULL,\n  PRIMARY KEY (operation_id),\n  UNIQUE KEY uk_sb_download_receipt_public (origin_installation_id,operation_public_id),\n  UNIQUE KEY uk_sb_download_receipt_result_group (origin_installation_id,operation_id,operation_public_id,evidence_id,evidence_public_id,intent_audit_id,retain_until),\n  KEY idx_sb_download_receipt_evidence (origin_installation_id,evidence_id,evidence_public_id),\n  KEY idx_sb_download_receipt_retention (retain_until,operation_id),\n  CONSTRAINT sbv2_fk_sb_download_receipt_operation\n    FOREIGN KEY (origin_installation_id,operation_id,operation_public_id,evidence_id)\n    REFERENCES system_backup_v2_operations(origin_installation_id,id,public_id,download_evidence_id) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_fk_sb_download_receipt_evidence\n    FOREIGN KEY (origin_installation_id,evidence_id,evidence_public_id)\n    REFERENCES system_backup_v2_evidence(origin_installation_id,id,public_id) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_fk_sb_download_receipt_audit FOREIGN KEY (intent_audit_id)\n    REFERENCES audit_logs(id) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_chk_sb_download_receipt_schema CHECK (schema_version='system-backup-evidence-download-admission.v1'),\n  CONSTRAINT sbv2_chk_sb_download_receipt_bytes CHECK (\n    receipt_size_bytes BETWEEN 2 AND 8192 AND operation_size_bytes BETWEEN 2 AND 8192\n    AND receipt_size_bytes=OCTET_LENGTH(receipt_canonical_json)\n    AND operation_size_bytes=OCTET_LENGTH(operation_canonical_json)\n    AND receipt_sha256 REGEXP '^[0-9a-f]{64}$' AND operation_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND JSON_VALID(CONVERT(receipt_canonical_json USING utf8mb4))\n    AND JSON_VALID(CONVERT(operation_canonical_json USING utf8mb4))\n    AND JSON_TYPE(CONVERT(receipt_canonical_json USING utf8mb4))='OBJECT'\n    AND JSON_TYPE(CONVERT(operation_canonical_json USING utf8mb4))='OBJECT'\n  ),\n  CONSTRAINT sbv2_chk_sb_download_receipt_times CHECK (\n    admitted_at < deadline_at AND deadline_at <= claim_expires_at\n    AND retain_until > claim_expires_at\n  )\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n\n-- One separately immutable result link; the admission receipt remains unchanged.\n-- Insert in the independent result transaction, after the actual audit INSERT\n-- and before the exact claim-release CAS. Lock its absent operation key at L3.\n-- Both evidence columns participate in the closed L3 reference prefix.\nCREATE TABLE system_backup_v2_download_result_receipts (\n  operation_id BIGINT UNSIGNED NOT NULL,\n  origin_installation_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  operation_public_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_id BIGINT UNSIGNED NOT NULL,\n  evidence_public_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  intent_audit_id INT NOT NULL,\n  result_audit_id INT NOT NULL,\n  schema_version VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL\n    DEFAULT 'system-backup-evidence-download-result.v1',\n  result_size_bytes INT UNSIGNED NOT NULL,\n  result_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  result_at DATETIME(6) NOT NULL,\n  retain_until DATETIME(6) NOT NULL,\n  PRIMARY KEY (operation_id),\n  UNIQUE KEY uk_sb_download_result_audit (result_audit_id),\n  KEY idx_sb_download_result_evidence (origin_installation_id,evidence_id,evidence_public_id),\n  KEY idx_sb_download_result_retention (retain_until,operation_id),\n  CONSTRAINT sbv2_fk_sb_download_result_group\n    FOREIGN KEY (origin_installation_id,operation_id,operation_public_id,evidence_id,evidence_public_id,intent_audit_id,retain_until)\n    REFERENCES system_backup_v2_download_admission_receipts(origin_installation_id,operation_id,operation_public_id,evidence_id,evidence_public_id,intent_audit_id,retain_until) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_fk_sb_download_result_audit FOREIGN KEY (result_audit_id)\n    REFERENCES audit_logs(id) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_chk_sb_download_result_schema CHECK (schema_version='system-backup-evidence-download-result.v1'),\n  CONSTRAINT sbv2_chk_sb_download_result_body CHECK (\n    result_size_bytes BETWEEN 2 AND 2048 AND result_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND result_audit_id <> intent_audit_id\n  ),\n  CONSTRAINT sbv2_chk_sb_download_result_times CHECK (result_at < retain_until)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n\n-- Admission account: receipt INSERT/SELECT only, no UPDATE/DELETE; existing\n-- audit anchors must likewise be protected from UPDATE/DELETE. Review the\n-- effective privileges inherited from roles and database-wide grants.\n-- GC uses a separate reviewed identity, checks all hold/ref/retention guards,\n-- then removes nonce -> receipt -> operation/audit as one retention group.\n-- FK RESTRICT alone does not make an audit or receipt immutable.\n-- The result identity has result-receipt INSERT/SELECT only; no UPDATE/DELETE\n-- on either receipt, original Operation/nonce/intent or result audit. Capacity\n-- measurement includes the additional result row, all indexes and FK work.\n-- Group GC must acquire the same L0..L5 prefix, all current holds/refs, original\n-- retain_until and later retention extensions, then remove result link/audit,\n-- nonce, admission receipt, Operation/intent in one reviewed transaction. There\n-- is no general-purpose result-receipt DELETE permission or automatic cascade.\n-- retain_until freezes the MAX of admission+control-retention, target's current\n-- protected_until and every nonce/idempotency/audit minimum. Later config must\n-- not shorten it. Actual physical page/index/audit reservation is mandatory.\n-- No generic writer/GC may clear evidence origin_installation_id after binding.\n\n",
+  "ownership_sha256": "dc0687839ce07646688b7a53d3c7ddda20ea5b269999d499a0730e2d2e0f50a9",
+  "config_schema_ddl": "CREATE TABLE IF NOT EXISTS system_backup_v2_configs (\n  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,\n  schema_version VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'system-backup-config.v1',\n  origin_installation_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  version BIGINT UNSIGNED NOT NULL,\n  copied_from_version BIGINT UNSIGNED NULL,\n  config_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  config_size_bytes INT UNSIGNED NOT NULL,\n  enabled BOOLEAN NOT NULL DEFAULT FALSE,\n  alert_profile ENUM('production', 'development') NOT NULL DEFAULT 'production',\n  minimum_recovery_points INT UNSIGNED NOT NULL DEFAULT 1,\n\n  controller_claim_ttl_seconds INT UNSIGNED NOT NULL,\n  controller_claim_heartbeat_seconds INT UNSIGNED NOT NULL,\n  controller_reconcile_interval_seconds INT UNSIGNED NOT NULL,\n  mutation_lease_ttl_seconds INT UNSIGNED NOT NULL,\n  mutation_lease_heartbeat_seconds INT UNSIGNED NOT NULL,\n  artifact_lease_ttl_seconds INT UNSIGNED NOT NULL,\n  artifact_lease_heartbeat_seconds INT UNSIGNED NOT NULL,\n  gate_acquisition_timeout_seconds INT UNSIGNED NOT NULL,\n  quiesce_max_hold_seconds INT UNSIGNED NOT NULL,\n  maintenance_lock_ttl_seconds INT UNSIGNED NOT NULL,\n  watchdog_db_unavailable_grace_seconds INT UNSIGNED NOT NULL,\n  watchdog_safety_margin_seconds INT UNSIGNED NOT NULL,\n  staging_retention_seconds INT UNSIGNED NOT NULL,\n  retention_seconds INT UNSIGNED NOT NULL,\n  prune_candidate_ttl_seconds INT UNSIGNED NOT NULL,\n  confirmation_ttl_seconds INT UNSIGNED NOT NULL,\n  logs_retention_seconds INT UNSIGNED NOT NULL,\n  evidence_retention_seconds INT UNSIGNED NOT NULL,\n  promotion_health_max_age_seconds INT UNSIGNED NOT NULL,\n  task_cancel_deadline_seconds INT UNSIGNED NOT NULL,\n  cleanup_deadline_seconds INT UNSIGNED NOT NULL,\n  retry_initial_backoff_seconds INT UNSIGNED NOT NULL,\n  retry_max_backoff_seconds INT UNSIGNED NOT NULL,\n  orphan_safety_window_seconds INT UNSIGNED NOT NULL,\n  artifact_health_interval_seconds INT UNSIGNED NOT NULL,\n  catalog_scan_interval_seconds INT UNSIGNED NOT NULL,\n  catalog_scan_deadline_seconds INT UNSIGNED NOT NULL,\n  provider_consistency_window_seconds INT UNSIGNED NOT NULL,\n  redis_clock_skew_seconds INT UNSIGNED NOT NULL,\n  strong_auth_max_age_seconds INT UNSIGNED NOT NULL,\n  strong_auth_clock_skew_seconds INT UNSIGNED NOT NULL,\n  provider_proof_max_age_seconds INT UNSIGNED NOT NULL,\n  capture_certificate_ttl_seconds INT UNSIGNED NOT NULL,\n  finalization_resolution_grace_seconds INT UNSIGNED NOT NULL,\n  recovery_point_objective_seconds INT UNSIGNED NOT NULL,\n  first_enable_recovery_alert_grace_seconds INT UNSIGNED NOT NULL,\n  control_metadata_retention_seconds INT UNSIGNED NOT NULL,\n  backup_task_deadline_seconds INT UNSIGNED NOT NULL,\n  drill_task_deadline_seconds INT UNSIGNED NOT NULL,\n  preflight_task_deadline_seconds INT UNSIGNED NOT NULL,\n  artifact_verify_task_deadline_seconds INT UNSIGNED NOT NULL,\n  operation_deadline_seconds INT UNSIGNED NOT NULL,\n  finalization_resolution_deadline_seconds INT UNSIGNED NOT NULL,\n  prune_operation_deadline_seconds INT UNSIGNED NOT NULL,\n\n  control_metadata_capacity_bytes BIGINT UNSIGNED NOT NULL,\n  staging_capacity_bytes BIGINT UNSIGNED NOT NULL,\n  max_artifact_bytes BIGINT UNSIGNED NOT NULL,\n  max_index_bytes BIGINT UNSIGNED NOT NULL,\n  max_plaintext_buffer_bytes BIGINT UNSIGNED NOT NULL,\n  max_source_items INT UNSIGNED NOT NULL,\n  minimum_capture_throughput_bytes_per_second INT UNSIGNED NOT NULL,\n  source_size_safety_factor DECIMAL(4,2) UNSIGNED NOT NULL,\n  max_log_bytes BIGINT UNSIGNED NOT NULL,\n  max_log_lines INT UNSIGNED NOT NULL,\n  log_chunk_bytes INT UNSIGNED NOT NULL,\n  log_chunk_lines INT UNSIGNED NOT NULL,\n\n  max_concurrent_drills INT UNSIGNED NOT NULL,\n  max_concurrent_preflights INT UNSIGNED NOT NULL,\n  max_concurrent_artifact_verifications INT UNSIGNED NOT NULL,\n  max_pending_tasks INT UNSIGNED NOT NULL,\n  max_auto_attempts INT UNSIGNED NOT NULL,\n  preflight_query_timeout_seconds INT UNSIGNED NOT NULL,\n  preflight_provider_qps INT UNSIGNED NOT NULL,\n  preflight_max_scan_bytes BIGINT UNSIGNED NOT NULL,\n  preflight_max_scan_items INT UNSIGNED NOT NULL,\n\n  parts_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  parts_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  redis_sources_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  redis_sources_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  failure_domains_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  failure_domains_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  disaster_identity_mapping_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  disaster_identity_mapping_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  source_writers_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  source_writers_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  rbac_bindings_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  rbac_bindings_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  secret_allowlist_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  secret_allowlist_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  strong_auth_issuers_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  strong_auth_issuers_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  provider_proof_issuers_registry_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  provider_proof_issuers_registry_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n\n  artifact_write_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_write_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_read_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_read_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_delete_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_delete_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_upload_issuer_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_upload_issuer_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_ca_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  artifact_ca_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_store_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_store_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_write_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_write_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_read_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_read_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_delete_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_delete_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_ca_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_ca_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_kek_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  evidence_kek_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  kek_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  kek_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  capture_signing_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  capture_signing_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  acceptance_signing_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  acceptance_signing_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_signing_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_signing_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_read_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_read_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_append_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_append_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_snapshot_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  catalog_snapshot_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  nonce_hmac_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  nonce_hmac_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  status_relay_identity_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  status_relay_ref_version VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n\n  created_by VARCHAR(128) NOT NULL,\n  change_reason VARCHAR(512) NULL,\n  row_version BIGINT UNSIGNED NOT NULL DEFAULT 1,\n  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  UNIQUE KEY uk_sb_config_version (origin_installation_id, version),\n  UNIQUE KEY uk_sb_config_snapshot (origin_installation_id, version, config_sha256, config_size_bytes),\n  KEY idx_sb_config_created (origin_installation_id, created_at, id),\n  CONSTRAINT sbv2_fk_sb_config_copied_from FOREIGN KEY (origin_installation_id, copied_from_version) REFERENCES system_backup_v2_configs(origin_installation_id, version) ON DELETE RESTRICT,\n  CONSTRAINT sbv2_chk_sb_config_schema CHECK (schema_version = 'system-backup-config.v1'),\n  CONSTRAINT sbv2_chk_sb_config_origin CHECK (origin_installation_id REGEXP '^installation_'),\n  CONSTRAINT sbv2_chk_sb_config_version CHECK (version >= 1 AND (copied_from_version IS NULL OR copied_from_version < version)),\n  CONSTRAINT sbv2_chk_sb_config_hash_size CHECK (config_sha256 REGEXP '^[0-9a-f]{64}$' AND config_size_bytes BETWEEN 2 AND 262144),\n  CONSTRAINT sbv2_chk_sb_config_base CHECK (minimum_recovery_points BETWEEN 1 AND 100 AND row_version = 1),\n  CONSTRAINT sbv2_chk_sb_config_durations_1 CHECK (\n    controller_claim_ttl_seconds BETWEEN 15 AND 300\n    AND controller_claim_heartbeat_seconds BETWEEN 5 AND 100\n    AND controller_reconcile_interval_seconds BETWEEN 1 AND 60\n    AND mutation_lease_ttl_seconds BETWEEN 6 AND 120\n    AND mutation_lease_heartbeat_seconds BETWEEN 2 AND 40\n    AND artifact_lease_ttl_seconds BETWEEN 15 AND 300\n    AND artifact_lease_heartbeat_seconds BETWEEN 5 AND 100\n    AND gate_acquisition_timeout_seconds BETWEEN 10 AND 600\n    AND quiesce_max_hold_seconds BETWEEN 30 AND 3600\n    AND maintenance_lock_ttl_seconds BETWEEN 65 AND 7200\n    AND watchdog_db_unavailable_grace_seconds BETWEEN 5 AND 60\n    AND watchdog_safety_margin_seconds BETWEEN 5 AND 60\n    AND staging_retention_seconds BETWEEN 3600 AND 604800\n    AND retention_seconds BETWEEN 86400 AND 31536000\n    AND prune_candidate_ttl_seconds BETWEEN 3600 AND 604800\n    AND confirmation_ttl_seconds BETWEEN 60 AND 3600\n    AND logs_retention_seconds BETWEEN 3600 AND 2592000\n    AND evidence_retention_seconds BETWEEN 86400 AND 31536000\n    AND promotion_health_max_age_seconds BETWEEN 60 AND 86400\n    AND task_cancel_deadline_seconds BETWEEN 10 AND 1800\n    AND cleanup_deadline_seconds BETWEEN 60 AND 21600\n  ),\n  CONSTRAINT sbv2_chk_sb_config_durations_2 CHECK (\n    retry_initial_backoff_seconds BETWEEN 1 AND 60\n    AND retry_max_backoff_seconds BETWEEN 5 AND 600\n    AND orphan_safety_window_seconds BETWEEN 300 AND 86400\n    AND artifact_health_interval_seconds BETWEEN 300 AND 86400\n    AND catalog_scan_interval_seconds BETWEEN 300 AND 86400\n    AND catalog_scan_deadline_seconds BETWEEN 60 AND 21600\n    AND provider_consistency_window_seconds BETWEEN 1 AND 600\n    AND redis_clock_skew_seconds <= 60\n    AND strong_auth_max_age_seconds BETWEEN 60 AND 900\n    AND strong_auth_clock_skew_seconds <= 120\n    AND provider_proof_max_age_seconds BETWEEN 60 AND 3600\n    AND capture_certificate_ttl_seconds BETWEEN 3600 AND 86400\n    AND finalization_resolution_grace_seconds BETWEEN 60 AND 3600\n    AND recovery_point_objective_seconds BETWEEN 3600 AND 2592000\n    AND first_enable_recovery_alert_grace_seconds <= 604800\n    AND control_metadata_retention_seconds BETWEEN 2592000 AND 157680000\n    AND backup_task_deadline_seconds BETWEEN 600 AND 43200\n    AND drill_task_deadline_seconds BETWEEN 600 AND 43200\n    AND preflight_task_deadline_seconds BETWEEN 60 AND 7200\n    AND artifact_verify_task_deadline_seconds BETWEEN 300 AND 21600\n    AND operation_deadline_seconds BETWEEN 60 AND 86400\n    AND finalization_resolution_deadline_seconds BETWEEN 60 AND 86400\n    AND prune_operation_deadline_seconds BETWEEN 60 AND 86400\n  ),\n  CONSTRAINT sbv2_chk_sb_config_capacity CHECK (\n    control_metadata_capacity_bytes BETWEEN 1073741824 AND 1099511627776\n    AND staging_capacity_bytes BETWEEN 1073741824 AND 1099511627776\n    AND max_artifact_bytes BETWEEN 1048576 AND 966367641600\n    AND max_index_bytes BETWEEN 1048576 AND 8589934592\n    AND max_plaintext_buffer_bytes BETWEEN 1048576 AND 268435456\n    AND max_source_items BETWEEN 1 AND 100000000\n    AND minimum_capture_throughput_bytes_per_second BETWEEN 1048576 AND 1073741824\n    AND source_size_safety_factor BETWEEN 1.00 AND 2.00\n    AND max_log_bytes BETWEEN 1048576 AND 1073741824\n    AND max_log_lines BETWEEN 1000 AND 1000000\n    AND log_chunk_bytes BETWEEN 4096 AND 1048576\n    AND log_chunk_lines BETWEEN 1 AND 1000\n  ),\n  CONSTRAINT sbv2_chk_sb_config_concurrency CHECK (\n    max_concurrent_drills BETWEEN 1 AND 10\n    AND max_concurrent_preflights BETWEEN 1 AND 20\n    AND max_concurrent_artifact_verifications BETWEEN 1 AND 10\n    AND max_pending_tasks BETWEEN 1 AND 1000\n    AND max_auto_attempts BETWEEN 1 AND 10\n  ),\n  CONSTRAINT sbv2_chk_sb_config_preflight CHECK (\n    preflight_query_timeout_seconds BETWEEN 5 AND 300\n    AND preflight_provider_qps BETWEEN 1 AND 200\n    AND preflight_max_scan_bytes BETWEEN 1073741824 AND 107374182400\n    AND preflight_max_scan_items BETWEEN 1000 AND 10000000\n  ),\n  CONSTRAINT sbv2_chk_sb_config_relationships CHECK (\n    controller_claim_heartbeat_seconds * 3 <= controller_claim_ttl_seconds\n    AND mutation_lease_heartbeat_seconds * 3 <= mutation_lease_ttl_seconds\n    AND artifact_lease_heartbeat_seconds * 3 <= artifact_lease_ttl_seconds\n    AND maintenance_lock_ttl_seconds >= quiesce_max_hold_seconds + watchdog_safety_margin_seconds + controller_claim_ttl_seconds * 2\n    AND retry_max_backoff_seconds >= retry_initial_backoff_seconds\n    AND evidence_retention_seconds >= retention_seconds\n    AND control_metadata_retention_seconds >= retention_seconds\n    AND control_metadata_retention_seconds >= evidence_retention_seconds\n    AND control_metadata_retention_seconds >= logs_retention_seconds\n    AND staging_capacity_bytes * 10 >= max_artifact_bytes * 11 + max_index_bytes * 10\n    AND log_chunk_bytes <= max_log_bytes\n    AND log_chunk_lines <= max_log_lines\n    AND capture_certificate_ttl_seconds > backup_task_deadline_seconds\n  ),\n  CONSTRAINT sbv2_chk_sb_config_registry_hashes CHECK (\n    parts_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND redis_sources_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND failure_domains_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND disaster_identity_mapping_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND source_writers_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND rbac_bindings_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND secret_allowlist_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND strong_auth_issuers_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n    AND provider_proof_issuers_registry_sha256 REGEXP '^[0-9a-f]{64}$'\n  ),\n  CONSTRAINT sbv2_chk_sb_config_registry_versions CHECK (\n    CHAR_LENGTH(parts_registry_version) >= 1\n    AND CHAR_LENGTH(redis_sources_registry_version) >= 1\n    AND CHAR_LENGTH(failure_domains_registry_version) >= 1\n    AND CHAR_LENGTH(disaster_identity_mapping_registry_version) >= 1\n    AND CHAR_LENGTH(source_writers_registry_version) >= 1\n    AND CHAR_LENGTH(rbac_bindings_registry_version) >= 1\n    AND CHAR_LENGTH(secret_allowlist_registry_version) >= 1\n    AND CHAR_LENGTH(strong_auth_issuers_registry_version) >= 1\n    AND CHAR_LENGTH(provider_proof_issuers_registry_version) >= 1\n  ),\n  CONSTRAINT sbv2_chk_sb_config_reference_hashes CHECK (\n    artifact_write_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND artifact_read_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND artifact_delete_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND artifact_upload_issuer_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND artifact_ca_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_store_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_write_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_read_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_delete_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_ca_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND evidence_kek_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND kek_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND capture_signing_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND acceptance_signing_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND catalog_signing_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND catalog_read_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND catalog_append_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND catalog_snapshot_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND nonce_hmac_identity_hash REGEXP '^[0-9a-f]{64}$'\n    AND status_relay_identity_hash REGEXP '^[0-9a-f]{64}$'\n  ),\n  CONSTRAINT sbv2_chk_sb_config_reference_versions CHECK (\n    CHAR_LENGTH(artifact_write_ref_version) >= 1\n    AND CHAR_LENGTH(artifact_read_ref_version) >= 1\n    AND CHAR_LENGTH(artifact_delete_ref_version) >= 1\n    AND CHAR_LENGTH(artifact_upload_issuer_ref_version) >= 1\n    AND CHAR_LENGTH(artifact_ca_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_store_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_write_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_read_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_delete_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_ca_ref_version) >= 1\n    AND CHAR_LENGTH(evidence_kek_ref_version) >= 1\n    AND CHAR_LENGTH(kek_ref_version) >= 1\n    AND CHAR_LENGTH(capture_signing_ref_version) >= 1\n    AND CHAR_LENGTH(acceptance_signing_ref_version) >= 1\n    AND CHAR_LENGTH(catalog_signing_ref_version) >= 1\n    AND CHAR_LENGTH(catalog_read_ref_version) >= 1\n    AND CHAR_LENGTH(catalog_append_ref_version) >= 1\n    AND CHAR_LENGTH(catalog_snapshot_ref_version) >= 1\n    AND CHAR_LENGTH(nonce_hmac_ref_version) >= 1\n    AND CHAR_LENGTH(status_relay_ref_version) >= 1\n  ),\n  CONSTRAINT sbv2_chk_sb_config_reason CHECK (change_reason IS NULL OR OCTET_LENGTH(change_reason) BETWEEN 1 AND 512),\n  CONSTRAINT sbv2_chk_sb_config_created_by CHECK (OCTET_LENGTH(created_by) BETWEEN 1 AND 128)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "effective_config": {
+    "enabled": false,
+    "alert_profile": "production",
+    "minimum_recovery_points": 1,
+    "durations": {
+      "controller_claim_ttl_seconds": 30,
+      "controller_claim_heartbeat_seconds": 10,
+      "controller_reconcile_interval_seconds": 10,
+      "mutation_lease_ttl_seconds": 30,
+      "mutation_lease_heartbeat_seconds": 10,
+      "artifact_lease_ttl_seconds": 60,
+      "artifact_lease_heartbeat_seconds": 20,
+      "gate_acquisition_timeout_seconds": 60,
+      "quiesce_max_hold_seconds": 600,
+      "maintenance_lock_ttl_seconds": 900,
+      "watchdog_db_unavailable_grace_seconds": 15,
+      "watchdog_safety_margin_seconds": 10,
+      "staging_retention_seconds": 86400,
+      "retention_seconds": 2592000,
+      "prune_candidate_ttl_seconds": 86400,
+      "confirmation_ttl_seconds": 900,
+      "logs_retention_seconds": 604800,
+      "evidence_retention_seconds": 2592000,
+      "promotion_health_max_age_seconds": 3600,
+      "task_cancel_deadline_seconds": 120,
+      "cleanup_deadline_seconds": 3600,
+      "retry_initial_backoff_seconds": 5,
+      "retry_max_backoff_seconds": 60,
+      "orphan_safety_window_seconds": 3600,
+      "artifact_health_interval_seconds": 3600,
+      "catalog_scan_interval_seconds": 3600,
+      "catalog_scan_deadline_seconds": 1800,
+      "provider_consistency_window_seconds": 30,
+      "redis_clock_skew_seconds": 5,
+      "strong_auth_max_age_seconds": 300,
+      "strong_auth_clock_skew_seconds": 30,
+      "provider_proof_max_age_seconds": 900,
+      "capture_certificate_ttl_seconds": 28800,
+      "finalization_resolution_grace_seconds": 900,
+      "recovery_point_objective_seconds": 86400,
+      "first_enable_recovery_alert_grace_seconds": 86400,
+      "control_metadata_retention_seconds": 31536000,
+      "backup_task_deadline_seconds": 21600,
+      "drill_task_deadline_seconds": 21600,
+      "preflight_task_deadline_seconds": 3600,
+      "artifact_verify_task_deadline_seconds": 7200,
+      "operation_deadline_seconds": 7200,
+      "finalization_resolution_deadline_seconds": 3600,
+      "prune_operation_deadline_seconds": 21600
+    },
+    "capacity": {
+      "control_metadata_capacity_bytes": 10737418240,
+      "staging_capacity_bytes": 21474836480,
+      "max_artifact_bytes": 17179869184,
+      "max_index_bytes": 536870912,
+      "max_plaintext_buffer_bytes": 67108864,
+      "max_source_items": 5000000,
+      "minimum_capture_throughput_bytes_per_second": 52428800,
+      "source_size_safety_factor": 1.25,
+      "max_log_bytes": 67108864,
+      "max_log_lines": 100000,
+      "log_chunk_bytes": 1048576,
+      "log_chunk_lines": 1000
+    },
+    "concurrency": {
+      "max_concurrent_drills": 1,
+      "max_concurrent_preflights": 2,
+      "max_concurrent_artifact_verifications": 1,
+      "max_pending_tasks": 100,
+      "max_auto_attempts": 3
+    },
+    "preflight_limits": {
+      "query_timeout_seconds": 30,
+      "provider_qps": 20,
+      "max_scan_bytes": 10737418240,
+      "max_scan_items": 1000000
+    },
+    "registries": [
+      {
+        "registry_kind": "parts",
+        "version": "parts-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "redis_sources",
+        "version": "redis-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "failure_domains",
+        "version": "domains-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "disaster_identity_mapping",
+        "version": "mapping-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "source_writers",
+        "version": "writers-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "rbac_bindings",
+        "version": "rbac-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "secret_allowlist",
+        "version": "allowlist-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "strong_auth_issuers",
+        "version": "auth-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "registry_kind": "provider_proof_issuers",
+        "version": "proof-v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "references": [
+      {
+        "purpose": "artifact_write",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "artifact_read",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "artifact_delete",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "artifact_upload_issuer",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "artifact_ca",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_store",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_write",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_read",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_delete",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_ca",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "evidence_kek",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "kek",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "capture_signing",
+        "identity_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "version": "v1"
+      },
+      {
+        "purpose": "acceptance_signing",
+        "identity_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "version": "v1"
+      },
+      {
+        "purpose": "catalog_signing",
+        "identity_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "version": "v1"
+      },
+      {
+        "purpose": "catalog_read",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "catalog_append",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "catalog_snapshot",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "nonce_hmac",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      },
+      {
+        "purpose": "status_relay",
+        "identity_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "v1"
+      }
+    ]
+  }
+}

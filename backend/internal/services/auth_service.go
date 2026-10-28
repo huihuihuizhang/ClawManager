@@ -10,6 +10,7 @@ import (
 	"clawreef/internal/config"
 	"clawreef/internal/models"
 	"clawreef/internal/repository"
+	"clawreef/internal/systembackupsecurity"
 	"clawreef/internal/utils"
 )
 
@@ -20,6 +21,14 @@ type AuthService interface {
 	RefreshToken(refreshToken string) (*TokenPair, error)
 	GetCurrentUser(userID int) (*models.User, error)
 	ChangePassword(userID int, currentPassword, newPassword string) error
+}
+
+// RequestAuthService lets HTTP callers carry request cancellation through
+// directory authentication and backup session registration.
+type RequestAuthService interface {
+	AuthService
+	LoginContext(context.Context, string, string) (*TokenPair, error)
+	RefreshTokenContext(context.Context, string) (*TokenPair, error)
 }
 
 // TokenPair holds access and refresh tokens
@@ -36,6 +45,7 @@ type authService struct {
 	jwtConfig               config.JWTConfig
 	enterpriseAuthenticator EnterpriseAuthenticator
 	enterprisePolicy        enterpriseAuthPolicy
+	backupSessions          systembackupsecurity.LoginSessionRecorder
 }
 
 type enterpriseAuthPolicy struct {
@@ -133,6 +143,16 @@ func (s *authService) Register(username, email, password string) (*models.User, 
 
 // Login authenticates a user and returns tokens
 func (s *authService) Login(username, password string) (*TokenPair, error) {
+	return s.LoginContext(context.Background(), username, password)
+}
+
+func (s *authService) LoginContext(ctx context.Context, username, password string) (*TokenPair, error) {
+	if ctx == nil {
+		return nil, context.Canceled
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
@@ -141,12 +161,12 @@ func (s *authService) Login(username, password string) (*TokenPair, error) {
 		return nil, errors.New("invalid username or password")
 	}
 	if normalizeAuthProvider(user.AuthProvider) == AuthProviderLDAP {
-		return s.loginLDAP(user, password)
+		return s.loginLDAP(ctx, user, password)
 	}
-	return s.loginLocal(user, password)
+	return s.loginLocal(ctx, user, password)
 }
 
-func (s *authService) loginLocal(user *models.User, password string) (*TokenPair, error) {
+func (s *authService) loginLocal(ctx context.Context, user *models.User, password string) (*TokenPair, error) {
 	// Check if user is active
 	if !user.IsActive {
 		return nil, errors.New("account is disabled")
@@ -159,51 +179,64 @@ func (s *authService) loginLocal(user *models.User, password string) (*TokenPair
 	if !utils.VerifyPassword(password, user.PasswordHash) {
 		return nil, errors.New("invalid username or password")
 	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 
 	// Update last login
+	state := loginState(user)
 	now := time.Now()
 	user.LastLogin = &now
 	if strings.TrimSpace(user.AuthProvider) == "" {
 		user.AuthProvider = AuthProviderLocal
 	}
-	if err := s.userRepo.Update(user); err != nil {
+	if err := s.updateLoginState(user, state); err != nil {
 		return nil, fmt.Errorf("failed to update last login: %w", err)
 	}
 
 	// Generate tokens
-	tokenPair, err := s.generateTokens(user.ID)
+	tokenPair, err := s.issueSessionTokens(ctx, user, "")
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate tokens: %w", err)
+		return nil, err
 	}
 
 	return tokenPair, nil
 }
 
-func (s *authService) loginLDAP(user *models.User, password string) (*TokenPair, error) {
+func (s *authService) loginLDAP(ctx context.Context, user *models.User, password string) (*TokenPair, error) {
 	if s.enterpriseAuthenticator == nil || user.ExternalID == nil || strings.TrimSpace(*user.ExternalID) == "" || !user.IsActive {
 		return nil, errors.New("invalid username or password")
 	}
 	externalID := strings.TrimSpace(*user.ExternalID)
-	enterpriseUser, err := s.enterpriseAuthenticator.AuthenticateByIdentity(context.Background(), externalID, password)
+	enterpriseUser, err := s.enterpriseAuthenticator.AuthenticateByIdentity(ctx, externalID, password)
 	if err != nil {
 		return nil, errors.New("invalid username or password")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	if enterpriseUser == nil || !strings.EqualFold(strings.TrimSpace(enterpriseUser.ExternalID), externalID) {
 		return nil, errors.New("invalid username or password")
 	}
 
+	state := loginState(user)
 	now := time.Now()
 	user.LastLogin = &now
-	if s.currentEnterprisePolicy().SyncRole && (enterpriseUser.Role == "admin" || enterpriseUser.Role == "user") {
+	syncRole := s.currentEnterprisePolicy().SyncRole && (enterpriseUser.Role == "admin" || enterpriseUser.Role == "user")
+	if syncRole {
 		user.Role = enterpriseUser.Role
+	}
+	if err := s.updateLoginState(user, state); err != nil {
+		return nil, fmt.Errorf("failed to update enterprise user: %w", err)
+	}
+	// The directory response cannot change quota until the verified user
+	// snapshot has passed the repository's conditional update.
+	if syncRole {
 		if err := SyncDefaultQuotaForRole(s.quotaRepo, user.ID, user.Role); err != nil {
 			return nil, err
 		}
 	}
-	if err := s.userRepo.Update(user); err != nil {
-		return nil, fmt.Errorf("failed to update enterprise user: %w", err)
-	}
-	return s.generateTokens(user.ID)
+	return s.issueSessionTokens(ctx, user, "")
 }
 
 func (s *authService) currentEnterprisePolicy() enterpriseAuthPolicy {
@@ -219,6 +252,16 @@ func (s *authService) currentEnterprisePolicy() enterpriseAuthPolicy {
 
 // RefreshToken refreshes the access token using a refresh token
 func (s *authService) RefreshToken(refreshToken string) (*TokenPair, error) {
+	return s.RefreshTokenContext(context.Background(), refreshToken)
+}
+
+func (s *authService) RefreshTokenContext(ctx context.Context, refreshToken string) (*TokenPair, error) {
+	if ctx == nil {
+		return nil, context.Canceled
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	// Validate refresh token
 	claims, err := utils.ValidateToken(refreshToken, s.jwtConfig.Secret)
 	if err != nil {
@@ -245,9 +288,9 @@ func (s *authService) RefreshToken(refreshToken string) (*TokenPair, error) {
 	}
 
 	// Generate new tokens
-	tokenPair, err := s.generateTokens(user.ID)
+	tokenPair, err := s.issueSessionTokens(ctx, user, refreshToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate tokens: %w", err)
+		return nil, err
 	}
 
 	return tokenPair, nil

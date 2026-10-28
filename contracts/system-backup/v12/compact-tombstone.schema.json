@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clawmanager.dev/contracts/system-backup/v12/compact-tombstone.schema.json",
+  "title": "System backup compact idempotency tombstone",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_type", "source_public_id", "origin_installation_id", "actor_type", "actor_id", "endpoint", "idempotency_key", "request_hash", "terminal_status", "failure_category", "eligibility", "artifact_final_state", "response_summary_hash", "source_created_at", "source_finished_at", "detail_rolling_hash", "gc_batch_id", "gc_at", "retention_class", "delete_after", "row_version"],
+  "properties": {
+    "schema_version": { "const": "system-backup-compact-tombstone.v1" },
+    "source_type": { "enum": ["backup", "drill", "preflight", "artifact_verify", "catalog_import", "prune_run", "operation", "promotion"] },
+    "source_public_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "origin_installation_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "actor_type": { "$ref": "status-failure-enums.schema.json#/$defs/ActorType" },
+    "actor_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "endpoint": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "request_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "terminal_status": {
+      "anyOf": [
+        { "enum": ["succeeded", "failed", "canceled", "expired", "partial_failed", "revoked", "superseded"] }
+      ]
+    },
+    "failure_category": { "$ref": "status-failure-enums.schema.json#/$defs/FailureCategory" },
+    "eligibility": { "type": ["boolean", "null"] },
+    "artifact_final_state": { "type": ["string", "null"], "enum": ["committed", "delete_failed", "deleted", "corrupt", null] },
+    "response_summary_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "source_created_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "source_finished_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "detail_rolling_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "gc_batch_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "gc_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },
+    "retention_class": { "enum": ["destructive_permanent", "standard"] },
+    "delete_after": { "type": ["string", "null"], "format": "date-time" },
+    "row_version": { "type": "integer", "minimum": 1 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "retention_class": { "const": "destructive_permanent" } }, "required": ["retention_class"] },
+      "then": { "properties": { "delete_after": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "retention_class": { "const": "standard" } }, "required": ["retention_class"] },
+      "then": { "properties": { "delete_after": { "type": "string", "format": "date-time" } } }
+    }
+  ],
+  "x-unique-key": ["origin_installation_id", "source_type", "source_public_id", "actor_type", "actor_id", "endpoint", "idempotency_key"],
+  "x-invariants": [
+    "A matching idempotency tuple and request hash returns HTTP 410 idempotency_expired with the original public ID and terminal summary; a different request hash returns idempotency_conflict.",
+    "destructive_permanent rows are never deleted.",
+    "standard rows are deletable only after delete_after and after audit and reference checks no longer require them."
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema-hash-live-evidence.schema.json",
+  "title": "System backup reviewed live schema-hash evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "contract_version", "status", "installation_identity_hash", "installation_identity_version", "capture_started_at", "capture_finished_at", "capture_method", "capture_sql_sha256", "capture_records_sha256", "capture_record_count", "server_context_hash", "inventory_snapshot_sha256", "migration_catalog_hash", "result", "inventory_comparison", "records_cleanup", "registered_evidence", "required_reviewers", "approved_reviewers"],
+  "properties": {
+    "kind": { "const": "system_backup_schema_hash_live_evidence" },
+    "contract_version": { "const": "system-backup-plan.v12" },
+    "status": { "enum": ["candidate", "reviewed"] },
+    "installation_identity_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "installation_identity_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "capture_started_at": { "type": "string", "format": "date-time" },
+    "capture_finished_at": { "type": "string", "format": "date-time" },
+    "capture_method": { "const": "mysql-batch-raw-no-column-names-v1" },
+    "capture_sql_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "capture_records_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "capture_record_count": { "type": "integer", "minimum": 1 },
+    "server_context_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "inventory_snapshot_sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "migration_catalog_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+    "result": { "$ref": "schema-hash-result.schema.json" },
+    "inventory_comparison": { "$ref": "#/$defs/InventoryComparison" },
+    "records_cleanup": { "$ref": "#/$defs/RecordsCleanup" },
+    "registered_evidence": { "anyOf": [{ "$ref": "#/$defs/EvidenceReference" }, { "type": "null" }] },
+    "required_reviewers": { "$ref": "#/$defs/AllOwners" },
+    "approved_reviewers": { "type": "array", "uniqueItems": true, "items": { "enum": ["A", "B", "C"] }, "maxItems": 3 }
+  },
+  "$defs": {
+    "ObjectKey": { "type": "string", "pattern": "^(table|view|trigger|routine|mysql_event):[a-z][a-z0-9_]*$" },
+    "AllOwners": {
+      "type": "array",
+      "prefixItems": [{ "const": "A" }, { "const": "B" }, { "const": "C" }],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_id", "sha256"],
+      "properties": {
+        "public_id": { "$ref": "admin-api-common.schema.json#/$defs/EvidencePublicId" },
+        "sha256": { "$ref": "artifact-common.schema.json#/$defs/Sha256" }
+      }
+    },
+    "InventoryComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_object_count", "observed_object_count", "observed_object_keys_hash", "missing_object_keys", "unexpected_object_keys", "matched"],
+      "properties": {
+        "expected_object_count": { "type": "integer", "minimum": 1 },
+        "observed_object_count": { "type": "integer", "minimum": 0 },
+        "observed_object_keys_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "missing_object_keys": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/ObjectKey" } },
+        "unexpected_object_keys": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/ObjectKey" } },
+        "matched": { "type": "boolean" }
+      }
+    },
+    "RecordsCleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_hash", "status", "deleted_at", "verified_absent"],
+      "properties": {
+        "path_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
+        "status": { "enum": ["pending", "verified"] },
+        "deleted_at": { "type": ["string", "null"], "format": "date-time" },
+        "verified_absent": { "type": "boolean" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "candidate" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "registered_evidence": { "type": "null" },
+          "approved_reviewers": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "reviewed" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "inventory_comparison": { "allOf": [{ "$ref": "#/$defs/InventoryComparison" }, { "properties": { "missing_object_keys": { "maxItems": 0 }, "unexpected_object_keys": { "maxItems": 0 }, "matched": { "const": true } } }] },
+          "records_cleanup": { "allOf": [{ "$ref": "#/$defs/RecordsCleanup" }, { "properties": { "status": { "const": "verified" }, "deleted_at": { "type": "string", "format": "date-time" }, "verified_absent": { "const": true } } }] },
+          "registered_evidence": { "$ref": "#/$defs/EvidenceReference" },
+          "approved_reviewers": { "$ref": "#/$defs/AllOwners" }
+        }
+      }
+    }
+  ],
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "draft",
+  "x-invariants": [
+    "capture_started_at is not later than capture_finished_at; cleanup deleted_at is later than capture_finished_at when present",
+    "capture_sql_sha256 binds the exact repository query and migration_catalog_hash binds the current embedded migrations",
+    "reviewed evidence requires exact inventory membership, verified temporary-record absence, a registered evidence reference and A/B/C review",
+    "candidate evidence never changes schema-registry status or satisfies schema_hash_evidence_present"
+  ],
+  "x-owner-boundaries": {
+    "A": "authenticates the installation/evidence identity and reviews safe evidence registration; D cannot self-approve it",
+    "B": "reviews workload/database capture provenance only; D does not infer B schema policy from this observation",
+    "C": "reviews evidence registration/retention only; D does not implement or assert provider storage",
+    "D": "owns deterministic capture parsing, inventory comparison, temporary-record cleanup verification and registry binding"
+  }
+}

@@ -8,6 +8,8 @@ import (
 	"errors"
 	"time"
 
+	"clawreef/internal/migrationcoord"
+
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -37,6 +39,9 @@ func RandomID(prefix string) (string, error) {
 func (g Gate) EnsureScope(ctx context.Context, scope string) error {
 	if scope == "" || len(scope) > 128 {
 		return errors.New("invalid maintenance scope")
+	}
+	if _, err := g.DB.ExecContext(ctx, "INSERT IGNORE INTO system_backup_v2_engine_bindings(scope) VALUES(?)", engineSelectionScope); err != nil {
+		return err
 	}
 	var exists int
 	err := g.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_gate WHERE scope=?", scope).Scan(&exists)
@@ -128,10 +133,34 @@ func (g Gate) WriteWithLease(ctx context.Context, lease MutationLease, write fun
 }
 
 func (g Gate) Begin(ctx context.Context, scope, owner, registryHash string, acquire, hold time.Duration) (GateOwnership, error) {
+	return g.BeginForEngine(ctx, LegacyEngine, scope, owner, registryHash, acquire, hold)
+}
+
+// BeginForEngine shares the same durable gate across both engine implementations.
+func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registryHash string, acquire, hold time.Duration) (result GateOwnership, resultErr error) {
+	lock, lockErr := (migrationcoord.SQLLocker{DB: g.DB, Timeout: time.Second}).Acquire(ctx)
+	if lockErr != nil {
+		return GateOwnership{}, ErrMaintenance
+	}
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := lock.Release(cleanup); err != nil && resultErr == nil {
+			resultErr = err
+		}
+	}()
+
 	if owner == "" || len(owner) > 128 || len(registryHash) != 64 || acquire <= 0 || acquire > 10*time.Minute || hold <= 0 || hold > time.Hour {
 		return GateOwnership{}, errors.New("invalid gate acquisition")
 	}
-	if err := g.closeAdmission(ctx, scope, owner, acquire); err != nil {
+	selected, err := g.Engine(ctx, scope)
+	if err != nil {
+		return GateOwnership{}, err
+	}
+	if !validEngine(engine) || selected.Engine != engine {
+		return GateOwnership{}, ErrEngineConflict
+	}
+	if err := g.closeAdmission(ctx, scope, owner, engine, acquire); err != nil {
 		return GateOwnership{}, err
 	}
 	tx, err := g.DB.BeginTx(ctx, nil)
@@ -139,6 +168,9 @@ func (g Gate) Begin(ctx context.Context, scope, owner, registryHash string, acqu
 		return GateOwnership{}, err
 	}
 	defer tx.Rollback()
+	if err = lockEngine(ctx, tx, scope, engine); err != nil {
+		return GateOwnership{}, err
+	}
 	var phase string
 	var generation, token uint64
 	// Never queue an exclusive lock behind the complete-request shared lock.

@@ -1,0 +1,109 @@
+{
+  "kind": "synthetic_cross_language_vectors",
+  "status": "draft",
+  "generator": "Node.js JSON.stringify of fixed ASCII keys sorted by UTF-16, Ed25519 JWS; private test key discarded without persistence",
+  "vectors": [
+    {
+      "name": "jcs-ed25519-1",
+      "proof": {
+        "schema_version": "system-backup-strong-auth-proof.v1",
+        "payload": {
+          "issuer": "issuer-admin-mfa-v1",
+          "audience": "clawmanager-admin-api",
+          "subject": "user:<>&  ",
+          "session": "session:redacted-01",
+          "auth_time": "2026-09-20T01:00:00Z",
+          "expires_at": "2026-09-20T01:05:00Z",
+          "method": "webauthn",
+          "nonce": "nonce_RedactedExample_123456",
+          "endpoint": "registerSystemBackupProviderProof",
+          "request_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "idempotency_key": "idem-a-proof-20260920-0001",
+          "acr": null,
+          "amr": [
+            "webauthn"
+          ]
+        },
+        "signature": {
+          "format": "jws",
+          "algorithm": "EdDSA",
+          "key_id": "auth-issuer-key",
+          "key_version": "2026-09-01",
+          "domain_separator": "clawmanager.system-backup.strong-auth.v1",
+          "protected_header": "eyJhbGciOiJFZERTQSIsImtleV92ZXJzaW9uIjoiMjAyNi0wOS0wMSIsImtpZCI6ImF1dGgtaXNzdWVyLWtleSIsInB1cnBvc2UiOiJzdHJvbmdfYXV0aF9pc3N1ZXIiLCJ0eXAiOiJjbGF3bWFuYWdlci5zeXN0ZW0tYmFja3VwLnN0cm9uZy1hdXRoLnYxIn0",
+          "value": "2prvBix0ZLvsVVCdDWNOcEQanE46wTHj5vEEQP7I9a2dU52WdxJqrcDIbgkk6cH1ILFgw1VtPUpzJSfot5F5BQ"
+        }
+      },
+      "canonical_utf8_hex": "7b22616372223a6e756c6c2c22616d72223a5b22776562617574686e225d2c2261756469656e6365223a22636c61776d616e616765722d61646d696e2d617069222c22617574685f74696d65223a22323032362d30392d32305430313a30303a30305a222c22656e64706f696e74223a22726567697374657253797374656d4261636b757050726f766964657250726f6f66222c22657870697265735f6174223a22323032362d30392d32305430313a30353a30305a222c226964656d706f74656e63795f6b6579223a226964656d2d612d70726f6f662d32303236303932302d30303031222c22697373756572223a226973737565722d61646d696e2d6d66612d7631222c226d6574686f64223a22776562617574686e222c226e6f6e6365223a226e6f6e63655f52656461637465644578616d706c655f313233343536222c22726571756573745f68617368223a2261616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c2273657373696f6e223a2273657373696f6e3a72656461637465642d3031222c227375626a656374223a22757365723a3c3e26e280a8e280a9227d",
+      "public_key_base64url": "tUK5S-I35rLVi92lhrcpB61cARe33jrLGDP7Jf4Vhe4"
+    },
+    {
+      "name": "jcs-ed25519-2",
+      "proof": {
+        "schema_version": "system-backup-strong-auth-proof.v1",
+        "payload": {
+          "issuer": "issuer-admin-mfa-v1",
+          "audience": "clawmanager-admin-api",
+          "subject": "user:literal\\u2028\\u003c\\\\\"\b\t\n\f\r\u0000\u001f/",
+          "session": "session:redacted-01",
+          "auth_time": "2026-09-20T01:00:00Z",
+          "expires_at": "2026-09-20T01:05:00Z",
+          "method": "webauthn",
+          "nonce": "nonce_RedactedExample_123456",
+          "endpoint": "registerSystemBackupProviderProof",
+          "request_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "idempotency_key": "idem-a-proof-20260920-0001",
+          "acr": null,
+          "amr": [
+            "webauthn"
+          ]
+        },
+        "signature": {
+          "format": "jws",
+          "algorithm": "EdDSA",
+          "key_id": "auth-issuer-key",
+          "key_version": "2026-09-01",
+          "domain_separator": "clawmanager.system-backup.strong-auth.v1",
+          "protected_header": "eyJhbGciOiJFZERTQSIsImtleV92ZXJzaW9uIjoiMjAyNi0wOS0wMSIsImtpZCI6ImF1dGgtaXNzdWVyLWtleSIsInB1cnBvc2UiOiJzdHJvbmdfYXV0aF9pc3N1ZXIiLCJ0eXAiOiJjbGF3bWFuYWdlci5zeXN0ZW0tYmFja3VwLnN0cm9uZy1hdXRoLnYxIn0",
+          "value": "JOaeksOfBfmqKMlMB1S-7K9wiRScud5XfyAr9-MyjNIjVcMKotbRBFrjzHQk5h5FKSUaZNOmN-Yl_aZo65R7Bg"
+        }
+      },
+      "canonical_utf8_hex": "7b22616372223a6e756c6c2c22616d72223a5b22776562617574686e225d2c2261756469656e6365223a22636c61776d616e616765722d61646d696e2d617069222c22617574685f74696d65223a22323032362d30392d32305430313a30303a30305a222c22656e64706f696e74223a22726567697374657253797374656d4261636b757050726f766964657250726f6f66222c22657870697265735f6174223a22323032362d30392d32305430313a30353a30305a222c226964656d706f74656e63795f6b6579223a226964656d2d612d70726f6f662d32303236303932302d30303031222c22697373756572223a226973737565722d61646d696e2d6d66612d7631222c226d6574686f64223a22776562617574686e222c226e6f6e6365223a226e6f6e63655f52656461637465644578616d706c655f313233343536222c22726571756573745f68617368223a2261616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c2273657373696f6e223a2273657373696f6e3a72656461637465642d3031222c227375626a656374223a22757365723a6c69746572616c5c5c75323032385c5c75303033635c5c5c5c5c225c625c745c6e5c665c725c75303030305c75303031662f227d",
+      "public_key_base64url": "tUK5S-I35rLVi92lhrcpB61cARe33jrLGDP7Jf4Vhe4"
+    },
+    {
+      "name": "jcs-ed25519-3",
+      "proof": {
+        "schema_version": "system-backup-strong-auth-proof.v1",
+        "payload": {
+          "issuer": "issuer-admin-mfa-v1",
+          "audience": "clawmanager-admin-api",
+          "subject": "user:中文😀é",
+          "session": "session:redacted-01",
+          "auth_time": "2026-09-20T01:00:00Z",
+          "expires_at": "2026-09-20T01:05:00Z",
+          "method": "webauthn",
+          "nonce": "nonce_RedactedExample_123456",
+          "endpoint": "registerSystemBackupProviderProof",
+          "request_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "idempotency_key": "idem-a-proof-20260920-0001",
+          "acr": null,
+          "amr": [
+            "webauthn"
+          ]
+        },
+        "signature": {
+          "format": "jws",
+          "algorithm": "EdDSA",
+          "key_id": "auth-issuer-key",
+          "key_version": "2026-09-01",
+          "domain_separator": "clawmanager.system-backup.strong-auth.v1",
+          "protected_header": "eyJhbGciOiJFZERTQSIsImtleV92ZXJzaW9uIjoiMjAyNi0wOS0wMSIsImtpZCI6ImF1dGgtaXNzdWVyLWtleSIsInB1cnBvc2UiOiJzdHJvbmdfYXV0aF9pc3N1ZXIiLCJ0eXAiOiJjbGF3bWFuYWdlci5zeXN0ZW0tYmFja3VwLnN0cm9uZy1hdXRoLnYxIn0",
+          "value": "aqVvv3WiJEtL9f0L10iS7PzLEYAqIfSb0Z4lpFDiKeC0sgHKidElZylaa7TO4Y2Zyf5VLqD2VBrcsjPu9TjaCA"
+        }
+      },
+      "canonical_utf8_hex": "7b22616372223a6e756c6c2c22616d72223a5b22776562617574686e225d2c2261756469656e6365223a22636c61776d616e616765722d61646d696e2d617069222c22617574685f74696d65223a22323032362d30392d32305430313a30303a30305a222c22656e64706f696e74223a22726567697374657253797374656d4261636b757050726f766964657250726f6f66222c22657870697265735f6174223a22323032362d30392d32305430313a30353a30305a222c226964656d706f74656e63795f6b6579223a226964656d2d612d70726f6f662d32303236303932302d30303031222c22697373756572223a226973737565722d61646d696e2d6d66612d7631222c226d6574686f64223a22776562617574686e222c226e6f6e6365223a226e6f6e63655f52656461637465644578616d706c655f313233343536222c22726571756573745f68617368223a2261616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c2273657373696f6e223a2273657373696f6e3a72656461637465642d3031222c227375626a656374223a22757365723ae4b8ade69687f09f9880c3a9227d",
+      "public_key_base64url": "tUK5S-I35rLVi92lhrcpB61cARe33jrLGDP7Jf4Vhe4"
+    }
+  ]
+}

@@ -86,7 +86,8 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	if e != nil {
 		t.Fatal(e)
 	}
-	if len(capture.Tables) != 75 || len(normalizedResult.Tables) != 75 || len(evidence) < 10 {
+	requireFullBusinessCoverage(t, capture, normalizedResult)
+	if len(evidence) < 10 {
 		t.Fatal("incomplete full capture/normalization")
 	}
 	target, targetName := isolatedSchemaDB(t, source)
@@ -126,6 +127,26 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	// A populated target is never reused implicitly, even after a failed retry.
 	if e = appdb.PrepareIsolatedRestoreSchema(ctx, target); e == nil {
 		t.Fatal("schema bootstrap accepted existing database")
+	}
+}
+
+// Use the independently migration-verified schema contract rather than a stale
+// table count. Every declared business table must survive both pipeline stages.
+func requireFullBusinessCoverage(t *testing.T, results ...SQLResult) {
+	t.Helper()
+	schema, err := BuiltinSchema()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, result := range results {
+		if len(result.Tables) != len(schema) {
+			t.Fatalf("business table coverage: got %d want %d", len(result.Tables), len(schema))
+		}
+		for _, table := range schema {
+			if _, exists := result.Tables[table.Name]; !exists {
+				t.Fatalf("business table missing from snapshot: %s", table.Name)
+			}
+		}
 	}
 }
 
