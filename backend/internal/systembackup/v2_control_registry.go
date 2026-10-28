@@ -50,5 +50,7 @@ func init() {
 		"system_backup_v2_import_journal",
 		"system_backup_v2_execution_readiness",
 		"system_backup_v2_execution_inputs",
+		"system_backup_v2_execution_plans",
+		"system_backup_v2_job_send_intents",
 	)
 }

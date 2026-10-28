@@ -39,6 +39,8 @@ def outputs():
                     # Readiness and immutable queued inputs are installation-local
                     # execution authority, never restored as runnable work.
                     "system_backup_v2_execution_readiness", "system_backup_v2_execution_inputs",
+                    "system_backup_v2_execution_plans",
+                    "system_backup_v2_job_send_intents",
                 ]) + '\t)\n}\n')
     yield ROOT / "backend/internal/systembackup/v2_control_registry.go", registry
 

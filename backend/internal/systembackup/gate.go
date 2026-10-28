@@ -138,6 +138,16 @@ func (g Gate) Begin(ctx context.Context, scope, owner, registryHash string, acqu
 
 // BeginForEngine shares the same durable gate across both engine implementations.
 func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registryHash string, acquire, hold time.Duration) (result GateOwnership, resultErr error) {
+	return g.beginForEngine(ctx, engine, scope, owner, registryHash, acquire, hold, nil)
+}
+
+// admission is evaluated before closing request admission, and again after the
+// engine/gate row locks in the transaction that changes the gate. The latter
+// check, not the initial observation, authorizes a versioned task to acquire it.
+func (g Gate) beginForEngine(ctx context.Context, engine, scope, owner, registryHash string, acquire, hold time.Duration, admission func(context.Context, gateQuery) error) (result GateOwnership, resultErr error) {
+	if g.DB == nil {
+		return GateOwnership{}, ErrFence
+	}
 	lock, lockErr := (migrationcoord.SQLLocker{DB: g.DB, Timeout: time.Second}).Acquire(ctx)
 	if lockErr != nil {
 		return GateOwnership{}, ErrMaintenance
@@ -159,6 +169,11 @@ func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registry
 	}
 	if !validEngine(engine) || selected.Engine != engine {
 		return GateOwnership{}, ErrEngineConflict
+	}
+	if admission != nil {
+		if err := admission(ctx, g.DB); err != nil {
+			return GateOwnership{}, err
+		}
 	}
 	if err := g.closeAdmission(ctx, scope, owner, engine, acquire); err != nil {
 		return GateOwnership{}, err
@@ -187,6 +202,11 @@ func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registry
 	if phase != "idle" {
 		return GateOwnership{}, ErrMaintenance
 	}
+	if admission != nil {
+		if err := admission(ctx, tx); err != nil {
+			return GateOwnership{}, err
+		}
+	}
 	var outstanding int
 	if err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_participants WHERE scope=? AND (state<>'running' OR resume_result NOT IN ('none','succeeded','forced'))", scope).Scan(&outstanding); err != nil {
 		return GateOwnership{}, err
@@ -211,6 +231,13 @@ func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registry
 // Hold requires every registered writer to have stopped, including expired
 // mutation leases. A TTL expiration alone never establishes consistency.
 func (g Gate) Hold(ctx context.Context, ownership GateOwnership) (GateOwnership, error) {
+	return g.hold(ctx, ownership, nil)
+}
+
+func (g Gate) hold(ctx context.Context, ownership GateOwnership, admission func(context.Context, gateQuery) error) (GateOwnership, error) {
+	if g.DB == nil {
+		return ownership, ErrFence
+	}
 	tx, err := g.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return ownership, err
@@ -224,6 +251,11 @@ func (g Gate) Hold(ctx context.Context, ownership GateOwnership) (GateOwnership,
 	}
 	if phase != "acquiring" || owner != ownership.Owner || generation != ownership.Generation || token != ownership.Token || !timely {
 		return ownership, ErrFence
+	}
+	if admission != nil {
+		if err := admission(ctx, tx); err != nil {
+			return ownership, err
+		}
 	}
 	var active int
 	if err = tx.QueryRowContext(ctx, "SELECT (SELECT COUNT(*) FROM system_backup_mutation_leases WHERE scope=? AND released_at IS NULL) + (SELECT COUNT(*) FROM system_backup_participants WHERE scope=? AND (generation<>? OR state<>'paused' OR resume_result<>'none'))", ownership.Scope, ownership.Scope, generation).Scan(&active); err != nil {

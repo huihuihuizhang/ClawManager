@@ -103,12 +103,7 @@ func (s *SQLApplication) CancelUnstarted(r *http.Request, kind read.TaskKind, id
 		if json.Unmarshal(cfg.Canonical, &values) != nil {
 			return zero, &Error{"not_ready"}
 		}
-		writer, ok := s.writer.(*SQLTaskWriter)
-		if !ok || writer == nil {
-			return zero, &Error{"not_ready"}
-		}
-		reservation := preparedSQLTask{writer: writer, body: []byte(`{}`)}
-		if err = reservation.reserveCapacity(q, values.Capacity.ControlMetadataCapacityBytes, 0); err != nil {
+		if err = reserveControlCapacity(q, s.cancellationCapacityFile, values.Capacity.ControlMetadataCapacityBytes, 65538); err != nil {
 			return zero, err
 		}
 		operationID := "sop_" + uuidlib.NewString()

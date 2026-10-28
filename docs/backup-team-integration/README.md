@@ -35,6 +35,14 @@ leases, and no unresolved provider writes or unconfirmed restore executions.
 Time expiry alone does not establish that a writer stopped. The selection API is
 internal and has no public activation endpoint.
 
+The task-claim adapter now provides `BeginVersionedCapture`,
+`HoldVersionedCapture` and `ResolveVersionedCapture` against this shared gate.
+It rejects stale task claims and recovers the same acquisition after response
+loss. The watchdog cannot reopen v2 work based on a missing legacy capture plan.
+This is a tested adapter, not a composed scheduler or remote recovery service.
+See the root `BACKUP_TEAM_INTEGRATION_HANDOFF.md` for implementation status and
+the remaining execution work.
+
 Schema migration and capture share the historical migration lock plus the
 connection-owned backup exclusion. Failed/uncertain lock cleanup discards the
 physical connection. A backup-fork unversioned schema is rejected **before DDL**;
@@ -131,7 +139,7 @@ Docker includes distinct migrate/import/bootstrap/registration/grant/audit tools
 the optional Secret Broker and a separately named `system-backup-v2-controller`.
 The original controller binary is retained. The versioned controller has a new,
 explicit `SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED` opt-in and refuses capture
-activation because the production runner/shared-gate adapter is absent. The
+activation because the production runner and shared-gate composition are absent. The
 legacy `SYSTEM_BACKUP_ENABLED` flag cannot accidentally activate it.
 
 The standalone migration tool pins server UUID, database and the exact current
@@ -143,3 +151,10 @@ reject both `cm_restore_<32hex>` and `cm_import_<32hex>` isolated targets.
 Necessary local regression results and boundaries are recorded in `validation.json`.
 These results do not assert full v2 execution, real-cluster recovery, an image
 publication or a deployment. Activation gates above remain explicit.
+
+The next local phase adds a durable SQL execution queue, claim-bound encrypted
+plans, and persisted single-send Job intents. The shared Team gate adapter is
+implemented but not yet called by a production execution loop. Job response-loss
+tests use real MySQL and a simulated Kubernetes boundary; they do not validate
+an actual capture or restore Job. See `../../BACKUP_TEAM_INTEGRATION_HANDOFF.md`
+for the paused implementation status and remaining execution work.

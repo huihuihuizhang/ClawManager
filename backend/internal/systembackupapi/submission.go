@@ -52,12 +52,13 @@ type TaskDetails interface {
 }
 
 type SQLApplication struct {
-	db      *sql.DB
-	actions *security.SystemBackupActionAuthorizer
-	reads   *security.SystemBackupReadAuthorizer
-	writer  TaskWriter
-	details TaskDetails
-	budget  time.Duration
+	db                       *sql.DB
+	actions                  *security.SystemBackupActionAuthorizer
+	reads                    *security.SystemBackupReadAuthorizer
+	writer                   TaskWriter
+	details                  TaskDetails
+	budget                   time.Duration
+	cancellationCapacityFile string
 }
 
 func NewSQLApplication(db *sql.DB, actions *security.SystemBackupActionAuthorizer, reads *security.SystemBackupReadAuthorizer,
@@ -65,7 +66,22 @@ func NewSQLApplication(db *sql.DB, actions *security.SystemBackupActionAuthorize
 	if db == nil || actions == nil || reads == nil || nilDependency(writer) || nilDependency(details) || admissionBudget <= 0 || admissionBudget > time.Minute {
 		return nil, &Error{"not_ready"}
 	}
-	return &SQLApplication{db, actions, reads, writer, details, admissionBudget}, nil
+	app := &SQLApplication{db: db, actions: actions, reads: reads, writer: writer, details: details, budget: admissionBudget}
+	if w, ok := writer.(*SQLTaskWriter); ok {
+		app.cancellationCapacityFile = w.capacityFile
+	}
+	return app, nil
+}
+
+// WithCancellationCapacityReport keeps recovery independent of the capture
+// profile/runner. It returns a copy; live requests never observe a partial edit.
+func (s *SQLApplication) WithCancellationCapacityReport(path string) *SQLApplication {
+	if s == nil {
+		return nil
+	}
+	copy := *s
+	copy.cancellationCapacityFile = path
+	return &copy
 }
 
 func (s *SQLApplication) CreateAndEnqueue(r *http.Request, kind read.TaskKind, endpoint, key string, body json.RawMessage) (read.TaskHeader, error) {

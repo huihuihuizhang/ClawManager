@@ -1,14 +1,9 @@
 {
-  "status": "transactional_admission_verified_execution_incomplete",
+  "status": "paused_after_verified_execution_foundation_full_execution_incomplete",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "8ef5fa7fd4df45f6306e910705db01f589266ba7",
-  "migration_count": 160,
+  "migration_count": 162,
   "checks": {
-    "backend_all": {
-      "result": "passed",
-      "local_log_sha256": "d6c27ce1c660c8471ee453545f5d23f75a9de7de0ef2e92ac48ce6e17bcc4f5e",
-      "boundary": "prior integration baseline unit suite; current full run found new-table registry omissions, corrected and focused registry regression passed; final full rerun pending"
-    },
     "real_mysql_schema": {
       "result": "passed",
       "local_log_sha256": "6cf43cae545f4a56185e08cee25a26481d212d1700295ea7881c670d522e275f",
@@ -48,18 +43,54 @@
       "result": "passed",
       "local_log_sha256": "62da520935875c50131153cfd5fe02fe59a93b04acc286176540c23831af868f",
       "boundary": "real disposable MySQL with 160 migrations; six same-key submissions; rollback/readiness; real HTTP session/RBAC create/read/cancel; synthetic readiness only, no capture Job"
+    },
+    "recovery_without_capture_profile": {
+      "result": "passed",
+      "local_log_sha256": "208c2f600bb83b3cb8d22bc5a21165a6e2c21401153966042fd6913350d48e61",
+      "boundary": "real MySQL and HTTP authority; disabled submission writer leaves authorized detail and unstarted cancellation usable; actual runner remains absent"
+    },
+    "versioned_shared_gate": {
+      "result": "passed",
+      "local_log_sha256": "85c6a40bef680f6c581186adfbf8104d844c23f5b5437c1c6d7d799494407f0f",
+      "boundary": "real MySQL shared Team gate: current task claim, stale controller rejection, same-generation lost-response recovery, timeout fences unconfirmed execution; synthetic task/controller setup, no remote participant or Job"
+    },
+    "legacy_gate_regression": {
+      "result": "passed",
+      "local_log_sha256": "d63f5c03242177cedbcc948630ff09a5a9003175af85501d065e65aea94edf64",
+      "boundary": "real MySQL legacy gate, engine competition, participant pause/resume, expired writers and watchdog; targeted tests have no skipped cases"
+    },
+    "backend_all_before_final_job_constraints": {
+      "result": "passed",
+      "local_log_sha256": "88a6ed03bf0cd295cb650a743b7e9b7e3e9f04fe66891c73ac06042e5d9dffec",
+      "boundary": "Full go test ./... -count=1 passed before final Job-intent foreign key and strict Pod identity comparisons; final focused tests cover those changes."
+    },
+    "execution_queue_plan_send": {
+      "result": "passed",
+      "local_log_sha256": "9296cb43560440f6aa9363080f0e912136afef48130c3ab3123fdf7106496615",
+      "boundary": "Real MySQL with 162 migrations; concurrent claim, takeover, tamper rejection, encrypted plan preservation, single-send Job intent and lost-response recovery. Kubernetes is simulated, not live capture acceptance. Focused cases have no skips."
+    },
+    "backend_all": {
+      "result": "passed",
+      "local_log_sha256": "b8443d770203f96c5a777e89ffdb07961a9e727a440852b0bd20215c8da00316",
+      "boundary": "Final go test ./... passed after final Job-intent foreign key and strict Pod identity changes. Opt-in platform tests without their environment may skip; real MySQL current-stage tests are separately recorded."
     }
   },
   "not_accepted": [
-    "production v2 runner, durable dispatch and remote shared-gate adapter; complete task control/health views",
-    "v2 current-data registry and complete restore acceptance",
-    "production grants/TLS/Broker/download deployment",
-    "final image/live environment and rollback"
+    "production v2 scheduling/readiness publisher and complete shared-gate composition",
+    "actual capture worker; Job observation, stop and recovery; remote participant pause/resume",
+    "current-data registry approval, publication and independent restore",
+    "running cancellation, retry/recovery actions and complete progress/health views",
+    "production grants/TLS/Broker/download deployment; final image/live environment and rollback"
   ],
-  "publication": "code branch only; no server mutation or new engine activation",
+  "publication": "User-requested pause after local stage commits; these new stages are not pushed; no image, server mutation or new engine activation.",
   "credential_pattern_scan": {
     "files": 1062,
     "result": "no matched private-key/GitHub/AWS credentials",
     "exception": "relay_peer_test.go deliberately rejects an invalid one-byte AA== PEM literal; it is not a key"
-  }
+  },
+  "current_stage_credential_pattern_scan": {
+    "files": 26,
+    "result": "no matched private-key/GitHub/AWS credential patterns; not a claim that all possible secret formats were detected"
+  },
+  "cleanup": "Removed only task-owned disposable MySQL container cm-backup-execution-20261028 after its tests; other containers and servers unchanged."
 }

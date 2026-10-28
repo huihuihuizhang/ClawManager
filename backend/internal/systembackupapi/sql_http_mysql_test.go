@@ -160,6 +160,10 @@ func TestSQLTaskRealHTTPAuthorityAndReadback(t *testing.T) {
 	if _, err = db.Exec("DROP TRIGGER reject_cancel_audit"); err != nil {
 		t.Fatal(err)
 	}
+	// Capture configuration can disappear during recovery; safe unstarted
+	// cancellation still uses its independent control capacity report.
+	app := handler.application.(*SQLApplication)
+	app.writer = DisabledTaskWriter{}
 	canceled := cancelTask(operator, "operator-cancel-key-001")
 	if canceled.Code != 202 {
 		t.Fatalf("cancel %d %s", canceled.Code, canceled.Body.String())
@@ -172,6 +176,7 @@ func TestSQLTaskRealHTTPAuthorityAndReadback(t *testing.T) {
 	if err != nil || detail.Task.Status != "canceled" || detail.Task.CanCancel || detail.Execution.CurrentAttemptNumber != nil {
 		t.Fatal("canceled detail", err)
 	}
+	app.writer = w
 	if _, err = db.Exec("UPDATE system_backup_v2_admin_sessions SET revoked=TRUE WHERE user_id=42"); err != nil {
 		t.Fatal(err)
 	}

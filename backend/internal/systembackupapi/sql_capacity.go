@@ -1,16 +1,24 @@
 package systembackupapi
 
 import (
-	security "clawreef/internal/systembackupsecurity"
 	"io"
 	"os"
 	"time"
+
+	security "clawreef/internal/systembackupsecurity"
 )
 
 // Reserve with the same monotonic ledger used by registration. Never reset it
 // on a fresh sample: delayed table statistics can omit committed admissions.
 func (p *preparedSQLTask) reserveCapacity(q TaskWriteSQL, capacity int64, configBytes int) error {
-	f, err := os.Open(p.writer.capacityFile)
+	return reserveControlCapacity(q, p.writer.capacityFile, capacity, int64(configBytes+len(p.writer.raw)+len(p.body))+65536)
+}
+
+func reserveControlCapacity(q TaskWriteSQL, reportFile string, capacity, cost int64) error {
+	if cost < 65536 || cost > 1<<20 {
+		return &Error{"not_ready"}
+	}
+	f, err := os.Open(reportFile)
 	if err != nil {
 		return &Error{"not_ready"}
 	}
@@ -32,7 +40,6 @@ func (p *preparedSQLTask) reserveCapacity(q TaskWriteSQL, capacity int64, config
 	if q.QueryRow("SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6)").Scan(&server, &database, &now) != nil || report.ServerUUID != server || report.Database != database || report.ObservedAt.After(now) || report.ObservedAt.Before(now.Add(-5*time.Second)) || report.AllocatedBytes < 0 || report.AvailableBytes < 0 || capacity < 1<<30 || capacity > 1<<40 {
 		return &Error{"not_ready"}
 	}
-	cost := int64(configBytes+len(p.writer.raw)+len(p.body)) + 65536
 	reserve := capacity / 20
 	if reserve < 64<<20 {
 		reserve = 64 << 20

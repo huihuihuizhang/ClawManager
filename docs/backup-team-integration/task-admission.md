@@ -12,8 +12,9 @@ profile (installation, revision, source orchestrator/profile, target class/risks
 failure domain and immutable restore-target reference/hash).
 `SYSTEM_BACKUP_CAPACITY_REPORT_FILE` supplies the same database-identity-pinned
 capacity report used by registration. Neither file contains browser credentials.
-An absent profile leaves reads available and refuses new submission. An invalid
-profile refuses the composed task application.
+An absent or invalid profile disables new submission. Authorized reads and safe
+unstarted cancellation remain available, using their independent control-capacity
+report. Invalid capture configuration must not remove recovery/history routes.
 
 Creation supports POST `/api/v1/admin/system-backups` and
 `/api/v1/admin/system-backup-preflights`. Request shapes are linked from the
@@ -65,3 +66,43 @@ cross-installation, mismatched-key and unconfirmed responses.
 The new readiness and execution-input tables are installation-local authority.
 They are classified as metadata/reference-only in the legacy backup registry;
 restoring a business backup must not replay their queued work or readiness.
+
+## Shared gate adapter and remaining composition
+
+`systembackup.Gate.BeginVersionedCapture` and `HoldVersionedCapture` use the
+existing Team gate, not a second `system_backup_v2_maintenance_locks` authority.
+They verify installation, admitted task inputs, controller owner, row version,
+lease and deadline. The live claim is rechecked inside the gate transition
+transaction; an old controller cannot proceed after takeover. Expired writer
+leases still block capture until the writers explicitly stop.
+
+`ResolveVersionedCapture` finds the original gate generation after a lost
+response without extending deadlines or acquiring a replacement generation.
+The legacy watchdog fences an expired v2 gate but cannot reopen application
+writes if a v2 attempt, Job observation or external action exists. A missing
+legacy capture plan is not evidence of v2 collector exit.
+
+Real MySQL tests verify this adapter and the unchanged legacy gate behavior.
+The test controller transitions are synthetic: no production scheduler calls
+these methods yet. Remote participant pause/resume, actual collector stop
+verification and versioned recovery/release composition remain required. Do
+not publish readiness or enable capture based on these library tests.
+
+## Durable execution foundation (not active composition)
+
+`SQLExecutionQueue` claims admitted work once and detects takeover that requires
+recovery instead of automatically starting a second execution. `PlanStore`
+persists immutable AES-GCM plans bound to the task, installation, configuration,
+profile and encryption key version. Keys remain outside SQL.
+
+`JobDriver.Ensure` records an attempt and send intent before the API call. After
+an uncertain send it only looks up the original Job and checks its specification
+and actual UID; it does not resend or accept a same-name replacement. An unresolved
+intent remains blocked until the still-required recovery implementation can
+establish what happened. This is deliberately not a full execution state machine.
+
+The current phase verifies concurrent claims, takeover, input/plan tampering and
+lost Job responses with real MySQL. Kubernetes calls are simulated for this
+failure boundary. Production scheduling, Job observation/stop/recovery, capture,
+publication and independent restore are still required before readiness can be
+published. Work is paused after the user's requested local commit and review.

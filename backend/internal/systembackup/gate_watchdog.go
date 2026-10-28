@@ -42,6 +42,22 @@ func (g Gate) ForceReleaseExpired(ctx context.Context, scope string) (bool, erro
 	if _, err = tx.ExecContext(ctx, "UPDATE system_backup_gate SET phase='releasing',updated_at=UTC_TIMESTAMP(6) WHERE scope=?", scope); err != nil {
 		return false, err
 	}
+	if versionedBackupID.MatchString(owner) {
+		// The old watchdog cannot infer v2 collector exit from a missing legacy
+		// capture plan. Fence immediately, but reopen only an acquisition with
+		// no possible v2 execution. A real attempt/Job/unknown external action
+		// must be reconciled by the v2 stop/resume adapter before release.
+		var effects int
+		if err = tx.QueryRowContext(ctx, `SELECT
+(SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_type='backup' AND target_public_id=?) +
+(SELECT COUNT(*) FROM system_backup_v2_job_observations WHERE target_type='backup' AND target_public_id=?) +
+(SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type='backup' AND target_public_id=?)`, owner, owner, owner).Scan(&effects); err != nil {
+			return false, err
+		}
+		if effects != 0 {
+			return false, tx.Commit()
+		}
+	}
 	var waiting int
 	if err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_participants WHERE scope=? AND (generation<>? OR state<>'running' OR resume_result NOT IN ('succeeded','forced'))", scope, generation).Scan(&waiting); err != nil {
 		return false, err

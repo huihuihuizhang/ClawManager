@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"os"
 	"time"
 
@@ -18,14 +19,16 @@ func linkedSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecurit
 	var writer systembackupapi.TaskWriter = systembackupapi.DisabledTaskWriter{}
 	if path := os.Getenv("SYSTEM_BACKUP_EXECUTION_PROFILE_FILE"); path != "" {
 		profile, err := systembackupapi.LoadExecutionProfile(path)
-		if err != nil {
-			return nil
+		if err == nil {
+			var configured *systembackupapi.SQLTaskWriter
+			configured, err = systembackupapi.NewSQLTaskWriter(profile)
+			if err == nil {
+				writer = configured.WithCapacityReport(os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"))
+			}
 		}
-		configured, err := systembackupapi.NewSQLTaskWriter(profile)
 		if err != nil {
-			return nil
+			log.Print("backup execution profile unavailable; task submission disabled, authorized history and unstarted cancellation retained")
 		}
-		writer = configured.WithCapacityReport(os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"))
 	}
 	details := systembackupapi.SQLTaskDetails{DB: db}
 	application, err := composeSystemBackupTaskApplication(db, sessions, writer, details, os.Getenv)
@@ -50,7 +53,11 @@ func composeSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecuri
 	if err != nil {
 		return nil, err
 	}
-	return systembackupapi.NewSQLApplication(db, actions, reads, writer, details, 30*time.Second)
+	app, err := systembackupapi.NewSQLApplication(db, actions, reads, writer, details, 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	return app.WithCancellationCapacityReport(getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE")), nil
 }
 
 func registerBackupTaskMutations(admin *gin.RouterGroup, handler *systembackupapi.Handler) {
