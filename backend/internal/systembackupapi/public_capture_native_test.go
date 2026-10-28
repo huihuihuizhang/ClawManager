@@ -1328,6 +1328,10 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, cl
 	if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_public_id=?", task).Scan(&attempts) != nil || attempts != 1 {
 		t.Fatal("production duplicate attempt")
 	}
+	var visibleJobs int
+	if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_job_observations j JOIN system_backup_v2_runtime_resources r ON r.task_public_id=j.target_public_id AND r.observed_uid=j.job_uid AND r.resource_kind='Job' WHERE j.target_public_id=? AND j.last_observed_status='sealed' AND j.progress_sequence=j.last_accepted_sequence AND j.progress_sequence>0 AND j.progress_digest_sha256=r.result_sha256 AND j.last_business_progress_at IS NOT NULL", task).Scan(&visibleJobs) != nil || visibleJobs != 1 {
+		t.Fatal("authenticated sealed Job progress missing from user-visible projection")
+	}
 	identity, e := c.NewPinnedExecutionIdentity(cfg.ForwardGrant.Path, forwardHash, cfg.KeyDirectory, signing.Public().(ed25519.PublicKey))
 	if e != nil {
 		t.Fatal(e)
@@ -1479,6 +1483,10 @@ func nativeReadCaptureDetail(t *testing.T, handler *Handler, token, task, status
 	header, ok := detail["task"].(map[string]any)
 	if !ok || header["status"] != status || detail["artifact_usable"] != false || detail["acceptance_ready"] != false {
 		t.Fatal("captured detail misreported publication/readiness")
+	}
+	execution, ok := detail["execution"].(map[string]any)
+	if !ok || execution["last_business_progress_at"] == nil || execution["job_generation"] != float64(1) {
+		t.Fatal("actual HTTP detail omitted authenticated Job progress")
 	}
 }
 

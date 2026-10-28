@@ -543,6 +543,12 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if e = guard.Recheck(ctx, tx); e != nil {
 		return lease, worker.ErrExecution
 	}
+	observationRaw, _ := json.Marshal(req)
+	observationHash := hash(observationRaw)
+	clear(observationRaw)
+	if e = recordPublicObservation(ctx, tx, a, binding, "running", observationHash); e != nil {
+		return lease, worker.ErrNotReady
+	}
 	if e = tx.Commit(); e != nil {
 		return lease, worker.ErrNotReady
 	}
@@ -637,6 +643,9 @@ func (o *PublicJobOwner) saveResult(ctx context.Context, a d.Authority, binding 
 		}
 	}
 	if e = guard.Recheck(ctx, tx); e != nil {
+		return e
+	}
+	if e = recordPublicObservation(ctx, tx, a, binding, "sealed", digest); e != nil {
 		return e
 	}
 	return tx.Commit()

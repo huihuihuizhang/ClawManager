@@ -273,6 +273,16 @@
       "result": "passed",
       "local_log_sha256": "103585263464e0714b0f2d61076e99c92b5fb850f6129a24c1860cc2366275e5",
       "boundary": "Focused public adapter, execution and HTTP API tests pass; nil recovery admission retains forward restrictions."
+    },
+    "m4_actual_job_observation": {
+      "result": "passed",
+      "local_log_sha256": "1d9b97128927856589a06413d34481cc7b55b5b38dc5f22fa0048ada3faf3051",
+      "boundary": "Actual production command, physical capacity, minimum SQL/Kubernetes, scratch worker: authenticated Job observation, verified sealed result/progress digest, actual HTTP generation/progress detail, prepublication cancellation/data retention. Workspace functional only."
+    },
+    "m4_actual_job_observation_backend": {
+      "result": "passed",
+      "local_log_sha256": "2b0c9d0f9850a8ee77250dae91094bd24d3920885391ccdafb538793ba1ed47b",
+      "boundary": "go test ./... after transactional actual Job/progress projection and terminal/dedup guards."
     }
   },
   "not_accepted": [

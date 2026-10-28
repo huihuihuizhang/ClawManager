@@ -108,3 +108,11 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 提交复核：首次实际最小角色暴露 UPDATE/PATCH 写法不符和 shared Admission 错接 forward 检查，均修正真实调用与权限边界，没有补 ALL。一次 ack 路径误限定001导致安装确认超时，改为受限的实际 Go TempDir编号。一次正常用例未及时读取诊断而等了八分钟，这仍是可避免的浪费；已改为正常链出现持久恢复受阻时立即结束测试并保留封闭诊断。下一步只做最终镜像与已实现用户链验收，不重复已通过的大矩阵。
 
 本块恢复测试早期错误地在 create_dispatched 位落盘就中断，这可能发生在真实 API 请求之前；等待到了保护状态而非预期的原 Job 恢复。已让该例先核实真实原 Job UID/owner，再测试恢复。无实际对象的未知发送仍明确受阻，这一自动收敛缺口没有被改等待条件掩盖为完成。
+
+### 第十一工作块：真实 Job 观察与业务进展投影
+
+认证后的原 Pod/进程/Job 通过现有事务写入 job_observations；只保存原身份引用与内容摘要，不保存证书、请求正文或密钥。心跳刷新观察时间，不生成业务进展；原密文实际打开验证后，封存结果和业务进展在同一事务落盘。重复结果复用、不同结果拒绝，迟到心跳不能将 sealed 改回 running。原 HTTP 详情现在能读出实际 Job generation 和 last_business_progress_at，未发布的 artifact_usable/acceptance_ready 仍为 false。
+
+最小 SQL 角色仅为原 job_observations 增加 INSERT/UPDATE，没有业务表扩权。实际正式入口、真实容量、最小 SQL/Kubernetes 角色、scratch Worker45.18秒通过；核对 projection 的 digest 与实际加密结果日记一致，详情/取消后历史仍可读，后端全量通过。没有改变旧备份、Worker 参数或 Team 业务协议。
+
+提交复核：复用现有表和 reader/DTO，不新增一套进度协议。先实际链验证，再补“同心跳只刷新观察时间”边界并以最终源码重新运行；避免只通过纯状态转换测试就认定用户详情可见。当前完整六域、正式成品及独立还原仍未完成，不能以进度展示补足这一缺口。

@@ -23,7 +23,7 @@
       "path": "BACKUP_M3_M4_EXECUTION.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "902715c256788c1bd06b6a9db318fb31ade2a49ddd83ac8a5c0a345e7a0dacc5",
+      "working_tree_sha256": "187438c38c7a01ed809b574ce824980cbf8b26a8dd57efa10f47a316cfc2102c",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -2942,7 +2942,7 @@
       "path": "backend/internal/systembackupapi/public_capture_native_test.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "1b4e2b473f3635d2ee310cc564de6273cc06642e070f79531b7e45bfadb2d943",
+      "working_tree_sha256": "31668a46747d489ed2a4270a478f5512ee3656ea339996cfc4a14d0852a6cd10",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -4181,7 +4181,7 @@
       "path": "backend/internal/systembackupcontroller/public_capture_grants.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "313d9f48f0f435cfed4954e4290d4900c90f59e3d748c06a93542c2acff3928e",
+      "working_tree_sha256": "3181693ee6df4fe61ee596f2e721ab4ebec0bc5ca827bae4342abda262dab7ad",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -6246,7 +6246,21 @@
       "path": "backend/internal/systembackupexecution/public_jobs.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "0c71a001f74ba805090fb9b435c122a55945113483f55e6d296e50d5cfe03a03",
+      "working_tree_sha256": "cefd606634f9184d4f03e8f014e56173a14d3559b3b31ba36c686797c1b25a87",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_observation.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "bb605579e99773967ebc0d53f44fb71ac8bd6ab7f7e5cd4e5dbd5c9cc3843461",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_observation_test.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "c678ed3f8aec412e2246a84196895c672abc4a92c34db27f6a1e2e9bad80e76c",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9718,7 +9732,7 @@
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "eaade9a72cea9597feead1551354d84088f976bbaf094ad52345ad3765f99756",
+      "working_tree_sha256": "f506090a2e47109a214ed5b92dddeb64d68ac3dfc4820839f92a5c582a2eb0ac",
       "disposition": "integration-owned adaptation"
     },
     {
