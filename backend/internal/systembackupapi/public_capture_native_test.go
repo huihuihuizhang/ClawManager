@@ -1320,9 +1320,81 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		t.Fatal(e)
 	}
 	waitNative(t, ctx, func() bool { after, z := os.ReadFile(counter); return z == nil && !bytes.Equal(before, after) })
+	nativeReadCaptureDetail(t, handler, operator, task, "validating")
+	// Admission is exercised against real original capture/exit/resume facts.
+	// Temporarily damage only the disposable fixture's receipt, then restore
+	// the exact original value; this is a fault test, not a recovery procedure.
+	for _, fault := range []struct{ clear, restore string }{
+		{"UPDATE system_backup_v2_runtime_captures SET source_resumed_at=NULL WHERE task_public_id=?", "UPDATE system_backup_v2_runtime_captures SET source_resumed_at=? WHERE task_public_id=?"},
+		{"UPDATE system_backup_v2_runtime_writers SET resumed=FALSE WHERE task_public_id=?", "UPDATE system_backup_v2_runtime_writers SET resumed=TRUE WHERE task_public_id=?"},
+	} {
+		if _, z := db.Exec(fault.clear, task); z != nil {
+			t.Fatal(z)
+		}
+		r := nativeCancelCall(handler, operator, task)
+		if r.Code != http.StatusConflict {
+			t.Fatal("released cancel accepted missing original recovery proof", r.Code, r.Body.String())
+		}
+		args := []any{task}
+		if strings.Contains(fault.restore, "source_resumed_at=?") {
+			args = []any{resumed.Time, task}
+		}
+		if _, z := db.Exec(fault.restore, args...); z != nil {
+			t.Fatal(z)
+		}
+	}
+	first := nativeCancelCall(handler, operator, task)
+	var canceled read.OperationDTO
+	if first.Code != http.StatusAccepted || json.Unmarshal(first.Body.Bytes(), &canceled) != nil || canceled.Status != "succeeded" {
+		t.Fatal("released cancel did not close original task", first.Code, first.Body.String())
+	}
+	second := nativeCancelCall(handler, operator, task)
+	if second.Code != http.StatusAccepted || second.Header().Get("Location") != first.Header().Get("Location") {
+		t.Fatal("released cancel replay created another operation")
+	}
+	var canceledState, attemptState string
+	if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&canceledState) != nil || canceledState != "canceled" {
+		t.Fatal("released task not canceled")
+	}
+	if db.QueryRow("SELECT status FROM system_backup_v2_attempts WHERE target_public_id=?", task).Scan(&attemptState) != nil || attemptState != "sealed" {
+		t.Fatal("released cancellation rewrote physical capture history")
+	}
+	retained, z := os.ReadFile(filepath.Join(cfg.StagingDirectory, task, "workspace.enc"))
+	if z != nil || !bytes.Equal(retained, sealed) {
+		t.Fatal("released cancellation discarded original sealed data")
+	}
+	nativeReadCaptureDetail(t, handler, operator, task, "canceled")
 	capacityEvidence := "synthetic capacity"
 	if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
 		capacityEvidence = "actual MySQL data-volume capacity under exact SELECT-only collector"
 	}
-	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating; " + capacityEvidence)
+	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating -> authorized pre-publication cancellation, sealed data retained; missing recovery proofs rejected; " + capacityEvidence)
+}
+
+func nativeReadCaptureDetail(t *testing.T, handler *Handler, token, task, status string) {
+	t.Helper()
+	r := httptest.NewRequest(http.MethodGet, "https://example.invalid/api/v1/admin/system-backups/"+task, nil)
+	r.TLS = &tls.ConnectionState{}
+	r.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	handler.Detail(w, r, read.BackupTask, task, "native-capture-detail")
+	var detail map[string]any
+	if w.Code != http.StatusOK || json.Unmarshal(w.Body.Bytes(), &detail) != nil {
+		t.Fatal("actual captured task detail unavailable", status, w.Code, w.Body.String())
+	}
+	header, ok := detail["task"].(map[string]any)
+	if !ok || header["status"] != status || detail["artifact_usable"] != false || detail["acceptance_ready"] != false {
+		t.Fatal("captured detail misreported publication/readiness")
+	}
+}
+
+func nativeCancelCall(handler *Handler, token, task string) *httptest.ResponseRecorder {
+	r := httptest.NewRequest(http.MethodPost, "https://example.invalid/api/v1/admin/system-backups/"+task+"/cancel", strings.NewReader(`{}`))
+	r.TLS = &tls.ConnectionState{}
+	r.Header.Set("Authorization", "Bearer "+token)
+	r.Header.Set("Idempotency-Key", "native-cancel-original-0001")
+	r.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Cancel(w, r, read.BackupTask, task, "native-released-cancel")
+	return w
 }

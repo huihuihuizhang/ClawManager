@@ -213,6 +213,21 @@
       "result": "passed",
       "local_log_sha256": "22b8120456206a69732fa74cb8ac5ad7a038b7bfcac9ff914b94ccae0094febb",
       "boundary": "Backend go test ./... passed with final exact forward action checks. Native opt-in separately recorded."
+    },
+    "m4_released_cancel_native": {
+      "result": "passed",
+      "local_log_sha256": "1c7716aa4b0f626d9c49ccc02bb5d9bae36073b18d05c781f7ed790b8d7b1ca1",
+      "boundary": "Actual production binary/physical MySQL capacity/minimum SQL role: real capture, authenticated content, source resume, actual validating and canceled detail queries, missing original resume proofs rejected, same-key cancel replay and exact sealed data retention. Does not publish or restore."
+    },
+    "m4_released_cancel_backend": {
+      "result": "passed",
+      "local_log_sha256": "f5f65886ec41df751fe5242c54593ec9cfd0644a44451f72b28cbc4c9bfb8efc",
+      "boundary": "Backend go test ./... passed. Opt-in native separately recorded."
+    },
+    "m4_released_cancel_frontend": {
+      "result": "passed",
+      "local_log_sha256": "3b6351c23057e4dbceda48d11d4a4673be7d64f0767450345f41de81c81f38a0",
+      "boundary": "Production frontend build passed with validating cancel entry. No browser acceptance."
     }
   },
   "not_accepted": [

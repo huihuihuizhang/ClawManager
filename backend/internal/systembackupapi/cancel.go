@@ -86,9 +86,20 @@ func (s *SQLApplication) CancelUnstarted(r *http.Request, kind read.TaskKind, id
 			return zero, &Error{"not_ready"}
 		}
 		if status != "pending" || owner.Valid {
+			if kind == read.BackupTask && status == "validating" {
+				if err = s.cancelReleasedCapture(ctx, tx, q, installation, id); err != nil {
+					return zero, err
+				}
+			}
 			op, err = s.stageActiveCancellation(q, kind, installation, id, actor, endpoint, key, hash, status)
 			if err != nil {
 				return zero, err
+			}
+			if status == "validating" {
+				op, err = finishReleasedCancellation(q, installation, id, op.PublicID)
+				if err != nil {
+					return zero, err
+				}
 			}
 		} else {
 			var effects uint64

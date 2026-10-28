@@ -114,7 +114,7 @@ export default function BackupLiveDetail({ selection, close, reader = systemBack
       {state.kind === 'ready' && <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">{fields.map(([name, value]) =>
         <div key={name} className="min-w-0"><dt className="text-slate-500">{name}</dt><dd className="mt-1 break-words text-slate-900">{value}</dd></div>)}</dl>}
       {state.kind === 'ready' && !localReport && reader === systemBackupReadService && (kind === 'backups' || kind === 'preflights')
-        && state.detail.task.can_cancel && ['pending', 'preparing', 'ready_for_capture', 'acquiring_gate', 'capturing', 'canceling'].includes(state.detail.task.status)
+        && state.detail.task.can_cancel && ['pending', 'preparing', 'ready_for_capture', 'acquiring_gate', 'capturing', 'canceling', 'validating'].includes(state.detail.task.status)
         && <BackupCancelUnstarted key={public_id} selection={selection} active={state.detail.task.status !== 'pending'} canceled={() => { setState({ kind: 'loading' }); setRevision(v => v + 1); }} />}
       {downloadEvidence !== null && <div className="mt-5">{localReport ? localReport(downloadEvidence) : <BackupEvidenceDownload
         installation={origin_installation_id} evidenceId={downloadEvidence.public_id} />}</div>}

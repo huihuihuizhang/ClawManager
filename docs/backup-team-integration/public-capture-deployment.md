@@ -83,3 +83,12 @@ Native production acceptance removes forward/source/private-key files, restarts
 the real controller, waits for the original lease to expire, proves original
 collector exit/source resume and ends the original task failed/idle. This is
 recovery acceptance, not successful publication or isolated restore.
+
+## Canceling sealed, unpublished work
+
+An authorized cancel may close a validating capture only after the original
+collector exit and every original writer resume are durably verified, with one
+sealed capture attempt and no publication actions, artifact references or remote
+effects. It preserves encrypted staging and sealed history. It never touches
+the current source gate, re-captures source data, deletes data or claims a
+successful backup. Publishing/unknown-result work is not accepted on this path.

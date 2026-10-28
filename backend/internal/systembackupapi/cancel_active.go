@@ -21,7 +21,7 @@ func (s *SQLApplication) stageActiveCancellation(q *taskSQLCapability, kind read
 		}
 	}()
 	var zero read.OperationDTO
-	if kind != read.BackupTask || (status != "preparing" && status != "ready_for_capture" && status != "acquiring_gate" && status != "capturing" && status != "canceling") {
+	if kind != read.BackupTask || (status != "preparing" && status != "ready_for_capture" && status != "acquiring_gate" && status != "capturing" && status != "canceling" && status != "validating") {
 		return zero, &Error{"conflict_active_job"}
 	}
 	var original int
