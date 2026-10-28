@@ -120,7 +120,12 @@
             "control_plane.empty.system_backup_v2_backups",
             "control_plane.empty.system_backup_v2_maintenance_locks", "control_plane.empty.system_backup_v2_maintenance_mutation_leases",
             "control_plane.empty.system_backup_v2_maintenance_participants", "control_plane.empty.system_backup_v2_restore_drill_resources",
-            "control_plane.empty.system_backup_v2_restore_drills"
+            "control_plane.empty.system_backup_v2_restore_drills",
+            "control_plane.empty.system_backup_v2_execution_records",
+            "control_plane.empty.system_backup_v2_runtime_resources",
+            "control_plane.empty.system_backup_v2_runtime_writers",
+            "control_plane.empty.system_backup_v2_runtime_captures",
+            "control_plane.empty.system_backup_v2_runtime_stop_proofs"
           ] },
           "expected": { "$ref": "#/$defs/ResourcesCountValue" },
           "actual": { "$ref": "#/$defs/ResourcesCountValue" }

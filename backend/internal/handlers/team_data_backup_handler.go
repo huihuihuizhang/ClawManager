@@ -21,6 +21,7 @@ func (h *TeamDataBackupHandler) Register(r *gin.RouterGroup) {
 	r.POST("/team-data/jobs", h.create)
 	r.GET("/team-data/jobs/:id", h.detail)
 	r.POST("/team-data/jobs/:id/cancel", h.cancel)
+	r.POST("/team-data/jobs/:id/retry", h.retry)
 	r.GET("/team-data/discover", h.discover)
 	r.GET("/team-data/artifacts", h.artifacts)
 	r.POST("/team-data/artifacts/:id/import", h.importArtifact)
@@ -30,13 +31,29 @@ func (h *TeamDataBackupHandler) Register(r *gin.RouterGroup) {
 }
 func teamDataHTTPError(c *gin.Context, e error) {
 	switch e.Error() {
-	case "backup_protected", "backup_in_use", "minimum_recovery_points", "backup_deleting", "catalog_changed", "state_conflict", "feature_disabled":
+	case "backup_protected", "backup_in_use", "minimum_recovery_points", "backup_deleting", "catalog_changed", "state_conflict", "feature_disabled", "backup_result_unconfirmed":
 		c.JSON(409, gin.H{"success": false, "code": e.Error()})
 	case "confirmation_invalid":
 		c.JSON(400, gin.H{"success": false, "code": "confirmation_invalid"})
 	default:
 		backupError(c, e)
 	}
+}
+
+func (h *TeamDataBackupHandler) retry(c *gin.Context) {
+	if !h.available(c) {
+		return
+	}
+	var body struct{}
+	if !backupBody(c, &body) {
+		return
+	}
+	job, e := h.service.Retry(c.Request.Context(), c.GetInt("userID"), c.Param("id"), c.GetHeader("Idempotency-Key"))
+	if e != nil {
+		teamDataHTTPError(c, e)
+		return
+	}
+	c.JSON(http.StatusAccepted, gin.H{"success": true, "data": job})
 }
 func (h *TeamDataBackupHandler) protect(c *gin.Context) {
 	if !h.available(c) {

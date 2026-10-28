@@ -8,6 +8,7 @@ export default function TeamDataCatalogPanel({zh,changed,active=false,disabled=f
  const [items,setItems]=useState<TeamDataArtifact[]>([]),[found,setFound]=useState<TeamDataDiscovery>();
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[preview,setPreview]=useState<TeamDataDeletePreview>();
  const deleteRequest=useRef('');
+ const startRequest=useRef<{intent:string;key:string}|undefined>(undefined);
  const text=(a:string,b:string)=>zh?a:b;
  const errorMessage=(code:string)=>{
   const labels:Record<string,[string,string]>={
@@ -24,7 +25,7 @@ export default function TeamDataCatalogPanel({zh,changed,active=false,disabled=f
  const load=useCallback(async()=>{setItems(await service.artifacts())},[]);
  useEffect(()=>{void load().catch(()=>setError(zh?'暂时无法读取备份目录，请重试。':'Backup inventory is temporarily unavailable. Retry.'))},[load,zh,refresh]);
  const action=async(run:()=>Promise<void>)=>{setBusy(true);setError('');try{await run();await load();changed()}catch(e){setError(errorMessage(backupErrorCode(e)))}finally{setBusy(false)}};
- const start=async(operation:TeamDataJob['operation'],id:string)=>{const j=await service.create(operation,crypto.randomUUID(),id);navigate(`/admin/backups/${j.public_id}`)};
+ const start=async(operation:TeamDataJob['operation'],id:string)=>{const intent=`${operation}:${id}`;if(startRequest.current?.intent!==intent)startRequest.current={intent,key:crypto.randomUUID()};const j=await service.create(operation,startRequest.current.key,id);startRequest.current=undefined;navigate(`/admin/backups/${j.public_id}`)};
  const health=(value:string)=>({verified:text('完整性核对通过','Integrity verified'),unchecked:text('尚需完整性复核','Full verification needed'),unavailable:text('暂时无法访问或读取','Temporarily unavailable'),damaged:text('备份完整性检查失败','Backup integrity check failed'),key_unavailable:text('无法解密，请检查密钥与备份','Cannot decrypt. Check the key and backup.'),deleted:text('已删除','Deleted')}[value]??text('状态待确认','Status unconfirmed'));
  const blocked=busy||active||disabled;
  return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">

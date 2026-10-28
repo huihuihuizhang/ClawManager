@@ -68,6 +68,8 @@ type TeamDataJob struct {
 }
 
 type TeamDataReport struct {
+	Retry                  *TeamDataRetry            `json:"retry,omitempty"`
+	InterruptedPhase       string                    `json:"interrupted_phase,omitempty"`
 	BackupID               string                    `json:"backup_id"`
 	Purpose                string                    `json:"purpose"`
 	Consistency            string                    `json:"consistency"`
@@ -342,16 +344,19 @@ func (s *TeamDataService) List(ctx context.Context) ([]TeamDataJob, error) {
 }
 
 func (s *TeamDataService) Create(ctx context.Context, actor int, key, operation, source string) (TeamDataJob, error) {
-	if s.cfg.Disabled && operation != "cleanup" {
-		return TeamDataJob{}, errors.New("feature_disabled")
-	}
-	if s.recoveryOnly && operation == "backup" {
-		return TeamDataJob{}, errors.New("recovery_only")
-	}
+	return s.createWithRetry(ctx, actor, key, operation, source, nil)
+}
+
+func (s *TeamDataService) createWithRetry(ctx context.Context, actor int, key, operation, source string, retry *TeamDataRetry) (TeamDataJob, error) {
 	if actor < 1 || !idemPattern.MatchString(key) || (operation != "backup" && operation != "restore" && operation != "cleanup" && operation != "verify" && operation != "delete") || (operation == "backup" && source != "") || ((operation == "restore" || operation == "verify" || operation == "delete") && (!publicIDPattern.MatchString(source) || !strings.HasPrefix(source, "sbk_"))) || (operation == "cleanup" && (!publicIDPattern.MatchString(source) || !strings.HasPrefix(source, "sdr_"))) {
 		return TeamDataJob{}, errors.New("validation_failed")
 	}
-	hash, _ := RequestHash(map[string]string{"operation": operation, "source_backup_id": source})
+	request := map[string]string{"operation": operation, "source_backup_id": source}
+	if retry != nil {
+		request["retry_of_public_id"] = retry.Of
+		request["continue_operation"] = retry.Next
+	}
+	hash, _ := RequestHash(request)
 	tx, e := s.db.BeginTx(ctx, nil)
 	if e != nil {
 		return TeamDataJob{}, e
@@ -369,7 +374,16 @@ func (s *TeamDataService) Create(ctx context.Context, actor int, key, operation,
 	if !errors.Is(e, sql.ErrNoRows) {
 		return TeamDataJob{}, e
 	}
+	if s.cfg.Disabled && operation != "cleanup" {
+		return TeamDataJob{}, errors.New("feature_disabled")
+	}
+	if s.recoveryOnly && operation == "backup" {
+		return TeamDataJob{}, errors.New("recovery_only")
+	}
 	if operation == "restore" || operation == "verify" {
+		if s.store.Client == nil {
+			return TeamDataJob{}, errors.New("artifact_unavailable")
+		}
 		j, e := s.Get(ctx, source)
 		if e != nil || j.Status != "succeeded" || j.Operation != "backup" || j.ConfigHash != s.configHash {
 			state, _, catalogErr := s.catalog().Load(ctx)
@@ -412,7 +426,12 @@ func (s *TeamDataService) Create(ctx context.Context, actor int, key, operation,
 	if e != nil {
 		return TeamDataJob{}, e
 	}
-	_, e = tx.ExecContext(ctx, "INSERT INTO system_team_data_backup_jobs(public_id,operation,source_backup_id,actor_id,idempotency_key,request_hash,config_hash) VALUES(?,?,NULLIF(?,''),?,?,?,?)", id, operation, source, actor, key, hash, s.configHash)
+	var initialReport any
+	if retry != nil {
+		raw, _ := json.Marshal(map[string]any{"retry": retry})
+		initialReport = raw
+	}
+	_, e = tx.ExecContext(ctx, "INSERT INTO system_team_data_backup_jobs(public_id,operation,source_backup_id,actor_id,idempotency_key,request_hash,config_hash,report_json) VALUES(?,?,NULLIF(?,''),?,?,?,?,?)", id, operation, source, actor, key, hash, s.configHash, initialReport)
 	if e != nil {
 		var duplicate *mysql.MySQLError
 		if errors.As(e, &duplicate) && duplicate.Number == 1062 {

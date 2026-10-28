@@ -31,7 +31,12 @@ var controlExclusionTables = map[string]struct{}{
 	"system_backup_v2_strong_auth_nonces": {}, "system_backup_v2_totp_credentials": {}, "system_backup_v2_backups": {},
 	"system_backup_v2_maintenance_locks": {}, "system_backup_v2_maintenance_mutation_leases": {},
 	"system_backup_v2_maintenance_participants": {}, "system_backup_v2_restore_drill_resources": {},
-	"system_backup_v2_restore_drills": {},
+	"system_backup_v2_restore_drills":      {},
+	"system_backup_v2_execution_records":   {},
+	"system_backup_v2_runtime_resources":   {},
+	"system_backup_v2_runtime_writers":     {},
+	"system_backup_v2_runtime_captures":    {},
+	"system_backup_v2_runtime_stop_proofs": {},
 }
 
 // ControlExclusionAllowlist is closed against the frozen schema registry. Any
@@ -58,7 +63,7 @@ func ControlExclusionAllowlist(registryJSON []byte) ([]string, error) {
 			sawMigrations = true
 			continue
 		}
-		if !required || object.ObjectType != "table" || object.Category != "system_backup" || object.Owner != "D" || object.BackupStrategy != "metadata_only" || object.RestoreStrategy != "reference_only" {
+		if !required || object.ObjectType != "table" || (object.Category != "system_backup" && object.Category != "control_plane") || object.Owner != "D" || object.BackupStrategy != "metadata_only" || object.RestoreStrategy != "reference_only" {
 			return nil, fmt.Errorf("control exclusion policy mismatch at %s", object.Name)
 		}
 		seen[object.Name] = struct{}{}

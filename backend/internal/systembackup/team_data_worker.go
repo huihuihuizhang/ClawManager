@@ -56,7 +56,7 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 	}()
 	// An old process never causes a second capture/restore of the same job.
 	// Keep partial targets and immutable parts for inspection and explicit cleanup.
-	if _, e = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='failed',phase='interrupted',error_code='process_interrupted',finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6),owner_id=NULL WHERE status IN ('running','canceling') AND (owner_id IS NULL OR owner_id<>?)", s.owner); e != nil {
+	if _, e = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET report_json=JSON_SET(COALESCE(report_json,JSON_OBJECT()),'$.interrupted_phase',phase),status='failed',phase='interrupted',error_code='process_interrupted',finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6),owner_id=NULL WHERE status IN ('running','canceling') AND (owner_id IS NULL OR owner_id<>?)", s.owner); e != nil {
 		return e
 	}
 	for ctx.Err() == nil {
@@ -66,6 +66,11 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 		j, e := scanTeamDataJob(s.db.QueryRowContext(ctx, "SELECT "+teamDataColumns+" FROM system_team_data_backup_jobs WHERE status='pending' ORDER BY created_at LIMIT 1"))
 		if e != nil && e.Error() != "not_found" {
 			return e
+		}
+		if e != nil && e.Error() == "not_found" {
+			if followErr := s.continueQueuedRetry(ctx); followErr != nil {
+				return followErr
+			}
 		}
 		if e == nil {
 			r, e := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='running',owner_id=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending'", s.owner, j.ID)
@@ -167,6 +172,13 @@ func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j Team
 		// These errors contain registered table/column names, never cell values.
 		if strings.HasPrefix(err.Error(), "value mismatch: ") || strings.HasPrefix(err.Error(), "row count mismatch: ") {
 			log.Printf("Team data SQL readback: id=%s detail=%s", j.ID, err.Error())
+		}
+	}
+	report.Retry = teamDataRetry(j)
+	if report.Retry != nil && report.Retry.Next == "restore" && status == "succeeded" && j.Operation == "cleanup" {
+		phase = "retry_pending"
+		if actual.CancelRequested {
+			phase = "retry_stopped"
 		}
 	}
 	raw, _ := json.Marshal(report)

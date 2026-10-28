@@ -140,7 +140,7 @@ func TestRestoreReadbackSingleTransaction(t *testing.T) {
 		return nil
 	}
 	proof.Final = func(_ context.Context, tx *sql.Tx) error {
-		if exact != tx || s.probes != 35 || s.field.closed != 18 {
+		if exact != tx || s.probes != len(controlExclusionTables) || s.field.closed != 18 {
 			t.Fatal("final proof skipped complete reads")
 		}
 		calls = append(calls, "final")
@@ -149,7 +149,7 @@ func TestRestoreReadbackSingleTransaction(t *testing.T) {
 	if err := verifyRestoreReadback(context.Background(), db, frozenRegistryBytes(t), expected, fieldTestBudget, proof); err != nil {
 		t.Fatal(err)
 	}
-	if strings.Join(calls, ",") != "target,candidate,final" || s.begins != 1 || s.field.base.commits != 1 || s.field.base.rollbacks != 0 || !s.field.base.begin.ReadOnly || s.field.base.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) || len(s.field.base.queries) != 98 {
+	if strings.Join(calls, ",") != "target,candidate,final" || s.begins != 1 || s.field.base.commits != 1 || s.field.base.rollbacks != 0 || !s.field.base.begin.ReadOnly || s.field.base.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) || len(s.field.base.queries) != 2*len(controlExclusionTables)+28 {
 		t.Fatal("wrong transaction/authority boundary")
 	}
 	for _, query := range s.field.base.queries {

@@ -3,6 +3,7 @@ import api from './api';
 export interface TeamDataState {table:string;field:string;captured:string|null;restored:string|null;rows:number}
 export interface TeamDataSummary {tables:Array<{table:string;rows:number;quarantined_rows:number}>;states:TeamDataState[];sql_readback_verified:boolean}
 export interface TeamDataReport {
+ retry?:{retry_of_public_id:string;continue_operation?:string;followup_public_id?:string};
  backup_id:string;purpose:string;consistency:string;storage:string;
  capture_started_at:string;capture_finished_at:string;integrity_verified:boolean;
  parts?:Array<{name:string;bytes:number;sha256:string}>;
@@ -32,5 +33,6 @@ export const teamDataBackupService={
  get:async(id:string,signal?:AbortSignal):Promise<TeamDataJob>=>(await api.get(`${base}/jobs/${encodeURIComponent(id)}`,{signal})).data.data,
  create:async(operation:TeamDataJob['operation'],key:string,source?:string):Promise<TeamDataJob>=>(await api.post(`${base}/jobs`,{operation,...(source?{source_backup_id:source}:{})},{headers:{'Idempotency-Key':key}})).data.data,
  cancel:async(id:string):Promise<TeamDataJob>=>(await api.post(`${base}/jobs/${encodeURIComponent(id)}/cancel`,{})).data.data,
+ retry:async(id:string,key:string):Promise<TeamDataJob>=>(await api.post(`${base}/jobs/${encodeURIComponent(id)}/retry`,{},{headers:{'Idempotency-Key':key}})).data.data,
 };
-export const teamDataActive=(j:TeamDataJob)=>['pending','running','canceling'].includes(j.status);
+export const teamDataActive=(j:TeamDataJob)=>['pending','running','canceling'].includes(j.status)||(j.status==='succeeded'&&j.phase==='retry_pending');

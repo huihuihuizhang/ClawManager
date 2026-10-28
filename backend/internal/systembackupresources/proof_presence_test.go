@@ -117,7 +117,7 @@ func TestResourcesTargetProofPresence(t *testing.T) {
 				}
 				return
 			}
-			if err != nil || calls != 1 || len(checks) != 35 || len(state.queries) != 70 || state.commits != 1 || state.rollbacks != 0 || !state.begin.ReadOnly || state.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) {
+			if err != nil || calls != 1 || len(checks) != 40 || len(state.queries) != 2*len(controlExclusionTables) || state.commits != 1 || state.rollbacks != 0 || !state.begin.ReadOnly || state.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) {
 				t.Fatalf("present target proof changed the snapshot: calls=%d queries=%d checks=%d err=%v", calls, len(state.queries), len(checks), err)
 			}
 			for _, check := range checks {

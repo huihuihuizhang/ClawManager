@@ -14,7 +14,7 @@ var runtimeControlTables = []string{"system_backup_v2_admin_revocations", "syste
 
 func TestControlExclusionCurrentRegistryScope(t *testing.T) {
 	tables, err := ControlExclusionAllowlist(frozenRegistryBytes(t))
-	if err != nil || len(tables) != 35 {
+	if err != nil || len(tables) != 40 {
 		t.Fatal("incomplete current control table closure", len(tables), err)
 	}
 	seen := map[string]bool{}
@@ -52,7 +52,7 @@ func TestControlExclusionRuntimeTables(t *testing.T) {
 					}
 					return
 				}
-				if err != nil || len(checks) != 35 || state.commits != 1 || state.rollbacks != 0 || len(state.queries) != 70 {
+				if err != nil || len(checks) != 40 || state.commits != 1 || state.rollbacks != 0 || len(state.queries) != 2*len(controlExclusionTables) {
 					t.Fatal("runtime table bypassed the complete snapshot", table, len(checks), err, state.commits, state.rollbacks, len(state.queries))
 				}
 				failed := 0
@@ -105,12 +105,12 @@ func TestControlExclusionCompletionContext(t *testing.T) {
 				return nil
 			})
 			checks, err := (SQLControlExclusionVerifier{DB: completionDB(t, state, finish), Proof: proof}).VerifyRestoreTarget(ctx, frozenRegistryBytes(t), "sev_control_completion_fixture")
-			if proofCalls != 1 || state.commits != 1 || state.rollbacks != 0 || len(state.queries) != 70 || !state.begin.ReadOnly || state.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) {
+			if proofCalls != 1 || state.commits != 1 || state.rollbacks != 0 || len(state.queries) != 2*len(controlExclusionTables) || !state.begin.ReadOnly || state.begin.Isolation != driver.IsolationLevel(sql.LevelRepeatableRead) {
 				t.Fatal("changed target snapshot/proof boundary", proofCalls, state.commits, state.rollbacks, len(state.queries), state.begin)
 			}
 			switch mode {
 			case "normal":
-				if err != nil || len(checks) != 35 {
+				if err != nil || len(checks) != 40 {
 					t.Fatal("normal control checks lost", len(checks), err)
 				}
 				for _, check := range checks {

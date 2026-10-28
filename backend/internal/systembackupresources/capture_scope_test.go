@@ -39,6 +39,12 @@ func frozenFixture(t *testing.T) map[string]any {
 		object := raw.(map[string]any)
 		object["decision_status"] = "frozen"
 		object["approved_cross_reviewers"] = object["required_cross_reviewers"]
+		// Explicit test-only candidate policies for the appended execution
+		// journals. The real draft registry remains unapproved and rejected.
+		if object["category"] == "control_plane" {
+			object["backup_strategy"] = "metadata_only"
+			object["restore_strategy"] = "reference_only"
+		}
 	}
 	return document
 }

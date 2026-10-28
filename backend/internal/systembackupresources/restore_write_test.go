@@ -100,7 +100,7 @@ func (c *writeConn) QueryContext(ctx context.Context, query string, args []drive
 
 func (c *writeConn) ExecContext(_ context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	s := c.state
-	if len(s.locks) != 9 || s.readback.probes != 35 {
+	if len(s.locks) != 9 || s.readback.probes != 40 {
 		return nil, errors.New("mutation before full preflight")
 	}
 	for _, forbidden := range []string{"private-secret", "REPLACE", "IGNORE", "FOREIGN_KEY_CHECKS", "TRUNCATE"} {
@@ -244,7 +244,7 @@ func TestRestoreWriteCommonTransaction(t *testing.T) {
 		return nil
 	}
 	proof.Final = func(_ context.Context, exact *sql.Tx) error {
-		if exact != tx || s.readback.probes != 70 || compareRestoreFields(ctx, after, s.readback.field.tables, fieldTestBudget) != nil {
+		if exact != tx || s.readback.probes != 2*len(controlExclusionTables) || compareRestoreFields(ctx, after, s.readback.field.tables, fieldTestBudget) != nil {
 			t.Fatal("final before complete readback")
 		}
 		calls = append(calls, "final")
@@ -361,7 +361,7 @@ func TestRestoreWriteRejectsInvalidAndLateFacts(t *testing.T) {
 			}
 			err = applyRestoreWriteInTransaction(ctx, tx, registry, before, after, budget, proof)
 			if mode == "empty" {
-				if err != nil || len(s.mutations) != 0 || s.readback.probes != 70 {
+				if err != nil || len(s.mutations) != 0 || s.readback.probes != 2*len(controlExclusionTables) {
 					t.Fatal("empty complete plan failed", err)
 				}
 			} else if err == nil || strings.Contains(err.Error(), "private-secret") {
