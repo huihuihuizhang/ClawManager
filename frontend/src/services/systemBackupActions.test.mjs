@@ -83,3 +83,11 @@ test('unsupported or malformed targets do not issue requests', async () => {
   }
   assert.equal(calls, 0);
 });
+
+test('active cancellation is accepted as pending, never represented as completed', async () => {
+  const pending = { ...operation(), status: 'pending', http_status: null, started_at: null, finished_at: null };
+  const api = setup(async () => ({status: 202, headers: {'x-system-backup-data-source': 'live'}, data: pending}));
+  const result = await api.cancelUnstartedBackup(selection, key, new AbortController().signal);
+  assert.equal(result.status, 'pending');
+  assert.equal(result.finished_at, null);
+});

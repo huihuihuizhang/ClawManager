@@ -2,6 +2,8 @@ import type { Locale } from './i18n';
 
 // Columns: Chinese, English, Japanese, Korean, German. Keep every locale explicit.
 const messages = {
+  cancelRunningNote: ['取消请求会持久保存。系统确认采集进程停止并恢复原业务后，才会完成取消；请勿强制清除受保护的数据。', 'The cancellation request is saved. Cancellation completes only after collector exit and source recovery are confirmed.', '要求を保存します。収集プロセスの停止と元の業務の復旧を確認後にキャンセルが完了します。', '취소 요청을 저장합니다. 수집 프로세스 종료와 원래 서비스 복구 확인 후 취소가 완료됩니다.', 'Die Abbruchanfrage wird gespeichert. Der Abbruch endet erst nach bestätigtem Prozessende und Wiederherstellung des Quellbetriebs.'],
+  cancelAccepted: ['已收到取消请求，正在等待停止与业务恢复确认。可使用同一请求核实进度；当前尚未完成取消。', 'Cancellation requested; waiting for exit and source recovery. Check again using the same request. Cancellation is not yet complete.', 'キャンセル要求を受信しました。停止と業務復旧を確認中です。同じ要求で進捗を確認できます。', '취소 요청을 받았습니다. 종료 및 서비스 복구 확인을 기다리는 중입니다. 동일 요청으로 진행 상황을 확인하세요.', 'Abbruch angefordert; Prozessende und Quellwiederherstellung werden geprüft. Status mit derselben Anfrage erneut prüfen.'],
   cancelUnstartedNote: ['仅取消尚未执行的任务；服务端会再次核对执行状态。', 'Cancel only work that has not started. The server rechecks execution state.', '未実行のタスクのみキャンセルします。サーバーが状態を再確認します。', '아직 시작하지 않은 작업만 취소하며 서버가 상태를 다시 확인합니다.', 'Nur noch nicht gestartete Aufgaben abbrechen. Der Server prüft den Ausführungsstatus erneut.'],
   cancelConfirmed: ['已确认取消', 'Cancellation confirmed', 'キャンセル確認済み', '취소 확인됨', 'Abbruch bestätigt'],
   cancelRetrySameRequest: ['核实并重试', 'Check and retry', '確認して再試行', '확인 후 다시 시도', 'Prüfen und wiederholen'],

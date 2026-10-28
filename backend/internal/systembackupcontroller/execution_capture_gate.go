@@ -79,7 +79,7 @@ func (g SQLCaptureGate) PrepareCapture(ctx context.Context, c ClaimedBackup) (*E
 	if c.Status != "ready_for_capture" && c.Status != "acquiring_gate" && c.Status != "preparing" {
 		return nil, ErrExecutionRecoveryRequired
 	}
-	if e = g.Authority.Check(ctx, in.Authority); e != nil && (c.Status == "ready_for_capture" || c.Status == "preparing") {
+	if e = g.Authority.Check(ctx, in.Authority); e != nil && (c.Status == "ready_for_capture" || c.Status == "preparing" || c.Status == "acquiring_gate") {
 		if e = g.FailUntouched(ctx, in.Authority); e != nil {
 			return nil, e
 		}
@@ -142,59 +142,74 @@ func (g SQLCaptureGate) PrepareCapture(ctx context.Context, c ClaimedBackup) (*E
 		c.Status = "acquiring_gate"
 	}
 	claim := app.VersionedGateClaim{InstallationID: in.Authority.InstallationID, TaskID: in.Authority.TaskPublicID, ControllerOwner: in.Authority.ClaimOwner, RowVersion: in.Authority.ClaimRowVersion}
+	journal := func(ctx context.Context, tx *sql.Tx, ownership app.GateOwnership) error {
+		return g.stageCaptureEpoch(ctx, tx, in, ownership, registry, raw, ids)
+	}
 	ownership, phase, e := gate.ResolveVersionedCapture(ctx, scope, claim, registry)
 	if e != nil {
-		ownership, e = gate.BeginVersionedCapture(ctx, scope, claim, registry, g.AcquisitionTimeout, g.HoldTimeout)
+		ownership, e = gate.BeginVersionedCaptureJournal(ctx, scope, claim, registry, g.AcquisitionTimeout, g.HoldTimeout, journal)
 		if e != nil {
 			return nil, e
 		}
-		phase = "acquiring"
-	}
-	if phase != "acquiring" {
-		return nil, ErrExecutionRecoveryRequired
-	}
-	tx, e = db.BeginTx(ctx, nil)
-	if e != nil {
-		return nil, e
-	}
-	defer tx.Rollback()
-	guard, e := g.Authority.Bind(ctx, tx, in.Authority)
-	if e != nil {
-		return nil, e
-	}
-	if e = guard.Recheck(ctx, tx); e != nil {
-		return nil, e
-	}
-	if e = g.checkParticipantsTx(ctx, tx, ids); e != nil {
-		return nil, e
-	}
-	var acquire, hold time.Time
-	if e = tx.QueryRowContext(ctx, "SELECT acquire_deadline,hold_deadline FROM system_backup_gate WHERE scope=? AND owner=? AND generation=? AND phase='acquiring' FOR SHARE", scope, ownership.Owner, ownership.Generation).Scan(&acquire, &hold); e != nil {
-		return nil, e
-	}
-	_, e = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_runtime_captures(task_public_id,application_scope,gate_generation,acquire_token,registry_sha256,writers_json,acquire_until,hold_until) VALUES(?,?,?,?,?,?,?,?)`, in.Authority.TaskPublicID, scope, ownership.Generation, ownership.Token, registry, raw, acquire, hold)
-	if e != nil {
-		return nil, e
-	}
-	r, e := tx.ExecContext(ctx, `UPDATE system_backup_v2_maintenance_locks SET gate_state='acquiring',generation=?,fencing_token=?,lock_owner=?,heartbeat_at=UTC_TIMESTAMP(6),lease_expires_at=?,gate_acquisition_timeout_seconds=?,acquiring_started_at=UTC_TIMESTAMP(6),acquisition_deadline_at=?,absolute_hold_deadline_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND scope=? AND gate_state='idle'`, ownership.Generation, ownership.Generation, in.Authority.TaskPublicID, hold, int(g.AcquisitionTimeout/time.Second), acquire, in.Authority.InstallationID, CaptureGateScope)
-	if ok, z := exactlyOneRow(r); e != nil || z != nil || !ok {
-		return nil, ErrGateFenceLost
-	}
-	r, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_attempts SET status='running',started_at=UTC_TIMESTAMP(6),row_version=row_version+1 WHERE target_type='backup' AND target_public_id=? AND phase IN ('capture','secret_capture') AND status='preparing'", in.Authority.TaskPublicID)
-	if e != nil {
-		return nil, e
-	}
-	r, e = tx.ExecContext(ctx, `UPDATE system_backup_v2_backups SET status='capturing',maintenance_lock_owner=?,maintenance_fencing_token=?,row_version=row_version+1 WHERE public_id=? AND row_version=? AND controller_owner=? AND status='acquiring_gate'`, in.Authority.TaskPublicID, ownership.Generation, in.Authority.TaskPublicID, in.Authority.ClaimRowVersion, in.Authority.ClaimOwner)
-	if ok, z := exactlyOneRow(r); e != nil || z != nil || !ok {
-		return nil, ErrClaimLost
-	}
-	if e = tx.Commit(); e != nil {
-		return nil, ErrExecutionCommitUnknown
+	} else {
+		// Upgrade compatibility for a pre-atomic acquisition. Its original
+		// generation is reused, never reacquired or given new deadlines.
+		if phase != "acquiring" {
+			return nil, ErrExecutionRecoveryRequired
+		}
+		tx, e = db.BeginTx(ctx, nil)
+		if e != nil {
+			return nil, e
+		}
+		defer tx.Rollback()
+		if e = journal(ctx, tx, ownership); e != nil {
+			return nil, e
+		}
+		if e = tx.Commit(); e != nil {
+			return nil, ErrExecutionCommitUnknown
+		}
 	}
 	in.Authority.ClaimRowVersion++
 	in.Authority.MaintenanceOwner = in.Authority.TaskPublicID
 	in.Authority.MaintenanceFencingToken = ownership.Generation
 	return &ExecutionWork{Step: ExecutionCapture, Input: in, Plan: p}, nil
+}
+
+// stageCaptureEpoch commits the physical acquiring transition, public original
+// epoch, attempt and task projection in the same SQL transaction.
+func (g SQLCaptureGate) stageCaptureEpoch(ctx context.Context, tx *sql.Tx, in d.Input, ownership app.GateOwnership, registry string, raw []byte, ids []string) error {
+	scope := g.Authority.ApplicationScope
+	guard, e := g.Authority.Bind(ctx, tx, in.Authority)
+	if e != nil {
+		return e
+	}
+	if e = guard.Recheck(ctx, tx); e != nil {
+		return e
+	}
+	if e = g.checkParticipantsTx(ctx, tx, ids); e != nil {
+		return e
+	}
+	var acquire, hold time.Time
+	if e = tx.QueryRowContext(ctx, "SELECT acquire_deadline,hold_deadline FROM system_backup_gate WHERE scope=? AND owner=? AND generation=? AND phase='acquiring' FOR SHARE", scope, ownership.Owner, ownership.Generation).Scan(&acquire, &hold); e != nil {
+		return e
+	}
+	_, e = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_runtime_captures(task_public_id,application_scope,gate_generation,acquire_token,registry_sha256,writers_json,acquire_until,hold_until) VALUES(?,?,?,?,?,?,?,?)`, in.Authority.TaskPublicID, scope, ownership.Generation, ownership.Token, registry, raw, acquire, hold)
+	if e != nil {
+		return e
+	}
+	r, e := tx.ExecContext(ctx, `UPDATE system_backup_v2_maintenance_locks SET gate_state='acquiring',generation=?,fencing_token=?,lock_owner=?,heartbeat_at=UTC_TIMESTAMP(6),lease_expires_at=?,gate_acquisition_timeout_seconds=?,acquiring_started_at=UTC_TIMESTAMP(6),acquisition_deadline_at=?,absolute_hold_deadline_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND scope=? AND gate_state='idle'`, ownership.Generation, ownership.Generation, in.Authority.TaskPublicID, hold, int(g.AcquisitionTimeout/time.Second), acquire, in.Authority.InstallationID, CaptureGateScope)
+	if ok, z := exactlyOneRow(r); e != nil || z != nil || !ok {
+		return ErrGateFenceLost
+	}
+	r, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_attempts SET status='running',started_at=UTC_TIMESTAMP(6),row_version=row_version+1 WHERE target_type='backup' AND target_public_id=? AND phase IN ('capture','secret_capture') AND status='preparing'", in.Authority.TaskPublicID)
+	if e != nil {
+		return e
+	}
+	r, e = tx.ExecContext(ctx, `UPDATE system_backup_v2_backups SET status='capturing',maintenance_lock_owner=?,maintenance_fencing_token=?,row_version=row_version+1 WHERE public_id=? AND row_version=? AND controller_owner=? AND status='acquiring_gate'`, in.Authority.TaskPublicID, ownership.Generation, in.Authority.TaskPublicID, in.Authority.ClaimRowVersion, in.Authority.ClaimOwner)
+	if ok, z := exactlyOneRow(r); e != nil || z != nil || !ok {
+		return ErrClaimLost
+	}
+	return nil
 }
 
 func (g SQLCaptureGate) checkParticipants(ctx context.Context, ids []string) error {

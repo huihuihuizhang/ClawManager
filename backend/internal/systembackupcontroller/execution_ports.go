@@ -177,6 +177,12 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 		return v, ErrExecutionAuthority
 	}
 	if a.TaskType == string(TargetBackup) {
+		if s.ApplicationScope != "" {
+			requested, err := executionCancelRequested(ctx, tx, a)
+			if err != nil || requested {
+				return v, ErrExecutionAuthority
+			}
+		}
 		if v.status == "preparing" || v.status == "ready_for_capture" || v.status == "acquiring_gate" {
 			if v.attemptStatus != "preparing" || a.MaintenanceOwner != "" || a.MaintenanceFencingToken != 0 {
 				return v, ErrExecutionAuthority

@@ -109,6 +109,16 @@ func (g Gate) BeginVersionedCapture(ctx context.Context, scope string, claim Ver
 	return g.beginForEngine(ctx, VersionedEngine, scope, claim.TaskID, registryHash, acquire, hold, claim.authorize)
 }
 
+// The public task's original epoch and the physical acquiring transition must
+// commit together. journal may only perform SQL using this transaction; no
+// source/provider IO, nested transaction or commit is allowed.
+func (g Gate) BeginVersionedCaptureJournal(ctx context.Context, scope string, claim VersionedGateClaim, registryHash string, acquire, hold time.Duration, journal func(context.Context, *sql.Tx, GateOwnership) error) (GateOwnership, error) {
+	if claim.validate() != nil || journal == nil {
+		return GateOwnership{}, ErrFence
+	}
+	return g.beginForEngineJournal(ctx, VersionedEngine, scope, claim.TaskID, registryHash, acquire, hold, claim.authorize, journal)
+}
+
 // HoldVersionedCapture checks the live public task claim in the gate transition
 // transaction. Paused participant evidence is still checked by the common Hold.
 func (g Gate) HoldVersionedCapture(ctx context.Context, claim VersionedGateClaim, ownership GateOwnership) (GateOwnership, error) {

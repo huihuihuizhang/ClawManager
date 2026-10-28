@@ -182,7 +182,7 @@ func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
 	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
 		t.Skip("requires explicitly provisioned task-owned native cluster")
 	}
-	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry"} {
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry", "prepare-cancel", "capture-cancel", "acquire-atomic"} {
 		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
 	}
 }
@@ -238,6 +238,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		t.Fatal(e)
 	}
 	handler, operator, _ := liveAdmissionHTTP(t, db, taskWriter)
+	handler.application = handler.application.(*SQLApplication).WithCancellationCapacityReport(legacy.capacityFile)
 	request := httptest.NewRequest(http.MethodPost, "https://example.invalid/api/v1/admin/system-backups", strings.NewReader(`{"requested_parts":["workspace"],"task_purpose":"functional_test"}`))
 	request.TLS = &tls.ConnectionState{}
 	request.Header.Set("Authorization", "Bearer "+operator)
@@ -291,7 +292,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		}
 	}
 	var projectionFault atomic.Bool
-	projectionFault.Store(scenario == "release-atomic")
+	projectionFault.Store(scenario == "release-atomic" || scenario == "acquire-atomic")
 	open := func(user string) *sql.DB {
 		q := mysql.Config{User: user, Passwd: "synthetic-native-only", Net: "tcp", Addr: net.JoinHostPort(os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT")), DBName: database, ParseTime: true, AllowNativePasswords: true}
 		q.Loc = time.UTC
@@ -301,7 +302,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		}
 		var conn *sql.DB
 		if user == account {
-			conn = sql.OpenDB(nativeProjectionConnector{Connector: connector, Fail: &projectionFault, BlockBinding: scenario == "binding-write-outage"})
+			conn = sql.OpenDB(nativeProjectionConnector{Connector: connector, Fail: &projectionFault, BlockBinding: scenario == "binding-write-outage", BlockAcquire: scenario == "acquire-atomic"})
 		} else {
 			conn = sql.OpenDB(connector)
 		}
@@ -525,6 +526,21 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		t.Log("revoked preparation closed with no source effects")
 		return
 	}
+	if scenario == "prepare-cancel" {
+		nativeRequestCancel(t, handler, operator, task)
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("cancel untouched preparation", e)
+		}
+		var state, operation string
+		if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) != nil || state != "canceled" {
+			t.Fatal("preparation not canceled", state)
+		}
+		if db.QueryRow("SELECT status FROM system_backup_v2_operations WHERE target_public_id=? AND operation_type='cancel'", task).Scan(&operation) != nil || operation != "succeeded" {
+			t.Fatal("cancellation not settled", operation)
+		}
+		t.Log("real authorized pending cancel -> untouched source proved -> root and operation canceled atomically")
+		return
+	}
 	bindRaw, _ := json.Marshal(capturedInv.Request.Binding)
 	captureDEK, e := forward.DeriveCaptureKey(ctx, preparedAuthority, bindRaw)
 	if e != nil {
@@ -533,6 +549,71 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	defer clear(captureDEK)
 	stopLog := nativeWorkerFailureLog(t, ctx, client, nsName, "capture-"+slug)
 	defer stopLog()
+	if scenario == "acquire-atomic" {
+		if e = runtime.Loop.RunOnce(ctx); e == nil {
+			t.Fatal("acquisition journal outage hidden")
+		}
+		var phase string
+		var count int
+		if db.QueryRow("SELECT phase FROM system_backup_gate WHERE scope='installation'").Scan(&phase) != nil || phase != "idle" {
+			t.Fatal("physical acquisition committed without public journal", phase)
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&count) != nil || count != 0 {
+			t.Fatal("partial acquisition journal")
+		}
+		projectionFault.Store(false)
+		nativeRequestCancel(t, handler, operator, task)
+		// Real lease expiry, no manual reset of controller/task state.
+		waitNative(t, ctx, func() bool {
+			runtime.Loop.RunOnce(ctx)
+			var state string
+			return db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) == nil && state == "canceled"
+		})
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=?", task).Scan(&count) != nil || count != 0 {
+			t.Fatal("canceled acquisition dispatched source work")
+		}
+		var closed bool
+		if db.QueryRow("SELECT owner IS NULL AND close_until IS NULL FROM system_backup_gate_admissions WHERE scope='installation'").Scan(&closed) != nil || !closed {
+			t.Fatal("request admission left closed")
+		}
+		t.Log("actual acquisition journal SQL outage rolls back physical transition; real lease expiry and authorized cancellation clear only original admission without source IO")
+		return
+	}
+	if scenario == "capture-cancel" {
+		passDone := make(chan error, 1)
+		go func() { passDone <- runtime.Loop.RunOnce(ctx) }()
+		waitNative(t, ctx, func() bool {
+			var n int
+			return db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE", task).Scan(&n) == nil && n == 1
+		})
+		nativeRequestCancel(t, handler, operator, task)
+		select {
+		case <-passDone:
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
+		waitNative(t, ctx, func() bool {
+			var state string
+			if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) != nil {
+				return false
+			}
+			if state == "canceled" {
+				return true
+			}
+			runtime.Loop.RunOnce(ctx)
+			return false
+		})
+		var stops, resumes sql.NullTime
+		var operation string
+		if db.QueryRow("SELECT collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&stops, &resumes) != nil || !stops.Valid || !resumes.Valid {
+			t.Fatal("cancel acknowledged without actual exit and resume")
+		}
+		if db.QueryRow("SELECT status FROM system_backup_v2_operations WHERE target_public_id=? AND operation_type='cancel'", task).Scan(&operation) != nil || operation != "succeeded" {
+			t.Fatal("cancel operation not settled", operation)
+		}
+		t.Log("real running Job -> authorized durable cancellation -> original exit proof + source resume -> canceled, no replacement Job")
+		return
+	}
 	e = runtime.Loop.RunOnce(ctx)
 	expectedStatus := "validating"
 	if scenario == "unknown-stop-recovery" {
@@ -732,6 +813,32 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	}
 }
 
+func nativeRequestCancel(t *testing.T, handler *Handler, token, task string) {
+	t.Helper()
+	call := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodPost, "https://example.invalid/api/v1/admin/system-backups/"+task+"/cancel", strings.NewReader(`{}`))
+		r.TLS = &tls.ConnectionState{}
+		r.Header.Set("Authorization", "Bearer "+token)
+		r.Header.Set("Idempotency-Key", "native-cancel-original-0001")
+		r.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.Cancel(w, r, read.BackupTask, task, "native-cancel-request")
+		return w
+	}
+	first := call()
+	if first.Code != http.StatusAccepted {
+		t.Fatal("active cancel admission", first.Code, first.Body.String())
+	}
+	var op read.OperationDTO
+	if json.Unmarshal(first.Body.Bytes(), &op) != nil || op.Status != "pending" {
+		t.Fatal("active cancel falsely acknowledged complete")
+	}
+	second := call()
+	if second.Code != http.StatusAccepted || second.Header().Get("Location") != first.Header().Get("Location") {
+		t.Fatal("cancel replay created another operation")
+	}
+}
+
 func waitNative(t *testing.T, ctx context.Context, ready func() bool) {
 	t.Helper()
 	for {
@@ -854,6 +961,7 @@ type nativeProjectionConnector struct {
 	driver.Connector
 	Fail         *atomic.Bool
 	BlockBinding bool
+	BlockAcquire bool
 }
 
 func (c nativeProjectionConnector) Connect(ctx context.Context) (driver.Conn, error) {
@@ -861,16 +969,20 @@ func (c nativeProjectionConnector) Connect(ctx context.Context) (driver.Conn, er
 	if e != nil {
 		return nil, e
 	}
-	return nativeProjectionConn{Conn: conn, Fail: c.Fail, BlockBinding: c.BlockBinding}, nil
+	return nativeProjectionConn{Conn: conn, Fail: c.Fail, BlockBinding: c.BlockBinding, BlockAcquire: c.BlockAcquire}, nil
 }
 
 type nativeProjectionConn struct {
 	driver.Conn
 	Fail         *atomic.Bool
 	BlockBinding bool
+	BlockAcquire bool
 }
 
 func (c nativeProjectionConn) ExecContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Result, error) {
+	if c.BlockAcquire && c.Fail.Load() && strings.HasPrefix(q, "INSERT INTO system_backup_v2_runtime_captures") {
+		return nil, errors.New("injected original acquisition journal unavailable")
+	}
 	if c.BlockBinding && strings.HasPrefix(q, "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE") {
 		return nil, errors.New("injected original binding write unavailable")
 	}

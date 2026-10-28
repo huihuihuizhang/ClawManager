@@ -26,9 +26,9 @@ func cancelRoute(kind read.TaskKind) (path, endpoint, prefix, table string) {
 	return
 }
 
-// CancelUnstarted settles only a task proven to have no execution/effects. A
-// running task needs its runner's stop/resume protocol; it is never marked
-// canceled here merely because a lease or heartbeat expired.
+// CancelUnstarted retains the original API seam. Unstarted work is settled
+// directly; public running backups get a durable cancellation request only.
+// Their original runner/recovery owner must prove actual exit/source recovery.
 func (s *SQLApplication) CancelUnstarted(r *http.Request, kind read.TaskKind, id, key string, body json.RawMessage) (read.OperationDTO, error) {
 	var zero read.OperationDTO
 	path, endpoint, prefix, table := cancelRoute(kind)
@@ -86,46 +86,50 @@ func (s *SQLApplication) CancelUnstarted(r *http.Request, kind read.TaskKind, id
 			return zero, &Error{"not_ready"}
 		}
 		if status != "pending" || owner.Valid {
-			return zero, &Error{"conflict_active_job"}
-		}
-		var effects uint64
-		if q.QueryRow(`SELECT (SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_type=? AND target_public_id=?) + (SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type=? AND target_public_id=?) + (SELECT COUNT(*) FROM system_backup_v2_artifact_leases WHERE holder_type=? AND holder_public_id=?)`, string(kind), id, string(kind), id, string(kind), id).Scan(&effects) != nil {
-			return zero, &Error{"not_ready"}
-		}
-		if effects != 0 {
-			return zero, &Error{"conflict_active_job"}
-		}
-		cfg, err := read.ReadControlConfig(func(query string, args ...any) read.AdmissionRow { return q.QueryRow(query, args...) }, installation, false)
-		if err != nil {
-			return zero, &Error{"not_ready"}
-		}
-		var values contract.ConfigValues
-		if json.Unmarshal(cfg.Canonical, &values) != nil {
-			return zero, &Error{"not_ready"}
-		}
-		if err = reserveControlCapacity(q, s.cancellationCapacityFile, values.Capacity.ControlMetadataCapacityBytes, 65538); err != nil {
-			return zero, err
-		}
-		operationID := "sop_" + uuidlib.NewString()
-		// Same row/transaction is authoritative for cancellation and its audit.
-		result, err := q.Exec("UPDATE "+table+" SET status='canceled',can_cancel=FALSE,failure_category='canceled_by_actor',pending_reason='none',attention_reason='none',started_at=UTC_TIMESTAMP(6),finished_at=UTC_TIMESTAMP(6),next_reconcile_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND public_id=? AND row_version=? AND status='pending' AND controller_owner IS NULL", installation, id, version)
-		if err != nil {
-			return zero, &Error{"not_ready"}
-		}
-		n, err := result.RowsAffected()
-		if err != nil || n != 1 {
-			return zero, &Error{"conflict_active_job"}
-		}
-		_, err = q.Exec(`INSERT INTO system_backup_v2_operations(public_id,origin_installation_id,operation_type,target_type,target_public_id,actor_type,actor_id,endpoint,idempotency_key,request_hash,external_action_public_ids_canonical_json,external_action_public_ids_size_bytes,external_action_public_ids_sha256,status,http_status,deadline_at,started_at,finished_at) VALUES(?,?,'cancel',?,?,'admin',?,?,?,?,?,2,?,'succeeded',202,TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))`, operationID, installation, string(kind), id, actor, endpoint, key, hash, []byte(`[]`), digestJSON([]byte(`[]`)))
-		if err != nil {
-			return zero, &Error{"not_ready"}
-		}
-		if _, err = q.Exec("INSERT INTO system_backup_v2_events(origin_installation_id,target_type,target_public_id,event_type,level,task_status,message,request_id) SELECT origin_installation_id,?,public_id,'task_status_changed','info','canceled','Canceled before execution',request_id FROM "+table+" WHERE origin_installation_id=? AND public_id=?", string(kind), installation, id); err != nil {
-			return zero, &Error{"not_ready"}
-		}
-		op, err = read.ScanSubmissionOperation(q.QueryRow("SELECT "+read.SubmissionOperationColumns()+" FROM system_backup_v2_operations WHERE origin_installation_id=? AND public_id=?", installation, operationID), installation)
-		if err != nil {
-			return zero, &Error{"not_ready"}
+			op, err = s.stageActiveCancellation(q, kind, installation, id, actor, endpoint, key, hash, status)
+			if err != nil {
+				return zero, err
+			}
+		} else {
+			var effects uint64
+			if q.QueryRow(`SELECT (SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_type=? AND target_public_id=?) + (SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type=? AND target_public_id=?) + (SELECT COUNT(*) FROM system_backup_v2_artifact_leases WHERE holder_type=? AND holder_public_id=?)`, string(kind), id, string(kind), id, string(kind), id).Scan(&effects) != nil {
+				return zero, &Error{"not_ready"}
+			}
+			if effects != 0 {
+				return zero, &Error{"conflict_active_job"}
+			}
+			cfg, err := read.ReadControlConfig(func(query string, args ...any) read.AdmissionRow { return q.QueryRow(query, args...) }, installation, false)
+			if err != nil {
+				return zero, &Error{"not_ready"}
+			}
+			var values contract.ConfigValues
+			if json.Unmarshal(cfg.Canonical, &values) != nil {
+				return zero, &Error{"not_ready"}
+			}
+			if err = reserveControlCapacity(q, s.cancellationCapacityFile, values.Capacity.ControlMetadataCapacityBytes, 65538); err != nil {
+				return zero, err
+			}
+			operationID := "sop_" + uuidlib.NewString()
+			// Same row/transaction is authoritative for cancellation and its audit.
+			result, err := q.Exec("UPDATE "+table+" SET status='canceled',can_cancel=FALSE,failure_category='canceled_by_actor',pending_reason='none',attention_reason='none',started_at=UTC_TIMESTAMP(6),finished_at=UTC_TIMESTAMP(6),next_reconcile_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND public_id=? AND row_version=? AND status='pending' AND controller_owner IS NULL", installation, id, version)
+			if err != nil {
+				return zero, &Error{"not_ready"}
+			}
+			n, err := result.RowsAffected()
+			if err != nil || n != 1 {
+				return zero, &Error{"conflict_active_job"}
+			}
+			_, err = q.Exec(`INSERT INTO system_backup_v2_operations(public_id,origin_installation_id,operation_type,target_type,target_public_id,actor_type,actor_id,endpoint,idempotency_key,request_hash,external_action_public_ids_canonical_json,external_action_public_ids_size_bytes,external_action_public_ids_sha256,status,http_status,deadline_at,started_at,finished_at) VALUES(?,?,'cancel',?,?,'admin',?,?,?,?,?,2,?,'succeeded',202,TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))`, operationID, installation, string(kind), id, actor, endpoint, key, hash, []byte(`[]`), digestJSON([]byte(`[]`)))
+			if err != nil {
+				return zero, &Error{"not_ready"}
+			}
+			if _, err = q.Exec("INSERT INTO system_backup_v2_events(origin_installation_id,target_type,target_public_id,event_type,level,task_status,message,request_id) SELECT origin_installation_id,?,public_id,'task_status_changed','info','canceled','Canceled before execution',request_id FROM "+table+" WHERE origin_installation_id=? AND public_id=?", string(kind), installation, id); err != nil {
+				return zero, &Error{"not_ready"}
+			}
+			op, err = read.ScanSubmissionOperation(q.QueryRow("SELECT "+read.SubmissionOperationColumns()+" FROM system_backup_v2_operations WHERE origin_installation_id=? AND public_id=?", installation, operationID), installation)
+			if err != nil {
+				return zero, &Error{"not_ready"}
+			}
 		}
 	}
 	if !q.close() || ctx.Err() != nil {

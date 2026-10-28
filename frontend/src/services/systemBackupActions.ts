@@ -17,6 +17,6 @@ export async function cancelUnstartedBackup(selection: BackupDetailSelection, ke
     || !validOperation(op) || op.origin_installation_id !== origin_installation_id
     || op.operation_type !== 'cancel' || op.target_public_id !== public_id
     || op.target_type !== (kind === 'backups' ? 'backup' : 'preflight')
-    || op.idempotency_key !== key || op.status !== 'succeeded') throw new Error('unconfirmed_response');
+    || op.idempotency_key !== key || !['pending', 'running', 'succeeded'].includes(op.status)) throw new Error('unconfirmed_response');
   return op;
 }

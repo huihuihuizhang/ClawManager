@@ -82,11 +82,17 @@ func TestUploadSealedPhasesHasNoSigningOrFinalWriteCapability(t *testing.T) {
 	store.invalid = false
 	store.objects = map[string][]byte{}
 	file := filepath.Join(dirs.Secrets, "secret_bundle.enc")
-	f, err := os.OpenFile(file, os.O_WRONLY, 0600)
+	f, err := os.OpenFile(file, os.O_RDWR, 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = f.WriteAt([]byte{42}, 64)
+	original := []byte{0}
+	if _, err = f.ReadAt(original, 64); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	original[0] ^= 0xff
+	_, err = f.WriteAt(original, 64)
 	f.Close()
 	if err != nil {
 		t.Fatal(err)

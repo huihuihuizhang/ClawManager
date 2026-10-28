@@ -40,10 +40,14 @@ func (g SQLCaptureGate) FinishCapture(ctx context.Context, w ExecutionWork, out 
 		return ErrExecutionAuthority
 	}
 	status, category, attemptStatus := "validating", "none", "sealed"
+	cancelRequested, e := executionCancelRequested(ctx, tx, a)
+	if e != nil {
+		return e
+	}
 	var finished any
-	if out.Err != nil || w.Step == ExecutionRecover || old == "canceling" {
+	if out.Err != nil || w.Step == ExecutionRecover || old == "canceling" || cancelRequested {
 		status, category, attemptStatus = "failed", "runner_failed", "failed"
-		if old == "canceling" {
+		if old == "canceling" || cancelRequested {
 			status, category, attemptStatus = "canceled", "canceled_by_actor", "canceled"
 		}
 		var now sql.NullTime
@@ -69,6 +73,11 @@ func (g SQLCaptureGate) FinishCapture(ctx context.Context, w ExecutionWork, out 
 	}
 	if _, e = tx.ExecContext(ctx, "INSERT INTO system_backup_v2_events(origin_installation_id,target_type,target_public_id,event_type,level,task_status,message,request_id) VALUES(?,'backup',?,'task_status_changed','info',?,'Capture stopped and source business resumed; outcome recorded.',?)", a.InstallationID, a.TaskPublicID, status, a.RequestID); e != nil {
 		return e
+	}
+	if cancelRequested {
+		if e = finishExecutionCancellation(ctx, tx, a); e != nil {
+			return e
+		}
 	}
 	if e = tx.Commit(); e != nil {
 		return ErrExecutionCommitUnknown

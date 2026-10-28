@@ -1,5 +1,5 @@
 {
-  "status": "m3_in_progress_production_workspace_entry_and_original_job_recovery_verified",
+  "status": "m3_in_progress_public_cancel_and_atomic_acquisition_verified",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -143,12 +143,37 @@
       "result": "passed",
       "local_log_sha256": "6a513c193bbe20216ccee84faecc539a996debf3b07afc91ae753454efd7a8ea",
       "boundary": "Closed deployment-config pins, bounded original-ACK save retry, surviving task failure and cancel-before-pass tests passed."
+    },
+    "m3_cancel_native": {
+      "result": "passed",
+      "local_log_sha256": "9235be7cbf7ddca4e0fd72f583c372aeeab2d48a1628edf721fdc210fe0ffe2e",
+      "boundary": "Real MySQL/kind/worker normal capture, authorized pending cancellation before source work and cancellation after actual Job dispatch. Actual original exit and source resume required before canceled root/operation; one Job and actual lease expiry. Synthetic capacity; no final publication."
+    },
+    "m3_atomic_acquire_native": {
+      "result": "passed",
+      "local_log_sha256": "71b47eeeda91665a17a24ee65afee511928ed0af71cc330ad2d09ec6e14de6ea",
+      "boundary": "Actual production binary regression plus real SQL acquisition journal outage: physical gate rolls back idle, no source dispatch; authorized cancel after real lease expiry clears only original request admission."
+    },
+    "m3_cancel_backend": {
+      "result": "passed",
+      "local_log_sha256": "2cc185ae8c92024b396562d072f529803737b9a1bca98d06c00d7318dda4fe3e",
+      "boundary": "Backend go test ./... passed at cancellation/atomic-acquisition node."
+    },
+    "m3_cancel_frontend_build": {
+      "result": "passed",
+      "local_log_sha256": "6f0698af9478b1eb348bd5ed5e09e0b37fd54f2f2ae8e1a97045a65594c8fef8",
+      "boundary": "Production frontend build passed. Local Node 22.11 emits Vite recommendation warning. No browser acceptance."
+    },
+    "m3_cancel_frontend_transport": {
+      "result": "passed",
+      "local_log_sha256": "bf284f10affc2e9f13276a2dc524dee7e8efbeab7dd571829d30f10638acfea5",
+      "boundary": "Four cancellation transport tests passed: same-key retry, closed DTO, invalid target, accepted pending operation remains incomplete."
     }
   },
   "not_accepted": [
     "Complete full-domain production composition; current production entry is explicit platform-workspace with zero source instances and functional_test only",
     "SQL/Redis/object/deployment/secret collectors with real providers; actual Lite/Pro/OpenClaw/Hermes runtime and background writer pause/resume",
-    "Unknown source stop/dispatch remains protected when original identity cannot be proven; running cancel/operator recovery endpoints still pending",
+    "Unknown actual source exit without evidence remains protected; explicit operator reconciliation and all final publication/restore operations still pending",
     "Production capacity observations, independent key providers/minimum SQL/Kubernetes grants/TLS and actual worker final image deployment",
     "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],

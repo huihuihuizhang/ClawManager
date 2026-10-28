@@ -145,6 +145,10 @@ func (g Gate) BeginForEngine(ctx context.Context, engine, scope, owner, registry
 // engine/gate row locks in the transaction that changes the gate. The latter
 // check, not the initial observation, authorizes a versioned task to acquire it.
 func (g Gate) beginForEngine(ctx context.Context, engine, scope, owner, registryHash string, acquire, hold time.Duration, admission func(context.Context, gateQuery) error) (result GateOwnership, resultErr error) {
+	return g.beginForEngineJournal(ctx, engine, scope, owner, registryHash, acquire, hold, admission, nil)
+}
+
+func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, registryHash string, acquire, hold time.Duration, admission func(context.Context, gateQuery) error, journal func(context.Context, *sql.Tx, GateOwnership) error) (result GateOwnership, resultErr error) {
 	if g.DB == nil {
 		return GateOwnership{}, ErrFence
 	}
@@ -221,6 +225,11 @@ func (g Gate) beginForEngine(ctx context.Context, engine, scope, owner, registry
 	_, err = tx.ExecContext(ctx, "UPDATE system_backup_participants SET generation=?,state='pausing',resume_result='none',checkpoint_hash=NULL,updated_at=UTC_TIMESTAMP(6) WHERE scope=?", generation+1, scope)
 	if err != nil {
 		return GateOwnership{}, err
+	}
+	if journal != nil {
+		if err = journal(ctx, tx, GateOwnership{scope, owner, generation + 1, token}); err != nil {
+			return GateOwnership{}, err
+		}
 	}
 	if err = tx.Commit(); err != nil {
 		return GateOwnership{}, err
