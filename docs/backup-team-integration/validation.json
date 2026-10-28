@@ -1,5 +1,5 @@
 {
-  "status": "m0_m1_complete_m2_functional_workspace_verified_full_m2_incomplete",
+  "status": "m3_in_progress_atomic_release_and_historical_recovery_verified",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -113,6 +113,21 @@
       "result": "passed",
       "local_log_sha256": "aaaebf8fc992c614e71b4b5a0d38b904c3d57e830219d888c04ef172c76d1c86",
       "boundary": "Actual Linux filesystem capture/restore checks permitted setgid directory mode AND original UID/GID; privileged regular file modes remain rejected. Not a real production NFS certification."
+    },
+    "m3_release_native": {
+      "result": "passed",
+      "local_log_sha256": "397f1fe1794a6099a504d9cfa279e5b863117f201d366fd6e13ed402669a1caf",
+      "boundary": "Real disposable MySQL+kind+compiled worker: original four native cases and two release recovery cases passed. Injected real SQL operation unavailability rolls back physical release and projection together; historical gap fixture uses actual prior capture/exit/writer proofs. No production entry, real capacity or full-domain acceptance."
+    },
+    "m3_legacy_recovery_terminal": {
+      "result": "passed",
+      "local_log_sha256": "25a22a533afd89d4ffed24a263445e40d6b590c28f03ffb3ce91ef5f0d61780e",
+      "boundary": "Historical pre-fix gap seeded in disposable metadata after actual capture/source resume; wrong generation and missing writer ACK rejected, valid facts repaired idempotently; forward grant removed and reacquisition closes original task failed/idle without new source work."
+    },
+    "m3_block1_backend": {
+      "result": "passed",
+      "local_log_sha256": "213f43a00c2d0ade4e841c0dc91ab1d29b1cba1007f7a22cc85de51c32b56d24",
+      "boundary": "Backend go test ./... passed; opt-in environment cases separate. No frontend change in this work block."
     }
   },
   "not_accepted": [
@@ -122,7 +137,7 @@
     "Production capacity observations, independent key providers/minimum SQL/Kubernetes grants/TLS and actual worker final image deployment",
     "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],
-  "publication": "Local staged M0/M1 and bounded M2 commits only; no push, no shared server or production mutation. Full M2 remains incomplete.",
+  "publication": "M3/M4 user-authorized implementation in progress. Local commits; no push or shared-server publication yet.",
   "credential_pattern_scan": {
     "files": 1062,
     "result": "no matched private-key/GitHub/AWS credentials",
@@ -134,5 +149,5 @@
     "matched_paths": [],
     "boundary": "Pattern scan of changed and untracked source paths only, not an all-format secret guarantee."
   },
-  "cleanup": "Removed only verified task-owned kind cluster cm-backup-m0m2-20261028 and MySQL container 0d88a0d20def730991f37c43bbc7580a031c8dcfd85b95acc6c2e9da0f11a632 after native acceptance; no other containers or shared servers changed."
+  "cleanup": "M3/M4 task-owned MySQL eb672095280ef4f47dc5a649803164583df34b01c8972485f23f04cafe181fc2 and kind cm-backup-m3m4-20261028 live for acceptance reuse; clean only these at final wrap-up."
 }

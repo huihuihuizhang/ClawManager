@@ -285,6 +285,20 @@ func (g Gate) FinishRelease(ctx context.Context, ownership GateOwnership) error 
 		return err
 	}
 	defer tx.Rollback()
+	if err = g.FinishReleaseTx(ctx, tx, ownership); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// FinishReleaseTx lets the public execution owner atomically record the same
+// release in its journal. It neither commits nor opens a second transaction.
+// Callers must lock admissions before the gate, and authorize their task in tx.
+func (g Gate) FinishReleaseTx(ctx context.Context, tx *sql.Tx, ownership GateOwnership) error {
+	if tx == nil || ctx == nil || ctx.Err() != nil {
+		return ErrFence
+	}
+	var err error
 	var admissionScope string
 	if err = tx.QueryRowContext(ctx, "SELECT scope FROM system_backup_gate_admissions WHERE scope=? FOR UPDATE", ownership.Scope).Scan(&admissionScope); err != nil {
 		return err
@@ -314,8 +328,9 @@ func (g Gate) FinishRelease(ctx context.Context, ownership GateOwnership) error 
 	if _, err = tx.ExecContext(ctx, "UPDATE system_backup_gate_admissions SET owner=NULL,close_until=NULL,updated_at=UTC_TIMESTAMP(6) WHERE scope=? AND owner=?", ownership.Scope, ownership.Owner); err != nil {
 		return err
 	}
-	return tx.Commit()
+	return nil
 }
+
 func requireRow(result sql.Result, err error) error {
 	if err != nil {
 		return err

@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -179,7 +180,7 @@ func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
 	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
 		t.Skip("requires explicitly provisioned task-owned native cluster")
 	}
-	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked"} {
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap"} {
 		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
 	}
 }
@@ -287,11 +288,20 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			t.Fatal(e)
 		}
 	}
+	var projectionFault atomic.Bool
+	projectionFault.Store(scenario == "release-atomic")
 	open := func(user string) *sql.DB {
 		q := mysql.Config{User: user, Passwd: "synthetic-native-only", Net: "tcp", Addr: net.JoinHostPort(os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT")), DBName: database, ParseTime: true, AllowNativePasswords: true}
-		conn, z := sql.Open("mysql", q.FormatDSN())
+		q.Loc = time.UTC
+		connector, z := mysql.NewConnector(&q)
 		if z != nil {
 			t.Fatal(z)
+		}
+		var conn *sql.DB
+		if user == account {
+			conn = sql.OpenDB(nativeProjectionConnector{Connector: connector, Fail: &projectionFault})
+		} else {
+			conn = sql.OpenDB(connector)
 		}
 		t.Cleanup(func() { conn.Close() })
 		return conn
@@ -527,6 +537,29 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			t.Fatal("restart recovery after forward revocation", e)
 		}
 		expectedStatus = "failed"
+	} else if scenario == "release-atomic" {
+		if e == nil {
+			t.Fatal("injected projection outage was hidden")
+		}
+		var phase string
+		var resumed sql.NullTime
+		if z := db.QueryRow("SELECT phase FROM system_backup_gate WHERE scope='installation'").Scan(&phase); z != nil || phase != "releasing" {
+			t.Fatal("physical release committed without projection", phase, z)
+		}
+		if z := db.QueryRow("SELECT source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&resumed); z != nil || resumed.Valid {
+			t.Fatal("projection invented", z)
+		}
+		projectionFault.Store(false)
+		if z := os.Remove(filepath.Join(dir, "forward.json")); z != nil {
+			t.Fatal(z)
+		}
+		if _, z := db.Exec("UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); z != nil {
+			t.Fatal(z)
+		}
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("atomic release recovery", e)
+		}
+		expectedStatus = "failed"
 	} else if e != nil {
 		t.Fatal("capture", e)
 	}
@@ -576,6 +609,56 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		t.Fatal("native ciphertext", e)
 	}
 	t.Logf("native public capture: task=%s Jobs=%d attempts=%d CRI_inspections=%d status=%s source_resumed=true", task, resources, attempts, inspector.Calls.Load(), status)
+	if scenario == "legacy-release-gap" {
+		// Seed only the historical pre-fix journal gap. Physical source, exit,
+		// original writer and participant proofs above all came from real work.
+		if _, e = db.Exec("UPDATE system_backup_v2_backups SET status='capturing',controller_owner=?,controller_lease_expires_at=TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),row_version=row_version+1 WHERE public_id=?", controllerOwner, task); e != nil {
+			t.Fatal(e)
+		}
+		if _, e = db.Exec("UPDATE system_backup_v2_runtime_captures SET source_resumed_at=NULL WHERE task_public_id=?", task); e != nil {
+			t.Fatal(e)
+		}
+		a := preparedAuthority
+		if e = db.QueryRow("SELECT row_version,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&a.ClaimRowVersion, &a.MaintenanceFencingToken); e != nil {
+			t.Fatal(e)
+		}
+		a.MaintenanceOwner = task
+		// A conflicting epoch is rejected without repairing the journal.
+		bad := a
+		bad.MaintenanceFencingToken++
+		if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, bad); z == nil || ok {
+			t.Fatal("foreign generation repaired")
+		}
+		if _, e = db.Exec("UPDATE system_backup_v2_runtime_writers SET resumed=FALSE WHERE task_public_id=?", task); e != nil {
+			t.Fatal(e)
+		}
+		if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, a); z == nil || ok {
+			t.Fatal("missing writer proof repaired")
+		}
+		if _, e = db.Exec("UPDATE system_backup_v2_runtime_writers SET resumed=TRUE WHERE task_public_id=?", task); e != nil {
+			t.Fatal(e)
+		}
+		if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, a); z != nil || !ok {
+			t.Fatal("historical release projection not recovered", z)
+		}
+		if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, a); z != nil || !ok {
+			t.Fatal("release reconciliation not idempotent", z)
+		}
+		if e = os.Remove(filepath.Join(dir, "forward.json")); e != nil {
+			t.Fatal(e)
+		}
+		if _, e = db.Exec("UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); e != nil {
+			t.Fatal(e)
+		}
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("close recovered legacy task", e)
+		}
+		if e = db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&status); e != nil || status != "failed" {
+			t.Fatal("legacy task left running", status, e)
+		}
+		t.Log("historical projection recovered without source reread or resume")
+	}
+
 	found := false
 	if e = staging.ConsumeCompressed(ctx, bytes.NewReader(raw), captureDEK, capturedInv.Request.Binding, capturedInv.Request.MaxCompressedBytes, capturedInv.Request.MaxArchiveBytes, func(plain io.Reader) error {
 		reader := tar.NewReader(plain)
@@ -719,3 +802,42 @@ func nativeTLS(t *testing.T, ip net.IP) (control.IdentityIssuer, tls.Certificate
 	}
 	return control.IdentityIssuer{Certificate: parsed, Signer: key, ServerRoots: caPEM, TrustDomain: "native-backup.invalid"}, cert, caPEM
 }
+
+// Native MySQL remains authoritative; only the projection statement is withheld.
+type nativeProjectionConnector struct {
+	driver.Connector
+	Fail *atomic.Bool
+}
+
+func (c nativeProjectionConnector) Connect(ctx context.Context) (driver.Conn, error) {
+	conn, e := c.Connector.Connect(ctx)
+	if e != nil {
+		return nil, e
+	}
+	return nativeProjectionConn{Conn: conn, Fail: c.Fail}, nil
+}
+
+type nativeProjectionConn struct {
+	driver.Conn
+	Fail *atomic.Bool
+}
+
+func (c nativeProjectionConn) ExecContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Result, error) {
+	if c.Fail.Load() && strings.HasPrefix(q, "UPDATE system_backup_v2_runtime_captures SET source_resumed_at") {
+		return nil, errors.New("injected projection write unavailable")
+	}
+	return c.Conn.(driver.ExecerContext).ExecContext(ctx, q, args)
+}
+func (c nativeProjectionConn) QueryContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
+	return c.Conn.(driver.QueryerContext).QueryContext(ctx, q, args)
+}
+func (c nativeProjectionConn) BeginTx(ctx context.Context, o driver.TxOptions) (driver.Tx, error) {
+	return c.Conn.(driver.ConnBeginTx).BeginTx(ctx, o)
+}
+func (c nativeProjectionConn) Ping(ctx context.Context) error {
+	return c.Conn.(driver.Pinger).Ping(ctx)
+}
+func (c nativeProjectionConn) ResetSession(ctx context.Context) error {
+	return c.Conn.(driver.SessionResetter).ResetSession(ctx)
+}
+func (c nativeProjectionConn) IsValid() bool { return c.Conn.(driver.Validator).IsValid() }

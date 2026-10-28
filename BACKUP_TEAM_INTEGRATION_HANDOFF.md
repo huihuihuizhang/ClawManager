@@ -1,5 +1,7 @@
 # 备份专用版与 Team 版整合交接
 
+> 最新接手入口：[M3/M4 最终开发计划与复盘](BACKUP_M3_M4_FINAL_PLAN.md)。按用户要求，原 M2 未完成项作为 M3 必做前置，后续只保留 M3/M4 两个最终阶段；不改变下文已经记录的验收边界。
+
 ## 2026-10-28 M0～M2 四小时开发交接（当前结论）
 
 本节优先于后文历史记录。当前仍在 `D:/test/ClawManager-2` 的 `codex/backup-team-integration`，不是备份目录直接开发；来源固定 `backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`。备份专用 checkout 保持不变。合并方法仍是 Team 稳定底座上的逐模块增量适配，不整文件覆盖、不以 ours 合并掩盖差异，保留原 Team/owner/北向/WorkBuddy/旧备份路径。

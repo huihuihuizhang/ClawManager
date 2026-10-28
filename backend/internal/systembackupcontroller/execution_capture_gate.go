@@ -60,6 +60,16 @@ func (g SQLCaptureGate) PrepareCapture(ctx context.Context, c ClaimedBackup) (*E
 		if e = g.Recovery.Check(ctx, in.Authority); e != nil {
 			return nil, e
 		}
+		if released, e := g.ReconcileReleasedCapture(ctx, in.Authority); e != nil {
+			return nil, e
+		} else if released {
+			w := ExecutionWork{Step: ExecutionRecover, Input: in}
+			out := ExecutionOutcome{Recovery: d.RecoveryResult{CollectorsStopped: true, WritersResumed: true}}
+			if e = g.FinishCapture(ctx, w, out); e != nil {
+				return nil, e
+			}
+			return nil, nil
+		}
 		p, e := g.Records.LoadRecoveryPlan(ctx, in, g.Recovery)
 		if e != nil {
 			return nil, e
@@ -393,21 +403,42 @@ func (g SQLCaptureGate) FinalizeRecovery(ctx context.Context, a d.Authority) err
 	if g.Authority.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_writers WHERE task_public_id=? AND resumed=FALSE", a.TaskPublicID).Scan(&active) != nil || active != 0 {
 		return ErrExecutionRecoveryRequired
 	}
-	if e = gate.FinishRelease(ctx, o); e != nil {
-		return e
-	}
+	return g.finishRelease(ctx, a, o)
+}
+
+func (g SQLCaptureGate) finishRelease(ctx context.Context, a d.Authority, o app.GateOwnership) error {
 	tx, e := g.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return e
 	}
 	defer tx.Rollback()
-	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_captures SET source_resumed_at=COALESCE(source_resumed_at,UTC_TIMESTAMP(6)) WHERE task_public_id=? AND collectors_stopped_at IS NOT NULL", a.TaskPublicID); e != nil {
+	var admission string
+	if e = tx.QueryRowContext(ctx, "SELECT scope FROM system_backup_gate_admissions WHERE scope=? FOR UPDATE", o.Scope).Scan(&admission); e != nil {
 		return e
 	}
-	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_maintenance_locks SET gate_state='idle',lock_owner=NULL,heartbeat_at=NULL,lease_expires_at=NULL,gate_acquisition_timeout_seconds=NULL,quiesce_max_hold_seconds=NULL,acquiring_started_at=NULL,held_at=NULL,release_started_at=NULL,acquisition_deadline_at=NULL,absolute_hold_deadline_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND scope=? AND lock_owner=? AND fencing_token=?", a.InstallationID, CaptureGateScope, a.TaskPublicID, a.MaintenanceFencingToken); e != nil {
+	if e = g.Recovery.CheckTx(ctx, tx, a); e != nil {
 		return e
 	}
-	return tx.Commit()
+	if e = (app.Gate{DB: g.Authority.DB}).FinishReleaseTx(ctx, tx, o); e != nil {
+		return e
+	}
+	if e = g.projectReleaseTx(ctx, tx, a); e != nil {
+		return e
+	}
+	if e = tx.Commit(); e != nil {
+		return ErrExecutionCommitUnknown
+	}
+	return nil
+}
+
+func (g SQLCaptureGate) projectReleaseTx(ctx context.Context, tx *sql.Tx, a d.Authority) error {
+	if _, e := tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_captures SET source_resumed_at=COALESCE(source_resumed_at,UTC_TIMESTAMP(6)) WHERE task_public_id=? AND collectors_stopped_at IS NOT NULL", a.TaskPublicID); e != nil {
+		return e
+	}
+	if _, e := tx.ExecContext(ctx, "UPDATE system_backup_v2_maintenance_locks SET gate_state='idle',lock_owner=NULL,heartbeat_at=NULL,lease_expires_at=NULL,gate_acquisition_timeout_seconds=NULL,quiesce_max_hold_seconds=NULL,acquiring_started_at=NULL,held_at=NULL,release_started_at=NULL,acquisition_deadline_at=NULL,absolute_hold_deadline_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND scope=? AND lock_owner=? AND fencing_token=?", a.InstallationID, CaptureGateScope, a.TaskPublicID, a.MaintenanceFencingToken); e != nil {
+		return e
+	}
+	return nil
 }
 
 func (g SQLCaptureGate) Paused(ctx context.Context, a d.Authority, id string, ack d.WriterACK) error {
@@ -527,21 +558,7 @@ func (g SQLCaptureGate) Resumed(ctx context.Context, a d.Authority, id string) e
 	if active != 0 {
 		return nil
 	}
-	if e = gate.FinishRelease(ctx, o); e != nil {
-		return e
-	}
-	tx, e := g.Authority.DB.BeginTx(ctx, nil)
-	if e != nil {
-		return e
-	}
-	defer tx.Rollback()
-	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_captures SET source_resumed_at=COALESCE(source_resumed_at,UTC_TIMESTAMP(6)) WHERE task_public_id=? AND collectors_stopped_at IS NOT NULL", a.TaskPublicID); e != nil {
-		return e
-	}
-	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_maintenance_locks SET gate_state='idle',lock_owner=NULL,heartbeat_at=NULL,lease_expires_at=NULL,gate_acquisition_timeout_seconds=NULL,quiesce_max_hold_seconds=NULL,acquiring_started_at=NULL,held_at=NULL,release_started_at=NULL,acquisition_deadline_at=NULL,absolute_hold_deadline_at=NULL,row_version=row_version+1 WHERE origin_installation_id=? AND scope=? AND lock_owner=? AND fencing_token=?", a.InstallationID, CaptureGateScope, a.TaskPublicID, a.MaintenanceFencingToken); e != nil {
-		return e
-	}
-	return tx.Commit()
+	return g.finishRelease(ctx, a, o)
 }
 
 func (g SQLCaptureGate) EnsureJob(context.Context, d.Authority, d.JobIntent) (d.JobBinding, error) {

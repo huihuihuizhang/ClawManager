@@ -59,6 +59,9 @@ func (s SQLRecoveryAuthority) CheckTx(ctx context.Context, tx *sql.Tx, a d.Autho
 		if tx.QueryRowContext(ctx, "SELECT COALESCE(owner,''),generation,phase FROM system_backup_gate WHERE scope=? FOR SHARE", scope).Scan(&gateOwner, &generation, &phase) != nil {
 			return ErrExecutionAuthority
 		}
+		if !resumed.Valid && phase == "idle" && gateOwner == "" && generation == a.MaintenanceFencingToken {
+			return releasedCaptureProofTx(ctx, tx, a, scope)
+		}
 		if !resumed.Valid && (gateOwner != a.TaskPublicID || generation != a.MaintenanceFencingToken || (phase != "acquiring" && phase != "held" && phase != "releasing")) {
 			return ErrExecutionAuthority
 		}

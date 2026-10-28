@@ -13,6 +13,22 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def registry_summary(objects):
+    statuses = {"owner_recorded", "pending_owner_review", "frozen"}
+    if any(obj["decision_status"] not in statuses for obj in objects):
+        raise ValueError("Unknown registry decision requires review")
+    identities = [(obj["object_type"], obj["name"]) for obj in objects]
+    if len(set(identities)) != len(identities):
+        raise ValueError("Duplicate registry object")
+    recorded = [obj for obj in objects if obj["decision_status"] in {"owner_recorded", "frozen"}]
+    return {
+        "object_count": len(objects), "policy_recorded": len(recorded),
+        "policy_pending": len(objects) - len(recorded),
+        "cross_review_pending": sum(bool(set(obj.get("required_cross_reviewers", [])) -
+            set(obj.get("approved_cross_reviewers", []))) for obj in recorded),
+    }
+
+
 def outputs():
     files = sorted((ROOT / "backend/internal/db/migrations").glob("*.sql"))
     digest = hashlib.sha256(b"system-backup-migration-catalog.v1\0")
@@ -33,6 +49,7 @@ def outputs():
     registry_path = ROOT / "contracts/system-backup/v12/schema-registry.json"
     schema_registry = json.loads(registry_path.read_text(encoding="utf-8"))
     schema_registry["migration_catalog"] = catalog
+    schema_registry["summary"] = registry_summary(schema_registry["objects"])
     registry_json = json.dumps(schema_registry, indent=2, ensure_ascii=False) + "\n"
     yield registry_path, registry_json
     yield ROOT / "backend/internal/systembackupbusinessa/testdata/schema-registry.json", registry_json

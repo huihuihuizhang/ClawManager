@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 125,
+    "object_count": 127,
     "policy_recorded": 68,
-    "policy_pending": 57,
+    "policy_pending": 59,
     "cross_review_pending": 68
   },
   "objects": [
