@@ -41,11 +41,11 @@ func (s *DeploymentService) platformProfile(o *PublicJobOwner) (b.LinuxProfileCo
 				return s.checkAutoscalers(ctx, ref)
 			}
 			w.PrepareStop = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
-				return o.StopWitness(in.Authority).Arm(ctx, pods)
+				return o.StopWitnessIn(in.Authority, ref.Namespace).Arm(ctx, pods)
 			}
 			stopLogged := false
 			w.ConfirmStopped = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
-				if e := o.StopWitness(in.Authority).Confirm(ctx, pods); e != nil {
+				if e := o.StopWitnessIn(in.Authority, ref.Namespace).Confirm(ctx, pods); e != nil {
 					if !stopLogged {
 						log.Printf("[system-backup-public] source-stop-proof=%s", closedExecutionCode(e))
 						stopLogged = true

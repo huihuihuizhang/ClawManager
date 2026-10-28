@@ -238,6 +238,21 @@
       "result": "passed",
       "local_log_sha256": "23478c39efc1a30e689769f3635a735408e3ffadf409bfe3a1b092be5d8a0577",
       "boundary": "Backend go test ./... passed including exact event privilege matrix."
+    },
+    "m3_watch_lifetime_native": {
+      "result": "passed",
+      "local_log_sha256": "54534989f43bf4a7f19a8a63c7c778cd64509210c4bcd809ed123ca643d66202",
+      "boundary": "Real production binary, final scratch worker by loaded digest, actual MySQL capacity and minimum SQL role. Actual 13-second preStop exceeds ordinary API 10-second timeout; bounded dedicated watch records original exit, source recovers, archived content/detail/cancel retention pass. Not a full-system publication or restore."
+    },
+    "m3_watch_lifetime_backend": {
+      "result": "passed",
+      "local_log_sha256": "f4fe135ace1174bf9beb47e0f50db258345a67901f835413317e6f242125d9a5",
+      "boundary": "Backend go test ./... passed after distinct watch client/source namespace fix."
+    },
+    "m3_watch_lifetime_unit": {
+      "result": "passed",
+      "local_log_sha256": "cd466000eb771544063e0f89bdd0d88e10d0fd76161965d7c311ace1afbd34f2",
+      "boundary": "Watch uses separate client and retains original ACK across transient SQL failure; explicit termination/identity negative checks pass."
     }
   },
   "not_accepted": [

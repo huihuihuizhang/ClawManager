@@ -25,7 +25,10 @@ type ExitWitnessStore interface {
 	Load(context.Context, string) (ExitWitness, error)
 }
 type KubeletStopWitness struct {
-	Client    kubernetes.Interface
+	Client kubernetes.Interface
+	// Watches has no global HTTP timeout. The bounded tracking context owns
+	// stream lifetime; ordinary API calls retain their short request timeout.
+	Watches   kubernetes.Interface
 	Namespace string
 	NodeUIDs  map[string]string
 	Store     ExitWitnessStore
@@ -98,7 +101,11 @@ func (w KubeletStopWitness) Arm(ctx context.Context, pods []PodIdentity) error {
 			continue
 		}
 		tracking, cancel := context.WithTimeout(context.WithoutCancel(ctx), w.Timeout)
-		stream, e := w.Client.CoreV1().Pods(w.Namespace).Watch(tracking, metav1.ListOptions{FieldSelector: "metadata.name=" + p.Name, ResourceVersion: pod.ResourceVersion})
+		watchClient := w.Watches
+		if watchClient == nil {
+			watchClient = w.Client
+		}
+		stream, e := watchClient.CoreV1().Pods(w.Namespace).Watch(tracking, metav1.ListOptions{FieldSelector: "metadata.name=" + p.Name, ResourceVersion: pod.ResourceVersion})
 		if e != nil {
 			cancel()
 			return flow.ErrQuiesce

@@ -70,5 +70,8 @@ func (s SQLStopProofs) Load(ctx context.Context, pod string) (quiesce.ExitWitnes
 	return p, nil
 }
 func (o *PublicJobOwner) StopWitness(a d.Authority) quiesce.KubeletStopWitness {
-	return quiesce.KubeletStopWitness{Client: o.Client, Namespace: o.Namespace, NodeUIDs: o.Security.NodeUIDs, Store: SQLStopProofs{Gate: o.Gate, Authority: a}, Timeout: 2 * time.Minute}
+	return o.StopWitnessIn(a, o.Namespace)
+}
+func (o *PublicJobOwner) StopWitnessIn(a d.Authority, namespace string) quiesce.KubeletStopWitness {
+	return quiesce.KubeletStopWitness{Client: o.Client, Watches: o.WatchClient, Namespace: namespace, NodeUIDs: o.Security.NodeUIDs, Store: SQLStopProofs{Gate: o.Gate, Authority: a}, Timeout: 2 * time.Minute}
 }

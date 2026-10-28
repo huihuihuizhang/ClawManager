@@ -44,11 +44,16 @@ func TestWitnessRetainsExplicitAckAcrossStoreFailure(t *testing.T) {
 	id := PodIdentity{Name: "source", UID: "pod-uid", Node: "node", Containers: []string{"containerd://old"}}
 	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: id.Name, Namespace: "backup", UID: "pod-uid", ResourceVersion: "1"}, Spec: corev1.PodSpec{NodeName: "node"}}
 	client := fake.NewSimpleClientset(pod, &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node", UID: "node-uid"}})
+	watchClient := fake.NewSimpleClientset()
 	stream := watch.NewRaceFreeFake()
 	var armed atomic.Bool
-	client.PrependWatchReactor("pods", func(k8stesting.Action) (bool, watch.Interface, error) { armed.Store(true); return true, stream, nil })
+	client.PrependWatchReactor("pods", func(k8stesting.Action) (bool, watch.Interface, error) {
+		t.Error("ordinary timeout client used for witness stream")
+		return true, nil, errors.New("wrong client")
+	})
+	watchClient.PrependWatchReactor("pods", func(k8stesting.Action) (bool, watch.Interface, error) { armed.Store(true); return true, stream, nil })
 	store := &retryWitnessStore{}
-	w := KubeletStopWitness{Client: client, Namespace: "backup", NodeUIDs: map[string]string{"node": "node-uid"}, Store: store, Timeout: time.Second}
+	w := KubeletStopWitness{Client: client, Watches: watchClient, Namespace: "backup", NodeUIDs: map[string]string{"node": "node-uid"}, Store: store, Timeout: time.Second}
 	if e := w.Arm(ctx, []PodIdentity{id}); e != nil || !armed.Load() {
 		t.Fatal("watch was not armed", e)
 	}

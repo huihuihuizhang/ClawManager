@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import hashlib
+import uuid
 from backup_native_capacity import NativeCapacity
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,6 +27,8 @@ def main():
     ap.add_argument('--mysql', required=True)
     ap.add_argument('--build', action='store_true')
     ap.add_argument('--physical-capacity',action='store_true')
+    ap.add_argument('--worker-image', help='Task-owned local cm-backup-worker tag built by the production Dockerfile')
+    ap.add_argument('--controller-image', help='Task-owned local cm-backup-app tag; extract and run its exact public controller binary')
     ap.add_argument('--test', default='^TestPublicCaptureNativeMySQLKubernetes$')
     ap.add_argument('--log', default='team-optimization-docs/m3-native.log')
     a = ap.parse_args()
@@ -47,9 +51,22 @@ def main():
     k = ['kubectl', '--context', context]
     build = ROOT / 'reports/m3m4-native-image'
     build.mkdir(parents=True, exist_ok=True)
+    for value, repo in [(a.worker_image, 'cm-backup-worker'), (a.controller_image, 'cm-backup-app')]:
+        if value is not None and not re.fullmatch(repo+r':[a-z0-9.-]+',value):
+            raise SystemExit('Only an explicit task-owned local image tag is accepted')
     env = dict(os.environ, GOOS='linux', GOARCH='amd64', CGO_ENABLED='0')
     run(['go', '-C', 'backend', 'test', '-c', '-ldflags=-s -w', '-o', str(build/'native.test'), './internal/systembackupapi'], env=env)
-    if 'production' in a.test:
+    if a.controller_image and 'production' not in a.test:
+        raise SystemExit('Controller-image acceptance requires the production entry case')
+    if a.controller_image:
+        original_image=read(['docker','image','inspect',a.controller_image,'--format','{{.Id}}'])
+        container=read(['docker','create','--name','cm-backup-controller-artifact-'+uuid.uuid4().hex[:12],
+                        '--label','codex.task=backup-team-integration','--entrypoint','/usr/local/bin/system-backup-v2-controller',original_image])
+        try:
+            run(['docker','cp',container+':/usr/local/bin/system-backup-v2-controller',str(build/'public-controller')])
+        finally:
+            run(['docker','rm',container],stdout=subprocess.DEVNULL)
+    elif 'production' in a.test:
         run(['go','-C','backend','build','-trimpath','-ldflags=-s -w','-o',str(build/'public-controller'),'./cmd/system-backup-v2-controller'],env=env)
     if a.physical_capacity:
         run(['go','-C','backend','build','-trimpath','-ldflags=-s -w','-o',str(build/'native-capacity'),'./cmd/system-backup-registration'],env=env)
@@ -70,6 +87,16 @@ def main():
         raise SystemExit('Exact loaded image digest unavailable; run --build')
     image = 'docker.io/library/cm-backup-native@' + rows[0][2]
     run(['docker', 'exec', node, 'ctr', '-n', 'k8s.io', 'images', 'tag', '--force', 'docker.io/library/'+tag, image], stdout=subprocess.DEVNULL)
+    worker_image=image
+    if a.worker_image:
+        run(['kind','load','docker-image',a.worker_image,'--name',a.cluster])
+        listing=read(['docker','exec',node,'ctr','-n','k8s.io','images','ls'])
+        wanted='docker.io/library/'+a.worker_image
+        found=[r.split() for r in listing.splitlines() if r.startswith(wanted+' ')]
+        if len(found)!=1 or not re.fullmatch(r'sha256:[a-f0-9]{64}',found[0][2]):
+            raise SystemExit('Exact final worker image digest unavailable')
+        worker_image='docker.io/library/cm-backup-worker@'+found[0][2]
+        run(['docker','exec',node,'ctr','-n','k8s.io','images','tag','--force',wanted,worker_image],stdout=subprocess.DEVNULL)
     yaml = (ROOT/'backend/internal/systembackupapi/testdata/native-capture.yaml').read_text(encoding='utf8')
     yaml = yaml.replace('__NATIVE_IMAGE__', image).replace('__MYSQL_HOST__', host)
     yaml = yaml.replace('command: [/native.test, -test.v, -test.run=^TestPublicCaptureNativeMySQLKubernetes$, -test.timeout=9m]', "command: [/bin/sleep, '21600']")
@@ -89,8 +116,11 @@ def main():
         raise SystemExit('Logs must stay in ignored team-optimization-docs')
     with log.open('w',encoding='utf8') as f:
         f.write('source=' + read(['git','rev-parse','HEAD']) + '\nimage=' + image + '\n')
+        f.write('worker_image='+worker_image+'\n')
+        if a.controller_image:
+            f.write('controller_image_id='+original_image+'\ncontroller_binary_sha256='+hashlib.sha256((build/'public-controller').read_bytes()).hexdigest()+'\n')
         f.flush()
-        command=k+['-n',ns,'exec','native-controller','--','env','NATIVE_BACKUP_IMAGE='+image]
+        command=k+['-n',ns,'exec','native-controller','--','env','NATIVE_BACKUP_IMAGE='+image,'NATIVE_BACKUP_WORKER_IMAGE='+worker_image]
         if a.physical_capacity:
             command+=['NATIVE_BACKUP_PHYSICAL_CAPACITY=true']
         command+=['/tmp/native.test','-test.v','-test.run='+a.test,'-test.timeout=15m']

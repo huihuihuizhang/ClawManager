@@ -100,3 +100,21 @@ record one redacted `diagnostic.d.recovery_blocked` event. Repeated reconciliati
 does not spam events; stale claims cannot report for newer or terminal work.
 This is an observed failure, never exit proof, a gate release or a completed
 backup. The control account needs SELECT+INSERT on events for atomic deduplication.
+
+## Worker image and source exit watches
+
+Build the `backup-worker` target from the root Dockerfile. Its only payload is
+`/backup-worker`, statically built from the same backend source as the app and
+controller. Pin the actual loaded/registry digest in deployment inputs. The
+worker has no shell, app server or baked-in credential. Job-level filesystem
+identity/capabilities remain explicit and are checked against the original spec.
+
+Ordinary Kubernetes requests retain their ten-second timeout. Exit watches use
+a separate client without a global HTTP timeout and the existing bounded
+two-minute witness context. A real thirteen-second preStop passed with the
+final scratch worker. Watch timeout/disconnection still cannot prove exit.
+
+`backup-public-native.py --worker-image <cm-backup-worker:tag>` records/uses the
+exact loaded digest. `--controller-image <cm-backup-app:tag>` extracts the exact
+controller binary and records its image ID and binary SHA. These flags target
+only explicitly owned local fixtures and do not install shared-cluster material.

@@ -183,7 +183,7 @@ func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
 	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
 		t.Skip("requires explicitly provisioned task-owned native cluster")
 	}
-	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry", "production-recovery-only", "prepare-cancel", "capture-cancel", "acquire-atomic"} {
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry", "production-recovery-only", "production-delayed-exit", "prepare-cancel", "capture-cancel", "acquire-atomic"} {
 		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
 	}
 }
@@ -211,9 +211,13 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	}
 	nsName := os.Getenv("NATIVE_BACKUP_NAMESPACE")
 	image := os.Getenv("NATIVE_BACKUP_IMAGE")
+	workerImage := os.Getenv("NATIVE_BACKUP_WORKER_IMAGE")
+	if workerImage == "" {
+		workerImage = image
+	}
 	podIP := os.Getenv("POD_IP")
 	nodeName := os.Getenv("NODE_NAME")
-	if nsName != "cm-backup-m0m2-native" || !strings.Contains(image, "@sha256:") || net.ParseIP(podIP) == nil || nodeName == "" {
+	if nsName != "cm-backup-m0m2-native" || !strings.Contains(image, "@sha256:") || !strings.Contains(workerImage, "@sha256:") || net.ParseIP(podIP) == nil || nodeName == "" {
 		t.Fatal("native fixture identity missing")
 	}
 	ns, e := client.CoreV1().Namespaces().Get(ctx, nsName, metav1.GetOptions{})
@@ -407,7 +411,12 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	deploymentName := "native-writer-" + slug
 	replicas := int32(1)
 	graces := int64(1)
-	dep, e := client.AppsV1().Deployments(nsName).Create(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: deploymentName, Namespace: nsName}, Spec: appsv1.DeploymentSpec{Replicas: &replicas, Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"native-source": account}}, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"native-source": account}}, Spec: corev1.PodSpec{TerminationGracePeriodSeconds: &graces, Containers: []corev1.Container{{Name: "writer", Image: image, Command: []string{"/bin/sh", "-c", "while true; do date +%s%N > /source/counter.txt; sleep 1; done"}, VolumeMounts: []corev1.VolumeMount{{Name: "source", MountPath: "/source", SubPath: account}}}}, Volumes: []corev1.Volume{{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}}}}}}, metav1.CreateOptions{})
+	var sourceLifecycle *corev1.Lifecycle
+	if scenario == "production-delayed-exit" {
+		graces = 20
+		sourceLifecycle = &corev1.Lifecycle{PreStop: &corev1.LifecycleHandler{Exec: &corev1.ExecAction{Command: []string{"/bin/sleep", "13"}}}}
+	}
+	dep, e := client.AppsV1().Deployments(nsName).Create(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: deploymentName, Namespace: nsName}, Spec: appsv1.DeploymentSpec{Replicas: &replicas, Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"native-source": account}}, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"native-source": account}}, Spec: corev1.PodSpec{TerminationGracePeriodSeconds: &graces, Containers: []corev1.Container{{Name: "writer", Image: image, Lifecycle: sourceLifecycle, Command: []string{"/bin/sh", "-c", "while true; do date +%s%N > /source/counter.txt; sleep 1; done"}, VolumeMounts: []corev1.VolumeMount{{Name: "source", MountPath: "/source", SubPath: account}}}}, Volumes: []corev1.Volume{{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}}}}}}, metav1.CreateOptions{})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -442,7 +451,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	endpoint := fmt.Sprintf("https://%s:%d/worker/v1", podIP, port)
 	if strings.HasPrefix(scenario, "production-") {
 		listener.Close()
-		entryCfg := execution.DeploymentConfig{Version: "system-backup-public-deployment.v1", CaptureScope: "platform-workspace", InstallationID: authority.InstallationID, ControllerOwner: controllerOwner, ApplicationScope: authority.ApplicationScope, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: owner.TrustDomain, ForwardGrant: execution.GrantReference{Path: filepath.Join(dir, "forward.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, RecoveryGrant: execution.GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, KeyDirectory: dir, ProfileFile: filepath.Join(dir, "profile.json"), CapacityFile: legacy.capacityFile, SourceDSNFile: filepath.Join(dir, "source.dsn"), SourceUser: sourceUser, SourceDatabase: database, SourceServerUUID: server, StagingDirectory: "/staging", StagingClaim: "native-staging", WorkerImage: image, Security: owner.Security, ControlURL: endpoint, Listen: listener.Addr().String(), ServerCertificate: filepath.Join(dir, "server.pem"), ServerKey: filepath.Join(dir, "server.key"), IssuerCertificate: filepath.Join(dir, "issuer.pem"), IssuerKey: filepath.Join(dir, "issuer.key"), Writers: []execution.PlatformDeployment{{Namespace: nsName, Name: dep.Name, UID: string(dep.UID)}}, Workspace: execution.WorkspaceCapture{Claim: "native-source", SubPath: account, Node: nodeName, MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, AcquireSeconds: 60, HoldSeconds: 120}
+		entryCfg := execution.DeploymentConfig{Version: "system-backup-public-deployment.v1", CaptureScope: "platform-workspace", InstallationID: authority.InstallationID, ControllerOwner: controllerOwner, ApplicationScope: authority.ApplicationScope, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: owner.TrustDomain, ForwardGrant: execution.GrantReference{Path: filepath.Join(dir, "forward.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, RecoveryGrant: execution.GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, KeyDirectory: dir, ProfileFile: filepath.Join(dir, "profile.json"), CapacityFile: legacy.capacityFile, SourceDSNFile: filepath.Join(dir, "source.dsn"), SourceUser: sourceUser, SourceDatabase: database, SourceServerUUID: server, StagingDirectory: "/staging", StagingClaim: "native-staging", WorkerImage: workerImage, Security: owner.Security, ControlURL: endpoint, Listen: listener.Addr().String(), ServerCertificate: filepath.Join(dir, "server.pem"), ServerKey: filepath.Join(dir, "server.key"), IssuerCertificate: filepath.Join(dir, "issuer.pem"), IssuerKey: filepath.Join(dir, "issuer.key"), Writers: []execution.PlatformDeployment{{Namespace: nsName, Name: dep.Name, UID: string(dep.UID)}}, Workspace: execution.WorkspaceCapture{Claim: "native-source", SubPath: account, Node: nodeName, MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, AcquireSeconds: 60, HoldSeconds: 120}
 		if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
 			stopCapacity()
 			if e = os.Remove(legacy.capacityFile); e != nil {
@@ -510,7 +519,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	var preparedAuthority d.Authority
 	sourceCfg.BuildParts = func(in d.Input, _ b.SourceInventory, until time.Time) ([]b.JobPart, error) {
 		invocation := worker.Invocation{Request: worker.Request{Version: worker.Version, Operation: "capture-workspace", Binding: staging.Binding{BackupID: in.Authority.TaskPublicID, Attempt: "1", Path: "workspace", PartIndex: 1, CaptureContextHash: in.Authority.ConfigSHA256, EnvelopeID: "functional-native"}, Deadline: until, ArtifactName: "workspace.enc", MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, WorkspacePath: "/workspace", StagingPath: "/staging"}
-		p, z := b.BuildCapturePart(in, until, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: "workspace", Generation: 1, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: nsName, Name: "capture-" + slug, Owner: in.Authority.TaskPublicID}, Image: image, ServiceAccount: sa.Name, Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}, StagingClaim: "native-staging", SourceSubPath: account, NodeName: nodeName, DeadlineSeconds: 120, WorkerControl: &kube.WorkerControl{URL: endpoint, InvocationConfigMap: "request-" + slug, IdentitySecret: "identity-" + slug, BoundPodIdentity: true}}})
+		p, z := b.BuildCapturePart(in, until, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: "workspace", Generation: 1, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: nsName, Name: "capture-" + slug, Owner: in.Authority.TaskPublicID}, Image: workerImage, ServiceAccount: sa.Name, Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}, StagingClaim: "native-staging", SourceSubPath: account, NodeName: nodeName, DeadlineSeconds: 120, WorkerControl: &kube.WorkerControl{URL: endpoint, InvocationConfigMap: "request-" + slug, IdentitySecret: "identity-" + slug, BoundPodIdentity: true}}})
 		if z != nil {
 			return nil, z
 		}

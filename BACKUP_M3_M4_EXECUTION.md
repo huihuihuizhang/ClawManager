@@ -86,3 +86,13 @@
 真实停止证明不明用例51.29秒通过：原源 Deployment 保持暂停、诊断恰好一条、重复报告不新增、错误版本拒绝；等待实际 lease 过期后，独立恢复原 Job、源业务恢复，任务 failed/idle。没有手改原领取或业务状态来通过这一用例。定向和全量后端另记。
 
 提交复核：十分钟左右形成持久可见故障事实，复用已有 events/DTO，未新增任务状态机或迁移。原表约束禁止将 capturing 硬改为 finalization_unknown 的 attention，保留原语义而用正式诊断记录，避免为了展示突破控制协议。完整六域/正式发布/独立还原仍未完成；进入镜像接线前继续保持能力关闭。
+
+### 第九工作块：退出监听独立预算与实际 Worker 镜像
+
+Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch、无 server/shell/内置凭据，默认65532；已审阅 Job 为保留文件身份显式使用原 root+最小能力，仍只读源、只写 staging。验收驱动按加载后的真实 digest 运行最终 Worker，支持提取实际 App 镜像内 controller 二进制并记录其 hash，避免测试壳镜像冒充最终 Worker。
+
+最终 Worker 实跑在同时构建 App 的负载下发现退出监听的相邻缺陷：生产 Kubernetes client 的10秒 HTTP Timeout 也限制 Watch。原数据保护没有被绕过，但 ACK 可能在退出较慢时丢失。生产入口现分离普通短请求与 Watch client；Watch 仅由两分钟跟踪 context 限时。原命名空间也按实际 writer 绑定，不混用 Job namespace。
+
+真实延迟退出回归使用13秒 preStop，超过原10秒限制，实际生产二进制＋scratch Worker＋真实容量＋精确 SQL 角色49.93秒通过：退出 ACK、源恢复、内容/详情/安全取消均通过。缺退出 ACK 的故障仍保护资源，未将超时或404改成证明。全量后端及 watcher 选用独立 client 的定向验证另记；App 初版镜像在修复前构建，不视为最终验收，后续需重建并从该镜像提取 controller 再验。
+
+提交复核：镜像阶段发现了测试负载差异，而非只列构建成功。一次本地 fixture 更新使用旧 resourceVersion 发生冲突，改为创建前固化 preStop，避免为测试引入重试状态。初次镜像故障提前读取封闭日志并停止已确认的本地测试子进程让清理完成，没有耗尽八分钟统一超时。下一块复用最终镜像和真实入口接最小 Kubernetes 权限，不重新搭建环境。

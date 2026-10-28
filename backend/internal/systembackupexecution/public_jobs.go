@@ -39,6 +39,7 @@ type StopProof interface {
 type PublicJobOwner struct {
 	Gate                                 c.SQLCaptureGate
 	Client                               kubernetes.Interface
+	WatchClient                          kubernetes.Interface
 	Dynamic                              dynamic.Interface
 	Namespace, NamespaceUID, TrustDomain string
 	Security                             kube.WorkerSecurity

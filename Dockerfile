@@ -54,9 +54,16 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-registration ./cmd/system-backup-registration \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-controller-grants ./cmd/system-backup-controller-grants \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-v2-controller ./cmd/system-backup-v2-controller \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/backup-worker ./cmd/backup-worker \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-audit-collect ./cmd/system-backup-audit-collect
 
-FROM nginx:1.27-alpine
+# Explicit target: same source as app/controller, no server, shell or keys.
+FROM scratch AS backup-worker
+COPY --from=backend-builder --chmod=0555 /out/backup-worker /backup-worker
+USER 65532:65532
+ENTRYPOINT ["/backup-worker"]
+
+FROM nginx:1.27-alpine AS app
 
 # nginx-module-njs provides ngx_http_js_module.so, loaded by nginx.conf to run
 # the desktop access-token verification (deployments/nginx/njs/desktop_auth.js).

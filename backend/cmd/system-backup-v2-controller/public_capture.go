@@ -57,6 +57,12 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e != nil {
 		return errors.New("public bounded Kubernetes client unavailable")
 	}
+	watchREST := rest.CopyConfig(publicREST)
+	watchREST.Timeout = 0 // Each witness supplies its own bounded stream context.
+	watchClient, e := kubernetes.NewForConfig(watchREST)
+	if e != nil {
+		return errors.New("public bounded Kubernetes watch client unavailable")
+	}
 	dyn, e := dynamic.NewForConfig(publicREST)
 	if e != nil {
 		return errors.New("public Kubernetes dynamic client unavailable")
@@ -66,6 +72,7 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 		return fmt.Errorf("public deployment unavailable: %w", e)
 	}
 	defer service.Close()
+	service.Runtime.Owner.WatchClient = watchClient
 	podName := os.Getenv("POD_NAME")
 	if podName == "" {
 		podName, _ = os.Hostname()
