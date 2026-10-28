@@ -191,3 +191,12 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 先以“不支持确认停止的在线源仍被接纳”复现失败，修复后已有 Gateway/公共 adapter 定向用例及缺注册记录、未确认回执、丢响应、接手恢复通过。测试是实际 HTTP 适配合同，不是实际 OpenClaw/Hermes 进程验收。核对 Runtime 源实现发现现有 stop-capabilities/gateway-stop 只支持 OpenCode/process_group，且明确不授予备份许可；/v1/backup/capabilities 未实现。因此不能把这个后端提交宣称为所有 Runtime B 完成，也不能伪造能力解开生产非空限制。
 
 提交复盘：复用了现有停止协议和请求校验，没有修改普通实例生命周期接口。实际 Runtime 代码核查应早于扩大 fixture 的成功结论；后续不再用参数齐全的模拟回执代替外部生产能力。
+
+
+### 补回 B / 第三块：普通后台执行纳入同一物理门禁
+
+发现普通 TeamData worker 只取得自己的执行互斥，没有参加服务器已经配置的共享工作准入。新增 executeAdmitted，在领取前取得现有 backupgate 工作许可；门禁关闭保持原 pending，不新建/失败化任务，下一轮续做。许可覆盖同步执行、取消监控退出及结果写回；异常也先返回、再释放。离线隔离恢复仍沿原独立控制库入口，不冒称活动 Runtime 的停写参与者。
+
+失败用例先证明旧实现绕过关闭门禁领取并执行。修复后拒绝准入、完整执行期间许可、实际结果写失败接手回归通过；另在真实同一 MySQL/schema 内持有原 Gate，验证 held 时 pending，实际释放后单次执行及全部许可已释放。没有通过修改 DB 状态绕过门禁。该闭环不证明 Runtime 或 detached 工具已停止。
+
+提交复盘：这次直接补生产后台遗漏的接线，不继续新增 profile 骨架；用已有门禁和一条小规模实际 SQL 对照验收，避免再次只测试 mock refusal。

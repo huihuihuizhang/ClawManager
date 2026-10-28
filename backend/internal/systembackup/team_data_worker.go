@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/backupgate"
+
 	"github.com/go-sql-driver/mysql"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -84,15 +86,8 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 			}
 		}
 		if e == nil {
-			r, e := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='running',owner_id=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending'", s.owner, j.ID)
-			if e != nil {
+			if e = s.executeAdmitted(ctx, conn, j); e != nil && !errors.Is(e, backupgate.ErrMaintenance) && !errors.Is(e, ErrMaintenance) {
 				return e
-			}
-			n, _ := r.RowsAffected()
-			if n == 1 {
-				if e = s.execute(ctx, conn, j); e != nil {
-					return e
-				}
 			}
 		}
 		select {
@@ -102,6 +97,33 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 		}
 	}
 	return ctx.Err()
+}
+
+// The online worker is a finite application participant, not a second
+// strong-consistency engine. Hold the shared source admission BEFORE claiming
+// work, and retain it through all synchronous execution and settlement. A
+// closed capture gate leaves this operation pending for a later tick.
+func (s *TeamDataService) executeAdmitted(ctx context.Context, lock *sql.Conn, j TeamDataJob) error {
+	release, err := backupgate.HoldWorkUnit(ctx, "backup.team_data")
+	if err != nil {
+		return err
+	}
+	defer release()
+	result, err := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='running',owner_id=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending'", s.owner, j.ID)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return nil
+	}
+	if n != 1 {
+		return ErrFence
+	}
+	return s.execute(ctx, lock, j)
 }
 
 func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j TeamDataJob) error {
