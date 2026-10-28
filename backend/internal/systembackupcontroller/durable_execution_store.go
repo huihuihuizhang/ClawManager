@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
+	"time"
 
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -77,7 +79,21 @@ func (s DurableExecutionStore) Next(ctx context.Context) (*ExecutionWork, error)
 	return nil, s.Scheduler.Record(ctx, *w, out)
 }
 
-func (s DurableExecutionStore) Record(ctx context.Context, w ExecutionWork, out ExecutionOutcome) error {
+func (s DurableExecutionStore) Record(ctx context.Context, w ExecutionWork, out ExecutionOutcome) (resultErr error) {
+	defer func() {
+		if resultErr == nil || ctx == nil || (w.Step != ExecutionCapture && w.Step != ExecutionRecover) {
+			return
+		}
+		if reporter, ok := s.Scheduler.(ExecutionFailureReporter); ok {
+			// Diagnostic recording is bounded and independent of the canceled
+			// forward call. Exact current SQL claim checks still fence the write.
+			note, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
+			defer cancel()
+			if err := reporter.ReportExecutionBlocked(note, w); err != nil && !errors.Is(err, ErrClaimLost) {
+				log.Printf("[system-backup-public] recovery-diagnostic=unavailable")
+			}
+		}
+	}()
 	if err := s.Ready(ctx); err != nil {
 		return err
 	}

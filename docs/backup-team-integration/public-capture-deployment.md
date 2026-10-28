@@ -92,3 +92,11 @@ sealed capture attempt and no publication actions, artifact references or remote
 effects. It preserves encrypted staging and sealed history. It never touches
 the current source gate, re-captures source data, deletes data or claims a
 successful backup. Publishing/unknown-result work is not accepted on this path.
+
+## Durable blocked-recovery diagnostics
+
+After an execution returns without conclusive cleanup, the exact live claim may
+record one redacted `diagnostic.d.recovery_blocked` event. Repeated reconciliation
+does not spam events; stale claims cannot report for newer or terminal work.
+This is an observed failure, never exit proof, a gate release or a completed
+backup. The control account needs SELECT+INSERT on events for atomic deduplication.

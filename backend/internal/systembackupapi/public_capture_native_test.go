@@ -664,14 +664,35 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		if z != nil || *blocked.Spec.Replicas != 0 {
 			t.Fatal("source resumed without stop proof", z)
 		}
+		var blockedNotes int
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='diagnostic.d.recovery_blocked'", task).Scan(&blockedNotes) != nil || blockedNotes != 1 {
+			t.Fatal("missing durable original recovery diagnostic", blockedNotes)
+		}
+		var original d.Authority
+		original.InstallationID, original.TaskType, original.TaskPublicID, original.AttemptNo, original.Phase = "installation_admission", "backup", task, 1, "capture"
+		if db.QueryRow("SELECT request_id,config_version,config_snapshot_sha256,controller_owner,row_version,deadline_at,maintenance_lock_owner,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&original.RequestID, &original.ConfigVersion, &original.ConfigSHA256, &original.ClaimOwner, &original.ClaimRowVersion, &original.DeadlineAt, &original.MaintenanceOwner, &original.MaintenanceFencingToken) != nil {
+			t.Fatal("original blocked claim missing")
+		}
+		blockedWork := c.ExecutionWork{Step: c.ExecutionRecover, Input: d.Input{Authority: original}}
+		if z = runtime.Scheduler.ReportExecutionBlocked(ctx, blockedWork); z != nil {
+			t.Fatal("duplicate diagnostic lookup", z)
+		}
+		blockedWork.Input.Authority.ClaimRowVersion++
+		if z = runtime.Scheduler.ReportExecutionBlocked(ctx, blockedWork); !errors.Is(z, c.ErrClaimLost) {
+			t.Fatal("stale diagnostic claim accepted", z)
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='diagnostic.d.recovery_blocked'", task).Scan(&blockedNotes) != nil || blockedNotes != 1 {
+			t.Fatal("recovery diagnostic duplicated", blockedNotes)
+		}
 		if z = os.Remove(filepath.Join(dir, "forward.json")); z != nil {
 			t.Fatal(z)
 		}
 		faultProof.Unknown.Store(false)
 		owner.AllowKubeletStopWitness = true
-		if _, z = db.Exec("UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); z != nil {
-			t.Fatal(z)
-		}
+		waitNative(t, ctx, func() bool {
+			var expired bool
+			return db.QueryRow("SELECT controller_lease_expires_at<=UTC_TIMESTAMP(6) FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&expired) == nil && expired
+		})
 		if e = runtime.Loop.RunOnce(ctx); e != nil {
 			t.Fatal("restart recovery after forward revocation", e)
 		}

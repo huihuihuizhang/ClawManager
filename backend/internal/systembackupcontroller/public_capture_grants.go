@@ -29,7 +29,7 @@ var publicCaptureTableGrants = map[string][]string{
 	"system_backup_v2_job_send_intents":      {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_external_actions":      {"SELECT"},
 	"system_backup_v2_operations":            {"SELECT", "UPDATE"},
-	"system_backup_v2_events":                {"INSERT"},
+	"system_backup_v2_events":                {"SELECT", "INSERT"},
 	"system_backup_v2_metadata_reservations": {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_runtime_captures":      {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_runtime_resources":     {"SELECT", "INSERT", "UPDATE"},

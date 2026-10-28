@@ -228,6 +228,16 @@
       "result": "passed",
       "local_log_sha256": "3b6351c23057e4dbceda48d11d4a4673be7d64f0767450345f41de81c81f38a0",
       "boundary": "Production frontend build passed with validating cancel entry. No browser acceptance."
+    },
+    "m3_blocked_diagnostic_native": {
+      "result": "passed",
+      "local_log_sha256": "e4296aa6a8891b199efb14335b63641bbdaa85a1f18c05eaed4c07b493cb9aa6",
+      "boundary": "Real MySQL/kind/worker: unknown original exit keeps source paused; one durable redacted diagnostic, duplicate dedup and stale-claim denial; actual lease expires then independent original recovery ends failed/idle. Synthetic capacity; controlled writer, not all Runtime modes."
+    },
+    "m3_blocked_diagnostic_backend": {
+      "result": "passed",
+      "local_log_sha256": "23478c39efc1a30e689769f3635a735408e3ffadf409bfe3a1b092be5d8a0577",
+      "boundary": "Backend go test ./... passed including exact event privilege matrix."
     }
   },
   "not_accepted": [
