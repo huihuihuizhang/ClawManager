@@ -50,7 +50,8 @@ func archiveMetadata(root *os.Root, name string, layout Layout) (map[string]stri
 	if !ok || !baseOK || stat.Dev != baseStat.Dev {
 		return nil, ErrArchive
 	}
-	if info.Mode()&(os.ModeSetuid|os.ModeSetgid|os.ModeSticky) != 0 {
+	special := info.Mode() & (os.ModeSetuid | os.ModeSetgid | os.ModeSticky)
+	if special != 0 && !(info.IsDir() && special == os.ModeSetgid) {
 		return nil, ErrArchive
 	}
 	if len(attrs) > 0 && !info.IsDir() && !info.Mode().IsRegular() {

@@ -3,6 +3,7 @@ package systembackupapi
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"time"
 
 	contract "clawreef/internal/systembackupcontract"
@@ -117,8 +118,28 @@ func (g *deploymentAdmissionGuard) Recheck(q TaskWriteSQL) error { return g.chec
 func (g *deploymentAdmissionGuard) check(q TaskWriteSQL, initial bool) error {
 	var until, now time.Time
 	var ready bool
-	if g == nil || q.QueryRow(`SELECT ready AND checked_at<=UTC_TIMESTAMP(6),expires_at,UTC_TIMESTAMP(6) FROM system_backup_v2_execution_readiness WHERE origin_installation_id=? AND task_type=? AND config_version=? AND profile_sha256=? FOR SHARE`, g.identity.InstallationID, string(g.kind), g.config, g.admission.hash).Scan(&ready, &until, &now) != nil || !ready || !now.Before(until) {
+	var protocol, parts string
+	var acceptance bool
+	if g == nil || q.QueryRow(`SELECT ready AND checked_at<=UTC_TIMESTAMP(6),expires_at,UTC_TIMESTAMP(6),execution_protocol,supported_parts,acceptance_ready FROM system_backup_v2_execution_readiness WHERE origin_installation_id=? AND task_type=? AND config_version=? AND profile_sha256=? FOR SHARE`, g.identity.InstallationID, string(g.kind), g.config, g.admission.hash).Scan(&ready, &until, &now, &protocol, &parts, &acceptance) != nil || !ready || !now.Before(until) || protocol != "public-v1" {
 		return &Error{"not_ready"}
+	}
+	if g.kind == read.BackupTask {
+		var request struct {
+			Parts   []string `json:"requested_parts"`
+			Purpose string   `json:"task_purpose"`
+		}
+		if json.Unmarshal(g.request, &request) != nil || (request.Purpose == "acceptance" && !acceptance) {
+			return &Error{"not_ready"}
+		}
+		allowed := map[string]bool{}
+		for _, part := range strings.Split(parts, ",") {
+			allowed[part] = true
+		}
+		for _, part := range request.Parts {
+			if !allowed[part] {
+				return &Error{"not_ready"}
+			}
+		}
 	}
 	if initial {
 		g.until = until

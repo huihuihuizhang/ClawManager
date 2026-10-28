@@ -72,6 +72,18 @@ func (w pinnedWriter) Pause(ctx context.Context, s flow.State) (flow.ACK, error)
 	return w.Writer.Pause(ctx, s)
 }
 
+func (w pinnedWriter) Resume(ctx context.Context, s flow.State) error {
+	if s != w.original {
+		return flow.ErrQuiesce
+	}
+	if barrier, ok := w.j.ports.(d.ResumeBarrier); ok {
+		if e := barrier.BeforeResume(ctx, w.j.in.Authority); e != nil {
+			return e
+		}
+	}
+	return w.Writer.Resume(ctx, s)
+}
+
 func bindWriters(ctx context.Context, p Profile, in d.Input, x Discovery, j journal) ([]flow.Writer, error) {
 	detached, err := copyDiscovery(x)
 	if err != nil {

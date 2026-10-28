@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"runtime"
 	"sort"
 	"strings"
 )
@@ -170,7 +171,9 @@ func RestoreWithLayout(ctx context.Context, root *os.Root, src io.Reader, limits
 		if e != nil {
 			return report, ErrArchive
 		}
-		if !layout.entry(h) || seen[h.Name] || h.Size < 0 || h.Uid < 0 || h.Gid < 0 || h.Mode&07000 != 0 {
+		special := h.Mode & 07000
+		sharedDirectory := h.Typeflag == tar.TypeDir && special == 02000 && preserveOwner && runtime.GOOS == "linux"
+		if !layout.entry(h) || seen[h.Name] || h.Size < 0 || h.Uid < 0 || h.Gid < 0 || (special != 0 && !sharedDirectory) {
 			return report, ErrArchive
 		}
 		seen[h.Name] = true
@@ -269,7 +272,11 @@ func metadata(root *os.Root, h *tar.Header, owner bool, layout Layout) error {
 	if owner && root.Chown(h.Name, h.Uid, h.Gid) != nil {
 		return ErrArchive
 	}
-	if root.Chmod(h.Name, h.FileInfo().Mode().Perm()) != nil {
+	mode := h.FileInfo().Mode().Perm()
+	if h.Typeflag == tar.TypeDir && h.Mode&02000 != 0 {
+		mode |= os.ModeSetgid
+	}
+	if root.Chmod(h.Name, mode) != nil {
 		return ErrArchive
 	}
 	if root.Chtimes(h.Name, h.ModTime, h.ModTime) != nil {

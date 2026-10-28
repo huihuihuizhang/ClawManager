@@ -1,5 +1,23 @@
 # 备份专用版与 Team 版整合交接
 
+## 2026-10-28 M0～M2 四小时开发交接（当前结论）
+
+本节优先于后文历史记录。当前仍在 `D:/test/ClawManager-2` 的 `codex/backup-team-integration`，不是备份目录直接开发；来源固定 `backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`。备份专用 checkout 保持不变。合并方法仍是 Team 稳定底座上的逐模块增量适配，不整文件覆盖、不以 ours 合并掩盖差异，保留原 Team/owner/北向/WorkBuddy/旧备份路径。
+
+- M0 `9c53b6ad`：来源公共执行组件、执行记录、SQL/catalog 兼容；实验私有 control 不注册到生产。
+- M1 `5bf61815`：公共 SQL 准入、唯一持久 Prepare 调度、签名执行身份及原加密计划；真实 COMMIT 确认丢失后复用原计划。
+- M2 本轮后续提交：真实 functional 工作区采集和源业务恢复、Job/Pod 身份与停止证明、独立恢复授权、实际资源日记。**完整 M2 尚未完成，生产全系统备份仍不能启用。**
+
+当前 catalog **164 个迁移**，122/123 为新追加；119/120/121 未改写。新增控制记录不能恢复为可执行工作。registry 新条目仍待策略/owner 审查，不批量批准。
+
+本轮真实隔离环境四例通过：正常采集、创建响应丢失找回原 Job、停止证明不可用保持保护并在接手后恢复、Prepare 撤权无源副作用。另通过真实 MySQL/M1 回归、Linux setgid 和后端全量测试。源是受控文件 writer，容量是合成测试信号；不能据此声称 OpenClaw/全数据域、最小生产授权、发布或独立恢复验收通过。
+
+**接手先读 [本轮开发验收及明确缺口](BACKUP_M0_M2_EXECUTION.md)。** 未完成的 M2：生产 `NewPublicCapture` 调用/实际 readiness、完整数据域采集与所有 writer 停写、若干提交不明窗口的恢复、受阻恢复操作。M3 发布/独立恢复和 M4 部署仍保留原范围。下一步先闭合一个生产 profile，不再重复移植库、整理来源或补虚假 readiness。
+
+本轮仅本地分阶段 commit；没有 push、没有服务器变更。后续若用户授权推送，显式使用 `backup-origin`，不可误推 Team origin。
+
+---
+
 ## 2026-10-28 新来源同步后的补充
 
 备份专用目录 `D:/test/backup/ClawManager` 已切换到跟踪 `origin/backup` 的 `backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`，工作区干净。我们的整合分支仍为 `codex/backup-team-integration@6dcdbb75`，本轮尚未合入新业务代码。

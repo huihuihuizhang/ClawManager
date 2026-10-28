@@ -35,6 +35,7 @@ type SQLExecutionQueue struct {
 	// the acquisition transaction. The historical reader remains compatible.
 	Authorization    ExecutionAuthorization
 	ApplicationScope string
+	Recovery         *SQLRecoveryAuthority
 }
 
 func (q SQLExecutionQueue) validate() error {
@@ -77,6 +78,7 @@ func (q SQLExecutionQueue) TakeBackup(ctx context.Context) (ClaimedBackup, error
 (controller_owner IS NULL OR controller_lease_expires_at<=UTC_TIMESTAMP(6))
 FROM system_backup_v2_backups WHERE origin_installation_id=?
 AND status NOT IN ('succeeded','failed','canceled')
+AND NOT (status IN ('validating','publishing','finalization_unknown') AND EXISTS(SELECT 1 FROM system_backup_v2_runtime_captures c WHERE c.task_public_id=system_backup_v2_backups.public_id AND c.collectors_stopped_at IS NOT NULL AND c.source_resumed_at IS NOT NULL))
 ORDER BY created_at,id LIMIT 1 FOR UPDATE`, q.InstallationID).Scan(&id, &version, &previous, &due, &available)
 	if errors.Is(err, sql.ErrNoRows) {
 		return out, ErrClaimNotAcquired
@@ -115,8 +117,18 @@ ORDER BY created_at,id LIMIT 1 FOR UPDATE`, q.InstallationID).Scan(&id, &version
 		}
 	}
 	if q.Authorization != nil {
+		input, e := out.ExecutionInput(ctx, tx)
+		if e != nil {
+			return ClaimedBackup{}, e
+		}
 		if !out.RecoveryRequired {
-			for _, phase := range []string{"capture", "secret_capture"} {
+			phases := []string{"capture"}
+			for _, part := range input.Backup.RequestedParts {
+				if part == "secret_bundle" {
+					phases = append(phases, "secret_capture")
+				}
+			}
+			for _, phase := range phases {
 				if _, err = tx.ExecContext(ctx, "INSERT INTO system_backup_v2_attempts(target_type,target_public_id,attempt_no,phase,status) VALUES('backup',?,1,?,'preparing')", id, phase); err != nil {
 					return ClaimedBackup{}, err
 				}
@@ -125,9 +137,14 @@ ORDER BY created_at,id LIMIT 1 FOR UPDATE`, q.InstallationID).Scan(&id, &version
 				return ClaimedBackup{}, err
 			}
 		}
-		input, e := out.ExecutionInput(ctx, tx)
-		if e != nil {
-			return ClaimedBackup{}, e
+		if out.RecoveryRequired && q.Recovery != nil {
+			if e = q.Recovery.CheckTx(ctx, tx, input.Authority); e != nil {
+				return ClaimedBackup{}, e
+			}
+			if e = tx.Commit(); e != nil {
+				return ClaimedBackup{}, ErrExecutionCommitUnknown
+			}
+			return out, nil
 		}
 		authority := SQLExecutionAuthority{DB: q.DB, InstallationID: q.InstallationID, Authorization: q.Authorization, DeploymentEnabled: true, ApplicationScope: q.ApplicationScope}
 		guard, e := authority.Bind(ctx, tx, input.Authority)

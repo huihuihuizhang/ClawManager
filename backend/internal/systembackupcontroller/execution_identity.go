@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
@@ -22,19 +23,21 @@ import (
 // ConfigSHA256 binds the exact purposes/resources/versions admitted by A. This
 // does not grant provider access, Job creation, publication, or recovery.
 type ExecutionGrant struct {
-	Version         string               `json:"schema_version"`
-	InstallationID  string               `json:"installation_id"`
-	ControllerOwner string               `json:"controller_owner"`
-	DatabaseAccount string               `json:"database_account"`
-	ServerUUID      string               `json:"server_uuid"`
-	Database        string               `json:"database"`
-	ConfigVersion   uint64               `json:"config_version"`
-	ConfigSHA256    string               `json:"config_sha256"`
-	ProfileSHA256   string               `json:"profile_sha256"`
-	NotBefore       time.Time            `json:"not_before"`
-	ExpiresAt       time.Time            `json:"expires_at"`
-	Actions         []string             `json:"actions"`
-	RecordKeys      []ExecutionRecordKey `json:"record_keys"`
+	Version            string               `json:"schema_version"`
+	InstallationID     string               `json:"installation_id"`
+	ControllerOwner    string               `json:"controller_owner"`
+	DatabaseAccount    string               `json:"database_account"`
+	ServerUUID         string               `json:"server_uuid"`
+	Database           string               `json:"database"`
+	ConfigVersion      uint64               `json:"config_version"`
+	ConfigSHA256       string               `json:"config_sha256"`
+	ProfileSHA256      string               `json:"profile_sha256"`
+	NotBefore          time.Time            `json:"not_before"`
+	ExpiresAt          time.Time            `json:"expires_at"`
+	Actions            []string             `json:"actions"`
+	RecordKeys         []ExecutionRecordKey `json:"record_keys"`
+	CaptureKeys        []ExecutionRecordKey `json:"capture_keys,omitempty"`
+	WorkerIssuerSHA256 string               `json:"worker_issuer_sha256,omitempty"`
 }
 type ExecutionRecordKey struct {
 	Ref    string `json:"ref"`
@@ -129,13 +132,25 @@ func (p *PinnedExecutionIdentity) decode(raw []byte) (ExecutionGrant, error) {
 	}
 	actions := map[string]bool{}
 	for _, a := range g.Actions {
-		if (a != "prepare" && a != "capture" && a != "preflight") || actions[a] {
+		if (a != "prepare" && a != "capture" && a != "preflight" && a != "recover" && a != "issue_worker") || actions[a] {
 			return ExecutionGrant{}, ErrExecutionAuthority
 		}
 		actions[a] = true
 	}
+	if actions["issue_worker"] != executionHash.MatchString(g.WorkerIssuerSHA256) {
+		return ExecutionGrant{}, ErrExecutionAuthority
+	}
 	keys := map[string]bool{}
 	for _, k := range g.RecordKeys {
+		if !controllerOwnerPattern.MatchString(k.Ref) || strings.Contains(k.Ref, "..") || strings.ContainsAny(k.Ref, "/\\") || !executionHash.MatchString(k.SHA256) || keys[k.Ref] {
+			return ExecutionGrant{}, ErrExecutionAuthority
+		}
+		keys[k.Ref] = true
+	}
+	if len(g.CaptureKeys) > 8 {
+		return ExecutionGrant{}, ErrExecutionAuthority
+	}
+	for _, k := range g.CaptureKeys {
 		if !controllerOwnerPattern.MatchString(k.Ref) || strings.Contains(k.Ref, "..") || strings.ContainsAny(k.Ref, "/\\") || !executionHash.MatchString(k.SHA256) || keys[k.Ref] {
 			return ExecutionGrant{}, ErrExecutionAuthority
 		}
@@ -169,6 +184,9 @@ func (g *pinnedExecutionGuard) RecheckExecution(ctx context.Context, tx *sql.Tx,
 	return g.identity.checkSQL(ctx, tx, a, now)
 }
 func (p *PinnedExecutionIdentity) checkSQL(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) error {
+	return p.checkSQLAction(ctx, tx, a, now, "")
+}
+func (p *PinnedExecutionIdentity) checkSQLAction(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time, requestedAction string) error {
 	if tx == nil || p.current(a, now) != nil {
 		return ErrExecutionAuthority
 	}
@@ -192,8 +210,14 @@ func (p *PinnedExecutionIdentity) checkSQL(ctx context.Context, tx *sql.Tx, a d.
 	if tx.QueryRowContext(ctx, "SELECT profile_json,profile_sha256 FROM system_backup_v2_execution_inputs WHERE origin_installation_id=? AND task_public_id=? AND task_type=? FOR SHARE", a.InstallationID, a.TaskPublicID, a.TaskType).Scan(&profile, &profileHash) != nil || profileHash != p.grant.ProfileSHA256 || recordHash(profile) != profileHash {
 		return ErrExecutionAuthority
 	}
-	if a.TaskType == "backup" && (status == "preparing" || status == "ready_for_capture" || status == "acquiring_gate") {
+	if a.TaskType == "backup" && a.MaintenanceOwner == "" && (status == "preparing" || status == "ready_for_capture" || status == "acquiring_gate") {
 		action = "prepare"
+	}
+	if requestedAction != "" {
+		if requestedAction != "recover" && requestedAction != "issue_worker" {
+			return ErrExecutionAuthority
+		}
+		action = requestedAction
 	}
 	for _, v := range p.grant.Actions {
 		if v == action {
@@ -201,6 +225,41 @@ func (p *PinnedExecutionIdentity) checkSQL(ctx context.Context, tx *sql.Tx, a d.
 		}
 	}
 	return ErrExecutionAuthority
+}
+
+func (p *PinnedExecutionIdentity) AuthorizeWorkerIssuer(ctx context.Context, tx *sql.Tx, a d.Authority, digest string) error {
+	var now time.Time
+	if p == nil || digest != p.grant.WorkerIssuerSHA256 || !executionHash.MatchString(digest) || tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil {
+		return ErrExecutionAuthority
+	}
+	return p.checkSQLAction(ctx, tx, a, now, "issue_worker")
+}
+
+// DeriveCaptureKey is a task/part-specific INTERNAL staging key for functional
+// capture. It never supplies record keys, restore unwrap, or a final envelope.
+// Acceptance capture must use the separately authorized provider/finalizer.
+func (p *PinnedExecutionIdentity) DeriveCaptureKey(ctx context.Context, a d.Authority, binding []byte) ([]byte, error) {
+	if ctx == nil || ctx.Err() != nil || p.current(a, time.Now().UTC()) != nil || len(binding) < 2 || len(binding) > 8192 || len(p.grant.CaptureKeys) != 1 {
+		return nil, ErrExecutionAuthority
+	}
+	allowed := false
+	for _, v := range p.grant.Actions {
+		allowed = allowed || v == "capture"
+	}
+	if !allowed {
+		return nil, ErrExecutionAuthority
+	}
+	k := p.grant.CaptureKeys[0]
+	root, err := readExecutionFile(filepath.Join(p.keyDirectory, k.Ref), 32)
+	defer clear(root)
+	if err != nil || len(root) != 32 || recordHash(root) != k.SHA256 {
+		return nil, ErrExecutionAuthority
+	}
+	mac := hmac.New(sha256.New, root)
+	mac.Write([]byte("clawmanager-functional-staging-key.v1\x00"))
+	mac.Write([]byte(a.InstallationID + "\x00" + a.TaskPublicID + "\x00" + a.ConfigSHA256 + "\x00"))
+	mac.Write(binding)
+	return mac.Sum(nil), nil
 }
 func (p *PinnedExecutionIdentity) AuthorizeExecution(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) (ExecutionAuthorizationGuard, error) {
 	if p.checkSQL(ctx, tx, a, now) != nil {

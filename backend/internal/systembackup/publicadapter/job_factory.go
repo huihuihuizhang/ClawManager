@@ -34,6 +34,11 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 	var err error
 	switch req.Invocation.Request.Operation {
 	case "capture-workspace":
+		// Match the real worker's capture contract before stopping sources.
+		// Restore-normalization policy is invalid for an archive capture.
+		if req.Invocation.Request.PolicyVersion != "" || len(req.Invocation.Request.Files) != 0 || req.Invocation.Request.ArtifactName == "" {
+			return zero, d.ErrNotReady
+		}
 		job, err = kube.Job(w)
 	case "capture-database":
 		// Database capture has no source filesystem or extra evidence mount.
@@ -46,6 +51,14 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 	}
 	if err != nil {
 		return zero, d.ErrNotReady
+	}
+	// Public tasks own separate ciphertext directories on the staging claim.
+	// The owner creates this directory only after the immutable plan is saved.
+	for i := range job.Spec.Template.Spec.Containers[0].VolumeMounts {
+		m := &job.Spec.Template.Spec.Containers[0].VolumeMounts[i]
+		if m.Name == "staging" {
+			m.SubPath = in.Authority.TaskPublicID
+		}
 	}
 	job.APIVersion, job.Kind = "batch/v1", "Job"
 	raw, err := json.Marshal(job)

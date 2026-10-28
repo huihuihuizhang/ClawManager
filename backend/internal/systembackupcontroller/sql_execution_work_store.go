@@ -61,6 +61,7 @@ type SQLExecutionWorkStore struct {
 	// PrepareCapture must obtain/verify the shared pause barrier before returning
 	// capture work. It is installed by the capture composition, never a default.
 	PrepareCapture func(context.Context, ClaimedBackup) (*ExecutionWork, error)
+	FinishCapture  func(context.Context, ExecutionWork, ExecutionOutcome) error
 }
 
 func (s *SQLExecutionWorkStore) Ready(ctx context.Context) error {
@@ -80,11 +81,17 @@ func (s *SQLExecutionWorkStore) Next(ctx context.Context) (*ExecutionWork, error
 	if err != nil {
 		return nil, err
 	}
-	if b.Status == "ready_for_capture" || b.Status == "acquiring_gate" || b.Status == "capturing" {
+	if b.Status == "ready_for_capture" || b.Status == "acquiring_gate" || b.Status == "capturing" || b.Status == "canceling" {
 		return s.PrepareCapture(ctx, b)
 	}
 	if b.Status != "preparing" {
 		return nil, ErrExecutionRecoveryRequired
+	}
+	if s.Queue.Recovery != nil {
+		a := d.Authority{InstallationID: b.InstallationID, TaskType: "backup", TaskPublicID: b.Claim.Target.PublicID, RequestID: b.RequestID, ConfigVersion: b.ConfigVersion, ConfigSHA256: b.ConfigSHA256, AttemptNo: 1, Phase: "capture", ClaimOwner: b.Claim.Owner, ClaimRowVersion: b.Claim.RowVersion, DeadlineAt: b.Deadline}
+		if e := s.Authority.Check(ctx, a); e != nil {
+			return s.PrepareCapture(ctx, b)
+		}
 	}
 	tx, err := s.Queue.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
@@ -158,12 +165,18 @@ func (s *SQLExecutionWorkStore) Record(ctx context.Context, w ExecutionWork, out
 		return ErrClaimLost
 	}
 	if out.Err != nil {
-		r, e := tx.ExecContext(ctx, "UPDATE system_backup_v2_attempts SET status='failed',failure_category='runner_failed',finished_at=?,row_version=row_version+1 WHERE target_type='backup' AND target_public_id=? AND attempt_no=? AND phase IN ('capture','secret_capture') AND status='preparing'", finished, a.TaskPublicID, a.AttemptNo)
+		r, e := tx.ExecContext(ctx, "UPDATE system_backup_v2_attempts SET status='failed',failure_category='runner_failed',started_at=COALESCE(started_at,?),finished_at=?,row_version=row_version+1 WHERE target_type='backup' AND target_public_id=? AND attempt_no=? AND phase IN ('capture','secret_capture') AND status='preparing'", finished, finished, a.TaskPublicID, a.AttemptNo)
 		if e != nil {
 			return e
 		}
 		n, e := r.RowsAffected()
-		if e != nil || n != 2 {
+		expected := int64(1)
+		for _, part := range w.Input.Backup.RequestedParts {
+			if part == "secret_bundle" {
+				expected = 2
+			}
+		}
+		if e != nil || n != expected {
 			return ErrExecutionRecord
 		}
 	}
@@ -180,8 +193,9 @@ func (s *SQLExecutionWorkStore) Record(ctx context.Context, w ExecutionWork, out
 	return nil
 }
 func (s *SQLExecutionWorkStore) recordCapture(ctx context.Context, w ExecutionWork, out ExecutionOutcome) error {
-	// Installed by M2 together with physical-stop and source-resume proof. Do not
-	// convert a B return value into a successful backup or release source writers.
+	if s.FinishCapture != nil {
+		return s.FinishCapture(ctx, w, out)
+	}
 	return ErrExecutionRecoveryRequired
 }
 

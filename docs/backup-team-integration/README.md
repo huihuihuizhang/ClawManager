@@ -1,5 +1,7 @@
 # Backup / Team integration workbench
 
+> Current 2026-10-28 milestone: M0/M1 completed; actual functional workspace capture/source recovery accepted in disposable MySQL/Kubernetes. Full M2 remains incomplete, with no production owner startup/readiness publisher or complete data-domain/writer coverage. See root `BACKUP_M0_M2_EXECUTION.md` and `BACKUP_TEAM_INTEGRATION_HANDOFF.md`; the sections below preserve earlier integration context. Latest reviewed source is `4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`, migration catalog 164. No production activation, push or shared-cluster deployment in this run.
+
 This branch is an **in-progress integration**, not a released replacement backup
 engine. Do not enable v2 from a database edit or infer runtime readiness from a
 passing library test. Production submission, backup/preflight details and safe

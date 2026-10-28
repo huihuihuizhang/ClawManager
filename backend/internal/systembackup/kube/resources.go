@@ -127,7 +127,14 @@ type JobRequest struct {
 
 // WorkerControl contains only refs to a credential-free immutable invocation
 // and the task-issued mTLS identity. It must never reference business Secrets.
-type WorkerControl struct{ URL, InvocationConfigMap, IdentitySecret string }
+type WorkerControl struct {
+	URL, InvocationConfigMap, IdentitySecret string
+	// Public execution additionally authenticates the actual bound Pod through
+	// TokenReview. This audience has no Kubernetes API permissions.
+	BoundPodIdentity bool
+}
+
+const WorkerTokenAudience = "clawmanager-backup-worker"
 
 var digestImage = regexp.MustCompile(`^[^\s@]+@sha256:[a-f0-9]{64}$`)
 
@@ -147,6 +154,9 @@ func job(r JobRequest, database bool) (*batchv1.Job, error) {
 			return nil, ErrResource
 		}
 		r.Command = []string{"/backup-worker", "--request", "/run/backup/request/invocation.json", "--control-url", c.URL, "--control-ca", "/run/backup/identity/ca.crt", "--client-cert", "/run/backup/identity/tls.crt", "--client-key", "/run/backup/identity/tls.key"}
+		if c.BoundPodIdentity {
+			r.Command = append(r.Command, "--workload-token", "/run/backup/pod/token")
+		}
 	}
 	if r.Restore && !strings.HasPrefix(r.Identity.Namespace, "cm-drill-") {
 		return nil, ErrResource
@@ -179,7 +189,7 @@ func job(r JobRequest, database bool) (*batchv1.Job, error) {
 	uid := int64(0)
 	caps := []corev1.Capability{"DAC_READ_SEARCH"}
 	if r.Restore {
-		caps = []corev1.Capability{"CHOWN", "FOWNER", "DAC_OVERRIDE"}
+		caps = []corev1.Capability{"CHOWN", "FOWNER", "DAC_OVERRIDE", "FSETID"}
 	}
 	job := &batchv1.Job{ObjectMeta: r.Identity.meta(), Spec: batchv1.JobSpec{BackoffLimit: &zero, ActiveDeadlineSeconds: &r.DeadlineSeconds, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: workerLabels(r.Identity)}, Spec: corev1.PodSpec{
 		RestartPolicy: corev1.RestartPolicyNever, ServiceAccountName: r.ServiceAccount, AutomountServiceAccountToken: &falseValue,
@@ -208,6 +218,11 @@ func job(r JobRequest, database bool) (*batchv1.Job, error) {
 			corev1.Volume{Name: "worker-identity", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: c.IdentitySecret, Items: []corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}, {Key: "tls.crt", Path: "tls.crt"}, {Key: "tls.key", Path: "tls.key"}}, DefaultMode: &mode}}},
 		)
 		job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "worker-request", MountPath: "/run/backup/request", ReadOnly: true}, corev1.VolumeMount{Name: "worker-identity", MountPath: "/run/backup/identity", ReadOnly: true})
+		if c.BoundPodIdentity {
+			expires := int64(600)
+			job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, corev1.Volume{Name: "worker-pod-identity", VolumeSource: corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{DefaultMode: &mode, Sources: []corev1.VolumeProjection{{ServiceAccountToken: &corev1.ServiceAccountTokenProjection{Audience: WorkerTokenAudience, ExpirationSeconds: &expires, Path: "token"}}}}}})
+			job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "worker-pod-identity", MountPath: "/run/backup/pod", ReadOnly: true})
+		}
 	}
 	return job, nil
 }

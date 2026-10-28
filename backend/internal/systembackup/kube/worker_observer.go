@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"sort"
 
@@ -18,8 +19,9 @@ import (
 // bind PVC->PV and immutable ConfigMap/Secret content; node UIDs prevent a
 // recreated node with the same name from inheriting the old authorization.
 type WorkerSecurity struct {
-	NodeUIDs map[string]string `json:"node_uids"`
-	Volumes  []MountIdentity   `json:"volumes"`
+	NodeUIDs                              map[string]string `json:"node_uids"`
+	Volumes                               []MountIdentity   `json:"volumes"`
+	ServiceAccountName, ServiceAccountUID string
 }
 type MountIdentity struct {
 	Volume, Kind, Name, UID string
@@ -30,6 +32,21 @@ type WorkerProcess struct {
 	Containers      []string
 }
 type WorkerObserver struct{ Client kubernetes.Interface }
+
+type observationFailure struct {
+	stage string
+	cause error
+}
+
+func (e observationFailure) Error() string { return "worker observation: " + e.stage }
+func (e observationFailure) Unwrap() error { return e.cause }
+func ObservationStage(err error) string {
+	var e observationFailure
+	if errors.As(err, &e) {
+		return e.stage
+	}
+	return "unknown"
+}
 
 func ContentHash(v any) string {
 	raw, e := json.Marshal(v)
@@ -113,11 +130,18 @@ func podSpecMatches(expected, actual map[string]any, scheduled bool) bool {
 	return reflect.DeepEqual(expected, copy)
 }
 
-func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, security WorkerSecurity) (WorkerProcess, error) {
+func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, security WorkerSecurity) (result WorkerProcess, err error) {
+	stage := "construction"
+	defer func() {
+		if err != nil {
+			err = observationFailure{stage: stage, cause: err}
+		}
+	}()
 	if o.Client == nil || record.Intent.Kind != "Job" || record.UID == "" || record.Deleted || record.Deleting || !record.CreateDispatched || len(security.NodeUIDs) == 0 {
 		return WorkerProcess{}, ErrResource
 	}
 	i := record.Intent.Identity
+	stage = "job"
 	job, e := o.Client.BatchV1().Jobs(i.Namespace).Get(ctx, i.Name, metav1.GetOptions{})
 	if e != nil {
 		return WorkerProcess{}, ErrPending
@@ -130,6 +154,7 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 	if e != nil || len(pods.Items) != 1 {
 		return WorkerProcess{}, ErrPending
 	}
+	stage = "pod"
 	pod := &pods.Items[0]
 	owner := metav1.GetControllerOf(pod)
 	if owner == nil || owner.APIVersion != "batch/v1" || owner.Kind != "Job" || owner.Name != i.Name || string(owner.UID) != record.UID || pod.UID == "" || pod.ResourceVersion == "" || pod.DeletionTimestamp != nil || pod.Status.Phase != corev1.PodRunning || pod.Spec.NodeName == "" || len(pod.Spec.Containers) != 1 || len(pod.Status.ContainerStatuses) != 1 {
@@ -141,6 +166,7 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 		}
 	}
 	var desired map[string]any
+	stage = "spec"
 	if json.Unmarshal(record.Intent.RequestJSON, &desired) != nil {
 		return WorkerProcess{}, ErrResource
 	}
@@ -162,6 +188,7 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 		}
 	}
 	uid := security.NodeUIDs[pod.Spec.NodeName]
+	stage = "node"
 	if uid == "" {
 		return WorkerProcess{}, ErrOwnership
 	}
@@ -169,10 +196,23 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 	if e != nil || string(node.UID) != uid || node.DeletionTimestamp != nil || node.Labels[corev1.LabelOSStable] != "linux" {
 		return WorkerProcess{}, ErrOwnership
 	}
+	stage = "mount"
 	if e = o.mounts(ctx, i.Namespace, pod.Spec.Volumes, security.Volumes); e != nil {
 		return WorkerProcess{}, e
 	}
+	for _, v := range pod.Spec.Volumes {
+		if v.Projected != nil {
+			if security.ServiceAccountName == "" || pod.Spec.ServiceAccountName != security.ServiceAccountName {
+				return WorkerProcess{}, ErrOwnership
+			}
+			sa, z := o.Client.CoreV1().ServiceAccounts(i.Namespace).Get(ctx, security.ServiceAccountName, metav1.GetOptions{})
+			if z != nil || string(sa.UID) != security.ServiceAccountUID || sa.DeletionTimestamp != nil {
+				return WorkerProcess{}, ErrOwnership
+			}
+		}
+	}
 	status := pod.Status.ContainerStatuses[0]
+	stage = "process"
 	if status.Name != pod.Spec.Containers[0].Name || status.ContainerID == "" || status.State.Running == nil || !status.Ready || status.RestartCount != 0 || status.LastTerminationState.Terminated != nil {
 		return WorkerProcess{}, ErrPending
 	}
@@ -223,6 +263,14 @@ func (o WorkerObserver) mounts(ctx context.Context, namespace string, volumes []
 		case v.HostPath != nil, v.NFS != nil, v.EmptyDir != nil:
 			// Exact path/export/subPath/read-only settings are already frozen in spec.
 			if bound {
+				return ErrOwnership
+			}
+		case v.Projected != nil:
+			if bound || v.Name != "worker-pod-identity" || len(v.Projected.Sources) != 1 {
+				return ErrOwnership
+			}
+			t := v.Projected.Sources[0].ServiceAccountToken
+			if t == nil || t.Audience != WorkerTokenAudience || t.Path != "token" || t.ExpirationSeconds == nil || *t.ExpirationSeconds != 600 {
 				return ErrOwnership
 			}
 		default:

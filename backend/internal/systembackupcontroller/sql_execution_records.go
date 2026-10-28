@@ -176,6 +176,49 @@ func (s SQLExecutionRecords) LoadPlan(ctx context.Context, in d.Input) (d.Plan, 
 	return plan, nil
 }
 
+// LoadRecoveryPlan decrypts ONLY the original plan under a separately issued
+// recovery grant. It does not relax forward LoadPlan or permit source capture.
+func (s SQLExecutionRecords) LoadRecoveryPlan(ctx context.Context, in d.Input, recovery SQLRecoveryAuthority) (d.Plan, error) {
+	a := in.Authority
+	if recovery.DB != s.Authority.DB || recovery.Identity == nil {
+		return d.Plan{}, ErrExecutionAuthority
+	}
+	if e := recovery.Check(ctx, a); e != nil {
+		return d.Plan{}, e
+	}
+	var digest, ref string
+	var sealed []byte
+	e := recovery.DB.QueryRowContext(ctx, "SELECT payload_sha256,key_ref,sealed_payload FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase=? AND record_kind='plan'", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase).Scan(&digest, &ref, &sealed)
+	if e != nil {
+		return d.Plan{}, e
+	}
+	if !executionHash.MatchString(digest) || len(sealed) > (8<<20)+4096 {
+		return d.Plan{}, ErrExecutionRecord
+	}
+	actual, key, e := recovery.Identity.Resolve(ctx, a, ref)
+	defer clear(key)
+	if e != nil || actual != ref || len(key) != 32 {
+		return d.Plan{}, ErrExecutionRecord
+	}
+	var plain bytes.Buffer
+	defer func() { clear(plain.Bytes()) }()
+	if staging.Open(ctx, bytes.NewReader(sealed), &plain, key, recordBinding(a, "plan", digest), 8<<20) != nil || recordHash(plain.Bytes()) != digest {
+		return d.Plan{}, ErrExecutionRecord
+	}
+	p := d.Plan{SchemaVersion: d.TaskPlanVersion, CanonicalJSON: bytes.Clone(plain.Bytes()), SHA256: digest}
+	inner, e := d.UnwrapTaskPlan(in, p, b.PlanVersion)
+	clear(inner.CanonicalJSON)
+	if e != nil {
+		clear(p.CanonicalJSON)
+		return d.Plan{}, e
+	}
+	if e = recovery.Check(ctx, a); e != nil {
+		clear(p.CanonicalJSON)
+		return d.Plan{}, e
+	}
+	return p, nil
+}
+
 type executionResultRecord struct {
 	Version    string           `json:"schema_version"`
 	PlanSHA256 string           `json:"plan_sha256"`

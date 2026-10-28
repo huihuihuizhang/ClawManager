@@ -21,7 +21,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	if e := run(ctx, os.Args[1:], os.Stdin, os.Stdout); e != nil {
-		fmt.Fprintln(os.Stderr, "backup worker failed; inspect controller evidence")
+		fmt.Fprintln(os.Stderr, "backup worker failed; category="+worker.FailureCode(e))
 		os.Exit(1)
 	}
 }
@@ -33,6 +33,7 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 	ca := f.String("control-ca", "", "controller CA PEM")
 	cert := f.String("client-cert", "", "task identity certificate PEM")
 	key := f.String("client-key", "", "task identity private key PEM")
+	workloadToken := f.String("workload-token", "", "explicit audience-bound Pod identity file")
 	if f.Parse(args) != nil || f.NArg() != 0 || *endpoint == "" || *ca == "" || *cert == "" || *key == "" {
 		return worker.ErrRequest
 	}
@@ -59,6 +60,11 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 		return e
 	}
 	defer control.Close()
+	if *workloadToken != "" {
+		if e = control.WithWorkloadToken(*workloadToken); e != nil {
+			return e
+		}
+	}
 	store, e := os.OpenRoot(i.StagingPath)
 	if e != nil {
 		return worker.ErrRequest

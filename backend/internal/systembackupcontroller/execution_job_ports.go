@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"time"
 
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
@@ -32,6 +34,14 @@ type ExecutionJobOwner interface {
 type ExecutionJobPorts struct {
 	d.Ports
 	Jobs ExecutionJobOwner
+}
+
+func (p ExecutionJobPorts) BeforeResume(ctx context.Context, a d.Authority) error {
+	b, ok := p.Ports.(d.ResumeBarrier)
+	if !ok {
+		return d.ErrNotReady
+	}
+	return b.BeforeResume(ctx, a)
 }
 
 func NewExecutionJobPorts(writers d.Ports, jobs ExecutionJobOwner) (*ExecutionJobPorts, error) {
@@ -129,6 +139,25 @@ func (p ExecutionJobPorts) ObserveJob(ctx context.Context, a d.Authority, bindin
 }
 
 func (p ExecutionJobPorts) StopJob(ctx context.Context, a d.Authority, binding d.JobBinding) error {
+	if _, ok := ctx.Deadline(); !ok {
+		return d.ErrNotReady
+	}
+	for {
+		err := p.stopJobOnce(ctx, a, binding)
+		if !errors.Is(err, kube.ErrPending) {
+			return err
+		}
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
+
+func (p ExecutionJobPorts) stopJobOnce(ctx context.Context, a d.Authority, binding d.JobBinding) error {
 	if absentExecutionDependency(p.Jobs) {
 		return d.ErrNotReady
 	}

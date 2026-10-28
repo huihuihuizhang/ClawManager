@@ -9,10 +9,12 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -105,7 +107,7 @@ func (h ControlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	lease, e := h.Authorizer.Authorize(r.Context(), cert.URIs[0].String(), req)
 	defer lease.Clear()
 	if e != nil {
-		if e == ErrNotReady {
+		if errors.Is(e, ErrNotReady) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		} else {
 			w.WriteHeader(http.StatusForbidden)
@@ -213,8 +215,17 @@ func validLease(l Lease, r ControlRequest) bool {
 }
 
 type ControlClient struct {
-	endpoint string
-	http     *http.Client
+	endpoint  string
+	http      *http.Client
+	tokenFile string
+}
+
+func (c *ControlClient) WithWorkloadToken(file string) error {
+	if c == nil || !filepath.IsAbs(file) {
+		return ErrRequest
+	}
+	c.tokenFile = file
+	return nil
 }
 
 // NewControlClient enables mutual TLS with an explicit CA and no redirects or
@@ -272,6 +283,14 @@ func (c *ControlClient) send(ctx context.Context, request ControlRequest) (Lease
 		return Lease{}, ErrRequest
 	}
 	r.Header.Set("Content-Type", "application/json")
+	if c.tokenFile != "" {
+		token, z := os.ReadFile(c.tokenFile)
+		defer clear(token)
+		if z != nil || len(token) < 16 || len(token) > 16384 || strings.ContainsAny(string(token), "\r\n\x00") {
+			return Lease{}, ErrNotReady
+		}
+		r.Header.Set("Authorization", "Bearer "+string(token))
+	}
 	response, e := c.http.Do(r)
 	if e != nil {
 		return Lease{}, ErrNotReady
@@ -298,8 +317,20 @@ func (c *ControlClient) Acquire(ctx context.Context, i Invocation) (Lease, error
 	return c.call(ctx, i, "acquire", "")
 }
 func (c *ControlClient) Check(ctx context.Context, i Invocation, point string) error {
-	_, e := c.call(ctx, i, "check", point)
-	return e
+	_, bounded := ctx.Deadline()
+	for {
+		_, e := c.call(ctx, i, "check", point)
+		if !bounded || !errors.Is(e, ErrNotReady) {
+			return e
+		}
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
 }
 func (c *ControlClient) Complete(ctx context.Context, i Invocation, result Result) error {
 	hash, e := i.Hash()

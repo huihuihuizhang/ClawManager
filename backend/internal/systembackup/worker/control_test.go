@@ -11,6 +11,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"math/big"
 	"net"
 	"net/http"
@@ -18,11 +19,50 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 type authorizeFunc func(context.Context, string, ControlRequest) (Lease, error)
+
+func TestBoundedControlChecksRetryOnlyTemporaryFailures(t *testing.T) {
+	for _, scenario := range []string{"recovers", "deadline", "revoked"} {
+		t.Run(scenario, func(t *testing.T) {
+			r, env, _ := fixture(t)
+			inv := Invocation{Request: r, WorkspacePath: env.Workspace.Name(), StagingPath: env.Staging.Name()}
+			var calls atomic.Int64
+			handler := ControlHandler{Authorizer: authorizeFunc(func(_ context.Context, _ string, q ControlRequest) (Lease, error) {
+				n := calls.Add(1)
+				if scenario == "revoked" {
+					return Lease{}, ErrExecution
+				}
+				if scenario == "deadline" || n == 1 {
+					return Lease{}, PendingControl("control_metadata_pending")
+				}
+				return Lease{InvocationSHA256: q.InvocationSHA256, ExpiresAt: time.Now().Add(10 * time.Second)}, nil
+			})}
+			client, _ := mutualTLSFixture(t, handler)
+			ctx, cancel := context.WithTimeout(context.Background(), 650*time.Millisecond)
+			defer cancel()
+			e := client.Check(ctx, inv, "prepare")
+			switch scenario {
+			case "recovers":
+				if e != nil || calls.Load() != 2 {
+					t.Fatal(e, calls.Load())
+				}
+			case "deadline":
+				if !errors.Is(e, context.DeadlineExceeded) || calls.Load() > 4 {
+					t.Fatal("unbounded retry", e, calls.Load())
+				}
+			case "revoked":
+				if e == nil || calls.Load() != 1 {
+					t.Fatal("revocation retried", e, calls.Load())
+				}
+			}
+		})
+	}
+}
 
 func (f authorizeFunc) Authorize(ctx context.Context, identity string, r ControlRequest) (Lease, error) {
 	return f(ctx, identity, r)

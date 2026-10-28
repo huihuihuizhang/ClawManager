@@ -1,0 +1,721 @@
+package systembackupapi
+
+import (
+	"archive/tar"
+	"bytes"
+	"context"
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"database/sql"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"io"
+	"math/big"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	backup "clawreef/internal/systembackup"
+	"clawreef/internal/systembackup/control"
+	"clawreef/internal/systembackup/flow"
+	"clawreef/internal/systembackup/kube"
+	b "clawreef/internal/systembackup/publicadapter"
+	"clawreef/internal/systembackup/quiesce"
+	"clawreef/internal/systembackup/scope"
+	"clawreef/internal/systembackup/staging"
+	"clawreef/internal/systembackup/worker"
+	c "clawreef/internal/systembackupcontroller"
+	d "clawreef/internal/systembackupdispatch"
+	execution "clawreef/internal/systembackupexecution"
+	read "clawreef/internal/systembackupread"
+	"github.com/go-sql-driver/mysql"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
+)
+
+type nativeLostCreate struct {
+	Base             http.RoundTripper
+	Enabled          bool
+	Dropped, Created atomic.Int64
+}
+
+func (t *nativeLostCreate) RoundTrip(r *http.Request) (*http.Response, error) {
+	response, e := t.Base.RoundTrip(r)
+	if e == nil && response.StatusCode == 201 && r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/jobs") {
+		t.Created.Add(1)
+		if t.Enabled && t.Dropped.CompareAndSwap(0, 1) {
+			io.Copy(io.Discard, response.Body)
+			response.Body.Close()
+			return nil, errors.New("synthetic lost original Job create acknowledgement")
+		}
+	}
+	return response, e
+}
+
+type nativeProofInspector struct {
+	Client         kubernetes.Interface
+	Config         *rest.Config
+	Namespace, Pod string
+	Calls          atomic.Int64
+}
+
+func (i *nativeProofInspector) Inspect(ctx context.Context, id string) ([]byte, error) {
+	i.Calls.Add(1)
+	req := i.Client.CoreV1().RESTClient().Post().Resource("pods").Name(i.Pod).Namespace(i.Namespace).SubResource("exec").VersionedParams(&corev1.PodExecOptions{Container: "proof", Command: []string{"/crictl", "--runtime-endpoint", "unix:///runtime/containerd.sock", "inspect", "--output", "json", id}, Stdout: true, Stderr: true}, scheme.ParameterCodec)
+	exec, e := remotecommand.NewSPDYExecutor(i.Config, http.MethodPost, req.URL())
+	if e != nil {
+		return nil, e
+	}
+	var out, stderr bytes.Buffer
+	e = exec.StreamWithContext(ctx, remotecommand.StreamOptions{Stdout: &out, Stderr: &stderr})
+	if e != nil {
+		return nil, e
+	}
+	return out.Bytes(), nil
+}
+
+type nativeGateProbe struct{ CheckFn func(context.Context) error }
+
+type nativeTraceRunner struct {
+	d.Runner
+	T *testing.T
+}
+
+type nativeTraceAuthorizer struct {
+	Owner *execution.PublicJobOwner
+	T     *testing.T
+}
+
+type nativeTracePorts struct {
+	d.Ports
+	T *testing.T
+}
+
+type nativeTraceSource struct {
+	flow.Writer
+	T *testing.T
+}
+
+func (w nativeTraceSource) Resume(ctx context.Context, s flow.State) error {
+	e := w.Writer.Resume(ctx, s)
+	w.T.Log("physical source resume", e)
+	return e
+}
+
+func (p nativeTracePorts) BeforeResume(ctx context.Context, a d.Authority) error {
+	e := p.Ports.(d.ResumeBarrier).BeforeResume(ctx, a)
+	p.T.Log("resume barrier", e)
+	return e
+}
+func (p nativeTracePorts) StopJob(ctx context.Context, a d.Authority, binding d.JobBinding) error {
+	e := p.Ports.StopJob(ctx, a, binding)
+	p.T.Log("collector stop", e)
+	return e
+}
+func (p nativeTracePorts) Resumed(ctx context.Context, a d.Authority, id string) error {
+	e := p.Ports.Resumed(ctx, a, id)
+	p.T.Log("source resumed receipt", e)
+	return e
+}
+
+func (a nativeTraceAuthorizer) Authorize(ctx context.Context, peer string, req worker.ControlRequest) (worker.Lease, error) {
+	v, e := a.Owner.Authorize(ctx, peer, req)
+	a.T.Log("worker control", req.Action, req.Point, "outcome", e)
+	return v, e
+}
+
+func (r nativeTraceRunner) Capture(ctx context.Context, in d.Input, p d.Plan, ports d.Ports) ([]d.ModuleResult, error) {
+	v, e := r.Runner.Capture(ctx, in, p, ports)
+	r.T.Log("B Capture outcome", e, "parts", len(v))
+	return v, e
+}
+func (r nativeTraceRunner) Recover(ctx context.Context, in d.Input, p d.Plan, ports d.Ports) (d.RecoveryResult, error) {
+	v, e := r.Runner.Recover(ctx, in, p, ports)
+	r.T.Log("B Recover outcome", e, "stopped", v.CollectorsStopped, "resumed", v.WritersResumed)
+	return v, e
+}
+
+func (p nativeGateProbe) Check(ctx context.Context) error { return p.CheckFn(ctx) }
+
+type nativeFaultProof struct {
+	Real    execution.StopProof
+	Unknown atomic.Bool
+}
+
+func (p *nativeFaultProof) Confirm(ctx context.Context, pods []quiesce.PodIdentity) error {
+	if e := p.Real.Confirm(ctx, pods); e != nil {
+		return e
+	}
+	if p.Unknown.Load() {
+		return flow.ErrQuiesce
+	}
+	return nil
+}
+
+// This runs INSIDE the task-owned kind test Pod with real MySQL, containerd,
+// Kubernetes, mTLS and the compiled backup-worker. The source is a controlled
+// continuous file writer, not an OpenClaw/model semantics acceptance fixture.
+func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
+	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
+		t.Skip("requires explicitly provisioned task-owned native cluster")
+	}
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked"} {
+		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
+	}
+}
+
+func testPublicNativeScenario(t *testing.T, scenario string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Minute)
+	defer cancel()
+	cfg, e := rest.InClusterConfig()
+	if e != nil {
+		t.Fatal(e)
+	}
+	cfg.Timeout = 10 * time.Second
+	cfg.QPS = 50
+	cfg.Burst = 100
+	client, e := kubernetes.NewForConfig(cfg)
+	if e != nil {
+		t.Fatal(e)
+	}
+	lost := &nativeLostCreate{Enabled: scenario == "lost-create-response"}
+	dynamicCfg := rest.CopyConfig(cfg)
+	dynamicCfg.WrapTransport = func(rt http.RoundTripper) http.RoundTripper { lost.Base = rt; return lost }
+	dyn, e := dynamic.NewForConfig(dynamicCfg)
+	if e != nil {
+		t.Fatal(e)
+	}
+	nsName := os.Getenv("NATIVE_BACKUP_NAMESPACE")
+	image := os.Getenv("NATIVE_BACKUP_IMAGE")
+	podIP := os.Getenv("POD_IP")
+	nodeName := os.Getenv("NODE_NAME")
+	if nsName != "cm-backup-m0m2-native" || !strings.Contains(image, "@sha256:") || net.ParseIP(podIP) == nil || nodeName == "" {
+		t.Fatal("native fixture identity missing")
+	}
+	ns, e := client.CoreV1().Namespaces().Get(ctx, nsName, metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	node, e := client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	sa, e := client.CoreV1().ServiceAccounts(nsName).Get(ctx, "capture-worker", metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	db, legacy := submissionMySQL(t)
+	stopCapacity := nativeSyntheticCapacity(t, db, legacy.capacityFile)
+	defer stopCapacity()
+	if _, e = db.Exec("UPDATE system_backup_v2_execution_readiness SET execution_protocol='public-v1',supported_parts='workspace',acceptance_ready=FALSE,expires_at=TIMESTAMPADD(SECOND,60,checked_at)"); e != nil {
+		t.Fatal(e)
+	}
+	taskWriter, e := NewAdmittedTaskWriter(testExecutionProfile(), legacy.capacityFile, true)
+	if e != nil {
+		t.Fatal(e)
+	}
+	handler, operator, _ := liveAdmissionHTTP(t, db, taskWriter)
+	request := httptest.NewRequest(http.MethodPost, "https://example.invalid/api/v1/admin/system-backups", strings.NewReader(`{"requested_parts":["workspace"],"task_purpose":"functional_test"}`))
+	request.TLS = &tls.ConnectionState{}
+	request.Header.Set("Authorization", "Bearer "+operator)
+	request.Header.Set("Idempotency-Key", "native-m2-functional-0001")
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+	handler.Create(response, request, read.BackupTask, "m2-native-request")
+	if response.Code != 202 {
+		t.Fatal(response.Code, response.Body.String())
+	}
+	var task, server, database, configHash string
+	if e = db.QueryRow("SELECT public_id,config_snapshot_sha256 FROM system_backup_v2_backups").Scan(&task, &configHash); e != nil {
+		t.Fatal(e)
+	}
+	if e = db.QueryRow("SELECT @@server_uuid,DATABASE()").Scan(&server, &database); e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(func() {
+		var status, phase string
+		var n int
+		db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&status)
+		db.QueryRow("SELECT phase FROM system_backup_gate WHERE scope='installation'").Scan(&phase)
+		db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=?", task).Scan(&n)
+		t.Log("final native facts", status, phase, "resource rows", n)
+		rows, z := db.Query("SELECT writer_id,paused,resumed FROM system_backup_v2_runtime_writers WHERE task_public_id=?", task)
+		if z == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var id string
+				var paused, resumed bool
+				rows.Scan(&id, &paused, &resumed)
+				t.Log("writer", id, "paused", paused, "resumed", resumed)
+			}
+		}
+	})
+	account := "m2_" + strings.ReplaceAll(task[4:16], "-", "")
+	sourceUser := account + "s"
+	for _, user := range []string{account, sourceUser} {
+		if _, e = db.Exec("CREATE USER '" + user + "'@'%' IDENTIFIED BY 'synthetic-native-only'"); e != nil {
+			t.Fatal(e)
+		}
+		u := user
+		t.Cleanup(func() { db.Exec("DROP USER '" + u + "'@'%'") })
+	}
+	if _, e = db.Exec("GRANT ALL PRIVILEGES ON `" + database + "`.* TO '" + account + "'@'%'"); e != nil {
+		t.Fatal(e)
+	}
+	for _, table := range []string{"users", "instances"} {
+		if _, e = db.Exec("GRANT SELECT ON `" + database + "`." + table + " TO '" + sourceUser + "'@'%'"); e != nil {
+			t.Fatal(e)
+		}
+	}
+	open := func(user string) *sql.DB {
+		q := mysql.Config{User: user, Passwd: "synthetic-native-only", Net: "tcp", Addr: net.JoinHostPort(os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT")), DBName: database, ParseTime: true, AllowNativePasswords: true}
+		conn, z := sql.Open("mysql", q.FormatDSN())
+		if z != nil {
+			t.Fatal(z)
+		}
+		t.Cleanup(func() { conn.Close() })
+		return conn
+	}
+	controlDB, sourceDB := open(account), open(sourceUser)
+	if e = (backup.Gate{DB: db}).EnsureScope(ctx, "installation"); e != nil {
+		t.Fatal(e)
+	}
+	if e = (c.SQLGateInitializer{DB: db}).Ensure(ctx, "installation_admission", c.GatePolicy{LockTTL: 900 * time.Second, AcquisitionTimeout: 60 * time.Second, MaxHold: 600 * time.Second}); e != nil {
+		t.Fatal(e)
+	}
+	issuer, serverCert, caPEM := nativeTLS(t, net.ParseIP(podIP))
+	dir := t.TempDir()
+	recordKey, captureKey := make([]byte, 32), make([]byte, 32)
+	rand.Read(recordKey)
+	rand.Read(captureKey)
+	for ref, key := range map[string][]byte{"record-v1": recordKey, "capture-v1": captureKey} {
+		if e = os.WriteFile(filepath.Join(dir, ref), key, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	pub, private, e := ed25519.GenerateKey(rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	now := time.Now().UTC()
+	controllerOwner := "m2-controller-" + account
+	grant := c.ExecutionGrant{Version: "system-backup-execution-grant.v1", InstallationID: "installation_admission", ControllerOwner: controllerOwner, DatabaseAccount: account + "@%", ServerUUID: server, Database: database, ConfigVersion: 1, ConfigSHA256: configHash, ProfileSHA256: legacy.hash, NotBefore: now.Add(-time.Minute), ExpiresAt: now.Add(time.Hour), Actions: []string{"prepare", "capture", "issue_worker"}, RecordKeys: []c.ExecutionRecordKey{{Ref: "record-v1", SHA256: digestJSON(recordKey)}}, CaptureKeys: []c.ExecutionRecordKey{{Ref: "capture-v1", SHA256: digestJSON(captureKey)}}, WorkerIssuerSHA256: digestJSON(issuer.Certificate.Raw)}
+	sign := func(name string, g c.ExecutionGrant) *c.PinnedExecutionIdentity {
+		body, _ := json.Marshal(g)
+		envelope, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(private, body))})
+		path := filepath.Join(dir, name)
+		if z := os.WriteFile(path, envelope, 0600); z != nil {
+			t.Fatal(z)
+		}
+		identity, z := c.NewPinnedExecutionIdentity(path, digestJSON(envelope), dir, pub)
+		if z != nil {
+			t.Fatal(z)
+		}
+		return identity
+	}
+	forward := sign("forward.json", grant)
+	recoveryGrant := grant
+	recoveryGrant.Actions = []string{"recover"}
+	recoveryGrant.CaptureKeys = nil
+	recoveryGrant.WorkerIssuerSHA256 = ""
+	recovery := sign("recovery.json", recoveryGrant)
+	authority := c.SQLExecutionAuthority{DB: controlDB, InstallationID: "installation_admission", ApplicationScope: "installation", Authorization: forward, DeploymentEnabled: true}
+	recoveryAuthority := c.SQLRecoveryAuthority{DB: controlDB, InstallationID: authority.InstallationID, ApplicationScope: authority.ApplicationScope, Identity: recovery}
+	records := c.SQLExecutionRecords{Authority: authority, Keys: forward, CapacityReportFile: legacy.capacityFile}
+	gate := c.SQLCaptureGate{Authority: authority, Recovery: recoveryAuthority, Records: records, AcquisitionTimeout: 60 * time.Second, HoldTimeout: 300 * time.Second}
+	stagingRoot, e := os.OpenRoot("/staging")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer stagingRoot.Close()
+	root, e := os.OpenRoot("/source")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer root.Close()
+	if e = os.Mkdir("/source/"+account, 0700); e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile("/source/"+account+"/data.txt", []byte("native-capture-preserves-source\n"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	slug := strings.ReplaceAll(account, "_", "-")
+	deploymentName := "native-writer-" + slug
+	replicas := int32(1)
+	graces := int64(1)
+	dep, e := client.AppsV1().Deployments(nsName).Create(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: deploymentName, Namespace: nsName}, Spec: appsv1.DeploymentSpec{Replicas: &replicas, Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"native-source": account}}, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"native-source": account}}, Spec: corev1.PodSpec{TerminationGracePeriodSeconds: &graces, Containers: []corev1.Container{{Name: "writer", Image: image, Command: []string{"/bin/sh", "-c", "while true; do date +%s%N > /source/counter.txt; sleep 1; done"}, VolumeMounts: []corev1.VolumeMount{{Name: "source", MountPath: "/source", SubPath: account}}}}, Volumes: []corev1.Volume{{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}}}}}}, metav1.CreateOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(func() {
+		client.AppsV1().Deployments(nsName).Delete(context.Background(), deploymentName, metav1.DeleteOptions{})
+	})
+	waitNative(t, ctx, func() bool {
+		v, z := client.AppsV1().Deployments(nsName).Get(ctx, deploymentName, metav1.GetOptions{})
+		return z == nil && v.Status.ReadyReplicas == 1 && v.Status.ObservedGeneration == v.Generation
+	})
+	inspector := &nativeProofInspector{Client: client, Config: cfg, Namespace: nsName, Pod: "native-node-proof"}
+	proof := quiesce.CRIProver{Node: nodeName, Inspector: inspector}
+	faultProof := &nativeFaultProof{Real: proof}
+	faultProof.Unknown.Store(scenario == "unknown-stop-recovery")
+	owner := &execution.PublicJobOwner{Gate: gate, Client: client, Dynamic: dyn, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: "native-backup.invalid", Security: kube.WorkerSecurity{NodeUIDs: map[string]string{nodeName: string(node.UID)}, ServiceAccountName: sa.Name, ServiceAccountUID: string(sa.UID)}, Identity: forward, Issuer: issuer, Staging: stagingRoot, Proof: faultProof, AllowKubeletStopWitness: scenario != "unknown-stop-recovery"}
+	for _, entry := range []struct{ Volume, Claim string }{{"workspace", "native-source"}, {"staging", "native-staging"}} {
+		claim, z := client.CoreV1().PersistentVolumeClaims(nsName).Get(ctx, entry.Claim, metav1.GetOptions{})
+		if z != nil {
+			t.Fatal(z)
+		}
+		pv, z := client.CoreV1().PersistentVolumes().Get(ctx, claim.Spec.VolumeName, metav1.GetOptions{})
+		if z != nil {
+			t.Fatal(z)
+		}
+		owner.Security.Volumes = append(owner.Security.Volumes, kube.MountIdentity{Volume: entry.Volume, Kind: "PersistentVolumeClaim", Name: claim.Name, UID: string(claim.UID), PVName: pv.Name, PVUID: string(pv.UID), SHA256: kube.ContentHash(pv.Spec)})
+	}
+	listener, e := net.Listen("tcp", "0.0.0.0:0")
+	if e != nil {
+		t.Fatal(e)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	endpoint := fmt.Sprintf("https://%s:%d/worker/v1", podIP, port)
+	writerID := "deployment/" + nsName + "/" + deploymentName
+	sourceCfg := b.LinuxProfileConfig{Source: sourceDB, Database: database, ServerUUID: server, Supported: map[b.AgentKind]bool{{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}: true}, HoldLimit: 300 * time.Second}
+	sourceCfg.BuildWriters = func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
+		if len(inventory.Instances) != 0 {
+			return nil, d.ErrNotReady
+		}
+		w := &quiesce.DeploymentWriter{Client: client, Namespace: nsName, Name: dep.Name, UID: string(dep.UID), FenceID: in.Authority.TaskPublicID + "/attempt/1", Runtime: scope.Runtime{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}, PollInterval: 100 * time.Millisecond}
+		w.Guard = func(ctx context.Context, point string, s flow.State) error {
+			var e error
+			switch point {
+			case "before-resume", "recovery-check-stopped", "check-resumed":
+				e = gate.CheckRecovery(ctx, in.Authority, writerID, d.WriterState{UID: s.UID, Generation: s.Generation, Running: s.Running, Checkpoint: s.Checkpoint})
+			default:
+				e = gate.Check(ctx, in.Authority)
+			}
+			if e != nil {
+				t.Log("source guard rejected", point, e)
+			}
+			return e
+		}
+		w.PrepareStop = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
+			return owner.StopWitness(in.Authority).Arm(ctx, pods)
+		}
+		w.ConfirmStopped = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
+			if owner.StopWitness(in.Authority).Confirm(ctx, pods) == nil {
+				return nil
+			}
+			if proof.Confirm(ctx, pods) == nil {
+				return nil
+			}
+			return quiesce.ErrStopProofPending
+		}
+		w.ConfirmResumed = func(ctx context.Context, _ flow.State) error {
+			current, z := client.AppsV1().Deployments(nsName).Get(ctx, dep.Name, metav1.GetOptions{})
+			if z != nil || current.UID != dep.UID || current.Status.ReadyReplicas != 1 {
+				return flow.ErrResume
+			}
+			return nil
+		}
+		return []flow.Writer{nativeTraceSource{Writer: w, T: t}}, nil
+	}
+	var capturedInv worker.Invocation
+	var preparedAuthority d.Authority
+	sourceCfg.BuildParts = func(in d.Input, _ b.SourceInventory, until time.Time) ([]b.JobPart, error) {
+		invocation := worker.Invocation{Request: worker.Request{Version: worker.Version, Operation: "capture-workspace", Binding: staging.Binding{BackupID: in.Authority.TaskPublicID, Attempt: "1", Path: "workspace", PartIndex: 1, CaptureContextHash: in.Authority.ConfigSHA256, EnvelopeID: "functional-native"}, Deadline: until, ArtifactName: "workspace.enc", MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, WorkspacePath: "/workspace", StagingPath: "/staging"}
+		p, z := b.BuildCapturePart(in, until, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: "workspace", Generation: 1, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: nsName, Name: "capture-" + slug, Owner: in.Authority.TaskPublicID}, Image: image, ServiceAccount: sa.Name, Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "native-source"}}}, StagingClaim: "native-staging", SourceSubPath: account, NodeName: nodeName, DeadlineSeconds: 120, WorkerControl: &kube.WorkerControl{URL: endpoint, InvocationConfigMap: "request-" + slug, IdentitySecret: "identity-" + slug, BoundPodIdentity: true}}})
+		if z != nil {
+			return nil, z
+		}
+		capturedInv = invocation
+		preparedAuthority = in.Authority
+		return []b.JobPart{p}, nil
+	}
+	queue := c.SQLExecutionQueue{DB: controlDB, InstallationID: authority.InstallationID, Owner: controllerOwner, ApplicationScope: authority.ApplicationScope, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}, Authorization: forward, Recovery: &recoveryAuthority}
+	runtime, z := execution.NewPublicCapture(execution.PublicCaptureConfig{Owner: owner, Queue: queue, Source: sourceCfg, Profile: b.ProfileKey{ID: testExecutionProfile().Profile, Revision: testExecutionProfile().Revision}, Guard: nativeGateProbe{CheckFn: func(ctx context.Context) error { return controlDB.PingContext(ctx) }}, Admission: func(_ context.Context, in d.Input) error {
+		if in.Backup == nil || in.Backup.TaskPurpose != "functional_test" || len(in.Backup.RequestedParts) != 1 || in.Backup.RequestedParts[0] != "workspace" {
+			return d.ErrNotReady
+		}
+		return nil
+	}, Inventory: func(_ context.Context, _ d.Input, x b.Discovery) error {
+		if len(x.Writers) != 1 || x.Writers[0].ID != writerID || x.Writers[0].Original.UID != string(dep.UID) || len(x.Parts) != 1 || x.Parts[0].Part != "workspace" {
+			return d.ErrNotReady
+		}
+		return nil
+	}, RecoveryTimeout: 2 * time.Minute})
+	if z != nil {
+		t.Fatal(z)
+	}
+	runtime.Loop.Dispatch.Runner = nativeTraceRunner{Runner: runtime.Loop.Dispatch.Runner, T: t}
+	runtime.Loop.Dispatch.Ports = nativeTracePorts{Ports: runtime.Loop.Dispatch.Ports, T: t}
+	runtime.Control = execution.WorkloadIdentity{Client: client, Namespace: nsName, ServiceAccount: sa.Name, ServiceAccountUID: string(sa.UID), Next: worker.ControlHandler{Authorizer: nativeTraceAuthorizer{Owner: owner, T: t}}}
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(caPEM)
+	serverHTTP := &http.Server{Handler: runtime.Control, TLSConfig: &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{serverCert}, ClientCAs: pool, ClientAuth: tls.RequireAndVerifyClientCert}, ReadHeaderTimeout: 5 * time.Second}
+	serverDone := make(chan error, 1)
+	go func() { serverDone <- serverHTTP.Serve(tls.NewListener(listener, serverHTTP.TLSConfig)) }()
+	defer func() { serverHTTP.Close(); <-serverDone }()
+	if e = runtime.Loop.RunOnce(ctx); e != nil {
+		t.Fatal("prepare", e)
+	}
+	if _, e = db.Exec("UPDATE system_backup_v2_backups SET next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); e != nil {
+		t.Fatal(e)
+	}
+	if scenario == "prepare-revoked" {
+		if e = os.Remove(filepath.Join(dir, "forward.json")); e != nil {
+			t.Fatal(e)
+		}
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("revoked preparation cleanup", e)
+		}
+		var state string
+		var resources int
+		if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) != nil || state != "failed" {
+			t.Fatal("revoked preparation stuck", state)
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=?", task).Scan(&resources) != nil || resources != 0 {
+			t.Fatal("revoked preparation performed source actions")
+		}
+		t.Log("revoked preparation closed with no source effects")
+		return
+	}
+	bindRaw, _ := json.Marshal(capturedInv.Request.Binding)
+	captureDEK, e := forward.DeriveCaptureKey(ctx, preparedAuthority, bindRaw)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer clear(captureDEK)
+	stopLog := nativeWorkerFailureLog(t, ctx, client, nsName, "capture-"+slug)
+	defer stopLog()
+	e = runtime.Loop.RunOnce(ctx)
+	expectedStatus := "validating"
+	if scenario == "unknown-stop-recovery" {
+		if !errors.Is(e, c.ErrExecutionRecoveryRequired) {
+			t.Fatal("unknown stop was not fenced", e)
+		}
+		blocked, z := client.AppsV1().Deployments(nsName).Get(ctx, dep.Name, metav1.GetOptions{})
+		if z != nil || *blocked.Spec.Replicas != 0 {
+			t.Fatal("source resumed without stop proof", z)
+		}
+		if z = os.Remove(filepath.Join(dir, "forward.json")); z != nil {
+			t.Fatal(z)
+		}
+		faultProof.Unknown.Store(false)
+		owner.AllowKubeletStopWitness = true
+		if _, z = db.Exec("UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); z != nil {
+			t.Fatal(z)
+		}
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("restart recovery after forward revocation", e)
+		}
+		expectedStatus = "failed"
+	} else if e != nil {
+		t.Fatal("capture", e)
+	}
+	if scenario == "lost-create-response" && (lost.Dropped.Load() != 1 || lost.Created.Load() != 1) {
+		t.Fatal("create replay duplicated source Job", lost.Dropped.Load(), lost.Created.Load())
+	}
+	var status string
+	var stopped, resumed sql.NullTime
+	var resources, attempts int
+	if e = db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&status); e != nil || status != expectedStatus {
+		t.Fatal("capture is not publish success", status, e)
+	}
+	if e = db.QueryRow("SELECT collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&stopped, &resumed); e != nil || !stopped.Valid || !resumed.Valid {
+		t.Fatal("missing physical recovery proof", e)
+	}
+	if e = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", task).Scan(&resources); e != nil || resources != 1 {
+		t.Fatal("duplicate job", resources, e)
+	}
+	if e = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_public_id=?", task).Scan(&attempts); e != nil || attempts != 1 {
+		t.Fatal("duplicate attempt", attempts, e)
+	}
+	var stopProofs int
+	if e = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_stop_proofs WHERE task_public_id=?", task).Scan(&stopProofs); e != nil || stopProofs != 2 {
+		t.Fatal("explicit runtime termination proofs", stopProofs, e)
+	}
+	before, e := os.ReadFile("/source/" + account + "/counter.txt")
+	if e != nil {
+		t.Fatal(e)
+	}
+	waitNative(t, ctx, func() bool {
+		after, z := os.ReadFile("/source/" + account + "/counter.txt")
+		return z == nil && !bytes.Equal(before, after)
+	})
+	// The authenticated worker result is encrypted in SQL; decrypt the original
+	// capture plan and sealed file with its task-bound key, then inspect tar bytes.
+	var sealed []byte
+	if e = db.QueryRow("SELECT sealed_payload FROM system_backup_v2_execution_records WHERE task_public_id=? AND record_kind='plan'", task).Scan(&sealed); e != nil || bytes.Contains(sealed, []byte("data.txt")) {
+		t.Fatal("plan custody", e)
+	}
+	rootTask, e := stagingRoot.OpenRoot(task)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer rootTask.Close()
+	raw, e := rootTask.ReadFile("workspace.enc")
+	if e != nil || bytes.Contains(raw, []byte("native-capture-preserves-source")) {
+		t.Fatal("native ciphertext", e)
+	}
+	t.Logf("native public capture: task=%s Jobs=%d attempts=%d CRI_inspections=%d status=%s source_resumed=true", task, resources, attempts, inspector.Calls.Load(), status)
+	found := false
+	if e = staging.ConsumeCompressed(ctx, bytes.NewReader(raw), captureDEK, capturedInv.Request.Binding, capturedInv.Request.MaxCompressedBytes, capturedInv.Request.MaxArchiveBytes, func(plain io.Reader) error {
+		reader := tar.NewReader(plain)
+		for {
+			entry, z := reader.Next()
+			if z == io.EOF {
+				return nil
+			}
+			if z != nil {
+				return z
+			}
+			if entry.Name == "data.txt" {
+				body, z := io.ReadAll(io.LimitReader(reader, 1024))
+				if z != nil {
+					return z
+				}
+				if string(body) != "native-capture-preserves-source\n" {
+					return fmt.Errorf("capture content differs")
+				}
+				found = true
+			}
+		}
+	}); e != nil || !found {
+		t.Fatal("authenticated native archive content", e, found)
+	}
+}
+
+func waitNative(t *testing.T, ctx context.Context, ready func() bool) {
+	t.Helper()
+	for {
+		if ready() {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		case <-time.After(200 * time.Millisecond):
+		}
+	}
+}
+
+// Admission capacity is an explicit fixture input, not physical-capacity or
+// production deployment acceptance. Refresh it like the trusted mounted feed;
+// never extend the production five-second freshness rule to suit this test.
+func nativeSyntheticCapacity(t *testing.T, db *sql.DB, path string) func() {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			var now time.Time
+			var server, database string
+			if db.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6),@@server_uuid,DATABASE()").Scan(&now, &server, &database) == nil {
+				raw, _ := json.Marshal(map[string]any{"server_uuid": server, "database": database, "observed_at": now, "allocated_bytes": int64(1 << 20), "available_bytes": int64(1 << 42)})
+				if os.WriteFile(path+".next", raw, 0600) == nil {
+					os.Rename(path+".next", path)
+				}
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Second):
+			}
+		}
+	}()
+	return func() { cancel(); <-done }
+}
+
+func nativeWorkerFailureLog(t *testing.T, ctx context.Context, client kubernetes.Interface, namespace, job string) func() {
+	tracking, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	stream, e := client.CoreV1().Pods(namespace).Watch(tracking, metav1.ListOptions{LabelSelector: "batch.kubernetes.io/job-name=" + job})
+	if e != nil {
+		cancel()
+		close(done)
+		return func() {}
+	}
+	go func() {
+		defer close(done)
+		defer stream.Stop()
+		for {
+			select {
+			case <-tracking.Done():
+				return
+			case event, ok := <-stream.ResultChan():
+				if !ok {
+					return
+				}
+				pod, ok := event.Object.(*corev1.Pod)
+				if !ok || pod.Status.Phase != corev1.PodFailed {
+					continue
+				}
+				raw, e := client.CoreV1().Pods(namespace).GetLogs(pod.Name, &corev1.PodLogOptions{Container: "worker"}).DoRaw(tracking)
+				if e == nil {
+					for _, line := range strings.Split(string(raw), "\n") {
+						if strings.HasPrefix(line, "backup worker failed; category=") && len(line) < 100 {
+							t.Log("native worker", line)
+						}
+					}
+				}
+				return
+			}
+		}
+	}()
+	return func() { cancel(); <-done }
+}
+func nativeTLS(t *testing.T, ip net.IP) (control.IdentityIssuer, tls.Certificate, []byte) {
+	t.Helper()
+	key, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	now := time.Now()
+	ca := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "task-owned-native-ca"}, NotBefore: now.Add(-time.Minute), NotAfter: now.Add(3 * time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature}
+	der, e := x509.CreateCertificate(rand.Reader, ca, ca, &key.PublicKey, key)
+	if e != nil {
+		t.Fatal(e)
+	}
+	parsed, e := x509.ParseCertificate(der)
+	if e != nil {
+		t.Fatal(e)
+	}
+	caPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	serverKey, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	server := &x509.Certificate{SerialNumber: big.NewInt(2), Subject: pkix.Name{CommonName: "native-control"}, NotBefore: now.Add(-time.Minute), NotAfter: now.Add(2 * time.Hour), IPAddresses: []net.IP{ip}, KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
+	serverDER, e := x509.CreateCertificate(rand.Reader, server, parsed, &serverKey.PublicKey, key)
+	if e != nil {
+		t.Fatal(e)
+	}
+	serverPrivate, e := x509.MarshalPKCS8PrivateKey(serverKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	cert, e := tls.X509KeyPair(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: serverDER}), pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: serverPrivate}))
+	if e != nil {
+		t.Fatal(e)
+	}
+	return control.IdentityIssuer{Certificate: parsed, Signer: key, ServerRoots: caPEM, TrustDomain: "native-backup.invalid"}, cert, caPEM
+}

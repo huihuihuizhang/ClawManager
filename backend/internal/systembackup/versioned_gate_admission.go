@@ -89,7 +89,7 @@ FROM system_backup_gate WHERE scope=? FOR SHARE`, scope).Scan(&phase, &owner, &h
 	if owner != claim.TaskID || hash != registryHash || !timely || (phase != "acquiring" && phase != "held") {
 		return zero, "", ErrFence
 	}
-	if err = claim.authorizePhase(ctx, tx, phase == "held"); err != nil {
+	if err = claim.authorizePhase(ctx, tx, true); err != nil {
 		return zero, "", err
 	}
 	if err = tx.Commit(); err != nil {
@@ -118,5 +118,5 @@ func (g Gate) HoldVersionedCapture(ctx context.Context, claim VersionedGateClaim
 	if ownership.Owner != claim.TaskID {
 		return ownership, ErrFence
 	}
-	return g.hold(ctx, ownership, claim.authorize)
+	return g.hold(ctx, ownership, func(ctx context.Context, q gateQuery) error { return claim.authorizePhase(ctx, q, true) })
 }

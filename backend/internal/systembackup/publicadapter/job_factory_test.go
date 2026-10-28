@@ -12,15 +12,20 @@ import (
 )
 
 func TestConcreteCaptureFactoryFreezesWorkerJobWithoutDispatch(t *testing.T) {
-	for _, mode := range []string{"valid", "database", "owner", "restore", "command", "identity", "deadline", "unpinned", "wrong-part", "wrong-attempt"} {
+	for _, mode := range []string{"valid", "database", "owner", "restore", "command", "identity", "deadline", "unpinned", "wrong-part", "wrong-attempt", "capture-policy", "capture-files"} {
 		t.Run(mode, func(t *testing.T) {
 			f, _, _ := setup(t)
 			var invocation worker.Invocation
 			if err := json.Unmarshal(f.x.Parts[0].InvocationJSON, &invocation); err != nil {
 				t.Fatal(err)
 			}
+			invocation.Request.PolicyVersion = ""
 			req := CapturePartRequest{Part: "users", Category: "metadata", JobUnitKey: "users", Generation: 5, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: "cm-drill-b", Name: "capture-one", Owner: f.in.Authority.TaskPublicID}, Image: "worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "b-worker", Source: corev1.Volume{Name: "workspace", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "source-pvc"}}}, StagingClaim: "staging-pvc", DeadlineSeconds: 20, WorkerControl: &kube.WorkerControl{URL: "https://owner.invalid/worker", InvocationConfigMap: "users-invocation", IdentitySecret: "job-identity"}}}
 			switch mode {
+			case "capture-policy":
+				req.Invocation.Request.PolicyVersion = "restore-only"
+			case "capture-files":
+				req.Invocation.Request.Files = []worker.FileRule{{Path: "config.json"}}
 			case "database":
 				req.Workload.Source = corev1.Volume{}
 				req.Invocation.WorkspacePath = ""

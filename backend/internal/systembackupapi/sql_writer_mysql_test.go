@@ -47,7 +47,11 @@ func submissionMySQL(t *testing.T) (*sql.DB, *SQLTaskWriter) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	rootCfg := mysql.Config{User: "root", Net: "tcp", Addr: fmt.Sprintf("127.0.0.1:%d", port), ParseTime: true, AllowNativePasswords: true, Params: map[string]string{"time_zone": "'+00:00'"}}
+	host := os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	rootCfg := mysql.Config{User: "root", Net: "tcp", Addr: fmt.Sprintf("%s:%d", host, port), ParseTime: true, AllowNativePasswords: true, Params: map[string]string{"time_zone": "'+00:00'"}}
 	root, err := sql.Open("mysql", rootCfg.FormatDSN())
 	if err != nil {
 		t.Fatal(err)

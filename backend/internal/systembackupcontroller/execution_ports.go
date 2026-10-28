@@ -89,24 +89,37 @@ func validExecutionInput(a dispatch.Authority, installation string) bool {
 
 func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispatch.Authority) (executionSnapshot, error) {
 	var v executionSnapshot
+	postCapture := false
+	var acquiringUntil, acquiringHold time.Time
 	if tx == nil || !validExecutionInput(a, s.InstallationID) {
 		return v, ErrExecutionAuthority
 	}
 	if s.ApplicationScope != "" {
 		var engine, phase, owner string
-		var token uint64
+		var token, generation uint64
 		if tx.QueryRowContext(ctx, "SELECT engine FROM system_backup_v2_engine_bindings WHERE scope='installation' FOR SHARE").Scan(&engine) != nil || engine != "v2" {
 			return v, ErrExecutionAuthority
 		}
-		if tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,''),fencing_token FROM system_backup_gate WHERE scope=? FOR SHARE", s.ApplicationScope).Scan(&phase, &owner, &token) != nil {
+		if tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,''),fencing_token,generation FROM system_backup_gate WHERE scope=? FOR SHARE", s.ApplicationScope).Scan(&phase, &owner, &token, &generation) != nil {
 			return v, ErrExecutionAuthority
 		}
 		if a.MaintenanceFencingToken == 0 {
 			if phase != "idle" && !(phase == "acquiring" && owner == a.TaskPublicID) {
 				return v, ErrExecutionAuthority
 			}
-		} else if phase != "held" || owner != a.TaskPublicID || token != a.MaintenanceFencingToken {
-			return v, ErrExecutionAuthority
+		} else {
+			// The public epoch is the acquisition generation. The application's
+			// held token is separate and must be checked by Job admission.
+			var epoch, acquireToken uint64
+			var heldToken sql.NullInt64
+			var stopped, resumed sql.NullTime
+			if tx.QueryRowContext(ctx, "SELECT gate_generation,acquire_token,held_token,collectors_stopped_at,source_resumed_at,acquire_until,hold_until FROM system_backup_v2_runtime_captures WHERE task_public_id=? AND application_scope=? FOR SHARE", a.TaskPublicID, s.ApplicationScope).Scan(&epoch, &acquireToken, &heldToken, &stopped, &resumed, &acquiringUntil, &acquiringHold) != nil || epoch != a.MaintenanceFencingToken {
+				return v, ErrExecutionAuthority
+			}
+			postCapture = resumed.Valid && stopped.Valid && phase == "idle"
+			if !postCapture && (owner != a.TaskPublicID || generation != epoch || (phase != "acquiring" && phase != "held") || (phase == "acquiring" && token != acquireToken) || (phase == "held" && (!heldToken.Valid || token != uint64(heldToken.Int64)))) {
+				return v, ErrExecutionAuthority
+			}
 		}
 	}
 	// Preserve the common coordination lock order: gate before business rows.
@@ -117,6 +130,14 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 		return v, ErrExecutionAuthority
 	}
 	v.gateUntil, v.holdUntil = gateLease.Time, hold.Time
+	if s.ApplicationScope != "" && v.gateState == "acquiring" && a.MaintenanceFencingToken != 0 {
+		v.gateUntil = acquiringUntil
+		v.holdUntil = acquiringHold
+	}
+	if postCapture {
+		v.gateUntil = a.DeadlineAt
+		v.holdUntil = a.DeadlineAt
+	}
 	var stateSchema, configSchema string
 	var enabled bool
 	var activeVersion uint64
@@ -163,7 +184,11 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 		} else if v.status == "capturing" {
 			var taskOwner string
 			var taskFence uint64
-			if tx.QueryRowContext(ctx, "SELECT maintenance_lock_owner,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? FOR UPDATE", a.InstallationID, a.TaskPublicID).Scan(&taskOwner, &taskFence) != nil || v.attemptStatus != "running" || v.gateState != "held" || v.gateOwner != a.MaintenanceOwner || fence != a.MaintenanceFencingToken || taskOwner != a.MaintenanceOwner || taskFence != fence || fence == 0 {
+			gateOK := v.gateState == "held"
+			if s.ApplicationScope != "" {
+				gateOK = v.gateState == "held" || v.gateState == "acquiring" || (postCapture && v.gateState == "idle")
+			}
+			if tx.QueryRowContext(ctx, "SELECT maintenance_lock_owner,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? FOR UPDATE", a.InstallationID, a.TaskPublicID).Scan(&taskOwner, &taskFence) != nil || v.attemptStatus != "running" || !gateOK || (!postCapture && v.gateOwner != a.MaintenanceOwner) || fence != a.MaintenanceFencingToken || taskOwner != a.MaintenanceOwner || taskFence != fence || fence == 0 {
 				return v, ErrExecutionAuthority
 			}
 		} else {
@@ -175,7 +200,7 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&v.now) != nil || v.now.IsZero() || !v.now.Before(v.claimUntil) || !v.now.Before(a.DeadlineAt) {
 		return v, ErrExecutionAuthority
 	}
-	if v.status == "capturing" && (!v.now.Before(v.gateUntil) || !v.now.Before(v.holdUntil)) {
+	if v.status == "capturing" && !postCapture && (!v.now.Before(v.gateUntil) || !v.now.Before(v.holdUntil)) {
 		return v, ErrExecutionAuthority
 	}
 	return v, nil

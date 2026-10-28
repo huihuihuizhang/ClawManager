@@ -146,7 +146,7 @@ func Run(ctx context.Context, r Request, env Environment) (Result, error) {
 			})
 		})
 		if e != nil {
-			return Result{}, ErrExecution
+			return Result{}, captureFailure(e)
 		}
 		if e = check("sealed"); e != nil {
 			return Result{}, e

@@ -88,6 +88,12 @@ type Ports interface {
 	ObserveJob(context.Context, Authority, JobBinding) (JobObservation, error)
 	StopJob(context.Context, Authority, JobBinding) error
 }
+
+// ResumeBarrier is required by the public SQL capture composition. It proves
+// ALL durable collector intents stopped before any physical source resume.
+type ResumeBarrier interface {
+	BeforeResume(context.Context, Authority) error
+}
 type JobObservation struct {
 	Binding        JobBinding
 	Complete       bool

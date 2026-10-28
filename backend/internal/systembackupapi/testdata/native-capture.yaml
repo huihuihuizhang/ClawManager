@@ -1,0 +1,134 @@
+# Disposable local fixture only. Never apply this file to a shared cluster.
+apiVersion: v1
+kind: Namespace
+metadata: {name: cm-backup-m0m2-native, labels: {codex-run: m0m2-20261028}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: native-controller, namespace: cm-backup-m0m2-native}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: capture-worker, namespace: cm-backup-m0m2-native}
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {name: native-controller, namespace: cm-backup-m0m2-native}
+rules:
+  - apiGroups: ['']
+    resources: [pods, pods/exec, pods/log, configmaps, secrets, serviceaccounts, persistentvolumeclaims]
+    verbs: [get, list, watch, create, patch, update, delete]
+  - apiGroups: [apps]
+    resources: [deployments, replicasets]
+    verbs: [get, list, create, patch, update, delete]
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [get, list, create, patch, update, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {name: native-controller, namespace: cm-backup-m0m2-native}
+subjects: [{kind: ServiceAccount, name: native-controller, namespace: cm-backup-m0m2-native}]
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: native-controller}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: {name: cm-backup-m0m2-native}
+rules:
+  - apiGroups: ['']
+    resources: [namespaces, nodes, persistentvolumes]
+    verbs: [get]
+  - apiGroups: [authentication.k8s.io]
+    resources: [tokenreviews]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: {name: cm-backup-m0m2-native}
+subjects: [{kind: ServiceAccount, name: native-controller, namespace: cm-backup-m0m2-native}]
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cm-backup-m0m2-native}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: {name: cm-backup-m0m2-source}
+spec:
+  capacity: {storage: 256Mi}
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  hostPath: {path: /var/local/cm-backup-m0m2-source, type: DirectoryOrCreate}
+  claimRef: {namespace: cm-backup-m0m2-native, name: native-source}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: native-source, namespace: cm-backup-m0m2-native}
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ''
+  volumeName: cm-backup-m0m2-source
+  resources: {requests: {storage: 256Mi}}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata: {name: cm-backup-m0m2-staging}
+spec:
+  capacity: {storage: 256Mi}
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  hostPath: {path: /var/local/cm-backup-m0m2-staging, type: DirectoryOrCreate}
+  claimRef: {namespace: cm-backup-m0m2-native, name: native-staging}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: native-staging, namespace: cm-backup-m0m2-native}
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ''
+  volumeName: cm-backup-m0m2-staging
+  resources: {requests: {storage: 256Mi}}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: native-node-proof, namespace: cm-backup-m0m2-native}
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+    - name: proof
+      image: __NATIVE_IMAGE__
+      imagePullPolicy: IfNotPresent
+      command: [/bin/sleep, '7200']
+      volumeMounts: [{name: runtime, mountPath: /runtime/containerd.sock, readOnly: true}]
+  volumes:
+    - name: runtime
+      hostPath: {path: /run/containerd/containerd.sock, type: Socket}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: native-controller, namespace: cm-backup-m0m2-native}
+spec:
+  restartPolicy: Never
+  serviceAccountName: native-controller
+  containers:
+    - name: controller
+      image: __NATIVE_IMAGE__
+      imagePullPolicy: IfNotPresent
+      command: [/native.test, -test.v, -test.run=^TestPublicCaptureNativeMySQLKubernetes$, -test.timeout=9m]
+      env:
+        - {name: TEST_PUBLIC_CAPTURE_NATIVE, value: m0m2-20261028}
+        - {name: TEST_SYSTEM_BACKUP_MYSQL_HOST, value: __MYSQL_HOST__}
+        - {name: TEST_SYSTEM_BACKUP_MYSQL_PORT, value: '3306'}
+        - {name: NATIVE_BACKUP_NAMESPACE, value: cm-backup-m0m2-native}
+        - {name: NATIVE_BACKUP_IMAGE, value: __NATIVE_IMAGE__}
+        - {name: POD_IP, valueFrom: {fieldRef: {fieldPath: status.podIP}}}
+        - {name: NODE_NAME, valueFrom: {fieldRef: {fieldPath: spec.nodeName}}}
+      volumeMounts:
+        - {name: source, mountPath: /source}
+        - {name: staging, mountPath: /staging}
+  volumes:
+    - name: source
+      persistentVolumeClaim: {claimName: native-source}
+    - name: staging
+      persistentVolumeClaim: {claimName: native-staging}

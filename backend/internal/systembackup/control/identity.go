@@ -41,14 +41,19 @@ type TaskIdentity struct {
 }
 
 func (i IdentityIssuer) Issue(t Task, invocationHash string) (TaskIdentity, error) {
-	if i.Certificate == nil || i.Signer == nil || !i.Certificate.IsCA || i.Certificate.KeyUsage&x509.KeyUsageCertSign == 0 || !identifier.MatchString(t.ID) || !revision.MatchString(invocationHash) || len(validation.IsDNS1123Subdomain(i.TrustDomain)) != 0 {
+	return i.IssueWorker(t.ID, time.UnixMilli(t.Deadline), invocationHash)
+}
+
+// IssueWorker is the identity primitive shared with the public execution
+// adapter. It accepts no private control.Task or private task store.
+func (i IdentityIssuer) IssueWorker(taskID string, expiry time.Time, invocationHash string) (TaskIdentity, error) {
+	if i.Certificate == nil || i.Signer == nil || !i.Certificate.IsCA || i.Certificate.KeyUsage&x509.KeyUsageCertSign == 0 || !identifier.MatchString(taskID) || !revision.MatchString(invocationHash) || len(validation.IsDNS1123Subdomain(i.TrustDomain)) != 0 {
 		return TaskIdentity{}, ErrInvalid
 	}
 	public, e := x509.MarshalPKIXPublicKey(i.Signer.Public())
 	if e != nil || !bytes.Equal(public, i.Certificate.RawSubjectPublicKeyInfo) {
 		return TaskIdentity{}, ErrInvalid
 	}
-	expiry := time.UnixMilli(t.Deadline)
 	now := time.Now()
 	if !now.Before(expiry) || expiry.After(now.Add(2*time.Hour)) || expiry.After(i.Certificate.NotAfter) || now.Before(i.Certificate.NotBefore) {
 		return TaskIdentity{}, ErrInvalid
@@ -65,7 +70,7 @@ func (i IdentityIssuer) Issue(t Task, invocationHash string) (TaskIdentity, erro
 	if e != nil || serial.Sign() == 0 {
 		return TaskIdentity{}, ErrNotReady
 	}
-	uri := &url.URL{Scheme: "spiffe", Host: i.TrustDomain, Path: "/backup/" + t.ID + "/" + invocationHash}
+	uri := &url.URL{Scheme: "spiffe", Host: i.TrustDomain, Path: "/backup/" + taskID + "/" + invocationHash}
 	template := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "backup-worker"}, NotBefore: now.Add(-30 * time.Second), NotAfter: expiry, KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, URIs: []*url.URL{uri}, BasicConstraintsValid: true}
 	cert, e := x509.CreateCertificate(rand.Reader, template, i.Certificate, &key.PublicKey, i.Signer)
 	if e != nil {

@@ -36,6 +36,37 @@ type deploymentFixture struct {
 var deploymentGVR = schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
 var podGVR = schema.GroupVersionResource{Version: "v1", Resource: "pods"}
 
+func TestOwnedUnscheduledResumePodIsPendingButCannotProveStopped(t *testing.T) {
+	f := newDeploymentFixture(t, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	pod := f.pod.DeepCopy()
+	pod.Spec.NodeName = ""
+	pod.Status.Phase = corev1.PodPending
+	pod.Status.ContainerStatuses = nil
+	if e := f.client.Tracker().Update(podGVR, pod, "fixture"); e != nil {
+		t.Fatal(e)
+	}
+	dep, e := f.client.AppsV1().Deployments("fixture").Get(ctx, "agent", metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	pods, ready, e := f.writer.pods(ctx, dep)
+	if e != nil || ready || len(pods) != 1 {
+		t.Fatal("legitimate scheduling wait rejected", ready, e)
+	}
+	if _, e = f.writer.Observe(ctx); e == nil {
+		t.Fatal("unscheduled source froze as healthy")
+	}
+	pod.OwnerReferences[0].UID = "foreign-replicaset"
+	if e = f.client.Tracker().Update(podGVR, pod, "fixture"); e != nil {
+		t.Fatal(e)
+	}
+	if _, _, e = f.writer.pods(ctx, dep); e == nil {
+		t.Fatal("foreign pending pod accepted")
+	}
+}
+
 func newDeploymentFixture(t *testing.T, replicas int32) *deploymentFixture {
 	t.Helper()
 	controller := true

@@ -53,5 +53,9 @@ func init() {
 		"system_backup_v2_execution_inputs",
 		"system_backup_v2_execution_plans",
 		"system_backup_v2_job_send_intents",
+		"system_backup_v2_runtime_resources",
+		"system_backup_v2_runtime_writers",
+		"system_backup_v2_runtime_captures",
+		"system_backup_v2_runtime_stop_proofs",
 	)
 }

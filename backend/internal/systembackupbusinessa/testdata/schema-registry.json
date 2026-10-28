@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 163,
-    "hash": "66d2573b9ae7c2098c08dc658cff6dbf348813873c224a7745879c3f3f8456dc"
+    "file_count": 164,
+    "hash": "ceb933e8ffebe1cd99ba4384443520b87b8dbc2540c85f4e9b0e9e72e769a672"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 123,
+    "object_count": 125,
     "policy_recorded": 68,
-    "policy_pending": 55,
+    "policy_pending": 57,
     "cross_review_pending": 68
   },
   "objects": [
@@ -3597,6 +3597,110 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/122_backup_v2_execution_records.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_v2_runtime_resources",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/123_backup_v2_runtime_execution_journal.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_v2_runtime_writers",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/123_backup_v2_runtime_execution_journal.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_v2_runtime_captures",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/123_backup_v2_runtime_execution_journal.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_v2_runtime_stop_proofs",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/123_backup_v2_runtime_execution_journal.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

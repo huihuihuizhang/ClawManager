@@ -1,8 +1,8 @@
 {
-  "status": "m1_prepare_custody_verified_m2_in_progress",
+  "status": "m0_m1_complete_m2_functional_workspace_verified_full_m2_incomplete",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
-  "migration_count": 163,
+  "migration_count": 164,
   "checks": {
     "real_mysql_schema": {
       "result": "passed",
@@ -93,24 +93,46 @@
       "result": "passed",
       "local_log_sha256": "36ebb0b3b98664f43ec666dcd5578cb65e55f3405b628da826138d408e451705",
       "boundary": "Real SQL+HTTP/RBAC+dedicated test workload+Ed25519 grant+encrypted plan. Real MySQL COMMIT reply lost after server acknowledgement; restart loads original plan without second Prepare. Signature/ciphertext tamper and file revocation rejected. Prepare is a tiny custody runner, not actual capture; synthetic readiness and broad disposable-schema test grants do not certify production readiness/grants."
+    },
+    "m2_backend_all": {
+      "result": "passed",
+      "local_log_sha256": "1c2cd47cf031ee28d869fad2bc513a16830579ad24b04bd2df107b0b6049b6dc",
+      "boundary": "Final M2 backend go test ./... passed. External opt-in tests may skip; native MySQL/Kubernetes and Linux cases are recorded separately."
+    },
+    "m2_m1_mysql_regression": {
+      "result": "passed",
+      "local_log_sha256": "8e60fa85cf38662e00bc3e79e7cccda1faa627ae804c5c96b278194bd02a90b0",
+      "boundary": "Real disposable MySQL with 164 migrations; M1 signed execution, original encrypted plan custody and native lost COMMIT acknowledgement regressions. Synthetic readiness and broad test schema grants; no production grant certification."
+    },
+    "m2_native_workspace_capture": {
+      "result": "passed",
+      "local_log_sha256": "29bfab30063b28a1ebefad9cd4b7f7e321da9f6a39993e62e763a5c024eb1555",
+      "boundary": "Real disposable kind Kubernetes 1.31.2/containerd + MySQL + compiled Linux worker: normal workspace capture, actual Job create response loss with original UID lookup, unknown stop proof blocked then recovered under separate recovery grant after forward grant removal, revoked Prepare without source effects. Actual source pause/resume and sealed AEAD/gzip/tar content checked; one task/attempt/Job. Continuous file writer is a controlled Deployment fixture; capacity observations are synthetic. functional_test only; ends validating, not published/restorable. Final controller source includes readiness and lock-order fixes; worker image was built in this run before the last unbounded-context retry guard, which is separately unit-tested. Final exact controller source includes rejection of unsupported domains before Prepare; four native cases passed in 72.50 seconds."
+    },
+    "m2_linux_setgid": {
+      "result": "passed",
+      "local_log_sha256": "aaaebf8fc992c614e71b4b5a0d38b904c3d57e830219d888c04ef172c76d1c86",
+      "boundary": "Actual Linux filesystem capture/restore checks permitted setgid directory mode AND original UID/GID; privileged regular file modes remain rejected. Not a real production NFS certification."
     }
   },
   "not_accepted": [
-    "production v2 scheduling/readiness publisher and complete shared-gate composition",
-    "actual capture worker; Job observation, stop and recovery; remote participant pause/resume",
-    "current-data registry approval, publication and independent restore",
-    "running cancellation, retry/recovery actions and complete progress/health views",
-    "production grants/TLS/Broker/download deployment; final image/live environment and rollback"
+    "Complete M2 production public owner startup, real capability/readiness publisher and all-domain gate/writer composition",
+    "SQL/Redis/object/deployment/secret collectors with real providers; actual Lite/Pro/OpenClaw/Hermes runtime and background writer pause/resume",
+    "Fully automatic unknown dispatch without actual binding/process and uncertain acquisition/release projection recovery; running cancel and operator recovery endpoints",
+    "Production capacity observations, independent key providers/minimum SQL/Kubernetes grants/TLS and actual worker final image deployment",
+    "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],
-  "publication": "M0/M1 local commits; M2 continues in this authorized four-hour run; no push or server mutation.",
+  "publication": "Local staged M0/M1 and bounded M2 commits only; no push, no shared server or production mutation. Full M2 remains incomplete.",
   "credential_pattern_scan": {
     "files": 1062,
     "result": "no matched private-key/GitHub/AWS credentials",
     "exception": "relay_peer_test.go deliberately rejects an invalid one-byte AA== PEM literal; it is not a key"
   },
   "current_stage_credential_pattern_scan": {
-    "files": 26,
-    "result": "no matched private-key/GitHub/AWS credential patterns; not a claim that all possible secret formats were detected"
+    "files": 61,
+    "result": "no matched private-key/GitHub/AWS credential patterns",
+    "matched_paths": [],
+    "boundary": "Pattern scan of changed and untracked source paths only, not an all-format secret guarantee."
   },
-  "cleanup": "Removed only task-owned disposable MySQL container cm-backup-execution-20261028 after its tests; other containers and servers unchanged."
+  "cleanup": "Removed only verified task-owned kind cluster cm-backup-m0m2-20261028 and MySQL container 0d88a0d20def730991f37c43bbc7580a031c8dcfd85b95acc6c2e9da0f11a632 after native acceptance; no other containers or shared servers changed."
 }

@@ -88,6 +88,9 @@ func (c *lostCommitConn) Read(p []byte) (int, error) {
 
 func TestPublicExecutionRealSQLHTTPPlanCustodyAndRevocation(t *testing.T) {
 	db, legacy := submissionMySQL(t)
+	if _, err := db.Exec("UPDATE system_backup_v2_execution_readiness SET execution_protocol='public-v1',supported_parts='workspace',acceptance_ready=FALSE"); err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	writer, err := NewAdmittedTaskWriter(testExecutionProfile(), legacy.capacityFile, true)

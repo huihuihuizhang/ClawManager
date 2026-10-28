@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"clawreef/internal/systembackup/kube"
 	d "clawreef/internal/systembackupdispatch"
@@ -44,15 +45,17 @@ func TestExecutionJobsRequireFrozenAuthorityBeforeCreate(t *testing.T) {
 	}
 }
 func TestExecutionJobsStopRequiresOriginalUIDAndRevocation(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 	binding := d.JobBinding{Namespace: "ns", Name: "job", UID: "original"}
 	o := &executionJobOwnerTest{record: kube.ResourceRecord{Intent: kube.ResourceIntent{Kind: "Job", Identity: kube.Identity{Namespace: "ns", Name: "job"}}, UID: "foreign"}}
 	ports, _ := NewExecutionJobPorts(&executionPortsTest{}, o)
-	if err := ports.StopJob(context.Background(), d.Authority{}, binding); !errors.Is(err, ErrExecutionAuthority) || o.revoked != 0 {
+	if err := ports.StopJob(ctx, d.Authority{}, binding); !errors.Is(err, ErrExecutionAuthority) || o.revoked != 0 {
 		t.Fatal("foreign job touched", err)
 	}
 	o.record.UID = "original"
 	o.revokeErr = errors.New("revocation unavailable")
-	if err := ports.StopJob(context.Background(), d.Authority{}, binding); !errors.Is(err, o.revokeErr) || o.revoked != 1 {
+	if err := ports.StopJob(ctx, d.Authority{}, binding); !errors.Is(err, o.revokeErr) || o.revoked != 1 {
 		t.Fatal("cleanup ran without revocation", err)
 	}
 }
