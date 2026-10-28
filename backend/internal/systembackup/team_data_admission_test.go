@@ -113,7 +113,7 @@ func TestTeamDataWorkerUsesSamePhysicalGateBeforeClaim(t *testing.T) {
 	if e != nil || actual.Status != "pending" || actual.Phase != "waiting_for_source" {
 		t.Fatal("closed gate consumed task", e, actual.Status)
 	}
-	if _, e = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET created_at=TIMESTAMPADD(SECOND,-61,UTC_TIMESTAMP(6)) WHERE public_id=?", j.ID); e != nil {
+	if _, e = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET created_at=TIMESTAMPADD(HOUR,8,UTC_TIMESTAMP(6)),updated_at=TIMESTAMPADD(SECOND,-61,UTC_TIMESTAMP(6)) WHERE public_id=?", j.ID); e != nil {
 		t.Fatal(e)
 	}
 	if e = s.executeAdmitted(ctx, connection, j); !errors.Is(e, backupgate.ErrMaintenance) {

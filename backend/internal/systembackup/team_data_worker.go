@@ -137,7 +137,7 @@ func (s *TeamDataService) deferSourceAdmission(ctx context.Context, j TeamDataJo
 	if seconds < 1 {
 		seconds = 600
 	}
-	result, err := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='failed',phase='admission_timed_out',error_code='source_gate_wait_timed_out',finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending' AND TIMESTAMPADD(SECOND,?,created_at)<=UTC_TIMESTAMP(6)", j.ID, seconds)
+	result, err := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='failed',phase='admission_timed_out',error_code='source_gate_wait_timed_out',finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending' AND phase='waiting_for_source' AND TIMESTAMPADD(SECOND,?,updated_at)<=UTC_TIMESTAMP(6)", j.ID, seconds)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,8 @@ func (s *TeamDataService) deferSourceAdmission(ctx context.Context, j TeamDataJo
 		return err
 	}
 	if n == 0 {
-		// A polling tick is not business progress. Write only on the transition.
+		// A polling tick is not business progress. Write UTC only on the
+		// transition; historical created_at can use a different session zone.
 		_, err = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET phase='waiting_for_source',updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending' AND phase<>'waiting_for_source'", j.ID)
 		if err != nil {
 			return err
