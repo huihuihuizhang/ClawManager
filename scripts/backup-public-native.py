@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+from backup_native_capacity import NativeCapacity
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -23,9 +24,12 @@ def main():
     ap.add_argument('--cluster', required=True)
     ap.add_argument('--mysql', required=True)
     ap.add_argument('--build', action='store_true')
+    ap.add_argument('--physical-capacity',action='store_true')
     ap.add_argument('--test', default='^TestPublicCaptureNativeMySQLKubernetes$')
     ap.add_argument('--log', default='team-optimization-docs/m3-native.log')
     a = ap.parse_args()
+    if a.physical_capacity and 'production-entry' not in a.test:
+        raise SystemExit('Physical capacity mode requires the production entry case')
     if not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.cluster) or not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.mysql):
         raise SystemExit('Explicit task-owned cluster/container names required')
     node = a.cluster + '-control-plane'
@@ -47,6 +51,10 @@ def main():
     run(['go', '-C', 'backend', 'test', '-c', '-ldflags=-s -w', '-o', str(build/'native.test'), './internal/systembackupapi'], env=env)
     if 'production' in a.test:
         run(['go','-C','backend','build','-trimpath','-ldflags=-s -w','-o',str(build/'public-controller'),'./cmd/system-backup-v2-controller'],env=env)
+    if a.physical_capacity:
+        run(['go','-C','backend','build','-trimpath','-ldflags=-s -w','-o',str(build/'native-capacity'),'./cmd/system-backup-registration'],env=env)
+        run(['docker','cp',(build/'native-capacity').relative_to(ROOT).as_posix(),a.mysql+':/tmp/native-capacity'])
+        run(['docker','exec',a.mysql,'chmod','0755','/tmp/native-capacity'])
     tag = 'cm-backup-native:' + a.cluster
     if a.build:
         run(['go', '-C', 'backend', 'build', '-trimpath', '-ldflags=-s -w', '-o', str(build/'backup-worker'), './cmd/backup-worker'], env=env)
@@ -82,11 +90,36 @@ def main():
     with log.open('w',encoding='utf8') as f:
         f.write('source=' + read(['git','rev-parse','HEAD']) + '\nimage=' + image + '\n')
         f.flush()
-        result = subprocess.run(k+['-n',ns,'exec','native-controller','--','env','NATIVE_BACKUP_IMAGE='+image,'/tmp/native.test','-test.v','-test.run='+a.test,'-test.timeout=15m'],cwd=ROOT,stdout=f,stderr=subprocess.STDOUT)
+        command=k+['-n',ns,'exec','native-controller','--','env','NATIVE_BACKUP_IMAGE='+image]
+        if a.physical_capacity:
+            command+=['NATIVE_BACKUP_PHYSICAL_CAPACITY=true']
+        command+=['/tmp/native.test','-test.v','-test.run='+a.test,'-test.timeout=15m']
+        feed=None
+        process=subprocess.Popen(command,cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+        try:
+            for line in process.stdout:
+                f.write(line);f.flush()
+                if line.startswith('NATIVE_CAPACITY_REQUEST '):
+                    if not a.physical_capacity or feed is not None:
+                        raise RuntimeError('unexpected or duplicate physical capacity request')
+                    try:
+                        feed=NativeCapacity(a.mysql,k,json.loads(line.split(' ',1)[1]));feed.start()
+                    except Exception:
+                        # Keep the remote test attached so its bounded missing
+                        # report check and source cleanup finish normally.
+                        f.write('native-capacity=setup-unavailable\n');f.flush()
+            code=process.wait()
+        finally:
+            if process.poll() is None:
+                process.terminate();process.wait(timeout=20)
+            if feed is not None:
+                feed.close()
+        if a.physical_capacity and (feed is None or feed.samples==0) and code==0:
+            raise RuntimeError('physical capacity evidence missing')
     print('image='+image)
     print('log='+str(log))
     print('\n'.join(log.read_text(encoding='utf8').splitlines()[-12:]))
-    raise SystemExit(result.returncode)
+    raise SystemExit(code)
 
 if __name__ == '__main__':
     main()

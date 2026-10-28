@@ -62,5 +62,9 @@ Runtime capture, full registry approvals, formal artifact finalization, remote
 providers and independent restore are not installed by this contract. There is
 no safe full-system production switch or rollback acceptance yet. Native minimum
 grants/real-binary tests still used a synthetic capacity feed at this checkpoint;
-the physical data-volume collector has a separate entry and must be connected
-before claiming physical-capacity acceptance.
+the physical data-volume collector has a separate entry. The subsequent native
+`--physical-capacity` acceptance connects it to the production entry: actual
+MySQL UID, exact SELECT-only account, actual auto.cnf/server UUID, complete live
+control-table inventory, Statfs and an unmodified fresh report. The small local
+fixture uses a two GiB tmpfs and an explicitly configured one GiB metadata budget;
+this is not a production storage durability or full-domain capacity certificate.

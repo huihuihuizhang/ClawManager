@@ -102,6 +102,11 @@ func submissionMySQL(t *testing.T) (*sql.DB, *SQLTaskWriter) {
 		t.Fatal(err)
 	}
 	values["enabled"] = true
+	if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
+		// Small dedicated native volume, with the same production minimum and
+		// safety reserve. This is fixture configuration, not a relaxed checker.
+		values["capacity"].(map[string]any)["control_metadata_capacity_bytes"] = json.Number("1073741824")
+	}
 	for _, v := range values["registries"].([]any) {
 		r := v.(map[string]any)
 		if r["registry_kind"] == "rbac_bindings" {

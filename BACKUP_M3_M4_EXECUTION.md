@@ -54,3 +54,11 @@
 真实最终二进制用最小角色完成创建→采集→源恢复→validating，并在 business SQL gate 环境启用下通过；真实 MySQL 否认 users/config 写、不可变记录删除及 DDL。原准备 fixture 的 broad control grants 已从这条生产验收撤除；容量仍合成，未扩大成完整 M4。全量后端及授权负例通过，具体部署材料见 public-capture-deployment.md。
 
 提交复核：约半小时，第一次最小权限实跑揭示旧 joined FOR UPDATE 隐式要求修改 immutable input 的权限，改为根任务锁＋EXISTS，而非扩大 grants。一个本地证明 Pod 的两小时 sleep 到期造成90秒等待，已改为六小时并只重建已确认终止的本地专用 Pod。后续先看实际现场状态再跑等待命令；容量接线、发布和独立恢复仍不能由这次最小权限通过代替。
+
+### 第五工作块：实际 MySQL 数据卷容量接入正式入口验收
+
+验收驱动增加 --physical-capacity，运行同源正式 system-backup-registration capacity collector；它在实际 MySQL 数据卷旁以 mysql UID、独立逐表 SELECT 账号检查真实 server UUID/auto.cnf、完整控制表 inventory、实际分配和 Statfs。驱动只转运原报告，不改 observed_at/allocated/available，也不合成 ready；密码内存生成后仅写本地容器私有文件，不输出、不提交。
+
+一次性两 GiB tmpfs 使用合法的一 GiB显式测试元数据预算。最初沿用样例十 GiB预算时，正式 HTTP 创建被正确以422拒绝；只调整隔离测试 config、重新固化签名配置，没有降低生产最小值或预留量。最终实际容量、精确 SQL 角色、正式二进制/mTLS HTTP、真实 Job/内容/源恢复一条链46.36秒通过。后端全量通过；不认作真实生产磁盘持久性、全域容量或正式成品恢复验收。
+
+提交复核：约12分钟完成，复用已有容量生产命令而非新建测量协议。第一次尝试扩大原本地 tmpfs 被环境拒绝，未绕过隔离限制；另建唯一标识的专用2GiB容器并等待原测试退出后更换测试入口，不删除旧容器或其他项目数据。下一步复用这条真实链，不再以准备环境替代恢复/发布开发。

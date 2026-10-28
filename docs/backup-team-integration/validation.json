@@ -1,5 +1,5 @@
 {
-  "status": "m3_m4_in_progress_exact_public_control_grants_verified",
+  "status": "m3_m4_in_progress_real_capacity_public_entry_verified",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -183,13 +183,23 @@
       "result": "passed",
       "local_log_sha256": "61a95488aff9feab2fd368b8854d9fb63e8a594c03eaa6cb7466b1f2f3c21bc6",
       "boundary": "Backend go test ./... passed at independent public metadata/grant node. Native opt-in cases separate."
+    },
+    "m4_physical_capacity_native": {
+      "result": "passed",
+      "local_log_sha256": "d9fcebdf257ed6aef775466bb9cf160ecf124204b2bd4a43477f2fecb84b3003",
+      "boundary": "Production capacity collector as actual MySQL UID and exact SELECT-only account beside real auto.cnf/data-volume Statfs. Full declared control-table inventory. Unmodified fresh report consumed by actual public entry/API/minimum SQL role/Job/source-recovery chain. Dedicated local 2GiB tmpfs and explicitly configured legal 1GiB metadata budget; no production durability or all-domain artifact acceptance."
+    },
+    "m4_capacity_backend": {
+      "result": "passed",
+      "local_log_sha256": "1c11b579dc2306bf4c1b5b1fec03bf64b145927a0b6e791bc3b8c920c7868515",
+      "boundary": "Backend go test ./... passed; physical-capacity native opt-in separately recorded."
     }
   },
   "not_accepted": [
     "Complete full-domain production composition; current production entry is explicit platform-workspace with zero source instances and functional_test only",
     "SQL/Redis/object/deployment/secret collectors with real providers; actual Lite/Pro/OpenClaw/Hermes runtime and background writer pause/resume",
     "Unknown actual source exit without evidence remains protected; explicit operator reconciliation and all final publication/restore operations still pending",
-    "Physical capacity feed, final signing/wrapping/provider grants, complete Kubernetes isolation/TLS installation and final image deployment; public SQL role itself now natively verified",
+    "Final signing/wrapping/provider grants, complete Kubernetes isolation/TLS installation and final image deployment; public SQL role and physical MySQL capacity feed now natively verified",
     "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],
   "publication": "M3/M4 user-authorized implementation in progress. Local commits; no push or shared-server publication yet.",
@@ -204,5 +214,5 @@
     "matched_paths": [],
     "boundary": "Pattern scan of changed and untracked source paths only, not an all-format secret guarantee."
   },
-  "cleanup": "M3/M4 task-owned MySQL eb672095280ef4f47dc5a649803164583df34b01c8972485f23f04cafe181fc2 and kind cm-backup-m3m4-20261028 live for acceptance reuse; clean only these at final wrap-up."
+  "cleanup": "M3/M4 owns local kind cm-backup-m3m4-20261028, original MySQL eb672095280ef4f47dc5a649803164583df34b01c8972485f23f04cafe181fc2 and capacity MySQL 38755cca980e52f27e85e2c78e88c6782880b236f2898000e306e911c5eb492e. Both task-only fixtures, preserve for acceptance reuse and clean only these at final wrap-up."
 }

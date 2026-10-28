@@ -23,7 +23,7 @@
       "path": "BACKUP_M3_M4_EXECUTION.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "2775232563a8f19cb20e7a20fad397786053d62996f94dc6fe9bdf2f02298d03",
+      "working_tree_sha256": "e18c9d90a79f35d429fae12eec414c5a527ee4b080877a48ea381a44a893e1d3",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -2935,7 +2935,7 @@
       "path": "backend/internal/systembackupapi/public_capture_native_test.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "c7e4de36c9e91756e5177766a36255cb7439479b77fcd5d5449e2c9c82856b0c",
+      "working_tree_sha256": "c71c653135e86acb7c7f0cea73843168a3453407d641fabde578add627e27486",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -2998,7 +2998,7 @@
       "path": "backend/internal/systembackupapi/sql_writer_mysql_test.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "49f67a27fd774acc49becd32400c60eed99624e25a4c7f96d0447c332b64b679",
+      "working_tree_sha256": "b7de007f39979e654b42dff6800b018933295e8b65bda05a990ebad19c7b2e33",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9508,7 +9508,7 @@
       "path": "docs/backup-team-integration/public-capture-deployment.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "6e3eb4ce43a433dc50bd3a14a78df4261026353d5d757c15750b215398f8e17f",
+      "working_tree_sha256": "c8406ca4e1caa413a59a9ef78ea0aaa296b3e485aa25084633b68934f40b9cfd",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9683,7 +9683,7 @@
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "c936f9fce1d4a673f05e0739960ec304fe91f98e73b54e00f8f55c659f340270",
+      "working_tree_sha256": "33b9cc84d7c99221799e3f38c866c7ccf5d2cc411b78bcd1d74d88df6c5c3190",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -10152,7 +10152,7 @@
       "path": "scripts/backup-public-native.py",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "5475b9a582947e70e2786cedc654c75ce74af332c85582222b4e26388e12f571",
+      "working_tree_sha256": "fe858375c81c6e66ce5166cfc47fe5b82ef6b653a15dfc76673568297d5d702e",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -10174,6 +10174,13 @@
       "source_path": null,
       "source_sha256": null,
       "working_tree_sha256": "8c3c5961a874b0543d0861a03e1ab7186139f31043eb29d855ed68b513a08067",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "scripts/backup_native_capacity.py",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "6c59efc897c4f3b4820e6bdb34bd4715b6a345760d3f6909f8ea7777a4e4bfc9",
       "disposition": "integration-owned adaptation"
     }
   ],

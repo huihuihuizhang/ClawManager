@@ -45,6 +45,7 @@ import (
 	d "clawreef/internal/systembackupdispatch"
 	execution "clawreef/internal/systembackupexecution"
 	read "clawreef/internal/systembackupread"
+	security "clawreef/internal/systembackupsecurity"
 	"github.com/go-sql-driver/mysql"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -442,6 +443,24 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	if scenario == "production-entry" {
 		listener.Close()
 		entryCfg := execution.DeploymentConfig{Version: "system-backup-public-deployment.v1", CaptureScope: "platform-workspace", InstallationID: authority.InstallationID, ControllerOwner: controllerOwner, ApplicationScope: authority.ApplicationScope, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: owner.TrustDomain, ForwardGrant: execution.GrantReference{Path: filepath.Join(dir, "forward.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, RecoveryGrant: execution.GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, KeyDirectory: dir, ProfileFile: filepath.Join(dir, "profile.json"), CapacityFile: legacy.capacityFile, SourceDSNFile: filepath.Join(dir, "source.dsn"), SourceUser: sourceUser, SourceDatabase: database, SourceServerUUID: server, StagingDirectory: "/staging", StagingClaim: "native-staging", WorkerImage: image, Security: owner.Security, ControlURL: endpoint, Listen: listener.Addr().String(), ServerCertificate: filepath.Join(dir, "server.pem"), ServerKey: filepath.Join(dir, "server.key"), IssuerCertificate: filepath.Join(dir, "issuer.pem"), IssuerKey: filepath.Join(dir, "issuer.key"), Writers: []execution.PlatformDeployment{{Namespace: nsName, Name: dep.Name, UID: string(dep.UID)}}, Workspace: execution.WorkspaceCapture{Claim: "native-source", SubPath: account, Node: nodeName, MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, AcquireSeconds: 60, HoldSeconds: 120}
+		if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
+			stopCapacity()
+			if e = os.Remove(legacy.capacityFile); e != nil {
+				t.Fatal(e)
+			}
+			raw, _ := json.Marshal(map[string]string{"database": database, "server_uuid": server, "report_file": legacy.capacityFile})
+			fmt.Fprintln(os.Stdout, "NATIVE_CAPACITY_REQUEST "+string(raw))
+			probe, done := context.WithTimeout(ctx, 30*time.Second)
+			waitNative(t, probe, func() bool {
+				raw, z := os.ReadFile(legacy.capacityFile)
+				if z != nil {
+					return false
+				}
+				r, z := security.ParseCapacityReport(raw)
+				return z == nil && r.Database == database && r.ServerUUID == server
+			})
+			done()
+		}
 		testNativeProductionEntry(t, ctx, db, handler, operator, task, entryCfg, grant, private, serverCert, caPEM)
 		return
 	}
@@ -1135,10 +1154,14 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 	if e != nil {
 		t.Fatal(e)
 	}
-	io.Copy(io.Discard, response.Body)
+	responseBody, _ := io.ReadAll(io.LimitReader(response.Body, 64<<10))
 	response.Body.Close()
 	if response.StatusCode != http.StatusAccepted {
-		t.Fatal("production HTTP create", response.StatusCode)
+		var rejection struct {
+			Code string `json:"code"`
+		}
+		json.Unmarshal(responseBody, &rejection)
+		t.Fatal("production HTTP create", response.StatusCode, rejection.Code)
 	}
 	var task string
 	if e = db.QueryRow("SELECT public_id FROM system_backup_v2_backups WHERE public_id<>?", bootstrapTask).Scan(&task); e != nil {
@@ -1222,5 +1245,9 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		t.Fatal(e)
 	}
 	waitNative(t, ctx, func() bool { after, z := os.ReadFile(counter); return z == nil && !bytes.Equal(before, after) })
-	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating; capacity synthetic")
+	capacityEvidence := "synthetic capacity"
+	if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
+		capacityEvidence = "actual MySQL data-volume capacity under exact SELECT-only collector"
+	}
+	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating; " + capacityEvidence)
 }
