@@ -698,6 +698,16 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='diagnostic.d.recovery_blocked'", task).Scan(&blockedNotes) != nil || blockedNotes != 1 {
 			t.Fatal("recovery diagnostic duplicated", blockedNotes)
 		}
+		// Fault only the disposable control journal after a real physical pause.
+		// Recovery must reconstruct the original intent from its independent
+		// witness and really resume this source, never merely mark it untouched.
+		var witness int
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_participants WHERE scope='installation' AND checkpoint_hash IS NOT NULL").Scan(&witness) != nil || witness != 1 {
+			t.Fatal("physical pause witness absent", witness)
+		}
+		if _, z = db.Exec("DELETE FROM system_backup_v2_runtime_writers WHERE task_public_id=?", task); z != nil {
+			t.Fatal(z)
+		}
 		if z = os.Remove(filepath.Join(dir, "forward.json")); z != nil {
 			t.Fatal(z)
 		}
@@ -709,6 +719,9 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		})
 		if e = runtime.Loop.RunOnce(ctx); e != nil {
 			t.Fatal("restart recovery after forward revocation", e)
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='diagnostic.d.recovery_intent_repaired'", task).Scan(&witness) != nil || witness != 1 {
+			t.Fatal("original intent repair missing", witness)
 		}
 		expectedStatus = "failed"
 	} else if scenario == "release-atomic" {

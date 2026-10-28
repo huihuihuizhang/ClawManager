@@ -22,6 +22,11 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 	if e != nil {
 		return out, e
 	}
+	// Reconstruct authenticated original INTENTS before the runner validates
+	// every pause. This does not acknowledge stop/resume or permit source IO.
+	if e = o.Gate.RepairOriginalPauseIntents(ctx, a); e != nil {
+		return out, e
+	}
 	tx, e := o.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if e != nil {
 		return out, e

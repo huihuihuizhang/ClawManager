@@ -22,6 +22,17 @@ func (s *TeamDataService) Run(ctx context.Context) {
 	for ctx.Err() == nil {
 		if e := s.runOwned(ctx); e != nil && ctx.Err() == nil {
 			log.Printf("Team data backup worker: %s", PublicError(e))
+			// runOwned joins execution and all cancellation watchers before it
+			// returns. A failed terminal write must not leave this process's
+			// old owner permanently running. Re-enter under a fresh owner and
+			// reconcile the old outcome, never replay its external operation.
+			prefix := "online_"
+			if s.recoveryOnly {
+				prefix = "recovery_"
+			}
+			if next, err := RandomID(prefix); err == nil {
+				s.owner = next
+			}
 		}
 		select {
 		case <-ctx.Done():
@@ -79,7 +90,9 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 			}
 			n, _ := r.RowsAffected()
 			if n == 1 {
-				s.execute(ctx, conn, j)
+				if e = s.execute(ctx, conn, j); e != nil {
+					return e
+				}
 			}
 		}
 		select {
@@ -91,7 +104,7 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j TeamDataJob) {
+func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j TeamDataJob) error {
 	ctx, cancel := context.WithTimeout(parent, time.Duration(s.cfg.DeadlineSeconds)*time.Second)
 	defer cancel()
 	stopped := make(chan struct{})
@@ -156,8 +169,11 @@ func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j Team
 	finish, stop := context.WithTimeout(context.Background(), 10*time.Second)
 	defer stop()
 	actual, e := s.Get(finish, j.ID)
-	if e != nil || actual.Owner != s.owner {
-		return
+	if e != nil {
+		return e
+	}
+	if actual.Owner != s.owner {
+		return ErrFence
 	}
 	status, phase, code := "succeeded", "complete", ""
 	if err != nil {
@@ -182,7 +198,8 @@ func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j Team
 		}
 	}
 	raw, _ := json.Marshal(report)
-	_, _ = s.db.ExecContext(finish, "UPDATE system_team_data_backup_jobs SET status=?,phase=?,error_code=?,report_json=?,finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND owner_id=? AND status IN ('running','canceling')", status, phase, code, raw, j.ID, s.owner)
+	result, e := s.db.ExecContext(finish, "UPDATE system_team_data_backup_jobs SET status=?,phase=?,error_code=?,report_json=?,finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND owner_id=? AND status IN ('running','canceling')", status, phase, code, raw, j.ID, s.owner)
+	return requireRow(result, e)
 }
 
 func teamDataFailure(err error) string {

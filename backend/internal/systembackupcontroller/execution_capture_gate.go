@@ -250,7 +250,10 @@ func (g SQLCaptureGate) Check(ctx context.Context, a d.Authority) error {
 }
 
 func (g SQLCaptureGate) BeforeResume(ctx context.Context, a d.Authority) error {
-	return g.CollectorsStopped(ctx, a)
+	if e := g.CollectorsStopped(ctx, a); e != nil {
+		return e
+	}
+	return g.RepairOriginalPauseIntents(ctx, a)
 }
 func (g SQLCaptureGate) CheckRecovery(ctx context.Context, a d.Authority, id string, s d.WriterState) error {
 	if e := g.Recovery.Check(ctx, a); e != nil {
@@ -318,6 +321,12 @@ func (g SQLCaptureGate) PauseIntent(ctx context.Context, a d.Authority, id strin
 			return e
 		}
 	} else {
+		return e
+	}
+	// Independent evidence is written in the SAME transaction as the intent,
+	// before the remote stop. A lost intent before its ACK is therefore not
+	// mistaken for a writer which was never touched.
+	if e = stampPauseWitnessTx(ctx, tx, g.Authority.ApplicationScope, a.MaintenanceFencingToken, id, hash); e != nil {
 		return e
 	}
 	if e = guard.Recheck(ctx, tx); e != nil {
@@ -391,21 +400,16 @@ func (g SQLCaptureGate) FinalizeRecovery(ctx context.Context, a d.Authority) err
 	if e = gate.BeginRelease(ctx, o); e != nil {
 		return e
 	}
-	rows, e := g.Authority.DB.QueryContext(ctx, "SELECT p.participant_id FROM system_backup_participants p WHERE p.scope=? AND p.generation=? AND NOT EXISTS(SELECT 1 FROM system_backup_v2_runtime_writers w WHERE w.task_public_id=? AND w.writer_id=p.participant_id)", o.Scope, o.Generation, a.TaskPublicID)
+	tx, e := g.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return e
 	}
-	var untouched []string
-	for rows.Next() {
-		var id string
-		if e = rows.Scan(&id); e != nil {
-			rows.Close()
-			return e
-		}
-		untouched = append(untouched, id)
+	if e = g.Recovery.CheckTx(ctx, tx, a); e != nil {
+		tx.Rollback()
+		return e
 	}
-	e = rows.Err()
-	rows.Close()
+	untouched, e := recoveryInventoryTx(ctx, tx, a, o.Scope, false)
+	tx.Rollback()
 	if e != nil {
 		return e
 	}
@@ -432,6 +436,9 @@ func (g SQLCaptureGate) finishRelease(ctx context.Context, a d.Authority, o app.
 		return e
 	}
 	if e = g.Recovery.CheckTx(ctx, tx, a); e != nil {
+		return e
+	}
+	if _, e = recoveryInventoryTx(ctx, tx, a, o.Scope, true); e != nil {
 		return e
 	}
 	if e = (app.Gate{DB: g.Authority.DB}).FinishReleaseTx(ctx, tx, o); e != nil {
@@ -534,7 +541,7 @@ func (g SQLCaptureGate) CollectorsStopped(ctx context.Context, a d.Authority) er
 		return e
 	}
 	var unresolved int
-	if e = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE AND stopped_at IS NULL", a.TaskPublicID).Scan(&unresolved); e != nil || unresolved != 0 {
+	if e = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE AND (stopped_at IS NULL OR revoked=FALSE)", a.TaskPublicID).Scan(&unresolved); e != nil || unresolved != 0 {
 		return ErrExecutionRecoveryRequired
 	}
 	_, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_captures SET collectors_stopped_at=COALESCE(collectors_stopped_at,UTC_TIMESTAMP(6)) WHERE task_public_id=? AND gate_generation=?", a.TaskPublicID, a.MaintenanceFencingToken)
