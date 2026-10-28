@@ -22,6 +22,7 @@ import (
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -227,6 +228,14 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 	if e != nil || secret.UID == "" || secret.Immutable == nil || !*secret.Immutable || secret.DeletionTimestamp != nil {
 		return zero, kube.ErrOwnership
 	}
+	var originalUID, originalHash string
+	var originalRaw []byte
+	if o.Gate.Authority.DB.QueryRowContext(ctx, `SELECT observed_uid,request_sha256,request_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=TRUE AND lifecycle='ready'`, a.TaskPublicID, o.Namespace, secretName).Scan(&originalUID, &originalHash, &originalRaw) != nil {
+		return zero, c.ErrExecutionRecord
+	}
+	if !originalIdentitySecretMatches(secret, originalUID, originalHash, originalRaw, part.InvocationSHA256) {
+		return zero, kube.ErrOwnership
+	}
 	block, _ := pem.Decode(secret.Data["tls.crt"])
 	if block == nil {
 		return zero, kube.ErrOwnership
@@ -293,6 +302,21 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 		return zero, c.ErrExecutionCommitUnknown
 	}
 	return binding, nil
+}
+
+// Same-name replacement or modified identity material cannot become the
+// original binding, including recovery after a missing binding write.
+func originalIdentitySecretMatches(actual *corev1.Secret, uid, digest string, raw []byte, invocation string) bool {
+	if actual == nil || uid == "" || string(actual.UID) != uid || hash(raw) != digest {
+		return false
+	}
+	var original identityEnvelope
+	if json.Unmarshal(raw, &original) != nil || original.InvocationSHA256 != invocation || len(original.Cipher) == 0 {
+		return false
+	}
+	plain, e := json.Marshal(actual.Data)
+	defer clear(plain)
+	return e == nil && hash(plain) == original.PlainSHA256
 }
 
 func (o *PublicJobOwner) Read(ctx context.Context, a d.Authority, binding d.JobBinding, recovery bool) (kube.Runner, kube.ResourceRecord, error) {

@@ -68,3 +68,18 @@ MySQL UID, exact SELECT-only account, actual auto.cnf/server UUID, complete live
 control-table inventory, Statfs and an unmodified fresh report. The small local
 fixture uses a two GiB tmpfs and an explicitly configured one GiB metadata budget;
 this is not a production storage durability or full-domain capacity certificate.
+
+## Independent recovery restart
+
+Pin `issuer_certificate_sha256` in the signed deployment JSON. A valid independent
+recovery grant with exactly `recover` is required before loading forward inputs.
+Missing or expired forward material selects recovery-only mode: no source DSN,
+issuer private key, server private key, issuing listener or new-work readiness.
+Original frozen writer/Job/Secret identities and original journal/key metadata
+remain required; a missing recovery grant fails closed. Recovery never reissues
+a worker credential or adopts a same-name replacement Secret.
+
+Native production acceptance removes forward/source/private-key files, restarts
+the real controller, waits for the original lease to expire, proves original
+collector exit/source resume and ends the original task failed/idle. This is
+recovery acceptance, not successful publication or isolated restore.

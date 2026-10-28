@@ -2,6 +2,7 @@ package systembackupexecution
 
 import (
 	"clawreef/internal/systembackup/kube"
+	c "clawreef/internal/systembackupcontroller"
 	"encoding/base64"
 	"encoding/json"
 	"os"
@@ -38,6 +39,24 @@ func TestDeploymentConfigurationIsPinnedAndClosed(t *testing.T) {
 	cfg.Writers = append(cfg.Writers, cfg.Writers[0])
 	if cfg.Validate() == nil {
 		t.Fatal("duplicate writer accepted")
+	}
+}
+
+func TestForwardCaptureGrantCannotBorrowRecoveryAuthority(t *testing.T) {
+	for _, tc := range []struct {
+		actions []string
+		ok      bool
+	}{
+		{[]string{"prepare", "capture", "issue_worker"}, true},
+		{[]string{"recover"}, false},
+		{[]string{"prepare", "capture"}, false},
+		{[]string{"prepare", "capture", "recover"}, false},
+		{[]string{"prepare", "capture", "issue_worker", "recover"}, false},
+		{[]string{"prepare", "prepare", "issue_worker"}, false},
+	} {
+		if forwardCaptureActions(c.ExecutionGrant{Actions: tc.actions}) != tc.ok {
+			t.Fatal("forward role accepted wrong authority set")
+		}
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"os"
@@ -44,6 +45,7 @@ type DeploymentConfig struct {
 	ServerCertificate string               `json:"server_certificate"`
 	ServerKey         string               `json:"server_key"`
 	IssuerCertificate string               `json:"issuer_certificate"`
+	IssuerSHA256      string               `json:"issuer_certificate_sha256,omitempty"`
 	IssuerKey         string               `json:"issuer_key"`
 	Writers           []PlatformDeployment `json:"platform_writers"`
 	Workspace         WorkspaceCapture     `json:"workspace"`
@@ -102,6 +104,14 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.IssuerSHA256 != "" {
+		if len(cnf.IssuerSHA256) != 64 || cnf.IssuerSHA256 != strings.ToLower(cnf.IssuerSHA256) {
+			return c.ErrExecutionAuthority
+		}
+		if _, e := hex.DecodeString(cnf.IssuerSHA256); e != nil {
+			return c.ErrExecutionAuthority
+		}
+	}
 	if cnf.CaptureScope != "platform-workspace" {
 		return c.ErrExecutionAuthority
 	}

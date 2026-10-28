@@ -216,3 +216,34 @@ func TestSourcePreflightPerformsNoWriterPauseOrJobDispatch(t *testing.T) {
 		t.Fatal(out, err, sf, f.events)
 	}
 }
+
+func TestRecoveryOnlyLinuxProfileCannotDiscoverSource(t *testing.T) {
+	f, _, _ := setup(t)
+	sf := &sourceFixture{}
+	original := linuxFixture(t, f, sf)
+	x, e := original.Discover(context.Background(), f.in)
+	if e != nil {
+		t.Fatal(e)
+	}
+	before := sf.queries
+	cfg := original.cfg
+	cfg.Source = nil
+	cfg.RecoveryOnly = true
+	recovery, e := NewLinuxProfile(cfg)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = recovery.Discover(context.Background(), f.in); e == nil {
+		t.Fatal("recovery-only discovered current source")
+	}
+	if _, e = recovery.BindWriters(context.Background(), f.in, x); e != nil {
+		t.Fatal("original frozen writer not available without source credential", e)
+	}
+	if sf.queries != before || sf.writes != 0 {
+		t.Fatal("recovery-only queried source")
+	}
+	cfg.RecoveryOnly = false
+	if _, e = NewLinuxProfile(cfg); e == nil {
+		t.Fatal("missing source accepted for forward work")
+	}
+}

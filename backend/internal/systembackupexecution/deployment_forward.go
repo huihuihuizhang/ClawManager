@@ -10,6 +10,20 @@ import (
 
 type deploymentAuthorization struct{ Service *DeploymentService }
 
+func forwardCaptureActions(g c.ExecutionGrant) bool {
+	if len(g.Actions) != 3 {
+		return false
+	}
+	have := map[string]bool{}
+	for _, a := range g.Actions {
+		if have[a] || (a != "prepare" && a != "capture" && a != "issue_worker") {
+			return false
+		}
+		have[a] = true
+	}
+	return have["prepare"] && have["capture"] && have["issue_worker"]
+}
+
 func (p deploymentAuthorization) check(ctx context.Context, tx *sql.Tx, a d.Authority) error {
 	if !p.Service.ForwardEnabled {
 		return c.ErrExecutionAuthority

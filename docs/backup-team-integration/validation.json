@@ -193,6 +193,26 @@
       "result": "passed",
       "local_log_sha256": "1c11b579dc2306bf4c1b5b1fec03bf64b145927a0b6e791bc3b8c920c7868515",
       "boundary": "Backend go test ./... passed; physical-capacity native opt-in separately recorded."
+    },
+    "m3_recovery_only_native": {
+      "result": "passed",
+      "local_log_sha256": "181df51c150527942c2565a30ce75bdabcab8850620c465a83b2235a8cde3f5c",
+      "boundary": "Actual production binary restart with missing forward grant/source DSN/issuer and server private keys. Actual physical capacity and minimum SQL role. Independent recovery stops original Job, restores original source and ends failed/idle after actual lease expiry; one Job/attempt and no new execution readiness. Not full publication or restore."
+    },
+    "m3_recovery_mode_forward_native": {
+      "result": "passed",
+      "local_log_sha256": "1d237d1d909d9c459896f2999b326149f70b24f5671e9eec8965d4c0777cbedc",
+      "boundary": "Actual forward-mode binary regression after independent recovery construction and original Secret identity protection. Physical capacity/minimum SQL; ends validating only."
+    },
+    "m3_recovery_only_unit": {
+      "result": "passed",
+      "local_log_sha256": "ce7430f3d871ecdf71be9ecb2fca7548c421efc755ebfa75ef779076bc802938",
+      "boundary": "Recovery-only frozen binding, exact action sets, signed CA pin and original immutable Secret replacement/tamper negative cases."
+    },
+    "m3_recovery_only_backend": {
+      "result": "passed",
+      "local_log_sha256": "22b8120456206a69732fa74cb8ac5ad7a038b7bfcac9ff914b94ccae0094febb",
+      "boundary": "Backend go test ./... passed with final exact forward action checks. Native opt-in separately recorded."
     }
   },
   "not_accepted": [

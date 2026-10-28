@@ -33,6 +33,9 @@ type AgentKind struct{ Type, Mode, Variant, OS string }
 // Runtime Agent, kubernetes/dynamic clients and CRI/NFS Proof clients belong to
 // these explicit builders; no private Driver, SQLStore or Vault is accepted.
 type LinuxProfileConfig struct {
+	// RecoveryOnly binds the original frozen plan without source discovery.
+	// It cannot produce a fresh source inventory or authorize another capture.
+	RecoveryOnly         bool
 	Source               *sql.DB
 	Database, ServerUUID string
 	Supported            map[AgentKind]bool
@@ -43,7 +46,7 @@ type LinuxProfileConfig struct {
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
-	if cfg.Source == nil || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || cfg.BuildParts == nil {
+	if (cfg.Source == nil && !cfg.RecoveryOnly) || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || cfg.BuildParts == nil {
 		return nil, d.ErrNotReady
 	}
 	copyKinds := map[AgentKind]bool{}
@@ -59,6 +62,9 @@ func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
 
 func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 	var out SourceInventory
+	if p.cfg.RecoveryOnly || p.cfg.Source == nil {
+		return out, d.ErrNotReady
+	}
 	tx, err := p.cfg.Source.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return out, d.ErrNotReady

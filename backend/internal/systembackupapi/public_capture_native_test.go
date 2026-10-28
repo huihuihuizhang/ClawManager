@@ -183,7 +183,7 @@ func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
 	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
 		t.Skip("requires explicitly provisioned task-owned native cluster")
 	}
-	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry", "prepare-cancel", "capture-cancel", "acquire-atomic"} {
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry", "production-recovery-only", "prepare-cancel", "capture-cancel", "acquire-atomic"} {
 		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
 	}
 }
@@ -284,7 +284,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		u := user
 		t.Cleanup(func() { db.Exec("DROP USER '" + u + "'@'%'") })
 	}
-	if scenario == "production-entry" {
+	if strings.HasPrefix(scenario, "production-") {
 		grants, z := c.PublicCaptureGrantSQL(database, account, "%", true)
 		if z != nil {
 			t.Fatal(z)
@@ -321,7 +321,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		return conn
 	}
 	controlDB, sourceDB := open(account), open(sourceUser)
-	if scenario == "production-entry" {
+	if strings.HasPrefix(scenario, "production-") {
 		if e = (c.SQLPublicCaptureGrantProbe{DB: controlDB, Schema: database, User: account}).Check(ctx); e != nil {
 			t.Fatal("exact public control grants rejected", e)
 		}
@@ -367,7 +367,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		}
 		return identity
 	}
-	if scenario == "production-entry" {
+	if strings.HasPrefix(scenario, "production-") {
 		raw, z := x509.MarshalPKCS8PrivateKey(issuer.Signer)
 		if z != nil {
 			t.Fatal(z)
@@ -440,7 +440,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 	endpoint := fmt.Sprintf("https://%s:%d/worker/v1", podIP, port)
-	if scenario == "production-entry" {
+	if strings.HasPrefix(scenario, "production-") {
 		listener.Close()
 		entryCfg := execution.DeploymentConfig{Version: "system-backup-public-deployment.v1", CaptureScope: "platform-workspace", InstallationID: authority.InstallationID, ControllerOwner: controllerOwner, ApplicationScope: authority.ApplicationScope, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: owner.TrustDomain, ForwardGrant: execution.GrantReference{Path: filepath.Join(dir, "forward.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, RecoveryGrant: execution.GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, KeyDirectory: dir, ProfileFile: filepath.Join(dir, "profile.json"), CapacityFile: legacy.capacityFile, SourceDSNFile: filepath.Join(dir, "source.dsn"), SourceUser: sourceUser, SourceDatabase: database, SourceServerUUID: server, StagingDirectory: "/staging", StagingClaim: "native-staging", WorkerImage: image, Security: owner.Security, ControlURL: endpoint, Listen: listener.Addr().String(), ServerCertificate: filepath.Join(dir, "server.pem"), ServerKey: filepath.Join(dir, "server.key"), IssuerCertificate: filepath.Join(dir, "issuer.pem"), IssuerKey: filepath.Join(dir, "issuer.key"), Writers: []execution.PlatformDeployment{{Namespace: nsName, Name: dep.Name, UID: string(dep.UID)}}, Workspace: execution.WorkspaceCapture{Claim: "native-source", SubPath: account, Node: nodeName, MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, AcquireSeconds: 60, HoldSeconds: 120}
 		if os.Getenv("NATIVE_BACKUP_PHYSICAL_CAPACITY") == "true" {
@@ -461,7 +461,8 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			})
 			done()
 		}
-		testNativeProductionEntry(t, ctx, db, handler, operator, task, entryCfg, grant, private, serverCert, caPEM)
+		entryCfg.IssuerSHA256 = digestJSON(issuer.Certificate.Raw)
+		testNativeProductionEntry(t, ctx, db, handler, operator, task, entryCfg, grant, private, serverCert, caPEM, scenario == "production-recovery-only")
 		return
 	}
 	writerID := "deployment/" + nsName + "/" + deploymentName
@@ -1047,7 +1048,7 @@ func (c nativeProjectionConn) IsValid() bool { return c.Conn.(driver.Validator).
 // This fixture starts the actual production command; it does not replace its
 // execution owner or readiness with a test callback. Capacity remains explicit
 // synthetic input here and is not production capacity/grants acceptance.
-func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, handler *Handler, operator, bootstrapTask string, cfg execution.DeploymentConfig, grant c.ExecutionGrant, signing ed25519.PrivateKey, serverCert tls.Certificate, caPEM []byte) {
+func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, handler *Handler, operator, bootstrapTask string, cfg execution.DeploymentConfig, grant c.ExecutionGrant, signing ed25519.PrivateKey, serverCert tls.Certificate, caPEM []byte, recoveryRestart bool) {
 	t.Helper()
 	write := func(path string, raw []byte) {
 		t.Helper()
@@ -1166,6 +1167,80 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 	var task string
 	if e = db.QueryRow("SELECT public_id FROM system_backup_v2_backups WHERE public_id<>?", bootstrapTask).Scan(&task); e != nil {
 		t.Fatal(e)
+	}
+	if recoveryRestart {
+		waitNative(t, ctx, func() bool {
+			var n int
+			return db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE", task).Scan(&n) == nil && n == 1
+		})
+		recoveryBytes, z := os.ReadFile(cfg.RecoveryGrant.Path)
+		if z != nil {
+			t.Fatal(z)
+		}
+		if z = os.Remove(cfg.RecoveryGrant.Path); z != nil {
+			t.Fatal(z)
+		}
+		command.Process.Signal(syscall.SIGTERM)
+		select {
+		case <-done:
+		case <-time.After(30 * time.Second):
+			t.Fatal("original production owner did not stop")
+		}
+		var originalPhase string
+		if db.QueryRow("SELECT phase FROM system_backup_gate WHERE scope=?", cfg.ApplicationScope).Scan(&originalPhase) != nil || originalPhase == "idle" {
+			t.Fatal("restart fixture did not retain a protected original capture")
+		}
+		for _, path := range []string{cfg.ForwardGrant.Path, cfg.SourceDSNFile, cfg.IssuerKey, cfg.ServerKey} {
+			if z = os.Remove(path); z != nil {
+				t.Fatal("withdraw forward-only material", z)
+			}
+		}
+		write(cfg.RecoveryGrant.Path, recoveryBytes)
+		clear(recoveryBytes)
+		env := append([]string(nil), command.Env...)
+		command = exec.CommandContext(ctx, "/tmp/public-controller")
+		command.Env = env
+		command.Stdout = logFile
+		command.Stderr = logFile
+		if z = command.Start(); z != nil {
+			t.Fatal(z)
+		}
+		done = make(chan error, 1)
+		go func(cmd *exec.Cmd, ch chan error) { ch <- cmd.Wait(); close(ch) }(command, done)
+		waitNative(t, ctx, func() bool {
+			select {
+			case <-done:
+				t.Fatal("recovery-only production process exited")
+			default:
+			}
+			var state string
+			if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) != nil {
+				return false
+			}
+			return state == "failed"
+		})
+		var stopped, resumed sql.NullTime
+		if db.QueryRow("SELECT collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&stopped, &resumed) != nil || !stopped.Valid || !resumed.Valid {
+			t.Fatal("recovery-only process lacks actual exit/resume proof")
+		}
+		var jobs, attempts, readiness int
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", task).Scan(&jobs) != nil || jobs != 1 {
+			t.Fatal("recovery-only created a replacement Job")
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_public_id=?", task).Scan(&attempts) != nil || attempts != 1 {
+			t.Fatal("recovery-only created another attempt")
+		}
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_execution_readiness WHERE ready=TRUE AND expires_at>UTC_TIMESTAMP(6)").Scan(&readiness) != nil || readiness != 0 {
+			t.Fatal("recovery grant advertised forward readiness")
+		}
+		counter := filepath.Join("/source", cfg.Workspace.SubPath, "counter.txt")
+		before, z := os.ReadFile(counter)
+		if z != nil {
+			t.Fatal(z)
+		}
+		waitNative(t, ctx, func() bool { after, z := os.ReadFile(counter); return z == nil && !bytes.Equal(before, after) })
+		t.Log("actual public controller restart: missing forward grant/source DSN/issuer and server private keys; independent recovery grant closes original Job, restores original source and ends failed/idle without new execution capability")
+		return
 	}
 	waitNative(t, ctx, func() bool {
 		select {

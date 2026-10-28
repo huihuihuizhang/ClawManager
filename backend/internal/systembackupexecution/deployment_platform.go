@@ -20,7 +20,7 @@ import (
 // capture. A platform profile cannot silently claim it quiesced Lite gateways.
 func (s *DeploymentService) platformProfile(o *PublicJobOwner) (b.LinuxProfileConfig, error) {
 	cfg := s.Config
-	source := b.LinuxProfileConfig{Source: s.Source, Database: cfg.SourceDatabase, ServerUUID: cfg.SourceServerUUID, Supported: map[b.AgentKind]bool{{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}: true}, HoldLimit: time.Duration(cfg.HoldSeconds) * time.Second}
+	source := b.LinuxProfileConfig{Source: s.Source, RecoveryOnly: !s.ForwardEnabled, Database: cfg.SourceDatabase, ServerUUID: cfg.SourceServerUUID, Supported: map[b.AgentKind]bool{{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}: true}, HoldLimit: time.Duration(cfg.HoldSeconds) * time.Second}
 	source.BuildWriters = func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
 		if len(inventory.Instances) != 0 {
 			return nil, d.ErrNotReady

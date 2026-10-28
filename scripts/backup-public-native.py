@@ -28,7 +28,7 @@ def main():
     ap.add_argument('--test', default='^TestPublicCaptureNativeMySQLKubernetes$')
     ap.add_argument('--log', default='team-optimization-docs/m3-native.log')
     a = ap.parse_args()
-    if a.physical_capacity and 'production-entry' not in a.test:
+    if a.physical_capacity and 'production-' not in a.test:
         raise SystemExit('Physical capacity mode requires the production entry case')
     if not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.cluster) or not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.mysql):
         raise SystemExit('Explicit task-owned cluster/container names required')

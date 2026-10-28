@@ -91,13 +91,27 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 			s.Close()
 		}
 	}()
-	s.Forward, e = deploymentIdentity(cfg.ForwardGrant, forwardDigest, cfg.KeyDirectory)
-	if e != nil {
-		return nil, e
-	}
 	s.Recovery, e = deploymentIdentity(cfg.RecoveryGrant, recoveryDigest, cfg.KeyDirectory)
 	if e != nil {
 		return nil, e
+	}
+	if e = s.Recovery.CheckDeployment(ctx, db); e != nil {
+		return nil, e
+	}
+	recoveryActions := s.Recovery.DeploymentBinding().Actions
+	if len(recoveryActions) != 1 || recoveryActions[0] != "recover" {
+		return nil, c.ErrExecutionAuthority
+	}
+	s.Forward, e = deploymentIdentity(cfg.ForwardGrant, forwardDigest, cfg.KeyDirectory)
+	if e != nil {
+		// Only the independent, currently signed recovery grant may reconstruct
+		// metadata/key references. It never gains prepare/capture/issuer rights.
+		s.Forward = s.Recovery
+		s.ForwardEnabled = false
+	} else {
+		if e = s.Forward.CheckDeployment(ctx, db); e != nil || !forwardCaptureActions(s.Forward.DeploymentBinding()) {
+			s.ForwardEnabled = false
+		}
 	}
 	stage = "profile"
 	s.profile, e = api.LoadExecutionProfile(cfg.ProfileFile)
@@ -128,82 +142,93 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 		return nil, c.ErrExecutionAuthority
 	}
 	root, e := x509.ParseCertificate(block.Bytes)
-	if e != nil || !root.IsCA || hash(root.Raw) != s.Forward.DeploymentBinding().WorkerIssuerSHA256 {
+	issuerPin := cfg.IssuerSHA256
+	if issuerPin == "" && s.Forward != s.Recovery {
+		issuerPin = s.Forward.DeploymentBinding().WorkerIssuerSHA256
+	}
+	if e != nil || !root.IsCA || hash(root.Raw) != issuerPin {
 		return nil, c.ErrExecutionAuthority
 	}
-	privateRaw, e := readPrivate(cfg.IssuerKey, 16384)
-	if e != nil {
-		return nil, e
-	}
-	defer clear(privateRaw)
-	block, _ = pem.Decode(privateRaw)
-	if block == nil {
+	if s.ForwardEnabled && hash(root.Raw) != s.Forward.DeploymentBinding().WorkerIssuerSHA256 {
 		return nil, c.ErrExecutionAuthority
 	}
-	key, e := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if e != nil {
-		return nil, c.ErrExecutionAuthority
-	}
-	signer, ok := key.(crypto.Signer)
-	if !ok {
-		return nil, c.ErrExecutionAuthority
-	}
-	publicDER, _ := x509.MarshalPKIXPublicKey(signer.Public())
-	wantDER, _ := x509.MarshalPKIXPublicKey(root.PublicKey)
-	if !bytes.Equal(publicDER, wantDER) {
-		return nil, c.ErrExecutionAuthority
-	}
-	stage = "control-tls"
-	privateServerKey, e := readPrivate(cfg.ServerKey, 16384)
-	if e != nil {
-		return nil, e
-	}
-	clear(privateServerKey)
-	cert, e := tls.LoadX509KeyPair(cfg.ServerCertificate, cfg.ServerKey)
-	if e != nil {
-		return nil, c.ErrExecutionAuthority
-	}
-	server, e := x509.ParseCertificate(cert.Certificate[0])
-	if e != nil {
-		return nil, c.ErrExecutionAuthority
-	}
-	endpoint, e := url.Parse(cfg.ControlURL)
-	if e != nil || endpoint.Scheme != "https" || endpoint.Host == "" || endpoint.User != nil || endpoint.RawQuery != "" || endpoint.Fragment != "" {
-		return nil, c.ErrExecutionAuthority
-	}
-	roots := x509.NewCertPool()
-	roots.AddCert(root)
-	if _, e = server.Verify(x509.VerifyOptions{Roots: roots, DNSName: endpoint.Hostname(), KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}); e != nil {
-		return nil, c.ErrExecutionAuthority
-	}
-	s.tlsConfig = &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{cert}, ClientCAs: roots, ClientAuth: tls.RequireAndVerifyClientCert}
-	stage = "source-connection"
-	dsnRaw, e := readPrivate(cfg.SourceDSNFile, 16384)
-	if e != nil {
-		return nil, e
-	}
-	defer clear(dsnRaw)
-	sqlCfg, e := mysql.ParseDSN(strings.TrimSpace(string(dsnRaw)))
-	if e != nil || sqlCfg.User != cfg.SourceUser || sqlCfg.DBName != cfg.SourceDatabase || sqlCfg.MultiStatements {
-		return nil, c.ErrExecutionAuthority
-	}
-	sqlCfg.ParseTime = true
-	sqlCfg.Loc = time.UTC
-	sqlCfg.Timeout = 5 * time.Second
-	sqlCfg.ReadTimeout = 10 * time.Second
-	sqlCfg.WriteTimeout = 10 * time.Second
-	if sqlCfg.Params == nil {
-		sqlCfg.Params = map[string]string{}
-	}
-	sqlCfg.Params["time_zone"] = "'+00:00'"
-	s.Source, e = sql.Open("mysql", sqlCfg.FormatDSN())
-	if e != nil {
-		return nil, c.ErrExecutionAuthority
-	}
-	s.Source.SetMaxOpenConns(4)
-	s.Source.SetMaxIdleConns(2)
-	if e = s.checkSource(ctx); e != nil {
-		return nil, e
+	var signer crypto.Signer
+	if s.ForwardEnabled {
+		privateRaw, e := readPrivate(cfg.IssuerKey, 16384)
+		if e != nil {
+			return nil, e
+		}
+		defer clear(privateRaw)
+		block, _ = pem.Decode(privateRaw)
+		if block == nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		key, e := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if e != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		var ok bool
+		signer, ok = key.(crypto.Signer)
+		if !ok {
+			return nil, c.ErrExecutionAuthority
+		}
+		publicDER, _ := x509.MarshalPKIXPublicKey(signer.Public())
+		wantDER, _ := x509.MarshalPKIXPublicKey(root.PublicKey)
+		if !bytes.Equal(publicDER, wantDER) {
+			return nil, c.ErrExecutionAuthority
+		}
+		stage = "control-tls"
+		privateServerKey, e := readPrivate(cfg.ServerKey, 16384)
+		if e != nil {
+			return nil, e
+		}
+		clear(privateServerKey)
+		cert, e := tls.LoadX509KeyPair(cfg.ServerCertificate, cfg.ServerKey)
+		if e != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		server, e := x509.ParseCertificate(cert.Certificate[0])
+		if e != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		endpoint, e := url.Parse(cfg.ControlURL)
+		if e != nil || endpoint.Scheme != "https" || endpoint.Host == "" || endpoint.User != nil || endpoint.RawQuery != "" || endpoint.Fragment != "" {
+			return nil, c.ErrExecutionAuthority
+		}
+		roots := x509.NewCertPool()
+		roots.AddCert(root)
+		if _, e = server.Verify(x509.VerifyOptions{Roots: roots, DNSName: endpoint.Hostname(), KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}); e != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		s.tlsConfig = &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{cert}, ClientCAs: roots, ClientAuth: tls.RequireAndVerifyClientCert}
+		stage = "source-connection"
+		dsnRaw, e := readPrivate(cfg.SourceDSNFile, 16384)
+		if e != nil {
+			return nil, e
+		}
+		defer clear(dsnRaw)
+		sqlCfg, e := mysql.ParseDSN(strings.TrimSpace(string(dsnRaw)))
+		if e != nil || sqlCfg.User != cfg.SourceUser || sqlCfg.DBName != cfg.SourceDatabase || sqlCfg.MultiStatements {
+			return nil, c.ErrExecutionAuthority
+		}
+		sqlCfg.ParseTime = true
+		sqlCfg.Loc = time.UTC
+		sqlCfg.Timeout = 5 * time.Second
+		sqlCfg.ReadTimeout = 10 * time.Second
+		sqlCfg.WriteTimeout = 10 * time.Second
+		if sqlCfg.Params == nil {
+			sqlCfg.Params = map[string]string{}
+		}
+		sqlCfg.Params["time_zone"] = "'+00:00'"
+		s.Source, e = sql.Open("mysql", sqlCfg.FormatDSN())
+		if e != nil {
+			return nil, c.ErrExecutionAuthority
+		}
+		s.Source.SetMaxOpenConns(4)
+		s.Source.SetMaxIdleConns(2)
+		if e = s.checkSource(ctx); e != nil {
+			return nil, e
+		}
 	}
 	stage = "staging"
 	s.staging, e = os.OpenRoot(cfg.StagingDirectory)
@@ -422,20 +447,25 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 	}
 	s.publicationGeneration = 0
 	active, cancel := context.WithCancel(ctx)
-	listener, e := net.Listen("tcp", s.Config.Listen)
-	if e != nil {
-		cancel()
-		return d.ErrNotReady
-	}
-	server := &http.Server{Handler: s.Runtime.Control, TLSConfig: s.tlsConfig, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
 	failures := make(chan error, 2)
 	loopDone := make(chan struct{})
-	go func() {
-		e := server.Serve(tls.NewListener(listener, s.tlsConfig))
-		if e != http.ErrServerClosed {
-			failures <- d.ErrNotReady
+	var server *http.Server
+	if s.ForwardEnabled {
+		listener, e := net.Listen("tcp", s.Config.Listen)
+		if e != nil {
+			cancel()
+			return d.ErrNotReady
 		}
-	}()
+		server = &http.Server{Handler: s.Runtime.Control, TLSConfig: s.tlsConfig, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 30 * time.Second}
+		go func() {
+			e := server.Serve(tls.NewListener(listener, s.tlsConfig))
+			if e != http.ErrServerClosed {
+				failures <- d.ErrNotReady
+			}
+		}()
+	} else {
+		log.Printf("[system-backup-public] mode=recovery-only")
+	}
 	go func() {
 		defer close(loopDone)
 		failures <- runDeploymentPasses(active, s.Runtime.Loop.RunOnce, s.Runtime.Loop.Interval, func(e error) {
@@ -446,7 +476,9 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 	}()
 	defer func() {
 		cancel()
-		server.Close()
+		if server != nil {
+			server.Close()
+		}
 		select {
 		case <-loopDone:
 		case <-time.After(125 * time.Second):
