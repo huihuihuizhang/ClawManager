@@ -63,6 +63,7 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 	if e != nil {
 		return out, e
 	}
+	var missing []b.JobPart
 	for _, part := range desc.Parts {
 		record, e := repository.Load(ctx, tx, kube.ResourceIntent{Kind: "Job", Identity: kube.Identity{Namespace: part.Intent.Namespace, Name: part.Intent.Name}})
 		if errors.Is(e, sql.ErrNoRows) || e == nil && !record.CreateDispatched {
@@ -72,17 +73,32 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 		if e != nil {
 			return out, e
 		}
-		var raw []byte
+		var raw, process []byte
 		var binding d.JobBinding
-		if e = tx.QueryRowContext(ctx, "SELECT binding_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? FOR UPDATE", a.TaskPublicID, part.Intent.Namespace, part.Intent.Name).Scan(&raw); e != nil {
+		if e = tx.QueryRowContext(ctx, "SELECT binding_json,process_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? FOR UPDATE", a.TaskPublicID, part.Intent.Namespace, part.Intent.Name).Scan(&raw, &process); e != nil {
 			return out, e
 		}
-		if len(raw) == 0 || json.Unmarshal(raw, &binding) != nil || binding.UID != record.UID || binding.Name != part.Intent.Name || binding.Namespace != part.Intent.Namespace || binding.JobUnitKey != part.Intent.JobUnitKey || binding.Generation != part.Intent.Generation {
+		if len(raw) == 0 || len(process) == 0 || record.UID == "" {
+			missing = append(missing, part)
+			continue
+		}
+		if json.Unmarshal(raw, &binding) != nil || binding.UID != record.UID || binding.Name != part.Intent.Name || binding.Namespace != part.Intent.Namespace || binding.JobUnitKey != part.Intent.JobUnitKey || binding.Generation != part.Intent.Generation {
 			return out, c.ErrExecutionRecoveryRequired
 		}
 		out.Jobs = append(out.Jobs, binding)
 	}
 	if e = o.Gate.Recovery.CheckTx(ctx, tx, a); e != nil {
+		return out, e
+	}
+	tx.Rollback() // No SQL transaction is kept during original-resource lookup.
+	for _, part := range missing {
+		binding, z := o.recoverJobIdentity(ctx, a, part)
+		if z != nil {
+			return out, z
+		}
+		out.Jobs = append(out.Jobs, binding)
+	}
+	if e = o.Gate.Recovery.Check(ctx, a); e != nil {
 		return out, e
 	}
 	return out, nil

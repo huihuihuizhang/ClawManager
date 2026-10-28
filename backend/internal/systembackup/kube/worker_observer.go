@@ -130,7 +130,16 @@ func podSpecMatches(expected, actual map[string]any, scheduled bool) bool {
 	return reflect.DeepEqual(expected, copy)
 }
 
-func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, security WorkerSecurity) (result WorkerProcess, err error) {
+func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, security WorkerSecurity) (WorkerProcess, error) {
+	return o.observe(ctx, record, security, false)
+}
+
+// ObserveForRecovery cannot authorize source IO. It also accepts the explicit
+// terminal container identity needed to stop/prove an original orphan worker.
+func (o WorkerObserver) ObserveForRecovery(ctx context.Context, record ResourceRecord, security WorkerSecurity) (WorkerProcess, error) {
+	return o.observe(ctx, record, security, true)
+}
+func (o WorkerObserver) observe(ctx context.Context, record ResourceRecord, security WorkerSecurity, recovery bool) (result WorkerProcess, err error) {
 	stage := "construction"
 	defer func() {
 		if err != nil {
@@ -157,7 +166,13 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 	stage = "pod"
 	pod := &pods.Items[0]
 	owner := metav1.GetControllerOf(pod)
-	if owner == nil || owner.APIVersion != "batch/v1" || owner.Kind != "Job" || owner.Name != i.Name || string(owner.UID) != record.UID || pod.UID == "" || pod.ResourceVersion == "" || pod.DeletionTimestamp != nil || pod.Status.Phase != corev1.PodRunning || pod.Spec.NodeName == "" || len(pod.Spec.Containers) != 1 || len(pod.Status.ContainerStatuses) != 1 {
+	if owner == nil || owner.APIVersion != "batch/v1" || owner.Kind != "Job" || owner.Name != i.Name || string(owner.UID) != record.UID || pod.UID == "" || pod.ResourceVersion == "" || pod.DeletionTimestamp != nil || len(pod.Spec.Containers) != 1 || (len(pod.Status.ContainerStatuses) != 1 && pod.Status.Phase != corev1.PodPending) {
+		return WorkerProcess{}, ErrOwnership
+	}
+	if pod.Status.Phase == corev1.PodPending {
+		return WorkerProcess{}, ErrPending
+	}
+	if pod.Spec.NodeName == "" || (pod.Status.Phase != corev1.PodRunning && !(recovery && (pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded))) {
 		return WorkerProcess{}, ErrOwnership
 	}
 	for key, value := range job.Spec.Template.Labels {
@@ -213,7 +228,8 @@ func (o WorkerObserver) Observe(ctx context.Context, record ResourceRecord, secu
 	}
 	status := pod.Status.ContainerStatuses[0]
 	stage = "process"
-	if status.Name != pod.Spec.Containers[0].Name || status.ContainerID == "" || status.State.Running == nil || !status.Ready || status.RestartCount != 0 || status.LastTerminationState.Terminated != nil {
+	terminal := recovery && status.State.Terminated != nil && status.State.Terminated.ContainerID == status.ContainerID && !status.State.Terminated.FinishedAt.IsZero()
+	if status.Name != pod.Spec.Containers[0].Name || status.ContainerID == "" || (!terminal && (status.State.Running == nil || !status.Ready)) || status.RestartCount != 0 || status.LastTerminationState.Terminated != nil {
 		return WorkerProcess{}, ErrPending
 	}
 	return WorkerProcess{Name: pod.Name, UID: string(pod.UID), Node: pod.Spec.NodeName, Containers: []string{status.ContainerID}}, nil

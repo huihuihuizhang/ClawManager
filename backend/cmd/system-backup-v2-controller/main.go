@@ -400,6 +400,9 @@ func run() error {
 		<-rootCtx.Done()
 		return nil
 	}
+	if os.Getenv("SYSTEM_BACKUP_EXECUTION_PROTOCOL") == "public-v1" {
+		return runConfiguredPublic(rootCtx, cfg)
+	}
 	if err := systembackupcontroller.ValidateControllerDatabaseCredentials(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), cfg.Database.User); err != nil {
 		return err
 	}
@@ -632,6 +635,15 @@ func run() error {
 func versionedControlAdmission(getenv func(string) string) error {
 	if getenv == nil || getenv("SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED") != "true" {
 		return errors.New("versioned control plane is explicitly disabled")
+	}
+	if getenv("SYSTEM_BACKUP_EXECUTION_PROTOCOL") == "public-v1" {
+		if value := getenv("SYSTEM_BACKUP_ENABLED"); value != "" && value != "true" && value != "false" {
+			return errors.New("invalid public enable flag")
+		}
+		if getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE") == "" || len(getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256")) != 64 || len(getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256")) != 64 || len(getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256")) != 64 {
+			return errors.New("public deployment and independent pinned grants required")
+		}
+		return nil // Full signatures/resources are verified before startup below.
 	}
 	if value := getenv("SYSTEM_BACKUP_ENABLED"); value != "" && value != "false" {
 		return errors.New("versioned capture runner and shared-gate adapter are not installed")

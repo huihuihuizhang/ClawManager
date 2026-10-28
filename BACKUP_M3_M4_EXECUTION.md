@@ -24,3 +24,13 @@
 验收驱动固定为 scripts/backup-public-native.py，实际镜像 digest 和独立 context/container 标签验证，测试资源继续复用。控制器源仍由测试构造，容量还是合成；这一工作块不代表生产装配/全系统采集完成。
 
 提交复核：先修真实已知断点，约25分钟形成完整测试出口；避免复制执行器和重新建集群。发现手工 MySQL Connector 缺 UTC Location 导致测试 panic，已修正；固定验收入口减少 Windows 路径参数返工。下一块接实际生产入口和能力回报，不再横向整理来源。
+
+### 第二工作块：实际生产入口及原 Job 日记缺口恢复
+
+公共 controller 新增显式 public-v1 模式，与旧控制循环互斥；实际 Kubernetes 选主、Pod UID publisher、独立签名 forward/recovery 材料、SHA 固定部署配置、源 SELECT 账号、mTLS 控制服务、受界限 Job 和实际 workspace Worker 已接通。生产能力当前严格为 platform-workspace、functional_test、源实例为零；明确不接受完整备份，不把工作区采集冒充所有 Runtime 已停写。
+
+新增 unknown binding/process 恢复：先独立撤权，再核实原发送 Job/Secret/Pod 与实际进程，不重发 Job、不签发新凭据。允许对原 terminated 容器建立恢复身份，forward 仍拒绝已终止容器。停止 ACK 遇到短暂日记写入失败时，在原观察界限内保存原 ACK，避免 Pod 清理后证据丢失。生产调度错误采用有界退避并继续查询原持久状态；错误期间暂停新任务能力回报，不退出从而遗弃恢复。
+
+真实验收：实际生产二进制选主→实时能力回报→实际 TLS HTTP/RBAC 创建→实际 Job→读取认证解密后的 tar 内容→实际源 counter 恢复写入→validating；原绑定 SQL 写入故障下独立 recovery 找回并停止原 Job，最终 failed/idle，单 task/attempt/Job。最终两例69.87秒通过，定向单元和后端全量通过。容量还是显式合成输入，测试控制账号尚非正式最小权限；不据此启用生产。
+
+提交复核：首次生产运行暴露 issuer 根集合遗漏、readiness owner/generation 装配遗漏、测试 HTTP 路径错误和实际 Kubernetes 默认 QPS 饱和。已逐项修复；这块用时约80分钟，超过预期。效率改进：生产启动的一次日志应覆盖每个封闭阶段，先验证配置/签发/选主再进入长流程；不等八分钟统一超时才检查子进程是否退出。后续复用这一实际入口，优先接用户恢复动作、权限和成品出口，不再重建 native 环境。

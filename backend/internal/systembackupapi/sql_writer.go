@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"os"
 	"reflect"
 	"regexp"
 	"slices"
@@ -18,6 +17,7 @@ import (
 	"time"
 
 	contract "clawreef/internal/systembackupcontract"
+	deployment "clawreef/internal/systembackupdeployment"
 	read "clawreef/internal/systembackupread"
 	uuidlib "github.com/google/uuid"
 )
@@ -29,54 +29,25 @@ var allBackupParts = []string{"mysql", "redis", "object_storage", "workspace", "
 
 // ExecutionProfile is deployment-owned, never accepted as a user request.
 // References are immutable identifiers, not paths, credentials or URLs.
-type ExecutionProfile struct {
-	InstallationID    string   `json:"installation_id"`
-	Revision          string   `json:"revision"`
-	Orchestrator      string   `json:"source_orchestrator"`
-	Profile           string   `json:"source_profile"`
-	TargetClass       string   `json:"target_class"`
-	TargetRisks       []string `json:"target_risks"`
-	FailureDomain     string   `json:"target_failure_domain_id"`
-	RestoreTargetRef  string   `json:"restore_target_ref"`
-	RestoreTargetHash string   `json:"restore_target_sha256"`
-}
+type ExecutionProfile deployment.ExecutionProfile
 
 func (p ExecutionProfile) canonical() ([]byte, string, error) {
-	if !installationToken.MatchString(p.InstallationID) || !profileToken.MatchString(p.Revision) ||
-		!slices.Contains([]string{"kubernetes", "k3s"}, p.Orchestrator) || !slices.Contains([]string{"cluster", "single-node"}, p.Profile) ||
-		!slices.Contains([]string{"dr-ready-external", "same-cluster-copy"}, p.TargetClass) || !profileToken.MatchString(p.FailureDomain) ||
-		!profileToken.MatchString(p.RestoreTargetRef) || !profileHash.MatchString(p.RestoreTargetHash) {
+	raw, digest, e := deployment.ExecutionProfile(p).CanonicalIdentity()
+	if e != nil {
 		return nil, "", &Error{"validation_failed"}
 	}
-	allowed := []string{"source_overlap", "same_failure_domain", "artifact_credential_source_dependent", "kek_source_dependent", "signing_key_source_dependent", "catalog_source_dependent", "attestation_missing", "attestation_expired", "conditional_commit_unavailable", "transport_unverified", "broad_egress", "provider_capability_degraded"}
-	p.TargetRisks = append([]string{}, p.TargetRisks...)
-	slices.Sort(p.TargetRisks)
-	for i, r := range p.TargetRisks {
-		if !slices.Contains(allowed, r) || i > 0 && p.TargetRisks[i-1] == r {
-			return nil, "", &Error{"validation_failed"}
-		}
-	}
-	raw, err := json.Marshal(p)
-	return raw, digestJSON(raw), err
+	return raw, digest, nil
 }
-
+func (p ExecutionProfile) CanonicalIdentity() ([]byte, string, error) { return p.canonical() }
 func LoadExecutionProfile(path string) (ExecutionProfile, error) {
-	var p ExecutionProfile
-	f, err := os.Open(path)
-	if err != nil {
-		return p, &Error{"not_ready"}
+	p, e := deployment.LoadExecutionProfile(path)
+	if e != nil {
+		if profileError, ok := e.(*deployment.ProfileError); ok {
+			return ExecutionProfile{}, &Error{profileError.Code}
+		}
+		return ExecutionProfile{}, &Error{"not_ready"}
 	}
-	defer f.Close()
-	info, err := f.Stat()
-	if err != nil || !info.Mode().IsRegular() || info.Size() > 16384 {
-		return p, &Error{"not_ready"}
-	}
-	raw, err := io.ReadAll(io.LimitReader(f, 16385))
-	if err != nil || closedJSON(raw, &p) != nil {
-		return p, &Error{"not_ready"}
-	}
-	_, _, err = p.canonical()
-	return p, err
+	return ExecutionProfile(p), nil
 }
 
 type BackupCreateRequest struct {

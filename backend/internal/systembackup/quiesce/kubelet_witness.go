@@ -122,7 +122,20 @@ func (w KubeletStopWitness) Arm(ctx context.Context, pods []PodIdentity) error {
 					if ready {
 						node, e := w.Client.CoreV1().Nodes().Get(tracking, original.Node, metav1.GetOptions{})
 						if e == nil && string(node.UID) == nodeUID && node.DeletionTimestamp == nil {
-							w.Store.Save(tracking, proof)
+							// SQL response loss/transient contention must not discard the
+							// one termination acknowledgement before the Pod is removed.
+							for {
+								if e = w.Store.Save(tracking, proof); e == nil {
+									break
+								}
+								timer := time.NewTimer(100 * time.Millisecond)
+								select {
+								case <-tracking.Done():
+									timer.Stop()
+									return
+								case <-timer.C:
+								}
+							}
 						}
 						return
 					}

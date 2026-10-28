@@ -53,10 +53,6 @@ func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part
 	if json.Unmarshal(record.Intent.RequestJSON, &desired) != nil || desired.Data["invocation.json"] != string(part.InvocationJSON) {
 		return s, kube.ErrOwnership
 	}
-	actual, e := o.Client.CoreV1().ConfigMaps(part.Intent.Namespace).Get(ctx, part.InvocationConfigMap, metav1.GetOptions{})
-	if e != nil || string(actual.UID) != record.UID {
-		return s, kube.ErrOwnership
-	}
 	for _, v := range s.Volumes {
 		if v.Volume == "worker-request" {
 			return s, kube.ErrOwnership
@@ -88,5 +84,10 @@ func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part
 		}
 	}
 	s.Volumes = append(s.Volumes, kube.MountIdentity{Volume: "worker-identity", Kind: "Secret", Name: identityName, UID: identityUID, SHA256: identity.PlainSHA256})
+	tx.Rollback()
+	actual, e := o.Client.CoreV1().ConfigMaps(part.Intent.Namespace).Get(ctx, part.InvocationConfigMap, metav1.GetOptions{})
+	if e != nil || string(actual.UID) != record.UID {
+		return s, kube.ErrOwnership
+	}
 	return s, nil
 }

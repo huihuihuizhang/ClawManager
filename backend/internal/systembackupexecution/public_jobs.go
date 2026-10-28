@@ -51,7 +51,7 @@ type PublicJobOwner struct {
 func hash(v []byte) string { s := sha256.Sum256(v); return hex.EncodeToString(s[:]) }
 
 func (o *PublicJobOwner) ready() bool {
-	return o != nil && o.Client != nil && o.Dynamic != nil && o.Namespace != "" && o.NamespaceUID != "" && o.TrustDomain != "" && o.Identity != nil && o.Staging != nil && o.Proof != nil && o.Security.ServiceAccountUID != ""
+	return o != nil && o.Client != nil && o.Dynamic != nil && o.Namespace != "" && o.NamespaceUID != "" && o.TrustDomain != "" && o.Identity != nil && o.Staging != nil && (o.Proof != nil || o.AllowKubeletStopWitness) && o.Security.ServiceAccountUID != ""
 }
 func (o *PublicJobOwner) input(ctx context.Context, a d.Authority, recovery bool) (d.Input, d.Plan, b.Discovery, error) {
 	var in d.Input
@@ -192,8 +192,13 @@ func partFor(desc b.Discovery, unit string) (b.JobPart, error) {
 }
 
 func (o *PublicJobOwner) Bind(ctx context.Context, a d.Authority, i d.JobIntent, r kube.ResourceRecord) (d.JobBinding, error) {
+	return o.bindOriginal(ctx, a, i, r, false)
+}
+
+// Recovery binding records original identity only; it never issues credentials.
+func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.JobIntent, r kube.ResourceRecord, recovery bool) (d.JobBinding, error) {
 	var zero d.JobBinding
-	_, _, desc, e := o.input(ctx, a, false)
+	_, _, desc, e := o.input(ctx, a, recovery)
 	if e != nil {
 		return zero, e
 	}
@@ -240,8 +245,11 @@ func (o *PublicJobOwner) Bind(ctx context.Context, a d.Authority, i d.JobIntent,
 		until = inv.Request.Deadline
 	}
 	now := time.Now().UTC()
-	if !until.After(now) || now.Before(cert.NotBefore) {
+	if !recovery && (!until.After(now) || now.Before(cert.NotBefore)) {
 		return zero, c.ErrExecutionAuthority
+	}
+	if recovery {
+		now = cert.NotBefore
 	}
 	binding := d.JobBinding{JobUnitKey: i.JobUnitKey, Namespace: i.Namespace, Name: i.Name, UID: r.UID, Generation: i.Generation, RelayIdentityRef: string(secret.UID), RelayIdentityVersion: hash(cert.Raw), RelayBoundAt: now, RelayExpiresAt: until}
 	raw, _ := json.Marshal(binding)
@@ -250,8 +258,15 @@ func (o *PublicJobOwner) Bind(ctx context.Context, a d.Authority, i d.JobIntent,
 		return zero, e
 	}
 	defer tx.Rollback()
-	guard, e := o.Gate.Authority.Bind(ctx, tx, a)
-	if e != nil {
+	recheck := func() error { return o.Gate.Recovery.CheckTx(ctx, tx, a) }
+	if !recovery {
+		guard, z := o.Gate.Authority.Bind(ctx, tx, a)
+		if z != nil {
+			return zero, z
+		}
+		recheck = func() error { return guard.Recheck(ctx, tx) }
+	}
+	if e = recheck(); e != nil {
 		return zero, e
 	}
 	var old []byte
@@ -263,11 +278,15 @@ func (o *PublicJobOwner) Bind(ctx context.Context, a d.Authority, i d.JobIntent,
 			return zero, c.ErrExecutionRecord
 		}
 	} else {
-		if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL", raw, a.TaskPublicID, i.Namespace, i.Name, r.UID); e != nil {
+		query := "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL"
+		if recovery {
+			query = "UPDATE system_backup_v2_runtime_resources SET binding_json=?,revoked=TRUE WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL"
+		}
+		if _, e = tx.ExecContext(ctx, query, raw, a.TaskPublicID, i.Namespace, i.Name, r.UID); e != nil {
 			return zero, e
 		}
 	}
-	if e = guard.Recheck(ctx, tx); e != nil {
+	if e = recheck(); e != nil {
 		return zero, e
 	}
 	if e = tx.Commit(); e != nil {
@@ -343,6 +362,9 @@ func (o *PublicJobOwner) Revoke(ctx context.Context, a d.Authority, binding d.Jo
 	// Arm while the original Pod still exists, before foreground deletion can
 	// remove its CRI record. A saved witness makes this idempotent on recovery.
 	if e := o.StopWitness(a).Arm(ctx, []quiesce.PodIdentity{{Name: process.Name, UID: process.UID, Node: process.Node, Containers: process.Containers}}); e != nil {
+		if o.Proof == nil {
+			return c.ErrExecutionRecoveryRequired
+		}
 		if e = o.Proof.Confirm(ctx, []quiesce.PodIdentity{{Name: process.Name, UID: process.UID, Node: process.Node, Containers: process.Containers}}); e != nil {
 			return e
 		}
@@ -387,6 +409,9 @@ func (o *PublicJobOwner) Stopped(ctx context.Context, a d.Authority, binding d.J
 		proved = o.StopWitness(a).Confirm(ctx, pods) == nil
 	}
 	if !proved {
+		if o.Proof == nil {
+			return c.ErrExecutionRecoveryRequired
+		}
 		if e := o.Proof.Confirm(ctx, pods); e != nil {
 			return e
 		}

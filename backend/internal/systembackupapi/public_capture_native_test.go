@@ -24,9 +24,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
@@ -180,7 +182,7 @@ func TestPublicCaptureNativeMySQLKubernetes(t *testing.T) {
 	if os.Getenv("TEST_PUBLIC_CAPTURE_NATIVE") != "m0m2-20261028" {
 		t.Skip("requires explicitly provisioned task-owned native cluster")
 	}
-	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap"} {
+	for _, scenario := range []string{"capture", "lost-create-response", "unknown-stop-recovery", "prepare-revoked", "release-atomic", "legacy-release-gap", "binding-write-outage", "production-entry"} {
 		t.Run(scenario, func(t *testing.T) { testPublicNativeScenario(t, scenario) })
 	}
 }
@@ -299,7 +301,7 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		}
 		var conn *sql.DB
 		if user == account {
-			conn = sql.OpenDB(nativeProjectionConnector{Connector: connector, Fail: &projectionFault})
+			conn = sql.OpenDB(nativeProjectionConnector{Connector: connector, Fail: &projectionFault, BlockBinding: scenario == "binding-write-outage"})
 		} else {
 			conn = sql.OpenDB(connector)
 		}
@@ -342,6 +344,16 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			t.Fatal(z)
 		}
 		return identity
+	}
+	if scenario == "production-entry" {
+		raw, z := x509.MarshalPKCS8PrivateKey(issuer.Signer)
+		if z != nil {
+			t.Fatal(z)
+		}
+		if z = os.WriteFile(filepath.Join(dir, "native-issuer-raw.key"), pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: raw}), 0600); z != nil {
+			t.Fatal(z)
+		}
+		clear(raw)
 	}
 	forward := sign("forward.json", grant)
 	recoveryGrant := grant
@@ -406,6 +418,12 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 	endpoint := fmt.Sprintf("https://%s:%d/worker/v1", podIP, port)
+	if scenario == "production-entry" {
+		listener.Close()
+		entryCfg := execution.DeploymentConfig{Version: "system-backup-public-deployment.v1", CaptureScope: "platform-workspace", InstallationID: authority.InstallationID, ControllerOwner: controllerOwner, ApplicationScope: authority.ApplicationScope, Namespace: nsName, NamespaceUID: string(ns.UID), TrustDomain: owner.TrustDomain, ForwardGrant: execution.GrantReference{Path: filepath.Join(dir, "forward.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, RecoveryGrant: execution.GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(pub)}, KeyDirectory: dir, ProfileFile: filepath.Join(dir, "profile.json"), CapacityFile: legacy.capacityFile, SourceDSNFile: filepath.Join(dir, "source.dsn"), SourceUser: sourceUser, SourceDatabase: database, SourceServerUUID: server, StagingDirectory: "/staging", StagingClaim: "native-staging", WorkerImage: image, Security: owner.Security, ControlURL: endpoint, Listen: listener.Addr().String(), ServerCertificate: filepath.Join(dir, "server.pem"), ServerKey: filepath.Join(dir, "server.key"), IssuerCertificate: filepath.Join(dir, "issuer.pem"), IssuerKey: filepath.Join(dir, "issuer.key"), Writers: []execution.PlatformDeployment{{Namespace: nsName, Name: dep.Name, UID: string(dep.UID)}}, Workspace: execution.WorkspaceCapture{Claim: "native-source", SubPath: account, Node: nodeName, MaxFiles: 50, MaxFileBytes: 1 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 4 << 20}, AcquireSeconds: 60, HoldSeconds: 120}
+		testNativeProductionEntry(t, ctx, db, handler, operator, task, entryCfg, grant, private, serverCert, caPEM)
+		return
+	}
 	writerID := "deployment/" + nsName + "/" + deploymentName
 	sourceCfg := b.LinuxProfileConfig{Source: sourceDB, Database: database, ServerUUID: server, Supported: map[b.AgentKind]bool{{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}: true}, HoldLimit: 300 * time.Second}
 	sourceCfg.BuildWriters = func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
@@ -560,6 +578,23 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			t.Fatal("atomic release recovery", e)
 		}
 		expectedStatus = "failed"
+	} else if scenario == "binding-write-outage" {
+		if e == nil {
+			t.Fatal("unknown original dispatch hidden")
+		}
+		if z := os.Remove(filepath.Join(dir, "forward.json")); z != nil {
+			t.Fatal(z)
+		}
+		if _, z := db.Exec("UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),next_reconcile_at=UTC_TIMESTAMP(6) WHERE public_id=?", task); z != nil {
+			t.Fatal(z)
+		}
+		if e = runtime.Loop.RunOnce(ctx); e != nil {
+			t.Fatal("binding outage recovery failed", e)
+		}
+		expectedStatus = "failed"
+		if lost.Created.Load() != 1 {
+			t.Fatal("orphan binding caused duplicate Job", lost.Created.Load())
+		}
 	} else if e != nil {
 		t.Fatal("capture", e)
 	}
@@ -598,6 +633,17 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 	var sealed []byte
 	if e = db.QueryRow("SELECT sealed_payload FROM system_backup_v2_execution_records WHERE task_public_id=? AND record_kind='plan'", task).Scan(&sealed); e != nil || bytes.Contains(sealed, []byte("data.txt")) {
 		t.Fatal("plan custody", e)
+	}
+	if scenario == "binding-write-outage" {
+		var revokedStopped int
+		if e = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND revoked=TRUE AND process_json IS NOT NULL AND stopped_at IS NOT NULL", task).Scan(&revokedStopped); e != nil || revokedStopped != 1 {
+			t.Fatal("orphan stop proof missing", e)
+		}
+		if e = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND result_cipher IS NOT NULL", task).Scan(&revokedStopped); e != nil || revokedStopped != 0 {
+			t.Fatal("orphan invented worker result", e)
+		}
+		t.Log("original orphan job revoked, bound, physically stopped; source recovered without issuing a new read grant")
+		return
 	}
 	rootTask, e := stagingRoot.OpenRoot(task)
 	if e != nil {
@@ -806,7 +852,8 @@ func nativeTLS(t *testing.T, ip net.IP) (control.IdentityIssuer, tls.Certificate
 // Native MySQL remains authoritative; only the projection statement is withheld.
 type nativeProjectionConnector struct {
 	driver.Connector
-	Fail *atomic.Bool
+	Fail         *atomic.Bool
+	BlockBinding bool
 }
 
 func (c nativeProjectionConnector) Connect(ctx context.Context) (driver.Conn, error) {
@@ -814,15 +861,19 @@ func (c nativeProjectionConnector) Connect(ctx context.Context) (driver.Conn, er
 	if e != nil {
 		return nil, e
 	}
-	return nativeProjectionConn{Conn: conn, Fail: c.Fail}, nil
+	return nativeProjectionConn{Conn: conn, Fail: c.Fail, BlockBinding: c.BlockBinding}, nil
 }
 
 type nativeProjectionConn struct {
 	driver.Conn
-	Fail *atomic.Bool
+	Fail         *atomic.Bool
+	BlockBinding bool
 }
 
 func (c nativeProjectionConn) ExecContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Result, error) {
+	if c.BlockBinding && strings.HasPrefix(q, "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE") {
+		return nil, errors.New("injected original binding write unavailable")
+	}
 	if c.Fail.Load() && strings.HasPrefix(q, "UPDATE system_backup_v2_runtime_captures SET source_resumed_at") {
 		return nil, errors.New("injected projection write unavailable")
 	}
@@ -841,3 +892,203 @@ func (c nativeProjectionConn) ResetSession(ctx context.Context) error {
 	return c.Conn.(driver.SessionResetter).ResetSession(ctx)
 }
 func (c nativeProjectionConn) IsValid() bool { return c.Conn.(driver.Validator).IsValid() }
+
+// This fixture starts the actual production command; it does not replace its
+// execution owner or readiness with a test callback. Capacity remains explicit
+// synthetic input here and is not production capacity/grants acceptance.
+func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, handler *Handler, operator, bootstrapTask string, cfg execution.DeploymentConfig, grant c.ExecutionGrant, signing ed25519.PrivateKey, serverCert tls.Certificate, caPEM []byte) {
+	t.Helper()
+	write := func(path string, raw []byte) {
+		t.Helper()
+		if e := os.WriteFile(path, raw, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	privateRaw, e := x509.MarshalPKCS8PrivateKey(serverCert.PrivateKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	write(cfg.ServerCertificate, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: serverCert.Certificate[0]}))
+	write(cfg.ServerKey, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateRaw}))
+	clear(privateRaw)
+	write(cfg.IssuerCertificate, caPEM)
+	// Native fixture CA key belongs only to this disposable test. It is passed in
+	// via the parent-generated issuer, never read from a deployment or a server.
+	// Native server certificate and issuer use the same root signing key below.
+	issuerKeyPath := filepath.Join(filepath.Dir(cfg.IssuerKey), "native-issuer-raw.key")
+	raw, e := os.ReadFile(issuerKeyPath)
+	if e != nil {
+		t.Fatal("fixture issuer key unavailable")
+	}
+	write(cfg.IssuerKey, raw)
+	clear(raw)
+	profileRaw, _ := json.Marshal(testExecutionProfile())
+	write(cfg.ProfileFile, profileRaw)
+	source := mysql.Config{User: cfg.SourceUser, Passwd: "synthetic-native-only", Net: "tcp", Addr: net.JoinHostPort(os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT")), DBName: cfg.SourceDatabase, ParseTime: true, AllowNativePasswords: true}
+	write(cfg.SourceDSNFile, []byte(source.FormatDSN()))
+	cfgRaw, _ := json.Marshal(cfg)
+	configFile := filepath.Join(filepath.Dir(cfg.ProfileFile), "deployment.json")
+	write(configFile, cfgRaw)
+	grant.DeploymentConfigSHA256 = digestJSON(cfgRaw)
+	sign := func(path string, g c.ExecutionGrant) string {
+		body, _ := json.Marshal(g)
+		envelope, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(signing, body))})
+		write(path, envelope)
+		return digestJSON(envelope)
+	}
+	forwardHash := sign(cfg.ForwardGrant.Path, grant)
+	recoverGrant := grant
+	recoverGrant.Actions = []string{"recover"}
+	recoverGrant.CaptureKeys = nil
+	recoverGrant.WorkerIssuerSHA256 = ""
+	recoveryHash := sign(cfg.RecoveryGrant.Path, recoverGrant)
+	// Close the setup-only task, then remove its synthetic readiness. The actual
+	// task below must be admitted using the production publisher's fresh receipt.
+	if _, e = db.Exec("UPDATE system_backup_v2_backups SET status='failed',failure_category='runner_failed',started_at=COALESCE(started_at,UTC_TIMESTAMP(6)),finished_at=UTC_TIMESTAMP(6),can_cancel=FALSE WHERE public_id=?", bootstrapTask); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = db.Exec("UPDATE system_backup_v2_execution_readiness SET ready=FALSE,expires_at=UTC_TIMESTAMP(6)"); e != nil {
+		t.Fatal(e)
+	}
+	command := exec.CommandContext(ctx, "/tmp/public-controller")
+	command.Env = append(os.Environ(), "DB_HOST="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), "DB_PORT="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT"), "DB_USER="+strings.Split(grant.DatabaseAccount, "@")[0], "DB_PASSWORD=synthetic-native-only", "DB_NAME="+cfg.SourceDatabase, "SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED=true", "SYSTEM_BACKUP_CONTROLLER_ENABLED=true", "SYSTEM_BACKUP_EXECUTION_PROTOCOL=public-v1", "SYSTEM_BACKUP_ENABLED=true", "SYSTEM_BACKUP_PUBLIC_CONFIG_FILE="+configFile, "SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256="+digestJSON(cfgRaw), "SYSTEM_BACKUP_FORWARD_GRANT_SHA256="+forwardHash, "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256="+recoveryHash, "POD_NAME="+os.Getenv("HOSTNAME"), "POD_NAMESPACE="+cfg.Namespace, "CLAWMANAGER_LEADER_ELECTION=true")
+	logFile, e := os.OpenFile(filepath.Join(filepath.Dir(configFile), "production.log"), os.O_CREATE|os.O_WRONLY, 0600)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer logFile.Close()
+	command.Stdout = logFile
+	command.Stderr = logFile
+	if e = command.Start(); e != nil {
+		t.Fatal(e)
+	}
+	done := make(chan error, 1)
+	go func() { done <- command.Wait(); close(done) }()
+	t.Cleanup(func() {
+		command.Process.Signal(syscall.SIGTERM)
+		select {
+		case <-done:
+		case <-time.After(10 * time.Second):
+			command.Process.Kill()
+			<-done
+		}
+	})
+	waitNative(t, ctx, func() bool {
+		select {
+		case <-done:
+			raw, _ := os.ReadFile(filepath.Join(filepath.Dir(configFile), "production.log"))
+			for _, line := range strings.Split(string(raw), "\n") {
+				if strings.Contains(line, "[system-backup-public]") || strings.Contains(line, "[system-backup-controller]") {
+					t.Log(line)
+				}
+			}
+			t.Fatal("production command exited before readiness")
+		default:
+		}
+		var ready bool
+		return db.QueryRow("SELECT ready AND execution_protocol='public-v1' AND supported_parts='workspace' AND expires_at>UTC_TIMESTAMP(6) FROM system_backup_v2_execution_readiness WHERE task_type='backup'").Scan(&ready) == nil && ready
+	})
+	apiServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler.Create(w, r, read.BackupTask, "m3-production-http")
+	}))
+	defer apiServer.Close()
+	request, e := http.NewRequestWithContext(ctx, http.MethodPost, apiServer.URL+"/api/v1/admin/system-backups", strings.NewReader(`{"requested_parts":["workspace"],"task_purpose":"functional_test"}`))
+	if e != nil {
+		t.Fatal(e)
+	}
+	request.Header.Set("Authorization", "Bearer "+operator)
+	request.Header.Set("Idempotency-Key", "native-production-functional-0001")
+	request.Header.Set("Content-Type", "application/json")
+	response, e := apiServer.Client().Do(request)
+	if e != nil {
+		t.Fatal(e)
+	}
+	io.Copy(io.Discard, response.Body)
+	response.Body.Close()
+	if response.StatusCode != http.StatusAccepted {
+		t.Fatal("production HTTP create", response.StatusCode)
+	}
+	var task string
+	if e = db.QueryRow("SELECT public_id FROM system_backup_v2_backups WHERE public_id<>?", bootstrapTask).Scan(&task); e != nil {
+		t.Fatal(e)
+	}
+	waitNative(t, ctx, func() bool {
+		select {
+		case <-done:
+			raw, _ := os.ReadFile(filepath.Join(filepath.Dir(configFile), "production.log"))
+			for _, line := range strings.Split(string(raw), "\n") {
+				if strings.Contains(line, "[system-backup-public]") {
+					t.Log(line)
+				}
+			}
+			t.Fatal("production controller stopped with active task")
+		default:
+		}
+		var state string
+		if db.QueryRow("SELECT status FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&state) != nil {
+			return false
+		}
+		if state == "failed" || state == "canceled" {
+			t.Fatal("production task failed")
+		}
+		return state == "validating"
+	})
+	var stopped, resumed sql.NullTime
+	var jobs, attempts int
+	if db.QueryRow("SELECT collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?", task).Scan(&stopped, &resumed) != nil || !stopped.Valid || !resumed.Valid {
+		t.Fatal("production physical recovery missing")
+	}
+	if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", task).Scan(&jobs) != nil || jobs != 1 {
+		t.Fatal("production duplicate job")
+	}
+	if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_public_id=?", task).Scan(&attempts) != nil || attempts != 1 {
+		t.Fatal("production duplicate attempt")
+	}
+	identity, e := c.NewPinnedExecutionIdentity(cfg.ForwardGrant.Path, forwardHash, cfg.KeyDirectory, signing.Public().(ed25519.PublicKey))
+	if e != nil {
+		t.Fatal(e)
+	}
+	binding := staging.Binding{BackupID: task, Attempt: "1", Path: "workspace", PartIndex: 1, CaptureContextHash: grant.ConfigSHA256, EnvelopeID: "functional-workspace"}
+	bindRaw, _ := json.Marshal(binding)
+	key, e := identity.DeriveCaptureKey(ctx, d.Authority{InstallationID: grant.InstallationID, TaskPublicID: task, ClaimOwner: grant.ControllerOwner, ConfigVersion: grant.ConfigVersion, ConfigSHA256: grant.ConfigSHA256}, bindRaw)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer clear(key)
+	sealed, e := os.ReadFile(filepath.Join(cfg.StagingDirectory, task, "workspace.enc"))
+	if e != nil {
+		t.Fatal("production sealed output unavailable")
+	}
+	found := false
+	if e = staging.ConsumeCompressed(ctx, bytes.NewReader(sealed), key, binding, cfg.Workspace.MaxCompressedBytes, cfg.Workspace.MaxArchiveBytes, func(plain io.Reader) error {
+		r := tar.NewReader(plain)
+		for {
+			h, z := r.Next()
+			if z == io.EOF {
+				return nil
+			}
+			if z != nil {
+				return z
+			}
+			if h.Name == "data.txt" {
+				content, z := io.ReadAll(io.LimitReader(r, 1024))
+				if z != nil {
+					return z
+				}
+				if string(content) != "native-capture-preserves-source\n" {
+					return errors.New("production content differs")
+				}
+				found = true
+			}
+		}
+	}); e != nil || !found {
+		t.Fatal("production authenticated content mismatch", e)
+	}
+	counter := filepath.Join("/source", cfg.Workspace.SubPath, "counter.txt")
+	before, e := os.ReadFile(counter)
+	if e != nil {
+		t.Fatal(e)
+	}
+	waitNative(t, ctx, func() bool { after, z := os.ReadFile(counter); return z == nil && !bytes.Equal(before, after) })
+	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating; capacity synthetic")
+}

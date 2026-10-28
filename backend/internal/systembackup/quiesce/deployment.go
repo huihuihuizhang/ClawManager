@@ -47,6 +47,9 @@ type deploymentCheckpoint struct {
 // proof after force deletion or a node partition. ConfirmResumed checks runtime
 // health/reconciliation, beyond Deployment readiness. No permissive defaults.
 type DeploymentWriter struct {
+	// Platform is deployment-owned, never a model/user option. Platform writers
+	// carry no fictitious Runtime identity; the guard must prove their registry.
+	Platform                      bool
 	Client                        kubernetes.Interface
 	Namespace, Name, UID, FenceID string
 	Runtime                       scope.Runtime
@@ -67,9 +70,15 @@ func (w *DeploymentWriter) ready(ctx context.Context) error {
 	if w.Client == nil || w.Namespace == "" || w.Name == "" || w.UID == "" || w.FenceID == "" || len(w.FenceID) > 128 || w.Guard == nil || w.ConfirmStopped == nil || w.ConfirmResumed == nil {
 		return flow.ErrNotReady
 	}
-	p, err := scope.PlanRuntime(w.Runtime)
-	if err != nil || p.Mode != "pro" {
-		return flow.ErrNotReady
+	if w.Platform {
+		if w.Runtime != (scope.Runtime{}) {
+			return flow.ErrNotReady
+		}
+	} else {
+		p, err := scope.PlanRuntime(w.Runtime)
+		if err != nil || p.Mode != "pro" {
+			return flow.ErrNotReady
+		}
 	}
 	return ctx.Err()
 }

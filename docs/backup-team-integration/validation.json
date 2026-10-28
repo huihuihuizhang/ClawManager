@@ -1,5 +1,5 @@
 {
-  "status": "m3_in_progress_atomic_release_and_historical_recovery_verified",
+  "status": "m3_in_progress_production_workspace_entry_and_original_job_recovery_verified",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -128,12 +128,27 @@
       "result": "passed",
       "local_log_sha256": "213f43a00c2d0ade4e841c0dc91ab1d29b1cba1007f7a22cc85de51c32b56d24",
       "boundary": "Backend go test ./... passed; opt-in environment cases separate. No frontend change in this work block."
+    },
+    "m3_production_entry_and_binding": {
+      "result": "passed",
+      "local_log_sha256": "d464750f2a35c88a31c18e87f7881e7d5a480ff4cb3eb083df22001f6f5ba26a",
+      "boundary": "Actual production controller binary + kind leader/Pod UID + signed mounted config + mTLS HTTP/RBAC + compiled worker + authenticated archived content and resumed source counter. Original binding SQL write failure recovers under separate authority; one original Job. Explicit platform-workspace functional scope; capacity synthetic and broad disposable control-schema grants. No full-system publication or independent restore acceptance."
+    },
+    "m3_entry_backend": {
+      "result": "passed",
+      "local_log_sha256": "37f91d6dfd061dfc8de9e78e4a6e61c122928bc884e9d24d298926a7ef109f3b",
+      "boundary": "Backend go test ./... passed; native opt-in evidence separately recorded."
+    },
+    "m3_entry_unit": {
+      "result": "passed",
+      "local_log_sha256": "6a513c193bbe20216ccee84faecc539a996debf3b07afc91ae753454efd7a8ea",
+      "boundary": "Closed deployment-config pins, bounded original-ACK save retry, surviving task failure and cancel-before-pass tests passed."
     }
   },
   "not_accepted": [
-    "Complete M2 production public owner startup, real capability/readiness publisher and all-domain gate/writer composition",
+    "Complete full-domain production composition; current production entry is explicit platform-workspace with zero source instances and functional_test only",
     "SQL/Redis/object/deployment/secret collectors with real providers; actual Lite/Pro/OpenClaw/Hermes runtime and background writer pause/resume",
-    "Fully automatic unknown dispatch without actual binding/process and uncertain acquisition/release projection recovery; running cancel and operator recovery endpoints",
+    "Unknown source stop/dispatch remains protected when original identity cannot be proven; running cancel/operator recovery endpoints still pending",
     "Production capacity observations, independent key providers/minimum SQL/Kubernetes grants/TLS and actual worker final image deployment",
     "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],

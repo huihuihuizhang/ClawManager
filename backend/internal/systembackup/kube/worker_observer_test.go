@@ -14,7 +14,7 @@ import (
 )
 
 func TestWorkerObserverRejectsResourceAndNestedSpecDrift(t *testing.T) {
-	for _, scenario := range []string{"valid", "defaults", "job-uid", "pod-owner", "privileged", "extra-env", "pvc-replaced", "pv-remapped", "node-replaced", "restart", "multiple-pods", "missing-binding"} {
+	for _, scenario := range []string{"valid", "defaults", "job-uid", "pod-owner", "privileged", "extra-env", "pvc-replaced", "pv-remapped", "node-replaced", "restart", "multiple-pods", "missing-binding", "terminal", "terminal-recovery"} {
 		t.Run(scenario, func(t *testing.T) {
 			job, e := Job(JobRequest{Identity: Identity{"backup", "capture", "task-one"}, Image: "worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "backup", Command: []string{"/backup-worker"}, Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/var/lib/workspace"}}}, NodeName: "node-a", StagingClaim: "staging", DeadlineSeconds: 120})
 			if e != nil {
@@ -48,6 +48,11 @@ func TestWorkerObserverRejectsResourceAndNestedSpecDrift(t *testing.T) {
 				pod.Spec.DNSPolicy = corev1.DNSClusterFirst
 				pod.Spec.SchedulerName = "default-scheduler"
 				pod.Spec.Containers[0].ImagePullPolicy = corev1.PullIfNotPresent
+			case "terminal", "terminal-recovery":
+				pod.Status.Phase = corev1.PodSucceeded
+				status := &pod.Status.ContainerStatuses[0]
+				status.Ready = false
+				status.State = corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ContainerID: status.ContainerID, FinishedAt: metav1.Now()}}
 			case "job-uid":
 				liveJob.UID = "replacement"
 			case "pod-owner":
@@ -77,7 +82,10 @@ func TestWorkerObserverRejectsResourceAndNestedSpecDrift(t *testing.T) {
 				}
 			}
 			observation, e := (WorkerObserver{Client: client}).Observe(context.Background(), record, security)
-			if (scenario == "valid" || scenario == "defaults") != (e == nil) {
+			if scenario == "terminal-recovery" {
+				observation, e = (WorkerObserver{Client: client}).ObserveForRecovery(context.Background(), record, security)
+			}
+			if (scenario == "valid" || scenario == "defaults" || scenario == "terminal-recovery") != (e == nil) {
 				t.Fatal("worker identity acceptance mismatch", e)
 			}
 			if e == nil && observation.UID != "pod-uid" {

@@ -23,21 +23,22 @@ import (
 // ConfigSHA256 binds the exact purposes/resources/versions admitted by A. This
 // does not grant provider access, Job creation, publication, or recovery.
 type ExecutionGrant struct {
-	Version            string               `json:"schema_version"`
-	InstallationID     string               `json:"installation_id"`
-	ControllerOwner    string               `json:"controller_owner"`
-	DatabaseAccount    string               `json:"database_account"`
-	ServerUUID         string               `json:"server_uuid"`
-	Database           string               `json:"database"`
-	ConfigVersion      uint64               `json:"config_version"`
-	ConfigSHA256       string               `json:"config_sha256"`
-	ProfileSHA256      string               `json:"profile_sha256"`
-	NotBefore          time.Time            `json:"not_before"`
-	ExpiresAt          time.Time            `json:"expires_at"`
-	Actions            []string             `json:"actions"`
-	RecordKeys         []ExecutionRecordKey `json:"record_keys"`
-	CaptureKeys        []ExecutionRecordKey `json:"capture_keys,omitempty"`
-	WorkerIssuerSHA256 string               `json:"worker_issuer_sha256,omitempty"`
+	Version                string               `json:"schema_version"`
+	InstallationID         string               `json:"installation_id"`
+	ControllerOwner        string               `json:"controller_owner"`
+	DatabaseAccount        string               `json:"database_account"`
+	ServerUUID             string               `json:"server_uuid"`
+	Database               string               `json:"database"`
+	ConfigVersion          uint64               `json:"config_version"`
+	ConfigSHA256           string               `json:"config_sha256"`
+	ProfileSHA256          string               `json:"profile_sha256"`
+	NotBefore              time.Time            `json:"not_before"`
+	ExpiresAt              time.Time            `json:"expires_at"`
+	Actions                []string             `json:"actions"`
+	RecordKeys             []ExecutionRecordKey `json:"record_keys"`
+	CaptureKeys            []ExecutionRecordKey `json:"capture_keys,omitempty"`
+	DeploymentConfigSHA256 string               `json:"deployment_config_sha256,omitempty"`
+	WorkerIssuerSHA256     string               `json:"worker_issuer_sha256,omitempty"`
 }
 type ExecutionRecordKey struct {
 	Ref    string `json:"ref"`
@@ -146,6 +147,9 @@ func (p *PinnedExecutionIdentity) decode(raw []byte) (ExecutionGrant, error) {
 			return ExecutionGrant{}, ErrExecutionAuthority
 		}
 		keys[k.Ref] = true
+	}
+	if g.DeploymentConfigSHA256 != "" && !executionHash.MatchString(g.DeploymentConfigSHA256) {
+		return ExecutionGrant{}, ErrExecutionAuthority
 	}
 	if len(g.CaptureKeys) > 8 {
 		return ExecutionGrant{}, ErrExecutionAuthority
@@ -298,3 +302,38 @@ func (p *PinnedExecutionIdentity) Resolve(ctx context.Context, a d.Authority, re
 
 var _ ExecutionAuthorization = (*PinnedExecutionIdentity)(nil)
 var _ ExecutionRecordKeys = (*PinnedExecutionIdentity)(nil)
+
+// DeploymentBinding is public metadata, never a grant to execute a task.
+func (p *PinnedExecutionIdentity) DeploymentBinding() ExecutionGrant {
+	if p == nil {
+		return ExecutionGrant{}
+	}
+	g := p.grant
+	g.Actions = append([]string(nil), g.Actions...)
+	g.RecordKeys = append([]ExecutionRecordKey(nil), g.RecordKeys...)
+	g.CaptureKeys = append([]ExecutionRecordKey(nil), g.CaptureKeys...)
+	return g
+}
+func (p *PinnedExecutionIdentity) CheckDeployment(ctx context.Context, db *sql.DB) error {
+	if p == nil || db == nil {
+		return ErrExecutionAuthority
+	}
+	var now time.Time
+	var account, server, database string
+	if db.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6),CURRENT_USER(),@@server_uuid,DATABASE()").Scan(&now, &account, &server, &database) != nil {
+		return ErrExecutionAuthority
+	}
+	a := d.Authority{InstallationID: p.grant.InstallationID, ClaimOwner: p.grant.ControllerOwner, ConfigVersion: p.grant.ConfigVersion, ConfigSHA256: p.grant.ConfigSHA256}
+	if p.current(a, now) != nil || account != p.grant.DatabaseAccount || server != p.grant.ServerUUID || database != p.grant.Database {
+		return ErrExecutionAuthority
+	}
+	for _, k := range append(append([]ExecutionRecordKey(nil), p.grant.RecordKeys...), p.grant.CaptureKeys...) {
+		raw, e := readExecutionFile(filepath.Join(p.keyDirectory, k.Ref), 32)
+		valid := e == nil && len(raw) == 32 && recordHash(raw) == k.SHA256
+		clear(raw)
+		if !valid {
+			return ErrExecutionAuthority
+		}
+	}
+	return nil
+}

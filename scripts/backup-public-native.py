@@ -45,6 +45,8 @@ def main():
     build.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, GOOS='linux', GOARCH='amd64', CGO_ENABLED='0')
     run(['go', '-C', 'backend', 'test', '-c', '-ldflags=-s -w', '-o', str(build/'native.test'), './internal/systembackupapi'], env=env)
+    if 'production' in a.test:
+        run(['go','-C','backend','build','-trimpath','-ldflags=-s -w','-o',str(build/'public-controller'),'./cmd/system-backup-v2-controller'],env=env)
     tag = 'cm-backup-native:' + a.cluster
     if a.build:
         run(['go', '-C', 'backend', 'build', '-trimpath', '-ldflags=-s -w', '-o', str(build/'backup-worker'), './cmd/backup-worker'], env=env)
@@ -70,6 +72,9 @@ def main():
         run(k+['-n',ns,'wait','--for=condition=Ready','pod/'+pod,'--timeout=90s'], stdout=subprocess.DEVNULL)
     run(k+['-n',ns,'cp',(build/'native.test').relative_to(ROOT).as_posix(),'native-controller:/tmp/native.test'])
     run(k+['-n',ns,'exec','native-controller','--','chmod','0755','/tmp/native.test'])
+    if 'production' in a.test:
+        run(k+['-n',ns,'cp',(build/'public-controller').relative_to(ROOT).as_posix(),'native-controller:/tmp/public-controller'])
+        run(k+['-n',ns,'exec','native-controller','--','chmod','0755','/tmp/public-controller'])
     log = (ROOT/a.log).resolve()
     allowed = (ROOT/'team-optimization-docs').resolve()
     if not log.is_relative_to(allowed):
