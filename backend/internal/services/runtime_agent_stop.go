@@ -20,6 +20,12 @@ type RuntimeAgentStopClient interface {
 }
 
 type RuntimeAgentStopCapabilities struct {
+	// Upgrade stop alone may retain an instance fence forever. Backup must not
+	// stop an online source unless the runtime separately attests complete
+	// backup-safe isolation AND original-source resume support. Old runtimes
+	// omit these fields and therefore remain ineligible for backup stop.
+	BackupSafe        bool   `json:"backup_safe,omitempty"`
+	BackupResume      bool   `json:"backup_resume,omitempty"`
 	Protocol          int    `json:"protocol"`
 	PodUID            string `json:"pod_uid"`
 	AgentEpoch        string `json:"agent_epoch"`

@@ -309,7 +309,7 @@ func (w *BackupGatewayWriter) stopCapabilities(ctx context.Context) (*RuntimeAge
 		return nil, flow.ErrNotReady
 	}
 	caps, err := agent.StopCapabilities(ctx, w.Source.Endpoint)
-	if err != nil || caps == nil || caps.Protocol != 1 || !caps.GracefulStop || caps.PodUID != w.Source.PodUID || !stopTokenValid(caps.AgentEpoch) || caps.ConfirmationScope != "process_group" {
+	if err != nil || caps == nil || caps.Protocol != 1 || !caps.GracefulStop || !caps.BackupSafe || !caps.BackupResume || caps.PodUID != w.Source.PodUID || !stopTokenValid(caps.AgentEpoch) || caps.ConfirmationScope != "process_group" {
 		return nil, flow.ErrNotReady
 	}
 	return caps, nil

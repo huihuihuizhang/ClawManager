@@ -132,7 +132,7 @@ func TestConcreteGatewayFactoryRestoresOriginalStateWithPublicRecoveryScope(t *t
 				defer mu.Unlock()
 
 				if r.URL.Path == "/v1/stop-capabilities" {
-					json.NewEncoder(w).Encode(services.RuntimeAgentStopCapabilities{Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
+					json.NewEncoder(w).Encode(services.RuntimeAgentStopCapabilities{BackupSafe: true, BackupResume: true, Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
 					return
 				}
 				if r.URL.Path == "/v1/gateway-stop" {

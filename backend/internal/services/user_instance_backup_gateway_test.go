@@ -21,6 +21,7 @@ type backupGatewayFixture struct {
 	creates, deletes, completed               int
 	claimed, loseCreate, holdCreate, loseStop bool
 	unsupportedStop, unconfirmedStop          bool
+	upgradeOnlyStop                           bool
 	blockPoint                                string
 	writer                                    *BackupGatewayWriter
 }
@@ -46,7 +47,7 @@ func newBackupGatewayFixture(t *testing.T, agent string, running bool) *backupGa
 				out.WriteHeader(404)
 				return
 			}
-			json.NewEncoder(out).Encode(RuntimeAgentStopCapabilities{Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
+			json.NewEncoder(out).Encode(RuntimeAgentStopCapabilities{BackupSafe: !f.upgradeOnlyStop, BackupResume: !f.upgradeOnlyStop, Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
 			return
 		}
 		if r.URL.Path == "/v1/gateway-stop" {
@@ -356,5 +357,16 @@ func TestBackupGatewayWriterMissingOriginalRegistryIsNotOriginallyStopped(t *tes
 	}
 	if f.deletes != 0 || f.creates != 0 {
 		t.Fatal("ambiguous original source mutated")
+	}
+}
+
+func TestBackupGatewayWriterRejectsUpgradeStopWithoutBackupResume(t *testing.T) {
+	f := newBackupGatewayFixture(t, "opencode", true)
+	f.upgradeOnlyStop = true
+	if _, err := f.writer.Observe(backupContext(t)); err == nil {
+		t.Fatal("upgrade-only fence accepted as a resumable backup stop")
+	}
+	if f.deletes != 0 || f.creates != 0 {
+		t.Fatal("source stopped before original-resume capability was admitted")
 	}
 }
