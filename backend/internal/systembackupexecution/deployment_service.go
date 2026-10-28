@@ -246,7 +246,7 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 	}
 	queue := c.SQLExecutionQueue{DB: db, InstallationID: cfg.InstallationID, Owner: cfg.ControllerOwner, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}, Authorization: deploymentAuthorization{Service: s}, ApplicationScope: cfg.ApplicationScope, Recovery: &recovery}
 	stage = "composition"
-	s.Runtime, e = NewPublicCapture(PublicCaptureConfig{Owner: owner, Queue: queue, Source: source, Profile: b.ProfileKey{ID: s.profile.Profile, Revision: s.profile.Revision}, Guard: deploymentBaseProbe{Service: s}, Admission: s.admit, Inventory: s.inventory, RecoveryTimeout: 2 * time.Minute})
+	s.Runtime, e = NewPublicCapture(PublicCaptureConfig{Owner: owner, Queue: queue, Source: source, Profile: b.ProfileKey{ID: s.profile.Profile, Revision: s.profile.Revision}, Guard: deploymentBaseProbe{Service: s}, Admission: s.admit, RecoveryAdmission: s.recoveryAdmit, Inventory: s.inventory, RecoveryTimeout: 2 * time.Minute})
 	if e != nil {
 		return nil, e
 	}
@@ -261,11 +261,17 @@ func (s *DeploymentService) Close() {
 		s.staging.Close()
 	}
 }
-func (s *DeploymentService) admit(_ context.Context, in d.Input) error {
+func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
+	if e := s.recoveryAdmit(ctx, in); e != nil {
+		return e
+	}
+	return CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config)
+}
+func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	if supportedPublicCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
 		return d.ErrNotReady
 	}
-	return nil
+	return nil // Original journal reads/effects still require SQLRecoveryAuthority.
 }
 func (s *DeploymentService) inventory(_ context.Context, _ d.Input, x b.Discovery) error {
 	if len(x.Writers) != len(s.Config.Writers) || len(x.Parts) != 1 || x.Parts[0].Part != "workspace" {
@@ -372,6 +378,10 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	}
 	stage = "control-grants"
 	if e := s.checkControlGrants(ctx, s.Runtime.Owner.Gate.Authority.DB); e != nil {
+		return e
+	}
+	stage = "kubernetes-access"
+	if e := CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config); e != nil {
 		return e
 	}
 	stage = "recovery-grant"

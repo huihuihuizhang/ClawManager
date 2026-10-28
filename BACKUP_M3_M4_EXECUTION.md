@@ -96,3 +96,15 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 真实延迟退出回归使用13秒 preStop，超过原10秒限制，实际生产二进制＋scratch Worker＋真实容量＋精确 SQL 角色49.93秒通过：退出 ACK、源恢复、内容/详情/安全取消均通过。缺退出 ACK 的故障仍保护资源，未将超时或404改成证明。全量后端及 watcher 选用独立 client 的定向验证另记；App 初版镜像在修复前构建，不视为最终验收，后续需重建并从该镜像提取 controller 再验。
 
 提交复核：镜像阶段发现了测试负载差异，而非只列构建成功。一次本地 fixture 更新使用旧 resourceVersion 发生冲突，改为创建前固化 preStop，避免为测试引入重试状态。初次镜像故障提前读取封闭日志并停止已确认的本地测试子进程让清理完成，没有耗尽八分钟统一超时。下一块复用最终镜像和真实入口接最小 Kubernetes 权限，不重新搭建环境。
+
+### 第十工作块：实际最小 Kubernetes 角色与独立恢复准入
+
+从签名配置导出同一份真实调用权限清单，用于管理员 RBAC 输出和新任务实际 SelfSubjectAccessReview：控制命名空间的动态 Job/identity、源 Deployment 精确名称 GET/PATCH、只读 Pod/RS/HPA、指定 node/PVC/PV/worker SA 与独立选主 lease。没有 exec/log、source Secret list、Deployment创建/删除、无关对象 mutation 或 RBAC 管理。默认不自行申请权限，安装命令只输出可审阅对象。
+
+公共 runner 增加显式 RecoveryAdmission，默认沿用原 Admission 而非放行；生产恢复仅检查原 profile/scope，再由原独立 SQLRecoveryAuthority 执行逐步授权，不依赖新建 Job 的权限。新任务仍必须通过完整权限预检。
+
+真实验收由宿主安装器临时清空本轮原 broad fixture roles，运行正式控制器和 scratch Worker，验证 API server 否认 exec、Secret list、无关源/节点操作；正常实际容量/最小 SQL/Kubernetes角色链40.30秒通过。恢复例确认原 Job 实际存在后撤掉所有 namespaced create 权限和 forward/source/私钥，重启后65.23秒通过，原任务 failed/idle、实际源 counter 恢复，只有一份原 Job/attempt；后端全量通过。新旧 test fixture 权限恢复后才执行自有资源清理。
+
+提交复核：首次实际最小角色暴露 UPDATE/PATCH 写法不符和 shared Admission 错接 forward 检查，均修正真实调用与权限边界，没有补 ALL。一次 ack 路径误限定001导致安装确认超时，改为受限的实际 Go TempDir编号。一次正常用例未及时读取诊断而等了八分钟，这仍是可避免的浪费；已改为正常链出现持久恢复受阻时立即结束测试并保留封闭诊断。下一步只做最终镜像与已实现用户链验收，不重复已通过的大矩阵。
+
+本块恢复测试早期错误地在 create_dispatched 位落盘就中断，这可能发生在真实 API 请求之前；等待到了保护状态而非预期的原 Job 恢复。已让该例先核实真实原 Job UID/owner，再测试恢复。无实际对象的未知发送仍明确受阻，这一自动收敛缺口没有被改等待条件掩盖为完成。

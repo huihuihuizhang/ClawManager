@@ -75,7 +75,7 @@ def main():
     prior["ports"] = records
     prior["status"] = "in_progress_not_activation_ready"
     prior["hash_basis"] = "source Git blob SHA256; target current worktree SHA256"
-    prior["activation"] = "legacy retained; v2 has no production composition or activation endpoint"
+    prior["activation"] = "legacy retained; explicit public-v1 workspace functional composition exists; complete full-domain publication/restore not activation ready"
     MANIFEST.write_text(json.dumps(prior, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     print(f"Mapped {len(records)} paths; source blobs found for {len(requested)}")
 

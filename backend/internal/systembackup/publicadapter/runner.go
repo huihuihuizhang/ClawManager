@@ -84,6 +84,9 @@ type Dependencies struct {
 	// Admission verifies current owner/profile/parts/writer-registry readiness;
 	// it is mandatory, even when every local dependency is non-nil.
 	Admission func(context.Context, d.Input) error
+	// Explicit independent recovery scope. Omitted implementations retain the
+	// existing Admission check; recovery never gets an allow-all fallback.
+	RecoveryAdmission func(context.Context, d.Input) error
 	// ValidateInventory proves exact writer/part coverage against the reviewed
 	// public registries, including external storage writers. Non-empty lists
 	// alone are not coverage. This receives a detached copy of the plan data.
@@ -117,6 +120,9 @@ func NewPublicRunner(deps Dependencies) (d.Runner, error) {
 		profiles[k] = p
 	}
 	deps.Profiles = profiles
+	if deps.RecoveryAdmission == nil {
+		deps.RecoveryAdmission = deps.Admission
+	}
 	return &runner{deps}, nil
 }
 
@@ -196,7 +202,11 @@ func (r *runner) admit(ctx context.Context, in d.Input, ports d.Ports, recovery 
 			return nil, classify(err)
 		}
 	}
-	if err := r.deps.Admission(ctx, cloneInput(in)); err != nil {
+	admission := r.deps.Admission
+	if recovery {
+		admission = r.deps.RecoveryAdmission
+	}
+	if err := admission(ctx, cloneInput(in)); err != nil {
 		return nil, classify(err)
 	}
 	return p, nil

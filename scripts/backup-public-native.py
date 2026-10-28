@@ -12,6 +12,7 @@ import subprocess
 import hashlib
 import uuid
 from backup_native_capacity import NativeCapacity
+from backup_native_access import NativeAccess
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -29,11 +30,14 @@ def main():
     ap.add_argument('--physical-capacity',action='store_true')
     ap.add_argument('--worker-image', help='Task-owned local cm-backup-worker tag built by the production Dockerfile')
     ap.add_argument('--controller-image', help='Task-owned local cm-backup-app tag; extract and run its exact public controller binary')
+    ap.add_argument('--minimum-kubernetes', action='store_true', help='Temporarily enforce the rendered minimum role on the original native controller identity')
     ap.add_argument('--test', default='^TestPublicCaptureNativeMySQLKubernetes$')
     ap.add_argument('--log', default='team-optimization-docs/m3-native.log')
     a = ap.parse_args()
     if a.physical_capacity and 'production-' not in a.test:
         raise SystemExit('Physical capacity mode requires the production entry case')
+    if a.minimum_kubernetes and 'production-' not in a.test:
+        raise SystemExit('Minimum Kubernetes mode requires a production entry case')
     if not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.cluster) or not re.fullmatch(r'cm-backup-[a-z0-9-]+', a.mysql):
         raise SystemExit('Explicit task-owned cluster/container names required')
     node = a.cluster + '-control-plane'
@@ -123,12 +127,31 @@ def main():
         command=k+['-n',ns,'exec','native-controller','--','env','NATIVE_BACKUP_IMAGE='+image,'NATIVE_BACKUP_WORKER_IMAGE='+worker_image]
         if a.physical_capacity:
             command+=['NATIVE_BACKUP_PHYSICAL_CAPACITY=true']
+        if a.minimum_kubernetes:
+            command+=['NATIVE_BACKUP_MINIMUM_KUBERNETES=true']
         command+=['/tmp/native.test','-test.v','-test.run='+a.test,'-test.timeout=15m']
         feed=None
+        access=NativeAccess(k) if a.minimum_kubernetes else None
         process=subprocess.Popen(command,cwd=ROOT,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
         try:
             for line in process.stdout:
                 f.write(line);f.flush()
+                if line.startswith('NATIVE_KUBERNETES_ACCESS '):
+                    if access is None:
+                        raise RuntimeError('unexpected native access request')
+                    try:
+                        access.install(json.loads(line.split(' ',1)[1]))
+                    except Exception:
+                        f.write('native-access=setup-unavailable\n');f.flush()
+                        access.restore()
+                if line.startswith('NATIVE_KUBERNETES_RESTORE '):
+                    if access is None:
+                        raise RuntimeError('unexpected native access restore')
+                    access.restore(json.loads(line.split(' ',1)[1]))
+                if line.startswith('NATIVE_KUBERNETES_RECOVERY_ONLY '):
+                    if access is None:
+                        raise RuntimeError('unexpected native recovery access request')
+                    access.recovery_only(json.loads(line.split(' ',1)[1]))
                 if line.startswith('NATIVE_CAPACITY_REQUEST '):
                     if not a.physical_capacity or feed is not None:
                         raise RuntimeError('unexpected or duplicate physical capacity request')
@@ -144,6 +167,8 @@ def main():
                 process.terminate();process.wait(timeout=20)
             if feed is not None:
                 feed.close()
+            if access is not None:
+                access.restore()
         if a.physical_capacity and (feed is None or feed.samples==0) and code==0:
             raise RuntimeError('physical capacity evidence missing')
     print('image='+image)

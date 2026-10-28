@@ -48,6 +48,7 @@ import (
 	security "clawreef/internal/systembackupsecurity"
 	"github.com/go-sql-driver/mysql"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
@@ -471,7 +472,11 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 			done()
 		}
 		entryCfg.IssuerSHA256 = digestJSON(issuer.Certificate.Raw)
-		testNativeProductionEntry(t, ctx, db, handler, operator, task, entryCfg, grant, private, serverCert, caPEM, scenario == "production-recovery-only")
+		if os.Getenv("NATIVE_BACKUP_MINIMUM_KUBERNETES") == "true" {
+			restoreAccess := nativeMinimumKubernetes(t, ctx, client, entryCfg)
+			defer restoreAccess()
+		}
+		testNativeProductionEntry(t, ctx, db, client, handler, operator, task, entryCfg, grant, private, serverCert, caPEM, scenario == "production-recovery-only")
 		return
 	}
 	writerID := "deployment/" + nsName + "/" + deploymentName
@@ -1078,7 +1083,7 @@ func (c nativeProjectionConn) IsValid() bool { return c.Conn.(driver.Validator).
 // This fixture starts the actual production command; it does not replace its
 // execution owner or readiness with a test callback. Capacity remains explicit
 // synthetic input here and is not production capacity/grants acceptance.
-func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, handler *Handler, operator, bootstrapTask string, cfg execution.DeploymentConfig, grant c.ExecutionGrant, signing ed25519.PrivateKey, serverCert tls.Certificate, caPEM []byte, recoveryRestart bool) {
+func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, client kubernetes.Interface, handler *Handler, operator, bootstrapTask string, cfg execution.DeploymentConfig, grant c.ExecutionGrant, signing ed25519.PrivateKey, serverCert tls.Certificate, caPEM []byte, recoveryRestart bool) {
 	t.Helper()
 	write := func(path string, raw []byte) {
 		t.Helper()
@@ -1200,8 +1205,15 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 	}
 	if recoveryRestart {
 		waitNative(t, ctx, func() bool {
-			var n int
-			return db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE", task).Scan(&n) == nil && n == 1
+			// This case recovers an actual original Job. The durable send bit
+			// precedes the API call: stopping at that bit can instead exercise
+			// an unresolved send with no observed object, which must stay fenced.
+			var name string
+			if db.QueryRow("SELECT resource_name FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE", task).Scan(&name) != nil {
+				return false
+			}
+			job, err := client.BatchV1().Jobs(cfg.Namespace).Get(ctx, name, metav1.GetOptions{})
+			return err == nil && job.UID != "" && job.Labels[kube.OwnerLabel] == task
 		})
 		recoveryBytes, z := os.ReadFile(cfg.RecoveryGrant.Path)
 		if z != nil {
@@ -1227,6 +1239,14 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		}
 		write(cfg.RecoveryGrant.Path, recoveryBytes)
 		clear(recoveryBytes)
+		if os.Getenv("NATIVE_BACKUP_MINIMUM_KUBERNETES") == "true" {
+			ack := filepath.Join(filepath.Dir(cfg.ProfileFile), "kubernetes-recovery-only")
+			raw, _ := json.Marshal(map[string]string{"ack_file": ack})
+			fmt.Println("NATIVE_KUBERNETES_RECOVERY_ONLY " + string(raw))
+			bounded, cancel := context.WithTimeout(ctx, 40*time.Second)
+			waitNative(t, bounded, func() bool { b, e := os.ReadFile(ack); return e == nil && string(b) == "confirmed\n" })
+			cancel()
+		}
 		env := append([]string(nil), command.Env...)
 		command = exec.CommandContext(ctx, "/tmp/public-controller")
 		command.Env = env
@@ -1290,6 +1310,10 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		}
 		if state == "failed" || state == "canceled" {
 			t.Fatal("production task failed")
+		}
+		var blocked int
+		if db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='diagnostic.d.recovery_blocked'", task).Scan(&blocked) == nil && blocked != 0 {
+			t.Fatal("normal production capture entered protected recovery; inspect the retained closed controller diagnostics")
 		}
 		return state == "validating"
 	})
@@ -1399,6 +1423,46 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		capacityEvidence = "actual MySQL data-volume capacity under exact SELECT-only collector"
 	}
 	t.Log("actual production binary: leader + signed mounted config + fresh capability -> real TLS HTTP create -> actual worker -> source recovered -> validating -> authorized pre-publication cancellation, sealed data retained; missing recovery proofs rejected; " + capacityEvidence)
+}
+
+func nativeMinimumKubernetes(t *testing.T, ctx context.Context, client kubernetes.Interface, cfg execution.DeploymentConfig) func() {
+	t.Helper()
+	objects, err := execution.CaptureKubernetesGrants(cfg, "native-controller")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ack := filepath.Join(filepath.Dir(cfg.ProfileFile), "kubernetes-installed")
+	raw, _ := json.Marshal(map[string]any{"objects": objects, "ack_file": ack})
+	fmt.Println("NATIVE_KUBERNETES_ACCESS " + string(raw))
+	installed, cancel := context.WithTimeout(ctx, 40*time.Second)
+	defer cancel()
+	waitNative(t, installed, func() bool { b, e := os.ReadFile(ack); return e == nil && string(b) == "confirmed\n" })
+	restore := func() {
+		ack := filepath.Join(filepath.Dir(cfg.ProfileFile), "kubernetes-restored")
+		raw, _ := json.Marshal(map[string]string{"ack_file": ack})
+		fmt.Println("NATIVE_KUBERNETES_RESTORE " + string(raw))
+		bounded, done := context.WithTimeout(context.Background(), 40*time.Second)
+		defer done()
+		waitNative(t, bounded, func() bool { b, e := os.ReadFile(ack); return e == nil && string(b) == "confirmed\n" })
+	}
+	checks := []authv1.ResourceAttributes{
+		{Namespace: cfg.Namespace, Verb: "create", Resource: "pods", Subresource: "exec", Name: "native-controller"},
+		{Namespace: cfg.Namespace, Verb: "list", Resource: "secrets"},
+		{Namespace: cfg.Namespace, Verb: "create", Group: "apps", Resource: "deployments"},
+		{Namespace: cfg.Namespace, Verb: "update", Group: "apps", Resource: "deployments", Name: "unrelated-source"},
+		{Namespace: cfg.Writers[0].Namespace, Verb: "update", Group: "apps", Resource: "deployments", Name: cfg.Writers[0].Name},
+		{Namespace: cfg.Writers[0].Namespace, Verb: "patch", Group: "apps", Resource: "deployments", Name: "unrelated-source"},
+		{Verb: "get", Resource: "nodes", Name: "unrelated-node"},
+	}
+	for _, check := range checks {
+		r, e := client.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &authv1.SelfSubjectAccessReview{Spec: authv1.SelfSubjectAccessReviewSpec{ResourceAttributes: &check}}, metav1.CreateOptions{})
+		if e != nil || r.Status.Allowed || r.Status.EvaluationError != "" {
+			restore()
+			t.Fatal("minimum Kubernetes role allowed unrelated operation")
+		}
+	}
+	t.Log("actual API server denies exec, Secret listing, source creation/unrelated mutation and unrelated node read under the temporary minimum role")
+	return restore
 }
 
 func nativeReadCaptureDetail(t *testing.T, handler *Handler, token, task, status string) {

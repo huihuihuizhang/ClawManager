@@ -118,3 +118,28 @@ final scratch worker. Watch timeout/disconnection still cannot prove exit.
 exact loaded digest. `--controller-image <cm-backup-app:tag>` extracts the exact
 controller binary and records its image ID and binary SHA. These flags target
 only explicitly owned local fixtures and do not install shared-cluster material.
+
+## Minimum Kubernetes grants
+
+Render RBAC from the signed deployment (no cluster mutation or credential output):
+
+```sh
+system-backup-controller-grants --kubernetes-config /absolute/deployment.json --kubernetes-config-sha256 <sha256> --controller-service-account <controller-sa>
+```
+
+SQL and Kubernetes modes are exclusive. Pre-create a dedicated controller SA,
+different from the worker SA. Review/apply the returned List as installation
+administrator; the controller receives no role-management permission.
+
+Dynamic Jobs/identity Secrets/ConfigMaps are restricted to the dedicated capture
+namespace. Source namespaces get only Pod observation, ReplicaSet/HPA listing
+and GET/PATCH of the exact frozen Deployment names. Nodes, namespace, PVCs/PVs
+and worker SA are named; no wildcard, exec/log, source Secret listing, source
+lifecycle creation/deletion or node proxy permission is granted. A shared
+namespace still shares its Secret-read scope: use a dedicated capture namespace.
+
+Current SelfSubjectAccessReview checks gate forward readiness/Prepare. Recovery
+has separate explicit admission and original authority; removing create rights
+must not block original cleanup. Native acceptance temporarily removes the old
+broad fixture role, exercises actual minimum access and denied operations, then
+restores only those fixture rules before cleanup. No shared-cluster grant changes.

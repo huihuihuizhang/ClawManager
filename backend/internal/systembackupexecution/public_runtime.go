@@ -17,10 +17,11 @@ type PublicCaptureConfig struct {
 	Source  b.LinuxProfileConfig
 	Profile b.ProfileKey
 	// These are the existing admitted registry/owner checks, not model inputs.
-	Admission       func(context.Context, d.Input) error
-	Inventory       func(context.Context, d.Input, b.Discovery) error
-	Guard           c.ReadinessProbe
-	RecoveryTimeout time.Duration
+	Admission         func(context.Context, d.Input) error
+	RecoveryAdmission func(context.Context, d.Input) error
+	Inventory         func(context.Context, d.Input, b.Discovery) error
+	Guard             c.ReadinessProbe
+	RecoveryTimeout   time.Duration
 }
 type PublicCapture struct {
 	Loop      c.TaskExecutionLoop
@@ -75,7 +76,16 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 		}
 		return cfg.Admission(ctx, in)
 	}
-	runner, e := b.NewPublicRunner(b.Dependencies{Profiles: map[b.ProfileKey]b.Profile{cfg.Profile: profile}, Results: PublicResults{Owner: o}, Recovery: o, Admission: admit, ValidateInventory: cfg.Inventory, RecoveryTimeout: cfg.RecoveryTimeout})
+	recoveryAdmit := admit
+	if cfg.RecoveryAdmission != nil {
+		recoveryAdmit = func(ctx context.Context, in d.Input) error {
+			if e := supportedPublicCapture(in); e != nil {
+				return e
+			}
+			return cfg.RecoveryAdmission(ctx, in)
+		}
+	}
+	runner, e := b.NewPublicRunner(b.Dependencies{Profiles: map[b.ProfileKey]b.Profile{cfg.Profile: profile}, Results: PublicResults{Owner: o}, Recovery: o, Admission: admit, RecoveryAdmission: recoveryAdmit, ValidateInventory: cfg.Inventory, RecoveryTimeout: cfg.RecoveryTimeout})
 	if e != nil {
 		return nil, e
 	}

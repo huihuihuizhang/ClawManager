@@ -73,6 +73,35 @@ func fixtureInventory(_ context.Context, _ d.Input, x Discovery) error {
 	}
 	return nil
 }
+
+func TestIndependentRecoveryAdmissionNeverBorrowsForwardReadiness(t *testing.T) {
+	f, original, plan := setup(t)
+	f.pauses = []flow.PauseRecord{{WriterID: "writer-1", Original: f.x.Writers[0].Original}}
+	f.undispatched = []string{f.x.Parts[0].Intent.JobUnitKey}
+	deps := original.(*runner).deps
+	deps.Admission = func(context.Context, d.Input) error { return d.ErrNotReady }
+	deps.RecoveryAdmission = func(context.Context, d.Input) error { return nil }
+	r, err := NewPublicRunner(deps)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = r.Prepare(context.Background(), f.in, f); err == nil {
+		t.Fatal("recovery admission enabled forward discovery")
+	}
+	if out, err := r.Recover(context.Background(), f.in, plan, f); err != nil || !out.CollectorsStopped || !out.WritersResumed {
+		t.Fatal("independent recovery depended on forward readiness", err)
+	}
+	f.denyRecovery = true
+	if _, err = r.Recover(context.Background(), f.in, plan, f); err == nil {
+		t.Fatal("independent scope bypassed recovery authority")
+	}
+	deps.RecoveryAdmission = nil
+	f.denyRecovery = false
+	r, _ = NewPublicRunner(deps)
+	if _, err = r.Recover(context.Background(), f.in, plan, f); err == nil {
+		t.Fatal("missing recovery adapter became allow-all")
+	}
+}
 func (f *fixture) Discover(context.Context, d.Input) (Discovery, error) {
 	f.discoveries++
 	return f.x, nil

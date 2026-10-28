@@ -253,6 +253,26 @@
       "result": "passed",
       "local_log_sha256": "cd466000eb771544063e0f89bdd0d88e10d0fd76161965d7c311ace1afbd34f2",
       "boundary": "Watch uses separate client and retains original ACK across transient SQL failure; explicit termination/identity negative checks pass."
+    },
+    "m4_minimum_kubernetes_forward": {
+      "result": "passed",
+      "local_log_sha256": "4e79f5cd28d7849947dd9c84fcc8bc64b21b1ffb5ac94b9c95de19abe09d0ae2",
+      "boundary": "Actual API server minimum role; real production binary, scratch worker, physical MySQL capacity, exact SQL privileges; original capture/content/detail/cancel/retention pass. Workspace functional only."
+    },
+    "m4_minimum_kubernetes_recovery": {
+      "result": "passed",
+      "local_log_sha256": "b7b720f83c98326b6caa9f4c867e491cc58c04dd9fe5e3bad738be6e1dd31f3d",
+      "boundary": "Actual original Job is confirmed before restart; all namespaced create permissions and forward/source/private key files removed. Independent recovery stops original Job and resumes original source; one attempt/Job, failed/idle. Unknown sends without observed original objects remain protected, not accepted as automatically recoverable."
+    },
+    "m4_minimum_kubernetes_backend": {
+      "result": "passed",
+      "local_log_sha256": "22b8120456206a69732fa74cb8ac5ad7a038b7bfcac9ff914b94ccae0094febb",
+      "boundary": "Backend go test ./... passed after explicit independent recovery admission and minimum Kubernetes access inventory."
+    },
+    "m4_minimum_kubernetes_focused": {
+      "result": "passed",
+      "local_log_sha256": "103585263464e0714b0f2d61076e99c92b5fb850f6129a24c1860cc2366275e5",
+      "boundary": "Focused public adapter, execution and HTTP API tests pass; nil recovery admission retains forward restrictions."
     }
   },
   "not_accepted": [
