@@ -105,7 +105,7 @@ spec:
     - name: proof
       image: __NATIVE_IMAGE__
       imagePullPolicy: IfNotPresent
-      command: [/bin/sleep, '7200']
+      command: [/bin/sleep, '21600']
       volumeMounts: [{name: runtime, mountPath: /runtime/containerd.sock, readOnly: true}]
   volumes:
     - name: runtime

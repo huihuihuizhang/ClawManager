@@ -13,17 +13,17 @@ import (
 // Current controller runtime only. Extending the controller requires an
 // explicit review of this matrix and a live positive/negative grant test.
 var controllerTableGrants = map[string][]string{
-	"schema_migrations":                    {"SELECT"},
+	"schema_migrations":                       {"SELECT"},
 	"system_backup_v2_installation_state":     {"SELECT", "UPDATE"},
 	"system_backup_v2_configs":                {"SELECT"},
-	"system_backup_v2_maintenance_locks":             {"SELECT", "INSERT", "UPDATE"},
+	"system_backup_v2_maintenance_locks":      {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_events":                 {"INSERT"},
 	"system_backup_v2_alert_states":           {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_attempts":               {"SELECT"},
 	"system_backup_v2_external_actions":       {"SELECT"},
-	"system_backup_v2_artifact_leases":               {"SELECT"},
-	"system_backup_v2_backups":                       {"SELECT", "UPDATE"},
-	"system_backup_v2_restore_drills":                {"SELECT", "UPDATE"},
+	"system_backup_v2_artifact_leases":        {"SELECT"},
+	"system_backup_v2_backups":                {"SELECT", "UPDATE"},
+	"system_backup_v2_restore_drills":         {"SELECT", "UPDATE"},
 	"system_backup_v2_preflights":             {"SELECT", "UPDATE"},
 	"system_backup_v2_artifact_verifications": {"SELECT", "UPDATE"},
 	"system_backup_v2_operations":             {"SELECT", "UPDATE"},
@@ -50,6 +50,9 @@ type SQLControllerGrantProbe struct {
 // runtime probe. It never creates a user, sets a password, or executes SQL.
 // A wildcard host must be acknowledged explicitly by the operator.
 func ControllerGrantSQL(schema, user, host string, allowAnyHost bool) ([]string, error) {
+	return controllerGrantSQL(schema, user, host, allowAnyHost, controllerTableGrants)
+}
+func controllerGrantSQL(schema, user, host string, allowAnyHost bool, matrix map[string][]string) ([]string, error) {
 	if !controllerSchemaName.MatchString(schema) || !controllerAccountName.MatchString(user) {
 		return nil, errors.New("invalid controller grant schema or user")
 	}
@@ -63,19 +66,22 @@ func ControllerGrantSQL(schema, user, host string, allowAnyHost bool) ([]string,
 	} else if !controllerHostName.MatchString(host) {
 		return nil, errors.New("invalid controller grant host")
 	}
-	tables := make([]string, 0, len(controllerTableGrants))
-	for table := range controllerTableGrants {
+	tables := make([]string, 0, len(matrix))
+	for table := range matrix {
 		tables = append(tables, table)
 	}
 	sort.Strings(tables)
 	statements := make([]string, 0, len(tables))
 	for _, table := range tables {
-		statements = append(statements, fmt.Sprintf("GRANT %s ON `%s`.`%s` TO '%s'@'%s';", strings.Join(controllerTableGrants[table], ", "), schema, table, user, host))
+		statements = append(statements, fmt.Sprintf("GRANT %s ON `%s`.`%s` TO '%s'@'%s';", strings.Join(matrix[table], ", "), schema, table, user, host))
 	}
 	return statements, nil
 }
 
-func (p SQLControllerGrantProbe) Check(ctx context.Context) (checkErr error) {
+func (p SQLControllerGrantProbe) Check(ctx context.Context) error {
+	return p.check(ctx, controllerTableGrants)
+}
+func (p SQLControllerGrantProbe) check(ctx context.Context, matrix map[string][]string) (checkErr error) {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -131,16 +137,19 @@ func (p SQLControllerGrantProbe) Check(ctx context.Context) (checkErr error) {
 	if closeErr != nil {
 		return fmt.Errorf("close controller direct grants: %w", closeErr)
 	}
-	return ValidateControllerGrantStatements(p.Schema, statements)
+	return validateControllerGrants(p.Schema, statements, matrix)
 }
 
 // ValidateControllerGrantStatements accepts only exact table-level grants for
 // the current D-only runtime. A grant with an unknown syntax fails closed.
 func ValidateControllerGrantStatements(schema string, statements []string) error {
+	return validateControllerGrants(schema, statements, controllerTableGrants)
+}
+func validateControllerGrants(schema string, statements []string, matrix map[string][]string) error {
 	if !controllerSchemaName.MatchString(schema) || len(statements) == 0 {
 		return errors.New("controller grant inventory is empty or schema is invalid")
 	}
-	observed := make(map[string]map[string]struct{}, len(controllerTableGrants))
+	observed := make(map[string]map[string]struct{}, len(matrix))
 	for _, statement := range statements {
 		if strings.Contains(statement, " WITH GRANT OPTION") || strings.Contains(statement, " WITH ADMIN OPTION") {
 			return errors.New("controller database user may not delegate privileges")
@@ -152,7 +161,7 @@ func ValidateControllerGrantStatements(schema string, statements []string) error
 		if parts == nil || parts[2] != schema {
 			return fmt.Errorf("controller grant is not an allowed direct table grant: %q", statement)
 		}
-		table, expected := parts[3], controllerTableGrants[parts[3]]
+		table, expected := parts[3], matrix[parts[3]]
 		if len(expected) == 0 {
 			return fmt.Errorf("controller grant references unapproved table %q", table)
 		}
@@ -170,7 +179,7 @@ func ValidateControllerGrantStatements(schema string, statements []string) error
 			observed[table][verb] = struct{}{}
 		}
 	}
-	for table, verbs := range controllerTableGrants {
+	for table, verbs := range matrix {
 		for _, verb := range verbs {
 			if _, ok := observed[table][verb]; !ok {
 				return fmt.Errorf("controller grant lacks %s privilege on %s", verb, table)

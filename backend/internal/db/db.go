@@ -68,6 +68,12 @@ func systemBackupReadOptions() map[string]string {
 func connect(cfg config.DatabaseConfig) (db.Session, error) { return connectWithOptions(cfg, nil) }
 
 func connectWithOptions(cfg config.DatabaseConfig, extra map[string]string) (db.Session, error) {
+	return connectWithGateOptions(cfg, extra, SQLGateScope())
+}
+
+// An explicit metadata-only controller connection is admitted separately below.
+// Every ordinary business/read/operate entry retains SQLGateScope fencing.
+func connectWithGateOptions(cfg config.DatabaseConfig, extra map[string]string, gateScope string) (db.Session, error) {
 
 	// P0 restored databases are data-only drill targets. Every official business
 	// process uses this connection path; none may start consumers, retry Owner
@@ -90,7 +96,7 @@ func connectWithOptions(cfg config.DatabaseConfig, extra map[string]string) (db.
 
 	var session db.Session
 	var err error
-	if scope := SQLGateScope(); scope != "" {
+	if scope := gateScope; scope != "" {
 		driverConfig, e := mysqldriver.ParseDSN(settings.String())
 		if e != nil {
 			return nil, fmt.Errorf("invalid gated database configuration")

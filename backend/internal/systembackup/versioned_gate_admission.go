@@ -43,9 +43,9 @@ func (c VersionedGateClaim) authorizePhase(ctx context.Context, q gateQuery, alr
 	// claim cannot acquire the application's gate even if its owner string fits.
 	const query = `SELECT (b.status='acquiring_gate' OR (? AND b.status='capturing')) AND b.controller_owner=? AND b.row_version=?
 AND b.controller_lease_expires_at>UTC_TIMESTAMP(6) AND b.deadline_at>UTC_TIMESTAMP(6)
-FROM system_backup_v2_backups b JOIN system_backup_v2_execution_inputs i
-ON i.origin_installation_id=b.origin_installation_id AND i.task_public_id=b.public_id AND i.task_type='backup'
-WHERE b.origin_installation_id=? AND b.public_id=?`
+FROM system_backup_v2_backups b
+WHERE b.origin_installation_id=? AND b.public_id=? AND EXISTS(
+SELECT 1 FROM system_backup_v2_execution_inputs i WHERE i.origin_installation_id=b.origin_installation_id AND i.task_public_id=b.public_id AND i.task_type='backup')`
 	suffix := ""
 	if _, ok := q.(*sql.Tx); ok {
 		suffix = " FOR UPDATE"

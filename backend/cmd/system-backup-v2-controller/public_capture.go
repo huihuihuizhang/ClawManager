@@ -31,7 +31,9 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e := c.ValidateControllerDatabaseCredentials(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), cfg.Database.User); e != nil {
 		return e
 	}
-	session, e := db.ConnectSystemBackupController(cfg.Database)
+	session, e := db.ConnectPublicBackupMetadata(cfg.Database, func(ctx context.Context, pool *sql.DB) error {
+		return (c.SQLPublicCaptureGrantProbe{DB: pool, Schema: cfg.Database.Database, User: cfg.Database.User}).Check(ctx)
+	})
 	if e != nil {
 		return errors.New("public control database unavailable")
 	}

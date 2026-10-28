@@ -87,7 +87,7 @@ func (s SQLExecutionRecords) write(ctx context.Context, a d.Authority, kind stri
 		return err
 	}
 	var oldHash string
-	err = tx.QueryRowContext(ctx, "SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase=? AND record_kind=? FOR UPDATE", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, kind).Scan(&oldHash)
+	err = tx.QueryRowContext(ctx, "SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase=? AND record_kind=? FOR SHARE", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, kind).Scan(&oldHash)
 	if err == nil {
 		if oldHash != digest {
 			return ErrExecutionRecord

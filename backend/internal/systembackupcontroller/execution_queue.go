@@ -172,7 +172,7 @@ b.config_snapshot_json,i.profile_sha256,i.profile_json,i.request_json,b.request_
 b.controller_owner=? AND b.row_version=? AND b.controller_lease_expires_at>UTC_TIMESTAMP(6)
 FROM system_backup_v2_backups b JOIN system_backup_v2_execution_inputs i
 ON i.origin_installation_id=b.origin_installation_id AND i.task_public_id=b.public_id AND i.task_type='backup'
-WHERE b.origin_installation_id=? AND b.public_id=? FOR UPDATE`, claim.Owner, claim.RowVersion, installation, claim.Target.PublicID).Scan(
+WHERE b.origin_installation_id=? AND b.public_id=? FOR SHARE`, claim.Owner, claim.RowVersion, installation, claim.Target.PublicID).Scan(
 		&out.Status, &out.RequestID, &out.ConfigVersion, &out.ConfigSHA256, &size, &out.Config, &out.ProfileSHA256, &out.Profile, &out.Request, &requestHash, &out.Deadline, &valid)
 	if err != nil {
 		return out, err

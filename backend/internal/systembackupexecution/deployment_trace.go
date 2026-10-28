@@ -6,6 +6,7 @@ import (
 	d "clawreef/internal/systembackupdispatch"
 	"context"
 	"errors"
+	"github.com/go-sql-driver/mysql"
 	"log"
 )
 
@@ -16,6 +17,19 @@ func closedExecutionCode(e error) string {
 	var failure *b.Failure
 	if errors.As(e, &failure) {
 		return failure.Error()
+	}
+	var sqlErr *mysql.MySQLError
+	if errors.As(e, &sqlErr) {
+		switch sqlErr.Number {
+		case 1044, 1045, 1142, 1143, 1227:
+			return "sql-permission"
+		case 1213:
+			return "sql-deadlock"
+		case 1205:
+			return "sql-lock-timeout"
+		default:
+			return "sql-unavailable"
+		}
 	}
 	switch {
 	case errors.Is(e, c.ErrClaimLost):

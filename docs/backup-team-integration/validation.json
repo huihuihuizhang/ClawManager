@@ -1,5 +1,5 @@
 {
-  "status": "m3_in_progress_public_cancel_and_atomic_acquisition_verified",
+  "status": "m3_m4_in_progress_exact_public_control_grants_verified",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -168,13 +168,28 @@
       "result": "passed",
       "local_log_sha256": "bf284f10affc2e9f13276a2dc524dee7e8efbeab7dd571829d30f10638acfea5",
       "boundary": "Four cancellation transport tests passed: same-key retry, closed DTO, invalid target, accepted pending operation remains incomplete."
+    },
+    "m4_public_minimum_grants_native": {
+      "result": "passed",
+      "local_log_sha256": "b62bd76c2dd938fce9a93b100d7beb2b7f9e48064da8f576b3265e98f3fa2006",
+      "boundary": "Actual production public binary completes mTLS HTTP create, real Job, authenticated content and source resume with exact table grants and business SQL gate env enabled. Actual MySQL refuses users/config writes, record deletion and DDL. Capacity remains synthetic; no all-domain or final artifact acceptance."
+    },
+    "m4_public_grants_unit": {
+      "result": "passed",
+      "local_log_sha256": "5736ff3f028a197af7350946d3c5f9b2667eb6b4e3e5701178f710acb0f36dec",
+      "boundary": "Exact matrix rejects missing/excess/direct wildcard/business/config/immutable updates and inherited role grants; legacy role remains separate."
+    },
+    "m4_public_grants_backend": {
+      "result": "passed",
+      "local_log_sha256": "61a95488aff9feab2fd368b8854d9fb63e8a594c03eaa6cb7466b1f2f3c21bc6",
+      "boundary": "Backend go test ./... passed at independent public metadata/grant node. Native opt-in cases separate."
     }
   },
   "not_accepted": [
     "Complete full-domain production composition; current production entry is explicit platform-workspace with zero source instances and functional_test only",
     "SQL/Redis/object/deployment/secret collectors with real providers; actual Lite/Pro/OpenClaw/Hermes runtime and background writer pause/resume",
     "Unknown actual source exit without evidence remains protected; explicit operator reconciliation and all final publication/restore operations still pending",
-    "Production capacity observations, independent key providers/minimum SQL/Kubernetes grants/TLS and actual worker final image deployment",
+    "Physical capacity feed, final signing/wrapping/provider grants, complete Kubernetes isolation/TLS installation and final image deployment; public SQL role itself now natively verified",
     "Current-data registry approval, final publication, independent restore, progress UI and complete deployment/rollback acceptance"
   ],
   "publication": "M3/M4 user-authorized implementation in progress. Local commits; no push or shared-server publication yet.",

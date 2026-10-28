@@ -114,6 +114,10 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 			return nil, c.ErrExecutionAuthority
 		}
 	}
+	stage = "control-grants"
+	if e = s.checkControlGrants(ctx, db); e != nil {
+		return nil, e
+	}
 	stage = "issuer"
 	rootRaw, e := os.ReadFile(cfg.IssuerCertificate)
 	if e != nil || len(rootRaw) > 65536 {
@@ -304,6 +308,13 @@ func (s *DeploymentService) RuntimeBaseReady(ctx context.Context) error {
 	}
 	return s.Runtime.Owner.namespace(ctx)
 }
+func (s *DeploymentService) checkControlGrants(ctx context.Context, db *sql.DB) error {
+	g := s.Forward.DeploymentBinding()
+	if e := (c.SQLPublicCaptureGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0]}).Check(ctx); e != nil {
+		return c.ErrExecutionAuthority
+	}
+	return nil
+}
 func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr error) {
 	stage := "forward-enabled"
 	defer func() {
@@ -313,7 +324,15 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	}()
 	if s.executionUnavailable.Load() {
 		stage = "execution-recovery"
-		return d.ErrNotReady
+		var active int
+		if s.Runtime.Owner.Gate.Authority.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_backups WHERE origin_installation_id=? AND status IN ('preparing','ready_for_capture','acquiring_gate','capturing','canceling')`, s.Config.InstallationID).Scan(&active) != nil || active != 0 {
+			return d.ErrNotReady
+		}
+		var phase string
+		if s.Runtime.Owner.Gate.Authority.DB.QueryRowContext(ctx, "SELECT phase FROM system_backup_gate WHERE scope=?", s.Config.ApplicationScope).Scan(&phase) != nil || phase != "idle" {
+			return d.ErrNotReady
+		}
+		s.executionUnavailable.Store(false)
 	}
 	if !s.ForwardEnabled {
 		return d.ErrNotReady
@@ -324,6 +343,10 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	}
 	stage = "forward-grant"
 	if e := s.Forward.CheckDeployment(ctx, s.Runtime.Owner.Gate.Authority.DB); e != nil {
+		return e
+	}
+	stage = "control-grants"
+	if e := s.checkControlGrants(ctx, s.Runtime.Owner.Gate.Authority.DB); e != nil {
 		return e
 	}
 	stage = "recovery-grant"
@@ -416,7 +439,9 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 	go func() {
 		defer close(loopDone)
 		failures <- runDeploymentPasses(active, s.Runtime.Loop.RunOnce, s.Runtime.Loop.Interval, func(e error) {
-			s.executionUnavailable.Store(e != nil)
+			if e != nil {
+				s.executionUnavailable.Store(true)
+			}
 		})
 	}()
 	defer func() {

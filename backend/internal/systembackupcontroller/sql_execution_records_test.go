@@ -125,7 +125,7 @@ func (c *recordConn) QueryContext(ctx context.Context, q string, args []driver.N
 		if strings.Contains(q, "key_ref") {
 			return &recordRows{values: []driver.Value{c.m.row.hash, c.m.row.ref, c.m.row.sealed}}, nil
 		}
-		if !c.active || !strings.HasSuffix(q, "FOR UPDATE") {
+		if !c.active || !strings.HasSuffix(q, "FOR SHARE") {
 			return nil, errors.New("unlocked receipt")
 		}
 		return &recordRows{values: []driver.Value{c.m.row.hash}}, nil

@@ -283,7 +283,17 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		u := user
 		t.Cleanup(func() { db.Exec("DROP USER '" + u + "'@'%'") })
 	}
-	if _, e = db.Exec("GRANT ALL PRIVILEGES ON `" + database + "`.* TO '" + account + "'@'%'"); e != nil {
+	if scenario == "production-entry" {
+		grants, z := c.PublicCaptureGrantSQL(database, account, "%", true)
+		if z != nil {
+			t.Fatal(z)
+		}
+		for _, statement := range grants {
+			if _, z = db.Exec(statement); z != nil {
+				t.Fatal("install exact public control grants", z)
+			}
+		}
+	} else if _, e = db.Exec("GRANT ALL PRIVILEGES ON `" + database + "`.* TO '" + account + "'@'%'"); e != nil {
 		t.Fatal(e)
 	}
 	for _, table := range []string{"users", "instances"} {
@@ -310,6 +320,16 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		return conn
 	}
 	controlDB, sourceDB := open(account), open(sourceUser)
+	if scenario == "production-entry" {
+		if e = (c.SQLPublicCaptureGrantProbe{DB: controlDB, Schema: database, User: account}).Check(ctx); e != nil {
+			t.Fatal("exact public control grants rejected", e)
+		}
+		for _, statement := range []string{"UPDATE users SET id=id WHERE FALSE", "UPDATE system_backup_v2_configs SET enabled=enabled WHERE FALSE", "DELETE FROM system_backup_v2_execution_records WHERE FALSE", "CREATE TABLE public_controller_must_not_create(id INT)"} {
+			if _, z := controlDB.Exec(statement); z == nil {
+				t.Fatal("public controller acquired forbidden business/config/delete/DDL capability")
+			}
+		}
+	}
 	if e = (backup.Gate{DB: db}).EnsureScope(ctx, "installation"); e != nil {
 		t.Fatal(e)
 	}
@@ -1063,7 +1083,7 @@ func testNativeProductionEntry(t *testing.T, ctx context.Context, db *sql.DB, ha
 		t.Fatal(e)
 	}
 	command := exec.CommandContext(ctx, "/tmp/public-controller")
-	command.Env = append(os.Environ(), "DB_HOST="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), "DB_PORT="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT"), "DB_USER="+strings.Split(grant.DatabaseAccount, "@")[0], "DB_PASSWORD=synthetic-native-only", "DB_NAME="+cfg.SourceDatabase, "SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED=true", "SYSTEM_BACKUP_CONTROLLER_ENABLED=true", "SYSTEM_BACKUP_EXECUTION_PROTOCOL=public-v1", "SYSTEM_BACKUP_ENABLED=true", "SYSTEM_BACKUP_PUBLIC_CONFIG_FILE="+configFile, "SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256="+digestJSON(cfgRaw), "SYSTEM_BACKUP_FORWARD_GRANT_SHA256="+forwardHash, "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256="+recoveryHash, "POD_NAME="+os.Getenv("HOSTNAME"), "POD_NAMESPACE="+cfg.Namespace, "CLAWMANAGER_LEADER_ELECTION=true")
+	command.Env = append(os.Environ(), "DB_HOST="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_HOST"), "DB_PORT="+os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT"), "DB_USER="+strings.Split(grant.DatabaseAccount, "@")[0], "DB_PASSWORD=synthetic-native-only", "DB_NAME="+cfg.SourceDatabase, "SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED=true", "SYSTEM_BACKUP_CONTROLLER_ENABLED=true", "SYSTEM_BACKUP_EXECUTION_PROTOCOL=public-v1", "SYSTEM_BACKUP_SQL_GATE_SCOPE=installation", "SYSTEM_BACKUP_ENABLED=true", "SYSTEM_BACKUP_PUBLIC_CONFIG_FILE="+configFile, "SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256="+digestJSON(cfgRaw), "SYSTEM_BACKUP_FORWARD_GRANT_SHA256="+forwardHash, "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256="+recoveryHash, "POD_NAME="+os.Getenv("HOSTNAME"), "POD_NAMESPACE="+cfg.Namespace, "CLAWMANAGER_LEADER_ELECTION=true")
 	logFile, e := os.OpenFile(filepath.Join(filepath.Dir(configFile), "production.log"), os.O_CREATE|os.O_WRONLY, 0600)
 	if e != nil {
 		t.Fatal(e)

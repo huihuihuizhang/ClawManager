@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
+	"time"
 
 	"clawreef/internal/config"
 	"clawreef/internal/migrationcatalog"
@@ -22,6 +24,31 @@ func EmbeddedMigrationCatalog() (migrationcatalog.Catalog, error) {
 // This independent UTC connection cannot migrate or initialize business services.
 func ConnectSystemBackupController(cfg config.DatabaseConfig) (upper.Session, error) {
 	return OpenSystemBackupRead(cfg)
+}
+
+// Recovery metadata must remain writable while the business gate is held.
+// This connection never migrates/initializes services or sets global Session.
+// A non-nil exact-grant admission is mandatory before returning its pool.
+func ConnectPublicBackupMetadata(cfg config.DatabaseConfig, admit func(context.Context, *sql.DB) error) (upper.Session, error) {
+	if admit == nil || cfg.User == "" || strings.EqualFold(cfg.User, "root") {
+		return nil, errors.New("dedicated public metadata admission required")
+	}
+	session, err := connectWithGateOptions(cfg, systemBackupReadOptions(), "")
+	if err != nil {
+		return nil, err
+	}
+	pool, ok := session.Driver().(*sql.DB)
+	if !ok {
+		session.Close()
+		return nil, errors.New("public metadata SQL unavailable")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err = admit(ctx, pool); err != nil {
+		session.Close()
+		return nil, errors.New("public metadata privileges rejected")
+	}
+	return session, nil
 }
 
 func applyEmbeddedMigrationsSQL(ctx context.Context, pool *sql.DB, target *MigrationTarget) (result error) {

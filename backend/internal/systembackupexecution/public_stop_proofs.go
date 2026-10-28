@@ -34,7 +34,7 @@ func (s SQLStopProofs) Save(ctx context.Context, p quiesce.ExitWitness) error {
 	}
 	var old []byte
 	var digest string
-	e = tx.QueryRowContext(ctx, "SELECT proof_json,proof_sha256 FROM system_backup_v2_runtime_stop_proofs WHERE task_public_id=? AND pod_uid=? FOR UPDATE", s.Authority.TaskPublicID, p.PodUID).Scan(&old, &digest)
+	e = tx.QueryRowContext(ctx, "SELECT proof_json,proof_sha256 FROM system_backup_v2_runtime_stop_proofs WHERE task_public_id=? AND pod_uid=? FOR SHARE", s.Authority.TaskPublicID, p.PodUID).Scan(&old, &digest)
 	if e == nil {
 		var original quiesce.ExitWitness
 		if json.Unmarshal(old, &original) != nil || hash(old) != digest || !quiesce.SameExitWitness(original, p) {
