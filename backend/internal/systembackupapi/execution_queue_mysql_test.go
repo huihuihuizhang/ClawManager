@@ -168,7 +168,7 @@ func TestExecutionQueueRealSQLAdmissionTakeoverAndInputIntegrity(t *testing.T) {
 		t.Fatal("new owner lost original plan", err)
 	}
 	var starts int
-	if err = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND task_status='preparing'", task.PublicID).Scan(&starts); err != nil || starts != 1 {
+	if err = db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_events WHERE target_public_id=? AND event_type='task_status_changed' AND task_status='preparing'", task.PublicID).Scan(&starts); err != nil || starts != 1 {
 		t.Fatal("takeover emitted duplicate start", starts, err)
 	}
 }

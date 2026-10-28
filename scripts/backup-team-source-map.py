@@ -38,6 +38,11 @@ def main():
         if not (ROOT / path).is_file():
             raise ValueError("unexpected deletion requires explicit review: " + path)
         source_path = path if path in source_paths else None
+        if path in {
+            "backend/internal/systembackupapi/public_sql_writer.go",
+            "backend/internal/systembackupapi/public_sql_writer_test.go",
+        }:
+            source_path = path.replace("public_sql_writer", "sql_writer")
         if path.startswith("backend/cmd/system-backup-v2-controller/"):
             source_path = path.replace("backend/cmd/system-backup-v2-controller/", "backend/cmd/system-backup-controller/", 1)
             if source_path not in source_paths:

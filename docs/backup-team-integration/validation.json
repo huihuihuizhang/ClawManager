@@ -1,5 +1,5 @@
 {
-  "status": "m0_increment_integrated_m1_m2_in_progress",
+  "status": "m1_prepare_custody_verified_m2_in_progress",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 163,
@@ -83,6 +83,16 @@
       "result": "passed",
       "local_log_sha256": "383a0a566ad8951ef5409026ff284360161e075a77d78331a868ede67c94870d",
       "boundary": "Real disposable MySQL, all 163 migrations and existing submission/queue/plan/Job-intent regressions passed. Kubernetes boundary remains simulated."
+    },
+    "m1_backend_all": {
+      "result": "passed",
+      "local_log_sha256": "112f2b4250f7dd61493f66445a65b9835d65b7156812e1351ceb97b7c9f27e77",
+      "boundary": "M1 backend go test ./... passed; opt-in environment cases may skip."
+    },
+    "m1_native_sql_commit_loss": {
+      "result": "passed",
+      "local_log_sha256": "36ebb0b3b98664f43ec666dcd5578cb65e55f3405b628da826138d408e451705",
+      "boundary": "Real SQL+HTTP/RBAC+dedicated test workload+Ed25519 grant+encrypted plan. Real MySQL COMMIT reply lost after server acknowledgement; restart loads original plan without second Prepare. Signature/ciphertext tamper and file revocation rejected. Prepare is a tiny custody runner, not actual capture; synthetic readiness and broad disposable-schema test grants do not certify production readiness/grants."
     }
   },
   "not_accepted": [
@@ -92,7 +102,7 @@
     "running cancellation, retry/recovery actions and complete progress/health views",
     "production grants/TLS/Broker/download deployment; final image/live environment and rollback"
   ],
-  "publication": "M0 local stage commit; M1/M2 continue in same run. No push or server mutation.",
+  "publication": "M0/M1 local commits; M2 continues in this authorized four-hour run; no push or server mutation.",
   "credential_pattern_scan": {
     "files": 1062,
     "result": "no matched private-key/GitHub/AWS credentials",

@@ -5,6 +5,56 @@
   "x-contract-version": "system-backup-plan.v12",
   "x-contract-status": "draft",
   "$defs": {
+    "BackupCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_parts"],
+      "properties": {
+        "requested_parts": {
+          "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true,
+          "items": { "enum": ["mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"] }
+        },
+        "task_purpose": { "enum": ["acceptance", "functional_test"], "default": "acceptance" },
+        "retry_of_public_id": {
+          "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" }, { "type": "null" }],
+          "default": null,
+          "x-runtime-availability": "non-null currently returns not_ready until same-transaction retry admission and persistence are implemented"
+        }
+      },
+      "allOf": [{
+        "if": { "properties": { "task_purpose": { "const": "functional_test" } }, "required": ["task_purpose"] },
+        "else": { "properties": { "requested_parts": { "minItems": 6 } } }
+      }],
+      "x-normalization": "Apply omitted purpose=acceptance and retry=null; null purpose is invalid. Treat requested_parts as a set, ordered mysql,redis,object_storage,workspace,deployment_resources,secret_bundle before JCS. Hash exactly the normalized business body.",
+      "x-server-derived": ["origin_installation_id", "source_orchestrator", "source_profile", "matrix_key", "runner", "providers", "credentials", "readiness"],
+      "x-decoding": "Reject duplicate decoded keys, invalid UTF-8, non-scalar Unicode, unknown or case-aliased keys and trailing JSON. Request/auth/idempotency transport is forbidden in the business body. Maximum input is 65536 bytes."
+    },
+    "PreflightCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_artifact_type", "source_public_id", "target_profile", "restore_target_config_ref"],
+      "properties": {
+        "source_artifact_type": { "enum": ["backup", "catalog_import"] },
+        "source_public_id": { "type": "string" },
+        "target_profile": { "enum": ["cluster", "single-node"] },
+        "restore_target_config_ref": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$" },
+        "preflight_mode": { "enum": ["production_readonly", "functional_test"], "default": "production_readonly" },
+        "retry_of_public_id": {
+          "anyOf": [{ "$ref": "admin-api-common.schema.json#/$defs/PreflightPublicId" }, { "type": "null" }],
+          "default": null,
+          "x-runtime-availability": "non-null currently returns not_ready until same-transaction retry admission and persistence are implemented"
+        }
+      },
+      "allOf": [{
+        "if": { "properties": { "source_artifact_type": { "const": "backup" } }, "required": ["source_artifact_type"] },
+        "then": { "properties": { "source_public_id": { "$ref": "admin-api-common.schema.json#/$defs/BackupPublicId" } } },
+        "else": { "properties": { "source_public_id": { "$ref": "admin-api-common.schema.json#/$defs/CatalogImportPublicId" } } }
+      }],
+      "x-runtime-availability": "catalog_import currently returns not_ready until canonical catalog source admission is delivered; it is never resolved as a local backup",
+      "x-normalization": "Apply omitted preflight_mode=production_readonly and retry=null. All other fields are required; null mode is invalid. Encode the normalized business body as JCS.",
+      "x-server-derived": ["source_manifest_checksum", "source_acceptance_checksum", "source_catalog_checksum", "restore_target_config_hash", "source_readability", "source_acceptance_readiness", "permissions"],
+      "x-decoding": "Reject duplicate decoded keys, invalid UTF-8, non-scalar Unicode, unknown or case-aliased keys and trailing JSON. Target ref is an opaque registered identifier, never a DSN/path/URL or observed target descriptor. Maximum input is 65536 bytes."
+    },
     "CancelRequest": {
       "type": "object",
       "additionalProperties": false,

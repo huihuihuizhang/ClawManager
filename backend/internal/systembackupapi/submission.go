@@ -137,6 +137,15 @@ func (s *SQLApplication) submit(ctx context.Context, scope taskActionScope, prep
 	task, err := prepared.Stage(capability, identity)
 	closedOK := capability.close()
 	if err != nil {
+		var expired *ExpiredTaskError
+		if errors.As(err, &expired) {
+			if !closedOK || ctx.Err() != nil {
+				return zero, &Error{"not_ready"}
+			}
+			if e := scope.RecheckAction(ctx, tx, installation); e != nil {
+				return zero, applicationError(e)
+			}
+		}
 		return zero, applicationError(err)
 	}
 	if !closedOK || ctx.Err() != nil {

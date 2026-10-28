@@ -21,7 +21,7 @@ import (
 
 const admissionRBAC = `{"schema_version":"system-backup-registration-rbac.draft.v1","version":"rbac-admission-v1","installation_id":"installation_admission","bindings":[{"actor_id":"42","subject":"user:42","role":"operator"},{"actor_id":"43","subject":"user:43","role":"viewer"}]}`
 
-func liveAdmissionHTTP(t *testing.T, db *sql.DB, writer *SQLTaskWriter) (*Handler, string, string) {
+func liveAdmissionHTTP(t *testing.T, db *sql.DB, writer TaskWriter) (*Handler, string, string) {
 	t.Helper()
 	ctx := context.Background()
 	var identity security.DatabaseIdentity

@@ -20,13 +20,18 @@ func linkedSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecurit
 	if path := os.Getenv("SYSTEM_BACKUP_EXECUTION_PROFILE_FILE"); path != "" {
 		profile, err := systembackupapi.LoadExecutionProfile(path)
 		if err == nil {
-			var configured *systembackupapi.SQLTaskWriter
-			configured, err = systembackupapi.NewSQLTaskWriter(profile)
-			if err == nil {
-				writer = configured.WithCapacityReport(os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"))
+			if os.Getenv("SYSTEM_BACKUP_EXECUTION_PROTOCOL") == "public-v1" {
+				writer, err = systembackupapi.NewAdmittedTaskWriter(profile, os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"), os.Getenv("SYSTEM_BACKUP_V2_EXECUTION_ENABLED") == "true")
+			} else {
+				var configured *systembackupapi.SQLTaskWriter
+				configured, err = systembackupapi.NewSQLTaskWriter(profile)
+				if err == nil {
+					writer = configured.WithCapacityReport(os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"))
+				}
 			}
 		}
 		if err != nil {
+			writer = systembackupapi.DisabledTaskWriter{}
 			log.Print("backup execution profile unavailable; task submission disabled, authorized history and unstarted cancellation retained")
 		}
 	}

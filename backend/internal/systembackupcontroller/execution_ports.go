@@ -54,6 +54,9 @@ type SQLExecutionAuthority struct {
 	InstallationID    string
 	Authorization     ExecutionAuthorization
 	DeploymentEnabled bool
+	// ApplicationScope binds the public metadata fence to the existing Team
+	// business gate. Production work stores require this explicit mapping.
+	ApplicationScope string
 }
 
 type executionSnapshot struct {
@@ -88,6 +91,23 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 	var v executionSnapshot
 	if tx == nil || !validExecutionInput(a, s.InstallationID) {
 		return v, ErrExecutionAuthority
+	}
+	if s.ApplicationScope != "" {
+		var engine, phase, owner string
+		var token uint64
+		if tx.QueryRowContext(ctx, "SELECT engine FROM system_backup_v2_engine_bindings WHERE scope='installation' FOR SHARE").Scan(&engine) != nil || engine != "v2" {
+			return v, ErrExecutionAuthority
+		}
+		if tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,''),fencing_token FROM system_backup_gate WHERE scope=? FOR SHARE", s.ApplicationScope).Scan(&phase, &owner, &token) != nil {
+			return v, ErrExecutionAuthority
+		}
+		if a.MaintenanceFencingToken == 0 {
+			if phase != "idle" && !(phase == "acquiring" && owner == a.TaskPublicID) {
+				return v, ErrExecutionAuthority
+			}
+		} else if phase != "held" || owner != a.TaskPublicID || token != a.MaintenanceFencingToken {
+			return v, ErrExecutionAuthority
+		}
 	}
 	// Preserve the common coordination lock order: gate before business rows.
 	var gateLease, hold sql.NullTime
@@ -136,7 +156,7 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 		return v, ErrExecutionAuthority
 	}
 	if a.TaskType == string(TargetBackup) {
-		if v.status == "preparing" {
+		if v.status == "preparing" || v.status == "ready_for_capture" || v.status == "acquiring_gate" {
 			if v.attemptStatus != "preparing" || a.MaintenanceOwner != "" || a.MaintenanceFencingToken != 0 {
 				return v, ErrExecutionAuthority
 			}

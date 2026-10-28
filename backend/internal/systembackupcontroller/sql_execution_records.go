@@ -14,6 +14,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	d "clawreef/internal/systembackupdispatch"
+	security "clawreef/internal/systembackupsecurity"
 )
 
 var ErrExecutionRecord = errors.New("execution record unavailable or conflicting")
@@ -32,8 +33,9 @@ type ExecutionRecordKeys interface {
 // It uses the same authenticated staging format as plan custody; plaintext
 // plans/checkpoints and keys never enter SQL. No provider call occurs in a Tx.
 type SQLExecutionRecords struct {
-	Authority SQLExecutionAuthority
-	Keys      ExecutionRecordKeys
+	Authority          SQLExecutionAuthority
+	Keys               ExecutionRecordKeys
+	CapacityReportFile string
 }
 
 func recordHash(raw []byte) string { sum := sha256.Sum256(raw); return hex.EncodeToString(sum[:]) }
@@ -95,6 +97,15 @@ func (s SQLExecutionRecords) write(ctx context.Context, a d.Authority, kind stri
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
 		return err
+	}
+	if s.CapacityReportFile != "" {
+		var capacity int64
+		if tx.QueryRowContext(ctx, "SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? FOR SHARE", a.InstallationID, a.ConfigVersion).Scan(&capacity) != nil {
+			return ErrExecutionRecord
+		}
+		if err = (security.RegistrationCapacity{ReportFile: s.CapacityReportFile}).ReserveExecutionPayload(ctx, tx, capacity, sealed.Len()); err != nil {
+			return err
+		}
 	}
 	_, err = tx.ExecContext(ctx, "INSERT INTO system_backup_v2_execution_records (origin_installation_id,task_public_id,attempt_no,phase,record_kind,payload_sha256,key_ref,sealed_payload) VALUES (?,?,?,?,?,?,?,?)", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, kind, digest, ref, sealed.Bytes())
 	if err != nil {

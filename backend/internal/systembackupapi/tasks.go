@@ -3,6 +3,7 @@
 package systembackupapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -37,6 +38,13 @@ type TaskApplication interface {
 // Error contains only a closed business code. Never put driver/provider errors,
 // credentials, request bodies or authorization material in the public response.
 type Error struct{ Code string }
+
+type ExpiredTaskError struct{ PublicID, TerminalStatus, FailureCategory string }
+
+func (*ExpiredTaskError) Error() string { return "system backup task idempotency expired" }
+func (*ExpiredTaskError) Unwrap() error { return &Error{"idempotency_expired"} }
+
+type taskRequestIDKey struct{}
 
 func (e *Error) Error() string { return "system backup task application rejected" }
 
@@ -108,6 +116,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request, kind systemback
 		writeError(w, requestID, &Error{"validation_failed"})
 		return
 	}
+	r = r.WithContext(context.WithValue(r.Context(), taskRequestIDKey{}, requestID))
 	task, err := h.application.CreateAndEnqueue(r, kind, endpoint, keys[0], json.RawMessage(body))
 	if err != nil {
 		writeError(w, requestID, err)
