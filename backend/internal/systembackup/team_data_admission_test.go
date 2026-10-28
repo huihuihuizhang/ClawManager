@@ -110,9 +110,29 @@ func TestTeamDataWorkerUsesSamePhysicalGateBeforeClaim(t *testing.T) {
 		t.Fatal("closed physical source admitted execution", e)
 	}
 	actual, e := s.Get(ctx, j.ID)
-	if e != nil || actual.Status != "pending" {
+	if e != nil || actual.Status != "pending" || actual.Phase != "waiting_for_source" {
 		t.Fatal("closed gate consumed task", e, actual.Status)
 	}
+	if _, e = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET created_at=TIMESTAMPADD(SECOND,-61,UTC_TIMESTAMP(6)) WHERE public_id=?", j.ID); e != nil {
+		t.Fatal(e)
+	}
+	if e = s.executeAdmitted(ctx, connection, j); !errors.Is(e, backupgate.ErrMaintenance) {
+		t.Fatal(e)
+	}
+	expired, e := s.Get(ctx, j.ID)
+	if e != nil || expired.Status != "failed" || expired.Error != "source_gate_wait_timed_out" || expired.StartedAt != nil {
+		t.Fatal("unclaimed timeout did not settle safely", e, expired.Status, expired.Error)
+	}
+	var physicalPhase string
+	if e = s.db.QueryRowContext(ctx, "SELECT phase FROM system_backup_gate WHERE scope='team-data-source'").Scan(&physicalPhase); e != nil || physicalPhase != "held" {
+		t.Fatal("waiting timeout released another capture", e, physicalPhase)
+	}
+	s.cfg.Disabled = false
+	j, e = s.Retry(ctx, 1, j.ID, "retry-source-after-original-timeout")
+	if e != nil {
+		t.Fatal(e)
+	}
+	s.cfg.Disabled = true
 	if e = gate.BeginRelease(ctx, owner); e != nil {
 		t.Fatal(e)
 	}

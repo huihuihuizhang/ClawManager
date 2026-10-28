@@ -106,6 +106,9 @@ func (s *TeamDataService) runOwned(ctx context.Context) error {
 func (s *TeamDataService) executeAdmitted(ctx context.Context, lock *sql.Conn, j TeamDataJob) error {
 	release, err := backupgate.HoldWorkUnit(ctx, "backup.team_data")
 	if err != nil {
+		if errors.Is(err, backupgate.ErrMaintenance) || errors.Is(err, ErrMaintenance) {
+			return s.deferSourceAdmission(ctx, j, err)
+		}
 		return err
 	}
 	defer release()
@@ -124,6 +127,32 @@ func (s *TeamDataService) executeAdmitted(ctx context.Context, lock *sql.Conn, j
 		return ErrFence
 	}
 	return s.execute(ctx, lock, j)
+}
+
+// Waiting for another capture must not occupy the ordinary backup slot
+// forever. Only an unclaimed operation may time out here; this never releases
+// the other owner's source protection or asserts that its writers stopped.
+func (s *TeamDataService) deferSourceAdmission(ctx context.Context, j TeamDataJob, cause error) error {
+	seconds := s.cfg.DeadlineSeconds
+	if seconds < 1 {
+		seconds = 600
+	}
+	result, err := s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET status='failed',phase='admission_timed_out',error_code='source_gate_wait_timed_out',finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending' AND TIMESTAMPADD(SECOND,?,created_at)<=UTC_TIMESTAMP(6)", j.ID, seconds)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		// A polling tick is not business progress. Write only on the transition.
+		_, err = s.db.ExecContext(ctx, "UPDATE system_team_data_backup_jobs SET phase='waiting_for_source',updated_at=UTC_TIMESTAMP(6) WHERE public_id=? AND status='pending' AND phase<>'waiting_for_source'", j.ID)
+		if err != nil {
+			return err
+		}
+	}
+	return cause
 }
 
 func (s *TeamDataService) execute(parent context.Context, lock *sql.Conn, j TeamDataJob) error {

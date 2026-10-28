@@ -200,3 +200,12 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 失败用例先证明旧实现绕过关闭门禁领取并执行。修复后拒绝准入、完整执行期间许可、实际结果写失败接手回归通过；另在真实同一 MySQL/schema 内持有原 Gate，验证 held 时 pending，实际释放后单次执行及全部许可已释放。没有通过修改 DB 状态绕过门禁。该闭环不证明 Runtime 或 detached 工具已停止。
 
 提交复盘：这次直接补生产后台遗漏的接线，不继续新增 profile 骨架；用已有门禁和一条小规模实际 SQL 对照验收，避免再次只测试 mock refusal。
+
+
+### 补回 B / 第四块：源准入等待必须有边界
+
+共用门禁关闭时，普通任务显示 waiting_for_source；只在步骤切换写进度，轮询不伪装业务推进。超过已有任务时间预算，只把尚未领取/采集的本任务结束为 admission_timed_out / source_gate_wait_timed_out，保留数据及原备份保护，之后可以用正常幂等重试入口续做。既不无限 pending，也不替别的 owner 解锁。
+
+真实同一 MySQL 门禁闭环覆盖 held 时排队、超时未产生 started_at、原 gate 仍 held、原任务重试后在实际释放后执行、无遗留 permit；其他两条准入/退出用例通过。受影响前端生产构建通过，提示说明尚未采集与保护保留，不增加无关页面。首次扩展测试因 fixture 的 disabled 开关仍开启而拒绝新重试，已修正测试边界，没有放开生产 disabled 检查。
+
+提交复盘：补的是刚引入等待分支的真实收敛，不用缩短 Runtime 的安全等待来换取成功。用户最新明确取消 E；最后剩余时间只处理 B 与交接。
