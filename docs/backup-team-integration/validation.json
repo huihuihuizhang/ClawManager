@@ -1,5 +1,5 @@
 {
-  "status": "m3_m4_incomplete_workspace_production_and_recovery_verified",
+  "status": "ordinary_team_data_and_recovery_guards_verified_full_B_incomplete_E_canceled",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -333,6 +333,71 @@
       "result": "passed",
       "local_log_sha256": "b5479aa0bffbb1922fe9a4e716c385464d0e0872cbd56c5028702b16aac6ccaf",
       "boundary": "Same full source revision/build arguments; scratch target with only static /backup-worker, default65532; original explicit Job root metadata policy unchanged."
+    },
+    "current_owner_team_restore": {
+      "result": "passed",
+      "local_log_sha256": "16f8187a0a148637257cc9811ceac7ca20f3056d6b7cdfb0a7150e9b24e2e664",
+      "boundary": "Real disposable MySQL current Team owner/template/file-audit schema export and independent restore/read-back; no Runtime semantics."
+    },
+    "ordinary_team_data_actual_pipeline": {
+      "result": "passed",
+      "local_log_sha256": "ce3d895c223a81d0952035ca5eb04f8a50a5fdd8ad850de30d34ece86a3cdf46",
+      "boundary": "Actual SQL/Redis/MinIO/files capture, encrypted publication, isolated restore and read-back; Kubernetes configuration boundary is controlled, not live full-system quiescence."
+    },
+    "durable_retry_continuation": {
+      "result": "passed",
+      "local_log_sha256": "3ead94d9fcb53bceb7843ea12067398cdc337d8f6908c137150f3d11b623194e",
+      "boundary": "Nine targeted SQL/object management and continuation cases plus strict JSON handler; metadata fixtures are not full restore acceptance."
+    },
+    "original_pause_recovery_native": {
+      "result": "passed",
+      "local_log_sha256": "a02f2e8d506e0eaadfaa78680347b01f4365aa4e5f3a9046b6aae9ce44eb457f",
+      "boundary": "Real owned kind, actual production controller/TLS HTTP/collector/source Deployment. Unknown stop, lost original writer row and revoked forward permission recover one original execution; source resumes and gate idle. Nonempty Runtime not accepted."
+    },
+    "original_pause_inventory_sql": {
+      "result": "passed",
+      "local_log_sha256": "ac898b2de0791d342743f15658d353a1f9e28a2f0592bc1dc1cbe5854df8e060",
+      "boundary": "Real MySQL immutable inventory, transaction rollback and missing-intent repair without fabricated ACK; execution package selection had no matching tests and is not counted."
+    },
+    "gateway_confirmed_stop_adapter": {
+      "result": "passed",
+      "local_log_sha256": "0ec8000226c77c7b5a201e19ebbcf72610326842ae2f6baaed30e904e58bb93e",
+      "boundary": "Real HTTP adapter fixtures: upgrade-only process-group stop is refused before side effects unless explicit backup-safe and original-resume capabilities are available. Positive fixtures model a future backup protocol, NOT actual current OpenClaw/Hermes support."
+    },
+    "same_physical_gate_and_bounded_wait": {
+      "result": "passed",
+      "local_log_sha256": "152c642751c25fa4447164eb872e7bb996e37421e0155f13730e0c1e36bacc0d",
+      "boundary": "Real same-schema MySQL source held/pending/unclaimed timeout/protection retained/retry/release/execution/no permit leak; disabled-operation fixture avoids external collector side effects."
+    },
+    "exited_result_write_failure": {
+      "result": "passed",
+      "local_log_sha256": "54c5f66eca33a22d611844ff8342ecae578540ff251c43caa8c2cbf2226a383d",
+      "boundary": "Real disposable MySQL plus one refused terminal UPDATE after synchronous execution exit; fresh owner reconciles old result without replay and new work can be accepted."
+    },
+    "backend_latest": {
+      "result": "passed",
+      "local_log_sha256": "a9fdb42837e67430afcaa7db87e9149100e0ef9afb453d860c7abcd9d5dcc485",
+      "boundary": "Final go test ./... exit 0 after all code changes. Opt-in tests without external environment may skip; real SQL/native/HTTP evidence is recorded separately."
+    },
+    "frontend_latest": {
+      "result": "passed",
+      "local_log_sha256": "fb27ab2ae162728f67401ab48b656be42e3b08f44ae96542bb9b8e411141265b",
+      "boundary": "Final frontend production build exit 0; no browser/production image acceptance."
+    },
+    "frontend_retry_transport": {
+      "result": "passed",
+      "local_log_sha256": "d1d907779081d0e6e38ff2b7ea0eecd65baec749a08c690341fcae51c5c8f55b",
+      "boundary": "Three service transport/polling tests, no skipped cases."
+    },
+    "migration_catalog_latest": {
+      "result": "passed",
+      "local_log_sha256": "20133937a6ade7405c64970793a9381734a547d37ad42af47bcd9e207ecb3563",
+      "boundary": "Reviewed migration catalog matches; no historical SQL rewritten and count remains 164."
+    },
+    "source_wait_utc_boundary": {
+      "result": "passed",
+      "local_log_sha256": "46c11f81a684c4f90c0c905c5cfca535ffd6a0dbf6235dbab3f8d4b7be566053",
+      "boundary": "Real same-schema MySQL held gate with UTC+8 historical created_at and explicit UTC wait start; timeout never starts capture or releases the other owner, retry and permit release still work. Exited result-write failure remains recoverable."
     }
   },
   "not_accepted": [
@@ -358,7 +423,15 @@
     "owned_mysql": "both exact IDs removed",
     "shared_server": "untouched",
     "final_images": "retained",
-    "boundary": "No global Docker prune, reset or other project deletion."
+    "boundary": "No global Docker prune, reset or other project deletion.",
+    "latest_increment": {
+      "kind": "cm-backup-b-final-20261029 removed after exact node identity check",
+      "data_containers": "four original fixtures and one final clock-regression MySQL removed after exact IDs/labels checked",
+      "temporary_credentials": "run-owned expired MinIO credential file removed",
+      "shared_server": "untouched",
+      "global_prune": "not run",
+      "local_log_sha256": "454d65fb306095a2a7df0c11559c4c580936b5f73bdda98f8a65b6c550ec7a77"
+    }
   },
   "final_images": {
     "cm-backup-app:m3m4-20261029-reviewed": {
@@ -372,6 +445,14 @@
     "source_code_commit": "806d14588bf6caf8ec12e75c0efb71e23c3bf59f",
     "controller_binary_sha256": "bd1a941a8ffd787e55755370f9bd48c5ce0a97ae0d0044f29f2fd3ff950ef67e",
     "worker_loaded_manifest_digest": "sha256:ca7dbe1bbec0878d8b26e78acbaaaca93a68862ba17dc3c72fc34b7a64c452fb",
-    "boundary": "Local tags/image IDs only; no registry publication or shared-server deployment. Local image ID is not a registry manifest digest."
+    "boundary": "Historical pre-increment images only, built from the recorded older source commit. They do not contain the latest changes. E canceled; no new App publication or shared-server deployment."
+  },
+  "latest_increment": {
+    "code_commit": "56b2fa957f4aca86dbf0159f1e34c7f0eb41f520",
+    "B": "incomplete: nonempty Runtime production capability and original restart/binding composition are not implemented",
+    "E": "canceled by user",
+    "push": "withheld: user requires full B before push",
+    "shared_server": "untouched",
+    "ordinary_consistency": "best_effort / team_data; not public-v2 strong-consistency acceptance"
   }
 }

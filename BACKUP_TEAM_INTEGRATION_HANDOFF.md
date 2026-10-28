@@ -1,8 +1,60 @@
 # 备份专用版与 Team 版整合交接
 
-## 2026-10-29 M3 / M4 本轮交付与未完成结论
+## 2026-10-29 本轮增量交接（八点截止，本节优先）
 
-**本节是最新状态，优先于下面所有历史记录。M3、M4 总出口均未完成，v2 全系统备份不能启用。** 这不是只差服务器部署或一份授权文件；完整数据面、正式发布与独立还原仍有实际实现缺口。完整原范围保留在 [最终计划](BACKUP_M3_M4_FINAL_PLAN.md)，每块成果、失败复现和提交复盘见 [本轮执行记录](BACKUP_M3_M4_EXECUTION.md)。
+工作目录 `D:/test/ClawManager-2`，分支 `codex/backup-team-integration`。来源备份目录 `D:/test/backup/ClawManager` 的 `backup@4fe83bcd` 未改；Team 基线 `be7da27d` 和双方提交历史保留。仍按逐模块/调用点适配合并，不整文件覆盖 Team、owner、WorkBuddy、登录和实例服务，不重写已发布迁移。本轮没有修改 AgentsRuntime、共享服务器或生产引擎开关。
+
+### 本轮可以使用的功能与提交
+
+| 提交 | 实际内容 | 必要验收 |
+| --- | --- | --- |
+| `f53772cc` | 普通 Team 数据备份恢复保留 northbound owner/resource_scope/display_name、成员图标、模板和文件审计；旧运行状态不重放 | 新增失败复现、真实当前 schema 导出/独立恢复/逐行比较 |
+| `c38083a2` | 普通备份/恢复的幂等重试；原成品查回；失败恢复先归属清理，再以稳定子请求续做；取消与超时收敛；页面接真实 API | 真实 SQL/对象的针对用例，真实 SQL/Redis/对象/文件采集发布和隔离读回；前端传输与生产构建 |
+| `f6a8e382` | 原暂停意图独立见证；丢回执行时只补意图；实际退出和恢复回执齐全才释放；执行退出但结果写失败不永久占位 | 真实 SQL；真实 kind、生产 controller、TLS HTTP、原 Job、连续写入 Deployment 的未知停止/丢回执行/撤 forward 后恢复；57.07秒 + 正常入口45.20秒 |
+| `4ce54ccc` | Gateway 不以404/普通删除证明退出；增加固定原身份的确认停止要求；记录缺失不当成原本停止 | 真实 HTTP 适配测试；不是实际 OpenClaw/Hermes 停写 |
+| `ca39bcfb` | 普通后台执行在领取前参加服务器共用物理门禁，关闭时保留 pending，执行/结果写回后释放许可 | 先失败再修复；真实同一 MySQL/schema 的持有→拒绝领取→释放→原任务执行→无遗留许可 |
+| `64f47bd2` | 源准入等待显示明确步骤并有时间边界；未采集任务超时后可重试，不释放其他备份保护 | 同库真实门禁验证未开始、原 gate 仍 held、原任务重试、实际放行后执行；前端构建 |
+| `5629c249` | 离线恢复读回权威终态；不确定结果明确报错、保留副本，不重跑 | 受影响包编译/回归，最终后端全量 |
+| `f75788f3` | 暂停前明确拒绝只有升级停止、没有备份隔离与原处恢复能力的源 | 原升级接口不受新字段影响；HTTP 能力拒绝及 Gateway/公共适配回归 |
+| `56b2fa95` | 源准入预算从首次等待的明确 UTC 时间计算，避免旧记录时区多等八小时 | 真实同库 UTC+8 旧创建时间、UTC 等待超时、保护保留与重试 |
+
+普通入口是 `TeamDataService` / `/api/v1/admin/system-backup/team-data`，一致性继续为 **best_effort / team_data**；公开 v2 是另一条带强授权的控制入口。不能把普通入口的六域内容恢复通过，说成公开 v2 的全域强一致备份已完成。新增5张 v2 执行控制表已加入精确恢复排除清单，避免重放旧执行权；实际 draft registry 审批没有伪造。
+
+### B 尚未完成的具体原因与唯一应继续的接线
+
+用户已把 B 加回，最新进一步明确 **E 取消，不再开展**。**完整 B 仍未完成，不能推送为“全部完成”，E 未开展。** 本轮修复了恢复证明和共用准入，但没有完成以下生产组合：
+
+1. `systembackupexecution/deployment_platform.go` 只装配明确的 Deployment；`deployment_service.go:PublishReadiness` 仍明确拒绝非空 `instances`。`publicadapter/writers.go` 的 Gateway/Pod/Deployment builder 尚未有完整生产冻结、原始恢复材料、恢复代数/绑定提交回调。不能只删除非空限制。
+2. `profile/capabilities.go` 要求 `/v1/backup/capabilities` 的真实完整进程树、UID隔离与代数能力；当前 Runtime 未实现该协议。现有 `/v1/stop-capabilities` 与 `/v1/gateway-stop` 只支持 OpenCode/process_group，并明确不授予备份许可，不能当成 OpenClaw/Hermes 备份停写能力。 此升级停止还会阻止同实例后续创建，缺少原处恢复协议。本轮增加显式 `backup_safe` 与 `backup_resume` 能力要求，本轮核查的 `D:/test/AgentsRuntime` 源码未提供，未验明镜像不能假定支持，必须在暂停前拒绝，不能先停机再发现无法恢复。
+3. 接手必须先完成真正的 Runtime 能力与生产 owner 接线：在停止前保存可恢复的原材料和精确实例/Pod/代数，所有受影响后台/工具写入者纳入同一门禁；不能只把 Runtime 的两个能力布尔值改成 true，必须真正实现并验证停止、原处恢复和原身份约束；停止、退出、原状态恢复和绑定读回都由实际事实证明。原本停止者保持停止；无法证明退出者保留保护并说明阻塞。
+
+接手时直接补下列生产位置，不再重做已经通过的恢复证明和普通数据链：
+
+| 尚缺实现 | 精确接入与约束 |
+| --- | --- |
+| 冻结与加密原材料 | `systembackupexecution/deployment_platform.go:platformProfile` 接 `publicadapter.NewRuntimeWriterBuilder`。Lite 的原 `RuntimeAgentCreateGatewayRequest` 含 Environment；Pro 原 Pod 也可能含秘密，必须以原 authority/密钥绑定的加密材料留存，不写进明文 `runtime_writers.original_json`，不停止后再从当前配置拼回。可复用 `systembackupcontroller/sql_execution_records.go` 的加密/当前身份检查模式，需同步正式 record-kind 合同。 |
+| 原处重建日记 | 迁移123的公共 writer 表只有 paused/resumed，尚无原重建发送/结果日记。若增加需追加新迁移并同步 catalog/最小 grants，不能改123。`control/source_restart.go:Claim/Complete` 已有语义参考，但绑定旧私有任务表，不能直接调用、创建影子任务或从旧表借权限。 |
+| 唯一代数与业务绑定 | 新公共 ClaimRestart/CompleteRestart 必须在同一当前授权事务核对实例、原 generation、Lite runtime_pod_id/gateway_id/port/workspace、原 Pod UID/slot，再保存唯一发送/结果。恢复写回涉及 `instances` 和 `instance_runtime_bindings`，现有 source 只读连接不能承担；需独立明确的最小恢复授权，不能擅自扩大 controller 常规权限。 |
+| 真正 Runtime 协议 | 已核查 `D:/test/AgentsRuntime/clawmanager-agent/internal/gateway/safe_stop.go` 与 `manager.go`：进程组不是完整工具树，升级 fence 还会拒绝后续 Create。必须先落实 OpenClaw/Hermes 的完整停写及受控原处恢复，不靠把能力字段置 true、清 stopOperation 或普通 DELETE 通过。原 operation/实例/Pod/代数及来源边界都要保持绑定。 |
+| 非空生产出口 | 上述回调和材料实际可用后，才扩 `deployment_service.go:PublishReadiness` 与 profile 支持范围；最后用一个含 Lite/Pro、在线/原本停止者的小规模非空源检查实际退出、原恢复和绑定。不要为了演示删除非空限制，也不要用现有空实例 counter Deployment 冒充这一用例。 |
+
+本轮没有伪造能力、取消停止校验、删除唯一数据或手改共享环境状态来解开这些限制。普通 `best_effort` 功能也不能替代这个实现缺口。公开 v2 的正式全域发布/独立恢复等历史欠账继续以下方完整计划为准，没有因本轮 C/D 收敛而销项。
+
+### 效率复盘与接手约定
+
+必要真实链找到了两个单元测试未暴露的生产问题（修复入口顺序和后台门禁漏接），这些验证应保留。浪费主要在：先按模拟协议推进后才核对 Runtime 实现；重复猜文件名、混用命令工作目录；反复分析宏大接线却未在开工前固定最小生产闭环。这些是执行组织问题，不能用更多提交数或重复验收掩盖。
+
+后续先把“真实 Runtime 能力 + 冻结/恢复材料 + 生产 callback + 最小权限”四项一次核对，再写一个可实际运行的非空入口；复用已通过的采集、发布、普通恢复、门禁和 native 驱动，不新增第二状态机，不再重跑无关前端/全矩阵。每次只对真实改动保留一条失败复现、一条正常链和必要故障链。
+
+推送目标仍只能是 `backup-origin` 的 `codex/backup-team-integration`，不强推、不推 Team 的 `origin`。用户最新要求是 B 补齐后再推送，当前尚不满足；是否已推送以最终远端 SHA 核对为准。本轮独立 kind、4个数据容器及最后时钟回归用的独立 MySQL 已核对 ID/标签后清理；临时对象凭据文件已删除，未执行全局 Docker prune/reset。已测 native 测试镜像和忽略日志保留，不是最新 App 发行镜像。
+
+本地忽略目录只存原始日志和临时配置，不进入提交。必要回归的真实范围与日志摘要记录于 `docs/backup-team-integration/validation.json`；不是所有 opt-in 用例都由普通全量测试执行。
+
+---
+
+## 2026-10-29 M3 / M4 前一轮交付与未完成结论（历史）
+
+**以下是前一轮记录；本文件最上方增量交接为当前状态。M3、M4 总出口均未完成，v2 全系统备份不能启用。** 这不是只差服务器部署或一份授权文件；完整数据面、正式发布与独立还原仍有实际实现缺口。完整原范围保留在 [最终计划](BACKUP_M3_M4_FINAL_PLAN.md)，每块成果、失败复现和提交复盘见 [本轮执行记录](BACKUP_M3_M4_EXECUTION.md)。
 
 ### 仓库与合并方法
 

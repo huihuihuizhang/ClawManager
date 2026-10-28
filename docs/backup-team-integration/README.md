@@ -2,7 +2,7 @@
 
 > Final remaining development plan: [M3/M4 execution and retrospective](../../BACKUP_M3_M4_FINAL_PLAN.md). Incomplete M2 work is mandatory in M3, followed by full publication/independent restore; M4 completes user actions, deployment and delivery. Existing acceptance boundaries are unchanged.
 
-> Current 2026-10-29 milestone: explicit production public-v1 workspace functional owner, readiness, actual capacity, minimum SQL/Kubernetes roles, independent original recovery, real progress and cancellation are accepted in disposable MySQL/kind. Complete M3/M4 remain unfinished: five data domains, nonempty Runtime/background writers, formal publication, independent restore and full deployment/rollback are not accepted. See root `BACKUP_TEAM_INTEGRATION_HANDOFF.md` and `BACKUP_M3_M4_EXECUTION.md` for current evidence. The following sections preserve historical context. Latest source is backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e, catalog 164. No shared-server activation.
+> Current 2026-10-29 increment: ordinary `TeamDataService` now preserves current owner Team data and exposes durable retry/cleanup/continuation. Its consistency remains **best_effort / team_data**. Shared admission, original pause-intent recovery and result confirmation are repaired and tested. Full B remains incomplete because production nonempty OpenClaw/Hermes writer/restart composition and its real Runtime capability are missing. E is canceled. Public v2 still admits only its explicit workspace functional profile; ordinary six-domain restore must not be reported as public-v2 strong-consistency acceptance. See the latest root handoff for commits, evidence and exact missing call sites. No shared-server activation or push before full B completion.
 
 This branch is an **in-progress integration**, not a released replacement backup
 engine. Do not enable v2 from a database edit or infer runtime readiness from a
@@ -15,7 +15,7 @@ executor readiness. See `task-admission.md` for the implemented boundary.
 
 - Team baseline: `be7da27dff85c2daf3321b8245ffdab024e67853`.
 - Backup source: `huihuihuizhang/ClawManager`, latest reviewed commit
-  `8ef5fa7fd4df45f6306e910705db01f589266ba7` on `backup`; the d3c5715a control/dispatch and 8ef5fa7f relay additions are included; initial
+  `4fe83bcde5a8a693dddb2635e9a3e397d6e3472e` on `backup`; earlier d3c5715a control/dispatch and 8ef5fa7f relay additions are retained; initial
   port and unchanged SQL came from `63a13b2771091e4ba47b691ce066a670cbc88d54`.
 - Common base: `b5582554f330e0e92a115bf9f4afe6a669a9e3d6`.
 - `source-map.json` records module provenance and adaptations;
@@ -31,8 +31,10 @@ unversioned control records are retained. The appended migrations do not select
 or start a new engine. The installation selector defaults to `legacy`.
 
 The existing Team maintenance gate supports both engine selectors through
-`BeginForEngine`; the versioned controller's source gate is **not yet wired to
-that gate**. Its capture activation remains disabled. The shared primitive checks
+`BeginForEngine`; the versioned workspace production owner now uses that SAME
+physical gate. Ordinary online Team-data work acquires its existing admission
+before claiming and leaves work pending while closed. Waiting has a bounded,
+retryable timeout and never releases another owner's protection. The primitive checks
 engine selection under the same authority transaction before closing admission. Switching
 requires an idle gate, no unfinished tasks/participants, no outstanding mutation
 leases, and no unresolved provider writes or unconfirmed restore executions.
@@ -43,8 +45,9 @@ The task-claim adapter now provides `BeginVersionedCapture`,
 `HoldVersionedCapture` and `ResolveVersionedCapture` against this shared gate.
 It rejects stale task claims and recovers the same acquisition after response
 loss. The watchdog cannot reopen v2 work based on a missing legacy capture plan.
-This is a tested adapter, not a composed scheduler or remote recovery service.
-See the root `BACKUP_TEAM_INTEGRATION_HANDOFF.md` for implementation status and
+The explicit workspace profile includes a composed scheduler and independent
+original-operation recovery. It is not a complete nonempty Runtime or full-domain
+production owner. See the root `BACKUP_TEAM_INTEGRATION_HANDOFF.md` for implementation status and
 the remaining execution work.
 
 Schema migration and capture share the historical migration lock plus the
