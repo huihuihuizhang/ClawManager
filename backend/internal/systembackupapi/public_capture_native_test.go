@@ -840,6 +840,29 @@ func testPublicNativeScenario(t *testing.T, scenario string) {
 		if _, e = db.Exec("UPDATE system_backup_v2_runtime_writers SET resumed=TRUE WHERE task_public_id=?", task); e != nil {
 			t.Fatal(e)
 		}
+		// Losing a whole row must not pass a loop which checks only present
+		// receipts. Preserve and restore the exact disposable fixture row.
+		func() {
+			var id, digest string
+			var original []byte
+			var paused, resumed bool
+			var version uint64
+			var created, updated time.Time
+			if z := db.QueryRow("SELECT writer_id,original_json,original_sha256,paused,resumed,row_version,created_at,updated_at FROM system_backup_v2_runtime_writers WHERE task_public_id=?", task).Scan(&id, &original, &digest, &paused, &resumed, &version, &created, &updated); z != nil {
+				t.Fatal(z)
+			}
+			if _, z := db.Exec("DELETE FROM system_backup_v2_runtime_writers WHERE task_public_id=? AND writer_id=?", task, id); z != nil {
+				t.Fatal(z)
+			}
+			defer func() {
+				if _, z := db.Exec("INSERT INTO system_backup_v2_runtime_writers(task_public_id,writer_id,original_json,original_sha256,paused,resumed,row_version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)", task, id, original, digest, paused, resumed, version, created, updated); z != nil {
+					t.Error("restore original fault fixture", z)
+				}
+			}()
+			if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, a); z == nil || ok {
+				t.Fatal("entire missing writer receipt was accepted as recovered")
+			}
+		}()
 		if ok, z := owner.Gate.ReconcileReleasedCapture(ctx, a); z != nil || !ok {
 			t.Fatal("historical release projection not recovered", z)
 		}

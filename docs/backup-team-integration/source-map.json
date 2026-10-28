@@ -23,7 +23,7 @@
       "path": "BACKUP_M3_M4_EXECUTION.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "01d5648cc834b708ac81ed284ea38baae9a363fe878cece69bda9f449bd56039",
+      "working_tree_sha256": "a02fc943b03a40439ad2549fff8310a4b55b2a10608877ac85325ce354354be8",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -2942,7 +2942,7 @@
       "path": "backend/internal/systembackupapi/public_capture_native_test.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "31668a46747d489ed2a4270a478f5512ee3656ea339996cfc4a14d0852a6cd10",
+      "working_tree_sha256": "ce4d2660230231be804c75d841539319b14ad224e561961c5ad8193b0873d442",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -4223,7 +4223,7 @@
       "path": "backend/internal/systembackupcontroller/released_capture.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "33535cf48be02302a6bf70036983061dcc773b93dfa817ed3d2ecaabccec1e80",
+      "working_tree_sha256": "07eedc9c71d3d428c29244a26625a3842f9136e7f7daa9aab56519df511466e2",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9732,7 +9732,7 @@
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "b701becd50e6a5efe04f05458278f2364376e6d682be5d304f9afeecd49b71f1",
+      "working_tree_sha256": "4c267e916013d113cba0893f56a9df0ba4496e20ee36e53186299b91d7b4f2f1",
       "disposition": "integration-owned adaptation"
     },
     {

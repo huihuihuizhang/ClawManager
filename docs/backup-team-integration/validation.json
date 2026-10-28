@@ -293,6 +293,21 @@
       "result": "passed",
       "local_log_sha256": "4a9307d0cf7e5437c795030538aa42eaab4ef6948f068ea9c988e4ef207910a9",
       "boundary": "Six no-skip cases: original/foreign/terminal diagnostic distinctions and existing cancellation transport/idempotency checks."
+    },
+    "m3_missing_writer_before": {
+      "result": "expected_failure",
+      "local_log_sha256": "9ac6da93a58a9b084342a447270f7ca85fadecbbe90afa46a55a62bb7c46db90",
+      "boundary": "Real historical release gap: deleting an actually paused writer receipt was incorrectly accepted before the fix."
+    },
+    "m3_missing_writer_after": {
+      "result": "passed",
+      "local_log_sha256": "354a002ce5354b1c6fe12b83b6db0d93dd6fd2ee357aa8af6f4ad417830140c5",
+      "boundary": "Actual paused checkpoint/identity requires a complete resume receipt. Missing row, missing resumed flag and foreign epoch rejected; exact original row restored then historical projection recovers idempotently without source reread; failed/idle."
+    },
+    "m3_missing_writer_backend": {
+      "result": "passed",
+      "local_log_sha256": "09d5ba36ab96943680de20997d8ae26aa5b362f3d6dcb3a996cd3bdeb53bdd05",
+      "boundary": "Backend go test ./... after full-row receipt completeness and original checkpoint hash checks."
     }
   },
   "not_accepted": [

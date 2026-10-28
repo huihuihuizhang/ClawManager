@@ -45,21 +45,31 @@ func releasedCaptureProofTx(ctx context.Context, tx *sql.Tx, a d.Authority, scop
 		}
 		expected[w.ID] = d.WriterState{UID: w.Original.UID, Generation: w.Original.Generation, Running: w.Original.Running, Checkpoint: w.Original.Checkpoint}
 	}
-	rows, e := tx.QueryContext(ctx, "SELECT participant_id,generation,state,resume_result FROM system_backup_participants WHERE scope=? ORDER BY participant_id FOR SHARE", scope)
+	rows, e := tx.QueryContext(ctx, "SELECT participant_id,generation,state,resume_result,checkpoint_hash FROM system_backup_participants WHERE scope=? ORDER BY participant_id FOR SHARE", scope)
 	if e != nil {
 		return e
 	}
 	seen := map[string]bool{}
+	requiredReceipts := map[string]bool{}
 	for rows.Next() {
 		var id, state, result string
 		var gen uint64
-		if rows.Scan(&id, &gen, &state, &result) != nil {
+		var checkpoint sql.NullString
+		if rows.Scan(&id, &gen, &state, &result, &checkpoint) != nil {
 			rows.Close()
 			return ErrExecutionRecord
 		}
 		if _, ok := expected[id]; !ok || seen[id] || gen != epoch || state != "running" || result != "succeeded" {
 			rows.Close()
 			return ErrExecutionRecoveryRequired
+		}
+		if checkpoint.Valid {
+			original, _ := json.Marshal(expected[id])
+			if checkpoint.String != recordHash(original) {
+				rows.Close()
+				return ErrExecutionRecoveryRequired
+			}
+			requiredReceipts[id] = true
 		}
 		seen[id] = true
 	}
@@ -76,6 +86,7 @@ func releasedCaptureProofTx(ctx context.Context, tx *sql.Tx, a d.Authority, scop
 		return e
 	}
 	defer rows.Close()
+	writerReceipts := map[string]bool{}
 	for rows.Next() {
 		var id, h string
 		var original []byte
@@ -85,11 +96,22 @@ func releasedCaptureProofTx(ctx context.Context, tx *sql.Tx, a d.Authority, scop
 		}
 		want, ok := expected[id]
 		canonical, _ := json.Marshal(want)
-		if !ok || !resumed || recordHash(original) != h || !bytes.Equal(original, canonical) {
+		if !ok || writerReceipts[id] || !resumed || recordHash(original) != h || !bytes.Equal(original, canonical) {
+			return ErrExecutionRecoveryRequired
+		}
+		writerReceipts[id] = true
+	}
+	if e = rows.Err(); e != nil {
+		return e
+	}
+	// A writer which never received a pause intent can remain untouched. A
+	// recorded pause checkpoint, however, cannot lose its whole resume receipt.
+	for id := range requiredReceipts {
+		if !writerReceipts[id] {
 			return ErrExecutionRecoveryRequired
 		}
 	}
-	return rows.Err()
+	return nil
 }
 
 // ReconcileReleasedCapture never resumes a runtime or re-reads source data. It
