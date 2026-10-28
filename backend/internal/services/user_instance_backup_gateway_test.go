@@ -20,6 +20,7 @@ type backupGatewayFixture struct {
 	states                                    map[string]*RuntimeAgentGatewayState
 	creates, deletes, completed               int
 	claimed, loseCreate, holdCreate, loseStop bool
+	unsupportedStop, unconfirmedStop          bool
 	blockPoint                                string
 	writer                                    *BackupGatewayWriter
 }
@@ -29,12 +30,41 @@ func newBackupGatewayFixture(t *testing.T, agent string, running bool) *backupGa
 	f := &backupGatewayFixture{states: map[string]*RuntimeAgentGatewayState{}}
 	if running {
 		f.states["gw-7-3"] = &RuntimeAgentGatewayState{GatewayID: "gw-7-3", InstanceID: 7, Generation: 3, State: "running"}
+	} else {
+		f.states["gw-7-3"] = &RuntimeAgentGatewayState{GatewayID: "gw-7-3", InstanceID: 7, Generation: 3, State: "stopped"}
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(out http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		if r.Header.Get("X-ClawManager-Control-Token") != "fixture-control" {
 			out.WriteHeader(403)
+			return
+		}
+
+		if r.URL.Path == "/v1/stop-capabilities" {
+			if f.unsupportedStop {
+				out.WriteHeader(404)
+				return
+			}
+			json.NewEncoder(out).Encode(RuntimeAgentStopCapabilities{Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
+			return
+		}
+		if r.URL.Path == "/v1/gateway-stop" {
+			var req RuntimeAgentStopRequest
+			if json.NewDecoder(r.Body).Decode(&req) != nil || req.GatewayID != "gw-7-3" {
+				out.WriteHeader(400)
+				return
+			}
+			if f.states[req.GatewayID] != nil {
+				f.deletes++
+				delete(f.states, req.GatewayID)
+			}
+			if f.loseStop {
+				f.loseStop = false
+				out.WriteHeader(504)
+				return
+			}
+			json.NewEncoder(out).Encode(RuntimeAgentStopReceipt{InstanceID: req.InstanceID, Generation: req.Generation, GatewayID: req.GatewayID, OperationID: req.OperationID, PodUID: req.PodUID, AgentEpoch: req.AgentEpoch, PID: 417, Confirmed: !f.unconfirmedStop, ConfirmationScope: "process_group", ConfirmedAt: time.Now().UTC()})
 			return
 		}
 		id := strings.TrimPrefix(r.URL.Path, "/v1/gateways/")
@@ -271,5 +301,60 @@ func TestBackupGatewayWriterRejectsDriftAndMissingRecoveryDependencies(t *testin
 				t.Fatal("mutated before identity/guard checks")
 			}
 		})
+	}
+}
+
+func TestBackupGatewayWriterDoesNotAcceptAbsenceAsProcessExit(t *testing.T) {
+	f := newBackupGatewayFixture(t, "openclaw", true)
+	f.unsupportedStop = true
+	if _, err := f.writer.Observe(backupContext(t)); err == nil {
+		t.Fatal("unsupported process-stop protocol admitted an online source")
+	}
+	if f.deletes != 0 || f.creates != 0 {
+		t.Fatal("unsupported source was mutated")
+	}
+}
+
+func TestBackupGatewayWriterMissingRegistryStillRequiresActualStopReceipt(t *testing.T) {
+	for _, phase := range []string{"pause", "check", "resume"} {
+		t.Run(phase, func(t *testing.T) {
+			f := newBackupGatewayFixture(t, "hermes", true)
+			ctx := backupContext(t)
+			original, err := f.writer.Observe(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.mu.Lock()
+			delete(f.states, "gw-7-3")
+			f.unconfirmedStop = true
+			f.mu.Unlock()
+			switch phase {
+			case "pause":
+				_, err = f.writer.Pause(ctx, original)
+			case "check":
+				err = f.writer.CheckPaused(ctx, original)
+			case "resume":
+				err = f.writer.Resume(ctx, original)
+			}
+			if err == nil {
+				t.Fatal("missing registry replaced positive process-stop proof")
+			}
+			if f.creates != 0 || f.completed != 0 {
+				t.Fatal("unconfirmed exit started recovery")
+			}
+		})
+	}
+}
+
+func TestBackupGatewayWriterMissingOriginalRegistryIsNotOriginallyStopped(t *testing.T) {
+	f := newBackupGatewayFixture(t, "openclaw", true)
+	f.mu.Lock()
+	delete(f.states, "gw-7-3")
+	f.mu.Unlock()
+	if _, err := f.writer.Observe(backupContext(t)); err == nil {
+		t.Fatal("missing original gateway was assumed to have been stopped")
+	}
+	if f.deletes != 0 || f.creates != 0 {
+		t.Fatal("ambiguous original source mutated")
 	}
 }

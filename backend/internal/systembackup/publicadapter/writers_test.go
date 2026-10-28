@@ -130,6 +130,24 @@ func TestConcreteGatewayFactoryRestoresOriginalStateWithPublicRecoveryScope(t *t
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
 				defer mu.Unlock()
+
+				if r.URL.Path == "/v1/stop-capabilities" {
+					json.NewEncoder(w).Encode(services.RuntimeAgentStopCapabilities{Protocol: 1, PodUID: "runtime-pod-uid", AgentEpoch: strings.Repeat("a", 32), GracefulStop: true, ConfirmationScope: "process_group"})
+					return
+				}
+				if r.URL.Path == "/v1/gateway-stop" {
+					var req services.RuntimeAgentStopRequest
+					if json.NewDecoder(r.Body).Decode(&req) != nil || req.GatewayID != "gw-7-7" {
+						w.WriteHeader(400)
+						return
+					}
+					if runningOld {
+						deletes.Add(1)
+						runningOld = false
+					}
+					json.NewEncoder(w).Encode(services.RuntimeAgentStopReceipt{InstanceID: req.InstanceID, Generation: req.Generation, GatewayID: req.GatewayID, OperationID: req.OperationID, PodUID: req.PodUID, AgentEpoch: req.AgentEpoch, PID: 419, Confirmed: true, ConfirmationScope: "process_group", ConfirmedAt: time.Now().UTC()})
+					return
+				}
 				switch r.Method {
 				case "GET":
 					reads.Add(1)

@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,9 +16,10 @@ import (
 )
 
 // BackupGatewayAgent is implemented by the existing Runtime Agent HTTP client.
-// Supported agents must prove generation-addressed deletion and stopped-state
-// semantics during capability discovery. An HTTP 404 on an unsupported state
-// endpoint must never be accepted as a stop acknowledgement.
+// RuntimeAgentStopClient is also required for a running source. Absence in the
+// gateway registry or an ordinary DELETE is not process exit evidence. Its
+// process-group receipt is necessary, NOT sufficient: Guard must independently
+// enforce the admitted whole-source/process-tree isolation capability.
 type BackupGatewayAgent interface {
 	GatewayState(context.Context, string, string) (*RuntimeAgentGatewayState, error)
 	DeleteGateway(context.Context, string, string) error
@@ -115,13 +118,16 @@ func (w *BackupGatewayWriter) Observe(ctx context.Context) (flow.State, error) {
 		return flow.State{}, flow.ErrQuiesce
 	}
 	state, err := w.state(ctx, w.Source.Generation)
-	if err != nil || (state != "running" && state != "stopped" && state != "absent") {
+	if err != nil || (state != "running" && state != "stopped") {
 		return flow.State{}, flow.ErrQuiesce
 	}
 	s.Running = state == "running"
 	// Do not stop a healthy source unless its immutable restart material is
 	// available and matches the reserved source identity. Never journal secrets.
 	if s.Running {
+		if _, err = w.stopCapabilities(ctx); err != nil {
+			return flow.State{}, err
+		}
 		if _, err = w.restart(ctx); err != nil {
 			return flow.State{}, err
 		}
@@ -148,11 +154,6 @@ func (w *BackupGatewayWriter) Pause(ctx context.Context, s flow.State) (flow.ACK
 	if !s.Running && state != "stopped" && state != "absent" {
 		return flow.ACK{}, flow.ErrQuiesce
 	}
-	if s.Running && state != "stopped" && state != "absent" {
-		if err = w.Agent.DeleteGateway(ctx, w.Source.Endpoint, w.gateway(w.Source.Generation)); err != nil && !errors.Is(err, ErrRuntimeAgentNotFound) {
-			return flow.ACK{}, flow.ErrQuiesce
-		}
-	}
 	if err = w.waitStopped(ctx, s, false); err != nil {
 		return flow.ACK{}, flow.ErrQuiesce
 	}
@@ -165,6 +166,11 @@ func (w *BackupGatewayWriter) waitStopped(ctx context.Context, s flow.State, rec
 	point := "check-stopped"
 	if recovery {
 		point = "recovery-check-stopped"
+	}
+	if s.Running {
+		if w.Guard(ctx, point, s) != nil || w.confirmStopped(ctx, s) != nil {
+			return flow.ErrQuiesce
+		}
 	}
 	return w.poll(ctx, func() (bool, error) {
 		if w.Guard(ctx, point, s) != nil {
@@ -179,6 +185,9 @@ func (w *BackupGatewayWriter) waitStopped(ctx context.Context, s flow.State, rec
 }
 func (w *BackupGatewayWriter) CheckPaused(ctx context.Context, s flow.State) error {
 	if w.ready(ctx) != nil || !w.validState(s) || w.Guard(ctx, "check-stopped", s) != nil {
+		return flow.ErrQuiesce
+	}
+	if s.Running && w.confirmStopped(ctx, s) != nil {
 		return flow.ErrQuiesce
 	}
 	state, err := w.state(ctx, w.Source.Generation)
@@ -210,15 +219,10 @@ func (w *BackupGatewayWriter) Resume(ctx context.Context, s flow.State) error {
 		}
 		return nil
 	}
-	// Always retire the old gateway before recreating a running source. A late
-	// DELETE addresses only the old generation, never this reserved new ID.
-	if old != "absent" && old != "stopped" {
-		if w.Guard(ctx, "recovery-stop-old", s) != nil {
-			return flow.ErrResume
-		}
-		if e := w.Agent.DeleteGateway(ctx, w.Source.Endpoint, w.gateway(w.Source.Generation)); e != nil && !errors.Is(e, ErrRuntimeAgentNotFound) {
-			return flow.ErrResume
-		}
+	// Reconcile the same confirmed stop operation even if the old registry entry
+	// disappeared. A missing gateway must never stand in for process exit.
+	if w.Guard(ctx, "recovery-stop-old", s) != nil {
+		return flow.ErrResume
 	}
 	if w.waitStopped(ctx, s, true) != nil {
 		return flow.ErrResume
@@ -296,4 +300,34 @@ func (w *BackupGatewayWriter) poll(ctx context.Context, check func() (bool, erro
 		case <-timer.C:
 		}
 	}
+}
+
+// stopCapabilities checks the pinned physical pod before any stop side effect.
+func (w *BackupGatewayWriter) stopCapabilities(ctx context.Context) (*RuntimeAgentStopCapabilities, error) {
+	agent, ok := w.Agent.(RuntimeAgentStopClient)
+	if !ok {
+		return nil, flow.ErrNotReady
+	}
+	caps, err := agent.StopCapabilities(ctx, w.Source.Endpoint)
+	if err != nil || caps == nil || caps.Protocol != 1 || !caps.GracefulStop || caps.PodUID != w.Source.PodUID || !stopTokenValid(caps.AgentEpoch) || caps.ConfirmationScope != "process_group" {
+		return nil, flow.ErrNotReady
+	}
+	return caps, nil
+}
+
+func (w *BackupGatewayWriter) confirmStopped(ctx context.Context, state flow.State) error {
+	caps, err := w.stopCapabilities(ctx)
+	if err != nil {
+		return flow.ErrQuiesce
+	}
+	agent := w.Agent.(RuntimeAgentStopClient)
+	// Stable across controller restart and uncertain replies; identity includes
+	// the original generation and reserved recovery material, never a new task.
+	sum := sha256.Sum256([]byte(state.UID + "\x00" + state.Checkpoint))
+	request := RuntimeAgentStopRequest{InstanceID: w.Source.InstanceID, UserID: w.Source.UserID, Generation: w.Source.Generation, GatewayID: w.gateway(w.Source.Generation), OperationID: hex.EncodeToString(sum[:16]), PodUID: w.Source.PodUID, AgentEpoch: caps.AgentEpoch, TimeoutSeconds: 20}
+	receipt, err := agent.ConfirmGatewayStop(ctx, w.Source.Endpoint, request)
+	if err != nil || !validRuntimeStopReceipt(request, receipt) {
+		return flow.ErrQuiesce
+	}
+	return nil
 }

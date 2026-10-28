@@ -182,3 +182,12 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 必要证据：真实 MySQL 的意图回滚/缺行/错摘要/全成员和结果写失败用例通过；原共享 gate 的实际 SQL 准入用例通过。独立本地 kind 的实际 controller 二进制、TLS HTTP、真实采集 Job、连续写入源 Deployment 经“未知停止→删原回执行→撤 forward 权限→租约实际到期→原执行恢复”57.07秒通过，只有一个 Job/attempt，实际源恢复、gate idle；正式入口正常采集/恢复45.20秒通过。它们验证工作区 profile，不是非空 OpenClaw/Hermes 或完整全域能力。
 
 提交复盘：真实链首次暴露“检查回执先于意图修复”的入口顺序错误，已改为先做受权元数据重建，未放宽远端停止证明。只重跑这一故障和生产入口，没有扩展全矩阵。B 的全部 Runtime/后台写入生产组合仍未完成，不能借这个提交销项。
+
+
+### 补回 B / 第二块：Gateway 不能以记录消失证明进程退出
+
+原 BackupGatewayWriter 对 404/普通 DELETE 的结果依赖过强。本次要求在线源在观察时具备固定 Pod UID 的确认停止协议，暂停/检查/恢复都取得绑定原代数与稳定 operation 的有效回执；响应丢失用同一 operation 查回，不转 DELETE。源观察时的记录缺失不再解释为“原本已停止”；明确已停止的源仍不启动。进程组回执只是必要附加条件，原 Guard 的完整进程树/UID隔离与来源能力证明仍不可省略。
+
+先以“不支持确认停止的在线源仍被接纳”复现失败，修复后已有 Gateway/公共 adapter 定向用例及缺注册记录、未确认回执、丢响应、接手恢复通过。测试是实际 HTTP 适配合同，不是实际 OpenClaw/Hermes 进程验收。核对 Runtime 源实现发现现有 stop-capabilities/gateway-stop 只支持 OpenCode/process_group，且明确不授予备份许可；/v1/backup/capabilities 未实现。因此不能把这个后端提交宣称为所有 Runtime B 完成，也不能伪造能力解开生产非空限制。
+
+提交复盘：复用了现有停止协议和请求校验，没有修改普通实例生命周期接口。实际 Runtime 代码核查应早于扩大 fixture 的成功结论；后续不再用参数齐全的模拟回执代替外部生产能力。
