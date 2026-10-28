@@ -2,13 +2,13 @@
 
 > Final remaining development plan: [M3/M4 execution and retrospective](../../BACKUP_M3_M4_FINAL_PLAN.md). Incomplete M2 work is mandatory in M3, followed by full publication/independent restore; M4 completes user actions, deployment and delivery. Existing acceptance boundaries are unchanged.
 
-> Current 2026-10-28 milestone: M0/M1 completed; actual functional workspace capture/source recovery accepted in disposable MySQL/Kubernetes. Full M2 remains incomplete, with no production owner startup/readiness publisher or complete data-domain/writer coverage. See root `BACKUP_M0_M2_EXECUTION.md` and `BACKUP_TEAM_INTEGRATION_HANDOFF.md`; the sections below preserve earlier integration context. Latest reviewed source is `4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`, migration catalog 164. No production activation, push or shared-cluster deployment in this run.
+> Current 2026-10-29 milestone: explicit production public-v1 workspace functional owner, readiness, actual capacity, minimum SQL/Kubernetes roles, independent original recovery, real progress and cancellation are accepted in disposable MySQL/kind. Complete M3/M4 remain unfinished: five data domains, nonempty Runtime/background writers, formal publication, independent restore and full deployment/rollback are not accepted. See root `BACKUP_TEAM_INTEGRATION_HANDOFF.md` and `BACKUP_M3_M4_EXECUTION.md` for current evidence. The following sections preserve historical context. Latest source is backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e, catalog 164. No shared-server activation.
 
 This branch is an **in-progress integration**, not a released replacement backup
 engine. Do not enable v2 from a database edit or infer runtime readiness from a
 passing library test. Production submission, backup/preflight details and safe
-unstarted cancellation are composed. The v2 capture runner and independent
-restore composition remain unavailable; submission refuses without fresh
+unstarted cancellation are composed. An opt-in production workspace functional runner exists; full-domain and independent
+restore composition remain unavailable. Submission refuses without fresh, matching
 executor readiness. See `task-admission.md` for the implemented boundary.
 
 ## Provenance and preservation

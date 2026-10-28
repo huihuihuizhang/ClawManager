@@ -1,8 +1,7 @@
-# Transactional task admission and safe unstarted cancellation
+# Transactional task admission and original-execution cancellation
 
 This is an implemented part of the integration, not capture/restore acceptance.
-No production runner currently publishes readiness; do not manufacture a receipt
-or update database flags to activate task submission.
+An explicitly pinned public-v1 platform-workspace functional production runner now publishes matching readiness. Full backup remains unavailable; do not manufacture readiness or update database flags. See public-capture-deployment.md and the root M3/M4 handoff for the current accepted boundary. The foundation sections below record earlier stages.
 
 ## Production composition
 
@@ -83,12 +82,11 @@ writes if a v2 attempt, Job observation or external action exists. A missing
 legacy capture plan is not evidence of v2 collector exit.
 
 Real MySQL tests verify this adapter and the unchanged legacy gate behavior.
-The test controller transitions are synthetic: no production scheduler calls
-these methods yet. Remote participant pause/resume, actual collector stop
+Historical foundation tests used synthetic controller transitions. Current production public-v1 scheduling calls these methods; its native acceptance is recorded in the root M3/M4 execution report. Remote participant pause/resume, actual collector stop
 verification and versioned recovery/release composition remain required. Do
 not publish readiness or enable capture based on these library tests.
 
-## Durable execution foundation (not active composition)
+## Durable execution foundation (historical foundation boundary)
 
 `SQLExecutionQueue` claims admitted work once and detects takeover that requires
 recovery instead of automatically starting a second execution. `PlanStore`
@@ -103,6 +101,4 @@ establish what happened. This is deliberately not a full execution state machine
 
 The current phase verifies concurrent claims, takeover, input/plan tampering and
 lost Job responses with real MySQL. Kubernetes calls are simulated for this
-failure boundary. Production scheduling, Job observation/stop/recovery, capture,
-publication and independent restore are still required before readiness can be
-published. Work is paused after the user's requested local commit and review.
+failure boundary. Production scheduling, authenticated Job observation, original stop/recovery and workspace functional capture are now composed. Formal publication and independent restore remain unimplemented in this path; only the bounded functional readiness may be published.

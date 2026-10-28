@@ -134,3 +134,18 @@ Dockerfile 增加正式 backup-worker target：同源静态二进制、scratch�
 真实缺行用例恢复原始行后22.88秒通过：原补记继续、再次调用幂等、没有重读源数据或重复恢复，最终 failed/idle；后端全量通过。修改只涉及原恢复证明，接口/迁移/Worker/前端不变，镜像必须由这次修复后的源码重建。一次本机 kubectl 客户端产生异常栈，虽然远端测试完成，为得到清晰验收日志又做了一次小规模复跑，没有扩大到全矩阵。
 
 提交复核：这是冻结后的实质安全缺陷，因此允许打破一次镜像冻结；应在阶段实现时同时审查“缺字段”和“缺整行/集合不完整”，避免只覆盖布尔标记错误。后续只验证最终镜像对应二进制和这一改动，不重跑无关前端。
+
+## 本轮最终镜像与交付边界
+
+- 源业务代码：`806d14588bf6caf8ec12e75c0efb71e23c3bf59f`；后续收尾仅文档/证据更新，不改变已测 backend/frontend/Worker。
+- 本机 App：`cm-backup-app:m3m4-20261029-reviewed`；Image ID `sha256:27f63eec6d14eaf47e812569e4265ec8d49a9117050a86eac013127127053e83`。
+- 本机 Worker：`cm-backup-worker:m3m4-20261029-reviewed`；Image ID `sha256:9a13299fbed6a5f6f729db8339085ac758d0e65b6ac3f0cd154fca5f5953f2bc`；实际加载 manifest `sha256:ca7dbe1bbec0878d8b26e78acbaaaca93a68862ba17dc3c72fc34b7a64c452fb`。
+- 从最终 App 提取的实际 controller SHA256：`bd1a941a8ffd787e55755370f9bd48c5ce0a97ae0d0044f29f2fd3ff950ef67e`。实际长退出/内容/进度/取消链58.76秒通过；撤 forward/source/私钥/create 权限后的独立重启恢复56.98秒通过；真实整包启动/HTTPS/迁移/登录/列表/缺能力拒绝通过。
+- 上述是本机已实现子链的验收，不是正式 registry 发布、真实浏览器、非空全域正式备份或独立还原验收。没有更新32543，没有修改32443、真实实例或共享服务器。
+- 推送目标为 `backup-origin HEAD:refs/heads/codex/backup-team-integration`，禁止 force；最终远端 SHA 在交付消息核对。源 `backup` 分支仍为 `4fe83bcd`，不覆盖同事代码。
+
+全范围 **M3/M4 未完成**。六域/全部 Runtime writer、真实策略评审、正式发布/独立还原、全部用户恢复操作和完整安装回退仍有实现缺口。根目录交接已经逐项列出代码位置、真实验收矩阵、失败原因与效率改进，不把它们写成“只差测试”。
+
+最后复盘：这一轮已有13个能独立验收的开发提交，但仍主要推进工作区可靠性，没有按原最终计划进入完整数据出口；不能用提交数证明整合完成。接手不应重做已通过模块，而应先固定全域生产组合、正式 key/provider 和独立恢复的真实接入位置，再直接贯通。镜像构建应统一完整 Git SHA 与 build args，避免仅短/长 SHA 差异失去缓存。新增缺行故障的“先失败、后修复、实际通过”过程应成为集合类恢复校验的固定检查点。
+
+本轮本地验收资源已收尾：确认原 native.test/public-controller 均退出，删除本轮唯一 kind 集群及两个已核对完整 ID/标签的 MySQL 容器；临时 App/Redis/schema/user 已由 smoke 驱动清理。最终 App/Worker 镜像和本机忽略验收日志保留，没有执行全局 Docker prune/reset、没有删除其他项目资源。

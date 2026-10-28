@@ -23,7 +23,7 @@
       "path": "BACKUP_M3_M4_EXECUTION.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "a02fc943b03a40439ad2549fff8310a4b55b2a10608877ac85325ce354354be8",
+      "working_tree_sha256": "72838c37a342577ca899343e4349ee68192181c69e8c2f59eacfc1766e9293c7",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -37,7 +37,7 @@
       "path": "BACKUP_TEAM_INTEGRATION_HANDOFF.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "731924302b30bfee04919da5bbf6f54e9e83073cf470b960206b25cf0836cf01",
+      "working_tree_sha256": "bc30606553b219e8f175d329f7fe88b1d4846cb698a6643790eebb0a0d2b9e40",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9536,7 +9536,7 @@
       "path": "docs/backup-team-integration/README.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "55423906f4a48df9b50708b938e4904f5743b53e2a896d055b6c5e4e7b60b030",
+      "working_tree_sha256": "8027b1327f306cb7ad07c1fadf514ff994e415763672f374fec3c09d528dd4a5",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9725,14 +9725,14 @@
       "path": "docs/backup-team-integration/task-admission.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "b1e5a0fe3bdf8d8919697088efd2f3b73c88ba1e9b5d7a29cca6c56cb99bc8b0",
+      "working_tree_sha256": "a302079c735a4416c9b87cf07ba5b2f3f439ec9646b575f7e0b9699771400329",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "4c267e916013d113cba0893f56a9df0ba4496e20ee36e53186299b91d7b4f2f1",
+      "working_tree_sha256": "9b8be37f0f38cb6ef8438e60b9ac91b80036b02e1108bf49ed76e6608b0f4178",
       "disposition": "integration-owned adaptation"
     },
     {

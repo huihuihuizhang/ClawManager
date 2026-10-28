@@ -1,5 +1,70 @@
 # 备份专用版与 Team 版整合交接
 
+## 2026-10-29 M3 / M4 本轮交付与未完成结论
+
+**本节是最新状态，优先于下面所有历史记录。M3、M4 总出口均未完成，v2 全系统备份不能启用。** 这不是只差服务器部署或一份授权文件；完整数据面、正式发布与独立还原仍有实际实现缺口。完整原范围保留在 [最终计划](BACKUP_M3_M4_FINAL_PLAN.md)，每块成果、失败复现和提交复盘见 [本轮执行记录](BACKUP_M3_M4_EXECUTION.md)。
+
+### 仓库与合并方法
+
+- 开发目录：`D:/test/ClawManager-2`，分支 `codex/backup-team-integration`；仍在 Team 底座上增量适配，不是在备份 checkout 里直接覆盖开发。
+- 备份来源：`backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`；`D:/test/backup/ClawManager` 保持干净、不改动。
+- Team 基线：`be7da27dff85c2daf3321b8245ffdab024e67853`；保留 Team/owner/北向、WorkBuddy、登录、实例、旧备份和既有历史。
+- 推送目标明确为 `backup-origin` → `https://github.com/huihuihuizhang/ClawManager.git` 的 `codex/backup-team-integration`；不推 Team origin，不覆盖同事的 `backup` 分支，不强推。
+- 不使用整文件替换或 `ours` 假合并；来源/目标 blob 映射在 `docs/backup-team-integration/source-map.json`。来源未被整分支 merge 认祖，未来仍需按这份来源映射核对新增量。
+- 当前164个迁移；本轮没有追加/重写迁移，119/120/121继续保留。127个 registry 对象中59项仍待 owner review、68项待交叉评审，没有把摘要更新当作策略批准。
+
+### 已经真正接通的能力
+
+实际生产 `system-backup-v2-controller` 通过选主、原公共任务和独立控制连接执行显式 `public-v1 / platform-workspace / functional_test`。**源 instances 必须为零，数据域仅 workspace**；这不是当前正式环境非空 Team/实例的全系统备份能力。
+
+已通过的纵向路径：真实 HTTP/RBAC 创建 → 生产进程领取 → 原加密计划 → 实际 scratch Worker → 工作区密文内容核验 → 实际退出证明 → 原源 writer 恢复 → validating → 查询 → 授权取消 → 原密文/历史保留。validated/sealed 不等于已发布/可独立恢复。
+
+本轮修复包括：物理释放与公共记录同事务；历史释放缺口按原 epoch 和回执补记；acquiring 日记原子性；原 Job binding/process 缺失时找回原对象；运行中取消；forward/source/私钥丢失后的独立恢复；最小 SQL/Kubernetes 角色；实际 MySQL 卷容量；超过10秒的退出监听；受阻诊断；认证 Job 的真实进展投影；摘要中的恢复保护提示；暂停回执整行缺失拒绝补记。
+
+已完成13个开发提交，从 `525fe528` 至 `806d1458`。每个工作块后的真实成果与效率复盘均在执行记录中；最终文档/验收提交另见本分支 `git log`，避免在文档中自引用最终 HEAD。
+
+### 完整验收矩阵的真实状态
+
+| 原计划 | 状态及尚未覆盖的边界 |
+| --- | --- |
+| A1 真实生产执行/单份原计划 | 工作区受控 writer 通过；未验非空 Runtime/完整多域 |
+| A2 准入/容量/权限与旧路径 | 实际容量、最小角色、缺授权拒绝及原列表通过；不是完整生产配置验收 |
+| A3 gate 事务及历史缺口 | acquiring/释放 SQL 故障和原代数恢复通过；发布后的未知外部写入尚未接入 |
+| A4 原 Job 不重复 | 响应/绑定缺口、真实原 Job 重启恢复通过；已记发送但始终没有观察到原对象时仍受保护，不能自动解锁 |
+| A5 超时/停止/取消/独立恢复 | 真实受控 Deployment/Worker、13秒退出、未知停止及独立恢复通过；非全部实际 Runtime/后台 writer |
+| A6 六域一致性采集 | **未通过：当前仅 workspace，其他五域未生产接齐** |
+| A7 当前业务恢复策略 | 摘要一致性已修；59项 owner 和68项交叉评审仍未完成 |
+| A8 正式发布/不确定写入 | **未完成生产公共 v2 适配** |
+| A9 正式成品独立还原 | **未完成**；密文 tar 内容比较不是正式成品独立还原 |
+| A10 用户动作/断线恢复 | 真实创建/详情/取消/幂等及前端传输通过；manifest/正式下载/恢复/全部重试未接齐，无真实浏览器验收 |
+| A11 安装/镜像/回退 | 最小角色、TLS 原链及真实 App/Worker 已验；完整 Broker/CNI 安装和安全切换回退未验 |
+| A12 原业务/最终交付 | 后端全量、前端构建、实际整包登录/原列表通过；非空 owner Team/WorkBuddy 的正式备份还原与共享环境发布未做 |
+
+每次验收的原始日志仅在本机忽略目录，可信范围和 SHA256 记录于 `docs/backup-team-integration/validation.json`；最终镜像证据在本轮执行记录收尾节。没有通过浏览器/模型/生产 NFS 的项目不能据此声称通过。
+
+### 仍需完成的代码位置与闭环要求（属于原 M3/M4，不另设 M5）
+
+1. **真实停写者与非空源**：`systembackupexecution/deployment_platform.go` 当前只装配显式 Deployment，`deployment_service.go` 仍拒绝非空 instances。接现有 `systembackup/publicadapter/writers.go` 的 Runtime writer builder 与当前 Team/background gate；用非空 Lite/Pro、OpenClaw/Hermes 和原本停止者证明逐个恢复，不能只删除零实例校验。
+2. **六域数据面和凭据**：`deployment_platform.go:BuildParts` 当前只有 workspace；`public_jobs.go:Authorize` 仍拒绝 Database 凭据请求。按原范围接 mysql/redis/object/deployment/secret 的真实采集与只读权限发放，每域形成实际内容及隔离恢复证据；不能把 controller SQL 写连接传给 Worker。
+3. **当前业务策略**：`contracts/system-backup/v12/schema-registry.json` 仍有未决项。逐对象落实 owner/Team/WorkBuddy、引用/FK、运行状态重建及凭据失效；交叉审批必须来自实际审阅，不批量写 owner_recorded/approved。
+4. **正式发布**：`SQLCaptureGate.FinishCapture` 当前终止于 validating。围绕同一公共 v2 task 适配 `systembackupproducer/finish.go` 与既有 recovery/provider/envelope 原语；接独立 KEK/signer/provider 身份、精确原 bytes 与外部效果日记。`systembackup.CorePublisher` 依赖旧任务，禁止通过另建旧任务接通它。
+5. **独立还原**：由正式发布成品恢复独立 DB/Redis/对象前缀/卷，真实目标隔离、逐步日记和独立 verifier，核对非空业务关系及危险队列/凭据不重放。没有正式发布就不能先用工作区包伪造独立恢复成功。
+6. **用户恢复及安装**：接真实重试/核实/恢复/manifest/下载/隔离演练；按钮取决于已实现能力。完成 Broker/网络/卷/私有材料安装、v2-aware 回退和最终浏览器操作，再考虑启用和共享环境发布。
+7. **未知发送边界**：目前不会用404或租约过期证明原执行停止。需要补经过审阅的原发送封禁/停止证明路径，不能删日记、重建 Job、清 gate 或手改失败状态解锁。
+
+本轮独占的本地 kind 与两个 MySQL 容器已经核对身份后清理；临时整包 App/Redis/测试库及测试用户也已清理。最终本机镜像与忽略日志保留，复验需重建独占 fixture，不能把 native fixture 应用到共享集群。未发布共享服务器。
+
+### 本轮为何没有完成，以及后续怎样提高效率
+
+这次仍未兑现“全部 M3/M4 完成”。主要问题是执行组织：先把工作区可靠性展开成了多个相邻工作块，虽然修复真实，但没有及时推进六域和正式成品出口；不能把未完成说成只差验收。对来源库“已有原语”的可组合程度仍估计不足，实际生产装配缺口远大于函数数量。
+
+可避免的浪费包括：新角色未先逐个核对实际 PATCH 调用、用发送标记代替实际 Job 作为测试前提，造成两次约八分钟等待；若干次猜文件名和重复镜像构建；工作块中间编译参数不同导致缓存未复用。必要的真实故障验证本身不是浪费。
+
+接手应直接复用当前生产纵向链和一次性 native 驱动：先把一份非空六域快照、正式发布、独立恢复的实际调用点和最小提供方材料核实清楚，再动代码；一次运行保留原始故障现场、阶段和集合完整性，不等统一长超时；每块先做失败复现/定向验证，冻结后做要求的全量和最终镜像验证。不要再横向增加一套状态机、演示页面或来源归档代替数据出口。进度按 A1～A12 和真实用户能力报告，不能按提交数或文件量报完成比例。
+
+---
+
+
 > 最新接手入口：[M3/M4 最终开发计划与复盘](BACKUP_M3_M4_FINAL_PLAN.md)。按用户要求，原 M2 未完成项作为 M3 必做前置，后续只保留 M3/M4 两个最终阶段；不改变下文已经记录的验收边界。
 
 ## 2026-10-28 M0～M2 四小时开发交接（当前结论）
