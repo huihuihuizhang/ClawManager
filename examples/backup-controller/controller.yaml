@@ -1,0 +1,128 @@
+# Templates only: provision the isolated databases, TLS, storage and mounted
+# configuration before applying. Replace every example.invalid image digest.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cm-backup
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-controller
+  namespace: cm-backup
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clawmanager-backup-controller
+rules:
+  - apiGroups: [""]
+    resources: [nodes, namespaces, persistentvolumes]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, create, patch, delete]
+  - apiGroups: [""]
+    resources: [persistentvolumeclaims, configmaps]
+    verbs: [get, list, create, delete]
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [get, create, delete]
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [get, list, patch]
+  - apiGroups: [apps]
+    resources: [replicasets, statefulsets, daemonsets]
+    verbs: [get, list]
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [get, list, create, delete]
+  - apiGroups: [batch]
+    resources: [cronjobs]
+    verbs: [get, list]
+  - apiGroups: [autoscaling]
+    resources: [horizontalpodautoscalers]
+    verbs: [get, list]
+  - apiGroups: [networking.k8s.io]
+    resources: [networkpolicies]
+    verbs: [get, list, create, delete]
+  - apiGroups: [snapshot.storage.k8s.io]
+    resources: [volumesnapshotclasses, volumesnapshotcontents]
+    verbs: [get, list]
+  - apiGroups: [snapshot.storage.k8s.io]
+    resources: [volumesnapshots]
+    verbs: [get, list, create, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: clawmanager-backup-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: clawmanager-backup-controller
+subjects:
+  - kind: ServiceAccount
+    name: backup-controller
+    namespace: cm-backup
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backup-controller
+  namespace: cm-backup
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: backup-controller}
+  template:
+    metadata:
+      labels: {app: backup-controller}
+    spec:
+      serviceAccountName: backup-controller
+      nodeSelector: {kubernetes.io/os: linux}
+      containers:
+        - name: controller
+          image: example.invalid/backup-controller@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          args: [--config, /config/controller.json]
+          env:
+            - name: POD_NAMESPACE
+              valueFrom: {fieldRef: {fieldPath: metadata.namespace}}
+            - name: POD_NAME
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            - name: POD_UID
+              valueFrom: {fieldRef: {fieldPath: metadata.uid}}
+          ports: [{name: relay, containerPort: 9443}]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: '2', memory: 1Gi}
+          volumeMounts:
+            - {name: configuration, mountPath: /config, readOnly: true}
+            - {name: credentials, mountPath: /credentials, readOnly: true}
+            - {name: tls, mountPath: /tls, readOnly: true}
+            - {name: staging, mountPath: /staging}
+            - {name: evidence, mountPath: /evidence}
+            - {name: artifacts, mountPath: /artifacts}
+      volumes:
+        - {name: configuration, secret: {secretName: backup-controller-config, defaultMode: 256}}
+        - {name: credentials, secret: {secretName: backup-controller-credentials, defaultMode: 256}}
+        - {name: tls, secret: {secretName: backup-controller-tls, defaultMode: 256}}
+        - {name: staging, persistentVolumeClaim: {claimName: backup-staging}}
+        - {name: evidence, persistentVolumeClaim: {claimName: backup-evidence}}
+        - {name: artifacts, persistentVolumeClaim: {claimName: backup-artifacts}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backup-relay
+  namespace: cm-backup
+spec:
+  selector: {app: backup-controller}
+  ports: [{name: relay, port: 9443, targetPort: relay}]

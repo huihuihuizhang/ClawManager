@@ -16,3 +16,16 @@ docs/system-backup-*-proposal-*.sql text eol=lf
 contracts/system-backup/v12/producer-authority-candidate.sql whitespace=-blank-at-eof
 docs/backup-team-integration/reference/system-backup-d-download-admission-schema-proposal-20261019.sql whitespace=-blank-at-eof
 docs/system-backup-d-download-admission-schema-proposal-20261019.sql whitespace=-blank-at-eof
+
+# These published backup contracts/fixtures are verified by exact bytes or SHA-256.
+# Preserve their canonical LF bytes in Windows checkouts as well as on Linux.
+contracts/system-backup/v12/admin-control-resources.schema.json text eol=lf
+contracts/system-backup/v12/schema-registry.json text eol=lf
+docs/system-backup-restore-schema-inventory.json text eol=lf
+contracts/system-backup/v12/metrics-alert-registry.json text eol=lf
+contracts/system-backup/v12/prometheus-alert-rules.yaml text eol=lf
+backend/internal/systembackupbusinessa/testdata/schema-registry.json text eol=lf
+backend/internal/systembackupbusinessa/testdata/schema-registry-historical-15.json text eol=lf
+backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql text eol=lf
+backend/internal/systembackupsecurity/testdata/config_proof_installation_schema_065.sql text eol=lf
+docs/evidence/system-backup-provider-issuer-*.registry.json text eol=lf

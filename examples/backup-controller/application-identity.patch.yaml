@@ -1,0 +1,24 @@
+# Strategic-merge example only. Use the real Deployment/container/ServiceAccount
+# names, mounted control credentials, and a pinned application image digest.
+# Application ServiceAccount needs GET on its Pod and Node before DB migrations.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: replace-clawmanager
+  namespace: cm-source-fixture
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: CLAWMANAGER_BACKUP_CONTROL_CONFIG
+              value: /backup-credentials/control-database.json
+            - name: BACKUP_APP_CONTAINER
+              value: app
+            - name: POD_NAME
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            - name: POD_NAMESPACE
+              valueFrom: {fieldRef: {fieldPath: metadata.namespace}}
+            - name: POD_UID
+              valueFrom: {fieldRef: {fieldPath: metadata.uid}}

@@ -42,7 +42,8 @@
     "system_backup_config_maintenance_receipts": "system_backup_v2_config_maintenance_receipts",
     "system_backup_download_result_receipts": "system_backup_v2_download_result_receipts",
     "system_backup_producer_recovery_revocations": "system_backup_v2_producer_recovery_revocations",
-    "system_backup_recovery_deployments": "system_backup_v2_recovery_deployments"
+    "system_backup_recovery_deployments": "system_backup_v2_recovery_deployments",
+    "system_backup_execution_records": "system_backup_v2_execution_records"
   },
   "constraints": {
     "chk_sb_alert_dimensions": "sbv2_chk_sb_alert_dimensions",
@@ -431,6 +432,7 @@
     "system-backup-d-control-health-proposal-20261016.sql": "114_backup_v2_system-backup-d-control-health-proposal-20261016.sql",
     "producer-recovery-authority-candidate.sql": "115_backup_v2_producer-recovery-authority-candidate.sql",
     "producer-recovery-revocation-candidate.sql": "116_backup_v2_producer-recovery-revocation-candidate.sql",
-    "system-backup-d-download-admission-schema-proposal-20261019.sql": "117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql"
+    "system-backup-d-download-admission-schema-proposal-20261019.sql": "117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql",
+    "082_add_system_backup_execution_records.sql": "122_backup_v2_execution_records.sql"
   }
 }

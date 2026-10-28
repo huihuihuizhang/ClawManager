@@ -1,6 +1,6 @@
 {
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
-  "backup_source": "8ef5fa7fd4df45f6306e910705db01f589266ba7",
+  "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "backup_origin": "https://github.com/huihuihuizhang/ClawManager.git",
   "common_base": "b5582554f330e0e92a115bf9f4afe6a669a9e3d6",
   "method": "reviewed module ports; no whole-file Team replacement",
@@ -8,15 +8,29 @@
     {
       "path": ".gitattributes",
       "source_path": ".gitattributes",
-      "source_sha256": "1d5d71dcc6ccd28ab46a335349ecc74742ca4b81f4fcad212f8d134f70f1f13e",
-      "working_tree_sha256": "4cba10271a1e37eb6c7ace50be4e5b4a506a2a7cc25082e1b82cbd03ed739a37",
+      "source_sha256": "f0470f5175a2bfdb1edba74cac284085966d25b2cbb549390ef29c96034f7396",
+      "working_tree_sha256": "82c48f18145b72324a53b29fd0b0fe5e013736b8f77929377572dc5901e353b7",
       "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "BACKUP_M0_M2_EXECUTION.md",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "79c8cecd08defc0912d011d4280140029344322fff423d704217e3bcf1aa34d5",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "BACKUP_TEAM_INTEGRATION_HANDOFF.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "e69ef0b8e2e71537e139e82da75286854ae011e2a7f3c98a19f34a0ae97bafa7",
+      "working_tree_sha256": "7418a451d8880722b507099834de830a72ae8f76bcd69a097664e0e2dd46795f",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "BACKUP_TEAM_REMAINING_PLAN_20261028.md",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "666361548a3445e152babeab3812fad90e7d1adf2137f13d65962bca153c1475",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -24,6 +38,41 @@
       "source_path": "Dockerfile",
       "source_sha256": "7dd9420eb8824754b520aebbe9895fed5fe6e24f4426964d7ff2a0d05adc9c31",
       "working_tree_sha256": "8b013c4d5eeb85bbc1a9e1f246804c707066176041b78f5fb1b66d549936de73",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/cmd/backup-inventory/main.go",
+      "source_path": "backend/cmd/backup-inventory/main.go",
+      "source_sha256": "aa7e221071bd0d3d9539a0abfe9f8c640e4b74689e9e5a9b27d39cc7bcc1f5ce",
+      "working_tree_sha256": "aa7e221071bd0d3d9539a0abfe9f8c640e4b74689e9e5a9b27d39cc7bcc1f5ce",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/cmd/backup-inventory/main_test.go",
+      "source_path": "backend/cmd/backup-inventory/main_test.go",
+      "source_sha256": "39c891583f3a0d9372fbf0994d059b7438bc78b98901e670963cd3d85e2c9d24",
+      "working_tree_sha256": "39c891583f3a0d9372fbf0994d059b7438bc78b98901e670963cd3d85e2c9d24",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/cmd/backup-node-proof/main.go",
+      "source_path": "backend/cmd/backup-node-proof/main.go",
+      "source_sha256": "44327e3e50a8de200d1073dd9dc9802bc7ed38c9ae8bba58d8490d86874d9d9e",
+      "working_tree_sha256": "44327e3e50a8de200d1073dd9dc9802bc7ed38c9ae8bba58d8490d86874d9d9e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/cmd/backup-worker/main.go",
+      "source_path": "backend/cmd/backup-worker/main.go",
+      "source_sha256": "8b1447550422fa72269a67698038bd44221eb98ba30cbac1d32cf383bd495e46",
+      "working_tree_sha256": "8b1447550422fa72269a67698038bd44221eb98ba30cbac1d32cf383bd495e46",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/cmd/backup-worker/main_test.go",
+      "source_path": "backend/cmd/backup-worker/main_test.go",
+      "source_sha256": "ca71d1ad926462a10321193888fb3d4299b000bd4bce2a509b930dd19b3ce7f5",
+      "working_tree_sha256": "ca71d1ad926462a10321193888fb3d4299b000bd4bce2a509b930dd19b3ce7f5",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -50,7 +99,7 @@
     {
       "path": "backend/cmd/server/main.go",
       "source_path": "backend/cmd/server/main.go",
-      "source_sha256": "8ae0ad71f4db8d418772e84c920d153b821910f59a98fa0a184d218e7df0ebf6",
+      "source_sha256": "b3eaddd403f6b8199e0a503e92282538140a8384d35fd82badcf26b0d5146228",
       "working_tree_sha256": "2cff0f61a8e69dc3ab1dae25ebd3e38db741102fa9e76a0f9794d539973d4619",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -71,7 +120,7 @@
     {
       "path": "backend/cmd/server/system_backup_read_live.go",
       "source_path": "backend/cmd/server/system_backup_read_live.go",
-      "source_sha256": "c919bf59f47f0dd0c174801d42ad5f23fa6741da5cfe818696500221caae5e1f",
+      "source_sha256": "c654eda45ad1f566151874286627fe8e17fa21c51b5957c172c77671424002d1",
       "working_tree_sha256": "c919bf59f47f0dd0c174801d42ad5f23fa6741da5cfe818696500221caae5e1f",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -85,14 +134,14 @@
     {
       "path": "backend/cmd/server/system_backup_tasks_live.go",
       "source_path": "backend/cmd/server/system_backup_tasks_live.go",
-      "source_sha256": "e5407ae4ebde00e9b0b6137a728f08cdecd765df7b67397448b81ca7e2b6cba6",
+      "source_sha256": "5ef11b42981eb9688892f083c9ff0827b19156614997fab56f3069af1c19ac49",
       "working_tree_sha256": "82946eed4e4f05b2ba2e985d23c70b8e124b28196aec56743212d4737e7fd180",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/cmd/server/system_backup_tasks_live_test.go",
       "source_path": "backend/cmd/server/system_backup_tasks_live_test.go",
-      "source_sha256": "0cf65a29f2b8dca216fcce60ec3a8d629ea704b7be027529e579c4da405f2184",
+      "source_sha256": "50c2e7b828544ae2f5e656c5bf35104366ba0aca99879a8cdcc82262eca564bc",
       "working_tree_sha256": "0cf65a29f2b8dca216fcce60ec3a8d629ea704b7be027529e579c4da405f2184",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -162,7 +211,7 @@
     {
       "path": "backend/cmd/system-backup-bootstrap/main.go",
       "source_path": "backend/cmd/system-backup-bootstrap/main.go",
-      "source_sha256": "b62ada7f8cdb876290c59e6565f35b6570118f1ecc664f2e1602ba63998c6e7d",
+      "source_sha256": "03c31542b944034f374b0078080dc396d860fce1044e513ce464985c8cd0aa5d",
       "working_tree_sha256": "b62ada7f8cdb876290c59e6565f35b6570118f1ecc664f2e1602ba63998c6e7d",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -176,14 +225,14 @@
     {
       "path": "backend/cmd/system-backup-bootstrap/materials.go",
       "source_path": "backend/cmd/system-backup-bootstrap/materials.go",
-      "source_sha256": "d8c39383bf6fab0943da519ac27f4e1a1e98f7e4d5376956b16335f3b7d869d8",
+      "source_sha256": "1bc30b13b6a892776d9e417db4ac7a96defaf52c94db8b67e875035e03d19bda",
       "working_tree_sha256": "d8c39383bf6fab0943da519ac27f4e1a1e98f7e4d5376956b16335f3b7d869d8",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/cmd/system-backup-bootstrap/materials_test.go",
       "source_path": "backend/cmd/system-backup-bootstrap/materials_test.go",
-      "source_sha256": "e395a451188bf19b908f2aba6af413831290a99e9759724d0eae5658ba1d0ac3",
+      "source_sha256": "b64d1879b1574b0f34a7ba53a5a764d61de7c21765fdc7b115dd58945b315d1d",
       "working_tree_sha256": "e395a451188bf19b908f2aba6af413831290a99e9759724d0eae5658ba1d0ac3",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -316,7 +365,7 @@
     {
       "path": "backend/cmd/system-backup-v2-controller/main.go",
       "source_path": "backend/cmd/system-backup-controller/main.go",
-      "source_sha256": "1d1b63326ffd7490f5e702f0b3125f688a826454c42fec150814ceb14b23cfeb",
+      "source_sha256": "1e4743812b6a10e701ba8363470cbae00a9f077d42986ad1ba05ec1932cdb7b0",
       "working_tree_sha256": "dae6c424771958cc47494e4ffa97071f5c39c33c36f8b48a704aab9da0264c7b",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -622,6 +671,13 @@
       "disposition": "integration-owned adaptation"
     },
     {
+      "path": "backend/internal/db/migrations/122_backup_v2_execution_records.sql",
+      "source_path": "backend/internal/db/migrations/082_add_system_backup_execution_records.sql",
+      "source_sha256": "0073cbbab7d3e8a2cb9e3dd5f3aad3a1490438c5adfa0ae0cefa2ed200a83c8d",
+      "working_tree_sha256": "46cdace7f064c21f5b90b4468306580a53bfdc276228393b56deaf807314c0a7",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/db/username_migration_test.go",
       "source_path": "backend/internal/db/username_migration_test.go",
       "source_sha256": "2a97c7c841678cee85fe6ced2225a29df14976ef311c85cf83caf3f30f767ea7",
@@ -680,7 +736,7 @@
     {
       "path": "backend/internal/migrationcatalog/catalog_test.go",
       "source_path": "backend/internal/migrationcatalog/catalog_test.go",
-      "source_sha256": "9e322a0793ca67d2af81c47dbb5b9282fc8333d0d1c50c9f5fe014de42098e31",
+      "source_sha256": "f1c9fccf538c9572a552aa3a9e24017fe1fc3e0c0525a94ce5638fe467938016",
       "working_tree_sha256": "461ba2fe869676b048b29ebeecff4d682de53fa307bbde821d645a79ab25cc7c",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -688,7 +744,7 @@
       "path": "backend/internal/migrationcatalog/reviewed_catalog.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "94079e46df09a65ccc5779c0eabd265c49013ba208b94af1a2c98a014f161186",
+      "working_tree_sha256": "a113f0bd49626ab4f916b5f2bdabb33367a187786357a2c87e73574f5b6af6fe",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -771,7 +827,7 @@
     {
       "path": "backend/internal/services/backup_mutation_gate.go",
       "source_path": "backend/internal/services/backup_mutation_gate.go",
-      "source_sha256": "7e00ba7bc96b8dbb2aeb73cc97295414bc5a5c93ded63207e63c12d1b5de3cbb",
+      "source_sha256": "856614dac18f2709f907c6dfccb82f66ded0b6e6be0b0e82d0894deabdf2305e",
       "working_tree_sha256": "b3147b0308595f78d438ee6ed05e8d02aef27d45e570d7b1920d8dd42a9a264e",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -855,7 +911,7 @@
     {
       "path": "backend/internal/services/skill_package_materialize_backup_gate_test.go",
       "source_path": "backend/internal/services/skill_package_materialize_backup_gate_test.go",
-      "source_sha256": "454229fd9e07b8c8a892c6dbace321172f214579186e56eabc5d3bbc8bc1a15b",
+      "source_sha256": "c8a6aaf6caba55a17afe8e19ad3032e32ce3e515a33f59a00ee5cc3c420a43f1",
       "working_tree_sha256": "454229fd9e07b8c8a892c6dbace321172f214579186e56eabc5d3bbc8bc1a15b",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -876,7 +932,7 @@
     {
       "path": "backend/internal/services/skill_package_materialize_worker.go",
       "source_path": "backend/internal/services/skill_package_materialize_worker.go",
-      "source_sha256": "d60ebb37b0fd6c5a7f8a6b508bb5cb9eb5d867b1d554f1e029beac4aae6b0d32",
+      "source_sha256": "c722a6480c331512a416c2f20add5d1affa0aa32fdd29f84882a36c7a90f7176",
       "working_tree_sha256": "d97f445ec66652c4c9606d8b4c50c0c188936e9255f113511f32530d79ff6c0e",
       "disposition": "source lifecycle with retained Team backup work-unit gate"
     },
@@ -893,6 +949,769 @@
       "source_sha256": "65a2b2fae4c7b9b35e90a54ab617498bc33bfda5a582324e4df8b2683e7b0a58",
       "working_tree_sha256": "65a2b2fae4c7b9b35e90a54ab617498bc33bfda5a582324e4df8b2683e7b0a58",
       "disposition": "three-way port retaining Team delta"
+    },
+    {
+      "path": "backend/internal/services/user_instance_backup_gateway.go",
+      "source_path": "backend/internal/services/user_instance_backup_gateway.go",
+      "source_sha256": "782d3955d9fb20361519d16d150281f35fad5f8c59d4bf2eeabf164a288ca73c",
+      "working_tree_sha256": "782d3955d9fb20361519d16d150281f35fad5f8c59d4bf2eeabf164a288ca73c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/services/user_instance_backup_gateway_test.go",
+      "source_path": "backend/internal/services/user_instance_backup_gateway_test.go",
+      "source_sha256": "29e6cca8f05229d9ef23266f6d18d01909faef4392f56ecf2641278aef1bbd41",
+      "working_tree_sha256": "29e6cca8f05229d9ef23266f6d18d01909faef4392f56ecf2641278aef1bbd41",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/services/user_instance_backup_scope.go",
+      "source_path": "backend/internal/services/user_instance_backup_scope.go",
+      "source_sha256": "2df4138f1a18ca2e6839967e041cc2d6fec3b21cf87effd0b08fe57c67619e4d",
+      "working_tree_sha256": "2df4138f1a18ca2e6839967e041cc2d6fec3b21cf87effd0b08fe57c67619e4d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/services/user_instance_backup_scope_test.go",
+      "source_path": "backend/internal/services/user_instance_backup_scope_test.go",
+      "source_sha256": "86b0589a7f387d9175408c5270925c2ef1538bad3a4b659ffd74bbceb6a3908c",
+      "working_tree_sha256": "86b0589a7f387d9175408c5270925c2ef1538bad3a4b659ffd74bbceb6a3908c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/README.md",
+      "source_path": "backend/internal/systembackup/README.md",
+      "source_sha256": "d1ccb14774082d4c3cd9f0c970fe2e37d80aaf87fc848777b979caa5883e630f",
+      "working_tree_sha256": "d1ccb14774082d4c3cd9f0c970fe2e37d80aaf87fc848777b979caa5883e630f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/bundle.go",
+      "source_path": "backend/internal/systembackup/artifact/bundle.go",
+      "source_sha256": "72f24458262e6f90c9eaabb491c488da553e91cf0feea05c34af37ea03b34f82",
+      "working_tree_sha256": "72f24458262e6f90c9eaabb491c488da553e91cf0feea05c34af37ea03b34f82",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/bundle_test.go",
+      "source_path": "backend/internal/systembackup/artifact/bundle_test.go",
+      "source_sha256": "992d15bb12847f30b4b9e7ad399c820279657d13ab9f431f4a6a7db402c0efc3",
+      "working_tree_sha256": "992d15bb12847f30b4b9e7ad399c820279657d13ab9f431f4a6a7db402c0efc3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/catalog.go",
+      "source_path": "backend/internal/systembackup/artifact/catalog.go",
+      "source_sha256": "bcccb72eae5ed2bf9e6cf385054231743fa9f104f403559e5d4b77697e9f2269",
+      "working_tree_sha256": "bcccb72eae5ed2bf9e6cf385054231743fa9f104f403559e5d4b77697e9f2269",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/catalog_test.go",
+      "source_path": "backend/internal/systembackup/artifact/catalog_test.go",
+      "source_sha256": "c7f96debe4168609090150644808b58f268a18dea8621b851f300c42c31af2ac",
+      "working_tree_sha256": "c7f96debe4168609090150644808b58f268a18dea8621b851f300c42c31af2ac",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/sync_unix.go",
+      "source_path": "backend/internal/systembackup/artifact/sync_unix.go",
+      "source_sha256": "3bdc5935c590e323de07d5581d127ba1beb7b1b7ad6755863578c5afd8376258",
+      "working_tree_sha256": "3bdc5935c590e323de07d5581d127ba1beb7b1b7ad6755863578c5afd8376258",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/artifact/sync_windows.go",
+      "source_path": "backend/internal/systembackup/artifact/sync_windows.go",
+      "source_sha256": "f542ea24a104b11e3ae32fcc2370153e3f80137ed7e02e2cc1c273c0b6e0a484",
+      "working_tree_sha256": "f542ea24a104b11e3ae32fcc2370153e3f80137ed7e02e2cc1c273c0b6e0a484",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/assets/assets.go",
+      "source_path": "backend/internal/systembackup/assets/assets.go",
+      "source_sha256": "eb175527462bfbcf4303cde27a8cf0acd22df8c6177cfe5d6a08f77a0f72055f",
+      "working_tree_sha256": "eb175527462bfbcf4303cde27a8cf0acd22df8c6177cfe5d6a08f77a0f72055f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/assets/assets_test.go",
+      "source_path": "backend/internal/systembackup/assets/assets_test.go",
+      "source_sha256": "1b8bc6298a78b94b3d1bd59fc1ea1d87a4976907411e4b4907881a0a0af62a15",
+      "working_tree_sha256": "1b8bc6298a78b94b3d1bd59fc1ea1d87a4976907411e4b4907881a0a0af62a15",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/assets/configmaps.go",
+      "source_path": "backend/internal/systembackup/assets/configmaps.go",
+      "source_sha256": "352f6d4ac09ff5e6d7082b38979eb16d724090069ec14b0da7631f4e7fcc9b71",
+      "working_tree_sha256": "352f6d4ac09ff5e6d7082b38979eb16d724090069ec14b0da7631f4e7fcc9b71",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/assets/configmaps_test.go",
+      "source_path": "backend/internal/systembackup/assets/configmaps_test.go",
+      "source_sha256": "dfd4e5c47e2d285ece139ee48f8bcc0d9a341484944dcc22f03b3d7d9d735617",
+      "working_tree_sha256": "dfd4e5c47e2d285ece139ee48f8bcc0d9a341484944dcc22f03b3d7d9d735617",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/acceptance.go",
+      "source_path": "backend/internal/systembackup/control/acceptance.go",
+      "source_sha256": "64fe97a6b2f21b43aa8905411411cdf13bdfde5e0828af7e38352c403d8ee3d1",
+      "working_tree_sha256": "64fe97a6b2f21b43aa8905411411cdf13bdfde5e0828af7e38352c403d8ee3d1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/acceptance_test.go",
+      "source_path": "backend/internal/systembackup/control/acceptance_test.go",
+      "source_sha256": "e6521b5f9865102a2f4ea315bc425223f391be21f87c24aea31fc5256ff10aa8",
+      "working_tree_sha256": "d18e3becd28364a4128583d91bbf91e5da1876d8cd76b3799d0dc221e9a237e4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/app_process.go",
+      "source_path": "backend/internal/systembackup/control/app_process.go",
+      "source_sha256": "cfc106a90fb26d47f864559c154a9decbb41af512610e8e0a448c2f465298367",
+      "working_tree_sha256": "cfc106a90fb26d47f864559c154a9decbb41af512610e8e0a448c2f465298367",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/app_process_test.go",
+      "source_path": "backend/internal/systembackup/control/app_process_test.go",
+      "source_sha256": "18caf34c9b952db894618924501fcff45cccefdc16bb4e4e9b69be3b4aef3cb4",
+      "working_tree_sha256": "18caf34c9b952db894618924501fcff45cccefdc16bb4e4e9b69be3b4aef3cb4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/application_start.go",
+      "source_path": "backend/internal/systembackup/control/application_start.go",
+      "source_sha256": "747c1137d38a075f610712797fb42807c39e9fa03f52a016b9cac2e0906cf5b8",
+      "working_tree_sha256": "747c1137d38a075f610712797fb42807c39e9fa03f52a016b9cac2e0906cf5b8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_actions.go",
+      "source_path": "backend/internal/systembackup/control/catalog_actions.go",
+      "source_sha256": "cec4329939c2eb114cb39cac2a06bdd5abf96d97b021c2950fb3024cb7bf7e1e",
+      "working_tree_sha256": "cec4329939c2eb114cb39cac2a06bdd5abf96d97b021c2950fb3024cb7bf7e1e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_actions_test.go",
+      "source_path": "backend/internal/systembackup/control/catalog_actions_test.go",
+      "source_sha256": "8faf4a3b03e2eb514c178b50ad496fa436c279806771aa6c25bd69fc052e1c30",
+      "working_tree_sha256": "8faf4a3b03e2eb514c178b50ad496fa436c279806771aa6c25bd69fc052e1c30",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_admission.go",
+      "source_path": "backend/internal/systembackup/control/catalog_admission.go",
+      "source_sha256": "93873b203ecc01d3ae2b6cdfdc1c004bd479426e23aafdbe90e45ad0025b15fa",
+      "working_tree_sha256": "93873b203ecc01d3ae2b6cdfdc1c004bd479426e23aafdbe90e45ad0025b15fa",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_admission_test.go",
+      "source_path": "backend/internal/systembackup/control/catalog_admission_test.go",
+      "source_sha256": "e6982be4f1333ca8fc04d9e5fdf2fd7bea49471180d92b8a26eec38eaec6d07d",
+      "working_tree_sha256": "e6982be4f1333ca8fc04d9e5fdf2fd7bea49471180d92b8a26eec38eaec6d07d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_executor.go",
+      "source_path": "backend/internal/systembackup/control/catalog_executor.go",
+      "source_sha256": "6ea76a8c1f575d0ba52cef10ae72e92d92b4d08473ca4076c8565f63abde97cf",
+      "working_tree_sha256": "6ea76a8c1f575d0ba52cef10ae72e92d92b4d08473ca4076c8565f63abde97cf",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_executor_test.go",
+      "source_path": "backend/internal/systembackup/control/catalog_executor_test.go",
+      "source_sha256": "67f25489f06439570afb05d93e24f1821a3244969e24e48e5b68a49e7173fbbd",
+      "working_tree_sha256": "67f25489f06439570afb05d93e24f1821a3244969e24e48e5b68a49e7173fbbd",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_scans.go",
+      "source_path": "backend/internal/systembackup/control/catalog_scans.go",
+      "source_sha256": "fd4b9b0c8f3096990e6688fd8c4e63295257536b8aa9bd2c670f6b7866be5b3f",
+      "working_tree_sha256": "fd4b9b0c8f3096990e6688fd8c4e63295257536b8aa9bd2c670f6b7866be5b3f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_scans_test.go",
+      "source_path": "backend/internal/systembackup/control/catalog_scans_test.go",
+      "source_sha256": "23e803e3604842d3ae29edaa26102ea9941df3b83433859b5fd6297b77233bcd",
+      "working_tree_sha256": "23e803e3604842d3ae29edaa26102ea9941df3b83433859b5fd6297b77233bcd",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_view.go",
+      "source_path": "backend/internal/systembackup/control/catalog_view.go",
+      "source_sha256": "75824406627b6cf016f78df35ea148f6e8aabdda2beaec48516de252f90d231c",
+      "working_tree_sha256": "75824406627b6cf016f78df35ea148f6e8aabdda2beaec48516de252f90d231c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/catalog_view_test.go",
+      "source_path": "backend/internal/systembackup/control/catalog_view_test.go",
+      "source_sha256": "0454a0ff18453bf4f976b0a02e97afd7107c3aafdc86554ef1d322ebf3fc2b79",
+      "working_tree_sha256": "0454a0ff18453bf4f976b0a02e97afd7107c3aafdc86554ef1d322ebf3fc2b79",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/collector.go",
+      "source_path": "backend/internal/systembackup/control/collector.go",
+      "source_sha256": "7072f2b344bbd4f70e683e181268fb1cc4771c1c444cf3abb9a69a4738bed3b6",
+      "working_tree_sha256": "7072f2b344bbd4f70e683e181268fb1cc4771c1c444cf3abb9a69a4738bed3b6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/collector_test.go",
+      "source_path": "backend/internal/systembackup/control/collector_test.go",
+      "source_sha256": "735ca8d08a6f805e45e68563267ab1e0ba6970eed5e0ac0e102006fd6db7b695",
+      "working_tree_sha256": "735ca8d08a6f805e45e68563267ab1e0ba6970eed5e0ac0e102006fd6db7b695",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/config.go",
+      "source_path": "backend/internal/systembackup/control/config.go",
+      "source_sha256": "a9d1ab0205bcf7c224e263abab042de5fef991e2e2fed128f0d2b2083fbd8375",
+      "working_tree_sha256": "a9d1ab0205bcf7c224e263abab042de5fef991e2e2fed128f0d2b2083fbd8375",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/credentials.go",
+      "source_path": "backend/internal/systembackup/control/credentials.go",
+      "source_sha256": "32c261373cfa59f4f8dbf10bcef712da2826a6adf4af6fad85aa02f5a982cd6f",
+      "working_tree_sha256": "32c261373cfa59f4f8dbf10bcef712da2826a6adf4af6fad85aa02f5a982cd6f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/credentials_test.go",
+      "source_path": "backend/internal/systembackup/control/credentials_test.go",
+      "source_sha256": "ea09f2ee8bc9bda37e8b6e8a7396291791a15e48d5b4604a0771c4a64dcbb373",
+      "working_tree_sha256": "ea09f2ee8bc9bda37e8b6e8a7396291791a15e48d5b4604a0771c4a64dcbb373",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/gate.go",
+      "source_path": "backend/internal/systembackup/control/gate.go",
+      "source_sha256": "07cf158f749d0570814c33b8f4d8d7ba9301be784ba1ae61314a9e0b8259f566",
+      "working_tree_sha256": "07cf158f749d0570814c33b8f4d8d7ba9301be784ba1ae61314a9e0b8259f566",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/gateway_dispatch.go",
+      "source_path": "backend/internal/systembackup/control/gateway_dispatch.go",
+      "source_sha256": "1ad9d537af2c3f911f407733e9c7a065a654304add41286e7f48ab0afbf718f4",
+      "working_tree_sha256": "1ad9d537af2c3f911f407733e9c7a065a654304add41286e7f48ab0afbf718f4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/gateway_dispatch_test.go",
+      "source_path": "backend/internal/systembackup/control/gateway_dispatch_test.go",
+      "source_sha256": "f0f6143e6418447a7feccade5c4288f27a460a9e465318a41389e91ab791e56c",
+      "working_tree_sha256": "f0f6143e6418447a7feccade5c4288f27a460a9e465318a41389e91ab791e56c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/identity.go",
+      "source_path": "backend/internal/systembackup/control/identity.go",
+      "source_sha256": "d72494ad4ade24ac069b1b2877ecc36a3d380efefb7514ffc668febe0d71e7ac",
+      "working_tree_sha256": "d72494ad4ade24ac069b1b2877ecc36a3d380efefb7514ffc668febe0d71e7ac",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/identity_test.go",
+      "source_path": "backend/internal/systembackup/control/identity_test.go",
+      "source_sha256": "6646477f7e0cf43f9789c9b109b7648db457dab8d56df225af495ed57556e4a1",
+      "working_tree_sha256": "6646477f7e0cf43f9789c9b109b7648db457dab8d56df225af495ed57556e4a1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/legacy_mutation.go",
+      "source_path": "backend/internal/systembackup/control/legacy_mutation.go",
+      "source_sha256": "96f412f1e8bf6a298784f97edce8595b2182af586f545a663024f3835f09bbd8",
+      "working_tree_sha256": "96f412f1e8bf6a298784f97edce8595b2182af586f545a663024f3835f09bbd8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/live_worker.go",
+      "source_path": "backend/internal/systembackup/control/live_worker.go",
+      "source_sha256": "c70f9bb35a633a0d6e66f9585b938c91302f30d63a18a9a3815169134a300ff4",
+      "working_tree_sha256": "c70f9bb35a633a0d6e66f9585b938c91302f30d63a18a9a3815169134a300ff4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/live_worker_test.go",
+      "source_path": "backend/internal/systembackup/control/live_worker_test.go",
+      "source_sha256": "e76989007ccf6b29fa3fa8ce3aa6c0bf3e625cd8441e9f4bbd28b0b0a7265f4e",
+      "working_tree_sha256": "e76989007ccf6b29fa3fa8ce3aa6c0bf3e625cd8441e9f4bbd28b0b0a7265f4e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/never_granted.go",
+      "source_path": "backend/internal/systembackup/control/never_granted.go",
+      "source_sha256": "e35916d48451d23a8955d973214d343668886c4a15d84396df42e8db047a721a",
+      "working_tree_sha256": "e35916d48451d23a8955d973214d343668886c4a15d84396df42e8db047a721a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/never_granted_test.go",
+      "source_path": "backend/internal/systembackup/control/never_granted_test.go",
+      "source_sha256": "e67e0b14a777cfa17413e67547dcc726005ff403341c547f782e4cde7e531e07",
+      "working_tree_sha256": "e67e0b14a777cfa17413e67547dcc726005ff403341c547f782e4cde7e531e07",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/pipeline.go",
+      "source_path": "backend/internal/systembackup/control/pipeline.go",
+      "source_sha256": "79b7125e5ff0ec0f609ad9f3b3c88baa914af47165937d67c43a348059b9f247",
+      "working_tree_sha256": "79b7125e5ff0ec0f609ad9f3b3c88baa914af47165937d67c43a348059b9f247",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/pipeline_test.go",
+      "source_path": "backend/internal/systembackup/control/pipeline_test.go",
+      "source_sha256": "b1276c05d0ffdb9a9d16f971131eb915d14a9e8b1c4b304b1defd089d6675f35",
+      "working_tree_sha256": "b1276c05d0ffdb9a9d16f971131eb915d14a9e8b1c4b304b1defd089d6675f35",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/profiles.go",
+      "source_path": "backend/internal/systembackup/control/profiles.go",
+      "source_sha256": "ebd265da07fb1d0fe8945abb264b1312a6c89178a42c4ce56aae2f368f44b987",
+      "working_tree_sha256": "ebd265da07fb1d0fe8945abb264b1312a6c89178a42c4ce56aae2f368f44b987",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/protected_collector.go",
+      "source_path": "backend/internal/systembackup/control/protected_collector.go",
+      "source_sha256": "d2be6abe9ff52fee1f3c6e68f2b5766f55e2ac6700984610c1a826ca5f69519d",
+      "working_tree_sha256": "d2be6abe9ff52fee1f3c6e68f2b5766f55e2ac6700984610c1a826ca5f69519d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/protected_collector_test.go",
+      "source_path": "backend/internal/systembackup/control/protected_collector_test.go",
+      "source_sha256": "ef1293df4b7cadef7918000e3babc338d10dc0d19a2f6ed0a41e75c958b4910a",
+      "working_tree_sha256": "ef1293df4b7cadef7918000e3babc338d10dc0d19a2f6ed0a41e75c958b4910a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/publication.go",
+      "source_path": "backend/internal/systembackup/control/publication.go",
+      "source_sha256": "36a355671d80289d7fe805a3ab2db6da472985c87c137a29e8627e5f5425a30d",
+      "working_tree_sha256": "36a355671d80289d7fe805a3ab2db6da472985c87c137a29e8627e5f5425a30d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/publication_test.go",
+      "source_path": "backend/internal/systembackup/control/publication_test.go",
+      "source_sha256": "a35f411dedc558c0b24e61cf43cd29834b11527d40e6ba93cab0cf4c09168f45",
+      "working_tree_sha256": "a35f411dedc558c0b24e61cf43cd29834b11527d40e6ba93cab0cf4c09168f45",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/recovery_guards.go",
+      "source_path": "backend/internal/systembackup/control/recovery_guards.go",
+      "source_sha256": "98913d719c9232ca5bf5965bc45c39a046f845968341775fad1d793fae934e47",
+      "working_tree_sha256": "42ca761283bdec8c121a8566a130000beb775bc9c7d9f3d48587dd0697422890",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/recovery_guards_test.go",
+      "source_path": "backend/internal/systembackup/control/recovery_guards_test.go",
+      "source_sha256": "10b8eeb2d825e6f36c54291e1fd17003b5fb3c80b82fa582921df0cfa12b726e",
+      "working_tree_sha256": "870466474705fca4bd43d089fa6ca70897668f5e9b235017ea3d40452a507063",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/recovery_schema_test.go",
+      "source_path": "backend/internal/systembackup/control/recovery_schema_test.go",
+      "source_sha256": "8ca4effd02ece3d509d236444036fbf83ac9ac82ca1cc62fe30b86ea5fe65ac9",
+      "working_tree_sha256": "8ca4effd02ece3d509d236444036fbf83ac9ac82ca1cc62fe30b86ea5fe65ac9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/redis_journal.go",
+      "source_path": "backend/internal/systembackup/control/redis_journal.go",
+      "source_sha256": "93dc08e9dfdf8f78c6ed389722e81f62f9de04561b1978128ae4db5c3efd27de",
+      "working_tree_sha256": "93dc08e9dfdf8f78c6ed389722e81f62f9de04561b1978128ae4db5c3efd27de",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/redis_journal_test.go",
+      "source_path": "backend/internal/systembackup/control/redis_journal_test.go",
+      "source_sha256": "63aca9968f0f20762126de169e33e719b1244710c570df3b9aee99aba4a1e68d",
+      "working_tree_sha256": "63aca9968f0f20762126de169e33e719b1244710c570df3b9aee99aba4a1e68d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/resources.go",
+      "source_path": "backend/internal/systembackup/control/resources.go",
+      "source_sha256": "fbe335e65ff455b0962983b9de47636496cb044a2e73f9a97c32116dab0dee48",
+      "working_tree_sha256": "fbe335e65ff455b0962983b9de47636496cb044a2e73f9a97c32116dab0dee48",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/schema.sql",
+      "source_path": "backend/internal/systembackup/control/schema.sql",
+      "source_sha256": "bf92be90258a8647b6209c83e8c257ce3ab72d29a45f743a7134abc1f1da280a",
+      "working_tree_sha256": "a0dc1de2289dba90b6984a1c89a972b689800a273c95e49924e5830f24065467",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/service.go",
+      "source_path": "backend/internal/systembackup/control/service.go",
+      "source_sha256": "36a879af2a1483efe0cc7c238c2d0789c15b69ceb96c1a52395709e56b23b101",
+      "working_tree_sha256": "36a879af2a1483efe0cc7c238c2d0789c15b69ceb96c1a52395709e56b23b101",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/source_restart.go",
+      "source_path": "backend/internal/systembackup/control/source_restart.go",
+      "source_sha256": "4e110f44d85fae36d2457ff1596a899088dbf48c04c34ad83f63864bc478e20b",
+      "working_tree_sha256": "4e110f44d85fae36d2457ff1596a899088dbf48c04c34ad83f63864bc478e20b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/source_restart_test.go",
+      "source_path": "backend/internal/systembackup/control/source_restart_test.go",
+      "source_sha256": "32548b2177e00a6d1904cf59ea08349d1d796b97148375d487a8aae4d51e6d09",
+      "working_tree_sha256": "32548b2177e00a6d1904cf59ea08349d1d796b97148375d487a8aae4d51e6d09",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/sql.go",
+      "source_path": "backend/internal/systembackup/control/sql.go",
+      "source_sha256": "99bebc39789c601ee00b7cee9c2be36e1a4ef85c3d4351f8ff45045997623e14",
+      "working_tree_sha256": "182ad22f6ac2c6e3d27846d67c447e37526b16a8a053af3d5546dbcbc86d9f84",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/sql_test.go",
+      "source_path": "backend/internal/systembackup/control/sql_test.go",
+      "source_sha256": "1b16f4139d58f70c1a6a57432b89167447be2e08ce1e9fa675b3cad97f8aede7",
+      "working_tree_sha256": "34c39b5658491b7ba0e5ebcdb90bf96318d366156083f346fdfcb01df02fe313",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/task.go",
+      "source_path": "backend/internal/systembackup/control/task.go",
+      "source_sha256": "6bd3e5f2499080b8fe6d77966ee84a9a74daf91cd1aaf1ade39e99db6281b9b3",
+      "working_tree_sha256": "6bd3e5f2499080b8fe6d77966ee84a9a74daf91cd1aaf1ade39e99db6281b9b3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/task_test.go",
+      "source_path": "backend/internal/systembackup/control/task_test.go",
+      "source_sha256": "645d12d44d608cc24d959d3da297906212f74344421d3b215d26441c0ece3244",
+      "working_tree_sha256": "645d12d44d608cc24d959d3da297906212f74344421d3b215d26441c0ece3244",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/upgrade-app-processes.sql",
+      "source_path": "backend/internal/systembackup/control/upgrade-app-processes.sql",
+      "source_sha256": "3a95a0002fc6feace1873e0ade03e0d089788922942385a29d9c6710c6b4d10e",
+      "working_tree_sha256": "3a95a0002fc6feace1873e0ade03e0d089788922942385a29d9c6710c6b4d10e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/upgrade-catalog.sql",
+      "source_path": "backend/internal/systembackup/control/upgrade-catalog.sql",
+      "source_sha256": "2fcbda878312a04947d355574baf0d3828a8f5e2bd7616e8567e41735b2ff63a",
+      "working_tree_sha256": "2fcbda878312a04947d355574baf0d3828a8f5e2bd7616e8567e41735b2ff63a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/upgrade-provider-gateway.sql",
+      "source_path": "backend/internal/systembackup/control/upgrade-provider-gateway.sql",
+      "source_sha256": "6f9874d2d036b8bca5d9fee14551485e404548b8fda72db01cfd81b74f7285c5",
+      "working_tree_sha256": "6f9874d2d036b8bca5d9fee14551485e404548b8fda72db01cfd81b74f7285c5",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/upgrade-recovery-operations.sql",
+      "source_path": "backend/internal/systembackup/control/upgrade-recovery-operations.sql",
+      "source_sha256": "3c86d74408bcf6710797ada6b32a7cf9e89887b54f46e182af4edc4b90f96e0a",
+      "working_tree_sha256": "368b98984f3574afddd305940147010d0290d8ee0253a1b29ab7efa44ee87ebc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/upgrade-restart-result.sql",
+      "source_path": "backend/internal/systembackup/control/upgrade-restart-result.sql",
+      "source_sha256": "295eceede683f5c86f61c602aa11dd455be50784d7097ff8e0a456daa875b004",
+      "working_tree_sha256": "295eceede683f5c86f61c602aa11dd455be50784d7097ff8e0a456daa875b004",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/vault.go",
+      "source_path": "backend/internal/systembackup/control/vault.go",
+      "source_sha256": "465ecc02cd38dbb4f130236e62053f375f1aa4bd7c0343c7246f5d6c72c16fd2",
+      "working_tree_sha256": "465ecc02cd38dbb4f130236e62053f375f1aa4bd7c0343c7246f5d6c72c16fd2",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/vault_test.go",
+      "source_path": "backend/internal/systembackup/control/vault_test.go",
+      "source_sha256": "427654105c35cea064fea48ad9cc475c8ea93a0567685de17d1288c238c40042",
+      "working_tree_sha256": "427654105c35cea064fea48ad9cc475c8ea93a0567685de17d1288c238c40042",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/worker.go",
+      "source_path": "backend/internal/systembackup/control/worker.go",
+      "source_sha256": "1941040cb30509b49dda40ca0441f6abd462b843603fcd1e916a07e698b26baf",
+      "working_tree_sha256": "1941040cb30509b49dda40ca0441f6abd462b843603fcd1e916a07e698b26baf",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/worker_status.go",
+      "source_path": "backend/internal/systembackup/control/worker_status.go",
+      "source_sha256": "bc6bf1b4dba99d9e233c21c247b0d6c71b8965bec72f9ceae2b831479005e437",
+      "working_tree_sha256": "bc6bf1b4dba99d9e233c21c247b0d6c71b8965bec72f9ceae2b831479005e437",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/control/worker_test.go",
+      "source_path": "backend/internal/systembackup/control/worker_test.go",
+      "source_sha256": "eb226fc92dba108e5fd2ddfe340a80197b091122fb29f2b460b7d76869c58119",
+      "working_tree_sha256": "eb226fc92dba108e5fd2ddfe340a80197b091122fb29f2b460b7d76869c58119",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/browser_worker_test.go",
+      "source_path": "backend/internal/systembackup/domain/browser_worker_test.go",
+      "source_sha256": "6b870975d293debbf400fe4a9ed104f9031b355ff860c06ea48f9a8f1c32807e",
+      "working_tree_sha256": "6b870975d293debbf400fe4a9ed104f9031b355ff860c06ea48f9a8f1c32807e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/codec.go",
+      "source_path": "backend/internal/systembackup/domain/codec.go",
+      "source_sha256": "9333278a74926bac0bd22ac39fe4b1e577733b97f88004c67284a1d3275a93c6",
+      "working_tree_sha256": "9333278a74926bac0bd22ac39fe4b1e577733b97f88004c67284a1d3275a93c6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/config.go",
+      "source_path": "backend/internal/systembackup/domain/config.go",
+      "source_sha256": "350c6cebead5388dd19e3a18bb57a68470fec4c50d78ac416435104211abafcc",
+      "working_tree_sha256": "350c6cebead5388dd19e3a18bb57a68470fec4c50d78ac416435104211abafcc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/config_test.go",
+      "source_path": "backend/internal/systembackup/domain/config_test.go",
+      "source_sha256": "25fca0730cff646befff53556ebaf4ffcce1817870e5c8e4a9dae5255f49d021",
+      "working_tree_sha256": "25fca0730cff646befff53556ebaf4ffcce1817870e5c8e4a9dae5255f49d021",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/crossdomain.go",
+      "source_path": "backend/internal/systembackup/domain/crossdomain.go",
+      "source_sha256": "f67aa3cdd270e4a52b42e1947ec82bdf237f042b33f88392602b6351b6b32873",
+      "working_tree_sha256": "f67aa3cdd270e4a52b42e1947ec82bdf237f042b33f88392602b6351b6b32873",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/crossdomain_test.go",
+      "source_path": "backend/internal/systembackup/domain/crossdomain_test.go",
+      "source_sha256": "27f081d6a146678e7ba4967f45f1980b0e1ab4739208ab388bdf33ccfebd6f89",
+      "working_tree_sha256": "27f081d6a146678e7ba4967f45f1980b0e1ab4739208ab388bdf33ccfebd6f89",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/data.go",
+      "source_path": "backend/internal/systembackup/domain/data.go",
+      "source_sha256": "2a1e01c3dc8d9131a6cee42c28d293ee36db34feaa526c33ac372ad38f3e7d21",
+      "working_tree_sha256": "2a1e01c3dc8d9131a6cee42c28d293ee36db34feaa526c33ac372ad38f3e7d21",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/dependencies.go",
+      "source_path": "backend/internal/systembackup/domain/dependencies.go",
+      "source_sha256": "8b64927611cde5b73aaa6d4812a9fa4ad9b23204a53d84165f8db2587506e70e",
+      "working_tree_sha256": "8b64927611cde5b73aaa6d4812a9fa4ad9b23204a53d84165f8db2587506e70e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/dependencies_test.go",
+      "source_path": "backend/internal/systembackup/domain/dependencies_test.go",
+      "source_sha256": "527f4d04e9918422a2bc3197e124b0334f781dca80d28cbc6c44f68af1e35a2c",
+      "working_tree_sha256": "527f4d04e9918422a2bc3197e124b0334f781dca80d28cbc6c44f68af1e35a2c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/export_test.go",
+      "source_path": "backend/internal/systembackup/domain/export_test.go",
+      "source_sha256": "f385d16470bd01060f0996e46f072caf2f362c06bc7b53c37ade9183ce6335c6",
+      "working_tree_sha256": "f385d16470bd01060f0996e46f072caf2f362c06bc7b53c37ade9183ce6335c6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/formats.go",
+      "source_path": "backend/internal/systembackup/domain/formats.go",
+      "source_sha256": "71a0a2af182989d5ae20e32b3476a4ddde682c26a12c7a65eefb14980cfa488e",
+      "working_tree_sha256": "71a0a2af182989d5ae20e32b3476a4ddde682c26a12c7a65eefb14980cfa488e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/formats_test.go",
+      "source_path": "backend/internal/systembackup/domain/formats_test.go",
+      "source_sha256": "7f9fb0061851defeb8823313b9ff512b8c6e3fea0e6486acc4a8949955186887",
+      "working_tree_sha256": "7f9fb0061851defeb8823313b9ff512b8c6e3fea0e6486acc4a8949955186887",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/grants.go",
+      "source_path": "backend/internal/systembackup/domain/grants.go",
+      "source_sha256": "359eb5e53ba78586c5a1d318f4fd0c111e35976c1cef16deaed5f0b66ebe65e1",
+      "working_tree_sha256": "359eb5e53ba78586c5a1d318f4fd0c111e35976c1cef16deaed5f0b66ebe65e1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/grants_test.go",
+      "source_path": "backend/internal/systembackup/domain/grants_test.go",
+      "source_sha256": "e9b263f964057e234d0d740830f96dd127abc08df495c9fed9115cff1c66280f",
+      "working_tree_sha256": "e9b263f964057e234d0d740830f96dd127abc08df495c9fed9115cff1c66280f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/mysql.go",
+      "source_path": "backend/internal/systembackup/domain/mysql.go",
+      "source_sha256": "c556419a61177e325adcc1e360b3187ac630371b2cb5cd5fddf13796630caf1f",
+      "working_tree_sha256": "c556419a61177e325adcc1e360b3187ac630371b2cb5cd5fddf13796630caf1f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/mysql_test.go",
+      "source_path": "backend/internal/systembackup/domain/mysql_test.go",
+      "source_sha256": "a68acf421dabf1bffa6b554fcb61c0dfed8a4ca577851fd6d54acd9e99563eff",
+      "working_tree_sha256": "a68acf421dabf1bffa6b554fcb61c0dfed8a4ca577851fd6d54acd9e99563eff",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "source_path": "backend/internal/systembackup/domain/normalize.go",
+      "source_sha256": "5cc3dcef3d53b5686a595bb5c82c6d37ef19b2e2cbb0750fa453d360671bcd45",
+      "working_tree_sha256": "5cc3dcef3d53b5686a595bb5c82c6d37ef19b2e2cbb0750fa453d360671bcd45",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/normalize_test.go",
+      "source_path": "backend/internal/systembackup/domain/normalize_test.go",
+      "source_sha256": "eb61c5d3be999bce15dc1aacaebb70ac8de2ea7364ed1d11c1a167bb7269e5e0",
+      "working_tree_sha256": "eb61c5d3be999bce15dc1aacaebb70ac8de2ea7364ed1d11c1a167bb7269e5e0",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/preflight.go",
+      "source_path": "backend/internal/systembackup/domain/preflight.go",
+      "source_sha256": "8e934e86769e77ccce5c62bf7ad13f5b4900e780d3b299ebd090a1938397d634",
+      "working_tree_sha256": "8e934e86769e77ccce5c62bf7ad13f5b4900e780d3b299ebd090a1938397d634",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/preflight_test.go",
+      "source_path": "backend/internal/systembackup/domain/preflight_test.go",
+      "source_sha256": "f1ff49f5adb1378f06296171111f218d5b1144a5171c10c2d675682966a0326f",
+      "working_tree_sha256": "f1ff49f5adb1378f06296171111f218d5b1144a5171c10c2d675682966a0326f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "source_path": "backend/internal/systembackup/domain/restore.go",
+      "source_sha256": "aab9f05eccad734602a9edf7f94be5c9430d8a69c59108ed0444ccc8050a532b",
+      "working_tree_sha256": "aab9f05eccad734602a9edf7f94be5c9430d8a69c59108ed0444ccc8050a532b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/roundtrip_test.go",
+      "source_path": "backend/internal/systembackup/domain/roundtrip_test.go",
+      "source_sha256": "3b540e65b8e66f4b5f222ce885aefa288338d4f4cc9b9b3603cfe42af0e5424b",
+      "working_tree_sha256": "3b540e65b8e66f4b5f222ce885aefa288338d4f4cc9b9b3603cfe42af0e5424b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_inventory.go",
+      "source_path": "backend/internal/systembackup/domain/source_inventory.go",
+      "source_sha256": "1e8b8a097035ff258f5c5dd8115d6ed4f1190ac58bf490884d3302cea65ebbb4",
+      "working_tree_sha256": "1e8b8a097035ff258f5c5dd8115d6ed4f1190ac58bf490884d3302cea65ebbb4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/teams.go",
+      "source_path": "backend/internal/systembackup/domain/teams.go",
+      "source_sha256": "b8d8ed2cefeae94fbbe8ef73a1b593671e2930583cc5d24ebd6dbdb68f116148",
+      "working_tree_sha256": "b8d8ed2cefeae94fbbe8ef73a1b593671e2930583cc5d24ebd6dbdb68f116148",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy.go",
+      "source_sha256": "39e4ce9680fb60634d7bbbd1365d29d2a81ef8818f7baf3ca297ab0f03692691",
+      "working_tree_sha256": "39e4ce9680fb60634d7bbbd1365d29d2a81ef8818f7baf3ca297ab0f03692691",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_observed_test.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_observed_test.go",
+      "source_sha256": "5e6d3e990572f6c40443097b5e048e9d7df1faa4f2590484e8bfe3480ca1a09c",
+      "working_tree_sha256": "5e6d3e990572f6c40443097b5e048e9d7df1faa4f2590484e8bfe3480ca1a09c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_uid.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_uid.go",
+      "source_sha256": "37fff5263238822a058cd81c03331e7100a31960dcf7d04577202ad588d1c298",
+      "working_tree_sha256": "37fff5263238822a058cd81c03331e7100a31960dcf7d04577202ad588d1c298",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_uid_test.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_uid_test.go",
+      "source_sha256": "565da6e2352add9a7278d0b9ec4b7cdf424b24df1880168be1db2d9601501086",
+      "working_tree_sha256": "565da6e2352add9a7278d0b9ec4b7cdf424b24df1880168be1db2d9601501086",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_workspace.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_workspace.go",
+      "source_sha256": "ecc2010e8ed4b36f3393fbe404ff5fa6b4674278a0bac5d5a5e21cc7c1508db6",
+      "working_tree_sha256": "ecc2010e8ed4b36f3393fbe404ff5fa6b4674278a0bac5d5a5e21cc7c1508db6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_workspace_linux.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_workspace_linux.go",
+      "source_sha256": "ab219210c0c086a90d867140a41bfd73645f4659784255f7a9f96884422b61b8",
+      "working_tree_sha256": "ab219210c0c086a90d867140a41bfd73645f4659784255f7a9f96884422b61b8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_workspace_linux_test.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_workspace_linux_test.go",
+      "source_sha256": "2c3745b004c4295dd49a437c0f49feeee4eec143616d6593404aa49dc2b26c24",
+      "working_tree_sha256": "2c3745b004c4295dd49a437c0f49feeee4eec143616d6593404aa49dc2b26c24",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/workbuddy_workspace_other.go",
+      "source_path": "backend/internal/systembackup/domain/workbuddy_workspace_other.go",
+      "source_sha256": "54082e90e7fd35faf5007f28da3d1066aaf27bcc7b31138fabfab2226bba1208",
+      "working_tree_sha256": "54082e90e7fd35faf5007f28da3d1066aaf27bcc7b31138fabfab2226bba1208",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/worker_integration_test.go",
+      "source_path": "backend/internal/systembackup/domain/worker_integration_test.go",
+      "source_sha256": "94177a3056821f34029bec809fddfdf8c86716068452c4513c73cf1f74d68ee9",
+      "working_tree_sha256": "94177a3056821f34029bec809fddfdf8c86716068452c4513c73cf1f74d68ee9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackup/engine_selection.go",
@@ -914,6 +1733,34 @@
       "source_sha256": null,
       "working_tree_sha256": "1c33326733e4d793dbbf19b5f2138686c85f5d9969a54e1601b821a332041419",
       "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/flow/capture.go",
+      "source_path": "backend/internal/systembackup/flow/capture.go",
+      "source_sha256": "7c653317d0441ecb7de89528d9ca19ad61463a2e79f2e43db92017ada85fd948",
+      "working_tree_sha256": "7c653317d0441ecb7de89528d9ca19ad61463a2e79f2e43db92017ada85fd948",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/flow/capture_test.go",
+      "source_path": "backend/internal/systembackup/flow/capture_test.go",
+      "source_sha256": "570f46762dcc0f280cd06586bde1f0133072d67d42c31d500ba49ae185d0bab4",
+      "working_tree_sha256": "570f46762dcc0f280cd06586bde1f0133072d67d42c31d500ba49ae185d0bab4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/flow/recovery.go",
+      "source_path": "backend/internal/systembackup/flow/recovery.go",
+      "source_sha256": "49850f21528889f1233d66971019ab56fdf569feb9f1f5ba0ac1b3f8319bc446",
+      "working_tree_sha256": "49850f21528889f1233d66971019ab56fdf569feb9f1f5ba0ac1b3f8319bc446",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/flow/recovery_test.go",
+      "source_path": "backend/internal/systembackup/flow/recovery_test.go",
+      "source_sha256": "23d7d3dd093147a0fe70ae58e9a2500ca49284f6b0fb4a96a9388049040485e3",
+      "working_tree_sha256": "23d7d3dd093147a0fe70ae58e9a2500ca49284f6b0fb4a96a9388049040485e3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackup/full_restore_test.go",
@@ -951,17 +1798,199 @@
       "disposition": "integration-owned adaptation"
     },
     {
+      "path": "backend/internal/systembackup/host/catalog.go",
+      "source_path": "backend/internal/systembackup/host/catalog.go",
+      "source_sha256": "993150ea9bffba0855b9eb42d4c8bf1838c15f1af3ae118da2cb334445a3325e",
+      "working_tree_sha256": "993150ea9bffba0855b9eb42d4c8bf1838c15f1af3ae118da2cb334445a3325e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/catalog_test.go",
+      "source_path": "backend/internal/systembackup/host/catalog_test.go",
+      "source_sha256": "fadd177048af423e0af783a0c16c9319fffd7965cb3134e7232f410f692fe8f9",
+      "working_tree_sha256": "fadd177048af423e0af783a0c16c9319fffd7965cb3134e7232f410f692fe8f9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/config.go",
+      "source_path": "backend/internal/systembackup/host/config.go",
+      "source_sha256": "f43ed271629144940530a16e47b22abfe592a5cf1a3633915126649b22a8acbc",
+      "working_tree_sha256": "f43ed271629144940530a16e47b22abfe592a5cf1a3633915126649b22a8acbc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/config_test.go",
+      "source_path": "backend/internal/systembackup/host/config_test.go",
+      "source_sha256": "605acdbc4bb059f23d99c103ef7884d02da71b45fd6d426acbe0c59d9e6f52ec",
+      "working_tree_sha256": "605acdbc4bb059f23d99c103ef7884d02da71b45fd6d426acbe0c59d9e6f52ec",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/diagnostics.go",
+      "source_path": "backend/internal/systembackup/host/diagnostics.go",
+      "source_sha256": "9e1f22a5976a57b350ba8491fa24cf63e55917125d625ea356b747837365d015",
+      "working_tree_sha256": "9e1f22a5976a57b350ba8491fa24cf63e55917125d625ea356b747837365d015",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/diagnostics_test.go",
+      "source_path": "backend/internal/systembackup/host/diagnostics_test.go",
+      "source_sha256": "cb14d7228dedee4a6b9e6d0becc6069dae672e34131190c608942363fcb6aea6",
+      "working_tree_sha256": "cb14d7228dedee4a6b9e6d0becc6069dae672e34131190c608942363fcb6aea6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/objects.go",
+      "source_path": "backend/internal/systembackup/host/objects.go",
+      "source_sha256": "e38004d8763783af72eea87824da6457d350d531d5614da56e68dfcdc7d72640",
+      "working_tree_sha256": "e38004d8763783af72eea87824da6457d350d531d5614da56e68dfcdc7d72640",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/provider_gateway.go",
+      "source_path": "backend/internal/systembackup/host/provider_gateway.go",
+      "source_sha256": "70af02b5374b103023fd5288d3a4f0f03a8f93ab443d5dc726800a39902922ac",
+      "working_tree_sha256": "70af02b5374b103023fd5288d3a4f0f03a8f93ab443d5dc726800a39902922ac",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/provider_gateway_test.go",
+      "source_path": "backend/internal/systembackup/host/provider_gateway_test.go",
+      "source_sha256": "69bd5adc95e477485de91adc7b3216b21609e61fe7b975bc3d336b1f4413f457",
+      "working_tree_sha256": "69bd5adc95e477485de91adc7b3216b21609e61fe7b975bc3d336b1f4413f457",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/run.go",
+      "source_path": "backend/internal/systembackup/host/run.go",
+      "source_sha256": "4cf37e902273c64678e84846f8f7ff5f77da2d5254e1df3c6f8f8449bb5812a6",
+      "working_tree_sha256": "4cf37e902273c64678e84846f8f7ff5f77da2d5254e1df3c6f8f8449bb5812a6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/host/templates_test.go",
+      "source_path": "backend/internal/systembackup/host/templates_test.go",
+      "source_sha256": "d4e16fa0839b24d061773d54ad8368ba4853d0c12bf304480fa9350cd8c6c628",
+      "working_tree_sha256": "d4e16fa0839b24d061773d54ad8368ba4853d0c12bf304480fa9350cd8c6c628",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/database_job.go",
+      "source_path": "backend/internal/systembackup/kube/database_job.go",
+      "source_sha256": "c2bc4b6641b2998b9625bd22a3df40f319cda06b8d7d728da0deb15760adff24",
+      "working_tree_sha256": "c2bc4b6641b2998b9625bd22a3df40f319cda06b8d7d728da0deb15760adff24",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/database_job_test.go",
+      "source_path": "backend/internal/systembackup/kube/database_job_test.go",
+      "source_sha256": "93dd7e3933604025b07f8d43d15ed2f29ed6060d85ac66dc6aae8249ebd7a6a1",
+      "working_tree_sha256": "93dd7e3933604025b07f8d43d15ed2f29ed6060d85ac66dc6aae8249ebd7a6a1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/journal.go",
+      "source_path": "backend/internal/systembackup/kube/journal.go",
+      "source_sha256": "080c8561db1c6811986e7afb2f72c532c18adc414e984878d8d1ffb1b41e290f",
+      "working_tree_sha256": "080c8561db1c6811986e7afb2f72c532c18adc414e984878d8d1ffb1b41e290f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/journal_rows.go",
+      "source_path": "backend/internal/systembackup/kube/journal_rows.go",
+      "source_sha256": "3c0bb0772add65f967d2893d9c6cbb11769def0fec583cc322f0b5257d34da24",
+      "working_tree_sha256": "3c0bb0772add65f967d2893d9c6cbb11769def0fec583cc322f0b5257d34da24",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/journal_test.go",
+      "source_path": "backend/internal/systembackup/kube/journal_test.go",
+      "source_sha256": "8199188eb0d025e569411a498448d353feac4d036e565c5847b4a9e2aac9a49f",
+      "working_tree_sha256": "8199188eb0d025e569411a498448d353feac4d036e565c5847b4a9e2aac9a49f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/resources.go",
+      "source_path": "backend/internal/systembackup/kube/resources.go",
+      "source_sha256": "82431d2c8089b0d2eba8e46d1eb210c72aee3a39ca85efa94f4a9eea63512105",
+      "working_tree_sha256": "82431d2c8089b0d2eba8e46d1eb210c72aee3a39ca85efa94f4a9eea63512105",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/resources_test.go",
+      "source_path": "backend/internal/systembackup/kube/resources_test.go",
+      "source_sha256": "69227a280454ba4db2c368f0b5821ddd8c485483a81dbe2ac4c15ab25668aa2f",
+      "working_tree_sha256": "69227a280454ba4db2c368f0b5821ddd8c485483a81dbe2ac4c15ab25668aa2f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/runner.go",
+      "source_path": "backend/internal/systembackup/kube/runner.go",
+      "source_sha256": "4d6556cea9194b8c367e543124b549e2e5832a53bd194f323c3ae99d23736d7d",
+      "working_tree_sha256": "4d6556cea9194b8c367e543124b549e2e5832a53bd194f323c3ae99d23736d7d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/runner_test.go",
+      "source_path": "backend/internal/systembackup/kube/runner_test.go",
+      "source_sha256": "671235ce139c745382c7bca811a9e6409e2c91099e0eade11dbe6383f14077a9",
+      "working_tree_sha256": "671235ce139c745382c7bca811a9e6409e2c91099e0eade11dbe6383f14077a9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_config.go",
+      "source_path": "backend/internal/systembackup/kube/worker_config.go",
+      "source_sha256": "6403b6d09c05adb7ced3a2343c7985723ee34b67097b73dfbfd98540eb33f77f",
+      "working_tree_sha256": "6403b6d09c05adb7ced3a2343c7985723ee34b67097b73dfbfd98540eb33f77f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_config_test.go",
+      "source_path": "backend/internal/systembackup/kube/worker_config_test.go",
+      "source_sha256": "5301b88542e0c85dc01fb412578772e36c757a46219bc132057b37629baa1636",
+      "working_tree_sha256": "5301b88542e0c85dc01fb412578772e36c757a46219bc132057b37629baa1636",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_network.go",
+      "source_path": "backend/internal/systembackup/kube/worker_network.go",
+      "source_sha256": "afadeedb4b2cc9d75f7f200441217b8a9eed327ca2aa43e40311d1c3a7e8e288",
+      "working_tree_sha256": "afadeedb4b2cc9d75f7f200441217b8a9eed327ca2aa43e40311d1c3a7e8e288",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_network_test.go",
+      "source_path": "backend/internal/systembackup/kube/worker_network_test.go",
+      "source_sha256": "73ce3e2a27081c2a8e36fbcf7188d8524c3df3f9a7dd92a0071ba01088603184",
+      "working_tree_sha256": "73ce3e2a27081c2a8e36fbcf7188d8524c3df3f9a7dd92a0071ba01088603184",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_observer.go",
+      "source_path": "backend/internal/systembackup/kube/worker_observer.go",
+      "source_sha256": "b32a894f56bb9c45999edd71d52fe3187f63e1c6449daeae73fa186044b4a7fe",
+      "working_tree_sha256": "b32a894f56bb9c45999edd71d52fe3187f63e1c6449daeae73fa186044b4a7fe",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/worker_observer_test.go",
+      "source_path": "backend/internal/systembackup/kube/worker_observer_test.go",
+      "source_sha256": "4ef7fd77a9326e91d820b343a19b68f8b2631be68615ae629e40b0d45f20c7dd",
+      "working_tree_sha256": "4ef7fd77a9326e91d820b343a19b68f8b2631be68615ae629e40b0d45f20c7dd",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackup/mutation/gate.go",
       "source_path": "backend/internal/systembackup/mutation/gate.go",
-      "source_sha256": "116e7da639c29af56d4bc0e3570ce8ee5c698896f4d284b9e9d32aca2cbedc3b",
-      "working_tree_sha256": "aba4951c62edba783915e42527bc5d60e2ca2fddafffb89000504de472c59ec3",
+      "source_sha256": "1ae0a4d126912ec5d144cce2653aa4bf412789e9dfac18d91779393d1757c73b",
+      "working_tree_sha256": "061f4d2536b6f2f982749d9bd5fe53e120c0aa4dde6c599d7849ecdd29c232fb",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackup/mutation/gate_test.go",
       "source_path": "backend/internal/systembackup/mutation/gate_test.go",
       "source_sha256": "eaa233160295391993ba4a3c007becccc00710254d9abd571186810f7f2c56ab",
-      "working_tree_sha256": "b6ad26f49b1dc6fb2b7fce81b6845ec10e09f5b743824f133a2fd75f4b4ad842",
+      "working_tree_sha256": "894dce66c2d138ff85ad2ec17c179a01e55d35a85ea1cb69f978a63dad9cd55c",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -970,6 +1999,664 @@
       "source_sha256": null,
       "working_tree_sha256": "f803077701d9e1dc479e55258b322bbed0b77e4579ad1272bc69bac3920e2140",
       "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/applications.go",
+      "source_path": "backend/internal/systembackup/profile/applications.go",
+      "source_sha256": "a4628fcc22d57058144d6c8ead0e891a584e4cd13e4f04aad3133f13d39a8c52",
+      "working_tree_sha256": "a4628fcc22d57058144d6c8ead0e891a584e4cd13e4f04aad3133f13d39a8c52",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/applications_test.go",
+      "source_path": "backend/internal/systembackup/profile/applications_test.go",
+      "source_sha256": "e6cbe3d9a77705d1590fde9ef66f5c9e6b8f737ceccf0e27837f0e435d4e3668",
+      "working_tree_sha256": "e6cbe3d9a77705d1590fde9ef66f5c9e6b8f737ceccf0e27837f0e435d4e3668",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/assets.go",
+      "source_path": "backend/internal/systembackup/profile/assets.go",
+      "source_sha256": "4194c35a6660076579e433a620a135e58a7f66396db0bc4d07e84fcee57acfe3",
+      "working_tree_sha256": "4194c35a6660076579e433a620a135e58a7f66396db0bc4d07e84fcee57acfe3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/capabilities.go",
+      "source_path": "backend/internal/systembackup/profile/capabilities.go",
+      "source_sha256": "2f5c10625d33b8bafe1ddeb74340b969a5a743d2ad854d7b77e2884ed5ab8ccc",
+      "working_tree_sha256": "2f5c10625d33b8bafe1ddeb74340b969a5a743d2ad854d7b77e2884ed5ab8ccc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/collector.go",
+      "source_path": "backend/internal/systembackup/profile/collector.go",
+      "source_sha256": "2c96004a064f8ca018e05cb6976786d43104331533c176469f83846ea73df4e6",
+      "working_tree_sha256": "2c96004a064f8ca018e05cb6976786d43104331533c176469f83846ea73df4e6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/config.go",
+      "source_path": "backend/internal/systembackup/profile/config.go",
+      "source_sha256": "61ee5e970eae9843d69de174b422a81e06cfd78f33d3efb73a792dfe3c72d972",
+      "working_tree_sha256": "61ee5e970eae9843d69de174b422a81e06cfd78f33d3efb73a792dfe3c72d972",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/discovery.go",
+      "source_path": "backend/internal/systembackup/profile/discovery.go",
+      "source_sha256": "bc858d9d958b33a97810da1611169b2092c812f210e612c0f4201a7be0bd1757",
+      "working_tree_sha256": "bc858d9d958b33a97810da1611169b2092c812f210e612c0f4201a7be0bd1757",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/discovery_test.go",
+      "source_path": "backend/internal/systembackup/profile/discovery_test.go",
+      "source_sha256": "c5a41cc1ac778bc80afcae3d92544d1bb27814343f672b01b50cff6bd09e1d33",
+      "working_tree_sha256": "c5a41cc1ac778bc80afcae3d92544d1bb27814343f672b01b50cff6bd09e1d33",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/execution.go",
+      "source_path": "backend/internal/systembackup/profile/execution.go",
+      "source_sha256": "7d93f7d407e87aac62b28c67baaa0dc5cf02a2dfa3896a9f3ae27fd83b7534a3",
+      "working_tree_sha256": "7d93f7d407e87aac62b28c67baaa0dc5cf02a2dfa3896a9f3ae27fd83b7534a3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/frozen.go",
+      "source_path": "backend/internal/systembackup/profile/frozen.go",
+      "source_sha256": "9c7e8bffb92003d06f407ef02b833cfdd6f9c1febf277af3b899c0321a3714c4",
+      "working_tree_sha256": "9c7e8bffb92003d06f407ef02b833cfdd6f9c1febf277af3b899c0321a3714c4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/preflight_test.go",
+      "source_path": "backend/internal/systembackup/profile/preflight_test.go",
+      "source_sha256": "42ff23cccd5233b693a10dae1e1500f61fece8d19f42c9ddd127d7a64962703e",
+      "working_tree_sha256": "42ff23cccd5233b693a10dae1e1500f61fece8d19f42c9ddd127d7a64962703e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/profile_test.go",
+      "source_path": "backend/internal/systembackup/profile/profile_test.go",
+      "source_sha256": "332f3e313d6c101b960a2a1dbe4d5705fc93d485fb2488f5f3474afca11a31de",
+      "working_tree_sha256": "332f3e313d6c101b960a2a1dbe4d5705fc93d485fb2488f5f3474afca11a31de",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/roots.go",
+      "source_path": "backend/internal/systembackup/profile/roots.go",
+      "source_sha256": "f65d401da32833dac75805e1ca9381be4bc26f71c0243ffafed3b634b52610f3",
+      "working_tree_sha256": "f65d401da32833dac75805e1ca9381be4bc26f71c0243ffafed3b634b52610f3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/runtime_policy_test.go",
+      "source_path": "backend/internal/systembackup/profile/runtime_policy_test.go",
+      "source_sha256": "c1145bfc2df48041c78e776ce9d7bbada892dad595460a79a7c2496e7f00ea4a",
+      "working_tree_sha256": "c1145bfc2df48041c78e776ce9d7bbada892dad595460a79a7c2496e7f00ea4a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/shared_workspace.go",
+      "source_path": "backend/internal/systembackup/profile/shared_workspace.go",
+      "source_sha256": "1b51a476005713638c18a6abe51044fac777cd01f55b7498f9944afe1121cf66",
+      "working_tree_sha256": "1b51a476005713638c18a6abe51044fac777cd01f55b7498f9944afe1121cf66",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/shared_workspace_test.go",
+      "source_path": "backend/internal/systembackup/profile/shared_workspace_test.go",
+      "source_sha256": "8a4944636765eaaf9f13f8e9236061c2605ebd82ebdea43008bfd28482e07b86",
+      "working_tree_sha256": "8a4944636765eaaf9f13f8e9236061c2605ebd82ebdea43008bfd28482e07b86",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/six_domain.go",
+      "source_path": "backend/internal/systembackup/profile/six_domain.go",
+      "source_sha256": "26e9a4cf60e33f417004977de6678ac300045fc65bf9b2852c1f0716bd0cda0f",
+      "working_tree_sha256": "26e9a4cf60e33f417004977de6678ac300045fc65bf9b2852c1f0716bd0cda0f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/six_domain_test.go",
+      "source_path": "backend/internal/systembackup/profile/six_domain_test.go",
+      "source_sha256": "21543285b5acf980d5def17de28f574262b1b68dbb81f4fef4668e1497f75cf8",
+      "working_tree_sha256": "21543285b5acf980d5def17de28f574262b1b68dbb81f4fef4668e1497f75cf8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/target.go",
+      "source_path": "backend/internal/systembackup/profile/target.go",
+      "source_sha256": "e4ae7a15f3072ff4cabcd5e2ee5621e175b5f7ef3c63da59e846de5461a0be8a",
+      "working_tree_sha256": "e4ae7a15f3072ff4cabcd5e2ee5621e175b5f7ef3c63da59e846de5461a0be8a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/workbuddy.go",
+      "source_path": "backend/internal/systembackup/profile/workbuddy.go",
+      "source_sha256": "76f81abb6494d9f87d66402a22b371f5c37fa8737aa200c8e99179af4216c5a2",
+      "working_tree_sha256": "76f81abb6494d9f87d66402a22b371f5c37fa8737aa200c8e99179af4216c5a2",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/workbuddy_test.go",
+      "source_path": "backend/internal/systembackup/profile/workbuddy_test.go",
+      "source_sha256": "4ec37f13aa1d9db9f051f442666b68fb2024bb8073337a5d17ddd3efcab26b8c",
+      "working_tree_sha256": "4ec37f13aa1d9db9f051f442666b68fb2024bb8073337a5d17ddd3efcab26b8c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/writer_proof_test.go",
+      "source_path": "backend/internal/systembackup/profile/writer_proof_test.go",
+      "source_sha256": "115ecee599c301f690e5ad79dc36d2b8d601998309cee120a9f23ebd6cfd8444",
+      "working_tree_sha256": "115ecee599c301f690e5ad79dc36d2b8d601998309cee120a9f23ebd6cfd8444",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/profile/writers.go",
+      "source_path": "backend/internal/systembackup/profile/writers.go",
+      "source_sha256": "a55557b7131a2656cff8da42fb1ee7dfcb318c6ed2e785e696ec8de6cede5c7b",
+      "working_tree_sha256": "a55557b7131a2656cff8da42fb1ee7dfcb318c6ed2e785e696ec8de6cede5c7b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/README.md",
+      "source_path": "backend/internal/systembackup/publicadapter/README.md",
+      "source_sha256": "2eb90f171f31d3fd96d3ad7d9870ed0d483ed4eca9c90b3b2f8dcd3e224460d5",
+      "working_tree_sha256": "2eb90f171f31d3fd96d3ad7d9870ed0d483ed4eca9c90b3b2f8dcd3e224460d5",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/capture.go",
+      "source_path": "backend/internal/systembackup/publicadapter/capture.go",
+      "source_sha256": "2f0c72d5ab02cf89149242832d068e3db2257aee9099f073f41d9884570d7a90",
+      "working_tree_sha256": "2f0c72d5ab02cf89149242832d068e3db2257aee9099f073f41d9884570d7a90",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/composition.go",
+      "source_path": "backend/internal/systembackup/publicadapter/composition.go",
+      "source_sha256": "c3e57745b4c1178213ca5aa705f828077a1957079d2463d811968ee65de2a22b",
+      "working_tree_sha256": "c3e57745b4c1178213ca5aa705f828077a1957079d2463d811968ee65de2a22b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/contracts_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/contracts_test.go",
+      "source_sha256": "6e16ebd1f4f5be56e0cf8d0d199459d5d919ab1fb9319fc1f1dad222455df548",
+      "working_tree_sha256": "6e16ebd1f4f5be56e0cf8d0d199459d5d919ab1fb9319fc1f1dad222455df548",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/d_spec_integration_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/d_spec_integration_test.go",
+      "source_sha256": "472e4e55ca312654dd377215438a7476abedf2214743933245946be3d494afc6",
+      "working_tree_sha256": "472e4e55ca312654dd377215438a7476abedf2214743933245946be3d494afc6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/job_factory.go",
+      "source_path": "backend/internal/systembackup/publicadapter/job_factory.go",
+      "source_sha256": "fd41ab867784eb7cb2273ecfa82777ab54f1c5aefb6f4506539160b6c92c2197",
+      "working_tree_sha256": "fd41ab867784eb7cb2273ecfa82777ab54f1c5aefb6f4506539160b6c92c2197",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/job_factory_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/job_factory_test.go",
+      "source_sha256": "8b3635395ee891b64bbb075cc99ede63d937dd9c168f2e97fd6b516f5ef34ab1",
+      "working_tree_sha256": "8b3635395ee891b64bbb075cc99ede63d937dd9c168f2e97fd6b516f5ef34ab1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/jobs.go",
+      "source_path": "backend/internal/systembackup/publicadapter/jobs.go",
+      "source_sha256": "cfc589fcdf51a1d9c5976eb51f62af215d29552b1bbec1fc0c98d247fb48f539",
+      "working_tree_sha256": "cfc589fcdf51a1d9c5976eb51f62af215d29552b1bbec1fc0c98d247fb48f539",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/linux_profile.go",
+      "source_path": "backend/internal/systembackup/publicadapter/linux_profile.go",
+      "source_sha256": "f82de6e7aa6c1dc702635965056b55302a297daf384cca52123b73775f2c509d",
+      "working_tree_sha256": "f82de6e7aa6c1dc702635965056b55302a297daf384cca52123b73775f2c509d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/linux_profile_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/linux_profile_test.go",
+      "source_sha256": "936c4f7ca14e84ee3da0bd24c5900f3c1b40120266d173d76be77c3eb1cb7f60",
+      "working_tree_sha256": "936c4f7ca14e84ee3da0bd24c5900f3c1b40120266d173d76be77c3eb1cb7f60",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/relay.go",
+      "source_path": "backend/internal/systembackup/publicadapter/relay.go",
+      "source_sha256": "ec92504b758220c1a063c4c4886b587d89931b9dcb87310e59c69e7f61651251",
+      "working_tree_sha256": "ec92504b758220c1a063c4c4886b587d89931b9dcb87310e59c69e7f61651251",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/relay_auth.go",
+      "source_path": "backend/internal/systembackup/publicadapter/relay_auth.go",
+      "source_sha256": "376fb15db3a20cc8c430c78ff2899f61df12f79f0952360e4652051d6d03066a",
+      "working_tree_sha256": "376fb15db3a20cc8c430c78ff2899f61df12f79f0952360e4652051d6d03066a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/relay_auth_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/relay_auth_test.go",
+      "source_sha256": "f69e84ca6c4b57f06164a56c9f8ede740d14f9f06dae47c473290c1ba0164095",
+      "working_tree_sha256": "f69e84ca6c4b57f06164a56c9f8ede740d14f9f06dae47c473290c1ba0164095",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/relay_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/relay_test.go",
+      "source_sha256": "c011e67f4c29bdb9fe56065f3820958546003082aaa12669c5217fc057cf726e",
+      "working_tree_sha256": "c011e67f4c29bdb9fe56065f3820958546003082aaa12669c5217fc057cf726e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/relay_tls_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/relay_tls_test.go",
+      "source_sha256": "2c2994632c5de2133779ce83c9c5bdd1f92413c1b3919a4860ceb8a2ed43caa1",
+      "working_tree_sha256": "2c2994632c5de2133779ce83c9c5bdd1f92413c1b3919a4860ceb8a2ed43caa1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/restore_target.go",
+      "source_path": "backend/internal/systembackup/publicadapter/restore_target.go",
+      "source_sha256": "8fe89301380132d7e0bba9b8a9f47b37812616b0a94586350a61630c56f1550a",
+      "working_tree_sha256": "8fe89301380132d7e0bba9b8a9f47b37812616b0a94586350a61630c56f1550a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/restore_target_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/restore_target_test.go",
+      "source_sha256": "bb2edeab815af14c10829560678e2dfd3d45a252909cabde99ae56d830be14db",
+      "working_tree_sha256": "bb2edeab815af14c10829560678e2dfd3d45a252909cabde99ae56d830be14db",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/results.go",
+      "source_path": "backend/internal/systembackup/publicadapter/results.go",
+      "source_sha256": "fe2a89aa82e64aeb904323be5730b5044035b9767386c3b7b8a32e011979134c",
+      "working_tree_sha256": "fe2a89aa82e64aeb904323be5730b5044035b9767386c3b7b8a32e011979134c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/results_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/results_test.go",
+      "source_sha256": "3136ae9962445057d75297bf66d2b4c07ce277f3751e4f355245e77dbb5d43af",
+      "working_tree_sha256": "3136ae9962445057d75297bf66d2b4c07ce277f3751e4f355245e77dbb5d43af",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/runner.go",
+      "source_path": "backend/internal/systembackup/publicadapter/runner.go",
+      "source_sha256": "edb89bc7e79fd02de8adc4c91f12500c7ece5acf25b3392b955140b4fc715f4d",
+      "working_tree_sha256": "edb89bc7e79fd02de8adc4c91f12500c7ece5acf25b3392b955140b4fc715f4d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/runner_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/runner_test.go",
+      "source_sha256": "99e9289499f42ce24542f0fe0a9dc06a2357952b199bb9c363391c1b246e0ba3",
+      "working_tree_sha256": "99e9289499f42ce24542f0fe0a9dc06a2357952b199bb9c363391c1b246e0ba3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/writers.go",
+      "source_path": "backend/internal/systembackup/publicadapter/writers.go",
+      "source_sha256": "370afccd796c2f59594eb591cb58940019fa15039d15b154aaae9c52ead258f2",
+      "working_tree_sha256": "370afccd796c2f59594eb591cb58940019fa15039d15b154aaae9c52ead258f2",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/writers_test.go",
+      "source_path": "backend/internal/systembackup/publicadapter/writers_test.go",
+      "source_sha256": "919a8fa92e03a82f3b848410ff67901045751be8e0c0a77222004eda444c22af",
+      "working_tree_sha256": "919a8fa92e03a82f3b848410ff67901045751be8e0c0a77222004eda444c22af",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/capture_test.go",
+      "source_path": "backend/internal/systembackup/quiesce/capture_test.go",
+      "source_sha256": "ad32a350b8eee3733c9fd759e329adcc5ac544158d0612ae7e76f3fbdce478d2",
+      "working_tree_sha256": "ad32a350b8eee3733c9fd759e329adcc5ac544158d0612ae7e76f3fbdce478d2",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/cri.go",
+      "source_path": "backend/internal/systembackup/quiesce/cri.go",
+      "source_sha256": "34a0510a4a5406659c1525d8a26c6df7d4ecd53f78c182c7b73bf2149551ae4f",
+      "working_tree_sha256": "34a0510a4a5406659c1525d8a26c6df7d4ecd53f78c182c7b73bf2149551ae4f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/cri_test.go",
+      "source_path": "backend/internal/systembackup/quiesce/cri_test.go",
+      "source_sha256": "bce3d01aef7f0b3a4ae9eb3113dd064681a07aad7ee211d6f41eb0704472fb9c",
+      "working_tree_sha256": "bce3d01aef7f0b3a4ae9eb3113dd064681a07aad7ee211d6f41eb0704472fb9c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/deployment.go",
+      "source_path": "backend/internal/systembackup/quiesce/deployment.go",
+      "source_sha256": "33b21f219fc2d8b085470bec2155449514b37ef82e04013f1ea97d91949b3873",
+      "working_tree_sha256": "33b21f219fc2d8b085470bec2155449514b37ef82e04013f1ea97d91949b3873",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/deployment_test.go",
+      "source_path": "backend/internal/systembackup/quiesce/deployment_test.go",
+      "source_sha256": "3a8f6ee4687c3779496e7399f904f3d3f90fb49a0bd7013032bcb8bf8ffdb74b",
+      "working_tree_sha256": "3a8f6ee4687c3779496e7399f904f3d3f90fb49a0bd7013032bcb8bf8ffdb74b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/pod.go",
+      "source_path": "backend/internal/systembackup/quiesce/pod.go",
+      "source_sha256": "7a9e09b2605ec80be61ed56fd1309589015238b25c4bfec0e53526e6dcb90e69",
+      "working_tree_sha256": "7a9e09b2605ec80be61ed56fd1309589015238b25c4bfec0e53526e6dcb90e69",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/pod_test.go",
+      "source_path": "backend/internal/systembackup/quiesce/pod_test.go",
+      "source_sha256": "e3a4fb091f117aae216ff04234ee53f6fc9277d85a52389d4ebf6e204e11174d",
+      "working_tree_sha256": "e3a4fb091f117aae216ff04234ee53f6fc9277d85a52389d4ebf6e204e11174d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/proof_transport.go",
+      "source_path": "backend/internal/systembackup/quiesce/proof_transport.go",
+      "source_sha256": "14a77ccc4b5c2ee10fdfedf663c64e7f56ead10bf41533d72a7b7ab7d790d513",
+      "working_tree_sha256": "14a77ccc4b5c2ee10fdfedf663c64e7f56ead10bf41533d72a7b7ab7d790d513",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/proof_transport_test.go",
+      "source_path": "backend/internal/systembackup/quiesce/proof_transport_test.go",
+      "source_sha256": "cf327efa05e4ed7bf11233dbda766bef667fd72d7d069bce3319c8fbd88d442c",
+      "working_tree_sha256": "cf327efa05e4ed7bf11233dbda766bef667fd72d7d069bce3319c8fbd88d442c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/README.md",
+      "source_path": "backend/internal/systembackup/recovery/README.md",
+      "source_sha256": "3cee5a5ae7e605d2013be11bdcfdc4fed87747f0b144e632f1ed46622fc611f0",
+      "working_tree_sha256": "3cee5a5ae7e605d2013be11bdcfdc4fed87747f0b144e632f1ed46622fc611f0",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/adapters_test.go",
+      "source_path": "backend/internal/systembackup/recovery/adapters_test.go",
+      "source_sha256": "bdbb7fbbd833426eafd7495f8ce9f392217602b561772f99ca70e628f70c4163",
+      "working_tree_sha256": "bdbb7fbbd833426eafd7495f8ce9f392217602b561772f99ca70e628f70c4163",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/boundaries_test.go",
+      "source_path": "backend/internal/systembackup/recovery/boundaries_test.go",
+      "source_sha256": "f2a2ead9128eb34c51836f6f8157c5bd835ef09bd2c1345ad5d74f806af853ec",
+      "working_tree_sha256": "f2a2ead9128eb34c51836f6f8157c5bd835ef09bd2c1345ad5d74f806af853ec",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/canonical.go",
+      "source_path": "backend/internal/systembackup/recovery/canonical.go",
+      "source_sha256": "463d21369a84b308a73a0508322f0bf72f22b4cdaa8cda7555975aa037d57564",
+      "working_tree_sha256": "463d21369a84b308a73a0508322f0bf72f22b4cdaa8cda7555975aa037d57564",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/codec.go",
+      "source_path": "backend/internal/systembackup/recovery/codec.go",
+      "source_sha256": "ddf89a22eb63cdd90020a293204074e084df667f1c73d648856797930078e941",
+      "working_tree_sha256": "ddf89a22eb63cdd90020a293204074e084df667f1c73d648856797930078e941",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/contracts.go",
+      "source_path": "backend/internal/systembackup/recovery/contracts.go",
+      "source_sha256": "d2474f4cdafafeecd56717c7de4e1a054f895670d6e4d3f506f3d5aa70c3699f",
+      "working_tree_sha256": "d2474f4cdafafeecd56717c7de4e1a054f895670d6e4d3f506f3d5aa70c3699f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/contracts.schema.json",
+      "source_path": "backend/internal/systembackup/recovery/contracts.schema.json",
+      "source_sha256": "07ba65cb7c51235369569dc2877aad5f36f03cb0d364241481bdaae9382de234",
+      "working_tree_sha256": "07ba65cb7c51235369569dc2877aad5f36f03cb0d364241481bdaae9382de234",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/finalize.go",
+      "source_path": "backend/internal/systembackup/recovery/finalize.go",
+      "source_sha256": "31d87d3f475c7a919e3162ba5e7a24ec78dea89ddf7231edab62650ad64e2307",
+      "working_tree_sha256": "31d87d3f475c7a919e3162ba5e7a24ec78dea89ddf7231edab62650ad64e2307",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/gateway.go",
+      "source_path": "backend/internal/systembackup/recovery/gateway.go",
+      "source_sha256": "524ba473f6d4e42683c58c50298708719aa7c03a8c336b31ef582efeaf8ccfeb",
+      "working_tree_sha256": "524ba473f6d4e42683c58c50298708719aa7c03a8c336b31ef582efeaf8ccfeb",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/gateway_server.go",
+      "source_path": "backend/internal/systembackup/recovery/gateway_server.go",
+      "source_sha256": "124b13165743d855507b334c37829ae98579ac32699c962abc64d25350b81b20",
+      "working_tree_sha256": "124b13165743d855507b334c37829ae98579ac32699c962abc64d25350b81b20",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/gateway_server_test.go",
+      "source_path": "backend/internal/systembackup/recovery/gateway_server_test.go",
+      "source_sha256": "f5c3dcabcf177e784290c682e0471021fe9ec2037cef4f112b3ad5788708ee46",
+      "working_tree_sha256": "f5c3dcabcf177e784290c682e0471021fe9ec2037cef4f112b3ad5788708ee46",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/gateway_test.go",
+      "source_path": "backend/internal/systembackup/recovery/gateway_test.go",
+      "source_sha256": "7b5de9249664df932ce64bc05dd77ed15a0798106f6c9cd19f425619e4766efb",
+      "working_tree_sha256": "7b5de9249664df932ce64bc05dd77ed15a0798106f6c9cd19f425619e4766efb",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/import.go",
+      "source_path": "backend/internal/systembackup/recovery/import.go",
+      "source_sha256": "9a5635297c91c59f6a8620eb1372e7741d558ab2ec55268dbf4548c4223395ab",
+      "working_tree_sha256": "9a5635297c91c59f6a8620eb1372e7741d558ab2ec55268dbf4548c4223395ab",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/provider.go",
+      "source_path": "backend/internal/systembackup/recovery/provider.go",
+      "source_sha256": "8ebcfd3eca918505cf19f6c09e04fb8bd0740be4bed03c7408a0d17cd55dcc23",
+      "working_tree_sha256": "8ebcfd3eca918505cf19f6c09e04fb8bd0740be4bed03c7408a0d17cd55dcc23",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/publish.go",
+      "source_path": "backend/internal/systembackup/recovery/publish.go",
+      "source_sha256": "a41aa05867f83d2916c6007df075618253d1bb4f911fdc6dd6ea7dffb762f234",
+      "working_tree_sha256": "a41aa05867f83d2916c6007df075618253d1bb4f911fdc6dd6ea7dffb762f234",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/recovery_test.go",
+      "source_path": "backend/internal/systembackup/recovery/recovery_test.go",
+      "source_sha256": "70fe065bc54ba982ed80b150ebc05066f0b0d077a9b03b802cdf288407845195",
+      "working_tree_sha256": "70fe065bc54ba982ed80b150ebc05066f0b0d077a9b03b802cdf288407845195",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/redis.go",
+      "source_path": "backend/internal/systembackup/recovery/redis.go",
+      "source_sha256": "c03561d7e47a7aa92512e264a4177c020d9debc467261268e445b33cbbca2033",
+      "working_tree_sha256": "c03561d7e47a7aa92512e264a4177c020d9debc467261268e445b33cbbca2033",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/redis_adapter.go",
+      "source_path": "backend/internal/systembackup/recovery/redis_adapter.go",
+      "source_sha256": "09b570d332b666a884b633a2bb56757437e6219f08756cc5d76c4a79b07b80bc",
+      "working_tree_sha256": "09b570d332b666a884b633a2bb56757437e6219f08756cc5d76c4a79b07b80bc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/retention.go",
+      "source_path": "backend/internal/systembackup/recovery/retention.go",
+      "source_sha256": "9b1a5193f1ce68eea8b5eed8e95aeae177aeb040c68d8feb3cda390d2ea1f735",
+      "working_tree_sha256": "9b1a5193f1ce68eea8b5eed8e95aeae177aeb040c68d8feb3cda390d2ea1f735",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/scan.go",
+      "source_path": "backend/internal/systembackup/recovery/scan.go",
+      "source_sha256": "0b914a01481b384f8dd30986dc87a30d150d3a213da536c862736bcc19504028",
+      "working_tree_sha256": "0b914a01481b384f8dd30986dc87a30d150d3a213da536c862736bcc19504028",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/schema.go",
+      "source_path": "backend/internal/systembackup/recovery/schema.go",
+      "source_sha256": "b26c73f7cfac22d72639c314d457fb53aaa320ceeb67a2b4ba54408423c885f3",
+      "working_tree_sha256": "b26c73f7cfac22d72639c314d457fb53aaa320ceeb67a2b4ba54408423c885f3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/signature.go",
+      "source_path": "backend/internal/systembackup/recovery/signature.go",
+      "source_sha256": "d68694129e3780f0f87bad1d720a49d816d694b13c4f2872757889ef77b7997f",
+      "working_tree_sha256": "d68694129e3780f0f87bad1d720a49d816d694b13c4f2872757889ef77b7997f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/sources.go",
+      "source_path": "backend/internal/systembackup/recovery/sources.go",
+      "source_sha256": "ac7021f48cb87e46dc6fa0e75fad76717db03afe54ebdda1618888611bd022d7",
+      "working_tree_sha256": "ac7021f48cb87e46dc6fa0e75fad76717db03afe54ebdda1618888611bd022d7",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/relaywire/message.go",
+      "source_path": "backend/internal/systembackup/relaywire/message.go",
+      "source_sha256": "fecdf7111ebcd9acd9177db76e6a964ce4bfa3b8f51f12bf58a0a8d301e9e015",
+      "working_tree_sha256": "fecdf7111ebcd9acd9177db76e6a964ce4bfa3b8f51f12bf58a0a8d301e9e015",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/inventory.go",
+      "source_path": "backend/internal/systembackup/scope/inventory.go",
+      "source_sha256": "e356b7c2bbb2281480a6e5b880ac9bf664d125b5c49ee8092d9f3f8bccb3f955",
+      "working_tree_sha256": "e356b7c2bbb2281480a6e5b880ac9bf664d125b5c49ee8092d9f3f8bccb3f955",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/inventory_test.go",
+      "source_path": "backend/internal/systembackup/scope/inventory_test.go",
+      "source_sha256": "b465bc64718a9f5dec6607667c5408c63c367caa522d938f04cebc8e1063e878",
+      "working_tree_sha256": "b465bc64718a9f5dec6607667c5408c63c367caa522d938f04cebc8e1063e878",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/registry.go",
+      "source_path": "backend/internal/systembackup/scope/registry.go",
+      "source_sha256": "ff67bdee854c03422f03805580edf331e294903b5b5a9e9f235cdae10e3f8a07",
+      "working_tree_sha256": "ff67bdee854c03422f03805580edf331e294903b5b5a9e9f235cdae10e3f8a07",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/registry_test.go",
+      "source_path": "backend/internal/systembackup/scope/registry_test.go",
+      "source_sha256": "d72bd6beb4dc6989856bd6a187ebe2e484d98f00f00038131249c6eb1e9d003b",
+      "working_tree_sha256": "d72bd6beb4dc6989856bd6a187ebe2e484d98f00f00038131249c6eb1e9d003b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/runtime.go",
+      "source_path": "backend/internal/systembackup/scope/runtime.go",
+      "source_sha256": "00c90b3d31e0e5d3e7243bad6318fc9e87bb5134efcc31b78aa494f4afff0845",
+      "working_tree_sha256": "00c90b3d31e0e5d3e7243bad6318fc9e87bb5134efcc31b78aa494f4afff0845",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/runtime_test.go",
+      "source_path": "backend/internal/systembackup/scope/runtime_test.go",
+      "source_sha256": "ec3772caabdf47209f0738b54a6bfecb9199559e77bdf1b750aa4a2186a74bc3",
+      "working_tree_sha256": "ec3772caabdf47209f0738b54a6bfecb9199559e77bdf1b750aa4a2186a74bc3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/storage.go",
+      "source_path": "backend/internal/systembackup/scope/storage.go",
+      "source_sha256": "dbf8ecd8034fbb90ddd5a95961266ec3226fc11d54c653b776ee8cc1b3f73a8c",
+      "working_tree_sha256": "dbf8ecd8034fbb90ddd5a95961266ec3226fc11d54c653b776ee8cc1b3f73a8c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/scope/storage_test.go",
+      "source_path": "backend/internal/systembackup/scope/storage_test.go",
+      "source_sha256": "fa0e7682a8ea3012c10430511b2b3f95cfc13b3519b79b2c3185f89f5cda6fbb",
+      "working_tree_sha256": "fa0e7682a8ea3012c10430511b2b3f95cfc13b3519b79b2c3185f89f5cda6fbb",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/compression.go",
+      "source_path": "backend/internal/systembackup/staging/compression.go",
+      "source_sha256": "832aaa1748fc7612030b446647f13bf8978556b292623eed334b97e00af8eca3",
+      "working_tree_sha256": "832aaa1748fc7612030b446647f13bf8978556b292623eed334b97e00af8eca3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/file.go",
+      "source_path": "backend/internal/systembackup/staging/file.go",
+      "source_sha256": "96cce50f4db97053b7a612fb955708528db7eea1d260c15e3386f87c4d9c55c1",
+      "working_tree_sha256": "96cce50f4db97053b7a612fb955708528db7eea1d260c15e3386f87c4d9c55c1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/file_test.go",
+      "source_path": "backend/internal/systembackup/staging/file_test.go",
+      "source_sha256": "ca3fae01b7db5b83263c259f3378867cb92363132d64394d7fe964f89d6753b8",
+      "working_tree_sha256": "ca3fae01b7db5b83263c259f3378867cb92363132d64394d7fe964f89d6753b8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/stream.go",
+      "source_path": "backend/internal/systembackup/staging/stream.go",
+      "source_sha256": "45f3661f6d63892e2afc772b1f9e54b352b863f0131e9f02925518fd6e3a0721",
+      "working_tree_sha256": "45f3661f6d63892e2afc772b1f9e54b352b863f0131e9f02925518fd6e3a0721",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/stream_test.go",
+      "source_path": "backend/internal/systembackup/staging/stream_test.go",
+      "source_sha256": "0d9bd29041749780643371453f91ad055a305c83b8b0118b8638e4a7a6115f1d",
+      "working_tree_sha256": "0d9bd29041749780643371453f91ad055a305c83b8b0118b8638e4a7a6115f1d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/sync_unix.go",
+      "source_path": "backend/internal/systembackup/staging/sync_unix.go",
+      "source_sha256": "4d0e37e4d6ce344b1a190f1b0a03465653ca622f2420379fa99b7689bd3247b6",
+      "working_tree_sha256": "4d0e37e4d6ce344b1a190f1b0a03465653ca622f2420379fa99b7689bd3247b6",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/sync_windows.go",
+      "source_path": "backend/internal/systembackup/staging/sync_windows.go",
+      "source_sha256": "b0758fedcbc32b1f74f7bd3dabcdc3b9142ac0b36cc56837cc1b528d54b36405",
+      "working_tree_sha256": "b0758fedcbc32b1f74f7bd3dabcdc3b9142ac0b36cc56837cc1b528d54b36405",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackup/store.go",
@@ -982,7 +2669,7 @@
       "path": "backend/internal/systembackup/v2_control_registry.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "b1c2a1b0f2561908a38a9bcbdb09997463901d12254b00d179db24adffcd28d2",
+      "working_tree_sha256": "14ac038e422c16eeebc0f483a5d4f762e60e3d753bc070341a8b65591c94c50a",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -991,6 +2678,153 @@
       "source_sha256": null,
       "working_tree_sha256": "1eb411463c72a705045e8c835a9a46ca83760caa897c3648731b3ee3333f49b8",
       "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/assets.go",
+      "source_path": "backend/internal/systembackup/worker/assets.go",
+      "source_sha256": "25a99da16a32bfaab6ee1c24571f95ff03a433e4ed837c3774f43e4c713e280f",
+      "working_tree_sha256": "25a99da16a32bfaab6ee1c24571f95ff03a433e4ed837c3774f43e4c713e280f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/assets_test.go",
+      "source_path": "backend/internal/systembackup/worker/assets_test.go",
+      "source_sha256": "7398df0c4b5ab64727a9e21a0c8766cf4bf9855bfb20321411f5d2bdb69f5091",
+      "working_tree_sha256": "7398df0c4b5ab64727a9e21a0c8766cf4bf9855bfb20321411f5d2bdb69f5091",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/control.go",
+      "source_path": "backend/internal/systembackup/worker/control.go",
+      "source_sha256": "88ec8000b5a147e95208273adb52e5578e2034e79398eadfa430b54782cbcedf",
+      "working_tree_sha256": "88ec8000b5a147e95208273adb52e5578e2034e79398eadfa430b54782cbcedf",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/control_test.go",
+      "source_path": "backend/internal/systembackup/worker/control_test.go",
+      "source_sha256": "dcab0da1b6eff3230a697feb15805ae882c80eda6e6172ed8ef08d31caf4a044",
+      "working_tree_sha256": "dcab0da1b6eff3230a697feb15805ae882c80eda6e6172ed8ef08d31caf4a044",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "source_path": "backend/internal/systembackup/worker/database.go",
+      "source_sha256": "b33c755a1d3f7610f69a3808851a1392316e32cf80b8556b5f68775f3c7060f3",
+      "working_tree_sha256": "b33c755a1d3f7610f69a3808851a1392316e32cf80b8556b5f68775f3c7060f3",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database_test.go",
+      "source_path": "backend/internal/systembackup/worker/database_test.go",
+      "source_sha256": "fce158bf98d26fea9101947b6f5824f9dcb9aad80a7a6017c810c0b8fd70c955",
+      "working_tree_sha256": "fce158bf98d26fea9101947b6f5824f9dcb9aad80a7a6017c810c0b8fd70c955",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/runtime_policy.go",
+      "source_path": "backend/internal/systembackup/worker/runtime_policy.go",
+      "source_sha256": "5b89903e01db14a3c2b80d4405e8b1f7092171558c5775f1215d0085097c6e57",
+      "working_tree_sha256": "5b89903e01db14a3c2b80d4405e8b1f7092171558c5775f1215d0085097c6e57",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/runtime_policy_test.go",
+      "source_path": "backend/internal/systembackup/worker/runtime_policy_test.go",
+      "source_sha256": "3f881b6e4c3270fd45121f0e9a0e69aea6688c14f67116ba643fa912c52e44c4",
+      "working_tree_sha256": "3f881b6e4c3270fd45121f0e9a0e69aea6688c14f67116ba643fa912c52e44c4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/server.go",
+      "source_path": "backend/internal/systembackup/worker/server.go",
+      "source_sha256": "21e08e56ee409daf6b5d0583018fe212ae8e47c5efa4a228783574510bf3b483",
+      "working_tree_sha256": "21e08e56ee409daf6b5d0583018fe212ae8e47c5efa4a228783574510bf3b483",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/wine_linux_test.go",
+      "source_path": "backend/internal/systembackup/worker/wine_linux_test.go",
+      "source_sha256": "4f68a9184e9f5e78ece4231d3a2db1286433fe4afaf25097fc9580c4d6958fac",
+      "working_tree_sha256": "4f68a9184e9f5e78ece4231d3a2db1286433fe4afaf25097fc9580c4d6958fac",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/workbuddy_linux_test.go",
+      "source_path": "backend/internal/systembackup/worker/workbuddy_linux_test.go",
+      "source_sha256": "ad94f856f36115a21e2f3858b40406acdb92189cf45f87f817b1047798430cc5",
+      "working_tree_sha256": "ad94f856f36115a21e2f3858b40406acdb92189cf45f87f817b1047798430cc5",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/workspace.go",
+      "source_path": "backend/internal/systembackup/worker/workspace.go",
+      "source_sha256": "5772d54eec5ed2fc05b3821dd51d97d67aa7decd801328b96b01983e83c4eac1",
+      "working_tree_sha256": "5772d54eec5ed2fc05b3821dd51d97d67aa7decd801328b96b01983e83c4eac1",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/workspace_test.go",
+      "source_path": "backend/internal/systembackup/worker/workspace_test.go",
+      "source_sha256": "0674e6ffd3f9da940c96fcd996780b5516969db4f1fc095887792b61833abdaa",
+      "working_tree_sha256": "0674e6ffd3f9da940c96fcd996780b5516969db4f1fc095887792b61833abdaa",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/archive.go",
+      "source_path": "backend/internal/systembackup/workspace/archive.go",
+      "source_sha256": "57bcdc172c997e61365bad6567606796c099f0fb96e6632a3cfc936e1041c1bc",
+      "working_tree_sha256": "57bcdc172c997e61365bad6567606796c099f0fb96e6632a3cfc936e1041c1bc",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/archive_test.go",
+      "source_path": "backend/internal/systembackup/workspace/archive_test.go",
+      "source_sha256": "0ea1474c8390c52fe8a925ed88eed6ec2b298f94d6497de519033c6120c4a09d",
+      "working_tree_sha256": "0ea1474c8390c52fe8a925ed88eed6ec2b298f94d6497de519033c6120c4a09d",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/deepseek_linux_test.go",
+      "source_path": "backend/internal/systembackup/workspace/deepseek_linux_test.go",
+      "source_sha256": "aab4e29732d7a29b791287be49660f1c0eca8801e3ab30f753896e2a6202fac0",
+      "working_tree_sha256": "aab4e29732d7a29b791287be49660f1c0eca8801e3ab30f753896e2a6202fac0",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/instance_wine_linux_test.go",
+      "source_path": "backend/internal/systembackup/workspace/instance_wine_linux_test.go",
+      "source_sha256": "196efb860150185293d00e5a705a4d44cabdb757eee40b524456190acb67ab28",
+      "working_tree_sha256": "196efb860150185293d00e5a705a4d44cabdb757eee40b524456190acb67ab28",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/layout.go",
+      "source_path": "backend/internal/systembackup/workspace/layout.go",
+      "source_sha256": "b705c0ff286a9788959be28f916c145c09b06cf960640080be74328141244ca2",
+      "working_tree_sha256": "b705c0ff286a9788959be28f916c145c09b06cf960640080be74328141244ca2",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/layout_linux_test.go",
+      "source_path": "backend/internal/systembackup/workspace/layout_linux_test.go",
+      "source_sha256": "d64ba35ac0b37ec22a059203ec9dbaa57b6d0559613602712268f91441f332fb",
+      "working_tree_sha256": "d64ba35ac0b37ec22a059203ec9dbaa57b6d0559613602712268f91441f332fb",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/metadata_linux.go",
+      "source_path": "backend/internal/systembackup/workspace/metadata_linux.go",
+      "source_sha256": "d4ea6f70d16a4e417b28fc0655232496a88964a6b0edfa601d5f6d348b179e5b",
+      "working_tree_sha256": "d4ea6f70d16a4e417b28fc0655232496a88964a6b0edfa601d5f6d348b179e5b",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackup/workspace/metadata_other.go",
+      "source_path": "backend/internal/systembackup/workspace/metadata_other.go",
+      "source_sha256": "fce1154318c9f14c1ad794ebd29254590d37793f1d9a9065e21468a03108855e",
+      "working_tree_sha256": "fce1154318c9f14c1ad794ebd29254590d37793f1d9a9065e21468a03108855e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackupapi/cancel.go",
@@ -1029,8 +2863,8 @@
     },
     {
       "path": "backend/internal/systembackupapi/sql_details.go",
-      "source_path": null,
-      "source_sha256": null,
+      "source_path": "backend/internal/systembackupapi/sql_details.go",
+      "source_sha256": "5cefa66d83e4f49b7e56fe7e1e42d5b5dcc423f5863bea2cdb827c8c5896f4a8",
       "working_tree_sha256": "f50af99596e11a49ed3e9f80a2640c5c5c55c00893ae52b619ea480063a281a2",
       "disposition": "integration-owned adaptation"
     },
@@ -1043,8 +2877,8 @@
     },
     {
       "path": "backend/internal/systembackupapi/sql_writer.go",
-      "source_path": null,
-      "source_sha256": null,
+      "source_path": "backend/internal/systembackupapi/sql_writer.go",
+      "source_sha256": "9822d87901db3c157bd91cbf82a21f6758abbf09926de14eb7e3de2363dc5c06",
       "working_tree_sha256": "56814b74ad7bd6f6e156ffcb35b455a2337350165fa4b986411cfb136bbeda61",
       "disposition": "integration-owned adaptation"
     },
@@ -1057,15 +2891,15 @@
     },
     {
       "path": "backend/internal/systembackupapi/sql_writer_test.go",
-      "source_path": null,
-      "source_sha256": null,
+      "source_path": "backend/internal/systembackupapi/sql_writer_test.go",
+      "source_sha256": "723d8919f3dc0c512c6648a93e76be6bff2bb0ce82a7ba4ae8aea251b9786e2f",
       "working_tree_sha256": "c096405469be9e18b94a5b8e9dad43d786395834b20350ccb37f99b240fcc7ac",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "backend/internal/systembackupapi/submission.go",
       "source_path": "backend/internal/systembackupapi/submission.go",
-      "source_sha256": "70935c14be1823d098915eec4801abfc97d545409ce0a4ef3d05c94014162b62",
+      "source_sha256": "f046ef2cb23610c485b1e528d087742a9717276e3b6eeeeada5d752da2033103",
       "working_tree_sha256": "34ae75bb3238b53583b7041068542b08573562c7b8b9070f88e9eabdd23b1172",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -1079,7 +2913,7 @@
     {
       "path": "backend/internal/systembackupapi/tasks.go",
       "source_path": "backend/internal/systembackupapi/tasks.go",
-      "source_sha256": "d099e72285d0721394d03691c9a0000ff9aeab1b5316002fa38ca0050ffddee4",
+      "source_sha256": "eeeef5be94d929478b750d40578930d2c1906bd6511fd08470f0ec57ee308a0a",
       "working_tree_sha256": "d099e72285d0721394d03691c9a0000ff9aeab1b5316002fa38ca0050ffddee4",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -1240,8 +3074,8 @@
     {
       "path": "backend/internal/systembackupbusinessa/capture_test.go",
       "source_path": "backend/internal/systembackupbusinessa/capture_test.go",
-      "source_sha256": "c10d91a0d42b30b13c7e4fa21b2720279647acb7bde57339e8fb2fc3267ebb2f",
-      "working_tree_sha256": "c6445f179244566470c9193e081adb3a4648093074b789fdc5c1284e6c1c7560",
+      "source_sha256": "ed49bf99c8974123f04ab7f057b6dfb3d16f8af81c492c76a29d8a7e52265148",
+      "working_tree_sha256": "4852f456bc2664a5b85075f3db2641efed23ce23d1e29a4890bfd3141aca4558",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -1415,15 +3249,15 @@
     {
       "path": "backend/internal/systembackupbusinessa/northbound_session_restore.go",
       "source_path": "backend/internal/systembackupbusinessa/northbound_session_restore.go",
-      "source_sha256": "7550506732ad197dc43b7e596546da0b02c4d3b908d1614b96fef02063e155a3",
-      "working_tree_sha256": "4e845993f92cec610802f32038318d92234886f09ecf479f73c8569de1723b05",
+      "source_sha256": "54bb2fc356b71b9c7115f5c993456c38762526371c6aca652d0b68ae06abd45f",
+      "working_tree_sha256": "1e5c42ba84841c34fd099b4d92432c307ff65ee8788cf1e0971d0ce1d6c091a1",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "backend/internal/systembackupbusinessa/northbound_session_restore_test.go",
       "source_path": "backend/internal/systembackupbusinessa/northbound_session_restore_test.go",
-      "source_sha256": "a5920c8e7c4644ab8a9f6e0ba0e8320b98cc551b07297bd9e05339fed66c2aab",
-      "working_tree_sha256": "aeef0c0cf5ff3dd65439dffd8add9887258c38fe182ae85e5bacb5cbb607b123",
+      "source_sha256": "af070f8ab8cce49926f61d564e118fa88522b22cd2af51fe1bd6a20b06340a25",
+      "working_tree_sha256": "42c3676a7a5eea406a6b1c3f37298c813f8e039cd7269a2ed3e070728e3ef8bc",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -1525,10 +3359,17 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupbusinessa/testdata/schema-registry-historical-15.json",
+      "source_path": "backend/internal/systembackupbusinessa/testdata/schema-registry-historical-15.json",
+      "source_sha256": "0ef28fb97fdbd2e9d1eab5f3f180596abcca744ad788004525f141ab48c62704",
+      "working_tree_sha256": "9a02eca892515ea8fe6e4bd0f0947eddeda5ea731039fa378d578f8a65383f62",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupbusinessa/testdata/schema-registry.json",
       "source_path": "backend/internal/systembackupbusinessa/testdata/schema-registry.json",
-      "source_sha256": "73eab79c10f0b73bfb0b765e956707aabcb814bb564b6eb0717da41c176ed7ff",
-      "working_tree_sha256": "288b9160c00c901c373cb71a6be9f81aef7dbb52ca42b64d6da62f275bde9b08",
+      "source_sha256": "456fdb0809e009a0ac311e0e2b007c8fcc7b572d0548be5a609db39c063ff5ba",
+      "working_tree_sha256": "2d182783a7196ffb3c6fde44e16a94a4f67a87e3367f3946192ac16f15336caa",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -1737,7 +3578,7 @@
     {
       "path": "backend/internal/systembackupcontroller/bootstrap.go",
       "source_path": "backend/internal/systembackupcontroller/bootstrap.go",
-      "source_sha256": "4371dd0d6f4376fc6d1f383a52434847e28489d97c6d68d391f566de51d99589",
+      "source_sha256": "8480a11f748120c1f53f92ab640d342c3c566fcb0e0d115144fa54e10b0d692f",
       "working_tree_sha256": "4120c04b2ce40b2ce095e3dd36b6c5be61568ad981727be939281c665c57c907",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -1959,6 +3800,41 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupcontroller/durable_execution_store.go",
+      "source_path": "backend/internal/systembackupcontroller/durable_execution_store.go",
+      "source_sha256": "ab7d25366cd5f12d5d16382be4cc6078c571583498b1316f9ee01b47d8cab414",
+      "working_tree_sha256": "ab7d25366cd5f12d5d16382be4cc6078c571583498b1316f9ee01b47d8cab414",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_job_ports.go",
+      "source_path": "backend/internal/systembackupcontroller/execution_job_ports.go",
+      "source_sha256": "1b8a6b15eaf6afe728eeb58022d6182cc127e3a5f5286839570de5b85f3b5728",
+      "working_tree_sha256": "1b8a6b15eaf6afe728eeb58022d6182cc127e3a5f5286839570de5b85f3b5728",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_job_ports_test.go",
+      "source_path": "backend/internal/systembackupcontroller/execution_job_ports_test.go",
+      "source_sha256": "4bb784048ab94b6f785545bfa3cd9e5d651594605b59cc4e9de8bbde7f3ab9af",
+      "working_tree_sha256": "4bb784048ab94b6f785545bfa3cd9e5d651594605b59cc4e9de8bbde7f3ab9af",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_ports.go",
+      "source_path": "backend/internal/systembackupcontroller/execution_ports.go",
+      "source_sha256": "db4a5bdaa0f0efd54b0f2ba76e8e1613ecf1fdd50ba525a5af89b78f3c9cacc2",
+      "working_tree_sha256": "aec314b7143427fc50ad9849a4d123182f607b9dcc1ed6cfb0865ecb50d0c444",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_ports_test.go",
+      "source_path": "backend/internal/systembackupcontroller/execution_ports_test.go",
+      "source_sha256": "318f35f7203114105f6b67fe4c7d985fc7d0ce978e9bf3853760b3bbc725005f",
+      "working_tree_sha256": "6e8f5bc894d281688203dda70ca1f22268f2a19750969ae69e632a191b024980",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupcontroller/execution_queue.go",
       "source_path": null,
       "source_sha256": null,
@@ -2134,11 +4010,39 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupcontroller/sql_backup_start_store.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_backup_start_store.go",
+      "source_sha256": "ca7197e5ff4c4af26b55c7caa1932305611c2a9e24cf513c7c2ca4b79353b6bb",
+      "working_tree_sha256": "77197ce8debd40e721a4c025e7e05736d34b19918011c93530cdf12c8437c758",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/sql_backup_start_store_test.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_backup_start_store_test.go",
+      "source_sha256": "3f2239d5f8a3e627584df509ecae8f159b768b3718af1b8a4a1ab0b9945db6cf",
+      "working_tree_sha256": "37e9a804a6825c4c33fa2fc9e6aed2d5428d8a985f487733499a474539395260",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupcontroller/sql_deadline_store.go",
       "source_path": "backend/internal/systembackupcontroller/sql_deadline_store.go",
-      "source_sha256": "b558cda2256cd8d5ef2280c6842eb5686f52c7ea6ba4ce1807f03c6be2e4a097",
-      "working_tree_sha256": "742a7720a66f84c3fff6d6d7f6a2d3332df0db658c4a3f3e9474ced1dee5cefc",
+      "source_sha256": "eabac2dfc0a4e77bc69ee851221c5672ede211d4aa490156d4dc19bd5e160d37",
+      "working_tree_sha256": "d39bf65f8623447101cc94b3ff8711d33e73b6acc5bf202474200f74a8d9a12b",
       "disposition": "isolated source module; activation pending integration gates"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/sql_execution_records.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_execution_records.go",
+      "source_sha256": "d05d874301518ce22491f6d25d3fb730fa4cb1176062c1f4a14260f1d5fb44e6",
+      "working_tree_sha256": "bb26f4d4db9193fca9dc3e57b9c5f9d70dcc18ba83b4e3a19c7d6ee34f028529",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/sql_execution_records_test.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_execution_records_test.go",
+      "source_sha256": "ef7e3001113be48de7cd9784cc1e20febb51c06cbae7090485cfbab9a0f0076c",
+      "working_tree_sha256": "b26d1767ec050eda0589141f2e5c57ec846c48157fb3f2b04c6d9bcd29625d1a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackupcontroller/sql_gate_recovery_store.go",
@@ -2169,6 +4073,34 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupcontroller/sql_task_claim_store.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_task_claim_store.go",
+      "source_sha256": "38a49b360ee9e5caeedd5edf5d3afef07801fdb65e5daf5aa715f8e80493f1e6",
+      "working_tree_sha256": "1601cea37407ce418c57691969a4b56328f1d41565a5f5d95aee5c6489014c2a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/sql_task_claim_store_test.go",
+      "source_path": "backend/internal/systembackupcontroller/sql_task_claim_store_test.go",
+      "source_sha256": "e7c9e8e8fead7aa2257940a6c803be55b3d7669135e218d83c1f617c2465d588",
+      "working_tree_sha256": "61d8f221705366275655f28332ba64b75035e788ef237dd5766c244ef4fadadd",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/task_execution_loop.go",
+      "source_path": "backend/internal/systembackupcontroller/task_execution_loop.go",
+      "source_sha256": "63748ce821e165c404ecd3c0698bcaf78c755966aa338e1f05ef491a947dc28c",
+      "working_tree_sha256": "63748ce821e165c404ecd3c0698bcaf78c755966aa338e1f05ef491a947dc28c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/task_execution_loop_test.go",
+      "source_path": "backend/internal/systembackupcontroller/task_execution_loop_test.go",
+      "source_sha256": "02d4acb32a7cc6c98c962f548ebf85293405812a9e867975d570652245f1f9fb",
+      "working_tree_sha256": "02d4acb32a7cc6c98c962f548ebf85293405812a9e867975d570652245f1f9fb",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupcontroller/utc_readiness_test.go",
       "source_path": "backend/internal/systembackupcontroller/utc_readiness_test.go",
       "source_sha256": "c346a0df00546c0eb2be16d491a3b655fc3b4651c31791b75b2b2ed1656879e7",
@@ -2176,10 +4108,17 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupdispatch/backup_spec.go",
+      "source_path": "backend/internal/systembackupdispatch/backup_spec.go",
+      "source_sha256": "01e3b0a6a9140fc946077154826c3b15c2a023c136f03072b50e5ea06e7859e8",
+      "working_tree_sha256": "01e3b0a6a9140fc946077154826c3b15c2a023c136f03072b50e5ea06e7859e8",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupdispatch/contract.go",
       "source_path": "backend/internal/systembackupdispatch/contract.go",
-      "source_sha256": "7c79afb22ff0329393e76d98dede188e3268a4b7d74cb5b9b6b3cd1ccdbd3c93",
-      "working_tree_sha256": "7c79afb22ff0329393e76d98dede188e3268a4b7d74cb5b9b6b3cd1ccdbd3c93",
+      "source_sha256": "a0f1c6393a10f818e0f5ea4929efcab780c6a7a06564f78a1a64949c1538b101",
+      "working_tree_sha256": "a7995ecb28fe2a62033d803561f1e68b9a383cf8504122c24f6081efdc4e7f2d",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -2187,6 +4126,20 @@
       "source_path": "backend/internal/systembackupdispatch/contract_test.go",
       "source_sha256": "91aa2f7dfea736286ae3056e13d1fd0e170213d29385988ee3747a9f394eb684",
       "working_tree_sha256": "91aa2f7dfea736286ae3056e13d1fd0e170213d29385988ee3747a9f394eb684",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupdispatch/task_binding.go",
+      "source_path": "backend/internal/systembackupdispatch/task_binding.go",
+      "source_sha256": "169e88024682f691b2f8430532a2c445c4dafdc1536437fa26b5ea9c30a99706",
+      "working_tree_sha256": "169e88024682f691b2f8430532a2c445c4dafdc1536437fa26b5ea9c30a99706",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupdispatch/task_binding_test.go",
+      "source_path": "backend/internal/systembackupdispatch/task_binding_test.go",
+      "source_sha256": "e4af0b9e0424bc107936cb7ee99a87d96a2453bccd08518d252f124344adbb3b",
+      "working_tree_sha256": "e4af0b9e0424bc107936cb7ee99a87d96a2453bccd08518d252f124344adbb3b",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -2276,8 +4229,8 @@
     {
       "path": "backend/internal/systembackupevidence/business_report_delivery_test.go",
       "source_path": "backend/internal/systembackupevidence/business_report_delivery_test.go",
-      "source_sha256": "4492213cddbb938b8413a7c18bb11e83008c4086e51ef560c99f9626473e35d1",
-      "working_tree_sha256": "210a53b33ca9d1faf709bb59b76e61943377935cd174a9a41ace2a357e502b8f",
+      "source_sha256": "84221b7c4a2b10108e3d74cf217e9da22141f68566d690b3b92017c36b998201",
+      "working_tree_sha256": "94bd52e28974461e29853a1e8e71323e5e4ccd17971922d8f9cf8013625e54e8",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -3310,6 +5263,20 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
+      "path": "backend/internal/systembackupevidence/relay_message.go",
+      "source_path": "backend/internal/systembackupevidence/relay_message.go",
+      "source_sha256": "086a2badc9afe8d959300e2db9dd448d81d952cb7f04b6865491fa8f1fc550ae",
+      "working_tree_sha256": "086a2badc9afe8d959300e2db9dd448d81d952cb7f04b6865491fa8f1fc550ae",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupevidence/relay_message_test.go",
+      "source_path": "backend/internal/systembackupevidence/relay_message_test.go",
+      "source_sha256": "66e22e1077f1a510b081dcccad10c5fbbed7e43893051e9e0e4c1821a1a781c9",
+      "working_tree_sha256": "66e22e1077f1a510b081dcccad10c5fbbed7e43893051e9e0e4c1821a1a781c9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupevidence/relay_peer.go",
       "source_path": "backend/internal/systembackupevidence/relay_peer.go",
       "source_sha256": "43b62779243cb94a46f0301e5ee0aa5758ae74e349dd48b44cef58d035447de8",
@@ -3877,6 +5844,20 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupevidence/transit_retention.go",
+      "source_path": "backend/internal/systembackupevidence/transit_retention.go",
+      "source_sha256": "f71da7feadc8fcb8349376c08ae23fcb6b1e9ee331cd5a258f84dc0a67c2ae49",
+      "working_tree_sha256": "f71da7feadc8fcb8349376c08ae23fcb6b1e9ee331cd5a258f84dc0a67c2ae49",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupevidence/transit_retention_test.go",
+      "source_path": "backend/internal/systembackupevidence/transit_retention_test.go",
+      "source_sha256": "462688ba2744a720cd706c9e7b485a6b982fe9eaaf5df719dcda3d93515d4492",
+      "working_tree_sha256": "462688ba2744a720cd706c9e7b485a6b982fe9eaaf5df719dcda3d93515d4492",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "backend/internal/systembackupevidence/transit_test.go",
       "source_path": "backend/internal/systembackupevidence/transit_test.go",
       "source_sha256": "225a3a58365a9555e14a1cbe02dcb80863bfd95180b51d909ed5cb9737ac248b",
@@ -4375,15 +6356,15 @@
     },
     {
       "path": "backend/internal/systembackupread/backup_preflight_detail.go",
-      "source_path": null,
-      "source_sha256": null,
+      "source_path": "backend/internal/systembackupread/backup_preflight_detail.go",
+      "source_sha256": "705f54acc6c2a2b98249aeef7852e75f06a586a9142e512056c9ce2905d45348",
       "working_tree_sha256": "3b6de11854a40614a46a519760382d4bb166f3cd26c99cc2faa7a2be47976d6a",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "backend/internal/systembackupread/backup_preflight_detail_test.go",
-      "source_path": null,
-      "source_sha256": null,
+      "source_path": "backend/internal/systembackupread/backup_preflight_detail_test.go",
+      "source_sha256": "a40e508ee7081e5935a62dfb82cf29ded01cf626184ff2532a0ca34018599ae7",
       "working_tree_sha256": "8700337f15b7eab4e356ea36cec9401321b084ebb33712c705861431a471b64b",
       "disposition": "integration-owned adaptation"
     },
@@ -5111,9 +7092,16 @@
     {
       "path": "backend/internal/systembackupsecurity/bootstrap_admission.go",
       "source_path": "backend/internal/systembackupsecurity/bootstrap_admission.go",
-      "source_sha256": "7826175e8e59cf6ea2a0371d45060bb6465ebedc6f1e02e25b136ada05f6f4b1",
-      "working_tree_sha256": "a591e09bb3c688ea1c71dac2604a9d9aca996a3fa19d1963ea67e7fa4d502c1a",
+      "source_sha256": "545fde75dd6c31f37ce234f1db0a7578d580c9da125860126e21db8f3e0f62a5",
+      "working_tree_sha256": "545fde75dd6c31f37ce234f1db0a7578d580c9da125860126e21db8f3e0f62a5",
       "disposition": "isolated source module; activation pending integration gates"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/bootstrap_admission_boundary_test.go",
+      "source_path": "backend/internal/systembackupsecurity/bootstrap_admission_boundary_test.go",
+      "source_sha256": "94e3b29cb8d632365124d29aa0ab3a053a46fc55f1d10d432a361690f45d7a25",
+      "working_tree_sha256": "94e3b29cb8d632365124d29aa0ab3a053a46fc55f1d10d432a361690f45d7a25",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackupsecurity/bootstrap_admission_test.go",
@@ -6301,8 +8289,8 @@
     {
       "path": "backend/internal/systembackupsecurity/transit_signer.go",
       "source_path": "backend/internal/systembackupsecurity/transit_signer.go",
-      "source_sha256": "04bf4ccfc3f891888dbbb48b78a05afc7039705d64cd85542c6ef4440902f62b",
-      "working_tree_sha256": "5d24e40ce7cf259901637d73afe7101de3924d6e5623e121d8578fbf36749208",
+      "source_sha256": "f5a840c62139ebb72727aa59296bd6c56f18010d99ea29d23978abacf0a3be46",
+      "working_tree_sha256": "f5a840c62139ebb72727aa59296bd6c56f18010d99ea29d23978abacf0a3be46",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -6311,6 +8299,20 @@
       "source_sha256": "ee3662571cbf06cf2cfeb97957253369ab8fddb1e2c6ccf758e071abf2aa8a2d",
       "working_tree_sha256": "b66237551bd9ecc7cf47257d8900724d2bfc15c7391e759d1ad6a782e5330d34",
       "disposition": "isolated source module; activation pending integration gates"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/transit_signing_credentials.go",
+      "source_path": "backend/internal/systembackupsecurity/transit_signing_credentials.go",
+      "source_sha256": "57accd7758253f46aaf73cfee90567ecdde3027453eb40d21a2ff0fe313d039e",
+      "working_tree_sha256": "57accd7758253f46aaf73cfee90567ecdde3027453eb40d21a2ff0fe313d039e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/transit_signing_credentials_test.go",
+      "source_path": "backend/internal/systembackupsecurity/transit_signing_credentials_test.go",
+      "source_sha256": "04cd35fd967d1f6d7df7d9469383c8e89284a8ae9c83c9345a6b95a1f89a73ba",
+      "working_tree_sha256": "04cd35fd967d1f6d7df7d9469383c8e89284a8ae9c83c9345a6b95a1f89a73ba",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "backend/internal/systembackupskillhub/object_index.go",
@@ -6523,6 +8525,27 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
+      "path": "contracts/system-backup/b-candidates/checkpoint.schema.json",
+      "source_path": "contracts/system-backup/b-candidates/checkpoint.schema.json",
+      "source_sha256": "b9e448cddc8a20f7c03ceecad7f8493b3ef0a7ab7bbb76dec0e39b2256463585",
+      "working_tree_sha256": "b9e448cddc8a20f7c03ceecad7f8493b3ef0a7ab7bbb76dec0e39b2256463585",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "contracts/system-backup/b-candidates/restore-target.schema.json",
+      "source_path": "contracts/system-backup/b-candidates/restore-target.schema.json",
+      "source_sha256": "830946063cd5c62b67582b544db0e75eb7aa46b2d067401dce3780efffb2d65f",
+      "working_tree_sha256": "830946063cd5c62b67582b544db0e75eb7aa46b2d067401dce3780efffb2d65f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "contracts/system-backup/b-candidates/status-relay.schema.json",
+      "source_path": "contracts/system-backup/b-candidates/status-relay.schema.json",
+      "source_sha256": "bf72190881a2bd5cdaf4ec71dafbf8f3f32436a52e646ad36e6a1397e042a715",
+      "working_tree_sha256": "bf72190881a2bd5cdaf4ec71dafbf8f3f32436a52e646ad36e6a1397e042a715",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "contracts/system-backup/v12/README.md",
       "source_path": "contracts/system-backup/v12/README.md",
       "source_sha256": "cbc0b73767d9f2ac29210eacd388966fc6dbdf44329e34992ad2fad6179fdd1f",
@@ -6651,7 +8674,7 @@
     {
       "path": "contracts/system-backup/v12/admin-mutation-requests.schema.json",
       "source_path": "contracts/system-backup/v12/admin-mutation-requests.schema.json",
-      "source_sha256": "a84a5fcf5f5a02ce6a186f38c057440f6ea7cd622d63376c31a997cd73c2bbca",
+      "source_sha256": "46560bec562cba43c8b0d5b904c753ec2bce35f1800cf14e21ebcb8b91ac4a46",
       "working_tree_sha256": "ddfc028cee67f45066b5b8c897c1e67b9d59e19de262f80cf46bc8628da2d9ae",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -6707,7 +8730,7 @@
     {
       "path": "contracts/system-backup/v12/admin.openapi.json",
       "source_path": "contracts/system-backup/v12/admin.openapi.json",
-      "source_sha256": "bd41b280168ad6c9dfda40152cedc907a4c3e19bc1b832a772ef83412cf8e18b",
+      "source_sha256": "f0761d94a14cc9c5d2a5441c5fab45e741c5d2376eb44181d93a4f50ffac3028",
       "working_tree_sha256": "0021fff265b1af9a66ebe6a4800a5c64aa26df074e40464088cf7d068c0e6e31",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -6777,7 +8800,7 @@
     {
       "path": "contracts/system-backup/v12/cross-owner-review-requests.json",
       "source_path": "contracts/system-backup/v12/cross-owner-review-requests.json",
-      "source_sha256": "75b8012de06f3d0120242aa00dcf0b1c4d5c0e60eb7a64b457bcc53efd954ce2",
+      "source_sha256": "a03ae2ce7d5dbf8e712797b7d14560858c3da5a44a03f85e88b1384d8ce3166d",
       "working_tree_sha256": "9a52230cebf36929eeb79838fb303ffaaf09cca7a62aef9edb654c58747f3198",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -6959,7 +8982,7 @@
     {
       "path": "contracts/system-backup/v12/redacted-examples.json",
       "source_path": "contracts/system-backup/v12/redacted-examples.json",
-      "source_sha256": "a5560e94f167326fd7313f2486022555a087170892d559f418da4e0fcb1fb129",
+      "source_sha256": "0904f4fb38686d22d5569a0e802fd27bb0d81f51823da5c63d05b919487d2dca",
       "working_tree_sha256": "02aa115b7337022d3861fd624166ff4f7bbc30c870046b06b87941186436ea59",
       "disposition": "isolated source module; activation pending integration gates"
     },
@@ -7022,8 +9045,8 @@
     {
       "path": "contracts/system-backup/v12/schema-registry.json",
       "source_path": "contracts/system-backup/v12/schema-registry.json",
-      "source_sha256": "73eab79c10f0b73bfb0b765e956707aabcb814bb564b6eb0717da41c176ed7ff",
-      "working_tree_sha256": "288b9160c00c901c373cb71a6be9f81aef7dbb52ca42b64d6da62f275bde9b08",
+      "source_sha256": "456fdb0809e009a0ac311e0e2b007c8fcc7b572d0548be5a609db39c063ff5ba",
+      "working_tree_sha256": "2d182783a7196ffb3c6fde44e16a94a4f67a87e3367f3946192ac16f15336caa",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -7114,7 +9137,7 @@
       "path": "docs/backup-team-integration/catalog.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "f67f7d919954c438489862169ce4322da194f9f5b779b0f2e6e36ea6db755dd7",
+      "working_tree_sha256": "94701a285afa6bcac245eebd4acbdcceef031ae4ddeef2d28c7da39b1de931a6",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -7244,6 +9267,13 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
+      "path": "docs/backup-team-integration/reference/schema-registry-4fe83bcd.json",
+      "source_path": "contracts/system-backup/v12/schema-registry.json",
+      "source_sha256": "456fdb0809e009a0ac311e0e2b007c8fcc7b572d0548be5a609db39c063ff5ba",
+      "working_tree_sha256": "456fdb0809e009a0ac311e0e2b007c8fcc7b572d0548be5a609db39c063ff5ba",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
       "path": "docs/backup-team-integration/reference/system-backup-d-config-canonical-081-proposal-20261014.sql",
       "source_path": "docs/system-backup-d-config-canonical-081-proposal-20261014.sql",
       "source_sha256": "14db3b88263f0ab3e31e293aa0351bb08da23464d4a0fee8854263d56354cce1",
@@ -7275,7 +9305,7 @@
       "path": "docs/backup-team-integration/sql-map.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "d8ad8bc3a60072fa15ee736cb0712d5826f178a55e0e49cac014ef857eab7d97",
+      "working_tree_sha256": "25e0483589f5f87e17115eab990be46dc9d89a26e7f768fe30968175503e9548",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -7289,7 +9319,7 @@
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "d7476ba40e31217a520898282320542f55debba618106fcf28e588da55460c7b",
+      "working_tree_sha256": "6f9ae73559b39fe0c1ad93d388f692be5ece8ee87165ff9473c0b1ab027b1ba6",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -7361,6 +9391,146 @@
       "source_sha256": null,
       "working_tree_sha256": "defa04fbdde3ff992dfee5491b8669332e9f69c9083ccd169d23f9d97c5091d7",
       "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "examples/backup-controller/README.md",
+      "source_path": "examples/backup-controller/README.md",
+      "source_sha256": "7f1490b38171651850557bfa045b7c4048941186a4028dd1e55eb50f3d94afbd",
+      "working_tree_sha256": "7f1490b38171651850557bfa045b7c4048941186a4028dd1e55eb50f3d94afbd",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/agent-matrix-fixtures.py",
+      "source_path": "examples/backup-controller/agent-matrix-fixtures.py",
+      "source_sha256": "f099d814ab76adee027d0dff9660e099ad82b74d5ffdbc625df03ff0a959222e",
+      "working_tree_sha256": "f099d814ab76adee027d0dff9660e099ad82b74d5ffdbc625df03ff0a959222e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/application-identity.patch.yaml",
+      "source_path": "examples/backup-controller/application-identity.patch.yaml",
+      "source_sha256": "ec5c8ed5b5d3cf2148fcfefc2b5363ae1a4b03218a1cf5e67a75457085e85125",
+      "working_tree_sha256": "ec5c8ed5b5d3cf2148fcfefc2b5363ae1a4b03218a1cf5e67a75457085e85125",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/catalog.example.json",
+      "source_path": "examples/backup-controller/catalog.example.json",
+      "source_sha256": "a8026f2571658768fe6fc9d1c34a7fc4be14b50698e9217e6853a3bacec46720",
+      "working_tree_sha256": "a8026f2571658768fe6fc9d1c34a7fc4be14b50698e9217e6853a3bacec46720",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/controller.example.json",
+      "source_path": "examples/backup-controller/controller.example.json",
+      "source_sha256": "408d8776f238408ceedd298cf2be6ac05b2c02be4fa9b27ec41595b7c2270b02",
+      "working_tree_sha256": "408d8776f238408ceedd298cf2be6ac05b2c02be4fa9b27ec41595b7c2270b02",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/controller.yaml",
+      "source_path": "examples/backup-controller/controller.yaml",
+      "source_sha256": "a51ff768360a3b2e97c49b94b574b6776a8902bf0fad0b5e8bf3e2c31b030b0a",
+      "working_tree_sha256": "a51ff768360a3b2e97c49b94b574b6776a8902bf0fad0b5e8bf3e2c31b030b0a",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/mixed-agent-verify.py",
+      "source_path": "examples/backup-controller/mixed-agent-verify.py",
+      "source_sha256": "691b93f42c759d40565f695109db405687c1cfbf6efd58c7c89101e23d32dd55",
+      "working_tree_sha256": "691b93f42c759d40565f695109db405687c1cfbf6efd58c7c89101e23d32dd55",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/node-proof.pod.yaml",
+      "source_path": "examples/backup-controller/node-proof.pod.yaml",
+      "source_sha256": "51c423013ecdc421386bc2f06c0fde0d7f22091d0fba66100f2641fa3e9466fe",
+      "working_tree_sha256": "51c423013ecdc421386bc2f06c0fde0d7f22091d0fba66100f2641fa3e9466fe",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/provider-gateway.example.json",
+      "source_path": "examples/backup-controller/provider-gateway.example.json",
+      "source_sha256": "8020a8f2e3c4116c5b2791a1645d73ce4b75cf68bb2352b9a1efba145e10cab7",
+      "working_tree_sha256": "8020a8f2e3c4116c5b2791a1645d73ce4b75cf68bb2352b9a1efba145e10cab7",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/quarantine.yaml",
+      "source_path": "examples/backup-controller/quarantine.yaml",
+      "source_sha256": "6afc0ef7c57a6eb3aa4f597cdc8e404f7f0751365544e507ba538a4d8cf5ba47",
+      "working_tree_sha256": "6afc0ef7c57a6eb3aa4f597cdc8e404f7f0751365544e507ba538a4d8cf5ba47",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/run-agent-matrix-lab.ps1",
+      "source_path": "examples/backup-controller/run-agent-matrix-lab.ps1",
+      "source_sha256": "c8a3e9adfc74154fdbdc3ab151cc15105ab1a98f98720020b9a3ac1a1675039f",
+      "working_tree_sha256": "c8a3e9adfc74154fdbdc3ab151cc15105ab1a98f98720020b9a3ac1a1675039f",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/run-local-lab.ps1",
+      "source_path": "examples/backup-controller/run-local-lab.ps1",
+      "source_sha256": "71f45ac39f2ab13c76642f4af8e725fefd3346fde6d1b39df72b8a535ca274b4",
+      "working_tree_sha256": "71f45ac39f2ab13c76642f4af8e725fefd3346fde6d1b39df72b8a535ca274b4",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/run-mixed-agent-lab.ps1",
+      "source_path": "examples/backup-controller/run-mixed-agent-lab.ps1",
+      "source_sha256": "e30db896c827080dbcc11e50988b2b99ef37f00410c2b2ecc8ad75c711537d44",
+      "working_tree_sha256": "e30db896c827080dbcc11e50988b2b99ef37f00410c2b2ecc8ad75c711537d44",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/run-workbuddy-lab.ps1",
+      "source_path": "examples/backup-controller/run-workbuddy-lab.ps1",
+      "source_sha256": "2673c517c190ac2c59fa13eb6438cb4173ca477d606a0a70103af6672cb99e6e",
+      "working_tree_sha256": "2673c517c190ac2c59fa13eb6438cb4173ca477d606a0a70103af6672cb99e6e",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/run-workbuddy-wine-lab.ps1",
+      "source_path": "examples/backup-controller/run-workbuddy-wine-lab.ps1",
+      "source_sha256": "f4359b44108970da33be12c1abfa735ba8b0771093ee08316e99edc6e418d822",
+      "working_tree_sha256": "f4359b44108970da33be12c1abfa735ba8b0771093ee08316e99edc6e418d822",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/workbuddy-identity-fixtures.py",
+      "source_path": "examples/backup-controller/workbuddy-identity-fixtures.py",
+      "source_sha256": "f33b46a78d7ab8033081964557e9878d2d2c0adc1c837d31e342ece54a77a1bf",
+      "working_tree_sha256": "f33b46a78d7ab8033081964557e9878d2d2c0adc1c837d31e342ece54a77a1bf",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/workbuddy-lab-fixtures.py",
+      "source_path": "examples/backup-controller/workbuddy-lab-fixtures.py",
+      "source_sha256": "2a05947a246d88813c2566d122048be5733b71e9dac54db6fa718a11a71788a9",
+      "working_tree_sha256": "2a05947a246d88813c2566d122048be5733b71e9dac54db6fa718a11a71788a9",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/workbuddy-observed-schema-20261026.sql",
+      "source_path": "examples/backup-controller/workbuddy-observed-schema-20261026.sql",
+      "source_sha256": "404db0ab3857df37af5fcb5f3b80b228acd369b47fc7344dc2ba0ea7f3e14d4c",
+      "working_tree_sha256": "404db0ab3857df37af5fcb5f3b80b228acd369b47fc7344dc2ba0ea7f3e14d4c",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-controller/workbuddy-uid-contract.v1.json",
+      "source_path": "examples/backup-controller/workbuddy-uid-contract.v1.json",
+      "source_sha256": "b8736a87cb2df30b51b1bfe879319339f8f20792d9ad4c47bceda77f5536b611",
+      "working_tree_sha256": "b8736a87cb2df30b51b1bfe879319339f8f20792d9ad4c47bceda77f5536b611",
+      "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "examples/backup-inventory/linux-agents.json",
+      "source_path": "examples/backup-inventory/linux-agents.json",
+      "source_sha256": "f37d2d68a59ac07f14eb4757c59e37a0b383d5594db4c17052ad9b9f079bf939",
+      "working_tree_sha256": "f37d2d68a59ac07f14eb4757c59e37a0b383d5594db4c17052ad9b9f079bf939",
+      "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "frontend/src/lib/systemBackupI18n.ts",
@@ -7568,7 +9738,7 @@
     {
       "path": "frontend/src/router/index.tsx",
       "source_path": "frontend/src/router/index.tsx",
-      "source_sha256": "a555742950f7b092063c8af811d6d31e3ae50dbbb8f126d59f9ece9921ddb4ef",
+      "source_sha256": "fb422053ee1ab7213d17d8719b9920e61d389c34d463106d177c66b72f5a537e",
       "working_tree_sha256": "7361ae6d8e89b89e6bc66759e8bd5671589879ce7b5f1a84cd40b72a6bea5c6c",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
@@ -7618,14 +9788,14 @@
       "path": "scripts/backup-team-catalog.py",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "b63b8fdf4815378d0ce12dc785fd3dd1470041feecf26e9b2273caec818160c0",
+      "working_tree_sha256": "18a44089cb213378624eec877c42e97025417efa2219029418594d2dad60ad72",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "scripts/backup-team-source-map.py",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "a783eeb0530c5fbdb3ed4475413530d124b2f4a5b89476a2a654ebfef00f3b17",
+      "working_tree_sha256": "12b5d946d9fdfe835182a2fe5246989e4241396fdb4811c4f1d619039a98296a",
       "disposition": "integration-owned adaptation"
     }
   ],
@@ -7634,6 +9804,7 @@
   "activation": "legacy retained; v2 has no production composition or activation endpoint",
   "previous_reviewed_sources": [
     "63a13b2771091e4ba47b691ce066a670cbc88d54",
-    "d3c5715a05a80c1134edd3ad0132a6c292ee1672"
+    "d3c5715a05a80c1134edd3ad0132a6c292ee1672",
+    "8ef5fa7fd4df45f6306e910705db01f589266ba7"
   ]
 }

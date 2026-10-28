@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 96,
-    "hash": "0a2fc9ee709ffe6935679ed0923414f0607b2d34bf55ba615e7f431f8411bffe"
+    "file_count": 163,
+    "hash": "66d2573b9ae7c2098c08dc658cff6dbf348813873c224a7745879c3f3f8456dc"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 100,
+    "object_count": 123,
     "policy_recorded": 68,
-    "policy_pending": 32,
+    "policy_pending": 55,
     "cross_review_pending": 68
   },
   "objects": [
@@ -321,6 +321,292 @@
     },
     {
       "object_type": "table",
+      "name": "gateway_image_artifacts",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/072_add_gateway_image_artifacts.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_image_jobs",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/073_add_gateway_image_jobs.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_key_budget_ledger",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/052_add_gateway_key_budget_and_attribution.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_key_budget_reservations",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/052_add_gateway_key_budget_and_attribution.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_keys",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/050_add_gateway_keys.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_maintenance",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/065_add_runtime_maintenance.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_protocols",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/064_add_runtime_protocol.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_task_models",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/063_add_gateway_runtime_tasks.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_tasks",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/063_add_gateway_runtime_tasks.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_upgrade_stops",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/067_add_runtime_upgrade_stop.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "gateway_runtime_upgrades",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/066_add_runtime_upgrade_fence.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
       "name": "instance_agents",
       "owner": "B",
       "category": "instances",
@@ -507,6 +793,136 @@
     },
     {
       "object_type": "table",
+      "name": "instance_lifecycle_batch_attempts",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/065_add_lifecycle_batch_retry_policy.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "instance_lifecycle_batch_items",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/064_add_instance_lifecycle_batches.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "instance_lifecycle_batches",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/064_add_instance_lifecycle_batches.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "instance_lifecycle_manual_guards",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/064_add_instance_lifecycle_batches.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "instance_lifecycle_scheduler",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/064_add_instance_lifecycle_batches.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
       "name": "instance_runtime_bindings",
       "owner": "B",
       "category": "instances",
@@ -619,6 +1035,32 @@
     },
     {
       "object_type": "table",
+      "name": "instance_workspace_write_intents",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/068_add_workspace_write_intents.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
       "name": "instances",
       "owner": "B",
       "category": "instances",
@@ -636,6 +1078,32 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/001_init_schema.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "llm_model_user_grants",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/062_add_model_user_access.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -812,6 +1280,32 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/045_add_northbound_api.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "northbound_owner_records",
+      "owner": "A",
+      "category": "users",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/067_add_northbound_owner_records.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1099,6 +1593,32 @@
     },
     {
       "object_type": "table",
+      "name": "routing_classifier_settings",
+      "owner": "A",
+      "category": "ai_gateway",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/060_add_routing_classifier_settings.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
       "name": "runtime_pods",
       "owner": "B",
       "category": "instances",
@@ -1116,6 +1636,32 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "runtime_rollout_checkpoints",
+      "owner": "B",
+      "category": "instances",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/068_add_runtime_rollout_checkpoints.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1585,7 +2131,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.artifact_lease_states.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_backups"
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1596,7 +2142,7 @@
       "redacted_explanation": "The per-source lease mode and generation guard is target-local coordination metadata that makes shared and delete leases mutually exclusive without storing provider content.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1616,12 +2162,12 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.artifact_leases.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_artifact_lease_states",
-        "table:system_backup_v2_artifact_verifications",
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_preflights",
-        "table:system_backup_v2_backups",
-        "table:system_backup_v2_restore_drills"
+        "table:system_artifact_lease_states",
+        "table:system_backup_artifact_verifications",
+        "table:system_backup_configs",
+        "table:system_backup_preflights",
+        "table:system_backups",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1632,7 +2178,7 @@
       "redacted_explanation": "Artifact leases are target-local coordination facts with typed source and holder IDs; no provider locator, credential or restore inventory is persisted.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1662,7 +2208,7 @@
       "redacted_explanation": "Only schema metadata is recorded. Installation-local token revocation cutoffs are never dumped or restored from a source backup. Existing target cutoffs must not be cleared; a new target requires fresh authentication identities before admission.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/109_backup_v2_add_system_backup_registration_runtime.sql"
+          "backend/internal/db/migrations/080_add_system_backup_registration_runtime.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1692,7 +2238,7 @@
       "redacted_explanation": "Only schema metadata is recorded. Live session digests, credential bindings, expirations and revocation flags are never dumped or restored. Current target sessions cannot be replaced with source sessions.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/109_backup_v2_add_system_backup_registration_runtime.sql"
+          "backend/internal/db/migrations/080_add_system_backup_registration_runtime.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1712,7 +2258,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.alert_states.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs"
+        "table:system_backup_configs"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1724,7 +2270,7 @@
       "redacted_explanation": "Low-cardinality persisted alert sequences survive controller restarts but contain no resource public IDs, free labels or owner payloads.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1744,9 +2290,9 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.artifact_verifications.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_backups"
+        "table:system_backup_configs",
+        "table:system_backup_evidence",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1758,7 +2304,7 @@
       "redacted_explanation": "Artifact verification rows retain task state, observed hashes and typed evidence references without embedding provider locations or verifier payloads.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/098_backup_v2_add_system_backup_task_execution_core.sql"
+          "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1778,10 +2324,10 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.attempts.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_artifact_verifications",
-        "table:system_backup_v2_preflights",
-        "table:system_backup_v2_backups",
-        "table:system_backup_v2_restore_drills"
+        "table:system_backup_artifact_verifications",
+        "table:system_backup_preflights",
+        "table:system_backups",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1793,7 +2339,7 @@
       "redacted_explanation": "Attempt history is a target-local execution ledger with typed task and phase references; runner jobs, check bodies and provider details are not restored.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/098_backup_v2_add_system_backup_task_execution_core.sql"
+          "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1813,14 +2359,14 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.check_results.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_artifact_verifications",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_preflights",
-        "table:system_backup_v2_promotions",
-        "table:system_backup_v2_prune_runs",
-        "table:system_backup_v2_backups",
-        "table:system_backup_v2_restore_drills"
+        "table:system_backup_artifact_verifications",
+        "table:system_backup_evidence",
+        "table:system_backup_operations",
+        "table:system_backup_preflights",
+        "table:system_backup_promotions",
+        "table:system_backup_prune_runs",
+        "table:system_backups",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1832,7 +2378,7 @@
       "redacted_explanation": "The shared verifier envelope is target-local control metadata; owner-defined check registries and expected/actual payload schemas remain external and are never reconstructed from restored rows.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/103_backup_v2_add_system_backup_check_authority.sql"
+          "backend/internal/db/migrations/072_add_system_backup_check_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1860,7 +2406,7 @@
       "redacted_explanation": "Compact tombstones preserve redacted idempotency and terminal hashes for control-plane safety; source operation rows are not reconstructed.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1890,7 +2436,7 @@
       "redacted_explanation": "Immutable configuration versions contain only closed scalar policy and redacted identity/version references; provider and security material is never restored.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/097_backup_v2_add_system_backup_config_and_operations.sql"
+          "backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1910,7 +2456,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.dependency_health.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence"
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1922,7 +2468,7 @@
       "redacted_explanation": "Observed dependency health and immutable-version evidence are target-local control facts and are referenced without restoring stale observations.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1942,11 +2488,11 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.events.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_artifact_verifications",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_preflights",
-        "table:system_backup_v2_backups",
-        "table:system_backup_v2_restore_drills"
+        "table:system_backup_artifact_verifications",
+        "table:system_backup_operations",
+        "table:system_backup_preflights",
+        "table:system_backups",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -1958,7 +2504,7 @@
       "redacted_explanation": "Events are an append-only redacted diagnostic projection with closed detail fields; they never restore or replace owner task, operation or lifecycle authority.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -1988,7 +2534,7 @@
       "redacted_explanation": "Evidence metadata remains a typed, encrypted control reference; neither payload bytes nor provider storage references are restored as business data.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2008,7 +2554,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.evidence_chunks.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence"
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2019,7 +2565,7 @@
       "redacted_explanation": "Chunk framing and integrity metadata is meaningful only with its evidence record and is referenced for verification, never replayed into a target.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2039,10 +2585,10 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.external_actions.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_prune_items",
-        "table:system_backup_v2_backups"
+        "table:system_backup_evidence",
+        "table:system_backup_operations",
+        "table:system_backup_prune_items",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2053,7 +2599,7 @@
       "redacted_explanation": "External-action rows preserve exact immutable non-secret request bytes, deterministic keys and provider observation hashes; replayable credentials and provider execution remain external.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/102_backup_v2_add_system_backup_external_action_authority.sql"
+          "backend/internal/db/migrations/071_add_system_backup_external_action_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2073,7 +2619,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.installation_state.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs"
+        "table:system_backup_configs"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2084,7 +2630,7 @@
       "redacted_explanation": "Installation identity and first-enabled history are referenced for monitoring and matrix transitions; source rows are never restored.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2104,7 +2650,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.job_observations.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_attempts"
+        "table:system_backup_attempts"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2116,7 +2662,7 @@
       "redacted_explanation": "Current Job generation, relay cursor, progress age and command slot are installation-local execution facts; B-owned message wire and Job execution are not restored or defined by D.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/107_backup_v2_add_system_backup_job_observations.sql"
+          "backend/internal/db/migrations/076_add_system_backup_job_observations.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2136,7 +2682,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.log_chunks.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence"
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2147,7 +2693,7 @@
       "redacted_explanation": "Only redacted log indexes and evidence references are retained for diagnostics; workload logs are not restored or resumed.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2175,7 +2721,7 @@
       "redacted_explanation": "Only schema metadata is recorded. Target-local monotonic capacity reservations are not copied from a backup and must never be reset by ordinary startup or statistics refresh. Any reconciliation requires a quiesced measured target baseline.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/109_backup_v2_add_system_backup_registration_runtime.sql"
+          "backend/internal/db/migrations/080_add_system_backup_registration_runtime.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2195,8 +2741,8 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.operations.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence"
+        "table:system_backup_configs",
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2208,7 +2754,7 @@
       "redacted_explanation": "Operation rows are the target-local idempotency and orchestration ledger; actor scope, hashes and typed result references are retained without replaying mutations.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/097_backup_v2_add_system_backup_config_and_operations.sql"
+          "backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2228,9 +2774,9 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.preflights.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_backups"
+        "table:system_backup_configs",
+        "table:system_backup_evidence",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2242,7 +2788,7 @@
       "redacted_explanation": "Preflight rows retain closed orchestration state and evidence references only; check bodies and restore-target content remain with their implementing owners.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/098_backup_v2_add_system_backup_task_execution_core.sql"
+          "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2262,11 +2808,11 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.promotions.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_dependency_health",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_backups",
-        "table:system_backup_v2_restore_drills"
+        "table:system_backup_configs",
+        "table:system_backup_dependency_health",
+        "table:system_backup_evidence",
+        "table:system_backups",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2278,7 +2824,7 @@
       "redacted_explanation": "Promotion records are installation-local baseline CAS facts containing typed resource and immutable evidence hashes; current health is always derived and no provider, runner or signing payload is copied.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/100_backup_v2_add_system_backup_promotion_authority.sql"
+          "backend/internal/db/migrations/069_add_system_backup_promotion_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2298,7 +2844,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.provider_capabilities.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence"
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2310,7 +2856,7 @@
       "redacted_explanation": "Capability probes are bound to an exact provider identity and reference version; target capability state must be observed again rather than restored.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql"
+          "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2330,9 +2876,9 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.prune_items.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_prune_runs",
-        "table:system_backup_v2_backups"
+        "table:system_backup_operations",
+        "table:system_backup_prune_runs",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2342,7 +2888,7 @@
       "redacted_explanation": "Prune items freeze typed object-version or catalog-tombstone identities and D-owned lifecycle state without storing provider locators, credentials or catalog payload bytes.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/101_backup_v2_add_system_backup_prune_authority.sql"
+          "backend/internal/db/migrations/070_add_system_backup_prune_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2362,11 +2908,11 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.prune_runs.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_artifact_leases",
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_promotions",
-        "table:system_backup_v2_backups"
+        "table:system_artifact_leases",
+        "table:system_backup_configs",
+        "table:system_backup_operations",
+        "table:system_backup_promotions",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2377,7 +2923,7 @@
       "redacted_explanation": "Prune runs are installation-local candidate, confirmation, idempotency and CAS ledgers; strong-auth proof material and provider deletion payloads remain with their owners.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/101_backup_v2_add_system_backup_prune_authority.sql"
+          "backend/internal/db/migrations/070_add_system_backup_prune_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2397,8 +2943,8 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.source_writer_check_states.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence"
+        "table:system_backup_configs",
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2410,7 +2956,7 @@
       "redacted_explanation": "Writer-inventory checks retain only versioned registry hashes, domain inventory hashes, bounded difference counts and registered evidence; every target installation must observe the writers again.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/103_backup_v2_add_system_backup_check_authority.sql"
+          "backend/internal/db/migrations/072_add_system_backup_check_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2430,10 +2976,10 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.staging_resources.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_attempts",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_backups"
+        "table:system_backup_attempts",
+        "table:system_backup_evidence",
+        "table:system_backup_operations",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2445,7 +2991,7 @@
       "redacted_explanation": "Staging intents, resource ownership, immutable identity and cleanup lifecycle are target-local control metadata; resource bytes and source data are never restored from these rows.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/104_backup_v2_add_system_backup_staging_resources.sql"
+          "backend/internal/db/migrations/073_add_system_backup_staging_resources.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2466,7 +3012,7 @@
       "verifier_id": "system_backup.strong_auth_nonces.reference.verify.v1",
       "depends_on": [
         "table:audit_logs",
-        "table:system_backup_v2_operations"
+        "table:system_backup_operations"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2476,7 +3022,7 @@
       "redacted_explanation": "Consumed nonce HMACs and request hashes are installation-local authentication replay records, never restored or exposed as proof material; A-owned verifier and wire contract remain pending.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/106_backup_v2_add_system_backup_strong_auth_nonces.sql"
+          "backend/internal/db/migrations/075_add_system_backup_strong_auth_nonces.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2506,7 +3052,7 @@
       "redacted_explanation": "Only schema metadata is recorded. Encrypted TOTP seeds, password-binding hashes, consumed steps and throttle state never enter backup payloads or diagnostic evidence. A restored target must enroll its administrator independently; source enrollment is not transferable.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/109_backup_v2_add_system_backup_registration_runtime.sql"
+          "backend/internal/db/migrations/080_add_system_backup_registration_runtime.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2526,8 +3072,8 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.backups.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence"
+        "table:system_backup_configs",
+        "table:system_backup_evidence"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2539,7 +3085,7 @@
       "redacted_explanation": "Backup task rows are target-local orchestration and immutable artifact-reference metadata; workload capture, security material and provider implementations are not restored.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/098_backup_v2_add_system_backup_task_execution_core.sql"
+          "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2588,7 +3134,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.maintenance_locks.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs"
+        "table:system_backup_configs"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2600,7 +3146,7 @@
       "redacted_explanation": "Gate generation, fencing and bounded deadlines are installation-local coordination state and must start empty on a restored installation.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2620,7 +3166,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.maintenance_mutation_leases.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_maintenance_locks"
+        "table:system_maintenance_locks"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2632,7 +3178,7 @@
       "redacted_explanation": "Mutation leases bind writer operation identity to a gate generation and bounded database time; they are never restored or replayed.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/099_backup_v2_add_system_backup_coordination_observability.sql"
+          "backend/internal/db/migrations/068_add_system_backup_coordination_observability.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2652,7 +3198,7 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.maintenance_participants.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_maintenance_locks"
+        "table:system_maintenance_locks"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2664,7 +3210,7 @@
       "redacted_explanation": "Participant generation, pause ACK, checkpoint and watchdog resume facts are installation-local coordination records; restored control tables must start empty.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/105_backup_v2_add_system_maintenance_participants.sql"
+          "backend/internal/db/migrations/074_add_system_maintenance_participants.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2684,9 +3230,9 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.restore_drill_resources.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_operations",
-        "table:system_backup_v2_restore_drills"
+        "table:system_backup_evidence",
+        "table:system_backup_operations",
+        "table:system_restore_drills"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2698,7 +3244,7 @@
       "redacted_explanation": "Restore resource intents, owner HMACs and cleanup evidence are target-local control records; B-owned target resources and bytes are not restored or defined by D.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/108_backup_v2_add_system_restore_drill_resources.sql"
+          "backend/internal/db/migrations/077_add_system_restore_drill_resources.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2718,9 +3264,9 @@
       "normalizer_id": null,
       "verifier_id": "system_backup.restore_drills.reference.verify.v1",
       "depends_on": [
-        "table:system_backup_v2_configs",
-        "table:system_backup_v2_evidence",
-        "table:system_backup_v2_backups"
+        "table:system_backup_configs",
+        "table:system_backup_evidence",
+        "table:system_backups"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [
@@ -2732,7 +3278,7 @@
       "redacted_explanation": "Drill rows keep only D-owned task state plus typed source, target-config hash and evidence references; B-owned restore inventory is not copied into the task row.",
       "sources": {
         "migration": [
-          "backend/internal/db/migrations/098_backup_v2_add_system_backup_task_execution_core.sql"
+          "backend/internal/db/migrations/067_add_system_backup_task_execution_core.sql"
         ],
         "repository_create": [],
         "repository_alter": [],
@@ -2898,6 +3444,32 @@
     },
     {
       "object_type": "table",
+      "name": "team_workspace_file_audits",
+      "owner": "C",
+      "category": "teams",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/072_add_team_workspace_file_audits.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
       "name": "teams",
       "owner": "C",
       "category": "teams",
@@ -2999,6 +3571,32 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/023_add_runtime_pool_v2.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_v2_execution_records",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/122_backup_v2_execution_records.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

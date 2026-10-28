@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = "8ef5fa7fd4df45f6306e910705db01f589266ba7"
+SOURCE = "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e"
 MANIFEST = ROOT / "docs/backup-team-integration/source-map.json"
 
 
@@ -43,8 +43,10 @@ def main():
             if source_path not in source_paths:
                 source_path = None
         original = reverse_sql.get(Path(path).name)
-        if path.startswith("docs/backup-team-integration/reference/"):
+        if path.startswith("docs/backup-team-integration/reference/") and Path(path).suffix == ".sql":
             original = Path(path).name
+        if path == "docs/backup-team-integration/reference/schema-registry-4fe83bcd.json":
+            source_path = "contracts/system-backup/v12/schema-registry.json"
         if original:
             matches = [candidate for candidate in source_paths if Path(candidate).name == original]
             if len(matches) != 1:

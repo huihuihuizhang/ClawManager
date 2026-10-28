@@ -28,6 +28,14 @@ def outputs():
                  f'const ReviewedFileCount = {len(files)}\n')
     yield ROOT / "backend/internal/migrationcatalog/reviewed_catalog.go", generated
     yield ROOT / "docs/backup-team-integration/catalog.json", json.dumps(catalog, indent=2) + "\n"
+    # Refresh only the directory identity. Draft policies and human reviews are
+    # preserved; freshness is not permission to activate a collector.
+    registry_path = ROOT / "contracts/system-backup/v12/schema-registry.json"
+    schema_registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    schema_registry["migration_catalog"] = catalog
+    registry_json = json.dumps(schema_registry, indent=2, ensure_ascii=False) + "\n"
+    yield registry_path, registry_json
+    yield ROOT / "backend/internal/systembackupbusinessa/testdata/schema-registry.json", registry_json
     mapping = json.loads((ROOT / "docs/backup-team-integration/sql-map.json").read_text(encoding="utf-8"))
     tables = sorted(mapping["tables"].values())
     registry = ('// Code generated from the reviewed SQL identifier map; DO NOT EDIT.\n'

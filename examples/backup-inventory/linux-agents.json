@@ -1,0 +1,53 @@
+{
+  "orchestrator": "kubernetes",
+  "profile": "cluster",
+  "total_users": 2,
+  "total_instances": 2,
+  "users": [
+    { "id": 1, "role": "admin", "auth_provider": "local", "has_password_hash": true },
+    { "id": 2, "role": "user", "auth_provider": "local", "has_password_hash": true }
+  ],
+  "instances": [
+    {
+      "id": 11,
+      "user_id": 1,
+      "runtime": { "type": "hermes", "mode": "lite", "backend": "gateway", "os": "linux" },
+      "mounts": [
+        {
+          "container_path": "/workspaces/hermes/user-1/instance-11",
+          "storage": {
+            "kind": "pvc",
+            "namespace": "example-runtime",
+            "claim_name": "example-shared-workspaces",
+            "claim_uid": "example-pvc-uid",
+            "sub_path": "hermes/user-1/instance-11",
+            "shared": true,
+            "csi_driver": "driver.longhorn.io",
+            "snapshot_class": "example-longhorn",
+            "snapshot_probe_passed": false,
+            "additional_mounts_known": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "user_id": 2,
+      "runtime": { "type": "codex", "mode": "pro", "backend": "desktop", "variant": "linux", "os": "linux" },
+      "mounts": [
+        {
+          "container_path": "/config",
+          "storage": {
+            "kind": "hostpath",
+            "node_name": "example-storage-node",
+            "host_path": "/data/clawreef/user-2/instance-12",
+            "sub_path": ".",
+            "shared": false,
+            "snapshot_probe_passed": false,
+            "additional_mounts_known": true
+          }
+        }
+      ]
+    }
+  ]
+}

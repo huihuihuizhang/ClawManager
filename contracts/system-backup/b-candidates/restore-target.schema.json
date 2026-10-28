@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:clawmanager:system-backup:b-candidate:restore-target:v1",
+  "x-review-status": "B-proposed-awaiting-A-D",
+  "description": "Observed isolated-drill descriptor only. Not a new HTTP create request or permission to provision/restore. Source database identity comes from the original authority. A/D current proof must verify blank admin-only target, schema, isolation, current grants, all resource identities and external writers. Real migration remains disabled.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "installation_id", "matrix_key", "namespace", "namespace_uid", "database_name", "database_server_uuid", "schema_sha256", "admin_policy", "start_policy", "isolation_evidence", "storage"],
+  "properties": {
+    "schema_version": {"const": "system-backup-b-restore-target.v1"},
+    "kind": {"const": "isolated_drill"},
+    "installation_id": {"type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$"},
+    "matrix_key": {"enum": ["k8s-cluster", "k3s-cluster", "k8s-single-node", "k3s-single-node"]},
+    "namespace": {"type": "string", "pattern": "^cm-drill-", "maxLength": 63},
+    "namespace_uid": {"$ref": "#/$defs/uid"},
+    "database_name": {"type": "string", "pattern": "^cm_drill_[a-z0-9_]{1,55}$"},
+    "database_server_uuid": {"$ref": "#/$defs/uid"},
+    "schema_sha256": {"$ref": "#/$defs/hash"},
+    "admin_policy": {"const": "replace_bootstrap_with_source_admin"},
+    "start_policy": {"const": "stopped_tasks_disabled"},
+    "isolation_evidence": {"$ref": "#/$defs/evidence"},
+    "storage": {"type": "array", "maxItems": 10000, "items": {"$ref": "#/$defs/storage"}}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "uid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "evidence": {"type": "object", "additionalProperties": false, "required": ["public_id", "sha256"], "properties": {"public_id": {"type": "string", "pattern": "^sev_[A-Za-z0-9_-]+$"}, "sha256": {"$ref": "#/$defs/hash"}}},
+    "storage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_mount_sha256", "kind", "claim_name", "claim_uid", "pv_uid", "node_name", "writer_proof"],
+      "properties": {
+        "source_mount_sha256": {"$ref": "#/$defs/hash"},
+        "kind": {"enum": ["csi", "nfs", "hostpath"]},
+        "claim_name": {"type": "string", "minLength": 1, "maxLength": 253},
+        "claim_uid": {"$ref": "#/$defs/uid"}, "pv_uid": {"$ref": "#/$defs/uid"},
+        "node_name": {"type": "string", "maxLength": 253}, "writer_proof": {"$ref": "#/$defs/evidence"}
+      },
+      "allOf": [{"if": {"properties": {"kind": {"const": "hostpath"}}}, "then": {"properties": {"node_name": {"minLength": 1}}}}]
+    }
+  }
+}

@@ -42,12 +42,12 @@ type BootstrapAdmissionSources struct {
 func MissingBootstrapAdapters(s BootstrapAdmissionSources) []string {
 	missing := []string{}
 	for _, kind := range bootstrapRegistryKinds {
-		if s.Registries[kind] == nil {
+		if candidateAuthorityNil(s.Registries[kind]) {
 			missing = append(missing, "registry:"+kind)
 		}
 	}
 	for _, purpose := range bootstrapReferencePurposes {
-		if s.References[purpose] == nil {
+		if candidateAuthorityNil(s.References[purpose]) {
 			missing = append(missing, "reference:"+purpose)
 		}
 	}
@@ -56,7 +56,7 @@ func MissingBootstrapAdapters(s BootstrapAdmissionSources) []string {
 		ok   bool
 	}{
 		{"offline_grant", s.ReadGrant != nil}, {"registry_bytes", s.RegistryBytes != nil},
-		{"cross_resources", s.CrossResources != nil}, {"nonce_material", s.NonceMaterial != nil},
+		{"cross_resources", !candidateAuthorityNil(s.CrossResources)}, {"nonce_material", s.NonceMaterial != nil},
 		{"metadata_capacity", s.ReserveMetadata != nil},
 	} {
 		if !item.ok {
@@ -78,6 +78,9 @@ type preparedBootstrapAdmission struct {
 // deliberately opaque: untrusted files cannot manufacture successful checks.
 // Preparation is NOT activation and is not evidence of human MFA.
 func PrepareBootstrapAdmission(ctx context.Context, g OfflineBootstrapGrant, raw []byte, s BootstrapAdmissionSources) (BootstrapAdmission, error) {
+	if candidateAuthorityNil(ctx) || ctx.Err() != nil {
+		return nil, ErrRegistrationUnavailable
+	}
 	c, err := DecodeBootstrapConfig(raw)
 	if err != nil {
 		return nil, err
@@ -85,6 +88,17 @@ func PrepareBootstrapAdmission(ctx context.Context, g OfflineBootstrapGrant, raw
 	if !validBootstrapGrant(g) || c.SHA256() != g.ConfigSHA256 || len(MissingBootstrapAdapters(s)) != 0 || len(s.Registries) != len(bootstrapRegistryKinds) || len(s.References) != len(bootstrapReferencePurposes) {
 		return nil, ErrRegistrationUnavailable
 	}
+	// Callbacks cannot replace a later owner through the caller's map, either
+	// during preparation or after this attempt has captured its sources.
+	registries := make(map[string]BootstrapResourceValidator, len(s.Registries))
+	for kind, validator := range s.Registries {
+		registries[kind] = validator
+	}
+	references := make(map[string]BootstrapResourceValidator, len(s.References))
+	for purpose, validator := range s.References {
+		references[purpose] = validator
+	}
+	s.Registries, s.References = registries, references
 	a := &preparedBootstrapAdmission{grant: g, config: c, sources: s}
 	if err = a.authorize(g, c, time.Now().UTC()); err != nil {
 		return nil, err
@@ -94,7 +108,7 @@ func PrepareBootstrapAdmission(ctx context.Context, g OfflineBootstrapGrant, raw
 			return ErrRegistrationUnavailable
 		}
 		check, e := v.Prepare(ctx, g, c)
-		if e != nil || check == nil {
+		if e != nil || candidateAuthorityNil(check) {
 			return ErrRegistrationUnavailable
 		}
 		a.checks = append(a.checks, check)

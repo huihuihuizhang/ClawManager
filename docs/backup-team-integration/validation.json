@@ -1,8 +1,8 @@
 {
-  "status": "paused_after_verified_execution_foundation_full_execution_incomplete",
+  "status": "m0_increment_integrated_m1_m2_in_progress",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
-  "backup_source": "8ef5fa7fd4df45f6306e910705db01f589266ba7",
-  "migration_count": 162,
+  "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
+  "migration_count": 163,
   "checks": {
     "real_mysql_schema": {
       "result": "passed",
@@ -73,6 +73,16 @@
       "result": "passed",
       "local_log_sha256": "b8443d770203f96c5a777e89ffdb07961a9e727a440852b0bd20215c8da00316",
       "boundary": "Final go test ./... passed after final Job-intent foreign key and strict Pod identity changes. Opt-in platform tests without their environment may skip; real MySQL current-stage tests are separately recorded."
+    },
+    "m0_backend_all": {
+      "result": "passed",
+      "local_log_sha256": "5c293f12442000fbec800e9c5ca471de31340ea4b90221978b9092ec635b01f9",
+      "boundary": "Final M0 backend go test ./... passed; external opt-in tests without their environment may skip. No live Job or full capture acceptance."
+    },
+    "m0_real_mysql": {
+      "result": "passed",
+      "local_log_sha256": "383a0a566ad8951ef5409026ff284360161e075a77d78331a868ede67c94870d",
+      "boundary": "Real disposable MySQL, all 163 migrations and existing submission/queue/plan/Job-intent regressions passed. Kubernetes boundary remains simulated."
     }
   },
   "not_accepted": [
@@ -82,7 +92,7 @@
     "running cancellation, retry/recovery actions and complete progress/health views",
     "production grants/TLS/Broker/download deployment; final image/live environment and rollback"
   ],
-  "publication": "User-requested pause after local stage commits; these new stages are not pushed; no image, server mutation or new engine activation.",
+  "publication": "M0 local stage commit; M1/M2 continue in same run. No push or server mutation.",
   "credential_pattern_scan": {
     "files": 1062,
     "result": "no matched private-key/GitHub/AWS credentials",

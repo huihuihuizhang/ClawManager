@@ -1,0 +1,10 @@
+{
+  "Version": "workbuddy-linux-uid.v1",
+  "SHA256": "f6206dada3ddbd2ed1c01af788b864f0193648bae2e9faf4aaf38ac8930c811c",
+  "Instance": "instance_id",
+  "StorageIdentity": "",
+  "UID": "linux_uid",
+  "GID": "",
+  "Layout": "workbuddy-linux-uid.v1",
+  "AllocatorSHA256": "0a9116e0fc61729f08af70de28ee5775b9b26fbb428859f94dfa23ee15ca6ba0"
+}

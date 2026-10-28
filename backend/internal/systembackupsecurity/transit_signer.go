@@ -26,9 +26,22 @@ type TransitSigner struct {
 }
 
 func NewTransitSigner(endpoint, keyName, version, token string, caPEM []byte, public ed25519.PublicKey) (*TransitSigner, error) {
+	if len(token) < 16 || strings.ContainsAny(token, "\r\n") {
+		return nil, ErrRegistrationUnavailable
+	}
+	s, err := newTransitSignerTransport(endpoint, keyName, version, caPEM, public)
+	if err != nil {
+		return nil, err
+	}
+	s.token = token
+	return s, nil
+}
+
+// The credential-resolving entry keeps this transport token-free between calls.
+func newTransitSignerTransport(endpoint, keyName, version string, caPEM []byte, public ed25519.PublicKey) (*TransitSigner, error) {
 	u, err := url.Parse(endpoint)
 	n, e := strconv.ParseUint(version, 10, 32)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "" || e != nil || n == 0 || strconv.FormatUint(n, 10) != version || len(public) != 32 || len(token) < 16 || strings.ContainsAny(token, "\r\n") || !safeTransitName(keyName) {
+	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Path != "" || e != nil || n == 0 || strconv.FormatUint(n, 10) != version || len(public) != 32 || !safeTransitName(keyName) {
 		return nil, ErrRegistrationUnavailable
 	}
 	pool := x509.NewCertPool()
@@ -37,7 +50,7 @@ func NewTransitSigner(endpoint, keyName, version, token string, caPEM []byte, pu
 	}
 	transport := &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool}, ResponseHeaderTimeout: 10 * time.Second, MaxIdleConnsPerHost: 4}
 	client := &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	return &TransitSigner{client: client, endpoint: endpoint, keyName: keyName, version: version, token: token, public: append(ed25519.PublicKey(nil), public...)}, nil
+	return &TransitSigner{client: client, endpoint: endpoint, keyName: keyName, version: version, public: append(ed25519.PublicKey(nil), public...)}, nil
 }
 func safeTransitName(s string) bool {
 	if len(s) < 1 || len(s) > 128 {

@@ -43,6 +43,23 @@ type fakeGate struct {
 	active atomic.Int64
 }
 
+type invalidContextGate struct{ released atomic.Bool }
+
+func (g *invalidContextGate) Enter(context.Context, string) (func() error, error) {
+	return nil, errors.New("wrong entry")
+}
+func (g *invalidContextGate) EnterContext(context.Context, string) (context.Context, func() error, error) {
+	return nil, func() error { g.released.Store(true); return nil }, nil
+}
+func TestContextAdmissionRejectsInvalidCapabilityWithoutLeakingPermit(t *testing.T) {
+	g := &invalidContextGate{}
+	Configure(g)
+	defer Configure(nil)
+	if _, release, err := EnterContext(context.Background(), "team-event"); err == nil || release != nil || !g.released.Load() {
+		t.Fatal("invalid context admission leaked a permit", err)
+	}
+}
+
 func (g *fakeGate) Enter(context.Context, string) (func() error, error) {
 	if g.closed.Load() {
 		return nil, errors.New("closed")

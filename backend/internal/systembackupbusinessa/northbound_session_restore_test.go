@@ -65,6 +65,25 @@ func TestNormalizeNorthboundSessionForRestoreRevokesAndRemaps(t *testing.T) {
 	}
 }
 
+func TestNewRuntimeScopesRestoreOnlyAsInactiveHistory(t *testing.T) {
+	for _, scope := range []string{"lite-instances:delete", "pro-instances:delete", "owners:usage:read"} {
+		t.Run(scope, func(t *testing.T) {
+			users, source, mapping, now := sessionRestoreFixture(t)
+			source.ScopesJSON = `["` + scope + `"]`
+			row, err := NormalizeNorthboundSessionForRestore(users, source, mapping, now)
+			if err != nil || row.Status != "revoked" || !row.AccessExpiresAt.Before(now) || !row.RefreshExpiresAt.Before(now) || row.ScopesJSON != source.ScopesJSON {
+				t.Fatalf("scope restored as active session: %+v, %v", row, err)
+			}
+			policyUsers, policySource := callerPolicyRestoreFixture(t)
+			policySource.ScopesJSON = source.ScopesJSON
+			policy, err := NormalizeNorthboundCallerPolicyForRestore(policyUsers, policySource)
+			if err != nil || policy.Enabled || policy.ScopesJSON != policySource.ScopesJSON {
+				t.Fatalf("scope restored as active caller policy: %+v, %v", policy, err)
+			}
+		})
+	}
+}
+
 func TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope(t *testing.T) {
 	users, source, mapping, targetNow := sessionRestoreFixture(t)
 	for name, mutate := range map[string]func(*NorthboundSessionRestoreSource, *NorthboundSessionRestoreMapping, *time.Time){

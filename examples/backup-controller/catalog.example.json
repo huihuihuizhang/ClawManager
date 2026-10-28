@@ -1,0 +1,48 @@
+{
+  "Owner": "catalog-controller",
+  "ControlDatabase": "/etc/backup/control-database.json",
+  "KeysFile": "/etc/backup/catalog-vault.json",
+  "Catalogs": [
+    {
+      "ID": "external-catalog",
+      "Provider": {
+        "Endpoint": "https://catalog-provider.example.invalid",
+        "Identity": { "id": "catalog-read-role", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+        "Location": { "provider": "s3", "bucket": "isolated-catalog", "prefix": "catalog-root", "failure_domain_id": "isolated-site" },
+        "DiscoveryMode": "inventory_manifest",
+        "AllowAppend": false
+      },
+      "TLS": { "CA": "/etc/backup/catalog/ca.pem", "Certificate": "/etc/backup/catalog/client.pem", "Key": "/etc/backup/catalog/client-key.pem" },
+      "Trust": {
+        "Path": "/etc/backup/catalog/trust.json",
+        "Reference": { "id": "recovery-trust", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+      },
+      "Artifacts": [
+        {
+          "Provider": {
+            "Endpoint": "https://artifact-provider.example.invalid",
+            "Identity": { "id": "artifact-read-role", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+            "Location": { "provider": "s3", "bucket": "isolated-artifacts", "prefix": "root/fixture-origin/fixture-backup/1", "failure_domain_id": "isolated-site" },
+            "DiscoveryMode": "known_record_only",
+            "AllowAppend": false
+          },
+          "TLS": { "CA": "/etc/backup/artifact/ca.pem", "Certificate": "/etc/backup/artifact/client.pem", "Key": "/etc/backup/artifact/client-key.pem" },
+          "Bootstrap": {
+            "read_credential": { "id": "disaster-read", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+            "ca": { "id": "disaster-ca", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+            "kek": { "id": "disaster-kek", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+            "disaster_identity": { "id": "disaster-reader", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+          },
+          "Codec": {
+            "Path": "/etc/backup/artifact/codec.json",
+            "Reference": { "id": "artifact-codec", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+          },
+          "WrappingKeys": {
+            "Path": "/etc/backup/artifact/wrapping-keys.json",
+            "Reference": { "id": "disaster-kek", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+          }
+        }
+      ]
+    }
+  ]
+}

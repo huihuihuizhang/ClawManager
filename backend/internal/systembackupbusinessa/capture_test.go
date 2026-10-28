@@ -24,6 +24,12 @@ import (
 //go:embed testdata/schema-registry.json
 var businessRegistryFixtureJSON []byte
 
+// Explicit historical capability fixture for synthetic successful 15-table
+// verifier tests. This is not the current canonical registry or an approval.
+//
+//go:embed testdata/schema-registry-historical-15.json
+var historicalBusinessRegistryFixtureJSON []byte
+
 func TestEmbeddedBusinessRegistryFixtureMatchesCanonical(t *testing.T) {
 	raw, err := os.ReadFile("../../../contracts/system-backup/v12/schema-registry.json")
 	if err != nil {
@@ -37,29 +43,50 @@ func TestEmbeddedBusinessRegistryFixtureMatchesCanonical(t *testing.T) {
 func registryFixture(t *testing.T, freeze bool) map[string]any {
 	t.Helper()
 	var document map[string]any
-	if err := json.Unmarshal(businessRegistryFixtureJSON, &document); err != nil {
+	raw := businessRegistryFixtureJSON
+	if freeze {
+		raw = historicalBusinessRegistryFixtureJSON
+	}
+	if err := json.Unmarshal(raw, &document); err != nil {
 		t.Fatal(err)
 	}
 	if freeze {
-		// Synthetic gate fixture, never a live schema observation or approval.
-		document["contract_status"] = "frozen"
-		hash := document["schema_hash"].(map[string]any)
-		hash["status"] = "observed"
-		hash["hash"] = strings.Repeat("a", 64)
-		hash["evidence"] = map[string]any{"public_id": "sev_fixture", "sha256": strings.Repeat("b", 64)}
-		objects := document["objects"].([]any)
-		summary := document["summary"].(map[string]any)
-		summary["object_count"] = len(objects)
-		summary["policy_recorded"] = len(objects)
-		summary["policy_pending"] = 0
-		summary["cross_review_pending"] = 0
-		for _, raw := range objects {
-			object := raw.(map[string]any)
-			object["decision_status"] = "frozen"
-			object["approved_cross_reviewers"] = object["required_cross_reviewers"]
-		}
+		freezeSyntheticRegistry(document)
 	}
 	return document
+}
+
+func freezeSyntheticRegistry(document map[string]any) {
+	// Synthetic gate fixture, never a live schema observation or approval.
+	document["contract_status"] = "frozen"
+	hash := document["schema_hash"].(map[string]any)
+	hash["status"] = "observed"
+	hash["hash"] = strings.Repeat("a", 64)
+	hash["evidence"] = map[string]any{"public_id": "sev_fixture", "sha256": strings.Repeat("b", 64)}
+	objects := document["objects"].([]any)
+	summary := document["summary"].(map[string]any)
+	summary["object_count"] = len(objects)
+	summary["policy_recorded"] = len(objects)
+	summary["policy_pending"] = 0
+	summary["cross_review_pending"] = 0
+	for _, raw := range objects {
+		object := raw.(map[string]any)
+		object["decision_status"] = "frozen"
+		object["approved_cross_reviewers"] = object["required_cross_reviewers"]
+	}
+}
+
+func TestExtendedInventoryDoesNotExpandClosedACaptureScope(t *testing.T) {
+	document := registryFixture(t, false)
+	if scope, err := pinnedScope(t, document); err == nil || scope != nil {
+		t.Fatal("new pending inventory was admitted")
+	}
+	// Even fabricated freeze/summary/reviewer flags cannot make these
+	// unimplemented tables part of the production collector's closed policy.
+	freezeSyntheticRegistry(document)
+	if scope, err := pinnedScope(t, document); err == nil || scope != nil {
+		t.Fatal("unsupported new A tables silently entered the collector")
+	}
 }
 
 func registryBytes(t *testing.T, document map[string]any) []byte {

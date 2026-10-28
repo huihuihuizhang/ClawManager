@@ -1,0 +1,24 @@
+{
+  "Listen": "127.0.0.1:8443",
+  "TLS": {
+    "CA": "/etc/backup-gateway/client-ca.pem",
+    "Certificate": "/etc/backup-gateway/server.pem",
+    "Key": "/etc/backup-gateway/server-key.pem"
+  },
+  "ControlDatabase": "/etc/backup-gateway/control-database.json",
+  "Server": {
+    "Identity": { "id": "isolated-provider", "version": "v1", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "Location": { "provider": "s3", "bucket": "isolated-backups", "prefix": "catalog", "failure_domain_id": "isolated-site" },
+    "DiscoveryMode": "inventory_manifest",
+    "AllowAppend": true,
+    "Clients": {
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": ["capabilities", "observe", "open", "conditional_create", "begin_snapshot", "snapshot_page"]
+    },
+    "TimeoutMS": 30000
+  },
+  "BackendModule": { "id": "native-provider-owner", "version": "v1", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" },
+  "BackendConfig": {
+    "Path": "/etc/backup-gateway/native-provider.json",
+    "Reference": { "id": "native-provider-config", "version": "v1", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" }
+  }
+}

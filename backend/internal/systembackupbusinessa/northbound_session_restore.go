@@ -56,12 +56,14 @@ var northboundRestoreScopes = map[string]struct{}{
 	"team-templates:write":    {},
 	"team-templates:generate": {},
 
-	"lite-instances:delete": {}, "pro-instances:delete": {}, "owners:usage:read": {},
 	"lite-instances:create": {}, "lite-instances:read": {},
 	"pro-instances:create": {}, "pro-instances:read": {},
 	"lite-instances:restart": {}, "lite-instances:reset": {},
 	"pro-instances:restart": {}, "pro-instances:reset": {},
 	"lite-instances:share-link:manage": {}, "lite-instances:share-link:reset": {},
+	// Preserve these permissions only as history: sessions are revoked and
+	// caller policies are disabled by both restore normalizers.
+	"lite-instances:delete": {}, "pro-instances:delete": {}, "owners:usage:read": {},
 }
 
 // NormalizeNorthboundSessionsForRestore closes the ID, session-ID and refresh

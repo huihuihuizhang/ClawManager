@@ -1,5 +1,15 @@
 # 备份专用版与 Team 版整合交接
 
+## 2026-10-28 新来源同步后的补充
+
+备份专用目录 `D:/test/backup/ClawManager` 已切换到跟踪 `origin/backup` 的 `backup@4fe83bcde5a8a693dddb2635e9a3e397d6e3472e`，工作区干净。我们的整合分支仍为 `codex/backup-team-integration@6dcdbb75`，本轮尚未合入新业务代码。
+
+最新深度对比、双边保留方法及剩余开发顺序见 [新 backup 增量与剩余开发计划](BACKUP_TEAM_REMAINING_PLAN_20261028.md)。下文是此前阶段的历史记录；关于来源尚无 runner/loop、100 对象/32 项策略待定、备份目录未修改等判断已被新计划更新。新来源已有公共 runner、执行循环、执行记录和 Job Ports，但 production owner 接线及真实整链仍未完成。新 registry 为 122 对象/54 策略待定/68 交叉评审待定，且 137 个迁移与 136 pin 未同步。
+
+本轮新来源执行定向测试通过，inventory/contract freshness 检查均失败；未发布镜像、未 push、未操作服务器。接手时先读新计划，避免按旧缺口重复开发。
+
+---
+
 更新日期：2026-10-28。按用户最新要求，在当前小阶段验收和 commit 后暂停，待用户查看成果后继续。本文记录实现、合并方法及剩余工作；不是生产启用许可。
 
 ## 1. 当前结论

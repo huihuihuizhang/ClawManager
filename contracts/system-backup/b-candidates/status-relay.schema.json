@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:clawmanager:system-backup:b-candidate:status-relay:v1",
+  "x-review-status": "B-proposed-awaiting-A-D",
+  "description": "B message shape only. A peer/trust/revocation/expiry and D current scope/cursor transaction remain mandatory. No route, authority, migration or registry approval is created by this file. SHA-256 covers the exact original UTF-8 request bytes; retries retain identical bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "installation_id", "task_public_id", "task_type", "attempt_no", "phase", "job_unit_key", "namespace", "job_name", "job_uid", "job_generation", "relay_identity_ref", "relay_identity_version", "sequence", "status", "result_evidence"],
+  "properties": {
+    "schema_version": {"const": "system-backup-status-relay.v1"},
+    "installation_id": {"type": "string", "pattern": "^installation_[A-Za-z0-9._:-]{1,115}$"},
+    "task_public_id": {"type": "string", "pattern": "^(sbk|spf)_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "task_type": {"enum": ["backup", "preflight"]},
+    "attempt_no": {"$ref": "#/$defs/counter"},
+    "phase": {"enum": ["capture", "preflight"]},
+    "job_unit_key": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,63}$"},
+    "namespace": {"type": "string", "minLength": 1, "maxLength": 63},
+    "job_name": {"type": "string", "minLength": 1, "maxLength": 253},
+    "job_uid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "job_generation": {"$ref": "#/$defs/counter"},
+    "relay_identity_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "relay_identity_version": {"type": "string", "minLength": 1, "maxLength": 128},
+    "sequence": {"$ref": "#/$defs/counter"},
+    "status": {"enum": ["ready", "running", "completed", "failed", "canceled"]},
+    "result_evidence": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/evidence"}]}
+  },
+  "allOf": [
+    {"if": {"properties": {"task_type": {"const": "backup"}}}, "then": {"properties": {"phase": {"const": "capture"}, "task_public_id": {"pattern": "^sbk_"}}}, "else": {"properties": {"phase": {"const": "preflight"}, "task_public_id": {"pattern": "^spf_"}}}},
+    {"if": {"properties": {"status": {"const": "completed"}}}, "then": {"properties": {"result_evidence": {"$ref": "#/$defs/evidence"}}}, "else": {"properties": {"result_evidence": {"type": "null"}}}}
+  ],
+  "$defs": {
+    "counter": {"type": "string", "pattern": "^[1-9][0-9]{0,19}$", "description": "Canonical decimal <= uint64 max; runtime parser enforces overflow."},
+    "evidence": {"type": "object", "additionalProperties": false, "required": ["public_id", "sha256"], "properties": {"public_id": {"type": "string", "pattern": "^sev_[A-Za-z0-9_-]+$"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+  }
+}

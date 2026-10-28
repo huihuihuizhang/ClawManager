@@ -23,6 +23,7 @@ func init() {
 		"system_backup_v2_events",
 		"system_backup_v2_evidence",
 		"system_backup_v2_evidence_chunks",
+		"system_backup_v2_execution_records",
 		"system_backup_v2_external_actions",
 		"system_backup_v2_installation_state",
 		"system_backup_v2_job_observations",

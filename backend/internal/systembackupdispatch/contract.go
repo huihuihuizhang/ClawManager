@@ -37,6 +37,16 @@ type Input struct {
 	ConfigSnapshot             json.RawMessage
 	ProfileID, ProfileRevision string
 	Jobs                       []JobBinding
+	Backup                     *BackupSpec
+}
+
+// BackupSpec is the admitted public system_backup_v2_backups projection. RequestedParts
+// and TaskPurpose come from the original task, never inferred from an empty
+// request, the current config, a profile name or B's lab functional_test default.
+type BackupSpec struct {
+	SourceOrchestrator, SourceProfile, MatrixKey string
+	DatasourceTopology, Runner, TaskPurpose      string
+	RequestedParts                               []string
 }
 
 // Plan is B's versioned immutable execution plan. D must encrypt/persist it

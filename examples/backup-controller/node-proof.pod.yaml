@@ -1,0 +1,79 @@
+# Template only. Substitute NODE_NAME, IMAGE_DIGEST and node-specific TLS Secret.
+# One Pod/identity per node; do not share a single server certificate across nodes.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backup-node-proof-NODE_NAME
+  namespace: backup-system
+  labels:
+    app: backup-node-proof
+spec:
+  nodeName: NODE_NAME
+  automountServiceAccountToken: false
+  restartPolicy: Always
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: proof
+      image: backup-node-proof@sha256:IMAGE_DIGEST
+      args:
+        - --node=NODE_NAME
+        - --listen=:8443
+        - --runtime-endpoint=unix:///run/containerd/containerd.sock
+        - --client-ca=/run/proof/controller-ca.crt
+        - --tls-cert=/run/proof/tls.crt
+        - --tls-key=/run/proof/tls.key
+        - --controller-uri=spiffe://backup.internal/controller
+      ports:
+        - name: proof
+          containerPort: 8443
+      securityContext:
+        runAsUser: 0
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: "1"
+          memory: 256Mi
+      volumeMounts:
+        - name: runtime
+          mountPath: /run/containerd/containerd.sock
+          readOnly: true
+        - name: identity
+          mountPath: /run/proof
+          readOnly: true
+  volumes:
+    - name: runtime
+      hostPath:
+        path: /run/containerd/containerd.sock
+        type: Socket
+    - name: identity
+      secret:
+        secretName: backup-node-proof-NODE_NAME-tls
+        defaultMode: 256
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backup-node-proof
+  namespace: backup-system
+spec:
+  podSelector:
+    matchLabels:
+      app: backup-node-proof
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backup-controller
+      ports:
+        - protocol: TCP
+          port: 8443
+  egress: []

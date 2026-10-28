@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:clawmanager:system-backup:b-candidate:checkpoint:v1",
+  "x-review-status": "B-proposed-awaiting-A-C-D",
+  "description": "B payload; A authenticates and signs the original binding, C accepts the immutable seal. This is not a manifest, certificate or acceptance decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "installation_id", "config_version", "task_public_id", "attempt_no", "phase", "config_sha256", "inventory_sha256", "part", "job_uid", "job_generation", "invocation_sha256", "sealed_ref", "content_sha256"],
+  "properties": {
+    "schema_version": {"const": "system-backup-b-checkpoint.v1"},
+    "installation_id": {"type":"string", "pattern":"^installation_[A-Za-z0-9._:-]{1,115}$"},
+    "config_version": {"type":"integer", "minimum":1},
+    "task_public_id": {"type": "string", "pattern": "^sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "attempt_no": {"type": "integer", "minimum": 1},
+    "phase": {"const": "capture"},
+    "config_sha256": {"$ref": "#/$defs/hash"},
+    "inventory_sha256": {"$ref": "#/$defs/hash"},
+    "part": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,63}$"},
+    "job_uid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "job_generation": {"type": "integer", "minimum": 1},
+    "invocation_sha256": {"$ref": "#/$defs/hash"},
+    "sealed_ref": {"type": "string", "minLength": 1, "maxLength": 1024},
+    "content_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

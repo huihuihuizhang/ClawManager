@@ -63,7 +63,7 @@ func (s SQLDeadlineStore) Acquire(ctx context.Context, installationID string, ca
 	if s.DB == nil {
 		return ClaimToken{}, errors.New("nil system backup SQL deadline database")
 	}
-	return (ClaimCoordinator{Executor: s.DB, InstallationID: installationID}).Acquire(ctx, candidate.Target, owner, candidate.RowVersion, policy)
+	return (SQLTaskClaimStore{DB: s.DB, InstallationID: installationID}).AcquireWithReceipt(ctx, candidate.Target, owner, candidate.RowVersion, policy)
 }
 
 func (s SQLDeadlineStore) Expire(ctx context.Context, installationID string, token ClaimToken) (uint64, error) {

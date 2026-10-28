@@ -1,0 +1,116 @@
+{
+  "Owner": "backup-controller-1",
+  "Listen": ":9443",
+  "ControlDatabase": "/credentials/control-database.json",
+  "Kubeconfig": "",
+  "StagingPath": "/staging",
+  "EvidencePath": "/evidence",
+  "ArtifactPath": "/artifacts",
+  "Relay": {
+    "CA": "/tls/relay-ca.crt",
+    "Certificate": "/tls/relay.crt",
+    "Key": "/tls/relay.key"
+  },
+  "NodeProof": {
+    "CA": "/tls/node-ca.crt",
+    "Certificate": "/tls/controller-client.crt",
+    "Key": "/tls/controller-client.key"
+  },
+  "NodeEndpoints": {
+    "replace-linux-node": {
+      "URL": "https://192.0.2.20:9444/proof/v1",
+      "ServerURI": "spiffe://backup.example/node/replace-linux-node"
+    }
+  },
+  "IssuerCertificate": "/tls/worker-issuer.crt",
+  "IssuerKey": "/tls/worker-issuer.key",
+  "TrustDomain": "backup.example",
+  "KeysFile": "/credentials/keys.json",
+  "ActiveRevisions": {},
+  "Profiles": [
+    {
+      "Config": {
+        "Mode": "",
+        "ID": "isolated-fixture",
+        "Namespace": "cm-source-fixture",
+        "TargetNamespace": "cm-drill-fixture",
+        "WorkerImage": "example.invalid/backup-worker@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "ServiceAccount": "backup-worker",
+        "ControlURL": "https://192.0.2.10:9443/worker/v1",
+        "Source": {
+          "address": "192.0.2.11:3306",
+          "name": "cm_source_fixture",
+          "server_uuid": "replace-source-mysql-uuid",
+          "tls_server_name": "source.mysql.example",
+          "root_ca": "UkVQTEFDRV9XSVRIX0JBU0U2NF9QRU0=",
+          "max_rows": 100000,
+          "max_memory_bytes": 33554432
+        },
+        "Target": {
+          "address": "192.0.2.12:3306",
+          "name": "cm_drill_fixture",
+          "server_uuid": "replace-target-mysql-uuid",
+          "tls_server_name": "target.mysql.example",
+          "root_ca": "UkVQTEFDRV9XSVRIX0JBU0U2NF9QRU0=",
+          "max_rows": 100000,
+          "max_memory_bytes": 33554432
+        },
+        "Staging": {
+          "cm-source-fixture": {
+            "Name": "backup-staging",
+            "UID": "replace-source-claim-uid"
+          },
+          "cm-drill-fixture": {
+            "Name": "backup-staging",
+            "UID": "replace-target-claim-uid"
+          }
+        },
+        "Evidence": {
+          "Name": "backup-evidence",
+          "UID": "replace-evidence-claim-uid"
+        },
+        "TargetStorageClass": "replace-isolated-storage-class",
+        "TargetStorageSize": "20Gi",
+        "PolicyVersion": "fixture-policy-v1",
+        "KeyVersion": "wrap-v1",
+        "SignerID": "signer-v1",
+        "Instances": [],
+        "Configs": {},
+        "MaxFiles": 100000,
+        "MaxFileBytes": 1073741824,
+        "MaxArchiveBytes": 107374182400,
+        "MaxCompressedBytes": 107374182400,
+        "ExclusiveNFSProofURL": "",
+        "Applications": [
+          {
+            "Namespace": "cm-source-fixture",
+            "Container": "app",
+            "Image": "example.invalid/clawmanager@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "UID": "replace-deployment-uid",
+            "Name": "replace-clawmanager"
+          }
+        ],
+        "WriterProofURL": "https://192.0.2.21:9445/writer-coverage/v1",
+        "Assets": {
+          "Namespace": "cm-source-fixture",
+          "Secrets": [],
+          "Objects": [],
+          "ConfigMaps": []
+        },
+        "RuntimePolicies": {},
+        "Dependencies": {},
+        "WorkBuddy": null,
+        "LegacyPermits": {}
+      },
+      "SourceCredential": "/credentials/source-readonly.json",
+      "SourceAdminCredential": "/credentials/source-account-manager.json",
+      "TargetAdminCredential": "/credentials/target-account-manager.json",
+      "RuntimeCA": "/tls/runtime-ca.crt",
+      "RuntimeToken": "/credentials/runtime-token",
+      "StorageCA": "",
+      "StorageToken": "",
+      "WriterCA": "/tls/writer-ca.crt",
+      "WriterToken": "/credentials/writer-token"
+    }
+  ]
+}

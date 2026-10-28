@@ -1,0 +1,1637 @@
+{
+  "$defs": {
+    "Acceptance": {
+      "additionalProperties": false,
+      "properties": {
+        "config_snapshot": {
+          "$ref": "#/$defs/Reference"
+        },
+        "decision_time_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "local_acceptance": {
+          "type": "boolean"
+        },
+        "local_reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "local_reason_codes_hash": {
+          "type": "string"
+        },
+        "manifest_checksum": {
+          "type": "string"
+        },
+        "marker_checksum": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        },
+        "staging_cleanup_evidence": {
+          "$ref": "#/$defs/Reference"
+        }
+      },
+      "required": [
+        "schema_version",
+        "identity",
+        "manifest_checksum",
+        "marker_checksum",
+        "staging_cleanup_evidence",
+        "local_acceptance",
+        "local_reason_codes",
+        "local_reason_codes_hash",
+        "decision_time_ms",
+        "config_snapshot"
+      ],
+      "type": "object"
+    },
+    "Binding": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "type": "string"
+        },
+        "backup_id": {
+          "type": "string"
+        },
+        "capture_context_hash": {
+          "type": "string"
+        },
+        "envelope_id": {
+          "type": "string"
+        },
+        "part_index": {
+          "maximum": 4294967295,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "backup_id",
+        "attempt",
+        "path",
+        "part_index",
+        "capture_context_hash",
+        "envelope_id"
+      ],
+      "type": "object"
+    },
+    "Bootstrap": {
+      "additionalProperties": false,
+      "properties": {
+        "ca": {
+          "$ref": "#/$defs/Reference"
+        },
+        "disaster_identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "kek": {
+          "$ref": "#/$defs/Reference"
+        },
+        "read_credential": {
+          "$ref": "#/$defs/Reference"
+        }
+      },
+      "required": [
+        "read_credential",
+        "ca",
+        "kek",
+        "disaster_identity"
+      ],
+      "type": "object"
+    },
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "Code": {
+          "type": "string"
+        },
+        "ExpiresAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "ObservedAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Role": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Role",
+        "Code",
+        "Status",
+        "Identity",
+        "ObservedAt",
+        "ExpiresAt"
+      ],
+      "type": "object"
+    },
+    "CaptureRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "Attempt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "CaptureContextSHA256": {
+          "type": "string"
+        },
+        "Config": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Deadline": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Task": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Task",
+        "Attempt",
+        "Deadline",
+        "Config",
+        "CaptureContextSHA256"
+      ],
+      "type": "object"
+    },
+    "CodecDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "CaptureSHA256": {
+          "type": "string"
+        },
+        "Entries": {
+          "items": {
+            "$ref": "#/$defs/CodecEntry"
+          },
+          "type": "array"
+        },
+        "Format": {
+          "type": "string"
+        },
+        "Identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "MaxPlaintextBytes": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "Format",
+        "Identity",
+        "CaptureSHA256",
+        "MaxPlaintextBytes",
+        "Entries"
+      ],
+      "type": "object"
+    },
+    "CodecEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "Binding": {
+          "$ref": "#/$defs/Binding"
+        },
+        "Key": {
+          "$ref": "#/$defs/WrappedKey"
+        },
+        "Object": {
+          "$ref": "#/$defs/Object"
+        }
+      },
+      "required": [
+        "Object",
+        "Binding",
+        "Key"
+      ],
+      "type": "object"
+    },
+    "Core": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance": {
+          "$ref": "#/$defs/Object"
+        },
+        "index": {
+          "$ref": "#/$defs/Object"
+        },
+        "manifest": {
+          "$ref": "#/$defs/Object"
+        },
+        "marker": {
+          "$ref": "#/$defs/Object"
+        }
+      },
+      "required": [
+        "manifest",
+        "index",
+        "marker",
+        "acceptance"
+      ],
+      "type": "object"
+    },
+    "Deletion": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_sha256": {
+          "type": "string"
+        },
+        "core": {
+          "$ref": "#/$defs/Core"
+        },
+        "deleted_at_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "first_execute_actor": {
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/Locator"
+        },
+        "prune_run": {
+          "type": "string"
+        },
+        "registration_id": {
+          "type": "string"
+        },
+        "registration_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "registration_id",
+        "registration_sha256",
+        "locator",
+        "core",
+        "prune_run",
+        "candidate_sha256",
+        "deleted_at_ms",
+        "first_execute_actor"
+      ],
+      "type": "object"
+    },
+    "DeletionProof": {
+      "additionalProperties": false,
+      "properties": {
+        "CandidateSHA256": {
+          "type": "string"
+        },
+        "DeletedAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Evidence": {
+          "$ref": "#/$defs/Reference"
+        },
+        "FirstActor": {
+          "type": "string"
+        },
+        "PruneRun": {
+          "type": "string"
+        },
+        "RegistrationID": {
+          "type": "string"
+        },
+        "RegistrationSHA256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "RegistrationID",
+        "RegistrationSHA256",
+        "PruneRun",
+        "CandidateSHA256",
+        "FirstActor",
+        "DeletedAt",
+        "Evidence"
+      ],
+      "type": "object"
+    },
+    "GatewayConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "AllowAppend": {
+          "type": "boolean"
+        },
+        "DiscoveryMode": {
+          "type": "string"
+        },
+        "Endpoint": {
+          "type": "string"
+        },
+        "Identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Location": {
+          "$ref": "#/$defs/Locator"
+        }
+      },
+      "required": [
+        "Endpoint",
+        "Identity",
+        "Location",
+        "DiscoveryMode",
+        "AllowAppend"
+      ],
+      "type": "object"
+    },
+    "GatewayRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "Arguments": {},
+        "Identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Location": {
+          "$ref": "#/$defs/Locator"
+        },
+        "Nonce": {
+          "type": "string"
+        },
+        "Operation": {
+          "type": "string"
+        },
+        "Schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Schema",
+        "Nonce",
+        "Identity",
+        "Location",
+        "Operation",
+        "Arguments"
+      ],
+      "type": "object"
+    },
+    "GatewayResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "Identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Nonce": {
+          "type": "string"
+        },
+        "Payload": {},
+        "RequestSHA256": {
+          "type": "string"
+        },
+        "Schema": {
+          "type": "string"
+        },
+        "ValidUntil": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "Schema",
+        "Nonce",
+        "RequestSHA256",
+        "Identity",
+        "ValidUntil",
+        "Payload"
+      ],
+      "type": "object"
+    },
+    "GatewayServerConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "AllowAppend": {
+          "type": "boolean"
+        },
+        "Clients": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "DiscoveryMode": {
+          "type": "string"
+        },
+        "Identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Location": {
+          "$ref": "#/$defs/Locator"
+        },
+        "TimeoutMS": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "Identity",
+        "Location",
+        "DiscoveryMode",
+        "AllowAppend",
+        "Clients",
+        "TimeoutMS"
+      ],
+      "type": "object"
+    },
+    "Header": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "key_id": {
+          "type": "string"
+        },
+        "key_version": {
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "manifest",
+            "acceptance_record",
+            "catalog_record"
+          ]
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        }
+      },
+      "required": [
+        "algorithm",
+        "key_id",
+        "key_version",
+        "purpose",
+        "schema_version"
+      ],
+      "type": "object"
+    },
+    "Identity": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_no": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "backup_public_id": {
+          "type": "string"
+        },
+        "deployment_profile": {
+          "type": "string"
+        },
+        "orchestrator": {
+          "type": "string"
+        },
+        "origin_installation_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "origin_installation_id",
+        "backup_public_id",
+        "attempt_no",
+        "orchestrator",
+        "deployment_profile"
+      ],
+      "type": "object"
+    },
+    "Index": {
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/Object"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        }
+      },
+      "required": [
+        "schema_version",
+        "identity",
+        "objects"
+      ],
+      "type": "object"
+    },
+    "Locator": {
+      "additionalProperties": false,
+      "properties": {
+        "bucket": {
+          "type": "string"
+        },
+        "failure_domain_id": {
+          "type": "string"
+        },
+        "prefix": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "bucket",
+        "prefix",
+        "failure_domain_id"
+      ],
+      "type": "object"
+    },
+    "Manifest": {
+      "additionalProperties": false,
+      "properties": {
+        "app_version": {
+          "type": "string"
+        },
+        "artifact_index": {
+          "$ref": "#/$defs/Object"
+        },
+        "business_domains": {
+          "additionalProperties": false,
+          "properties": {
+            "ai_gateway": {
+              "$ref": "#/$defs/Summary"
+            },
+            "instances": {
+              "$ref": "#/$defs/Summary"
+            },
+            "resources": {
+              "$ref": "#/$defs/Summary"
+            },
+            "skill_hub": {
+              "$ref": "#/$defs/Summary"
+            },
+            "teams": {
+              "$ref": "#/$defs/Summary"
+            },
+            "users": {
+              "$ref": "#/$defs/Summary"
+            }
+          },
+          "required": [
+            "users",
+            "instances",
+            "ai_gateway",
+            "teams",
+            "resources",
+            "skill_hub"
+          ],
+          "type": "object"
+        },
+        "capture_context_hash": {
+          "type": "string"
+        },
+        "commit_marker": {
+          "type": "string"
+        },
+        "config_snapshot": {
+          "$ref": "#/$defs/Reference"
+        },
+        "consistency_class": {
+          "enum": [
+            "strong",
+            "bounded"
+          ]
+        },
+        "control_plane": {
+          "$ref": "#/$defs/Summary"
+        },
+        "created_at_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "git_version": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "kek_recoverable": {
+          "type": "boolean"
+        },
+        "migration_catalog_hash": {
+          "type": "string"
+        },
+        "parts": {
+          "additionalProperties": false,
+          "properties": {
+            "deployment_resources": {
+              "$ref": "#/$defs/PartSummary"
+            },
+            "mysql": {
+              "$ref": "#/$defs/PartSummary"
+            },
+            "object_storage": {
+              "$ref": "#/$defs/PartSummary"
+            },
+            "redis": {
+              "$ref": "#/$defs/PartSummary"
+            },
+            "secret_bundle": {
+              "$ref": "#/$defs/PartSummary"
+            },
+            "workspace": {
+              "$ref": "#/$defs/PartSummary"
+            }
+          },
+          "required": [
+            "mysql",
+            "redis",
+            "object_storage",
+            "workspace",
+            "deployment_resources",
+            "secret_bundle"
+          ],
+          "type": "object"
+        },
+        "purpose": {
+          "enum": [
+            "acceptance",
+            "functional_test"
+          ]
+        },
+        "schema_hash": {
+          "type": "string"
+        },
+        "schema_object_coverage": {
+          "$ref": "#/$defs/Reference"
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        },
+        "secret_policy": {
+          "$ref": "#/$defs/Reference"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/$defs/Warning"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "identity",
+        "app_version",
+        "git_version",
+        "created_at_ms",
+        "purpose",
+        "migration_catalog_hash",
+        "schema_hash",
+        "capture_context_hash",
+        "config_snapshot",
+        "secret_policy",
+        "schema_object_coverage",
+        "target",
+        "kek_recoverable",
+        "consistency_class",
+        "artifact_index",
+        "commit_marker",
+        "parts",
+        "business_domains",
+        "control_plane",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "Marker": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_index_checksum": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "manifest_checksum": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        }
+      },
+      "required": [
+        "schema_version",
+        "identity",
+        "manifest_checksum",
+        "artifact_index_checksum"
+      ],
+      "type": "object"
+    },
+    "Object": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "size": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "version",
+        "size",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "Page": {
+      "additionalProperties": false,
+      "properties": {
+        "Cursor": {
+          "type": "string"
+        },
+        "Next": {
+          "type": "string"
+        },
+        "Number": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Objects": {
+          "items": {
+            "$ref": "#/$defs/Object"
+          },
+          "type": "array"
+        },
+        "SnapshotID": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "SnapshotID",
+        "Number",
+        "Cursor",
+        "Next",
+        "Objects"
+      ],
+      "type": "object"
+    },
+    "PartResult": {
+      "additionalProperties": false,
+      "properties": {
+        "Checkpoint": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Consistency": {
+          "type": "string"
+        },
+        "Objects": {
+          "items": {
+            "$ref": "#/$defs/Object"
+          },
+          "type": "array"
+        },
+        "Part": {
+          "type": "string"
+        },
+        "Schema": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "string"
+        },
+        "Warnings": {
+          "items": {
+            "$ref": "#/$defs/Warning"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "Schema",
+        "Part",
+        "Status",
+        "Consistency",
+        "Checkpoint",
+        "Objects",
+        "Warnings"
+      ],
+      "type": "object"
+    },
+    "PartSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint": {
+          "$ref": "#/$defs/Reference"
+        },
+        "consistency_class": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "objects",
+        "checkpoint",
+        "consistency_class"
+      ],
+      "type": "object"
+    },
+    "ProviderConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "append_credential": {
+          "$ref": "#/$defs/Reference"
+        },
+        "discovery_credential": {
+          "$ref": "#/$defs/Reference"
+        },
+        "discovery_mode": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "read_credential": {
+          "$ref": "#/$defs/Reference"
+        },
+        "root": {
+          "$ref": "#/$defs/Locator"
+        }
+      },
+      "required": [
+        "provider",
+        "root",
+        "discovery_mode",
+        "read_credential",
+        "append_credential"
+      ],
+      "type": "object"
+    },
+    "PruneArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "ActiveFinalizer": {
+          "type": "boolean"
+        },
+        "Bytes": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "CommittedAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Core": {
+          "$ref": "#/$defs/Core"
+        },
+        "FinishedAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Group": {
+          "$ref": "#/$defs/RecoveryGroup"
+        },
+        "GuardVersion": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "HistoricalEligible": {
+          "type": "boolean"
+        },
+        "ID": {
+          "type": "string"
+        },
+        "LeaseUntil": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Locator": {
+          "$ref": "#/$defs/Locator"
+        },
+        "ManualHold": {
+          "type": "boolean"
+        },
+        "PromotionHold": {
+          "type": "boolean"
+        },
+        "RegistrationID": {
+          "type": "string"
+        },
+        "RegistrationSHA256": {
+          "type": "string"
+        },
+        "State": {
+          "type": "string"
+        },
+        "Terminal": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ID",
+        "Group",
+        "Terminal",
+        "FinishedAt",
+        "CommittedAt",
+        "State",
+        "HistoricalEligible",
+        "Locator",
+        "Core",
+        "Bytes",
+        "ManualHold",
+        "PromotionHold",
+        "ActiveFinalizer",
+        "LeaseUntil",
+        "GuardVersion",
+        "RegistrationID",
+        "RegistrationSHA256"
+      ],
+      "type": "object"
+    },
+    "PrunePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "Candidates": {
+          "items": {
+            "$ref": "#/$defs/PruneArtifact"
+          },
+          "type": "array"
+        },
+        "Config": {
+          "$ref": "#/$defs/Reference"
+        },
+        "Cutoff": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "SHA256": {
+          "type": "string"
+        },
+        "Shortage": {
+          "additionalProperties": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "Cutoff",
+        "Config",
+        "Candidates",
+        "SHA256",
+        "Shortage"
+      ],
+      "type": "object"
+    },
+    "Record": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "not": {
+            "required": [
+              "deletion"
+            ]
+          },
+          "properties": {
+            "record_type": {
+              "const": "artifact_registered"
+            }
+          },
+          "required": [
+            "registration"
+          ]
+        },
+        {
+          "not": {
+            "required": [
+              "registration"
+            ]
+          },
+          "properties": {
+            "record_type": {
+              "const": "artifact_deleted"
+            }
+          },
+          "required": [
+            "deletion"
+          ]
+        }
+      ],
+      "properties": {
+        "deletion": {
+          "$ref": "#/$defs/Deletion"
+        },
+        "record_id": {
+          "type": "string"
+        },
+        "record_type": {
+          "type": "string"
+        },
+        "registration": {
+          "$ref": "#/$defs/Registration"
+        },
+        "schema_version": {
+          "const": "system-backup.v1"
+        }
+      },
+      "required": [
+        "schema_version",
+        "record_id",
+        "record_type"
+      ],
+      "type": "object"
+    },
+    "RecoveryGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "FailureDomain": {
+          "type": "string"
+        },
+        "Matrix": {
+          "type": "string"
+        },
+        "Origin": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Origin",
+        "Matrix",
+        "FailureDomain"
+      ],
+      "type": "object"
+    },
+    "RedisItem": {
+      "additionalProperties": false,
+      "properties": {
+        "captured_at_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "dump": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "expires_at_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "key": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "pttl_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "stream_groups": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "dump",
+        "sha256",
+        "captured_at_ms",
+        "pttl_ms",
+        "expires_at_ms"
+      ],
+      "type": "object"
+    },
+    "RedisPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "CaptureMode": {
+          "type": "string"
+        },
+        "DB": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "MaxBytes": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "MaxClockSkew": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "MaxItems": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Prefixes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "Purpose": {
+          "type": "string"
+        },
+        "Source": {
+          "$ref": "#/$defs/Reference"
+        },
+        "TTLPolicy": {
+          "type": "string"
+        },
+        "Topology": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Source",
+        "Topology",
+        "CaptureMode",
+        "TTLPolicy",
+        "Purpose",
+        "DB",
+        "Prefixes",
+        "MaxItems",
+        "MaxBytes",
+        "MaxClockSkew"
+      ],
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "Registration": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_signing_key": {
+          "$ref": "#/$defs/Reference"
+        },
+        "bootstrap": {
+          "$ref": "#/$defs/Bootstrap"
+        },
+        "core": {
+          "$ref": "#/$defs/Core"
+        },
+        "decision_time_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "locator": {
+          "$ref": "#/$defs/Locator"
+        },
+        "matrix_key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "identity",
+        "matrix_key",
+        "locator",
+        "core",
+        "bootstrap",
+        "acceptance_signing_key",
+        "decision_time_ms"
+      ],
+      "type": "object"
+    },
+    "Request": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "type": "string"
+        },
+        "canonical_bytes": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "content_length": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "deadline_at_ms": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "dispatch_generation": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "key": {
+          "type": "string"
+        },
+        "provider_identity": {
+          "$ref": "#/$defs/Reference"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "key",
+        "sha256",
+        "content_length",
+        "deadline_at_ms",
+        "dispatch_generation",
+        "condition",
+        "canonical_bytes",
+        "provider_identity"
+      ],
+      "type": "object"
+    },
+    "ScanPage": {
+      "additionalProperties": false,
+      "properties": {
+        "Page": {
+          "$ref": "#/$defs/Page"
+        },
+        "PreviousSHA256": {
+          "type": "string"
+        },
+        "SHA256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Page",
+        "PreviousSHA256",
+        "SHA256"
+      ],
+      "type": "object"
+    },
+    "ScanState": {
+      "additionalProperties": false,
+      "properties": {
+        "Complete": {
+          "type": "boolean"
+        },
+        "Count": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "Cursor": {
+          "type": "string"
+        },
+        "LastKey": {
+          "type": "string"
+        },
+        "Page": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "PageSHA256": {
+          "type": "string"
+        },
+        "RollingSHA256": {
+          "type": "string"
+        },
+        "Snapshot": {
+          "$ref": "#/$defs/Snapshot"
+        }
+      },
+      "required": [
+        "Snapshot",
+        "Cursor",
+        "LastKey",
+        "RollingSHA256",
+        "Page",
+        "Count",
+        "Complete",
+        "PageSHA256"
+      ],
+      "type": "object"
+    },
+    "Signature": {
+      "additionalProperties": false,
+      "properties": {
+        "protected": {
+          "$ref": "#/$defs/Header"
+        },
+        "value": {
+          "contentEncoding": "base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "protected",
+        "value"
+      ],
+      "type": "object"
+    },
+    "SignedAcceptance": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/Acceptance"
+        },
+        "signature": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "properties": {
+                "protected": {
+                  "properties": {
+                    "purpose": {
+                      "const": "acceptance_record"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "payload",
+        "signature"
+      ],
+      "type": "object"
+    },
+    "SignedCatalogRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/Record"
+        },
+        "signature": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "properties": {
+                "protected": {
+                  "properties": {
+                    "purpose": {
+                      "const": "catalog_record"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "payload",
+        "signature"
+      ],
+      "type": "object"
+    },
+    "SignedManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "$ref": "#/$defs/Manifest"
+        },
+        "signature": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "properties": {
+                "protected": {
+                  "properties": {
+                    "purpose": {
+                      "const": "manifest"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "payload",
+        "signature"
+      ],
+      "type": "object"
+    },
+    "Snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "Count": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "ExpiresAt": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "ID": {
+          "type": "string"
+        },
+        "Mode": {
+          "type": "string"
+        },
+        "RecordsSHA256": {
+          "type": "string"
+        },
+        "Root": {
+          "$ref": "#/$defs/Reference"
+        }
+      },
+      "required": [
+        "ID",
+        "Mode",
+        "Root",
+        "Count",
+        "RecordsSHA256",
+        "ExpiresAt"
+      ],
+      "type": "object"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Reference"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "count",
+        "status",
+        "evidence"
+      ],
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "attestation": {
+          "$ref": "#/$defs/Reference"
+        },
+        "class": {
+          "type": "string"
+        },
+        "risks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "class",
+        "risks",
+        "attestation"
+      ],
+      "type": "object"
+    },
+    "Warning": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "classification"
+      ],
+      "type": "object"
+    },
+    "WrappedKey": {
+      "additionalProperties": false,
+      "properties": {
+        "ciphertext": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "nonce": {
+          "contentEncoding": "base64",
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "nonce",
+        "ciphertext"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:clawmanager:system-backup.v1:recovery",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Six-domain artifact and recovery catalog contract"
+}
