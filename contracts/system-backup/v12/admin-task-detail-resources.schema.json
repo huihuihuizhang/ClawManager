@@ -101,7 +101,7 @@
         "target_class": { "type": "string", "enum": ["dr-ready-external", "same-cluster-copy"] },
         "target_risks": { "type": "array", "maxItems": 12, "uniqueItems": true, "items": { "enum": ["source_overlap", "same_failure_domain", "artifact_credential_source_dependent", "kek_source_dependent", "signing_key_source_dependent", "catalog_source_dependent", "attestation_missing", "attestation_expired", "conditional_commit_unavailable", "transport_unverified", "broad_egress", "provider_capability_degraded"] } },
         "target_failure_domain_id": { "type": "string", "minLength": 1, "maxLength": 128 },
-        "consistency": { "type": "string", "enum": ["strong", "bounded", "weak"] },
+        "consistency": { "type": ["string", "null"], "enum": ["strong", "bounded", "weak", null] },
         "checksums": { "$ref": "#/$defs/NullableArtifactChecksumSet" },
         "artifact_registration_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
         "artifact_registration_hash": { "$ref": "#/$defs/NullableSha256" },

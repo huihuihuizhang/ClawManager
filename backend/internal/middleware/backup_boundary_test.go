@@ -50,3 +50,25 @@ func TestBackupBoundaryReleasesOnlyAfterHandlerReturnsOrPanics(t *testing.T) {
 		}
 	}
 }
+
+func TestBackupCancellationRemainsReachableDuringMaintenance(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(backupRequestBoundary("installation", func(context.Context) (func(), error) { return nil, backupgate.ErrMaintenance }))
+	for _, path := range []string{"/api/v1/admin/system-backups/:id/cancel", "/api/v1/admin/system-backup-preflights/:id/cancel"} {
+		// The real handler must still check authorization and execution evidence.
+		r.POST(path, func(c *gin.Context) { c.Status(403) })
+	}
+	for _, path := range []string{"/api/v1/admin/system-backups/task/cancel", "/api/v1/admin/system-backup-preflights/task/cancel"} {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest("POST", path, nil))
+		if w.Code != 403 {
+			t.Fatal("cancel blocked before authority check", path, w.Code)
+		}
+		w = httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest("POST", path+"/force", nil))
+		if w.Code != 503 {
+			t.Fatal("unknown control suffix bypassed gate", w.Code)
+		}
+	}
+}

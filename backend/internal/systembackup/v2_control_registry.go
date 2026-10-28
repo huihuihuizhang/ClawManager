@@ -48,5 +48,7 @@ func init() {
 		"system_backup_v2_totp_credentials",
 		"system_backup_v2_engine_bindings",
 		"system_backup_v2_import_journal",
+		"system_backup_v2_execution_readiness",
+		"system_backup_v2_execution_inputs",
 	)
 }

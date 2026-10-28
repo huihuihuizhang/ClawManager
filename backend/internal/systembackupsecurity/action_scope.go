@@ -5,19 +5,26 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
 )
 
 const CreateSystemBackup = "createSystemBackup"
 const CreateSystemBackupPreflight = "createSystemBackupPreflight"
+const CancelSystemBackup = "cancelSystemBackup"
+const CancelSystemBackupPreflight = "cancelSystemBackupPreflight"
+
+var cancelBackupPath = regexp.MustCompile(`^/api/v1/admin/system-backups/sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/cancel$`)
+var cancelPreflightPath = regexp.MustCompile(`^/api/v1/admin/system-backup-preflights/spf_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/cancel$`)
 
 var ErrSystemBackupActionValidation = errors.New("validation_failed")
 
 // SystemBackupActionAuthorizer uses the SAME login recorder and deployment pins
-// as reads. It covers only v12's two first-chain create actions. Their policy is
-// operate + idempotency, with recent_strong_auth=none. It does not grant config,
-// provider, sensitive-download, cancel, restore, or destructive permissions.
+// as reads. It covers v12's backup/preflight create and cancel actions, all
+// operate + idempotency with recent_strong_auth=none. It does not grant config,
+// provider, sensitive-download, restore, or destructive permissions. Cancel
+// admission is separately bounded to proven-unstarted tasks by the application.
 type SystemBackupActionAuthorizer struct{ read *SystemBackupReadAuthorizer }
 
 // LoadSystemBackupActionAuthorizer reads the existing SystemBackupReadPins
@@ -66,6 +73,16 @@ func (a *SystemBackupActionAuthorizer) Scope(r *http.Request, operation string) 
 		path = "/api/v1/admin/system-backups"
 	case CreateSystemBackupPreflight:
 		path = "/api/v1/admin/system-backup-preflights"
+	case CancelSystemBackup:
+		if r.URL == nil || !cancelBackupPath.MatchString(r.URL.Path) {
+			return nil, ErrRegistrationPermission
+		}
+		path = r.URL.Path
+	case CancelSystemBackupPreflight:
+		if r.URL == nil || !cancelPreflightPath.MatchString(r.URL.Path) {
+			return nil, ErrRegistrationPermission
+		}
+		path = r.URL.Path
 	default:
 		return nil, ErrRegistrationPermission
 	}

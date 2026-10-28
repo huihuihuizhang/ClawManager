@@ -12,17 +12,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// This is the only production task application composition point. The existing
-// read authorizer is intentionally not reused as system_backup.operate authority.
-// Supply the reviewed request decoder + A mutation admission + atomic SQL
-// create/enqueue + B runner/C provider adapters here when those contracts land.
-// No production implementation is currently available, so both POSTs and the
-// dependent details stay not_ready rather than falling through to the proxy.
+// Read and operate authorities remain separate. Task admission additionally
+// requires a matching, fresh execution-adapter receipt inside its SQL transaction.
 func linkedSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecurity.SQLLoginSessions) systembackupapi.TaskApplication {
-	// The missing reviewed request writer and complete B/C detail adapters
-	// have one explicit link location. Never substitute test models here.
-	var writer systembackupapi.TaskWriter
-	var details systembackupapi.TaskDetails
+	var writer systembackupapi.TaskWriter = systembackupapi.DisabledTaskWriter{}
+	if path := os.Getenv("SYSTEM_BACKUP_EXECUTION_PROFILE_FILE"); path != "" {
+		profile, err := systembackupapi.LoadExecutionProfile(path)
+		if err != nil {
+			return nil
+		}
+		configured, err := systembackupapi.NewSQLTaskWriter(profile)
+		if err != nil {
+			return nil
+		}
+		writer = configured.WithCapacityReport(os.Getenv("SYSTEM_BACKUP_CAPACITY_REPORT_FILE"))
+	}
+	details := systembackupapi.SQLTaskDetails{DB: db}
 	application, err := composeSystemBackupTaskApplication(db, sessions, writer, details, os.Getenv)
 	if err != nil {
 		return nil
@@ -54,5 +59,11 @@ func registerBackupTaskMutations(admin *gin.RouterGroup, handler *systembackupap
 	})
 	admin.POST("/system-backup-preflights", func(c *gin.Context) {
 		handler.Create(c.Writer, c.Request, systembackupread.PreflightTask, middleware.SystemBackupRequestID(c))
+	})
+	admin.POST("/system-backups/:id/cancel", func(c *gin.Context) {
+		handler.Cancel(c.Writer, c.Request, systembackupread.BackupTask, c.Param("id"), middleware.SystemBackupRequestID(c))
+	})
+	admin.POST("/system-backup-preflights/:id/cancel", func(c *gin.Context) {
+		handler.Cancel(c.Writer, c.Request, systembackupread.PreflightTask, c.Param("id"), middleware.SystemBackupRequestID(c))
 	})
 }

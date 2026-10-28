@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-task-create-requests.schema.json",
+  "$defs": {
+    "BackupCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_purpose": {"enum": ["acceptance", "functional_test"], "default": "acceptance"},
+        "requested_parts": {
+          "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true,
+          "items": {"enum": ["mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"]},
+          "default": ["mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"]
+        }
+      },
+      "allOf": [{
+        "if": {"properties": {"task_purpose": {"const": "acceptance"}}},
+        "then": {"properties": {"requested_parts": {"minItems": 6}}}
+      }]
+    },
+    "PreflightCreateRequest": {
+      "type": "object", "additionalProperties": false, "required": ["source_public_id"],
+      "properties": {
+        "source_public_id": {"type": "string", "pattern": "^sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+        "preflight_mode": {"enum": ["production_readonly", "functional_test"], "default": "production_readonly"}
+      }
+    }
+  }
+}

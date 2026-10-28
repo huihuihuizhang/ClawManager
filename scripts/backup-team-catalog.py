@@ -34,7 +34,12 @@ def outputs():
                 'package systembackup\n\n'
                 '// Versioned control rows are historical metadata, never restored as runnable work.\n'
                 'func init() {\n\tcontrolTables = append(controlTables,\n' +
-                ''.join(f'\t\t"{table}",\n' for table in tables + ["system_backup_v2_engine_bindings", "system_backup_v2_import_journal"]) + '\t)\n}\n')
+                ''.join(f'\t\t"{table}",\n' for table in tables + [
+                    "system_backup_v2_engine_bindings", "system_backup_v2_import_journal",
+                    # Readiness and immutable queued inputs are installation-local
+                    # execution authority, never restored as runnable work.
+                    "system_backup_v2_execution_readiness", "system_backup_v2_execution_inputs",
+                ]) + '\t)\n}\n')
     yield ROOT / "backend/internal/systembackup/v2_control_registry.go", registry
 
 

@@ -537,7 +537,7 @@ export interface BackupDetailResource {
   target_class: "dr-ready-external" | "same-cluster-copy";
   target_risks: TargetRisk[];
   target_failure_domain_id: string;
-  consistency: "strong" | "bounded" | "weak";
+  consistency: "strong" | "bounded" | "weak" | null;
   checksums: NullableArtifactChecksumSet;
   artifact_registration_id: string | null;
   artifact_registration_hash: string | null;

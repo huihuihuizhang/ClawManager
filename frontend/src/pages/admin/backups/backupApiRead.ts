@@ -327,7 +327,7 @@ function validOperationTarget(kind: unknown, id: unknown, installation: unknown)
   const prefix = operationTargetPrefixes[kind];
   return prefix !== undefined && new RegExp(`^${prefix}[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$`).test(id);
 }
-function validOperation(value: unknown, expectedId?: string): value is SystemBackupOperation {
+export function validOperation(value: unknown, expectedId?: string): value is SystemBackupOperation {
   if (!record(value) || !exactFields(value, operationFields)
     || value.schema_version !== 'system-backup-operation.v1'
     || typeof value.public_id !== 'string' || !operationIdPattern.test(value.public_id)
@@ -420,7 +420,7 @@ function validBackupDetail(value: Record<string, unknown>): boolean {
     || !['dr-ready-external', 'same-cluster-copy'].includes(value.target_class as string)
     || !uniqueEnumArray(value.target_risks, targetRisks, 0, 12)
     || !boundedString(value.target_failure_domain_id, 1, 128)
-    || !['strong', 'bounded', 'weak'].includes(value.consistency as string)
+    || value.consistency !== null && !['strong', 'bounded', 'weak'].includes(value.consistency as string)
     || !validChecksums(value.checksums)
     || value.artifact_registration_id !== null && !boundedString(value.artifact_registration_id, 1, 128)
     || !nullableHash(value.artifact_registration_hash)

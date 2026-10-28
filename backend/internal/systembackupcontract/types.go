@@ -533,7 +533,7 @@ type BackupDetailResource struct {
 	TargetClass              string                      `json:"target_class"`
 	TargetRisks              []string                    `json:"target_risks"`
 	TargetFailureDomainID    string                      `json:"target_failure_domain_id"`
-	Consistency              string                      `json:"consistency"`
+	Consistency              *string                     `json:"consistency"`
 	Checksums                NullableArtifactChecksumSet `json:"checksums"`
 	ArtifactRegistrationID   *string                     `json:"artifact_registration_id"`
 	ArtifactRegistrationHash *string                     `json:"artifact_registration_hash"`

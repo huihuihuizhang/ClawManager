@@ -1,13 +1,13 @@
 {
-  "status": "module_port_verified_activation_incomplete",
+  "status": "transactional_admission_verified_execution_incomplete",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "8ef5fa7fd4df45f6306e910705db01f589266ba7",
-  "migration_count": 159,
+  "migration_count": 160,
   "checks": {
     "backend_all": {
       "result": "passed",
       "local_log_sha256": "d6c27ce1c660c8471ee453545f5d23f75a9de7de0ef2e92ac48ce6e17bcc4f5e",
-      "boundary": "unit suite; opt-in platform tests may skip"
+      "boundary": "prior integration baseline unit suite; current full run found new-table registry omissions, corrected and focused registry regression passed; final full rerun pending"
     },
     "real_mysql_schema": {
       "result": "passed",
@@ -31,8 +31,8 @@
     },
     "frontend_build": {
       "result": "passed",
-      "local_log_sha256": "8c6307560a4eec8ce20ec7bf9d6e5c43a206b084b2696e9c5fadc269d2e992f9",
-      "boundary": "production frontend compilation"
+      "local_log_sha256": "9184efe9e81c9d3c3e4daff7156e4a8ac7afe51ce58a06da0e44ba07e3acc416",
+      "boundary": "production frontend compilation including safe unstarted cancellation; no live browser/backend mutation acceptance"
     },
     "backup_browser": {
       "result": "passed",
@@ -43,10 +43,15 @@
       "result": "passed",
       "local_log_sha256": "b4b24b0e3d701578258f4658ad2ab98b1b5c0d66be3ee41cd0b475f2bb55607c",
       "boundary": "real SQL/Redis/MinIO/files; controlled Kubernetes boundary and fixture object administrator"
+    },
+    "transactional_task_admission": {
+      "result": "passed",
+      "local_log_sha256": "62da520935875c50131153cfd5fe02fe59a93b04acc286176540c23831af868f",
+      "boundary": "real disposable MySQL with 160 migrations; six same-key submissions; rollback/readiness; real HTTP session/RBAC create/read/cancel; synthetic readiness only, no capture Job"
     }
   },
   "not_accepted": [
-    "production v2 task writer/details/runner and remote shared-gate adapter",
+    "production v2 runner, durable dispatch and remote shared-gate adapter; complete task control/health views",
     "v2 current-data registry and complete restore acceptance",
     "production grants/TLS/Broker/download deployment",
     "final image/live environment and rollback"

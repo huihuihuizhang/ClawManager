@@ -79,7 +79,7 @@
       "path": "backend/cmd/server/system_backup_tasks_live.go",
       "source_path": "backend/cmd/server/system_backup_tasks_live.go",
       "source_sha256": "e5407ae4ebde00e9b0b6137a728f08cdecd765df7b67397448b81ca7e2b6cba6",
-      "working_tree_sha256": "e5407ae4ebde00e9b0b6137a728f08cdecd765df7b67397448b81ca7e2b6cba6",
+      "working_tree_sha256": "f0b5c24122a95d16106c843e7d1dae2d7ca80566f62c641e1536ed49d5614c96",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -594,6 +594,13 @@
       "disposition": "integration-owned adaptation"
     },
     {
+      "path": "backend/internal/db/migrations/119_backup_v2_execution_admission.sql",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "464ee7089e7132db715268f6f0e3496dc70843b8a6e257b4d44540514ad6096d",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "backend/internal/db/username_migration_test.go",
       "source_path": "backend/internal/db/username_migration_test.go",
       "source_sha256": "2a97c7c841678cee85fe6ced2225a29df14976ef311c85cf83caf3f30f767ea7",
@@ -618,14 +625,14 @@
       "path": "backend/internal/middleware/backup_boundary.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "2a0d47a72d42ff79478110b20731ec33e0cae4d3b0b968b4d7c9bd74e6b5fc3c",
+      "working_tree_sha256": "9b750f87a94e189473a9203c7bc6aa967cee2e6d70769bf69dbe4c6c1bb617fd",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "backend/internal/middleware/backup_boundary_test.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "514d4d160e94e6080b0bb1d0128d6c05b04026c977f2779acc21722ae90f2073",
+      "working_tree_sha256": "0fa13e1762b00db1506c84a9a39806b7d76e27ae509cd091555851e071f63a19",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -660,7 +667,7 @@
       "path": "backend/internal/migrationcatalog/reviewed_catalog.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "cd3563912f3b96ae223b2d2cfd916fbb348f36ad61cb12ed1c0ea1bda2beb3c4",
+      "working_tree_sha256": "8a1a8539adaf6bfe4e4381a6247d0800c91f3d8b32841fdbbfc85fc0128bfed0",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -947,35 +954,84 @@
       "path": "backend/internal/systembackup/v2_control_registry.go",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "13ff8dec9436155316eeb77740c10cb90f436317fee1bf04fcc5957a2986c1a3",
+      "working_tree_sha256": "04d2204c6a46699a81e93c2ffce94ec8818fb92bd3f088857913b699f2e1bb70",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/cancel.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "4f8195b712913d2e559a471871f27110ec0cfcb46db843bb548fce8580c29a31",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_capacity.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "5db2b9ffed20c20932e8bd976abed9e30eb874232d690c869a9114cf6f80d4bb",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_details.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "f50af99596e11a49ed3e9f80a2640c5c5c55c00893ae52b619ea480063a281a2",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_http_mysql_test.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "eb9fd06aae55311cade459237b0e021408252e7bd868499979e062275ca64c9e",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_writer.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "56814b74ad7bd6f6e156ffcb35b455a2337350165fa4b986411cfb136bbeda61",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_writer_mysql_test.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "3a08a5b41cdccbbdcfcafcbb3d2232a01d0c01f59aba40c16ce1d1e952a6f0d8",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupapi/sql_writer_test.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "c096405469be9e18b94a5b8e9dad43d786395834b20350ccb37f99b240fcc7ac",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "backend/internal/systembackupapi/submission.go",
       "source_path": "backend/internal/systembackupapi/submission.go",
       "source_sha256": "70935c14be1823d098915eec4801abfc97d545409ce0a4ef3d05c94014162b62",
-      "working_tree_sha256": "c2a49a165ba8fac9ba879f51ce8a3b27b78df16016d194723ff3dda1fcf8b022",
+      "working_tree_sha256": "70935c14be1823d098915eec4801abfc97d545409ce0a4ef3d05c94014162b62",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "backend/internal/systembackupapi/submission_test.go",
       "source_path": "backend/internal/systembackupapi/submission_test.go",
       "source_sha256": "01c2ecc53b6e0666ef29022068e126a187f7653bbafef62a03c246b0aca7a893",
-      "working_tree_sha256": "d31ff2aa455f25df1e93d4cca71e98faab96a4a1d57bd1e2528f7c782a53879b",
+      "working_tree_sha256": "01c2ecc53b6e0666ef29022068e126a187f7653bbafef62a03c246b0aca7a893",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "backend/internal/systembackupapi/tasks.go",
       "source_path": "backend/internal/systembackupapi/tasks.go",
       "source_sha256": "d099e72285d0721394d03691c9a0000ff9aeab1b5316002fa38ca0050ffddee4",
-      "working_tree_sha256": "21aacfc86b0acabe96c3184ce6127ca5349517e90018378526fd79adba916641",
+      "working_tree_sha256": "d099e72285d0721394d03691c9a0000ff9aeab1b5316002fa38ca0050ffddee4",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "backend/internal/systembackupapi/tasks_test.go",
       "source_path": "backend/internal/systembackupapi/tasks_test.go",
       "source_sha256": "24987630ec0205d8038273fc56c490d59135dfaa9663b85fc14a269476feab12",
-      "working_tree_sha256": "7d3e585a229292e19d3e2707be02fb970682aa3a3ed2177bf773557ed6e28c9b",
+      "working_tree_sha256": "24987630ec0205d8038273fc56c490d59135dfaa9663b85fc14a269476feab12",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -1591,7 +1647,7 @@
       "path": "backend/internal/systembackupcontract/types.go",
       "source_path": "backend/internal/systembackupcontract/types.go",
       "source_sha256": "322756010509bca44f5807aef67a30bb98f593e09817ccdd2c1dbb4896e75738",
-      "working_tree_sha256": "c97bf4d056ae66ba341be5e610a9546c358fb79ca0e4bf0f650690297a466734",
+      "working_tree_sha256": "8705a77cc578b2d854e727d8d45199663ea78794c418b2dbd820883273bc1775",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -4234,6 +4290,20 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "backend/internal/systembackupread/backup_preflight_detail.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "3b6de11854a40614a46a519760382d4bb166f3cd26c99cc2faa7a2be47976d6a",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "backend/internal/systembackupread/backup_preflight_detail_test.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "8700337f15b7eab4e356ea36cec9401321b084ebb33712c705861431a471b64b",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "backend/internal/systembackupread/config_backfill_source.go",
       "source_path": "backend/internal/systembackupread/config_backfill_source.go",
       "source_sha256": "6cafc4a6cfe824895f6f577402a360f46874c624b0c72298a66d9950113cf8ad",
@@ -4363,7 +4433,7 @@
       "path": "backend/internal/systembackupread/drill_detail.go",
       "source_path": "backend/internal/systembackupread/drill_detail.go",
       "source_sha256": "f431e19f68493d86f3bdb0d7e047024b811d25b991ae0b8a38ee4b65a759a9a5",
-      "working_tree_sha256": "b2c5a528b46fdc557d2e28d5c5afc2b295f849530abd8a6c3446e3ba06d48ac8",
+      "working_tree_sha256": "35cada5e249a5d6f7b3befea23d82db74624dcd02e6c43b79484b5d0420047e5",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -4463,6 +4533,13 @@
       "source_sha256": "c9723beb064858657f08e4bbe9f3ed21f8dcf9e075f530dba80670b866e4e1ac",
       "working_tree_sha256": "1952f0e568bc7848e9c189e2df182758185e056359f14131e533e8ae4ade98a6",
       "disposition": "isolated source module; activation pending integration gates"
+    },
+    {
+      "path": "backend/internal/systembackupread/task_admission.go",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "d28e91022c8116cf1ac595c0a50df01cfb174a9cbd239f2a40d8d8e56b632b74",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "backend/internal/systembackupread/task_check_control.go",
@@ -4629,7 +4706,7 @@
       "path": "backend/internal/systembackupread/verification_detail_test.go",
       "source_path": "backend/internal/systembackupread/verification_detail_test.go",
       "source_sha256": "6af6fcd137fc6ea3650ee46cd614965278bcbb1570e939c4a767d8fd31034178",
-      "working_tree_sha256": "2eaf64b087e14ac77af95a5f66467ce4263470c79d19b19ee1264970f1de2e4e",
+      "working_tree_sha256": "87b92f90639ee2907f31b884d80acea22ec0f934a024c084311ce718a999ca48",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -4909,14 +4986,14 @@
       "path": "backend/internal/systembackupsecurity/action_scope.go",
       "source_path": "backend/internal/systembackupsecurity/action_scope.go",
       "source_sha256": "1249ece64c9ab1d7979282aa7f0655613f6db866f91f96234d93958840df73f0",
-      "working_tree_sha256": "c8403079d73b25ee3dff13dbd54dde05907f191e410df38df45c8809f50428a0",
+      "working_tree_sha256": "a371a38de36044e1d02e1f993af22c3fd8cf638c7005a1a8b42a766d5a808ec6",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "backend/internal/systembackupsecurity/action_scope_test.go",
       "source_path": "backend/internal/systembackupsecurity/action_scope_test.go",
       "source_sha256": "31f5d7abb997689cf983b48a2ba4616d40f341f29c680693ec4b5f39d7e50010",
-      "working_tree_sha256": "1c84035ecdf67cab8ca05bccbe86b460ceae7a30497b31c90fc01ecd080ec6f4",
+      "working_tree_sha256": "63bb242927c1750b6415584bfe44c652c20ab2028e1853ea3d4d941e859a33d9",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -6523,6 +6600,13 @@
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
+      "path": "contracts/system-backup/v12/admin-task-create-requests.schema.json",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "63963e1564340a6b8d77ed265b7d52cf79528390f42bd4c780ad7572a4780077",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "contracts/system-backup/v12/admin-task-detail-redacted-examples.json",
       "source_path": "contracts/system-backup/v12/admin-task-detail-redacted-examples.json",
       "source_sha256": "5ff68bdb81af2837571a5299452dba033cf14e2d8a00e98cffa4ed4492f3ed4b",
@@ -6533,14 +6617,14 @@
       "path": "contracts/system-backup/v12/admin-task-detail-resources.schema.json",
       "source_path": "contracts/system-backup/v12/admin-task-detail-resources.schema.json",
       "source_sha256": "40ba79f9782fc668a3f0f864572685936312860e0e0f127e860286977305154e",
-      "working_tree_sha256": "f982b2890a4836131b99e39b47fe288b81a9769ccdbc44ff3ac641d525844a25",
+      "working_tree_sha256": "d15e2d77290a86d1327a36f9998a5c24dd7e3023a3187d2e796b2ba5959b4f27",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
       "path": "contracts/system-backup/v12/admin.openapi.json",
       "source_path": "contracts/system-backup/v12/admin.openapi.json",
       "source_sha256": "bd41b280168ad6c9dfda40152cedc907a4c3e19bc1b832a772ef83412cf8e18b",
-      "working_tree_sha256": "1d01615139603e329cc487d3319b6cce8063f6df50c72b9ecd7224e797b07d44",
+      "working_tree_sha256": "0021fff265b1af9a66ebe6a4800a5c64aa26df074e40464088cf7d068c0e6e31",
       "disposition": "isolated source module; activation pending integration gates"
     },
     {
@@ -6939,14 +7023,14 @@
       "path": "docs/backup-team-integration/README.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "6ff0633c22bae4a65bb1b43b9764e1c8b601bebbaffa25a31028834ce926c728",
+      "working_tree_sha256": "d36dcf820f4330a6096a31c8d386ef6a45d53044fd494b45ef920c4a8846a32c",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "docs/backup-team-integration/catalog.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "53e46bad9cdf62c93404bda6e13628e25318ce2c0bb7369b8e6d74f57ce20796",
+      "working_tree_sha256": "460c35d803be0b87b6f540f0bc2be63acb8f694380fb160dd49d548d36b30ef5",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -7111,10 +7195,17 @@
       "disposition": "integration-owned adaptation"
     },
     {
+      "path": "docs/backup-team-integration/task-admission.md",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "6334cb06274f8c973c565e848f700778f8fda9ad41e2f006f6b7decff318565a",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "47bc706ad101c2815a0728f8ddac32ee20fe092c56a757527ee7634911eaed06",
+      "working_tree_sha256": "5bd15842140856add007a6cba214604ad267ed2aeb32351f9b67cf8fa288d263",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -7191,8 +7282,15 @@
       "path": "frontend/src/lib/systemBackupI18n.ts",
       "source_path": "frontend/src/lib/systemBackupI18n.ts",
       "source_sha256": "fb1a5ce24368655bf2aae730bf0ea82ec349482c37db60dc5bebd59ac1d50e8b",
-      "working_tree_sha256": "fb1a5ce24368655bf2aae730bf0ea82ec349482c37db60dc5bebd59ac1d50e8b",
+      "working_tree_sha256": "126da95b84bd70230213bfc52eea85f19f7706e12f60746a6dc9a0f9a2230927",
       "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupCancelUnstarted.tsx",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "dfa40c97cccd60fa12cf9495597497dfa698e1d9208431c3905cfa98c0e3d5fa",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "frontend/src/pages/admin/backups/BackupEvidenceDownload.tsx",
@@ -7219,7 +7317,7 @@
       "path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
       "source_path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
       "source_sha256": "97dad9b865c55a2b335dfdb8ff8ea0564d8cda2bb34ed864a86570f5f307a678",
-      "working_tree_sha256": "97dad9b865c55a2b335dfdb8ff8ea0564d8cda2bb34ed864a86570f5f307a678",
+      "working_tree_sha256": "da1a3f034a5ae51d69368549c2f10fd9ee6385b36f7d9bce709e2197db1972f1",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -7268,7 +7366,7 @@
       "path": "frontend/src/pages/admin/backups/SystemBackupsPage.tsx",
       "source_path": "frontend/src/pages/admin/backups/SystemBackupsPage.tsx",
       "source_sha256": "13a9aecaf17946addcc732f7f23275d0199edc807f1cf3724f7ab166bb07160a",
-      "working_tree_sha256": "13a9aecaf17946addcc732f7f23275d0199edc807f1cf3724f7ab166bb07160a",
+      "working_tree_sha256": "9cf22123e6c48b40aa672190cbb9ae6809aed3d608d9f1a53b381885efcb6b4d",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -7282,7 +7380,7 @@
       "path": "frontend/src/pages/admin/backups/backupApiRead.ts",
       "source_path": "frontend/src/pages/admin/backups/backupApiRead.ts",
       "source_sha256": "32155c670dbe40fff5357768a47be12e0629af4652b8365edbe63988afdeea72",
-      "working_tree_sha256": "32155c670dbe40fff5357768a47be12e0629af4652b8365edbe63988afdeea72",
+      "working_tree_sha256": "18dc6fb97ca88db9e98ab5d839ee879d14d62816b3ec71fb55c416c88948552a",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -7391,6 +7489,20 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
+      "path": "frontend/src/services/systemBackupActions.test.mjs",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "8c9c5b016aefdcb87aeb5cf7a1f0e917769edfa6384eec6ec15298274b69c8a4",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "frontend/src/services/systemBackupActions.ts",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "fdc0a2bb8283ee7f35b60df9ba13dd3d8f7d815d81d41efb949ed45289d4cdef",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "frontend/src/services/systemBackupDownloadService.ts",
       "source_path": "frontend/src/services/systemBackupDownloadService.ts",
       "source_sha256": "090dc3add6480a6275909d19a3fd4a0db6bddf253c101b702f1738faf0f212ad",
@@ -7415,14 +7527,14 @@
       "path": "frontend/src/types/systemBackupContract.ts",
       "source_path": "frontend/src/types/systemBackupContract.ts",
       "source_sha256": "6782a0536603435501659381ab4e86a9b973a16ac60888d5211208cea0b88588",
-      "working_tree_sha256": "6782a0536603435501659381ab4e86a9b973a16ac60888d5211208cea0b88588",
+      "working_tree_sha256": "b970608b12fba1f547fe1e5d09b3d223709e956b7c3611830d3d84a736330012",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
       "path": "scripts/backup-team-catalog.py",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "6c2e6098a4d1d4b15d001edce4f34890e4d2a93efe7544b490790f60777ab449",
+      "working_tree_sha256": "44f205e700884f12ad5ed422b59fe1d9096a59f1a5086ba84ce631c8574483ee",
       "disposition": "integration-owned adaptation"
     },
     {

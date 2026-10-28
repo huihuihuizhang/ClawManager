@@ -47,7 +47,8 @@ func backupRequestBoundary(scope string, acquire func(context.Context) (func(), 
 // closed: an unknown suffix must not bypass admission during maintenance.
 func backupRecordControlRoute(method, path string) bool {
 	if method == http.MethodPost {
-		return path == "/api/v1/admin/system-backups" || path == "/api/v1/admin/system-backup-preflights"
+		return path == "/api/v1/admin/system-backups" || path == "/api/v1/admin/system-backup-preflights" ||
+			path == "/api/v1/admin/system-backups/:id/cancel" || path == "/api/v1/admin/system-backup-preflights/:id/cancel"
 	}
 	if method != http.MethodGet {
 		return false

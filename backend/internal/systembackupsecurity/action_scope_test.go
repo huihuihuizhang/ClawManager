@@ -65,11 +65,17 @@ func actionScopeFixture(t *testing.T, role string) (*SystemBackupActionAuthorize
 
 func TestSystemBackupActionScopePolicyAndSession(t *testing.T) {
 	for _, role := range []string{"viewer", "operator", "security_admin"} {
-		for _, operation := range []string{CreateSystemBackup, CreateSystemBackupPreflight} {
+		for _, operation := range []string{CreateSystemBackup, CreateSystemBackupPreflight, CancelSystemBackup, CancelSystemBackupPreflight} {
 			t.Run(role+"/"+operation, func(t *testing.T) {
 				a, db, state, r, _ := actionScopeFixture(t, role)
 				if operation == CreateSystemBackupPreflight {
 					r.URL.Path = "/api/v1/admin/system-backup-preflights"
+				}
+				if operation == CancelSystemBackup {
+					r.URL.Path = "/api/v1/admin/system-backups/sbk_12345678-1234-4234-8234-123456789abc/cancel"
+				}
+				if operation == CancelSystemBackupPreflight {
+					r.URL.Path = "/api/v1/admin/system-backup-preflights/spf_12345678-1234-4234-8234-123456789abc/cancel"
 				}
 				scope, err := a.Scope(r, operation)
 				if err != nil {

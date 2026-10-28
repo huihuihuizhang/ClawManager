@@ -2,8 +2,10 @@
 
 This branch is an **in-progress integration**, not a released replacement backup
 engine. Do not enable v2 from a database edit or infer runtime readiness from a
-passing library test. No production task writer, complete detail adapter or v2
-capture runner has been composed in the application yet.
+passing library test. Production submission, backup/preflight details and safe
+unstarted cancellation are composed. The v2 capture runner and independent
+restore composition remain unavailable; submission refuses without fresh
+executor readiness. See `task-admission.md` for the implemented boundary.
 
 ## Provenance and preservation
 
@@ -24,8 +26,10 @@ The new control metadata uses `system_backup_v2_*`. Historical Team SQL and
 unversioned control records are retained. The appended migrations do not select
 or start a new engine. The installation selector defaults to `legacy`.
 
-Both acquisition paths use the existing Team maintenance gate. Engine selection
-is checked under the same authority transaction before closing admission. Switching
+The existing Team maintenance gate supports both engine selectors through
+`BeginForEngine`; the versioned controller's source gate is **not yet wired to
+that gate**. Its capture activation remains disabled. The shared primitive checks
+engine selection under the same authority transaction before closing admission. Switching
 requires an idle gate, no unfinished tasks/participants, no outstanding mutation
 leases, and no unresolved provider writes or unconfirmed restore executions.
 Time expiry alone does not establish that a writer stopped. The selection API is
@@ -95,8 +99,9 @@ own environments; ordinary `go test ./...` is not proof those tests ran.
    quiescence, exit/UID evidence, fencing and bounded business recovery.
 2. Current Team/Gateway/Skill/object coverage in the v2 registry and readers. Its
    source draft is not upgraded merely by updating a SQL catalog hash.
-3. Production request decoder, transaction-owned writer, durable dispatch,
-   complete details, actual runner and independent restore verification.
+3. Durable dispatch, actual runner, full control/health views and independent
+   restore verification. Transaction-owned backup/preflight submission and their
+   persisted detail projections are implemented; this does not satisfy execution.
 4. Real auth/grant/TLS/Broker/download deployment acceptance.
 5. Final image, real-environment closure, compatible rollback and cleanup receipts.
 
@@ -116,8 +121,11 @@ with the source deployment-pinned read authority, independent UTC/session pool a
 cursor key. No fixture HTTP fallback is registered. Existing admin checks still
 apply; read permission does not confer operation authority. New record routes
 retain maintenance-time access using an explicit registered method/path allowlist;
-unknown suffixes do not bypass the gate. The source task composition's missing
-writer/details still returns `not_ready`; no test adapter is installed.
+unknown suffixes do not bypass the gate. The composed transaction-owned
+writer uses a deployment-owned execution profile and capacity report, with a
+fresh readiness receipt required for each task type/config/profile. Missing
+dependencies return `not_ready` without leaving a task. Detail queries use actual
+SQL records; no test adapter is installed.
 
 Docker includes distinct migrate/import/bootstrap/registration/grant/audit tools,
 the optional Secret Broker and a separately named `system-backup-v2-controller`.

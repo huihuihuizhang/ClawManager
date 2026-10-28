@@ -58,7 +58,7 @@ func (c *verificationDetailConn) BeginTx(ctx context.Context, opts driver.TxOpti
 }
 func (c *verificationDetailConn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	f := c.f
-	if query != verificationTaskTimesSQL && query != drillTaskTimesSQL && query != verificationReportReferenceSQL {
+	if query != verificationTaskTimesSQL && query != drillTaskTimesSQL && query != backupTaskTimesSQL && query != preflightTaskTimesSQL && query != verificationReportReferenceSQL {
 		return c.Conn.(driver.QueryerContext).QueryContext(ctx, query, args)
 	}
 	if f.rechecks != 0 || f.commits != 0 {
@@ -68,7 +68,7 @@ func (c *verificationDetailConn) QueryContext(ctx context.Context, query string,
 	if f.beforeDetail != nil {
 		f.beforeDetail()
 	}
-	if query == verificationTaskTimesSQL || query == drillTaskTimesSQL {
+	if query == verificationTaskTimesSQL || query == drillTaskTimesSQL || query == backupTaskTimesSQL || query == preflightTaskTimesSQL {
 		if len(args) != 2 || args[0].Value != "installation_test" || args[1].Value != f.rows[0][1] || f.timeError {
 			return nil, errors.New("private times query failure")
 		}

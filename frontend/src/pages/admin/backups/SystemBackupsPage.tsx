@@ -90,7 +90,7 @@ function BackupDetail({ backup, data }: { backup: BackupDetailResource; data: Ba
         [b('acceptanceReady'), <Badge value={backup.acceptance_ready ? 'passed' : 'unknown'} label={backup.acceptance_ready ? b('ready') : b('notReady')} />],
         [b('backupEligibility'), <Badge value={backup.acceptance_eligible ? 'eligible' : 'warning'} label={backup.acceptance_eligible ? b('status_eligible') : b('ineligible')} />],
         [b('registration'), <Badge value={registration?.registration ?? 'unknown'} />],
-        [b('purpose'), <Badge value={backup.task_purpose} />], [b('consistency'), statusLabel(backup.consistency)], [b('size'), formatBytes(backup.bytes, locale)],
+        [b('purpose'), <Badge value={backup.task_purpose} />], [b('consistency'), backup.consistency === null ? b('notGenerated') : statusLabel(backup.consistency)], [b('size'), formatBytes(backup.bytes, locale)],
         [b('eligibilityReason'), list(backup.eligibility_reason_codes.map(statusLabel))],
         [b('unreadableReason'), backup.artifact_usable ? '—' : statusLabel(backup.artifact_unusable_reason)],
         [b('failureDomain'), backup.target_failure_domain_id],

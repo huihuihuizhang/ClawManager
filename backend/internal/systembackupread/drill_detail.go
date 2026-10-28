@@ -173,11 +173,15 @@ func buildDrillDetail(ctx context.Context, q detailReadSQL, snapshot TaskCheckEv
 // latest attempt rows identify one; do not impose a guessed phase ordering or
 // merge independent Job unit generations. Progress excludes old retries.
 func drillExecution(snapshot TaskExecutionSnapshot) (contract.ExecutionProjection, uint64, time.Time, error) {
+	return taskExecutionProjection(snapshot, DrillTask)
+}
+
+func taskExecutionProjection(snapshot TaskExecutionSnapshot, kind TaskKind) (contract.ExecutionProjection, uint64, time.Time, error) {
 	var result contract.ExecutionProjection
 	var current uint64
 	var reportStart time.Time
 	for _, a := range snapshot.attempts {
-		if !validTaskPhase(DrillTask, a.Phase) || !validExecutionNumber(a.Number) {
+		if !validTaskPhase(kind, a.Phase) || !validExecutionNumber(a.Number) {
 			return result, 0, reportStart, ErrUnavailable
 		}
 		if a.Number > current {
