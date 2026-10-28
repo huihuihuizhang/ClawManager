@@ -129,6 +129,8 @@ func validateDependencyLinks(s Snapshot) error {
 				refs = map[string][2]string{"skill_id": {"skills", "id"}, "blob_id": {"skill_blobs", "id"}}
 			case "instance_skills":
 				refs = map[string][2]string{"skill_id": {"skills", "id"}, "skill_version_id": {"skill_versions", "id"}}
+			case "team_workspace_file_audits":
+				refs = map[string][2]string{"team_id": {"teams", "id"}, "user_id": {"users", "id"}}
 			case "team_members":
 				refs = map[string][2]string{"team_id": {"teams", "id"}}
 			case "team_tasks":

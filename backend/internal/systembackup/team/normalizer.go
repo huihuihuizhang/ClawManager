@@ -86,7 +86,12 @@ func Normalize(table string, row Row, now time.Time) (Change, error) {
 		active = []string{"creating", "running", "deleting"}
 		terminal = []string{"failed", "deleted"}
 		r.Quarantined = true
-	case "team_events", "team_workspace_file_audits", "custom_team_templates", "owner_team_admission_locks":
+	case "custom_team_templates":
+		if _, ok := row["last_operation_id"]; ok {
+			r.After["last_operation_id"] = Null()
+		}
+		return r, nil
+	case "team_events", "team_workspace_file_audits", "owner_team_admission_locks":
 		return r, nil
 	default:
 		return r, fmt.Errorf("normalization policy missing for %s", table)
@@ -117,7 +122,7 @@ func Normalize(table string, row Row, now time.Time) (Change, error) {
 		}
 	}
 	if table == "team_members" {
-		for _, key := range []string{"current_task_id", "runtime_task_id"} {
+		for _, key := range []string{"current_task_id", "runtime_task_id", "runtime_status", "runtime_intent", "blocked_reason", "last_seen_at"} {
 			if _, ok := row[key]; ok {
 				r.After[key] = Null()
 			}

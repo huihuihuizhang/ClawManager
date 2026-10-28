@@ -83,7 +83,7 @@ func CrossDomainDependencies() []Dependency {
 	return []Dependency{
 		{"ai_gateway", []string{"llm_models", "model_invocations", "audit_events", "cost_records", "risk_rules", "risk_hits", "instance_gateway_token_aliases", "chat_sessions", "chat_messages"}, "Model/provider configuration, platform chat history and gateway credentials require the AI Gateway collector and Secret resolver."},
 		{"skill_hub", []string{"skills", "skill_versions", "instance_skills", "skill_blobs", "skill_package_materialize_jobs"}, "Workspace skill files do not replace Skill Hub metadata, bindings and package objects."},
-		{"teams", []string{"teams", "team_members", "team_tasks", "team_events", "team_work_items", "team_event_outbox", "team_workflow_phases", "custom_team_templates"}, "Team-owned task definitions and replayable work must be preserved and normalized by their owner."},
+		{"teams", []string{"teams", "team_members", "team_tasks", "team_events", "team_work_items", "team_event_outbox", "team_workflow_phases", "custom_team_templates", "team_workspace_file_audits"}, "Team-owned task definitions and replayable work must be preserved and normalized by their owner."},
 		{"resources", []string{"system_image_settings", "egress_private_exceptions", "security_scan_configs", "security_scan_jobs", "security_scan_job_items", "security_scan_reports", "audit_logs"}, "Resource definitions and audit history are archived; execution and egress remain disabled in the drill."},
 	}
 }

@@ -53,6 +53,9 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 		`INSERT INTO team_members(id,team_id,user_id,member_key,display_name,role,status) VALUES(2001,1001,101,'leader','Leader','leader','busy'),(2002,1002,101,'leader','Leader','leader','idle'),(2003,1003,101,'worker','Worker','worker','creating'),(2004,1004,102,'leader','Leader','leader','busy')`,
 		`INSERT INTO team_tasks(id,team_id,target_member_id,message_id,status,payload_json,result_json,workflow_state) VALUES(3001,1001,2001,'cm-1','running','{"task":"保存数据"}','{"partial":"已生成结果"}','executing'),(3002,1002,2002,'owner-1','succeeded','{}','{"answer":"完成结果"}','completed'),(3003,1004,2004,'other-provider-1','waiting','{}','{"partial":"等待人工"}','awaiting_phase_results')`,
 		`UPDATE team_members SET current_task_id=3001,availability='busy',runtime_task_id='3001' WHERE id=2001`,
+		`UPDATE teams SET display_name='北向工作团队' WHERE id=1002`,
+		`UPDATE team_members SET icon_key='crown',runtime_status='running',runtime_intent='continue_task',blocked_reason='old dependency',last_seen_at=UTC_TIMESTAMP() WHERE id=2002`,
+		`INSERT INTO custom_team_templates(id,user_id,name,intent,resolved_member_count,spec_json,resource_scope,owner,last_operation_id) VALUES(4001,101,'owner template','original definition',1,'{"members":[{"role":"leader"}]}','northbound','owner-x','old-template-operation')`,
 		`INSERT INTO team_events(team_id,member_id,task_id,event_type,payload_json) VALUES(1001,2001,3001,'assistant_message','{"text":"中断前的完整消息"}')`,
 		`INSERT INTO owner_team_provision_steps(team_id,step_key,operation_id,status) VALUES(1003,'secret','half-created-operation','done'),(1003,'member','half-created-operation','started')`,
 		`INSERT INTO northbound_operations(operation_id,user_id,session_id,operation_type,idempotency_key_hash,request_hash,request_payload,status,available_at,attempt_count,created_at,updated_at,owner,team_id,owner_request_key) VALUES('half-created-operation',101,'historical-session','owner_team_teams_create',REPEAT('a',64),REPEAT('b',64),'{"owner":"owner-y","team_id":1003}','processing',UTC_TIMESTAMP(),1,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'owner-y',1003,REPEAT('c',64))`,
@@ -110,6 +113,17 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	}
 	if e = target.QueryRow("SELECT user_id,resource_scope,owner FROM teams WHERE id=1004").Scan(&provider, &scope, &owner); e != nil || provider != 102 || scope != "northbound" || owner != "owner-x" {
 		t.Fatal(provider, scope, owner, e)
+	}
+	var display, icon, definition string
+	var staleFields int
+	if e = target.QueryRow("SELECT display_name FROM teams WHERE id=1002").Scan(&display); e != nil || display != "北向工作团队" {
+		t.Fatal("lost Team display name", display, e)
+	}
+	if e = target.QueryRow("SELECT icon_key,(runtime_status IS NOT NULL)+(runtime_intent IS NOT NULL)+(blocked_reason IS NOT NULL)+(last_seen_at IS NOT NULL) FROM team_members WHERE id=2002").Scan(&icon, &staleFields); e != nil || icon != "crown" || staleFields != 0 {
+		t.Fatal("lost member definition or retained live runtime projection", icon, staleFields, e)
+	}
+	if e = target.QueryRow("SELECT owner,resource_scope,spec_json,(last_operation_id IS NOT NULL) FROM custom_team_templates WHERE id=4001").Scan(&owner, &scope, &definition, &staleFields); e != nil || owner != "owner-x" || scope != "northbound" || !strings.Contains(definition, "leader") || staleFields != 0 {
+		t.Fatal("lost owner template or retained stale operation", owner, scope, definition, e)
 	}
 	if e = target.QueryRow("SELECT status FROM owner_team_provision_steps WHERE team_id=1003 AND step_key='secret'").Scan(&status); e != nil || status != "done" {
 		t.Fatal("lost completed step", status, e)

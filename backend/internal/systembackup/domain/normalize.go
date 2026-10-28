@@ -210,6 +210,12 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 				out.Columns = append(append([]Column(nil), t.Columns...), c)
 			}
 		}
+		legacyTeamScope := (t.Name == "teams" || t.Name == "custom_team_templates") && !hasColumn(t, "resource_scope")
+		if legacyTeamScope {
+			if c, ok := targetCols["resource_scope"]; ok {
+				out.Columns = append(append([]Column(nil), out.Columns...), c)
+			}
+		}
 		for _, c := range dest.Columns {
 			// Do not silently introduce a new target default (possibly an
 			// executable state). Only absent nullable NULL columns are harmless.
@@ -219,6 +225,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		for _, r := range t.Rows {
 			n := cloneRow(r)
+			if legacyTeamScope && hasColumn(out, "resource_scope") {
+				n["resource_scope"] = Text("cm") // Historical CM Teams never acquire an inferred owner.
+			}
 			if adapted {
 				if err := applyAdapter(ctx, n, adapter); err != nil {
 					return RestorePlan{}, err
