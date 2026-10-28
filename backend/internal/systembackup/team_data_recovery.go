@@ -50,14 +50,23 @@ func (s *TeamDataService) runRecoveryJob(ctx context.Context, operation, origin,
 	}
 	// Reuse the worker's lock-loss/cancellation watch and conditional final
 	// write. A late old process cannot overwrite a cleaned/newer job result.
-	s.execute(ctx, lock, j)
+	executionErr := s.execute(ctx, lock, j)
 	finish, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	j, e = s.Get(finish, j.ID)
-	if e == nil && j.Status != "succeeded" {
-		return j, errors.New(j.Error)
+	if e != nil {
+		return j, e
 	}
-	return j, e
+	// A lost final UPDATE can leave the operation active even though this
+	// synchronous execution returned. Preserve the copy and report uncertainty;
+	// never return an empty error or replay the restore under a new identity.
+	if j.Status == "succeeded" {
+		return j, nil // Read-back reconciles an uncertain UPDATE reply.
+	}
+	if executionErr != nil || (j.Status != "failed" && j.Status != "canceled") || j.Error == "" {
+		return j, errors.New("operation_result_unconfirmed")
+	}
+	return j, errors.New(j.Error)
 }
 func (s *TeamDataService) CleanupRecovery(ctx context.Context, id string) error {
 	if !s.recoveryOnly {

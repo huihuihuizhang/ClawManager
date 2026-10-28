@@ -459,7 +459,7 @@ func PublicError(err error) string {
 		}
 	}
 	switch err.Error() {
-	case "validation_failed", "permission_denied", "not_found", "not_ready", "artifact_unavailable", "version_conflict", "idempotency_conflict", "state_conflict", "commit_started", "rate_limited", "conflict_active_job", "capacity_exceeded", "unsupported_runner_p1", "unsupported_profile_p1", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed":
+	case "operation_result_unconfirmed", "validation_failed", "permission_denied", "not_found", "not_ready", "artifact_unavailable", "version_conflict", "idempotency_conflict", "state_conflict", "commit_started", "rate_limited", "conflict_active_job", "capacity_exceeded", "unsupported_runner_p1", "unsupported_profile_p1", "strong_auth_required", "strong_auth_expired", "strong_auth_invalid_issuer", "strong_auth_invalid", "strong_auth_replayed":
 		return err.Error()
 	}
 	return "internal_error"
