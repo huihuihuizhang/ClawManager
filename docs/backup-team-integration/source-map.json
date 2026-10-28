@@ -23,7 +23,7 @@
       "path": "BACKUP_M3_M4_EXECUTION.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "187438c38c7a01ed809b574ce824980cbf8b26a8dd57efa10f47a316cfc2102c",
+      "working_tree_sha256": "01d5648cc834b708ac81ed284ea38baae9a363fe878cece69bda9f449bd56039",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9732,7 +9732,7 @@
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "f506090a2e47109a214ed5b92dddeb64d68ac3dfc4820839f92a5c582a2eb0ac",
+      "working_tree_sha256": "b701becd50e6a5efe04f05458278f2364376e6d682be5d304f9afeecd49b71f1",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9949,7 +9949,7 @@
       "path": "frontend/src/lib/systemBackupI18n.ts",
       "source_path": "frontend/src/lib/systemBackupI18n.ts",
       "source_sha256": "fb1a5ce24368655bf2aae730bf0ea82ec349482c37db60dc5bebd59ac1d50e8b",
-      "working_tree_sha256": "a1e3fb1c67f979be084addec22f46f02a9ef80d703be857cf1bdc080efacfde0",
+      "working_tree_sha256": "9b287f6d186c58bca3594917ff32a2df7dd204750c0ba6906739396d85733b4a",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -9984,7 +9984,7 @@
       "path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
       "source_path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
       "source_sha256": "97dad9b865c55a2b335dfdb8ff8ea0564d8cda2bb34ed864a86570f5f307a678",
-      "working_tree_sha256": "85621b1b89797f2654ebce7927e12bd83e74550e1b76db8e5fde6b2e8ab51167",
+      "working_tree_sha256": "d4218286cdac1bbc919cfb396d1eec289d31e4ac0d81548756072489eea574b3",
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
@@ -10007,6 +10007,13 @@
       "source_sha256": "49923fdc6db97df42bb691bcf636e2c171d5a27318011f838b6d3846c31105bb",
       "working_tree_sha256": "49923fdc6db97df42bb691bcf636e2c171d5a27318011f838b6d3846c31105bb",
       "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupRecoveryNotice.tsx",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "3b9a4c146ff4661ecfad8013d17195de10997c6a62f2253a0ed72cd079de683a",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "frontend/src/pages/admin/backups/BackupTaskTable.tsx",
@@ -10135,6 +10142,20 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
+      "path": "frontend/src/pages/admin/backups/backupRecoveryNotice.test.mjs",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "2ee28337427f3ab474f2d4ef2b11cd599365463328f8fbfc779bc6326c1687e9",
+      "disposition": "integration-owned adaptation"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/backupRecoveryState.ts",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "ea561173c3c2305d9eb3d3d0443a684b2542113decc1a4bc3f1bbbdc1c44054b",
+      "disposition": "integration-owned adaptation"
+    },
+    {
       "path": "frontend/src/pages/admin/backups/useBackupText.ts",
       "source_path": "frontend/src/pages/admin/backups/useBackupText.ts",
       "source_sha256": "90a90e149b2cf5aa71e524ef3727dc3a3951a11b32100c117cac2fa5c88522fd",
@@ -10196,6 +10217,13 @@
       "source_sha256": "6782a0536603435501659381ab4e86a9b973a16ac60888d5211208cea0b88588",
       "working_tree_sha256": "b970608b12fba1f547fe1e5d09b3d223709e956b7c3611830d3d84a736330012",
       "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "scripts/backup-app-smoke.py",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "462ed09c69e3219be226b56f15ba2307548a51bebae411ec887fb0fc98864c3a",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "scripts/backup-public-native.py",

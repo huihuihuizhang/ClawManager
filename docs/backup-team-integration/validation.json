@@ -283,6 +283,16 @@
       "result": "passed",
       "local_log_sha256": "2b0c9d0f9850a8ee77250dae91094bd24d3920885391ccdafb538793ba1ed47b",
       "boundary": "go test ./... after transactional actual Job/progress projection and terminal/dedup guards."
+    },
+    "m4_recovery_notice_frontend": {
+      "result": "passed",
+      "local_log_sha256": "5442cf2dd57a595ee68cce46ce837c773bb4aa078571ee975fa586657bf22997",
+      "boundary": "Frontend production build after summary recovery-protection notice; no visual browser acceptance."
+    },
+    "m4_recovery_notice_tests": {
+      "result": "passed",
+      "local_log_sha256": "4a9307d0cf7e5437c795030538aa42eaab4ef6948f068ea9c988e4ef207910a9",
+      "boundary": "Six no-skip cases: original/foreign/terminal diagnostic distinctions and existing cancellation transport/idempotency checks."
     }
   },
   "not_accepted": [
