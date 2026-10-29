@@ -13,38 +13,10 @@
       "disposition": "reviewed source port with Team compatibility adaptation"
     },
     {
-      "path": "BACKUP_M0_M2_EXECUTION.md",
-      "source_path": null,
-      "source_sha256": null,
-      "working_tree_sha256": "6bd58e3ca90ae4d36f7df30810b290ea35d64d59cc7427da8d774e7020816796",
-      "disposition": "integration-owned adaptation"
-    },
-    {
-      "path": "BACKUP_M3_M4_EXECUTION.md",
-      "source_path": null,
-      "source_sha256": null,
-      "working_tree_sha256": "aabcd8af8d4174d6dd9deb9fc26311ec4a700cdb313a992abb98b2b89b200066",
-      "disposition": "integration-owned adaptation"
-    },
-    {
-      "path": "BACKUP_M3_M4_FINAL_PLAN.md",
-      "source_path": null,
-      "source_sha256": null,
-      "working_tree_sha256": "5ed1e9ce59ea3500140a0ac6bb7fcdd278fc5f57e35d4b3ce1dcfda4802b00a7",
-      "disposition": "integration-owned adaptation"
-    },
-    {
       "path": "BACKUP_TEAM_INTEGRATION_HANDOFF.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "738a1f46079970a3b64b4ccd406363379fca4ff3bd983ea18d8dbb71c02de43c",
-      "disposition": "integration-owned adaptation"
-    },
-    {
-      "path": "BACKUP_TEAM_REMAINING_PLAN_20261028.md",
-      "source_path": null,
-      "source_sha256": null,
-      "working_tree_sha256": "ff983f09e27f716a8a396c2a2a50561ad9704175a00b1a28c85236a61210acce",
+      "working_tree_sha256": "20fb1f8f150e00d5abcf3a81ff70abf140152a6729a5e4dc23df5d1e41da133b",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9627,7 +9599,7 @@
       "path": "docs/backup-team-integration/README.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "e321de2cc62b6846ea4326d8c82af0b5ba83c442978753769d53b5b2681488ab",
+      "working_tree_sha256": "1ac6ad5c0f4d34932f9e19fa382391d7a5f91f3df93e5f5d861512a3d732df63",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9641,7 +9613,7 @@
       "path": "docs/backup-team-integration/conflict-resolution.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "a7701a583864a290655cd62fcd7c212d923ebaf6e7c37a69989b7aba5f82d513",
+      "working_tree_sha256": "0d532560c70cc2bd0d89c433b1071423befd2a19ecbc7b75f622a761b00f460c",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9816,14 +9788,14 @@
       "path": "docs/backup-team-integration/task-admission.md",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "a302079c735a4416c9b87cf07ba5b2f3f439ec9646b575f7e0b9699771400329",
+      "working_tree_sha256": "aa5e1811e762b6db0a4bd4645566b44828bc2860ce0f6859e60a517c7cc53e44",
       "disposition": "integration-owned adaptation"
     },
     {
       "path": "docs/backup-team-integration/validation.json",
       "source_path": null,
       "source_sha256": null,
-      "working_tree_sha256": "38d44200a72e82d2bc3df293daf26e152ac40edcfac6a2a25710290229fa7c55",
+      "working_tree_sha256": "d1a1a4fea0fa6d82ced4732b4e0cc6fbc4e2e5f8504eb6555dd79b0723653625",
       "disposition": "integration-owned adaptation"
     },
     {
@@ -9874,6 +9846,13 @@
       "source_sha256": "dc0687839ce07646688b7a53d3c7ddda20ea5b269999d499a0730e2d2e0f50a9",
       "working_tree_sha256": "cef6baf7db4a16a3afd7de627a70cedcfb71da8203d4c3a17fbe8e8871a5c312",
       "disposition": "reviewed source port with Team compatibility adaptation"
+    },
+    {
+      "path": "docs/team-backup-restore-team-integration-plan.md",
+      "source_path": null,
+      "source_sha256": null,
+      "working_tree_sha256": "e02610724b48ee87ad86fc6f128c1441ee14840e15a75303682f3e61bd9e0ef4",
+      "disposition": "integration-owned adaptation"
     },
     {
       "path": "e2e/backup-integration-pages.test.mjs",

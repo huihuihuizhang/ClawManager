@@ -1,5 +1,5 @@
 {
-  "status": "ordinary_team_data_and_recovery_guards_verified_full_B_incomplete_E_canceled",
+  "status": "integration_incomplete_current_handoff_covers_remaining_A_to_E",
   "team_baseline": "be7da27dff85c2daf3321b8245ffdab024e67853",
   "backup_source": "4fe83bcde5a8a693dddb2635e9a3e397d6e3472e",
   "migration_count": 164,
@@ -445,14 +445,36 @@
     "source_code_commit": "806d14588bf6caf8ec12e75c0efb71e23c3bf59f",
     "controller_binary_sha256": "bd1a941a8ffd787e55755370f9bd48c5ce0a97ae0d0044f29f2fd3ff950ef67e",
     "worker_loaded_manifest_digest": "sha256:ca7dbe1bbec0878d8b26e78acbaaaca93a68862ba17dc3c72fc34b7a64c452fb",
-    "boundary": "Historical pre-increment images only, built from the recorded older source commit. They do not contain the latest changes. E canceled; no new App publication or shared-server deployment."
+    "boundary": "Historical pre-increment images only, built from the recorded older source commit. They do not contain the latest changes. No new App publication or shared-server deployment; E remains outstanding."
   },
   "latest_increment": {
     "code_commit": "56b2fa957f4aca86dbf0159f1e34c7f0eb41f520",
     "B": "incomplete: nonempty Runtime production capability and original restart/binding composition are not implemented",
-    "E": "canceled by user",
-    "push": "withheld: user requires full B before push",
+    "E": "not completed; included in the remaining-work handoff per latest user request",
+    "push": "explicitly authorized by user to backup-origin with incomplete features documented; remote SHA verified after push",
     "shared_server": "untouched",
     "ordinary_consistency": "best_effort / team_data; not public-v2 strong-consistency acceptance"
+  },
+  "handoff_update": {
+    "date": "2026-10-29",
+    "authority": "BACKUP_TEAM_INTEGRATION_HANDOFF.md",
+    "scope": "documentation consolidation and progress push only; no executable code, images or shared-server changes",
+    "completion": {
+      "A": "partial; full-domain production capture and formal publication missing",
+      "B": "partial; nonempty Runtime quiescence/original-resume production wiring missing",
+      "C": "partial; complete policy review and formal independent restore missing",
+      "D": "partial; complete public-v2 user operations missing",
+      "E": "outstanding; permissions, final release/deployment/rollback and end-to-end acceptance remain"
+    },
+    "removed_superseded_docs": [
+      "BACKUP_M0_M2_EXECUTION.md",
+      "BACKUP_M3_M4_EXECUTION.md",
+      "BACKUP_M3_M4_FINAL_PLAN.md",
+      "BACKUP_TEAM_REMAINING_PLAN_20261028.md"
+    ],
+    "push_remote": "backup-origin",
+    "push_repository": "https://github.com/huihuihuizhang/ClawManager.git",
+    "push_branch": "codex/backup-team-integration",
+    "authorization": "latest user explicitly requests handoff rewrite and push, superseding earlier hold-until-B-complete instruction"
   }
 }

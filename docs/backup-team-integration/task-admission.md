@@ -1,7 +1,7 @@
 # Transactional task admission and original-execution cancellation
 
 This is an implemented part of the integration, not capture/restore acceptance.
-An explicitly pinned public-v1 platform-workspace functional production runner now publishes matching readiness. Full backup remains unavailable; do not manufacture readiness or update database flags. See public-capture-deployment.md and the root M3/M4 handoff for the current accepted boundary. The foundation sections below record earlier stages.
+An explicitly pinned public-v1 platform-workspace functional production runner now publishes matching readiness. Full backup remains unavailable; do not manufacture readiness or update database flags. See public-capture-deployment.md and the [current root handoff](../../BACKUP_TEAM_INTEGRATION_HANDOFF.md) for the current accepted boundary. The foundation sections below record earlier stages.
 
 ## Production composition
 
@@ -82,7 +82,7 @@ writes if a v2 attempt, Job observation or external action exists. A missing
 legacy capture plan is not evidence of v2 collector exit.
 
 Real MySQL tests verify this adapter and the unchanged legacy gate behavior.
-Historical foundation tests used synthetic controller transitions. Current production public-v1 scheduling calls these methods; its native acceptance is recorded in the root M3/M4 execution report. Remote participant pause/resume, actual collector stop
+Historical foundation tests used synthetic controller transitions. Current production public-v1 scheduling calls these methods; its native acceptance is recorded in the [current root handoff](../../BACKUP_TEAM_INTEGRATION_HANDOFF.md). Remote participant pause/resume, actual collector stop
 verification and versioned recovery/release composition remain required. Do
 not publish readiness or enable capture based on these library tests.
 
