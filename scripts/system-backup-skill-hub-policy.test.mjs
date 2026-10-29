@@ -17,6 +17,10 @@ test('eight policies match actual models, canonical decisions and generated regi
 });
 
 const cases = [
+  ['missing owner', (i) => { delete i.policy.writer_groups[0].owner; }],
+  ['delegate own writer', (i) => { i.policy.writer_groups[0].owner = 'B'; }],
+  ['claim B runtime writer', (i) => { i.policy.writer_groups.find(g => g.source.endsWith('/skill_runtime_sync.go')).owner = 'C'; }],
+  ['claim D scanner', (i) => { i.policy.writer_groups.find(g => g.source.endsWith('/security_scan_service.go')).owner = 'C'; }],
   ['missing table', (i) => i.policy.policies.pop()],
   ['duplicate table', (i) => i.policy.policies.push(i.policy.policies[0])],
   ['undeclared field', (i) => policy(i, 'skills').fields.push('new_execution_state')],

@@ -14,9 +14,9 @@
 第七批补齐 SQL 对象映射与完整对象恢复计划的关联、整组目标校验，并明确只负责 Skill Hub。
 第八批将 SQL、对象、workspace 证明和权限复查接入统一 Skill Hub 恢复校验入口。
 这些模块尚未绑定公共 Runner wire DTO、生产证据适配器或分布式停写 participant；
-没有数据库迁移、生产部署或真实恢复写入。registry 中的 normalizer/verifier
+未部署生产；隔离 MySQL/MinIO 专项通过记录见第 14 节。registry 中的 normalizer/verifier
 ID 尚未绑定正式 Runner 适配器。
-`owner_recorded` 表示策略已登记，所有跨 owner 批准仍为空，公共合同保持 draft。代码尚未提交或推送。
+`owner_recorded` 表示策略已登记，所有跨 owner 批准仍为空，公共合同保持 draft。核心实现已由 52117de 提交；各批次的未提交描述为历史记录。当前接入基线为 4fe83bc，最新进度见第 15 节。
 
 ## 1. 数据策略
 
@@ -63,23 +63,47 @@ materialize 状态映射。模型字段校验不能代替真实 information_sche
 `writer_groups` 当前是源码盘点，`protection=pending`；它不能充当已准入的 source-writer registry。
 新增间接写路径仍需要人工及实际调用链核对，方法存在性检查不证明已经覆盖所有写入者。
 
-| 源文件 | 必须覆盖的行为 |
-| --- | --- |
-| skill_service.go | 导入、修改、删除、安装/移除、Agent 同步及包上传、对象补写、扫描完成和失败回写 |
-| skill_hub_service.go | 发布、撤销、标签、从实例导入、重试、回存及复制 |
-| skill_package_materialize_service.go | Enqueue、启动回填、claim、执行、释放及重试 |
-| skill_package_materialize_worker.go | 停止接单、取消传播、等待全部在途批次、幂等恢复 |
-| skill_runtime_sync.go | Runtime 报告、工作区同步、延迟报告及命令完成 |
-| skill_import.go | 带导入决策的覆盖/新建、版本创建、对象发布和扫描结果 |
-| skill_lite_package_collect.go | 从 workspace 收集包，写对象和 blob，更新技能 |
-| instance_command_service.go（B） | Agent 命令完成时直接标记技能卸载 |
-| security_scan_service.go（D） | 异步安全扫描直接写 blob、skill 和扫描结果 |
-| workspace_file_handler.go（B） | 删除工作区文件时直接更新技能绑定 |
+负责人是改造责任角色，不是审核签收。C 仅指 Skill Hub 开发者；机器清单新增 owner，十组均保持 protection=pending。
 
-特别注意 `ListInstanceSkills -> reconcileRemovedInstanceSkillsFromCommands` 会回写卸载状态。
-不能根据 HTTP GET 或 List 方法名把它排除。worker 现已支持等待当前批次真正退出，
-但其返回值仍不能用作分布式 pause ACK。应适配 B/D 的公共代次、lease、participant 与 watchdog，
-不另造 Skill Hub gate 或第二套任务状态机。Workspace/runtime 写入者由 B 协调。
+| 源文件 | 负责人 | 事务、回调和任务阶段 |
+| --- | --- | --- |
+| skill_service.go | C | 导入/修改/删除、安装移除、SyncAgentSkills/上传回调、对象补写和扫描结果回写；同一次业务变更使用同一受保护事务；ListInstanceSkills 的卸载回写也纳入 |
+| skill_hub_service.go | C | 发布/撤销、标签替换、回存/复制、导入/重试；skill/version/tag/binding 的关联更新共享提交边界 |
+| skill_package_materialize_service.go | C | 入队/回填、claim、执行、归还/重试及最终终态提交分别绑定 lease，不能只保护领取 |
+| skill_package_materialize_worker.go | C | 停止新接单，permit 覆盖子任务和归还；超时、释放失败或授权失效不得报告停写成功 |
+| skill_runtime_sync.go | B | runtime 报告、workspace 同步、延迟报告和命令完成由 B 改造；调用 C 写接口时传递有效代次/授权 |
+| skill_import.go | C | 决策导入、新建/覆盖、blob/version/skill 发布、recordImportScan；扫描完成/失败回调另做当前授权检查 |
+| skill_lite_package_collect.go | C | C 负责包持久化的对象/SQL 写入及 syncSkillRecordFromBlob；B 提供 workspace 冻结和一致读取，C 不代改 runtime |
+| instance_command_service.go | B | MarkFinished/markUninstalledSkillRemoved 的迟到命令回调和绑定更新由 B 改造 |
+| security_scan_service.go | D | StartScan/RescanSkill/runJob/scanBlob 的异步扫描及三表写入由 D 改造；C 仅保护自己收到结果后的落库 |
+| workspace_file_handler.go | B | Delete/syncSkillDeletionFromWorkspacePath 的文件删除和绑定更新由 B 协调 |
+
+### 3.1 C 的公共停写接入位置
+
+1. **同步业务事务**：公共层授予 mutation lease 后，C 将 repository 写入迁移至
+   ExecuteProtectedMutation 的同一 Executor。需要读取/生成 ID 的事务能力须与 D 对齐；
+   不能在其回调外使用另一连接提交，也不能只在 HTTP/service 入口检查 gate。
+2. **对象和扫描回调**：permit 覆盖外部 I/O、子任务和回调；上传/扫描返回后核对当前
+   generation/授权，再提交对象引用、版本回指和扫描事实。网络 I/O 不是 SQL 原子事务；
+   已上传未提交的候选交公共 C provider 对账/清理，不自行删除共享对象。
+3. **materialize 阶段**：入队/回填、领取、执行、归还/重试、终态提交逐阶段保护。
+   关闸后停止新接单，等待在途任务和归还结束再释放 permit。D 需明确关闸后的清理权限；
+   归还被拒绝时保留失败，不绕过 gate，也不报告成功。
+4. **迟到回调**：Agent 包上传/库存报告、扫描完成/失败及卸载回写绑定原任务和当前代次。
+   B/D 改各自的调用端，C 改自身 SQL 落库入口，不替其他负责人修改运行时或扫描器。
+5. **全局判定**：本地 join 不等于全局停写。还须 B/D 汇总跨副本 writer、对象/workspace
+   保护和当前 lease/fence 证明；超时、归还失败、释放失败、权限失效均阻止成功结论。
+
+### 3.2 最新接口与本轮修正
+
+基线 4fe83bc 已提供 systembackup/mutation.ContextGate，以及 worker 的 skill-backfill、
+skill-materialize permit 接入，不能再记作“公共 gate 不存在”。但 service 的同事务提交
+保护尚未闭合；未配置 gate 时的旧行为兼容也不是备份准入证据。
+
+本轮补齐：父运行 context 有效而 permit context 已取消时，即使 release 返回 nil，
+回填/批次仍返回失败并保留到 StopAndWait。检查在 release 前进行，避免将正常释放自身
+取消 context 误判为失效。父运行取消和 lease 失效同时发生时，仍需要公共 release/fence
+给出真实授权结论；context 检查不能代替该证明。
 
 ## 4. 分批实施和验收
 
@@ -488,16 +512,19 @@ Kubernetes 恢复环境或其他业务域 verifier。公共接口到位后的 **
 
 ### 12.2 接入时所需输入及交接验收
 
-- **B/Runner 与公共恢复协调器**：提供已认证 `RestoreRequest`，完整 source/mapping/limits、
-  独立 writer/read-only 数据库连接和对应 authority 实现；writer 的最终复查必须在同一 SQL
-  事务内锁定 fence。不能将测试适配器或固定返回 nil 的回调用于生产。
-- **公共 C provider**：提供只读精确版本 reader、任务专属加密 candidate writer；恢复上传
-  完成后提供经过认证的目标 key/version 回执。Skill Hub 不接收可任意跳转的 URI，不自己找
-  生产凭据，不替公共层执行 DeleteCandidate、publish 或 finalization。
-- **B/workspace**：覆盖所有 `UnpackagedBlobIDs`，提供同一 artifact/target 的路径映射和恢复
-  证明，防止将没有打包对象的 blob 当作已经完整恢复。
-- **D/check 协议**：提供经评审的 check ID、expected/actual schema、失败类别和 metadata
-  warning code；本模块输出只能转换到正式合同，不自行增加全局状态或声明 eligible。
+以下按最新基线 4fe83bc 核对，接口存在不代表本域生产接线完成。沿用既有协议，不另建框架。
+
+| 输入/接口 | 提供方 | 接入位置 | 当前阻塞点与下一步 |
+| --- | --- | --- | --- |
+| 认证 Runner 请求、完整 source/Binding/limits | B Runner、D 调度授权 | Normalizer.Normalize、SQLRestorer.Restore、RestoreVerifier.Verify | 共享 systembackupdispatch 和 publicadapter.NewPublicRunner 已有；缺 Skill Hub wire DTO 到本地请求的完整注册/映射，不能直接 marshal 带 json:"-" 的模型 |
+| users/instances、域内 ID 映射及依赖就绪证明 | A 用户、B 实例/恢复协调器、C 本域 | RestoreMapping、PrepareRestoreRows、SQL 外部引用检查 | 需同一 artifact/target 的认证映射，不能靠目标查询猜测 ID |
+| 独立写入/只读连接、隔离与权限证明 | A 权限、B 目标、D 当前授权 | NormalizationAuthority、RestoreWriteAuthority、TargetReadAuthority、RestoreVerificationAuthority | B 已有 RestoreTarget/CheckRestoreTarget 提案；仍缺真实 observer/grant/fence 到本域 authority 的适配 |
+| gate/lease、同事务 Executor、participant、清理权限 | D 协调提交；B participant | 第 3.1 节 service 提交及 worker ContextGate | worker permit 已有；C service 事务改造、授权传递和关闸清理规则待闭合 |
+| 完整 key/version/size、白名单、checkpoint | 公共 C provider、B/D 停写冻结 | PrepareObjectCapture、NewS3VersionReaderWithMetadata | reader 已有；仍需认证完整库存，不能仅取 SQL 引用集合 |
+| 加密 candidate writer、seal/发布/失败清理 | 公共 C provider | CopyFrozenObject、WriteCapturedObjectIndex | 需任务专属 writer/生命周期回执，不在本域重建加密存储或默认明文落盘 |
+| 恢复上传回执、目标只读 reader | 公共 C provider | PrepareObjectRestore.Targets、RestoreMapping.ObjectKeys、VerifyObjectRestorePlan | 认证 key/version/target，覆盖引用及未引用对象，不回退生产/当前版本 |
+| workspace 映射与真实恢复证明 | B workspace/runtime | WorkspaceRestoreVerifier.VerifySkillHubWorkspace | 覆盖实例绑定、job 路径和全部 UnpackagedBlobIDs；evidence ID 格式不是证明 |
+| 正式 check/warning/evidence 与资格判定 | D；A 证据权限 | RestoreVerificationSummary 的公共输出适配 | 已有公共结果框架；仍需本域 check ID/错误分类及 metadata 省略的 disqualifying warning，nil error 不能直接升级 eligible |
 
 本模块接入验收应至少包括：八表 SQL 校验通过、所有引用和未引用对象校验通过、SQL key 与
 目标上传回执一致、未打包 blob 的 workspace 证明闭合、metadata 警告未丢失，以及过期权限、
@@ -641,3 +668,33 @@ systembackupevidence 触发整个包 10 分钟超时。因此累计 34 个有测
 本轮新增两个 Go 测试文件、两个 PowerShell 实库复跑脚本并更新本文，累计交付为
 48 个变更文件。补丁已在独立临时仓库检查、应用并逐文件比对；没有 commit、push
 或生产部署。
+
+## 15. 两阶段推进与策略评审（2026-10-29）
+
+交付口径：**Skill Hub 模块已实现，待公共能力接入**。保持 runtime_ready=false。
+本轮仅改责任登记、交接与已存在 ContextGate 的错误传播，不改 B/D 负责的 writer。
+八表依据第 1 节及策略 JSON，任务状态 pending/running 转 cancelled 且不重放；
+对象依据第 2、12.1 节，metadata 依据第 11 节，不重复另建策略。
+第 14 节 MySQL/MinIO 通过记录继续有效，但不冒充新基线全链路生产验收。
+
+| 评审方 | 本次请确认 | 签收 |
+| --- | --- | --- |
+| A | 用户/发布者映射；私有/公开与 admin_only 权限不扩大；正文与脱敏证据分离；独立只读权限 | 待本人评审，GitHub 账号待确认 |
+| B | 实例/路径映射；workspace 合法差异；未打包 blob 证明；任务不重放；B writer 归属和隔离目标 | 待本人评审，GitHub 账号待确认 |
+| D | 历史扫描不视为新批准；fence/迟到回调；metadata 白名单及省略告警；正式检查/证据 | 待本人评审，GitHub 账号待确认 |
+
+cross-owner-review-requests.json 已登记角色和对象，不重复创建签收数据。
+在 PR 中解释并处理反馈，按“意见链接、涉及规则、修复提交、验证结果、负责人复核”追踪。
+未收到意见不虚构反馈，未由负责人确认不填写 approved_cross_reviewers。
+
+第二阶段按接口就绪逐项接入：本域事务保护、Runner 适配、candidate/上传回执、
+workspace 证明、正式检查输出。任何单项稳定可先接；本轮已对现有 worker gate 补充验证。
+联合验收需覆盖取消、迟到回调、权限过期、fence 失效、多副本停写；公共层问题交对应负责人。
+不安装依赖，不在仓库留下测试二进制或构建输出。
+
+本轮验证：策略检查仍返回 8 表、88 字段、10 组 writer，runtime_ready 和
+cross_review_complete 均为 false；三组 Node 合同/策略测试共 105 项通过。
+设置 GOPROXY=off 后，services 的 Test(Materialize|SkillPackageMaterializeWorker)
+专项及 vet 通过，包含新增权限 context 失效、归还等待与正常释放取消的回归。
+初次合同测试缺少稀疏检出的 DTO/YAML/SQL/Dockerfile，补齐同版本原文件后全部通过；
+没有通过修改公共测试或安装依赖来消除失败。未重跑已有效的旧基线实库专项，未进行生产联调。

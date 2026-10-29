@@ -191,11 +191,18 @@ func (w *SkillPackageMaterializeWorker) backfillAttempt(ctx context.Context) (ad
 	if ctx.Err() != nil {
 		return false, nil
 	}
+	runCtx := ctx
 	ctx, release, err := enterBackupMutationContext(ctx, w.BackupGate, "skill-backfill")
 	if err != nil {
 		return false, nil // admission is closed; no work has started
 	}
-	defer func() { releaseErr = release() }()
+	defer func() {
+		// Observe loss before release: release may cancel its own permit context.
+		if ctx.Err() != nil && runCtx.Err() == nil {
+			releaseErr = errors.Join(releaseErr, ctx.Err())
+		}
+		releaseErr = errors.Join(releaseErr, release())
+	}()
 	if ctx.Err() != nil {
 		return true, nil
 	}
@@ -213,12 +220,18 @@ func (w *SkillPackageMaterializeWorker) processBatch(ctx context.Context) (resul
 	if ctx.Err() != nil {
 		return nil
 	}
+	runCtx := ctx
 	ctx, releasePermit, gateErr := enterBackupMutationContext(ctx, w.BackupGate, "skill-materialize")
 	if gateErr != nil {
 		return nil // a closed gate is not an incomplete claim
 	}
 	// Release only after all child jobs and cancellation cleanup have joined.
-	defer func() { resultErr = errors.Join(resultErr, releasePermit()) }()
+	defer func() {
+		if ctx.Err() != nil && runCtx.Err() == nil {
+			resultErr = errors.Join(resultErr, ctx.Err())
+		}
+		resultErr = errors.Join(resultErr, releasePermit())
+	}()
 	if ctx.Err() != nil {
 		return nil
 	}

@@ -58,7 +58,10 @@ func TestMaterializeGateContextLossJoinsChildrenAndCleanup(t *testing.T) {
 	}
 	finishOnce.Do(func() { close(finish) })
 	select {
-	case <-done:
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("permit context loss was reported as successful drain: %v", err)
+		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("children/cleanup did not join")
 	}
@@ -69,6 +72,52 @@ func TestMaterializeGateContextLossJoinsChildrenAndCleanup(t *testing.T) {
 
 func (f materializeBackupGateFunc) Enter(ctx context.Context, name string) (func() error, error) {
 	return f(ctx, name)
+}
+
+func TestMaterializeBackfillContextLossReachesStop(t *testing.T) {
+	permitCtx, lose := context.WithCancel(context.Background())
+	defer lose()
+	released := make(chan struct{})
+	w := lifecycleWorker(&materializeLifecycleStub{backfill: func(context.Context, int) (int, error) {
+		lose()
+		return 0, context.Canceled
+	}})
+	w.BackupGate = contextualMaterializeGate{enter: func(ctx context.Context, name string) (context.Context, func() error, error) {
+		if name != "skill-backfill" {
+			return ctx, nil, errors.New("closed")
+		}
+		return permitCtx, func() error { close(released); return nil }, nil
+	}}
+	if err := w.StartContext(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer stopMaterializeWorkerIgnoringExpectedError(w)
+	awaitMaterializeSignal(t, released)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := w.StopAndWait(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("stop lost backfill authority cancellation: %v", err)
+	}
+}
+
+func TestMaterializePermitReleaseCancellationIsNotAuthorityLoss(t *testing.T) {
+	for _, backfill := range []bool{true, false} {
+		ctx, cancel := context.WithCancel(context.Background())
+		w := lifecycleWorker(&materializeLifecycleStub{})
+		w.BackupGate = contextualMaterializeGate{enter: func(context.Context, string) (context.Context, func() error, error) {
+			return ctx, func() error { cancel(); return nil }, nil
+		}}
+		var err error
+		if backfill {
+			err = w.backfill(context.Background())
+		} else {
+			err = w.processBatch(context.Background())
+		}
+		cancel()
+		if err != nil {
+			t.Fatalf("release cancellation reported as authority loss: %v", err)
+		}
+	}
 }
 
 func TestMaterializeBackupGateClosedPreventsBackfillAndClaims(t *testing.T) {

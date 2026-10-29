@@ -108,7 +108,9 @@ export function validateSkillHubPolicies({ policy, decisions, registry, inventor
     'backend/internal/handlers/workspace_file_handler.go',
   ]));
   for (const group of policy.writer_groups) {
-    keys(group, ['source', 'methods', 'protection', 'note'], 'writer group');
+    keys(group, ['source', 'methods', 'protection', 'note', 'owner'], 'writer group');
+    const owners = { 'skill_runtime_sync.go': 'B', 'instance_command_service.go': 'B', 'workspace_file_handler.go': 'B', 'security_scan_service.go': 'D' };
+    assert.equal(group.owner, owners[group.source.split('/').at(-1)] ?? 'C', 'writer responsibility drift');
     assert.equal(group.protection, 'pending', 'inventory is not a runtime pause proof');
     unique(group.methods, group.source);
     assert.ok(group.methods.length > 0 && typeof group.note === 'string' && group.note.length > 0);

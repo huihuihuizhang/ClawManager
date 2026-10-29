@@ -284,7 +284,8 @@
         "markSkillScanFailed"
       ],
       "protection": "pending",
-      "note": "ListInstanceSkills reconciles removed bindings and therefore writes; scan completion and upload callbacks must participate."
+      "note": "ListInstanceSkills reconciles removed bindings and therefore writes; scan completion and upload callbacks must participate.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/skill_hub_service.go",
@@ -302,7 +303,8 @@
         "ImportHubArchive"
       ],
       "protection": "pending",
-      "note": "Inventory includes indirect calls; service/worker boundaries, not HTTP verb classification, must enforce the gate."
+      "note": "Inventory includes indirect calls; service/worker boundaries, not HTTP verb classification, must enforce the gate.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/skill_package_materialize_service.go",
@@ -315,7 +317,8 @@
         "BackfillOnce"
       ],
       "protection": "pending",
-      "note": "Cover initial backfill, claim, retries, object publication, scan completion and final SQL commit."
+      "note": "Cover initial backfill, claim, retries, object publication, scan completion and final SQL commit.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/skill_package_materialize_worker.go",
@@ -327,7 +330,8 @@
         "processBatch"
       ],
       "protection": "pending",
-      "note": "StopAndWait cancels and joins local backfill/jobs/claim cleanup; timeout or cleanup error cannot confirm drain. Distributed gate, commit fencing and participant ACK remain pending."
+      "note": "StopAndWait cancels and joins local backfill/jobs/claim cleanup; timeout or cleanup error cannot confirm drain. Distributed gate, commit fencing and participant ACK remain pending.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/skill_runtime_sync.go",
@@ -338,7 +342,8 @@
         "completePendingSkillInventorySync"
       ],
       "protection": "pending",
-      "note": "Coordinate runtime/workspace writers with B, including delayed reports and command completion."
+      "note": "Coordinate runtime/workspace writers with B, including delayed reports and command completion.",
+      "owner": "B"
     },
     {
       "source": "backend/internal/services/skill_import.go",
@@ -349,7 +354,8 @@
         "recordImportScan"
       ],
       "protection": "pending",
-      "note": "Import options can create object/blob/version/skill rows and persist scan failures; protect the complete publication sequence."
+      "note": "Import options can create object/blob/version/skill rows and persist scan failures; protect the complete publication sequence.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/skill_lite_package_collect.go",
@@ -359,7 +365,8 @@
         "syncSkillRecordFromBlob"
       ],
       "protection": "pending",
-      "note": "Workspace collection writes object content and blob/skill rows; a canceled SQL operation does not prove object upload has stopped."
+      "note": "Workspace collection writes object content and blob/skill rows; a canceled SQL operation does not prove object upload has stopped.",
+      "owner": "C"
     },
     {
       "source": "backend/internal/services/instance_command_service.go",
@@ -368,7 +375,8 @@
         "markUninstalledSkillRemoved"
       ],
       "protection": "pending",
-      "note": "B-owned command completion directly writes instance_skills; late completion callbacks require the same capture gate."
+      "note": "B-owned command completion directly writes instance_skills; late completion callbacks require the same capture gate.",
+      "owner": "B"
     },
     {
       "source": "backend/internal/services/security_scan_service.go",
@@ -379,7 +387,8 @@
         "scanBlob"
       ],
       "protection": "pending",
-      "note": "D-owned security scans write skill_blobs, skills and skill_scan_results asynchronously; pause and drain before capture, never replay during drill."
+      "note": "D-owned security scans write skill_blobs, skills and skill_scan_results asynchronously; pause and drain before capture, never replay during drill.",
+      "owner": "D"
     },
     {
       "source": "backend/internal/handlers/workspace_file_handler.go",
@@ -388,7 +397,8 @@
         "syncSkillDeletionFromWorkspacePath"
       ],
       "protection": "pending",
-      "note": "B-owned workspace deletion directly marks instance_skills removed; coordinate file mutation and database binding updates."
+      "note": "B-owned workspace deletion directly marks instance_skills removed; coordinate file mutation and database binding updates.",
+      "owner": "B"
     }
   ]
 }
