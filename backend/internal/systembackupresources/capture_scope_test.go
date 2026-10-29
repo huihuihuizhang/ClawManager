@@ -1,12 +1,20 @@
 package systembackupresources
 
 import (
+	_ "embed"
 	"encoding/json"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+// Test-only snapshot from 2407192, before migration 082 was registered.
+// Positive cases exercise the implemented 35-control-table capability, not
+// approval of the current draft or support for newly registered control tables.
+//
+//go:embed testdata/schema-registry-historical-35.json
+var historicalControlRegistryJSON []byte
 
 func currentRegistry(t *testing.T) map[string]any {
 	t.Helper()
@@ -23,7 +31,14 @@ func currentRegistry(t *testing.T) map[string]any {
 
 func frozenFixture(t *testing.T) map[string]any {
 	t.Helper()
-	document := currentRegistry(t)
+	var document map[string]any
+	if err := json.Unmarshal(historicalControlRegistryJSON, &document); err != nil {
+		t.Fatal(err)
+	}
+	return freezeSyntheticRegistry(document)
+}
+
+func freezeSyntheticRegistry(document map[string]any) map[string]any {
 	document["contract_status"] = "frozen"
 	// Synthetic test-only evidence exercises the collector gate; it is not a
 	// reviewed live schema-hash observation or a registry artifact.
@@ -41,6 +56,20 @@ func frozenFixture(t *testing.T) map[string]any {
 		object["approved_cross_reviewers"] = object["required_cross_reviewers"]
 	}
 	return document
+}
+
+func TestHistoricalControlFixturePreservesCurrentImplementedDPolicies(t *testing.T) {
+	var historical map[string]any
+	if err := json.Unmarshal(historicalControlRegistryJSON, &historical); err != nil {
+		t.Fatal(err)
+	}
+	current := currentRegistry(t)
+	for _, raw := range historical["objects"].([]any) {
+		object := raw.(map[string]any)
+		if object["owner"] == "D" && !reflect.DeepEqual(object, resourceObject(t, current, object["name"].(string))) {
+			t.Fatalf("historical D policy drift at %s; review the explicit capability fixture", object["name"])
+		}
+	}
 }
 
 func captureScope(t *testing.T, document map[string]any) ([]string, error) {

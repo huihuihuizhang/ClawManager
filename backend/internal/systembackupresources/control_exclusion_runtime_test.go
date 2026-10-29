@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 var runtimeControlTables = []string{"system_backup_admin_revocations", "system_backup_admin_sessions", "system_backup_metadata_reservations", "system_backup_totp_credentials"}
 
-func TestControlExclusionCurrentRegistryScope(t *testing.T) {
+func TestControlExclusionHistoricalImplementedScope(t *testing.T) {
 	tables, err := ControlExclusionAllowlist(frozenRegistryBytes(t))
 	if err != nil || len(tables) != 35 {
 		t.Fatal("incomplete current control table closure", len(tables), err)
@@ -28,6 +29,36 @@ func TestControlExclusionCurrentRegistryScope(t *testing.T) {
 		if !seen[table] {
 			t.Fatal("runtime control table omitted", table)
 		}
+	}
+}
+
+func TestControlExclusionCurrentRegistryRequiresNewTableIntegration(t *testing.T) {
+	for _, syntheticFrozen := range []bool{false, true} {
+		t.Run(fmt.Sprintf("synthetic_frozen=%v", syntheticFrozen), func(t *testing.T) {
+			document := currentRegistry(t)
+			pending := resourceObject(t, document, "system_backup_execution_records")
+			if pending["decision_status"] != "pending_owner_review" || len(pending["approved_cross_reviewers"].([]any)) != 0 {
+				t.Fatal("new control policy must remain explicitly unapproved")
+			}
+			if syntheticFrozen {
+				// Even synthetic approvals cannot invent runtime support for a new table.
+				document = freezeSyntheticRegistry(document)
+			}
+			raw, err := json.Marshal(document)
+			if err != nil {
+				t.Fatal(err)
+			}
+			state := controlFixture()
+			proofCalls := 0
+			proof := controlCompletionProof(func(context.Context, *sql.Tx) error { proofCalls++; return nil })
+			checks, err := (SQLControlExclusionVerifier{DB: countDatabase(t, state), Proof: proof}).VerifyRestoreTarget(context.Background(), raw, "sev_pending_control_fixture")
+			if err == nil || checks != nil || proofCalls != 0 || len(state.queries) != 0 || state.commits != 0 {
+				t.Fatal("current unsupported control scope reached target", err, proofCalls, len(state.queries))
+			}
+			if syntheticFrozen && !strings.Contains(err.Error(), "system_backup_execution_records") {
+				t.Fatal("unexpected failure masked unsupported control table", err)
+			}
+		})
 	}
 }
 func TestControlExclusionRuntimeTables(t *testing.T) {

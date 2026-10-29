@@ -14,9 +14,13 @@ const map=runtime.match(/var controlExclusionTables = map\[string\]struct\{\}\{(
 assert.ok(map,'closed runtime control map missing');
 const runtimeNames=[...map[1].matchAll(/"([a-z_]+)"\s*:/g)].map(m=>m[1]).sort();
 const contractIDs=schema.$defs.ControlExclusionCheck.allOf[1].properties.id.enum;
-test('D control exclusion schema and runtime cover all 35 registered source-control tables',()=>{
- assert.equal(controls.length,35);assert.equal(new Set(runtimeNames).size,35);assert.equal(contractIDs.length,35);assert.equal(new Set(contractIDs).size,35);
- assert.deepEqual(runtimeNames,controls.map(o=>o.name).sort());
+test('D control exclusion covers the implemented 35-table capability and exposes pending integration',()=>{
+ assert.equal(controls.length,36);assert.equal(new Set(runtimeNames).size,35);assert.equal(contractIDs.length,35);assert.equal(new Set(contractIDs).size,35);
+ const pending=controls.filter(o=>!runtimeNames.includes(o.name));
+ assert.deepEqual(pending.map(o=>o.name),['system_backup_execution_records']);
+ assert.equal(pending[0].decision_status,'pending_owner_review');assert.deepEqual(pending[0].approved_cross_reviewers,[]);
+ assert.equal(registry.contract_status,'draft');
+ assert.deepEqual(runtimeNames,controls.filter(o=>o.name!=='system_backup_execution_records').map(o=>o.name).sort());
  assert.deepEqual([...contractIDs].sort(),runtimeNames.map(n=>'control_plane.empty.'+n));
  assert.ok(!runtimeNames.includes('schema_migrations'));
 });
@@ -28,10 +32,10 @@ test('D control exclusion keeps redacted count payloads and generic wire DTOs',(
  const parity=json('contracts/system-backup/v12/dto-parity.json');assert.ok(!parity.schema_sources.includes('contracts/system-backup/v12/verifier-contract.schema.json'));assert.equal(parity.status,'draft');
 });
 
-test('D control exclusion required count agrees with schema IDs, registry and runtime',()=>{
+test('D implemented control exclusion count agrees with schema IDs and runtime',()=>{
  const declaration=schema['x-owner-check-registries'].D.control_plane_restore_validate;
  assert.equal(declaration.check_schema,'#/$defs/ControlExclusionCheck');
  assert.equal(declaration.required_check_count,contractIDs.length);
- assert.equal(declaration.required_check_count,controls.length);
+ assert.equal(declaration.required_check_count,controls.length-1);
  assert.equal(declaration.required_check_count,runtimeNames.length);
 });
