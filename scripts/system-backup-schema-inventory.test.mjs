@@ -54,6 +54,6 @@ test('new ownership routing stays pending and cannot grant P0 capture', () => {
   }
   assert.equal(count, 22);
   assert.equal(registry.contract_status, 'draft');
-  assert.equal(registry.summary.policy_pending, 54);
+  assert.equal(registry.summary.policy_pending, 55);
   assert.equal(blockers.schema_hash_pending, true);
 });

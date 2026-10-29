@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 136,
-    "hash": "dba576ad9efd3f377d8d07de2a9a86d4e523d8dafe8943751beb057a64e52441"
+    "file_count": 137,
+    "hash": "88f4b5f39622a068b060e083689da263ee066bd9642de77fd82e8a28926ee557"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 122,
+    "object_count": 123,
     "policy_recorded": 68,
-    "policy_pending": 54,
+    "policy_pending": 55,
     "cross_review_pending": 68
   },
   "objects": [
@@ -2566,6 +2566,38 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_execution_records",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "confidential",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.execution_records.reference.verify.v1",
+      "depends_on": [
+        "table:system_backups"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Pending D review and verifier implementation: installation-local immutable encrypted plan/capture observations are not task authority. Only a reviewed redacted metadata/reference projection may be exported; never restore sealed payload rows, expose key references or replay execution.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/082_add_system_backup_execution_records.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

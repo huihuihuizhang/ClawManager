@@ -3,11 +3,11 @@
   "plan_version": "system-backup-plan.v12",
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "summary": {
-    "plan_business_tables": 121,
-    "plan_control_tables": 32,
+    "plan_business_tables": 122,
+    "plan_control_tables": 33,
     "plan_control_without_inventory": 3,
-    "inventoried_objects": 122,
-    "migration_objects": 121,
+    "inventoried_objects": 123,
+    "migration_objects": 122,
     "without_migration": 0,
     "unassigned": 0,
     "repository_runtime_create": 0,
@@ -1176,6 +1176,19 @@
       "category": "system_backup",
       "migration_sources": [
         "backend/internal/db/migrations/065_add_system_backup_control_metadata_core.sql"
+      ],
+      "repository_create_sources": [],
+      "repository_alter_sources": [],
+      "deployment_bootstrap_create_sources": [],
+      "source_exception": null
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_execution_records",
+      "owner": "D",
+      "category": "system_backup",
+      "migration_sources": [
+        "backend/internal/db/migrations/082_add_system_backup_execution_records.sql"
       ],
       "repository_create_sources": [],
       "repository_alter_sources": [],

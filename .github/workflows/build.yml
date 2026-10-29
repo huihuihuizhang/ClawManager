@@ -31,6 +31,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Test K8s install fixtures offline
+        working-directory: .
         run: python3 -B -m unittest discover -s scripts/ci -p test_k8s_smoke.py -v
 
       - name: Check system backup schema inventory

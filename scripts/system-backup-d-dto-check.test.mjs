@@ -7,8 +7,8 @@ const go = read('backend/internal/systembackupcontract/types.go');
 const ts = read('frontend/src/types/systemBackupContract.ts');
 test('every existing D Admin object has matching nested wire types', () => {
   const report = checkDTO();
-  assert.equal(report.dto_count, 49);
-  assert.equal(report.field_count, 435);
+  assert.equal(report.dto_count, 51);
+  assert.equal(report.field_count, 444);
   assert.equal(report.contract_frozen, false);
   assert.ok(report.missing_contracts.includes('status_relay'));
 });
@@ -18,6 +18,7 @@ test('Go nullable, primitive, numeric and nested type changes fail', () => {
     ['bool    `json:"can_cancel"`', 'string  `json:"can_cancel"`'],
     ['int64   `json:"config_version"`', 'float64 `json:"config_version"`'],
     ['[]Task  `json:"items"`', '[]Operation `json:"items"`'],
+    ['[]string `json:"requested_parts"`', 'string `json:"requested_parts"`'],
   ]) {
     assert.ok(go.includes(before), `test mutation missing ${before}`);
     assert.throws(() => checkDTO({ goSource: go.replace(before, after) }), /mismatch/);
@@ -30,6 +31,8 @@ test('TS open enums, nullability, optional fields and nested collections fail', 
     ['can_cancel: boolean;', 'can_cancel?: boolean;'],
     ['items: SystemBackupTask[];', 'items: SystemBackupOperation[];'],
     ['eligibility_reason_codes: EligibilityReasonCode[];', 'eligibility_reason_codes: string[];'],
+    ['task_purpose: "acceptance" | "functional_test";', 'task_purpose: string;'],
+    ['preflight_mode: "production_readonly" | "functional_test";', 'preflight_mode: string;'],
   ]) {
     assert.ok(ts.includes(before));
     assert.throws(() => checkDTO({ tsSource: ts.replace(before, after) }));

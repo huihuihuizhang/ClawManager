@@ -86,6 +86,21 @@ type OperationList struct {
 // The request DTOs below contain D-owned business fields only. Authentication
 // transport fields such as strong_auth_proof remain in the A-owned boundary and
 // are deliberately excluded from request hashing and these structs.
+type BackupCreateRequest struct {
+	RequestedParts  []string `json:"requested_parts"`
+	TaskPurpose     string   `json:"task_purpose"`
+	RetryOfPublicID *string  `json:"retry_of_public_id"`
+}
+
+type PreflightCreateRequest struct {
+	SourceArtifactType     string  `json:"source_artifact_type"`
+	SourcePublicID         string  `json:"source_public_id"`
+	TargetProfile          string  `json:"target_profile"`
+	RestoreTargetConfigRef string  `json:"restore_target_config_ref"`
+	PreflightMode          string  `json:"preflight_mode"`
+	RetryOfPublicID        *string `json:"retry_of_public_id"`
+}
+
 type CancelRequest struct {
 }
 

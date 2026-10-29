@@ -5,6 +5,28 @@
   "decisions": [
     {
       "object_type": "table",
+      "name": "system_backup_execution_records",
+      "owner": "D",
+      "data_classification": "confidential",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.execution_records.reference.verify.v1",
+      "depends_on": [
+        "table:system_backups"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Pending D review and verifier implementation: installation-local immutable encrypted plan/capture observations are not task authority. Only a reviewed redacted metadata/reference projection may be exported; never restore sealed payload rows, expose key references or replay execution."
+    },
+    {
+      "object_type": "table",
       "name": "system_backup_admin_revocations",
       "owner": "D",
       "data_classification": "confidential",

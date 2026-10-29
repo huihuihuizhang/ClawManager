@@ -89,6 +89,21 @@ export interface OperationList {
 
 // D-owned business request fields. A-owned authentication transport such as
 // strong_auth_proof is intentionally not represented or request-hashed here.
+export interface BackupCreateRequest {
+  requested_parts: Array<"mysql" | "redis" | "object_storage" | "workspace" | "deployment_resources" | "secret_bundle">;
+  task_purpose: "acceptance" | "functional_test";
+  retry_of_public_id: string | null;
+}
+
+export interface PreflightCreateRequest {
+  source_artifact_type: "backup" | "catalog_import";
+  source_public_id: string;
+  target_profile: "cluster" | "single-node";
+  restore_target_config_ref: string;
+  preflight_mode: "production_readonly" | "functional_test";
+  retry_of_public_id: string | null;
+}
+
 export interface CancelRequest {
 }
 

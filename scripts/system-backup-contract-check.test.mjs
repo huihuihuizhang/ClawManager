@@ -85,7 +85,15 @@ test('draft registry covers inventory and records every D decision', () => {
   assert.equal(registry.summary.object_count, registry.objects.length);
   assert.equal(registry.summary.policy_recorded + registry.summary.policy_pending, registry.objects.length);
   assert.ok(dObjects.length > 0);
-  assert.ok(dObjects.every((item) => item.decision_status === 'owner_recorded'));
+  assert.deepEqual(dObjects.filter((item) => item.decision_status !== 'owner_recorded').map((item) => item.name), ['system_backup_execution_records']);
+  const execution = dObjects.find((item) => item.name === 'system_backup_execution_records');
+  assert.equal(execution.decision_status, 'pending_owner_review');
+  assert.equal(execution.category, 'system_backup');
+  assert.equal(execution.backup_strategy, 'metadata_only');
+  assert.equal(execution.restore_strategy, 'reference_only');
+  assert.deepEqual(execution.approved_cross_reviewers, []);
+  assert.ok(execution.sources.migration.includes('backend/internal/db/migrations/082_add_system_backup_execution_records.sql'));
+  assert.ok(strictBlockers(registry, manifest).policy_pending.includes('table:system_backup_execution_records'));
   assert.ok(dObjects.every((item) => item.verifier_id));
   assert.equal(registry.schema_hash.status, 'pending_live_evidence');
   assert.equal(registry.schema_hash.hash, null);
@@ -100,7 +108,7 @@ test('draft registry covers inventory and records every D decision', () => {
 });
 
 test('P0-0a inventory exposes planned control tables absent from owner and migration coverage', () => {
-  assert.equal(inventory.summary.plan_control_tables, 32);
+  assert.equal(inventory.summary.plan_control_tables, 33);
   assert.equal(inventory.summary.plan_control_without_inventory, inventory.gaps.plan_control_without_inventory.length);
   assert.deepEqual(inventory.gaps.plan_control_without_inventory, [
     'system_backup_catalog_imports',
