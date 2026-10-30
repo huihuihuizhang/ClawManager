@@ -42,7 +42,7 @@ func TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, mode := range []string{"valid", "missing-source-grant", "revoked-source", "revoked-during-source", "wrong-server", "functional-fallback", "mixed-scope"} {
+	for _, mode := range []string{"valid", "mutating-source-callback", "missing-source-grant", "revoked-source", "revoked-during-source", "wrong-server", "functional-fallback", "mixed-scope"} {
 		t.Run(mode, func(t *testing.T) {
 			i, env, key := formalInvocationFixture(t)
 			i.WorkspacePath = ""
@@ -56,6 +56,11 @@ func TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode(t *test
 			i.Request.Teams = &TeamCaptureSpec{InventorySHA256: strings.Repeat("a", 64), Redis: &team.RedisScope{ID: "redis_a", ServerID: server, Database: db, TeamIDs: []int{4242}}, MaxItems: 100}
 			env.Teams = &TeamCaptureSources{Redis: client, Authorize: func(context.Context, Invocation) error { return nil }}
 			switch mode {
+			case "mutating-source-callback":
+				env.Teams.Authorize = func(_ context.Context, bound Invocation) error {
+					bound.Request.Teams.Redis.TeamIDs[0] = 999
+					return nil
+				}
 			case "missing-source-grant":
 				env.Teams.Authorize = nil
 			case "revoked-source":
@@ -77,7 +82,7 @@ func TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode(t *test
 				i.Request.Teams.Objects = []team.ObjectRef{{TeamID: 20}}
 			}
 			result, err := runFormalCapture(context.Background(), i, key, env)
-			if mode != "valid" {
+			if mode != "valid" && mode != "mutating-source-callback" {
 				if err == nil || result.Ciphertext.Name != "" {
 					t.Fatal("unsupported source accepted")
 				}

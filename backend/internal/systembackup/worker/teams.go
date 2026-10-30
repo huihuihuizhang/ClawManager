@@ -4,6 +4,7 @@ import (
 	c "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/team"
 	"context"
+	"encoding/json"
 	"github.com/minio/minio-go/v7"
 	"io"
 )
@@ -20,6 +21,23 @@ type TeamCaptureSources struct {
 	Redis     *c.RedisClient
 	Objects   *minio.Client
 	Authorize func(context.Context, Invocation) error
+}
+
+// Source authority callbacks observe detached original facts. They cannot
+// mutate the frozen Redis/object scope while authorizing or retaining it.
+func authorizeTeamSources(ctx context.Context, env *TeamCaptureSources, i Invocation) error {
+	if env == nil || env.Authorize == nil {
+		return ErrNotReady
+	}
+	raw, err := json.Marshal(i)
+	if err != nil || len(raw) > 1<<20 {
+		return ErrRequest
+	}
+	var bound Invocation
+	if json.Unmarshal(raw, &bound) != nil {
+		return ErrRequest
+	}
+	return env.Authorize(ctx, bound)
 }
 
 func teamCaptureOperation(op string) bool {
@@ -54,7 +72,7 @@ func captureTeamSource(ctx context.Context, i Invocation, env *TeamCaptureSource
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if check() != nil || env.Authorize(ctx, i) != nil {
+		if check() != nil || authorizeTeamSources(ctx, env, i) != nil {
 			return ErrNotReady
 		}
 		return nil

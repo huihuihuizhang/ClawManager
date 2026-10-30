@@ -109,7 +109,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		if job.Recheck(ctx) != nil {
 			return ErrNotReady
 		}
-		if r.Teams != nil && env.Teams.Authorize(ctx, i) != nil {
+		if r.Teams != nil && authorizeTeamSources(ctx, env.Teams, i) != nil {
 			return ErrNotReady
 		}
 		return nil
