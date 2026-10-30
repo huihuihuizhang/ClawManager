@@ -156,6 +156,14 @@ func TestProviderInvocationCannotBorrowFunctionalOrRecoveryCalls(t *testing.T) {
 			t.Fatal("C context changed original part", field)
 		}
 	}
+	for _, endpoint := range []string{"https://:8200", "https://bao.example.invalid:8200?", "https://bao.example.invalid:8200#"} {
+		bad := keyInvocation(t)
+		bad.ProviderKey.Endpoint = endpoint
+		h, _ := bad.Hash()
+		if ValidateControl(ControlRequest{Invocation: bad, InvocationSHA256: h, Action: "key-reserve", Point: strings.Repeat("a", 32)}) {
+			t.Fatalf("invalid provider endpoint reserved original key use: %q", endpoint)
+		}
+	}
 	i.ProviderKey.Operation = k.Unwrap
 	hash, _ = i.Hash()
 	if ValidateControl(ControlRequest{Invocation: i, InvocationSHA256: hash, Action: "key-reserve", Point: strings.Repeat("a", 32)}) {
