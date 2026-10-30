@@ -16,10 +16,10 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 137,
-    "policy_recorded": 68,
-    "policy_pending": 69,
-    "cross_review_pending": 68
+    "object_count": 139,
+    "policy_recorded": 79,
+    "policy_pending": 60,
+    "cross_review_pending": 79
   },
   "objects": [
     {
@@ -236,17 +236,23 @@
       "name": "custom_team_templates",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.custom_team_templates.normalize.v1",
+      "verifier_id": "teams.custom_team_templates.verify.v1",
+      "depends_on": [
+        "table:users"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/046_add_custom_team_templates.sql"
@@ -3291,17 +3297,23 @@
       "name": "team_event_outbox",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_event_outbox.normalize.v1",
+      "verifier_id": "teams.team_event_outbox.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Encrypted original rows remain archived. Outbox is historical evidence only and is omitted from active restore.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/036_add_team_event_outbox.sql"
@@ -3317,17 +3329,23 @@
       "name": "team_events",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_events.normalize.v1",
+      "verifier_id": "teams.team_events.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/014_add_team_mvp.sql"
@@ -3343,17 +3361,23 @@
       "name": "team_members",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_members.normalize.v1",
+      "verifier_id": "teams.team_members.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/014_add_team_mvp.sql"
@@ -3369,17 +3393,23 @@
       "name": "team_tasks",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_tasks.normalize.v1",
+      "verifier_id": "teams.team_tasks.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/014_add_team_mvp.sql"
@@ -3395,17 +3425,23 @@
       "name": "team_work_items",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_work_items.normalize.v1",
+      "verifier_id": "teams.team_work_items.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/035_harden_team_event_protocol.sql"
@@ -3421,17 +3457,23 @@
       "name": "team_workflow_phases",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_workflow_phases.normalize.v1",
+      "verifier_id": "teams.team_workflow_phases.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/037_add_team_workflow_ledger.sql"
@@ -3447,17 +3489,23 @@
       "name": "team_workspace_file_audits",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.team_workspace_file_audits.normalize.v1",
+      "verifier_id": "teams.team_workspace_file_audits.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/072_add_team_workspace_file_audits.sql"
@@ -3473,17 +3521,23 @@
       "name": "teams",
       "owner": "C",
       "category": "teams",
-      "data_classification": null,
-      "backup_strategy": null,
-      "restore_strategy": null,
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
       "excluded_reason": null,
-      "normalizer_id": null,
-      "verifier_id": null,
-      "depends_on": [],
-      "decision_status": "pending_owner_review",
-      "required_cross_reviewers": [],
+      "normalizer_id": "teams.teams.normalize.v1",
+      "verifier_id": "teams.teams.verify.v1",
+      "depends_on": [
+        "table:users"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
       "approved_cross_reviewers": [],
-      "redacted_explanation": null,
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed.",
       "sources": {
         "migration": [
           "backend/internal/db/migrations/014_add_team_mvp.sql"
@@ -3967,6 +4021,70 @@
         "deployment_bootstrap": [],
         "exception": null
       }
+    },
+    {
+      "object_type": "table",
+      "name": "owner_team_admission_locks",
+      "owner": "C",
+      "category": "teams",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/077_add_northbound_owner_teams.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      },
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
+      "excluded_reason": null,
+      "normalizer_id": "teams.owner_team_admission_locks.normalize.v1",
+      "verifier_id": "teams.owner_team_admission_locks.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Encrypted original rows remain archived. Isolated restoration omits live admissions and cannot copy execution authority."
+    },
+    {
+      "object_type": "table",
+      "name": "owner_team_provision_steps",
+      "owner": "C",
+      "category": "teams",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/077_add_northbound_owner_teams.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      },
+      "data_classification": "confidential",
+      "backup_strategy": "mysql_dump",
+      "restore_strategy": "normalize",
+      "excluded_reason": null,
+      "normalizer_id": "teams.owner_team_provision_steps.normalize.v1",
+      "verifier_id": "teams.owner_team_provision_steps.verify.v1",
+      "depends_on": [
+        "table:teams"
+      ],
+      "decision_status": "owner_recorded",
+      "required_cross_reviewers": [
+        "A",
+        "B",
+        "D"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed."
     }
   ]
 }

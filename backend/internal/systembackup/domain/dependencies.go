@@ -15,7 +15,7 @@ func dependencyRules() []scope.TableRule {
 	for _, d := range scope.CrossDomainDependencies() {
 		for _, name := range d.Tables {
 			action := "preserve"
-			if name == "instance_gateway_token_aliases" || name == "skill_package_materialize_jobs" || name == "team_event_outbox" {
+			if name == "instance_gateway_token_aliases" || name == "skill_package_materialize_jobs" || name == "team_event_outbox" || name == "owner_team_admission_locks" {
 				action = "drop"
 			}
 			out = append(out, scope.TableRule{Name: name, Domain: d.Domain, RestoreAction: action, Reason: "Portable users/instances dependency; preserve encrypted source rows and normalize with the owning schema."})
@@ -131,6 +131,8 @@ func validateDependencyLinks(s Snapshot) error {
 				refs = map[string][2]string{"skill_id": {"skills", "id"}, "skill_version_id": {"skill_versions", "id"}}
 			case "team_workspace_file_audits":
 				refs = map[string][2]string{"team_id": {"teams", "id"}, "user_id": {"users", "id"}}
+			case "owner_team_provision_steps":
+				refs = map[string][2]string{"team_id": {"teams", "id"}}
 			case "team_members":
 				refs = map[string][2]string{"team_id": {"teams", "id"}}
 			case "team_tasks":

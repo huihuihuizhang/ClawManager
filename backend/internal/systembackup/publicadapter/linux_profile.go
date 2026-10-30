@@ -9,6 +9,7 @@ import (
 
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/flow"
+	"clawreef/internal/systembackup/team"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -17,11 +18,13 @@ type SourceInventory struct {
 	Database, ServerUUID string
 	Users                []int
 	Instances            []InstanceIdentity
+	Teams                *team.Inventory `json:"Teams,omitempty"`
 }
 
 func cloneSourceInventory(in SourceInventory) SourceInventory {
 	in.Users = append([]int(nil), in.Users...)
 	in.Instances = append([]InstanceIdentity(nil), in.Instances...)
+	in.Teams = team.CloneInventory(in.Teams)
 	return in
 }
 
@@ -36,6 +39,9 @@ type LinuxProfileConfig struct {
 	// VerifySource checks the actual discovery transaction before and after
 	// reading inventory. It must not commit or roll back the transaction.
 	VerifySource func(context.Context, *sql.Tx) error
+	// Optional C reader shares this exact authenticated SQL snapshot. A nil
+	// reader preserves historical user/instance plans and cannot enable Teams.
+	ReadTeams func(context.Context, *sql.Tx, SourceInventory) (*team.Inventory, error)
 	// RecoveryOnly binds the original frozen plan without source discovery.
 	// It cannot produce a fresh source inventory or authorize another capture.
 	RecoveryOnly         bool
@@ -109,6 +115,17 @@ func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 		}
 		seen[i.ID] = true
 		out.Instances = append(out.Instances, i)
+	}
+	if p.cfg.ReadTeams != nil {
+		out.Teams, err = p.cfg.ReadTeams(ctx, tx, cloneSourceInventory(out))
+		owners := map[int]int{}
+		for _, instance := range out.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		if err != nil || out.Teams == nil || out.Teams.Validate(users, owners) != nil {
+			return SourceInventory{}, d.ErrNotReady
+		}
+		out.Teams = team.CloneInventory(out.Teams)
 	}
 	if ctx.Err() != nil || (p.cfg.VerifySource != nil && p.cfg.VerifySource(ctx, tx) != nil) {
 		return SourceInventory{}, d.ErrNotReady

@@ -5,6 +5,8 @@ import "strings"
 // Explicit inventory from migrations 014/017/018/032/035/036/037/042/046.
 // Do not derive an allowlist from reflection: new model fields need review.
 var teamColumns = map[string]string{
+	"owner_team_provision_steps": "team_id step_key operation_id status updated_at",
+	"owner_team_admission_locks": "team_id",
 	"teams":                      "id user_id resource_scope owner display_name name description status communication_mode redis_url_secret_name redis_url_secret_key team_token_secret_name team_token_secret_key redis_events_last_id shared_pvc_name shared_pvc_namespace shared_mount_path storage_class created_at updated_at",
 	"team_members":               "id team_id instance_id user_id member_key display_name icon_key role runtime_type instance_mode description status current_task_id progress last_seen_at availability runtime_status runtime_task_id runtime_intent blocked_reason last_summary created_at updated_at",
 	"team_tasks":                 "id team_id target_member_id created_by message_id status workflow_state plan_version ledger_version current_phase_id accepted_completion_id payload_json result_json error_message redis_stream_id created_at dispatched_at started_at finished_at updated_at",
@@ -53,6 +55,17 @@ func normalizeTeam(table string, r Row, p Policy) error {
 		default:
 			return ErrNormalization
 		}
+	case "owner_team_provision_steps":
+		switch r["status"].String() {
+		case "done", "failed":
+		case "pending", "started":
+			set(r, "status", Text("failed"))
+		default:
+			return ErrNormalization
+		}
+		// The immutable archive retains the original operation reference.
+		// The restored history must not authorize a source provisioning retry.
+		set(r, "operation_id", Text("drill-disabled"))
 	case "custom_team_templates":
 		clearFields(r, "last_operation_id")
 	case "team_tasks":

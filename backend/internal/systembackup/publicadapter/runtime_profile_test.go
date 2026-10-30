@@ -171,13 +171,15 @@ func TestRuntimeProfileMixedInventoryCallsConcreteBuildersAndPreservesStoppedIns
 	authentications := 0
 	source := LinuxProfileConfig{Source: db, Database: "synthetic_source", ServerUUID: "source-uuid", Supported: map[AgentKind]bool{{"openclaw", "lite", "linux", "linux"}: true}, HoldLimit: 30 * time.Second, VerifySource: func(ctx context.Context, tx *sql.Tx) error {
 		authentications++
-		if sourceTx == nil {
+		// Each discovery/check uses its own read-only snapshot. Both authority
+		// checks must bind THAT transaction, not the already-closed first one.
+		if authentications%2 == 1 {
 			sourceTx = tx
-		} else if sourceTx != tx {
-			return errors.New("source authentication changed transaction")
-		}
-		if (authentications == 1 && sf.queries != 0) || (authentications == 2 && sf.queries != 3) {
-			return errors.New("wrong source authentication boundary")
+			if sf.queries != (authentications/2)*3 {
+				return errors.New("wrong source authentication start")
+			}
+		} else if sourceTx != tx || sf.queries != (authentications/2)*3 {
+			return errors.New("source authentication changed transaction or boundary")
 		}
 		return ctx.Err()
 	}}

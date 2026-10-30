@@ -66,6 +66,20 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 		}
 	}
 	// Real current-schema rows exercise the preserved Team adapter, not only
+	// C's inventory reader consumes the SAME caller-owned SQL snapshot; it
+	// cannot replace observed ownership/member links with deployment claims.
+	tx, inventoryErr := source.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	if inventoryErr != nil {
+		t.Fatal(inventoryErr)
+	}
+	mapped := team.Inventory{Version: team.InventoryVersion, Teams: []team.SourceTeam{{ID: 1001, RedisScopeID: "team_redis"}, {ID: 1002, RedisScopeID: "team_redis"}, {ID: 1003, RedisScopeID: "team_redis"}, {ID: 1004, RedisScopeID: "team_redis"}}, Redis: []team.RedisScope{{ID: "team_redis", ServerID: strings.Repeat("a", 40), TeamIDs: []int{1001, 1002, 1003, 1004}}}}
+	observed, inventoryErr := team.ReadInventory(ctx, tx, mapped, map[int]bool{101: true, 102: true}, map[int]int{})
+	if inventoryErr != nil || len(observed.Teams) != 4 || observed.Teams[1].Owner != "owner-x" || len(observed.Teams[1].Members) != 1 {
+		tx.Rollback()
+		t.Fatal("C SQL inventory lost observed Team/owner/member relationships", inventoryErr)
+	}
+	tx.Rollback()
+	// The pure normalizer. Interruption keeps result/artifact bytes and records
 	// the pure normalizer. Interruption keeps result/artifact bytes and records
 	// the original state while terminal children retain their exact status.
 	workStates := map[string]string{"cancelled": "cancelled", "skipped": "skipped", "superseded": "superseded", "blocked": "failed", "awaiting_review": "failed", "running": "failed", "succeeded": "succeeded"}

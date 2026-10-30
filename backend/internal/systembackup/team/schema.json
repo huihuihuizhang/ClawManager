@@ -1,0 +1,1021 @@
+[
+  {
+    "name": "custom_team_templates",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "user_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "name",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "intent",
+        "type": "text",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "requested_member_count",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "resolved_member_count",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "spec_json",
+        "type": "longtext",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "last_trace_id",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "resource_scope",
+        "type": "varchar(16)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "owner",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "last_operation_id",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "owner_team_admission_locks",
+    "columns": [
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      }
+    ],
+    "primary_key": [
+      "team_id"
+    ]
+  },
+  {
+    "name": "owner_team_provision_steps",
+    "columns": [
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "step_key",
+        "type": "varchar(100)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "operation_id",
+        "type": "varchar(128)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_key": [
+      "team_id",
+      "step_key"
+    ]
+  },
+  {
+    "name": "team_event_outbox",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "source_event_id",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "destination",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "message_id",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "payload_json",
+        "type": "longtext",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "attempts",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "available_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "last_error",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "delivered_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_events",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "event_id",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "completion_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "sequence_no",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "member_id",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "task_id",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "message_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "event_type",
+        "type": "varchar(100)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "payload_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "redis_stream_id",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "occurred_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_members",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "instance_id",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "user_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "member_key",
+        "type": "varchar(100)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "display_name",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "role",
+        "type": "varchar(100)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "runtime_type",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "instance_mode",
+        "type": "enum('lite','pro')",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "current_task_id",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "progress",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "last_seen_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "availability",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "runtime_status",
+        "type": "varchar(50)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "runtime_task_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "runtime_intent",
+        "type": "varchar(100)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "blocked_reason",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "last_summary",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "icon_key",
+        "type": "varchar(32)",
+        "nullable": "YES",
+        "extra": ""
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_tasks",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "target_member_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "created_by",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "message_id",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "workflow_state",
+        "type": "varchar(40)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "plan_version",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "ledger_version",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "current_phase_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "accepted_completion_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "payload_json",
+        "type": "longtext",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "result_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "error_message",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "redis_stream_id",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "dispatched_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "started_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "finished_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_work_items",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "root_task_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "work_id",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "assignment_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "canonical_work_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "phase_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "required_for_root",
+        "type": "tinyint(1)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "superseded_by",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "review_required",
+        "type": "tinyint(1)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "validated_revision",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "review_target_assignment_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "review_target_revision",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "owner_member_id",
+        "type": "int",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "title",
+        "type": "varchar(500)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "depends_on_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "result_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "artifact_refs_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "started_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "finished_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_workflow_phases",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "root_task_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "phase_id",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "plan_version",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "sequence_no",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(40)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "required_for_root",
+        "type": "tinyint(1)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "decision_required",
+        "type": "tinyint(1)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "depends_on_json",
+        "type": "longtext",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "next_phase_id",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "completion_policy",
+        "type": "varchar(80)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "team_workspace_file_audits",
+    "columns": [
+      {
+        "name": "id",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "team_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "user_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "action",
+        "type": "varchar(32)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "relative_path",
+        "type": "varchar(1024)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "bytes",
+        "type": "bigint",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "datetime",
+        "nullable": "NO",
+        "extra": "DEFAULT_GENERATED"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  },
+  {
+    "name": "teams",
+    "columns": [
+      {
+        "name": "id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": "auto_increment"
+      },
+      {
+        "name": "user_id",
+        "type": "int",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "name",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "status",
+        "type": "varchar(30)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "communication_mode",
+        "type": "varchar(50)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "redis_url_secret_name",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "redis_url_secret_key",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "team_token_secret_name",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "team_token_secret_key",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "redis_events_last_id",
+        "type": "varchar(128)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "shared_pvc_name",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "shared_pvc_namespace",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "shared_mount_path",
+        "type": "varchar(255)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "storage_class",
+        "type": "varchar(100)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp",
+        "nullable": "YES",
+        "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "resource_scope",
+        "type": "varchar(16)",
+        "nullable": "NO",
+        "extra": ""
+      },
+      {
+        "name": "owner",
+        "type": "varchar(128)",
+        "nullable": "YES",
+        "extra": ""
+      },
+      {
+        "name": "display_name",
+        "type": "varchar(255)",
+        "nullable": "YES",
+        "extra": ""
+      }
+    ],
+    "primary_key": [
+      "id"
+    ]
+  }
+]
