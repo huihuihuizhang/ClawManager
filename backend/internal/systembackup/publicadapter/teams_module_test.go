@@ -101,6 +101,42 @@ func TestTeamsModuleSharesOnePublicSQLAndCapturesAllOriginalParts(t *testing.T) 
 	}
 }
 
+func TestEmptyTeamsStillRegisterSQLTemplateAndHistoryCoverage(t *testing.T) {
+	f, b, _ := teamsModuleFixture(t)
+	b.Source.Teams.Teams, b.Source.Teams.Mounts, b.Source.Teams.Redis, b.Source.Teams.Objects = nil, nil, nil, nil
+	f.in.Backup.RequestedParts = []string{"mysql", "workspace"}
+	cr, err := NewTeamsModule(TeamsModuleConfig{Revision: "empty-teams-v1", Source: b.Source})
+	if err != nil {
+		t.Fatal("no active Teams must not discard template/history SQL coverage", err)
+	}
+	br, err := NewUsersInstancesModule(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := NewCaptureModules([]CaptureModuleRegistration{br, cr}, moduleTestContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts, err := m.BuildParts(f.in, b.Source, f.x.HoldUntil)
+	if err != nil || len(parts) != 3 {
+		t.Fatal(parts, err)
+	}
+	database := 0
+	for _, part := range parts {
+		var inv worker.Invocation
+		json.Unmarshal(part.InvocationJSON, &inv)
+		if inv.Request.Operation == "capture-database" {
+			database++
+			if inv.Request.Database.TeamsInventory == nil {
+				t.Fatal("empty C scope lost from atomic SQL")
+			}
+		}
+	}
+	if database != 1 {
+		t.Fatal("duplicate shared SQL")
+	}
+}
+
 func TestTeamsModuleRejectsIncompleteAndCrossOwnerBindings(t *testing.T) {
 	for _, mode := range []string{"missing-workspace", "foreign-pvc", "missing-redis", "foreign-redis", "wrong-object-version", "foreign-member", "source-drift", "rebound-provider-index"} {
 		t.Run(mode, func(t *testing.T) {

@@ -27,6 +27,7 @@ type CaptureModuleDescriptor struct {
 	Parts               []CaptureModulePart
 	Requires            []CaptureModuleDependency `json:"Requires,omitempty"`
 	Required            bool                      `json:"Required,omitempty"`
+	DependencyOnly      bool                      `json:"DependencyOnly,omitempty"`
 }
 
 // ModuleCaptureContext is D's original admitted capture-point projection.
@@ -80,10 +81,9 @@ func knownRequestedPart(part string) bool {
 	return false
 }
 
-// NewCaptureModules validates and freezes the module catalog. Only the two
-// EXISTING worker operations can currently be materialized. In particular the
-// B database worker exports users/instances; it is not a generic Teams/Skills
-// SQL exporter. C's other operations require actual worker/schema adapters.
+// NewCaptureModules freezes the actual registered operations and dependencies.
+// A dependency-only domain contributes its data to another owner's shared
+// capture (for example empty Teams plus template/history SQL), never a fake Job.
 func NewCaptureModules(registrations []CaptureModuleRegistration, resolve CaptureContextResolver) (*CaptureModules, error) {
 	if len(registrations) == 0 || len(registrations) > 256 || resolve == nil {
 		return nil, d.ErrNotReady
@@ -92,7 +92,10 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 	ids, parts := map[string]bool{}, map[string]bool{}
 	for _, registration := range registrations {
 		descriptor := registration.Descriptor
-		if !unit.MatchString(descriptor.ID) || ids[descriptor.ID] || !strings.Contains("ABCD", descriptor.Owner) || len(descriptor.Owner) != 1 || descriptor.Revision == "" || len(descriptor.Revision) > 128 || !utf8.ValidString(descriptor.Revision) || strings.ContainsAny(descriptor.Revision, "\x00\r\n") || len(descriptor.Parts) == 0 || registration.Build == nil {
+		if !unit.MatchString(descriptor.ID) || ids[descriptor.ID] || !strings.Contains("ABCD", descriptor.Owner) || len(descriptor.Owner) != 1 || descriptor.Revision == "" || len(descriptor.Revision) > 128 || !utf8.ValidString(descriptor.Revision) || strings.ContainsAny(descriptor.Revision, "\x00\r\n") || registration.Build == nil {
+			return nil, d.ErrNotReady
+		}
+		if (len(descriptor.Parts) == 0) != descriptor.DependencyOnly || (descriptor.DependencyOnly && (!descriptor.Required || len(descriptor.Requires) == 0)) {
 			return nil, d.ErrNotReady
 		}
 		ids[descriptor.ID] = true
@@ -242,7 +245,7 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 	var out []JobPart
 	outputs := map[string]bool{}
 	for i, registration := range m.modules {
-		if len(selections[i]) == 0 {
+		if len(selections[i]) == 0 && !registration.Descriptor.DependencyOnly {
 			continue
 		}
 		expected := map[string]CaptureModuleSelection{}

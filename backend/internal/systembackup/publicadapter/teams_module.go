@@ -39,7 +39,7 @@ func NewTeamsModule(cfg TeamsModuleConfig) (CaptureModuleRegistration, error) {
 	if !utf8.ValidString(cfg.Revision) || strings.ContainsAny(cfg.Revision, "\x00\r\n") {
 		return zero, d.ErrNotReady
 	}
-	if i == nil || len(i.Teams) == 0 || cfg.Source.Database == "" || cfg.Source.ServerUUID == "" || cfg.Revision == "" || len(cfg.Revision) > 128 {
+	if i == nil || cfg.Source.Database == "" || cfg.Source.ServerUUID == "" || cfg.Revision == "" || len(cfg.Revision) > 128 {
 		return zero, d.ErrNotReady
 	}
 	users, owners := map[int]bool{}, map[int]int{}
@@ -89,7 +89,7 @@ func NewTeamsModule(cfg TeamsModuleConfig) (CaptureModuleRegistration, error) {
 		}
 	}
 	sourceRaw, _ := json.Marshal(cfg.Source)
-	registration := CaptureModuleRegistration{Descriptor: CaptureModuleDescriptor{ID: "teams", Owner: "C", Revision: cfg.Revision, Parts: parts, Requires: []CaptureModuleDependency{{Part: UsersInstancesDatabasePart, Owner: "B", RequestedPart: "mysql", Operation: "capture-database"}}, Required: true}}
+	registration := CaptureModuleRegistration{Descriptor: CaptureModuleDescriptor{ID: "teams", Owner: "C", Revision: cfg.Revision, Parts: parts, Requires: []CaptureModuleDependency{{Part: UsersInstancesDatabasePart, Owner: "B", RequestedPart: "mysql", Operation: "capture-database"}}, Required: true, DependencyOnly: len(parts) == 0}}
 	registration.Build = func(input CaptureModuleInput) ([]CapturePartRequest, error) {
 		actual, _ := json.Marshal(input.Source)
 		if string(actual) != string(sourceRaw) || input.Source.Teams == nil || len(input.Parts) != len(parts) {
