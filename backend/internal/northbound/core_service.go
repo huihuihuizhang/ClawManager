@@ -1192,8 +1192,20 @@ func (w *OperationWorker) finishOrContinueLifecycle(ctx context.Context, item *m
 }
 
 func (w *OperationWorker) runLifecycleActionWithLease(ctx context.Context, item *models.NorthboundOperation, action func() error) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	// The caller can stop waiting while a provider action is still running.
+	// Keep its own shared-gate permit until that actual action has exited.
+	release, err := backupgate.HoldWorkUnit(ctx, "northbound.lifecycle_action")
+	if err != nil {
+		return err
+	}
 	result := make(chan error, 1)
-	go func() { result <- action() }()
+	go func() {
+		defer release()
+		result <- action()
+	}()
 	lease := time.Duration(w.service.settings().OperationLeaseSeconds) * time.Second
 	if lease <= 0 {
 		lease = 30 * time.Second
