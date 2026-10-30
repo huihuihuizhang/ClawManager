@@ -1,0 +1,15 @@
+{
+  "source": "user-supplied remote command output",
+  "namespace": "seal-capability-db99feff9f554c29",
+  "namespace_uid": "66ee86e2-c0a2-4750-8792-7440b1c7737f",
+  "storage_class_uid": "a7e3a85f-6ecf-4b40-bfb7-98892f9b3076",
+  "scope": "disposable-storage-capability",
+  "production_accepted": false,
+  "passed": false,
+  "cleaned": true,
+  "exit_code": 1,
+  "failure_stage": "wait-controller-ready",
+  "error": "timed out waiting for the condition on pods/controller after 60 seconds",
+  "lock_probe_started": false,
+  "root_cause": "unknown; original startup wrapper did not capture Pod/PVC status or events before cleanup"
+}

@@ -1,10 +1,12 @@
 # D：独立存储能力验收（不启用生产备份）
 
+最新状态：2026-10-30 独立临时 PVC 跨节点验收通过，内外层 `passed=true`、`cleaned=true`，退出 0。原始字段记录见 `docs/evidence/d-seal-capability-passed-20261030.json`；正式部署验收仍为 false，范围见文末。
+
 现场只读输出确认：`clawmanager-app` 使用 `backup-test-zh-fix18`，不存在 `/usr/local/bin/system-backup-seal-custody` 和 `/usr/local/bin/system-backup-v2-controller`；当前 Deployment 没有 `SYSTEM_BACKUP_*` 配置或 staging 挂载。不能在该 App 上直接执行生产 seal 探针。此记录不推断镜像是否包含其他备份实现。
 
 `scripts/system-backup-seal-isolated-probe.py` 复用正式 PVC 探针，但只创建随机 `seal-capability-*` namespace、独立 ServiceAccount、两个 1Gi RWX PVC 及临时 Pod。默认打印方案，`--execute` 才执行。默认存储类 `longhorn-rwx`，controller 在 `k8s-master`，worker 在 `node1`；要求两个不同 Linux/amd64 节点、Immediate 绑定及 Delete 回收策略。无业务卷、业务凭据、数据库连接或生产 Deployment 修改。
 
-当前诊断镜像的 Go 二进制来自精确提交 `39265b45ef414c76ef46153de34b83e8392571f3`，不是持续变化的工作区（初版来自 `e1baddba`）。镜像用 `deployments/backup-seal-probe.Dockerfile` 构建，只包含 Alpine 和维护 CLI。此镜像有 shell，专用于验收，不是正式 worker 镜像。
+当前握手版镜像的 Go 二进制来自精确提交 `e9bfe2d5dc91112255570864ead935b94757f953`，不是持续变化的工作区（初版来自 `e1baddba`，诊断版来自 `39265b45`）。镜像用 `deployments/backup-seal-probe.Dockerfile` 构建，只包含 Alpine 和维护 CLI。此镜像有 shell，专用于验收，不是正式 worker 镜像。
 
 ## 执行
 
@@ -13,7 +15,7 @@
 ```sh
 python3 -B system-backup-seal-isolated-probe.py \
   --context kubernetes-admin@kubernetes \
-  --image '10.130.14.23:5000/backup-seal-probe@sha256:fbd2fe4a84256354a3a142cb42f64cefe458f137e3af528379bee89f47efdcd6' \
+  --image '10.130.14.23:5000/backup-seal-probe@sha256:4306be60e169c18f100d26b28f7802f8c9a539d87a6a8ae85b097c0a8637c057' \
   --execute
 ```
 
@@ -33,4 +35,41 @@ python3 -B system-backup-seal-isolated-probe.py \
 
 用户回传运行 `sbk_bac4fd17-7520-4b72-b21f-e1a8e5f4c28f`：跨节点 true，worker isolation/locking 阶段失败，退出 1；内外两层 cleaned=true。结构化摘要保存在 `docs/evidence/d-seal-capability-failed-20261030.json`。原脚本清理前没有保存 worker 状态和日志，无法据此判定是隔离、锁、等待超时或存储驱动问题。
 
-诊断版保留原成功判定和安全上下文，仅增加 worker 失败步骤、容器状态/退出码、有界日志及 holder 输出。日志采集前后校验原 Pod UID。Go staging 全包 7.515s 通过，两个 Python 测试文件各 5 项通过；尚待诊断版现场复测，不能将初版失败改记为通过。
+诊断版保留原成功判定和安全上下文，仅增加 worker 失败步骤、容器状态/退出码、有界日志及 holder 输出。日志采集前后校验原 Pod UID。Go staging 全包 7.515s 通过，两个 Python 测试文件各 5 项通过；诊断版现场复测结果见下一节，不能将初版失败改记为通过。
+
+## 第二轮：竞争检查与握手修复
+
+诊断版现场运行 `sbk_3f7cb575-dfe4-4e05-a36a-714f64430a56` 返回 `step=lock-must-block: acquired=true lock_error=<nil>`，holder 退出 0；worker 运行约 30 秒，内外 cleaned=true，整体退出 1。完整 JSON 回执保存在 `docs/evidence/d-seal-capability-contention-20261030.json`。旧 holder 只固定持锁 10 秒，无法保证 worker 发起竞争时它仍持锁，因此不能据此判断共享存储的锁是否失效。
+
+`e9bfe2d5` 改为双向标记握手：holder 持锁发布 ready，worker 完成竞争检查后写 observed，holder 收到原 run ID 的 observed 才释放并发布 release，worker 最后验证能取得锁。observed 只表示检查结束；意外取得锁或其他错误仍判失败。无回执时按上下文超时失败，不自动放行。两端必须使用同一新版验收镜像。
+
+为覆盖跨节点标记可见性延迟，探针命令期限为 3 分钟，worker Pod 上限 240 秒，结果等待 200 秒；维护命令仍为 2 分钟。原有 2 秒竞争检查和隔离要求不变。Go staging 全包 28.347s 通过，包含延迟 11 秒仍阻塞、握手后释放、错 run 标记和取消的回归；两套 Python 各 5 项通过。该修复尚需新的现场回执。
+
+握手版 Linux Docker 复核运行 `sbk_c7be957d-2da8-44b8-81e7-3d21fc7c1820`：holder 先启动，11 秒后检查仍运行，再启动仅挂载 task subPath 的 worker。双方退出 0，worker 报告 `cross_process_lock=true`、`worker_isolation=true`，随后 verify/clean 均成功，临时容器和卷已删除。这证明本地延迟场景可通过，不能替代现场共享 PVC 回执。
+
+## 第三轮：controller 启动超时
+
+namespace `seal-capability-db99feff9f554c29` 的临时 controller 等待 Ready 60 秒超时；未进入内层锁探针，外层 cleaned=true、退出 1。回执见 `docs/evidence/d-seal-capability-startup-timeout-20261030.json`。未保留 Pod/PVC 状态和事件，不能据此判断是拉取镜像、挂载、节点还是容器启动问题，也不能判定握手修复是否有效。
+
+本次只更新 Python 包装脚本，继续使用上述握手版镜像。controller 首次就绪等待改为 300 秒，单次请求 310 秒、子进程 330 秒；controller 生命周期改为 900 秒以覆盖启动与后续验收。失败时先按 namespace UID 核验并保存 Pod/PVC 状态和最多 40 条事件，再执行原 UID 约束清理。延长等待不改变 Ready 条件、锁检查或成功判定。独立编排测试 7 项、内层探针测试 5 项通过；未生成测试二进制或 Python 缓存。
+
+## 第四轮：节点 Pod 配额已满
+
+namespace `seal-capability-8305973def314a05` 的回执明确：`k8s-master` controller 被 kubelet 以 `OutOfpods` 拒绝，requested=1、used=110、capacity=110。两个 PVC 均 Bound；锁探针没有开始，整体退出 1、cleaned=true。完整诊断保存于 `docs/evidence/d-seal-capability-outofpods-20261030.json`。继续延长等待或原样重跑不能解决节点 Pod 配额问题。
+
+当前脚本在最多约 300 秒的就绪轮询中发现 Failed/Succeeded 终态即报错、采集诊断并清理，不再等待满 300 秒。新增 `--inventory-nodes` 只执行读取 nodes 和全 namespace pods，将 Pod 数量按节点汇总，不输出业务 Pod 名称，不创建任何资源，也不需要 image 参数：
+
+```sh
+python3 -B system-backup-seal-isolated-probe.py \
+  --context kubernetes-admin@kubernetes --inventory-nodes
+```
+
+先据此选有余量的两个不同 Linux/amd64 节点，再指定 `--controller-node`、`--worker-node` 复测。容量估计不等于预约，可能与 kubelet 当时统计不同；还需为 Longhorn 共享卷辅助 Pod 留余量。工具不删除其他工作负载、不提高节点 Pod 上限、不改生产调度或安全配置。当前独立编排测试 10 项、内层探针测试 5 项通过。
+
+## 第五轮：独立共享 PVC 跨节点通过
+
+用户报告 master 活跃 Pod 降到 108 后复测，运行 `sbk_8c80058b-2d2a-4c24-b083-2a5a73ca8015` 返回 `cross_node=true`、`passed=true`、`cleaned=true`、`holder_exit=0`；外层 namespace `seal-capability-0deaf818ce864950` 同样 passed/cleaned=true，`D_SEAL_CAPABILITY_EXIT=0`。记录来自用户回传的现场命令输出，未拼接此前失败轮次。
+
+该轮验证了所记录 Longhorn 临时 PVC、镜像和节点组合的 hardlink/create-only、chmod、文件/目录 fsync 调用、跨节点锁竞争/释放及 worker subPath 隔离。内层探针文件/Pod 及外层 namespace/PVC/PV 的清理均由该轮脚本回报成功。SSH 认证重试后命令确实执行；客户端随后出现的 socket 关闭提示未改变本轮明确的成功回执及退出码。
+
+本轮的 `production_accepted=false` 保持不变：尚未部署正式 controller/worker 与真实 staging PVC，尚未验证真实工作区挂载组合，也未执行真实 MySQL 引用判定/清理或系统备份整链。后续生产部署应使用自己的准确配置和身份重新验收；此轮不是断电耐久性证明。此前失败记录保留。

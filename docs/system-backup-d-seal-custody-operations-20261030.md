@@ -1,5 +1,22 @@
 # D：封存容量、孤儿清理与实际 PVC 验收
 
+2026-10-30 后续现场进展：独立临时 Longhorn PVC 跨节点能力验收已通过，运行 `sbk_8c80058b-2d2a-4c24-b083-2a5a73ca8015` 的内外层 passed/cleaned 均为 true、退出 0。回执见 `docs/evidence/d-seal-capability-passed-20261030.json`。这是独立工具镜像和临时卷的验证；正式 staging 部署、真实工作区挂载及 MySQL 清理验收仍未完成。
+
+## 生产准入现状（2026-10-30）
+
+现有现场只读库存 `docs/evidence/d-existing-db-live-inventory-direct-20261030.json` 记录 99 张表、没有 `system_backup_v2_*` 表，且 `migration_authorized=false`、`schema_equivalence_verified=false`。D 的清理查询明确依赖 `system_backup_v2_backups`、`system_backup_v2_runtime_resources`、`system_backup_v2_evidence`。因此此库存对应的数据库尚不能执行 seal prune 的 dry-run 或 apply，更不能把缺表错误解释为无引用。旧表与新 `079` 迁移的同名结构冲突由统一执行链 D 窗口处理；本工具不能代替迁移或绕过准入。
+
+现场 `clawmanager-app` 仍没有 `SYSTEM_BACKUP_PUBLIC_CONFIG_FILE`、固定配置 SHA、正式 staging 挂载和封存工具。仓库的 `examples/backup-controller/public-deployment.security.example.json` 是占位模板，含 `REPLACE_WITH_*`，不得当成已审定的现场部署材料。临时 Longhorn 探针的 namespace、PVC、PV、Pod、镜像身份只证明该次存储能力，不是正式安装的固定身份。
+
+继续生产接线时，按以下依赖顺序核对：
+
+1. 先由数据库迁移 owner 提供同一目标库的新版表结构等价与迁移准入记录，并在迁移后的实时库存中核对三张清理表及其列、索引。
+2. 由部署 owner 固定真实 `installation_id`、namespace/SA/PVC/PV UID、原工作区和 staging 根卷、`seal_custody_max_bytes`、controller 与 worker 镜像 digest，以及公开配置文件的 SHA。容量按实际保留量和卷剩余空间决定；不能仅复制 1 GiB 示例。
+3. 排空旧 controller 后安装相同版本的新 controller/worker，核对实际挂载和原配置 pin，再在**正式 staging PVC** 上运行 `scripts/system-backup-seal-custody-probe.py`。接收同轮 `passed=true`、`cleaned=true` 和精确 UID/image/PV 记录。
+4. 使用独立 SELECT-only 控制库账号，在 controller 挂载环境先运行 inventory 和 prune **dry-run**。保存候选、未知文件、数据库身份和引用判定回执；只有符合下述清理规则的版本才进入单独的 apply 操作。现场目前没有这份 DSN/准入记录，不能运行这一阶段。
+
+以上各项未有实时回执前，保留本轮独立存储能力通过的结论，不宣布正式 staging 或真实 SQL 清理完成。
+
 本增量承接 `a113760a` 的 controller 私有 staging seal。它不发布 C 最终 artifact，不删除正式 evidence，也不把本机测试计作真实 PVC/MySQL 验收。
 
 ## 部署要求
@@ -62,7 +79,7 @@ python3 scripts/system-backup-seal-custody-probe.py \
 
 controller 在独立随机任务形状目录测试 hard link 的 same-inode/create-only、chmod、原字节回读、文件及目录 fsync；在 sibling custody 放入本轮标记。worker 必须能够读取自己挂载中的标记，不能直接或通过越界 symlink 读取 sibling 标记，也不能通过 workspace 的同级入口读到标记。原 marker 在 worker 测试后再次由 controller 核实仍存在。
 
-controller 持有该探针目录的锁期间，worker 必须无法取得同一锁；释放后 worker 必须能够取得。输出 `cross_node=false` 只证明本次同节点跨 Pod 情况；需按实际可调度节点组合复跑，不能外推为跨节点 NFS 锁通过。此工具也不证明存储管理员无法修改文件，或任意未纳入部署清单的额外挂载不存在。
+controller 持有该探针目录的锁期间，worker 必须无法取得同一锁；释放后 worker 必须能够取得。两端使用同一新版工具：controller 保持锁直到 worker 写入竞争检查结束标记，随后释放并写入 release；不再按固定 10 秒猜测另一节点已看到 ready。检查结束标记不代表检查成功，worker 意外取得锁仍失败。输出 `cross_node=false` 只证明本次同节点跨 Pod 情况；需按实际可调度节点组合复跑，不能外推为跨节点 NFS 锁通过。此工具也不证明存储管理员无法修改文件，或任意未纳入部署清单的额外挂载不存在。
 
 清理使用 API UID precondition 删除准确探针 Pod，等待消失、锁 holder 结束，再删除核对 run ID 的已知探针文件。创建提交结果不明时按原名称、run label 和 spec 恢复 UID；不明确时保留现场并输出 `cleaned=false`，不冒险清理仍被 Pod 使用的文件。永久 custody 控制目录/锁不属于探针垃圾。
 

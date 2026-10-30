@@ -47,6 +47,7 @@ type SigningTokenSource interface {
 type OriginalSigningResolver struct {
 	installation string
 	bindings     map[string]TransitSigningBinding
+	keyWindows   map[string]struct{ start, end time.Time }
 	authority    OriginalSigningAuthority
 	tokens       SigningTokenSource
 	now          func() time.Time
@@ -56,7 +57,7 @@ func NewOriginalSigningResolver(history *ArtifactSigningKeyHistory, bindings []T
 	if history == nil || candidateAuthorityNil(authority) || candidateAuthorityNil(tokens) || len(bindings) != 3 {
 		return nil, ErrRegistrationUnavailable
 	}
-	r := &OriginalSigningResolver{installation: history.installationID, bindings: make(map[string]TransitSigningBinding, 3), authority: authority, tokens: tokens, now: time.Now}
+	r := &OriginalSigningResolver{installation: history.installationID, bindings: make(map[string]TransitSigningBinding, 3), keyWindows: make(map[string]struct{ start, end time.Time }, 3), authority: authority, tokens: tokens, now: time.Now}
 	providerKeys := map[string]bool{}
 	for _, binding := range bindings {
 		if binding.InstallationID != r.installation || !artifactSigningPurpose(binding.Purpose) || r.bindings[binding.Purpose].Purpose != "" ||
@@ -70,6 +71,7 @@ func NewOriginalSigningResolver(history *ArtifactSigningKeyHistory, bindings []T
 			return nil, ErrRegistrationUnavailable
 		}
 		r.bindings[binding.Purpose] = binding
+		r.keyWindows[binding.Purpose] = struct{ start, end time.Time }{key.NotBefore, key.NotAfter}
 		providerKeys[binding.Endpoint+"\x00"+binding.KeyName] = true
 	}
 	if len(r.bindings) != 3 {
@@ -99,9 +101,10 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 	}
 	now := r.now()
 	key := r.bindings[request.Binding.Purpose]
+	window := r.keyWindows[request.Binding.Purpose]
 	// The key history is immutable for this resolver; current revocation is
 	// checked by the original authority on every use and recheck.
-	if key.Purpose == "" {
+	if key.Purpose == "" || now.Before(window.start) || !now.Before(window.end) {
 		return fail()
 	}
 	use, err := r.authority.AuthorizeSigning(ctx, request)
@@ -120,6 +123,9 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 		return fail()
 	}
 	until := use.ExpiresAt
+	if window.end.Before(until) {
+		until = window.end
+	}
 	if token.ExpiresAt.Before(until) {
 		until = token.ExpiresAt
 	}
@@ -129,7 +135,8 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 	}
 	credential := TransitSigningCredential{Request: request, Secret: token.Secret, NotBefore: token.NotBefore, ExpiresAt: until}
 	credential.Recheck = func(c context.Context, got TransitSigningRequest) error {
-		if c == nil || c.Err() != nil || got != request || !r.now().Before(until) || use.Recheck(c, request) != nil || token.Recheck(c, request) != nil {
+		at := r.now()
+		if c == nil || c.Err() != nil || got != request || at.Before(window.start) || !at.Before(until) || use.Recheck(c, request) != nil || token.Recheck(c, request) != nil {
 			return ErrRegistrationUnavailable
 		}
 		return nil

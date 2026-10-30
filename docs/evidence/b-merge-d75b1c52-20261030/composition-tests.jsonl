@@ -1,0 +1,12 @@
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"# clawreef/internal/systembackupexecution\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"internal\\systembackupkekregistry\\store.go:15:2: module lookup disabled by GOPROXY=off\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-fail"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"start","Package":"clawreef/internal/systembackupexecution"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Output":"FAIL\tclawreef/internal/systembackupexecution [setup failed]\n"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"fail","Package":"clawreef/internal/systembackupexecution","Elapsed":0,"FailedBuild":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"# clawreef/internal/systembackup/publicadapter\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"internal\\systembackupkekregistry\\store.go:15:2: module lookup disabled by GOPROXY=off\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-fail"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"start","Package":"clawreef/internal/systembackup/publicadapter"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"output","Package":"clawreef/internal/systembackup/publicadapter","Output":"FAIL\tclawreef/internal/systembackup/publicadapter [setup failed]\n"}
+{"Time":"2026-10-30T16:20:02.4637771+08:00","Action":"fail","Package":"clawreef/internal/systembackup/publicadapter","Elapsed":0,"FailedBuild":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"}

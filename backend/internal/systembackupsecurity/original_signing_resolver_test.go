@@ -116,3 +116,39 @@ func TestOriginalSigningResolverErasesRejectedToken(t *testing.T) {
 		}
 	}
 }
+
+func TestOriginalSigningResolverEnforcesCurrentKeyWindow(t *testing.T) {
+	base := time.Now().UTC()
+	current := base
+	calls := 0
+	auth := signingAuthorityFixture(func(_ context.Context, r TransitSigningRequest) (OriginalSigningUse, error) {
+		calls++
+		return OriginalSigningUse{Request: r, NotBefore: current.Add(-time.Second), ExpiresAt: current.Add(time.Minute),
+			Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+	})
+	tokens := signingTokensFixture(func(_ context.Context, use OriginalSigningUse) (SigningToken, error) {
+		return SigningToken{Request: use.Request, Secret: []byte(strings.Repeat("t", 32)),
+			NotBefore: current.Add(-time.Second), ExpiresAt: current.Add(10 * time.Second),
+			Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+	})
+	resolver, request, err := signingResolverFixture(t, base, false, auth, tokens)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolver.now = func() time.Time { return current }
+	for _, at := range []time.Time{base.Add(-2 * time.Minute), base.Add(2 * time.Hour)} {
+		current = at
+		if _, err := resolver.ResolveSigning(context.Background(), request); err == nil || calls != 0 {
+			t.Fatal("signing credential issued outside the current key window", at, err)
+		}
+	}
+	current = base.Add(time.Hour - 5*time.Second)
+	credential, err := resolver.ResolveSigning(context.Background(), request)
+	if err != nil || calls != 1 || !credential.ExpiresAt.Equal(base.Add(time.Hour)) {
+		t.Fatal("current key expiration did not cap the credential", err)
+	}
+	current = base.Add(time.Hour + time.Second)
+	if credential.Recheck(context.Background(), request) == nil {
+		t.Fatal("expired key remained usable after credential issuance")
+	}
+}

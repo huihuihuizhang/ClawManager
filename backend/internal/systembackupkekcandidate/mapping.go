@@ -1,6 +1,7 @@
 package systembackupkekcandidate
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -25,6 +26,10 @@ func source(s SourceRecord) bool {
 func binding(k KeyBindingInput) bool {
 	return k.Provider == "external-kms" && digest.MatchString(k.IdentityHash) && version(k.RegistryVersion) && text(k.ProviderKeyID, 256) && positive.MatchString(k.ProviderVersion) && len(k.ProviderVersion) <= 10
 }
+func exactEndpoint(endpoint string) bool {
+	u, err := url.Parse(endpoint)
+	return err == nil && u.Scheme == "https" && u.Hostname() != "" && u.User == nil && u.Opaque == "" && u.Path == "" && u.RawQuery == "" && u.Fragment == "" && !u.ForceQuery && !strings.ContainsAny(endpoint, "?#\r\n") && text(endpoint, 2048)
+}
 func kmsRef(r KMSReference, purpose, capability string, p ProviderInput) bool {
 	return r.Kind == "external_kms_key" && r.Purpose == purpose && r.Capability == capability && digest.MatchString(r.IdentityHash) && version(r.Version) && text(r.Description, 256) && r.ProviderIdentityHash == p.ProviderIdentityHash && r.ScopeHash == p.ScopeHash
 }
@@ -37,7 +42,7 @@ func DecodeMapping(raw []byte) (UnadmittedMapping, error) {
 	p := m.Provider
 	if err != nil || m.SchemaVersion != MappingVersion || !text(m.InstallationID, 256) || !digest.MatchString(m.ConfigSHA256) || !version(m.SourceRevision) ||
 		m.ConfigRef.Purpose != "kek" || !binding(m.KeyBinding) || m.ConfigRef.IdentityHash != m.KeyBinding.IdentityHash || m.ConfigRef.Version != m.KeyBinding.RegistryVersion ||
-		!strings.HasPrefix(p.Endpoint, "https://") || !text(p.Endpoint, 2048) || !keyName.MatchString(p.KeyName) || !digest.MatchString(p.ProviderIdentityHash) || !digest.MatchString(p.ScopeHash) || !digest.MatchString(p.CAPEMSHA256) || !source(p.CASource) ||
+		!exactEndpoint(p.Endpoint) || !keyName.MatchString(p.KeyName) || !digest.MatchString(p.ProviderIdentityHash) || !digest.MatchString(p.ScopeHash) || !digest.MatchString(p.CAPEMSHA256) || !source(p.CASource) ||
 		!kmsRef(m.GenerateRef, "data_key_generation", "generate_data_key", p) || !kmsRef(m.UnwrapRef, "kek_unwrap", "unwrap_data_key", p) {
 		return UnadmittedMapping{}, ErrInvalid
 	}

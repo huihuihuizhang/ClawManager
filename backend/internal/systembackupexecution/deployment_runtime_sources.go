@@ -382,6 +382,9 @@ func (s *DeploymentService) checkRuntimeSources(ctx context.Context) error {
 // This profile supports the same PVC and matching subpath; other storage needs
 // an independently reviewed profile instead of silently claiming coverage.
 func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity) error {
+	if s.Config.Workspace.NFS != nil {
+		return s.checkNFSRuntimeWorkspace(ctx, client, instances)
+	}
 	target, e := client.CoreV1().PersistentVolumeClaims(s.Config.Namespace).Get(ctx, s.Config.Workspace.Claim, metav1.GetOptions{})
 	if e != nil || target.Spec.VolumeName == "" || target.DeletionTimestamp != nil {
 		return d.ErrNotReady
@@ -460,6 +463,81 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 					return d.ErrNotReady
 				}
 				found = found || ancestor
+			}
+		}
+		if !found {
+			return d.ErrNotReady
+		}
+	}
+	return nil
+}
+
+// The NFS worker mounts only the installation-owned subpath. Every live source
+// must resolve to that exact export and a descendant of that subpath; a nested
+// or aliased mount cannot silently add content outside the capture tree.
+func (s *DeploymentService) checkNFSRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity) error {
+	cfg := s.Config.Workspace
+	if cfg.NFS == nil || !cfg.validSource(s.Config.InstallationID) {
+		return d.ErrNotReady
+	}
+	ownedRoot := path.Join(s.Config.RuntimeSources.WorkspaceRoot, cfg.SubPath)
+	for _, source := range instances {
+		if !strings.HasPrefix(source.Workspace, ownedRoot+"/") {
+			return d.ErrNotReady
+		}
+		if source.Status != "running" {
+			continue
+		}
+		namespace, name, uid := source.Namespace, source.Pod, ""
+		if source.Mode == "lite" {
+			if s.RuntimeControl == nil {
+				return d.ErrNotReady
+			}
+			mapped, err := s.RuntimeControl.ResolveGatewaySource(ctx, source)
+			if err != nil {
+				return err
+			}
+			namespace, name, uid = mapped.RuntimeNamespace(), mapped.RuntimePod(), mapped.UID
+		}
+		if namespace != s.Config.Namespace || name == "" {
+			return d.ErrNotReady
+		}
+		pod, err := client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil || pod.DeletionTimestamp != nil || (uid != "" && string(pod.UID) != uid) {
+			return d.ErrNotReady
+		}
+		found := false
+		for _, container := range pod.Spec.Containers {
+			for _, mount := range container.VolumeMounts {
+				ancestor := source.Workspace == mount.MountPath || strings.HasPrefix(source.Workspace, mount.MountPath+"/")
+				descendant := strings.HasPrefix(mount.MountPath, source.Workspace+"/")
+				if !ancestor && !descendant {
+					continue
+				}
+				if descendant || mount.SubPathExpr != "" || !path.IsAbs(mount.MountPath) || path.Clean(mount.MountPath) != mount.MountPath ||
+					(mount.SubPath != "" && (path.IsAbs(mount.SubPath) || path.Clean(mount.SubPath) != mount.SubPath || mount.SubPath == ".." || strings.HasPrefix(mount.SubPath, "../"))) {
+					return d.ErrNotReady
+				}
+				relative := strings.TrimPrefix(source.Workspace, mount.MountPath)
+				relative = strings.TrimPrefix(relative, "/")
+				physical := path.Join(mount.SubPath, relative)
+				if physical != cfg.SubPath && !strings.HasPrefix(physical, cfg.SubPath+"/") {
+					return d.ErrNotReady
+				}
+				matched := false
+				for _, volume := range pod.Spec.Volumes {
+					if volume.Name != mount.Name {
+						continue
+					}
+					if volume.NFS == nil || volume.NFS.Server != cfg.NFS.Server || volume.NFS.Path != cfg.NFS.Export {
+						return d.ErrNotReady
+					}
+					matched = true
+				}
+				if !matched {
+					return d.ErrNotReady
+				}
+				found = true
 			}
 		}
 		if !found {

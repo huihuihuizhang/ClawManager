@@ -3,11 +3,14 @@ package systembackupexecution
 import (
 	"bytes"
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -64,13 +67,31 @@ type PlatformDeployment struct {
 	UID       string `json:"uid"`
 }
 type WorkspaceCapture struct {
-	Claim              string `json:"claim"`
-	SubPath            string `json:"sub_path"`
-	Node               string `json:"node"`
-	MaxFiles           int    `json:"max_files"`
-	MaxFileBytes       int64  `json:"max_file_bytes"`
-	MaxArchiveBytes    int64  `json:"max_archive_bytes"`
-	MaxCompressedBytes int64  `json:"max_compressed_bytes"`
+	Claim              string        `json:"claim"`
+	NFS                *NFSWorkspace `json:"nfs,omitempty"`
+	SubPath            string        `json:"sub_path"`
+	Node               string        `json:"node"`
+	MaxFiles           int           `json:"max_files"`
+	MaxFileBytes       int64         `json:"max_file_bytes"`
+	MaxArchiveBytes    int64         `json:"max_archive_bytes"`
+	MaxCompressedBytes int64         `json:"max_compressed_bytes"`
+}
+type NFSWorkspace struct {
+	Server string `json:"server"`
+	Export string `json:"export"`
+}
+
+// The NFS capture mount is restricted to one installation tree. A shared
+// export root is never a source scope, even when the app lives in one namespace.
+func (w WorkspaceCapture) validSource(installation string) bool {
+	if w.NFS == nil {
+		return w.Claim != ""
+	}
+	if w.Claim != "" || net.ParseIP(w.NFS.Server) == nil || !path.IsAbs(w.NFS.Export) || path.Clean(w.NFS.Export) != w.NFS.Export || strings.ContainsAny(w.NFS.Export, "\\\x00\r\n:") {
+		return false
+	}
+	h := sha256.Sum256([]byte(installation))
+	return w.SubPath == "installations/"+hex.EncodeToString(h[:])
 }
 
 func pinnedDeploymentFile(path, digest string, max int64) ([]byte, error) {
@@ -120,13 +141,16 @@ func (cnf DeploymentConfig) Validate() error {
 	if cnf.CaptureScope != "platform-workspace" && cnf.CaptureScope != "runtime-workspace" {
 		return c.ErrExecutionAuthority
 	}
+	if cnf.Workspace.NFS != nil && cnf.CaptureScope != "runtime-workspace" {
+		return c.ErrExecutionAuthority
+	}
 	if (cnf.CaptureScope == "runtime-workspace") != (cnf.RuntimeSources != nil) || (cnf.RuntimeSources != nil && cnf.RuntimeSources.validate() != nil) {
 		return c.ErrExecutionAuthority
 	}
 	if cnf.RuntimeSources != nil && cnf.RuntimeSources.Namespaces[0] != cnf.Namespace {
 		return c.ErrExecutionAuthority
 	}
-	if cnf.Version != "system-backup-public-deployment.v1" || cnf.InstallationID == "" || cnf.ControllerOwner == "" || cnf.ApplicationScope == "" || cnf.Namespace == "" || cnf.NamespaceUID == "" || cnf.TrustDomain == "" || strings.ContainsAny(cnf.TrustDomain, "/: ") || !strings.Contains(cnf.WorkerImage, "@sha256:") || cnf.StagingClaim == "" || cnf.Workspace.Claim == "" || cnf.Security.ServiceAccountName == "" || cnf.Security.ServiceAccountUID == "" || len(cnf.Security.NodeUIDs) == 0 || len(cnf.Writers) == 0 || len(cnf.Writers) > 1000 || cnf.AcquireSeconds < 10 || cnf.AcquireSeconds > 600 || cnf.HoldSeconds < 30 || time.Duration(cnf.HoldSeconds)*time.Second > time.Hour || cnf.Listen == "" || !strings.HasPrefix(cnf.ControlURL, "https://") || cnf.SourceUser == "" || strings.EqualFold(cnf.SourceUser, "root") || cnf.SourceDatabase == "" || cnf.SourceServerUUID == "" {
+	if cnf.Version != "system-backup-public-deployment.v1" || cnf.InstallationID == "" || cnf.ControllerOwner == "" || cnf.ApplicationScope == "" || cnf.Namespace == "" || cnf.NamespaceUID == "" || cnf.TrustDomain == "" || strings.ContainsAny(cnf.TrustDomain, "/: ") || !strings.Contains(cnf.WorkerImage, "@sha256:") || cnf.StagingClaim == "" || !cnf.Workspace.validSource(cnf.InstallationID) || cnf.Security.ServiceAccountName == "" || cnf.Security.ServiceAccountUID == "" || len(cnf.Security.NodeUIDs) == 0 || len(cnf.Writers) == 0 || len(cnf.Writers) > 1000 || cnf.AcquireSeconds < 10 || cnf.AcquireSeconds > 600 || cnf.HoldSeconds < 30 || time.Duration(cnf.HoldSeconds)*time.Second > time.Hour || cnf.Listen == "" || !strings.HasPrefix(cnf.ControlURL, "https://") || cnf.SourceUser == "" || strings.EqualFold(cnf.SourceUser, "root") || cnf.SourceDatabase == "" || cnf.SourceServerUUID == "" {
 		return c.ErrExecutionAuthority
 	}
 	for _, path := range []string{cnf.KeyDirectory, cnf.ProfileFile, cnf.CapacityFile, cnf.SourceDSNFile, cnf.StagingDirectory, cnf.ServerCertificate, cnf.ServerKey, cnf.IssuerCertificate, cnf.IssuerKey, cnf.ForwardGrant.Path, cnf.RecoveryGrant.Path} {

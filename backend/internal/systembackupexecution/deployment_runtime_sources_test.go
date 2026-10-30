@@ -142,6 +142,58 @@ func TestDeploymentRuntimeChecksActualCapturedVolume(t *testing.T) {
 		})
 	}
 }
+
+func TestDeploymentRuntimeChecksOwnedNFSSubtree(t *testing.T) {
+	cfg := runtimeDeploymentFixture(t)
+	cfg.Workspace.Claim = ""
+	cfg.Workspace.NFS = &NFSWorkspace{Server: "10.107.165.245", Export: "/"}
+	cfg.Workspace.SubPath = "installations/" + hash([]byte(cfg.InstallationID))
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	s := &DeploymentService{Config: cfg}
+	source := b.InstanceIdentity{ID: 7, UserID: 2, Generation: 3, Mode: "pro", Type: "openclaw", Variant: "linux", OS: "linux", Status: "running", Namespace: cfg.Namespace, Pod: "original", Workspace: "/workspaces/" + cfg.Workspace.SubPath + "/users/2/instances/7"}
+	for _, fault := range []string{"", "outside", "server", "export", "subpath", "missing", "overlay", "subpath-expr"} {
+		t.Run(fault, func(t *testing.T) {
+			item := source
+			pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: cfg.Namespace, Name: source.Pod}, Spec: corev1.PodSpec{Volumes: []corev1.Volume{{Name: "workspace", VolumeSource: corev1.VolumeSource{NFS: &corev1.NFSVolumeSource{Server: cfg.Workspace.NFS.Server, Path: cfg.Workspace.NFS.Export}}}}, Containers: []corev1.Container{{Name: "source", VolumeMounts: []corev1.VolumeMount{{Name: "workspace", MountPath: "/workspaces"}}}}}}
+			switch fault {
+			case "outside":
+				item.Workspace = "/workspaces/openclaw/user-2/instance-7"
+			case "server":
+				pod.Spec.Volumes[0].NFS.Server = "10.111.9.69"
+			case "export":
+				pod.Spec.Volumes[0].NFS.Path = "/other"
+			case "subpath":
+				pod.Spec.Containers[0].VolumeMounts[0].SubPath = "other"
+			case "missing":
+				pod.Spec.Volumes = nil
+			case "overlay":
+				pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "other", MountPath: item.Workspace + "/nested"})
+			case "subpath-expr":
+				pod.Spec.Containers[0].VolumeMounts[0].SubPathExpr = "$(POD_NAME)"
+			}
+			inv := b.SourceInventory{Database: cfg.SourceDatabase, ServerUUID: cfg.SourceServerUUID, Instances: []b.InstanceIdentity{item}}
+			err := s.validateRuntimeInventory(inv)
+			if err == nil {
+				err = s.checkRuntimeWorkspace(context.Background(), fake.NewSimpleClientset(pod), inv.Instances)
+			}
+			if (err == nil) != (fault == "") {
+				t.Fatal("NFS source scope mismatch", fault, err)
+			}
+		})
+	}
+	stopped := source
+	stopped.Status = "stopped"
+	stopped.Pod = ""
+	if err := s.checkRuntimeWorkspace(context.Background(), fake.NewSimpleClientset(), []b.InstanceIdentity{stopped}); err != nil {
+		t.Fatal("stopped source inside installation subtree rejected", err)
+	}
+	stopped.Workspace = "/workspaces/openclaw/user-2/instance-7"
+	if err := s.checkRuntimeWorkspace(context.Background(), fake.NewSimpleClientset(), []b.InstanceIdentity{stopped}); err == nil {
+		t.Fatal("stopped source outside installation subtree admitted")
+	}
+}
 func TestDeploymentRuntimeRegistersRelayBehindWorkloadIdentity(t *testing.T) {
 	cfg := runtimeDeploymentFixture(t)
 	controlCalls := 0

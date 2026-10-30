@@ -1,0 +1,44 @@
+{
+  "source": "user-supplied remote command output",
+  "exit_code": 0,
+  "probe": {
+    "run_id": "sbk_8c80058b-2d2a-4c24-b083-2a5a73ca8015",
+    "namespace_uid": "487d6115-4183-4582-a878-d82f4cb5d941",
+    "pv_uid": "5106b93d-8896-4f0f-bafd-9db75524db22",
+    "controller_uid": "c2d8d682-33f1-4cc4-b6dc-326e0c217a62",
+    "controller_image_id": "10.130.14.23:5000/backup-seal-probe@sha256:4306be60e169c18f100d26b28f7802f8c9a539d87a6a8ae85b097c0a8637c057",
+    "worker_image": "10.130.14.23:5000/backup-seal-probe@sha256:4306be60e169c18f100d26b28f7802f8c9a539d87a6a8ae85b097c0a8637c057",
+    "worker_node_uid": "fe1cc275-6fa1-484e-8bf6-7b21193daffd",
+    "cross_node": true,
+    "passed": true,
+    "cleaned": true,
+    "worker_pod_uid": "5112d345-7cfe-4a9a-a4bd-8ab15183e64f",
+    "holder_exit": 0
+  },
+  "isolated": {
+    "namespace": "seal-capability-0deaf818ce864950",
+    "scope": "disposable-storage-capability",
+    "production_accepted": false,
+    "passed": true,
+    "cleaned": true,
+    "storage_class_uid": "a7e3a85f-6ecf-4b40-bfb7-98892f9b3076",
+    "namespace_uid": "487d6115-4183-4582-a878-d82f4cb5d941",
+    "controller_uid": "c2d8d682-33f1-4cc4-b6dc-326e0c217a62",
+    "volumes": [
+      {
+        "Kind": "PersistentVolumeClaim",
+        "Name": "staging",
+        "UID": "939a18f3-735d-47a7-9c70-8d7236d4c9f7",
+        "PVName": "pvc-939a18f3-735d-47a7-9c70-8d7236d4c9f7",
+        "PVUID": "5106b93d-8896-4f0f-bafd-9db75524db22"
+      },
+      {
+        "Kind": "PersistentVolumeClaim",
+        "Name": "source",
+        "UID": "90117e05-635d-4758-9606-d0156407a6ba",
+        "PVName": "pvc-90117e05-635d-4758-9606-d0156407a6ba",
+        "PVUID": "1e9abe43-0c5d-461b-bf07-16c2d9a868e2"
+      }
+    ]
+  }
+}

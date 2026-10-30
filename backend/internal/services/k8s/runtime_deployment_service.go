@@ -577,6 +577,12 @@ func (s *runtimeDeploymentService) Ensure(ctx context.Context, spec RuntimeDeplo
 	if err != nil {
 		return fmt.Errorf("failed to get runtime deployment %s/%s: %w", spec.Namespace, spec.Name, err)
 	}
+	// Ensure still owns only the legacy single-container template. A native
+	// pool/slot Deployment must be migrated by its own controller; replacing its
+	// Pod template here would discard the slot sockets and durable ledger.
+	if nativeSlotTemplate(existing.Spec.Template) {
+		return fmt.Errorf("runtime deployment %s/%s uses native pool/slot layout; legacy Ensure cannot reconcile it", spec.Namespace, spec.Name)
+	}
 
 	if !reflect.DeepEqual(existing.Spec.Selector, desired.Spec.Selector) {
 		return fmt.Errorf("runtime deployment %s/%s selector mismatch; delete and recreate the deployment to change immutable selector", spec.Namespace, spec.Name)
@@ -603,6 +609,23 @@ func (s *runtimeDeploymentService) Ensure(ctx context.Context, spec RuntimeDeplo
 		return fmt.Errorf("failed to update runtime deployment %s/%s: %w", spec.Namespace, spec.Name, err)
 	}
 	return nil
+}
+
+func nativeSlotTemplate(template corev1.PodTemplateSpec) bool {
+	if template.Annotations["clawmanager.io/runtime-layout"] == "pool-slot-v1" || template.Labels["clawmanager.io/runtime-layout"] == "pool-slot-v1" {
+		return true
+	}
+	for _, container := range template.Spec.Containers {
+		if container.Name == "pool" || container.Name == "slot" {
+			return true
+		}
+		for _, env := range container.Env {
+			if env.Name == "RUNTIME_AGENT_ROLE" && (env.Value == "pool" || env.Value == "slot") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (s *runtimeDeploymentService) Scale(ctx context.Context, namespace, name string, replicas int32) error {
@@ -816,6 +839,7 @@ func (s *runtimeDeploymentService) listDeploymentPods(ctx context.Context, deplo
 	}
 	deploymentRuntimeType := strings.ToLower(strings.TrimSpace(deployment.Labels["clawmanager.io/runtime-type"]))
 	deploymentImage := runtimeContainerImage(deployment.Spec.Template.Spec.Containers)
+	nativeTemplate := nativeSlotTemplate(deployment.Spec.Template)
 	var schedulingEnabled *bool
 	if raw, ok := deployment.Labels[runtimeSchedulingLabel]; ok {
 		if parsed, parseErr := strconv.ParseBool(strings.TrimSpace(raw)); parseErr == nil {
@@ -832,8 +856,14 @@ func (s *runtimeDeploymentService) listDeploymentPods(ctx context.Context, deplo
 			continue
 		}
 		image := runtimeContainerImage(pod.Spec.Containers)
-		if image == "" {
+		nativePod := nativeTemplate || nativeSlotTemplate(corev1.PodTemplateSpec{Spec: pod.Spec})
+		if image == "" && !nativePod {
 			image = deploymentImage
+		}
+		imageDigest := runtimeContainerImageID(pod.Status.ContainerStatuses)
+		state := runtimeK8sPodState(pod)
+		if nativePod && (!nativeSlotContainers(pod.Spec.Containers) || image == "" || imageDigest == "") {
+			state = "unhealthy"
 		}
 		result = append(result, RuntimeDeploymentPod{
 			RuntimeType:       deploymentRuntimeType,
@@ -844,8 +874,8 @@ func (s *runtimeDeploymentService) listDeploymentPods(ctx context.Context, deplo
 			PodIP:             stringPtrIfNotEmpty(pod.Status.PodIP),
 			NodeName:          stringPtrIfNotEmpty(pod.Spec.NodeName),
 			ImageRef:          image,
-			ImageDigest:       runtimeContainerImageID(pod.Status.ContainerStatuses),
-			State:             runtimeK8sPodState(pod),
+			ImageDigest:       imageDigest,
+			State:             state,
 			PoolRole:          strings.TrimSpace(deployment.Labels[runtimePoolRoleLabel]),
 			PoolPurpose:       strings.TrimSpace(deployment.Labels[upgradeLabPurposeLabel]),
 			UpgradeID:         strings.TrimSpace(deployment.Labels[runtimeUpgradeIDLabel]),
@@ -865,6 +895,22 @@ func runtimeContainerImageID(statuses []corev1.ContainerStatus) string {
 	}
 	if len(statuses) == 1 {
 		return normalizeRuntimeImageID(statuses[0].ImageID)
+	}
+	if len(statuses) == 2 {
+		var pool, slot string
+		for _, status := range statuses {
+			switch status.Name {
+			case "pool":
+				pool = normalizeRuntimeImageID(status.ImageID)
+			case "slot":
+				slot = normalizeRuntimeImageID(status.ImageID)
+			default:
+				return ""
+			}
+		}
+		if pool != "" && pool == slot {
+			return pool
+		}
 	}
 	return ""
 }
@@ -886,7 +932,31 @@ func runtimeContainerImage(containers []corev1.Container) string {
 	if len(containers) == 1 {
 		return strings.TrimSpace(containers[0].Image)
 	}
+	if len(containers) == 2 {
+		var pool, slot string
+		for _, container := range containers {
+			switch container.Name {
+			case "pool":
+				pool = strings.TrimSpace(container.Image)
+			case "slot":
+				slot = strings.TrimSpace(container.Image)
+			default:
+				return ""
+			}
+		}
+		if pool != "" && pool == slot {
+			return pool
+		}
+	}
 	return ""
+}
+
+func nativeSlotContainers(containers []corev1.Container) bool {
+	if len(containers) != 2 {
+		return false
+	}
+	return (containers[0].Name == "pool" && containers[1].Name == "slot") ||
+		(containers[0].Name == "slot" && containers[1].Name == "pool")
 }
 
 func runtimeK8sPodState(pod corev1.Pod) string {

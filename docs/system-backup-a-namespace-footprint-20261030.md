@@ -22,4 +22,6 @@
 
 这些是不同数据域：完整备份必须在一致性窗口覆盖现库、真实 Redis 状态、MinIO 对象及三个运行实例的 NFS 子树，并包含已确认的实例 12 子 namespace PVC 与团队共享 PVC 的业务数据边界。团队目录 `/workspaces/teams/user-1/team-3-shared` 已在实际根 export 挂载中只读确认存在，见 [NFS 归属观察](system-backup-a-nfs-ownership-20261030.md)。原任务还请求 `deployment_resources` 和 `secret_bundle`；本次元数据盘点没有读取 Secret.data，也没有证明这两部分已经完整采集。Redis 的当前 `/data` 是 `emptyDir`：删除或替换 Pod 会丢失该卷，不能在捕获 Redis 前把它缩容/删除，也不能从未使用的 `redis-data` PVC 读取旧快照冒充现状。运行 Runtime 的 NFS 和本 namespace `workspace-store` 使用的 PVC 不是同一已证明的数据源。`system-backup-capacity-report` 的用途及保留边界也需按原业务事实判断。直接采整个共享 NFS export 或只采这四个目录都不能自动证明“当前 namespace 所有数据”。
 
+共享分支 `a3b34b85` 新增的 `runtime-workspace` NFS 入口只接受安装专属的 `installations/<SHA256(installation_id)>` 子树，并要求所有来源的 workspace 路径非空且在该子树内。现场三个运行实例位于共享根 export 的 `/openclaw/user-1/instance-*`，团队目录在 `/teams/user-1/team-3-shared`，已停止实例 12 的 workspace 路径为空且数据位于子 namespace 的 Longhorn PVC。因此该新增入口**不会准入本次现库全量范围**；不能通过把配置的 NFS server 指向同一 IP、修改 `sub_path` 或忽略实例 12 来取得虚假的成功。D/B 需按原实例与团队数据来源分别交付可冻结的范围、真实 writer/停止证明及采集与恢复目标；A 的 KEK/签名接线仍须随正式成品使用。这是当前源码与现场观察的对照，不是对新功能测试入口的失败回执。
+
 工具本地四项离线测试 `py -3 -B scripts/system-backup-a-namespace-footprint.test.py` 退出 0，覆盖已停止实例与 PVC、重复/异常 SQL 行拒绝、Pod/PVC 输出不含环境值和非法身份拒绝。没有构建产物。该工具只观察，`ready_for_backup=false`；正式采集仍依赖 B/C 冻结 context、D 现库升级及全域 writer/停止证明、A KEK 准入与凭据接线。

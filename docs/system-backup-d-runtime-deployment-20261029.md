@@ -131,11 +131,17 @@ python3 -B scripts/system-backup-d-nfs-inventory.py \
 
 1. **数据范围**：将 installation、NFS endpoint/export、实际目录与用户/实例关系绑定；明确独立采集子树。盘点所有实际和可重新创建的写入者。未知 writer 或跨 installation 范围不明时不进入停止阶段。
 2. **Runtime 控制**：补空 source locator 的真实映射、UID/Agent 交叉验证、未启动 generation 0 的明确合同；保留原 source 字节语义和恢复 CAS。启用真实创建请求的加密留存后，使用受控测试实例生命周期产生新 generation 收据；当前 ENV 或手写 JSON 不能替代历史原配置。以原配置加密读取、实际停止证明、完整 probes 和 relay 持久化完成 B 接入。
-3. **一致性采集**：在同一授权和维护周期内关闭入口、暂停后台和 Runtime writer，核实停止证据，再捕获对应 SQL 状态与 NFS 子树。固定 export/目录身份及完整 writer 清单到计划，最终复查后提交。当前生产 `runtime-workspace` 仍仅实现同 PV 校验；直接 NFS admission 和采集构造尚需实现，不能放宽成路径字符串相同即通过。
+3. **一致性采集**：在同一授权和维护周期内关闭入口、暂停后台和 Runtime writer，核实停止证据，再捕获对应 SQL 状态与 NFS 子树。固定 export/目录身份及完整 writer 清单到计划，最终复查后提交。`runtime-workspace` 已增加显式 NFS 采集构造和来源 Pod 挂载核对，但仅限安装专属子树的功能测试配置；现场共享根目录仍不符合准入条件。
 4. **首次恢复**：在同一 NFS 上预留独立、可核实归属的测试恢复目录，配合隔离数据库及测试实例恢复，避免覆盖原目录。保留用户和实例主键关系；仅按明确的目标位置映射调整 workspace locator。不能将另一个 installation 的相同数字 ID 当作同一主体。原配置解密、ClaimRestart/CompleteRestart 及恢复 CAS 必须沿真实 caller 执行。
 5. **多用户验收**：至少两个用户，各自独立样本、同名但不同内容文件、目录、权限和运行实例；验证文件 hash、UID/GID/mode、用户/实例归属、用户间访问隔离、真实 Agent 重启及恢复后的读写。并发写入必须被 fence；停止失败、绑定漂移、部分失败及重复恢复不得冒充成功。首次恢复验证后，再单独设计原实例切换和回退。
 
 NFS 盘点工具本地 8 项测试通过，覆盖跨 namespace/DNS/endpoint、PVC UID 漂移、hostPath 与 NFS 区分、CSI 未解析状态、子路径边界、只读标志和失败不泄露输出。使用 `python -B`，不产生字节码或构建产物；此结果不代表现场 NFS、MySQL 或 Agent 联调通过。
+
+## 安装专属 NFS 功能测试范围
+
+`runtime-workspace` 的部署配置现在允许 `workspace.nfs={"server":"<固定 IP>","export":"<绝对导出路径>"}`，此时 `workspace.claim` 必须为空，`workspace.sub_path` 必须精确为 `installations/<SHA256(installation_id)>`。采集 Job 以只读 NFS 卷和该 subPath 构造；部署权限不再请求空名称的来源 PVC。运行中实例必须映射到本 namespace 的真实 Pod，Pod 在对应实例路径上的挂载必须是相同 NFS server/export，并位于该子树；已停止实例的登记路径也必须在该子树内。此配置仅用于 `runtime-workspace`，不能绕过 Runtime source 核对。
+
+此规则不会准入现场现有 `/workspaces/openclaw/user-1/instance-*` 路径，也不会将 `10.107.165.245:/` 根目录视为本 installation 的独占数据。还需在隔离测试安装下准备新子树、使 Runtime 和 App 确实写入该树，并验证 NFS exporter 身份、符号链接与其他客户端写入者。当前 `BuildParts` 仍标记 `acceptance_ready=false`；本节只描述功能测试的采集入口，不宣称多用户备份或恢复已闭环。
 
 ## 原 source 与实际 Runtime locator 的版本化交接
 

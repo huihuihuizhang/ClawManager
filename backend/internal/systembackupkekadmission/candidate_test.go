@@ -73,9 +73,12 @@ func TestCandidateRejectsChangedPurposeVersionAndIncompleteHistory(t *testing.T)
 			v.Candidate.ConfigRef.Version = "latest"
 			v.Candidate.Key.RegistryVersion = "latest"
 		},
-		"invalid-provider-version": func(v *r.AdmissionInput) { v.Candidate.Key.ProviderVersion = "latest" },
-		"provider-redirect-path":   func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid/other" },
-		"wrong-purpose":            func(v *r.AdmissionInput) { v.Candidate.GenerateRef = v.Candidate.UnwrapRef },
+		"invalid-provider-version":  func(v *r.AdmissionInput) { v.Candidate.Key.ProviderVersion = "latest" },
+		"provider-redirect-path":    func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid/other" },
+		"provider-empty-query":      func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid?" },
+		"provider-empty-fragment":   func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid#" },
+		"provider-missing-hostname": func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://:8200" },
+		"wrong-purpose":             func(v *r.AdmissionInput) { v.Candidate.GenerateRef = v.Candidate.UnwrapRef },
 		"changed-ref-bytes": func(v *r.AdmissionInput) {
 			v.Candidate.GenerateRef.RawJSON = append([]byte(nil), v.Candidate.GenerateRef.RawJSON...)
 			v.Candidate.GenerateRef.RawJSON[0] = '['
@@ -95,6 +98,12 @@ func TestCandidateRejectsChangedPurposeVersionAndIncompleteHistory(t *testing.T)
 			old := v.Candidate
 			old.ConfigRef.Version, old.Key.RegistryVersion = "old-v1", "old-v1"
 			old.Provider.Endpoint = "http://untrusted.invalid"
+			v.Snapshot.Bindings = []r.BindingFacts{{Binding: old, BindingSHA256: keyBindingHash(old), RowVersion: 1}}
+		},
+		"historical-provider-empty-query": func(v *r.AdmissionInput) {
+			old := v.Candidate
+			old.ConfigRef.Version, old.Key.RegistryVersion = "old-v1", "old-v1"
+			old.Provider.Endpoint = "https://provider.invalid?"
 			v.Snapshot.Bindings = []r.BindingFacts{{Binding: old, BindingSHA256: keyBindingHash(old), RowVersion: 1}}
 		},
 	}
