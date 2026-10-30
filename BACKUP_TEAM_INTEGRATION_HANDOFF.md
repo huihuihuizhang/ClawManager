@@ -1,3 +1,13 @@
+# 2026-10-30 当前交付：backup 基线上的 Teams 适配
+
+本轮以 `backup@304a15d9` 为基础，已完成第一阶段迁移及第二阶段 A、B；保留统一分支新代码，未启用旧 Team 独立控制面。阶段提交：`d3cf98bb`、`1350f63c`、`c5a6319b`、`e6922f6a`。中间提交仅在本地，所有工作完成后统一推送 backup。
+
+**当前状态、实际调用链、测试证据及 A/B/D/C 后续责任，以 [本轮 C—Teams 模块交接](docs/system-backup-c-teams-module-handoff-20261030.md) 为准。** 可注册协议清单在 [Teams adapter v1](contracts/system-backup/teams-domain-adapter.v1.json)。本轮不是 writer 完整物理停写、生产正式发布或全系统隔离恢复验收；生产准入保护保持不变。
+
+新增迁移 129/130 保留对方 128 KEK authority，当前 catalog 171 文件。C 领域 11 项 owner 决策已记录，独立交叉评审未冒填。下面完整保留原 C50 历史交接，不再作为最新完成状态或本轮实施范围。
+
+---
+
 # 备份专用版与 Team 版整合：当前交接说明
 
 > D 集成注（2026-10-30）：本页记录 C `50b27d7763d545a7905862fa1a1e544a5e14235e` 的来源分支状态。D 对齐时保留了原生网关停止回执，并暂缓其 35→40 控制表排除及 verifier 合同变更；五张新增 v2 表仍为 `pending_owner_review`。D 的实际采纳范围与验证见 `docs/system-backup-d-c50-integration-20261030.md`，不能把下文 C 来源状态直接当成 D 已验收状态。
