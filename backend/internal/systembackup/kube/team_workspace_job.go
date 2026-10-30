@@ -1,12 +1,15 @@
 package kube
 
-import batchv1 "k8s.io/api/batch/v1"
+import (
+	batchv1 "k8s.io/api/batch/v1"
+	"strings"
+)
 
 // TeamWorkspaceJob reuses the standard worker workload. Verification mounts
 // BOTH the isolated target and authenticated staging read-only; restore keeps
 // the existing writable-target/read-only-input split. Neither starts an agent.
 func TeamWorkspaceJob(r JobRequest, operation string) (*batchv1.Job, error) {
-	if (operation != "restore-workspace" && operation != "verify-team-workspace") || r.Restore != (operation == "restore-workspace") {
+	if (operation != "restore-workspace" && operation != "verify-team-workspace") || r.Restore != (operation == "restore-workspace") || !strings.HasPrefix(r.Identity.Namespace, "cm-drill-") || r.WorkerControl == nil || !r.WorkerControl.BoundPodIdentity || len(r.Command) != 0 {
 		return nil, ErrResource
 	}
 	job, err := Job(r)
