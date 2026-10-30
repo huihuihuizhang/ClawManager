@@ -701,6 +701,11 @@ func (s ConfigMutationService) Mutate(ctx context.Context, actor RegistrationAct
 	if err = v.tx.Commit(); err != nil {
 		return zero, ErrConfigCommitUnknown
 	}
+	if kekPrepared != nil {
+		if err = verifyCommittedKEK(ctx, s.DB, s.InstallationID, op, kekPrepared); err != nil {
+			return zero, ErrConfigCommitUnknown
+		}
+	}
 	return ConfigMutationResult{op, newVersion, 200, append([]byte(nil), response...), false}, nil
 }
 

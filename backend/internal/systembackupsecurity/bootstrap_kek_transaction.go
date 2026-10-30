@@ -3,9 +3,18 @@ package systembackupsecurity
 import (
 	"context"
 	"database/sql"
+	"reflect"
 
 	reg "clawreef/internal/systembackupkekregistry"
 )
+
+func verifyCommittedKEK(ctx context.Context, db *sql.DB, installation, operation string, prepared reg.PreparedAdmission) error {
+	b, o, err := (reg.SQLStore{}).ReadCommitted(ctx, db, installation, operation)
+	if err != nil || candidateAuthorityNil(prepared) || !reflect.DeepEqual(b, prepared.Binding()) || o != prepared.Observation() {
+		return ErrRegistrationCommitUnknown
+	}
+	return nil
+}
 
 // BootstrapKEKPreparation is a trusted deployment composition of C's original
 // source and A's validator. It runs before the original transaction takes any

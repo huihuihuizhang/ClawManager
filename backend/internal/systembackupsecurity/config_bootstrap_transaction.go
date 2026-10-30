@@ -63,7 +63,14 @@ func (s ConfigBootstrapService) Bootstrap(ctx context.Context, g OfflineBootstra
 		return zero, err
 	}
 	if s.Candidates != nil {
-		return s.Candidates.bootstrap(ctx, s.DB, g, c, s.CanonicalSnapshot, s.KEK)
+		result, err := s.Candidates.bootstrap(ctx, s.DB, g, c, s.CanonicalSnapshot, s.KEK)
+		if err == nil && s.KEK != nil {
+			binding, observation, readErr := (reg.SQLStore{}).ReadCommitted(ctx, s.DB, g.InstallationID, result.OperationPublicID)
+			if readErr != nil || binding.InstallationID != g.InstallationID || observation.ConfigSHA256 != g.ConfigSHA256 {
+				return zero, ErrRegistrationCommitUnknown
+			}
+		}
+		return result, err
 	}
 	if candidateAuthorityNil(ctx) || ctx.Err() != nil || s.DB == nil || candidateAuthorityNil(s.Admission) || !validBootstrapGrant(g) || c.SHA256() != g.ConfigSHA256 {
 		return zero, ErrRegistrationUnavailable
@@ -181,6 +188,9 @@ func (s ConfigBootstrapService) bootstrapLegacyPrepared(ctx context.Context, g O
 			return zero, ErrRegistrationCommitUnknown
 		}
 		prior.ConfigSHA256 = g.ConfigSHA256
+		if kekPrepared != nil && verifyCommittedKEK(ctx, s.DB, g.InstallationID, prior.OperationPublicID, kekPrepared) != nil {
+			return zero, ErrRegistrationCommitUnknown
+		}
 		prior.Replayed = true
 		return prior, nil
 	}
@@ -224,6 +234,9 @@ func (s ConfigBootstrapService) bootstrapLegacyPrepared(ctx context.Context, g O
 		}
 	}
 	if err = tx.Commit(); err != nil {
+		return zero, ErrRegistrationCommitUnknown
+	}
+	if kekPrepared != nil && verifyCommittedKEK(ctx, s.DB, g.InstallationID, op, kekPrepared) != nil {
 		return zero, ErrRegistrationCommitUnknown
 	}
 	return ConfigBootstrapResult{OperationPublicID: op, Version: 1, ConfigSHA256: g.ConfigSHA256}, nil
