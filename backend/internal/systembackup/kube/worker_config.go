@@ -16,6 +16,10 @@ func WorkerConfigMap(i Identity, invocation worker.Invocation) (*corev1.ConfigMa
 		return nil, ErrResource
 	}
 	switch r.Operation {
+	case "capture-team-redis", "capture-team-objects":
+		if invocation.WorkspacePath != "" || invocation.EvidencePath != "" || r.Database != nil || r.Teams == nil || invocation.ProviderKey == nil || invocation.FormalCapture == nil || !worker.ValidateRecordedInvocation(invocation) {
+			return nil, ErrResource
+		}
 	case "capture-workspace", "restore-workspace", "restore-assets", "verify-assets":
 		if invocation.WorkspacePath != "/workspace" || invocation.EvidencePath != "" || r.Database != nil {
 			return nil, ErrResource

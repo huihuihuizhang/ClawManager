@@ -26,10 +26,11 @@ type RedisOptions struct {
 	MaxReplyBytes               int64
 }
 type RedisClient struct {
-	conn   net.Conn
-	reader *bufio.Reader
-	max    int64
-	mu     sync.Mutex
+	database int
+	conn     net.Conn
+	reader   *bufio.Reader
+	max      int64
+	mu       sync.Mutex
 }
 
 func ConnectRedis(ctx context.Context, o RedisOptions) (*RedisClient, error) {
@@ -51,7 +52,7 @@ func ConnectRedis(ctx context.Context, o RedisOptions) (*RedisClient, error) {
 	if e != nil {
 		return nil, errors.New("Redis unavailable")
 	}
-	c := &RedisClient{conn: conn, reader: bufio.NewReader(conn), max: o.MaxReplyBytes}
+	c := &RedisClient{conn: conn, reader: bufio.NewReader(conn), max: o.MaxReplyBytes, database: o.Database}
 	failed := true
 	defer func() {
 		if failed {
@@ -75,6 +76,15 @@ func ConnectRedis(ctx context.Context, o RedisOptions) (*RedisClient, error) {
 	return c, nil
 }
 func (c *RedisClient) Close() error { return c.conn.Close() }
+
+// Identity is a read-only source observation, never a barrier or permission.
+func (c *RedisClient) Identity(ctx context.Context) (string, int, error) {
+	if c == nil {
+		return "", 0, errors.New("Redis unavailable")
+	}
+	id, err := redisServerID(ctx, c)
+	return id, c.database, err
+}
 func (c *RedisClient) command(ctx context.Context, args ...[]byte) (any, error) {
 	if len(args) == 0 {
 		return nil, errors.New("empty Redis command")
@@ -187,14 +197,15 @@ func readRedisReply(r *bufio.Reader, budget *int64, depth int) (any, error) {
 }
 
 type RedisRecord struct {
-	Kind            string `json:"kind"`
-	ServerID        string `json:"server_id,omitempty"`
-	Key             []byte `json:"key,omitempty"`
-	Type            string `json:"type,omitempty"`
-	Dump            []byte `json:"dump,omitempty"`
-	ExpiresAtMillis int64  `json:"expires_at_millis,omitempty"`
-	Count           int64  `json:"count,omitempty"`
-	SHA256          string `json:"sha256,omitempty"`
+	CapturedAtMillis int64  `json:"captured_at_millis,omitempty"`
+	Kind             string `json:"kind"`
+	ServerID         string `json:"server_id,omitempty"`
+	Key              []byte `json:"key,omitempty"`
+	Type             string `json:"type,omitempty"`
+	Dump             []byte `json:"dump,omitempty"`
+	ExpiresAtMillis  int64  `json:"expires_at_millis,omitempty"`
+	Count            int64  `json:"count,omitempty"`
+	SHA256           string `json:"sha256,omitempty"`
 }
 type RedisBudget struct {
 	MaxItems          int

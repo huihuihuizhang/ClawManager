@@ -46,6 +46,8 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 			return zero, d.ErrNotReady
 		}
 		job, err = kube.DatabaseJob(kube.DatabaseJobRequest{Identity: w.Identity, Image: w.Image, ServiceAccount: w.ServiceAccount, StagingClaim: w.StagingClaim, NodeName: w.NodeName, DeadlineSeconds: w.DeadlineSeconds, Operation: "capture-database", Control: *w.WorkerControl})
+	case "capture-team-redis", "capture-team-objects":
+		job, err = kube.TeamCaptureJob(w, req.Invocation.Request.Operation)
 	default:
 		return zero, d.ErrNotReady
 	}

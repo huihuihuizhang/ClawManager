@@ -141,7 +141,13 @@ func validControl(r ControlRequest) bool {
 	if !validWorkBuddyIdentityRequest(q) {
 		return false
 	}
-	if databaseOperation(q.Operation) {
+	if teamCaptureOperation(q.Operation) {
+		if !validTeamCapture(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
+			return false
+		}
+	} else if q.Teams != nil {
+		return false
+	} else if databaseOperation(q.Operation) {
 		if !validDatabaseRequest(q) || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || (q.Operation == "restore-database" && r.Invocation.EvidencePath == "") || (q.Operation != "restore-database" && r.Invocation.EvidencePath != "") {
 			return false
 		}
@@ -399,7 +405,7 @@ func decodeBounded(r io.Reader, dst any, limit int64) error {
 }
 func ReadInvocation(r io.Reader) (Invocation, error) {
 	var i Invocation
-	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
+	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && !teamCaptureOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
 		return Invocation{}, ErrRequest
 	}
 	return i, nil

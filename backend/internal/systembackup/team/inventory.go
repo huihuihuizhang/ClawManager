@@ -7,6 +7,8 @@ import (
 	"errors"
 	"path"
 	"regexp"
+	"strings"
+	"unicode/utf8"
 )
 
 const InventoryVersion = "teams-source-inventory.v1"
@@ -64,6 +66,9 @@ func (r RedisScope) Validate() error {
 	return nil
 }
 func (o ObjectRef) Validate() error {
+	if !utf8.ValidString(o.Key) || !utf8.ValidString(o.Bucket) || !utf8.ValidString(o.Version) || strings.ContainsAny(o.Key+o.Bucket+o.Version, "\x00\r\n") {
+		return ErrInventory
+	}
 	if o.TeamID <= 0 || o.Bucket == "" || o.Key == "" || o.Version == "" || o.Version == "null" || !digest64.MatchString(o.SHA256) || o.Size < 0 || len(o.Key) > 4096 {
 		return ErrInventory
 	}

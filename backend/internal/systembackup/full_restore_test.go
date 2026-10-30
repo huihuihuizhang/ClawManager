@@ -13,6 +13,7 @@ import (
 	"time"
 
 	appdb "clawreef/internal/db"
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/team"
 	"github.com/go-sql-driver/mysql"
 )
@@ -79,6 +80,33 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 		t.Fatal("C SQL inventory lost observed Team/owner/member relationships", inventoryErr)
 	}
 	tx.Rollback()
+	// The real public worker explicitly uses parseTime=false. The application
+	// fixture's parseTime=true connection is intentionally rejected by it.
+	var captureSourceName string
+	if err := source.QueryRowContext(ctx, "SELECT DATABASE()").Scan(&captureSourceName); err != nil {
+		t.Fatal(err)
+	}
+	captureDB, openErr := sql.Open("mysql", (&mysql.Config{User: "root", Net: "tcp", Addr: "127.0.0.1:" + os.Getenv("TEST_SYSTEM_BACKUP_MYSQL_PORT"), DBName: captureSourceName, AllowNativePasswords: true, ParseTime: false}).FormatDSN())
+	if openErr != nil {
+		t.Fatal(openErr)
+	}
+	defer captureDB.Close()
+	publicRows, captureErr := domain.Capture(ctx, captureDB, domain.Limits{MaxRows: 10000, MaxBytes: 32 << 20})
+	if captureErr != nil || domain.VerifyTeamCapture(publicRows, *observed) != nil {
+		t.Fatal("public atomic SQL capture omitted C data or relationships", captureErr)
+	}
+	// Missing a C table cannot become a successful public SQL part.
+	partial := publicRows
+	partial.Tables = append([]domain.Table(nil), publicRows.Tables...)
+	for n, table := range partial.Tables {
+		if table.Name == "owner_team_provision_steps" {
+			partial.Tables = append(partial.Tables[:n], partial.Tables[n+1:]...)
+			break
+		}
+	}
+	if domain.VerifyTeamCapture(partial, *observed) == nil {
+		t.Fatal("partial public C SQL was accepted")
+	}
 	// The pure normalizer. Interruption keeps result/artifact bytes and records
 	// the pure normalizer. Interruption keeps result/artifact bytes and records
 	// the original state while terminal children retain their exact status.

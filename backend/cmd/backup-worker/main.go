@@ -81,9 +81,10 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 		if err != nil {
 			return err
 		}
-		// A/D have not delivered a provider-mode SELECT-only source credential
-		// lease. Do not read a DSN/token from this public mapping or reuse KEK ACL.
-		if i.Request.Database != nil {
+		// A/D have not delivered provider-mode SQL/Teams source credential
+		// leases. C's typed collectors require that separate original-Job grant.
+		// Do not read a DSN/token from public mappings or reuse a KEK permission.
+		if i.Request.Teams != nil || i.Request.Database != nil {
 			return worker.ErrNotReady
 		}
 		workspace, err := os.OpenRoot(i.WorkspacePath)

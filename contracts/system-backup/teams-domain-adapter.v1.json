@@ -1,0 +1,109 @@
+{
+  "schema_version": "system-backup-teams-adapter.v1",
+  "status": "candidate_owner_recorded",
+  "owner": "C",
+  "implementation_baseline": "backup@304a15d9bc0de092975f3249c2190e56c9d6a393",
+  "module": {
+    "constructor": "publicadapter.NewTeamsModule",
+    "id": "teams",
+    "required": true,
+    "sql_dependency": {
+      "part": "users_instances_database",
+      "owner": "B",
+      "operation": "capture-database",
+      "policy": "one shared SQL transaction; includes C coverage verification before seal"
+    },
+    "discovery": "publicadapter.WithTeamsInventory -> team.ReadInventory on the original authenticated SQL transaction",
+    "inventory_version": "teams-source-inventory.v1",
+    "schema": "backend/internal/systembackup/team/schema.json"
+  },
+  "operations": [
+    {
+      "name": "capture-workspace",
+      "scope": "original Team shared PVC; member instance mounts remain B-owned and are not duplicated"
+    },
+    {
+      "name": "capture-team-redis",
+      "scope": "exact original server run_id, database and Team IDs; bounded EVAL_RO fixes values/type/TTL at one server TIME",
+      "provider_mode_only": true
+    },
+    {
+      "name": "capture-team-objects",
+      "scope": "explicit original immutable versions, lengths and SHA-256; no whole-bucket LIST or latest fallback",
+      "provider_mode_only": true
+    }
+  ],
+  "sql_tables": [
+    "teams",
+    "team_members",
+    "team_tasks",
+    "team_events",
+    "team_work_items",
+    "team_event_outbox",
+    "team_workflow_phases",
+    "team_workspace_file_audits",
+    "custom_team_templates",
+    "owner_team_provision_steps",
+    "owner_team_admission_locks"
+  ],
+  "foreign_sql_dependencies": [
+    {
+      "name": "northbound_operations",
+      "owner": "B",
+      "capture": "raw encrypted rows in the same SQL transaction for original operation references",
+      "restore": "requires B exact schema/normalization adapter; nonempty unsupported rows fail closed"
+    }
+  ],
+  "writers": [
+    {
+      "id": "team.pending_deletions",
+      "existing_boundary": "backend/internal/services/team_service.go",
+      "physical_proof": "second-stage-C pending"
+    },
+    {
+      "id": "team.event_projection",
+      "existing_boundary": "backend/internal/services/team_service.go",
+      "physical_proof": "second-stage-C pending"
+    },
+    {
+      "id": "team.maintenance_sweep",
+      "existing_boundary": "backend/internal/services/team_service.go",
+      "physical_proof": "second-stage-C pending"
+    },
+    {
+      "id": "northbound.operation",
+      "existing_boundary": "backend/internal/northbound/core_service.go",
+      "physical_proof": "B/D/C cross-review pending"
+    },
+    {
+      "id": "team.workspace_http",
+      "existing_boundary": "shared HTTP admission and SQL work boundary",
+      "physical_proof": "second-stage-C pending"
+    },
+    {
+      "id": "team.runtime_redis_and_workspace",
+      "existing_boundary": "B/D original Runtime writer control",
+      "physical_proof": "D actual original stop/exit/resume pending"
+    }
+  ],
+  "dependencies": [
+    {
+      "owner": "A/D",
+      "requirement": "original-Job read-only SQL/Redis/object source credential leases and live source grant; KEK permission alone is insufficient"
+    },
+    {
+      "owner": "D",
+      "requirement": "production Modules + ReadTeams + complete writer inventory composition, original material mounts/--formal-config, formal candidate observer/finalizer and admission"
+    },
+    {
+      "owner": "B",
+      "requirement": "actual target schema/generated-column and northbound operation restore adapters"
+    },
+    {
+      "owner": "A/B/D",
+      "requirement": "independent registry cross-review; no approvals inferred from local tests"
+    }
+  ],
+  "production_admission": "unchanged: workspace functional_test only; acceptance_ready=false",
+  "verification_scope": "local real SQL/Redis/MinIO source operations; module assembly and formal candidate readback; no server deployment, actual Runtime quiescence or final acceptance artifact claim"
+}

@@ -30,6 +30,7 @@ type FormalCaptureSpec struct {
 }
 
 type FormalCaptureEnvironment struct {
+	Teams              *TeamCaptureSources
 	Workspace, Staging *os.Root
 	Database           *sql.DB // already SELECT-only admitted source; never opened from artifact
 }
@@ -49,7 +50,7 @@ func validFormalInvocation(i Invocation) bool {
 	if f == nil || i.ProviderKey == nil || f.Version != FormalCaptureVersion || !keyUseHash.MatchString(f.ConfigSHA256) || !formalFileName.MatchString(f.EnvelopeName) || f.EnvelopeName == i.Request.ArtifactName || !formalFileName.MatchString(i.Request.ArtifactName) || f.MaxFrames < 2 || f.MaxFrames > w.MaxStreamFrames || i.Request.MaxCompressedBytes <= 0 || i.Request.MaxCompressedBytes > int64(f.MaxFrames-1)*w.ChunkSize {
 		return false
 	}
-	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database"
+	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request))
 }
 
 type formalKeyUse interface {
@@ -96,7 +97,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		return zero, ErrRequest
 	}
 	r := i.Request
-	if (r.Database == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) {
+	if (r.Teams == nil && r.Database == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) {
 		return zero, ErrNotReady
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
@@ -106,6 +107,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			return ctx.Err()
 		}
 		if job.Recheck(ctx) != nil {
+			return ErrNotReady
+		}
+		if r.Teams != nil && env.Teams.Authorize(ctx, i) != nil {
 			return ErrNotReady
 		}
 		return nil
@@ -144,12 +148,20 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
 			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{useCtx, job, dst}, func(stream io.Writer) error {
+				if r.Teams != nil {
+					return staging.Compress(stream, func(compressed io.Writer) error {
+						return captureTeamSource(useCtx, i, env.Teams, &budgetWriter{w: compressed, left: r.MaxArchiveBytes}, inUseCheck)
+					})
+				}
 				if r.Database != nil {
 					s, e := domain.CaptureSource(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
 					if e != nil {
 						return ErrExecution
 					}
 					defer clearSnapshot(s)
+					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
+						return ErrExecution
+					}
 					counts := snapshotCounts(s)
 					result.Rows, result.Tables = counts.Rows, counts.Tables
 					return staging.Compress(stream, func(compressed io.Writer) error {

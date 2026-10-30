@@ -24,6 +24,10 @@ func dependencyRules() []scope.TableRule {
 	for _, name := range []string{"skill_hub_tags", "skill_hub_tag_assignments", "skill_scan_results"} {
 		out = append(out, scope.TableRule{Name: name, Domain: "skill_hub", RestoreAction: "preserve", Reason: "Skill metadata dependency."})
 	}
+	// C's owner provisioning history references B-owned operations. Preserve
+	// the raw rows in THIS SQL transaction; B must supply its exact restore
+	// adapter. Unknown executable fields are never given an identity fallback.
+	out = append(out, scope.TableRule{Name: "northbound_operations", Domain: "resources", RestoreAction: "preserve", Reason: "Owner Team operation history dependency; restore requires B's explicit schema adapter."})
 	return out
 }
 

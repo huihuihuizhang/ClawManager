@@ -4075,7 +4075,8 @@
       "normalizer_id": "teams.owner_team_provision_steps.normalize.v1",
       "verifier_id": "teams.owner_team_provision_steps.verify.v1",
       "depends_on": [
-        "table:teams"
+        "table:teams",
+        "table:northbound_operations"
       ],
       "decision_status": "owner_recorded",
       "required_cross_reviewers": [

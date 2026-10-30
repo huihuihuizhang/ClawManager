@@ -21,9 +21,12 @@ type CaptureModulePart struct {
 	Operation     string
 }
 
+type CaptureModuleDependency struct{ Part, Owner, RequestedPart, Operation string }
 type CaptureModuleDescriptor struct {
 	ID, Owner, Revision string
 	Parts               []CaptureModulePart
+	Requires            []CaptureModuleDependency `json:"Requires,omitempty"`
+	Required            bool                      `json:"Required,omitempty"`
 }
 
 // ModuleCaptureContext is D's original admitted capture-point projection.
@@ -94,6 +97,7 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 		}
 		ids[descriptor.ID] = true
 		descriptor.Parts = append([]CaptureModulePart(nil), descriptor.Parts...)
+		descriptor.Requires = append([]CaptureModuleDependency(nil), descriptor.Requires...)
 		for _, part := range descriptor.Parts {
 			if !unit.MatchString(part.Part) || !unit.MatchString(part.Category) || parts[part.Part] || !knownRequestedPart(part.RequestedPart) {
 				return nil, d.ErrNotReady
@@ -107,6 +111,14 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 				if part.RequestedPart != "mysql" || descriptor.Owner != "B" {
 					return nil, d.ErrNotReady
 				}
+			case "capture-team-redis":
+				if descriptor.Owner != "C" || part.RequestedPart != "redis" {
+					return nil, d.ErrNotReady
+				}
+			case "capture-team-objects":
+				if descriptor.Owner != "C" || part.RequestedPart != "object_storage" {
+					return nil, d.ErrNotReady
+				}
 			default:
 				return nil, d.ErrNotReady
 			}
@@ -117,6 +129,21 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 		}
 		sort.Slice(descriptor.Parts, func(i, j int) bool { return descriptor.Parts[i].Part < descriptor.Parts[j].Part })
 		m.modules = append(m.modules, CaptureModuleRegistration{descriptor, registration.Build})
+	}
+	definitions := map[string]CaptureModuleDependency{}
+	for _, registration := range m.modules {
+		for _, part := range registration.Descriptor.Parts {
+			definitions[part.Part] = CaptureModuleDependency{part.Part, registration.Descriptor.Owner, part.RequestedPart, part.Operation}
+		}
+	}
+	for _, registration := range m.modules {
+		seen := map[string]bool{}
+		for _, required := range registration.Descriptor.Requires {
+			if !parts[required.Part] || seen[required.Part] || !unit.MatchString(required.Part) || definitions[required.Part] != required {
+				return nil, d.ErrNotReady
+			}
+			seen[required.Part] = true
+		}
 	}
 	sort.Slice(m.modules, func(i, j int) bool { return m.modules[i].Descriptor.ID < m.modules[j].Descriptor.ID })
 	catalog, _ := json.Marshal(struct {
@@ -135,6 +162,7 @@ func (m *CaptureModules) Describe() []CaptureModuleDescriptor {
 	for i, registration := range m.modules {
 		out[i] = registration.Descriptor
 		out[i].Parts = append([]CaptureModulePart(nil), registration.Descriptor.Parts...)
+		out[i].Requires = append([]CaptureModuleDependency(nil), registration.Descriptor.Requires...)
 	}
 	return out
 }
@@ -171,11 +199,33 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 	selections := make([][]CaptureModuleSelection, len(m.modules))
 	var index uint32
 	for i, registration := range m.modules {
+		if registration.Descriptor.Required {
+			for _, part := range registration.Descriptor.Parts {
+				if !requested[part.RequestedPart] {
+					return nil, d.ErrNotReady
+				}
+			}
+		}
 		for _, part := range registration.Descriptor.Parts {
 			if requested[part.RequestedPart] {
 				selections[i] = append(selections[i], CaptureModuleSelection{part, index})
 				covered[part.RequestedPart] = true
 				index++
+			}
+		}
+	}
+	selectedParts := map[string]bool{}
+	for _, list := range selections {
+		for _, part := range list {
+			selectedParts[part.Part] = true
+		}
+	}
+	for n, registration := range m.modules {
+		if registration.Descriptor.Required || len(selections[n]) > 0 {
+			for _, part := range registration.Descriptor.Requires {
+				if !selectedParts[part.Part] {
+					return nil, d.ErrNotReady
+				}
 			}
 		}
 	}
@@ -233,6 +283,9 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 			if selection.Operation == "capture-database" {
 				database := request.Invocation.Request.Database
 				if database == nil || source.Database == "" || source.ServerUUID == "" || database.Name != source.Database || database.ServerUUID != source.ServerUUID {
+					return nil, d.ErrNotReady
+				}
+				if source.Teams != nil && (database.TeamsInventory == nil || database.TeamsInventory.SHA256() != source.Teams.SHA256()) {
 					return nil, d.ErrNotReady
 				}
 			}

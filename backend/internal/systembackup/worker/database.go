@@ -16,6 +16,7 @@ import (
 	legacy "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
+	"clawreef/internal/systembackup/team"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -23,6 +24,7 @@ import (
 // Credentials only arrive in an acquire grant; source and drill identities,
 // placement and policy are bound to the complete invocation hash.
 type DatabaseSpec struct {
+	TeamsInventory  *team.Inventory                `json:"teams_inventory,omitempty"`
 	InputFormat     string                         `json:"input_format,omitempty"`
 	Address         string                         `json:"address"`
 	Name            string                         `json:"name"`
@@ -65,10 +67,13 @@ func validDatabaseSpec(d *DatabaseSpec) bool {
 	return err == nil && host != "" && portErr == nil && n > 0 && n <= 65535
 }
 func validDatabaseRequest(r Request) bool {
-	if r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
+	if r.Teams != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
 		return false
 	}
 	d := r.Database
+	if d != nil && d.TeamsInventory != nil && (r.Operation != "capture-database" || d.TeamsInventory.SchemaSHA256 != team.SchemaSHA256() || d.TeamsInventory.Version != team.InventoryVersion) {
+		return false
+	}
 	if d != nil && d.InputFormat != "" && d.InputFormat != legacy.LegacyTeamSQLFormat {
 		return false
 	}
@@ -181,6 +186,9 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 			return Result{}, ErrExecution
 		}
 		defer clearSnapshot(s)
+		if d.TeamsInventory != nil && domain.VerifyTeamCapture(s, *d.TeamsInventory) != nil {
+			return Result{}, ErrExecution
+		}
 		if err = check("before-seal"); err != nil {
 			return Result{}, err
 		}
