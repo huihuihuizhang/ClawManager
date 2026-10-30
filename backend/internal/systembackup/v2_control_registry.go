@@ -65,5 +65,7 @@ func init() {
 		"system_backup_v2_kek_admissions",
 		"system_backup_v2_kek_coverage",
 		"system_backup_v2_kek_references",
+		"system_backup_installation_kek_authority",
+		"system_backup_installation_kek_authority_history",
 	)
 }

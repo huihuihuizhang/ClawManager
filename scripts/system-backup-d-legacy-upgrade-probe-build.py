@@ -53,7 +53,9 @@ def build() -> dict[str, bytes]:
     if len(ledger) != 97 or len(set(ledger)) != 97 or any(not re.fullmatch(r"[A-Za-z0-9_.-]+\.sql", name) for name in ledger):
         raise ValueError("observed migration ledger changed")
     entries = sorted(MIGRATIONS.glob("*.sql"), key=lambda entry: entry.name)
-    pending = [entry for entry in entries if entry.name not in set(ledger)]
+    # This exploratory probe pins the reviewed through-127 catalog. New
+    # migrations require a separate review and must not alter its SQL bytes.
+    pending = [entry for entry in entries if entry.name not in set(ledger) and int(entry.name[:3]) <= 127]
     if len(pending) != 92:
         raise ValueError("current migration catalog changed")
 

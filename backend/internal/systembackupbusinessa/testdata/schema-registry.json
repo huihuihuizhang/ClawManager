@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 168,
-    "hash": "d82eb65ecd839741255722bc8bdcd77de28c4fa25f8c1c25a622ba588f4156b5"
+    "file_count": 169,
+    "hash": "617e8c7b08ed9dcd2fe3bad531561094be3bd688669f204e7c72211ecfb626b3"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 135,
+    "object_count": 137,
     "policy_recorded": 68,
-    "policy_pending": 67,
+    "policy_pending": 69,
     "cross_review_pending": 68
   },
   "objects": [
@@ -3909,6 +3909,58 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/127_backup_v2_kek_registry.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_installation_kek_authority",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/128_backup_installation_kek_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_installation_kek_authority_history",
+      "owner": "D",
+      "category": "control_plane",
+      "data_classification": null,
+      "backup_strategy": null,
+      "restore_strategy": null,
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": null,
+      "depends_on": [],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": null,
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/128_backup_installation_kek_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

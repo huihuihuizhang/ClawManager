@@ -21,7 +21,9 @@ class RegistrySummaryTest(unittest.TestCase):
     def test_runtime_custody_and_relay_history_remain_control_metadata(self):
         output = dict(catalog.outputs())
         generated = output[catalog.ROOT / "backend/internal/systembackup/v2_control_registry.go"]
-        for table in ("system_backup_v2_runtime_controls", "system_backup_v2_relay_receipts"):
+        for table in ("system_backup_v2_runtime_controls", "system_backup_v2_relay_receipts",
+                      "system_backup_installation_kek_authority",
+                      "system_backup_installation_kek_authority_history"):
             self.assertEqual(generated.count('"' + table + '"'), 1)
         # Metadata refresh must never invent object approval or restore policy.
         import json

@@ -41,7 +41,18 @@ func WireServices(bootstrap sec.ConfigBootstrapService, mutation sec.ConfigMutat
 		return sec.ConfigBootstrapService{}, sec.ConfigMutationService{}, sec.ErrRegistrationUnavailable
 	}
 	validator := KEKAdmissionValidator{Original: original, Now: original.Now}
-	if reader, ok := original.Reader.(SQLOriginalReader); ok && reader.DB != bootstrap.DB {
+	var authorityDB *sql.DB
+	switch reader := original.Reader.(type) {
+	case SQLOriginalReader:
+		authorityDB = reader.DB
+	case *SQLOriginalReader:
+		if reader != nil {
+			authorityDB = reader.DB
+		}
+	default:
+		return sec.ConfigBootstrapService{}, sec.ConfigMutationService{}, sec.ErrRegistrationUnavailable
+	}
+	if authorityDB != bootstrap.DB {
 		return sec.ConfigBootstrapService{}, sec.ConfigMutationService{}, sec.ErrRegistrationUnavailable
 	}
 	bootstrap.KEK = BootstrapComposition{Source: source, Validator: validator}

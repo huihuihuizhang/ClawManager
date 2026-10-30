@@ -282,7 +282,11 @@ Pod 上的临时副本也不是独立故障域备份。脚本在退出时执行�
 
 这证明**这一次真实数据副本**可跑通当前 92 项 SQL，并保存上述核心身份；尚未证明所有表原列的逐行字节一致、部分 DDL 失败后可原位重跑，也没有恢复 Workspace、启动 App/Controller、迁移原库或跑备份任务。三项额外历史 SQL 原字节仍未找到，不能把此探针改写成生产导入授权。后续正式 profile 应采用独立 journal、完整原列行证明、迁移后约束/应用查询、失败副本丢弃重建以及切换/回退步骤；旧版同名控制表须明确处理，不能靠 `IF NOT EXISTS`。
 
-如需重新生成上述临时 SQL，运行 `py -3 -B scripts/system-backup-d-legacy-upgrade-probe-build.py --output-dir <临时目录>`；输入或当前 SQL catalog 任一字节变化时生成器会拒绝输出。生成文件属于测试产物，测试后删除。
+随后增加逐表原列摘要探针，第一次发现升级前后聚合摘要不等。第二次定位到 99 张原表中仅 `llm_models` 的 2 行发生变化；其余 98 张表（含原 97 项 ledger、359 行 `model_invocations` 与用户/实例关系）逐行摘要相同。现场只读计数确认这 2 行的原 `protocol_type` 均非空。缺失迁移 `049_add_llm_model_groups.sql` 对新增 `model_group` 回填，触发原表自动更新 `updated_at`。因此全原列逐字节不变并非此迁移的正确验收条件；修订探针保留 `protocol_type` 及其他原列在摘要中，仅对 `llm_models.updated_at` 设明确例外，同时检查新 `model_group` 与原 `display_name` 精确相等。
+
+第三次现场运行使用传输包 SHA256 `33f5efc72e5a17efe9cf85cbf6b36f378ca05ba5d101d728bee61c92cbd8b307`，随机副本为 `cm_import_1fcd8a2cc8b344f2be312882b34746a4`。复制流与副本重导出流 SHA256 同为 `edc9f4782f0bb4dd533d4707322aa8a041ca7f9a13d0e26ecf7c1d5343df4851`。升级前后，原 99 表稳定原列聚合 SHA256 同为 `c82e6e6bb70b4a8965669353d691e9bfed7f1e769c2e62b482a61a0cf4cf4eee`；2 条模型的 `model_group` 与原 `display_name` 精确相等，其 `protocol_type` 及其他原列摘要不变。`UPGRADE_COPY_VERIFIED` 仍确认 ledger 189、旧表 35、核心身份 SHA256 `efcbae2af2d44c98932574eddeca0453861450e7126f5342e833a7530138aeca`。独立只读收尾确认 `COPY_ABSENT`、`POD_TEMP_ABSENT`。这些证明只覆盖一个运行中的数据库快照及已固定的截至 127 的迁移；不覆盖并发写入间的跨域一致性、迁移 128、Workspace/NFS 内容、应用启动或恢复成功，也不授权升级原库。
+
+如需重新生成上述临时 SQL，运行 `py -3 -B scripts/system-backup-d-legacy-upgrade-probe-build.py --output-dir <临时目录>`；生成器只选择本次已审阅的截至 `127` 的 92 项迁移，并验证生成 SQL 的固定 SHA。新增的 `128` 及以后迁移不在本次探针结论内，必须单独审阅。生成文件属于测试产物，测试后删除。
 
 ## 本 profile 的交付出口
 
@@ -297,4 +301,4 @@ Pod 上的临时副本也不是独立故障域备份。脚本在退出时执行�
 4. 提供独立的 `--preflight`、`--apply` 输入和现场回退命令；均绑定实际
    server UUID、库名、catalog、历史 SQL 摘要。输出不能含 DSN 或密钥。
 
-第 1 项仍缺 3 项历史原 SQL，第 2 项仅验证了旧表隔离改名的候选路径，第 3 项仅有一次真实数据副本的结构迁移和有限保全证明；重复运行、部分失败恢复及完整逐行/约束验收未完成。第 4 项未完成，因此现库升级和备份准入仍关闭。
+第 1 项仍缺 3 项历史原 SQL，第 2 项仅验证了旧表隔离改名的候选路径。第 3 项已有真实数据隔离副本的原列摘要保全证明（明确排除模型回填触发的 `updated_at`），但部分失败恢复、完整约束与应用查询验收未完成。第 4 项未完成，因此现库升级和备份准入仍关闭。
