@@ -50,6 +50,57 @@ func TestDeploymentConfigurationIsPinnedAndClosed(t *testing.T) {
 	}
 }
 
+func TestNFSWorkspaceRequiresInstallationOwnedSubtree(t *testing.T) {
+	cfg := runtimeDeploymentFixture(t)
+	cfg.Workspace.Claim = ""
+	cfg.Workspace.NFS = &NFSWorkspace{Server: "10.107.165.245", Export: "/"}
+	cfg.Workspace.SubPath = "installations/" + hash([]byte(cfg.InstallationID))
+	if err := cfg.Validate(); err != nil {
+		t.Fatal("installation-owned NFS subtree rejected", err)
+	}
+	platform := cfg
+	platform.CaptureScope = "platform-workspace"
+	platform.RuntimeSources = nil
+	if platform.Validate() == nil {
+		t.Fatal("NFS capture without runtime source verification admitted")
+	}
+	for _, fault := range []string{"root", "other-installation", "alias", "dual-source", "hostname", "relative-export"} {
+		candidate := cfg
+		copyNFS := *cfg.Workspace.NFS
+		candidate.Workspace.NFS = &copyNFS
+		switch fault {
+		case "root":
+			candidate.Workspace.SubPath = ""
+		case "other-installation":
+			candidate.Workspace.SubPath = "installations/" + hash([]byte("other"))
+		case "alias":
+			candidate.Workspace.SubPath += "/../other"
+		case "dual-source":
+			candidate.Workspace.Claim = "source"
+		case "hostname":
+			candidate.Workspace.NFS.Server = "workspace-store.other.svc"
+		case "relative-export":
+			candidate.Workspace.NFS.Export = "relative"
+		}
+		if candidate.Validate() == nil {
+			t.Fatal("unsafe NFS source admitted", fault)
+		}
+	}
+	access, err := RequiredCaptureAccess(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rule := range access {
+		if len(rule.Rule.Resources) == 1 && rule.Rule.Resources[0] == "persistentvolumeclaims" && len(rule.Rule.ResourceNames) > 0 {
+			for _, name := range rule.Rule.ResourceNames {
+				if name == "" || name == "source" {
+					t.Fatal("NFS capture generated source PVC permission", rule.Rule.ResourceNames)
+				}
+			}
+		}
+	}
+}
+
 func TestForwardCaptureGrantCannotBorrowRecoveryAuthority(t *testing.T) {
 	for _, tc := range []struct {
 		actions []string

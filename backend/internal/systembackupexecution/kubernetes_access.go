@@ -36,7 +36,11 @@ func RequiredCaptureAccess(cfg DeploymentConfig) ([]CaptureAccess, error) {
 	add(cfg.Namespace, "", "secrets", []string{"get", "create"}, nil)
 	add(cfg.Namespace, "batch", "jobs", []string{"get", "create", "delete"}, nil)
 	add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{cfg.Security.ServiceAccountName})
-	add(cfg.Namespace, "", "persistentvolumeclaims", []string{"get"}, sortedUnique([]string{cfg.Workspace.Claim, cfg.StagingClaim}))
+	claims := []string{cfg.StagingClaim}
+	if cfg.Workspace.Claim != "" {
+		claims = append(claims, cfg.Workspace.Claim)
+	}
+	add(cfg.Namespace, "", "persistentvolumeclaims", []string{"get"}, sortedUnique(claims))
 	add(cfg.Namespace, "coordination.k8s.io", "leases", []string{"get", "update", "patch"}, []string{"clawmanager-public-backup-controller"})
 	add(cfg.Namespace, "coordination.k8s.io", "leases", []string{"create"}, nil)
 	namespaces := map[string][]string{}

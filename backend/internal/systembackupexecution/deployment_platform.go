@@ -91,7 +91,13 @@ func (s *DeploymentService) platformProfile(o *PublicJobOwner) (b.LinuxProfileCo
 		if seconds < 1 {
 			return nil, d.ErrNotReady
 		}
-		part, e := b.BuildCapturePart(in, until, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: "workspace", Generation: 1, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: cfg.Namespace, Name: name, Owner: in.Authority.TaskPublicID}, Image: cfg.WorkerImage, ServiceAccount: cfg.Security.ServiceAccountName, Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: cfg.Workspace.Claim}}}, StagingClaim: cfg.StagingClaim, SourceSubPath: cfg.Workspace.SubPath, NodeName: cfg.Workspace.Node, DeadlineSeconds: seconds, WorkerControl: &kube.WorkerControl{URL: cfg.ControlURL, InvocationConfigMap: "request-" + token, IdentitySecret: "identity-" + token, BoundPodIdentity: true}}})
+		sourceVolume := corev1.Volume{Name: "source"}
+		if cfg.Workspace.NFS != nil {
+			sourceVolume.NFS = &corev1.NFSVolumeSource{Server: cfg.Workspace.NFS.Server, Path: cfg.Workspace.NFS.Export, ReadOnly: true}
+		} else {
+			sourceVolume.PersistentVolumeClaim = &corev1.PersistentVolumeClaimVolumeSource{ClaimName: cfg.Workspace.Claim}
+		}
+		part, e := b.BuildCapturePart(in, until, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: "workspace", Generation: 1, Invocation: invocation, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: cfg.Namespace, Name: name, Owner: in.Authority.TaskPublicID}, Image: cfg.WorkerImage, ServiceAccount: cfg.Security.ServiceAccountName, Source: sourceVolume, StagingClaim: cfg.StagingClaim, SourceSubPath: cfg.Workspace.SubPath, NodeName: cfg.Workspace.Node, DeadlineSeconds: seconds, WorkerControl: &kube.WorkerControl{URL: cfg.ControlURL, InvocationConfigMap: "request-" + token, IdentitySecret: "identity-" + token, BoundPodIdentity: true}}})
 		if e != nil {
 			return nil, e
 		}
