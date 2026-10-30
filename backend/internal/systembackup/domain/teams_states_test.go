@@ -41,6 +41,23 @@ func TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState(t *testing.T) {
 	}
 }
 
+func TestDeletedTeamHistoryDoesNotRequireDeletedSharedVolume(t *testing.T) {
+	s, schema, p := teamFixture()
+	find(s, "teams").Rows[0]["status"] = Text("deleted")
+	p.TeamPlacements = nil
+	plan, err := Normalize(context.Background(), s, schema, p)
+	if err != nil {
+		t.Fatal("deleted Team history must not request a deleted physical volume", err)
+	}
+	row := find(plan.Data, "teams").Rows[0]
+	if row["status"].String() != "deleted" || !row["shared_pvc_name"].Null || !row["shared_pvc_namespace"].Null {
+		t.Fatal("deleted history lost or source volume binding reactivated")
+	}
+	if find(s, "teams").Rows[0]["shared_pvc_name"].String() != "source-volume" {
+		t.Fatal("original history was modified")
+	}
+}
+
 func TestIndependentTeamVerificationRejectsExecutableExpectedPlan(t *testing.T) {
 	for _, mode := range []string{"valid", "team", "member", "work", "workflow", "credentials", "outbox", "locks", "owner-operation", "template-operation", "source-volume"} {
 		t.Run(mode, func(t *testing.T) {

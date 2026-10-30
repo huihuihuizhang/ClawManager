@@ -34,7 +34,13 @@ func normalizeTeam(table string, r Row, p Policy) error {
 		}
 		clearFields(r, "redis_url_secret_name redis_url_secret_key team_token_secret_name team_token_secret_key")
 		set(r, "redis_events_last_id", Text("0-0"))
-		if v := r["shared_pvc_name"]; !v.Null && v.String() != "" {
+		if r["status"].String() == "deleted" {
+			// Deleted Teams have no C volume part or writer enrollment. Retain
+			// their SQL history without recreating or binding a removed source
+			// claim; the immutable source archive keeps the original placement.
+			clearFields(r, "shared_pvc_name shared_pvc_namespace storage_class")
+			set(r, "shared_mount_path", Text("/team"))
+		} else if v := r["shared_pvc_name"]; !v.Null && v.String() != "" {
 			placement, ok := p.TeamPlacements[r["id"].String()]
 			if !ok || placement.PVC == "" || !strings.HasPrefix(placement.Namespace, "cm-drill-") || !safeRoot(placement.MountPath) {
 				return ErrNormalization
