@@ -21,12 +21,24 @@ var redisServer = regexp.MustCompile(`^[a-f0-9]{40}$`)
 // This is a credential-free projection of the original SQL snapshot and D's
 // independently authenticated storage/provider mapping, never user input.
 type Inventory struct {
-	SchemaSHA256 string        `json:"schema_sha256"`
-	Version      string        `json:"version"`
-	Teams        []SourceTeam  `json:"teams"`
-	Mounts       []SharedMount `json:"mounts"`
-	Redis        []RedisScope  `json:"redis"`
-	Objects      []ObjectRef   `json:"objects"`
+	SchemaSHA256 string          `json:"schema_sha256"`
+	Version      string          `json:"version"`
+	Teams        []SourceTeam    `json:"teams"`
+	Mounts       []SharedMount   `json:"mounts"`
+	Redis        []RedisScope    `json:"redis"`
+	Objects      []ObjectRef     `json:"objects"`
+	Writers      []WriterBinding `json:"writers,omitempty"`
+}
+
+// WriterBinding is D's original authenticated mapping, not a stop receipt.
+// A platform writer can cover several finite units. Runtime bindings identify
+// exactly one original member instance and use B/D's native physical writer.
+type WriterBinding struct {
+	ID, Kind, UID, Checkpoint string
+	Generation                int64
+	Running                   bool
+	InstanceID                int
+	Units                     []string
 }
 type SourceTeam struct {
 	ID, UserID                   int

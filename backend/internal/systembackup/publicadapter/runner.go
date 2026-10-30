@@ -250,6 +250,11 @@ func (r *runner) Prepare(ctx context.Context, in d.Input, ports d.Ports) (d.Plan
 }
 
 func (r *runner) guardInventory(ctx context.Context, in d.Input, x Discovery) error {
+	if in.Authority.TaskType == "backup" {
+		if err := validateTeamsDiscovery(x); err != nil {
+			return err
+		}
+	}
 	detached, err := copyDiscovery(x)
 	if err != nil {
 		return err
