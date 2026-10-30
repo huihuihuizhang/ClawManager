@@ -46,6 +46,9 @@ type FormalCaptureResult struct {
 }
 
 func validFormalInvocation(i Invocation) bool {
+	if i.Request.TeamWorkspace != nil {
+		return false
+	}
 	f := i.FormalCapture
 	if f == nil || i.ProviderKey == nil || f.Version != FormalCaptureVersion || !keyUseHash.MatchString(f.ConfigSHA256) || !formalFileName.MatchString(f.EnvelopeName) || f.EnvelopeName == i.Request.ArtifactName || !formalFileName.MatchString(i.Request.ArtifactName) || f.MaxFrames < 2 || f.MaxFrames > w.MaxStreamFrames || i.Request.MaxCompressedBytes <= 0 || i.Request.MaxCompressedBytes > int64(f.MaxFrames-1)*w.ChunkSize {
 		return false

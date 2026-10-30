@@ -1,9 +1,29 @@
 package domain
 
 import (
+	"bytes"
 	"context"
 	"testing"
 )
+
+func TestTeamArtifactReferencesCannotBeSilentlyRedactedByConfigPolicy(t *testing.T) {
+	s, schema, p := teamFixture()
+	for n := range s.Tables {
+		if s.Tables[n].Name == "team_work_items" {
+			s.Tables[n].Columns = append(s.Tables[n].Columns, Column{Name: "artifact_refs_json", Type: "text", Nullable: true})
+			s.Tables[n].Rows[0]["artifact_refs_json"] = Text("[ \"/team/results/报告.bin\" ]")
+		}
+	}
+	schema = s.Tables
+	p.Configs = JSONRegistry{"team_work_items.artifact_refs_json": {{Path: []string{"*"}, Action: "stub"}}}
+	plan, err := Normalize(context.Background(), s, schema, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(find(plan.Data, "team_work_items").Rows[0]["artifact_refs_json"].Bytes, find(s, "team_work_items").Rows[0]["artifact_refs_json"].Bytes) {
+		t.Fatal("artifact locations were rewritten as credentials, losing task products")
+	}
+}
 
 func TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState(t *testing.T) {
 	for _, field := range []string{"member", "workflow"} {

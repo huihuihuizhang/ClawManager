@@ -141,7 +141,11 @@ func validControl(r ControlRequest) bool {
 	if !validWorkBuddyIdentityRequest(q) {
 		return false
 	}
-	if teamCaptureOperation(q.Operation) {
+	if q.TeamWorkspace != nil || q.Operation == "verify-team-workspace" {
+		if !validTeamWorkspace(q) || r.Invocation.WorkspacePath == "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" || r.Invocation.ProviderKey != nil {
+			return false
+		}
+	} else if teamCaptureOperation(q.Operation) {
 		if !validTeamCapture(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
 			return false
 		}
@@ -213,7 +217,7 @@ func validResult(r Request, result *Result) bool {
 		return result.Quarantined && !result.Verified && result.Receipt == r.Receipt
 	case "restore-database":
 		return result.Quarantined && !result.Verified && result.Receipt == r.Receipt && r.Database != nil && result.Evidence.Name == r.Database.EvidenceName && validReceipt(result.Evidence)
-	case "verify-database", "verify-assets":
+	case "verify-database", "verify-assets", "verify-team-workspace":
 		return result.Quarantined && result.Verified && result.Receipt == r.Receipt
 	}
 	return false
@@ -229,6 +233,8 @@ func validCheckpoint(operation, point string) bool {
 		return point == "before-restore" || point == "before-normalize" || point == "restored-quarantine"
 	case "restore-database":
 		return point == "before-restore" || point == "database-isolation" || point == "before-evidence" || point == "before-database-commit" || point == "restored-quarantine"
+	case "verify-team-workspace":
+		return point == "before-verify" || point == "verified-quarantine"
 	case "verify-database", "verify-assets":
 		return point == "before-verify" || point == "database-isolation" || point == "verified-quarantine"
 	}

@@ -375,6 +375,15 @@ func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
 		if !ok || v.Null || len(v.Bytes) == 0 {
 			continue
 		}
+		// C's artifact list is a data relationship, not a credential/config
+		// document. Validate the supported paths and preserve original bytes;
+		// generic Secret rules must not replace locations with disabled tokens.
+		if table == "team_work_items" && column == "artifact_refs_json" {
+			if err := validateTeamArtifactList(v.Bytes); err != nil {
+				return ErrNormalization
+			}
+			continue
+		}
 		if p.Configs == nil {
 			return ErrNormalization
 		}

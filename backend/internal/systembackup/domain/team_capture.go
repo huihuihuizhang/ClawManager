@@ -10,6 +10,9 @@ import (
 // result. It checks the already-captured rows, not another SQL transaction.
 // Deleted history can remain archived; only live Team coverage is required.
 func VerifyTeamCapture(snapshot Snapshot, inventory team.Inventory) error {
+	if err := validateSnapshot(snapshot); err != nil {
+		return err
+	}
 	users, owners := map[int]bool{}, map[int]int{}
 	for _, table := range snapshot.Tables {
 		for _, row := range table.Rows {
@@ -31,6 +34,10 @@ func VerifyTeamCapture(snapshot Snapshot, inventory team.Inventory) error {
 		required[name] = false
 	}
 	byTeam := map[int]team.SourceTeam{}
+	mounts := map[string]team.SharedMount{}
+	for _, mount := range inventory.Mounts {
+		mounts[mount.ID] = mount
+	}
 	for _, t := range inventory.Teams {
 		byTeam[t.ID] = t
 	}
@@ -71,8 +78,18 @@ func VerifyTeamCapture(snapshot Snapshot, inventory team.Inventory) error {
 				id, _ := strconv.Atoi(r["id"].String())
 				expected, ok := byTeam[id]
 				uid, _ := strconv.Atoi(r["user_id"].String())
-				if !ok || uid != expected.UserID || r["resource_scope"].String() != expected.ResourceScope || r["owner"].String() != expected.Owner {
+				if !ok || uid != expected.UserID || r["status"].String() != expected.Status || r["resource_scope"].String() != expected.ResourceScope || r["owner"].String() != expected.Owner {
 					return ErrData
+				}
+				if expected.SharedMountID == "" {
+					if r["shared_pvc_name"].String() != "" {
+						return ErrData
+					}
+				} else {
+					mount := mounts[expected.SharedMountID]
+					if r["shared_pvc_name"].String() != mount.PVC || r["shared_pvc_namespace"].String() != mount.Namespace || r["shared_mount_path"].String() != mount.Root {
+						return ErrData
+					}
 				}
 				teamCount++
 			}

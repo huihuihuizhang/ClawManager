@@ -25,7 +25,7 @@ func validAssetRequest(r Request) bool {
 // index. No source Secret is activated: secret files contain deterministic,
 // task-keyed nonfunctional values. A separate read-only Job verifies every byte.
 func RunAssets(ctx context.Context, r Request, env Environment) (Result, error) {
-	if r.WorkBuddyIdentity != nil {
+	if r.TeamWorkspace != nil || r.WorkBuddyIdentity != nil {
 		return Result{}, ErrRequest
 	}
 	if !validAssetRequest(r) || env.Workspace == nil || env.Staging == nil || len(env.Key) != 32 || env.Check == nil || !separateRoots(env.Workspace, env.Staging) {

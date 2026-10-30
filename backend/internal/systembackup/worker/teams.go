@@ -44,6 +44,9 @@ func teamCaptureOperation(op string) bool {
 	return op == "capture-team-redis" || op == "capture-team-objects"
 }
 func validTeamCapture(r Request) bool {
+	if r.TeamWorkspace != nil {
+		return false
+	}
 	s := r.Teams
 	if s == nil || !keyUseHash.MatchString(s.InventorySHA256) || !teamCaptureOperation(r.Operation) || r.Version != Version || s.MaxItems <= 0 || s.MaxItems > 10000 || r.Database != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil || r.PolicyVersion != "" || len(r.Files) != 0 || r.MaxFiles != 0 || r.MaxFileBytes != 0 || r.MaxArchiveBytes <= 0 || r.MaxArchiveBytes > 32<<20 || r.MaxCompressedBytes <= 0 || r.MaxCompressedBytes > 32<<20 || r.ArtifactName == "" {
 		return false

@@ -34,21 +34,22 @@ type FileRule struct {
 	Fields   []domain.JSONRule `json:"fields"`
 }
 type Request struct {
-	Version            string           `json:"version"`
-	Operation          string           `json:"operation"`
-	Binding            staging.Binding  `json:"binding"`
-	Deadline           time.Time        `json:"deadline"`
-	ArtifactName       string           `json:"artifact_name"`
-	Receipt            staging.Receipt  `json:"receipt"`
-	MaxFiles           int64            `json:"max_files"`
-	MaxFileBytes       int64            `json:"max_file_bytes"`
-	MaxArchiveBytes    int64            `json:"max_archive_bytes"`
-	MaxCompressedBytes int64            `json:"max_compressed_bytes"`
-	PolicyVersion      string           `json:"policy_version"`
-	Files              []FileRule       `json:"files"`
-	Database           *DatabaseSpec    `json:"database,omitempty"`
-	Teams              *TeamCaptureSpec `json:"teams,omitempty"`
-	RuntimePolicy      *RuntimePolicy   `json:"runtime_policy,omitempty"`
+	TeamWorkspace      *TeamWorkspaceSpec `json:"team_workspace,omitempty"`
+	Version            string             `json:"version"`
+	Operation          string             `json:"operation"`
+	Binding            staging.Binding    `json:"binding"`
+	Deadline           time.Time          `json:"deadline"`
+	ArtifactName       string             `json:"artifact_name"`
+	Receipt            staging.Receipt    `json:"receipt"`
+	MaxFiles           int64              `json:"max_files"`
+	MaxFileBytes       int64              `json:"max_file_bytes"`
+	MaxArchiveBytes    int64              `json:"max_archive_bytes"`
+	MaxCompressedBytes int64              `json:"max_compressed_bytes"`
+	PolicyVersion      string             `json:"policy_version"`
+	Files              []FileRule         `json:"files"`
+	Database           *DatabaseSpec      `json:"database,omitempty"`
+	Teams              *TeamCaptureSpec   `json:"teams,omitempty"`
+	RuntimePolicy      *RuntimePolicy     `json:"runtime_policy,omitempty"`
 	// Expected identity comes from the authenticated SQL snapshot and is frozen
 	// into the authorized invocation, never inferred from workspace content.
 	WorkBuddyIdentity *domain.WorkBuddyUIDIdentity `json:"workbuddy_identity,omitempty"`
@@ -77,6 +78,9 @@ type Result struct {
 }
 
 func Run(ctx context.Context, r Request, env Environment) (Result, error) {
+	if r.TeamWorkspace != nil || r.Operation == "verify-team-workspace" {
+		return RunTeamWorkspace(ctx, r, env)
+	}
 	if assetOperation(r.Operation) {
 		return RunAssets(ctx, r, env)
 	}
