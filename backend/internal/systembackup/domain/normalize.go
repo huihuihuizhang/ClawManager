@@ -262,6 +262,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	plan.Data.Tables = ordered
+	if err := VerifyTeamQuarantine(plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
 	return plan, nil
 }
 func hasColumn(t Table, name string) bool {

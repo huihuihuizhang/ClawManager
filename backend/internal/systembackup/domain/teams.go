@@ -1,6 +1,9 @@
 package domain
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // Explicit inventory from migrations 014/017/018/032/035/036/037/042/046.
 // Do not derive an allowlist from reflection: new model fields need review.
@@ -42,6 +45,9 @@ func normalizeTeam(table string, r Row, p Policy) error {
 			set(r, "storage_class", Text(placement.StorageClass))
 		}
 	case "team_members":
+		if !slices.Contains([]string{"creating", "idle", "busy", "deleting", "offline", "deleted", "failed"}, r["status"].String()) {
+			return ErrNormalization
+		}
 		if r["status"].String() != "deleted" {
 			set(r, "status", Text("offline"))
 		}
@@ -69,6 +75,9 @@ func normalizeTeam(table string, r Row, p Policy) error {
 	case "custom_team_templates":
 		clearFields(r, "last_operation_id")
 	case "team_tasks":
+		if field, ok := r["workflow_state"]; ok && (field.Null || !slices.Contains([]string{"open", "planning", "executing", "awaiting_phase_results", "awaiting_leader_decision", "synthesizing", "completion_pending", "completed", "failed"}, field.String())) {
+			return ErrNormalization
+		}
 		switch r["status"].String() {
 		case "succeeded", "failed", "stale":
 		case "pending", "dispatched", "running", "waiting":

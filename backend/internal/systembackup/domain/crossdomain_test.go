@@ -10,7 +10,7 @@ func teamFixture() (Snapshot, []Table, Policy) {
 	extra := []Table{
 		table("teams", Row{"id": Text("20"), "user_id": Text("4"), "status": Text("running"), "shared_pvc_name": Text("source-volume"), "shared_pvc_namespace": Text("production"), "shared_mount_path": Text("/shared"), "storage_class": Text("source-class"), "redis_url_secret_name": Text("source-redis"), "redis_events_last_id": Text("10-1")}),
 		table("team_members", Row{"id": Text("21"), "team_id": Text("20"), "instance_id": Text("7"), "user_id": Text("4"), "status": Text("busy"), "availability": Text("busy"), "current_task_id": Text("22")}),
-		table("team_tasks", Row{"id": Text("22"), "team_id": Text("20"), "target_member_id": Text("21"), "status": Text("running"), "workflow_state": Text("active"), "redis_stream_id": Text("10-2")}),
+		table("team_tasks", Row{"id": Text("22"), "team_id": Text("20"), "target_member_id": Text("21"), "status": Text("running"), "workflow_state": Text("executing"), "redis_stream_id": Text("10-2")}),
 		table("team_work_items", Row{"id": Text("23"), "team_id": Text("20"), "root_task_id": Text("22"), "owner_member_id": Text("21"), "status": Text("waiting")}),
 		table("team_workflow_phases", Row{"id": Text("24"), "team_id": Text("20"), "root_task_id": Text("22"), "status": Text("active")}),
 		table("team_event_outbox", Row{"id": Text("25"), "team_id": Text("20"), "status": Text("pending")}),

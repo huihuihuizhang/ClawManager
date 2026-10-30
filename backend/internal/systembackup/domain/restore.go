@@ -211,6 +211,9 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 // The grant check rejects roles, wildcard grants and write privileges rather
 // than accepting a read-only transaction as proof of independent permissions.
 func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan RestorePlan) error {
+	if err := VerifyTeamQuarantine(plan.Data); err != nil {
+		return err
+	}
 	if db == nil {
 		return ErrDatabase
 	}
