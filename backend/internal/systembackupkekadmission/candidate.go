@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	refs "clawreef/internal/systembackupbootstrapsecurity"
@@ -36,7 +37,9 @@ func source(s reg.SourceRecord) bool {
 func exactProvider(b reg.Binding) bool {
 	u, err := url.Parse(b.Provider.Endpoint)
 	v, parseErr := strconv.ParseUint(b.Key.ProviderVersion, 10, 32)
-	return err == nil && u.Scheme == "https" && u.Host != "" && u.User == nil && u.Opaque == "" && u.Path == "" && u.RawQuery == "" && u.Fragment == "" &&
+	// Match the live Transit endpoint rule: an empty query/fragment
+	// delimiter is still a different endpoint and must not be admitted.
+	return err == nil && u.Scheme == "https" && u.Host != "" && u.User == nil && u.Opaque == "" && u.Path == "" && u.RawQuery == "" && u.Fragment == "" && !u.ForceQuery && !strings.ContainsAny(b.Provider.Endpoint, "?#\r\n") &&
 		keyName.MatchString(b.Provider.KeyName) && len(b.Key.ProviderKeyID) > 0 && len(b.Key.ProviderKeyID) <= 256 &&
 		parseErr == nil && v > 0 && strconv.FormatUint(v, 10) == b.Key.ProviderVersion
 }
