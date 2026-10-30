@@ -45,3 +45,9 @@ A 曾启动 C50 后的四包隔离缓存回归；运行中 D 连续修改 `syste
 复用已固定的 OpenBao v2.6.2、JWT trust readback SHA `595ab8034b889490a055b56094ffdd1d71ace5a188d10fa77eab19d3deb89244`、backup KEK v1 profile SHA `fd5c182837152d128d00ece72520a90baa924d07cc76311f151f4f2ab05d4e9f`。这些公开回执证明配置/属性，不证明 role、policy、permit、任务授权或真实 generate/unwrap；不重复昨日采集。
 
 现场正式材料尚需：原 mapping/coverage 来源及 SQL 读回、B 冻结任务上下文和最终 writer、三个签名用途的原业务 reader、受控 provider role/policy/permit/JWT 引用、新部署镜像摘要、历史 ref/version 与当前独立 recovery grant。凭据、JWT、私钥和 DEK 只走受控挂载，不进 Git。没有这些材料时，生产 caller 应继续拒绝；本地测试只报告合成材料的结果。
+
+### 端点校验复审增量
+
+`818870bf` 将正式 KMS、候选解码/准入和 Transit signer 的 provider URL 收紧到有实际主机名、无路径、查询及片段分隔符；`fed94238` 将 worker 的原 Job 密钥预约入口与该规则对齐，避免无效端点先消耗单次预约。合成材料下 KMS、候选准入和候选解码包通过；签名端点定向测试与 worker 控制请求定向测试通过。签名包全包测试在既有 `TestBootstrapCandidateServiceConsumerIntegration/late_rbac_removed` 上达到 180 秒超时，不能报告全包通过。两轮隔离构建目录已删除。
+
+另一 A 窗口维护的 `OriginalSigningResolver.exactSigningEndpoint` 仍只检查非空 `Host`，可在构造阶段接受 `https://:8200` 或尾随空 `#`；实际 `NewTransitSigner` 已拒绝这两种地址。应在该 resolver 的下一次提交中对齐校验并添加构造拒绝用例，避免配置先被接受、实际签名才失败。此发现不改变现有签名原字节或用途合同。

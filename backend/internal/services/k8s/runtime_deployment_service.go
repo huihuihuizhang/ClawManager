@@ -861,8 +861,10 @@ func (s *runtimeDeploymentService) listDeploymentPods(ctx context.Context, deplo
 			image = deploymentImage
 		}
 		imageDigest := runtimeContainerImageID(pod.Status.ContainerStatuses)
+		expectedDigest := runtimeImageDigest(image)
 		state := runtimeK8sPodState(pod)
-		if nativePod && (!nativeSlotContainers(pod.Spec.Containers) || image == "" || imageDigest == "") {
+		if nativePod && (!nativeSlotContainers(pod.Spec.Containers) || image == "" ||
+			expectedDigest == "" || !strings.EqualFold(expectedDigest, imageDigest)) {
 			state = "unhealthy"
 		}
 		result = append(result, RuntimeDeploymentPod{

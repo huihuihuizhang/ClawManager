@@ -108,7 +108,9 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 		return fail()
 	}
 	use, err := r.authority.AuthorizeSigning(ctx, request)
-	if err != nil || use.Request != request || use.Recheck == nil || use.NotBefore.IsZero() ||
+	if err != nil || use.Request != request || use.Recheck == nil ||
+		!providerBoundedString(use.Workload.Namespace) || !providerBoundedString(use.Workload.PodUID) ||
+		!providerBoundedString(use.Workload.ServiceAccountUID) || use.NotBefore.IsZero() ||
 		use.ExpiresAt.IsZero() || now.Before(use.NotBefore) || !now.Before(use.ExpiresAt) {
 		return fail()
 	}

@@ -19,6 +19,32 @@ type SealMaintenance struct {
 	Installation, ServerUUID, Database string
 }
 
+// Preflight checks the exact control database and columns required by cleanup.
+// It only executes SELECT statements and does not touch the staging volume.
+func (m SealMaintenance) Preflight(ctx context.Context) error {
+	if m.DB == nil || m.Installation == "" || m.ServerUUID == "" || m.Database == "" {
+		return errors.New("seal maintenance scope invalid")
+	}
+	var server, database string
+	if err := m.DB.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE()").Scan(&server, &database); err != nil || server != m.ServerUUID || database != m.Database {
+		return errors.New("seal maintenance database mismatch")
+	}
+	for _, query := range []string{
+		"SELECT origin_installation_id,public_id,status,config_version,config_snapshot_sha256,finished_at FROM system_backup_v2_backups LIMIT 0",
+		"SELECT task_public_id,resource_kind,namespace_name,resource_name,observed_uid,revoked,result_sha256,binding_json,attempt_no FROM system_backup_v2_runtime_resources LIMIT 0",
+		"SELECT public_id,owner_target_type,owner_target_public_id FROM system_backup_v2_evidence LIMIT 0",
+	} {
+		rows, err := m.DB.QueryContext(ctx, query)
+		if err != nil {
+			return errors.New("seal maintenance schema or SELECT grant unavailable")
+		}
+		if err = rows.Close(); err != nil {
+			return errors.New("seal maintenance schema check failed")
+		}
+	}
+	return nil
+}
+
 func (m SealMaintenance) WithUnreferencedSeal(ctx context.Context, intent staging.SealIntent, reference string, remove func() error) (bool, error) {
 	s := intent.Scope
 	if m.DB == nil || s.Installation != m.Installation || m.ServerUUID == "" || m.Database == "" || remove == nil {

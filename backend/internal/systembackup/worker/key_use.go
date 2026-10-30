@@ -42,7 +42,7 @@ func validKeyUseRequest(r ControlRequest) bool {
 		return false
 	}
 	u, e := url.Parse(a.Endpoint)
-	if e != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || !keyUseName.MatchString(a.KeyName) {
+	if e != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Opaque != "" || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.ForceQuery || strings.ContainsAny(a.Endpoint, "?#\r\n") || !keyUseName.MatchString(a.KeyName) {
 		return false
 	}
 	b, c := r.Invocation.Request.Binding, a.Request.Context

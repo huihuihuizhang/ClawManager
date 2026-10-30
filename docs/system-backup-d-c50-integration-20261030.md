@@ -26,6 +26,7 @@ A 对本轮源码的只读复审确认：新增公共 recovery 仍通过独立 `
 
 - C 净变更在隔离工作树对齐后，相关 Go 包编译检查通过；迁移目录检查通过；新增前端 TeamData 服务测试 3 项通过；前端 `npm run build` 通过。
 - Go 定向行为测试在初始候选通过：`internal/handlers`、`services`、`systembackup`、`systembackup/domain`、`systembackup/team`、`systembackupapi`、`systembackupcontroller`、`systembackupexecution`、`systembackupresources`。`systembackupexecution` 首轮在 Windows 高负载下有 1 秒循环用例超时，单用例及全包复跑均通过。重放到 D 新基底后，9 包中 8 包通过；`services` 的并发调度用例首轮 3/4 断言失败，单用例重复 3 次通过。不能把该轮记作完整 9 包通过。
-- 尚未对该候选运行完整 `go test ./...`；与最新共享 HEAD 的最终对齐也仍需完成。上述定向通过不能代替全量 CI 或生产验收。
+- C 净变更已通过集成提交 `05c2f897` 纳入并推送至 `codex/unified-backup-baseline`；HTTPS gateway 测试桩修正 `f7d5a5bc` 也已推送。C 原始 `50b27d77` 不是该分支的祖先，五张待审批控制表未随净变更放行。
+- 完整 `go test ./...` 已在隔离工作树运行两轮，不能记作全绿。首轮在 `05c2f897` 上发现本机 Python 路径缺失、HTTP 测试桩与 HTTPS 生产约束冲突，及 `systembackupevidence` 的时间敏感失败/20 分钟包超时；前两项在补齐 Python 路径与 `f7d5a5bc` 后按包通过。第二轮在 `96c2fa3f` 上以 Python 路径、`-p 4`、每包 20 分钟运行，`ownerrecords`、`publicadapter`、共享 dispatch、controller、迁移、核心执行包均通过；`quiesce/valid`、证据原始 deadline、KMS JWT 过期边界三个时间敏感用例在整轮失败，各自低负载单独连跑 3 次通过。全量 CI/生产验收仍待独立环境给出绿色回执。
 - 正式全系统成品、非空 Runtime、历史密钥读取、发布和独立还原的剩余任务，仍以 C 新交接说明和各 owner 的现场回执为准。
 - 2026-10-30 远测窗口优先：原生 Agent TLS 和停止/恢复、非空 Runtime participant、真实 SQL/原 Job 授权、现库 inventory 能测则留原始回执；未具备 role/policy/凭据、正式 KEK mapping、完整 writer/permit 的项目不得以临时 grant 代测。明日远测机不可用，今天未完成项必须明确标阻断。

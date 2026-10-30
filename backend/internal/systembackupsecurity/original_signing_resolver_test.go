@@ -49,7 +49,7 @@ func TestOriginalSigningResolverExactBusinessAndTokenBoundary(t *testing.T) {
 	revoked := false
 	auth := signingAuthorityFixture(func(_ context.Context, r TransitSigningRequest) (OriginalSigningUse, error) {
 		calls++
-		return OriginalSigningUse{Request: r, NotBefore: now.Add(-time.Second), ExpiresAt: now.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error {
+		return OriginalSigningUse{Request: r, Workload: SigningWorkloadIdentity{Namespace: "backup", PodUID: "pod", ServiceAccountUID: "sa"}, NotBefore: now.Add(-time.Second), ExpiresAt: now.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error {
 			checks++
 			if revoked {
 				return errors.New("revoked")
@@ -96,7 +96,7 @@ func TestOriginalSigningResolverExactBusinessAndTokenBoundary(t *testing.T) {
 func TestOriginalSigningResolverErasesRejectedToken(t *testing.T) {
 	now := time.Now().UTC()
 	auth := signingAuthorityFixture(func(_ context.Context, r TransitSigningRequest) (OriginalSigningUse, error) {
-		return OriginalSigningUse{Request: r, NotBefore: now.Add(-time.Second), ExpiresAt: now.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+		return OriginalSigningUse{Request: r, Workload: SigningWorkloadIdentity{Namespace: "backup", PodUID: "pod", ServiceAccountUID: "sa"}, NotBefore: now.Add(-time.Second), ExpiresAt: now.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
 	})
 	secret := []byte(strings.Repeat("s", 32))
 	tokens := signingTokensFixture(func(_ context.Context, u OriginalSigningUse) (SigningToken, error) {
@@ -117,13 +117,46 @@ func TestOriginalSigningResolverErasesRejectedToken(t *testing.T) {
 	}
 }
 
+func TestOriginalSigningResolverRequiresOriginalWorkload(t *testing.T) {
+	now := time.Now().UTC()
+	for _, missing := range []string{"namespace", "pod", "service-account"} {
+		t.Run(missing, func(t *testing.T) {
+			tokenCalls := 0
+			auth := signingAuthorityFixture(func(_ context.Context, request TransitSigningRequest) (OriginalSigningUse, error) {
+				workload := SigningWorkloadIdentity{Namespace: "backup", PodUID: "pod", ServiceAccountUID: "sa"}
+				switch missing {
+				case "namespace":
+					workload.Namespace = ""
+				case "pod":
+					workload.PodUID = ""
+				case "service-account":
+					workload.ServiceAccountUID = ""
+				}
+				return OriginalSigningUse{Request: request, Workload: workload, NotBefore: now.Add(-time.Second), ExpiresAt: now.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+			})
+			tokens := signingTokensFixture(func(context.Context, OriginalSigningUse) (SigningToken, error) {
+				tokenCalls++
+				return SigningToken{}, nil
+			})
+			resolver, request, err := signingResolverFixture(t, now, false, auth, tokens)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resolver.now = func() time.Time { return now }
+			if _, err := resolver.ResolveSigning(context.Background(), request); err == nil || tokenCalls != 0 {
+				t.Fatal("missing original workload reached credential source", err)
+			}
+		})
+	}
+}
+
 func TestOriginalSigningResolverEnforcesCurrentKeyWindow(t *testing.T) {
 	base := time.Now().UTC()
 	current := base
 	calls := 0
 	auth := signingAuthorityFixture(func(_ context.Context, r TransitSigningRequest) (OriginalSigningUse, error) {
 		calls++
-		return OriginalSigningUse{Request: r, NotBefore: current.Add(-time.Second), ExpiresAt: current.Add(time.Minute),
+		return OriginalSigningUse{Request: r, Workload: SigningWorkloadIdentity{Namespace: "backup", PodUID: "pod", ServiceAccountUID: "sa"}, NotBefore: current.Add(-time.Second), ExpiresAt: current.Add(time.Minute),
 			Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
 	})
 	tokens := signingTokensFixture(func(_ context.Context, use OriginalSigningUse) (SigningToken, error) {
