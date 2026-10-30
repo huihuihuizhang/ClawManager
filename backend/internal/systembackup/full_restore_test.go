@@ -55,6 +55,7 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 		`INSERT INTO team_tasks(id,team_id,target_member_id,message_id,status,payload_json,result_json,workflow_state) VALUES(3001,1001,2001,'cm-1','running','{"task":"保存数据"}','{"partial":"已生成结果"}','executing'),(3002,1002,2002,'owner-1','succeeded','{}','{"answer":"完成结果"}','completed'),(3003,1004,2004,'other-provider-1','waiting','{}','{"partial":"等待人工"}','awaiting_phase_results')`,
 		`UPDATE team_members SET current_task_id=3001,availability='busy',runtime_task_id='3001' WHERE id=2001`,
 		`UPDATE teams SET display_name='北向工作团队' WHERE id=1002`,
+		`UPDATE teams SET shared_pvc_name='source-team-shared',shared_pvc_namespace='source-fixture',shared_mount_path='/team' WHERE id=1002`,
 		`UPDATE team_members SET icon_key='crown',runtime_status='running',runtime_intent='continue_task',blocked_reason='old dependency',last_seen_at=UTC_TIMESTAMP() WHERE id=2002`,
 		`INSERT INTO custom_team_templates(id,user_id,name,intent,resolved_member_count,spec_json,resource_scope,owner,last_operation_id) VALUES(4001,101,'owner template','original definition',1,'{"members":[{"role":"leader"}]}','northbound','owner-x','old-template-operation')`,
 		`INSERT INTO team_events(team_id,member_id,task_id,event_type,payload_json) VALUES(1001,2001,3001,'assistant_message','{"text":"中断前的完整消息"}')`,
@@ -66,6 +67,17 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 			t.Fatal(e)
 		}
 	}
+	// Seed every state/product BEFORE the single public capture, so coverage
+	// cannot pass on empty work tables while only the legacy path sees data.
+	workStates := map[string]string{"cancelled": "cancelled", "skipped": "skipped", "superseded": "superseded", "blocked": "failed", "awaiting_review": "failed", "running": "failed", "succeeded": "succeeded"}
+	for status := range workStates {
+		if _, e := source.ExecContext(ctx, `INSERT INTO team_work_items(team_id,root_task_id,work_id,assignment_id,owner_member_id,title,status,result_json,artifact_refs_json) VALUES(1002,3002,?,?,2002,'saved work',?,'{"partial":"中断前的产物"}','["results/report.md"]')`, status, "assignment-"+status, status); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if _, e := source.ExecContext(ctx, `INSERT INTO team_workspace_file_audits(team_id,user_id,action,relative_path,bytes) VALUES(1002,101,'write','results/report.md',17)`); e != nil {
+		t.Fatal(e)
+	}
 	// Real current-schema rows exercise the preserved Team adapter, not only
 	// C's inventory reader consumes the SAME caller-owned SQL snapshot; it
 	// cannot replace observed ownership/member links with deployment claims.
@@ -73,7 +85,7 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	if inventoryErr != nil {
 		t.Fatal(inventoryErr)
 	}
-	mapped := team.Inventory{Version: team.InventoryVersion, Teams: []team.SourceTeam{{ID: 1001, RedisScopeID: "team_redis"}, {ID: 1002, RedisScopeID: "team_redis"}, {ID: 1003, RedisScopeID: "team_redis"}, {ID: 1004, RedisScopeID: "team_redis"}}, Redis: []team.RedisScope{{ID: "team_redis", ServerID: strings.Repeat("a", 40), TeamIDs: []int{1001, 1002, 1003, 1004}}}}
+	mapped := team.Inventory{Version: team.InventoryVersion, Teams: []team.SourceTeam{{ID: 1001, RedisScopeID: "team_redis"}, {ID: 1002, SharedMountID: "team_1002", RedisScopeID: "team_redis"}, {ID: 1003, RedisScopeID: "team_redis"}, {ID: 1004, RedisScopeID: "team_redis"}}, Mounts: []team.SharedMount{{ID: "team_1002", TeamID: 1002, Namespace: "source-fixture", PVC: "source-team-shared", UID: "fixture-original-pvc", Root: "/team"}}, Redis: []team.RedisScope{{ID: "team_redis", ServerID: strings.Repeat("a", 40), TeamIDs: []int{1001, 1002, 1003, 1004}}}}
 	observed, inventoryErr := team.ReadInventory(ctx, tx, mapped, map[int]bool{101: true, 102: true}, map[int]int{})
 	if inventoryErr != nil || len(observed.Teams) != 4 || observed.Teams[1].Owner != "owner-x" || len(observed.Teams[1].Members) != 1 {
 		tx.Rollback()
@@ -95,6 +107,27 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	if captureErr != nil || domain.VerifyTeamCapture(publicRows, *observed) != nil {
 		t.Fatal("public atomic SQL capture omitted C data or relationships", captureErr)
 	}
+	sharedSpec, specErr := domain.NewTeamWorkspaceSpec(publicRows, *observed, 1002)
+	if specErr != nil || sharedSpec.TeamID != 1002 || len(sharedSpec.ArtifactRefs) != 1 || sharedSpec.ArtifactRefs[0] != "results/report.md" || sharedSpec.InventorySHA256 != observed.SHA256() {
+		t.Fatal("final SQL lost nonempty work/product dependencies", specErr)
+	}
+	workCount, auditCount := 0, 0
+	for _, table := range publicRows.Tables {
+		if table.Name == "team_work_items" {
+			workCount = len(table.Rows)
+		}
+		if table.Name == "team_workspace_file_audits" {
+			auditCount = len(table.Rows)
+		}
+	}
+	if workCount != len(workStates) || auditCount != 1 {
+		t.Fatal("public C capture was empty", workCount, auditCount)
+	}
+	wrongMount := team.CloneInventory(observed)
+	wrongMount.Mounts[0].PVC = "replacement-volume"
+	if domain.VerifyTeamCapture(publicRows, *wrongMount) == nil {
+		t.Fatal("SQL capture accepted another shared-volume mapping")
+	}
 	// Missing a C table cannot become a successful public SQL part.
 	partial := publicRows
 	partial.Tables = append([]domain.Table(nil), publicRows.Tables...)
@@ -106,18 +139,6 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	}
 	if domain.VerifyTeamCapture(partial, *observed) == nil {
 		t.Fatal("partial public C SQL was accepted")
-	}
-	// The pure normalizer. Interruption keeps result/artifact bytes and records
-	// the pure normalizer. Interruption keeps result/artifact bytes and records
-	// the original state while terminal children retain their exact status.
-	workStates := map[string]string{"cancelled": "cancelled", "skipped": "skipped", "superseded": "superseded", "blocked": "failed", "awaiting_review": "failed", "running": "failed", "succeeded": "succeeded"}
-	for status := range workStates {
-		if _, e := source.ExecContext(ctx, `INSERT INTO team_work_items(team_id,root_task_id,work_id,assignment_id,owner_member_id,title,status,result_json,artifact_refs_json) VALUES(1002,3002,?,?,2002,'saved work',?,'{"partial":"中断前的产物"}','["results/report.md"]')`, status, "assignment-"+status, status); e != nil {
-			t.Fatal(e)
-		}
-	}
-	if _, e := source.ExecContext(ctx, `INSERT INTO team_workspace_file_audits(team_id,user_id,action,relative_path,bytes) VALUES(1002,101,'write','results/report.md',17)`); e != nil {
-		t.Fatal(e)
 	}
 	if e := ValidateSchema(ctx, source); e != nil {
 		t.Fatal(e)
