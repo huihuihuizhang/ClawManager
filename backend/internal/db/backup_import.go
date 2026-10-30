@@ -280,7 +280,7 @@ func assertImportSourceIdle(ctx context.Context, conn importQueryer, m backupImp
 	return nil
 }
 
-func proveImportTable(ctx context.Context, conn *sql.Conn, table importTable, target string, m backupImportMap) (importTableProof, error) {
+func proveImportTable(ctx context.Context, conn importQueryer, table importTable, target string, m backupImportMap) (importTableProof, error) {
 	proof := importTableProof{Table: table}
 	name, err := importIdentifier(target)
 	if err != nil {
