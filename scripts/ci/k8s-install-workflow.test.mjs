@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
@@ -18,6 +20,11 @@ test('ordinary CI keeps builds and offline fixtures without a storage configurat
     assert.ok(Object.values(build.jobs).some(value => value.name === name), name);
   }
   assert.ok(build.jobs.frontend.steps.some(step => step.run?.includes('test_k8s_smoke.py')));
+  const fixtures = build.jobs.frontend.steps.find(step => step.run?.includes('test_k8s_smoke.py'));
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const cwd = resolve(root, fixtures['working-directory'] ?? build.jobs.frontend.defaults?.run?.['working-directory'] ?? '.');
+  assert.equal(cwd, resolve(root), 'offline fixtures must run from the repository root, not the frontend job default');
+  assert.ok(readFileSync(resolve(cwd, 'scripts/ci/test_k8s_smoke.py'), 'utf8').includes('unittest'));
   assert.ok(build.jobs.frontend.steps.some(step => step.run?.includes('k8s-install-workflow.test.mjs')));
   assert.equal(build.jobs['k8s-smoke'], undefined);
   assert.doesNotMatch(buildText, /K8S_SMOKE_MINIO_IMAGE|kubectl|kind-action/);

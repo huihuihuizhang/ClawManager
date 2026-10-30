@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -13,8 +14,142 @@ import (
 
 type materializeBackupGateFunc func(context.Context, string) (func() error, error)
 
+type contextualMaterializeGate struct {
+	enter func(context.Context, string) (context.Context, func() error, error)
+}
+
+func (g contextualMaterializeGate) Enter(context.Context, string) (func() error, error) {
+	return nil, errors.New("context admission required")
+}
+
+func (g contextualMaterializeGate) EnterContext(ctx context.Context, name string) (context.Context, func() error, error) {
+	return g.enter(ctx, name)
+}
+
+func TestMaterializeInvalidContextPermitDoesNotStartWork(t *testing.T) {
+	for _, missingContext := range []bool{false, true} {
+		t.Run(fmt.Sprintf("missing_context=%v", missingContext), func(t *testing.T) {
+			releases := 0
+			w := lifecycleWorker(&materializeLifecycleStub{
+				backfill: func(context.Context, int) (int, error) {
+					t.Fatal("invalid capability reached backfill")
+					return 0, nil
+				},
+				claim: func(context.Context, int) ([]models.SkillPackageMaterializeJob, error) {
+					t.Fatal("invalid capability reached claim")
+					return nil, nil
+				},
+			})
+			w.BackupGate = contextualMaterializeGate{enter: func(ctx context.Context, _ string) (context.Context, func() error, error) {
+				if missingContext {
+					return nil, func() error { releases++; return nil }, nil
+				}
+				return ctx, nil, nil
+			}}
+			if admitted, _ := w.backfillAttempt(context.Background()); admitted {
+				t.Fatal("invalid capability admitted backfill")
+			}
+			_ = w.processBatch(context.Background())
+			if missingContext && releases != 2 {
+				t.Fatalf("invalid child contexts leaked permits: %d releases", releases)
+			}
+		})
+	}
+}
+
+func TestMaterializeGateContextLossJoinsChildrenAndCleanup(t *testing.T) {
+	started, cleaning, finish, done := make(chan struct{}), make(chan struct{}), make(chan struct{}), make(chan error, 1)
+	var finishOnce sync.Once
+	t.Cleanup(func() { finishOnce.Do(func() { close(finish) }) })
+	var released atomic.Bool
+	ctx, lose := context.WithCancel(context.Background())
+	defer lose()
+	w := lifecycleWorker(&materializeLifecycleStub{
+		claim: func(context.Context, int) ([]models.SkillPackageMaterializeJob, error) {
+			return []models.SkillPackageMaterializeJob{{ID: 1, InstanceID: 1}}, nil
+		},
+		process: func(ctx context.Context, _ int) error { close(started); <-ctx.Done(); return ctx.Err() },
+		release: func(int) error {
+			close(cleaning)
+			<-finish
+			if released.Load() {
+				t.Error("released before cleanup")
+			}
+			return nil
+		},
+	})
+	w.BackupGate = contextualMaterializeGate{enter: func(context.Context, string) (context.Context, func() error, error) {
+		return ctx, func() error { released.Store(true); return nil }, nil
+	}}
+	go func() { done <- w.processBatch(context.Background()) }()
+	awaitMaterializeSignal(t, started)
+	lose()
+	awaitMaterializeSignal(t, cleaning)
+	if released.Load() {
+		t.Fatal("lost context prematurely released permit")
+	}
+	finishOnce.Do(func() { close(finish) })
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("permit context loss was reported as successful drain: %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("children/cleanup did not join")
+	}
+	if !released.Load() {
+		t.Fatal("joined work leaked permit")
+	}
+}
+
 func (f materializeBackupGateFunc) Enter(ctx context.Context, name string) (func() error, error) {
 	return f(ctx, name)
+}
+
+func TestMaterializeBackfillContextLossReachesStop(t *testing.T) {
+	permitCtx, lose := context.WithCancel(context.Background())
+	defer lose()
+	released := make(chan struct{})
+	w := lifecycleWorker(&materializeLifecycleStub{backfill: func(context.Context, int) (int, error) {
+		lose()
+		return 0, context.Canceled
+	}})
+	w.BackupGate = contextualMaterializeGate{enter: func(ctx context.Context, name string) (context.Context, func() error, error) {
+		if name != "skill-backfill" {
+			return ctx, nil, errors.New("closed")
+		}
+		return permitCtx, func() error { close(released); return nil }, nil
+	}}
+	if err := w.StartContext(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer stopMaterializeWorkerIgnoringExpectedError(w)
+	awaitMaterializeSignal(t, released)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := w.StopAndWait(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("stop lost backfill authority cancellation: %v", err)
+	}
+}
+
+func TestMaterializePermitReleaseCancellationIsNotAuthorityLoss(t *testing.T) {
+	for _, backfill := range []bool{true, false} {
+		ctx, cancel := context.WithCancel(context.Background())
+		w := lifecycleWorker(&materializeLifecycleStub{})
+		w.BackupGate = contextualMaterializeGate{enter: func(context.Context, string) (context.Context, func() error, error) {
+			return ctx, func() error { cancel(); return nil }, nil
+		}}
+		var err error
+		if backfill {
+			err = w.backfill(context.Background())
+		} else {
+			err = w.processBatch(context.Background())
+		}
+		cancel()
+		if err != nil {
+			t.Fatalf("release cancellation reported as authority loss: %v", err)
+		}
+	}
 }
 
 func TestMaterializeBackupGateClosedPreventsBackfillAndClaims(t *testing.T) {
