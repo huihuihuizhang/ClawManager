@@ -239,6 +239,50 @@ func TestRuntimeDeploymentServiceEnsureCannotReplaceNativeSlots(t *testing.T) {
 	}
 }
 
+func TestRuntimeDeploymentServiceListNativeSlotPodRequiresMatchingImages(t *testing.T) {
+	const image = "registry/openclaw@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	const digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	deployment := BuildRuntimeDeployment(RuntimeDeploymentSpec{Name: "openclaw-native", Namespace: "runtime-system", RuntimeType: "openclaw", Image: image, Replicas: 1})
+	deployment.Spec.Template.Annotations = map[string]string{"clawmanager.io/runtime-layout": "pool-slot-v1"}
+	deployment.Spec.Template.Spec.Containers = []corev1.Container{{Name: "pool", Image: image}, {Name: "slot", Image: image}}
+	ready := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: "ready", Namespace: deployment.Namespace, Labels: deployment.Spec.Template.Labels},
+		Spec:       corev1.PodSpec{Containers: []corev1.Container{{Name: "pool", Image: image}, {Name: "slot", Image: image}}},
+		Status: corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}},
+			ContainerStatuses: []corev1.ContainerStatus{{Name: "pool", ImageID: "registry/openclaw@" + digest}, {Name: "slot", ImageID: "registry/openclaw@" + digest}}},
+	}
+	wrongImage := ready.DeepCopy()
+	wrongImage.Name = "wrong-image"
+	wrongImage.Spec.Containers[1].Image = "registry/openclaw:other"
+	wrongDigest := ready.DeepCopy()
+	wrongDigest.Name = "wrong-digest"
+	wrongDigest.Status.ContainerStatuses[1].ImageID = "registry/openclaw@sha256:" + strings.Repeat("b", 64)
+	legacyPod := ready.DeepCopy()
+	legacyPod.Name = "legacy-shape"
+	legacyPod.Spec.Containers = []corev1.Container{{Name: "runtime", Image: image}}
+	legacyPod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: "runtime", ImageID: "registry/openclaw@" + digest}}
+	client := fake.NewSimpleClientset(deployment, ready, wrongImage, wrongDigest, legacyPod)
+	pods, err := NewRuntimeDeploymentService(client).ListPods(context.Background(), deployment.Namespace, "openclaw")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pods) != 4 {
+		t.Fatalf("pods length = %d, want 4", len(pods))
+	}
+	byName := make(map[string]RuntimeDeploymentPod, len(pods))
+	for _, pod := range pods {
+		byName[pod.PodName] = pod
+	}
+	if got := byName["ready"]; got.State != "ready" || got.ImageRef != image || got.ImageDigest != digest {
+		t.Fatalf("valid native Pod inventory = %+v", got)
+	}
+	for _, name := range []string{"wrong-image", "wrong-digest", "legacy-shape"} {
+		if got := byName[name]; got.State != "unhealthy" {
+			t.Errorf("%s must not be scheduled: %+v", name, got)
+		}
+	}
+}
+
 func TestRuntimeDeploymentServiceEnsurePreservesUnownedMetadata(t *testing.T) {
 	existing := BuildRuntimeDeployment(RuntimeDeploymentSpec{
 		Name:               "runtime-openclaw",
