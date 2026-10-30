@@ -1,4 +1,14 @@
-# 2026-10-30 当前交付：backup 基线上的 Teams 适配
+# 2026-10-30 当前交付：Team 领域剩余适配完成
+
+最新一轮从 `backup@cf52722cca43ef2c863bb90fd7406025e6ec1bdb` 开发，目录为 `D:/test/backup/ClawManager`，本地分支 `codex/backup-teams-adaptation`。已补齐我们负责的 writer 生命周期/覆盖、公共恢复安全校验、共享卷/产物恢复和独立验证、空 Team SQL 覆盖及非空回归。全部代码和验收完成后才推送 backup。未操作服务器，无线上部署结论。
+
+**当前完成范围、调用链、验收界限、A/B/D 依赖及回退，以 [C—Teams 恢复交接](docs/system-backup-c-teams-recovery-handoff-20261030.md) 为准。** 全系统正式采集/发布、Runtime 物理证明、现场数据库 profile、正式目标装配和 registry 交叉复核仍由对应负责人接通，未据本轮单域验收解除生产保护。
+
+下文为前轮 A/B 及更早 C50 历史，保留溯源，不作为新的执行指令或当前剩余任务清单。
+
+---
+
+# 前轮交付：backup 基线上的 Teams A/B 适配
 
 本轮以 `backup@304a15d9` 为基础，已完成第一阶段迁移及第二阶段 A、B；保留统一分支新代码，未启用旧 Team 独立控制面。阶段提交：`d3cf98bb`、`1350f63c`、`c5a6319b`、`e6922f6a`。中间提交仅在本地，所有工作完成后统一推送 backup。
 

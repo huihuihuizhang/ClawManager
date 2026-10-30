@@ -1,5 +1,7 @@
 # C—Teams：迁移与公共模块交接（2026-10-30）
 
+> 后续状态：本页保留前轮 A/B 历史；剩余 C 适配、验收及 A/B/D 接缝以 [C—Teams 恢复交接](system-backup-c-teams-recovery-handoff-20261030.md) 为准。
+
 ## 当前范围与结论
 
 本轮按用户要求完成**第一阶段，以及第二阶段 A、B**。第二阶段 C 的完整 writer 屏障、恢复独立验证和最终生产全链路不属于本轮完成项。实现只在 `D:/test/backup/ClawManager`；不操作服务器，不触碰个人正式项目。阶段 commit 先留本地，全部完成后才推送 `backup`。

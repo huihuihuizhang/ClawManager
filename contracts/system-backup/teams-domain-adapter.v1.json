@@ -2,7 +2,7 @@
   "schema_version": "system-backup-teams-adapter.v1",
   "status": "candidate_owner_recorded",
   "owner": "C",
-  "implementation_baseline": "backup@304a15d9bc0de092975f3249c2190e56c9d6a393",
+  "implementation_baseline": "backup@cf52722cca43ef2c863bb90fd7406025e6ec1bdb",
   "module": {
     "constructor": "publicadapter.NewTeamsModule",
     "id": "teams",
@@ -15,7 +15,9 @@
     },
     "discovery": "publicadapter.WithTeamsInventory -> team.ReadInventory on the original authenticated SQL transaction",
     "inventory_version": "teams-source-inventory.v1",
-    "schema": "backend/internal/systembackup/team/schema.json"
+    "schema": "backend/internal/systembackup/team/schema.json",
+    "empty_team_policy": "required dependency-only module; C template/history SQL remains inside the single B capture; no synthetic Job",
+    "writer_coverage": "publicadapter.ValidateTeamsWriters at actual public Prepare and every capture fence; original inventory.Writers is mapping, never a physical receipt"
   },
   "operations": [
     {
@@ -58,32 +60,37 @@
     {
       "id": "team.pending_deletions",
       "existing_boundary": "backend/internal/services/team_service.go",
-      "physical_proof": "second-stage-C pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
     },
     {
       "id": "team.event_projection",
       "existing_boundary": "backend/internal/services/team_service.go",
-      "physical_proof": "second-stage-C pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
     },
     {
       "id": "team.maintenance_sweep",
       "existing_boundary": "backend/internal/services/team_service.go",
-      "physical_proof": "second-stage-C pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
     },
     {
       "id": "northbound.operation",
       "existing_boundary": "backend/internal/northbound/core_service.go",
-      "physical_proof": "B/D/C cross-review pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
+    },
+    {
+      "id": "northbound.lifecycle_action",
+      "existing_boundary": "backend/internal/northbound/core_service.go; shared finite work permit retained until actual child exit",
+      "physical_proof": "C cancellation lifetime regression passed; D native platform exit/resume still required"
     },
     {
       "id": "team.workspace_http",
       "existing_boundary": "shared HTTP admission and SQL work boundary",
-      "physical_proof": "second-stage-C pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
     },
     {
       "id": "team.runtime_redis_and_workspace",
       "existing_boundary": "B/D original Runtime writer control",
-      "physical_proof": "D actual original stop/exit/resume pending"
+      "physical_proof": "C frozen coverage and original-state matching implemented; D must supply and verify actual complete native physical stop/exit/resume evidence"
     }
   ],
   "dependencies": [
@@ -102,8 +109,51 @@
     {
       "owner": "A/B/D",
       "requirement": "independent registry cross-review; no approvals inferred from local tests"
+    },
+    {
+      "owner": "D/A",
+      "requirement": "formal product-to-staging authentication/decryption with pinned ciphertext reference, C shared workspace grant and isolated target Job composition; register existing Redis/object target adapters in the same public restore task; admit verify-team-workspace in original phase/capability routing before enabling it"
     }
   ],
   "production_admission": "unchanged: workspace functional_test only; acceptance_ready=false",
-  "verification_scope": "local real SQL/Redis/MinIO source operations; module assembly and formal candidate readback; no server deployment, actual Runtime quiescence or final acceptance artifact claim"
+  "verification_scope": "C code seams complete with targeted Windows/Linux tests, nonempty public SQL protocol recovery, real current-schema C SQL capture and local isolated Redis/object readback; no server, actual Runtime physical quiescence, final product publication or full-system acceptance claim",
+  "recovery": {
+    "sql": "existing domain.Normalize + RestoreDrillWithEvidence + SELECT-only VerifyDrill; VerifyTeamQuarantine independently applied at normalization and verifier boundaries",
+    "artifact_references": "validate explicit current /team and historical relative paths; preserve artifact_refs_json bytes; no generic Secret stubbing of artifact locations",
+    "shared_workspace": {
+      "constructor": "domain.NewTeamWorkspaceSpec(authenticatedFinalSQL, originalInventory, teamID, originalSQLCiphertextSHA256)",
+      "version": "teams-shared-workspace.v1",
+      "request": "restore-workspace + Request.TeamWorkspace; original part team_<id>_workspace; authenticated existing staging input only",
+      "verify": "verify-team-workspace via actual CLI/worker.Run/Control; kube.TeamWorkspaceJob uses original bound worker, isolated namespace and read-only target/staging",
+      "source_binding": "inventory hash and original authenticated SQL ciphertext digest; plaintext SQL/row fingerprints are forbidden in public configuration",
+      "checks": [
+        "whole-object authentication before writes",
+        "empty isolated target",
+        "archive file bytes/type/mode/owner where supported/mtime/links",
+        "no extra files",
+        "all explicit artifact references exist as regular files"
+      ],
+      "result": "restore is quarantined but not independently verified; only separate successful verify returns Verified=true",
+      "dependency": "A/D original product authentication/unwrap/restaging and exact target/identity/grant/task composition remain required; no ProviderKey or functional-key fallback"
+    },
+    "redis": "reuse RestoreRedisHistory/VerifyRedisHistory on independent server and inert history prefix; original live claw:team keys are not replayed",
+    "objects": "reuse RestoreObjects/VerifyObjects with explicit original-version archive and owned empty isolated bucket mapping",
+    "unsupported": "external/foreign paths, source-missing or non-regular artifact references and unsupported metadata fail safely; no fabricated file recovery or automatic partial-copy deletion",
+    "deleted_teams": "do not enroll deleted Team shared volumes/writers; preserve SQL history and clear removed source placement in restored rows; immutable source retains original metadata",
+    "original_power": "source stopped instances cannot be enrolled under running native writers; original stopped evidence and independent recovery remain B/D-owned"
+  },
+  "local_acceptance": {
+    "code_freeze": "bff7e4c9",
+    "backend": {
+      "passed_packages": 75,
+      "no_test_packages": 16,
+      "failed_packages": 0,
+      "command_exit": 0
+    },
+    "linux": "workspace, worker, domain, publicadapter, northbound, kube passed; affected-only reruns after final fixes",
+    "real_local_data": "current-schema C SQL capture and ciphertext binding; independent Redis history ACL readback; pinned object isolated recovery; no production/profile/runtime acceptance inferred",
+    "frontend": "unchanged; prior build not rerun",
+    "schema_approval": "owner_recorded only; independent cross-review not inferred",
+    "server_operations": false
+  }
 }
