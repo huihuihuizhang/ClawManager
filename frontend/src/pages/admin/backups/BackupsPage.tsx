@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {Link, useNavigate, useParams} from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import {Archive, CheckCircle2, CircleAlert, RefreshCw, Settings2, X} from 'lucide-react';
 import AdminLayout from '../../../components/AdminLayout';
 import {useI18n} from '../../../contexts/I18nContext';
@@ -12,7 +12,7 @@ const dependencyLabels: Record<string,string> = {
 };
 
 export default function BackupsPage() {
- const {locale}=useI18n();const text=backupMessages(locale);const {id}=useParams();const navigate=useNavigate();
+ const {locale}=useI18n();const text=backupMessages(locale);const {id}=useParams();
  const [health,setHealth]=useState<BackupReadiness>();const [permissions,setPermissions]=useState<string[]>([]);
  const [tasks,setTasks]=useState<BackupTask[]>([]);const [task,setTask]=useState<BackupTask>();const [events,setEvents]=useState<BackupEvent[]>([]);
  const [verification,setVerification]=useState<BackupVerificationReport>();
@@ -20,7 +20,6 @@ export default function BackupsPage() {
  const [config,setConfig]=useState<BackupConfigVersion>();const [showConfig,setShowConfig]=useState(false);const [notice,setNotice]=useState('');
  const [reason,setReason]=useState('');const [proof,setProof]=useState('');const [approval,setApproval]=useState('');
  useEffect(()=>{setProof('');setApproval('')},[config,reason,showConfig]);
- const requestKey=useRef<string|null>(null);
  const mutationKey=useRef<{intent:string;key:string}|undefined>(undefined);
  const keyFor=(intent:string)=>{if(mutationKey.current?.intent!==intent)mutationKey.current={intent,key:crypto.randomUUID()};return mutationKey.current.key;};
  const configDialog=useRef<HTMLElement|null>(null);
@@ -62,7 +61,6 @@ export default function BackupsPage() {
   };void poll();return()=>{abort.abort();if(timer)clearTimeout(timer)};
  },[id,reload]);
 
- const create=async()=>{if(busy)return;setBusy(true);setError('');requestKey.current??=crypto.randomUUID();try{const t=await service.create(requestKey.current,'backup');requestKey.current=null;navigate(`/admin/backups/system/${t.public_id}`)}catch(e){setError(backupErrorCode(e))}finally{setBusy(false)}};
  const openConfig=async()=>{setBusy(true);try{setConfig(await service.config());setShowConfig(true)}catch(e){setError(backupErrorCode(e))}finally{setBusy(false)}};
  const saveConfig=async()=>{if(!config||busy)return;setBusy(true);try{const saved=await service.saveConfig(config.version,config.config,keyFor(JSON.stringify(['config',config,reason])),reason,proof);setConfig(saved);setShowConfig(false);setNotice(text.saved);setReload(x=>x+1)}catch(e){setError(backupErrorCode(e))}finally{setBusy(false)}};
  const prepareApproval=async()=>{if(!config||busy)return;setBusy(true);setError('');try{const binding=await service.configAuthorization({expected_version:config.version,config:config.config,...(reason?{change_reason:reason}:{})},keyFor(JSON.stringify(['config',config,reason])));setApproval(JSON.stringify(binding,null,2))}catch(e){setError(backupErrorCode(e))}finally{setBusy(false)}};
@@ -72,7 +70,7 @@ export default function BackupsPage() {
   <div className="space-y-6 pb-8">
    <header className="flex flex-wrap items-start justify-between gap-4">
     <div><div className="flex items-center gap-3"><Archive className="h-6 w-6 text-slate-600"/><h1 className="text-2xl font-semibold text-slate-900">{text.title}</h1></div><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{text.intro}</p></div>
-    <div className="flex flex-wrap gap-2"><button type="button" className="app-button-secondary inline-flex items-center gap-2" onClick={()=>setReload(x=>x+1)} disabled={loading}><RefreshCw className="h-4 w-4"/>{text.refresh}</button><button type="button" className="app-button-secondary inline-flex items-center gap-2" onClick={openConfig} disabled={busy||!permissions.includes('system_backup.read')}><Settings2 className="h-4 w-4"/>{text.config}</button><button type="button" className="app-button-primary" onClick={create} disabled={busy||!health?.can_create||!canOperate}>{busy?text.creating:text.create}</button></div>
+    <div className="flex flex-wrap gap-2"><button type="button" className="app-button-secondary inline-flex items-center gap-2" onClick={()=>setReload(x=>x+1)} disabled={loading}><RefreshCw className="h-4 w-4"/>{text.refresh}</button><button type="button" className="app-button-secondary inline-flex items-center gap-2" onClick={openConfig} disabled={busy||!permissions.includes('system_backup.read')}><Settings2 className="h-4 w-4"/>{text.config}</button><Link className="app-button-primary" to="/admin/backups/records">{text.create}</Link></div>
    </header>
    {error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{errorText(error)} <span className="ml-2 text-xs">({error})</span></div>}
    {notice&&<div role="status" className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">{notice}</div>}

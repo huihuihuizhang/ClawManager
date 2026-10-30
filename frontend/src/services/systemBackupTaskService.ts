@@ -2,6 +2,13 @@ import api from './api';
 import type { SystemBackupTask } from '../types/systemBackupContract';
 import { isBackupTaskListResource } from '../pages/admin/backups/backupApiRead.ts';
 
+// Matches the acceptance request in admin-mutation-requests.schema.json.
+// Keep the body byte-identical when retrying an unknown result with the same key.
+export const acceptanceBackupRequestJSON = JSON.stringify({
+  task_purpose: 'acceptance',
+  requested_parts: ['mysql', 'redis', 'object_storage', 'workspace', 'deployment_resources', 'secret_bundle'],
+});
+
 // Supply owner-reviewed JSON and retain the exact body/key on an unknown result.
 // This transport does not invent the missing backup/preflight request DTOs.
 export async function createSystemBackupTask(

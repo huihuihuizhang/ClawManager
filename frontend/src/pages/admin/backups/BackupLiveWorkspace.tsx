@@ -6,6 +6,7 @@ import type { BackupLiveData, BackupLiveState } from './backupLiveSource';
 import { startBackupLivePolling } from './backupLivePolling';
 import { useBackupText } from './useBackupText';
 import { systemBackupReadService } from '../../../services/systemBackupReadService';
+import { acceptanceBackupRequestJSON, createSystemBackupTask } from '../../../services/systemBackupTaskService';
 import BackupLiveDetail from './BackupLiveDetail.tsx';
 import type { BackupDetailSelection } from './backupLiveDetail';
 import BackupLiveConfigHistory from './BackupLiveConfigHistory';
@@ -24,6 +25,10 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
   const [paging, setPaging] = useState<{ kind: TaskGroup; error: boolean } | null>(null);
   const [selected, setSelected] = useState<BackupDetailSelection | null>(null);
   const [configHistoryOpen, setConfigHistoryOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createdID, setCreatedID] = useState<string | null>(null);
+  const createKey = useRef<string | null>(null);
   const pageController = useRef<AbortController | null>(null);
 
   const refresh = () => {
@@ -87,6 +92,27 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
   const overview = dataState.kind === 'ready' ? dataState.data.overview : null;
   const config = dataState.kind === 'ready' ? dataState.data.config : dataState.data.config.kind === 'ready' ? dataState.data.config.value : null;
   const installation = dataState.kind === 'ready' ? dataState.data.overview.origin_installation_id : dataState.data.origin_installation_id;
+  const canCreate = dataState.kind === 'ready' && overview?.effective_enabled === true && config?.effective_enabled === true;
+  const createBackup = async () => {
+    if (!canCreate || creating) return;
+    const key = createKey.current ?? crypto.randomUUID();
+    createKey.current = key;
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const task = await createSystemBackupTask('backup', acceptanceBackupRequestJSON, key);
+      if (task.origin_installation_id !== installation) throw new Error('installation_changed');
+      createKey.current = null;
+      setCreatedID(task.public_id);
+      setSelected({ kind: 'backups', public_id: task.public_id, origin_installation_id: installation, row_version: task.row_version });
+      setRevision((value) => value + 1);
+    } catch (error) {
+      const responseCode = (error as { response?: { data?: { code?: unknown } } })?.response?.data?.code;
+      setCreateError(typeof responseCode === 'string' ? responseCode : error instanceof Error ? error.message : 'not_ready');
+    } finally {
+      setCreating(false);
+    }
+  };
   const pageOf = (kind: TaskGroup) => {
     if (dataState.kind === 'ready') return dataState.data[kind];
     const resource = dataState.data[kind];
@@ -108,7 +134,10 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
 
   return <div className="space-y-5">
     <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold text-slate-700">{overview === null ? b('recordReads') : b('overview')}</h2>
-      <button type="button" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" onClick={refresh}>{b('refresh')}</button></div>
+      <div className="flex flex-wrap gap-2"><button type="button" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" onClick={refresh}>{b('refresh')}</button>
+        <button type="button" className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!canCreate || creating} onClick={() => void createBackup()}>{creating ? b('creatingBackup') : b('createBackup')}</button></div></div>
+    {createError !== null && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{b('createBackupFailed', { code: createError })}</p>}
+    {createdID !== null && <p role="status" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{b('createBackupAccepted', { id: createdID })}</p>}
     {overview === null ? <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{b('recordsOverviewUnavailable')}</p>
       : <BackupOverviewReadout overview={overview} />}
     <section className="rounded-xl border border-slate-200 bg-white p-5">
