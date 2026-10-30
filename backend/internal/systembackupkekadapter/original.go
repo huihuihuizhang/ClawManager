@@ -1,16 +1,19 @@
 package systembackupkekadapter
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"reflect"
 	"time"
 
 	admission "clawreef/internal/systembackupkekadmission"
 	reg "clawreef/internal/systembackupkekregistry"
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 )
 
 // OriginalRecord is issued by the installation authority, never by the config
@@ -48,7 +51,17 @@ type InstallationPreparation struct {
 func authenticate(raw, signature []byte, key ed25519.PublicKey, now time.Time) (OriginalRecord, error) {
 	var r OriginalRecord
 	if len(key) != ed25519.PublicKeySize || len(raw) == 0 || len(raw) > 65536 ||
-		!ed25519.Verify(key, append([]byte("system-backup-original-kek.v1\x00"), raw...), signature) || json.Unmarshal(raw, &r) != nil ||
+		!ed25519.Verify(key, append([]byte("system-backup-original-kek.v1\x00"), raw...), signature) {
+		return OriginalRecord{}, admission.ErrCandidate
+	}
+	// The signed authority record must have one unambiguous interpretation.
+	// Transform rejects duplicate members, including inside the binding.
+	if _, err := jsoncanonicalizer.Transform(raw); err != nil {
+		return OriginalRecord{}, admission.ErrCandidate
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if decoder.Decode(&r) != nil || decoder.Decode(new(any)) != io.EOF ||
 		r.Source.SourceID == "" || r.Source.RecordID == "" || r.Source.RecordVersion == "" || r.Revision == "" ||
 		now.IsZero() || r.NotBefore.IsZero() || now.Before(r.NotBefore) || !now.Before(r.Until) || r.GenerateRevoked || r.UnwrapRevoked {
 		return OriginalRecord{}, admission.ErrCandidate

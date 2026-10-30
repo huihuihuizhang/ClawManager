@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -45,5 +46,17 @@ func TestOriginalSignatureAndRevocation(t *testing.T) {
 	raw[0] = ' '
 	if _, e := authenticate(raw, sig, pub, now); e == nil {
 		t.Fatal("tampered record accepted")
+	}
+	base, _ := json.Marshal(r)
+	for _, malformed := range []string{
+		strings.Replace(string(base), `"Revision":"v1"`, `"Revision":"v1","Revision":"v1"`, 1),
+		strings.Replace(string(base), `"Revision":"v1"`, `"Revision":"v1","Extra":true`, 1),
+		string(base) + `{}`,
+	} {
+		payload := []byte(malformed)
+		signed := ed25519.Sign(key, append([]byte("system-backup-original-kek.v1\x00"), payload...))
+		if _, e := authenticate(payload, signed, pub, now); e == nil {
+			t.Fatal("ambiguous signed authority record accepted")
+		}
 	}
 }
