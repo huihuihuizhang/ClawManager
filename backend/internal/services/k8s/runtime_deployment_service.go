@@ -577,6 +577,12 @@ func (s *runtimeDeploymentService) Ensure(ctx context.Context, spec RuntimeDeplo
 	if err != nil {
 		return fmt.Errorf("failed to get runtime deployment %s/%s: %w", spec.Namespace, spec.Name, err)
 	}
+	// Ensure still owns only the legacy single-container template. A native
+	// pool/slot Deployment must be migrated by its own controller; replacing its
+	// Pod template here would discard the slot sockets and durable ledger.
+	if nativeSlotTemplate(existing.Spec.Template) {
+		return fmt.Errorf("runtime deployment %s/%s uses native pool/slot layout; legacy Ensure cannot reconcile it", spec.Namespace, spec.Name)
+	}
 
 	if !reflect.DeepEqual(existing.Spec.Selector, desired.Spec.Selector) {
 		return fmt.Errorf("runtime deployment %s/%s selector mismatch; delete and recreate the deployment to change immutable selector", spec.Namespace, spec.Name)
@@ -603,6 +609,23 @@ func (s *runtimeDeploymentService) Ensure(ctx context.Context, spec RuntimeDeplo
 		return fmt.Errorf("failed to update runtime deployment %s/%s: %w", spec.Namespace, spec.Name, err)
 	}
 	return nil
+}
+
+func nativeSlotTemplate(template corev1.PodTemplateSpec) bool {
+	if template.Annotations["clawmanager.io/runtime-layout"] == "pool-slot-v1" || template.Labels["clawmanager.io/runtime-layout"] == "pool-slot-v1" {
+		return true
+	}
+	for _, container := range template.Spec.Containers {
+		if container.Name == "pool" || container.Name == "slot" {
+			return true
+		}
+		for _, env := range container.Env {
+			if env.Name == "RUNTIME_AGENT_ROLE" && (env.Value == "pool" || env.Value == "slot") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (s *runtimeDeploymentService) Scale(ctx context.Context, namespace, name string, replicas int32) error {

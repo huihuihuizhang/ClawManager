@@ -212,6 +212,33 @@ func TestRuntimeDeploymentServiceEnsureCreatesAndUpdates(t *testing.T) {
 	}
 }
 
+func TestRuntimeDeploymentServiceEnsureCannotReplaceNativeSlots(t *testing.T) {
+	for _, mode := range []string{"layout-annotation", "role-env", "container-names"} {
+		t.Run(mode, func(t *testing.T) {
+			spec := RuntimeDeploymentSpec{Name: "openclaw-runtime", Namespace: "runtime-system", RuntimeType: "openclaw", Image: "registry/openclaw:old", Replicas: 1}
+			existing := BuildRuntimeDeployment(spec)
+			switch mode {
+			case "layout-annotation":
+				existing.Spec.Template.Annotations = map[string]string{"clawmanager.io/runtime-layout": "pool-slot-v1"}
+			case "role-env":
+				existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "RUNTIME_AGENT_ROLE", Value: "pool"})
+			case "container-names":
+				existing.Spec.Template.Spec.Containers = []corev1.Container{{Name: "pool", Image: spec.Image}, {Name: "slot", Image: spec.Image}}
+			}
+			client := fake.NewSimpleClientset(existing)
+			spec.Image = "registry/openclaw:new"
+			if err := NewRuntimeDeploymentService(client).Ensure(context.Background(), spec); err == nil || !strings.Contains(err.Error(), "legacy Ensure cannot reconcile") {
+				t.Fatalf("legacy Ensure accepted native layout: %v", err)
+			}
+			for _, action := range client.Actions() {
+				if action.Matches("update", "deployments") {
+					t.Fatal("legacy Ensure mutated native Deployment")
+				}
+			}
+		})
+	}
+}
+
 func TestRuntimeDeploymentServiceEnsurePreservesUnownedMetadata(t *testing.T) {
 	existing := BuildRuntimeDeployment(RuntimeDeploymentSpec{
 		Name:               "runtime-openclaw",
