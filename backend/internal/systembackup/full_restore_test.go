@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -14,6 +15,7 @@ import (
 
 	appdb "clawreef/internal/db"
 	"clawreef/internal/systembackup/domain"
+	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/team"
 	"github.com/go-sql-driver/mysql"
 )
@@ -107,7 +109,23 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	if captureErr != nil || domain.VerifyTeamCapture(publicRows, *observed) != nil {
 		t.Fatal("public atomic SQL capture omitted C data or relationships", captureErr)
 	}
-	sharedSpec, specErr := domain.NewTeamWorkspaceSpec(publicRows, *observed, 1002)
+	publicStage, stageErr := os.OpenRoot(t.TempDir())
+	if stageErr != nil {
+		t.Fatal(stageErr)
+	}
+	defer publicStage.Close()
+	sqlKey := make([]byte, 32)
+	if _, err := rand.Read(sqlKey); err != nil {
+		t.Fatal(err)
+	}
+	defer clear(sqlKey)
+	publicReceipt, sealErr := staging.SealFile(ctx, publicStage, "public-teams-sql.enc", sqlKey, staging.Binding{BackupID: "fixture-public-team", Attempt: "1", Path: "mysql/teams", CaptureContextHash: strings.Repeat("c", 64), EnvelopeID: "fixture-envelope"}, func(dst io.Writer) error {
+		return staging.Compress(dst, func(plain io.Writer) error { return domain.Encode(plain, publicRows) })
+	})
+	if sealErr != nil {
+		t.Fatal(sealErr)
+	}
+	sharedSpec, specErr := domain.NewTeamWorkspaceSpec(publicRows, *observed, 1002, publicReceipt.SHA256)
 	if specErr != nil || sharedSpec.TeamID != 1002 || len(sharedSpec.ArtifactRefs) != 1 || sharedSpec.ArtifactRefs[0] != "results/report.md" || sharedSpec.InventorySHA256 != observed.SHA256() {
 		t.Fatal("final SQL lost nonempty work/product dependencies", specErr)
 	}

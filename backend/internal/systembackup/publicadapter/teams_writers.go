@@ -99,6 +99,9 @@ func ValidateTeamsWriters(source SourceInventory, frozen []FrozenWriter) error {
 }
 
 func validTeamsRuntimeBinding(b team.WriterBinding, i InstanceIdentity) bool {
+	if b.Kind != "stopped" && i.Status != "running" {
+		return false
+	}
 	switch b.Kind {
 	case "stopped":
 		return i.Status == "stopped" && !b.Running && b.ID == "stopped/"+strconv.Itoa(i.ID)

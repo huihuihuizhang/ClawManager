@@ -30,7 +30,7 @@ func TestTeamSharedWorkspaceRestoresWithoutRuntimeConfigRules(t *testing.T) {
 	raw, _ := json.Marshal(r)
 	var object map[string]json.RawMessage
 	json.Unmarshal(raw, &object)
-	object["team_workspace"] = json.RawMessage(`{"version":"teams-shared-workspace.v1","team_id":20,"inventory_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_sql_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","artifact_refs":["tasks.txt"]}`)
+	object["team_workspace"] = json.RawMessage(`{"version":"teams-shared-workspace.v1","team_id":20,"inventory_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_sql_ciphertext_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","artifact_refs":["tasks.txt"]}`)
 	raw, _ = json.Marshal(object)
 	json.Unmarshal(raw, &r)
 	env.Workspace = target
@@ -43,7 +43,7 @@ func sharedTeamRequest(r Request, receipt staging.Receipt) Request {
 	r = restoreRequest(r, receipt)
 	r.Files = nil
 	r.PolicyVersion = TeamWorkspaceVersion
-	r.TeamWorkspace = &TeamWorkspaceSpec{Version: TeamWorkspaceVersion, TeamID: 20, InventorySHA256: strings.Repeat("a", 64), SourceSQLSHA256: strings.Repeat("b", 64), ArtifactRefs: []string{"tasks.txt"}}
+	r.TeamWorkspace = &TeamWorkspaceSpec{Version: TeamWorkspaceVersion, TeamID: 20, InventorySHA256: strings.Repeat("a", 64), SourceSQLCiphertextSHA256: strings.Repeat("b", 64), ArtifactRefs: []string{"tasks.txt"}}
 	return r
 }
 

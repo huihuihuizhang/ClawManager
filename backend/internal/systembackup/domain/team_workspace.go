@@ -1,6 +1,9 @@
 package domain
 
-import "clawreef/internal/systembackup/team"
+import (
+	"clawreef/internal/systembackup/team"
+	"regexp"
+)
 
 const TeamWorkspaceVersion = "teams-shared-workspace.v1"
 
@@ -8,14 +11,21 @@ const TeamWorkspaceVersion = "teams-shared-workspace.v1"
 // authenticated SQL capture. D must authorize both digests and the original
 // part/target; choosing a Team ID or constructing this value is no grant.
 type TeamWorkspaceSpec struct {
-	Version         string   `json:"version"`
-	TeamID          int      `json:"team_id"`
-	InventorySHA256 string   `json:"inventory_sha256"`
-	SourceSQLSHA256 string   `json:"source_sql_sha256"`
-	ArtifactRefs    []string `json:"artifact_refs"`
+	Version                   string   `json:"version"`
+	TeamID                    int      `json:"team_id"`
+	InventorySHA256           string   `json:"inventory_sha256"`
+	SourceSQLCiphertextSHA256 string   `json:"source_sql_ciphertext_sha256"`
+	ArtifactRefs              []string `json:"artifact_refs"`
 }
 
-func NewTeamWorkspaceSpec(source Snapshot, inventory team.Inventory, teamID int) (*TeamWorkspaceSpec, error) {
+var teamCipherDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
+
+func NewTeamWorkspaceSpec(source Snapshot, inventory team.Inventory, teamID int, sourceSQLCiphertextSHA256 string) (*TeamWorkspaceSpec, error) {
+	// Public configuration binds the original authenticated ciphertext reference,
+	// never a dictionary-testable digest of plaintext SQL or individual rows.
+	if !teamCipherDigest.MatchString(sourceSQLCiphertextSHA256) {
+		return nil, ErrData
+	}
 	if err := VerifyTeamCapture(source, inventory); err != nil {
 		return nil, err
 	}
@@ -32,9 +42,5 @@ func NewTeamWorkspaceSpec(source Snapshot, inventory team.Inventory, teamID int)
 	if err != nil {
 		return nil, err
 	}
-	digest, err := Digest(source)
-	if err != nil {
-		return nil, err
-	}
-	return &TeamWorkspaceSpec{TeamWorkspaceVersion, teamID, inventory.SHA256(), digest, refs}, nil
+	return &TeamWorkspaceSpec{TeamWorkspaceVersion, teamID, inventory.SHA256(), sourceSQLCiphertextSHA256, refs}, nil
 }

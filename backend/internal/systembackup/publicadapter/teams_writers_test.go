@@ -36,7 +36,7 @@ func teamsWriterFixture(t *testing.T) (SourceInventory, []FrozenWriter) {
 }
 
 func TestTeamsFrozenCoverageUsesOriginalNativeWriters(t *testing.T) {
-	for _, mode := range []string{"valid", "missing-platform", "missing-unit", "missing-runtime", "duplicate", "uid", "generation", "checkpoint", "power", "foreign-instance", "participant-as-platform", "wrong-native-id", "unknown-unit", "stopped", "stopped-but-running"} {
+	for _, mode := range []string{"valid", "missing-platform", "missing-unit", "missing-runtime", "duplicate", "uid", "generation", "checkpoint", "power", "foreign-instance", "participant-as-platform", "wrong-native-id", "unknown-unit", "stopped", "stopped-but-running", "running-writer-for-stopped"} {
 		t.Run(mode, func(t *testing.T) {
 			source, frozen := teamsWriterFixture(t)
 			switch mode {
@@ -56,6 +56,12 @@ func TestTeamsFrozenCoverageUsesOriginalNativeWriters(t *testing.T) {
 				frozen[1].Original.Checkpoint = "replacement"
 			case "power":
 				frozen[1].Original.Running = false
+			case "running-writer-for-stopped":
+				for n := range source.Instances {
+					if source.Instances[n].ID == 7 {
+						source.Instances[n].Status = "stopped"
+					}
+				}
 			case "foreign-instance":
 				source.Teams.Writers[1].InstanceID = 9
 			case "participant-as-platform":
