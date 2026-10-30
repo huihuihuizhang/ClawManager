@@ -1,5 +1,7 @@
 # D：独立存储能力验收（不启用生产备份）
 
+最新状态：2026-10-30 独立临时 PVC 跨节点验收通过，内外层 `passed=true`、`cleaned=true`，退出 0。原始字段记录见 `docs/evidence/d-seal-capability-passed-20261030.json`；正式部署验收仍为 false，范围见文末。
+
 现场只读输出确认：`clawmanager-app` 使用 `backup-test-zh-fix18`，不存在 `/usr/local/bin/system-backup-seal-custody` 和 `/usr/local/bin/system-backup-v2-controller`；当前 Deployment 没有 `SYSTEM_BACKUP_*` 配置或 staging 挂载。不能在该 App 上直接执行生产 seal 探针。此记录不推断镜像是否包含其他备份实现。
 
 `scripts/system-backup-seal-isolated-probe.py` 复用正式 PVC 探针，但只创建随机 `seal-capability-*` namespace、独立 ServiceAccount、两个 1Gi RWX PVC 及临时 Pod。默认打印方案，`--execute` 才执行。默认存储类 `longhorn-rwx`，controller 在 `k8s-master`，worker 在 `node1`；要求两个不同 Linux/amd64 节点、Immediate 绑定及 Delete 回收策略。无业务卷、业务凭据、数据库连接或生产 Deployment 修改。
@@ -63,3 +65,11 @@ python3 -B system-backup-seal-isolated-probe.py \
 ```
 
 先据此选有余量的两个不同 Linux/amd64 节点，再指定 `--controller-node`、`--worker-node` 复测。容量估计不等于预约，可能与 kubelet 当时统计不同；还需为 Longhorn 共享卷辅助 Pod 留余量。工具不删除其他工作负载、不提高节点 Pod 上限、不改生产调度或安全配置。当前独立编排测试 10 项、内层探针测试 5 项通过。
+
+## 第五轮：独立共享 PVC 跨节点通过
+
+用户报告 master 活跃 Pod 降到 108 后复测，运行 `sbk_8c80058b-2d2a-4c24-b083-2a5a73ca8015` 返回 `cross_node=true`、`passed=true`、`cleaned=true`、`holder_exit=0`；外层 namespace `seal-capability-0deaf818ce864950` 同样 passed/cleaned=true，`D_SEAL_CAPABILITY_EXIT=0`。记录来自用户回传的现场命令输出，未拼接此前失败轮次。
+
+该轮验证了所记录 Longhorn 临时 PVC、镜像和节点组合的 hardlink/create-only、chmod、文件/目录 fsync 调用、跨节点锁竞争/释放及 worker subPath 隔离。内层探针文件/Pod 及外层 namespace/PVC/PV 的清理均由该轮脚本回报成功。SSH 认证重试后命令确实执行；客户端随后出现的 socket 关闭提示未改变本轮明确的成功回执及退出码。
+
+本轮的 `production_accepted=false` 保持不变：尚未部署正式 controller/worker 与真实 staging PVC，尚未验证真实工作区挂载组合，也未执行真实 MySQL 引用判定/清理或系统备份整链。后续生产部署应使用自己的准确配置和身份重新验收；此轮不是断电耐久性证明。此前失败记录保留。

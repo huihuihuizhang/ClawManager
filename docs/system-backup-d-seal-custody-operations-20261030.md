@@ -1,5 +1,7 @@
 # D：封存容量、孤儿清理与实际 PVC 验收
 
+2026-10-30 后续现场进展：独立临时 Longhorn PVC 跨节点能力验收已通过，运行 `sbk_8c80058b-2d2a-4c24-b083-2a5a73ca8015` 的内外层 passed/cleaned 均为 true、退出 0。回执见 `docs/evidence/d-seal-capability-passed-20261030.json`。这是独立工具镜像和临时卷的验证；正式 staging 部署、真实工作区挂载及 MySQL 清理验收仍未完成。
+
 本增量承接 `a113760a` 的 controller 私有 staging seal。它不发布 C 最终 artifact，不删除正式 evidence，也不把本机测试计作真实 PVC/MySQL 验收。
 
 ## 部署要求
