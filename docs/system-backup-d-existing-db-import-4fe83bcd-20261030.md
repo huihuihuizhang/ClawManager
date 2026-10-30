@@ -274,6 +274,16 @@ Pod 上的临时副本也不是独立故障域备份。脚本在退出时执行�
 因此不把它等同于停止写入后的完整备份或升级授权。预检 JSON 仍报告
 `data_preservation_verified=false`、`migration_authorized=false`。
 
+## 隔离升级探针：真实数据副本
+
+2026-10-30 又在无网络的本地 MySQL 8.4.8 临时容器中用现场无数据 DDL（SHA256 `1f1fa2d156c2527587d21a727e1e273cb02635b0e1e3ce1391443cfce7f5a655`）及原 97 行 ledger 复现升级。直接执行当前缺失的 92 项迁移，在 `085_add_backup_capture_coordination.sql` 因旧 `system_backup_attempts` 缺少新版 `public_id` 外键目标而失败；根因是之前 `081` 的同名 `CREATE TABLE IF NOT EXISTS` 静默跳过旧表。对第二个全新隔离库，先一次性将 35 张旧控制表改名为确定的 `dlegacy_*`，保留其定义与外键，再执行同一 92 项迁移，全部成功：ledger 从 97 增至 189，旧表 35 张仍保留，新版 `system_backup_attempts.public_id` 和 `system_backup_v2_runtime_controls` 均存在。此试验无业务行，不能证明现场数据保全；本地容器和镜像随后删除。
+
+操作员随后在现场 MySQL **随机隔离副本**运行了[升级探针](../scripts/system-backup-d-legacy-copy-upgrade-probe-remote.sh)，传输包 SHA256 为 `518c9421f92f02b5a9c2bba44c7ce1a639280e5ed27f4e06bcac594bc0150b3f`。输入由[固定字节生成器](../scripts/system-backup-d-legacy-upgrade-probe-build.py)从现场 inventory、97 行 ledger 和当前 migration catalog 重建并逐文件校验 SHA。原库仅作单事务 `mysqldump` 读取，探针先核对复制与重导出的完整数据流 SHA256 都为 `b9b3a11e8869949f258cbb1eaefea56bc405998b4fb3721aa66f02373228c97c`；在副本确认 35 张旧控制表为空后原子改名，执行 92 项迁移。结果 `UPGRADE_COPY_VERIFIED ledger=189 legacy_tables=35 core_identity_sha256=efcbae2af2d44c98932574eddeca0453861450e7126f5342e833a7530138aeca row_counts_non_decreasing=true`。原 99 张表的行数均未减少，`users/instances/runtime_pods/instance_runtime_bindings` 的主键及关键关系摘要前后相等。随机副本 `cm_import_a79db332fe944df58f22f0fd7c298cb5` 与 Pod 临时文件的独立收尾返回 `COPY_ABSENT`、`POD_TEMP_ABSENT`。
+
+这证明**这一次真实数据副本**可跑通当前 92 项 SQL，并保存上述核心身份；尚未证明所有表原列的逐行字节一致、部分 DDL 失败后可原位重跑，也没有恢复 Workspace、启动 App/Controller、迁移原库或跑备份任务。三项额外历史 SQL 原字节仍未找到，不能把此探针改写成生产导入授权。后续正式 profile 应采用独立 journal、完整原列行证明、迁移后约束/应用查询、失败副本丢弃重建以及切换/回退步骤；旧版同名控制表须明确处理，不能靠 `IF NOT EXISTS`。
+
+如需重新生成上述临时 SQL，运行 `py -3 -B scripts/system-backup-d-legacy-upgrade-probe-build.py --output-dir <临时目录>`；输入或当前 SQL catalog 任一字节变化时生成器会拒绝输出。生成文件属于测试产物，测试后删除。
+
 ## 本 profile 的交付出口
 
 1. 已从 `4fe83bcd` Git blob 提取该提交的 137 项 SQL 原字节摘要，与现场
@@ -287,4 +297,4 @@ Pod 上的临时副本也不是独立故障域备份。脚本在退出时执行�
 4. 提供独立的 `--preflight`、`--apply` 输入和现场回退命令；均绑定实际
    server UUID、库名、catalog、历史 SQL 摘要。输出不能含 DSN 或密钥。
 
-第 1 项仅部分完成，第 2–4 项未完成，因此现库升级和备份准入仍关闭。
+第 1 项仍缺 3 项历史原 SQL，第 2 项仅验证了旧表隔离改名的候选路径，第 3 项仅有一次真实数据副本的结构迁移和有限保全证明；重复运行、部分失败恢复及完整逐行/约束验收未完成。第 4 项未完成，因此现库升级和备份准入仍关闭。
