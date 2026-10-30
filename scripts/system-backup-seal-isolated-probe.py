@@ -8,7 +8,49 @@ import pathlib
 import re
 import subprocess
 import tempfile
+import time
 import uuid
+
+
+def node_capacity_inventory(kubectl, context):
+    def read(kind):
+        args = [kubectl, "--context", context, "--request-timeout=30s", "get", kind]
+        if kind == "pods":
+            args.append("--all-namespaces")
+        p = subprocess.run(args + ["-o", "json"], text=True, capture_output=True, timeout=60)
+        if p.returncode:
+            raise RuntimeError("node inventory failed: " + p.stderr[-1000:])
+        return json.loads(p.stdout)["items"]
+    nodes, pods = read("nodes"), read("pods")
+    rows = []
+    for node in nodes:
+        name = node["metadata"]["name"]
+        bound = [p for p in pods if p.get("spec", {}).get("nodeName") == name]
+        active = [p for p in bound if p.get("status", {}).get("phase") not in ("Succeeded", "Failed")]
+        limit = int(node["status"].get("allocatable", {}).get("pods", 0))
+        rows.append({"name": name, "uid": node["metadata"]["uid"],
+            "ready": any(c.get("type") == "Ready" and c.get("status") == "True" for c in node["status"].get("conditions", [])),
+            "unschedulable": node.get("spec", {}).get("unschedulable", False),
+            "taints": node.get("spec", {}).get("taints", []),
+            "allocatable_pods": limit, "active_pods": len(active), "total_bound_pods": len(bound),
+            "estimated_free_pods": max(0, limit - len(active))})
+    return {"read_only": True, "capacity_is_advisory": True, "nodes": rows}
+
+
+def wait_controller_ready(get, uid, timeout=300):
+    deadline = time.monotonic() + timeout
+    while True:
+        pod = get("pod", "controller", True)
+        if pod["metadata"]["uid"] != uid or pod["metadata"].get("deletionTimestamp"):
+            raise ValueError("controller replaced or deleting during startup")
+        status = pod.get("status", {})
+        if status.get("phase") in ("Failed", "Succeeded"):
+            raise RuntimeError("controller terminated before Ready: " + status.get("reason", "") + ": " + status.get("message", "")[:1000])
+        if any(c.get("type") == "Ready" and c.get("status") == "True" for c in status.get("conditions", [])):
+            return pod
+        if time.monotonic() >= deadline:
+            raise RuntimeError("controller readiness timeout after 300 seconds")
+        time.sleep(2)
 
 
 def startup_diagnostics(command, get, namespace, uid):
@@ -32,7 +74,10 @@ def startup_diagnostics(command, get, namespace, uid):
 
 
 def run(a):
-    if not re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", a.image) or a.controller_node == a.worker_node:
+    if getattr(a, "inventory_nodes", False):
+        print(json.dumps(node_capacity_inventory(a.kubectl, a.context), indent=2))
+        return
+    if not re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", a.image or "") or a.controller_node == a.worker_node:
         raise ValueError("digest-pinned image and two distinct nodes required")
     name = "seal-capability-" + uuid.uuid4().hex[:16]
     report = {"namespace": name, "scope": "disposable-storage-capability",
@@ -97,11 +142,7 @@ def run(a):
                     "volumes": [{"name": c, "persistentVolumeClaim": {"claimName": c}} for c in ["staging", "source"]]}})
         report["controller_uid"] = created["metadata"]["uid"]
         stage = "wait-controller-ready"
-        command(["-n", name, "wait", "--for=condition=Ready", "pod/controller",
-                 "--timeout=300s", "--request-timeout=310s"], timeout=330)
-        pod = get("pod", "controller", True)
-        if pod["metadata"]["uid"] != report["controller_uid"]:
-            raise ValueError("controller replaced during startup")
+        pod = wait_controller_ready(get, report["controller_uid"])
         stage = "verify-volume-bindings"
         if len(pod["spec"]["containers"]) != 1 or pod["spec"].get("initContainers"):
             raise ValueError("unexpected controller injection")
@@ -176,7 +217,8 @@ def run(a):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--context", required=True)
-    p.add_argument("--image", required=True)
+    p.add_argument("--image")
+    p.add_argument("--inventory-nodes", action="store_true", help="read-only node Pod capacity inventory; creates no resources")
     p.add_argument("--storage-class", default="longhorn-rwx")
     p.add_argument("--controller-node", default="k8s-master")
     p.add_argument("--worker-node", default="node1")

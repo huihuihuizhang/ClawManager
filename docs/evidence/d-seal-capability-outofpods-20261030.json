@@ -1,0 +1,179 @@
+{
+  "source": "user-supplied remote command output",
+  "exit_code": 1,
+  "root_cause": "k8s-master rejected controller with OutOfpods: used=110 capacity=110",
+  "lock_probe_started": false,
+  "reports": [
+    {
+      "started": {
+        "namespace": "seal-capability-8305973def314a05",
+        "scope": "disposable-storage-capability",
+        "production_accepted": false,
+        "passed": false,
+        "cleaned": false,
+        "storage_class_uid": "a7e3a85f-6ecf-4b40-bfb7-98892f9b3076"
+      }
+    },
+    {
+      "namespace": "seal-capability-8305973def314a05",
+      "scope": "disposable-storage-capability",
+      "production_accepted": false,
+      "passed": false,
+      "cleaned": true,
+      "storage_class_uid": "a7e3a85f-6ecf-4b40-bfb7-98892f9b3076",
+      "namespace_uid": "884179a9-eef8-4d36-b995-7915c011c597",
+      "controller_uid": "cdc33bce-36b3-4954-9483-e54872a428e6",
+      "failure_stage": "wait-controller-ready",
+      "failure": "kubectl failed: error: timed out waiting for the condition on pods/controller\n",
+      "diagnostics": {
+        "resources": [
+          {
+            "kind": "Pod",
+            "name": "controller",
+            "uid": "cdc33bce-36b3-4954-9483-e54872a428e6",
+            "status": {
+              "message": "Pod was rejected: Node didn't have enough resource: pods, requested: 1, used: 110, capacity: 110",
+              "phase": "Failed",
+              "reason": "OutOfpods",
+              "startTime": "2026-10-30T07:28:47Z"
+            },
+            "node": "k8s-master",
+            "volume": null
+          },
+          {
+            "kind": "PersistentVolumeClaim",
+            "name": "source",
+            "uid": "270510ff-9f02-489d-b04c-f5ea1ef6cc1d",
+            "status": {
+              "accessModes": [
+                "ReadWriteMany"
+              ],
+              "capacity": {
+                "storage": "1Gi"
+              },
+              "phase": "Bound"
+            },
+            "node": null,
+            "volume": "pvc-270510ff-9f02-489d-b04c-f5ea1ef6cc1d"
+          },
+          {
+            "kind": "PersistentVolumeClaim",
+            "name": "staging",
+            "uid": "14704228-06b0-44cc-a4d6-da65067ff387",
+            "status": {
+              "accessModes": [
+                "ReadWriteMany"
+              ],
+              "capacity": {
+                "storage": "1Gi"
+              },
+              "phase": "Bound"
+            },
+            "node": null,
+            "volume": "pvc-14704228-06b0-44cc-a4d6-da65067ff387"
+          }
+        ],
+        "events": [
+          {
+            "reason": "OutOfpods",
+            "message": "Node didn't have enough resource: pods, requested: 1, used: 110, capacity: 110",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "Pod",
+              "name": "controller",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632045",
+              "uid": "cdc33bce-36b3-4954-9483-e54872a428e6"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:47Z"
+          },
+          {
+            "reason": "Provisioning",
+            "message": "External provisioner is provisioning volume for claim \"seal-capability-8305973def314a05/source\"",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "source",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632040",
+              "uid": "270510ff-9f02-489d-b04c-f5ea1ef6cc1d"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:47Z"
+          },
+          {
+            "reason": "ExternalProvisioning",
+            "message": "Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "source",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632040",
+              "uid": "270510ff-9f02-489d-b04c-f5ea1ef6cc1d"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:47Z"
+          },
+          {
+            "reason": "ProvisioningSucceeded",
+            "message": "Successfully provisioned volume pvc-270510ff-9f02-489d-b04c-f5ea1ef6cc1d",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "source",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632040",
+              "uid": "270510ff-9f02-489d-b04c-f5ea1ef6cc1d"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:50Z"
+          },
+          {
+            "reason": "ExternalProvisioning",
+            "message": "Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "staging",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632035",
+              "uid": "14704228-06b0-44cc-a4d6-da65067ff387"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:46Z"
+          },
+          {
+            "reason": "Provisioning",
+            "message": "External provisioner is provisioning volume for claim \"seal-capability-8305973def314a05/staging\"",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "staging",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632035",
+              "uid": "14704228-06b0-44cc-a4d6-da65067ff387"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:46Z"
+          },
+          {
+            "reason": "ProvisioningSucceeded",
+            "message": "Successfully provisioned volume pvc-14704228-06b0-44cc-a4d6-da65067ff387",
+            "object": {
+              "apiVersion": "v1",
+              "kind": "PersistentVolumeClaim",
+              "name": "staging",
+              "namespace": "seal-capability-8305973def314a05",
+              "resourceVersion": "121632035",
+              "uid": "14704228-06b0-44cc-a4d6-da65067ff387"
+            },
+            "count": 1,
+            "lastTimestamp": "2026-10-30T07:28:50Z"
+          }
+        ]
+      }
+    }
+  ]
+}

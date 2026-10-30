@@ -50,3 +50,16 @@ python3 -B system-backup-seal-isolated-probe.py \
 namespace `seal-capability-db99feff9f554c29` 的临时 controller 等待 Ready 60 秒超时；未进入内层锁探针，外层 cleaned=true、退出 1。回执见 `docs/evidence/d-seal-capability-startup-timeout-20261030.json`。未保留 Pod/PVC 状态和事件，不能据此判断是拉取镜像、挂载、节点还是容器启动问题，也不能判定握手修复是否有效。
 
 本次只更新 Python 包装脚本，继续使用上述握手版镜像。controller 首次就绪等待改为 300 秒，单次请求 310 秒、子进程 330 秒；controller 生命周期改为 900 秒以覆盖启动与后续验收。失败时先按 namespace UID 核验并保存 Pod/PVC 状态和最多 40 条事件，再执行原 UID 约束清理。延长等待不改变 Ready 条件、锁检查或成功判定。独立编排测试 7 项、内层探针测试 5 项通过；未生成测试二进制或 Python 缓存。
+
+## 第四轮：节点 Pod 配额已满
+
+namespace `seal-capability-8305973def314a05` 的回执明确：`k8s-master` controller 被 kubelet 以 `OutOfpods` 拒绝，requested=1、used=110、capacity=110。两个 PVC 均 Bound；锁探针没有开始，整体退出 1、cleaned=true。完整诊断保存于 `docs/evidence/d-seal-capability-outofpods-20261030.json`。继续延长等待或原样重跑不能解决节点 Pod 配额问题。
+
+当前脚本在最多约 300 秒的就绪轮询中发现 Failed/Succeeded 终态即报错、采集诊断并清理，不再等待满 300 秒。新增 `--inventory-nodes` 只执行读取 nodes 和全 namespace pods，将 Pod 数量按节点汇总，不输出业务 Pod 名称，不创建任何资源，也不需要 image 参数：
+
+```sh
+python3 -B system-backup-seal-isolated-probe.py \
+  --context kubernetes-admin@kubernetes --inventory-nodes
+```
+
+先据此选有余量的两个不同 Linux/amd64 节点，再指定 `--controller-node`、`--worker-node` 复测。容量估计不等于预约，可能与 kubelet 当时统计不同；还需为 Longhorn 共享卷辅助 Pod 留余量。工具不删除其他工作负载、不提高节点 Pod 上限、不改生产调度或安全配置。当前独立编排测试 10 项、内层探针测试 5 项通过。
