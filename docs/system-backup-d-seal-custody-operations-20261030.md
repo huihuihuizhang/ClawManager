@@ -8,6 +8,14 @@
 
 现场 `clawmanager-app` 仍没有 `SYSTEM_BACKUP_PUBLIC_CONFIG_FILE`、固定配置 SHA、正式 staging 挂载和封存工具。仓库的 `examples/backup-controller/public-deployment.security.example.json` 是占位模板，含 `REPLACE_WITH_*`，不得当成已审定的现场部署材料。临时 Longhorn 探针的 namespace、PVC、PV、Pod、镜像身份只证明该次存储能力，不是正式安装的固定身份。
 
+维护 CLI 新增 `-mode preflight`：在 pinned 部署配置和私有 SELECT-only DSN 下，仅查询 `@@server_uuid`、`DATABASE()` 和三张清理表所需列的 `SELECT ... LIMIT 0`。输出 `ready=true` 才表示这几项准入检查通过；它不读取或创建 staging 目录，也不判定任何文件可删。`prune` 现在先执行相同数据库预检，缺表、错库或权限不足时在触碰 staging 前拒绝。现场仍需真实固定配置、独立账号和已批准的迁移，才能运行：
+
+```sh
+system-backup-seal-custody -mode preflight \
+  -config /run/backup/public-deployment.json -config-sha256 "$CONFIG_SHA256" \
+  -dsn-file /run/backup/seal-maintenance.dsn
+```
+
 继续生产接线时，按以下依赖顺序核对：
 
 1. 先由数据库迁移 owner 提供同一目标库的新版表结构等价与迁移准入记录，并在迁移后的实时库存中核对三张清理表及其列、索引。

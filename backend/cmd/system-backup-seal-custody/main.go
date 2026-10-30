@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	mode := flag.String("mode", "inventory", "inventory, prune, probe-init, probe-hold, probe-worker, probe-clean")
+	mode := flag.String("mode", "inventory", "inventory, preflight, prune, probe-init, probe-hold, probe-worker, probe-clean")
 	config := flag.String("config", "", "pinned deployment file")
 	digest := flag.String("config-sha256", "", "independent deployment SHA256")
 	dsn := flag.String("dsn-file", "", "private SELECT-only control database DSN file")
@@ -78,12 +78,27 @@ func run(ctx context.Context, mode, config, digest, dsn string, apply bool, age 
 		}
 		return json.NewEncoder(os.Stdout).Encode(map[string]any{"run_id": id, "mode": mode, "ok": true})
 	}
-	if (mode != "inventory" && mode != "prune") || (apply && mode != "prune") || age < time.Hour {
+	if (mode != "inventory" && mode != "preflight" && mode != "prune") || (apply && mode != "prune") || age < time.Hour {
 		return staging.ErrFile
 	}
 	cfg, err := execution.LoadDeploymentConfig(config, digest)
 	if err != nil {
 		return err
+	}
+	if mode == "preflight" || mode == "prune" {
+		pool, err := openControlDB(dsn, cfg.SourceDatabase)
+		if err != nil {
+			return err
+		}
+		defer pool.Close()
+		maintenance := execution.SealMaintenance{DB: pool, Installation: cfg.InstallationID, ServerUUID: cfg.SourceServerUUID, Database: cfg.SourceDatabase}
+		if err := maintenance.Preflight(ctx); err != nil {
+			return err
+		}
+		if mode == "preflight" {
+			return json.NewEncoder(os.Stdout).Encode(map[string]any{"ready": true, "mode": "preflight"})
+		}
+		return runPrune(ctx, cfg, pool, age, apply)
 	}
 	parent, err := os.OpenRoot(cfg.StagingDirectory)
 	if err != nil {
@@ -103,11 +118,21 @@ func run(ctx context.Context, mode, config, digest, dsn string, apply bool, age 
 		}
 		return json.NewEncoder(os.Stdout).Encode(inventory)
 	}
-	pool, err := openControlDB(dsn, cfg.SourceDatabase)
+	return staging.ErrFile
+}
+
+func runPrune(ctx context.Context, cfg execution.DeploymentConfig, pool *sql.DB, age time.Duration, apply bool) error {
+	parent, err := os.OpenRoot(cfg.StagingDirectory)
 	if err != nil {
 		return err
 	}
-	defer pool.Close()
+	defer parent.Close()
+	root, err := staging.OpenSealCustody(parent)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	policy := staging.CustodyPolicy{Installation: cfg.InstallationID, MaxBytes: cfg.SealCustodyMaxBytes}
 	result, err := staging.PruneCustody(ctx, root, policy, time.Now().Add(-age), apply, execution.SealMaintenance{DB: pool, Installation: cfg.InstallationID, ServerUUID: cfg.SourceServerUUID, Database: cfg.SourceDatabase})
 	// Even a failed pass may have removed earlier independently proven orphans.
 	if e := json.NewEncoder(os.Stdout).Encode(map[string]any{"apply": apply, "complete": err == nil, "items": result}); e != nil {
