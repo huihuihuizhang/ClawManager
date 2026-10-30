@@ -11,6 +11,26 @@ import tempfile
 import uuid
 
 
+def startup_diagnostics(command, get, namespace, uid):
+    if get("namespace", namespace)["metadata"]["uid"] != uid:
+        raise ValueError("diagnostic namespace identity changed")
+    resources = json.loads(command(["-n", namespace, "get", "pod,pvc", "-o", "json"]))
+    result = {"resources": [{"kind": r["kind"], "name": r["metadata"]["name"],
+        "uid": r["metadata"]["uid"], "status": r.get("status", {}),
+        "node": r.get("spec", {}).get("nodeName"), "volume": r.get("spec", {}).get("volumeName")}
+        for r in resources.get("items", [])]}
+    try:
+        events = json.loads(command(["-n", namespace, "get", "events", "-o", "json"]))
+        result["events"] = [{"reason": e.get("reason"), "message": e.get("message", "")[:1500],
+            "object": e.get("involvedObject"), "count": e.get("count"),
+            "lastTimestamp": e.get("lastTimestamp")} for e in events.get("items", [])[-40:]]
+    except Exception as exc:
+        result["events_error"] = str(exc)[:500]
+    if get("namespace", namespace)["metadata"]["uid"] != uid:
+        raise ValueError("diagnostic namespace replaced")
+    return result
+
+
 def run(a):
     if not re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", a.image) or a.controller_node == a.worker_node:
         raise ValueError("digest-pinned image and two distinct nodes required")
@@ -23,9 +43,9 @@ def run(a):
         return
     base = [a.kubectl, "--context", a.context, "--request-timeout=30s"]
 
-    def command(args, body=None):
+    def command(args, body=None, timeout=90):
         p = subprocess.run(base + args, input=json.dumps(body) if body is not None else None,
-                           capture_output=True, text=True, timeout=90)
+                           capture_output=True, text=True, timeout=timeout)
         if p.returncode:
             raise RuntimeError("kubectl failed: " + p.stderr[-1500:])
         return p.stdout
@@ -48,23 +68,26 @@ def run(a):
     report["storage_class_uid"] = sc["metadata"]["uid"]
     uid, pvs, attempted = None, {}, False
     print(json.dumps({"started": report}), flush=True)
+    stage = "create-namespace"
     try:
         attempted = True
         ns = create({"apiVersion": "v1", "kind": "Namespace", "metadata": {
             "name": name, "labels": {"seal-capability-run": name}}})
         uid = ns["metadata"]["uid"]
         report["namespace_uid"] = uid
+        stage = "create-storage"
         for claim in ["staging", "source"]:
             create({"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {
                 "name": claim, "namespace": name}, "spec": {"accessModes": ["ReadWriteMany"],
                 "storageClassName": a.storage_class, "resources": {"requests": {"storage": "1Gi"}}}})
         create({"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {
             "name": "probe", "namespace": name}, "automountServiceAccountToken": False})
-        create({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "controller", "namespace": name},
+        stage = "create-controller"
+        created = create({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "controller", "namespace": name},
                 "spec": {"nodeName": a.controller_node, "serviceAccountName": "probe",
-                    "automountServiceAccountToken": False, "restartPolicy": "Never", "activeDeadlineSeconds": 600,
+                    "automountServiceAccountToken": False, "restartPolicy": "Never", "activeDeadlineSeconds": 900,
                     "securityContext": {"seccompProfile": {"type": "RuntimeDefault"}},
-                    "containers": [{"name": "controller", "image": a.image, "command": ["/bin/sleep", "600"],
+                    "containers": [{"name": "controller", "image": a.image, "command": ["/bin/sleep", "900"],
                         "securityContext": {"runAsUser": 0, "allowPrivilegeEscalation": False,
                             "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"], "add": ["DAC_READ_SEARCH"]}},
                         "resources": {"requests": {"cpu": "100m", "memory": "64Mi"},
@@ -72,8 +95,14 @@ def run(a):
                         "volumeMounts": [{"name": "staging", "mountPath": "/staging"},
                                          {"name": "source", "mountPath": "/source"}]}],
                     "volumes": [{"name": c, "persistentVolumeClaim": {"claimName": c}} for c in ["staging", "source"]]}})
-        command(["-n", name, "wait", "--for=condition=Ready", "pod/controller", "--timeout=60s"])
+        report["controller_uid"] = created["metadata"]["uid"]
+        stage = "wait-controller-ready"
+        command(["-n", name, "wait", "--for=condition=Ready", "pod/controller",
+                 "--timeout=300s", "--request-timeout=310s"], timeout=330)
         pod = get("pod", "controller", True)
+        if pod["metadata"]["uid"] != report["controller_uid"]:
+            raise ValueError("controller replaced during startup")
+        stage = "verify-volume-bindings"
         if len(pod["spec"]["containers"]) != 1 or pod["spec"].get("initContainers"):
             raise ValueError("unexpected controller injection")
         volumes = []
@@ -97,6 +126,7 @@ def run(a):
         spec = importlib.util.spec_from_file_location("seal_probe", pathlib.Path(__file__).with_name("system-backup-seal-custody-probe.py"))
         probe = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(probe)
+        stage = "run-storage-probe"
         with tempfile.TemporaryDirectory(prefix="seal-capability-") as tmp:
             path = pathlib.Path(tmp) / "probe-config.json"
             raw = json.dumps(cfg).encode()
@@ -106,6 +136,15 @@ def run(a):
                 controller_image_id=pod["status"]["containerStatuses"][0]["imageID"], container="controller",
                 worker_node=a.worker_node, kubectl=a.kubectl, execute=True))
         report["passed"] = True
+    except Exception as exc:
+        report["failure_stage"] = stage
+        report["failure"] = str(exc)[:1500]
+        if uid is not None:
+            try:
+                report["diagnostics"] = startup_diagnostics(command, get, name, uid)
+            except Exception as diagnostic_error:
+                report["diagnostic_error"] = str(diagnostic_error)[:500]
+        raise
     finally:
         try:
             if attempted and uid is None:

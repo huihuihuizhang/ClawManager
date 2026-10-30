@@ -44,3 +44,9 @@ python3 -B system-backup-seal-isolated-probe.py \
 为覆盖跨节点标记可见性延迟，探针命令期限为 3 分钟，worker Pod 上限 240 秒，结果等待 200 秒；维护命令仍为 2 分钟。原有 2 秒竞争检查和隔离要求不变。Go staging 全包 28.347s 通过，包含延迟 11 秒仍阻塞、握手后释放、错 run 标记和取消的回归；两套 Python 各 5 项通过。该修复尚需新的现场回执。
 
 握手版 Linux Docker 复核运行 `sbk_c7be957d-2da8-44b8-81e7-3d21fc7c1820`：holder 先启动，11 秒后检查仍运行，再启动仅挂载 task subPath 的 worker。双方退出 0，worker 报告 `cross_process_lock=true`、`worker_isolation=true`，随后 verify/clean 均成功，临时容器和卷已删除。这证明本地延迟场景可通过，不能替代现场共享 PVC 回执。
+
+## 第三轮：controller 启动超时
+
+namespace `seal-capability-db99feff9f554c29` 的临时 controller 等待 Ready 60 秒超时；未进入内层锁探针，外层 cleaned=true、退出 1。回执见 `docs/evidence/d-seal-capability-startup-timeout-20261030.json`。未保留 Pod/PVC 状态和事件，不能据此判断是拉取镜像、挂载、节点还是容器启动问题，也不能判定握手修复是否有效。
+
+本次只更新 Python 包装脚本，继续使用上述握手版镜像。controller 首次就绪等待改为 300 秒，单次请求 310 秒、子进程 330 秒；controller 生命周期改为 900 秒以覆盖启动与后续验收。失败时先按 namespace UID 核验并保存 Pod/PVC 状态和最多 40 条事件，再执行原 UID 约束清理。延长等待不改变 Ready 条件、锁检查或成功判定。独立编排测试 7 项、内层探针测试 5 项通过；未生成测试二进制或 Python 缓存。
