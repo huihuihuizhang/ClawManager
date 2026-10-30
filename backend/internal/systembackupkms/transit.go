@@ -131,7 +131,7 @@ func (u *RecoveryUnwrapper) Close() {
 
 func newTransit(c Config, r Resolver, op Operation) (*transit, error) {
 	u, err := url.Parse(c.Endpoint)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Path != "" || u.Opaque != "" || strings.ContainsAny(c.Endpoint, "?#\r\n") ||
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.Opaque != "" || strings.ContainsAny(c.Endpoint, "?#\r\n") ||
 		!text(c.InstallationID) || !keyName.MatchString(c.KeyName) || !validKey(c.Key) || absent(r) || c.NotBefore.IsZero() || !c.NotAfter.After(c.NotBefore) ||
 		len(c.CAPEM) > 65536 || !digest.MatchString(c.CASHA256) || hash(c.CAPEM) != c.CASHA256 {
 		return nil, ErrBinding

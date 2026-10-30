@@ -31,6 +31,22 @@ func testConfig(s *httptest.Server) Config {
 	return Config{Endpoint: s.URL, InstallationID: testRequest().Context.InstallationID, KeyName: "backup-key", Key: testRequest().Key, CAPEM: ca, CASHA256: hash(ca), NotBefore: time.Now().Add(-time.Minute), NotAfter: time.Now().Add(time.Hour)}
 }
 
+func TestCaptureGeneratorRejectsMissingProviderHostname(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("invalid endpoint reached provider")
+	}))
+	defer server.Close()
+	cfg := testConfig(server)
+	cfg.Endpoint = "https://:8200"
+	resolver := resolverFunc(func(context.Context, Access) (Grant, error) {
+		t.Fatal("invalid endpoint reached resolver")
+		return Grant{}, nil
+	})
+	if _, err := NewCaptureGenerator(cfg, resolver); !errors.Is(err, ErrBinding) {
+		t.Fatalf("missing hostname admitted: %v", err)
+	}
+}
+
 func TestOnlineGenerateUnwrapBindingAndRevocation(t *testing.T) {
 	for _, mode := range []string{"valid", "wrong-purpose", "wrong-installation", "wrong-key", "wrong-version", "wrong-registry", "wrong-context", "expired", "not-yet-valid", "revoked-before", "revoked-after-provider", "revoke-at-use", "wrong-response-version", "wrong-ciphertext", "bad-plaintext", "duplicate-json", "provider-denied", "callback-fails", "use-not-called", "callback-error-swallowed", "cancel-at-provider", "revoked-after-use", "unknown-use-commit"} {
 		t.Run(mode, func(t *testing.T) {

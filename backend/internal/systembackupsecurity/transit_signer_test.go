@@ -75,3 +75,22 @@ func TestTransitSignerTLSVersionAndPublicKey(t *testing.T) {
 		})
 	}
 }
+
+func TestTransitSignerRejectsMalformedProviderEndpoint(t *testing.T) {
+	pub, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("invalid endpoint reached provider")
+	}))
+	defer server.Close()
+	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
+	for _, endpoint := range []string{"https://:8200", server.URL + "?", server.URL + "#"} {
+		t.Run(endpoint, func(t *testing.T) {
+			if _, err := newTransitSignerTransport(endpoint, "test-key", "1", ca, pub); err == nil {
+				t.Fatal("malformed endpoint admitted")
+			}
+		})
+	}
+}

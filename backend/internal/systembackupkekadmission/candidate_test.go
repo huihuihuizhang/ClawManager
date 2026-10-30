@@ -73,11 +73,12 @@ func TestCandidateRejectsChangedPurposeVersionAndIncompleteHistory(t *testing.T)
 			v.Candidate.ConfigRef.Version = "latest"
 			v.Candidate.Key.RegistryVersion = "latest"
 		},
-		"invalid-provider-version": func(v *r.AdmissionInput) { v.Candidate.Key.ProviderVersion = "latest" },
-		"provider-redirect-path":   func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid/other" },
-		"provider-empty-query":     func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid?" },
-		"provider-empty-fragment":  func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid#" },
-		"wrong-purpose":            func(v *r.AdmissionInput) { v.Candidate.GenerateRef = v.Candidate.UnwrapRef },
+		"invalid-provider-version":  func(v *r.AdmissionInput) { v.Candidate.Key.ProviderVersion = "latest" },
+		"provider-redirect-path":    func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid/other" },
+		"provider-empty-query":      func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid?" },
+		"provider-empty-fragment":   func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://provider.invalid#" },
+		"provider-missing-hostname": func(v *r.AdmissionInput) { v.Candidate.Provider.Endpoint = "https://:8200" },
+		"wrong-purpose":             func(v *r.AdmissionInput) { v.Candidate.GenerateRef = v.Candidate.UnwrapRef },
 		"changed-ref-bytes": func(v *r.AdmissionInput) {
 			v.Candidate.GenerateRef.RawJSON = append([]byte(nil), v.Candidate.GenerateRef.RawJSON...)
 			v.Candidate.GenerateRef.RawJSON[0] = '['

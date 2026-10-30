@@ -41,7 +41,7 @@ func NewTransitSigner(endpoint, keyName, version, token string, caPEM []byte, pu
 func newTransitSignerTransport(endpoint, keyName, version string, caPEM []byte, public ed25519.PublicKey) (*TransitSigner, error) {
 	u, err := url.Parse(endpoint)
 	n, e := strconv.ParseUint(version, 10, 32)
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Path != "" || e != nil || n == 0 || strconv.FormatUint(n, 10) != version || len(public) != 32 || !safeTransitName(keyName) {
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Path != "" || strings.ContainsAny(endpoint, "?#\r\n") || e != nil || n == 0 || strconv.FormatUint(n, 10) != version || len(public) != 32 || !safeTransitName(keyName) {
 		return nil, ErrRegistrationUnavailable
 	}
 	pool := x509.NewCertPool()
