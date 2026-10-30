@@ -62,7 +62,7 @@ python3 scripts/system-backup-seal-custody-probe.py \
 
 controller 在独立随机任务形状目录测试 hard link 的 same-inode/create-only、chmod、原字节回读、文件及目录 fsync；在 sibling custody 放入本轮标记。worker 必须能够读取自己挂载中的标记，不能直接或通过越界 symlink 读取 sibling 标记，也不能通过 workspace 的同级入口读到标记。原 marker 在 worker 测试后再次由 controller 核实仍存在。
 
-controller 持有该探针目录的锁期间，worker 必须无法取得同一锁；释放后 worker 必须能够取得。输出 `cross_node=false` 只证明本次同节点跨 Pod 情况；需按实际可调度节点组合复跑，不能外推为跨节点 NFS 锁通过。此工具也不证明存储管理员无法修改文件，或任意未纳入部署清单的额外挂载不存在。
+controller 持有该探针目录的锁期间，worker 必须无法取得同一锁；释放后 worker 必须能够取得。两端使用同一新版工具：controller 保持锁直到 worker 写入竞争检查结束标记，随后释放并写入 release；不再按固定 10 秒猜测另一节点已看到 ready。检查结束标记不代表检查成功，worker 意外取得锁仍失败。输出 `cross_node=false` 只证明本次同节点跨 Pod 情况；需按实际可调度节点组合复跑，不能外推为跨节点 NFS 锁通过。此工具也不证明存储管理员无法修改文件，或任意未纳入部署清单的额外挂载不存在。
 
 清理使用 API UID precondition 删除准确探针 Pod，等待消失、锁 holder 结束，再删除核对 run ID 的已知探针文件。创建提交结果不明时按原名称、run label 和 spec 恢复 UID；不明确时保留现场并输出 `cleaned=false`，不冒险清理仍被 Pod 使用的文件。永久 custody 控制目录/锁不属于探针垃圾。
 
