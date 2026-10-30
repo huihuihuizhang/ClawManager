@@ -130,7 +130,7 @@ func TestConcreteGatewayFactoryRestoresOriginalStateWithPublicRecoveryScope(t *t
 			runningOld, runningNew := true, false
 			var reads, deletes, creates atomic.Int32
 			completed := 0
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
 				defer mu.Unlock()
 
@@ -186,7 +186,7 @@ func TestConcreteGatewayFactoryRestoresOriginalStateWithPublicRecoveryScope(t *t
 				}
 			}))
 			defer srv.Close()
-			deps.Agent = services.NewRuntimeAgentClient("synthetic-control").(services.BackupGatewayAgent)
+			deps.Agent = services.NewRuntimeAgentClientWithHTTPClient("synthetic-control", srv.Client()).(services.BackupGatewayAgent)
 			deps.Callbacks.LoadGateway = func(_ context.Context, a d.Authority, id, ref string) (services.RuntimeAgentCreateGatewayRequest, error) {
 				if a != ports.in.Authority || ref != "encrypted-original-ref" {
 					t.Error("restart scope")
