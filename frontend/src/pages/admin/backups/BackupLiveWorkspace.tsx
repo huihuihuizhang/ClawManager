@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { backupEntryPoints } from './backupReadModel';
 import { createBackupLiveSource } from './backupLiveSource';
 import type { BackupLiveData, BackupLiveState } from './backupLiveSource';
 import { startBackupLivePolling } from './backupLivePolling';
@@ -14,6 +13,7 @@ import BackupOverviewReadout from './BackupOverviewReadout';
 import BackupLiveOperations from './BackupLiveOperations.tsx';
 import BackupEvidenceDownload from './BackupEvidenceDownload.tsx';
 import BackupTaskTable from './BackupTaskTable.tsx';
+import LegacyTeamBackupHistory from './LegacyTeamBackupHistory';
 
 const liveSource = createBackupLiveSource(systemBackupReadService);
 type TaskGroup = 'backups' | 'drills' | 'preflights' | 'verifications';
@@ -80,7 +80,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
     };
   }, [revision]);
 
-  if (state.kind === 'unavailable') return <div className="space-y-5">{fallback}<BackupLiveOperations installation={null} /><BackupEvidenceDownload installation={null} /></div>;
+  if (state.kind === 'unavailable') return <div className="space-y-5">{fallback}<LegacyTeamBackupHistory /><BackupLiveOperations installation={null} /><BackupEvidenceDownload installation={null} /></div>;
   if (state.kind === 'loading') return <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500" role="status" aria-busy="true">{b('loading')}</div>;
   if (state.kind === 'error') return <div className="rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
     <h2 className="font-medium text-red-800">{b('loadFailed')}</h2>
@@ -160,8 +160,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
         {paging?.kind === group.key && paging.error && <p className="mt-2 text-sm text-red-700" role="alert">{b('readError')}</p>}</div>}</>}
     </section>; })}
     <BackupLiveOperations key={installation ?? 'unknown-installation'} installation={installation} />
+    <LegacyTeamBackupHistory />
     <BackupEvidenceDownload key={`download:${installation ?? ''}`} installation={installation} />
-    <section className="grid gap-3 sm:grid-cols-3">{backupEntryPoints.filter((entry) => ['catalog', 'retention', 'baseline'].includes(entry.tab)).map((entry) =>
-      <div key={entry.tab} className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-800">{b(entry.label)}</h2><p className="mt-2 text-xs text-slate-500">{b('comingSoon')}</p></div>)}</section>
   </div>;
 }

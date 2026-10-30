@@ -11,7 +11,7 @@
     "DrillStatus": { "type": "string", "enum": ["pending", "preflighting", "provisioning", "restoring", "normalizing", "verifying", "canceling", "succeeded", "failed", "canceled"] },
     "SimpleTaskStatus": { "type": "string", "enum": ["pending", "running", "canceling", "succeeded", "failed", "canceled"] },
     "OperationStatus": { "type": "string", "enum": ["pending", "running", "succeeded", "failed"] },
-    "OperationType": { "type": "string", "enum": ["cancel", "cleanup", "ownership_resolution", "provider_proof_register", "finalization_resolution", "manual_hold_update", "config_update", "promotion_create", "promotion_revoke", "catalog_scan", "catalog_import", "prune_execute", "prune_retry", "artifact_health_reconcile", "orphan_gc", "control_metadata_gc", "evidence_gc", "evidence_download_admission"] },
+    "OperationType": { "type": "string", "enum": ["cancel", "cleanup", "ownership_resolution", "provider_proof_register", "finalization_resolution", "manual_hold_update", "config_update", "promotion_create", "promotion_revoke", "catalog_scan", "catalog_import", "prune_execute", "prune_retry", "artifact_health_reconcile", "orphan_gc", "control_metadata_gc", "evidence_gc", "evidence_download_admission", "capture_reconcile"] },
     "OperationTargetType": { "type": "string", "enum": ["backup", "backup_staging", "external_action", "drill", "restore_resource", "preflight", "artifact_verify", "catalog_scan", "catalog_import", "prune_run", "promotion", "matrix", "system", "evidence"] },
     "AttemptPhase": { "type": "string", "enum": ["capture", "secret_capture", "publish", "restore", "normalize", "verify", "preflight"] },
     "AttemptStatus": { "type": "string", "enum": ["preparing", "running", "sealed", "succeeded", "failed", "canceled"] },

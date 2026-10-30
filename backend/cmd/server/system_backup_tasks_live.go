@@ -62,6 +62,12 @@ func composeSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecuri
 }
 
 func registerBackupTaskMutations(admin *gin.RouterGroup, handler *systembackupapi.Handler) {
+	admin.GET("/system-backups/:id/recovery-actions", func(c *gin.Context) {
+		handler.RecoveryActions(c.Writer, c.Request, c.Param("id"), middleware.SystemBackupRequestID(c))
+	})
+	admin.POST("/system-backups/:id/reconcile", func(c *gin.Context) {
+		handler.Reconcile(c.Writer, c.Request, c.Param("id"), middleware.SystemBackupRequestID(c))
+	})
 	admin.POST("/system-backups", func(c *gin.Context) {
 		handler.Create(c.Writer, c.Request, systembackupread.BackupTask, middleware.SystemBackupRequestID(c))
 	})

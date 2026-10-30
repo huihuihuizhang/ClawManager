@@ -10,6 +10,17 @@ import (
 // Unknown legacy actions, a gate acquisition, or ANY dispatched resource keep
 // the task protected for the full recovery protocol.
 func (g SQLCaptureGate) FailUntouched(ctx context.Context, a d.Authority) error {
+	return g.failUntouched(ctx, a, "not_ready")
+}
+
+const untouchedEffectsSQL = `SELECT
+ (SELECT COUNT(*) FROM system_backup_v2_runtime_captures WHERE task_public_id=?)+
+ (SELECT COUNT(*) FROM system_backup_v2_runtime_writers WHERE task_public_id=?)+
+ (SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND create_dispatched=TRUE)+
+ (SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type='backup' AND target_public_id=?)+
+ (SELECT COUNT(*) FROM system_backup_v2_job_observations WHERE target_type='backup' AND target_public_id=?)`
+
+func (g SQLCaptureGate) failUntouched(ctx context.Context, a d.Authority, category string) error {
 	tx, e := g.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return e
@@ -18,7 +29,7 @@ func (g SQLCaptureGate) FailUntouched(ctx context.Context, a d.Authority) error 
 	// Match acquisition/release order; clearing only this task's drained request
 	// admission must commit with its untouched cancellation outcome.
 	var engine string
-	if tx.QueryRowContext(ctx, "SELECT engine FROM system_backup_v2_engine_bindings WHERE scope='installation' FOR SHARE").Scan(&engine) != nil {
+	if tx.QueryRowContext(ctx, "SELECT engine FROM system_backup_v2_engine_bindings WHERE scope='installation' FOR SHARE").Scan(&engine) != nil || engine != "v2" {
 		return ErrExecutionRecoveryRequired
 	}
 	var admissionScope string
@@ -33,22 +44,19 @@ func (g SQLCaptureGate) FailUntouched(ctx context.Context, a d.Authority) error 
 	if tx.QueryRowContext(ctx, "SELECT status FROM system_backup_v2_backups WHERE public_id=? FOR UPDATE", a.TaskPublicID).Scan(&status) != nil || (status != "preparing" && status != "ready_for_capture" && status != "acquiring_gate") {
 		return ErrExecutionRecoveryRequired
 	}
-	if tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,'') FROM system_backup_gate WHERE scope=? FOR SHARE", g.Authority.ApplicationScope).Scan(&phase, &gateOwner) != nil || phase != "idle" || gateOwner != "" {
+	if tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,'') FROM system_backup_gate WHERE scope=? FOR SHARE", g.Authority.ApplicationScope).Scan(&phase, &gateOwner) != nil ||
+		(phase == "idle" && gateOwner != "") ||
+		(phase != "idle" && (gateOwner == "" || gateOwner == a.TaskPublicID || (phase != "acquiring" && phase != "held" && phase != "releasing"))) {
 		return ErrExecutionRecoveryRequired
 	}
-	if tx.QueryRowContext(ctx, `SELECT
- (SELECT COUNT(*) FROM system_backup_v2_runtime_captures WHERE task_public_id=?)+
- (SELECT COUNT(*) FROM system_backup_v2_runtime_writers WHERE task_public_id=?)+
- (SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND create_dispatched=TRUE)+
- (SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type='backup' AND target_public_id=?)+
- (SELECT COUNT(*) FROM system_backup_v2_job_observations WHERE target_type='backup' AND target_public_id=?)`, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID).Scan(&effects) != nil || effects != 0 {
+	if tx.QueryRowContext(ctx, untouchedEffectsSQL, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID, a.TaskPublicID).Scan(&effects) != nil || effects != 0 {
 		return ErrExecutionRecoveryRequired
 	}
 	cancelRequested, e := executionCancelRequested(ctx, tx, a)
 	if e != nil {
 		return e
 	}
-	status, category := "failed", "not_ready"
+	status = "failed"
 	if cancelRequested {
 		status, category = "canceled", "canceled_by_actor"
 	}

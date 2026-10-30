@@ -188,6 +188,15 @@ func OpenPublishedArtifact(ctx context.Context, store ImmutableObjectStore, orig
 	if e != nil {
 		return out, e
 	}
+	return openPublishedCommit(ctx, store, origin, id, raw, ref, key, keyVersion)
+}
+
+// Shared authentication for exact historical versions and current discovery.
+// Only this helper consumes a commit; it never follows a second latest pointer.
+func openPublishedCommit(ctx context.Context, store ImmutableObjectStore, origin, id string, raw []byte, ref ObjectReference, key ed25519.PublicKey, keyVersion string) (PublishedArtifact, error) {
+	var out PublishedArtifact
+	prefix := artifactPrefix(origin, id)
+	var e error
 	if e = strictDecode(raw, &out.Commit); e != nil {
 		return out, e
 	}

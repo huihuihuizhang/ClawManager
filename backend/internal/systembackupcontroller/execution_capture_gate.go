@@ -79,6 +79,13 @@ func (g SQLCaptureGate) PrepareCapture(ctx context.Context, c ClaimedBackup) (*E
 	if c.Status != "ready_for_capture" && c.Status != "acquiring_gate" && c.Status != "preparing" {
 		return nil, ErrExecutionRecoveryRequired
 	}
+	if waiting, e := g.WaitForSource(ctx, in.Authority); errors.Is(e, ErrSourceGateWaitExpired) {
+		return nil, nil
+	} else if e != nil {
+		return nil, e
+	} else if waiting {
+		return nil, ErrSourceGateWaiting
+	}
 	if e = g.Authority.Check(ctx, in.Authority); e != nil && (c.Status == "ready_for_capture" || c.Status == "preparing" || c.Status == "acquiring_gate") {
 		if e = g.FailUntouched(ctx, in.Authority); e != nil {
 			return nil, e

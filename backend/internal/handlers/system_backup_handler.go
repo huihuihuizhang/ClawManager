@@ -35,6 +35,34 @@ func (h *SystemBackupHandler) Register(r *gin.RouterGroup) {
 	r.GET("/tasks/:id/events", h.events)
 	r.GET("/tasks/:id/verification-report", h.verificationReport)
 	r.POST("/tasks/:id/cancel", h.cancel)
+	// Historical Team jobs are evidence only. Do not register the retired
+	// handler's mutation routes or restart its independent worker.
+	r.GET("/team-data/jobs", h.legacyTeamHistory)
+	r.GET("/team-data/jobs/:id", h.legacyTeamHistoryDetail)
+}
+
+func (h *SystemBackupHandler) legacyTeamHistory(c *gin.Context) {
+	if !h.allow(c, systembackup.Read) {
+		return
+	}
+	v, err := h.store.LegacyTeamHistory(c.Request.Context(), c.Query("before"))
+	if err != nil {
+		backupError(c, err)
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "data": v})
+}
+
+func (h *SystemBackupHandler) legacyTeamHistoryDetail(c *gin.Context) {
+	if !h.allow(c, systembackup.Read) {
+		return
+	}
+	v, err := h.store.LegacyTeamHistoryJob(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		backupError(c, err)
+		return
+	}
+	c.JSON(200, gin.H{"success": true, "data": v, "history_only": true, "writes_available": false})
 }
 
 func (h *SystemBackupHandler) verificationReport(c *gin.Context) {

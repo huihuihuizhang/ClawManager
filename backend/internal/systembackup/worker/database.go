@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	legacy "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"github.com/go-sql-driver/mysql"
@@ -22,6 +23,7 @@ import (
 // Credentials only arrive in an acquire grant; source and drill identities,
 // placement and policy are bound to the complete invocation hash.
 type DatabaseSpec struct {
+	InputFormat     string                         `json:"input_format,omitempty"`
 	Address         string                         `json:"address"`
 	Name            string                         `json:"name"`
 	ServerUUID      string                         `json:"server_uuid"`
@@ -67,11 +69,17 @@ func validDatabaseRequest(r Request) bool {
 		return false
 	}
 	d := r.Database
+	if d != nil && d.InputFormat != "" && d.InputFormat != legacy.LegacyTeamSQLFormat {
+		return false
+	}
+	if d != nil && d.InputFormat != "" && r.Operation != "restore-database" {
+		return false
+	}
 	if r.Version != Version || !databaseOperation(r.Operation) || !time.Now().Before(r.Deadline) || !validDatabaseSpec(d) || d.MaxRows <= 0 || d.MaxRows > 100_000 || d.MaxMemoryBytes <= 0 || d.MaxMemoryBytes > 32<<20 || r.MaxArchiveBytes <= 0 || r.MaxArchiveBytes > 32<<20 || r.MaxCompressedBytes <= 0 || r.MaxCompressedBytes > 32<<20 || r.MaxFiles != 0 || r.MaxFileBytes != 0 || len(r.Files) != 0 {
 		return false
 	}
 	if r.Operation == "capture-database" {
-		return r.ArtifactName != "" && r.PolicyVersion == "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
+		return d.InputFormat == "" && r.ArtifactName != "" && r.PolicyVersion == "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
 	}
 	if !strings.HasPrefix(d.Name, "cm_drill_") {
 		return false
@@ -197,7 +205,11 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	// GCM frame, gzip checksum and all payload limits have been verified.
 	err = staging.ConsumeCompressed(ctx, file, key, r.Binding, r.MaxCompressedBytes, r.MaxArchiveBytes, func(src io.Reader) error {
 		var e error
-		source, e = domain.Decode(src, domain.Limits{MaxRows: d.MaxRows, MaxBytes: r.MaxArchiveBytes})
+		if d.InputFormat == legacy.LegacyTeamSQLFormat {
+			source, e = legacy.DecodeLegacyTeamSQL(ctx, src, domain.Limits{MaxRows: d.MaxRows, MaxBytes: r.MaxArchiveBytes})
+		} else {
+			source, e = domain.Decode(src, domain.Limits{MaxRows: d.MaxRows, MaxBytes: r.MaxArchiveBytes})
+		}
 		return e
 	})
 	defer clearSnapshot(source)

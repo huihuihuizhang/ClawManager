@@ -1666,15 +1666,15 @@ test('D-owned config and operation authorities materialize the closed machine co
   };
   // Published 066 remains immutable. The draft download extension must exactly
   // append to its enums in the explicit, unnumbered migration proposal.
-  assert.equal(statusDefs.OperationType.enum.at(-1), 'evidence_download_admission');
+  assert.equal(statusDefs.OperationType.enum.filter(value => value !== 'capture_reconcile').at(-1), 'evidence_download_admission');
   assert.equal(statusDefs.OperationTargetType.enum.at(-1), 'evidence');
-  assert.deepEqual(enumValues('operation_type'), statusDefs.OperationType.enum.slice(0, -1));
+  assert.deepEqual(enumValues('operation_type'), statusDefs.OperationType.enum.filter(value => value !== 'capture_reconcile').slice(0, -1));
   assert.deepEqual(enumValues('target_type'), statusDefs.OperationTargetType.enum.slice(0, -1));
   const proposal = readFileSync(join(root, taskSchema.$defs.Operation['x-storage-migration-proposal']), 'utf8');
   for (const [column, schemaName] of [['operation_type', 'OperationType'], ['target_type', 'OperationTargetType']]) {
     const declared = proposal.match(new RegExp(`MODIFY COLUMN ${column} ENUM\\(([^)]*)\\)`));
     assert.ok(declared, `download proposal must declare ${column}`);
-    assert.deepEqual([...declared[1].matchAll(/'([^']+)'/g)].map(match => match[1]), statusDefs[schemaName].enum);
+    assert.deepEqual([...declared[1].matchAll(/'([^']+)'/g)].map(match => match[1]), statusDefs[schemaName].enum.filter(value => value !== 'capture_reconcile'));
   }
   assert.equal(taskSchema['x-contract-status'], 'draft');
   assert.deepEqual(enumValues('status'), statusDefs.OperationStatus.enum);

@@ -14,9 +14,11 @@ const CreateSystemBackup = "createSystemBackup"
 const CreateSystemBackupPreflight = "createSystemBackupPreflight"
 const CancelSystemBackup = "cancelSystemBackup"
 const CancelSystemBackupPreflight = "cancelSystemBackupPreflight"
+const ReconcileSystemBackup = "reconcileSystemBackup"
 
 var cancelBackupPath = regexp.MustCompile(`^/api/v1/admin/system-backups/sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/cancel$`)
 var cancelPreflightPath = regexp.MustCompile(`^/api/v1/admin/system-backup-preflights/spf_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/cancel$`)
+var reconcileBackupPath = regexp.MustCompile(`^/api/v1/admin/system-backups/sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/reconcile$`)
 
 var ErrSystemBackupActionValidation = errors.New("validation_failed")
 
@@ -80,6 +82,11 @@ func (a *SystemBackupActionAuthorizer) Scope(r *http.Request, operation string) 
 		path = r.URL.Path
 	case CancelSystemBackupPreflight:
 		if r.URL == nil || !cancelPreflightPath.MatchString(r.URL.Path) {
+			return nil, ErrRegistrationPermission
+		}
+		path = r.URL.Path
+	case ReconcileSystemBackup:
+		if r.URL == nil || !reconcileBackupPath.MatchString(r.URL.Path) {
 			return nil, ErrRegistrationPermission
 		}
 		path = r.URL.Path

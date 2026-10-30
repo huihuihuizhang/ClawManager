@@ -93,7 +93,7 @@ const operationTargetPrefixes: Record<string, string> = {
 const operationResultPrefixes: Record<string, string> = {
   provider_proof_register: 'sev_', promotion_create: 'spm_', catalog_scan: 'scs_', catalog_import: 'sci_',
 };
-const synchronousOperationTypes = new Set(['config_update', 'provider_proof_register', 'manual_hold_update', 'promotion_create', 'promotion_revoke']);
+const synchronousOperationTypes = new Set(['config_update', 'provider_proof_register', 'manual_hold_update', 'promotion_create', 'promotion_revoke', 'capture_reconcile']);
 const eventFields = new Set([
   'schema_version', 'target_type', 'target_public_id', 'event_type', 'level', 'task_status',
   'message', 'details', 'request_id', 'created_at',
@@ -366,6 +366,7 @@ export function validOperation(value: unknown, expectedId?: string): value is Sy
       && operationUTCInstant(value.started_at) === admitted && operationUTCInstant(value.finished_at) === admitted
       && operationUTCInstant(value.updated_at) === admitted;
   }
+  if (value.operation_type === 'capture_reconcile' && (value.target_type !== 'backup' || value.endpoint !== 'reconcileSystemBackup' || value.actor_type !== 'admin' || value.status !== 'succeeded' || value.http_status !== 202)) return false;
   const terminal = value.status === 'succeeded' || value.status === 'failed';
   if (value.status === 'pending' && (value.started_at !== null || value.finished_at !== null)
     || value.status === 'running' && (value.started_at === null || value.finished_at !== null)

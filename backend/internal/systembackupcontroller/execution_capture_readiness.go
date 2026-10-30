@@ -13,6 +13,7 @@ func (g SQLCaptureGate) Ready(ctx context.Context) error {
 		return d.ErrNotReady
 	}
 	for _, q := range []string{
+		"SELECT source_gate_wait_started_at FROM system_backup_v2_backups WHERE 1=0",
 		"SELECT gate_generation,acquire_token,held_token,registry_sha256,writers_json,collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE 1=0",
 		"SELECT resource_kind,create_dispatched,request_sha256,binding_json,process_json,revoked,result_cipher,result_key_ref,result_sha256,stopped_at FROM system_backup_v2_runtime_resources WHERE 1=0",
 		"SELECT writer_id,original_json,original_sha256,paused,resumed,row_version FROM system_backup_v2_runtime_writers WHERE 1=0",

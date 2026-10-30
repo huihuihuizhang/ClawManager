@@ -21,7 +21,7 @@ var operationActorID = regexp.MustCompile(`^[0-9]+$`)
 
 var operationTypes = statusSet(systembackupcontract.OperationTypes...)
 var operationStatuses = statusSet("pending", "running", "succeeded", "failed")
-var synchronousOperationTypes = statusSet("config_update", "provider_proof_register", "manual_hold_update", "promotion_create", "promotion_revoke")
+var synchronousOperationTypes = statusSet("config_update", "provider_proof_register", "manual_hold_update", "promotion_create", "promotion_revoke", "capture_reconcile")
 var operationTargetPrefixes = map[string]string{
 	"backup": "sbk_", "backup_staging": "sbs_", "external_action": "sxa_", "drill": "sdr_",
 	"restore_resource": "srr_", "preflight": "spf_", "artifact_verify": "sav_", "catalog_scan": "scs_",
@@ -174,6 +174,9 @@ func operationFailureCategory(category string) bool {
 }
 
 func operationStatusFacts(row OperationSnapshot) bool {
+	if row.operationType == "capture_reconcile" {
+		return row.targetType == "backup" && row.endpoint == "reconcileSystemBackup" && row.actorType == "admin" && row.status == "succeeded" && !row.retryable && row.failureCategory == "none" && row.httpStatus.Valid && row.httpStatus.Int64 == 202 && !row.resultResourcePublicID.Valid && !row.resultConfigVersion.Valid && row.startedAt.Valid && row.finishedAt.Valid
+	}
 	// Admission is a committed synchronous fact, not a download-result audit.
 	// Evidence targets are reserved for this exact type and endpoint.
 	if row.operationType == "evidence_download_admission" || row.targetType == "evidence" {

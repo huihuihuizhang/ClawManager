@@ -1,0 +1,46 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Unified Team recovery integration", "version": "1"},
+  "servers": [{"url": "/api/v1"}],
+  "x-extends": "v12/admin.openapi.json",
+  "x-runtime-registration": "backend/cmd/server/system_backup_tasks_live.go",
+  "paths": {
+    "/admin/system-backups/{backup_public_id}/recovery-actions": {
+      "get": {
+        "operationId": "getSystemBackupRecoveryActions",
+        "x-required-permissions": ["system_backup.read"],
+        "parameters": [{"name": "backup_public_id", "in": "path", "required": true, "schema": {"$ref": "v12/admin-api-common.schema.json#/$defs/BackupPublicId"}}],
+        "responses": {"200": {"description": "Current capability observation, not mutation authority", "content": {"application/json": {"schema": {"$ref": "#/$defs/RecoveryActions"}}}}, "default": {"description": "Closed existing Admin API error envelope"}}
+      }
+    },
+    "/admin/system-backups/{backup_public_id}/reconcile": {
+      "post": {
+        "operationId": "reconcileSystemBackup",
+        "x-required-permissions": ["system_backup.operate"],
+        "parameters": [
+          {"name": "backup_public_id", "in": "path", "required": true, "schema": {"$ref": "v12/admin-api-common.schema.json#/$defs/BackupPublicId"}},
+          {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"$ref": "v12/admin-api-common.schema.json#/$defs/IdempotencyKey"}}
+        ],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "additionalProperties": false, "properties": {"lookup_only": {"type": "boolean", "default": false}}}}}},
+        "responses": {"202": {"description": "Original scheduling operation acknowledged, never recovery or backup success", "headers": {"Location": {"schema": {"type": "string"}}}, "content": {"application/json": {"schema": {"allOf": [{"$ref": "v12/task-operation.schema.json#/$defs/Operation"}, {"properties": {"operation_type": {"const": "capture_reconcile"}, "target_type": {"const": "backup"}, "endpoint": {"const": "reconcileSystemBackup"}, "status": {"const": "succeeded"}, "http_status": {"const": 202}}}]}}}}, "404": {"description": "With lookup_only, no original accepted request exists; no new operation is created"}, "default": {"description": "Closed existing Admin API error envelope"}},
+        "x-invariants": ["TLS and current operate scope are mandatory", "lookup_only is excluded from the business request hash and cannot create or schedule anything", "same actor/endpoint/key always returns the original persisted operation", "active owner lease and row version are unchanged", "cancellation remains cancellation", "no new capture, task, attempt, stop/resume receipt or gate mutation"]
+      }
+    }
+  },
+  "$defs": {
+    "RecoveryActions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "origin_installation_id", "public_id", "row_version", "status", "can_reconcile", "reason"],
+      "properties": {
+        "schema_version": {"const": "system-backup-recovery-actions.v1"},
+        "origin_installation_id": {"$ref": "v12/admin-api-common.schema.json#/$defs/InstallationId"},
+        "public_id": {"$ref": "v12/admin-api-common.schema.json#/$defs/BackupPublicId"},
+        "row_version": {"type": "integer", "minimum": 1},
+        "status": {"$ref": "v12/status-failure-enums.schema.json#/$defs/BackupStatus"},
+        "can_reconcile": {"type": "boolean"},
+        "reason": {"enum": ["original_recovery_only", "original_recovery_record_missing", "public_execution_unavailable", "canceled_task_cannot_retry", "publication_continuation_not_connected", "capture_retry_not_supported", "permission_denied"]}
+      },
+      "allOf": [{"if": {"properties": {"can_reconcile": {"const": true}}}, "then": {"properties": {"status": {"enum": ["capturing", "canceling"]}, "reason": {"const": "original_recovery_only"}}}}]
+    }
+  }
+}

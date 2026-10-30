@@ -101,6 +101,19 @@ func (s *SystemBackupReadScope) Context() context.Context {
 	return s.boundContext
 }
 
+// CanOperate is a read-only capability observation, never mutation authority.
+// Every POST still obtains and rechecks its own SystemBackupActionScope.
+func (s *SystemBackupReadScope) CanOperate(ctx context.Context, tx *sql.Tx) (bool, error) {
+	if err := s.check(ctx, tx); err != nil {
+		return false, err
+	}
+	err := s.config.checkSessionPermissions(ctx, tx, s.actor, []string{"system_backup.operate"})
+	if errors.Is(err, ErrRegistrationPermission) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 func (s *SystemBackupReadScope) AuthorizeRead(ctx context.Context, tx *sql.Tx) (string, error) {
 	if err := s.check(ctx, tx); err != nil {
 		return "", err

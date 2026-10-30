@@ -71,10 +71,11 @@ func TestQueueBudgetMetricsRenderCompleteClosedPrometheusSampleSet(t *testing.T)
 	}
 	output := string(body)
 	if strings.Count(output, "# HELP ") != 4 || strings.Count(output, "# TYPE ") != 4 ||
-		strings.Count(output, "_queue_deadline_utilization_ratio{") != 26 ||
+		strings.Count(output, "_queue_deadline_utilization_ratio{") != 27 ||
 		!strings.Contains(output, "task_type=\"backup\",task_purpose=\"acceptance\"} 1.25\n") ||
 		!strings.Contains(output, "preflight_mode=\"production_readonly\"} 0\n") ||
 		!strings.Contains(output, "operation_type=\"evidence_download_admission\"} 0\n") ||
+		!strings.Contains(output, "operation_type=\"capture_reconcile\"} 0\n") ||
 		!strings.Contains(output, "verification_scope=\"full\"} 0\n") {
 		t.Fatalf("unexpected queue budget exposition: %s", output)
 	}

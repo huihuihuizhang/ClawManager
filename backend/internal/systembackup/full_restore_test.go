@@ -65,6 +65,18 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 			t.Fatal(e)
 		}
 	}
+	// Real current-schema rows exercise the preserved Team adapter, not only
+	// the pure normalizer. Interruption keeps result/artifact bytes and records
+	// the original state while terminal children retain their exact status.
+	workStates := map[string]string{"cancelled": "cancelled", "skipped": "skipped", "superseded": "superseded", "blocked": "failed", "awaiting_review": "failed", "running": "failed", "succeeded": "succeeded"}
+	for status := range workStates {
+		if _, e := source.ExecContext(ctx, `INSERT INTO team_work_items(team_id,root_task_id,work_id,assignment_id,owner_member_id,title,status,result_json,artifact_refs_json) VALUES(1002,3002,?,?,2002,'saved work',?,'{"partial":"中断前的产物"}','["results/report.md"]')`, status, "assignment-"+status, status); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if _, e := source.ExecContext(ctx, `INSERT INTO team_workspace_file_audits(team_id,user_id,action,relative_path,bytes) VALUES(1002,101,'write','results/report.md',17)`); e != nil {
+		t.Fatal(e)
+	}
 	if e := ValidateSchema(ctx, source); e != nil {
 		t.Fatal(e)
 	}
@@ -121,6 +133,20 @@ func TestFullSchemaTeamRestorePreservesScopeHistoryAndInterruptedResults(t *test
 	}
 	if e = target.QueryRow("SELECT icon_key,(runtime_status IS NOT NULL)+(runtime_intent IS NOT NULL)+(blocked_reason IS NOT NULL)+(last_seen_at IS NOT NULL) FROM team_members WHERE id=2002").Scan(&icon, &staleFields); e != nil || icon != "crown" || staleFields != 0 {
 		t.Fatal("lost member definition or retained live runtime projection", icon, staleFields, e)
+	}
+	for original, want := range workStates {
+		var actual, partial, artifacts string
+		if e = target.QueryRow("SELECT status,result_json,artifact_refs_json FROM team_work_items WHERE team_id=1002 AND work_id=?", original).Scan(&actual, &partial, &artifacts); e != nil || actual != want || !strings.Contains(partial, "中断前的产物") || !strings.Contains(artifacts, "results/report.md") {
+			t.Fatal("work state or artifact changed", original, actual, e)
+		}
+		if e = source.QueryRow("SELECT status FROM team_work_items WHERE team_id=1002 AND work_id=?", original).Scan(&actual); e != nil || actual != original {
+			t.Fatal("source work changed", original, actual, e)
+		}
+	}
+	var path string
+	var size int64
+	if e = target.QueryRow("SELECT relative_path,bytes FROM team_workspace_file_audits WHERE team_id=1002").Scan(&path, &size); e != nil || path != "results/report.md" || size != 17 {
+		t.Fatal("file audit lost", path, size, e)
 	}
 	if e = target.QueryRow("SELECT owner,resource_scope,spec_json,(last_operation_id IS NOT NULL) FROM custom_team_templates WHERE id=4001").Scan(&owner, &scope, &definition, &staleFields); e != nil || owner != "owner-x" || scope != "northbound" || !strings.Contains(definition, "leader") || staleFields != 0 {
 		t.Fatal("lost owner template or retained stale operation", owner, scope, definition, e)

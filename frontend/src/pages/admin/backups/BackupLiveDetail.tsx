@@ -10,6 +10,7 @@ import BackupLiveActivity from './BackupLiveActivity.tsx';
 import BackupEvidenceDownload from './BackupEvidenceDownload.tsx';
 import BackupCancelUnstarted from './BackupCancelUnstarted';
 import BackupRecoveryNotice from './BackupRecoveryNotice';
+import BackupReconcileOriginal from './BackupReconcileOriginal';
 
 type DetailState = { kind: 'loading' } | { kind: 'error' }
   | { kind: 'ready'; detail: BackupTaskResource[BackupTaskKind] };
@@ -115,6 +116,8 @@ export default function BackupLiveDetail({ selection, close, reader = systemBack
       {state.kind === 'ready' && !localReport && reader === systemBackupReadService && <BackupRecoveryNotice
         key={`${public_id}:${revision}:${state.detail.task.row_version}`}
         selection={{ ...selection, row_version: state.detail.task.row_version }} status={state.detail.task.status} viewEvents={() => setSection('events')} />}
+      {state.kind === 'ready' && kind === 'backups' && state.detail.task.status === 'validating' && <p role="status" className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{b('validationIsNotPublication')}</p>}
+      {state.kind === 'ready' && kind === 'backups' && !localReport && reader === systemBackupReadService && <BackupReconcileOriginal key={`${public_id}:${state.detail.task.row_version}`} selection={{...selection,row_version:state.detail.task.row_version}} />}
       {state.kind === 'ready' && <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">{fields.map(([name, value]) =>
         <div key={name} className="min-w-0"><dt className="text-slate-500">{name}</dt><dd className="mt-1 break-words text-slate-900">{value}</dd></div>)}</dl>}
       {state.kind === 'ready' && !localReport && reader === systemBackupReadService && (kind === 'backups' || kind === 'preflights')
