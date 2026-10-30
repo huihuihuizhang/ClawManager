@@ -257,17 +257,27 @@ func TestRuntimeDeploymentServiceListNativeSlotPodRequiresMatchingImages(t *test
 	wrongDigest := ready.DeepCopy()
 	wrongDigest.Name = "wrong-digest"
 	wrongDigest.Status.ContainerStatuses[1].ImageID = "registry/openclaw@sha256:" + strings.Repeat("b", 64)
+	wrongPinnedDigest := ready.DeepCopy()
+	wrongPinnedDigest.Name = "wrong-pinned-digest"
+	for index := range wrongPinnedDigest.Spec.Containers {
+		wrongPinnedDigest.Spec.Containers[index].Image = "registry/openclaw@sha256:" + strings.Repeat("b", 64)
+	}
+	mutableTag := ready.DeepCopy()
+	mutableTag.Name = "mutable-tag"
+	for index := range mutableTag.Spec.Containers {
+		mutableTag.Spec.Containers[index].Image = "registry/openclaw:latest"
+	}
 	legacyPod := ready.DeepCopy()
 	legacyPod.Name = "legacy-shape"
 	legacyPod.Spec.Containers = []corev1.Container{{Name: "runtime", Image: image}}
 	legacyPod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: "runtime", ImageID: "registry/openclaw@" + digest}}
-	client := fake.NewSimpleClientset(deployment, ready, wrongImage, wrongDigest, legacyPod)
+	client := fake.NewSimpleClientset(deployment, ready, wrongImage, wrongDigest, wrongPinnedDigest, mutableTag, legacyPod)
 	pods, err := NewRuntimeDeploymentService(client).ListPods(context.Background(), deployment.Namespace, "openclaw")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(pods) != 4 {
-		t.Fatalf("pods length = %d, want 4", len(pods))
+	if len(pods) != 6 {
+		t.Fatalf("pods length = %d, want 6", len(pods))
 	}
 	byName := make(map[string]RuntimeDeploymentPod, len(pods))
 	for _, pod := range pods {
@@ -276,7 +286,7 @@ func TestRuntimeDeploymentServiceListNativeSlotPodRequiresMatchingImages(t *test
 	if got := byName["ready"]; got.State != "ready" || got.ImageRef != image || got.ImageDigest != digest {
 		t.Fatalf("valid native Pod inventory = %+v", got)
 	}
-	for _, name := range []string{"wrong-image", "wrong-digest", "legacy-shape"} {
+	for _, name := range []string{"wrong-image", "wrong-digest", "wrong-pinned-digest", "mutable-tag", "legacy-shape"} {
 		if got := byName[name]; got.State != "unhealthy" {
 			t.Errorf("%s must not be scheduled: %+v", name, got)
 		}
