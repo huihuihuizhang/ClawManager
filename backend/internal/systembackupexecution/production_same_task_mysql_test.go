@@ -675,6 +675,7 @@ func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
 		t.Fatal("original Prepare frozen plan", err)
 	}
 	f.checkOriginalFrozenDiscovery(ctx, t, discovery)
+	checkOriginalPublicationSourceFacts(t, discovery)
 	if err := f.service.Runtime.Loop.Store.Record(ctx, c.ExecutionWork{Step: c.ExecutionPrepare, Input: f.input}, c.ExecutionOutcome{Plan: plan}); err != nil {
 		t.Fatal("same-task original DurableExecutionStore SavePlan/outcome", err)
 	}

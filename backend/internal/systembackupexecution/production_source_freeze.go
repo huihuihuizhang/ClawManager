@@ -134,6 +134,10 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		}
 		metadata.ControlEvidence = saved.ControlEvidence
 	}
+	metadata.PublicationFacts, err = observePublicationSourceFacts(sqlMetadata.Schema, sqlMetadata.Census, metadata.ControlEvidence.Expected.SchemaRegistry)
+	if err != nil {
+		return nil, nil, err
+	}
 	if authority.Recheck(ctx) != nil {
 		return nil, nil, d.ErrNotReady
 	}

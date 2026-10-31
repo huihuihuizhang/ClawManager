@@ -37,6 +37,7 @@ type productionCaptureMetadata struct {
 	Skills                worker.SkillObjectCaptureSpec
 	Redis                 c.RedisCapturePolicy
 	Deployment, Secrets   worker.ResourceCaptureSpec
+	PublicationFacts      *productionPublicationSourceFacts `json:",omitempty"`
 }
 
 type productionInstanceMount struct {

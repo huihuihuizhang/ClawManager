@@ -116,6 +116,7 @@ func (record PublisherCaptureRecord) Detached() (PublisherCaptureRecord, error) 
 		return PublisherCaptureRecord{}, ErrExecutionRecord
 	}
 	out.Input.ConfigSnapshot = bytes.Clone(record.Input.ConfigSnapshot)
+	out.Input.SourceSnapshot = bytes.Clone(record.Input.SourceSnapshot)
 	out.Plan.CanonicalJSON = bytes.Clone(record.Plan.CanonicalJSON)
 	out.CandidateJSON = bytes.Clone(record.CandidateJSON)
 	out.PartResult.Checkpoint = bytes.Clone(record.PartResult.Checkpoint)
