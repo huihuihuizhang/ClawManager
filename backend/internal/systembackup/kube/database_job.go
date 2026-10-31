@@ -11,13 +11,17 @@ type DatabaseJobRequest struct {
 	Image, ServiceAccount, StagingClaim, EvidenceClaim, NodeName, Operation string
 	DeadlineSeconds                                                         int64
 	Control                                                                 WorkerControl
+	FormalMaterials                                                         *FormalJobMaterials
 }
 
-// DatabaseJob has no source volume or database Secret mount. The separate
-// evidence claim is writable only for restore; input backup staging is readonly
-// on restore/verify. Controller must provide observed claim UID and isolation.
+// DatabaseJob keeps source access in explicit readonly formal materials.
+// The separate evidence claim is writable only for restore; input staging is
+// readonly on restore/verify. Controller supplies claim UID and isolation.
 func DatabaseJob(r DatabaseJobRequest) (*batchv1.Job, error) {
 	if len(validation.IsDNS1123Subdomain(r.StagingClaim)) != 0 {
+		return nil, ErrResource
+	}
+	if r.FormalMaterials != nil && r.Operation != "capture-database" {
 		return nil, ErrResource
 	}
 	switch r.Operation {
@@ -32,7 +36,7 @@ func DatabaseJob(r DatabaseJobRequest) (*batchv1.Job, error) {
 	default:
 		return nil, ErrResource
 	}
-	j, err := job(JobRequest{Identity: r.Identity, Image: r.Image, ServiceAccount: r.ServiceAccount, StagingClaim: r.StagingClaim, NodeName: r.NodeName, DeadlineSeconds: r.DeadlineSeconds, Restore: r.Operation != "capture-database", WorkerControl: &r.Control}, true)
+	j, err := job(JobRequest{Identity: r.Identity, Image: r.Image, ServiceAccount: r.ServiceAccount, StagingClaim: r.StagingClaim, NodeName: r.NodeName, DeadlineSeconds: r.DeadlineSeconds, Restore: r.Operation != "capture-database", WorkerControl: &r.Control, FormalMaterials: r.FormalMaterials}, true)
 	if err != nil {
 		return nil, err
 	}

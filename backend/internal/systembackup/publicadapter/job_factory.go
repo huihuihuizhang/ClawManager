@@ -48,7 +48,7 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 		if w.Source.Name != "" || w.SourceSubPath != "" {
 			return zero, d.ErrNotReady
 		}
-		job, err = kube.DatabaseJob(kube.DatabaseJobRequest{Identity: w.Identity, Image: w.Image, ServiceAccount: w.ServiceAccount, StagingClaim: w.StagingClaim, NodeName: w.NodeName, DeadlineSeconds: w.DeadlineSeconds, Operation: "capture-database", Control: *w.WorkerControl})
+		job, err = kube.DatabaseJob(kube.DatabaseJobRequest{Identity: w.Identity, Image: w.Image, ServiceAccount: w.ServiceAccount, StagingClaim: w.StagingClaim, NodeName: w.NodeName, DeadlineSeconds: w.DeadlineSeconds, Operation: "capture-database", Control: *w.WorkerControl, FormalMaterials: w.FormalMaterials})
 	case "capture-team-redis", "capture-team-objects":
 		job, err = kube.TeamCaptureJob(w, req.Invocation.Request.Operation)
 	case "capture-skill-objects":
