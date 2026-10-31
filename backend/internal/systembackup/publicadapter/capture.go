@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"clawreef/internal/systembackup/flow"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -185,7 +186,18 @@ func (r *runner) Capture(ctx context.Context, in d.Input, plan d.Plan, ports d.P
 	for _, part := range f.Discovery.Parts {
 		c := &jobCollector{in: in, spec: part, sourceSHA: f.Discovery.SourceSHA256, ports: ports, reader: r.deps.Results}
 		jobs = append(jobs, c)
-		collectors = append(collectors, c)
+		if part.Part != ce.Part && part.Part != ce.ProofPart {
+			collectors = append(collectors, c)
+		}
+	}
+	// Dispatch CE only after every original business result is independently
+	// observed. Its finalized source cannot depend on a collector still waiting
+	// to be dispatched. The sealed Discovery, indices/AAD, jobs and result order
+	// stay unchanged; only the flow's execution order has this dependency.
+	for _, c := range jobs {
+		if c.spec.Part == ce.Part || c.spec.Part == ce.ProofPart {
+			collectors = append(collectors, c)
+		}
 	}
 	_, err = flow.Capture(ctx, flow.Request{Identity: identity(in), HoldUntil: f.Discovery.HoldUntil, ResumeTimeout: r.deps.RecoveryTimeout, Writers: writers, Collectors: collectors, Journal: j, DependenciesReady: func(ctx context.Context) error {
 		if err := j.record(ports.Check(ctx, in.Authority)); err != nil {
