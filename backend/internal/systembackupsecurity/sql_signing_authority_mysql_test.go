@@ -4,8 +4,8 @@ package systembackupsecurity
 
 import (
 	"context"
-	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
@@ -189,23 +189,95 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	if _, err = owner.ExecContext(ctx, `INSERT INTO system_backup_v2_execution_records VALUES (?,?,?,'capture','capture_result',?)`, f.pin.InstallationID, f.task.BackupPublicID, f.task.AttemptNo, strings.Repeat("d", 64)); err != nil {
 		t.Fatal(err)
 	}
+	var prepared []*PreparedPublicationRecord
+	var signedRecords [][]byte
 	for _, mount := range f.mounts {
-		input := signingSQLInput(t, f.task, mount.Binding)
-		stageSigningSQLFixture(t, job, s, mount.Binding.Purpose, input, false)
-		signer, _ := s.Signer(mount.Binding.Purpose)
-		if value, e := signer.Sign(ctx, input); e == nil || len(value) != 0 {
+		payload := publicationFixturePayload(t, f, mount.Binding)
+		p, e := s.PreparePublicationRecord(ctx, mount.Binding.Purpose, payload)
+		if e != nil {
+			t.Fatal(e)
+		}
+		clear(payload)
+		stagePreparedPublication(t, job, p, false)
+		if value, _, e := p.SignCommitted(ctx); e == nil || len(value) != 0 {
 			t.Fatal("rolled-back MySQL evidence authorized signing")
 		}
-		stageSigningSQLFixture(t, job, s, mount.Binding.Purpose, input, true)
-		stageSigningSQLFixture(t, job, s, mount.Binding.Purpose, input, true)
-		value, e := signer.Sign(ctx, input)
+		if mount.Binding.Purpose == "capture_certificate" {
+			var count int
+			if owner.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_evidence`).Scan(&count) != nil || count != 0 {
+				t.Fatal("rollback retained signing chunks")
+			}
+		}
+		stagePreparedPublication(t, job, p, true)
+		stagePreparedPublication(t, job, p, true)
+		if mount.Binding.Purpose == "capture_certificate" {
+			a := s.owners[mount.Binding.Purpose]
+			id := signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)
+			var rootBytes []byte
+			if owner.QueryRowContext(ctx, `SELECT inline_payload FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&rootBytes) != nil {
+				t.Fatal("chunk index unavailable")
+			}
+			var index frozenSigningChunkIndex
+			if !decodeFrozenSigningJSON(rootBytes, &index) || index.Count < 2 || index.Size <= 8192 {
+				t.Fatal("large certificate was not chunked")
+			}
+			var count, maxSize, total int
+			prefix := id + "_p"
+			if owner.QueryRowContext(ctx, `SELECT COUNT(*),MAX(OCTET_LENGTH(inline_payload)),SUM(OCTET_LENGTH(inline_payload)) FROM system_backup_v2_evidence WHERE public_id=? OR LEFT(public_id,?)=?`, id, len(prefix), prefix).Scan(&count, &maxSize, &total) != nil || count != index.Count+1 || maxSize > 8192 || total <= 8192 {
+				t.Fatal("actual SQL chunk boundary not exercised")
+			}
+			chunkID := signingChunkID(id, 0)
+			var original []byte
+			var until time.Time
+			if owner.QueryRowContext(ctx, `SELECT inline_payload,expires_at FROM system_backup_v2_evidence WHERE public_id=?`, chunkID).Scan(&original, &until) != nil {
+				t.Fatal("first chunk unavailable")
+			}
+			var chunk frozenSigningChunk
+			if !decodeFrozenSigningJSON(original, &chunk) {
+				t.Fatal("invalid fixture chunk")
+			}
+			chunk.Index++
+			bad, _ := json.Marshal(chunk)
+			digest := sha256.Sum256(bad)
+			if _, e = owner.ExecContext(ctx, `UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, bad, hex.EncodeToString(digest[:]), len(bad), chunkID); e != nil {
+				t.Fatal(e)
+			}
+			before := f.login
+			if _, _, e = p.SignCommitted(ctx); e == nil || f.login != before {
+				t.Fatal("wrong chunk ordinal reached provider")
+			}
+			if _, e = owner.ExecContext(ctx, `DELETE FROM system_backup_v2_evidence WHERE public_id=?`, chunkID); e != nil {
+				t.Fatal(e)
+			}
+			if _, _, e = p.SignCommitted(ctx); e == nil || f.login != before {
+				t.Fatal("missing chunk reached provider")
+			}
+			tx, e := owner.BeginTx(ctx, nil)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = a.insertFrozenEvidence(ctx, tx, chunkID, original, until); e != nil {
+				tx.Rollback()
+				t.Fatal(e)
+			}
+			if e = tx.Commit(); e != nil {
+				t.Fatal(e)
+			}
+			t.Logf("full local capture: payload=%d input=%d frozen=%d chunks=%d max-inline=%d", len(p.payload), len(p.input), index.Size, index.Count, maxSize)
+		}
+		value, checksum, e := p.SignCommitted(ctx)
 		if e != nil {
 			t.Fatal("real restricted MySQL-to-TLS signing failed", mount.Binding.Purpose, e)
 		}
 		history, e := s.History(ctx)
-		if e != nil || !ed25519.Verify(history.PurposeKeys(mount.Binding.Purpose)[0].PublicKey, input, value) {
+		if e != nil {
+			t.Fatal(e)
+		}
+		if observed, verifyErr := history.VerifyPublicationRecord(value, f.task, mount.Binding.Purpose); verifyErr != nil || observed != checksum {
 			t.Fatal("real SQL signature readback failed", e)
 		}
+		prepared = append(prepared, p)
+		signedRecords = append(signedRecords, value)
 	}
 	if _, err = job.ExecContext(ctx, `UPDATE system_backup_v2_backups SET status='failed' WHERE public_id=?`, f.task.BackupPublicID); err == nil {
 		t.Fatal("signing workload can UPDATE source task")
@@ -226,5 +298,40 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	input := signingSQLInput(t, f.task, f.mounts[0].Binding)
 	if _, err = signer.Sign(ctx, input); err == nil || f.login != 3 {
 		t.Fatal("old MySQL claim reached provider after takeover")
+	}
+	// Model the original runtime release and subsequent publisher acquisition.
+	// This gate proves the SQL signing adapter, not the controller acquire API.
+	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_owner='',status='validating' WHERE public_id=?`, f.task.BackupPublicID); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range prepared {
+		if _, _, e := p.SignCommitted(ctx); e == nil || f.login != 3 {
+			t.Fatal("released capture claim authorized publication")
+		}
+	}
+	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_owner=?,row_version=13,status='publishing' WHERE public_id=?`, grant.ControllerOwner, f.task.BackupPublicID); err != nil {
+		t.Fatal(err)
+	}
+	publisher, e := NewSQLInstallationArtifactSigners(ctx, job, f.reader, f.pin, f.mounts, f.task, SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 13})
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer publisher.Close()
+	for i, p := range prepared {
+		current, e := publisher.PreparePublicationRecord(ctx, p.binding.Purpose, p.payload)
+		if e != nil {
+			t.Fatal(e)
+		}
+		stagePreparedPublication(t, job, current, true)
+		raw, _, e := current.SignCommitted(ctx)
+		if e != nil || string(raw) != string(signedRecords[i]) {
+			t.Fatal("new publisher claim changed frozen artifact or could not sign", e)
+		}
+		if _, _, e = p.SignCommitted(ctx); e == nil {
+			t.Fatal("old capture claim reused after publisher acquisition")
+		}
+	}
+	if f.login != 6 || f.signed != 6 {
+		t.Fatal("publisher did not use three separate purpose signers")
 	}
 }
