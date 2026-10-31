@@ -9,6 +9,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	a "clawreef/internal/systembackupkekadapter"
 	w "clawreef/internal/systembackupwire"
@@ -19,13 +20,15 @@ import (
 // stopped Job history and controller-private observed C copies. Its logical C
 // AAD paths remain the ORIGINAL worker names when objects are later relocated.
 type publicationCaptureFiles struct {
-	record    c.PublisherCaptureRecord
-	candidate worker.FormalCaptureResult
-	files     staging.FormalFiles
-	envelope  []byte
-	stream    w.StreamVerification
-	verifier  *a.PublisherVerifier
-	until     time.Time
+	record         c.PublisherCaptureRecord
+	candidate      worker.FormalCaptureResult
+	files          staging.FormalFiles
+	envelope       []byte
+	stream         w.StreamVerification
+	verifier       *a.PublisherVerifier
+	until          time.Time
+	domainVerified bool
+	controlPlain   []byte
 }
 
 func (p *publicationCaptureFiles) Close() {
@@ -35,6 +38,8 @@ func (p *publicationCaptureFiles) Close() {
 	p.files.Close()
 	clear(p.envelope)
 	p.envelope = nil
+	clear(p.controlPlain)
+	p.controlPlain = nil
 	if p.verifier != nil {
 		p.verifier.Close()
 		p.verifier = nil
@@ -48,9 +53,9 @@ func (p *publicationCaptureFiles) check(ctx context.Context) error {
 	return nil
 }
 
-// This authenticates complete C bytes, not their domain semantics. The final
-// assembler must additionally run the actual inert domain readers and require
-// complete owned reports before publishing a manifest or claiming success.
+// This independently authenticates and inertly reads complete original business
+// C bytes. Control parts remain bounded in-memory inputs for the paired final
+// source verification; neither individual part grants artifact acceptance.
 func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, claim c.ClaimToken, attempt uint64, part string) (out *publicationCaptureFiles, resultErr error) {
 	if s == nil || s.staging == nil || ctx == nil || ctx.Err() != nil {
 		return nil, c.ErrExecutionAuthority
@@ -100,7 +105,26 @@ func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, cla
 	}
 	i := record.Invocation
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
-	verified, err := w.VerifyWrappedStream(bounded, spec, envelope, files.Ciphertext, bound)
+	verified, err := w.InspectWrappedStream(bounded, spec, envelope, files.Ciphertext, bound, func(plaintext io.Reader) error {
+		if i.Request.ControlEvidence == nil {
+			if err := inspectOwnedBusinessPayload(bounded, i, original.Candidate, plaintext); err != nil {
+				return err
+			}
+			p.domainVerified = true
+			return nil
+		}
+		limit := int64(ce.MaxBytes)
+		if part == ce.ProofPart {
+			limit = ce.MaxProofBytes
+		} else if part != ce.Part {
+			return c.ErrExecutionRecord
+		}
+		p.controlPlain, err = io.ReadAll(io.LimitReader(plaintext, limit+1))
+		if err != nil || int64(len(p.controlPlain)) > limit {
+			return c.ErrExecutionRecord
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -12,8 +12,9 @@ import (
 )
 
 // Real original SQL/receipt/history, current publisher, private observed C
-// copies and TLS Unwrap. This verifies publisher file intake, not domain or
-// artifact/terminal acceptance. Runtime stop/resume remain named fixtures.
+// copies, TLS Unwrap and a full inert portable-workspace read. This does not
+// prove all six domains or artifact/terminal acceptance. Runtime stop/resume
+// remain named fixtures.
 func TestAPublicationConsumesOnlyOriginalPrivateObservedCFiles(t *testing.T) {
 	for _, mode := range []string{"private-only", "missing-private-cipher", "changed-private-cipher", "changed-private-envelope", "renew-old-object"} {
 		t.Run(mode, func(t *testing.T) {
@@ -92,6 +93,9 @@ func TestAPublicationConsumesOnlyOriginalPrivateObservedCFiles(t *testing.T) {
 				t.Fatal("actual private publisher intake", err)
 			}
 			defer part.Close()
+			if !part.domainVerified || len(part.controlPlain) != 0 {
+				t.Fatal("publisher omitted inert domain read")
+			}
 			if part.candidate != h.candidate || part.stream.CiphertextSHA256() != h.candidate.Ciphertext.SHA256 || part.stream.CiphertextBytes() != h.candidate.Ciphertext.Size || x.logins.Load() != 1 || x.decrypts.Load() != 1 || part.check(ctx) != nil {
 				t.Fatal("original bytes/current claim lost")
 			}
