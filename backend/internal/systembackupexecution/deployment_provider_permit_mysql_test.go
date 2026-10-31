@@ -424,6 +424,9 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 			if err := controlClient.Ready(ctx, invocation); err != nil {
 				t.Fatal("actual mTLS ready handler", err)
 			}
+			if mode == "valid" {
+				assertOriginalCaptureRequestMutations(t, owner, client, admin, controlClient, authority, invocation)
+			}
 			capture, err := worker.NewDeliveredCaptureKeyJob(ctx, controlClient, invocation, config, *invocation.FormalCapture.PermitDelivery)
 			if err != nil {
 				t.Fatal("actual mTLS reserve/SQL issuer", err)

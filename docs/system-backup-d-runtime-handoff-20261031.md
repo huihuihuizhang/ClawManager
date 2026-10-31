@@ -445,3 +445,10 @@
 - 仅reviewed-business source分支改为四个有界JSON metadata结果（tables/columns/PK+FK/原WorkBuddy unique），在同一原RR中重建完整原Table形状。每个真实SQL Query及Next前后仍调用原source guard，业务DATA每行与最后原session/schema/census检查保持；没有授权缓存、schema字段删减、额外SQL权限、源数据重编码或旧hash重写。legacy Catalog/Capture路径保持。
 - 约束名只作metadata排序，不新增SQL标识符限制；PK/FK和unique的排序由原MySQL ORDER BY生成ROW_NUMBER ordinal，避免Go字节排序改变原外键数组/hash。监督独立真实MySQL ordinary、合法fk$owner和a_owner/B_creator三类probe全部PASS；domain全包（含metadata全部边界撤权、data/final读取撤权）PASS3.464s。
 - 实际D独立SAN/TLS MySQL原172迁移、原SELECT-only source角色完整capture与旧Catalog逐字段等价，含schema/PK/FK/unique/defaults，原frozen schema验证PASS19.08s（package22.469s）；完整RR/data path当前授权437次、SQL耗时123.7841ms（该低层对照无HTTP key-check延迟，不冒充完整native任务成功）。完整同任务默认30秒key window、10parts/C/Evidence/原Record(validating)仍继续。
+
+## D5.38 同一控制请求复用已认证原计划，提交前完整输入/密文重查
+
+- 01:23 SQL-first logging-only失败保留在`.tools/d-same-task-sql-cost-diagnostic.log`及CPU profile；原窗口26.486秒的另一轮只完成129次SourceAuthorize，未称正向成功。profile中Authorize累计14.18秒、input11.69秒（约82%，包含重叠），同次请求原Read、挂载与issuer重复原计划解密/Describe是实测成本。
+- 新SQLExecutionRecords.OpenOriginalCapturePlan只从实际原SQL/原密钥解析与完整plan绑定签发私有OriginalCapturePlan历史凭据，绑定当前context及原Records配置；调用者不能由DTO构造。每个Authorize独立读取一次，不跨请求缓存，不延长claim/hold/DEK，不删减逐行/EOF guard。Read的原gate/资源journal、security的原CM/Secret/Pod挂载、issuer的原controller/worker/SA/grant/capability/mapping与Stage均继续。
+- 原始profile bytes/hash、config bytes、全部BackupSpec字段、原plan payload hash/key_ref、实际sealed_payload的SHA256与长度在签发前取样；原LoadPlan认证全部sealed bytes。原key-use事务提交前以FOR SHARE重读全部字段，与原样本逐字段等同；issuer Stage也重查该凭据，最终原guard Recheck及commit后的ValidateCollectors保留。原解密8MiB读取上限不变，预分配改为实际有界密文大小。
+- 实际mTLS Ready在原CM GET期间变更profile_json、profile_sha256、runner、config_snapshot_json、payload_sha256、key_ref、sealed_payload七反例均拒绝；异context与调用者零值凭据拒绝。实际TLS/SQL valid、unknown-reserve-ack与revoked-after-login三模式PASS10.47s/package13.709s；controller9.341s、adapter5.346s、execution8.245s全包PASS。完整原任务、173迁移/新staging producer、10 C/Evidence与Record(validating)待无overlay正向实跑，当前不能声称已解决默认窗口或A发布。

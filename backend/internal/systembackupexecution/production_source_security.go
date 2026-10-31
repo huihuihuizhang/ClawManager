@@ -48,6 +48,13 @@ func (o *PublicJobOwner) originalProductionMounts(ctx context.Context, a d.Autho
 	if err != nil {
 		return nil, false, err
 	}
+	return o.productionMountsFromOriginal(in, discovery, part)
+}
+
+func (o *PublicJobOwner) productionMountsFromOriginal(in d.Input, discovery b.Discovery, part b.JobPart) ([]kube.MountIdentity, bool, error) {
+	if o.productionSource == nil {
+		return nil, false, nil
+	}
 	if in.Backup == nil || in.Backup.TaskPurpose != "acceptance" {
 		return nil, false, nil
 	}

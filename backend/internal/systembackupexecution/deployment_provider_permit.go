@@ -109,6 +109,10 @@ func (o *PublicJobOwner) validProviderPermitPin(inv worker.Invocation) bool {
 }
 
 func (o *PublicJobOwner) prepareProviderPermit(ctx context.Context, in d.Input, job d.JobBinding, pod BoundPod, req worker.ControlRequest) (*a.PreparedProviderPermitIssue, error) {
+	return o.prepareProviderPermitOriginal(ctx, in, job, pod, req, nil)
+}
+
+func (o *PublicJobOwner) prepareProviderPermitOriginal(ctx context.Context, in d.Input, job d.JobBinding, pod BoundPod, req worker.ControlRequest, original *c.OriginalCapturePlan) (*a.PreparedProviderPermitIssue, error) {
 	if req.Invocation.ProviderKey == nil {
 		return nil, nil
 	}
@@ -118,5 +122,9 @@ func (o *PublicJobOwner) prepareProviderPermit(ctx context.Context, in d.Input, 
 	if o.providerPermits == nil || req.Action == "ready" {
 		return nil, nil
 	}
-	return o.providerPermits.issuer.Prepare(ctx, a.ProviderPermitIssueScope{Input: in, Job: job, Invocation: req.Invocation, WorkerPodName: pod.Name, WorkerIdentity: k.JobIdentity{Namespace: pod.Namespace, PodUID: pod.UID, ServiceAccountUID: pod.ServiceAccountUID, JobUID: job.UID, InvocationSHA256: req.InvocationSHA256, ExecutionGrantSHA256: o.Identity.GrantSHA256()}})
+	scope := a.ProviderPermitIssueScope{Input: in, Job: job, Invocation: req.Invocation, WorkerPodName: pod.Name, WorkerIdentity: k.JobIdentity{Namespace: pod.Namespace, PodUID: pod.UID, ServiceAccountUID: pod.ServiceAccountUID, JobUID: job.UID, InvocationSHA256: req.InvocationSHA256, ExecutionGrantSHA256: o.Identity.GrantSHA256()}}
+	if original != nil {
+		return o.providerPermits.issuer.PrepareOriginal(ctx, scope, original)
+	}
+	return o.providerPermits.issuer.Prepare(ctx, scope)
 }

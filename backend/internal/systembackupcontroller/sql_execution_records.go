@@ -141,7 +141,9 @@ func (s SQLExecutionRecords) read(ctx context.Context, a d.Authority, kind strin
 	if err != nil || resolved != ref || len(key) != 32 {
 		return nil, ErrExecutionRecord
 	}
-	plain := bytes.NewBuffer(make([]byte, 0, 8<<20))
+	// The authenticated reader enforces the same 8 MiB maximum. Reserve only
+	// the actual bounded ciphertext size, rather than 8 MiB for every check.
+	plain := bytes.NewBuffer(make([]byte, 0, min(len(sealed), 8<<20)))
 	defer func() { clear(plain.Bytes()) }()
 	if staging.Open(ctx, bytes.NewReader(sealed), plain, key, recordBinding(a, kind, digest), 8<<20) != nil || recordHash(plain.Bytes()) != digest {
 		return nil, ErrExecutionRecord

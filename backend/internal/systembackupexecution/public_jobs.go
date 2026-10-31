@@ -65,47 +65,11 @@ func (o *PublicJobOwner) ready() bool {
 	return o != nil && o.Client != nil && o.Dynamic != nil && o.Namespace != "" && o.NamespaceUID != "" && o.TrustDomain != "" && o.Identity != nil && o.Staging != nil && (o.Proof != nil || o.AllowKubeletStopWitness) && o.Security.ServiceAccountUID != ""
 }
 func (o *PublicJobOwner) input(ctx context.Context, a d.Authority, recovery bool) (d.Input, d.Plan, b.Discovery, error) {
-	var in d.Input
+	in, e := o.executionInput(ctx, a, recovery)
 	var p d.Plan
 	var desc b.Discovery
-	if !o.ready() {
-		return in, p, desc, d.ErrNotReady
-	}
-	var e error
-	if recovery {
-		e = o.Gate.Recovery.Check(ctx, a)
-	} else {
-		e = o.Gate.Check(ctx, a)
-	}
 	if e != nil {
 		return in, p, desc, e
-	}
-	tx, e := o.Gate.Authority.DB.BeginTx(ctx, nil)
-	if e != nil {
-		return in, p, desc, e
-	}
-	defer tx.Rollback()
-	var profile, config []byte
-	if e = tx.QueryRowContext(ctx, `SELECT i.profile_json,b.config_snapshot_json FROM system_backup_v2_execution_inputs i JOIN system_backup_v2_backups b ON b.public_id=i.task_public_id AND b.origin_installation_id=i.origin_installation_id WHERE b.origin_installation_id=? AND b.public_id=? AND i.task_type='backup'`, a.InstallationID, a.TaskPublicID).Scan(&profile, &config); e != nil {
-		return in, p, desc, e
-	}
-	var identity struct {
-		Profile  string `json:"source_profile"`
-		Revision string `json:"revision"`
-	}
-	if json.Unmarshal(profile, &identity) != nil {
-		return in, p, desc, c.ErrExecutionInput
-	}
-	bclaim := c.ClaimedBackup{Claim: c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: a.TaskPublicID}, Owner: a.ClaimOwner, RowVersion: a.ClaimRowVersion}, InstallationID: a.InstallationID, Profile: profile, Config: config, RequestID: a.RequestID, ConfigVersion: a.ConfigVersion, ConfigSHA256: a.ConfigSHA256, Deadline: a.DeadlineAt}
-	in, e = bclaim.ExecutionInputForAttempt(ctx, tx, a.AttemptNo)
-	tx.Rollback()
-	if e != nil || in.Authority != a {
-		return in, p, desc, c.ErrExecutionAuthority
-	}
-	if in.Backup.TaskPurpose != "functional_test" {
-		if o.supportsCapture(in) != nil {
-			return in, p, desc, d.ErrNotReady
-		}
 	}
 	if recovery {
 		p, e = o.Gate.Records.LoadRecoveryPlan(ctx, in, o.Gate.Recovery)
@@ -122,6 +86,50 @@ func (o *PublicJobOwner) input(ctx context.Context, a d.Authority, recovery bool
 	defer clear(inner.CanonicalJSON)
 	desc, e = b.DescribePlan(in, inner)
 	return in, p, desc, e
+}
+
+func (o *PublicJobOwner) executionInput(ctx context.Context, a d.Authority, recovery bool) (d.Input, error) {
+	var in d.Input
+	if !o.ready() {
+		return in, d.ErrNotReady
+	}
+	var e error
+	if recovery {
+		e = o.Gate.Recovery.Check(ctx, a)
+	} else {
+		e = o.Gate.Check(ctx, a)
+	}
+	if e != nil {
+		return in, e
+	}
+	tx, e := o.Gate.Authority.DB.BeginTx(ctx, nil)
+	if e != nil {
+		return in, e
+	}
+	defer tx.Rollback()
+	var profile, config []byte
+	if e = tx.QueryRowContext(ctx, `SELECT i.profile_json,b.config_snapshot_json FROM system_backup_v2_execution_inputs i JOIN system_backup_v2_backups b ON b.public_id=i.task_public_id AND b.origin_installation_id=i.origin_installation_id WHERE b.origin_installation_id=? AND b.public_id=? AND i.task_type='backup'`, a.InstallationID, a.TaskPublicID).Scan(&profile, &config); e != nil {
+		return in, e
+	}
+	var identity struct {
+		Profile  string `json:"source_profile"`
+		Revision string `json:"revision"`
+	}
+	if json.Unmarshal(profile, &identity) != nil {
+		return in, c.ErrExecutionInput
+	}
+	bclaim := c.ClaimedBackup{Claim: c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: a.TaskPublicID}, Owner: a.ClaimOwner, RowVersion: a.ClaimRowVersion}, InstallationID: a.InstallationID, Profile: profile, Config: config, RequestID: a.RequestID, ConfigVersion: a.ConfigVersion, ConfigSHA256: a.ConfigSHA256, Deadline: a.DeadlineAt}
+	in, e = bclaim.ExecutionInputForAttempt(ctx, tx, a.AttemptNo)
+	tx.Rollback()
+	if e != nil || in.Authority != a {
+		return in, c.ErrExecutionAuthority
+	}
+	if in.Backup.TaskPurpose != "functional_test" {
+		if o.supportsCapture(in) != nil {
+			return in, d.ErrNotReady
+		}
+	}
+	return in, nil
 }
 func (o *PublicJobOwner) namespace(ctx context.Context) error {
 	ns, e := o.Client.CoreV1().Namespaces().Get(ctx, o.Namespace, metav1.GetOptions{})
@@ -357,6 +365,13 @@ func (o *PublicJobOwner) Read(ctx context.Context, a d.Authority, binding d.JobB
 	if e != nil {
 		return kube.Runner{}, record, e
 	}
+	return o.readOriginalPart(ctx, a, binding, recovery, part)
+}
+
+// Only callers that have authenticated the original plan in this request may
+// use this projection; all current gate and resource journal checks remain.
+func (o *PublicJobOwner) readOriginalPart(ctx context.Context, a d.Authority, binding d.JobBinding, recovery bool, part b.JobPart) (kube.Runner, kube.ResourceRecord, error) {
+	var record kube.ResourceRecord
 	var originalJob batchv1.Job
 	if json.Unmarshal(part.Intent.SpecJSON, &originalJob) != nil {
 		return kube.Runner{}, record, c.ErrExecutionRecord
@@ -503,10 +518,15 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrNotReady
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
-	in, plan, desc, e := o.input(ctx, a, false)
+	in, e := o.executionInput(ctx, a, false)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
+	plan, desc, originalPlan, e := o.Gate.Records.OpenOriginalCapturePlan(ctx, in)
+	if e != nil {
+		return lease, worker.ErrExecution
+	}
+	defer clear(plan.CanonicalJSON)
 	var part *b.JobPart
 	for idx := range desc.Parts {
 		p := &desc.Parts[idx]
@@ -559,11 +579,15 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if json.Unmarshal(rawBinding, &binding) != nil || revoked || !time.Now().Before(binding.RelayExpiresAt) {
 		return lease, worker.ErrExecution
 	}
-	_, record, e := o.Read(ctx, a, binding, false)
+	_, record, e := o.readOriginalPart(ctx, a, binding, false, *part)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
-	security, e := o.workerSecurity(ctx, a, *part)
+	mounts, production, e := o.productionMountsFromOriginal(in, desc, *part)
+	if e != nil {
+		return lease, worker.ErrExecution
+	}
+	security, e := o.workerSecurityWithMounts(ctx, a, *part, mounts, production)
 	if e != nil {
 		return lease, worker.PendingControl("worker_mount_identity_pending")
 	}
@@ -574,7 +598,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if process.Name != pod.Name || process.UID != pod.UID {
 		return lease, worker.ErrExecution
 	}
-	preparedPermit, e := o.prepareProviderPermit(ctx, in, binding, pod, req)
+	preparedPermit, e := o.prepareProviderPermitOriginal(ctx, in, binding, pod, req, originalPlan)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
@@ -681,6 +705,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		if lease.KeyUse == nil || preparedPermit.Stage(ctx, tx, *lease.KeyUse, req.Action) != nil {
 			return worker.Lease{}, worker.ErrExecution
 		}
+	}
+	if originalPlan.RecheckTx(ctx, tx, o.Gate.Records, in) != nil || guard.Recheck(ctx, tx) != nil {
+		return worker.Lease{}, worker.ErrExecution
 	}
 	if e = tx.Commit(); e != nil {
 		return lease, worker.ErrNotReady
