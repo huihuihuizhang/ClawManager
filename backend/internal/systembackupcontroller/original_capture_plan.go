@@ -27,8 +27,9 @@ type OriginalCapturePlan struct {
 }
 
 type originalCapturePart struct {
-	namespace, name, invocation, request string
-	generation                           uint64
+	namespace, name, invocation string
+	generation                  uint64
+	spec                        []byte
 }
 
 type originalCaptureStamp struct {
@@ -115,18 +116,13 @@ func (s SQLExecutionRecords) OpenOriginalCapturePlan(ctx context.Context, in d.I
 	}
 	p := &OriginalCapturePlan{ctx: ctx, records: s, input: raw, stamp: stamp, parts: map[string]originalCapturePart{}}
 	for _, part := range desc.Parts {
-		var job batchv1.Job
-		if hash := recordHash(part.Intent.SpecJSON); hash != part.Intent.SpecSHA256 || json.Unmarshal(part.Intent.SpecJSON, &job) != nil || recordHash(part.InvocationJSON) != part.InvocationSHA256 {
-			return d.Plan{}, desc, nil, ErrExecutionRecord
-		}
-		intent, e := kube.Intent("Job", &job)
-		if e != nil || intent.Identity.Owner != in.Authority.TaskPublicID {
+		if hash := recordHash(part.Intent.SpecJSON); hash != part.Intent.SpecSHA256 || recordHash(part.InvocationJSON) != part.InvocationSHA256 {
 			return d.Plan{}, desc, nil, ErrExecutionRecord
 		}
 		if _, exists := p.parts[part.Intent.JobUnitKey]; exists {
 			return d.Plan{}, desc, nil, ErrExecutionRecord
 		}
-		p.parts[part.Intent.JobUnitKey] = originalCapturePart{namespace: part.Intent.Namespace, name: part.Intent.Name, generation: part.Intent.Generation, invocation: part.InvocationSHA256, request: intent.RequestSHA256}
+		p.parts[part.Intent.JobUnitKey] = originalCapturePart{namespace: part.Intent.Namespace, name: part.Intent.Name, generation: part.Intent.Generation, invocation: part.InvocationSHA256, spec: bytes.Clone(part.Intent.SpecJSON)}
 	}
 	failed = false
 	return plan, desc, p, nil
@@ -153,7 +149,15 @@ func (p *OriginalCapturePlan) MatchPart(ctx context.Context, s SQLExecutionRecor
 	if !exists || err != nil || inv.ProviderKey == nil || part.namespace != job.Namespace || part.name != job.Name || part.generation != job.Generation || part.invocation != hash {
 		return "", "", ErrExecutionRecord
 	}
-	return p.stamp.PlanHash, part.request, nil
+	var original batchv1.Job
+	if json.Unmarshal(part.spec, &original) != nil {
+		return "", "", ErrExecutionRecord
+	}
+	intent, err := kube.Intent("Job", &original)
+	if err != nil || intent.Identity.Owner != in.Authority.TaskPublicID || intent.Identity.Namespace != job.Namespace || intent.Identity.Name != job.Name {
+		return "", "", ErrExecutionRecord
+	}
+	return p.stamp.PlanHash, intent.RequestSHA256, nil
 }
 
 // RecheckTx compares the CURRENT complete input and sealed record, including

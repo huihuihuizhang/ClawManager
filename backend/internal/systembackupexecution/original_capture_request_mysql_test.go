@@ -76,7 +76,7 @@ func assertOriginalCaptureRequestMutations(t *testing.T, owner *PublicJobOwner, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, _, original, err := owner.Gate.Records.OpenOriginalCapturePlan(ctx, in)
+	plan, discovery, original, err := owner.Gate.Records.OpenOriginalCapturePlan(ctx, in)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,6 +88,15 @@ func assertOriginalCaptureRequestMutations(t *testing.T, owner *PublicJobOwner, 
 	}
 	if _, _, err = original.MatchPart(ctx, owner.Gate.Records, in, binding, invocation); err != nil {
 		t.Fatal("original request part", err)
+	}
+	// Caller-owned observations cannot change the private part used by issuer.
+	plan.CanonicalJSON[0] = '!'
+	for index := range discovery.Parts {
+		discovery.Parts[index].Intent.SpecJSON[0] = '!'
+		discovery.Parts[index].InvocationJSON[0] = '!'
+	}
+	if _, _, err = original.MatchPart(ctx, owner.Gate.Records, in, binding, invocation); err != nil {
+		t.Fatal("caller observation mutation changed private authenticated part", err)
 	}
 	other, cancel := context.WithCancel(ctx)
 	defer cancel()
