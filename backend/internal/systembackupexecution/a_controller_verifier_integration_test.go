@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -53,7 +54,7 @@ func TestAControllerVerifierOriginalUnwrapOnlyRevocation(t *testing.T) {
 	aControllerVerifierOriginalSQLAndTLS(t, true)
 }
 
-func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
+func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool, exercises ...func(aOriginalIssuerFixture)) {
 	file := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE")
 	expectedUUID := os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
 	if file == "" {
@@ -136,16 +137,49 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 		`CREATE TABLE system_backup_v2_maintenance_locks(origin_installation_id VARCHAR(128),scope VARCHAR(128),lock_name VARCHAR(128),gate_state VARCHAR(32),lock_owner VARCHAR(128),fencing_token BIGINT UNSIGNED,row_version BIGINT UNSIGNED,lease_expires_at DATETIME(6),absolute_hold_deadline_at DATETIME(6),PRIMARY KEY(origin_installation_id,scope,lock_name)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_installation_state(origin_installation_id VARCHAR(128) PRIMARY KEY,schema_version VARCHAR(64),row_version BIGINT UNSIGNED,active_config_version BIGINT UNSIGNED,last_effective_enabled BOOLEAN) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_configs(origin_installation_id VARCHAR(128),version BIGINT UNSIGNED,schema_version VARCHAR(64),enabled BOOLEAN,canonical_config_json MEDIUMBLOB,config_sha256 CHAR(64),config_size_bytes INT UNSIGNED,PRIMARY KEY(origin_installation_id,version)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_backups(origin_installation_id VARCHAR(128),public_id VARCHAR(128),schema_version VARCHAR(64),task_type VARCHAR(32),request_id VARCHAR(128),status VARCHAR(32),controller_owner VARCHAR(128),row_version BIGINT UNSIGNED,controller_lease_expires_at DATETIME(6),deadline_at DATETIME(6),config_version BIGINT UNSIGNED,config_snapshot_json MEDIUMBLOB,config_snapshot_size_bytes INT UNSIGNED,config_snapshot_sha256 CHAR(64),maintenance_lock_owner VARCHAR(128),maintenance_fencing_token BIGINT UNSIGNED,PRIMARY KEY(origin_installation_id,public_id)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_attempts(target_type VARCHAR(32),target_public_id VARCHAR(128),phase VARCHAR(32),attempt_no INT UNSIGNED,status VARCHAR(32),row_version BIGINT UNSIGNED,PRIMARY KEY(target_type,target_public_id,phase,attempt_no)) ENGINE=InnoDB`,
+		`CREATE TABLE system_backup_v2_backups(origin_installation_id VARCHAR(128),public_id CHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,schema_version VARCHAR(64),task_type VARCHAR(32),request_id VARCHAR(128),status VARCHAR(32),controller_owner VARCHAR(128),row_version BIGINT UNSIGNED,controller_lease_expires_at DATETIME(6),deadline_at DATETIME(6),config_version BIGINT UNSIGNED,config_snapshot_json MEDIUMBLOB,config_snapshot_size_bytes INT UNSIGNED,config_snapshot_sha256 CHAR(64),maintenance_lock_owner VARCHAR(128),maintenance_fencing_token BIGINT UNSIGNED,PRIMARY KEY(origin_installation_id,public_id),UNIQUE KEY original_backup_public(public_id)) ENGINE=InnoDB`,
+		`CREATE TABLE system_backup_v2_attempts(target_type ENUM('backup') NOT NULL,target_public_id CHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,phase ENUM('capture') NOT NULL,attempt_no INT UNSIGNED NOT NULL,status VARCHAR(32),row_version BIGINT UNSIGNED,PRIMARY KEY(target_type,target_public_id,attempt_no,phase)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 		`CREATE TABLE system_backup_v2_operations(origin_installation_id VARCHAR(128),target_type VARCHAR(32),target_public_id VARCHAR(128),operation_type VARCHAR(32),status VARCHAR(32)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_inputs(origin_installation_id VARCHAR(128),task_public_id VARCHAR(128),task_type VARCHAR(32),profile_json MEDIUMBLOB,profile_sha256 CHAR(64),PRIMARY KEY(origin_installation_id,task_public_id,task_type)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_records(origin_installation_id VARCHAR(128),task_public_id VARCHAR(128),attempt_no INT UNSIGNED,phase VARCHAR(32),record_kind VARCHAR(32),payload_sha256 CHAR(64),key_ref VARCHAR(128),sealed_payload MEDIUMBLOB,PRIMARY KEY(origin_installation_id,task_public_id,attempt_no,phase,record_kind)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_runtime_resources(task_public_id VARCHAR(128),attempt_no INT UNSIGNED,phase VARCHAR(32),resource_kind VARCHAR(32),namespace_name VARCHAR(128),resource_name VARCHAR(128),observed_uid VARCHAR(128),candidate_sha256 CHAR(64),request_sha256 CHAR(64),request_json MEDIUMBLOB,revoked BOOLEAN,lifecycle VARCHAR(32),stopped_at DATETIME(6),PRIMARY KEY(task_public_id,resource_kind,namespace_name,resource_name)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_evidence(public_id VARCHAR(128) PRIMARY KEY,owner_target_type VARCHAR(32),owner_target_public_id VARCHAR(128),evidence_type VARCHAR(32),storage_state VARCHAR(32),observed_health VARCHAR(32),encryption VARCHAR(32),inline_payload VARBINARY(8192),content_checksum CHAR(64),content_size_bytes BIGINT UNSIGNED,expires_at DATETIME(6),CHECK(content_checksum=SHA2(inline_payload,256))) ENGINE=InnoDB`,
 	} {
 		if _, err = owner.ExecContext(ctx, ddl); err != nil {
 			t.Fatal(err)
+		}
+	}
+	runtimeDDL, e := os.ReadFile("../db/migrations/123_backup_v2_runtime_execution_journal.sql")
+	if e != nil {
+		t.Fatal(e)
+	}
+	runtimeParts := strings.SplitN(string(runtimeDDL), "CREATE TABLE IF NOT EXISTS system_backup_v2_runtime_captures", 2)
+	if len(runtimeParts) != 2 {
+		t.Fatal("runtime migration split changed")
+	}
+	if _, e = owner.ExecContext(ctx, runtimeParts[0]); e != nil {
+		t.Fatal("actual runtime resource DDL failed", e)
+	}
+	coreDDL, e := os.ReadFile("../db/migrations/096_backup_v2_add_system_backup_control_metadata_core.sql")
+	if e != nil {
+		t.Fatal(e)
+	}
+	evidenceParts := strings.SplitN(string(coreDDL), "CREATE TABLE IF NOT EXISTS system_backup_v2_evidence (", 2)
+	if len(evidenceParts) != 2 {
+		t.Fatal("evidence migration start changed")
+	}
+	evidenceParts = strings.SplitN(evidenceParts[1], "CREATE TABLE IF NOT EXISTS system_backup_v2_evidence_chunks", 2)
+	if len(evidenceParts) != 2 {
+		t.Fatal("evidence migration end changed")
+	}
+	if _, e = owner.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS system_backup_v2_evidence ("+evidenceParts[0]); e != nil {
+		t.Fatal("actual original evidence DDL failed", e)
+	}
+	for _, name := range []string{"125_backup_v2_job_key_use.sql", "131_backup_v2_formal_job_candidates.sql"} {
+		ddl, e := os.ReadFile("../db/migrations/" + name)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = owner.ExecContext(ctx, string(ddl)); e != nil {
+			t.Fatal("actual key-use/candidate migration failed", e)
 		}
 	}
 	for _, name := range []string{"127_backup_v2_kek_registry.sql", "128_backup_installation_kek_authority.sql"} {
@@ -189,8 +223,46 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	dek := bytes.Repeat([]byte{9}, 32)
 	defer clear(dek)
 	var workload a.ControllerVerifierWorkload
+	var expectedGenerateContext string
+	var captureLoginMu sync.Mutex
+	var captureLoginHook func() error
+	var generationCalls atomic.Int64
 	server := httptest.NewTLSServer(http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case "/v1/auth/capture-jwt/login":
+			logins++
+			var req map[string]string
+			if json.NewDecoder(r.Body).Decode(&req) != nil || req["role"] != "capture-generate-role" || req["jwt"] != "local-capture-projected-jwt-only" {
+				t.Error("wrong independently issued capture login")
+				wr.WriteHeader(403)
+				return
+			}
+			captureLoginMu.Lock()
+			hook := captureLoginHook
+			captureLoginMu.Unlock()
+			if hook != nil {
+				if err := hook(); err != nil {
+					t.Error("original owner login hook failed", err)
+					wr.WriteHeader(403)
+					return
+				}
+			}
+			json.NewEncoder(wr).Encode(map[string]any{"auth": map[string]any{"client_token": "local-capture-generate-token-only", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{"capture-generate-policy"}, "metadata": map[string]string{"role": "capture-generate-role", "namespace": "backup", "pod_uid": "capture-pod-uid", "service_account_uid": "capture-sa-uid"}}})
+		case "/v1/transit/datakey/plaintext/original-key":
+			generationCalls.Add(1)
+			var originalReference string
+			if db.QueryRowContext(r.Context(), `SELECT reference_state FROM system_backup_v2_kek_references WHERE installation_id=?`, "installation_test").Scan(&originalReference) != nil || originalReference != "unknown" {
+				t.Error("provider called before committed original unknown reference")
+				wr.WriteHeader(403)
+				return
+			}
+			var req map[string]string
+			if r.Header.Get("X-Vault-Token") != "local-capture-generate-token-only" || json.NewDecoder(r.Body).Decode(&req) != nil || req["context"] != expectedGenerateContext || req["key_version"] != "1" || req["bits"] != "256" {
+				t.Error("wrong original Generate operation")
+				wr.WriteHeader(403)
+				return
+			}
+			json.NewEncoder(wr).Encode(map[string]any{"data": map[string]any{"plaintext": base64.StdEncoding.EncodeToString(dek), "ciphertext": "vault:v1:" + base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{3}, 60)), "key_version": 1}})
 		case "/v1/auth/controller-jwt/login":
 			logins++
 			var req map[string]string
@@ -221,6 +293,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	in.Authority.MaintenanceOwner = in.Authority.TaskPublicID
 	j := d.JobBinding{JobUnitKey: "workspace", Namespace: "backup", Name: "capture-workspace", UID: "22222222-2222-4222-8222-222222222222", Generation: 7, RelayIdentityRef: "original-relay", RelayIdentityVersion: "v1", RelayBoundAt: now, RelayExpiresAt: in.Authority.DeadlineAt}
 	request := w.KeyRequest{Key: w.KeyBinding{Provider: "external-kms", IdentityHash: strings.Repeat("d", 64), RegistryVersion: "original-r1", ProviderKeyID: "original-key", ProviderVersion: "1"}, Context: w.KeyContext{InstallationID: in.Authority.InstallationID, BackupPublicID: in.Authority.TaskPublicID, AttemptNo: "3", Phase: "capture", Part: "workspace", PartIndex: "0", EnvelopeID: "original-envelope", CaptureContextHash: strings.Repeat("b", 64)}}
+	expectedGenerateContext, _ = k.TransitContext(request)
 	i := worker.Invocation{Request: worker.Request{Version: worker.Version, Operation: "capture-workspace", Binding: staging.Binding{BackupID: request.Context.BackupPublicID, Attempt: request.Context.AttemptNo, Path: "workspace", EnvelopeID: request.Context.EnvelopeID, CaptureContextHash: request.Context.CaptureContextHash}, Deadline: in.Authority.DeadlineAt, ArtifactName: "workspace.enc", MaxFiles: 100, MaxFileBytes: 2 << 20, MaxArchiveBytes: 4 << 20, MaxCompressedBytes: 2 << 20}, WorkspacePath: "/workspace", StagingPath: "/staging", ProviderKey: &k.Access{Request: request, Operation: k.Generate, Endpoint: server.URL, KeyName: "original-key"}, FormalCapture: &worker.FormalCaptureSpec{Version: worker.FormalCaptureVersion, ConfigSHA256: strings.Repeat("c", 64), EnvelopeName: "envelope.json", MaxFrames: 8}}
 	if !worker.ValidateRecordedInvocation(i) {
 		t.Fatal("invalid original invocation fixture")
@@ -344,7 +417,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	}
 	exec(`INSERT INTO system_backup_v2_execution_records VALUES (?,?,3,'capture','plan',?,'original-record',?)`, in.Authority.InstallationID, in.Authority.TaskPublicID, plan.SHA256, sealed.Bytes())
 	candidateHash := strings.Repeat("d", 64)
-	exec(`INSERT INTO system_backup_v2_runtime_resources VALUES (?,3,'capture','Job',?,?,?, ?,?,?,FALSE,'ready',NULL)`, in.Authority.TaskPublicID, j.Namespace, j.Name, j.UID, candidateHash, jobIntent.RequestSHA256, jobIntent.RequestJSON)
+	exec(`INSERT INTO system_backup_v2_runtime_resources(task_public_id,resource_kind,namespace_name,resource_name,resource_owner,request_sha256,request_json,row_version,create_dispatched,observed_uid,resource_version,lifecycle,attempt_no,phase,candidate_cipher,candidate_key_ref,candidate_sha256) VALUES (?,'Job',?,?,?,?,?,1,TRUE,?,'1','ready',3,'capture',?,'original-record',?)`, in.Authority.TaskPublicID, j.Namespace, j.Name, in.Authority.TaskPublicID, jobIntent.RequestSHA256, jobIntent.RequestJSON, j.UID, []byte("local-original-candidate-component-fixture"), candidateHash)
 	core, _ := json.Marshal(binding)
 	semantic := binding
 	for _, r := range []*reg.TypedReference{&semantic.GenerateRef, &semantic.UnwrapRef} {
@@ -357,7 +430,17 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	semanticRaw, _ := json.Marshal(semantic)
 	fingerprint, _ := reg.BindingFingerprint(binding)
 	exec(`INSERT INTO system_backup_v2_kek_bindings(installation_id,identity_hash,registry_version,binding_sha256,core_sha256,core_json) VALUES (?,?,?,?,?,?)`, in.Authority.InstallationID, binding.Key.IdentityHash, binding.Key.RegistryVersion, fingerprint, hash(semanticRaw), core)
-	exec(`INSERT INTO system_backup_v2_evidence VALUES (?,'system',?,'capability_snapshot','inline','healthy','none',?,?,?,?)`, capRecord.Source.RecordID, in.Authority.InstallationID, capEnvelope, hash(capEnvelope), len(capEnvelope), capRecord.Until)
+	exec(`INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'system',?,'capability_snapshot','inline',?,?,?,'application/json','none','internal','healthy',?)`, capRecord.Source.RecordID, in.Authority.InstallationID, capEnvelope, hash(capEnvelope), len(capEnvelope), capRecord.Until)
+	if len(exercises) > 0 {
+		for _, exercise := range exercises {
+			exercise(aOriginalIssuerFixture{ctx: ctx, db: db, owner: owner, cfg: vcfg, in: in, job: j, invocation: i, unwrapPin: capPin, original: originalMapping, putOriginal: putOriginal, dek: dek, generationCalls: generationCalls.Load, onCaptureLogin: func(hook func() error) { captureLoginMu.Lock(); captureLoginHook = hook; captureLoginMu.Unlock() }, updateOriginal: func(record a.OriginalRecord, expected uint64) error {
+				raw, _ := json.Marshal(record)
+				_, err := originalWriter.Put(ctx, raw, ed25519.Sign(installationKey, append([]byte("system-backup-original-kek.v1\x00"), raw...)), expected)
+				return err
+			}})
+		}
+		return
+	}
 	scope := a.ControllerVerifierCandidate{Input: in, Job: j, Invocation: i, CandidateSHA256: candidateHash, CaptureGrantSHA256: forward.GrantSHA256()}
 	verifier, err := factory.ForCandidate(ctx, scope)
 	if err != nil {
