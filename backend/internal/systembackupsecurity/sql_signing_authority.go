@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -86,6 +87,14 @@ type frozenSQLSigningInput struct {
 	CaptureResultSHA256 string
 	CaptureEpoch        uint64
 }
+
+// Match the bounded Transit signing interface. The existing evidence table
+// keeps its 8192-byte inline limit; larger frozen JSON uses atomic bounded
+// chunks in that same registry, never a digest in place of signing input.
+const maxArtifactSigningInputBytes = 16384
+const maxFrozenSigningEvidenceBytes = 32768
+const maxSigningEvidenceInlineBytes = 8192
+const signingEvidenceChunkBytes = 4096
 
 type SQLArtifactSigningAuthority struct {
 	db               *sql.DB
@@ -176,7 +185,7 @@ func (a *SQLArtifactSigningAuthority) current(ctx context.Context, view signingS
 // and exact task/key purpose identities. The original C owner remains
 // responsible for computing and validating its complete business payload.
 func validateFrozenSigningInput(input []byte, task ArtifactSigningTask, binding TransitSigningBinding) error {
-	if len(input) == 0 || len(input) > 4096 {
+	if len(input) == 0 || len(input) > maxArtifactSigningInputBytes {
 		return ErrRegistrationUnavailable
 	}
 	parts := strings.Split(string(input), ".")
@@ -248,10 +257,9 @@ func (s *SQLInstallationArtifactSigners) StageSigningInput(ctx context.Context, 
 	h := sha256.Sum256(input)
 	frozen := frozenSQLSigningInput{Version: "system-backup-original-sql-signing-input.v1", Authorization: ArtifactSigningAuthorizationRequest{Task: a.task, Signing: TransitSigningRequest{Binding: a.binding, InputSHA256: hex.EncodeToString(h[:])}}, Input: input, CaptureResultSHA256: facts.CaptureHash, CaptureEpoch: facts.Epoch}
 	raw, err := json.Marshal(frozen)
-	if err != nil || len(raw) > 8192 {
+	if err != nil || len(raw) > maxFrozenSigningEvidenceBytes {
 		return ErrRegistrationUnavailable
 	}
-	id := signingInputEvidenceID(a.task, a.binding.InstallationID, purpose)
 	old, oldUntil, err := a.readFrozen(ctx, tx, true)
 	if err == nil {
 		if !bytes.Equal(old, raw) || !time.Now().Before(oldUntil) {
@@ -262,13 +270,8 @@ func (s *SQLInstallationArtifactSigners) StageSigningInput(ctx context.Context, 
 	if !errors.Is(err, sql.ErrNoRows) {
 		return ErrRegistrationUnavailable
 	}
-	digest := sha256.Sum256(raw)
-	result, err := tx.ExecContext(ctx, `INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'backup',?,'diagnostic','inline',?,?,?,'application/json','none','internal','healthy',?)`, id, a.task.BackupPublicID, raw, hex.EncodeToString(digest[:]), len(raw), until)
-	if err != nil {
-		return ErrRegistrationUnavailable
-	}
-	if n, e := result.RowsAffected(); e != nil || n != 1 {
-		return ErrRegistrationUnavailable
+	if err = a.insertFrozen(ctx, tx, raw, until); err != nil {
+		return err
 	}
 	if again, end, e := a.current(ctx, tx, true); e != nil || again != facts || !end.Equal(until) {
 		return ErrRegistrationUnavailable
@@ -276,7 +279,7 @@ func (s *SQLInstallationArtifactSigners) StageSigningInput(ctx context.Context, 
 	return nil
 }
 
-func (a *SQLArtifactSigningAuthority) readFrozen(ctx context.Context, view signingSQLView, lock bool) ([]byte, time.Time, error) {
+func (a *SQLArtifactSigningAuthority) readFrozenEvidence(ctx context.Context, view signingSQLView, lock bool, id string) ([]byte, time.Time, error) {
 	suffix := ""
 	if lock {
 		suffix = " FOR SHARE"
@@ -285,15 +288,133 @@ func (a *SQLArtifactSigningAuthority) readFrozen(ctx context.Context, view signi
 	var hash, owner, ownerType, kind, state, health, encryption string
 	var size uint64
 	var until time.Time
-	err := view.QueryRowContext(ctx, `SELECT inline_payload,content_checksum,content_size_bytes,owner_target_type,owner_target_public_id,evidence_type,storage_state,observed_health,encryption,expires_at FROM system_backup_v2_evidence WHERE public_id=?`+suffix, signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)).Scan(&raw, &hash, &size, &ownerType, &owner, &kind, &state, &health, &encryption, &until)
+	err := view.QueryRowContext(ctx, `SELECT inline_payload,content_checksum,content_size_bytes,owner_target_type,owner_target_public_id,evidence_type,storage_state,observed_health,encryption,expires_at FROM system_backup_v2_evidence WHERE public_id=?`+suffix, id).Scan(&raw, &hash, &size, &ownerType, &owner, &kind, &state, &health, &encryption, &until)
 	if err != nil {
 		return nil, time.Time{}, err
 	}
 	h := sha256.Sum256(raw)
-	if len(raw) == 0 || len(raw) > 8192 || size != uint64(len(raw)) || hash != hex.EncodeToString(h[:]) || ownerType != "backup" || owner != a.task.BackupPublicID || kind != "diagnostic" || state != "inline" || health != "healthy" || encryption != "none" {
+	if len(raw) == 0 || len(raw) > maxSigningEvidenceInlineBytes || size != uint64(len(raw)) || hash != hex.EncodeToString(h[:]) || ownerType != "backup" || owner != a.task.BackupPublicID || kind != "diagnostic" || state != "inline" || health != "healthy" || encryption != "none" {
 		return nil, time.Time{}, ErrRegistrationUnavailable
 	}
 	return raw, until, nil
+}
+
+type frozenSigningChunkIndex struct {
+	Version     string
+	Size, Count int
+	SHA256      string
+}
+type frozenSigningChunk struct {
+	Version, Parent string
+	Index, Count    int
+	Data            []byte
+}
+
+func signingChunkID(parent string, index int) string { return parent + "_p" + strconv.Itoa(index) }
+
+func (a *SQLArtifactSigningAuthority) insertFrozenEvidence(ctx context.Context, tx *sql.Tx, id string, raw []byte, until time.Time) error {
+	if len(raw) == 0 || len(raw) > maxSigningEvidenceInlineBytes {
+		return ErrRegistrationUnavailable
+	}
+	digest := sha256.Sum256(raw)
+	result, err := tx.ExecContext(ctx, `INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'backup',?,'diagnostic','inline',?,?,?,'application/json','none','internal','healthy',?)`, id, a.task.BackupPublicID, raw, hex.EncodeToString(digest[:]), len(raw), until)
+	if err != nil {
+		return ErrRegistrationUnavailable
+	}
+	if n, e := result.RowsAffected(); e != nil || n != 1 {
+		return ErrRegistrationUnavailable
+	}
+	return nil
+}
+
+func (a *SQLArtifactSigningAuthority) insertFrozen(ctx context.Context, tx *sql.Tx, raw []byte, until time.Time) error {
+	id := signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)
+	if len(raw) <= maxSigningEvidenceInlineBytes {
+		return a.insertFrozenEvidence(ctx, tx, id, raw, until)
+	}
+	if len(raw) > maxFrozenSigningEvidenceBytes {
+		return ErrRegistrationUnavailable
+	}
+	count := (len(raw) + signingEvidenceChunkBytes - 1) / signingEvidenceChunkBytes
+	for i := 0; i < count; i++ {
+		end := (i + 1) * signingEvidenceChunkBytes
+		if end > len(raw) {
+			end = len(raw)
+		}
+		body, err := json.Marshal(frozenSigningChunk{Version: "system-backup-original-sql-signing-chunk.v1", Parent: id, Index: i, Count: count, Data: raw[i*signingEvidenceChunkBytes : end]})
+		if err != nil {
+			return ErrRegistrationUnavailable
+		}
+		if err = a.insertFrozenEvidence(ctx, tx, signingChunkID(id, i), body, until); err != nil {
+			return err
+		}
+	}
+	h := sha256.Sum256(raw)
+	index, err := json.Marshal(frozenSigningChunkIndex{Version: "system-backup-original-sql-signing-chunks.v1", Size: len(raw), Count: count, SHA256: hex.EncodeToString(h[:])})
+	if err != nil {
+		return ErrRegistrationUnavailable
+	}
+	return a.insertFrozenEvidence(ctx, tx, id, index, until)
+}
+
+func decodeFrozenSigningJSON(raw []byte, dest any) bool {
+	canonical, err := jsoncanonicalizer.Transform(raw)
+	if err != nil {
+		return false
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.DisallowUnknownFields()
+	if d.Decode(dest) != nil || d.Decode(new(any)) != io.EOF {
+		return false
+	}
+	// encoding/json accepts case-insensitive field aliases and absent zero
+	// fields. The exact internal chunk schema accepts neither ambiguity.
+	roundtrip, err := json.Marshal(dest)
+	if err != nil {
+		return false
+	}
+	roundtrip, err = jsoncanonicalizer.Transform(roundtrip)
+	return err == nil && bytes.Equal(canonical, roundtrip)
+}
+
+func (a *SQLArtifactSigningAuthority) readFrozen(ctx context.Context, view signingSQLView, lock bool) ([]byte, time.Time, error) {
+	id := signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)
+	raw, until, err := a.readFrozenEvidence(ctx, view, lock, id)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	var version struct{ Version string }
+	if json.Unmarshal(raw, &version) != nil {
+		return nil, time.Time{}, ErrRegistrationUnavailable
+	}
+	if version.Version == "system-backup-original-sql-signing-input.v1" {
+		return raw, until, nil
+	}
+	var index frozenSigningChunkIndex
+	if !decodeFrozenSigningJSON(raw, &index) || index.Version != "system-backup-original-sql-signing-chunks.v1" || index.Size <= maxSigningEvidenceInlineBytes || index.Size > maxFrozenSigningEvidenceBytes || index.Count != (index.Size+signingEvidenceChunkBytes-1)/signingEvidenceChunkBytes || !signingDigest.MatchString(index.SHA256) {
+		return nil, time.Time{}, ErrRegistrationUnavailable
+	}
+	joined := make([]byte, 0, index.Size)
+	for i := 0; i < index.Count; i++ {
+		body, end, e := a.readFrozenEvidence(ctx, view, lock, signingChunkID(id, i))
+		if e != nil || !end.Equal(until) {
+			return nil, time.Time{}, ErrRegistrationUnavailable
+		}
+		var chunk frozenSigningChunk
+		size := signingEvidenceChunkBytes
+		if i == index.Count-1 {
+			size = index.Size - i*signingEvidenceChunkBytes
+		}
+		if !decodeFrozenSigningJSON(body, &chunk) || chunk.Version != "system-backup-original-sql-signing-chunk.v1" || chunk.Parent != id || chunk.Index != i || chunk.Count != index.Count || len(chunk.Data) != size {
+			return nil, time.Time{}, ErrRegistrationUnavailable
+		}
+		joined = append(joined, chunk.Data...)
+	}
+	h := sha256.Sum256(joined)
+	if hex.EncodeToString(h[:]) != index.SHA256 {
+		return nil, time.Time{}, ErrRegistrationUnavailable
+	}
+	return joined, until, nil
 }
 
 func (a *SQLArtifactSigningAuthority) authorize(ctx context.Context, r ArtifactSigningAuthorizationRequest) (OriginalSigningUse, signingSQLFacts, error) {
