@@ -32,6 +32,7 @@ const (
 )
 
 type RuntimeDeploymentSpec struct {
+	Native                *NativeRuntimeConfig
 	Name                  string
 	Namespace             string
 	RuntimeType           string
@@ -572,6 +573,9 @@ func runtimeGatewayPortValue(value, defaultValue int) int {
 func (s *runtimeDeploymentService) Ensure(ctx context.Context, spec RuntimeDeploymentSpec) error {
 	if s == nil || s.client == nil {
 		return fmt.Errorf("k8s client not initialized")
+	}
+	if spec.Native != nil {
+		return s.ensureNativeRuntime(ctx, spec, *spec.Native)
 	}
 
 	desired := BuildRuntimeDeployment(spec)
