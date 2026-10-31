@@ -22,6 +22,7 @@ func main() {
 	formalVerifier := flag.Bool("formal-verifier", false, "extend the selected capture role for the independent controller unwrap reader")
 	providerPermits := flag.Bool("formal-provider-permits", false, "add original Generate permit planned/unknown reference writes; requires formal-verifier")
 	publication := flag.Bool("publication", false, "add original v2 publication journal writes and frozen-signature chunks; requires formal-verifier")
+	controlEvidence := flag.Bool("control-evidence", false, "add exact read-only control snapshot projections; requires formal-verifier; no worker SQL access")
 	kubeConfig := flag.String("kubernetes-config", "", "render Kubernetes RBAC for this pinned public deployment JSON")
 	kubeDigest := flag.String("kubernetes-config-sha256", "", "exact public deployment JSON SHA256")
 	verifierMaterialsSHA := flag.String("verifier-materials-sha256", "", "independently deployed formal verifier materials SHA256 for exact read-only actor/owner RBAC")
@@ -44,12 +45,16 @@ func main() {
 		fmt.Fprintln(os.Stderr, "publication requires the explicit formal verifier role")
 		os.Exit(2)
 	}
+	if *controlEvidence && !*formalVerifier {
+		fmt.Fprintln(os.Stderr, "control evidence requires the explicit formal verifier role")
+		os.Exit(2)
+	}
 	if flag.NArg() != 0 {
 		fmt.Fprintln(os.Stderr, "unexpected positional arguments")
 		os.Exit(2)
 	}
 	if *kubeConfig != "" {
-		if *publication || *providerPermits || *formalVerifier || *publicCapture || *runtimeControl || *schema != "" || *user != "" || *host != "" || *allowAnyHost {
+		if *controlEvidence || *publication || *providerPermits || *formalVerifier || *publicCapture || *runtimeControl || *schema != "" || *user != "" || *host != "" || *allowAnyHost {
 			fmt.Fprintln(os.Stderr, "Kubernetes and SQL grant modes are exclusive")
 			os.Exit(2)
 		}
@@ -103,6 +108,9 @@ func main() {
 	}
 	if *publication {
 		statements, err = systembackupcontroller.PublicationGrantSQL(*schema, *user, *host, *allowAnyHost, *runtimeControl, *providerPermits)
+	}
+	if *controlEvidence {
+		statements, err = systembackupcontroller.ControlEvidenceGrantSQL(*schema, *user, *host, *allowAnyHost, *runtimeControl, *providerPermits, *publication)
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

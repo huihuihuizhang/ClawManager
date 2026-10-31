@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/worker"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	k "clawreef/internal/systembackupkms"
 )
@@ -53,6 +54,8 @@ type productionCaptureMaterials struct {
 	MaxObjects                                                                  int
 	MaxObjectBytes, MaxObjectTotalBytes                                         int64
 	ResourceTypes                                                               []productionResourceType
+	ControlEvidence                                                             *ce.CaptureInput                   `json:"ControlEvidence,omitempty"`
+	ControlEvidenceSource                                                       *worker.ControlEvidenceSourceMount `json:"ControlEvidenceSource,omitempty"`
 }
 
 type productionResourceType struct {
@@ -102,7 +105,10 @@ func (s *DeploymentService) loadProductionCapture(inputs []ProductionCaptureInpu
 }
 
 func (s *DeploymentService) validateProductionCapture(m productionCaptureMaterials) error {
-	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Config.CaptureScope != "six-part" || s.Config.RuntimeSources == nil || s.Config.FormalVerifier == nil || m.Version != productionCaptureMaterialsVersion || m.Revision == "" || len(m.Revision) > 128 || m.InstallationID != s.Config.InstallationID || m.ControllerOwner != s.Config.ControllerOwner || m.DeploymentConfigSHA256 != s.ConfigDigest || m.CaptureGrantSHA256 != s.Forward.GrantSHA256() || len(m.Operations) < 6 || len(m.Operations) > 7 || m.MaxObjects < 1 || m.MaxObjects > 10000 || m.MaxObjectBytes < 1 || m.MaxObjectTotalBytes < m.MaxObjectBytes || m.MaxObjectTotalBytes > 64<<20 || len(m.ResourceTypes) < 1 || len(m.ResourceTypes) > 32 {
+	if s == nil || (m.ControlEvidence != nil) != (m.ControlEvidenceSource != nil) || m.ControlEvidence != nil && (m.ControlEvidence.Validate() != nil || m.ControlEvidenceSource.Validate() != nil || m.ControlEvidenceSource.ControllerGrantFile == "" || m.ControlEvidenceSource.Endpoint != s.Config.ControlURL) {
+		return c.ErrExecutionAuthority
+	}
+	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Config.CaptureScope != "six-part" || s.Config.RuntimeSources == nil || s.Config.FormalVerifier == nil || m.Version != productionCaptureMaterialsVersion || m.Revision == "" || len(m.Revision) > 128 || m.InstallationID != s.Config.InstallationID || m.ControllerOwner != s.Config.ControllerOwner || m.DeploymentConfigSHA256 != s.ConfigDigest || m.CaptureGrantSHA256 != s.Forward.GrantSHA256() || len(m.Operations) < 6 || len(m.Operations) > 8 || m.MaxObjects < 1 || m.MaxObjects > 10000 || m.MaxObjectBytes < 1 || m.MaxObjectTotalBytes < m.MaxObjectBytes || m.MaxObjectTotalBytes > 64<<20 || len(m.ResourceTypes) < 1 || len(m.ResourceTypes) > 32 {
 		return c.ErrExecutionAuthority
 	}
 	for _, operation := range []string{"capture-database", "capture-workspace", "capture-source-redis", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle"} {
@@ -110,13 +116,19 @@ func (s *DeploymentService) validateProductionCapture(m productionCaptureMateria
 			return c.ErrExecutionAuthority
 		}
 	}
+	if _, exists := m.Operations[ce.Operation]; exists != (m.ControlEvidence != nil) {
+		return c.ErrExecutionAuthority
+	}
 	for name, x := range m.Operations {
 		switch name {
-		case "capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle":
+		case "capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle", ce.Operation:
 		default:
 			return c.ErrExecutionAuthority
 		}
 		if x.Formal.PermitDelivery == nil || !k.ValidPermitDeliveryPin(*x.Formal.PermitDelivery) || x.Provider.Operation != k.Generate || x.Workload.FormalMaterials == nil || x.Workload.WorkerControl == nil || x.Workload.WorkerControl.URL != s.Config.ControlURL || x.Workload.Identity.Namespace != s.Config.Namespace || x.Workload.Image != s.Config.WorkerImage || x.Workload.StagingClaim != s.Config.StagingClaim || x.Workload.ServiceAccount != s.Config.Security.ServiceAccountName || x.Formal.Version != worker.FormalCaptureVersion || !formalCandidateDigest(x.Formal.ConfigSHA256) || len(x.Workload.Command) != 0 {
+			return c.ErrExecutionAuthority
+		}
+		if name == ce.Operation && bytes.Equal(m.ControlEvidenceSource.Issuer, x.Formal.PermitDelivery.Issuer) {
 			return c.ErrExecutionAuthority
 		}
 	}

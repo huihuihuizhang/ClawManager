@@ -15,6 +15,7 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/worker"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	api "clawreef/internal/systembackupdeployment"
 	a "clawreef/internal/systembackupkekadapter"
@@ -95,11 +96,40 @@ func TestProductionCaptureMaterialsBothStartupPaths(t *testing.T) {
 	}
 	pool := sql.OpenDB(providerAdmissionConnector{grant: grant, grants: grants})
 	defer pool.Close()
-	for _, mode := range []string{"valid", "missing", "wrong-pin", "wrong-file", "extra", "replaced", "unknown-field", "wrong-grant", "missing-operation", "optional-worker-command", "recovery"} {
+	for _, mode := range []string{"valid", "control-valid", "control-base-role", "control-missing-source", "control-generate-issuer", "missing", "wrong-pin", "wrong-file", "extra", "replaced", "unknown-field", "wrong-grant", "missing-operation", "optional-worker-command", "recovery"} {
 		t.Run(mode, func(t *testing.T) {
 			defer write(cfg.CaptureModules.Path, materialRaw)
 			in := inputs
 			in.CaptureModules = append([]ProductionCaptureInput{}, inputs.CaptureModules...)
+			selectedPool := pool
+			if strings.HasPrefix(mode, "control-") {
+				var changed productionCaptureMaterials
+				json.Unmarshal(materialRaw, &changed)
+				sourcePub, _, _ := ed25519.GenerateKey(rand.Reader)
+				changed.ControlEvidence = &ce.CaptureInput{SchemaRegistryFile: filepath.Join(dir, "schema.json"), SchemaRegistrySHA256: strings.Repeat("a", 64), RedactionRegistryFile: filepath.Join(dir, "redaction.json"), RedactionRegistrySHA256: strings.Repeat("b", 64), CoverageWindowSeconds: 3600}
+				changed.ControlEvidenceSource = &worker.ControlEvidenceSourceMount{Endpoint: cfg.ControlURL, GrantFile: filepath.Join(dir, "worker-source-grant.json"), ControllerGrantFile: filepath.Join(dir, "controller-source-grant.json"), GrantSHA256: strings.Repeat("c", 64), Issuer: sourcePub}
+				changed.Operations[ce.Operation] = changed.Operations["capture-workspace"]
+				if mode == "control-missing-source" {
+					changed.ControlEvidenceSource = nil
+				}
+				if mode == "control-generate-issuer" {
+					changed.ControlEvidenceSource.Issuer = pub
+				}
+				raw, _ := json.Marshal(changed)
+				write(cfg.CaptureModules.Path, raw)
+				in.CaptureModules[0].SHA256 = hash(raw)
+				if mode != "control-base-role" {
+					controlGrants, e := c.ControlEvidenceGrantSQL(grant.Database, "local_controller", "127.0.0.1", false, true, false, false)
+					if e != nil {
+						t.Fatal(e)
+					}
+					for i := range controlGrants {
+						controlGrants[i] = strings.TrimSuffix(controlGrants[i], ";")
+					}
+					selectedPool = sql.OpenDB(providerAdmissionConnector{grant: grant, grants: controlGrants})
+					defer selectedPool.Close()
+				}
+			}
 			switch mode {
 			case "missing":
 				in.CaptureModules = nil
@@ -137,22 +167,23 @@ func TestProductionCaptureMaterialsBothStartupPaths(t *testing.T) {
 				os.Remove(cfg.FormalVerifier.Path)
 				defer write(cfg.FormalVerifier.Path, formalRaw)
 			}
-			want := mode == "valid" || mode == "recovery"
+			want := mode == "valid" || mode == "control-valid" || mode == "recovery"
 			s := DeploymentService{ConfigPath: coreFile, ConfigDigest: hash(core), Forward: forward, Recovery: recovery, ForwardEnabled: mode != "recovery"}
-			if err := s.bindDeploymentStartupInputs(in); (err == nil) != want {
+			if err := s.bindDeploymentStartupInputs(in); (err == nil) != (want || mode == "control-base-role") {
 				t.Fatal("actual file binding", err)
 			}
-			if err := CheckDeploymentDatabaseWithInputs(context.Background(), pool, coreFile, hash(core), forwardSHA, recoverySHA, mode != "recovery", in); (err == nil) != want {
+			if err := CheckDeploymentDatabaseWithInputs(context.Background(), selectedPool, coreFile, hash(core), forwardSHA, recoverySHA, mode != "recovery", in); (err == nil) != want {
 				t.Fatal("actual early database admission", err)
 			}
-			if !want && (s.captureMaterials != nil || s.captureInput != nil) {
+			if !want && mode != "control-base-role" && (s.captureMaterials != nil || s.captureInput != nil) {
 				t.Fatal("failed input retained usable capture material")
 			}
-			if mode == "valid" {
+			if mode == "valid" || mode == "control-valid" {
 				if err := s.checkProductionCaptureMaterials(); err != nil {
 					t.Fatal(err)
 				}
-				write(cfg.CaptureModules.Path, append(append([]byte{}, materialRaw...), ' '))
+				original, _ := os.ReadFile(cfg.CaptureModules.Path)
+				write(cfg.CaptureModules.Path, append(append([]byte{}, original...), ' '))
 				if s.checkProductionCaptureMaterials() == nil {
 					t.Fatal("replaced independent material accepted after startup")
 				}
