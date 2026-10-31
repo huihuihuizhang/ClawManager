@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	c "clawreef/internal/systembackupcontroller"
 	"context"
 	"database/sql/driver"
 	"os"
@@ -12,7 +13,11 @@ import (
 
 // Real SQL/current authority with delayed delivery of one actual fact row.
 // Delays are transport observations, not fabricated time or authorization.
-type dHeldClockDelay struct{ armed, fired atomic.Bool }
+type dHeldClockDelay struct {
+	armed, fired atomic.Bool
+	ownerFacts   bool
+	duration     time.Duration
+}
 type dHeldClockConnector struct {
 	driver.Connector
 	delay *dHeldClockDelay
@@ -52,6 +57,12 @@ func (c *dHeldClockConn) ExecContext(ctx context.Context, q string, args []drive
 	return c.Conn.(driver.ExecerContext).ExecContext(ctx, q, args)
 }
 func (c *dHeldClockConn) wrap(q string, r driver.Rows) driver.Rows {
+	if c.delay.ownerFacts {
+		if strings.HasPrefix(q, "SELECT b.status,p.profile_json,p.profile_sha256,i.last_effective_enabled FROM") {
+			return &dHeldClockRows{Rows: r, delay: c.delay}
+		}
+		return r
+	}
 	if strings.Contains(q, "FROM system_backup_gate g") || strings.HasPrefix(q, "SELECT schema_version,origin_installation_id,task_type,request_id,status,controller_owner,") {
 		return &dHeldClockRows{Rows: r, delay: c.delay}
 	}
@@ -81,9 +92,45 @@ func (r *dHeldClockRows) Next(v []driver.Value) error {
 	e := r.Rows.Next(v)
 	if e == nil && r.delay.armed.CompareAndSwap(true, false) {
 		r.delay.fired.Store(true)
-		time.Sleep(2500 * time.Millisecond)
+		pause := r.delay.duration
+		if pause <= 0 {
+			pause = 2500 * time.Millisecond
+		}
+		time.Sleep(pause)
 	}
 	return e
+}
+
+func TestDeploymentEffectiveGrantCannotExpireDuringCurrentFactsRead(t *testing.T) {
+	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
+		t.Skip("requires disposable local MySQL")
+	}
+	delay := &dHeldClockDelay{ownerFacts: true, duration: 5500 * time.Millisecond}
+	var expires time.Time
+	owner, _, _, _, a, _, _, _, refresh := newConsumerMySQLFixtureOptions(t, &consumerFixtureOptions{
+		WrapControlConnector: func(conn driver.Connector) driver.Connector {
+			return dHeldClockConnector{Connector: conn, delay: delay}
+		},
+		ConfigureGrant: func(grant *c.ExecutionGrant) {
+			expires = time.Now().UTC().Add(5 * time.Second).Truncate(time.Microsecond)
+			grant.ExpiresAt = expires
+		},
+	})
+	refresh()
+	ctx := context.Background()
+	tx, err := owner.Gate.Authority.DB.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	delay.armed.Store(true)
+	_, err = owner.Gate.Authority.Bind(ctx, tx, a)
+	if !delay.fired.Load() || time.Now().Before(expires) {
+		t.Fatal("current owner facts did not actually delay beyond the original signed grant")
+	}
+	if err == nil {
+		t.Fatal("authorization accepted a signed grant that expired during current facts delivery")
+	}
 }
 
 func TestHeldCaptureRecheckCannotUseClockBeforeDelayedFacts(t *testing.T) {

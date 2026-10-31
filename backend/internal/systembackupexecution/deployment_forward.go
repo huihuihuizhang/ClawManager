@@ -25,23 +25,21 @@ func forwardCaptureActions(g c.ExecutionGrant) bool {
 }
 
 func (p deploymentAuthorization) check(ctx context.Context, tx *sql.Tx, a d.Authority) error {
-	if !p.Service.ForwardEnabled {
+	if ctx == nil || ctx.Err() != nil || !p.Service.ForwardEnabled {
 		return c.ErrExecutionAuthority
 	}
 	if _, e := pinnedDeploymentFile(p.Service.ConfigPath, p.Service.ConfigDigest, 256<<10); e != nil {
 		return e
 	}
-	var enabled bool
-	if tx.QueryRowContext(ctx, "SELECT last_effective_enabled FROM system_backup_v2_installation_state WHERE origin_installation_id=? FOR SHARE", a.InstallationID).Scan(&enabled) != nil || !enabled {
-		return c.ErrExecutionAuthority
-	}
+	// Effective-enabled remains a CURRENT locked SQL fact in the pinned grant
+	// check below, joined with that same call's task/profile reads.
 	return nil
 }
 func (p deploymentAuthorization) AuthorizeExecution(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) (c.ExecutionAuthorizationGuard, error) {
 	if e := p.check(ctx, tx, a); e != nil {
 		return nil, e
 	}
-	grant, e := p.Service.Forward.AuthorizeExecution(ctx, tx, a, now)
+	grant, e := p.Service.Forward.AuthorizeEffectiveExecution(ctx, tx, a, now)
 	if e != nil {
 		return nil, e
 	}

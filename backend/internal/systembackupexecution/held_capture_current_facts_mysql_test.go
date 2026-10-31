@@ -33,6 +33,7 @@ func assertHeldCaptureCurrentFacts(t *testing.T, o *PublicJobOwner, a d.Authorit
 		{"maintenance_locks", "absolute_hold_deadline_at", "TIMESTAMPADD(SECOND,1,absolute_hold_deadline_at)"},
 		{"maintenance_locks", "lock_owner", "CONCAT(lock_owner,' ')"},
 		{"installation_state", "row_version", "row_version+1"},
+		{"installation_state", "last_effective_enabled", "0"},
 		{"installation_state", "schema_version", "UPPER(schema_version)"},
 		{"attempts", "row_version", "row_version+1"},
 		{"attempts", "status", "'Running'"},

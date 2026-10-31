@@ -180,12 +180,16 @@ type pinnedExecutionGuard struct {
 	identity  *PinnedExecutionIdentity
 	authority d.Authority
 	until     time.Time
+	effective bool
 }
 
 func (g *pinnedExecutionGuard) ValidUntil() time.Time { return g.until }
 func (g *pinnedExecutionGuard) RecheckExecution(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) error {
 	if g == nil || a != g.authority || !now.Before(g.until) {
 		return ErrExecutionAuthority
+	}
+	if g.effective {
+		return g.identity.checkEffectiveSQL(ctx, tx, a, now)
 	}
 	return g.identity.checkSQL(ctx, tx, a, now)
 }
@@ -201,10 +205,8 @@ func (p *PinnedExecutionIdentity) checkSQLAction(ctx context.Context, tx *sql.Tx
 		return ErrExecutionAuthority
 	}
 	table := "system_backup_v2_backups"
-	action := "capture"
 	if a.TaskType == "preflight" {
 		table = "system_backup_v2_preflights"
-		action = "preflight"
 	} else if a.TaskType != "backup" {
 		return ErrExecutionAuthority
 	}
@@ -215,6 +217,14 @@ func (p *PinnedExecutionIdentity) checkSQLAction(ctx context.Context, tx *sql.Tx
 	var profileHash string
 	if tx.QueryRowContext(ctx, "SELECT profile_json,profile_sha256 FROM system_backup_v2_execution_inputs WHERE origin_installation_id=? AND task_public_id=? AND task_type=? FOR SHARE", a.InstallationID, a.TaskPublicID, a.TaskType).Scan(&profile, &profileHash) != nil || profileHash != p.grant.ProfileSHA256 || recordHash(profile) != profileHash {
 		return ErrExecutionAuthority
+	}
+	return p.allowSQLAction(a, status, requestedAction)
+}
+
+func (p *PinnedExecutionIdentity) allowSQLAction(a d.Authority, status, requestedAction string) error {
+	action := "capture"
+	if a.TaskType == "preflight" {
+		action = "preflight"
 	}
 	if a.TaskType == "backup" && a.MaintenanceOwner == "" && (status == "preparing" || status == "ready_for_capture" || status == "acquiring_gate") {
 		action = "prepare"
@@ -289,7 +299,46 @@ func (p *PinnedExecutionIdentity) AuthorizeExecution(ctx context.Context, tx *sq
 	if p.checkSQL(ctx, tx, a, now) != nil {
 		return nil, ErrExecutionAuthority
 	}
-	return &pinnedExecutionGuard{p, a, p.grant.ExpiresAt}, nil
+	return &pinnedExecutionGuard{identity: p, authority: a, until: p.grant.ExpiresAt}, nil
+}
+
+// AuthorizeEffectiveExecution is the dedicated deployment forward composition.
+// It performs every current grant/identity/profile/purpose/effective check, with
+// locked task/profile/effective facts in one query followed by an independent
+// identity+SQL-clock query AFTER facts/lock waits. No authority is cached.
+func (p *PinnedExecutionIdentity) AuthorizeEffectiveExecution(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) (ExecutionAuthorizationGuard, error) {
+	if p.checkEffectiveSQL(ctx, tx, a, now) != nil {
+		return nil, ErrExecutionAuthority
+	}
+	return &pinnedExecutionGuard{identity: p, authority: a, until: p.grant.ExpiresAt, effective: true}, nil
+}
+
+func (p *PinnedExecutionIdentity) checkEffectiveSQL(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time) error {
+	if ctx == nil || ctx.Err() != nil || tx == nil || p.current(a, now) != nil {
+		return ErrExecutionAuthority
+	}
+	table := "system_backup_v2_backups"
+	if a.TaskType == "preflight" {
+		table = "system_backup_v2_preflights"
+	} else if a.TaskType != "backup" {
+		return ErrExecutionAuthority
+	}
+	var status, profileHash string
+	var profile []byte
+	var enabled bool
+	query := `SELECT b.status,p.profile_json,p.profile_sha256,i.last_effective_enabled FROM ` + table + ` b
+JOIN system_backup_v2_execution_inputs p ON p.origin_installation_id=b.origin_installation_id AND p.task_public_id=b.public_id AND p.task_type=?
+JOIN system_backup_v2_installation_state i ON i.origin_installation_id=b.origin_installation_id
+WHERE b.origin_installation_id=? AND b.public_id=? FOR SHARE`
+	if tx.QueryRowContext(ctx, query, a.TaskType, a.InstallationID, a.TaskPublicID).Scan(&status, &profile, &profileHash, &enabled) != nil || !enabled || profileHash != p.grant.ProfileSHA256 || recordHash(profile) != profileHash {
+		return ErrExecutionAuthority
+	}
+	var account, server, database string
+	var afterFacts time.Time
+	if tx.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,DATABASE(),UTC_TIMESTAMP(6)").Scan(&account, &server, &database, &afterFacts) != nil || account != p.grant.DatabaseAccount || server != p.grant.ServerUUID || database != p.grant.Database || afterFacts.Before(now) || afterFacts.Before(p.grant.NotBefore) || !afterFacts.Before(p.grant.ExpiresAt) || !afterFacts.Before(a.DeadlineAt) {
+		return ErrExecutionAuthority
+	}
+	return p.allowSQLAction(a, status, "")
 }
 
 // Resolve reads only the exact record-encryption key versions in the signed
