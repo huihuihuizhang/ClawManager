@@ -267,3 +267,17 @@
 - CheckSource 使用原 Discovery.Writers 再次发现 metadata，不调用 BuildWriters/Observe 或新建 reservation；传给 resolver 与工厂的 writer/source DTO 都深复制/分离，回调修改不能换掉原 plan。原 Team facts/关系验证与有界 metadata 规则全部保留。
 - 既有真实本机 MySQL 同 RR/新 Team 下次纳入测试新增 original-writers 模式：真实源连接 InUse=0、原 writer 只 Observe 一次，resolver 与工厂逐值比对同一原 State；连续 CheckSource 使用原快照，PVC/object version 变化拒绝，preflight 不调用 provider。另四个具名 driver 场景覆盖 Observe 失败、metadata 失败、双 hook 和 legacy-only 工厂误配：无可用 Source/parts、模块工厂调用零次。完整 publicadapter（真实 SQL opt-in）5.407s通过。
 - 安全保留 WIP 合并 backup@1469c77e（A 最后 Kube I/O 后原 inventory custody 短复核）；本提交不包含 production_capture_modules.go 草稿，不声称已开放六项服务或完成物理 source 停写。下一步在服务构造中使用本顺序及独立 controller 元数据授权，原 worker source grant 不能被伪造为 discovery Job。
+
+## D5.17 服务和正式 SQL worker 的同一有限业务源权限（2026-10-31）
+
+- D5.16 最终 SHA 1b9b74ebc6df9bdb7f2378d73130ec5feffd371b。继续接线时发现真实不相容：服务 SHOW GRANTS 只允许 users/instances 表级 SELECT，而原共享 domain.CaptureSource 只接受 database.* SELECT。新 reviewed-business-tables.v1 使用与实际 capture 完全相同的 reviewed rules() 生成 BusinessCaptureTables，精确覆盖 Users/Instances、Teams11、Skills8 和所有既有业务依赖；不额外授予 global/schema wildcard、控制表、未知表、role、写入或 GRANT OPTION。未知新业务表仍需原注册表与合法 source-owner role 同步。
+- 新 CaptureBusinessSourceGuarded 沿用原单一源 session/RR、原 row/schema/capacity 检查，校验同一数据库/server/无 role/完整有限表 grant。原 capture 在 RR 完成后、交出任何 snapshot 前再次校验该原 session 的身份/权限和当前源授权；中途撤销返回零 snapshot。旧 schema-scope 功能测试接口保留原协议。
+- DatabaseSpec.SourceScope 只允许 capture-database 使用该精确版本；正式 worker 的原 encrypted collector 在有独立 SourceAuthorize 时选择新 API，缺独立源授权拒绝。FormalSourceScopeSHA256 将 scope protocol 和同一 reviewed table set 纳入新源 grant hash；旧空 scope 编码不变，不能用旧 database-scope source grant 冒充新有限角色。模块工厂草稿已设置该 scope，但仍未作为可用工厂提交。
+- 实际本机 MySQL 新建随机 ad_d_src schema/只读账户、每个 reviewed table 的最小具名空 schema（users 有一行），用真实 SHOW GRANTS 验证服务连接及同一 RR，然后实际共享 SQL capture 成功且全表数一致；真实 UPDATE 被服务器拒绝。缺 skill_blobs SELECT、额外控制表 SELECT、UPDATE、schema wildcard 四例服务和 worker 均拒绝，RR 中原 users SELECT 被撤销后无 snapshot。此用例不冒充原完整业务 DDL/跨表约束、TLS 部署或完整六项任务；只清理自建 schema/account。
+- 11 模式纯 grant 矩阵、源 scope/hash/restore 拒绝另测。实际源回归 execution5.023s，完整 domain3.197s/worker36.410s（D 真实 SQL opt-in）通过；原两表服务 parser 回归保留。安全保留 WIP 同步 backup@0ce6fc7f；默认 guards/readiness 不变。
+
+### v12 control evidence producer ABI 协调（未交付）
+
+- 监督已认可原 capture 计划 part=control_evidence、operation=capture-control-evidence；D 负责原正式 Job/Generate permit/CMBKGC01/custody/observer/历史读取接线，A 负责原 SQL 脱敏构造及规范独立验证。绝不把 publisher Unwrap 提升为 Generate、复活旧 capture claim、删除 control/evidence.json.enc 必需项或复制 SQL sealed_payload 冒充正式密文。
+- D 建议 A collector 输入原只读 SQL连接、原 task/attempt、固定 coverage cutoff、行/字节容量及原权限复查；输出规范 canonical JSON，直接写 C stream（不 gzip）。独立 observer 调用 A 验证器并核真实 registered evidence；不伪造 owner complete、proof/ref 或 rolling hash。cutoff 可合法早于当前任务终态，不将当前 sidecar 自己的结果纳入自引用。
+- 实际私有候选仍使用原 flat artifact name/envelope/KeyRequest/全局 PartIndex；A 发布映射到 control/evidence.json.enc，并保留原 capture path/AAD 与原 envelope 身份供独立读回，不能按目标路径重新加密。此小节是待 A 确认函数签名的协调说明，当前尚无 sidecar producer，不声称闭合。

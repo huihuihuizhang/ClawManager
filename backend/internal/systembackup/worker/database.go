@@ -25,6 +25,7 @@ import (
 // Credentials only arrive in an acquire grant; source and drill identities,
 // placement and policy are bound to the complete invocation hash.
 type DatabaseSpec struct {
+	SourceScope     string                         `json:"source_scope,omitempty"`
 	SkillsInventory *sh.CaptureInventory           `json:"skills_inventory,omitempty"`
 	TeamsInventory  *team.Inventory                `json:"teams_inventory,omitempty"`
 	InputFormat     string                         `json:"input_format,omitempty"`
@@ -73,6 +74,9 @@ func validDatabaseRequest(r Request) bool {
 		return false
 	}
 	d := r.Database
+	if d != nil && d.SourceScope != "" && (d.SourceScope != domain.BusinessTableSourceScope || r.Operation != "capture-database") {
+		return false
+	}
 	if d != nil && d.SkillsInventory != nil && (r.Operation != "capture-database" || d.SkillsInventory.Version != sh.CaptureInventoryVersion) {
 		return false
 	}

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"clawreef/internal/systembackup/control"
+	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
@@ -337,10 +338,18 @@ func (s *DeploymentService) checkSourceIdentity(ctx context.Context, source sour
 	}
 	defer rows.Close()
 	seen := map[string]bool{}
+	var businessGrants []string
 	for rows.Next() {
 		var grant string
 		if rows.Scan(&grant) != nil {
 			return c.ErrExecutionAuthority
+		}
+		if s.Config.CaptureScope == "six-part" {
+			if len(businessGrants) >= 1000 {
+				return c.ErrExecutionAuthority
+			}
+			businessGrants = append(businessGrants, grant)
+			continue
 		}
 		if strings.HasPrefix(grant, "GRANT USAGE ON *.* TO ") {
 			continue
@@ -350,6 +359,12 @@ func (s *DeploymentService) checkSourceIdentity(ctx context.Context, source sour
 			return c.ErrExecutionAuthority
 		}
 		seen[m[2]] = true
+	}
+	if s.Config.CaptureScope == "six-part" {
+		if rows.Err() != nil || domain.ValidateBusinessSourceGrants(database, businessGrants) != nil {
+			return c.ErrExecutionAuthority
+		}
+		return nil
 	}
 	if rows.Err() != nil || !seen["users"] || !seen["instances"] {
 		return c.ErrExecutionAuthority

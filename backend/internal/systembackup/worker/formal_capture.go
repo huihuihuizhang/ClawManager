@@ -293,13 +293,20 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 					capture := domain.CaptureSource
 					if env.SourceAuthorize != nil {
 						capture = func(ctx context.Context, db *sql.DB, limits domain.Limits, name, uuid string) (domain.Snapshot, error) {
-							return domain.CaptureSourceGuarded(ctx, db, limits, name, uuid, func(ctx context.Context) error {
+							guarded := domain.CaptureSourceGuarded
+							if r.Database.SourceScope == domain.BusinessTableSourceScope {
+								guarded = domain.CaptureBusinessSourceGuarded
+							}
+							return guarded(ctx, db, limits, name, uuid, func(ctx context.Context) error {
 								if env.SourceAuthorize(ctx, i) != nil {
 									return ErrNotReady
 								}
 								return inUseCheck()
 							})
 						}
+					}
+					if r.Database.SourceScope != "" && env.SourceAuthorize == nil {
+						return ErrNotReady
 					}
 					s, e := capture(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
 					if e != nil {
