@@ -239,6 +239,27 @@ CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks�
 
 真实SQL新用例 `TestAProviderPermitIssuerNanosecondAuthorizationDeadline`：独立issuer grant的最短期限显式含123456789纳秒，小于task/relay/Generate capability；从真实Prepare.ValidUntil→原keyUseTx首次写入→签名payload→真实evidence DATETIME(6)→ReadCommitted→JWT/TLS Generate完整跑通，断言各处期限完全一致且严格早于未截断授权期限。普通正例也不再在fixture手工截断原until，原生产入口自身负责规范化。三条issuer实际SQL+TLS测试PASS，pkg7.432秒。
 
+## 第八切片：原生S3全版本/删除标记/保护与未知multipart EOF观察
+
+新增 `NewS3CoverageCensus`，从独立部署固定的endpoint/region/bucket/prefix、CA SHA、只读发现凭证文件SHA和原SourceRecord读取真实原生S3 API；Source.ContentSHA为Scope完整JSON摘要，不从HTTP任务选择scope。SDK固定path-style/region/HTTPS/CA、一次尝试；专用transport只允许原bucket版本配置/Object Lock配置、原prefix的全版本/multipart列表和精确version retention/legal-hold GET，拒绝写方法、HTTP/crosshost跳转、邻接prefix及内容GET。私密凭证结构String/JSON均不输出内容，SDK内部Go string无法承诺完全清零，没有日志打印秘密。
+
+实际枚举 `WithVersions=true` 全部Version和DeleteMarker；保留旧版本及`null`历史为legacy_unversioned，绝不把删除标记当作旧版本解密材料释放。逐版本读取retention/legal-hold；原生multipart列表持续分页至EOF，每个上传标为multipart_unknown，不由TTL或任务状态去掉。所有返回成员保留原key/version/upload ID/metadata及保护事实，返回防别名副本和摘要；不输出对象payload。
+
+在SDK宽松XML解码**之前**捕获实际HTTP响应：核对root/bucket/prefix/回显cursor、必需IsTruncated和终止页、精确下一游标及全局已访问游标集（拒绝非相邻循环）、必需且无重复的Key/VersionId/IsLatest/LastModified/Size/ETag、0字节版本与缺失Size严格区分；拒绝多根尾随XML、错entry kind、重复版本身份及未知截断空页。原页SHA/数量与SDK实际输出数量一致，EOF才返回观察。单HTTP响应4MiB、10k页、100k成员、成员metadata64MiB及页证据32MiB均为拒绝阈值，从不当作分页完成。
+
+保护元数据也先严格解析：**只有HTTP404 + 唯一ObjectLockConfigurationNotFoundError代码**才视为原bucket未配置Object Lock。HTTP200须明确唯一Enabled；缺字段、重复字段、尾随多根、歧义retention Mode/date、歧义legal-hold Status均拒绝。成功Enabled时逐版本保护API不可省；原404未配置正例不虚构每对象持有保护。versioning也要求唯一Enabled。读取末尾复核原凭证文件SHA，途中材料替换使观察失败。
+
+本地验证：实际MinIO SDK→loopback TLS/SigV4 GET，23场景（完整双页旧版本/删除marker/legacy null、明确Size=0、原404 no-lock、持有COMPLIANCE+legal-hold、未知multipart双页及各类拒绝）+只读/前缀边界transport与歧义XML测试全部PASS；最终完整adapter suite PASS4.599秒。每个负例均确认真实HTTP已到达，未把前置连接错误算成特定源拒绝。TLS fixture没有实际生产S3/IAM，返回native响应作为本地协议验证，不冒充现场provider能力。
+
+边界保持：返回 `UnadmittedS3CoverageCensus`，不实现PreparedCoverage，没有StageAdmission/CompleteScan/删除权限。live LIST遍历完整EOF不是immutable snapshot；还需原owner的固定inventory/snapshot及expected-request历史投影、与原SQL冻结/adoption同一维护协议结合，所有writer/GC参与共享fence后才可完整准入。没有用0行/四行receipt/观察标签放开门禁。
+
+直接阻塞同一正式v2六项封存/签名/发布的最小本地剩余项：
+
+1. D将A7生产issuer的Prepare/Stage/ReadCommitted接进实际mTLS/TokenReview控制入口，当前worker/lease/CLI消费已进20cc8235，不能仅依赖测试桥。
+2. 六类正式ModuleFactory与原Runtime/参与者停采和恢复在同一原任务执行；FinishCapture成功释放capture claim并进入validating后，D必须取得**当前publisher新claim**。A下一切片提供三用途签名对正式v2发布的最小适配，在该原业务tx StageSigningInput，不沿用capture authority。
+3. 当前recovery.Publisher仍用Signer.Private/旧签名Seal，旧control publisher写system_backup_catalog_actions等旧表；不能作为正式v2终结器。需保持C既定JWS字节/域/三用途历史独立验签，冻结真实原输入→原owner commit/readback→独立JWT/TLS签名→不可变finalizer原字节/ACK未知读回→所有终态前提真实成立。A负责安全签名适配，D负责当前claim/原事务/六模块/终态路径。
+4. KEK四源adoption/backfill及持续hold/catalog/restore/prune/GC fence仍是代码待办。A6原SQL和本切片原生S3是可消费来源，不是完整准入；此项继续保留，不改记成现场材料。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
