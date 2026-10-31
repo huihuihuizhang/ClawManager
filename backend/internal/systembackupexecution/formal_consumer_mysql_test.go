@@ -338,7 +338,7 @@ func seedConsumerRows(t *testing.T, db *sql.DB, a d.Authority, config, profile [
 	exec(`INSERT INTO system_backup_v2_runtime_captures(task_public_id,application_scope,gate_generation,acquire_token,held_token,registry_sha256,writers_json,acquire_until,hold_until) VALUES(?,'original-app',?,9,10,?,'[]',?,?)`, a.TaskPublicID, a.MaintenanceFencingToken, strings.Repeat("a", 64), a.DeadlineAt, a.DeadlineAt)
 }
 
-func newConsumerMySQLFixture(t *testing.T) (*PublicJobOwner, *DeploymentService, *sql.DB, *sql.DB, d.Authority, d.JobBinding, worker.FormalCaptureResult, *consumerCurrentKeyUse, func()) {
+func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)) (*PublicJobOwner, *DeploymentService, *sql.DB, *sql.DB, d.Authority, d.JobBinding, worker.FormalCaptureResult, *consumerCurrentKeyUse, func()) {
 	t.Helper()
 	ctx := context.Background()
 	var cred struct {
@@ -460,6 +460,9 @@ func newConsumerMySQLFixture(t *testing.T) (*PublicJobOwner, *DeploymentService,
 	}
 	a.DeadlineAt = now.UTC().Add(4 * time.Minute)
 	inv.Request.Deadline = a.DeadlineAt
+	for _, f := range configure {
+		f(&inv)
+	}
 	config := []byte(`{"source":"original-fixture"}`)
 	a.ConfigSHA256 = hash(config)
 	invHash, _ := inv.Hash()

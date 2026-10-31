@@ -22,40 +22,41 @@ import (
 // DeploymentConfig is an administrator-pinned input; public create requests
 // cannot supply paths, trusted roots, source identities or resource UIDs.
 type DeploymentConfig struct {
-	Version             string               `json:"schema_version"`
-	CaptureScope        string               `json:"capture_scope"`
-	InstallationID      string               `json:"installation_id"`
-	ControllerOwner     string               `json:"controller_owner"`
-	ApplicationScope    string               `json:"application_scope"`
-	Namespace           string               `json:"namespace"`
-	NamespaceUID        string               `json:"namespace_uid"`
-	TrustDomain         string               `json:"trust_domain"`
-	ForwardGrant        GrantReference       `json:"forward_grant"`
-	RecoveryGrant       GrantReference       `json:"recovery_grant"`
-	KeyDirectory        string               `json:"key_directory"`
-	ProfileFile         string               `json:"profile_file"`
-	CapacityFile        string               `json:"capacity_file"`
-	SourceDSNFile       string               `json:"source_dsn_file"`
-	SourceUser          string               `json:"source_user"`
-	SourceDatabase      string               `json:"source_database"`
-	SourceServerUUID    string               `json:"source_server_uuid"`
-	StagingDirectory    string               `json:"staging_directory"`
-	SealCustodyMaxBytes int64                `json:"seal_custody_max_bytes"`
-	StagingClaim        string               `json:"staging_claim"`
-	WorkerImage         string               `json:"worker_image"`
-	Security            kube.WorkerSecurity  `json:"worker_security"`
-	ControlURL          string               `json:"control_url"`
-	Listen              string               `json:"listen"`
-	ServerCertificate   string               `json:"server_certificate"`
-	ServerKey           string               `json:"server_key"`
-	IssuerCertificate   string               `json:"issuer_certificate"`
-	IssuerSHA256        string               `json:"issuer_certificate_sha256,omitempty"`
-	IssuerKey           string               `json:"issuer_key"`
-	Writers             []PlatformDeployment `json:"platform_writers"`
-	Workspace           WorkspaceCapture     `json:"workspace"`
-	AcquireSeconds      int                  `json:"acquire_seconds"`
-	HoldSeconds         int                  `json:"hold_seconds"`
-	RuntimeSources      *RuntimeSourceConfig `json:"runtime_sources,omitempty"`
+	Version             string                   `json:"schema_version"`
+	CaptureScope        string                   `json:"capture_scope"`
+	InstallationID      string                   `json:"installation_id"`
+	ControllerOwner     string                   `json:"controller_owner"`
+	ApplicationScope    string                   `json:"application_scope"`
+	Namespace           string                   `json:"namespace"`
+	NamespaceUID        string                   `json:"namespace_uid"`
+	TrustDomain         string                   `json:"trust_domain"`
+	ForwardGrant        GrantReference           `json:"forward_grant"`
+	RecoveryGrant       GrantReference           `json:"recovery_grant"`
+	KeyDirectory        string                   `json:"key_directory"`
+	ProfileFile         string                   `json:"profile_file"`
+	CapacityFile        string                   `json:"capacity_file"`
+	SourceDSNFile       string                   `json:"source_dsn_file"`
+	SourceUser          string                   `json:"source_user"`
+	SourceDatabase      string                   `json:"source_database"`
+	SourceServerUUID    string                   `json:"source_server_uuid"`
+	StagingDirectory    string                   `json:"staging_directory"`
+	SealCustodyMaxBytes int64                    `json:"seal_custody_max_bytes"`
+	StagingClaim        string                   `json:"staging_claim"`
+	WorkerImage         string                   `json:"worker_image"`
+	Security            kube.WorkerSecurity      `json:"worker_security"`
+	ControlURL          string                   `json:"control_url"`
+	Listen              string                   `json:"listen"`
+	ServerCertificate   string                   `json:"server_certificate"`
+	ServerKey           string                   `json:"server_key"`
+	IssuerCertificate   string                   `json:"issuer_certificate"`
+	IssuerSHA256        string                   `json:"issuer_certificate_sha256,omitempty"`
+	IssuerKey           string                   `json:"issuer_key"`
+	Writers             []PlatformDeployment     `json:"platform_writers"`
+	Workspace           WorkspaceCapture         `json:"workspace"`
+	AcquireSeconds      int                      `json:"acquire_seconds"`
+	HoldSeconds         int                      `json:"hold_seconds"`
+	RuntimeSources      *RuntimeSourceConfig     `json:"runtime_sources,omitempty"`
+	FormalVerifier      *FormalVerifierReference `json:"formal_verifier,omitempty"`
 }
 type GrantReference struct {
 	Path      string `json:"path"`
@@ -127,6 +128,9 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.FormalVerifier != nil && cnf.FormalVerifier.validate(cnf) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if cnf.SealCustodyMaxBytes < 1<<20 || cnf.SealCustodyMaxBytes > 1<<40 {
 		return c.ErrExecutionAuthority
 	}

@@ -67,7 +67,11 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e != nil {
 		return errors.New("public Kubernetes dynamic client unavailable")
 	}
-	service, e := execution.NewDeploymentService(ctx, control, publicClient, dyn, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true")
+	var verifierInputs []execution.FormalVerifierInput
+	if os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256") != "" {
+		verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256")})
+	}
+	service, e := execution.NewDeploymentService(ctx, control, publicClient, dyn, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", verifierInputs...)
 	if e != nil {
 		return fmt.Errorf("public deployment unavailable: %w", e)
 	}
