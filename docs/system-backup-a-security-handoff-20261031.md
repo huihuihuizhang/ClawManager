@@ -194,11 +194,50 @@ job, err := systembackupkms.NewDeliveredCaptureJob(ctx, admittedKMSConfig, pin, 
 
 **A7.0 consumer ABI已实现并验证，先独立提交供D消费**：`systembackupkms/delivered_permit.go`、原Job resolver共用校验及NewDeliveredCaptureJob、worker.OriginalKeyAuthority.PermitNonce。KMS整包PASS3.786秒，worker整包PASS34.727秒。真实loopback TLS正例验证exact完整context/version/bits、原JWT→batch单policy生成、原DEK回调及原单次调用守卫；20类拒绝覆盖wrong grant/nonce/request/invocation/Job/Pod/SA/capture grant、Unwrap、静态凭证、未来/过期/越原权限、旧签名域、重复/未知JSON、issuer替换、构造后nonce变化/原授权撤销。DTO byte修改不改变已构造resolver。此阶段original authority为明确unit double，原producer SQL/K8s/签发授权测试仍在开发，未声称生产闭环。
 
-生产producer由 `ProviderPermitIssuer` 持独立原Generate-owner部署级签名delegation（签发专用公钥+真实controller workload/SQL账号/备份业务config/完整binding/精确Generate role-policy-JWT trust/worker namespace-SA/期限撤销），准备时核对原加密plan/真实Job和Pod；`Prepare`在SQL锁外完成，`Stage(ctx, originalTx, originalKeyUseLease)`在原owner所有业务锁之后、Commit之前写原public signed permit evidence并取得原KEK fence（planned/unknown引用仍在接入中）。签发使用专用被授权Ed25519签发key；不调用artifact三用途signer、worker身份CA或ACL观察签发业务grant。`ReadCommitted(ctx)`只回读已提交原字节，不为ACK不明重签/续期。D负责原ControlClient/lease/CLI/部署消费；A提供具体原owner签发权限和current Generate来源，不要求每任务手工材料。
+生产producer由 `ProviderPermitIssuer` 持独立原Generate-owner部署级签名delegation（签发专用公钥+真实controller workload/SQL账号/备份业务config/完整binding/精确Generate role-policy-JWT trust/worker namespace-SA/期限撤销），准备时核对原加密plan/真实Job和Pod；`Prepare`在SQL锁外完成，`Stage(ctx, originalTx, originalKeyUseLease, req.Action)`在原owner所有业务锁之后、Commit之前写原public signed permit evidence、planned/unknown引用并取得原KEK fence。签发使用专用被授权Ed25519签发key；不调用artifact三用途signer、worker身份CA或ACL观察签发业务grant。`ReadCommitted(ctx)`只回读已提交原字节，不为ACK不明重签/续期。D负责原ControlClient/lease/CLI/部署消费；A提供具体原owner签发权限和current Generate来源，不要求每任务手工材料。
 
 无环构造修正：**ProviderPermitIssuerGrant不包含Forward/CaptureGrantSHA，也不包含父DeploymentConfig/ProfileSHA**。其Workload.ConfigSHA只绑定既有备份业务配置（该schema不包含issuer delegation/未来permit）。可以先生成独立delegation→materials只pin独立公钥/delegationSHA→Invocation/Profile/DeploymentConfig→Forward grant→真实Job/Pod绑定→动态permit。`ProviderPermitIssuerConfig.CaptureGrantSHA256`仅在运行期绑定实际原recordKeys/SQL执行grant，不写回独立delegation。每份动态payload仍严格包含经原授权验证的Identity.ExecutionGrantSHA256，拒绝跨grant替换。D的外部启动材料包也不能把依赖Forward的派生摘要嵌回父config/profile/materials。
 
-planned/unknown草稿保持保守：key-reserve持久化planned，key-begin在provider I/O前同事务标unknown；key-end/candidate/status/TTL不释放；任何payload/ACK未知都保留原引用。CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks齐备。
+**A7.1 producer实际消费ABI**（待本轮提交；D接入同一原控制事务）：
+
+```go
+issuer, err := systembackupkekadapter.NewProviderPermitIssuer(ProviderPermitIssuerConfig{
+    Capabilities: actualSQLPurposePreparation, Binding: admittedBinding,
+    InstallationIssuer: independentInstallationOwnerPublicKey,
+    Authority: owner.Gate.Authority, Records: owner.Gate.Records,
+    Kubernetes: owner.Client, Workload: actualControllerWorkload,
+    CaptureGrantSHA256: owner.Identity.GrantSHA256(),
+    GrantMount: ProviderPermitIssuerGrantMount{File: independentDelegationFile,
+        SHA256: independentDelegationEnvelopeSHA, Issuer: originalGenerateBusinessOwnerPublicKey},
+    SigningKeyFile: dedicatedDelegatedRawEd25519PrivateKeyFile,
+})
+// 原mTLS/TokenReview/frozen plan/process检查后、开原tx之前；身份全部来自原链。
+prepared, err := issuer.Prepare(ctx, ProviderPermitIssueScope{
+    Input: originalInput, Job: originalJob, Invocation: originalInvocation,
+    WorkerIdentity: actualOriginalWorkerIdentity, WorkerPodName: actualBoundPodName,
+})
+// D应把prepared.ValidUntil()再min到原until；精确DATETIME(6)微秒窗，不续期。
+// 原tx内keyUseTx/候选/容量/观察等业务锁完成后、原Commit之前：
+err = prepared.Stage(ctx, originalTx, originalKeyUseLease, req.Action)
+// 原owner自行Commit；结果不明只执行原记录readback，不重签。
+delivery, err := prepared.ReadCommitted(ctx)
+```
+
+需接 `key-reserve/key-check/key-begin/key-end/candidate` 所有原动作。只有reserve首次创建permit；using/finished没有原record则拒绝，不追补。deterministic `sev_apermit_*` evidence保存独立domain签名payload的原始字节；重复读取比较signature/context/full identity/nonce/期限，签名key不在时仍可回读同一现有permit，不能重签/续期。当前SQL原guard、signed installation Generate撤销、独立issuer delegation文件与provider Generate capability在同一原fence事务反复检查；实际profile的容量报告存在时沿用原RegistrationCapacity事务额度。原purpose证据只作观察，不能颁业务授权。
+
+planned/unknown保持保守：reserve原事务持久化planned。**kms Transit的Generate RPC发生在WithUse/key-begin之前**，所以从constructor/Resolve/preRPC第一次原 `key-check` 开始即同事务标unknown，早于JWT/provider I/O；不能只挂key-begin。key-begin/end/candidate均保留unknown；status/TTL/撤销/ACK不明不释放。每次状态写入推进同一fence，之后在同一原tx刷新其派生snapshot继续复查，未创建第二提交边界。没有实现release/retire/CompleteScan成功分支。
+
+本地A7.1集成验证已跑通：四包整回归adapter3.155s/execution13.273s/registry0.612s/kms3.819s，全部退出0。同步D5.3 `3c4e8c1d` 后execution再PASS12.338s。真实原DeploymentService.captureGate/deploymentAuthorization、原加密plan、**实际keyUseTx**、独立Generate owner授权/专用签发key、原事务Stage/Commit/ReadCommitted、worker NewDeliveredCaptureJob、原JWT→TLS Transit Generate→原回调，原guard全程复查。实际写入表使用仓库123 runtime_resources CREATE段＋125 key_use＋131 candidate DDL及真实FK/CHECK；evidence也使用096原CREATE段。周边控制表保留明确focused fixture，不冒充完整现库。real runtime父表保留匹配的PK/ASCII/enums用于真实FK。
+
+真实provider handler在收到**首个**Generate请求时另连接查SQL，断言unknown已提交；另一用例在JWT login响应前由原InstallationAuthorityWriter导入GenerateRevoked，后续Generate调用数严格0、无DEK、unknown仍保留。actualStage成功后rollback不会返回permit/索引，提交后planned；ACK重放在专用privatekey被换成无效字节时仍返回原signature/payload一字不变；原envelope最多一次Generate，key-end后unknown不释放；当前原Generate撤销禁止新的Prepare和旧记录ReadCommitted。K8s使用fake API，测试桥接原keyUseTx而非真实mTLS/TokenReview；D生产handler/启动材料/lease/CLI调用仍须落地。独立授权单测覆盖过期/未来/过长/其他安装映射/DB/账号/workload/controller/SA/JWT路径/issuer替换、错误签名用途与私钥规范性，delegation不包含Forward/Profile/DeploymentConfig摘要。
+
+CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks齐备。
+
+### A7.2 原key-use持久化前统一微秒窗口
+
+原 `PublicJobOwner.keyUseTx` 现在在读取/构造原lease之前统一 `until.UTC().Truncate(time.Microsecond)`，覆盖全部原claim/relay/task/issuer/capability最短窗口；不在签名后修改lease，也不向上取整。A7.1 `PreparedProviderPermitIssue.ValidUntil` 也先向下截微秒，Stage拒绝不规范的纳秒lease；D仍须在原keyUseTx之前min准备期限与原guard/relay/task。
+
+真实SQL新用例 `TestAProviderPermitIssuerNanosecondAuthorizationDeadline`：独立issuer grant的最短期限显式含123456789纳秒，小于task/relay/Generate capability；从真实Prepare.ValidUntil→原keyUseTx首次写入→签名payload→真实evidence DATETIME(6)→ReadCommitted→JWT/TLS Generate完整跑通，断言各处期限完全一致且严格早于未截断授权期限。普通正例也不再在fixture手工截断原until，原生产入口自身负责规范化。三条issuer实际SQL+TLS测试PASS，pkg7.432秒。
 
 ## 现场事实边界（最终集中更新）
 

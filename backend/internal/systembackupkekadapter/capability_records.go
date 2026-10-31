@@ -220,7 +220,7 @@ type sqlPreparedCapability struct {
 }
 
 func (p *SQLProviderCapabilityPreparation) prepareOperation(ctx context.Context, binding reg.Binding, operation kms.Operation) (*sqlPreparedCapability, error) {
-	if p == nil || ctx == nil || ctx.Err() != nil || binding.InstallationID != p.installation || operation != kms.Unwrap {
+	if p == nil || ctx == nil || ctx.Err() != nil || binding.InstallationID != p.installation || (operation != kms.Unwrap && operation != kms.Generate) {
 		return nil, admission.ErrCandidate
 	}
 	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
@@ -233,11 +233,15 @@ func (p *SQLProviderCapabilityPreparation) prepareOperation(ctx context.Context,
 	if tx.QueryRowContext(ctx, `SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6)`).Scan(&database.ServerUUID, &database.Database, &now) != nil || database != p.database {
 		return nil, admission.ErrCandidate
 	}
-	e, err := readCapabilityEvidence(ctx, tx, p.installation, p.unwrap, false)
+	pin := p.unwrap
+	if operation == kms.Generate {
+		pin = p.generate
+	}
+	e, err := readCapabilityEvidence(ctx, tx, p.installation, pin, false)
 	if err != nil {
 		return nil, err
 	}
-	r, err := authenticateProviderCapability(e, p.unwrap, binding, operation, now)
+	r, err := authenticateProviderCapability(e, pin, binding, operation, now)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +249,7 @@ func (p *SQLProviderCapabilityPreparation) prepareOperation(ctx context.Context,
 	if e.until.Before(until) {
 		until = e.until
 	}
-	return &sqlPreparedCapability{database: p.database, record: r, pin: p.unwrap, evidence: e, until: until}, nil
+	return &sqlPreparedCapability{database: p.database, record: r, pin: pin, evidence: e, until: until}, nil
 }
 
 func (p *sqlPreparedCapability) Source() reg.SourceRecord { return p.record.Source }
