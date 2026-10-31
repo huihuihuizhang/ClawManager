@@ -25,7 +25,7 @@ import (
 // This isolated candidate executes the real writer, JWT/session/RBAC checks,
 // Operation evidence adapter, FKs and transactions. Resource readiness and
 // capacity are explicitly synthetic; this is not a deployment admission test.
-const configWriterCandidateSHA256 = "14db3b88263f0ab3e31e293aa0351bb08da23464d4a0fee8854263d56354cce1"
+const configWriterCandidateSHA256 = "0ffe4e77397b09a8965616d224de91c5a4ec8b96ccc6d236f320f4abde477bf8"
 
 type configWriterProbeInputs struct {
 	Kind            string          `json:"kind"`

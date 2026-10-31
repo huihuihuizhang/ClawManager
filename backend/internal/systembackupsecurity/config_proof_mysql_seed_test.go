@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"clawreef/internal/systembackupcontroller"
+	"clawreef/internal/migrationcatalog"
 )
 
 // Detached seeds verify the exact formal table's required-column contract.
@@ -36,7 +36,7 @@ func decodeConfigProofProbeInputs(raw []byte, digest string) (configProofProbeIn
 		return out, ErrConfigMutation
 	}
 	var fields map[string]json.RawMessage
-	if json.Unmarshal(raw, &fields) != nil || !providerFieldSet(fields, "kind", "catalog_sha256", "filenames") || json.Unmarshal(raw, &out) != nil || out.Kind != "a_config_proof_probe_inputs.v1" || out.Catalog != systembackupcontroller.ContractMigrationCatalogHash || len(out.Filenames) != systembackupcontroller.ContractMigrationCatalogFileCount || !sort.StringsAreSorted(out.Filenames) {
+	if json.Unmarshal(raw, &fields) != nil || !providerFieldSet(fields, "kind", "catalog_sha256", "filenames") || json.Unmarshal(raw, &out) != nil || out.Kind != "a_config_proof_probe_inputs.v1" || out.Catalog != migrationcatalog.ReviewedHash || len(out.Filenames) != migrationcatalog.ReviewedFileCount || !sort.StringsAreSorted(out.Filenames) {
 		return configProofProbeInputs{}, ErrConfigMutation
 	}
 	pattern := regexp.MustCompile(`^[0-9]{3}_[a-z0-9_]+\.sql$`)
@@ -52,8 +52,8 @@ func decodeConfigProofProbeInputs(raw []byte, digest string) (configProofProbeIn
 // exercises capsule parsing and the exact code-generated configuration input.
 func TestAConfigProofMySQLSeed(t *testing.T) {
 	assertConfigProofInstallationStateSeed(t, configProofInstallationSchema)
-	input := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: systembackupcontroller.ContractMigrationCatalogHash}
-	for n := 1; n <= systembackupcontroller.ContractMigrationCatalogFileCount; n++ {
+	input := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: migrationcatalog.ReviewedHash}
+	for n := 1; n <= migrationcatalog.ReviewedFileCount; n++ {
 		input.Filenames = append(input.Filenames, fmt.Sprintf("%03d_synthetic.sql", n))
 	}
 	encode := func(v any) ([]byte, string) {
