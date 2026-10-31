@@ -80,6 +80,7 @@ func newDProductionSourceFixture(t *testing.T, handler http.Handler) *dProductio
 		TeamPlatformUnits: map[string][]string{"deployment/" + w.Namespace + "/" + w.Name: append([]string{}, units...)}}
 	m.Discovery = discovery
 	for name, operation := range m.Operations {
+		operation.Workload.DeadlineSeconds = 30
 		operation.MountIdentities = []kube.MountIdentity{{Volume: "formal-mapping", Kind: "ConfigMap", Name: operation.Workload.FormalMaterials.ConfigMap, UID: name + "-mapping-uid", SHA256: hash([]byte(name))}}
 		m.Operations[name] = operation
 	}
