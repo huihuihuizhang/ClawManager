@@ -34,6 +34,7 @@ var publicCaptureTableGrants = map[string][]string{
 	"system_backup_v2_metadata_reservations": {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_runtime_captures":      {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_runtime_resources":     {"SELECT", "INSERT", "UPDATE"},
+	"system_backup_v2_staging_resources":     {"SELECT", "INSERT", "UPDATE"},
 	"system_backup_v2_runtime_stop_proofs":   {"SELECT", "INSERT"},
 	"system_backup_v2_runtime_writers":       {"SELECT", "INSERT", "UPDATE"},
 }

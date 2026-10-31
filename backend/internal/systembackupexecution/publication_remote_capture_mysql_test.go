@@ -110,7 +110,7 @@ func TestAOriginalRemotePublicationReadbackNeedsNoPrivateCipherFiles(t *testing.
 					}
 					var owner sql.NullString
 					var rowVersion uint64
-					if h.db.QueryRowContext(faultCtx, `SELECT controller_owner,row_version FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&owner, &rowVersion) != nil || owner.Valid || rowVersion <= h.token.RowVersion {
+					if h.admin.QueryRowContext(faultCtx, `SELECT controller_owner,row_version FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&owner, &rowVersion) != nil || owner.Valid || rowVersion <= h.token.RowVersion {
 						t.Error("remote read fault did not actually release original SQL claim")
 						return
 					}

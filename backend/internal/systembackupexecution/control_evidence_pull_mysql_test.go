@@ -187,7 +187,10 @@ func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture, w
 	}
 	// Upgrade the original consumer's narrow gate fixtures to the actual DDL,
 	// preserving constraints and using a NEW task with no prior effects.
-	exec("RENAME TABLE system_backup_gate TO system_backup_gate_a_prior_fixture")
+	// The base consumer now uses the actual 079 gate for the pre-create 104
+	// staging producer. This isolated replacement starts a NEW task, so discard
+	// its prior fixture gate row rather than retaining conflicting CHECK names.
+	exec("DROP TABLE system_backup_gate")
 	exec("RENAME TABLE system_backup_v2_engine_bindings TO system_backup_v2_engine_bindings_a_prior_fixture")
 	exec(aPublicationActualTable(t, "111_backup_engine_selection.sql", "system_backup_v2_engine_bindings"))
 	exec("INSERT INTO system_backup_v2_engine_bindings(scope,engine) VALUES('installation','v2')")

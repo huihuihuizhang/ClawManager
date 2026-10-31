@@ -501,7 +501,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool, exercis
 	if _, err = factory.ForCandidate(ctx, wrong); err == nil {
 		t.Fatal("cross-attempt candidate scope accepted")
 	}
-	exec(`INSERT INTO system_backup_v2_operations VALUES (?,'backup',?,'cancel','pending')`, in.Authority.InstallationID, in.Authority.TaskPublicID)
+	exec(`INSERT INTO system_backup_v2_operations(origin_installation_id,target_type,target_public_id,operation_type,status) VALUES (?,'backup',?,'cancel','pending')`, in.Authority.InstallationID, in.Authority.TaskPublicID)
 	if err = verifier.Unwrap(ctx, request, wrapped, func([]byte) error { called++; return nil }); err == nil || logins != 1 {
 		t.Fatal("canceled original task reached provider")
 	}

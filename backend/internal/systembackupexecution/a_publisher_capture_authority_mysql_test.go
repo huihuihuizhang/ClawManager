@@ -214,7 +214,7 @@ func TestAPublisherCaptureAuthorityRejectsRenewRevokeAndScope(t *testing.T) {
 			case "capturing":
 				exec(`UPDATE system_backup_v2_backups SET status='capturing'`)
 			case "canceled":
-				exec(`INSERT INTO system_backup_v2_operations VALUES (?,'backup',?,'cancel','pending')`, x.f.installation, x.f.target.PublicID)
+				exec(`INSERT INTO system_backup_v2_operations(origin_installation_id,target_type,target_public_id,operation_type,status) VALUES (?,'backup',?,'cancel','pending')`, x.f.installation, x.f.target.PublicID)
 			case "expired task":
 				exec(`UPDATE system_backup_v2_backups SET deadline_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6))`)
 			case "source not resumed":
