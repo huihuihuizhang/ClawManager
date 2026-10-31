@@ -151,6 +151,8 @@ func DiagnoseUsersInstancesConfig(cfg UsersInstancesModuleConfig) ModuleConfigDi
 			} else if identity.Schema != 1 || identity.UserID != i.UserID || identity.InstanceID != i.ID || identity.UID < 10000 || identity.UID > 65533 || identity.GID != identity.UID {
 				add("workbuddy_identity_mismatch", "workspaces.request.invocation.workbuddy_identity", "B", m.InstanceID, n)
 			}
+		} else if m.Request.Invocation.Request.WorkBuddyIdentity != nil {
+			add("workbuddy_identity_mismatch", "workspaces.request.invocation.workbuddy_identity", "B", m.InstanceID, n)
 		}
 	}
 	for _, i := range cfg.Source.Instances {

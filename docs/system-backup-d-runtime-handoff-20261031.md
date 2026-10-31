@@ -342,3 +342,14 @@
 - D5.23提交56892485。监督在新scope mapper上实测同一原PK的已派发Job被放入prior attempt1后，当前attempt3过滤查询返回sql.ErrNoRows，可能让Pending误作Undispatched，初始反例FAIL3.797s。现scoped Load未命中时，在同一原SQL事务用原PK FOR UPDATE再查：同PK存在任何其他target/attempt/phase或读取失败都返回ErrJournal；只有物理PK真正无行才返回sql.ErrNoRows。精确scope INSERT/CAS继续保留，未派发证明不因过滤而放宽。
 - Pending的实际缺席分支提为loadPendingOriginalJob，仍消费同一原锁内MappedResourceRows；错scope错误直接传播。实际SQL五模式覆盖真正缺席、错attempt、错phase、错target、显式prior-attempt错日志；对应原Pending分支不把任何冲突标Undispatched。完整owner.Pending在shadowed fixture同样返回错误且没有Undispatched条目；该fixture其他恢复inventory材料有限，不据此宣称完成全体writer恢复。
 - 原两identity测试的跨attempt期望改为ErrJournal；对真正不存在的名称仍要求sql.ErrNoRows。监督在干净候选树组合原身份/唯一mount/五模式/独立两反例全部PASS7.481s；本机定向回归另见本轮tool输出。仅本mapper、Pending helper与两份真实SQL回归交付，source Discovery/restore WIP不包含本片，生产接线继续推进。
+
+## D5.25 WorkBuddy Pro/Lite 原身份适用范围修复（2026-10-31）
+
+- 监督原Pro探针确认factory和UsersInstances构造器均把全部WorkBuddy强制套入Lite UID合同。现共同使用RequiresWorkBuddyUIDIdentity：先原scope.PlanRuntime验证Linux已知runtime，再仅原workbuddy/lite/gateway/linux variant要求身份；Pro无Lite身份且禁止借用Lite身份。纯WithWorkBuddyIdentities与诊断沿同一适用规则，未放宽worker原UID检查或Windows/未知runtime规则。
+- Factory逐一绑定实际Source instance与全部Runtime tuple，Lite身份必须原instance/user、schema1、UID10000..65533且GID一致；所有非Lite来源带Lite身份直接拒绝。Source WIP中的SQL与mount选择也已用同一predicate，但未包含本独立提交。
+- 新增8模式完整原factory/Job构造回归：Pro正例、Pro借Lite身份拒绝、Lite正例、缺身份/错owner/错instance/错GID/越界均拒绝；B模块/纯binder/诊断Pro正例与Windows/unknown/backend边界覆盖。原UsersInstances、WorkBuddy binder、factory组合publicadapter3.315s/execution4.046s PASS。六部分Discovery/Runtime源接线和restore仍继续施工，未据本修复声明页面完整通过。
+
+### D5.25a 归一化Lite不能绕过UID（2026-10-31）
+
+- 监督补充原scope.PlanRuntime允许ModeLite/backend空、mode空/backend gateway两种归一化边界。RequiresWorkBuddyUIDIdentity现以原已验证RuntimePlan的Type+Mode判断，所有已知Linux WorkBuddy Lite必须保留身份，不能因raw backend缺失转入普通workspace；Pro仍不借Lite身份，Windows/未知runtime仍拒绝。
+- 新增factory缺UID的blank-backend、inferred-mode反例，以及共同predicate两边界正分类；与原Pro/Lite/UsersInstances/binder/诊断组合publicadapter3.274s、execution见本轮日志通过。TLS原客户端（明确RESP协议fixture）及Kubernetes元数据实际客户端组合8.246s PASS，属于source WIP未含本补片。

@@ -110,11 +110,13 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 		if e != nil || actual.Type != expected.Type || actual.Mode != expected.Mode {
 			return zero, d.ErrNotReady
 		}
-		if actual.Type == "workbuddy" {
+		if isWorkBuddySource(i) {
 			identity := r.Invocation.Request.WorkBuddyIdentity
-			if identity == nil || identity.UserID != i.UserID || identity.InstanceID != i.ID {
+			if identity == nil || identity.Schema != 1 || identity.UserID != i.UserID || identity.InstanceID != i.ID || identity.UID < 10000 || identity.UID > 65533 || identity.GID != identity.UID {
 				return zero, d.ErrNotReady
 			}
+		} else if r.Invocation.Request.WorkBuddyIdentity != nil {
+			return zero, d.ErrNotReady
 		}
 		if r.Part != part || r.Category != "instances" {
 			return zero, d.ErrNotReady
