@@ -248,6 +248,7 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 			return nil, d.ErrNotReady
 		}
 		r.Workload.WorkerControl.InvocationConfigMap = name + "-invocation"
+		r.Workload.WorkerControl.IdentitySecret = name + "-identity"
 		r.Workload.DeadlineSeconds = int64(time.Until(until).Seconds()) - 1
 		if r.Workload.DeadlineSeconds < 1 || byPart[r.Part].Part != "" {
 			return nil, d.ErrNotReady

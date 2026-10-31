@@ -48,7 +48,7 @@ func (o *PublicJobOwner) recoverJobIdentity(ctx context.Context, a d.Authority, 
 	if e = o.Gate.Recovery.CheckTx(ctx, tx, a); e != nil {
 		return zero, e
 	}
-	rows, e := o.rows(a.TaskPublicID)
+	rows, e := o.rows(a)
 	if e != nil {
 		return zero, e
 	}

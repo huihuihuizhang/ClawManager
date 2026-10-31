@@ -64,7 +64,7 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 	if e != nil {
 		return out, e
 	}
-	repository, e := o.rows(a.TaskPublicID)
+	repository, e := o.rows(a)
 	if e != nil {
 		return out, e
 	}

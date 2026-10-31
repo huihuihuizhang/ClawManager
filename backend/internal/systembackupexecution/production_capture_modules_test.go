@@ -22,6 +22,7 @@ import (
 	k "clawreef/internal/systembackupkms"
 	sh "clawreef/internal/systembackupskillhub"
 	w "clawreef/internal/systembackupwire"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -104,6 +105,7 @@ func TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices(t *
 	}
 	seen := map[string]bool{}
 	configs := map[string]bool{}
+	identities := map[string]bool{}
 	sql, control := 0, 0
 	for index, part := range parts {
 		var invocation worker.Invocation
@@ -114,6 +116,20 @@ func TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices(t *
 			t.Fatal("duplicate or wrong global binding", part.Part)
 		}
 		seen[part.Part], configs[part.InvocationConfigMap] = true, true
+		var job batchv1.Job
+		if json.Unmarshal(part.Intent.SpecJSON, &job) != nil {
+			t.Fatal("actual Job decode")
+		}
+		identity := ""
+		for _, volume := range job.Spec.Template.Spec.Volumes {
+			if volume.Name == "worker-identity" && volume.Secret != nil {
+				identity = volume.Secret.SecretName
+			}
+		}
+		if identity == "" || identities[identity] || identity != part.Intent.Name+"-identity" {
+			t.Fatal("actual identity mount reused or mismatched", part.Part, identity)
+		}
+		identities[identity] = true
 		if invocation.Request.Database != nil {
 			sql++
 		}

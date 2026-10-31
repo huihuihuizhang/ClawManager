@@ -41,7 +41,7 @@ func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part
 		return s, e
 	}
 	defer tx.Rollback()
-	rows, e := o.rows(a.TaskPublicID)
+	rows, e := o.rows(a)
 	if e != nil {
 		return s, e
 	}
@@ -71,7 +71,7 @@ func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part
 	}
 	var identityUID string
 	var sealed []byte
-	if tx.QueryRowContext(ctx, "SELECT observed_uid,request_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=TRUE AND lifecycle='ready'", a.TaskPublicID, part.Intent.Namespace, identityName).Scan(&identityUID, &sealed) != nil || identityUID == "" {
+	if tx.QueryRowContext(ctx, "SELECT observed_uid,request_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=TRUE AND lifecycle='ready' AND target_type=? AND attempt_no=? AND phase=?", a.TaskPublicID, part.Intent.Namespace, identityName, a.TaskType, a.AttemptNo, a.Phase).Scan(&identityUID, &sealed) != nil || identityUID == "" {
 		return s, kube.ErrOwnership
 	}
 	var identity identityEnvelope
