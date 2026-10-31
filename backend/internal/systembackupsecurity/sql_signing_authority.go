@@ -104,6 +104,9 @@ type SQLArtifactSigningAuthority struct {
 	grant            SQLSigningOwnerGrant
 	notBefore, until time.Time
 	materialCheck    func(context.Context) error
+	// Set only by the concrete production factory, never deployment/request
+	// callbacks. Kube I/O runs outside current() and every SQL transaction.
+	useCheck func(context.Context) error
 }
 
 type signingSQLView interface {
@@ -421,6 +424,9 @@ func (a *SQLArtifactSigningAuthority) authorize(ctx context.Context, r ArtifactS
 	if a == nil || ctx == nil || ctx.Err() != nil || r.Task != a.task || r.Signing.Binding != a.binding || !signingDigest.MatchString(r.Signing.InputSHA256) {
 		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
 	}
+	if a.useCheck != nil && a.useCheck(ctx) != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
 	tx, err := a.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
@@ -451,6 +457,14 @@ func (a *SQLArtifactSigningAuthority) authorize(ctx context.Context, r ArtifactS
 		until = evidenceUntil
 	}
 	if !time.Now().Before(until) {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	// End the SQL snapshot before external workload rechecks. The resolver calls
+	// this again after JWT login and immediately before provider use.
+	if tx.Rollback() != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	if a.useCheck != nil && a.useCheck(ctx) != nil {
 		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
 	}
 	return OriginalSigningUse{Request: r.Signing, Workload: a.task.Workload, NotBefore: a.notBefore, ExpiresAt: until}, facts, nil

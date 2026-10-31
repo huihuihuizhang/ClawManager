@@ -174,7 +174,9 @@ func publicationFixturePayload(t *testing.T, f *installationSigningFixture, b Tr
 	return nil
 }
 
-func stagePreparedPublication(t *testing.T, db *sql.DB, p *PreparedPublicationRecord, commit bool) {
+func stagePreparedPublication(t *testing.T, db *sql.DB, p interface {
+	Stage(context.Context, *sql.Tx) error
+}, commit bool) {
 	t.Helper()
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)

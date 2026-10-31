@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
 	"os"
 	"strconv"
@@ -189,11 +190,17 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	if _, err = owner.ExecContext(ctx, `INSERT INTO system_backup_v2_execution_records VALUES (?,?,?,'capture','capture_result',?)`, f.pin.InstallationID, f.task.BackupPublicID, f.task.AttemptNo, strings.Repeat("d", 64)); err != nil {
 		t.Fatal(err)
 	}
-	var prepared []*PreparedPublicationRecord
+	factory, k, controller, _ := publicationFactoryFixture(t, f, job)
+	production, e := factory.ForTask(ctx, f.task.BackupPublicID, SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 11})
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer production.Close()
+	var prepared []*SQLPreparedPublicationRecord
 	var signedRecords [][]byte
 	for _, mount := range f.mounts {
 		payload := publicationFixturePayload(t, f, mount.Binding)
-		p, e := s.PreparePublicationRecord(ctx, mount.Binding.Purpose, payload)
+		p, e := production.PreparePublicationRecord(ctx, mount.Binding.Purpose, payload)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -263,13 +270,13 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 			if e = tx.Commit(); e != nil {
 				t.Fatal(e)
 			}
-			t.Logf("full local capture: payload=%d input=%d frozen=%d chunks=%d max-inline=%d", len(p.payload), len(p.input), index.Size, index.Count, maxSize)
+			t.Logf("full local capture through production factory: payload=%d input=%d frozen=%d chunks=%d max-inline=%d", len(p.record.payload), len(p.record.input), index.Size, index.Count, maxSize)
 		}
 		value, checksum, e := p.SignCommitted(ctx)
 		if e != nil {
 			t.Fatal("real restricted MySQL-to-TLS signing failed", mount.Binding.Purpose, e)
 		}
-		history, e := s.History(ctx)
+		history, e := production.History(ctx)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -291,12 +298,32 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	if f.login != 3 || f.signed != 3 || f.authorized != 0 {
 		t.Fatal("real SQL gate did not use three automatic owners")
 	}
+	originalPod, e := k.CoreV1().Pods(controller.Namespace).Get(ctx, controller.PodName, metav1.GetOptions{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	f.afterLogin = func() {
+		replaced := originalPod.DeepCopy()
+		replaced.UID = "replacement-during-real-JWT-login"
+		if _, err := k.CoreV1().Pods(controller.Namespace).Update(ctx, replaced, metav1.UpdateOptions{}); err != nil {
+			t.Error(err)
+		}
+	}
+	if raw, _, err := prepared[0].SignCommitted(ctx); err == nil || raw != nil || f.login != 4 || f.signed != 3 {
+		t.Fatal("real SQL/JWT login workload replacement reached Transit Sign")
+	}
+	f.afterLogin = nil
+	// Restore this fake Kube fixture only; no production identity is repaired.
+	if _, err := k.CoreV1().Pods(controller.Namespace).Update(ctx, originalPod, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	baselineLogins := f.login
 	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET row_version=row_version+1 WHERE public_id=?`, f.task.BackupPublicID); err != nil {
 		t.Fatal(err)
 	}
 	signer, _ := s.Signer("capture_certificate")
 	input := signingSQLInput(t, f.task, f.mounts[0].Binding)
-	if _, err = signer.Sign(ctx, input); err == nil || f.login != 3 {
+	if _, err = signer.Sign(ctx, input); err == nil || f.login != baselineLogins {
 		t.Fatal("old MySQL claim reached provider after takeover")
 	}
 	// Model the original runtime release and subsequent publisher acquisition.
@@ -305,20 +332,20 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, p := range prepared {
-		if _, _, e := p.SignCommitted(ctx); e == nil || f.login != 3 {
+		if _, _, e := p.SignCommitted(ctx); e == nil || f.login != baselineLogins {
 			t.Fatal("released capture claim authorized publication")
 		}
 	}
 	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_owner=?,row_version=13,status='publishing' WHERE public_id=?`, grant.ControllerOwner, f.task.BackupPublicID); err != nil {
 		t.Fatal(err)
 	}
-	publisher, e := NewSQLInstallationArtifactSigners(ctx, job, f.reader, f.pin, f.mounts, f.task, SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 13})
+	publisher, e := factory.ForTask(ctx, f.task.BackupPublicID, SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 13})
 	if e != nil {
 		t.Fatal(e)
 	}
 	defer publisher.Close()
 	for i, p := range prepared {
-		current, e := publisher.PreparePublicationRecord(ctx, p.binding.Purpose, p.payload)
+		current, e := publisher.PreparePublicationRecord(ctx, p.record.binding.Purpose, p.record.payload)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -331,7 +358,7 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 			t.Fatal("old capture claim reused after publisher acquisition")
 		}
 	}
-	if f.login != 6 || f.signed != 6 {
+	if f.login != baselineLogins+3 || f.signed != 6 {
 		t.Fatal("publisher did not use three separate purpose signers")
 	}
 }

@@ -76,6 +76,24 @@ func (t *signingSQLTx) Commit() error {
 func (t *signingSQLTx) Rollback() error { t.c.working = nil; return nil }
 func (c *signingSQLConn) QueryContext(_ context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
 	s := c.s
+	// Production factory startup and original task lookup are bounded SELECTs
+	// outside Stage; source authorization below still uses original SQL txs.
+	if q == "SELECT CURRENT_USER(),@@server_uuid,DATABASE()" {
+		server := s.grant.ServerUUID
+		if s.wrongDatabase {
+			server = "other-server"
+		}
+		return registrationRow(s.grant.DatabaseAccount, server, s.grant.Database), nil
+	}
+	if strings.HasPrefix(q, "SELECT request_id FROM system_backup_v2_backups") {
+		if len(args) != 4 || args[0].Value != s.f.pin.InstallationID || args[1].Value != s.f.task.BackupPublicID || args[2].Value != s.claim.ControllerOwner || args[3].Value != int64(s.claim.RowVersion) || s.status != "validating" && s.status != "publishing" || !s.now.Before(s.lease) || !s.now.Before(s.deadline) {
+			return &registrationTestRows{width: 1}, nil
+		}
+		return registrationRow(s.f.task.OperationID), nil
+	}
+	if c.working == nil && strings.HasPrefix(q, "SELECT attempt_no,status FROM system_backup_v2_attempts") {
+		return registrationRow(s.attempt, s.attemptStatus), nil
+	}
 	if c.working == nil {
 		return nil, errors.New("query outside original transaction")
 	}
