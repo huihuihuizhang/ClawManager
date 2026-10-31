@@ -81,14 +81,26 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 		if err != nil {
 			return err
 		}
-		// A/D have not delivered provider-mode SQL/Teams source credential
-		// leases. C's typed collectors require that separate original-Job grant.
-		// Do not read a DSN/token from public mappings or reuse a KEK permission.
-		if i.Request.Teams != nil || i.Request.Database != nil {
-			return worker.ErrNotReady
+		var job *worker.CaptureKeyJob
+		if materials.PermitDelivery != nil {
+			job, err = worker.NewDeliveredCaptureKeyJob(ctx, control, i, materials.KMS, *materials.PermitDelivery)
+		} else {
+			job, err = worker.NewCaptureKeyJob(ctx, control, i, materials.KMS, materials.Permit)
 		}
+		if err != nil {
+			return err
+		}
+		defer job.Close()
 		env := worker.FormalCaptureEnvironment{Staging: store}
-		if i.Request.Resources != nil {
+		if i.Request.Teams != nil || i.Request.Database != nil {
+			sources, err := worker.OpenFormalCaptureSources(ctx, i, job, materials.Sources)
+			if err != nil {
+				return err
+			}
+			defer sources.Close()
+			env.Database, env.Teams = sources.Database, sources.Teams
+			env.SourceAuthorize, env.SourceValidUntil = sources.Authorize, sources.ValidUntil()
+		} else if i.Request.Resources != nil {
 			env.Resources, err = worker.OpenResourceCaptureSources(ctx, i, materials.Resources)
 			if err != nil {
 				return err
@@ -102,16 +114,6 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 			defer workspace.Close()
 			env.Workspace = workspace
 		}
-		var job *worker.CaptureKeyJob
-		if materials.PermitDelivery != nil {
-			job, err = worker.NewDeliveredCaptureKeyJob(ctx, control, i, materials.KMS, *materials.PermitDelivery)
-		} else {
-			job, err = worker.NewCaptureKeyJob(ctx, control, i, materials.KMS, materials.Permit)
-		}
-		if err != nil {
-			return err
-		}
-		defer job.Close()
 		result, err := worker.RunFormalCapture(ctx, i, job, env)
 		if err != nil {
 			return err

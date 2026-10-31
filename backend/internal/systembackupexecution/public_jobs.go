@@ -529,6 +529,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		if keyContext.InstallationID != a.InstallationID || keyContext.Part != part.Part {
 			return lease, worker.ErrExecution
 		}
+		if (req.Invocation.Request.Database != nil || req.Invocation.Request.Teams != nil) && (req.Invocation.FormalCapture == nil || req.Invocation.FormalCapture.SourceConfigSHA256 != a.ConfigSHA256) {
+			return lease, worker.ErrExecution
+		}
 	}
 	var rawBinding []byte
 	if pendingObservation {

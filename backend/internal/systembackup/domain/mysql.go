@@ -17,12 +17,64 @@ type queryer interface {
 // Catalog reads metadata only. The supplied connection must already select the
 // desired database; unlike the application startup path it never runs migrations.
 func Catalog(ctx context.Context, q queryer) ([]Table, error) {
+	return catalogGuarded(ctx, q, nil)
+}
+
+type sourceGuardedQuery struct {
+	queryer
+	check func() error
+}
+
+func (q sourceGuardedQuery) QueryContext(ctx context.Context, statement string, args ...any) (*sql.Rows, error) {
+	if sourceReadGuard(ctx, q.check) != nil {
+		return nil, ErrIsolation
+	}
+	rows, err := q.queryer.QueryContext(ctx, statement, args...)
+	if err != nil {
+		return nil, err
+	}
+	if sourceReadGuard(ctx, q.check) != nil {
+		rows.Close()
+		return nil, ErrIsolation
+	}
+	return rows, nil
+}
+func sourceReadGuard(ctx context.Context, check func() error) error {
+	if ctx == nil || ctx.Err() != nil {
+		return ErrIsolation
+	}
+	if check != nil && check() != nil {
+		return ErrIsolation
+	}
+	return nil
+}
+func sourceRowsNext(ctx context.Context, rows *sql.Rows, check func() error) (bool, error) {
+	if sourceReadGuard(ctx, check) != nil {
+		rows.Close()
+		return false, ErrIsolation
+	}
+	next := rows.Next()
+	if sourceReadGuard(ctx, check) != nil {
+		rows.Close()
+		return false, ErrIsolation
+	}
+	return next, nil
+}
+func catalogGuarded(ctx context.Context, original queryer, check func() error) ([]Table, error) {
+	q := sourceGuardedQuery{original, check}
 	rows, err := q.QueryContext(ctx, `SELECT TABLE_NAME, COALESCE(ENGINE, '') FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME`)
 	if err != nil {
 		return nil, ErrDatabase
 	}
 	var tables []Table
-	for rows.Next() {
+	for {
+		next, guardErr := sourceRowsNext(ctx, rows, check)
+		if guardErr != nil {
+			return nil, guardErr
+		}
+		if !next {
+			break
+		}
 		var t Table
 		if rows.Scan(&t.Name, &t.Engine) != nil {
 			rows.Close()
@@ -45,7 +97,14 @@ func Catalog(ctx context.Context, q queryer) ([]Table, error) {
 		if err != nil {
 			return nil, ErrDatabase
 		}
-		for rows.Next() {
+		for {
+			next, guardErr := sourceRowsNext(ctx, rows, check)
+			if guardErr != nil {
+				return nil, guardErr
+			}
+			if !next {
+				break
+			}
 			var c Column
 			var nullable string
 			var def sql.NullString
@@ -73,7 +132,14 @@ func Catalog(ctx context.Context, q queryer) ([]Table, error) {
 		if err != nil {
 			return nil, ErrDatabase
 		}
-		for rows.Next() {
+		for {
+			next, guardErr := sourceRowsNext(ctx, rows, check)
+			if guardErr != nil {
+				return nil, guardErr
+			}
+			if !next {
+				break
+			}
 			var col, key string
 			var refTable, refCol sql.NullString
 			if rows.Scan(&col, &key, &refTable, &refCol) != nil {
@@ -96,7 +162,14 @@ func Catalog(ctx context.Context, q queryer) ([]Table, error) {
 			if err != nil {
 				return nil, ErrDatabase
 			}
-			for rows.Next() {
+			for {
+				next, guardErr := sourceRowsNext(ctx, rows, check)
+				if guardErr != nil {
+					return nil, guardErr
+				}
+				if !next {
+					break
+				}
 				var name string
 				var column sql.NullString
 				var sequence int
@@ -138,6 +211,18 @@ func Capture(ctx context.Context, db *sql.DB, limits Limits) (Snapshot, error) {
 // the SAME session used by the capture transaction. A worker cannot silently
 // switch to another database after preflight or use application write credentials.
 func CaptureSource(ctx context.Context, db *sql.DB, limits Limits, database, serverUUID string) (Snapshot, error) {
+	return captureSourceGuarded(ctx, db, limits, database, serverUUID, nil)
+}
+
+// The same admitted session and RR snapshot retain source-owner checks at all
+// catalog queries, table reads, row advances/EOF and final commit boundaries.
+func CaptureSourceGuarded(ctx context.Context, db *sql.DB, limits Limits, database, serverUUID string, authorize func(context.Context) error) (Snapshot, error) {
+	if authorize == nil {
+		return Snapshot{}, ErrIsolation
+	}
+	return captureSourceGuarded(ctx, db, limits, database, serverUUID, func() error { return authorize(ctx) })
+}
+func captureSourceGuarded(ctx context.Context, db *sql.DB, limits Limits, database, serverUUID string, authorize func() error) (Snapshot, error) {
 	if !identifier.MatchString(database) || serverUUID == "" {
 		return Snapshot{}, ErrIsolation
 	}
@@ -150,10 +235,20 @@ func CaptureSource(ctx context.Context, db *sql.DB, limits Limits, database, ser
 			return ErrIsolation
 		}
 		return checkSelectOnly(ctx, conn, database)
-	})
+	}, authorize)
 }
 
-func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error) (Snapshot, error) {
+func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, sourceChecks ...func() error) (Snapshot, error) {
+	var authorize func() error
+	if len(sourceChecks) > 1 {
+		return Snapshot{}, ErrIsolation
+	}
+	if len(sourceChecks) == 1 {
+		authorize = sourceChecks[0]
+	}
+	if sourceReadGuard(ctx, authorize) != nil {
+		return Snapshot{}, ErrIsolation
+	}
 	if db == nil || !limits.valid() {
 		return Snapshot{}, ErrData
 	}
@@ -167,12 +262,15 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 			return Snapshot{}, err
 		}
 	}
+	if sourceReadGuard(ctx, authorize) != nil {
+		return Snapshot{}, ErrIsolation
+	}
 	tx, err := conn.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
 	if err != nil {
 		return Snapshot{}, ErrDatabase
 	}
 	defer tx.Rollback()
-	tables, err := Catalog(ctx, tx)
+	tables, err := catalogGuarded(ctx, tx, authorize)
 	if err != nil {
 		return Snapshot{}, err
 	}
@@ -208,11 +306,18 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 			pk = append(pk, name)
 		}
 		name, _ := quoted(t.Name)
-		rows, err := tx.QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+" ORDER BY "+strings.Join(pk, ","))
+		rows, err := (sourceGuardedQuery{tx, authorize}).QueryContext(ctx, "SELECT "+strings.Join(cols, ",")+" FROM "+name+" ORDER BY "+strings.Join(pk, ","))
 		if err != nil {
 			return Snapshot{}, ErrDatabase
 		}
-		for rows.Next() {
+		for {
+			next, guardErr := sourceRowsNext(ctx, rows, authorize)
+			if guardErr != nil {
+				return Snapshot{}, guardErr
+			}
+			if !next {
+				break
+			}
 			values := make([]any, len(cols))
 			pointers := make([]any, len(cols))
 			for i := range values {
@@ -262,8 +367,14 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 			return Snapshot{}, ErrSchema
 		}
 	}
+	if sourceReadGuard(ctx, authorize) != nil {
+		return Snapshot{}, ErrIsolation
+	}
 	if err = tx.Commit(); err != nil {
 		return Snapshot{}, ErrDatabase
+	}
+	if sourceReadGuard(ctx, authorize) != nil {
+		return Snapshot{}, ErrIsolation
 	}
 	return result, nil
 }

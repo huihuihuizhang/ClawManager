@@ -28,11 +28,12 @@ var formalFileName = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{0,127}$`)
 // original ProviderKey contains C's full frozen request/context; no context hash
 // is inferred from source data here. A/D/C must sign off its business source.
 type FormalCaptureSpec struct {
-	Version        string               `json:"schema_version"`
-	ConfigSHA256   string               `json:"config_sha256"`
-	EnvelopeName   string               `json:"envelope_name"`
-	MaxFrames      uint64               `json:"max_frames"`
-	PermitDelivery *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
+	Version            string               `json:"schema_version"`
+	ConfigSHA256       string               `json:"config_sha256"`
+	EnvelopeName       string               `json:"envelope_name"`
+	MaxFrames          uint64               `json:"max_frames"`
+	PermitDelivery     *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
+	SourceConfigSHA256 string               `json:"source_config_sha256,omitempty"`
 }
 
 type FormalCaptureEnvironment struct {
@@ -40,6 +41,8 @@ type FormalCaptureEnvironment struct {
 	Workspace, Staging *os.Root
 	Database           *sql.DB // already SELECT-only admitted source; never opened from artifact
 	Resources          *ResourceCaptureSources
+	SourceAuthorize    func(context.Context, Invocation) error
+	SourceValidUntil   time.Time
 }
 type FormalCaptureResult struct {
 	Version          string          `json:"schema_version"`
@@ -140,6 +143,9 @@ func validFormalInvocation(i Invocation) bool {
 	if f.PermitDelivery != nil && !k.ValidPermitDeliveryPin(*f.PermitDelivery) {
 		return false
 	}
+	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.Database == nil && i.Request.Teams == nil)) {
+		return false
+	}
 	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request))
 }
 
@@ -192,11 +198,22 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
 	defer cancel()
+	if i.FormalCapture.SourceConfigSHA256 != "" {
+		if env.SourceAuthorize == nil || env.SourceValidUntil.IsZero() || !time.Now().Before(env.SourceValidUntil) {
+			return zero, ErrNotReady
+		}
+		var sourceCancel context.CancelFunc
+		ctx, sourceCancel = context.WithDeadline(ctx, env.SourceValidUntil)
+		defer sourceCancel()
+	}
 	check := func() error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
 		if job.Recheck(ctx) != nil {
+			return ErrNotReady
+		}
+		if r.Database != nil && env.SourceAuthorize != nil && env.SourceAuthorize(ctx, i) != nil {
 			return ErrNotReady
 		}
 		if r.Teams != nil && authorizeTeamSources(ctx, env.Teams, i) != nil {
@@ -232,6 +249,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			if job.recheckDuringUse(useCtx) != nil {
 				return ErrNotReady
 			}
+			if r.Database != nil && env.SourceAuthorize != nil && env.SourceAuthorize(useCtx, i) != nil {
+				return ErrNotReady
+			}
 			return nil
 		}
 		if e := inUseCheck(); e != nil {
@@ -252,7 +272,18 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 					})
 				}
 				if r.Database != nil {
-					s, e := domain.CaptureSource(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
+					capture := domain.CaptureSource
+					if env.SourceAuthorize != nil {
+						capture = func(ctx context.Context, db *sql.DB, limits domain.Limits, name, uuid string) (domain.Snapshot, error) {
+							return domain.CaptureSourceGuarded(ctx, db, limits, name, uuid, func(ctx context.Context) error {
+								if env.SourceAuthorize(ctx, i) != nil {
+									return ErrNotReady
+								}
+								return inUseCheck()
+							})
+						}
+					}
+					s, e := capture(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
 					if e != nil {
 						return ErrExecution
 					}
