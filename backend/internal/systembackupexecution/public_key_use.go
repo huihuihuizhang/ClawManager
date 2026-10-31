@@ -82,6 +82,11 @@ func advanceKeyUse(raw []byte, current worker.KeyUseLease, action string, now ti
 		return deny()
 	}
 	switch action {
+	case "candidate":
+		if original.State != "finished" {
+			return deny()
+		}
+		return original, false, nil
 	case "key-check":
 		if original.State != "reserved" && original.State != "using" && original.State != "finished" {
 			return deny()

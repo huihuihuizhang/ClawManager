@@ -24,6 +24,9 @@ func TestOriginalJobKeyUseIsBoundedAndNonReplayable(t *testing.T) {
 	if _, _, e = advanceKeyUse(encode(), current, "key-end", now); e == nil {
 		t.Fatal("end before use")
 	}
+	if _, _, e = advanceKeyUse(encode(), current, "candidate", now); e == nil {
+		t.Fatal("candidate before use")
+	}
 	for _, mode := range []string{"pod", "job", "sa", "installation", "version", "purpose", "claim", "nonce", "grant", "expired", "shorter"} {
 		t.Run(mode, func(t *testing.T) {
 			bad := current
@@ -66,6 +69,9 @@ func TestOriginalJobKeyUseIsBoundedAndNonReplayable(t *testing.T) {
 	if _, _, e = advanceKeyUse(encode(), current, "key-begin", now); e == nil {
 		t.Fatal("replayed use")
 	}
+	if _, _, e = advanceKeyUse(encode(), current, "candidate", now); e == nil {
+		t.Fatal("candidate during use")
+	}
 	state, changed, e = advanceKeyUse(encode(), current, "key-end", now)
 	if e != nil || !changed || state.State != "finished" {
 		t.Fatal(e)
@@ -75,5 +81,10 @@ func TestOriginalJobKeyUseIsBoundedAndNonReplayable(t *testing.T) {
 	}
 	if _, changed, e = advanceKeyUse(encode(), current, "key-check", now); e != nil || changed {
 		t.Fatal("final check", e)
+	}
+	for tries := 0; tries < 2; tries++ {
+		if _, changed, e = advanceKeyUse(encode(), current, "candidate", now); e != nil || changed {
+			t.Fatal("candidate ACK retry altered key-use", e)
+		}
 	}
 }
