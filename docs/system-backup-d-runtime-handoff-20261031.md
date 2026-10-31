@@ -410,3 +410,9 @@
 - 原SQLExecutionWorkStore.RunWithExecutionHeartbeat维持同一原epoch；原freezeProductionSource重查SQL/TLS、版本化Skills对象、finite资源元数据、runtime custody/mount/PVC/PV和非空Team映射，实际注册source exclusion与原CE base。完整Source保留V1 locator；原全部六构造器BuildParts生成准确10个业务/CE part并经productionInventory/V2精确完整context及原invocation集合校验，未派发Job。
 - 新阶段首次失败经只读overlay定位到原ControlEvidenceCaptureJob→attachFormalMaterials的最少一个Input要求：元数据stage夹具原先清空了Inputs。现使用实际不可变公有CA ConfigMap及其原UID/内容hash，签入对应operation材料；没有修改原Job builder/expectedparts或跳过材料检查。临时诊断overlay仅在.tools，正式代码无调试包装。
 - 无overlay最终同任务定向PASS21.549s；此前仅source冻结/摘要注册PASS21.587s。测试仍明确LOCAL approval/协议环境，只证明原代码调用；formal mapping/独立permit issuer/verifier/实际worker、原runner Prepare/SavePlan/reTake/held gate及Stop/Resume仍继续，不能由该成功断言D owner complete、生产readiness或最终发布。
+
+## D5.33 同任务admission前准备实际Skill/对象/workspace源字节
+
+- 新本地payload构造在原HTTP admission之前创建实际确定性ZIP、未引用对象、运行/停机instance完整目录与Team结果文件。unpackaged Skill的demo/previous两原绑定都有SKILL.md、src/main.py与隐藏文件；沿原service目录/文件framing计算MD5，并对独立既有golden 7c876ed8f2fc9206f8cc0914cb0a24f0断言。SQL blob/content/archive hash、size、binding observed_hash与materialize job content_hash均在最初源种子中使用实际值，取消此前重复字母占位。
+- 原S3协议fixture固定version返回实际同一源body及Content-Length/ETag/Last-Modified/version头；原生产S3VersionReader通过同一签名源authority/TLS客户端逐个读取精确version，检验原Size/VersionID及body SHA。其余目录/隐藏文件保留原整体archive输入，不把legacy Skill MD5过滤当删除源数据。
+- 本地workspace上界在core签名之前明确为100files/4MiB file bytes/16MiB archive+compressed；workspace operation材料沿同一原上界，尚无现场物理PVC或真实Kube进程声明。完整同一task源freeze/原10part/V2检查+真实version body读取PASS24.315s；上一版实际文件/SQL绑定组合PASS21.598s。实际C worker、独立permit/verifier、原runner Prepare/SavePlan/reTake/held gate/Stop/Resume尚继续。
