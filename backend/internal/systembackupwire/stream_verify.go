@@ -200,6 +200,10 @@ func (r streamContextReader) Read(p []byte) (int, error) {
 }
 
 func (e *StreamEnvelope) authenticate(ctx context.Context, src io.Reader, key []byte) (StreamVerification, error) {
+	return e.authenticateTo(ctx, src, key, io.Discard)
+}
+
+func (e *StreamEnvelope) authenticateTo(ctx context.Context, src io.Reader, key []byte, dst io.Writer) (StreamVerification, error) {
 	var zero StreamVerification
 	if e == nil || ctx == nil || ctx.Err() != nil || src == nil || len(key) != 32 {
 		return zero, ErrStreamAuthority
@@ -246,8 +250,13 @@ func (e *StreamEnvelope) authenticate(ctx context.Context, src io.Reader, key []
 			return zero, ErrStream
 		}
 		result.plain += int64(len(plain))
-		clear(plain)
 		if result.plain > e.spec.MaxPlaintextBytes {
+			clear(plain)
+			return zero, ErrStream
+		}
+		n, writeErr := dst.Write(plain)
+		clear(plain)
+		if writeErr != nil || n != int(expected.PlaintextLength) {
 			return zero, ErrStream
 		}
 		h.Write(frame)
@@ -268,6 +277,23 @@ func (e *StreamEnvelope) authenticate(ctx context.Context, src io.Reader, key []
 // exposes no plaintext/DEK. A provider post-use revocation discards verification.
 // Invalid envelope bindings fail before any provider call.
 func VerifyWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte, src io.Reader, keys Unwrapper) (StreamVerification, error) {
+	return inspectWrappedStream(ctx, spec, envelope, src, keys, nil)
+}
+
+// InspectWrappedStream lets a bounded, inert domain reader inspect the exact
+// authenticated plaintext stream without exposing a DEK. The reader MUST NOT
+// publish/mutate external state: terminal AEAD, ciphertext EOF and provider
+// post-use authorization are accepted only after it returns. Early return,
+// unread suffix, parser failure or revocation yields NO verification result.
+// Both sides of the bounded pipe exit before the original Unwrap use ends.
+func InspectWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte, src io.Reader, keys Unwrapper, inspect func(io.Reader) error) (StreamVerification, error) {
+	if inspect == nil {
+		return StreamVerification{}, ErrStreamAuthority
+	}
+	return inspectWrappedStream(ctx, spec, envelope, src, keys, inspect)
+}
+
+func inspectWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte, src io.Reader, keys Unwrapper, inspect func(io.Reader) error) (StreamVerification, error) {
 	var zero StreamVerification
 	if ctx == nil || ctx.Err() != nil {
 		return zero, ErrStreamAuthority
@@ -287,7 +313,30 @@ func VerifyWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte, 
 			return ErrStreamAuthority
 		}
 		var err error
-		result, err = parsed.authenticate(ctx, src, key)
+		if inspect == nil {
+			result, err = parsed.authenticate(ctx, src, key)
+			return err
+		}
+		reader, writer := io.Pipe()
+		done := make(chan error, 1)
+		go func() {
+			err := inspect(streamContextReader{ctx, reader})
+			if err == nil {
+				var extra [1]byte
+				n, tailErr := reader.Read(extra[:])
+				if n != 0 || tailErr != io.EOF {
+					err = ErrStream
+				}
+			}
+			reader.CloseWithError(ErrStream)
+			done <- err
+		}()
+		result, err = parsed.authenticateTo(ctx, src, key, writer)
+		writer.CloseWithError(err)
+		parseErr := <-done
+		if err == nil {
+			err = parseErr
+		}
 		return err
 	})
 	if err != nil || calls != 1 || result.sha == "" {

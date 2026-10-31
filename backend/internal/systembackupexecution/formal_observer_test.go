@@ -40,7 +40,7 @@ func (u *candidateContentUnwrapper) Unwrap(ctx context.Context, r w.KeyRequest, 
 	return ctx.Err()
 }
 
-func formalObserverFixture(t *testing.T) (*os.Root, *os.Root, staging.SealScope, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) {
+func formalObserverFixture(t *testing.T, prepare ...func(*os.Root, *worker.Invocation)) (*os.Root, *os.Root, staging.SealScope, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) {
 	t.Helper()
 	ctx := context.Background()
 	open := func() *os.Root {
@@ -64,6 +64,9 @@ func formalObserverFixture(t *testing.T) (*os.Root, *os.Root, staging.SealScope,
 	i.ProviderKey = &k.Access{Operation: k.Generate, Endpoint: "https://kms.fixture.invalid", KeyName: "original-key", Request: w.KeyRequest{Key: w.KeyBinding{Provider: "external-kms", IdentityHash: strings.Repeat("d", 64), RegistryVersion: "original-r1", ProviderKeyID: "original-key", ProviderVersion: "1"}, Context: w.KeyContext{InstallationID: a.InstallationID, BackupPublicID: a.TaskPublicID, AttemptNo: "3", Phase: "capture", Part: "workspace", PartIndex: "0", EnvelopeID: i.Request.Binding.EnvelopeID, CaptureContextHash: i.Request.Binding.CaptureContextHash}}}
 	if err = original.WriteFile("history.json", []byte(`{"fixture":"original private conversation"}`), 0600); err != nil {
 		t.Fatal(err)
+	}
+	for _, callback := range prepare {
+		callback(original, &i)
 	}
 	key := bytes.Repeat([]byte{9}, 32)
 	keys := &candidateContentUnwrapper{expected: i.ProviderKey.Request, key: key}

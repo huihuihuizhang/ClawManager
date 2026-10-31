@@ -141,3 +141,95 @@ func TestSkillsModuleFailsClosedWithoutWorkspaceProofOrExactInventory(t *testing
 		})
 	}
 }
+
+func TestUnpackagedSkillsRequireActualOriginalFormalWorkspaceDependency(t *testing.T) {
+	for _, mode := range []string{"valid", "missing-scope", "forged-directory", "wrong-root", "foreign-instance", "functional-fallback", "missing-dependency"} {
+		t.Run(mode, func(t *testing.T) {
+			f, b, c := skillModuleFixture(t)
+			inv := b.Source.Skills
+			inv.Blobs[0].ObjectKey = ""
+			inv.Bindings = []sh.CaptureBinding{{ID: 14, InstanceID: 7, SkillID: 11, SkillVersionID: 13, WorkspaceDir: "demo", ObservedHash: strings.Repeat("a", 32)}}
+			for n := range inv.Tables {
+				if inv.Tables[n].Name == "instance_skills" {
+					inv.Tables[n].IDs = []int{14}
+				}
+			}
+			c.Source = cloneSourceInventory(b.Source)
+			c.Objects.Invocation.Request.SkillObjects.Blobs[0].ObjectKey = ""
+			c.Objects.Invocation.Request.SkillObjects.WorkspaceRequiredBlobIDs = []int{12}
+			c.Objects.Invocation.Request.SkillObjects.InventorySHA256 = inv.SHA256()
+			c.Workspaces = map[int]string{7: instanceMountPart(7, "workspace")}
+			r := &b.Workspaces[0].Request
+			i := &r.Invocation
+			requirements, err := inv.WorkspaceRequirements()
+			if err != nil {
+				t.Fatal(err)
+			}
+			i.Request.SkillWorkspace = &sh.WorkspaceCaptureSpec{Version: sh.WorkspaceCaptureVersion, InventorySHA256: inv.SHA256(), InstanceID: 7, MountID: "workspace", Runtime: i.Request.RuntimePolicy.Runtime, SkillRoot: "home/.openclaw/workspace/skills", Requirements: requirements, MaxFiles: i.Request.MaxFiles, MaxBytes: i.Request.MaxFileBytes, MaxProofBytes: 1 << 20}
+			provider := *c.Objects.Invocation.ProviderKey
+			i.ProviderKey = &provider
+			provider.Request.Context.Part = r.Part
+			provider.Request.Context.PartIndex = "1"
+			i.Request.Binding.PartIndex = 1
+			formal := *c.Objects.Invocation.FormalCapture
+			i.FormalCapture = &formal
+			formal.EnvelopeName = "original-instance.envelope"
+			r.Workload.FormalMaterials = c.Objects.Workload.FormalMaterials
+			switch mode {
+			case "missing-scope":
+				i.Request.SkillWorkspace = nil
+			case "forged-directory":
+				i.Request.SkillWorkspace.Requirements[0].WorkspaceDirectory = "foreign"
+			case "wrong-root":
+				i.Request.SkillWorkspace.SkillRoot = "skills"
+			case "foreign-instance":
+				i.Request.SkillWorkspace.InstanceID = 9
+			case "functional-fallback":
+				i.ProviderKey = nil
+				i.FormalCapture = nil
+				r.Workload.FormalMaterials = nil
+			case "missing-dependency":
+				c.Workspaces = nil
+			}
+			br, err := NewUsersInstancesModule(b)
+			if err != nil {
+				if mode == "valid" {
+					t.Fatal("valid original B workspace", err)
+				}
+				return
+			}
+			sr, err := NewSkillObjectsModule(c)
+			if err != nil {
+				if mode == "valid" {
+					t.Fatal("valid original Skills dependency", err)
+				}
+				return
+			}
+			modules, err := NewCaptureModules([]CaptureModuleRegistration{br, sr}, moduleTestContext)
+			if err != nil {
+				t.Fatal(err)
+			}
+			parts, err := modules.BuildParts(f.in, b.Source, f.x.HoldUntil)
+			if mode != "valid" {
+				if err == nil || parts != nil {
+					t.Fatal("unproved unpackaged blob admitted", mode)
+				}
+				return
+			}
+			if err != nil || len(parts) != 4 {
+				t.Fatal("actual SQL/object/workspace assembly", err, len(parts))
+			}
+			proofs := 0
+			for _, part := range parts {
+				var actual worker.Invocation
+				json.Unmarshal(part.InvocationJSON, &actual)
+				if actual.Request.SkillWorkspace != nil {
+					proofs++
+				}
+			}
+			if proofs != 1 || len(sr.Descriptor.Requires) != 2 {
+				t.Fatal("parallel boolean replaced actual formal workspace invocation")
+			}
+		})
+	}
+}

@@ -315,7 +315,7 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 			out = append(out, part)
 		}
 	}
-	if validateDiscovery(in, Discovery{Source: raw, SourceSHA256: digest(raw), Writers: []FrozenWriter{}, Parts: out, HoldUntil: hold}) != nil {
+	if validateSkillWorkspaceParts(source, out) != nil || validateDiscovery(in, Discovery{Source: raw, SourceSHA256: digest(raw), Writers: []FrozenWriter{}, Parts: out, HoldUntil: hold}) != nil {
 		return nil, d.ErrNotReady
 	}
 	return out, nil

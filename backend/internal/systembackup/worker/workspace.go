@@ -17,6 +17,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/workspace"
+	sh "clawreef/internal/systembackupskillhub"
 )
 
 const Version = "users-instances-worker.v1alpha1"
@@ -34,24 +35,25 @@ type FileRule struct {
 	Fields   []domain.JSONRule `json:"fields"`
 }
 type Request struct {
-	TeamWorkspace      *TeamWorkspaceSpec      `json:"team_workspace,omitempty"`
-	Version            string                  `json:"version"`
-	Operation          string                  `json:"operation"`
-	Binding            staging.Binding         `json:"binding"`
-	Deadline           time.Time               `json:"deadline"`
-	ArtifactName       string                  `json:"artifact_name"`
-	Receipt            staging.Receipt         `json:"receipt"`
-	MaxFiles           int64                   `json:"max_files"`
-	MaxFileBytes       int64                   `json:"max_file_bytes"`
-	MaxArchiveBytes    int64                   `json:"max_archive_bytes"`
-	MaxCompressedBytes int64                   `json:"max_compressed_bytes"`
-	PolicyVersion      string                  `json:"policy_version"`
-	Files              []FileRule              `json:"files"`
-	Database           *DatabaseSpec           `json:"database,omitempty"`
-	Teams              *TeamCaptureSpec        `json:"teams,omitempty"`
-	Resources          *ResourceCaptureSpec    `json:"resources,omitempty"`
-	SkillObjects       *SkillObjectCaptureSpec `json:"skill_objects,omitempty"`
-	RuntimePolicy      *RuntimePolicy          `json:"runtime_policy,omitempty"`
+	TeamWorkspace      *TeamWorkspaceSpec       `json:"team_workspace,omitempty"`
+	Version            string                   `json:"version"`
+	Operation          string                   `json:"operation"`
+	Binding            staging.Binding          `json:"binding"`
+	Deadline           time.Time                `json:"deadline"`
+	ArtifactName       string                   `json:"artifact_name"`
+	Receipt            staging.Receipt          `json:"receipt"`
+	MaxFiles           int64                    `json:"max_files"`
+	MaxFileBytes       int64                    `json:"max_file_bytes"`
+	MaxArchiveBytes    int64                    `json:"max_archive_bytes"`
+	MaxCompressedBytes int64                    `json:"max_compressed_bytes"`
+	PolicyVersion      string                   `json:"policy_version"`
+	Files              []FileRule               `json:"files"`
+	Database           *DatabaseSpec            `json:"database,omitempty"`
+	Teams              *TeamCaptureSpec         `json:"teams,omitempty"`
+	Resources          *ResourceCaptureSpec     `json:"resources,omitempty"`
+	SkillObjects       *SkillObjectCaptureSpec  `json:"skill_objects,omitempty"`
+	SkillWorkspace     *sh.WorkspaceCaptureSpec `json:"skill_workspace,omitempty"`
+	RuntimePolicy      *RuntimePolicy           `json:"runtime_policy,omitempty"`
 	// Expected identity comes from the authenticated SQL snapshot and is frozen
 	// into the authorized invocation, never inferred from workspace content.
 	WorkBuddyIdentity *domain.WorkBuddyUIDIdentity `json:"workbuddy_identity,omitempty"`
@@ -80,13 +82,16 @@ type Result struct {
 }
 
 func Run(ctx context.Context, r Request, env Environment) (Result, error) {
+	if r.SkillWorkspace != nil || r.SkillObjects != nil {
+		return Result{}, ErrRequest
+	}
 	if r.TeamWorkspace != nil || r.Operation == "verify-team-workspace" {
 		return RunTeamWorkspace(ctx, r, env)
 	}
 	if assetOperation(r.Operation) {
 		return RunAssets(ctx, r, env)
 	}
-	if r.SkillObjects != nil || r.Resources != nil || r.Teams != nil || r.Database != nil || r.Version != Version || (r.Operation != "capture-workspace" && r.Operation != "restore-workspace") || !time.Now().Before(r.Deadline) || r.MaxFiles <= 0 || r.MaxFiles > 1_000_000 || r.MaxFileBytes <= 0 || r.MaxArchiveBytes < r.MaxFileBytes || r.MaxCompressedBytes <= 0 || r.MaxArchiveBytes > 1<<50 || r.MaxCompressedBytes > 1<<50 || len(env.Key) != 32 || env.Workspace == nil || env.Staging == nil {
+	if r.SkillWorkspace != nil || r.SkillObjects != nil || r.Resources != nil || r.Teams != nil || r.Database != nil || r.Version != Version || (r.Operation != "capture-workspace" && r.Operation != "restore-workspace") || !time.Now().Before(r.Deadline) || r.MaxFiles <= 0 || r.MaxFiles > 1_000_000 || r.MaxFileBytes <= 0 || r.MaxArchiveBytes < r.MaxFileBytes || r.MaxCompressedBytes <= 0 || r.MaxArchiveBytes > 1<<50 || r.MaxCompressedBytes > 1<<50 || len(env.Key) != 32 || env.Workspace == nil || env.Staging == nil {
 		return Result{}, ErrRequest
 	}
 	if env.Check == nil {

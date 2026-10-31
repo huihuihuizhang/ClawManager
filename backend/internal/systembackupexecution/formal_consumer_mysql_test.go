@@ -343,6 +343,9 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 }
 
 type consumerFixtureOptions struct {
+	PrepareSource    func(*os.Root, *worker.Invocation)
+	RewriteCandidate func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
+
 	FormalMaterials *kube.FormalJobMaterials
 	Configure       func(*worker.Invocation, *sql.DB, *sql.DB, d.Authority)
 }
@@ -454,7 +457,11 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	db.SetMaxOpenConns(8)
 	t.Cleanup(func() { db.Close() })
-	source, _, _, inv, candidate, contentKeys := formalObserverFixture(t)
+	var preparation []func(*os.Root, *worker.Invocation)
+	if options.PrepareSource != nil {
+		preparation = append(preparation, options.PrepareSource)
+	}
+	source, _, _, inv, candidate, contentKeys := formalObserverFixture(t, preparation...)
 	a, j, _ := resultEvidenceFixture()
 	a.ConfigVersion = 1
 	a.ClaimOwner = "controller"
@@ -476,6 +483,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	a.ConfigSHA256 = hash(config)
 	if options.Configure != nil {
 		options.Configure(&inv, db, admin, a)
+	}
+	if options.RewriteCandidate != nil {
+		source, candidate = options.RewriteCandidate(source, inv, candidate, contentKeys)
 	}
 	invHash, _ := inv.Hash()
 	candidate.InvocationSHA256 = invHash
