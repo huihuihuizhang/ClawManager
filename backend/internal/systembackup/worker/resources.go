@@ -49,6 +49,9 @@ func resourceCaptureOperation(op string) bool {
 }
 
 func validResourceCapture(r Request) bool {
+	if r.ControlEvidence != nil {
+		return false
+	}
 	s := r.Resources
 	if s == nil || !resourceCaptureOperation(r.Operation) || r.Version != Version || s.NamespaceUID == "" || s.ServiceAccountUID == "" || len(validation.IsDNS1123Label(s.Namespace)) != 0 || len(validation.IsDNS1123Subdomain(s.ServiceAccountName)) != 0 || s.MaxItems < 1 || s.MaxItems > 10000 || s.Selections == nil || len(s.Selections) > s.MaxItems || r.TeamWorkspace != nil || r.Teams != nil || r.Database != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil || r.PolicyVersion != "" || len(r.Files) != 0 || r.MaxFiles != 0 || r.MaxFileBytes != 0 || r.MaxArchiveBytes <= 0 || r.MaxArchiveBytes > 32<<20 || r.MaxCompressedBytes <= 0 || r.MaxCompressedBytes > 32<<20 {
 		return false

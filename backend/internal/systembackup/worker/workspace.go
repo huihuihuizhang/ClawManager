@@ -18,6 +18,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/workspace"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	sh "clawreef/internal/systembackupskillhub"
 )
 
@@ -52,6 +53,7 @@ type Request struct {
 	Database           *DatabaseSpec            `json:"database,omitempty"`
 	Teams              *TeamCaptureSpec         `json:"teams,omitempty"`
 	SourceRedis        *c.RedisCapturePolicy    `json:"source_redis,omitempty"`
+	ControlEvidence    *ce.CaptureLocator       `json:"control_evidence,omitempty"`
 	Resources          *ResourceCaptureSpec     `json:"resources,omitempty"`
 	SkillObjects       *SkillObjectCaptureSpec  `json:"skill_objects,omitempty"`
 	SkillWorkspace     *sh.WorkspaceCaptureSpec `json:"skill_workspace,omitempty"`
@@ -93,7 +95,7 @@ func Run(ctx context.Context, r Request, env Environment) (Result, error) {
 	if assetOperation(r.Operation) {
 		return RunAssets(ctx, r, env)
 	}
-	if r.SourceRedis != nil || r.SkillWorkspace != nil || r.SkillObjects != nil || r.Resources != nil || r.Teams != nil || r.Database != nil || r.Version != Version || (r.Operation != "capture-workspace" && r.Operation != "restore-workspace") || !time.Now().Before(r.Deadline) || r.MaxFiles <= 0 || r.MaxFiles > 1_000_000 || r.MaxFileBytes <= 0 || r.MaxArchiveBytes < r.MaxFileBytes || r.MaxCompressedBytes <= 0 || r.MaxArchiveBytes > 1<<50 || r.MaxCompressedBytes > 1<<50 || len(env.Key) != 32 || env.Workspace == nil || env.Staging == nil {
+	if r.ControlEvidence != nil || r.SourceRedis != nil || r.SkillWorkspace != nil || r.SkillObjects != nil || r.Resources != nil || r.Teams != nil || r.Database != nil || r.Version != Version || (r.Operation != "capture-workspace" && r.Operation != "restore-workspace") || !time.Now().Before(r.Deadline) || r.MaxFiles <= 0 || r.MaxFiles > 1_000_000 || r.MaxFileBytes <= 0 || r.MaxArchiveBytes < r.MaxFileBytes || r.MaxCompressedBytes <= 0 || r.MaxArchiveBytes > 1<<50 || r.MaxCompressedBytes > 1<<50 || len(env.Key) != 32 || env.Workspace == nil || env.Staging == nil {
 		return Result{}, ErrRequest
 	}
 	if env.Check == nil {

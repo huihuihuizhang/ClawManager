@@ -17,6 +17,7 @@ import (
 	"unicode/utf8"
 
 	"clawreef/internal/systembackup/flow"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -450,7 +451,7 @@ func (e *Failure) Error() string {
 	return e.Category
 }
 
-var failureCategories = map[string]bool{"permission_denied": true, "writer_registry_drift": true, "isolation_invalid": true, "unsupported_profile_p1": true, "quiesce_timeout": true, "quiesce_resume_failed": true, "runner_failed": true, "checksum_mismatch": true, "fencing_token_lost": true, "coordination_invalid": true, "control_evidence_invalid": true, "deadline_exceeded": true}
+var failureCategories = map[string]bool{"permission_denied": true, "writer_registry_drift": true, "isolation_invalid": true, "unsupported_profile_p1": true, "quiesce_timeout": true, "quiesce_resume_failed": true, "runner_failed": true, "checksum_mismatch": true, "fencing_token_lost": true, "coordination_invalid": true, "control_evidence_invalid": true, "deadline_exceeded": true, "capacity_exceeded": true}
 
 func classify(err error) error {
 	if err == nil {
@@ -464,6 +465,10 @@ func classify(err error) error {
 		return &Failure{f.Category}
 	}
 	switch {
+	case errors.Is(err, ce.ErrCapacity):
+		return &Failure{"capacity_exceeded"}
+	case errors.Is(err, ce.ErrInvalid):
+		return &Failure{"control_evidence_invalid"}
 	case errors.Is(err, context.Canceled):
 		return context.Canceled
 	case errors.Is(err, context.DeadlineExceeded):
