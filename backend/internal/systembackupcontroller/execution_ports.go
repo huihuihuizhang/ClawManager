@@ -64,6 +64,7 @@ type executionSnapshot struct {
 	claimUntil, gateUntil, holdUntil, now            time.Time
 	gateVersion, attemptVersion, installationVersion uint64
 	config                                           []byte
+	heldCapture                                      bool
 }
 
 func validExecutionInput(a dispatch.Authority, installation string) bool {
@@ -117,6 +118,7 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 				return v, ErrExecutionAuthority
 			}
 			postCapture = resumed.Valid && stopped.Valid && phase == "idle"
+			v.heldCapture = phase == "held" && !postCapture
 			if !postCapture && (owner != a.TaskPublicID || generation != epoch || (phase != "acquiring" && phase != "held") || (phase == "acquiring" && token != acquireToken) || (phase == "held" && (!heldToken.Valid || token != uint64(heldToken.Int64)))) {
 				return v, ErrExecutionAuthority
 			}
@@ -130,6 +132,7 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 		return v, ErrExecutionAuthority
 	}
 	v.gateUntil, v.holdUntil = gateLease.Time, hold.Time
+	v.heldCapture = v.heldCapture && v.gateState == "held"
 	if s.ApplicationScope != "" && v.gateState == "acquiring" && a.MaintenanceFencingToken != 0 {
 		v.gateUntil = acquiringUntil
 		v.holdUntil = acquiringHold
@@ -324,7 +327,13 @@ func (g *ExecutionAuthorityGuard) RecheckAfter(ctx context.Context, tx *sql.Tx, 
 	if s.owner.RecheckExecution(ctx, tx, s.authority, beforeOwner) != nil || !s.owner.ValidUntil().Equal(s.until) {
 		return ErrExecutionAuthority
 	}
-	v, err := s.store.snapshot(ctx, tx, s.authority)
+	var v executionSnapshot
+	var err error
+	if s.first.heldCapture {
+		v, err = s.store.recheckHeldCapture(ctx, tx, s.authority, s.first)
+	} else {
+		v, err = s.store.snapshot(ctx, tx, s.authority)
+	}
 	f := s.first
 	if err != nil || v.now.Before(beforeOwner) || !v.now.Before(s.until) || v.status != f.status || v.attemptStatus != f.attemptStatus || v.attemptVersion != f.attemptVersion || v.installationVersion != f.installationVersion || v.gateVersion != f.gateVersion || v.gateState != f.gateState || v.gateOwner != f.gateOwner || !v.claimUntil.Equal(f.claimUntil) || !v.gateUntil.Equal(f.gateUntil) || !v.holdUntil.Equal(f.holdUntil) || !bytes.Equal(v.config, f.config) || ctx.Err() != nil {
 		return ErrExecutionAuthority

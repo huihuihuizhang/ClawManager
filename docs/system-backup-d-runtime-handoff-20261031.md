@@ -465,3 +465,10 @@
 - 窄真实mTLS/SQL fixture新增独立admin actor：在首轮当前授权/完整原plan认证之后的原CM GET实际撤回controller_owner，affected=1并独立SELECT确认。原NewOriginalKeyAuthority发送真实key-reserve必须拒绝；SQL key_use、签名sev_apermit、candidate/result均0，provider Generate计数未变。原三场景与八种输入/密文变更组合PASS8.34s/package11.597s。该测试不证明完整原DDL可篡改，也不是同任务Stop/Resume验收。
 - D5.39无overlay完整任务`sbk_d189b9eb-d17c-4157-b08d-7bf26a73bac7`仍FAIL118.41s/package121.647s：SQL窗口24.835秒，279次env.SourceAuthorize后24.560秒拒绝；原失败Record=ok。未进入validating。
 - 监督纠正：domain完整RR/data的437是checkSource回调数；原checkSource调用一次本地env.SourceAuthorize，随后inUseCheck执行一次实际Control key-check并再次env.SourceAuthorize，因此263/279等本地计数不能除以437作为完成比例。原437回调通常会产生约874次本地grant/file授权及额外流前后检查。后续分别记录本地Authorize次数/累计耗时、实际Control key-check请求次数与domain guard回调数，保持所有原row/EOF范围；不以调整预期或删除边界宣称完成。
+
+## D5.41 原held事务完整当前字段批量重读
+
+- 无CPU profile的SQL-first日志`.tools/d-request-authority-once-cost.log`实际FAIL63.91s/package67.226s，domain guard222次、本地Authorize445次/384.6221ms，实际key-check231次（包括流前后）。平均每次控制请求约125ms：plan30.947、Stage41.239、collectors19.932ms；本地grant/file并非主要成本。该轮不是验收，原固定窗口未解决。
+- 首次SQLExecutionAuthority.snapshot仍按原gate→business顺序、原全部SQL锁/owner授权取得完整状态；只在同一guard、context/tx且原application及metadata gate都held时，后续RecheckAfter把原当前SQL字段重读合为一条FOR SHARE查询。现有owner/grant回调仍每次执行；SQL时间下界/原固定until、全部原字段、config完整字节、原config历史、latest attempt、当前cancel、原app/public gate/fence/lease保持核验。其他阶段/恢复/无application-scope仍走原完整snapshot。没有跨请求/跨事务缓存或首次JOIN取锁顺序变化。
+- 明确BINARY比较原Go精确比较的字符串与完整config，防止默认SQL collation掩盖大小写/尾空格变化。真实原SQL事务17种已独立读回实际变更（含rowversion/claim lease延长/owner尾空格/schema与task/status大小写/request尾空格/config/maintenance fence+lease+hold+owner/installation/attempt）均由末尾guard拒绝并锁定失败；每例rollback保留原fixture。原mTLS/TLS provider三场景、8种中途input/sealed变更与key-reserve当前claim撤回组合PASS8.71s/package11.927s；完整controller9.312s/adapter6.361s/execution8.244s PASS。
+- 这是当前检查SQL往返优化，不代表完整新任务通过。完整原173/default30秒任务仍需无overlay完成原row/EOF、10 C/Evidence/Stop/Resume和实际Record(validating)，A发布/生产readiness均未声称完成。
