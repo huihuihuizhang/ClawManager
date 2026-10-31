@@ -24,8 +24,13 @@ type HistoricalCaptureInput struct {
 	ConfigVersion, CaptureAttemptNo, CaptureEpoch           uint64
 	ConfigSHA256, ProfileID, ProfileRevision, ProfileSHA256 string
 	ConfigSnapshot                                          json.RawMessage
-	Backup                                                  d.BackupSpec
-	Deadline                                                time.Time
+	// Detached SOURCE bytes from the authenticated ORIGINAL encrypted plan.
+	// These facts contain no execution authority; a publisher never reconstructs
+	// the old claim merely to parse its frozen source inventory.
+	SourceSnapshot json.RawMessage
+	SourceSHA256   string
+	Backup         d.BackupSpec
+	Deadline       time.Time
 }
 
 type PublisherCaptureRecord struct {
@@ -282,6 +287,8 @@ func publisherValidateHistory(c publisherCaptureCoordinates, wanted string, plan
 	}
 	input := HistoricalCaptureInput{InstallationID: c.installation, TaskPublicID: c.task, RequestID: c.request, ConfigVersion: c.configVersion, CaptureAttemptNo: c.attempt, CaptureEpoch: c.epoch, ConfigSHA256: c.configSHA, ProfileID: profile.Profile, ProfileRevision: profile.Revision, ProfileSHA256: c.profileSHA, ConfigSnapshot: bytes.Clone(c.config), Backup: c.spec, Deadline: c.deadline}
 	input.Backup.RequestedParts = append([]string(nil), c.spec.RequestedParts...)
+	input.SourceSnapshot = bytes.Clone(discovery.Source)
+	input.SourceSHA256 = discovery.SourceSHA256
 	return PublisherCaptureRecord{Input: input, Plan: plan, Job: j, Invocation: invocation, CandidateJSON: bytes.Clone(candidateRaw), CandidateSHA256: candidateSHA, RequestSHA256: requestSHA, CaptureResultSHA256: recordHash(resultRaw), KeyUse: keyUse, SealScope: sealScope, PartResult: partResult}, nil
 }
 

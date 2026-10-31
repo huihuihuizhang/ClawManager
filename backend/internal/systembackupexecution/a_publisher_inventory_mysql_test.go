@@ -75,8 +75,12 @@ func TestAPublisherCapturedRecordDetachedCannotMutateVerifier(t *testing.T) {
 	}
 	record.CandidateJSON[0] = 'x'
 	record.Input.ConfigSnapshot[0] = 'x'
+	if len(record.Input.SourceSnapshot) == 0 {
+		t.Fatal("original frozen source bytes missing")
+	}
+	record.Input.SourceSnapshot[0] = 'x'
 	again, err := v.CapturedRecord(ctx)
-	if err != nil || again.CandidateJSON[0] == 'x' || again.Input.ConfigSnapshot[0] == 'x' {
+	if err != nil || again.CandidateJSON[0] == 'x' || again.Input.ConfigSnapshot[0] == 'x' || again.Input.SourceSnapshot[0] == 'x' || hash(again.Input.SourceSnapshot) != again.Input.SourceSHA256 {
 		t.Fatal("detached history mutated current verifier", err)
 	}
 }
