@@ -35,7 +35,7 @@ func ConnectPublicBackupMetadata(cfg config.DatabaseConfig, admit func(context.C
 	if admit == nil || cfg.User == "" || strings.EqualFold(cfg.User, "root") {
 		return nil, errors.New("dedicated public metadata admission required")
 	}
-	session, err := connectWithGateOptions(cfg, systemBackupReadOptions(), "")
+	session, err := connectWithGateOptions(cfg, publicBackupMetadataOptions(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,15 @@ func ConnectPublicBackupMetadata(cfg config.DatabaseConfig, admit func(context.C
 		return nil, errors.New("public metadata privileges rejected")
 	}
 	return session, nil
+}
+
+// This dedicated metadata pool uses the driver's own utf8mb4 parameter
+// escaping to avoid preparing/closing every short current-authority query.
+// Business/source/observer pools retain their existing connection policies.
+func publicBackupMetadataOptions() map[string]string {
+	options := systemBackupReadOptions()
+	options["interpolateParams"] = "true"
+	return options
 }
 
 func applyEmbeddedMigrationsSQL(ctx context.Context, pool *sql.DB, target *MigrationTarget) (result error) {
