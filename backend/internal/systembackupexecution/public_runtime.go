@@ -59,6 +59,9 @@ func (g publicCaptureGuard) Check(ctx context.Context) error {
 	if e := g.Owner.Gate.Ready(ctx); e != nil {
 		return e
 	}
+	if e := g.Owner.candidateJournalReady(ctx); e != nil {
+		return e
+	}
 	return g.Owner.namespace(ctx)
 }
 

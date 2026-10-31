@@ -42,11 +42,12 @@ func (i Invocation) Hash() (string, error) {
 }
 
 type ControlRequest struct {
-	Invocation       Invocation `json:"invocation"`
-	InvocationSHA256 string     `json:"invocation_sha256"`
-	Action           string     `json:"action"`
-	Point            string     `json:"point,omitempty"`
-	Result           *Result    `json:"result,omitempty"`
+	Invocation       Invocation           `json:"invocation"`
+	InvocationSHA256 string               `json:"invocation_sha256"`
+	Action           string               `json:"action"`
+	Point            string               `json:"point,omitempty"`
+	Result           *Result              `json:"result,omitempty"`
+	Candidate        *FormalCaptureResult `json:"candidate,omitempty"`
 }
 type Lease struct {
 	Relay            *relaywire.RelayMessage `json:"relay,omitempty"`
@@ -55,6 +56,7 @@ type Lease struct {
 	DEK              []byte                  `json:"dek,omitempty"`
 	Database         *DatabaseCredential     `json:"database,omitempty"`
 	KeyUse           *KeyUseLease            `json:"key_use,omitempty"`
+	CandidateSHA256  string                  `json:"candidate_sha256,omitempty"`
 }
 
 // Clear releases mutable credential buffers. Driver password strings cannot be
@@ -71,6 +73,9 @@ func validLeasePayload(l Lease, r ControlRequest) bool {
 	}
 	if r.Invocation.ProviderKey != nil {
 		return validKeyUseLease(l, r)
+	}
+	if l.CandidateSHA256 != "" {
+		return false
 	}
 	if l.KeyUse != nil {
 		return false
@@ -168,6 +173,9 @@ func validControl(r ControlRequest) bool {
 	}
 	if r.Invocation.ProviderKey != nil {
 		return validKeyUseRequest(r)
+	}
+	if r.Candidate != nil {
+		return false
 	}
 	switch r.Action {
 	case "ready", "acquire":

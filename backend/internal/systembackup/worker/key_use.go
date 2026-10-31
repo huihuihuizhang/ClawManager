@@ -49,6 +49,12 @@ func validKeyUseRequest(r ControlRequest) bool {
 	if c.BackupPublicID != b.BackupID || c.AttemptNo != b.Attempt || c.Phase != "capture" || c.Part != b.Path || c.PartIndex != strconv.FormatUint(uint64(b.PartIndex), 10) || c.EnvelopeID != b.EnvelopeID || c.CaptureContextHash != b.CaptureContextHash {
 		return false
 	}
+	if r.Action == "candidate" {
+		return keyUseNonce.MatchString(r.Point) && ValidateFormalCaptureResult(r.Invocation, r.Candidate)
+	}
+	if r.Candidate != nil {
+		return false
+	}
 	switch r.Action {
 	case "ready":
 		return r.Point == ""
@@ -61,13 +67,19 @@ func validKeyUseRequest(r ControlRequest) bool {
 func validKeyUseLease(l Lease, r ControlRequest) bool {
 	v := l.KeyUse
 	if r.Action == "ready" {
-		return v == nil && len(l.DEK) == 0 && l.Database == nil
+		return v == nil && len(l.DEK) == 0 && l.Database == nil && l.CandidateSHA256 == ""
 	}
 	if v == nil || len(l.DEK) != 0 || l.Database != nil || v.Access != *r.Invocation.ProviderKey || v.Nonce != r.Point || !v.Until.Equal(l.ExpiresAt) || !keyUseHash.MatchString(v.AuthoritySHA256) {
 		return false
 	}
 	i := v.Identity
 	if i.Namespace == "" || i.PodUID == "" || i.ServiceAccountUID == "" || i.JobUID == "" || i.InvocationSHA256 != r.InvocationSHA256 || !keyUseHash.MatchString(i.ExecutionGrantSHA256) {
+		return false
+	}
+	if r.Action == "candidate" {
+		return v.State == "finished" && l.CandidateSHA256 == FormalCandidateSHA256(r.Invocation, r.Candidate) && keyUseHash.MatchString(l.CandidateSHA256)
+	}
+	if l.CandidateSHA256 != "" {
 		return false
 	}
 	switch r.Action {

@@ -101,8 +101,11 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 		if err != nil {
 			return err
 		}
-		// This is an unpublished C candidate. D/C need their formal result
-		// observer/finalizer; legacy Complete would wrongly parse old framing.
+		if err = job.ReportCandidate(ctx, i, result); err != nil {
+			return err
+		}
+		// Durable candidate ACK is not a completed module, artifact or acceptance.
+		// The independent formal observer/finalizer consumes this original report.
 		return json.NewEncoder(stdout).Encode(result)
 	}
 	if *formalConfig != "" {

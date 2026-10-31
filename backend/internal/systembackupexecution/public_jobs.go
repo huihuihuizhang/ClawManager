@@ -526,6 +526,14 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if process.Name != pod.Name || process.UID != pod.UID {
 		return lease, worker.ErrExecution
 	}
+	var candidateRef, candidateDigest string
+	var candidateCipher []byte
+	if req.Action == "candidate" {
+		candidateRef, candidateDigest, candidateCipher, e = o.sealFormalCandidate(ctx, a, binding, pod, req)
+		if e != nil {
+			return worker.Lease{}, worker.ErrExecution
+		}
+	}
 	tx, e := db.BeginTx(ctx, nil)
 	if e != nil {
 		return lease, worker.ErrNotReady
@@ -578,6 +586,15 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return worker.Lease{}, worker.ErrExecution
 		}
 		lease.ExpiresAt = lease.KeyUse.Until
+		if req.Action == "candidate" {
+			if lease.KeyUse.State != "finished" {
+				return worker.Lease{}, worker.ErrExecution
+			}
+			if e = o.saveFormalCandidateTx(ctx, tx, a, binding, candidateRef, candidateDigest, candidateCipher); e != nil {
+				return worker.Lease{}, worker.ErrNotReady
+			}
+			lease.CandidateSHA256 = worker.FormalCandidateSHA256(req.Invocation, req.Candidate)
+		}
 	}
 	observationRaw, _ := json.Marshal(req)
 	observationHash := hash(observationRaw)
@@ -612,7 +629,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrExecution
 	}
 	switch req.Action {
-	case "ready", "check", "key-reserve", "key-check", "key-begin", "key-end":
+	case "ready", "check", "key-reserve", "key-check", "key-begin", "key-end", "candidate":
 		return lease, nil
 	case "acquire":
 		lease.DEK = bytes.Clone(captureKey)

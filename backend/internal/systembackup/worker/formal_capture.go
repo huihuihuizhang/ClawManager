@@ -2,7 +2,11 @@ package worker
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"regexp"
@@ -43,6 +47,83 @@ type FormalCaptureResult struct {
 	Bytes            int64           `json:"bytes"`
 	Rows             int64           `json:"rows"`
 	Tables           int             `json:"tables"`
+}
+
+// This validates only the original unpublished report's shape and binding.
+// It proves neither stream authenticity nor immutable artifact publication.
+func ValidateFormalCaptureResult(i Invocation, r *FormalCaptureResult) bool {
+	if r == nil || !validFormalInvocation(i) || !ValidateRecordedInvocation(i) || r.Version != "public-c-stream-candidate.v1alpha1" || !validReceipt(r.Ciphertext) || !validReceipt(r.Envelope) || r.Ciphertext.Name != i.Request.ArtifactName || r.Envelope.Name != i.FormalCapture.EnvelopeName || r.Envelope.Size > 16<<20 || !keyUseHash.MatchString(r.Ciphertext.SHA256) || !keyUseHash.MatchString(r.Envelope.SHA256) || r.Files < 0 || r.Bytes < 0 || r.Rows < 0 || r.Tables < 0 {
+		return false
+	}
+	hash, err := i.Hash()
+	if err != nil || r.InvocationSHA256 != hash || r.Ciphertext.Size > i.Request.MaxCompressedBytes+int64(i.FormalCapture.MaxFrames)*4096+8192 {
+		return false
+	}
+	if i.Request.Database != nil {
+		return r.Files == 0 && r.Bytes == 0 && r.Rows <= i.Request.Database.MaxRows && r.Tables > 0 && r.Tables <= 1000
+	}
+	if i.Request.Teams != nil {
+		return r.Files == 0 && r.Bytes == 0 && r.Rows == 0 && r.Tables == 0
+	}
+	return r.Files <= int64(i.Request.MaxFiles) && r.Bytes <= i.Request.MaxFileBytes && r.Rows == 0 && r.Tables == 0
+}
+
+func FormalCandidateSHA256(i Invocation, r *FormalCaptureResult) string {
+	if !ValidateFormalCaptureResult(i, r) {
+		return ""
+	}
+	raw, err := json.Marshal(r)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:])
+}
+
+// ReportCandidate retries ONLY the same metadata, bounded by the original key
+// window. It never reserves another nonce, invokes Generate, or reports a
+// completed module. A lost ACK cannot create a second stream.
+func (j *CaptureKeyJob) ReportCandidate(ctx context.Context, i Invocation, r FormalCaptureResult) error {
+	if j == nil || j.original == nil || j.original.client == nil || ctx == nil || !ValidateFormalCaptureResult(i, &r) {
+		return ErrExecution
+	}
+	a := j.original
+	hash, err := i.Hash()
+	if err != nil || hash != a.lease.Identity.InvocationSHA256 {
+		return ErrExecution
+	}
+	ctx, cancel := context.WithDeadline(ctx, a.lease.Until)
+	defer cancel()
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.failed || !a.used {
+		return ErrExecution
+	}
+	for {
+		lease, err := a.client.send(ctx, ControlRequest{Invocation: a.invocation, InvocationSHA256: hash, Action: "candidate", Point: a.lease.Nonce, Candidate: &r})
+		if err == nil {
+			if lease.KeyUse == nil {
+				err = ErrExecution
+			} else {
+				got, want := *lease.KeyUse, a.lease
+				got.State, want.State = "", ""
+				if got != want {
+					err = ErrExecution
+				}
+			}
+		}
+		lease.Clear()
+		if !errors.Is(err, ErrNotReady) {
+			return err
+		}
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
 }
 
 func validFormalInvocation(i Invocation) bool {
