@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"strings"
+	"time"
 
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
@@ -19,11 +20,12 @@ import (
 // Its private state cannot be supplied by a worker or reused with another
 // request context. It conveys no current execution or provider authority.
 type OriginalCapturePlan struct {
-	ctx     context.Context
-	records SQLExecutionRecords
-	input   []byte
-	stamp   originalCaptureStamp
-	parts   map[string]originalCapturePart
+	ctx           context.Context
+	records       SQLExecutionRecords
+	input         []byte
+	stamp         originalCaptureStamp
+	parts         map[string]originalCapturePart
+	recordKeyHash string
 }
 
 type originalCapturePart struct {
@@ -72,9 +74,10 @@ func (s originalCaptureStamp) matches(in d.Input) bool {
 	return in.Backup != nil && reflect.DeepEqual(spec, *in.Backup)
 }
 
-// OpenOriginalCapturePlan performs the original key resolution, authenticated
-// decryption, complete input binding and complete discovery validation once.
-// Returned plan/discovery values are detached from the private matching data.
+// OpenOriginalCapturePlan checks CURRENT authority, complete input/ciphertext
+// identity and pinned key on every call. Cold data is authenticated/decrypted
+// and fully validated; hits reuse only that immutable data. A new context-bound
+// object and detached caller observations are constructed on every request.
 func (s SQLExecutionRecords) OpenOriginalCapturePlan(ctx context.Context, in d.Input) (d.Plan, b.Discovery, *OriginalCapturePlan, error) {
 	var desc b.Discovery
 	if !s.ready() || ctx == nil || !reflect.TypeOf(ctx).Comparable() || ctx.Err() != nil {
@@ -87,34 +90,66 @@ func (s SQLExecutionRecords) OpenOriginalCapturePlan(ctx context.Context, in d.I
 	if err != nil || !stamp.matches(in) {
 		return d.Plan{}, desc, nil, ErrExecutionRecord
 	}
-	rawPlan, err := s.readPlain(ctx, in.Authority, "plan")
+	raw, err := json.Marshal(in)
 	if err != nil {
-		return d.Plan{}, desc, nil, err
+		return d.Plan{}, desc, nil, ErrExecutionRecord
 	}
-	plan := d.Plan{SchemaVersion: d.TaskPlanVersion, CanonicalJSON: rawPlan, SHA256: recordHash(rawPlan)}
+	var keyHash string
+	var cacheKey originalPlanDataKey
+	// Only the closed pinned file-key implementation may use this data cache.
+	// Resolve CURRENT grant/key bytes even on hits; retain only their digest.
+	if identity, ok := s.Keys.(*PinnedExecutionIdentity); ok {
+		resolved, key, e := identity.Resolve(ctx, in.Authority, stamp.KeyRef)
+		valid := e == nil && resolved == stamp.KeyRef && len(key) == 32
+		if valid {
+			keyHash = recordHash(key)
+		}
+		clear(key)
+		if !valid {
+			return d.Plan{}, desc, nil, ErrExecutionRecord
+		}
+		identityBytes, e := json.Marshal(struct {
+			Input   json.RawMessage
+			Stamp   originalCaptureStamp
+			KeyHash string
+		}{raw, stamp, keyHash})
+		if e != nil {
+			return d.Plan{}, desc, nil, ErrExecutionRecord
+		}
+		cacheKey = originalPlanDataKey{database: s.Authority.DB, hash: recordHash(identityBytes)}
+		clear(identityBytes)
+	}
+	var plan d.Plan
+	hit := false
+	if keyHash != "" {
+		plan, desc, hit = authenticatedOriginalPlanData.get(cacheKey, time.Now())
+	}
 	failed := true
 	defer func() {
 		if failed {
 			clear(plan.CanonicalJSON)
 		}
 	}()
-	if plan.SHA256 != stamp.PlanHash {
-		return d.Plan{}, desc, nil, ErrExecutionRecord
+	if !hit {
+		rawPlan, facts, e := s.readPlainRecord(ctx, in.Authority, "plan")
+		if e != nil {
+			return d.Plan{}, desc, nil, e
+		}
+		plan = d.Plan{SchemaVersion: d.TaskPlanVersion, CanonicalJSON: rawPlan, SHA256: recordHash(rawPlan)}
+		if plan.SHA256 != stamp.PlanHash || facts.digest != stamp.PlanHash || facts.ref != stamp.KeyRef || facts.sealedHash != stamp.SealedHash || facts.sealedSize != stamp.SealedSize || (keyHash != "" && facts.keyHash != keyHash) {
+			return d.Plan{}, desc, nil, ErrExecutionRecord
+		}
+		inner, e := d.UnwrapTaskPlan(in, plan, b.PlanVersion)
+		if e != nil {
+			return d.Plan{}, desc, nil, e
+		}
+		defer clear(inner.CanonicalJSON)
+		desc, e = b.DescribePlan(in, inner)
+		if e != nil {
+			return d.Plan{}, desc, nil, e
+		}
 	}
-	inner, err := d.UnwrapTaskPlan(in, plan, b.PlanVersion)
-	if err != nil {
-		return d.Plan{}, desc, nil, err
-	}
-	defer clear(inner.CanonicalJSON)
-	desc, err = b.DescribePlan(in, inner)
-	if err != nil {
-		return d.Plan{}, desc, nil, err
-	}
-	raw, err := json.Marshal(in)
-	if err != nil {
-		return d.Plan{}, desc, nil, ErrExecutionRecord
-	}
-	p := &OriginalCapturePlan{ctx: ctx, records: s, input: raw, stamp: stamp, parts: map[string]originalCapturePart{}}
+	p := &OriginalCapturePlan{ctx: ctx, records: s, input: raw, stamp: stamp, parts: map[string]originalCapturePart{}, recordKeyHash: keyHash}
 	for _, part := range desc.Parts {
 		if hash := recordHash(part.Intent.SpecJSON); hash != part.Intent.SpecSHA256 || recordHash(part.InvocationJSON) != part.InvocationSHA256 {
 			return d.Plan{}, desc, nil, ErrExecutionRecord
@@ -123,6 +158,9 @@ func (s SQLExecutionRecords) OpenOriginalCapturePlan(ctx context.Context, in d.I
 			return d.Plan{}, desc, nil, ErrExecutionRecord
 		}
 		p.parts[part.Intent.JobUnitKey] = originalCapturePart{namespace: part.Intent.Namespace, name: part.Intent.Name, generation: part.Intent.Generation, invocation: part.InvocationSHA256, spec: bytes.Clone(part.Intent.SpecJSON)}
+	}
+	if !hit && keyHash != "" {
+		authenticatedOriginalPlanData.put(cacheKey, plan, desc, time.Now(), in.Authority.DeadlineAt)
 	}
 	failed = false
 	return plan, desc, p, nil
@@ -170,6 +208,18 @@ func (p *OriginalCapturePlan) RecheckTx(ctx context.Context, tx *sql.Tx, s SQLEx
 	stamp, err := readOriginalCaptureStamp(ctx, tx, in.Authority, true)
 	if err != nil || !reflect.DeepEqual(stamp, p.stamp) {
 		return ErrExecutionRecord
+	}
+	if p.recordKeyHash != "" {
+		identity, ok := s.Keys.(*PinnedExecutionIdentity)
+		if !ok {
+			return ErrExecutionRecord
+		}
+		ref, key, e := identity.Resolve(ctx, in.Authority, p.stamp.KeyRef)
+		valid := e == nil && ref == p.stamp.KeyRef && len(key) == 32 && recordHash(key) == p.recordKeyHash
+		clear(key)
+		if !valid {
+			return ErrExecutionRecord
+		}
 	}
 	return nil
 }

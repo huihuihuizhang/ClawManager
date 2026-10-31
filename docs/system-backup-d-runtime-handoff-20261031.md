@@ -491,3 +491,11 @@
 - 只在实际ConnectPublicBackupMetadata连接选项增加interpolateParams=true，由驱动转义/参数类型编码，不拼接调用者值；现有utf8mb4/utf8mb4_unicode_ci、UTC、单语句、原pool admission/role及事务策略保持。business/source/observer连接选项未改，原SQL/guard/Keys/issuer/nonce/window无任何跳过。D完整TLS fixture后续只镜像该metadata driver flag，保留原TLS/账号/UTC，不将diagnostic overlay当生产入口已接入。
 - 新独立实际构造器test使用一次性schema/有限SELECT,INSERT,UPDATE role（仅LOCAL SQL参数协议证明）。两种SQL mode（STRICT_ALL_TABLES与NO_BACKSLASH_ESCAPES）下，引号/双引号/反斜线/NUL/0x1a/中文emoji/看似SQL的完整字串、全部256种字节与真实staging.Seal密文均byte-exact，实际staging.Open核验原明文。time.Time UTC微秒、decimal、bool一致，提交后密文一致。服务器Com_stmt_prepare在正常参数操作不增加、含字面问号时原prepared fallback确实增加，证明确实走实际constructor flag而非只测fixture布尔值。
 - 实际验证charset/collation/UTC、RepeatableRead与多语句拒绝；定向PASS0.07s/package1.375s，db全包1.710s/execution7.598s PASS。此项不证明TLS生产部署或完整capture，default30窗口/所有row EOF范围保持，仍需后续完整无overlay正向。
+
+## D5.45 有界已认证原计划数据缓存，每请求重建私有对象/当前授权
+
+- 监督明确允许缓存已认证不可变历史数据以消除重复解密/Describe，禁止缓存旧授权/claim/nonce/window/DEK。仅对实际PinnedExecutionIdentity开放；全局最多8项/32MiB（保守4倍外plan字节计费）、数据可用期最多5分钟且不超过原task deadline，LRU淘汰/过期不可用，所有返回byte slice独立复制，空非nil数组形状保留。缓存值只有plan/discovery，不含context、OriginalCapturePlan、guard、许可、nonce、key或DEK。
+- 每次请求仍先原完整Authority.Check，再读取完整当前profile/config/spec与实际sealed SHA256/size/key_ref；当前Keys.Resolve读取原grant/实际key bytes并校验后只以digest参与data key。数据索引还包含原DB pool身份和完整Input/当前stamp；任一变更必须miss或拒绝。命中后重新构造本context私有OriginalCapturePlan/part副本，原Kube/claim/grants/取消/issuer Stage/固定期限/row EOF/末尾Recheck保持；原事务末尾还用闭合PinnedExecutionIdentity重新Resolve并检查当前记录密钥digest，临时key bytes立即clear，不接入provider IO。
+- readPlainRecord返回实际已AEAD认证的cipher SHA/size/ref/payload hash/key hash；冷读必须与前置sample全等才可缓存，避免“sample是坏C、读取瞬间换成好C”把好明文错误归到坏C身份。真实SQL probe主动形成该竞态，首次拒绝、随后恢复坏C仍拒绝，未污染cache。冷读实际raw record SELECT计数1，另context命中保持1且对象不同；破坏返回plan/Source/Spec/Invocation不会污染后续命中；异context复用旧对象拒绝。
+- 真实key bytes改变/本请求末尾key改变、cipher tag改变、claim/config/profile/spec/key_ref实际独立UPDATE并SELECT确认均拒绝；恢复原scope后缓存数据与独立LoadPlan/Unwrap/Describe逐字节等价。首次测试暴露空Writers由[]变null，修复后unit内存/数量/过期/alias/oversize组合PASS3.130s；实际cache SQL定向PASS1.60s/package5.010s。当前mTLS三模式/8输入变化/17当前事实/claim reserve撤回/4真实延迟期限及cache组合package24.157s PASS；controller9.441s/kekadapter5.403s/execution8.887s全包PASS。
+- 仍未声称完整原六项任务成功，默认30秒窗口保持。下一轮以正式metadata原生参数传输及本数据优化，真实BuildCommit创建全新测试运行的原HTTP task；不改任何已失败旧任务/nonce/DEK，也不将diagnostic SQL-first顺序当完整正向验收。
