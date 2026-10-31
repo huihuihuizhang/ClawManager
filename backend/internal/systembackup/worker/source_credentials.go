@@ -21,6 +21,7 @@ import (
 
 	source "clawreef/internal/systembackup"
 	k "clawreef/internal/systembackupkms"
+	sh "clawreef/internal/systembackupskillhub"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -112,6 +113,24 @@ func FormalSourceScopeSHA256(i Invocation, m FormalSourceMount) (string, error) 
 			ObjectPrefixes               []ObjectSourcePrefix
 			RedisMapping, ObjectsMapping *SourceTLSMapping
 		}{i.Request.Operation, m.RedisScope, m.ObjectPrefixes, m.Redis, m.Objects}
+	} else if s := i.Request.SkillObjects; s != nil {
+		if !validSkillObjectRequest(i.Request) || m.Objects == nil || m.Redis != nil || m.RedisScope != nil || !validObjectSourcePrefixes(m.ObjectPrefixes) {
+			return "", ErrRequest
+		}
+		for _, object := range s.Objects {
+			if !objectSourceAllowed(m.ObjectPrefixes, s.Bucket, s.Prefix+"/"+object.Key) {
+				return "", ErrRequest
+			}
+		}
+		// Empty current keysets still bind the exact owned provider root.
+		if !objectSourceAllowed(m.ObjectPrefixes, s.Bucket, s.Prefix+"/") {
+			return "", ErrRequest
+		}
+		scope = struct {
+			Operation      string
+			ObjectPrefixes []ObjectSourcePrefix
+			ObjectsMapping *SourceTLSMapping
+		}{i.Request.Operation, m.ObjectPrefixes, m.Objects}
 	} else {
 		return "", ErrRequest
 	}
@@ -126,6 +145,7 @@ func sourceDigest(raw []byte) string { sum := sha256.Sum256(raw); return hex.Enc
 type FormalCaptureSources struct {
 	Database      *sql.DB
 	Teams         *TeamCaptureSources
+	objects       *minio.Client
 	invocation    Invocation
 	invocationSHA string
 	mount         FormalSourceMount
@@ -294,8 +314,8 @@ func OpenFormalCaptureSources(ctx context.Context, i Invocation, job *CaptureKey
 		if err != nil || id != i.Request.Teams.Redis.ServerID || database != i.Request.Teams.Redis.Database {
 			return nil, ErrNotReady
 		}
-	case "capture-team-objects":
-		if i.Request.Teams == nil || len(i.Request.Teams.Objects) == 0 || mount.Objects == nil || mount.Redis != nil || credential.Username != "" || len(credential.Password) != 0 || credential.AccessKey == "" || len(credential.SecretKey) == 0 {
+	case "capture-team-objects", "capture-skill-objects":
+		if (i.Request.SkillObjects == nil && (i.Request.Teams == nil || len(i.Request.Teams.Objects) == 0)) || mount.Objects == nil || mount.Redis != nil || credential.Username != "" || len(credential.Password) != 0 || credential.AccessKey == "" || len(credential.SecretKey) == 0 {
 			return nil, ErrNotReady
 		}
 		tlsConfig, err := sourceTLS(*mount.Objects)
@@ -308,7 +328,10 @@ func OpenFormalCaptureSources(ctx context.Context, i Invocation, job *CaptureKey
 		if err != nil {
 			return nil, ErrNotReady
 		}
-		s.Teams = &TeamCaptureSources{Objects: client, Authorize: s.Authorize}
+		s.objects = client
+		if i.Request.Teams != nil {
+			s.Teams = &TeamCaptureSources{Objects: client, Authorize: s.Authorize}
+		}
 	default:
 		return nil, ErrNotReady
 	}
@@ -316,6 +339,40 @@ func OpenFormalCaptureSources(ctx context.Context, i Invocation, job *CaptureKey
 		return nil, ErrNotReady
 	}
 	return s, nil
+}
+
+func (s *FormalCaptureSources) SkillObjects() (*SkillObjectCaptureSources, error) {
+	if s == nil || s.closed.Load() || s.objects == nil || s.invocation.Request.SkillObjects == nil {
+		return nil, ErrNotReady
+	}
+	spec := s.invocation.Request.SkillObjects
+	reader, err := sh.NewS3VersionReaderWithMetadata(s.objects, spec.Bucket, spec.Prefix, spec.UserMetadataAllowlist)
+	if err != nil {
+		return nil, ErrNotReady
+	}
+	return &SkillObjectCaptureSources{Reader: reader, Authorize: s.Authorize}, nil
+}
+func validObjectSourcePrefixes(prefixes []ObjectSourcePrefix) bool {
+	if len(prefixes) == 0 || len(prefixes) > 32 {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, b := range prefixes {
+		key := b.Bucket + "\x00" + b.Prefix
+		if b.Bucket == "" || !utf8.ValidString(key) || seen[key] || !strings.HasSuffix(b.Prefix, "/") || strings.TrimSuffix(b.Prefix, "/") == "" || path.IsAbs(b.Prefix) || path.Clean(b.Prefix) != strings.TrimSuffix(b.Prefix, "/") || strings.ContainsAny(b.Bucket+b.Prefix, "*?\\\r\n\x00") {
+			return false
+		}
+		seen[key] = true
+	}
+	return true
+}
+func objectSourceAllowed(prefixes []ObjectSourcePrefix, bucket, key string) bool {
+	for _, b := range prefixes {
+		if b.Bucket == bucket && strings.HasPrefix(key, b.Prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func sourceTLS(mapping SourceTLSMapping) (*tls.Config, error) {

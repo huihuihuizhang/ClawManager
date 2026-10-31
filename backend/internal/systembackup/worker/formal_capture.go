@@ -41,6 +41,7 @@ type FormalCaptureEnvironment struct {
 	Workspace, Staging *os.Root
 	Database           *sql.DB // already SELECT-only admitted source; never opened from artifact
 	Resources          *ResourceCaptureSources
+	SkillObjects       *SkillObjectCaptureSources
 	SourceAuthorize    func(context.Context, Invocation) error
 	SourceValidUntil   time.Time
 }
@@ -68,7 +69,7 @@ func ValidateFormalCaptureResult(i Invocation, r *FormalCaptureResult) bool {
 	if i.Request.Database != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows <= i.Request.Database.MaxRows && r.Tables > 0 && r.Tables <= 1000
 	}
-	if i.Request.Teams != nil || i.Request.Resources != nil {
+	if i.Request.Teams != nil || i.Request.Resources != nil || i.Request.SkillObjects != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows == 0 && r.Tables == 0
 	}
 	return r.Files <= int64(i.Request.MaxFiles) && r.Bytes <= i.Request.MaxFileBytes && r.Rows == 0 && r.Tables == 0
@@ -143,10 +144,10 @@ func validFormalInvocation(i Invocation) bool {
 	if f.PermitDelivery != nil && !k.ValidPermitDeliveryPin(*f.PermitDelivery) {
 		return false
 	}
-	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.Database == nil && i.Request.Teams == nil)) {
+	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.Database == nil && i.Request.Teams == nil && i.Request.SkillObjects == nil)) {
 		return false
 	}
-	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request))
+	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request)) || (skillObjectOperation(i.Request.Operation) && validSkillObjectRequest(i.Request))
 }
 
 type formalKeyUse interface {
@@ -193,7 +194,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		return zero, ErrRequest
 	}
 	r := i.Request
-	if (r.Teams == nil && r.Resources == nil && r.Database == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) || (r.Resources != nil && (env.Resources == nil || env.Resources.Client == nil || env.Resources.Authorize == nil)) {
+	if (r.Teams == nil && r.Resources == nil && r.Database == nil && r.SkillObjects == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) || (r.Resources != nil && (env.Resources == nil || env.Resources.Client == nil || env.Resources.Authorize == nil)) || (r.SkillObjects != nil && (env.SkillObjects == nil || env.SkillObjects.Reader == nil || env.SkillObjects.Authorize == nil)) {
 		return zero, ErrNotReady
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
@@ -217,6 +218,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			return ErrNotReady
 		}
 		if r.Teams != nil && authorizeTeamSources(ctx, env.Teams, i) != nil {
+			return ErrNotReady
+		}
+		if r.SkillObjects != nil && authorizeSkillObjects(ctx, env.SkillObjects, i) != nil {
 			return ErrNotReady
 		}
 		if r.Resources != nil && authorizeResourceSource(ctx, env.Resources, i) != nil {
@@ -261,6 +265,11 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
 			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{useCtx, job, dst}, func(stream io.Writer) error {
+				if r.SkillObjects != nil {
+					return staging.Compress(stream, func(compressed io.Writer) error {
+						return captureSkillObjects(useCtx, env.SkillObjects, i, &budgetWriter{w: compressed, left: r.MaxArchiveBytes}, inUseCheck)
+					})
+				}
 				if r.Resources != nil {
 					return staging.Compress(stream, func(compressed io.Writer) error {
 						return captureResourceSource(useCtx, env.Resources, i, &budgetWriter{w: compressed, left: r.MaxArchiveBytes}, inUseCheck)
