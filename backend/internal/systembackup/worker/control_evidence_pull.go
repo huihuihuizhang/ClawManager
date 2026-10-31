@@ -90,10 +90,24 @@ func (j *CaptureKeyJob) ControlEvidenceSource(ctx context.Context) (source ce.Pr
 	var reply ce.SourceResponse
 	decoder = json.NewDecoder(bytes.NewReader(payload))
 	decoder.DisallowUnknownFields()
-	if decoder.Decode(&reply) != nil || decoder.Decode(new(any)) != io.EOF || reply.Version != "system-backup-control-evidence-source-response.v1" || reply.InvocationSHA256 != control.InvocationSHA256 || reply.KeyUseNonce != control.Point || reply.AuthoritySHA256 != a.lease.AuthoritySHA256 || !reply.Until.Equal(a.lease.Until) || !time.Now().Before(j.until) {
+	if decoder.Decode(&reply) != nil || decoder.Decode(new(any)) != io.EOF || reply.InvocationSHA256 != control.InvocationSHA256 || reply.KeyUseNonce != control.Point || reply.AuthoritySHA256 != a.lease.AuthoritySHA256 || !reply.Until.Equal(a.lease.Until) || !time.Now().Before(j.until) {
 		return source, ErrExecution
 	}
-	source, err = ce.Rebuild(bounded, locator, reply.Evidence)
+	if locator.Finalization == nil {
+		if reply.Version != "system-backup-control-evidence-source-response.v1" || reply.FinalizedSource != nil || len(reply.FinalizedLocatorChunks) != 0 {
+			return source, ErrExecution
+		}
+		source, err = ce.Rebuild(bounded, locator, reply.Evidence)
+	} else {
+		if reply.Version != "system-backup-control-evidence-source-response.v2" || reply.FinalizedSource == nil {
+			return source, ErrExecution
+		}
+		final, sealErr := ce.ReadFinalizedSourceSeal(locator, *reply.FinalizedSource, reply.FinalizedLocatorChunks...)
+		if sealErr != nil {
+			return source, ErrExecution
+		}
+		source, err = ce.VerifyFinalized(bounded, locator, final, reply.Evidence)
+	}
 	if err != nil {
 		return ce.PreparedSource{}, err
 	}

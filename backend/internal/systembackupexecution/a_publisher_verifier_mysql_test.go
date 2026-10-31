@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/x509"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/base64"
@@ -17,10 +18,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"clawreef/internal/systembackup/control"
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
@@ -42,6 +45,7 @@ type aPublisherVerifierFixture struct {
 	logins, decrypts       atomic.Int64
 	generates              atomic.Int64
 	controlGenerateRequest *w.KeyRequest
+	controlContexts        sync.Map
 	onLogin, onDecrypt     func()
 	original               a.OriginalRecord
 	putOriginal            func(a.OriginalRecord, uint64)
@@ -60,6 +64,7 @@ type aPublisherVerifierFixtureOptions struct {
 	ControlRequestedParts []string
 	ConfigSnapshot        []byte
 	WrapControlConnector  func(driver.Connector) driver.Connector
+	WorkerIssuer          *control.IdentityIssuer
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -116,6 +121,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				return
 			}
 			x.generates.Add(1)
+			x.controlContexts.Store(request["context"], true)
 			json.NewEncoder(wr).Encode(map[string]any{"data": map[string]any{"plaintext": base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{9}, 32)), "ciphertext": "vault:v1:" + base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)), "key_version": 1}})
 		case "/v1/auth/publisher-jwt/login":
 			x.logins.Add(1)
@@ -137,8 +143,11 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 					wr.WriteHeader(403)
 					return
 				}
-				currentContext, contextErr := k.TransitContext(*x.controlGenerateRequest)
-				if contextErr != nil || json.NewDecoder(r.Body).Decode(&request) != nil || len(request) != 2 || request["context"] != currentContext || request["ciphertext"] != "vault:v1:"+base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)) {
+				if json.NewDecoder(r.Body).Decode(&request) != nil || len(request) != 2 || request["ciphertext"] != "vault:v1:"+base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)) {
+					wr.WriteHeader(403)
+					return
+				}
+				if _, exists := x.controlContexts.Load(request["context"]); !exists {
 					wr.WriteHeader(403)
 					return
 				}
@@ -159,6 +168,9 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 	}))
 	t.Cleanup(provider.Close)
 	x.history = newPublisherHistoryFixture(t, func(options *consumerFixtureOptions) {
+		if fixture.WorkerIssuer != nil {
+			options.WorkerIssuerSHA256 = hash(fixture.WorkerIssuer.Certificate.Raw)
+		}
 		options.WrapControlConnector = fixture.WrapControlConnector
 		options.ConfigSnapshot = fixture.ConfigSnapshot
 		options.OwnedCredentialsFile, options.OwnedServerUUID = credentials, serverUUID
@@ -191,6 +203,15 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				cfg.Security.ServiceAccountName = "capture"
 				cfg.Security.ServiceAccountUID = "capture-sa"
 				cfg.KeyDirectory = dir
+				if fixture.WorkerIssuer != nil {
+					cfg.IssuerSHA256 = hash(fixture.WorkerIssuer.Certificate.Raw)
+					cfg.IssuerCertificate, cfg.IssuerKey = filepath.Join(dir, "worker-ca.crt"), filepath.Join(dir, "worker-ca.key")
+					key, err := x509.MarshalPKCS8PrivateKey(fixture.WorkerIssuer.Signer)
+					if err != nil || os.WriteFile(cfg.IssuerCertificate, fixture.WorkerIssuer.ServerRoots, 0600) != nil || os.WriteFile(cfg.IssuerKey, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: key}), 0600) != nil {
+						t.Fatal("owned independently pinned worker issuer")
+					}
+					clear(key)
+				}
 				cfg.ProfileFile = filepath.Join(dir, "profile.json")
 				cfg.CapacityFile = filepath.Join(dir, "capacity.json")
 				cfg.ForwardGrant = GrantReference{Path: filepath.Join(dir, "grant.json"), PublicKey: base64.StdEncoding.EncodeToString(issuer)}

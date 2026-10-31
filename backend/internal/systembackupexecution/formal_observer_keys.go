@@ -151,6 +151,7 @@ func (s *scopedFormalCandidateKeys) ValidUntil() time.Time {
 	}
 	return s.until
 }
+func (s *scopedFormalCandidateKeys) RecheckStream(ctx context.Context) error { return s.recheck(ctx) }
 func (s *scopedFormalCandidateKeys) Unwrap(ctx context.Context, expected w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
 	if s == nil || ctx == nil || ctx.Err() != nil || s.scope.Invocation.ProviderKey == nil || expected != s.scope.Invocation.ProviderKey.Request || wrapped.Request != expected || use == nil {
 		return w.ErrStreamAuthority

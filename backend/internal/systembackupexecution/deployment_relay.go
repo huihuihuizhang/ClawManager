@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
+	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	e "clawreef/internal/systembackupevidence"
@@ -22,10 +23,13 @@ import (
 // pinned runtime deployment and its explicitly extended database role.
 func (s *DeploymentService) controlHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("/", s.Runtime.Control)
+	control := s.Runtime.Control
 	if s.captureMaterials != nil && s.captureMaterials.ControlEvidence != nil {
+		o := s.Runtime.Owner
+		control = WorkloadIdentity{Client: o.Client, Namespace: o.Namespace, ServiceAccount: o.Security.ServiceAccountName, ServiceAccountUID: o.Security.ServiceAccountUID, Next: worker.ControlHandler{Authorizer: deploymentControlAuthorizer{service: s, owner: o}}}
 		mux.Handle(ControlEvidencePullPath, s.controlEvidenceSourceHandler())
 	}
+	mux.Handle("/", control)
 	if s.Config.RuntimeSources != nil {
 		o := s.Runtime.Owner
 		mux.Handle("/relay", WorkloadIdentity{Client: o.Client, Namespace: o.Namespace, ServiceAccount: o.Security.ServiceAccountName, ServiceAccountUID: o.Security.ServiceAccountUID, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

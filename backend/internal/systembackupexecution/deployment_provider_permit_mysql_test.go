@@ -493,6 +493,17 @@ func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql
 		pod.Labels[key] = value
 	}
 	pod.Spec.NodeName = "worker-node"
+	// Preserve an identity created by the actual Admit/ensureIdentity path when
+	// the named local Kubernetes surface is replaced for the next Job.
+	existingSecrets := map[string]*corev1.Secret{}
+	for _, volume := range pod.Spec.Volumes {
+		if volume.Secret != nil && o.Client != nil {
+			secret, err := o.Client.CoreV1().Secrets(o.Namespace).Get(ctx, volume.Secret.SecretName, metav1.GetOptions{})
+			if err == nil {
+				existingSecrets[secret.Name] = secret.DeepCopy()
+			}
+		}
+	}
 	pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: pod.Spec.Containers[0].Name, ContainerID: "containerd://original-worker", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}
 	workload := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "controller-pod", Namespace: "controller", UID: "controller-pod-uid", OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "ReplicaSet", Name: "controller-rs", UID: "controller-rs-uid", Controller: &controller}}}, Spec: corev1.PodSpec{ServiceAccountName: "controller"}, Status: corev1.PodStatus{Phase: corev1.PodRunning}}
 	client := fake.NewSimpleClientset(&job, pod, workload, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: o.Namespace, UID: types.UID(o.NamespaceUID)}}, &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "worker-node", UID: "worker-node-uid", Labels: map[string]string{corev1.LabelOSStable: "linux"}}}, &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "capture", Namespace: o.Namespace, UID: "capture-sa"}}, &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "controller", Namespace: "controller", UID: "controller-sa"}}, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "controller-rs", Namespace: "controller", UID: "controller-rs-uid", OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "Deployment", Name: "controller-deployment", UID: "controller-deployment-uid", Controller: &controller}}}}, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "controller-deployment", Namespace: "controller", UID: "controller-deployment-uid"}})
@@ -538,6 +549,12 @@ func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql
 			}
 		case volume.Secret != nil:
 			secret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: volume.Secret.SecretName, Namespace: o.Namespace, UID: types.UID(volume.Secret.SecretName + "-uid")}, Immutable: &immutable, Data: map[string][]byte{"fixture": []byte("original worker identity fixture")}}
+			if original := existingSecrets[secret.Name]; original != nil {
+				if _, err := client.CoreV1().Secrets(o.Namespace).Create(ctx, original, metav1.CreateOptions{}); err != nil {
+					t.Fatal(err)
+				}
+				continue
+			}
 			if _, err := client.CoreV1().Secrets(o.Namespace).Create(ctx, secret, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
@@ -573,7 +590,7 @@ func originalMTLSControlClient(t *testing.T, o *PublicJobOwner, authority d.Auth
 
 // Reserve the actual TLS endpoint before the signed core/source grants are
 // frozen. Worker identity is issued only after the original invocation exists.
-func originalMTLSControlServer(t *testing.T, handler http.Handler) (string, func(*PublicJobOwner, d.Authority, worker.Invocation, ...string) *worker.ControlClient) {
+func originalMTLSControlServer(t *testing.T, handler http.Handler, bootstrap ...func(control.IdentityIssuer)) (string, func(*PublicJobOwner, d.Authority, worker.Invocation, ...string) *worker.ControlClient) {
 	t.Helper()
 	now := time.Now()
 	pub, key, _ := ed25519.GenerateKey(rand.Reader)
@@ -588,6 +605,9 @@ func originalMTLSControlServer(t *testing.T, handler http.Handler) (string, func
 		t.Fatal(err)
 	}
 	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: rootDER})
+	for _, configure := range bootstrap {
+		configure(control.IdentityIssuer{Certificate: root, Signer: key, TrustDomain: "fixture.invalid", ServerRoots: ca})
+	}
 	serverTemplate := &x509.Certificate{SerialNumber: big.NewInt(2), NotBefore: now.Add(-time.Minute), NotAfter: now.Add(time.Hour), IPAddresses: []net.IP{net.ParseIP("127.0.0.1")}, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, KeyUsage: x509.KeyUsageDigitalSignature}
 	serverDER, err := x509.CreateCertificate(rand.Reader, serverTemplate, root, pub, key)
 	if err != nil {

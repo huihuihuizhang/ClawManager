@@ -353,6 +353,7 @@ type consumerFixtureOptions struct {
 	OwnedCredentialsFile, OwnedServerUUID string
 	DeploymentCore                        func(c.ExecutionGrant, ed25519.PublicKey, string) DeploymentConfig
 	JobDeadlineSeconds                    int64
+	WorkerIssuerSHA256                    string
 	ConfigureGrant                        func(*c.ExecutionGrant)
 	PrepareSource                         func(*os.Root, *worker.Invocation)
 	RewriteCandidate                      func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
@@ -579,6 +580,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		grant.DeploymentConfigSHA256 = hash(coreRaw)
 		grant.Actions = []string{"prepare", "capture", "issue_worker"}
 		grant.WorkerIssuerSHA256 = strings.Repeat("f", 64)
+		if options.WorkerIssuerSHA256 != "" {
+			grant.WorkerIssuerSHA256 = options.WorkerIssuerSHA256
+		}
 		if os.WriteFile(configured.ProfileFile, profile, 0600) != nil {
 			t.Fatal("owned full profile")
 		}

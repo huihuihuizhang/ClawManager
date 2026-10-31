@@ -339,6 +339,7 @@ func Verify(ctx context.Context, sidecarRaw, proofRaw []byte, expected Expected)
 			}
 		}
 	}
+	ownerBasisSHA := ""
 	for _, name := range []string{"A", "B", "C", "D"} {
 		owner, ok := sidecar.Owners[name]
 		if !ok || owner.Owner != name || owner.Evidence == nil || len(owner.Evidence) > 32 {
@@ -346,7 +347,39 @@ func Verify(ctx context.Context, sidecarRaw, proofRaw []byte, expected Expected)
 		}
 		switch owner.Status {
 		case "complete":
-			if name != "A" || owner.Reason != "none" || owner.Summary == nil || !digestPattern.MatchString(*owner.Summary) || len(owner.Evidence) != 1 {
+			if owner.Reason != "none" || owner.Summary == nil || !digestPattern.MatchString(*owner.Summary) || len(owner.Evidence) < 1 {
+				return Sidecar{}, ErrInvalid
+			}
+			if name != "A" {
+				raw, err = resolve(owner.Evidence[0])
+				var proof OwnedReportProof
+				if err != nil || closed(raw, &proof) != nil || proof.Version != "system-backup-control-owned-reports.v1" || proof.Scope != expected.Scope || proof.Owner != name || proof.ConfigSHA256 != expected.ConfigSHA256 || !proof.CoverageEndedAt.Equal(sidecar.End) || proof.ObservedAt.Before(sidecar.End) || proof.ObservedAt.After(sidecar.Generated) || proof.SummarySHA256 != *owner.Summary || len(owner.Evidence) != len(proof.Reports)+len(proof.BasisRefs)+1 {
+					return Sidecar{}, ErrInvalid
+				}
+				basis, basisErr := ownedBasis(proof, refs)
+				if basisErr != nil {
+					return Sidecar{}, basisErr
+				}
+				basisRaw, basisErr := CanonicalProofs(basis)
+				if basisErr != nil || ownerBasisSHA != "" && ownerBasisSHA != SHA256(basisRaw) {
+					return Sidecar{}, ErrInvalid
+				}
+				ownerBasisSHA = SHA256(basisRaw)
+				for index, ref := range append(append([]EvidenceRef{}, proof.BasisRefs...), proof.Reports...) {
+					if ref != owner.Evidence[index+1] {
+						return Sidecar{}, ErrInvalid
+					}
+					if _, err = resolve(ref); err != nil {
+						return Sidecar{}, err
+					}
+				}
+				summary, err := ownedSummary(proof, refs)
+				if err != nil || summary != *owner.Summary {
+					return Sidecar{}, ErrInvalid
+				}
+				continue
+			}
+			if len(owner.Evidence) != 1 {
 				return Sidecar{}, ErrInvalid
 			}
 			raw, err = resolve(owner.Evidence[0])
@@ -368,6 +401,29 @@ func Verify(ctx context.Context, sidecarRaw, proofRaw []byte, expected Expected)
 			}
 		default:
 			return Sidecar{}, ErrInvalid
+		}
+	}
+	for _, entry := range bundle.Entries {
+		var kind struct {
+			Version string `json:"schema_version"`
+		}
+		if json.Unmarshal(entry.Payload, &kind) != nil {
+			return Sidecar{}, ErrInvalid
+		}
+		if kind.Version != "system-backup-control-original-source-seed.v1" {
+			continue
+		}
+		seed, root, chunks, err := finalizedSeed(refs)
+		if err != nil || seed.Expected != expected || verifySeedBasis(ctx, seed, sidecar, refs) != nil {
+			return Sidecar{}, ErrInvalid
+		}
+		if _, err = resolve(reference(root)); err != nil {
+			return Sidecar{}, err
+		}
+		for _, ref := range chunks {
+			if _, err = resolve(ref); err != nil {
+				return Sidecar{}, err
+			}
 		}
 	}
 	if len(used) != len(refs) || ctx.Err() != nil {

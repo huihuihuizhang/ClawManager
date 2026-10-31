@@ -22,6 +22,9 @@ func validControlEvidenceRequest(r Request) bool {
 	if locator.Expected.Backup != r.Binding.BackupID || r.Binding.Attempt != strconv.FormatUint(locator.Expected.Attempt, 10) {
 		return false
 	}
+	if locator.Finalization != nil && locator.Finalization.CaptureContextSHA256 != r.Binding.CaptureContextHash {
+		return false
+	}
 	limit := int64(ce.MaxBytes)
 	if r.Binding.Path == ce.Part {
 		if r.ArtifactName != ce.LogicalCipherName {
@@ -50,9 +53,18 @@ func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEv
 	defer clear(prepared.ProofsJSON)
 	payload := prepared.SidecarJSON
 	expected := i.Request.ControlEvidence.SidecarSHA256
+	if i.Request.ControlEvidence.Finalization != nil {
+		if ce.VerifyFinalizedPrepared(ctx, *i.Request.ControlEvidence, prepared) != nil {
+			return ErrExecution
+		}
+		expected = prepared.SidecarSHA256
+	}
 	if i.Request.Binding.Path == ce.ProofPart {
 		payload = prepared.ProofsJSON
 		expected = i.Request.ControlEvidence.ProofsSHA256
+		if i.Request.ControlEvidence.Finalization != nil {
+			expected = prepared.ProofsSHA256
+		}
 	}
 	if int64(len(payload)) > i.Request.MaxArchiveBytes || ce.SHA256(payload) != expected {
 		return ErrExecution

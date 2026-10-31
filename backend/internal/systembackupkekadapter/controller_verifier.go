@@ -201,15 +201,14 @@ func (f *ControllerVerifierFactory) ForCandidate(ctx context.Context, scope Cont
 }
 
 type ControllerVerifier struct {
-	factory           *ControllerVerifierFactory
-	scope             ControllerVerifierCandidate
-	request           w.KeyRequest
-	capability        *sqlPreparedCapability
-	client            *http.Client
-	unwrap            *kms.RecoveryUnwrapper // transport only; no RecoveryJob/restore grant
-	until             time.Time
-	callMu, sessionMu sync.Mutex
-	active            *controllerVerifierSession
+	factory    *ControllerVerifierFactory
+	scope      ControllerVerifierCandidate
+	request    w.KeyRequest
+	capability *sqlPreparedCapability
+	client     *http.Client
+	unwrap     *kms.RecoveryUnwrapper // transport only; no RecoveryJob/restore grant
+	until      time.Time
+	callMu     sync.Mutex
 }
 
 // ValidUntil bounds the ENTIRE candidate verification, including source reads
@@ -491,18 +490,16 @@ func (v *ControllerVerifier) Recheck(ctx context.Context) error {
 	if v == nil {
 		return kms.ErrPermission
 	}
-	v.sessionMu.Lock()
-	active := v.active
-	v.sessionMu.Unlock()
-	if active != nil {
-		return active.check(ctx)
-	}
 	session, err := v.begin(ctx)
 	if err != nil {
 		return err
 	}
 	return session.tx.Rollback()
 }
+
+// Stream readers check the same original authority around every bounded read.
+// This cannot renew the fixed per-use deadline captured by ForCandidate.
+func (v *ControllerVerifier) RecheckStream(ctx context.Context) error { return v.Recheck(ctx) }
 
 func (v *ControllerVerifier) Unwrap(ctx context.Context, expected w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
 	if v == nil || v.unwrap == nil || ctx == nil || ctx.Err() != nil || use == nil || expected != v.request || wrapped.Request != v.request {
@@ -544,34 +541,21 @@ func (v *ControllerVerifier) Resolve(ctx context.Context, access kms.Access) (km
 		}
 		c, cancel := context.WithDeadline(c, v.until)
 		defer cancel()
-		session, e := v.begin(c)
-		if e != nil {
-			return e
-		}
-		defer session.tx.Rollback()
-		v.sessionMu.Lock()
-		if v.active != nil {
-			v.sessionMu.Unlock()
-			return kms.ErrPermission
-		}
-		v.active = session
-		v.sessionMu.Unlock()
-		defer func() { v.sessionMu.Lock(); v.active = nil; v.sessionMu.Unlock() }()
+		// Every check opens and closes an exact original task/KEK snapshot.
+		// Holding that snapshot across inert stream I/O blocks the same-epoch
+		// heartbeat and prevents observing revocation. The C stream performs
+		// current-authority checks at read boundaries, and this final check
+		// rejects the entire use before any original result/seal is committed.
 		if check(c, a) != nil {
 			return kms.ErrPermission
 		}
-		e = use()
+		e := use()
 		if e != nil {
 			return e
 		}
 		if check(c, a) != nil {
 			return kms.ErrPermission
 		}
-		if e = session.tx.Rollback(); e != nil {
-			return kms.ErrPermission
-		}
-		// The provider RPC has already finished, and no Kubernetes/provider
-		// network call occurs while the original task/KEK locks are held.
 		return v.checkWorkload(c)
 	}}, nil
 }

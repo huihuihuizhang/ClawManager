@@ -21,6 +21,31 @@ type StreamEnvelope struct {
 	wrapped WrappedKey
 }
 
+// StreamReadAuthority is supplied by original scoped controller verifiers.
+// It rechecks existing authority and never renews a DEK, claim or permit.
+type StreamReadAuthority interface{ RecheckStream(context.Context) error }
+
+type streamAuthorityReader struct {
+	ctx       context.Context
+	reader    io.Reader
+	authority StreamReadAuthority
+}
+
+func (r streamAuthorityReader) Read(dst []byte) (int, error) {
+	if r.ctx.Err() != nil || r.authority.RecheckStream(r.ctx) != nil {
+		return 0, ErrStreamAuthority
+	}
+	if len(dst) > 64<<10 {
+		dst = dst[:64<<10]
+	}
+	n, err := r.reader.Read(dst)
+	if r.ctx.Err() != nil || r.authority.RecheckStream(r.ctx) != nil {
+		clear(dst[:n])
+		return 0, ErrStreamAuthority
+	}
+	return n, err
+}
+
 type streamEnvelopeJSON struct {
 	Entries []struct {
 		Chunks  []StreamChunk `json:"chunks"`
@@ -305,6 +330,9 @@ func inspectWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte,
 	if keys == nil {
 		return zero, ErrStreamAuthority
 	}
+	if authority, ok := keys.(StreamReadAuthority); ok {
+		src = streamAuthorityReader{ctx, src, authority}
+	}
 	var result StreamVerification
 	calls := 0
 	err = keys.Unwrap(ctx, spec.Request, parsed.wrapped, func(key []byte) error {
@@ -320,7 +348,11 @@ func inspectWrappedStream(ctx context.Context, spec StreamSpec, envelope []byte,
 		reader, writer := io.Pipe()
 		done := make(chan error, 1)
 		go func() {
-			err := inspect(streamContextReader{ctx, reader})
+			var plaintext io.Reader = streamContextReader{ctx, reader}
+			if authority, ok := keys.(StreamReadAuthority); ok {
+				plaintext = streamAuthorityReader{ctx, plaintext, authority}
+			}
+			err := inspect(plaintext)
 			if err == nil {
 				var extra [1]byte
 				n, tailErr := reader.Read(extra[:])
