@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
@@ -28,6 +29,7 @@ import (
 	kms "clawreef/internal/systembackupkms"
 	w "clawreef/internal/systembackupwire"
 	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -231,8 +233,13 @@ func (v *ControllerVerifier) checkWorkload(ctx context.Context) error {
 	if _, err := v.originalGrant(ctx); err != nil {
 		return err
 	}
-	wk := v.factory.cfg.Workload
-	k := v.factory.cfg.Kubernetes
+	return checkControllerWorkload(ctx, v.factory.cfg.Kubernetes, v.factory.cfg.Workload)
+}
+
+func checkControllerWorkload(ctx context.Context, k kubernetes.Interface, wk ControllerVerifierWorkload) error {
+	if ctx == nil || ctx.Err() != nil || nilSource(k) {
+		return kms.ErrPermission
+	}
 	pod, err := k.CoreV1().Pods(wk.Namespace).Get(ctx, wk.PodName, metav1.GetOptions{})
 	if err != nil || string(pod.UID) != wk.PodUID || pod.DeletionTimestamp != nil || string(pod.Status.Phase) != "Running" || pod.Spec.ServiceAccountName != wk.ServiceAccountName {
 		return kms.ErrPermission
@@ -286,36 +293,59 @@ func (v *ControllerVerifier) checkWorkload(ctx context.Context) error {
 }
 
 func (v *ControllerVerifier) loadPlan(ctx context.Context) (string, string, error) {
-	plan, err := v.factory.cfg.Records.LoadPlan(ctx, v.scope.Input)
+	return loadOriginalCandidatePlan(ctx, v.factory.cfg.Records, v.scope)
+}
+
+func loadOriginalCandidatePlan(ctx context.Context, records c.SQLExecutionRecords, scope ControllerVerifierCandidate) (string, string, error) {
+	if scope.Invocation.ProviderKey == nil {
+		return "", "", kms.ErrPermission
+	}
+	plan, err := records.LoadPlan(ctx, scope.Input)
 	if err != nil {
 		return "", "", kms.ErrPermission
 	}
 	defer clear(plan.CanonicalJSON)
-	inner, err := d.UnwrapTaskPlan(v.scope.Input, plan, b.PlanVersion)
+	inner, err := d.UnwrapTaskPlan(scope.Input, plan, b.PlanVersion)
 	if err != nil {
 		return "", "", kms.ErrPermission
 	}
 	defer clear(inner.CanonicalJSON)
-	desc, err := b.DescribePlan(v.scope.Input, inner)
+	desc, err := b.DescribePlan(scope.Input, inner)
 	if err != nil {
 		return "", "", kms.ErrPermission
 	}
-	hash, err := v.scope.Invocation.Hash()
+	hash, err := scope.Invocation.Hash()
 	if err != nil {
 		return "", "", kms.ErrPermission
 	}
 	for _, part := range desc.Parts {
-		if part.Intent.JobUnitKey != v.scope.Job.JobUnitKey {
+		if part.Intent.JobUnitKey != scope.Job.JobUnitKey {
 			continue
 		}
-		if part.Intent.Namespace != v.scope.Job.Namespace || part.Intent.Name != v.scope.Job.Name || part.Intent.Generation != v.scope.Job.Generation || part.InvocationSHA256 != hash {
+		if part.Intent.Namespace != scope.Job.Namespace || part.Intent.Name != scope.Job.Name || part.Intent.Generation != scope.Job.Generation || part.InvocationSHA256 != hash {
 			return "", "", kms.ErrPermission
 		}
 		var invocation worker.Invocation
-		if json.Unmarshal(part.InvocationJSON, &invocation) != nil || invocation.ProviderKey == nil || invocation.ProviderKey.Request != v.request {
+		if json.Unmarshal(part.InvocationJSON, &invocation) != nil || invocation.ProviderKey == nil || invocation.ProviderKey.Request != scope.Invocation.ProviderKey.Request {
 			return "", "", kms.ErrPermission
 		}
-		return plan.SHA256, part.Intent.SpecSHA256, nil
+		// The plan authenticates the ORIGINAL typed Job bytes. The runtime
+		// journal instead pins kube.Intent's normalized unstructured request
+		// (apiVersion/kind, no status, pre request-hash annotation). Preserve BOTH
+		// checks; a plan SpecSHA is not the runtime RequestSHA.
+		specSum := sha256.Sum256(part.Intent.SpecJSON)
+		if hex.EncodeToString(specSum[:]) != part.Intent.SpecSHA256 {
+			return "", "", kms.ErrPermission
+		}
+		var job batchv1.Job
+		if json.Unmarshal(part.Intent.SpecJSON, &job) != nil {
+			return "", "", kms.ErrPermission
+		}
+		intent, err := kube.Intent("Job", &job)
+		if err != nil || intent.Identity.Namespace != scope.Job.Namespace || intent.Identity.Name != scope.Job.Name || intent.Identity.Owner != scope.Input.Authority.TaskPublicID {
+			return "", "", kms.ErrPermission
+		}
+		return plan.SHA256, intent.RequestSHA256, nil
 	}
 	return "", "", kms.ErrPermission
 }
