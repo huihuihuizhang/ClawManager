@@ -1,0 +1,65 @@
+{
+  "schema": "ad-supervisor-local-migration-review.v1",
+  "date": "2026-10-31",
+  "source_commit": "a3dc32a7a0065d892e2ce29ec972525a3f7295cf",
+  "baseline_commit": "8578b0bf0bf7de4461b1899e95f2fd0cbef178b0",
+  "baseline_sql_files": 171,
+  "current_sql_files": 172,
+  "catalog_sha256": "718e4509d2c83c73636dd9745ac7c2b350a57c01d75b5ac50e482ffcb4f537d8",
+  "added_migration": "131_backup_v2_formal_job_candidates.sql",
+  "environment": {
+    "mysql": "8.4.13",
+    "go": "1.26.1",
+    "target": "owned disposable local MySQL, loopback TCP only",
+    "dependency_downloads": false,
+    "remote_environment_accessed": false
+  },
+  "checks": [
+    {
+      "test": "TestMergedMigrationsMySQL/fresh",
+      "package": "backend/internal/db",
+      "result": "PASS",
+      "case_seconds": 15.93,
+      "package_seconds": 17.297,
+      "behavior": "Apply the complete embedded catalog to a unique empty database, then invoke the application migration runner again.",
+      "local_log_sha256": "9479f568164388084fa6631a33107836b71324eaaeeebfe30642c5cde30e754a"
+    },
+    {
+      "test": "TestMergedMigrationsMySQL/upgrade",
+      "package": "backend/internal/db",
+      "result": "PASS",
+      "case_seconds": 14.24,
+      "package_seconds": 15.557,
+      "behavior": "Replay the exact baseline SQL extracted with git archive; seed model authorization; apply the current embedded catalog twice; check authorization preservation.",
+      "local_log_sha256": "f47715fc6ef0cf958538d9031a2155f4b7f1f86f1d7f0966807ce38f9c97a3d4"
+    },
+    {
+      "entrypoint": "backend/cmd/system-backup-migrate",
+      "result": "PASS on both databases",
+      "behavior": "Build the real CLI from source_commit and run -apply against each migrated database with the independently observed server UUID, exact database name and catalog digest pinned. Temporary DSN files were removed.",
+      "reported_migration_count": 172,
+      "config_activated": false,
+      "historical_equivalence_verified": false,
+      "human_mfa_verified": false
+    },
+    {
+      "check": "independent post-test SQL inspection",
+      "result": "PASS",
+      "fresh_ledger_rows": 172,
+      "upgrade_ledger_rows": 172,
+      "candidate_columns_in_each_database": 3,
+      "preserved_model": {
+        "display_name": "merge-test",
+        "visibility_scope": "selected_users",
+        "access_policy_version": 3,
+        "grant_count": 1
+      }
+    }
+  ],
+  "scope_limits": [
+    "These are unique disposable databases on a dedicated local server, not copies of the unavailable deployed database.",
+    "Upgrade covers the exact baseline embedded schema and the test's model/grant rows. It does not prove compatibility with unknown deployed schema drift, historical SQL or production data.",
+    "This is migration/reentry evidence only. It does not prove a page request, six-part capture, physical Runtime stop/resume, live provider authorization, immutable artifact publication or independent restore.",
+    "Original deployment materials and final remote verification remain pending; no readiness or acceptance flags were changed."
+  ]
+}
