@@ -207,7 +207,11 @@ func TestAOriginalPublicationBinaryIntentSingleSendAndPinnedIndependentReadback(
 				}
 				return
 			}
-			if err != nil || second != first || state.puts != 1 {
+			// The fresh independent read carries a fresh opaque receipt pointer;
+			// every observed coordinate AND the full receipt contents must match.
+			firstRead, secondRead := first.payloadRead, second.payloadRead
+			first.payloadRead, second.payloadRead = nil, nil
+			if err != nil || second != first || firstRead == nil || secondRead == nil || *firstRead != *secondRead || state.puts != 1 {
 				t.Fatal("original intent resent or pinned readback changed", err, state.puts)
 			}
 			var actions int
