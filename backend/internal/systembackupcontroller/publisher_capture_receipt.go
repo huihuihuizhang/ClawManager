@@ -40,7 +40,7 @@ func publisherCaptureRecordHash(record PublisherCaptureRecord) string {
 	// encoding/json compacts RawMessage values; additionally frame their EXACT
 	// original bytes so even whitespace replacement cannot pass this receipt.
 	digest := sha256.New()
-	for _, part := range [][]byte{[]byte("system-backup-publisher-capture-output.v1\x00"), raw, record.Input.ConfigSnapshot, record.Plan.CanonicalJSON, record.CandidateJSON, record.PartResult.Checkpoint} {
+	for _, part := range [][]byte{[]byte("system-backup-publisher-capture-output.v1\x00"), raw, record.Input.ConfigSnapshot, record.Input.SourceSnapshot, record.Plan.CanonicalJSON, record.CandidateJSON, record.PartResult.Checkpoint} {
 		var size [8]byte
 		binary.BigEndian.PutUint64(size[:], uint64(len(part)))
 		digest.Write(size[:])
