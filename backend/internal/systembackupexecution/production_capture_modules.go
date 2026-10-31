@@ -263,8 +263,10 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 		}
 		r.Workload.WorkerControl.InvocationConfigMap = name + "-invocation"
 		r.Workload.WorkerControl.IdentitySecret = name + "-identity"
-		r.Workload.DeadlineSeconds = int64(time.Until(until).Seconds()) - 1
-		if r.Workload.DeadlineSeconds < 1 || byPart[r.Part].Part != "" {
+		// Relative Job duration is an original signed template bound, never
+		// recomputed from a later wall clock while rebuilding the same plan.
+		// BuildCapturePart still refuses a duration beyond the original hold.
+		if r.Workload.DeadlineSeconds < 1 || r.Workload.DeadlineSeconds > 3600 || byPart[r.Part].Part != "" {
 			return nil, d.ErrNotReady
 		}
 		byPart[r.Part] = r
