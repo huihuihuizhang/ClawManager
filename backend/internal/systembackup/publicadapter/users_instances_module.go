@@ -119,6 +119,9 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 		if r.Part != part || r.Category != "instances" {
 			return zero, d.ErrNotReady
 		}
+		if r.Invocation.Request.SkillWorkspace != nil && validateOriginalSkillWorkspace(cfg.Source, r) != nil {
+			return zero, d.ErrNotReady
+		}
 		if mount.MountID == "workspace" {
 			primary[i.ID] = true
 		}

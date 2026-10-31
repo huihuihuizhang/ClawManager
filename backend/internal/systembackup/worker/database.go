@@ -69,7 +69,7 @@ func validDatabaseSpec(d *DatabaseSpec) bool {
 	return err == nil && host != "" && portErr == nil && n > 0 && n <= 65535
 }
 func validDatabaseRequest(r Request) bool {
-	if r.SkillObjects != nil || r.Resources != nil || r.TeamWorkspace != nil || r.Teams != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
+	if r.SkillWorkspace != nil || r.SkillObjects != nil || r.Resources != nil || r.TeamWorkspace != nil || r.Teams != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
 		return false
 	}
 	d := r.Database

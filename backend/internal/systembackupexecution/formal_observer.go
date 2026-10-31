@@ -1,9 +1,11 @@
 package systembackupexecution
 
 import (
+	"compress/gzip"
 	"context"
 	"database/sql"
 	"encoding/json"
+	"io"
 	"os"
 
 	b "clawreef/internal/systembackup/publicadapter"
@@ -11,6 +13,7 @@ import (
 	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
+	sh "clawreef/internal/systembackupskillhub"
 	w "clawreef/internal/systembackupwire"
 )
 
@@ -97,5 +100,24 @@ func observeOriginalFormalCandidate(ctx context.Context, source, custody *os.Roo
 		return staging.FormalObservation{}, d.ErrNotReady
 	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	if i.Request.SkillWorkspace != nil {
+		// Inert proof derives from the exact authenticated captured tar, not a
+		// second source read or a worker-provided "proof succeeded" flag.
+		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(compressed io.Reader) error {
+			z, err := gzip.NewReader(compressed)
+			if err != nil {
+				return d.ErrNotReady
+			}
+			defer z.Close()
+			limited := &io.LimitedReader{R: z, N: i.Request.MaxArchiveBytes + 1}
+			if sh.VerifyWorkspaceCapture(ctx, limited, *i.Request.SkillWorkspace) != nil || limited.N <= 0 {
+				return d.ErrNotReady
+			}
+			if z.Close() != nil {
+				return d.ErrNotReady
+			}
+			return nil
+		})
+	}
 	return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys)
 }

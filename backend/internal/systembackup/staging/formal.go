@@ -58,9 +58,9 @@ func OpenFormalObserved(ctx context.Context, custody *os.Root, scope SealScope, 
 // ObserveFormalManaged retains the original CMBKGC01 format and provider key
 // binding; it never tries CMSTG01 or a functional key on any failure. The same
 // lock, intent, capacity and create-only mechanics protect both private copies.
-func ObserveFormalManaged(ctx context.Context, source, custody *os.Root, p CustodyPolicy, scope SealScope, ciphertext, envelope Receipt, spec w.StreamSpec, keys w.Unwrapper) (FormalObservation, error) {
+func ObserveFormalManaged(ctx context.Context, source, custody *os.Root, p CustodyPolicy, scope SealScope, ciphertext, envelope Receipt, spec w.StreamSpec, keys w.Unwrapper, inspectors ...func(io.Reader) error) (FormalObservation, error) {
 	var zero FormalObservation
-	if keys == nil || envelope.Size > 32<<20 || scope.Binding.BackupID != spec.Request.Context.BackupPublicID || scope.Binding.Attempt != spec.Request.Context.AttemptNo || scope.Binding.Path != spec.Request.Context.Part || scope.Binding.CaptureContextHash != spec.Request.Context.CaptureContextHash || scope.Binding.EnvelopeID != spec.Request.Context.EnvelopeID || scope.Installation != spec.Request.Context.InstallationID {
+	if keys == nil || len(inspectors) > 1 || (len(inspectors) == 1 && inspectors[0] == nil) || envelope.Size > 32<<20 || scope.Binding.BackupID != spec.Request.Context.BackupPublicID || scope.Binding.Attempt != spec.Request.Context.AttemptNo || scope.Binding.Path != spec.Request.Context.Part || scope.Binding.CaptureContextHash != spec.Request.Context.CaptureContextHash || scope.Binding.EnvelopeID != spec.Request.Context.EnvelopeID || scope.Installation != spec.Request.Context.InstallationID {
 		return zero, ErrFile
 	}
 	_, err := observeManaged(ctx, source, custody, p, formalEnvelopeScope(scope), envelope, func() (Observation, error) {
@@ -87,7 +87,12 @@ func ObserveFormalManaged(ctx context.Context, source, custody *os.Root, p Custo
 			if err != nil || len(raw) > 32<<20 {
 				return ErrFile
 			}
-			verified, err := w.VerifyWrappedStream(ctx, spec, raw, reader, keys)
+			var verified w.StreamVerification
+			if len(inspectors) == 1 {
+				verified, err = w.InspectWrappedStream(ctx, spec, raw, reader, keys, inspectors[0])
+			} else {
+				verified, err = w.VerifyWrappedStream(ctx, spec, raw, reader, keys)
+			}
 			if err != nil {
 				return err
 			}

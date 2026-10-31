@@ -149,6 +149,11 @@ func (h ControlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func validControl(r ControlRequest) bool {
 	q := r.Invocation.Request
+	if s := q.SkillWorkspace; s != nil {
+		if q.Operation != "capture-workspace" || r.Invocation.FormalCapture == nil || r.Invocation.ProviderKey == nil || q.RuntimePolicy == nil || s.Runtime != q.RuntimePolicy.Runtime || s.WorkspaceLayout != q.RuntimePolicy.WorkspaceLayout || s.Validate() != nil || s.MaxFiles > q.MaxFiles || s.MaxBytes > q.MaxFileBytes {
+			return false
+		}
+	}
 	if q.SkillObjects != nil && !skillObjectOperation(q.Operation) {
 		return false
 	}

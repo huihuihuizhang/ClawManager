@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -20,12 +21,14 @@ type SkillObjectsModuleConfig struct {
 	Revision string
 	Source   SourceInventory
 	Objects  CapturePartRequest
+	// Original B primary workspace parts selected to discharge unpackaged
+	// blob requirements. Actual invocation scopes are checked at assembly.
+	Workspaces map[int]string
 }
 
 // Required Skill package domain, using one shared B SQL dependency. This pure
-// registration grants no source permission. Unpackaged blobs remain closed
-// until the original workspace-proof module is wired; they cannot be marked
-// complete by an empty object archive or a fabricated TeamID.
+// registration grants no source permission. Unpackaged blobs require actual
+// B workspace dependencies with independently inspected archive bytes.
 func NewSkillObjectsModule(cfg SkillObjectsModuleConfig) (CaptureModuleRegistration, error) {
 	var zero CaptureModuleRegistration
 	raw, err := json.Marshal(cfg)
@@ -58,7 +61,7 @@ func NewSkillObjectsModule(cfg SkillObjectsModuleConfig) (CaptureModuleRegistrat
 	}
 	r := cfg.Objects
 	s := r.Invocation.Request.SkillObjects
-	if r.Part != SkillObjectsPart || r.Category != "skill_hub" || r.Invocation.Request.Operation != "capture-skill-objects" || s == nil || s.InventorySHA256 != cfg.Source.Skills.SHA256() || r.Workload.FormalMaterials == nil || r.Invocation.FormalCapture == nil || r.Invocation.ProviderKey == nil || !worker.ValidateRecordedInvocation(r.Invocation) || len(s.WorkspaceRequiredBlobIDs) != 0 || len(s.Blobs) != len(cfg.Source.Skills.Blobs) {
+	if r.Part != SkillObjectsPart || r.Category != "skill_hub" || r.Invocation.Request.Operation != "capture-skill-objects" || s == nil || s.InventorySHA256 != cfg.Source.Skills.SHA256() || r.Workload.FormalMaterials == nil || r.Invocation.FormalCapture == nil || r.Invocation.ProviderKey == nil || !worker.ValidateRecordedInvocation(r.Invocation) || len(s.Blobs) != len(cfg.Source.Skills.Blobs) {
 		return zero, d.ErrNotReady
 	}
 	blobs := map[int]worker.SkillObjectBlobRef{}
@@ -70,11 +73,45 @@ func NewSkillObjectsModule(cfg SkillObjectsModuleConfig) (CaptureModuleRegistrat
 	}
 	for _, blob := range cfg.Source.Skills.Blobs {
 		actual := blobs[blob.ID]
-		if actual.ID != blob.ID || actual.ObjectKey != blob.ObjectKey || actual.SizeBytes != blob.SizeBytes || blob.ObjectKey == "" {
+		if actual.ID != blob.ID || actual.ObjectKey != blob.ObjectKey || actual.SizeBytes != blob.SizeBytes {
 			return zero, d.ErrNotReady
 		}
 	}
 	registration := CaptureModuleRegistration{Descriptor: CaptureModuleDescriptor{ID: "skill_hub", Owner: "D", Revision: cfg.Revision, Required: true, Parts: []CaptureModulePart{{SkillObjectsPart, "skill_hub", "object_storage", "capture-skill-objects"}}, Requires: []CaptureModuleDependency{{Part: UsersInstancesDatabasePart, Owner: "B", RequestedPart: "mysql", Operation: "capture-database"}}}}
+	if len(s.WorkspaceRequiredBlobIDs) == 0 {
+		if len(cfg.Workspaces) != 0 {
+			return zero, d.ErrNotReady
+		}
+	} else {
+		requirements, err := cfg.Source.Skills.WorkspaceRequirements()
+		if err != nil || len(cfg.Workspaces) == 0 {
+			return zero, d.ErrNotReady
+		}
+		covered := map[int]bool{}
+		used := map[int]bool{}
+		for _, requirement := range requirements {
+			if cfg.Workspaces[requirement.InstanceID] != "" {
+				covered[requirement.BlobID] = true
+				used[requirement.InstanceID] = true
+			}
+		}
+		for _, id := range s.WorkspaceRequiredBlobIDs {
+			if !covered[id] {
+				return zero, d.ErrNotReady
+			}
+		}
+		instances := make([]int, 0, len(cfg.Workspaces))
+		for id, part := range cfg.Workspaces {
+			if !used[id] || owners[id] == 0 || part != instanceMountPart(id, "workspace") {
+				return zero, d.ErrNotReady
+			}
+			instances = append(instances, id)
+		}
+		sort.Ints(instances)
+		for _, id := range instances {
+			registration.Descriptor.Requires = append(registration.Descriptor.Requires, CaptureModuleDependency{Part: cfg.Workspaces[id], Owner: "B", RequestedPart: "workspace", Operation: "capture-workspace"})
+		}
+	}
 	sourceRaw, _ := json.Marshal(cfg.Source)
 	registration.Build = func(input CaptureModuleInput) ([]CapturePartRequest, error) {
 		actual, _ := json.Marshal(input.Source)
