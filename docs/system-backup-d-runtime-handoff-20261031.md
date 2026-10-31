@@ -478,3 +478,9 @@
 - 监督真实透传driver只延迟原SQL事实行交付2.5秒：旧末尾采时钟路径PASS6.507s，6ce批量查询在语句开头采UTC时间、返回时原2秒claim已过期却返回nil，candidate FAIL6.472s。因此6ce单独不安全且未被监督集成，D5.41的17种字段漂移/全包通过不能替代该时序证明。
 - 在整条当前事实Query/Scan完成后增加独立SELECT UTC_TIMESTAMP(6)，严格检查时间不早于事实sample/原snapshot时间，且严格早于原claimUntil/taskDeadline/gateUntil/holdUntil；外层仍检查原owner until与beforeOwner/floor，并保留原当前grant回调。无原expiry延长、无caller时钟或权限伪造。
 - 监督同一真实SQL probe复制为repo独立回归（原透传连接/真实SQL、仅事实行延迟），扩展claim、task deadline、gate lease、hold四种原2秒上界，每次实际更新一行、原Bind健康、delay真实触发且跨过原界限，四例全部拒绝且guard锁失败。定向PASS10.84s/package14.056s；最初同监督单claim例PASS3.31s/package6.531s。完整任务尚待，不能把修复和6ce字段测试称完整备份通过。
+
+## D5.43 只转移已解码数据所有权，当前part按需规范化
+
+- DescribePlan仍完整loadPlan（canonical/unique JSON、原任务绑定、完整Discovery/全部worker part验证）；loadPlan解码产生的Source/parts/writers已是新内存，直接转移所有权，取消随后同份数据的Marshal/decodeStrict副本。其他跨owner回调的copyDiscovery保持。新增实际plan多次Describe与Source/Writer/SpecJSON/InvocationJSON/CM name调用者变更反例，其他观察和原plan bytes不变。
+- OriginalCapturePlan仍完整解密、Unwrap/Describe、验证全部part hash并在私有map克隆原SpecJSON；只在MatchPart中为当前原part执行kube.Intent规范化，与原job namespace/name/owner精确匹配。没有跨请求缓存或接受调用者Job字节。实际SQL/mTLS反例另将返回的plan/discovery字节原地破坏，原私有part MatchPart仍保持原值，异context与伪造对象拒绝。
+- 原SQL/mTLS三场景、8中途输入/密文变化、当前claim撤回、17 held当前字段反例与私有所有权验证PASS/package11.616s。合并监督87082fae及906时钟修正后，publicadapter3.636s/controller9.310s/kekadapter5.491s/execution7.871s全包PASS。下次完整新任务必须包含906修正，默认window/行和EOF guard不变；仍未声称完整positive或A发布。

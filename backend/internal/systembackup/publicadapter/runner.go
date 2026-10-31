@@ -433,7 +433,10 @@ func DescribePlan(in d.Input, p d.Plan) (Discovery, error) {
 	if err != nil {
 		return Discovery{}, err
 	}
-	return copyDiscovery(f.Discovery)
+	// loadPlan decoded every nested value into fresh storage and completed the
+	// full canonical/discovery validation. Transfer that detached ownership;
+	// another JSON round trip would only decode the same original bytes again.
+	return f.Discovery, nil
 }
 
 func identity(in d.Input) flow.Identity {
