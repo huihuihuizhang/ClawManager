@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func TestAPublisherCaptureInventoryOriginalBytesAfterFinalWorkloadIO(t *testing.T) {
-	for _, mode := range []string{"unchanged", "plan-cipher", "plan-keyref", "profile", "grant-file"} {
+	for _, mode := range []string{"unchanged", "plan-cipher", "plan-keyref", "profile", "grant-file", "record-key-file", "original-custody-grant"} {
 		t.Run(mode, func(t *testing.T) {
 			x := newAPublisherVerifierFixture(t)
 			h := x.history
@@ -32,6 +33,11 @@ func TestAPublisherCaptureInventoryOriginalBytesAfterFinalWorkloadIO(t *testing.
 						_, err = h.admin.Exec("UPDATE system_backup_v2_execution_inputs SET profile_json=CONCAT(profile_json,' ')")
 					case "grant-file":
 						err = os.WriteFile(h.cfg.GrantMount.File, []byte(`{"revoked":true}`), 0600)
+					case "record-key-file":
+						key := h.owner.Identity.DeploymentBinding().RecordKeys[0]
+						err = os.WriteFile(filepath.Join(filepath.Dir(h.service.ConfigPath), key.Ref), make([]byte, 32), 0600)
+					case "original-custody-grant":
+						err = os.WriteFile(filepath.Join(filepath.Dir(h.service.ConfigPath), "grant.json"), []byte(`{"replacement":true}`), 0600)
 					}
 					if err != nil {
 						t.Fatal("committed original change", err)
