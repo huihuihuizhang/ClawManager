@@ -1,13 +1,17 @@
 package publicadapter
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/worker"
 	d "clawreef/internal/systembackupdispatch"
+	sh "clawreef/internal/systembackupskillhub"
 )
 
 const SkillObjectsPart = "skills_objects"
@@ -90,4 +94,24 @@ func NewSkillObjectsModule(cfg SkillObjectsModuleConfig) (CaptureModuleRegistrat
 		return []CapturePartRequest{copy}, nil
 	}
 	return registration, nil
+}
+
+// WithSkillCaptureInventory installs the concrete reader, not a supplied DTO.
+// The discovery owner authenticates the same transaction on both sides.
+func WithSkillCaptureInventory(source LinuxProfileConfig) LinuxProfileConfig {
+	source.ReadSkills = func(ctx context.Context, tx *sql.Tx, inv SourceInventory) (*sh.CaptureInventory, error) {
+		users, owners := map[int]bool{}, map[int]int{}
+		for _, id := range inv.Users {
+			users[id] = true
+		}
+		for _, instance := range inv.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		actual, err := domain.ReadSkillCaptureInventory(ctx, tx, users, owners)
+		if err != nil {
+			return nil, err
+		}
+		return &actual, nil
+	}
+	return source
 }

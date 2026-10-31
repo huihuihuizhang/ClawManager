@@ -10,6 +10,7 @@ import (
 	"clawreef/internal/systembackup/scope"
 	"clawreef/internal/systembackup/team"
 	d "clawreef/internal/systembackupdispatch"
+	sh "clawreef/internal/systembackupskillhub"
 )
 
 const UsersInstancesDatabasePart = "users_instances_database"
@@ -85,6 +86,7 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 	db := cfg.Database.Invocation.Request.Database
 	if db != nil {
 		db.TeamsInventory = team.CloneInventory(cfg.Source.Teams)
+		db.SkillsInventory = sh.CloneCaptureInventory(cfg.Source.Skills)
 	}
 	if db == nil || db.Name != cfg.Source.Database || db.ServerUUID != cfg.Source.ServerUUID || cfg.Database.Invocation.Request.Operation != "capture-database" {
 		return zero, d.ErrNotReady

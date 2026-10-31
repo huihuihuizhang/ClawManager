@@ -303,6 +303,9 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 				if source.Teams != nil && (database.TeamsInventory == nil || database.TeamsInventory.SHA256() != source.Teams.SHA256()) {
 					return nil, d.ErrNotReady
 				}
+				if source.Skills != nil && (database.SkillsInventory == nil || database.SkillsInventory.SHA256() != source.Skills.SHA256()) {
+					return nil, d.ErrNotReady
+				}
 			}
 			delete(expected, request.Part)
 			part, err := BuildCapturePart(in, hold, request)
