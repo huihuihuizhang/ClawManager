@@ -123,6 +123,7 @@ type JobRequest struct {
 	DeadlineSeconds int64
 	Restore         bool
 	WorkerControl   *WorkerControl
+	FormalMaterials *FormalJobMaterials
 }
 
 // WorkerControl contains only refs to a credential-free immutable invocation
@@ -147,6 +148,9 @@ func Job(r JobRequest) (*batchv1.Job, error) {
 }
 
 func job(r JobRequest, database bool) (*batchv1.Job, error) {
+	if r.FormalMaterials != nil && r.WorkerControl == nil {
+		return nil, ErrResource
+	}
 	if r.WorkerControl != nil {
 		c := r.WorkerControl
 		u, e := url.Parse(c.URL)
@@ -222,6 +226,11 @@ func job(r JobRequest, database bool) (*batchv1.Job, error) {
 			expires := int64(600)
 			job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, corev1.Volume{Name: "worker-pod-identity", VolumeSource: corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{DefaultMode: &mode, Sources: []corev1.VolumeProjection{{ServiceAccountToken: &corev1.ServiceAccountTokenProjection{Audience: WorkerTokenAudience, ExpirationSeconds: &expires, Path: "token"}}}}}})
 			job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "worker-pod-identity", MountPath: "/run/backup/pod", ReadOnly: true})
+		}
+	}
+	if r.FormalMaterials != nil {
+		if err := attachFormalMaterials(job, r.FormalMaterials); err != nil {
+			return nil, err
 		}
 	}
 	return job, nil

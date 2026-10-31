@@ -150,6 +150,12 @@ func validControl(r ControlRequest) bool {
 		if !validTeamWorkspace(q) || r.Invocation.WorkspacePath == "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" || r.Invocation.ProviderKey != nil {
 			return false
 		}
+	} else if resourceCaptureOperation(q.Operation) {
+		if !validResourceCapture(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
+			return false
+		}
+	} else if q.Resources != nil {
+		return false
 	} else if teamCaptureOperation(q.Operation) {
 		if !validTeamCapture(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
 			return false

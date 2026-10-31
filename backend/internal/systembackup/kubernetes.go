@@ -63,12 +63,20 @@ func (s KubernetesSelection) valid(part string) bool {
 	return ok && s.Name != "" && s.UID != "" && ((part == "secret_bundle" && s.Resource == "secrets") || (part == "deployment_resources" && s.Resource != "secrets"))
 }
 
+func ValidKubernetesSelection(s KubernetesSelection, part string) bool { return s.valid(part) }
+
 // CaptureKubernetesResources is GET-only and reads a server-frozen inventory.
 // Separate clients/service accounts must supply deployment and Secret parts.
 // Resource UID drift is fatal; this never applies manifests or copies access
 // credentials into a live restored installation.
 func CaptureKubernetesResources(ctx context.Context, c dynamic.Interface, w io.Writer, namespace, namespaceUID, part string, selection []KubernetesSelection, b ObjectBudget) error {
-	if c == nil || namespace == "" || namespaceUID == "" || b.MaxBytes <= 0 || b.MaxItems <= 0 || len(selection) > b.MaxItems || (part != "deployment_resources" && part != "secret_bundle") {
+	return CaptureKubernetesResourcesGuarded(ctx, c, w, namespace, namespaceUID, part, selection, b, func(ctx context.Context) error { return ctx.Err() })
+}
+
+// CaptureKubernetesResourcesGuarded rechecks original source/Job authority
+// before and after each exact GET and each emitted record, including EOF.
+func CaptureKubernetesResourcesGuarded(ctx context.Context, c dynamic.Interface, w io.Writer, namespace, namespaceUID, part string, selection []KubernetesSelection, b ObjectBudget, check func(context.Context) error) error {
+	if ctx == nil || check == nil || c == nil || namespace == "" || namespaceUID == "" || b.MaxBytes <= 0 || b.MaxItems <= 0 || len(selection) > b.MaxItems || (part != "deployment_resources" && part != "secret_bundle") {
 		return errors.New("invalid Kubernetes capture configuration")
 	}
 	// Namespace identity is verified by the controller's independent inventory.
@@ -78,6 +86,9 @@ func CaptureKubernetesResources(ctx context.Context, c dynamic.Interface, w io.W
 	whole := sha256.New()
 	var total int64
 	emit := func(v KubernetesRecord, seal bool) error {
+		if err := check(ctx); err != nil {
+			return err
+		}
 		raw, e := json.Marshal(v)
 		if e != nil {
 			return e
@@ -90,7 +101,10 @@ func CaptureKubernetesResources(ctx context.Context, c dynamic.Interface, w io.W
 		if !seal {
 			whole.Write(raw)
 		}
-		return writeFull(w, raw)
+		if err := writeFull(w, raw); err != nil {
+			return err
+		}
+		return check(ctx)
 	}
 	if e := emit(KubernetesRecord{Kind: "kubernetes_history_v1", Namespace: namespace, NamespaceUID: namespaceUID, Part: part}, false); e != nil {
 		return e
@@ -99,7 +113,13 @@ func CaptureKubernetesResources(ctx context.Context, c dynamic.Interface, w io.W
 		if !item.valid(part) || (i > 0 && item.identity() == selection[i-1].identity()) {
 			return errors.New("invalid Kubernetes inventory")
 		}
+		if err := check(ctx); err != nil {
+			return err
+		}
 		object, e := c.Resource(item.gvr()).Namespace(namespace).Get(ctx, item.Name, metav1.GetOptions{})
+		if err := check(ctx); err != nil {
+			return err
+		}
 		if e != nil {
 			return errors.New("Kubernetes source unavailable")
 		}

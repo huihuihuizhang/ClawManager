@@ -106,6 +106,14 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 				return nil, d.ErrNotReady
 			}
 			switch part.Operation {
+			case "capture-deployment-resources":
+				if descriptor.Owner != "D" || part.RequestedPart != "deployment_resources" {
+					return nil, d.ErrNotReady
+				}
+			case "capture-secret-bundle":
+				if descriptor.Owner != "D" || part.RequestedPart != "secret_bundle" {
+					return nil, d.ErrNotReady
+				}
 			case "capture-workspace":
 				if part.RequestedPart != "workspace" {
 					return nil, d.ErrNotReady

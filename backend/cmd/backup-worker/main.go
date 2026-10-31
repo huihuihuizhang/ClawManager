@@ -87,17 +87,27 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 		if i.Request.Teams != nil || i.Request.Database != nil {
 			return worker.ErrNotReady
 		}
-		workspace, err := os.OpenRoot(i.WorkspacePath)
-		if err != nil {
-			return worker.ErrRequest
+		env := worker.FormalCaptureEnvironment{Staging: store}
+		if i.Request.Resources != nil {
+			env.Resources, err = worker.OpenResourceCaptureSources(ctx, i, materials.Resources)
+			if err != nil {
+				return err
+			}
+			defer env.Resources.Close()
+		} else {
+			workspace, err := os.OpenRoot(i.WorkspacePath)
+			if err != nil {
+				return worker.ErrRequest
+			}
+			defer workspace.Close()
+			env.Workspace = workspace
 		}
-		defer workspace.Close()
 		job, err := worker.NewCaptureKeyJob(ctx, control, i, materials.KMS, materials.Permit)
 		if err != nil {
 			return err
 		}
 		defer job.Close()
-		result, err := worker.RunFormalCapture(ctx, i, job, worker.FormalCaptureEnvironment{Workspace: workspace, Staging: store})
+		result, err := worker.RunFormalCapture(ctx, i, job, env)
 		if err != nil {
 			return err
 		}

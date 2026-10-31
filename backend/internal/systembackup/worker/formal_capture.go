@@ -37,6 +37,7 @@ type FormalCaptureEnvironment struct {
 	Teams              *TeamCaptureSources
 	Workspace, Staging *os.Root
 	Database           *sql.DB // already SELECT-only admitted source; never opened from artifact
+	Resources          *ResourceCaptureSources
 }
 type FormalCaptureResult struct {
 	Version          string          `json:"schema_version"`
@@ -62,7 +63,7 @@ func ValidateFormalCaptureResult(i Invocation, r *FormalCaptureResult) bool {
 	if i.Request.Database != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows <= i.Request.Database.MaxRows && r.Tables > 0 && r.Tables <= 1000
 	}
-	if i.Request.Teams != nil {
+	if i.Request.Teams != nil || i.Request.Resources != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows == 0 && r.Tables == 0
 	}
 	return r.Files <= int64(i.Request.MaxFiles) && r.Bytes <= i.Request.MaxFileBytes && r.Rows == 0 && r.Tables == 0
@@ -134,7 +135,7 @@ func validFormalInvocation(i Invocation) bool {
 	if f == nil || i.ProviderKey == nil || f.Version != FormalCaptureVersion || !keyUseHash.MatchString(f.ConfigSHA256) || !formalFileName.MatchString(f.EnvelopeName) || f.EnvelopeName == i.Request.ArtifactName || !formalFileName.MatchString(i.Request.ArtifactName) || f.MaxFrames < 2 || f.MaxFrames > w.MaxStreamFrames || i.Request.MaxCompressedBytes <= 0 || i.Request.MaxCompressedBytes > int64(f.MaxFrames-1)*w.ChunkSize {
 		return false
 	}
-	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request))
+	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request))
 }
 
 type formalKeyUse interface {
@@ -181,7 +182,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		return zero, ErrRequest
 	}
 	r := i.Request
-	if (r.Teams == nil && r.Database == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) {
+	if (r.Teams == nil && r.Resources == nil && r.Database == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) || (r.Resources != nil && (env.Resources == nil || env.Resources.Client == nil || env.Resources.Authorize == nil)) {
 		return zero, ErrNotReady
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
@@ -194,6 +195,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			return ErrNotReady
 		}
 		if r.Teams != nil && authorizeTeamSources(ctx, env.Teams, i) != nil {
+			return ErrNotReady
+		}
+		if r.Resources != nil && authorizeResourceSource(ctx, env.Resources, i) != nil {
 			return ErrNotReady
 		}
 		return nil
@@ -232,6 +236,11 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
 			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{useCtx, job, dst}, func(stream io.Writer) error {
+				if r.Resources != nil {
+					return staging.Compress(stream, func(compressed io.Writer) error {
+						return captureResourceSource(useCtx, env.Resources, i, &budgetWriter{w: compressed, left: r.MaxArchiveBytes}, inUseCheck)
+					})
+				}
 				if r.Teams != nil {
 					return staging.Compress(stream, func(compressed io.Writer) error {
 						return captureTeamSource(useCtx, i, env.Teams, &budgetWriter{w: compressed, left: r.MaxArchiveBytes}, inUseCheck)

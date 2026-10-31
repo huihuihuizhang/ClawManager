@@ -500,6 +500,23 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if !bytes.Equal(original, part.InvocationJSON) {
 		return lease, worker.ErrExecution
 	}
+	if resources := req.Invocation.Request.Resources; resources != nil {
+		if resources.Namespace != o.Namespace || resources.NamespaceUID != o.NamespaceUID || o.namespace(ctx) != nil {
+			return lease, worker.ErrExecution
+		}
+		for _, saved := range resources.OriginalWriters {
+			matched := false
+			for _, writer := range desc.Writers {
+				if writer.ID == saved.ID && writer.Original == saved.State {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				return lease, worker.ErrExecution
+			}
+		}
+	}
 	if req.Invocation.ProviderKey != nil {
 		keyContext := req.Invocation.ProviderKey.Request.Context
 		if keyContext.InstallationID != a.InstallationID || keyContext.Part != part.Part {
