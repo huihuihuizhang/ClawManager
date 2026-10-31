@@ -86,7 +86,11 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 	if json.Unmarshal(findHistoryInvocation(t, owner, a, job), &invocation) != nil {
 		t.Fatal("original invocation")
 	}
-	use := worker.KeyUseLease{Identity: k.JobIdentity{Namespace: job.Namespace, PodUID: record.Pod.UID, ServiceAccountUID: record.Pod.ServiceAccountUID, JobUID: job.UID, InvocationSHA256: candidate.InvocationSHA256, ExecutionGrantSHA256: owner.Identity.GrantSHA256()}, Access: *invocation.ProviderKey, AuthoritySHA256: hash(originalAuthority), Nonce: nonce, Until: a.DeadlineAt, State: "finished"}
+	useUntil := a.DeadlineAt
+	if invocation.Request.Deadline.Before(useUntil) {
+		useUntil = invocation.Request.Deadline
+	}
+	use := worker.KeyUseLease{Identity: k.JobIdentity{Namespace: job.Namespace, PodUID: record.Pod.UID, ServiceAccountUID: record.Pod.ServiceAccountUID, JobUID: job.UID, InvocationSHA256: candidate.InvocationSHA256, ExecutionGrantSHA256: owner.Identity.GrantSHA256()}, Access: *invocation.ProviderKey, AuthoritySHA256: hash(originalAuthority), Nonce: nonce, Until: useUntil, State: "finished"}
 	keyUseRaw, _ := json.Marshal(use)
 	for _, q := range []string{
 		"ALTER TABLE system_backup_v2_backups MODIFY controller_owner VARCHAR(128) NULL,MODIFY controller_lease_expires_at DATETIME(6) NULL,ADD COLUMN heartbeat_at DATETIME(6) NULL,ADD COLUMN next_reconcile_at DATETIME(6) NULL",
@@ -178,7 +182,11 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 	}
 	fixture.cfg.GrantMount = s.PublisherCaptureGrantMount{File: file, SHA256: hash(signed), Issuer: pub}
 	fixture.cfg.Workload.GrantSHA256 = hash(signed)
-	fixture.scope = s.PublisherCaptureScope{BackupPublicID: a.TaskPublicID, Claim: s.SQLSigningClaim{ControllerOwner: token.Owner, RowVersion: token.RowVersion}, CaptureAttemptNo: a.AttemptNo, Part: "workspace"}
+	partName := "workspace"
+	if options.PartName != "" {
+		partName = options.PartName
+	}
+	fixture.scope = s.PublisherCaptureScope{BackupPublicID: a.TaskPublicID, Claim: s.SQLSigningClaim{ControllerOwner: token.Owner, RowVersion: token.RowVersion}, CaptureAttemptNo: a.AttemptNo, Part: partName}
 	// Kube calls must happen with NO original SQL read transaction held.
 	owner.Client.(*kubefake.Clientset).PrependReactor("*", "*", func(ktesting.Action) (bool, kruntime.Object, error) {
 		if db.Stats().InUse != 0 {

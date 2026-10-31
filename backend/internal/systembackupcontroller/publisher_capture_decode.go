@@ -240,7 +240,7 @@ func publisherValidateHistory(c publisherCaptureCoordinates, wanted string, plan
 		return zero, ErrExecutionRecord
 	}
 	var keyUse worker.KeyUseLease
-	if len(keyUseRaw) > 16384 || publisherDecodeClosed(keyUseRaw, &keyUse) != nil || keyUse.State != "finished" || invocation.ProviderKey == nil || keyUse.Access != *invocation.ProviderKey || keyUse.Nonce != candidate.KeyUseNonce || keyUse.Until.IsZero() || keyUse.Until.After(a.DeadlineAt) {
+	if len(keyUseRaw) > 16384 || publisherDecodeClosed(keyUseRaw, &keyUse) != nil || keyUse.State != "finished" || invocation.ProviderKey == nil || keyUse.Access != *invocation.ProviderKey || keyUse.Nonce != candidate.KeyUseNonce || keyUse.Until.IsZero() || keyUse.Until.After(a.DeadlineAt) || keyUse.Until.After(invocation.Request.Deadline) {
 		return zero, ErrExecutionRecord
 	}
 	authorityRaw, err := json.Marshal(a)

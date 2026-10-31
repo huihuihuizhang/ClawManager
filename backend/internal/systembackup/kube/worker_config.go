@@ -19,6 +19,10 @@ func WorkerConfigMap(i Identity, invocation worker.Invocation) (*corev1.ConfigMa
 		return nil, ErrResource
 	}
 	switch r.Operation {
+	case "capture-source-redis":
+		if invocation.WorkspacePath != "" || invocation.EvidencePath != "" || r.SourceRedis == nil || invocation.ProviderKey == nil || invocation.FormalCapture == nil || !worker.ValidateRecordedInvocation(invocation) {
+			return nil, ErrResource
+		}
 	case "capture-skill-objects":
 		if invocation.WorkspacePath != "" || invocation.EvidencePath != "" || r.SkillObjects == nil || invocation.ProviderKey == nil || invocation.FormalCapture == nil || !worker.ValidateRecordedInvocation(invocation) {
 			return nil, ErrResource
