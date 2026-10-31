@@ -363,3 +363,17 @@
 - 实际原SQL preparing AcquireWithReceipt/签名deployment和本机TLS组件测试：签名grant配置/范围/撤销/过期/未来/workload替换及原claim丢失均拒绝；原AUTH/SELECT/INFO客户端使用明确TLS RESP协议fixture（非真实Redis Lua/DUMP），原S3版本列表及Kubernetes SSR/SSRR/PartialObjectMetadata客户端使用明确TLS protocol fixtures。未引用对象保留，版本/新key/UID漂移反映在原frozen selection；null版本、foreign prefix/namespace、duplicate latest/delete marker、deleting对象、写权限、错SA和最终响应期间token替换均关闭。
 - 原172迁移完整非空SQL+原捕获/独立observer+census新返回值及失败零partial输出组合47.399s/publicadapter3.869s PASS。最终source authority/client/compose/metadata/image/各part pins/factory/WorkBuddy/原frozen重检组合execution22.774s、publicadapter3.229s PASS。另实际文件归属/回环可用下非SQL全三包execution7.295s/publicadapter3.990s/domain3.288s PASS；sandbox内首次全包失败为回环/文件identity权限，未修改安全检查。Windows未装WSL，Linux启动守卫未删。
 - 本提交不包括restore adapters WIP。readiness仍原supported_parts=workspace/acceptance_ready=false；尚未证明一个原API/queue任务完成全六项、真实quiesce/Resume、CE晚报告时序及A最终发布。CE当前仍复用A现有locator，A v2part-basis/CE-last施工后需一起接入。独立可信容量collector原CLI已每秒采样，controller消费只读报告；本机夹具的刷新不代表已部署该collector。继续同一实际任务验收，不据组件通过标D owner complete。
+
+### D整链专用TLS MySQL（2026-10-31）
+
+- 仅D整链fixture使用：127.0.0.1:63507，MySQL8.4.13，serverUUID=f3756194-d52b-11f1-b8cc-745d22085e06；VERIFY_IDENTITY实际连接成功，session cipher TLS_AES_128_GCM_SHA256。使用已有发行版，独立SAN含localhost/127.0.0.1，未改共享59355实例/UUID/credentials或其他现有172迁移schema。
+- 凭据文件（只引用，禁止打印内容）：C:/Users/13542/Desktop/新建文件夹/.tools/mysql-d-sixpart-tls/credentials.json；公有CA：同目录ca.pem；专用datadir：同目录data；my.ini/client.ini/process.json与服务器stdout/stderr日志均在同目录。测试env仅TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS指向该credentials.json，不替换现A/共享fixture env。
+- Windows原生MySQL绝对Unicode配置路径有兼容问题；当前通过临时ASCII junction入口启动，process.json记录进程PID和ascii_access_root（C:/Users/13542/AppData/Local/Temp/codex-d-sixpart-mysql-0aeba8b33d5f45b883dcf0f512b380e7），两个入口fixture/distribution分别指向专用根和现有只读发行版。启动隐藏窗口；清理前必须核对process.json/PID/原commandline/datadir，仅停此新实例，junction删除不能递归遍历目标。保留当前实例供独立SQLworker/restore验收复用。
+- 新production_same_task_mysql_test.go正施工：实际原172迁移、原签名session/RBAC/HTTP acceptance六项、有限controller role和原queue准备同一task；readiness/capacity暂为明确local输入夹具，不代表主服务PublishReadiness。初次运行发现fixture refresh token expiry必须晚于access、instances原必填CPU/memory/disk/os_version，正补原字段而不改SQL约束或源guard；尚未声明整链通过。
+
+## D5.27 原runner先业务Evidence后CE调度（2026-10-31）
+
+- 原publicadapter runner Capture保持sealed Discovery、全局indices/AAD、原Job specs和结果顺序不变，只给flow.Collectors传入业务优先、两个CE最后的稳定依赖顺序。CE依赖所有业务Job原独立Evidence读取，不能在它们尚未派发时等待而死锁或耗尽Generate期限；collector停止与原writer恢复仍由同一flow执行。
+- 新真实runner/flow单元夹具（明确port/evidence模型，非SQL或物理证明）故意令canonical计划CE排在第一；CE Ensure若业务Evidence未全部Read即返回错误。旧顺序正例会失败；现四个原Job依次业务→CE、结果仍canonical、计划bytes不变且全collector Stop后原writer Resume。业务Ensure失败反例不派发CE、不返回完成parts。定向3.267s、完整publicadapter3.591s PASS。
+- 专用63507 SAN/TLS库上的production_same_task_mysql_test.go施工检查点：完整原迁移/非空Teams和Skills八表/运行与停机实例/原签名session+RBAC+HTTP acceptance六项/有限controller direct grants+原queue拿同一task与capture+secret_capture两attempt单元已PASS18.259s。这不是完整捕获：source hooks、SavePlan/reTake/held gate、实际worker/Evidence/Stop/Resume仍须在同一个fixture继续。该整链WIP未含本调度小片，readiness仍关闭。
+- 与A采用无环方案：完整Source只保留完整V1 base locator，原context仍哈希完整Source；最终TaskPlan冻结前仅CE两个Invocation绑定V2 policy。factory须先用原构造器得到准确business Invocation（注意SQL构造器会附加Teams/Skills inventory，不能提前哈希draft），再绑定CE seed并重建；productionInventory精确验证V2.BaseSnapshot==冻结base、policy context与全体准确business inv集合。没有排除Source字段的哈希投影。
