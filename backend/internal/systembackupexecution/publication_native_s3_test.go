@@ -30,6 +30,7 @@ type aNativePublicationServer struct {
 	deadline              time.Time
 	read, write           nativePublicationCredential
 	onGet                 func()
+	onRead                func(http.ResponseWriter, *http.Request) bool
 }
 
 func aHMAC(key []byte, message string) []byte {
@@ -106,6 +107,9 @@ func (s *aNativePublicationServer) serve(w http.ResponseWriter, r *http.Request)
 	}
 	if !strings.Contains(r.Header.Get("Authorization"), "Credential="+s.read.AccessKey+"/") || r.URL.Query().Get("X-Amz-Credential") != "" {
 		http.Error(w, "read denied", 403)
+		return
+	}
+	if s.onRead != nil && s.onRead(w, r) {
 		return
 	}
 	raw, ok := s.objects[r.URL.Path]
