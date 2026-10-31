@@ -2,6 +2,7 @@ package systembackupexecution
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -29,7 +30,8 @@ type PublicCaptureConfig struct {
 	PlatformWriters *b.PlatformWriterGroup
 	// Optional B module intake. Nil preserves the current workspace-only factory;
 	// this does not widen supportedPublicCapture, admission, or readiness.
-	Modules *b.CaptureModules
+	Modules    *b.CaptureModules
+	FormalKeys FormalCandidateKeyFactory
 }
 type PublicCapture struct {
 	Loop      c.TaskExecutionLoop
@@ -72,6 +74,9 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 	o := cfg.Owner
 	if !o.ready() || cfg.Guard == nil || cfg.Admission == nil || cfg.Inventory == nil || cfg.Profile.ID == "" || cfg.Profile.Revision == "" || cfg.Queue.DB != o.Gate.Authority.DB || cfg.Queue.ApplicationScope != o.Gate.Authority.ApplicationScope || cfg.Queue.Recovery == nil || cfg.Queue.Recovery.Identity != o.Gate.Recovery.Identity {
 		return nil, d.ErrNotReady
+	}
+	if cfg.FormalKeys != nil {
+		o.FormalKeys = cfg.FormalKeys
 	}
 	ports, e := c.NewExecutionJobPorts(o.Gate, o)
 	if e != nil {
@@ -142,6 +147,29 @@ func configuredPublicSource(cfg PublicCaptureConfig) (b.LinuxProfileConfig, erro
 		cfg.Source, e = b.WithCaptureModules(cfg.Source, cfg.Modules)
 		if e != nil {
 			return b.LinuxProfileConfig{}, e
+		}
+	}
+	if build := cfg.Source.BuildParts; build != nil {
+		cfg.Source.BuildParts = func(in d.Input, inv b.SourceInventory, hold time.Time) ([]b.JobPart, error) {
+			parts, err := build(in, inv, hold)
+			if err != nil {
+				return nil, err
+			}
+			if in.Authority.TaskType == "preflight" {
+				return parts, nil
+			}
+			for _, part := range parts {
+				var invocation worker.Invocation
+				if json.Unmarshal(part.InvocationJSON, &invocation) != nil {
+					return nil, d.ErrNotReady
+				}
+				if invocation.FormalCapture != nil || invocation.ProviderKey != nil {
+					if !worker.ValidateRecordedInvocation(invocation) || (cfg.FormalKeys == nil && (cfg.Owner == nil || cfg.Owner.FormalKeys == nil)) {
+						return nil, d.ErrNotReady
+					}
+				}
+			}
+			return parts, nil
 		}
 	}
 	return cfg.Source, nil

@@ -110,8 +110,17 @@ func OpenObserved(ctx context.Context, custody *os.Root, scope SealScope, origin
 // The caller persists the returned reference in its original Job transaction.
 // Production callers must use ObserveManaged for the shared lock and budget.
 func ObserveFile(ctx context.Context, source, custody *os.Root, scope SealScope, original Receipt, key []byte, max int64) (Observation, error) {
+	if max <= 0 || max > 1<<50 {
+		return Observation{}, ErrFile
+	}
+	return observeAuthenticatedFile(ctx, source, custody, scope, original, max+(max/chunkSize+2)*64+8192, func(reader io.Reader) error { return Open(ctx, reader, io.Discard, key, scope.Binding, max) })
+}
+
+// Shared create-only copy mechanics. Only the typed CMSTG01/formal wrappers
+// choose authentication; an arbitrary callback is not an exported capability.
+func observeAuthenticatedFile(ctx context.Context, source, custody *os.Root, scope SealScope, original Receipt, max int64, authenticate func(io.Reader) error) (Observation, error) {
 	receipt, err := observedReceipt(scope, original)
-	if err != nil || ctx == nil || ctx.Err() != nil || source == nil || custody == nil || max <= 0 || max > 1<<50 || original.Size > max+(max/chunkSize+2)*64+8192 {
+	if err != nil || ctx == nil || ctx.Err() != nil || source == nil || custody == nil || max <= 0 || max > 1<<51 || original.Size > max || authenticate == nil {
 		return Observation{}, ErrFile
 	}
 	verify := func() (Observation, error) {
@@ -120,7 +129,7 @@ func ObserveFile(ctx context.Context, source, custody *os.Root, scope SealScope,
 			return Observation{}, e
 		}
 		defer f.Close()
-		if e = Open(ctx, f, io.Discard, key, scope.Binding, max); e != nil {
+		if e = authenticate(f); e != nil {
 			return Observation{}, e
 		}
 		if e = syncDirectory(custody); e != nil {
@@ -178,7 +187,7 @@ func ObserveFile(ctx context.Context, source, custody *os.Root, scope SealScope,
 	if _, err = dst.Seek(0, io.SeekStart); err != nil {
 		return Observation{}, err
 	}
-	if err = Open(ctx, dst, io.Discard, key, scope.Binding, max); err != nil {
+	if err = authenticate(dst); err != nil {
 		return Observation{}, err
 	}
 	if err = dst.Sync(); err != nil {
@@ -199,6 +208,16 @@ func ObserveFile(ctx context.Context, source, custody *os.Root, scope SealScope,
 	if err = custody.Chmod(receipt.Name, 0400); err != nil {
 		return Observation{}, err
 	}
-	// This also authenticates a concurrent winner; never replace it.
-	return verify()
+	// The temporary bytes were authenticated above. A concurrent winner must
+	// have the exact same pinned ciphertext digest/size; do not repeat a
+	// single-use external unwrap just to hash identical published bytes again.
+	f, observation, err := OpenObserved(ctx, custody, scope, original)
+	if err != nil {
+		return Observation{}, err
+	}
+	f.Close()
+	if err = syncDirectory(custody); err != nil {
+		return Observation{}, err
+	}
+	return observation, nil
 }

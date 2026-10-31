@@ -183,6 +183,10 @@ func validateCustodyPolicy(root *os.Root, p CustodyPolicy) error {
 // installation, so overlapping controller versions cannot use different caps.
 // All files, including interrupted copies and unknown legacy files, count.
 func ObserveManaged(ctx context.Context, source, custody *os.Root, p CustodyPolicy, scope SealScope, original Receipt, key []byte, max int64) (out Observation, err error) {
+	return observeManaged(ctx, source, custody, p, scope, original, func() (Observation, error) { return ObserveFile(ctx, source, custody, scope, original, key, max) })
+}
+
+func observeManaged(ctx context.Context, source, custody *os.Root, p CustodyPolicy, scope SealScope, original Receipt, observe func() (Observation, error)) (out Observation, err error) {
 	err = WithCustodyLock(ctx, custody, func() error {
 		if scope.Installation != p.Installation {
 			return ErrFile
@@ -228,7 +232,7 @@ func ObserveManaged(ctx context.Context, source, custody *os.Root, p CustodyPoli
 		if e = exactCustodyJSON(custody, receipt.Name+".intent.json", raw); e != nil {
 			return e
 		}
-		out, e = ObserveFile(ctx, source, custody, scope, original, key, max)
+		out, e = observe()
 		return e
 	})
 	return

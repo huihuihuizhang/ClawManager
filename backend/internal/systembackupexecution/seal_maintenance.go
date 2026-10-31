@@ -31,7 +31,7 @@ func (m SealMaintenance) Preflight(ctx context.Context) error {
 	}
 	for _, query := range []string{
 		"SELECT origin_installation_id,public_id,status,config_version,config_snapshot_sha256,finished_at FROM system_backup_v2_backups LIMIT 0",
-		"SELECT task_public_id,resource_kind,namespace_name,resource_name,observed_uid,revoked,result_sha256,binding_json,attempt_no FROM system_backup_v2_runtime_resources LIMIT 0",
+		"SELECT task_public_id,resource_kind,namespace_name,resource_name,observed_uid,revoked,result_sha256,candidate_sha256,binding_json,attempt_no FROM system_backup_v2_runtime_resources LIMIT 0",
 		"SELECT public_id,owner_target_type,owner_target_public_id FROM system_backup_v2_evidence LIMIT 0",
 	} {
 		rows, err := m.DB.QueryContext(ctx, query)
@@ -79,10 +79,10 @@ func (m SealMaintenance) WithUnreferencedSeal(ctx context.Context, intent stagin
 		return false, nil
 	}
 	var revoked bool
-	var result sql.NullString
+	var result, candidate sql.NullString
 	var bindingRaw []byte
 	var attempt uint64
-	err = tx.QueryRowContext(ctx, `SELECT revoked,result_sha256,binding_json,attempt_no FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? FOR SHARE`, s.Task, s.Namespace, s.JobName, s.JobUID).Scan(&revoked, &result, &bindingRaw, &attempt)
+	err = tx.QueryRowContext(ctx, `SELECT revoked,result_sha256,candidate_sha256,binding_json,attempt_no FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? FOR SHARE`, s.Task, s.Namespace, s.JobName, s.JobUID).Scan(&revoked, &result, &candidate, &bindingRaw, &attempt)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -90,7 +90,7 @@ func (m SealMaintenance) WithUnreferencedSeal(ctx context.Context, intent stagin
 		return false, err
 	}
 	var job d.JobBinding
-	if !revoked || result.Valid || attempt != s.Attempt || json.Unmarshal(bindingRaw, &job) != nil || job.UID != s.JobUID || job.Namespace != s.Namespace || job.Name != s.JobName || job.JobUnitKey != s.Unit || job.Generation != s.Generation {
+	if !revoked || result.Valid || candidate.Valid || attempt != s.Attempt || json.Unmarshal(bindingRaw, &job) != nil || job.UID != s.JobUID || job.Namespace != s.Namespace || job.Name != s.JobName || job.JobUnitKey != s.Unit || job.Generation != s.Generation {
 		return false, nil
 	}
 	// Deliberately retain any evidence for this task, even expired/error records.

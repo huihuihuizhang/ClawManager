@@ -96,7 +96,11 @@ func (c *sealMaintenanceConn) QueryContext(_ context.Context, q string, args []d
 		if m.fault == "result" {
 			result = strings.Repeat("f", 64)
 		}
-		return row(m.fault != "not_revoked", result, raw, int64(s.Attempt))
+		var candidate driver.Value
+		if m.fault == "candidate" {
+			candidate = strings.Repeat("e", 64)
+		}
+		return row(m.fault != "not_revoked", result, candidate, raw, int64(s.Attempt))
 	case strings.Contains(q, "FROM system_backup_v2_evidence"):
 		if len(args) != 1 || args[0].Value != s.Task || !strings.HasSuffix(q, "FOR SHARE") {
 			return nil, errors.New("evidence scope escaped")
@@ -115,7 +119,7 @@ func (c *sealMaintenanceConn) QueryContext(_ context.Context, q string, args []d
 }
 
 func TestSealMaintenanceRequiresTerminalRevokedUnreferencedJob(t *testing.T) {
-	for _, mode := range []string{"ok", "server", "missing_task", "active", "config", "recent", "missing_job", "binding", "result", "not_revoked", "evidence", "sql"} {
+	for _, mode := range []string{"ok", "server", "missing_task", "active", "config", "recent", "missing_job", "binding", "result", "candidate", "not_revoked", "evidence", "sql"} {
 		t.Run(mode, func(t *testing.T) {
 			scope := staging.SealScope{Installation: "installation_test", Task: "sbk_original", Phase: "capture", Unit: "workspace", Namespace: "ns", JobName: "job", JobUID: "uid", Attempt: 2, Generation: 3, ConfigVersion: 4, ConfigSHA256: strings.Repeat("a", 64), InvocationSHA256: strings.Repeat("b", 64), Binding: staging.Binding{BackupID: "sbk_original"}}
 			intent := staging.SealIntent{Schema: "controller-staging-seal-intent.v1", Scope: scope, Original: staging.Receipt{Name: "source.enc", Size: 64, SHA256: strings.Repeat("c", 64)}}

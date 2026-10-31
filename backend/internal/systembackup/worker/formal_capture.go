@@ -52,7 +52,7 @@ type FormalCaptureResult struct {
 // This validates only the original unpublished report's shape and binding.
 // It proves neither stream authenticity nor immutable artifact publication.
 func ValidateFormalCaptureResult(i Invocation, r *FormalCaptureResult) bool {
-	if r == nil || !validFormalInvocation(i) || !ValidateRecordedInvocation(i) || r.Version != "public-c-stream-candidate.v1alpha1" || !validReceipt(r.Ciphertext) || !validReceipt(r.Envelope) || r.Ciphertext.Name != i.Request.ArtifactName || r.Envelope.Name != i.FormalCapture.EnvelopeName || r.Envelope.Size > 16<<20 || !keyUseHash.MatchString(r.Ciphertext.SHA256) || !keyUseHash.MatchString(r.Envelope.SHA256) || r.Files < 0 || r.Bytes < 0 || r.Rows < 0 || r.Tables < 0 {
+	if r == nil || !validFormalInvocation(i) || !ValidateRecordedInvocation(i) || r.Version != "public-c-stream-candidate.v1alpha1" || !validReceipt(r.Ciphertext) || !validReceipt(r.Envelope) || r.Ciphertext.Name != i.Request.ArtifactName || r.Envelope.Name != i.FormalCapture.EnvelopeName || r.Envelope.Size > 32<<20 || !keyUseHash.MatchString(r.Ciphertext.SHA256) || !keyUseHash.MatchString(r.Envelope.SHA256) || r.Files < 0 || r.Bytes < 0 || r.Rows < 0 || r.Tables < 0 {
 		return false
 	}
 	hash, err := i.Hash()
