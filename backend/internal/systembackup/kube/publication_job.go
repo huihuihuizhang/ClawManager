@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"path"
 	"regexp"
-	"sort"
 	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -74,10 +73,11 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 			seen["source:"+file.SubPath] = true
 			paths = append(paths, file.Path)
 		}
-		sort.Strings(paths)
-		for i := 1; i < len(paths); i++ {
-			if strings.HasPrefix(paths[i], paths[i-1]+"/") {
-				return nil, ErrResource
+		for _, file := range paths {
+			for parent := path.Dir(file); parent != "."; parent = path.Dir(parent) {
+				if seen["path:"+parent] {
+					return nil, ErrResource
+				}
 			}
 		}
 	}

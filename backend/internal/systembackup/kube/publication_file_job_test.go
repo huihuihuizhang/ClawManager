@@ -52,4 +52,12 @@ func TestPublishJobMountsOnlyIndividualObservedCipherFiles(t *testing.T) {
 	if _, err = PublishJob(other); err == nil {
 		t.Fatal("same private input aliased into another part")
 	}
+	interleaved := []PublishInputFile{{Path: "parts/a.enc", SubPath: ".controller-seals/seal-" + strings.Repeat("1", 64) + ".enc"}, {Path: "parts/a.enc-x.enc", SubPath: ".controller-seals/seal-" + strings.Repeat("2", 64) + ".enc"}, {Path: "parts/a.enc/child.enc", SubPath: ".controller-seals/seal-" + strings.Repeat("3", 64) + ".enc"}}
+	for _, order := range [][]int{{0, 1, 2}, {0, 2, 1}, {1, 0, 2}, {1, 2, 0}, {2, 0, 1}, {2, 1, 0}} {
+		other := r
+		other.InputFiles = []PublishInputFile{interleaved[order[0]], interleaved[order[1]], interleaved[order[2]]}
+		if _, err = PublishJob(other); err == nil {
+			t.Fatal("file/directory overlap hidden by intervening lexical sibling", order)
+		}
+	}
 }
