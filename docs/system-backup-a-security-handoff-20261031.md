@@ -517,6 +517,12 @@ volumes:
 
 A13.2c最终已同步监督42f321fa（D已提交formal MySQL材料修复，未复制D CaptureModules大装配WIP），空Secret预分配/不替换UID、所有当前材料/用途/registry/readiness/原SQL/TLS路径与实际CLI输入在最终完整回归中PASS：security21.561s/controller4.453s/adapter5.860s/execution77.417s/kms5.256s/v2-controller3.065s/grantsCLI编译通过。没有远侧部署、权限放宽、生产DDL或CompleteScan放行。
 
+## 第十四切片：真实完整加密流跨token与固定DEK窗口
+
+新增A实际SQL/TLS原密文流用例：原workspace含1.5MiB不可压缩数据，真实归档/压缩/多个CMBKGC01帧+强制EOF、原Envelope/opaque history与当前Acquire claim。正例在provider完成1秒batch凭证调用后，实际ciphertext reader延迟1.5秒，再通过C InspectWrappedStream读取全部明文压缩流并校验全帧AEAD/EOF，最终checksum/size与原candidate一致；原DEK权限窗口仍有效、同一对象ValidUntil不变，只login/decrypt各一次。明确遵守CredentialExpiresAt只限providerRPC、ExpiresAt限独立DEK使用，未人为clip到token TTL。
+
+负例独立原Unwrap capability签5秒窗口，实际ciphertext reader延迟6秒，使完整DEK-use窗口耗尽；返回零StreamVerification，不接受任何完整产物、不自动重试provider。原SQL读回证实当前claim仍live，真实Renew得到新token也不能延长已过期原capability/既有对象，provider仍各一次；组件未伪造业务终态，原task仍validating供实际publisher处理。两suite PASS14.926s，监督独立复跑PASS14.776s；必要fixture options保持原调用兼容，所有现有publisher+service suites合计PASS39.076s。此项不冒充六域/业务终态，后续正式v2 publisher/finalizer已由监督分配A直接实现。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
