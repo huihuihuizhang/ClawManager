@@ -68,6 +68,7 @@ type dOriginalSixPartTask struct {
 	input                      d.Input
 	sourceInventory            b.SourceInventory
 	frozenWriters              []b.FrozenWriter
+	metadataSigner             ed25519.PrivateKey
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
@@ -669,7 +670,15 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 
 func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
 	f := newDOriginalSixPartTask(t)
-	f.checkOriginalMetadataSources(t)
+	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
+	defer cancel()
+	store := c.SQLExecutionWorkStore{Queue: f.queue}
+	if err := store.RunWithExecutionHeartbeat(ctx, f.input.Authority, func(active context.Context) error {
+		f.checkOriginalMetadataSources(active, t)
+		return nil
+	}); err != nil {
+		t.Fatal("original same-epoch source preparation heartbeat", err)
+	}
 	var attempts int
 	if f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_type='backup' AND target_public_id=? AND attempt_no=1 AND phase IN ('capture','secret_capture') AND status='preparing'", f.publicID).Scan(&attempts) != nil || attempts != 2 {
 		t.Fatal("original same-task capture/secret phase attempts")
