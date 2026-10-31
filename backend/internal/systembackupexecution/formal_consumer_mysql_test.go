@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -355,6 +356,7 @@ type consumerFixtureOptions struct {
 	WorkerIssuerSHA256                    string
 	ConfigureGrant                        func(*c.ExecutionGrant)
 	FinalizeGrant                         func(*c.ExecutionGrant)
+	AttemptNo                             uint64
 	PrepareSource                         func(*os.Root, *worker.Invocation)
 	RewriteCandidate                      func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
 
@@ -524,11 +526,21 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	db.SetMaxOpenConns(8)
 	t.Cleanup(func() { db.Close() })
 	var preparation []func(*os.Root, *worker.Invocation)
+	if options.AttemptNo != 0 {
+		preparation = append(preparation, func(_ *os.Root, invocation *worker.Invocation) {
+			value := strconv.FormatUint(options.AttemptNo, 10)
+			invocation.Request.Binding.Attempt = value
+			invocation.ProviderKey.Request.Context.AttemptNo = value
+		})
+	}
 	if options.PrepareSource != nil {
 		preparation = append(preparation, options.PrepareSource)
 	}
 	source, _, _, inv, candidate, contentKeys := formalObserverFixture(t, preparation...)
 	a, j, _ := resultEvidenceFixture()
+	if options.AttemptNo != 0 {
+		a.AttemptNo = options.AttemptNo
+	}
 	a.ConfigVersion = 1
 	if options.PartName != "" {
 		j.JobUnitKey = options.PartName

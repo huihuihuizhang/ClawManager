@@ -21,6 +21,56 @@ func captureAccessFixture(t *testing.T) DeploymentConfig {
 	return cfg
 }
 
+func TestPublicationWorkerNamedReadInGeneratedRBACAndReadiness(t *testing.T) {
+	cfg := captureAccessFixture(t)
+	cfg.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publication-upload", ServiceAccountUID: "publication-upload-uid"}
+	objects, err := CaptureKubernetesGrants(cfg, "controller")
+	if err != nil {
+		t.Fatal(err)
+	}
+	named := 0
+	for _, object := range objects {
+		role, ok := object.(*rbacv1.Role)
+		if !ok {
+			continue
+		}
+		for _, rule := range role.Rules {
+			if slices.Contains(rule.Resources, "serviceaccounts") && slices.Contains(rule.ResourceNames, cfg.PublicationWorker.ServiceAccountName) {
+				if role.Namespace != cfg.Namespace || !slices.Equal(rule.ResourceNames, []string{cfg.PublicationWorker.ServiceAccountName}) || !slices.Equal(rule.Verbs, []string{"get"}) {
+					t.Fatal("publication worker read broadened")
+				}
+				named++
+			}
+		}
+	}
+	if named != 1 {
+		t.Fatal("generated grants omitted actual publication worker SA read", named)
+	}
+	for _, allow := range []bool{true, false} {
+		client := fake.NewSimpleClientset()
+		reads := 0
+		client.PrependReactor("create", "selfsubjectaccessreviews", func(action kt.Action) (bool, runtime.Object, error) {
+			review := action.(kt.CreateAction).GetObject().(*authv1.SelfSubjectAccessReview)
+			review.Status.Allowed = true
+			attributes := review.Spec.ResourceAttributes
+			if attributes.Resource == "serviceaccounts" && attributes.Name == cfg.PublicationWorker.ServiceAccountName {
+				reads++
+				if attributes.Namespace != cfg.Namespace || attributes.Verb != "get" || attributes.Group != "" {
+					t.Fatal("wrong publication worker readiness read")
+				}
+				review.Status.Allowed, review.Status.Denied = allow, !allow
+			}
+			return true, review, nil
+		})
+		if err := CheckCaptureKubernetesAccess(context.Background(), client, cfg, "controller"); (err == nil) != allow || reads != 1 {
+			t.Fatal("publication worker denial absent from actual readiness probe", allow, reads, err)
+		}
+	}
+	if _, err := RequiredCaptureAccess(cfg, cfg.PublicationWorker.ServiceAccountName); err == nil {
+		t.Fatal("publication worker granted controller role")
+	}
+}
+
 func TestCaptureKubernetesGrantsDoNotGrantSourceSecretsOrAdministration(t *testing.T) {
 	cfg := captureAccessFixture(t)
 	cfg.Writers = append(cfg.Writers, PlatformDeployment{Namespace: "source-other", Name: "original-source", UID: "dep-2"})

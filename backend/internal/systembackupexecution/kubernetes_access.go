@@ -36,6 +36,12 @@ func RequiredCaptureAccess(cfg DeploymentConfig, controllerSA ...string) ([]Capt
 	add(cfg.Namespace, "", "secrets", []string{"get", "create"}, nil)
 	add(cfg.Namespace, "batch", "jobs", []string{"get", "create", "delete"}, nil)
 	add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{cfg.Security.ServiceAccountName})
+	if cfg.PublicationWorker != nil {
+		if len(controllerSA) == 1 && cfg.PublicationWorker.ServiceAccountName == controllerSA[0] {
+			return nil, c.ErrExecutionAuthority
+		}
+		add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{cfg.PublicationWorker.ServiceAccountName})
+	}
 	if cfg.PublicationSigners != nil {
 		if len(controllerSA) != 1 || len(validation.IsDNS1123Subdomain(controllerSA[0])) != 0 || controllerSA[0] == cfg.Security.ServiceAccountName {
 			return nil, c.ErrExecutionAuthority

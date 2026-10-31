@@ -66,6 +66,8 @@ type aPublisherVerifierFixtureOptions struct {
 	WrapControlConnector    func(driver.Connector) driver.Connector
 	WorkerIssuer            *control.IdentityIssuer
 	ConfigureExecutionGrant func(*c.ExecutionGrant)
+	AttemptNo               uint64
+	PublicationWorker       *PublicationWorkerReference
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -173,6 +175,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 			options.WorkerIssuerSHA256 = hash(fixture.WorkerIssuer.Certificate.Raw)
 		}
 		options.WrapControlConnector = fixture.WrapControlConnector
+		options.AttemptNo = fixture.AttemptNo
 		if fixture.ConfigureExecutionGrant != nil {
 			options.FinalizeGrant = fixture.ConfigureExecutionGrant
 		}
@@ -204,6 +207,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 					cfg.RuntimeSources.Namespaces = []string{cfg.Namespace}
 				}
 				cfg.NamespaceUID = "ns-original"
+				cfg.PublicationWorker = fixture.PublicationWorker
 				cfg.Security.ServiceAccountName = "capture"
 				cfg.Security.ServiceAccountUID = "capture-sa"
 				cfg.KeyDirectory = dir

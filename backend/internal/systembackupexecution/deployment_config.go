@@ -61,6 +61,7 @@ type DeploymentConfig struct {
 	PublisherVerifier   *PublisherVerifierReference `json:"publisher_verifier,omitempty"`
 	CaptureModules      *ProductionCaptureReference `json:"capture_modules,omitempty"`
 	PublicationTarget   *PublicationTargetReference `json:"publication_target,omitempty"`
+	PublicationWorker   *PublicationWorkerReference `json:"publication_worker,omitempty"`
 }
 type GrantReference struct {
 	Path      string `json:"path"`
@@ -132,6 +133,9 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.PublicationWorker != nil && cnf.PublicationWorker.validate(cnf.Security.ServiceAccountName, cnf.Security.ServiceAccountUID) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if cnf.CaptureModules != nil && (cnf.CaptureModules.validate() != nil || cnf.CaptureScope != "six-part") {
 		return c.ErrExecutionAuthority
 	}
