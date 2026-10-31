@@ -319,3 +319,26 @@
 - D5.20提交5f4ed3b1。当前observer在原ObserveFormalManaged独立unwrap/AEAD/private custody流程内直接检查两份未gzip的canonical JSON。每份均受独立locator精确hash与字节上限约束；sidecar核closed JCS/scope/固定registry/原cutoff，proofs核完整原bundle并用ce.Rebuild离线重建/ce.Verify全部组/排除/脱敏/owner证明，不能从SQL补丢失body。最终publisher仍必须对两份实际读回的原C流一起ce.Verify，本观察不替代最终v12成品验收。
 - 纯内容反例将修改后的payload重新计算合法locator hash，仍拒绝missing/forged body、错误scope、suffix、unknown field、不同cutoff/registry；正例含非空event。实际原SQL encrypted plan/candidate/Job→Evidence/deployment wrapper→独立内容observer/custody→原ModuleResult/evidence，两份合法part分别成功，suffix/缺proof/错payloadhash即使AEAD有效也零result/evidence。producer key/unwrap、source proof注册及Kubernetes/finished-use明确为命名本机fixture，不能声称原SQL source producer/mTLS拉取或完整六项已验收。
 - 真实SQL CE consumer8例9.152s通过；合并后CE+既有正式observer组合10.060s通过。一次未提权的旧filesystem observer fixture在staging原文件identity创建阶段失败；按既有约定用本机原filesystem权限重跑全部相关observer通过，没有修改seal/owner guard。保留WIP同步监督原backup源完整链及A7f19da41 source endpoint兼容；本片未含production factory/discovery材料。
+
+## D5.22 六原构造器的纯生产模块factory（2026-10-31）
+
+- D5.21提交5c09e9e3。productionCaptureModules只消费原冻结SourceInventory中的typed metadata（完整SQLSchema、原instance mounts/runtime policy/UID、Skills versioned objects、完整Redis policy、两类资源selection及CE locator），无SQL/provider/Kubernetes调用或任务/密钥授权。仍未在NewDeploymentService接为可用生产factory；真实metadata discovery/registered exclusion producer接线继续，不开放sixpart guards/readiness。
+- 使用B UsersInstances、C Teams、D Skills/Resource/SourceRedis/ControlEvidence六个原constructor，SQL只有一份。所有draft按原module/part规范排序后统一分配global PartIndex；原task/attempt/context/envelope/Generate context及Job绑定一致。CE保持A原固定logical cipher names。每份InvocationConfigMap由真实part生成独立名称，修复重复workspace使用同一模板时ConfigMap冲突。
+- resource OriginalWriters仅包含其真实所选Deployment的原checkpoint，精确UID/缺writer拒绝；全体writer仍绑定统一捕获上下文，不能将其他runtime/lease writer偷偷丢出原barrier。Skills workspace mapping仅选择实际未打包blob的原WorkspaceRequirements涉及的primary mount，不误加无关instance。
+- 自有pure fixture明确模拟两原实例（running/stopped）、非空Teams SQL事实/共享PVC/object、非空Skills blob/versioned object及原六项acceptance spec，通过全部原constructor与真实Job工厂生成11份Job：1SQL+2实例workspace+1Teamworkspace+1Teamobject+1Redis+1Skillsobject+2resource+2CE。检查精确part全集、唯一ConfigMap、连续全局索引/Generate上下文；构造后caller改DB/template/permit/writer不改变原计划字节。
+- 缺operation/primary、重复mount、替换Team事实、错业务policy、缺CE/异scope、选Deployment缺writer/错UID等九类反例均拒绝。工厂定向组合3.418s通过。SQLschema在此pure测试是完整已知表的明确synthetic形状，不声称原177表现场metadata；原完整迁移SQL真实性属于D5.19。未完成Discovery/源metadata authority仍排除本提交，下一步继续原服务接线及真实非空目标恢复。
+
+## D5.23 修复各part原身份及attempt日志绑定（2026-10-31）
+
+- 监督用独立probe实测D5.22/266e0c39的11份Job复用模板job-identity，第二Job会被原Invocation绑定拒绝，故266e不能单独启用。现按同一原task/attempt/part确定性Job名生成独立IdentitySecret名，全部11份实际Job的worker-identity Secret挂载逐一唯一；原TLS/不可变Secret/生成许可证校验不放宽。
+- 自有真实两identity SQL测试进一步触发原ensureIdentity的attempt FK：旧INSERT省略target_type/attempt_no/phase而默认1，AAD也硬写1。现原当前TaskType/AttemptNo/Phase显式入行；identity AAD用实际attempt；身份读取、dispatch与observed更新、workerSecurity及原Job绑定查询/CAS均约束同一原坐标。合法attempt1原AAD不变；历史错误坐标不会静默迁移/重封/借给新attempt，缺原记录仍按原unknown/recovery规则关闭。
+- 同样核对Invocation ConfigMap/Job原共用kube.MappedResourceRows，发现其INSERT也依赖同一默认1。新增原attempt映射入口，将target/attempt/phase同时用于Load/INSERT/CAS；旧legacy表映射保持原SQL。所有public runner/security/recovery调用传同一Authority，不修改FK、CAS、dispatch-before-create、原owner或不可变request hash规则。
+- 实际原claim attempt3+独立签名worker issuer+原encrypted identity SQL journal：两份CE Job分别创建/重放成功；本机Kube fixture每次首create先落原对象却返回timeout，原生产代码只GET确认，重复ensure不再create。原同一个certificate校验函数用于public_jobs实际绑定及测试，跨part SPIFFE/原Invocation拒绝；强行恢复旧共享Secret模板由原ensureIdentity journal拒绝且零额外create；跨attempt也拒绝。该测试未冒充完整sixpart原plan/TokenReview，Kube create为明确fixture。
+- 同一原SQL实测Invocation ConfigMap行在attempt3/phase capture的原FK插入、dispatch CAS、observe CAS、重放成功，另一个attempt的映射Load返回sql.ErrNoRows。自建角色仅新增本fixture所需原runtime_resources INSERT，未改共享server/生产权限；创建/元数据始终在自建ad_d_consumer范围清理。
+- 定向identity/factory/原secret反例4.041s；加入原mapped SQL journal后kube3.451s/execution4.350s；最新原SQL consumer/concurrent结果/原provider permit mTLS handler/identity/factory组合kube3.240s、execution24.225s通过。source Discovery/原SourceProfile接线和恢复适配WIP继续留工作区，不含本小片；主任务仍优先实际NewDeploymentService装配。
+
+## D5.24 原资源scope冲突不能变成“未派发”（2026-10-31）
+
+- D5.23提交56892485。监督在新scope mapper上实测同一原PK的已派发Job被放入prior attempt1后，当前attempt3过滤查询返回sql.ErrNoRows，可能让Pending误作Undispatched，初始反例FAIL3.797s。现scoped Load未命中时，在同一原SQL事务用原PK FOR UPDATE再查：同PK存在任何其他target/attempt/phase或读取失败都返回ErrJournal；只有物理PK真正无行才返回sql.ErrNoRows。精确scope INSERT/CAS继续保留，未派发证明不因过滤而放宽。
+- Pending的实际缺席分支提为loadPendingOriginalJob，仍消费同一原锁内MappedResourceRows；错scope错误直接传播。实际SQL五模式覆盖真正缺席、错attempt、错phase、错target、显式prior-attempt错日志；对应原Pending分支不把任何冲突标Undispatched。完整owner.Pending在shadowed fixture同样返回错误且没有Undispatched条目；该fixture其他恢复inventory材料有限，不据此宣称完成全体writer恢复。
+- 原两identity测试的跨attempt期望改为ErrJournal；对真正不存在的名称仍要求sql.ErrNoRows。监督在干净候选树组合原身份/唯一mount/五模式/独立两反例全部PASS7.481s；本机定向回归另见本轮tool输出。仅本mapper、Pending helper与两份真实SQL回归交付，source Discovery/restore WIP不包含本片，生产接线继续推进。

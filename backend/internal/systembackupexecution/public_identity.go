@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 	"time"
 
 	"clawreef/internal/systembackup/kube"
@@ -28,7 +29,7 @@ type identityEnvelope struct {
 }
 
 func identityBinding(a d.Authority, name, digest string) staging.Binding {
-	return staging.Binding{BackupID: a.TaskPublicID, Attempt: "1", Path: "worker-identity/" + name, CaptureContextHash: a.ConfigSHA256, EnvelopeID: digest}
+	return staging.Binding{BackupID: a.TaskPublicID, Attempt: strconv.FormatUint(a.AttemptNo, 10), Path: "worker-identity/" + name, CaptureContextHash: a.ConfigSHA256, EnvelopeID: digest}
 }
 
 // ensureIdentity stores encrypted key material BEFORE its only possible create.
@@ -56,7 +57,7 @@ func (o *PublicJobOwner) ensureIdentity(ctx context.Context, a d.Authority, part
 	var envelope identityEnvelope
 	var sent bool
 	var uid, rv string
-	e := db.QueryRowContext(ctx, "SELECT request_json,create_dispatched,observed_uid,resource_version FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=?", a.TaskPublicID, o.Namespace, name).Scan(&raw, &sent, &uid, &rv)
+	e := db.QueryRowContext(ctx, "SELECT request_json,create_dispatched,observed_uid,resource_version FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND target_type=? AND attempt_no=? AND phase=?", a.TaskPublicID, o.Namespace, name, a.TaskType, a.AttemptNo, a.Phase).Scan(&raw, &sent, &uid, &rv)
 	if errors.Is(e, sql.ErrNoRows) {
 		tx, z := db.BeginTx(ctx, nil)
 		if z != nil {
@@ -108,7 +109,7 @@ func (o *PublicJobOwner) ensureIdentity(ctx context.Context, a d.Authority, part
 		if z = (security.RegistrationCapacity{ReportFile: o.Gate.Records.CapacityReportFile}).ReserveExecutionPayload(ctx, tx, capacity, len(raw)); z != nil {
 			return z
 		}
-		_, z = tx.ExecContext(ctx, "INSERT INTO system_backup_v2_runtime_resources(task_public_id,resource_kind,namespace_name,resource_name,resource_owner,request_sha256,request_json,row_version) VALUES(?,'IdentitySecret',?,?,?,?,?,1)", a.TaskPublicID, o.Namespace, name, a.TaskPublicID, hash(raw), raw)
+		_, z = tx.ExecContext(ctx, "INSERT INTO system_backup_v2_runtime_resources(task_public_id,resource_kind,namespace_name,resource_name,resource_owner,request_sha256,request_json,row_version,target_type,attempt_no,phase) VALUES(?,'IdentitySecret',?,?,?,?,?,1,?,?,?)", a.TaskPublicID, o.Namespace, name, a.TaskPublicID, hash(raw), raw, a.TaskType, a.AttemptNo, a.Phase)
 		if z != nil {
 			return z
 		}
@@ -156,7 +157,7 @@ func (o *PublicJobOwner) ensureIdentity(ctx context.Context, a d.Authority, part
 		if z = o.Identity.AuthorizeWorkerIssuer(ctx, tx, a, hash(o.Issuer.Certificate.Raw)); z != nil {
 			return z
 		}
-		r, z := tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_resources SET create_dispatched=TRUE,row_version=row_version+1 WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=FALSE AND request_sha256=?", a.TaskPublicID, o.Namespace, name, hash(raw))
+		r, z := tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_resources SET create_dispatched=TRUE,row_version=row_version+1 WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=FALSE AND request_sha256=? AND target_type=? AND attempt_no=? AND phase=?", a.TaskPublicID, o.Namespace, name, hash(raw), a.TaskType, a.AttemptNo, a.Phase)
 		if z != nil {
 			return z
 		}
@@ -202,7 +203,7 @@ func (o *PublicJobOwner) ensureIdentity(ctx context.Context, a d.Authority, part
 	if secret.UID == "" || secret.ResourceVersion == "" || secret.Labels[kube.OwnerLabel] != a.TaskPublicID || secret.Immutable == nil || !*secret.Immutable || secret.DeletionTimestamp != nil || kube.ContentHash(secret.Data) != envelope.PlainSHA256 || uid != "" && string(secret.UID) != uid {
 		return kube.ErrOwnership
 	}
-	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_resources SET observed_uid=?,resource_version=?,lifecycle='ready',row_version=row_version+1 WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND request_sha256=?", string(secret.UID), secret.ResourceVersion, a.TaskPublicID, o.Namespace, name, hash(raw)); e != nil {
+	if _, e = tx.ExecContext(ctx, "UPDATE system_backup_v2_runtime_resources SET observed_uid=?,resource_version=?,lifecycle='ready',row_version=row_version+1 WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND request_sha256=? AND target_type=? AND attempt_no=? AND phase=?", string(secret.UID), secret.ResourceVersion, a.TaskPublicID, o.Namespace, name, hash(raw), a.TaskType, a.AttemptNo, a.Phase); e != nil {
 		return e
 	}
 	if e = guard.Recheck(ctx, tx); e != nil {

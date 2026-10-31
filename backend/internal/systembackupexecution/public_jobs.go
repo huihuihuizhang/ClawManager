@@ -127,11 +127,11 @@ func (o *PublicJobOwner) namespace(ctx context.Context) error {
 	}
 	return nil
 }
-func (o *PublicJobOwner) rows(task string) (*kube.MappedResourceRows, error) {
-	return kube.NewMappedResourceRows(task, "system_backup_v2_runtime_resources", "ready", kube.ResourceColumns{Scope: "task_public_id", Kind: "resource_kind", Namespace: "namespace_name", Name: "resource_name", Owner: "resource_owner", RequestHash: "request_sha256", RequestJSON: "request_json", Revision: "row_version", Dispatched: "create_dispatched", UID: "observed_uid", ResourceVersion: "resource_version", Lifecycle: "lifecycle"})
+func (o *PublicJobOwner) rows(a d.Authority) (*kube.MappedResourceRows, error) {
+	return kube.NewAttemptMappedResourceRows(a.TaskPublicID, "system_backup_v2_runtime_resources", "ready", kube.ResourceColumns{Scope: "task_public_id", Kind: "resource_kind", Namespace: "namespace_name", Name: "resource_name", Owner: "resource_owner", RequestHash: "request_sha256", RequestJSON: "request_json", Revision: "row_version", Dispatched: "create_dispatched", UID: "observed_uid", ResourceVersion: "resource_version", Lifecycle: "lifecycle"}, a.TaskType, a.AttemptNo, a.Phase)
 }
 func (o *PublicJobOwner) runner(a d.Authority, recovery bool) (kube.Runner, error) {
-	rows, e := o.rows(a.TaskPublicID)
+	rows, e := o.rows(a)
 	if e != nil {
 		return kube.Runner{}, e
 	}
@@ -239,19 +239,12 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 	}
 	var originalUID, originalHash string
 	var originalRaw []byte
-	if o.Gate.Authority.DB.QueryRowContext(ctx, `SELECT observed_uid,request_sha256,request_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=TRUE AND lifecycle='ready'`, a.TaskPublicID, o.Namespace, secretName).Scan(&originalUID, &originalHash, &originalRaw) != nil {
+	if o.Gate.Authority.DB.QueryRowContext(ctx, `SELECT observed_uid,request_sha256,request_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='IdentitySecret' AND namespace_name=? AND resource_name=? AND create_dispatched=TRUE AND lifecycle='ready' AND target_type=? AND attempt_no=? AND phase=?`, a.TaskPublicID, o.Namespace, secretName, a.TaskType, a.AttemptNo, a.Phase).Scan(&originalUID, &originalHash, &originalRaw) != nil {
 		return zero, c.ErrExecutionRecord
 	}
-	if !originalIdentitySecretMatches(secret, originalUID, originalHash, originalRaw, part.InvocationSHA256) {
-		return zero, kube.ErrOwnership
-	}
-	block, _ := pem.Decode(secret.Data["tls.crt"])
-	if block == nil {
-		return zero, kube.ErrOwnership
-	}
-	cert, e := x509.ParseCertificate(block.Bytes)
-	if e != nil || len(cert.URIs) != 1 || cert.URIs[0].String() != "spiffe://"+o.TrustDomain+"/backup/"+a.TaskPublicID+"/"+part.InvocationSHA256 {
-		return zero, c.ErrExecutionAuthority
+	cert, e := originalWorkerIdentityCertificate(secret, originalUID, originalHash, originalRaw, o.TrustDomain, a.TaskPublicID, part.InvocationSHA256)
+	if e != nil {
+		return zero, e
 	}
 	until := cert.NotAfter
 	if until.After(a.DeadlineAt) {
@@ -290,7 +283,7 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 		return zero, e
 	}
 	var old []byte
-	if e = tx.QueryRowContext(ctx, "SELECT binding_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? FOR UPDATE", a.TaskPublicID, i.Namespace, i.Name, r.UID).Scan(&old); e != nil {
+	if e = tx.QueryRowContext(ctx, "SELECT binding_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND target_type=? AND attempt_no=? AND phase=? FOR UPDATE", a.TaskPublicID, i.Namespace, i.Name, r.UID, a.TaskType, a.AttemptNo, a.Phase).Scan(&old); e != nil {
 		return zero, e
 	}
 	if len(old) > 0 {
@@ -298,11 +291,11 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 			return zero, c.ErrExecutionRecord
 		}
 	} else {
-		query := "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL"
+		query := "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL AND target_type=? AND attempt_no=? AND phase=?"
 		if recovery {
-			query = "UPDATE system_backup_v2_runtime_resources SET binding_json=?,revoked=TRUE WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL"
+			query = "UPDATE system_backup_v2_runtime_resources SET binding_json=?,revoked=TRUE WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL AND target_type=? AND attempt_no=? AND phase=?"
 		}
-		if _, e = tx.ExecContext(ctx, query, raw, a.TaskPublicID, i.Namespace, i.Name, r.UID); e != nil {
+		if _, e = tx.ExecContext(ctx, query, raw, a.TaskPublicID, i.Namespace, i.Name, r.UID, a.TaskType, a.AttemptNo, a.Phase); e != nil {
 			return zero, e
 		}
 	}
@@ -313,6 +306,21 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 		return zero, c.ErrExecutionCommitUnknown
 	}
 	return binding, nil
+}
+
+func originalWorkerIdentityCertificate(secret *corev1.Secret, uid, digest string, record []byte, trust, task, invocation string) (*x509.Certificate, error) {
+	if !originalIdentitySecretMatches(secret, uid, digest, record, invocation) {
+		return nil, kube.ErrOwnership
+	}
+	block, _ := pem.Decode(secret.Data["tls.crt"])
+	if block == nil {
+		return nil, kube.ErrOwnership
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil || len(cert.URIs) != 1 || cert.URIs[0].String() != "spiffe://"+trust+"/backup/"+task+"/"+invocation {
+		return nil, c.ErrExecutionAuthority
+	}
+	return cert, nil
 }
 
 // Same-name replacement or modified identity material cannot become the
@@ -360,7 +368,7 @@ func (o *PublicJobOwner) Read(ctx context.Context, a d.Authority, binding d.JobB
 			return kube.Runner{}, record, e
 		}
 	}
-	rows, e := o.rows(a.TaskPublicID)
+	rows, e := o.rows(a)
 	if e != nil {
 		return kube.Runner{}, record, e
 	}

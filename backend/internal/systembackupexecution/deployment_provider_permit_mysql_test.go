@@ -352,7 +352,7 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 				if db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE evidence_type='diagnostic'`).Scan(&permits) != nil || db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE key_use_json IS NOT NULL`).Scan(&uses) != nil || permits != 0 || uses != 0 || generates.Load() != 0 {
 					t.Fatal("pending observation admitted key use")
 				}
-				rows, err := owner.rows(authority.TaskPublicID)
+				rows, err := owner.rows(authority)
 				if err != nil {
 					t.Fatal(err)
 				}
