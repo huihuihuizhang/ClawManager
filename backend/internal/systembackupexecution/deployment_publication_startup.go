@@ -24,6 +24,7 @@ type DeploymentStartupInputs struct {
 	FormalVerifier     []FormalVerifierInput
 	PublicationSigners []PublicationSignerInput
 	PublisherVerifier  []PublisherVerifierInput
+	PublicationTarget  []PublicationTargetInput
 	ControllerPodName  string
 	CaptureModules     []ProductionCaptureInput
 }

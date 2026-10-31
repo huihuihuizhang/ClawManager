@@ -74,7 +74,7 @@ func aStartPublisherVerifierSamePod(t *testing.T, x *aPublisherVerifierFixture) 
 		}
 		t.Setenv(env.Name, value)
 	}
-	inputs := DeploymentStartupInputs{PublisherVerifier: PublisherVerifierInputsFromEnvironment(), ControllerPodName: pod.Name}
+	inputs := DeploymentStartupInputs{PublisherVerifier: PublisherVerifierInputsFromEnvironment(), PublicationTarget: PublicationTargetInputsFromEnvironment(), ControllerPodName: pod.Name}
 	if len(inputs.PublisherVerifier) != 1 || inputs.PublisherVerifier[0].SHA256 != string(secret.Data["materials_sha256"]) {
 		t.Fatal("real CLI startup parser lost independent pin")
 	}
