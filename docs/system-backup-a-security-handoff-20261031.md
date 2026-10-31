@@ -152,6 +152,20 @@ Provider RPC在原SQL锁之外；实际DEK消费在同一原task/KEK-fence事务
 
 真实MySQL测试直接调用现有 `NewInstallationAuthorityWriter.Put` 导入原签名record，再保持registry的unwrap_revocation_json为空；覆盖初始正常解封→仅UnwrapRevoked后旧/新对象均拒绝，以及另一随机schema内仅GenerateRevoked仍可解封→再UnwrapRevoked拒绝。不是手工改registry列或fake epoch。A5 commit `40ba9d81`配合本补丁交付，不改写已推送历史。
 
+## 第六切片：原SQL四分区来源census与原事务冻结（首个实际scanner切片）
+
+新增 `systembackupkekadapter.NewSQLCoverageCensus(db, databasePin, installation)`，不是对candidate/registry的DTO转换。直接遍历当前172迁移中49张原业务/历史来源表，包括079旧任务/manifest/attempt/send/staging/restore和v2原backup/计划/加密record/evidence/unknown actions/runtime/hold/promotion/lease/import/drill/prune/tombstone，整个数据库保守扫描而非按terminal/deleted/TTL排除。扫描之前枚举所有backup命名空间表，未审查新表或缺失必需表直接失败；派生KEK索引、认证与无引用协调表的排除列表固定在代码，不接收请求提供的表名/布尔值。
+
+每表按真实PRIMARY KEY排序，完整读到cursor EOF并检查Rows.Err/多结果/Close；记录schema摘要、区分NULL/空值及列边界的逐行SHA、真实行数/字节数。每表百万行/单行16MiB/总512MiB是拒绝阈值，超限从不当作分页完成。只返回摘要和计数，不返回原config、manifest、加密payload字节。
+
+消费流程：`observed := scanner.Observe(ctx)` → 原owner在事务起点改用 `original := scanner.BeginOriginalTransaction(ctx)`，以 `original.Tx()` 持续取得原业务授权/maintenance/domain锁 → `locked := scanner.LockOriginalSources(ctx, original, observed)` → 再取得原KEK fence并做原adoption/backfill → `locked.Recheck(ctx, original.Tx())` → 原owner自行Commit/Rollback。冻结对全部原表全范围FOR SHARE，包含空区间，阻止未升级旧SQL writer趁adoption插入。原对象只接受构造器创建的同一RR事务能力；不能传外来 `*sql.Tx` 伪装，且没有另开事务/二次提交。原事务内自己的后续来源改动也会被重查拒绝。
+
+监督及A识别 `@@transaction_isolation` 仅是session默认，不能证明外来tx当前隔离级别；已删除该判定，改为上述私有构造能力。真实SQL反例展示外来RC tx的@@仍报告RR但被拒绝。另一测试先确认原config_versions表确实0行，以test-root的 `performance_schema.data_lock_waits/data_locks/threads` 检查**精确schema/table/old-writer connection/blocker connection、WAITING INSERT_INTENTION、GRANTED supremum pseudo-record**；观察到真实等待后才释放census事务，要求**同一条**旧writer INSERT成功，随后rollback该writer。观察系统表只用于测试root，不增加生产账号权限。不以任意超时/SQL/driver错误冒充gap-lock证明。
+
+验证：真实MySQL `-tags=systembackup_mysql -run '^TestSQLCoverageCensusOriginalSourcesMySQL$'` 最新增强版退出0，pkg17.850s；此前同生产代码完整tagged adapter suite退出0，21.115s。在随机 `ad_a_census_*` 空库运行**全部172个** `db.ApplyPinnedMigrations`（catalog `718e4509d2c83c73636dd9745ac7c2b350a57c01d75b5ac50e482ffcb4f537d8`），再实际运行原表枚举/EOF/重复稳定性/防别名、旧config表新增使旧准备失效、同原事务冻结/复查/跨事务拒绝、空来源旧writer精确等待/释放后成功、owner自身改动拒绝、rollback释锁、未知表拒绝、跨库拒绝和RC伪装反例。独立server UUID+fixture marker检查后删除本次随机schema，不修改监督/D测试库。
+
+明确尚未完成：这个对象**刻意不实现PreparedCoverage**，不会把SQL census直接升级为四分区完整性，更没有放开Bound.CompleteScan。外部immutable artifact/catalog全分页EOF、真实expected-request/envelope历史回填、未知provider调用处置、原source adoption签名与持续writer/GC共享fence hook仍待实际代码接入；不能用本地census、四行receipt或手填完成布尔值替代。此切片提供原SQL完整读取/锁定/重查的真实基础，后续将连接上述原owner记录和producer入口，保持完整KEK覆盖门禁关闭直到都满足。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
