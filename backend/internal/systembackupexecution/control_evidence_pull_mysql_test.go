@@ -57,11 +57,32 @@ type aControlPullConnector struct {
 // those of the original verifier; no permission/DEK is renewed or substituted.
 type aOwnedReadLatency struct {
 	FormalCandidateKeyUse
-	delay func(context.Context) error
+	delay        func(context.Context) error
+	readBoundary bool
+	reading      atomic.Bool
+	boundaries   atomic.Int64
+	applied      atomic.Bool
+}
+
+func (x *aOwnedReadLatency) Recheck(ctx context.Context, scope FormalCandidateReadScope) error {
+	// A plaintext pipe reader and ciphertext reader may run concurrently. The
+	// third boundary is after the first actual original C header read; a fault
+	// must execute exactly once, not merely before entering the stream callback.
+	if x.readBoundary && x.reading.Load() && x.boundaries.Add(1) >= 3 && x.applied.CompareAndSwap(false, true) {
+		if err := x.delay(ctx); err != nil {
+			return err
+		}
+	}
+	return x.FormalCandidateKeyUse.Recheck(ctx, scope)
 }
 
 func (x *aOwnedReadLatency) Unwrap(ctx context.Context, request w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
 	return x.FormalCandidateKeyUse.Unwrap(ctx, request, wrapped, func(key []byte) error {
+		if x.readBoundary {
+			x.reading.Store(true)
+			defer x.reading.Store(false)
+			return use(key)
+		}
 		if err := x.delay(ctx); err != nil {
 			return err
 		}
@@ -685,7 +706,7 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 					if err != nil {
 						return nil, err
 					}
-					return &aOwnedReadLatency{FormalCandidateKeyUse: actual, delay: func(useCtx context.Context) error {
+					return &aOwnedReadLatency{FormalCandidateKeyUse: actual, readBoundary: ownedFault && !cancelRead && !expireDEK && !missingResult, delay: func(useCtx context.Context) error {
 						ownedReadEntered.Store(true)
 						if expireDEK {
 							<-useCtx.Done()
