@@ -215,3 +215,11 @@
 - 该测试的停止/恢复时间与 finished-key-use 是明确命名的本机事实夹具；Kubernetes 是假客户端。原 SQL journal/密文/认领回执/权限检查为实际代码和真实 MySQL，不声称完成物理 source 恢复或在线授权。原 Generate+finished use 的真实签发链另由 D5.5 覆盖。初次临时事件表缺 details_present 导致真实回执失败，已按原协议修复夹具，未绕过 AcquireWithReceipt。
 - 已保留 dirty 同步 backup@a77a643a 与 A末次I/O修复159717d0。完整controller4.338s/security19.785s/execution91.780s/publicadapter5.181s/v2-controller2.927s/backup-worker4.664s通过，A/D真实SQL opt-in均启用；首次命令误写不存在的grant CLI路径使总命令退出1，已用实际cmd/system-backup-controller-grants单独编译通过。最终返回期限补强后14场景定向复测24.526s通过。git diff --check无错误。
 - 后续继续实际六模块生产factory/自动源inventory/Runtime与完整participants，以及 A13.2 独立publisher unwrap 和最终 v12 JCS/JWS immutable 发布/独立读回/终态；不以本只读历史接口宣布页面六项闭环。
+
+## D5.11 Teams 自动 SQL 库存（2026-10-31）
+
+- 新 team.ReadAutomaticInventory 与 B.WithAutomaticTeamsInventory 从原 LinuxProfile 的同一已认证只读 RR 中自动枚举所有未删除 Team，再复用原 ReadInventory 的11表精确schema/owner/member/storage校验。没有预填Team/member ID清单、第二事务、Kube/provider I/O或新gate。原共享PVC名称/namespace/root来自真实SQL；UID来自独立原源映射，按 namespace/PVC 精确匹配；不制造空Team替代品。
+- 原受信存储映射只含Redis ID/server/database、原PVC UID、固定对象版本和writer关系。逐项有界、深拷贝，未知/重复/多余PVC、foreign对象/成员和未知schema失败；原provider LIST顺序先按bucket/key排序再入冻结库存。新Team ID在同一Redis源scope内自动纳入下一次SQL发现，无逐任务授权清单。该DTO本身不能授予source权限；其外部Kube/provider实际发现与worker源grant仍须生产service接线。
+- 真实本机MySQL+实际 LinuxProfile.Discover：在users已读后的同一RR中，另一个真实连接提交新Team/member，第一次发现仍只有旧Team，下一次同配置发现自动得到两个Team及真实成员；同一source的ONE domain.CaptureSource SQL导出同时通过Teams与非空Skills投影校验。原共享PVC `/team`、独立UID及固定对象版本正例另测；missing/extra/duplicate claim、foreign object/member、unknown schema六例全拒绝。
+- 该用例11表使用原 reviewed schema.json 在真实MySQL构造精确column/type/nullability/extra的具名fixture，不冒充原业务迁移/外键验收。BuildWriters/BuildParts是明确fixture，所以本项不等于生产六项factory、物理quiesce或完整source权限已完成。原B gate/writers/recovery包装未变，默认functional/workspace门禁未改。
+- 已保留WIP安全快进 backup@4ae5d729（含监督集成D5.10/A精确Kube reads）。完整team0.651s/publicadapter4.841s通过，D真实SQL opt-in开启；监督另独立定向8场景3.903s通过。git diff --check无错误。下一项继续实际service构造/同一acceptance六项spec/自动metadata/全部参与者与原冻结barrier；readiness必须来自真实探测后才放行。
