@@ -15,6 +15,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/workspace"
+	k "clawreef/internal/systembackupkms"
 	w "clawreef/internal/systembackupwire"
 )
 
@@ -27,10 +28,11 @@ var formalFileName = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{0,127}$`)
 // original ProviderKey contains C's full frozen request/context; no context hash
 // is inferred from source data here. A/D/C must sign off its business source.
 type FormalCaptureSpec struct {
-	Version      string `json:"schema_version"`
-	ConfigSHA256 string `json:"config_sha256"`
-	EnvelopeName string `json:"envelope_name"`
-	MaxFrames    uint64 `json:"max_frames"`
+	Version        string               `json:"schema_version"`
+	ConfigSHA256   string               `json:"config_sha256"`
+	EnvelopeName   string               `json:"envelope_name"`
+	MaxFrames      uint64               `json:"max_frames"`
+	PermitDelivery *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
 }
 
 type FormalCaptureEnvironment struct {
@@ -133,6 +135,9 @@ func validFormalInvocation(i Invocation) bool {
 	}
 	f := i.FormalCapture
 	if f == nil || i.ProviderKey == nil || f.Version != FormalCaptureVersion || !keyUseHash.MatchString(f.ConfigSHA256) || !formalFileName.MatchString(f.EnvelopeName) || f.EnvelopeName == i.Request.ArtifactName || !formalFileName.MatchString(i.Request.ArtifactName) || f.MaxFrames < 2 || f.MaxFrames > w.MaxStreamFrames || i.Request.MaxCompressedBytes <= 0 || i.Request.MaxCompressedBytes > int64(f.MaxFrames-1)*w.ChunkSize {
+		return false
+	}
+	if f.PermitDelivery != nil && !k.ValidPermitDeliveryPin(*f.PermitDelivery) {
 		return false
 	}
 	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request))

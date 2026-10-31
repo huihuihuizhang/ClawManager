@@ -102,7 +102,12 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) 
 			defer workspace.Close()
 			env.Workspace = workspace
 		}
-		job, err := worker.NewCaptureKeyJob(ctx, control, i, materials.KMS, materials.Permit)
+		var job *worker.CaptureKeyJob
+		if materials.PermitDelivery != nil {
+			job, err = worker.NewDeliveredCaptureKeyJob(ctx, control, i, materials.KMS, *materials.PermitDelivery)
+		} else {
+			job, err = worker.NewCaptureKeyJob(ctx, control, i, materials.KMS, materials.Permit)
+		}
 		if err != nil {
 			return err
 		}

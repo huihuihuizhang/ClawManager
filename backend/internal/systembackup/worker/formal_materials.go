@@ -16,10 +16,11 @@ import (
 // private key or unverified "approved" flag. The original frozen invocation
 // pins the exact bytes; the existing A resolver authenticates the permit/Job.
 type FormalCaptureMaterials struct {
-	Version   string               `json:"schema_version"`
-	KMS       k.Config             `json:"kms"`
-	Permit    k.PermitMount        `json:"permit"`
-	Resources *ResourceSourceMount `json:"resources,omitempty"`
+	Version        string               `json:"schema_version"`
+	KMS            k.Config             `json:"kms"`
+	Permit         k.PermitMount        `json:"permit"`
+	Resources      *ResourceSourceMount `json:"resources,omitempty"`
+	PermitDelivery *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
 }
 
 func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMaterials, error) {
@@ -49,13 +50,23 @@ func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMateria
 	if decodeBounded(bytes.NewReader(raw), &out, 1<<20) != nil || out.Version != FormalCaptureVersion || out.KMS.Key != i.ProviderKey.Request.Key || out.KMS.Endpoint != i.ProviderKey.Endpoint || out.KMS.KeyName != i.ProviderKey.KeyName || out.KMS.InstallationID != i.ProviderKey.Request.Context.InstallationID {
 		return zero, ErrNotReady
 	}
-	if out.Permit.PermitPath == "" || out.Permit.CredentialDirectory == "" || !keyUseHash.MatchString(out.Permit.PermitSHA256) || len(out.Permit.PublicKey) != ed25519.PublicKeySize {
-		return zero, ErrNotReady
+	if i.FormalCapture.PermitDelivery != nil {
+		if out.PermitDelivery == nil || !samePermitDeliveryPin(*out.PermitDelivery, *i.FormalCapture.PermitDelivery) || out.Permit.PermitPath != "" || out.Permit.PermitSHA256 != "" || out.Permit.CredentialDirectory != "" || len(out.Permit.PublicKey) != 0 {
+			return zero, ErrNotReady
+		}
+	} else {
+		if out.PermitDelivery != nil || out.Permit.PermitPath == "" || out.Permit.CredentialDirectory == "" || !keyUseHash.MatchString(out.Permit.PermitSHA256) || len(out.Permit.PublicKey) != ed25519.PublicKeySize {
+			return zero, ErrNotReady
+		}
 	}
 	if (i.Request.Resources != nil) != (out.Resources != nil) {
 		return zero, ErrNotReady
 	}
 	return out, nil
+}
+
+func samePermitDeliveryPin(a, b k.PermitDeliveryPin) bool {
+	return k.ValidPermitDeliveryPin(a) && k.ValidPermitDeliveryPin(b) && a.Version == b.Version && a.IssuerGrantSHA256 == b.IssuerGrantSHA256 && bytes.Equal(a.Issuer, b.Issuer)
 }
 func uniqueFormalJSON(raw []byte) bool {
 	d := json.NewDecoder(bytes.NewReader(raw))

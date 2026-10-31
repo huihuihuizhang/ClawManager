@@ -129,3 +129,11 @@
 - 测试暴露A5把typed SpecSHA当真实kube.Intent requestSHA比较，已保留真实journal并合入A修复98ccb4d3（backup f4631961），未修改A helper或把fixture SQL改为错误SpecSHA。之后原D fixture的opaque占位wrapped key不满足A真实Transit 60-byte密文格式；改为正确vault:v1/60-byte格式的本地opaque fixture，没有弱化生产验证。
 - 最终A/D MySQL opt-in均启用、UUID独立固定，五包完整退出0：execution20.403s、controller4.321s、kekadapter2.990s、v2-controller CLI2.901s、grant CLI编译通过。前述文件/consumer定向5.301s通过。SQL仍使用D focused surrounding schema及实际123/125/127/128/131 DDL，不冒充完整172消费者验收；所有自有临时库/用户清理。
 - 本项没有开启acceptance_ready、修改supportedPublicCapture或把workspace-only inventory称为六项完成。动态Generate permit producer/lease/worker消费、真正完整模块生产工厂/Runtime参与者、publisher新claim/三用途签名/immutable发布独立读回及终态仍继续开发。实际controller Pod/SA/owner读权限由独立部署提供并须现场核对，当前五包不能代替Kubernetes RBAC/CSI/CRI实证。
+
+## D5.4 动态 Generate 许可消费端（2026-10-31）
+
+- FormalCaptureSpec/materials 只冻结 A PermitDeliveryPin（独立 delegation SHA、公钥、协议）；不依赖未来 Invocation/Pod/Job 或许可摘要，动态材料禁止混入静态 PermitMount。实际 backup-worker CLI 使用 NewDeliveredCaptureKeyJob，签名字节只能取自原 mTLS key-reserve ACK，旧静态构造显式拒绝动态 invocation。
+- Lease 新增公开签名许可，只允许动态 key-reserve ACK 携带，其余 action 禁止；不传 DEK/provider token。未知 reserve ACK 最多以相同原请求/nonce重读两次，原 reserved key-use 只能原字节ACK，不重签、不续期、不接受 using/finished 或替换claim/Pod/key/nonce。旧静态 reserve 不可重放规则保留。
+- 原 keyUseTx 保留 A ce375f28 的 UTC 微秒向下截断四行，待合并时不覆盖 A 的独有 SQL 纳秒期限回归。
+- 实际本机 mTLS ControlHandler/ControlClient + 独立 TLS JWT/Generate + CMBKGC01 文件封存 + 原 ReportCandidate 测试通过。未知ACK仅一次签名、同nonce两次reserve；正常login/Generate各一次。缺许可、错签名/nonce、登录后撤销均零Generate；动态materials错独立公钥/delegation/缺pin/静态混用拒绝。此测试authorizer明确为状态夹具，不冒充原SQL issuer提交证据。
+- Go1.26.1四包完整退出0，原D/A MySQL opt-in均启用：worker35.212s、publicadapter3.434s、execution20.325s、backup-worker2.897s。当前仍未接入PublicJobOwner实际Prepare/Stage/ReadCommitted，紧接着合入A7.1与精度修复后完成；不能称实际生产Generate链路完成。

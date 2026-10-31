@@ -36,7 +36,11 @@ func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	next, changed, e := advanceKeyUse(old, current, req.Action, now)
+	advance := advanceKeyUse
+	if req.Invocation.FormalCapture != nil && req.Invocation.FormalCapture.PermitDelivery != nil {
+		advance = advanceDeliveredKeyUse
+	}
+	next, changed, e := advance(old, current, req.Action, now)
 	if e != nil {
 		return nil, e
 	}
@@ -54,6 +58,17 @@ func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority
 		}
 	}
 	return &next, nil
+}
+
+func advanceDeliveredKeyUse(raw []byte, current worker.KeyUseLease, action string, now time.Time) (worker.KeyUseLease, bool, error) {
+	if action == "key-reserve" && len(raw) != 0 {
+		original, _, err := advanceKeyUse(raw, current, "key-check", now)
+		if err != nil || original.State != "reserved" {
+			return worker.KeyUseLease{}, false, c.ErrExecutionAuthority
+		}
+		return original, false, nil
+	}
+	return advanceKeyUse(raw, current, action, now)
 }
 
 func advanceKeyUse(raw []byte, current worker.KeyUseLease, action string, now time.Time) (worker.KeyUseLease, bool, error) {
