@@ -7,6 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -99,6 +100,9 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 			return nil, d.ErrNotReady
 		}
 		ids[descriptor.ID] = true
+		if !validControlEvidenceDescriptor(descriptor) {
+			return nil, d.ErrNotReady
+		}
 		descriptor.Parts = append([]CaptureModulePart(nil), descriptor.Parts...)
 		descriptor.Requires = append([]CaptureModuleDependency(nil), descriptor.Requires...)
 		for _, part := range descriptor.Parts {
@@ -106,6 +110,10 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 				return nil, d.ErrNotReady
 			}
 			switch part.Operation {
+			case ce.Operation:
+				if descriptor.ID != ce.Part || descriptor.Owner != "D" || part.RequestedPart != "mysql" || part.Category != ce.Part || part.Part != ce.Part && part.Part != ce.ProofPart {
+					return nil, d.ErrNotReady
+				}
 			case "capture-source-redis":
 				if descriptor.Owner != "D" || part.RequestedPart != "redis" {
 					return nil, d.ErrNotReady
@@ -319,7 +327,7 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 			out = append(out, part)
 		}
 	}
-	if validateSkillWorkspaceParts(source, out) != nil || validateDiscovery(in, Discovery{Source: raw, SourceSHA256: digest(raw), Writers: []FrozenWriter{}, Parts: out, HoldUntil: hold}) != nil {
+	if validateControlEvidenceParts(in, out) != nil || validateSkillWorkspaceParts(source, out) != nil || validateDiscovery(in, Discovery{Source: raw, SourceSHA256: digest(raw), Writers: []FrozenWriter{}, Parts: out, HoldUntil: hold}) != nil {
 		return nil, d.ErrNotReady
 	}
 	return out, nil
