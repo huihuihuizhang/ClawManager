@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -347,6 +348,8 @@ type consumerFixtureOptions struct {
 	PartName, Category                    string
 	RequestedParts                        []string
 	ConfigureWorkload                     func(*kube.JobRequest)
+	WrapControlConnector                  func(driver.Connector) driver.Connector
+	ConfigSnapshot                        []byte
 	OwnedCredentialsFile, OwnedServerUUID string
 	DeploymentCore                        func(c.ExecutionGrant, ed25519.PublicKey, string) DeploymentConfig
 	JobDeadlineSeconds                    int64
@@ -490,10 +493,15 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	cfg.User, cfg.Passwd = user, password
 	password = ""
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+	connector, err := mysql.NewConnector(cfg)
 	if err != nil {
-		t.Fatal("local consumer connection failed")
+		t.Fatal("local consumer connector failed")
 	}
+	var controlConnector driver.Connector = connector
+	if options.WrapControlConnector != nil {
+		controlConnector = options.WrapControlConnector(controlConnector)
+	}
+	db := sql.OpenDB(controlConnector)
 	db.SetMaxOpenConns(8)
 	t.Cleanup(func() { db.Close() })
 	var preparation []func(*os.Root, *worker.Invocation)
@@ -522,6 +530,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		f(&inv)
 	}
 	config := []byte(`{"source":"original-fixture"}`)
+	if len(options.ConfigSnapshot) > 0 {
+		config = bytes.Clone(options.ConfigSnapshot)
+	}
 	a.ConfigSHA256 = hash(config)
 	if options.Configure != nil {
 		options.Configure(&inv, db, admin, a)

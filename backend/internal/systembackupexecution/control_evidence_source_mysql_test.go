@@ -21,15 +21,66 @@ import (
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	k "clawreef/internal/systembackupkms"
+	security "clawreef/internal/systembackupsecurity"
 )
 
 // Actual service production wrapper, signed original deployment, original
 // 096/097/098/099 SQL constraints, official scoped controller role and actual
 // AcquireWithReceipt. The historical schema approval/source exclusion bodies
 // are explicit synthetic fixtures, NOT current source census/readiness proof.
-func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing.T) {
+type aControlEvidenceSourceFixture struct {
+	x         *aPublisherVerifierFixture
+	in        d.Input
+	claim     c.ClaimToken
+	expected  ce.Expected
+	source    ce.RegisteredEvidence
+	input     ce.CaptureInput
+	schema    []byte
+	locator   ce.CaptureLocator
+	materials productionCaptureMaterials
+	sourceKey ed25519.PrivateKey
+}
+
+func newAControlEvidenceSourceFixture(t *testing.T, adjust ...func(*aPublisherVerifierFixtureOptions)) *aControlEvidenceSourceFixture {
+	t.Helper()
 	store, _ := newANativePublicationStore(t, time.Minute)
-	x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config, ControlEvidence: true})
+	options := aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config, ControlEvidence: true}
+	// The full original scheduler reads the frozen acquisition duration. Use a
+	// complete original config snapshot rather than the old consumer's tiny
+	// data-only JSON fixture, and bind the references actually used here.
+	exampleRaw, err := os.ReadFile(filepath.Join("..", "..", "..", "contracts", "system-backup", "v12", "admin-control-redacted-examples.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var example struct {
+		Request struct {
+			Config map[string]any `json:"config"`
+		} `json:"config_update_request"`
+	}
+	if json.Unmarshal(exampleRaw, &example) != nil {
+		t.Fatal("original full config fixture")
+	}
+	values := example.Request.Config
+	values["enabled"] = true
+	values["capacity"].(map[string]any)["control_metadata_capacity_bytes"] = float64(1 << 30)
+	for _, v := range values["references"].([]any) {
+		ref := v.(map[string]any)
+		switch ref["purpose"] {
+		case "kek":
+			ref["identity_hash"], ref["version"] = strings.Repeat("d", 64), "original-r1"
+		case "artifact_write":
+			ref["identity_hash"], ref["version"] = store.config.WriteIdentityHash, store.config.WriteRefVersion
+		case "artifact_read":
+			ref["identity_hash"], ref["version"] = store.config.ReadIdentityHash, store.config.ReadRefVersion
+		case "artifact_ca":
+			ref["identity_hash"], ref["version"] = store.config.CAIdentityHash, store.config.CARefVersion
+		}
+	}
+	options.ConfigSnapshot, _ = json.Marshal(values)
+	for _, fn := range adjust {
+		fn(&options)
+	}
+	x := newAPublisherVerifierFixtureOptions(t, options)
 	aUseActualPublicationDDL(t, x, store.config)
 	h, ctx := x.history, context.Background()
 	s := h.service
@@ -102,6 +153,10 @@ func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing
 	// A NEW preparing task uses the same original config/deployment. No stopped
 	// historical capture or publisher claim is revived for a source read.
 	backup := "sbk_00000000-0000-4000-8000-000000000019"
+	requestedParts := "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle"
+	if len(options.ControlRequestedParts) > 0 {
+		requestedParts = strings.Join(options.ControlRequestedParts, ",")
+	}
 	var config []byte
 	if h.db.QueryRow("SELECT config_snapshot_json FROM system_backup_v2_backups WHERE public_id=?", h.original.TaskPublicID).Scan(&config) != nil {
 		t.Fatal("original config")
@@ -125,7 +180,7 @@ func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing
 	}
 	conn.Close()
 	exec("UPDATE system_backup_v2_configs SET canonical_config_json=? WHERE origin_installation_id=? AND version=1", config, g.InstallationID)
-	exec(`INSERT INTO system_backup_v2_backups(public_id,origin_installation_id,actor_type,actor_id,endpoint,idempotency_key,request_hash,request_id,status,config_version,config_snapshot_json,config_snapshot_size_bytes,config_snapshot_sha256,deadline_at,started_at,source_orchestrator,source_profile,matrix_key,runner,task_purpose,requested_parts,artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version,target_class,target_risks,target_failure_domain_id) SELECT ?,origin_installation_id,actor_type,actor_id,'OriginalControlEvidenceService','original-control-service',request_hash,'original-control-service','preparing',config_version,config_snapshot_json,config_snapshot_size_bytes,config_snapshot_sha256,deadline_at,UTC_TIMESTAMP(6),source_orchestrator,source_profile,matrix_key,runner,task_purpose,'mysql,redis,object_storage,workspace,deployment_resources,secret_bundle',artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version,target_class,target_risks,target_failure_domain_id FROM system_backup_v2_backups WHERE public_id=?`, backup, h.original.TaskPublicID)
+	exec(`INSERT INTO system_backup_v2_backups(public_id,origin_installation_id,actor_type,actor_id,endpoint,idempotency_key,request_hash,request_id,status,config_version,config_snapshot_json,config_snapshot_size_bytes,config_snapshot_sha256,deadline_at,started_at,source_orchestrator,source_profile,matrix_key,runner,task_purpose,requested_parts,artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version,target_class,target_risks,target_failure_domain_id) SELECT ?,origin_installation_id,actor_type,actor_id,'OriginalControlEvidenceService','original-control-service',request_hash,'original-control-service','preparing',config_version,config_snapshot_json,config_snapshot_size_bytes,config_snapshot_sha256,deadline_at,UTC_TIMESTAMP(6),source_orchestrator,source_profile,matrix_key,runner,task_purpose,?,artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version,target_class,target_risks,target_failure_domain_id FROM system_backup_v2_backups WHERE public_id=?`, backup, requestedParts, h.original.TaskPublicID)
 	exec(`INSERT INTO system_backup_v2_attempts(target_type,target_public_id,attempt_no,phase,status,row_version) VALUES('backup',?,1,'capture','preparing',1)`, backup)
 	exec(`INSERT INTO system_backup_v2_execution_inputs(origin_installation_id,task_public_id,task_type,profile_json,profile_sha256) SELECT origin_installation_id,?,'backup',profile_json,profile_sha256 FROM system_backup_v2_execution_inputs WHERE task_public_id=?`, backup, h.original.TaskPublicID)
 	var version uint64
@@ -199,7 +254,7 @@ func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing
 		t.Fatal("register explicit source proof fixture")
 	}
 	pub, private, _ := ed25519.GenerateKey(rand.Reader)
-	defer clear(private)
+	t.Cleanup(func() { clear(private) })
 	m := productionCaptureMaterials{Version: productionCaptureMaterialsVersion, Revision: "preparing-fixture-r1", InstallationID: g.InstallationID, ControllerOwner: g.ControllerOwner, DeploymentConfigSHA256: s.ConfigDigest, CaptureGrantSHA256: s.Forward.GrantSHA256(), Operations: map[string]productionCaptureOperation{}, MaxObjects: 100, MaxObjectBytes: 1024, MaxObjectTotalBytes: 4096, ResourceTypes: []productionResourceType{{Part: "deployment_resources", Group: "apps", Version: "v1", Resource: "deployments"}}, ControlEvidence: &input, ControlEvidenceSource: &worker.ControlEvidenceSourceMount{Endpoint: s.Config.ControlURL, GrantFile: filepath.Join(dir, "worker-source-grant.json"), ControllerGrantFile: filepath.Join(dir, "controller-source-grant.json"), GrantSHA256: strings.Repeat("a", 64), Issuer: pub}}
 	permitPub, _, _ := ed25519.GenerateKey(rand.Reader)
 	for _, op := range []string{"capture-database", "capture-workspace", "capture-source-redis", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle", ce.Operation} {
@@ -228,6 +283,17 @@ func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing
 	if err = h.owner.Gate.Authority.Check(ctx, authority); err != nil {
 		t.Fatal("actual original preparing guard before producer", err)
 	}
+	// SQL setup can legitimately exceed the trusted report's five-second
+	// freshness window under concurrent tests. Resample this owned fixture
+	// immediately before the actual consumer; production freshness is unchanged.
+	var sampledAt time.Time
+	if h.db.QueryRow("SELECT UTC_TIMESTAMP(6)").Scan(&sampledAt) != nil {
+		t.Fatal("owned capacity SQL clock")
+	}
+	capacityRaw, _ := json.Marshal(security.CapacityReport{ServerUUID: g.ServerUUID, Database: g.Database, ObservedAt: sampledAt, AvailableBytes: 4 << 30})
+	if os.WriteFile(s.Config.CapacityFile, capacityRaw, 0600) != nil {
+		t.Fatal("owned fresh capacity sample")
+	}
 	locator, err := s.PrepareControlEvidenceLocator(ctx, in, ce.EvidenceRef{PublicID: source.PublicID, SHA256: source.SHA256})
 	if err != nil {
 		t.Fatal("actual original preparing source producer", err)
@@ -235,8 +301,23 @@ func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing
 	if locator.Expected != expected {
 		t.Fatal("source scope changed")
 	}
+	return &aControlEvidenceSourceFixture{x: x, in: in, claim: claim, expected: expected, source: source, input: input, schema: schema, locator: locator, materials: m, sourceKey: private}
+}
+
+func TestAControlEvidenceServiceOriginalPreparingClaimAndRegistration(t *testing.T) {
+	f := newAControlEvidenceSourceFixture(t)
+	h, ctx := f.x.history, context.Background()
+	s := h.service
+	in, claim, expected, source, input, schema, locator := f.in, f.claim, f.expected, f.source, f.input, f.schema, f.locator
+	authority, backup, g := in.Authority, in.Authority.TaskPublicID, s.Forward.DeploymentBinding()
+	exec := func(q string, args ...any) {
+		t.Helper()
+		if _, err := h.admin.ExecContext(ctx, q, args...); err != nil {
+			t.Fatal("owned control fixture", err)
+		}
+	}
 	entries := []ce.RegisteredEvidence{}
-	tx, err = h.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	tx, err := h.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		t.Fatal(err)
 	}

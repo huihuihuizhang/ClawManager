@@ -23,6 +23,9 @@ import (
 func (s *DeploymentService) controlHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("/", s.Runtime.Control)
+	if s.captureMaterials != nil && s.captureMaterials.ControlEvidence != nil {
+		mux.Handle(ControlEvidencePullPath, s.controlEvidenceSourceHandler())
+	}
 	if s.Config.RuntimeSources != nil {
 		o := s.Runtime.Owner
 		mux.Handle("/relay", WorkloadIdentity{Client: o.Client, Namespace: o.Namespace, ServiceAccount: o.Security.ServiceAccountName, ServiceAccountUID: o.Security.ServiceAccountUID, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
