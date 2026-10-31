@@ -29,6 +29,7 @@ type FormalVerifierDeploymentConfig struct {
 	Workload           a.ControllerVerifierWorkload    `json:"workload"`
 	Grant              a.ControllerVerifierGrantMount  `json:"grant"`
 	ProviderPermits    *ProviderPermitDeploymentConfig `json:"provider_permits,omitempty"`
+	KubernetesReads    *a.VerifierKubernetesReads      `json:"kubernetes_reads,omitempty"`
 }
 
 const formalVerifierMaterialsVersion = "controller-verifier-materials.v1"
@@ -78,6 +79,9 @@ func (s *DeploymentService) loadFormalVerifier(inputs []FormalVerifierInput) err
 }
 
 func (v FormalVerifierDeploymentConfig) validate(cfg DeploymentConfig) error {
+	if v.KubernetesReads != nil && v.KubernetesReads.Validate(v.Workload) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if v.ProviderPermits != nil && v.ProviderPermits.validate(cfg) != nil {
 		return c.ErrExecutionAuthority
 	}
@@ -108,6 +112,9 @@ func (s *DeploymentService) attachFormalVerifier(o *PublicJobOwner) error {
 	if v == nil || o == nil || o.Identity != s.Forward || v.validate(s.Config) != nil {
 		return c.ErrExecutionAuthority
 	}
+	if reads := v.KubernetesReads; reads != nil && (v.Workload.Namespace != s.Config.Namespace || reads.NamespaceUID != s.Config.NamespaceUID || v.Workload.PodName != s.controllerActor.PodName || v.Workload.PodUID != s.controllerActor.PodUID || v.Workload.ServiceAccountName != s.controllerActor.ServiceAccountName) {
+		return c.ErrExecutionAuthority
+	}
 	deployment := s.Forward.DeploymentBinding()
 	if v.Database.Database != deployment.Database || v.Database.ServerUUID != deployment.ServerUUID {
 		return c.ErrExecutionAuthority
@@ -123,7 +130,7 @@ func (s *DeploymentService) attachFormalVerifier(o *PublicJobOwner) error {
 	if err = s.attachProviderPermits(o, capabilities); err != nil {
 		return err
 	}
-	factory, err := a.NewControllerVerifierFactory(a.ControllerVerifierConfig{Capabilities: capabilities, Binding: v.Binding, CAPEM: ca, JWTFile: v.JWTFile, Workload: v.Workload, Kubernetes: o.Client, Authority: o.Gate.Authority, Records: o.Gate.Records, GrantMount: v.Grant, CaptureGrantSHA256: s.Forward.GrantSHA256(), InstallationIssuer: v.InstallationIssuer})
+	factory, err := a.NewControllerVerifierFactory(a.ControllerVerifierConfig{Capabilities: capabilities, Binding: v.Binding, CAPEM: ca, JWTFile: v.JWTFile, Workload: v.Workload, Kubernetes: o.Client, Authority: o.Gate.Authority, Records: o.Gate.Records, GrantMount: v.Grant, CaptureGrantSHA256: s.Forward.GrantSHA256(), InstallationIssuer: v.InstallationIssuer, KubernetesReads: v.KubernetesReads})
 	if err != nil {
 		return err
 	}

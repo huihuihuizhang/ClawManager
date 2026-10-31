@@ -123,8 +123,12 @@ func sortedUnique(values []string) []string {
 
 // CaptureKubernetesGrants renders reviewable RBAC only. Applying it requires
 // the installation administrator. No controller can create its own roles.
-func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string) ([]runtime.Object, error) {
-	access, err := RequiredCaptureAccess(cfg, controllerSA)
+func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string, verifierInputs ...FormalVerifierInput) ([]runtime.Object, error) {
+	verifier, err := loadVerifierKubernetesGrantInputs(cfg, verifierInputs)
+	if err != nil {
+		return nil, err
+	}
+	access, err := RequiredDeploymentCaptureAccess(cfg, controllerSA, verifier)
 	if err != nil || len(validation.IsDNS1123Subdomain(controllerSA)) != 0 || controllerSA == cfg.Security.ServiceAccountName {
 		return nil, c.ErrExecutionAuthority
 	}
@@ -157,7 +161,14 @@ func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string) ([]runti
 // forward-work probe and still uses original journals plus independent grants.
 func CheckCaptureKubernetesAccess(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig, controllerSA ...string) error {
 	access, err := RequiredCaptureAccess(cfg, controllerSA...)
-	if err != nil || client == nil || ctx == nil || ctx.Err() != nil {
+	if err != nil {
+		return err
+	}
+	return checkCaptureKubernetesAccess(ctx, client, access)
+}
+
+func checkCaptureKubernetesAccess(ctx context.Context, client kubernetes.Interface, access []CaptureAccess) error {
+	if client == nil || ctx == nil || ctx.Err() != nil {
 		return c.ErrExecutionAuthority
 	}
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)

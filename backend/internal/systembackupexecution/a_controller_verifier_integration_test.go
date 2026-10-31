@@ -227,7 +227,9 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool, exercis
 	var captureLoginMu sync.Mutex
 	var captureLoginHook func() error
 	var generationCalls atomic.Int64
+	var providerCalls atomic.Int64
 	server := httptest.NewTLSServer(http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
+		providerCalls.Add(1)
 		switch r.URL.Path {
 		case "/v1/auth/capture-jwt/login":
 			logins++
@@ -433,7 +435,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool, exercis
 	exec(`INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'system',?,'capability_snapshot','inline',?,?,?,'application/json','none','internal','healthy',?)`, capRecord.Source.RecordID, in.Authority.InstallationID, capEnvelope, hash(capEnvelope), len(capEnvelope), capRecord.Until)
 	if len(exercises) > 0 {
 		for _, exercise := range exercises {
-			exercise(aOriginalIssuerFixture{ctx: ctx, db: db, owner: owner, cfg: vcfg, in: in, job: j, invocation: i, unwrapPin: capPin, original: originalMapping, putOriginal: putOriginal, dek: dek, generationCalls: generationCalls.Load, onCaptureLogin: func(hook func() error) { captureLoginMu.Lock(); captureLoginHook = hook; captureLoginMu.Unlock() }, updateOriginal: func(record a.OriginalRecord, expected uint64) error {
+			exercise(aOriginalIssuerFixture{ctx: ctx, db: db, owner: owner, cfg: vcfg, in: in, job: j, invocation: i, unwrapPin: capPin, original: originalMapping, putOriginal: putOriginal, dek: dek, generationCalls: generationCalls.Load, providerCalls: providerCalls.Load, onCaptureLogin: func(hook func() error) { captureLoginMu.Lock(); captureLoginHook = hook; captureLoginMu.Unlock() }, updateOriginal: func(record a.OriginalRecord, expected uint64) error {
 				raw, _ := json.Marshal(record)
 				_, err := originalWriter.Put(ctx, raw, ed25519.Sign(installationKey, append([]byte("system-backup-original-kek.v1\x00"), raw...)), expected)
 				return err

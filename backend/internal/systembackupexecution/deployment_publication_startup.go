@@ -102,7 +102,7 @@ func (d *DeploymentService) attachPublicationSigners(ctx context.Context, db *sq
 		return c.ErrExecutionAuthority
 	}
 	if podName == "" {
-		if d.ForwardEnabled && d.Config.PublicationSigners != nil {
+		if d.ForwardEnabled && (d.Config.PublicationSigners != nil || d.Config.FormalVerifier != nil) {
 			return c.ErrExecutionAuthority
 		}
 		return nil
@@ -117,6 +117,7 @@ func (d *DeploymentService) attachPublicationSigners(ctx context.Context, db *sq
 		return c.ErrExecutionAuthority
 	}
 	d.PublisherOwner = "public:" + string(pod.UID)
+	d.controllerActor = controllerObservedActor{PodName: pod.Name, PodUID: string(pod.UID), ServiceAccountName: pod.Spec.ServiceAccountName}
 	if !d.ForwardEnabled {
 		return nil
 	}
