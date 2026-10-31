@@ -67,7 +67,16 @@ func ValidateBusinessSourceGrants(database string, grants []string) error {
 		}
 		seen[match[2]] = true
 	}
-	if !census || !routineMetadata || len(seen) != len(allowed) {
+	optional := map[string]bool{}
+	for _, name := range schemaobjects.OptionalBusinessTables() {
+		optional[name] = true
+	}
+	for name := range allowed {
+		if !seen[name] && !optional[name] {
+			return ErrIsolation
+		}
+	}
+	if !census || !routineMetadata {
 		return ErrIsolation
 	}
 	return nil

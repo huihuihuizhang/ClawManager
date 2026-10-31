@@ -22,6 +22,18 @@ import (
 // minimal empty business schemas exercise scope admission, not original DDL,
 // full business constraints, physical source consistency or TLS deployment.
 func TestDeploymentFiniteBusinessSourceAndActualCaptureMySQL(t *testing.T) {
+	testDeploymentFiniteBusinessSourceMySQL(t, false)
+}
+
+func TestDeploymentLatestMigratedSchemaFiniteBusinessSourceMySQL(t *testing.T) {
+	testDeploymentFiniteBusinessSourceMySQL(t, true)
+}
+
+func testDeploymentFiniteBusinessSourceMySQL(t *testing.T, originalDDL bool) {
+	if originalDDL {
+		testLatestMigratedSourceMySQL(t)
+		return
+	}
 	path := os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS")
 	if path == "" {
 		t.Skip("requires disposable local MySQL")
@@ -78,52 +90,9 @@ func TestDeploymentFiniteBusinessSourceAndActualCaptureMySQL(t *testing.T) {
 	if _, err = admin.Exec("INSERT INTO `" + name + "`.system_backup_v2_configs VALUES(1,'local-control-row-must-remain-unreadable')"); err != nil {
 		t.Fatal(err)
 	}
-	owner := "ad_d_cen_" + hex.EncodeToString(id[:])
-	if _, err = admin.Exec("CREATE USER '" + owner + "'@'127.0.0.1' ACCOUNT LOCK"); err != nil {
-		t.Fatal("owned locked census definer", err)
-	}
+	owner, grantDatabase, projection, census, installCensus := installLockedSourceCensusFixture(t, admin, name, user, id)
 	defer admin.Exec("DROP USER '" + owner + "'@'127.0.0.1'")
-	grantConn, e := admin.Conn(context.Background())
-	if e != nil {
-		t.Fatal(e)
-	}
-	grantDatabase, e := domain.QuotedGrantDatabase(context.Background(), grantConn, name)
-	grantConn.Close()
-	if e != nil {
-		t.Fatal("original exact schema GRANT quoting", e)
-	}
-	var partialRevokes bool
-	if admin.QueryRow("SELECT @@GLOBAL.partial_revokes").Scan(&partialRevokes) != nil {
-		t.Fatal("source grant mode unavailable")
-	}
-	t.Logf("actual local source partial_revokes=%v; underscore schema grants use original quoting", partialRevokes)
-	for _, statement := range []string{"GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON " + grantDatabase + ".* TO '" + owner + "'@'127.0.0.1'", "GRANT SHOW_ROUTINE ON *.* TO '" + owner + "'@'127.0.0.1'", "GRANT SELECT ON mysql.global_grants TO '" + owner + "'@'127.0.0.1'", "GRANT SELECT ON mysql.role_edges TO '" + owner + "'@'127.0.0.1'", "GRANT SHOW_ROUTINE ON *.* TO '" + user + "'@'127.0.0.1'"} {
-		if _, err = admin.Exec(statement); err != nil {
-			t.Fatal("owned census metadata capability setup failed")
-		}
-	}
-	projection, err := domain.SchemaCensusProjection(name, owner+"@127.0.0.1", partialRevokes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	installCensus := func() {
-		t.Helper()
-		admin.Exec("DROP PROCEDURE IF EXISTS `" + name + "`.`" + domain.SchemaCensusRoutine + "`")
-		if _, err := admin.Exec("CREATE DEFINER='" + owner + "'@'127.0.0.1' PROCEDURE `" + name + "`.`" + domain.SchemaCensusRoutine + "`() READS SQL DATA SQL SECURITY DEFINER BEGIN " + projection + "; END"); err != nil {
-			t.Fatal("owned source-owner census installation", err)
-		}
-		for _, account := range []string{owner, user} {
-			if _, err := admin.Exec("GRANT EXECUTE ON PROCEDURE `" + name + "`.`" + domain.SchemaCensusRoutine + "` TO '" + account + "'@'127.0.0.1'"); err != nil {
-				t.Fatal("finite original census EXECUTE", err)
-			}
-		}
-	}
-	installCensus()
-	var definition, definer string
-	if admin.QueryRow("SELECT ROUTINE_DEFINITION,DEFINER FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=? AND ROUTINE_NAME=?", name, domain.SchemaCensusRoutine).Scan(&definition, &definer) != nil {
-		t.Fatal("original source-owner census identity unavailable")
-	}
-	census := domain.SchemaCensusSpec{Version: domain.SchemaCensusVersion, Definer: definer, DefinitionSHA256: hash([]byte(definition)), PartialRevokes: partialRevokes}
+	partialRevokes := census.PartialRevokes
 	if _, err = admin.Exec("INSERT INTO `" + name + "`.users VALUES(1)"); err != nil {
 		t.Fatal(err)
 	}
@@ -488,7 +457,8 @@ func TestDeploymentFiniteBusinessSourceAndActualCaptureMySQL(t *testing.T) {
 
 type censusTraceConnector struct {
 	driver.Connector
-	calls atomic.Int64
+	calls     atomic.Int64
+	lastQuery atomic.Value
 }
 
 func (c *censusTraceConnector) Connect(ctx context.Context) (driver.Conn, error) {
@@ -508,8 +478,60 @@ func (c *censusTraceConn) BeginTx(ctx context.Context, options driver.TxOptions)
 	return c.Conn.(driver.ConnBeginTx).BeginTx(ctx, options)
 }
 func (c *censusTraceConn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
+	c.trace.lastQuery.Store(query)
 	if strings.HasPrefix(query, "CALL ") {
 		c.trace.calls.Add(1)
 	}
 	return c.Conn.(driver.QueryerContext).QueryContext(ctx, query, args)
+}
+
+func installLockedSourceCensusFixture(t *testing.T, admin *sql.DB, name, user string, id [8]byte) (owner, grantDatabase, projection string, census domain.SchemaCensusSpec, installCensus func()) {
+	t.Helper()
+	var err error
+	owner = "ad_d_cen_" + hex.EncodeToString(id[:])
+	if _, err = admin.Exec("CREATE USER '" + owner + "'@'127.0.0.1' ACCOUNT LOCK"); err != nil {
+		t.Fatal("owned locked census definer", err)
+	}
+	grantConn, e := admin.Conn(context.Background())
+	if e != nil {
+		t.Fatal(e)
+	}
+	grantDatabase, e = domain.QuotedGrantDatabase(context.Background(), grantConn, name)
+	grantConn.Close()
+	if e != nil {
+		t.Fatal("original exact schema GRANT quoting", e)
+	}
+	var partialRevokes bool
+	if admin.QueryRow("SELECT @@GLOBAL.partial_revokes").Scan(&partialRevokes) != nil {
+		t.Fatal("source grant mode unavailable")
+	}
+	t.Logf("actual local source partial_revokes=%v; underscore schema grants use original quoting", partialRevokes)
+	for _, statement := range []string{"GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON " + grantDatabase + ".* TO '" + owner + "'@'127.0.0.1'", "GRANT SHOW_ROUTINE ON *.* TO '" + owner + "'@'127.0.0.1'", "GRANT SELECT ON mysql.global_grants TO '" + owner + "'@'127.0.0.1'", "GRANT SELECT ON mysql.role_edges TO '" + owner + "'@'127.0.0.1'", "GRANT SHOW_ROUTINE ON *.* TO '" + user + "'@'127.0.0.1'"} {
+		if _, err = admin.Exec(statement); err != nil {
+			t.Fatal("owned census metadata capability setup failed")
+		}
+	}
+	projection, err = domain.SchemaCensusProjection(name, owner+"@127.0.0.1", partialRevokes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	installCensus = func() {
+		t.Helper()
+		admin.Exec("DROP PROCEDURE IF EXISTS `" + name + "`.`" + domain.SchemaCensusRoutine + "`")
+		if _, err := admin.Exec("CREATE DEFINER='" + owner + "'@'127.0.0.1' PROCEDURE `" + name + "`.`" + domain.SchemaCensusRoutine + "`() READS SQL DATA SQL SECURITY DEFINER BEGIN " + projection + "; END"); err != nil {
+			t.Fatal("owned source-owner census installation", err)
+		}
+		for _, account := range []string{owner, user} {
+			if _, err := admin.Exec("GRANT EXECUTE ON PROCEDURE `" + name + "`.`" + domain.SchemaCensusRoutine + "` TO '" + account + "'@'127.0.0.1'"); err != nil {
+				t.Fatal("finite original census EXECUTE", err)
+			}
+		}
+	}
+	installCensus()
+	var definition, definer string
+	if admin.QueryRow("SELECT ROUTINE_DEFINITION,DEFINER FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=? AND ROUTINE_NAME=?", name, domain.SchemaCensusRoutine).Scan(&definition, &definer) != nil {
+		t.Fatal("original source-owner census identity unavailable")
+	}
+	census = domain.SchemaCensusSpec{Version: domain.SchemaCensusVersion, Definer: definer, DefinitionSHA256: hash([]byte(definition)), PartialRevokes: partialRevokes}
+	return
 }

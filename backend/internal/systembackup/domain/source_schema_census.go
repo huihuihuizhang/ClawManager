@@ -30,9 +30,9 @@ func (s SchemaCensusSpec) Validate() error {
 
 func SchemaCensusPolicySHA256() string {
 	raw, _ := json.Marshal(struct {
-		Version, View string
-		Excluded      []string
-	}{SchemaCensusVersion, SchemaCensusRoutine, schemaobjects.ExcludedControlTables()})
+		Version, View      string
+		Excluded, Optional []string
+	}{SchemaCensusVersion, SchemaCensusRoutine, schemaobjects.ExcludedControlTables(), schemaobjects.OptionalBusinessTables()})
 	h := sha256.Sum256(raw)
 	return hex.EncodeToString(h[:])
 }
@@ -148,8 +148,48 @@ func CheckBusinessSchemaCensus(ctx context.Context, q schemaCensusReader, spec S
 		return ErrIsolation
 	}
 	for name := range business {
-		if !seen[name] {
+		optional := false
+		for _, table := range schemaobjects.OptionalBusinessTables() {
+			optional = optional || table == name
+		}
+		if !seen[name] && !optional {
 			return ErrSchema
+		}
+	}
+	// Only original observed Linux Lite WorkBuddy uses this identity contract.
+	// An absent optional schema cannot be called inactive when such an original
+	// instance exists. This reads the same authenticated source connection/RR.
+	if !seen[workBuddyIdentities] || !seen[workBuddyAllocator] {
+		var instances int
+		if q.QueryRowContext(ctx, "SELECT COUNT(*) FROM instances WHERE type='workbuddy' AND instance_mode='lite' AND runtime_type='gateway' AND runtime_variant='linux'").Scan(&instances) != nil || instances != 0 {
+			return ErrSchema
+		}
+	}
+	// Complete census, not ACL-filtered information_schema, determines which
+	// optional source tables actually exist and therefore require SELECT.
+	grants, err := q.QueryContext(ctx, "SHOW GRANTS FOR CURRENT_USER")
+	if err != nil {
+		return ErrIsolation
+	}
+	selected := map[string]bool{}
+	for grants.Next() {
+		var g string
+		if grants.Scan(&g) != nil {
+			grants.Close()
+			return ErrIsolation
+		}
+		if match := businessTableGrant.FindStringSubmatch(g); len(match) == 3 && match[1] == database {
+			selected[match[2]] = true
+		}
+	}
+	err = grants.Err()
+	grants.Close()
+	if err != nil {
+		return ErrIsolation
+	}
+	for name := range seen {
+		if business[name] && !selected[name] {
+			return ErrIsolation
 		}
 	}
 	return ctx.Err()

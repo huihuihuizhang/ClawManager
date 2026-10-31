@@ -39,6 +39,9 @@ func TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes(t *testing.T) {
 	if cfg.Passwd != string(credential.Password) || cfg.Net != "tcp" || cfg.TLS == nil || cfg.TLS.MinVersion < tls.VersionTLS12 || cfg.TLS.InsecureSkipVerify || cfg.TLS.ServerName != "fixture.invalid" || cfg.TLS.RootCAs == nil || cfg.ParseTime || cfg.AllowAllFiles || cfg.MultiStatements || cfg.AllowCleartextPasswords || cfg.AllowFallbackToPlaintext || cfg.AllowOldPasswords {
 		t.Fatal("unsafe connection options")
 	}
+	if cfg.Params["time_zone"] != "'+00:00'" {
+		t.Fatal("source/restore connection lost explicit UTC raw-value semantics")
+	}
 	db, err := OpenDatabase(i.Request.Database, credential)
 	if err != nil {
 		t.Fatal(err)

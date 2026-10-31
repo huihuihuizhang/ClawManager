@@ -329,6 +329,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 						return ErrExecution
 					}
 					defer clearSnapshot(s)
+					if r.Database.SourceScope == domain.BusinessTableSourceScope && (r.Database.CaptureSchema == nil || r.Database.CaptureSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || domain.VerifyBusinessCapturedSnapshot(s, *r.Database.CaptureSchema) != nil) {
+						return ErrExecution
+					}
 					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
 						return ErrExecution
 					}

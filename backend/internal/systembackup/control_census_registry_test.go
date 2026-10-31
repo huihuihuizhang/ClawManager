@@ -19,3 +19,15 @@ func TestControlCensusRegistryMatchesOriginalPolicy(t *testing.T) {
 		t.Fatal("shared full schema census control exclusions drifted from original reviewed registry")
 	}
 }
+
+func TestOptionalSourceTablesRetainOriginalBusinessClassification(t *testing.T) {
+	for _, name := range schemaobjects.OptionalBusinessTables() {
+		if !teamDataHistoricalOperationTable(name) {
+			t.Fatal("optional source has no original historical-runtime policy", name)
+		}
+		p, ok := Policy(name)
+		if !ok || p.Category != "instances" || p.Classification != "secret" || p.BackupStrategy != "mysql_dump" {
+			t.Fatal("optional business rows were reclassified as controls", name)
+		}
+	}
+}

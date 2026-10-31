@@ -196,12 +196,20 @@ func sourceMySQLTLSFixture(t *testing.T, mode string) (string, []byte, *atomic.I
 		if sourceSQLPacketWrite(secured, 3, []byte{0, 0, 0, 2, 0, 0, 0}) != nil {
 			return
 		}
+		sessionUTC := false
 		for {
 			command, _, err := sourceSQLPacketRead(secured)
 			if err != nil || len(command) == 0 || command[0] == 1 {
 				return
 			}
-			if command[0] != 3 || string(command[1:]) != "SELECT CURRENT_USER(),CURRENT_ROLE(),DATABASE(),@@server_uuid" {
+			if !sessionUTC && command[0] == 3 && string(command[1:]) == "SET time_zone = '+00:00'" {
+				if sourceSQLPacketWrite(secured, 1, []byte{0, 0, 0, 2, 0, 0, 0}) != nil {
+					return
+				}
+				sessionUTC = true
+				continue
+			}
+			if !sessionUTC || command[0] != 3 || string(command[1:]) != "SELECT CURRENT_USER(),CURRENT_ROLE(),DATABASE(),@@server_uuid" {
 				t.Error("unexpected SQL source opener statement")
 				return
 			}

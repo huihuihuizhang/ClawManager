@@ -25,6 +25,7 @@ import (
 // Credentials only arrive in an acquire grant; source and drill identities,
 // placement and policy are bound to the complete invocation hash.
 type DatabaseSpec struct {
+	CaptureSchema   *domain.BusinessCaptureSchema  `json:"capture_schema,omitempty"`
 	SchemaCensus    *domain.SchemaCensusSpec       `json:"schema_census,omitempty"`
 	SourceScope     string                         `json:"source_scope,omitempty"`
 	SkillsInventory *sh.CaptureInventory           `json:"skills_inventory,omitempty"`
@@ -78,6 +79,9 @@ func validDatabaseRequest(r Request) bool {
 		return false
 	}
 	d := r.Database
+	if d != nil && ((d.SourceScope == domain.BusinessTableSourceScope && (d.CaptureSchema == nil || d.CaptureSchema.Validate() != nil)) || (d.SourceScope == "" && d.CaptureSchema != nil)) {
+		return false
+	}
 	if d != nil && ((d.SourceScope == domain.BusinessTableSourceScope && (d.SchemaCensus == nil || d.SchemaCensus.Validate() != nil)) || (d.SourceScope == "" && d.SchemaCensus != nil)) {
 		return false
 	}
@@ -149,6 +153,7 @@ func databaseConfig(d *DatabaseSpec, c *DatabaseCredential) (*mysql.Config, erro
 	cfg.Passwd = string(c.Password)
 	cfg.TLS = &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool, ServerName: d.TLSServerName}
 	cfg.ParseTime = false
+	cfg.Params = map[string]string{"time_zone": "'+00:00'"}
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 30 * time.Second
 	cfg.WriteTimeout = 30 * time.Second
