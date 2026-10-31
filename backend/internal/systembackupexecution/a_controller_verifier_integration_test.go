@@ -141,7 +141,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 		`CREATE TABLE system_backup_v2_operations(origin_installation_id VARCHAR(128),target_type VARCHAR(32),target_public_id VARCHAR(128),operation_type VARCHAR(32),status VARCHAR(32)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_inputs(origin_installation_id VARCHAR(128),task_public_id VARCHAR(128),task_type VARCHAR(32),profile_json MEDIUMBLOB,profile_sha256 CHAR(64),PRIMARY KEY(origin_installation_id,task_public_id,task_type)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_records(origin_installation_id VARCHAR(128),task_public_id VARCHAR(128),attempt_no INT UNSIGNED,phase VARCHAR(32),record_kind VARCHAR(32),payload_sha256 CHAR(64),key_ref VARCHAR(128),sealed_payload MEDIUMBLOB,PRIMARY KEY(origin_installation_id,task_public_id,attempt_no,phase,record_kind)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_runtime_resources(task_public_id VARCHAR(128),attempt_no INT UNSIGNED,phase VARCHAR(32),resource_kind VARCHAR(32),namespace_name VARCHAR(128),resource_name VARCHAR(128),observed_uid VARCHAR(128),candidate_sha256 CHAR(64),request_sha256 CHAR(64),revoked BOOLEAN,lifecycle VARCHAR(32),stopped_at DATETIME(6),PRIMARY KEY(task_public_id,resource_kind,namespace_name,resource_name)) ENGINE=InnoDB`,
+		`CREATE TABLE system_backup_v2_runtime_resources(task_public_id VARCHAR(128),attempt_no INT UNSIGNED,phase VARCHAR(32),resource_kind VARCHAR(32),namespace_name VARCHAR(128),resource_name VARCHAR(128),observed_uid VARCHAR(128),candidate_sha256 CHAR(64),request_sha256 CHAR(64),request_json MEDIUMBLOB,revoked BOOLEAN,lifecycle VARCHAR(32),stopped_at DATETIME(6),PRIMARY KEY(task_public_id,resource_kind,namespace_name,resource_name)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_evidence(public_id VARCHAR(128) PRIMARY KEY,owner_target_type VARCHAR(32),owner_target_public_id VARCHAR(128),evidence_type VARCHAR(32),storage_state VARCHAR(32),observed_health VARCHAR(32),encryption VARCHAR(32),inline_payload VARBINARY(8192),content_checksum CHAR(64),content_size_bytes BIGINT UNSIGNED,expires_at DATETIME(6),CHECK(content_checksum=SHA2(inline_payload,256))) ENGINE=InnoDB`,
 	} {
 		if _, err = owner.ExecContext(ctx, ddl); err != nil {
@@ -228,6 +228,10 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	seconds := int64(60)
 	job := batchv1.Job{TypeMeta: metav1.TypeMeta{APIVersion: "batch/v1", Kind: "Job"}, ObjectMeta: metav1.ObjectMeta{Name: j.Name, Namespace: j.Namespace, Labels: map[string]string{kube.OwnerLabel: in.Authority.TaskPublicID}}, Spec: batchv1.JobSpec{ActiveDeadlineSeconds: &seconds, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{kube.OwnerLabel: in.Authority.TaskPublicID}}, Spec: corev1.PodSpec{ServiceAccountName: "capture-worker", RestartPolicy: corev1.RestartPolicyNever, Containers: []corev1.Container{{Name: "capture", Image: "test@sha256:" + strings.Repeat("b", 64)}}, Volumes: []corev1.Volume{{Name: "invocation", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "original-invocation"}}}}}}}}}
 	jobRaw, _ := json.Marshal(job)
+	jobIntent, err := kube.Intent("Job", &job)
+	if err != nil || jobIntent.RequestSHA256 == hash(jobRaw) {
+		t.Fatal("fixture must use actual normalized kube.Intent, with distinct SpecSHA/RequestSHA", err)
+	}
 	invRaw, _ := json.Marshal(i)
 	profile := []byte(`{"local_profile":"original"}`)
 	part := b.JobPart{Part: "workspace", Category: "workspace", InvocationSHA256: hash(invRaw), InvocationJSON: invRaw, InvocationConfigMap: "original-invocation", Intent: d.JobIntent{JobUnitKey: j.JobUnitKey, Namespace: j.Namespace, Name: j.Name, Generation: j.Generation, SpecJSON: jobRaw, SpecSHA256: hash(jobRaw)}}
@@ -340,7 +344,7 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	}
 	exec(`INSERT INTO system_backup_v2_execution_records VALUES (?,?,3,'capture','plan',?,'original-record',?)`, in.Authority.InstallationID, in.Authority.TaskPublicID, plan.SHA256, sealed.Bytes())
 	candidateHash := strings.Repeat("d", 64)
-	exec(`INSERT INTO system_backup_v2_runtime_resources VALUES (?,3,'capture','Job',?,?,?, ?,?,FALSE,'ready',NULL)`, in.Authority.TaskPublicID, j.Namespace, j.Name, j.UID, candidateHash, hash(jobRaw))
+	exec(`INSERT INTO system_backup_v2_runtime_resources VALUES (?,3,'capture','Job',?,?,?, ?,?,?,FALSE,'ready',NULL)`, in.Authority.TaskPublicID, j.Namespace, j.Name, j.UID, candidateHash, jobIntent.RequestSHA256, jobIntent.RequestJSON)
 	core, _ := json.Marshal(binding)
 	semantic := binding
 	for _, r := range []*reg.TypedReference{&semantic.GenerateRef, &semantic.UnwrapRef} {
@@ -393,6 +397,15 @@ func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 		t.Fatal("disabled deployment wrapper bypassed by independent grant")
 	}
 	service.ForwardEnabled = true
+	exec(`UPDATE system_backup_v2_runtime_resources SET request_sha256=?`, hash(jobRaw))
+	beforeWrongRequest := logins
+	if err = verifier.Recheck(ctx); err == nil {
+		t.Fatal("plan SpecSHA substituted for normalized runtime RequestSHA")
+	}
+	if _, err = factory.ForCandidate(ctx, scope); err == nil || logins != beforeWrongRequest {
+		t.Fatal("new verifier accepted substituted runtime RequestSHA")
+	}
+	exec(`UPDATE system_backup_v2_runtime_resources SET request_sha256=?`, jobIntent.RequestSHA256)
 	exec(`UPDATE system_backup_v2_runtime_resources SET candidate_sha256=?`, strings.Repeat("e", 64))
 	if err = verifier.Recheck(ctx); err == nil {
 		t.Fatal("replaced original candidate accepted")
