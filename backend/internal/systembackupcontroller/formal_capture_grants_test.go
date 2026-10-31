@@ -40,3 +40,32 @@ func TestFormalVerifierRoleKeepsOriginalRecordsAndEvidenceImmutable(t *testing.T
 		}
 	}
 }
+
+func TestFormalProviderPermitRoleRetainsUnknownWithoutSourceMutation(t *testing.T) {
+	for _, runtime := range []bool{false, true} {
+		grants, err := FormalProviderPermitGrantSQL("capture", "issuer", "127.0.0.1", false, runtime)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := range grants {
+			grants[i] = strings.TrimSuffix(grants[i], ";")
+		}
+		if ValidateFormalProviderPermitGrants("capture", grants, runtime) != nil {
+			t.Fatal("exact producer role rejected")
+		}
+		if ValidateFormalCaptureGrants("capture", grants, runtime) == nil {
+			t.Fatal("reader role admitted producer writes")
+		}
+		for _, extra := range []string{"GRANT DELETE ON `capture`.`system_backup_v2_kek_references` TO 'issuer'@'127.0.0.1'", "GRANT UPDATE ON `capture`.`system_backup_v2_evidence` TO 'issuer'@'127.0.0.1'", "GRANT UPDATE ON `capture`.`system_backup_installation_kek_authority` TO 'issuer'@'127.0.0.1'"} {
+			if ValidateFormalProviderPermitGrants("capture", append(append([]string(nil), grants...), extra), runtime) == nil {
+				t.Fatal("extra producer privilege accepted", extra)
+			}
+		}
+		db := sql.OpenDB(grantProbeConnector{user: "issuer@127.0.0.1", role: "NONE", grants: grants})
+		err = (SQLFormalProviderPermitGrantProbe{DB: db, Schema: "capture", User: "issuer", Runtime: runtime}).Check(context.Background())
+		db.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}

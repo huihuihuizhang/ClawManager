@@ -107,6 +107,7 @@ func TestFormalVerifierFileBootstrapHasNoForwardGrantHashCycle(t *testing.T) {
 	if _, err = LoadDeploymentConfig(coreFile, hash(core)); err != nil {
 		t.Fatal("derived grant changed core digest", err)
 	}
+	checkProviderDatabaseAdmission(t, cfg, coreFile, hash(core), hash(envelope), hash(recoveryEnvelope), forward, materials, materialFile)
 	for _, fault := range []string{"core-original-pin", "signed-forward-config", "signed-forward-profile"} {
 		t.Run(fault, func(t *testing.T) {
 			defer os.WriteFile(coreFile, core, 0600)

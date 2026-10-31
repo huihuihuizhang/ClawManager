@@ -31,8 +31,12 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e := c.ValidateControllerDatabaseCredentials(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), cfg.Database.User); e != nil {
 		return e
 	}
+	var verifierInputs []execution.FormalVerifierInput
+	if os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256") != "" {
+		verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256")})
+	}
 	session, e := db.ConnectPublicBackupMetadata(cfg.Database, func(ctx context.Context, pool *sql.DB) error {
-		return execution.CheckDeploymentDatabase(ctx, pool, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true")
+		return execution.CheckDeploymentDatabase(ctx, pool, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", verifierInputs...)
 	})
 	if e != nil {
 		return errors.New("public control database unavailable")
@@ -66,10 +70,6 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	dyn, e := dynamic.NewForConfig(publicREST)
 	if e != nil {
 		return errors.New("public Kubernetes dynamic client unavailable")
-	}
-	var verifierInputs []execution.FormalVerifierInput
-	if os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256") != "" {
-		verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256")})
 	}
 	service, e := execution.NewDeploymentService(ctx, control, publicClient, dyn, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", verifierInputs...)
 	if e != nil {

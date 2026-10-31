@@ -23,6 +23,30 @@ func formalCaptureTableGrants(runtime bool) map[string][]string {
 	out["system_backup_v2_kek_fences"] = []string{"SELECT", "INSERT", "UPDATE"}
 	return out
 }
+
+// The original Generate issuer retains planned/unknown references in the same
+// key-use transaction. It cannot delete references or modify signed sources.
+func formalProviderPermitTableGrants(runtime bool) map[string][]string {
+	out := formalCaptureTableGrants(runtime)
+	out["system_backup_v2_kek_references"] = []string{"SELECT", "INSERT", "UPDATE"}
+	return out
+}
+func FormalProviderPermitGrantSQL(schema, user, host string, allowAnyHost, runtime bool) ([]string, error) {
+	return controllerGrantSQL(schema, user, host, allowAnyHost, formalProviderPermitTableGrants(runtime))
+}
+func ValidateFormalProviderPermitGrants(schema string, statements []string, runtime bool) error {
+	return validateControllerGrants(schema, statements, formalProviderPermitTableGrants(runtime))
+}
+
+type SQLFormalProviderPermitGrantProbe struct {
+	DB           *sql.DB
+	Schema, User string
+	Runtime      bool
+}
+
+func (p SQLFormalProviderPermitGrantProbe) Check(ctx context.Context) error {
+	return (SQLControllerGrantProbe{DB: p.DB, Schema: p.Schema, User: p.User}).check(ctx, formalProviderPermitTableGrants(p.Runtime))
+}
 func FormalCaptureGrantSQL(schema, user, host string, allowAnyHost, runtime bool) ([]string, error) {
 	return controllerGrantSQL(schema, user, host, allowAnyHost, formalCaptureTableGrants(runtime))
 }

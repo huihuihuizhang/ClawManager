@@ -333,12 +333,21 @@ func seedConsumerRows(t *testing.T, db *sql.DB, a d.Authority, config, profile [
 	exec(`INSERT INTO system_backup_v2_installation_state VALUES(?,'system-backup-installation-state.v1',1,1,TRUE)`, a.InstallationID)
 	exec(`INSERT INTO system_backup_v2_maintenance_locks VALUES(?,?,'system_backup_capture_gate','held',?,?,1,?,?)`, a.InstallationID, c.CaptureGateScope, a.MaintenanceOwner, a.MaintenanceFencingToken, a.DeadlineAt, a.DeadlineAt)
 	exec(`INSERT INTO system_backup_v2_engine_bindings VALUES('installation','v2')`)
-	exec(`INSERT INTO system_backup_gate VALUES('original-app','held',?,10,?)`, a.TaskPublicID, a.MaintenanceFencingToken)
+	exec(`INSERT INTO system_backup_gate(scope,phase,owner,fencing_token,generation) VALUES('original-app','held',?,10,?)`, a.TaskPublicID, a.MaintenanceFencingToken)
 	exec(`INSERT INTO system_backup_v2_execution_inputs VALUES(?,?,'backup',?,?)`, a.InstallationID, a.TaskPublicID, profile, hash(profile))
 	exec(`INSERT INTO system_backup_v2_runtime_captures(task_public_id,application_scope,gate_generation,acquire_token,held_token,registry_sha256,writers_json,acquire_until,hold_until) VALUES(?,'original-app',?,9,10,?,'[]',?,?)`, a.TaskPublicID, a.MaintenanceFencingToken, strings.Repeat("a", 64), a.DeadlineAt, a.DeadlineAt)
 }
 
 func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)) (*PublicJobOwner, *DeploymentService, *sql.DB, *sql.DB, d.Authority, d.JobBinding, worker.FormalCaptureResult, *consumerCurrentKeyUse, func()) {
+	return newConsumerMySQLFixtureOptions(t, &consumerFixtureOptions{}, configure...)
+}
+
+type consumerFixtureOptions struct {
+	FormalMaterials *kube.FormalJobMaterials
+	Configure       func(*worker.Invocation, *sql.DB, *sql.DB, d.Authority)
+}
+
+func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOptions, configure ...func(*worker.Invocation)) (*PublicJobOwner, *DeploymentService, *sql.DB, *sql.DB, d.Authority, d.JobBinding, worker.FormalCaptureResult, *consumerCurrentKeyUse, func()) {
 	t.Helper()
 	ctx := context.Background()
 	var cred struct {
@@ -465,6 +474,9 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 	}
 	config := []byte(`{"source":"original-fixture"}`)
 	a.ConfigSHA256 = hash(config)
+	if options.Configure != nil {
+		options.Configure(&inv, db, admin, a)
+	}
 	invHash, _ := inv.Hash()
 	candidate.InvocationSHA256 = invHash
 	profile, _ := json.Marshal(map[string]string{"installation_id": a.InstallationID, "source_profile": "original-linux", "revision": "original-r1"})
@@ -536,7 +548,7 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 	seedConsumerRows(t, admin, a, config, profile, now, j)
 	refresh()
 	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: "original-linux", ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"workspace"}}}
-	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: 200, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}})
+	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: 200, FormalMaterials: options.FormalMaterials, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}})
 	if err != nil {
 		t.Fatal("original formal part assembly failed", err)
 	}

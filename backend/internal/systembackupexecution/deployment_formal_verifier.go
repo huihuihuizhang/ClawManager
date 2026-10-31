@@ -18,16 +18,17 @@ import (
 // Independent deployed pins; public task requests cannot provide these values.
 // Capability/installation/verifier business issuers have separate provenance.
 type FormalVerifierDeploymentConfig struct {
-	Version            string                         `json:"schema_version"`
-	Database           reg.DatabaseIdentity           `json:"database"`
-	Binding            reg.Binding                    `json:"binding"`
-	GenerateCapability a.ProviderCapabilityPin        `json:"generate_capability"`
-	UnwrapCapability   a.ProviderCapabilityPin        `json:"unwrap_capability"`
-	InstallationIssuer ed25519.PublicKey              `json:"installation_issuer"`
-	CAFile             string                         `json:"ca_file"`
-	JWTFile            string                         `json:"jwt_file"`
-	Workload           a.ControllerVerifierWorkload   `json:"workload"`
-	Grant              a.ControllerVerifierGrantMount `json:"grant"`
+	Version            string                          `json:"schema_version"`
+	Database           reg.DatabaseIdentity            `json:"database"`
+	Binding            reg.Binding                     `json:"binding"`
+	GenerateCapability a.ProviderCapabilityPin         `json:"generate_capability"`
+	UnwrapCapability   a.ProviderCapabilityPin         `json:"unwrap_capability"`
+	InstallationIssuer ed25519.PublicKey               `json:"installation_issuer"`
+	CAFile             string                          `json:"ca_file"`
+	JWTFile            string                          `json:"jwt_file"`
+	Workload           a.ControllerVerifierWorkload    `json:"workload"`
+	Grant              a.ControllerVerifierGrantMount  `json:"grant"`
+	ProviderPermits    *ProviderPermitDeploymentConfig `json:"provider_permits,omitempty"`
 }
 
 const formalVerifierMaterialsVersion = "controller-verifier-materials.v1"
@@ -77,6 +78,9 @@ func (s *DeploymentService) loadFormalVerifier(inputs []FormalVerifierInput) err
 }
 
 func (v FormalVerifierDeploymentConfig) validate(cfg DeploymentConfig) error {
+	if v.ProviderPermits != nil && v.ProviderPermits.validate(cfg) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if v.Version != formalVerifierMaterialsVersion || v.Database.Database == "" || v.Database.ServerUUID == "" || v.Binding.InstallationID != cfg.InstallationID || v.Workload.ControllerOwner != cfg.ControllerOwner || v.Workload.ServiceAccountUID == cfg.Security.ServiceAccountUID || len(v.InstallationIssuer) != ed25519.PublicKeySize || len(v.Grant.Issuer) != ed25519.PublicKeySize || len(v.GenerateCapability.Issuer) != ed25519.PublicKeySize || len(v.UnwrapCapability.Issuer) != ed25519.PublicKeySize || !formalCandidateDigest(v.Grant.SHA256) || v.Workload.GrantSHA256 != v.Grant.SHA256 || !formalCandidateDigest(v.Binding.Provider.CAPEMSHA256) {
 		return c.ErrExecutionAuthority
 	}
@@ -114,6 +118,9 @@ func (s *DeploymentService) attachFormalVerifier(o *PublicJobOwner) error {
 	}
 	capabilities, err := a.NewSQLProviderCapabilityPreparation(o.Gate.Authority.DB, v.Database, s.Config.InstallationID, v.GenerateCapability, v.UnwrapCapability)
 	if err != nil {
+		return err
+	}
+	if err = s.attachProviderPermits(o, capabilities); err != nil {
 		return err
 	}
 	factory, err := a.NewControllerVerifierFactory(a.ControllerVerifierConfig{Capabilities: capabilities, Binding: v.Binding, CAPEM: ca, JWTFile: v.JWTFile, Workload: v.Workload, Kubernetes: o.Client, Authority: o.Gate.Authority, Records: o.Gate.Records, GrantMount: v.Grant, CaptureGrantSHA256: s.Forward.GrantSHA256(), InstallationIssuer: v.InstallationIssuer})
