@@ -1,13 +1,16 @@
 package systembackupexecution
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -19,6 +22,7 @@ import (
 	"time"
 
 	app "clawreef/internal/systembackup"
+	"clawreef/internal/systembackup/control"
 	"clawreef/internal/systembackup/flow"
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
@@ -34,6 +38,10 @@ import (
 	w "clawreef/internal/systembackupwire"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/fake"
+	ktest "k8s.io/client-go/testing"
 )
 
 // Transparent hook around the real original controller's SQL connection. It
@@ -42,6 +50,49 @@ import (
 type aControlPullConnector struct {
 	driver.Connector
 	query func(string)
+}
+
+// Transparent named latency injection within each independently acquired real
+// controller DEK callback. Identity, fixed deadline, rechecks and close remain
+// those of the original verifier; no permission/DEK is renewed or substituted.
+type aOwnedReadLatency struct {
+	FormalCandidateKeyUse
+	delay func(context.Context) error
+}
+
+func (x *aOwnedReadLatency) Unwrap(ctx context.Context, request w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
+	return x.FormalCandidateKeyUse.Unwrap(ctx, request, wrapped, func(key []byte) error {
+		if err := x.delay(ctx); err != nil {
+			return err
+		}
+		return use(key)
+	})
+}
+
+func aSlowOriginalOwnedCipherRead(ctx context.Context, owner *PublicJobOwner, scope FormalCandidateReadScope) error {
+	custody, err := staging.OpenSealCustody(owner.Staging)
+	if err != nil {
+		return err
+	}
+	defer custody.Close()
+	files, _, err := staging.OpenFormalObserved(ctx, custody, workerSealScope(scope.Authority, scope.Job, scope.Invocation), scope.Candidate.Ciphertext, scope.Candidate.Envelope)
+	if err != nil {
+		return err
+	}
+	defer files.Close()
+	timer := time.NewTimer(8 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	digest := sha256.New()
+	n, err := io.Copy(digest, files.Ciphertext)
+	if err != nil || n != scope.Candidate.Ciphertext.Size || fmt.Sprintf("%x", digest.Sum(nil)) != scope.Candidate.Ciphertext.SHA256 {
+		return errors.New("owned slow C read did not match original receipt")
+	}
+	return ctx.Err()
 }
 
 func (x aControlPullConnector) Connect(ctx context.Context) (driver.Conn, error) {
@@ -93,8 +144,17 @@ type aControlCaptureFixture struct {
 // Uses actual original Prepare/SavePlan/Record/TakeBackup/PrepareCapture and
 // held-gate SQL. Its single physical writer and Kubernetes API are explicitly
 // local named fixtures, not a six-domain Runtime/CSI certification.
-func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture) *aControlCaptureFixture {
+func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture, withBusiness ...bool) *aControlCaptureFixture {
 	t.Helper()
+	business := len(withBusiness) > 0 && withBusiness[0]
+	businessCount := 1
+	if len(withBusiness) > 1 && withBusiness[1] {
+		businessCount = 2
+	}
+	expectedParts := 2
+	if business {
+		expectedParts += businessCount
+	}
 	h, ctx := f.x.history, context.Background()
 	s, o := h.service, h.owner
 	exec := func(q string, args ...any) {
@@ -140,6 +200,9 @@ func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture) *
 	exec("RENAME TABLE system_backup_v2_execution_inputs TO system_backup_v2_execution_inputs_a_prior_fixture")
 	exec(aPublicationActualTable(t, "119_backup_v2_execution_admission.sql", "system_backup_v2_execution_inputs"))
 	requestRaw := []byte(`{"requested_parts":["mysql"],"task_purpose":"functional_test"}`)
+	if business {
+		requestRaw = []byte(`{"requested_parts":["mysql","workspace"],"task_purpose":"functional_test"}`)
+	}
 	exec(`INSERT INTO system_backup_v2_execution_inputs(origin_installation_id,task_public_id,task_type,profile_json,profile_sha256,request_json) SELECT origin_installation_id,task_public_id,task_type,profile_json,profile_sha256,? FROM system_backup_v2_execution_inputs_a_prior_fixture`, requestRaw)
 	exec("UPDATE system_backup_v2_backups SET request_hash=? WHERE public_id=?", hash(requestRaw), f.in.Authority.TaskPublicID)
 	sourceWaitDDL, err := os.ReadFile(filepath.Join("..", "db", "migrations", "129_backup_v2_source_gate_wait.sql"))
@@ -204,6 +267,9 @@ func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture) *
 	in.ProfileID, in.ProfileRevision = profile.ID, profile.Revision
 	exec("UPDATE system_backup_v2_backups SET datasource_topology='in_cluster' WHERE public_id=?", in.Authority.TaskPublicID)
 	in.Backup = &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"mysql"}}
+	if business {
+		in.Backup.RequestedParts = append(in.Backup.RequestedParts, "workspace")
+	}
 	source := b.SourceInventory{Database: s.Config.SourceDatabase, ServerUUID: s.Config.SourceServerUUID, Users: []int{}, Instances: []b.InstanceIdentity{}}
 	sourceRaw, _ := json.Marshal(source)
 	sourceSHA := hash(sourceRaw)
@@ -221,11 +287,71 @@ func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture) *
 		workload := kube.JobRequest{Identity: kube.Identity{Namespace: o.Namespace, Name: name, Owner: in.Authority.TaskPublicID}, Image: s.Config.WorkerImage, ServiceAccount: o.Security.ServiceAccountName, StagingClaim: s.Config.StagingClaim, DeadlineSeconds: 60, FormalMaterials: &kube.FormalJobMaterials{ConfigMap: name + "-formal", Inputs: []kube.FormalInputMount{{Volume: "formal-control-source", Kind: "ConfigMap", Name: name + "-source", Directory: "/run/backup/materials/source", Items: []corev1.KeyToPath{{Key: "grant.json", Path: "grant.json"}}}}}, WorkerControl: &kube.WorkerControl{URL: s.Config.ControlURL, InvocationConfigMap: name + "-inv", IdentitySecret: name + "-identity", BoundPodIdentity: true}}
 		requests[index] = b.CapturePartRequest{Part: part, Category: ce.Part, JobUnitKey: part, Generation: 1, Workload: workload, Invocation: inv}
 	}
+	registrations := []b.CaptureModuleRegistration{}
+	if business {
+		businessRequests := []b.CapturePartRequest{}
+		businessParts := []b.CaptureModulePart{}
+		policyParts := []ce.FinalizationPart{}
+		for ordinal := 0; ordinal < businessCount; ordinal++ {
+			part := "z_business_workspace"
+			name := "business-" + strings.TrimPrefix(in.Authority.TaskPublicID, "sbk_")
+			if ordinal > 0 {
+				part += "_" + strconv.Itoa(ordinal)
+				name += "-" + strconv.Itoa(ordinal)
+			}
+			partIndex := 2 + ordinal
+			inv := requests[0].Invocation
+			inv.WorkspacePath = "/workspace"
+			inv.Request = worker.Request{Version: worker.Version, Operation: "capture-workspace", Binding: staging.Binding{BackupID: in.Authority.TaskPublicID, Attempt: strconv.FormatUint(in.Authority.AttemptNo, 10), PartIndex: uint32(partIndex), Path: part, EnvelopeID: name + "-envelope", CaptureContextHash: point.CaptureContextSHA256}, Deadline: hold, ArtifactName: part + ".enc", MaxFiles: 100, MaxFileBytes: 1 << 20, MaxArchiveBytes: 2 << 20, MaxCompressedBytes: 2 << 20}
+			formal := *inv.FormalCapture
+			formal.EnvelopeName = part + ".envelope"
+			formal.SourceConfigSHA256 = ""
+			inv.FormalCapture = &formal
+			provider := *inv.ProviderKey
+			provider.Request.Context.Part = part
+			provider.Request.Context.PartIndex = strconv.Itoa(partIndex)
+			provider.Request.Context.EnvelopeID = inv.Request.Binding.EnvelopeID
+			inv.ProviderKey = &provider
+			workload := requests[0].Workload
+			workload.Identity.Name = name
+			workload.Source = corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "owned-business-source"}}}
+			workload.WorkerControl = &kube.WorkerControl{URL: s.Config.ControlURL, InvocationConfigMap: name + "-inv", IdentitySecret: name + "-identity", BoundPodIdentity: true}
+			workload.FormalMaterials = &kube.FormalJobMaterials{ConfigMap: name + "-formal", Inputs: []kube.FormalInputMount{{Volume: "formal-control-source", Kind: "ConfigMap", Name: name + "-source", Directory: "/run/backup/materials/source", Items: []corev1.KeyToPath{{Key: "grant.json", Path: "grant.json"}}}}}
+			request := b.CapturePartRequest{Part: part, Category: "instances", JobUnitKey: part, Generation: 1, Workload: workload, Invocation: inv}
+			if !worker.ValidateRecordedInvocation(inv) {
+				t.Fatal("named original business invocation invalid")
+			}
+			if _, buildErr := b.BuildCapturePart(in, hold, request); buildErr != nil {
+				t.Fatal("named original business part construction", buildErr)
+			}
+			invSHA, err := inv.Hash()
+			if err != nil {
+				t.Fatal(err)
+			}
+			policyParts = append(policyParts, ce.FinalizationPart{Part: part, Operation: inv.Request.Operation, InvocationSHA256: invSHA})
+			businessRequests = append(businessRequests, request)
+			businessParts = append(businessParts, b.CaptureModulePart{Part: part, Category: "instances", RequestedPart: "workspace", Operation: "capture-workspace"})
+		}
+		seed, err := ce.RequireOwnedFinalization(f.locator, ce.FinalizationPolicy{Version: ce.FinalizationPolicyVersion, ChecksVersion: ce.OwnedChecksVersion, CaptureContextSHA256: point.CaptureContextSHA256, Parts: policyParts})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for index := range requests {
+			requests[index].Invocation.Request.ControlEvidence = &seed
+		}
+		registrations = append(registrations, b.CaptureModuleRegistration{Descriptor: b.CaptureModuleDescriptor{ID: "zz_named_business", Owner: "B", Revision: "named-portable-source-r1", Required: true, Parts: businessParts}, Build: func(input b.CaptureModuleInput) ([]b.CapturePartRequest, error) {
+			if len(input.Parts) != len(businessRequests) || input.Parts[0].PartIndex != 2 {
+				return nil, d.ErrNotReady
+			}
+			return businessRequests, nil
+		}})
+	}
 	registration, err := b.NewControlEvidenceModule(b.ControlEvidenceModuleConfig{Revision: "original-control-pair-r1", Sidecar: requests[0], Proofs: requests[1]})
 	if err != nil {
 		t.Fatal("actual paired module", err)
 	}
-	modules, err := b.NewCaptureModules([]b.CaptureModuleRegistration{registration}, func(_ d.Input, _ b.SourceInventory, _ time.Time, catalog string) (b.ModuleCaptureContext, error) {
+	registrations = append(registrations, registration)
+	modules, err := b.NewCaptureModules(registrations, func(_ d.Input, _ b.SourceInventory, _ time.Time, catalog string) (b.ModuleCaptureContext, error) {
 		point.CatalogSHA256 = catalog
 		return point, nil
 	})
@@ -233,13 +359,13 @@ func newAControlCaptureFixture(t *testing.T, f *aControlEvidenceSourceFixture) *
 		t.Fatal(err)
 	}
 	parts, err := modules.BuildParts(in, source, hold)
-	if err != nil || len(parts) != 2 {
+	if err != nil || len(parts) != expectedParts {
 		t.Fatal("actual paired Job assembly", err)
 	}
 	writer := b.FrozenWriter{ID: "controlled-metadata-writer", Original: flow.State{UID: "controlled-metadata-writer-uid", Generation: 1, Running: true}}
 	discovery := b.Discovery{Source: sourceRaw, SourceSHA256: sourceSHA, Parts: parts, Writers: []b.FrozenWriter{writer}, HoldUntil: hold}
 	runner, err := b.NewPublicRunner(b.Dependencies{Profiles: map[b.ProfileKey]b.Profile{{ID: in.ProfileID, Revision: in.ProfileRevision}: consumerFrozenProfile{discovery}}, Results: PublicResults{o}, Recovery: o, Admission: func(ctx context.Context, in d.Input) error { return o.Gate.Check(ctx, in.Authority) }, ValidateInventory: func(_ context.Context, _ d.Input, got b.Discovery) error {
-		if len(got.Parts) != 2 {
+		if len(got.Parts) != expectedParts {
 			return d.ErrNotReady
 		}
 		return nil
@@ -390,12 +516,24 @@ func aEnableControlOriginalVerifier(t *testing.T, f *aControlEvidenceSourceFixtu
 }
 
 func TestAControlEvidenceOriginalCaptureComposition(t *testing.T) {
-	for _, mode := range []string{"pair", "controller-grant-replaced-during-final-sql", "job-stopped-before-final-sql"} {
+	for _, mode := range []string{"pair", "controller-grant-replaced-during-final-sql", "job-stopped-before-final-sql", "owned-finalization", "owned-long-batch", "owned-long-use", "owned-malformed-business", "owned-source-withdrawn", "owned-context-canceled", "owned-claim-released", "owned-claim-taken-over", "owned-provider-revoked", "owned-issuer-revoked", "owned-fixed-dek-expired", "owned-missing-business-result"} {
 		t.Run(mode, func(t *testing.T) { testAControlEvidenceOriginalCapture(t, mode) })
 	}
 }
 
 func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
+	business := strings.HasPrefix(mode, "owned-")
+	malformed := mode == "owned-malformed-business"
+	longUse := mode == "owned-long-use"
+	longBatch := mode == "owned-long-batch" || longUse
+	withdrawSource := mode == "owned-source-withdrawn"
+	missingResult := mode == "owned-missing-business-result"
+	cancelRead := mode == "owned-context-canceled"
+	releaseClaim, takeoverClaim := mode == "owned-claim-released", mode == "owned-claim-taken-over"
+	revokeProvider, revokeIssuer := mode == "owned-provider-revoked", mode == "owned-issuer-revoked"
+	expireDEK := mode == "owned-fixed-dek-expired"
+	ownedFault := withdrawSource || cancelRead || releaseClaim || takeoverClaim || revokeProvider || revokeIssuer || expireDEK || missingResult
+	var ownedReadEntered atomic.Bool
 	replaceGrant, stopJob := mode == "controller-grant-replaced-during-final-sql", mode == "job-stopped-before-final-sql"
 	fault := replaceGrant || stopJob
 	var s *DeploymentService
@@ -404,6 +542,7 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 	var sourceReads atomic.Int64
 	var source *aControlEvidenceSourceFixture
 	var currentJob string
+	var workerIssuer control.IdentityIssuer
 	endpoint, makeClient := originalMTLSControlServer(t, http.HandlerFunc(func(out http.ResponseWriter, r *http.Request) {
 		if s == nil {
 			out.WriteHeader(503)
@@ -416,10 +555,16 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 			defer armed.Store(false)
 		}
 		s.controlHandler().ServeHTTP(out, r)
-	}))
+	}), func(issuer control.IdentityIssuer) { workerIssuer = issuer })
 	f := newAControlEvidenceSourceFixture(t, func(o *aPublisherVerifierFixtureOptions) {
+		if business {
+			o.WorkerIssuer = &workerIssuer
+		}
 		o.ControlURL = endpoint + "/worker/v1"
 		o.ControlRequestedParts = []string{"mysql"}
+		if business {
+			o.ControlRequestedParts = append(o.ControlRequestedParts, "workspace")
+		}
 		if fault {
 			o.WrapControlConnector = func(inner driver.Connector) driver.Connector {
 				return aControlPullConnector{Connector: inner, query: func(q string) {
@@ -449,12 +594,38 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 	})
 	source = f
 	s = f.x.history.service
-	x := newAControlCaptureFixture(t, f)
-	if len(x.parts) != 2 || x.input.Authority.MaintenanceFencingToken == 0 {
+	x := newAControlCaptureFixture(t, f, business, longBatch)
+	expectedResults, expectedDecrypts := 2, int64(2)
+	if business {
+		expectedResults, expectedDecrypts = 3, 4
+	}
+	if longBatch {
+		expectedResults, expectedDecrypts = 4, 6
+	}
+	if len(x.parts) != expectedResults || x.input.Authority.MaintenanceFencingToken == 0 {
 		t.Fatal("missing original pair/held epoch")
 	}
 	h, ctx := f.x.history, context.Background()
 	o := h.owner
+	if business {
+		o.Issuer = workerIssuer
+	}
+	if business {
+		heartbeatCtx, cancelHeartbeat := context.WithCancel(ctx)
+		started := make(chan context.Context, 1)
+		done := make(chan error, 1)
+		store := c.SQLExecutionWorkStore{Queue: c.SQLExecutionQueue{DB: h.db, InstallationID: x.input.Authority.InstallationID, Owner: x.input.Authority.ClaimOwner, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}}}
+		go func() {
+			done <- store.RunWithExecutionHeartbeat(heartbeatCtx, x.input.Authority, func(runCtx context.Context) error { started <- runCtx; <-runCtx.Done(); return nil })
+		}()
+		ctx = <-started
+		defer func() {
+			cancelHeartbeat()
+			if err := <-done; err != nil && !((releaseClaim || takeoverClaim) && errors.Is(err, c.ErrClaimLost)) {
+				t.Error("actual original capture heartbeat", err)
+			}
+		}()
+	}
 	if err := o.Staging.Mkdir(x.input.Authority.TaskPublicID, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -464,12 +635,156 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 	}
 	defer taskStage.Close()
 	plain := map[string][]byte{}
-	for index, part := range x.parts {
+	captureParts := append([]b.JobPart{}, x.parts...)
+	if business {
+		captureParts = append(append([]b.JobPart{}, x.parts[2:]...), x.parts[:2]...)
+	} // execution dependency only; original global indices/plan stay frozen
+	for index, part := range captureParts {
 		phaseStarted := time.Now()
 		var inv worker.Invocation
 		var object batchv1.Job
 		if json.Unmarshal(part.InvocationJSON, &inv) != nil || json.Unmarshal(part.Intent.SpecJSON, &object) != nil {
 			t.Fatal("original frozen pair")
+		}
+		if seed := inv.Request.ControlEvidence; seed != nil && seed.Finalization != nil {
+			aRefreshControlSourceCapacity(t, f)
+			admissionCtx, cancelAdmission := context.WithCancel(ctx)
+			originalKeys := o.FormalKeys
+			firstCE := index == len(x.parts)-2
+			var evidenceBefore, resourcesBefore int
+			if firstCE && ownedFault {
+				if h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_type='backup' AND owner_target_public_id=?`, x.input.Authority.TaskPublicID).Scan(&evidenceBefore) != nil || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=?`, x.input.Authority.TaskPublicID).Scan(&resourcesBefore) != nil {
+					t.Fatal("original pre-admission effect snapshot")
+				}
+			}
+			if firstCE && missingResult {
+				if _, err := h.admin.Exec(`UPDATE system_backup_v2_runtime_resources SET result_sha256=NULL WHERE task_public_id=? AND resource_kind='Job'`, x.input.Authority.TaskPublicID); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if firstCE && (longBatch || ownedFault && !missingResult) {
+				if longBatch {
+					for _, selected := range seed.Finalization.Parts {
+						for _, frozen := range x.parts {
+							if selected.Part == frozen.Part && selected.InvocationSHA256 != frozen.InvocationSHA256 {
+								t.Fatal("frozen business invocation changed during module assembly", selected.Part)
+							}
+						}
+					}
+				}
+				o.FormalKeys = func(readCtx context.Context, scope FormalCandidateReadScope) (FormalCandidateKeyUse, error) {
+					if longBatch && !longUse {
+						// Model slow ciphertext storage BEFORE acquiring the next DEK.
+						// This reads the actual original private C and verifies its full
+						// receipt; it creates no fallback/result or permission.
+						if err := aSlowOriginalOwnedCipherRead(readCtx, o, scope); err != nil {
+							return nil, err
+						}
+					}
+					actual, err := originalKeys(readCtx, scope)
+					if err != nil {
+						return nil, err
+					}
+					return &aOwnedReadLatency{FormalCandidateKeyUse: actual, delay: func(useCtx context.Context) error {
+						ownedReadEntered.Store(true)
+						if expireDEK {
+							<-useCtx.Done()
+							return useCtx.Err()
+						}
+						if releaseClaim || takeoverClaim {
+							token := c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: x.input.Authority.TaskPublicID}, Owner: x.input.Authority.ClaimOwner, RowVersion: x.input.Authority.ClaimRowVersion}
+							version, err := (c.ClaimCoordinator{Executor: h.db, InstallationID: x.input.Authority.InstallationID}).Release(useCtx, token, time.Microsecond)
+							if err != nil {
+								return err
+							}
+							if takeoverClaim {
+								_, err = c.AcquireClaimInInstallation(useCtx, h.db, x.input.Authority.InstallationID, token.Target, token.Owner+"-takeover", version, c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second})
+								if err != nil {
+									return err
+								}
+							}
+						}
+						if revokeProvider {
+							record := f.x.original
+							record.UnwrapRevoked = true
+							record.Revision = "owner-revoked-during-owned-C-read"
+							f.x.putOriginal(record, 1)
+						}
+						if revokeIssuer && os.WriteFile(s.formalVerifier.Grant.File, []byte("independent verifier issuer withdrew during original C read"), 0600) != nil {
+							return errors.New("owned verifier issuer withdrawal failed")
+						}
+						if cancelRead {
+							cancelAdmission()
+							return admissionCtx.Err()
+						}
+						if longBatch {
+							latency := 8 * time.Second
+							if longUse {
+								latency = 16 * time.Second
+							}
+							timer := time.NewTimer(latency)
+							defer timer.Stop()
+							select {
+							case <-timer.C:
+							case <-useCtx.Done():
+								return useCtx.Err()
+							}
+							// This is a named capacity-source boundary sample on Windows;
+							// the real collector is Linux-only and is not certified here.
+							aRefreshControlSourceCapacity(t, f)
+						}
+						if withdrawSource && os.WriteFile(f.materials.ControlEvidenceSource.ControllerGrantFile, []byte("independent source owner withdrew during original C read"), 0600) != nil {
+							return errors.New("owned source fault injection failed")
+						}
+						return nil
+					}}, nil
+				}
+			}
+			// Exercise the production admission entry point before any CE Job
+			// row or Generate exists, including its real encrypted identity journal.
+			client := o.Client.(*fake.Clientset)
+			client.PrependReactor("create", "secrets", func(action ktest.Action) (bool, runtime.Object, error) {
+				secret := action.(ktest.CreateAction).GetObject().(*corev1.Secret).DeepCopy()
+				secret.UID, secret.ResourceVersion = types.UID(secret.Name+"-uid"), "1"
+				if err := client.Tracker().Create(corev1.SchemeGroupVersion.WithResource("secrets"), secret, secret.Namespace); err != nil {
+					return true, nil, err
+				}
+				return true, secret, nil
+			})
+			_, _, _, prepareErr := o.Admit(admissionCtx, x.input.Authority, part.Intent)
+			cancelAdmission()
+			o.FormalKeys = originalKeys
+			if firstCE && ownedFault {
+				id, _ := ce.FinalizedSourceEvidenceID(*seed)
+				var seals, jobs int
+				if prepareErr == nil || !missingResult && !ownedReadEntered.Load() || f.x.generates.Load() != 1 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&seals) != nil || seals != 0 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND resource_name=?`, x.input.Authority.TaskPublicID, part.Intent.Name).Scan(&jobs) != nil || jobs != 0 {
+					t.Fatal("failed original owned admission left seal/CE Job/Generate", prepareErr)
+				}
+				var evidenceAfter, resourcesAfter int
+				if h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_type='backup' AND owner_target_public_id=?`, x.input.Authority.TaskPublicID).Scan(&evidenceAfter) != nil || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=?`, x.input.Authority.TaskPublicID).Scan(&resourcesAfter) != nil || evidenceAfter != evidenceBefore || resourcesAfter != resourcesBefore {
+					t.Fatal("failed admission left partial owner report/identity registration")
+				}
+				return
+			}
+			if malformed && index == 1 {
+				id, _ := ce.FinalizedSourceEvidenceID(*seed)
+				var seals, jobs int
+				if prepareErr == nil || f.x.generates.Load() != 1 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&seals) != nil || seals != 0 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND resource_name=?`, x.input.Authority.TaskPublicID, part.Intent.Name).Scan(&jobs) != nil || jobs != 0 {
+					t.Fatal("unsafe original business payload produced seal or early CE dispatch", prepareErr)
+				}
+				return
+			}
+			if prepareErr != nil {
+				t.Fatal("actual pre-dispatch owned reader/source seal", prepareErr)
+			}
+			if firstCE && longBatch {
+				var revision uint64
+				var until time.Time
+				if time.Since(phaseStarted) <= 30*time.Second || h.db.QueryRow(`SELECT row_version,controller_lease_expires_at FROM system_backup_v2_backups WHERE public_id=?`, x.input.Authority.TaskPublicID).Scan(&revision, &until) != nil || revision != x.input.Authority.ClaimRowVersion || !until.After(time.Now()) {
+					t.Fatal("long original batch did not preserve live same-epoch heartbeat authority")
+				}
+				t.Logf("actual Admit batch=%s, original heartbeat kept row version=%d", time.Since(phaseStarted), revision)
+			}
 		}
 		intent, err := kube.Intent("Job", &object)
 		if err != nil {
@@ -525,21 +840,53 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 		client := makeClient(o, x.input.Authority, inv, s.Config.ControlURL)
 		f.x.controlGenerateRequest = &inv.ProviderKey.Request
 		aRefreshControlSourceCapacity(t, f)
+		readyStarted := time.Now()
 		if err = client.Ready(ctx, inv); err != nil {
+			if malformed && index == 1 {
+				if !errors.Is(err, worker.ErrNotReady) || f.x.generates.Load() != 1 {
+					t.Fatal("invalid business C reached CE Generate", err)
+				}
+				id, idErr := ce.FinalizedSourceEvidenceID(*inv.Request.ControlEvidence)
+				var count int
+				if idErr != nil || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&count) != nil || count != 0 {
+					t.Fatal("invalid actual domain produced final owner seal")
+				}
+				return
+			}
 			t.Fatal("actual original CE Ready", err)
 		}
-		t.Logf("part=%d Ready=%s", index, time.Since(phaseStarted))
+		if malformed && index == 1 {
+			t.Fatal("valid AEAD unsafe business archive passed original owned reader")
+		}
+		t.Logf("part=%d Ready RPC=%s", index, time.Since(readyStarted))
 		job, err := worker.NewDeliveredCaptureKeyJob(ctx, client, inv, x.config, x.pin)
 		if err != nil {
 			t.Fatal("actual original CE reserve", err)
 		}
 		t.Logf("part=%d reserved=%s fixed_remaining=%s", index, time.Since(phaseStarted), fixedRemaining())
-		sources, err := worker.OpenControlEvidenceCaptureSources(ctx, inv, job, f.materials.ControlEvidenceSource)
-		if err != nil {
-			job.Close()
-			t.Fatal("actual original CE source open", err)
+		var sources *worker.ControlEvidenceCaptureSources
+		environment := worker.FormalCaptureEnvironment{Staging: taskStage}
+		if inv.Request.ControlEvidence != nil {
+			sources, err = worker.OpenControlEvidenceCaptureSources(ctx, inv, job, f.materials.ControlEvidenceSource)
+			if err != nil {
+				job.Close()
+				t.Fatal("actual original CE source open", err)
+			}
+			environment.ControlEvidence = sources
+			environment.SourceAuthorize = sources.Authorize
+			environment.SourceValidUntil = sources.ValidUntil()
+		} else {
+			root, openErr := os.OpenRoot(t.TempDir())
+			if openErr != nil {
+				t.Fatal(openErr)
+			}
+			defer root.Close()
+			if root.WriteFile("history.json", []byte(`{"history":"named owned portable workspace"}`), 0600) != nil {
+				t.Fatal("owned business workspace fixture")
+			}
+			environment.Workspace = root
 		}
-		result, err := worker.RunFormalCapture(ctx, inv, job, worker.FormalCaptureEnvironment{Staging: taskStage, ControlEvidence: sources, SourceAuthorize: sources.Authorize, SourceValidUntil: sources.ValidUntil()})
+		result, err := worker.RunFormalCapture(ctx, inv, job, environment)
 		if fault {
 			sources.Close()
 			job.Close()
@@ -565,6 +912,9 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 			sources.Close()
 			job.Close()
 			t.Fatal("actual original CE Generate/pull/C stream", err)
+		}
+		if malformed && index == 0 {
+			result = forgeOwnedBusinessArchive(t, taskStage, inv, result)
 		}
 		t.Logf("part=%d C-written=%s fixed_remaining=%s", index, time.Since(phaseStarted), fixedRemaining())
 		if index == 0 {
@@ -603,6 +953,18 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 		job.Close()
 		aRefreshControlSourceCapacity(t, f)
 		ref, err := o.Evidence(ctx, x.input.Authority, j)
+		if malformed && index == 0 && err != nil {
+			var seedInv worker.Invocation
+			if json.Unmarshal(x.parts[0].InvocationJSON, &seedInv) != nil {
+				t.Fatal("missing frozen finalization seed")
+			}
+			id, _ := ce.FinalizedSourceEvidenceID(*seedInv.Request.ControlEvidence)
+			var seals, ceJobs int
+			if f.x.generates.Load() != 1 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&seals) != nil || seals != 0 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND resource_name<>?`, x.input.Authority.TaskPublicID, j.Name).Scan(&ceJobs) != nil || ceJobs != 0 {
+				t.Fatal("rejected original business reader left CE effects")
+			}
+			return
+		}
 		if err != nil || ref == nil {
 			t.Fatal("actual original CE independent Unwrap/Evidence consumer", err)
 		}
@@ -619,15 +981,80 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 		}
 		plain[part.Part] = bytes.Clone(decoded.Bytes())
 	}
-	if f.x.generates.Load() != 2 {
+	if f.x.generates.Load() != int64(expectedResults) {
 		t.Fatal("pair did not consume two distinct original Generate uses")
 	}
 	var results int
-	if f.x.decrypts.Load() != 2 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND result_sha256 IS NOT NULL`, x.input.Authority.TaskPublicID).Scan(&results) != nil || results != 2 {
+	if f.x.decrypts.Load() != expectedDecrypts || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND result_sha256 IS NOT NULL`, x.input.Authority.TaskPublicID).Scan(&results) != nil || results != expectedResults {
 		t.Fatal("pair omitted original independent Unwrap/result registration")
 	}
 	verified, err := ce.Verify(ctx, plain[ce.Part], plain[ce.ProofPart], f.expected)
 	if err != nil || verified.Groups["event"].Count < 121 {
 		t.Fatal("complete actual service pair readback", err)
 	}
+	if business {
+		for _, owner := range []string{"A", "B", "C", "D"} {
+			if verified.Owners[owner].Status != "complete" {
+				t.Fatal("actual owned reader/registration was skipped", owner)
+			}
+		}
+		var seed ce.CaptureLocator
+		var invocation worker.Invocation
+		if json.Unmarshal(x.parts[0].InvocationJSON, &invocation) != nil || invocation.Request.ControlEvidence == nil {
+			t.Fatal("original v2 source seed")
+		}
+		seed = *invocation.Request.ControlEvidence
+		prepared, verifyErr := ce.VerifyFinalizedBytes(ctx, seed, plain[ce.Part], plain[ce.ProofPart])
+		clear(prepared.SidecarJSON)
+		clear(prepared.ProofsJSON)
+		if verifyErr != nil {
+			t.Fatal("self-contained final owned proof readback", verifyErr)
+		}
+	}
+}
+
+// Explicit malicious-worker fixture: one actual original Generate completed,
+// then unpublished bytes are replaced by a valid C stream/envelope containing
+// an unsafe tar path. Crypto-only observation is insufficient for owner B.
+func forgeOwnedBusinessArchive(t *testing.T, stage *os.Root, inv worker.Invocation, result worker.FormalCaptureResult) worker.FormalCaptureResult {
+	t.Helper()
+	spec := w.StreamSpec{Request: inv.ProviderKey.Request, Path: inv.Request.ArtifactName, MaxPlaintextBytes: inv.Request.MaxCompressedBytes, MaxFrames: inv.FormalCapture.MaxFrames}
+	var ciphertext bytes.Buffer
+	seal, err := w.EncryptStream(context.Background(), spec, bytes.Repeat([]byte{9}, 32), &ciphertext, func(dst io.Writer) error {
+		return staging.Compress(dst, func(z io.Writer) error {
+			tw := tar.NewWriter(z)
+			if err := tw.WriteHeader(&tar.Header{Name: "../../outside", Typeflag: tar.TypeReg, Mode: 0600, Size: 3}); err != nil {
+				return err
+			}
+			if _, err := tw.Write([]byte("bad")); err != nil {
+				return err
+			}
+			return tw.Close()
+		})
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	envelope, err := seal.EnvelopeJSON(w.WrappedKey{Request: spec.Request, Algorithm: "provider-native", Ciphertext: bytes.Repeat([]byte{7}, 60)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Only the named fixture worker's unpublished files are made mutable for
+	// this malicious-worker negative; controller-private custody is untouched.
+	if stage.Chmod(result.Ciphertext.Name, 0600) != nil || stage.Chmod(result.Envelope.Name, 0600) != nil {
+		t.Fatal("owned forged-worker file mode")
+	}
+	if stage.WriteFile(result.Ciphertext.Name, ciphertext.Bytes(), 0600) != nil || stage.WriteFile(result.Envelope.Name, envelope, 0600) != nil {
+		t.Fatal("owned unpublished forged-worker bytes")
+	}
+	result.Ciphertext.Size = int64(ciphertext.Len())
+	result.Ciphertext.SHA256 = hash(ciphertext.Bytes())
+	result.Envelope.Size = int64(len(envelope))
+	result.Envelope.SHA256 = hash(envelope)
+	result.Files = 1
+	result.Bytes = 3
+	if !worker.ValidateFormalCaptureResult(inv, &result) {
+		t.Fatal("forgery did not preserve original candidate binding")
+	}
+	return result
 }

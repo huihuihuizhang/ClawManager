@@ -124,7 +124,7 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 		deny()
 		return
 	}
-	prepared, err := ce.Rebuild(ctx, locator, entries)
+	prepared, finalSeal, responseEntries, locatorChunks, err := rebuildControlSourceSnapshot(ctx, locator, entries)
 	if err != nil {
 		deny()
 		return
@@ -168,6 +168,12 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 		return
 	}
 	response := ce.SourceResponse{Version: "system-backup-control-evidence-source-response.v1", InvocationSHA256: request.InvocationSHA256, KeyUseNonce: request.Point, AuthoritySHA256: first.KeyUse.AuthoritySHA256, Until: first.ExpiresAt, Evidence: entries}
+	if locator.Finalization != nil {
+		response.Version = "system-backup-control-evidence-source-response.v2"
+		response.FinalizedSource = finalSeal
+		response.FinalizedLocatorChunks = locatorChunks
+		response.Evidence = responseEntries
+	}
 	raw, err := ce.CanonicalProofs(response)
 	if err != nil {
 		deny()
@@ -211,14 +217,27 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 	if decodeProviderDeploymentJSON(originalUse, &actual) != nil || actual != *lease.KeyUse || !time.Now().Before(actual.Until) || actual.State != "using" {
 		return nil, c.ErrExecutionAuthority
 	}
-	out := make([]ce.RegisteredEvidence, 0, len(locator.Evidence))
-	for _, ref := range locator.Evidence {
+	effective := locator
+	var finalized []ce.RegisteredEvidence
+	if locator.Finalization != nil {
+		prepared, seal, err := loadFinalizedControlSourceSQL(ctx, tx, locator)
+		if err != nil {
+			return nil, err
+		}
+		effective = prepared.Locator
+		clear(prepared.SidecarJSON)
+		clear(prepared.ProofsJSON)
+		finalized = seal
+	}
+	out := make([]ce.RegisteredEvidence, 0, len(effective.Evidence)+1)
+	for _, ref := range effective.Evidence {
 		entry, err := ce.LoadRegisteredSQL(ctx, tx, locator.Expected.Scope, ref)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, entry)
 	}
+	out = append(out, finalized...)
 	if guard.Recheck(ctx, tx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
@@ -230,4 +249,27 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 		return nil, c.ErrExecutionAuthority
 	}
 	return out, nil
+}
+
+func rebuildControlSourceSnapshot(ctx context.Context, locator ce.CaptureLocator, entries []ce.RegisteredEvidence) (ce.PreparedSource, *ce.RegisteredEvidence, []ce.RegisteredEvidence, []ce.RegisteredEvidence, error) {
+	if locator.Finalization == nil {
+		prepared, err := ce.Rebuild(ctx, locator, entries)
+		return prepared, nil, entries, nil, err
+	}
+	if len(entries) < 2 {
+		return ce.PreparedSource{}, nil, nil, nil, ce.ErrInvalid
+	}
+	seal := entries[len(entries)-1]
+	refs, err := ce.FinalizedSourceReferences(locator, seal)
+	if err != nil || len(refs)+1 >= len(entries) {
+		return ce.PreparedSource{}, nil, nil, nil, ce.ErrInvalid
+	}
+	chunks := entries[len(entries)-len(refs)-1 : len(entries)-1]
+	final, err := ce.ReadFinalizedSourceSeal(locator, seal, chunks...)
+	if err != nil {
+		return ce.PreparedSource{}, nil, nil, nil, err
+	}
+	proofs := entries[:len(entries)-len(refs)-1]
+	prepared, err := ce.VerifyFinalized(ctx, locator, final, proofs)
+	return prepared, &seal, proofs, chunks, err
 }

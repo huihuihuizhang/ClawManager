@@ -70,7 +70,19 @@ func (o *PublicJobOwner) observeFormalCandidateResult(ctx context.Context, a d.A
 	if err = o.Gate.Check(ctx, a); err != nil {
 		return nil, err
 	}
-	observed, err := observeOriginalFormalCandidate(ctx, source, custody, staging.CustodyPolicy{Installation: a.InstallationID, MaxBytes: o.SealCustodyMaxBytes}, workerSealScope(a, j, invocation), invocation, record.Candidate, keys)
+	var observed staging.FormalObservation
+	if seed := invocation.Request.ControlEvidence; seed != nil && seed.Finalization != nil {
+		final, readErr := o.finalizedControlLocator(ctx, a, *seed)
+		if readErr != nil {
+			return nil, readErr
+		}
+		spec := w.StreamSpec{Request: invocation.ProviderKey.Request, Path: invocation.Request.ArtifactName, MaxPlaintextBytes: invocation.Request.MaxCompressedBytes, MaxFrames: invocation.FormalCapture.MaxFrames}
+		observed, err = staging.ObserveFormalManaged(ctx, source, custody, staging.CustodyPolicy{Installation: a.InstallationID, MaxBytes: o.SealCustodyMaxBytes}, workerSealScope(a, j, invocation), record.Candidate.Ciphertext, record.Candidate.Envelope, spec, keys, func(plaintext io.Reader) error {
+			return inspectControlEvidencePart(ctx, plaintext, invocation.Request.Binding.Path, final)
+		})
+	} else {
+		observed, err = observeOriginalFormalCandidate(ctx, source, custody, staging.CustodyPolicy{Installation: a.InstallationID, MaxBytes: o.SealCustodyMaxBytes}, workerSealScope(a, j, invocation), invocation, record.Candidate, keys)
+	}
 	if err != nil {
 		return nil, err
 	}

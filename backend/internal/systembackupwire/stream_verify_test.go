@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -20,6 +21,69 @@ type streamVerifyUnwrapper struct {
 	calls       int
 	deny, after bool
 }
+
+type streamReadAuthorityKeys struct {
+	*streamVerifyUnwrapper
+	revoked atomic.Bool
+}
+
+func (k *streamReadAuthorityKeys) RecheckStream(context.Context) error {
+	if k.revoked.Load() {
+		return ErrStreamAuthority
+	}
+	return nil
+}
+
+func TestStreamAuthorityWithdrawalDuringPlaintextReadDiscardsWholeVerification(t *testing.T) {
+	spec := streamFixture()
+	key := bytes.Repeat([]byte{9}, 32)
+	defer clear(key)
+	var ciphertext bytes.Buffer
+	seal, err := EncryptStream(context.Background(), spec, key, &ciphertext, func(dst io.Writer) error {
+		_, err := dst.Write(bytes.Repeat([]byte("bound original content"), 4096))
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	envelope, err := seal.EnvelopeJSON(WrappedKey{Request: spec.Request, Algorithm: "provider-native", Ciphertext: []byte("opaque")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	keys := &streamReadAuthorityKeys{streamVerifyUnwrapper: &streamVerifyUnwrapper{request: spec.Request, key: key}}
+	entered := false
+	verified, err := InspectWrappedStream(context.Background(), spec, envelope, bytes.NewReader(ciphertext.Bytes()), keys, func(plaintext io.Reader) error {
+		var first [1]byte
+		if _, err := io.ReadFull(plaintext, first[:]); err != nil {
+			return err
+		}
+		entered = true
+		keys.revoked.Store(true)
+		_, err := io.Copy(io.Discard, plaintext)
+		return err
+	})
+	if !entered || err == nil || verified.CiphertextSHA256() != "" || keys.calls != 1 {
+		t.Fatal("withdrawn stream authority retained a partial verification", err)
+	}
+}
+
+func TestStreamReadAuthorityPostReadFailureClearsReturnedBytes(t *testing.T) {
+	keys := &streamReadAuthorityKeys{}
+	reader := streamAuthorityReader{ctx: context.Background(), authority: keys, reader: readerFunc(func(dst []byte) (int, error) {
+		n := copy(dst, []byte("inert private bytes"))
+		keys.revoked.Store(true)
+		return n, nil
+	})}
+	dst := make([]byte, 64)
+	n, err := reader.Read(dst)
+	if n != 0 || !errors.Is(err, ErrStreamAuthority) || !bytes.Equal(dst, make([]byte, len(dst))) {
+		t.Fatal("failed post-read authority exposed bytes", n, err)
+	}
+}
+
+type readerFunc func([]byte) (int, error)
+
+func (f readerFunc) Read(dst []byte) (int, error) { return f(dst) }
 
 type deadlineStreamReader struct {
 	src   io.Reader

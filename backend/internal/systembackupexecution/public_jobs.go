@@ -187,6 +187,9 @@ func (o *PublicJobOwner) Admit(ctx context.Context, a d.Authority, intent d.JobI
 	}
 	for _, part := range desc.Parts {
 		if part.Intent.JobUnitKey == intent.JobUnitKey {
+			if e = o.prepareControlEvidenceDispatch(ctx, in, part); e != nil {
+				return in, p, kube.Runner{}, e
+			}
 			if e = o.ensureIdentity(ctx, a, part); e != nil {
 				return in, p, kube.Runner{}, e
 			}
