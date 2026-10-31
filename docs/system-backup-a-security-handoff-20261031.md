@@ -152,6 +152,10 @@ Provider RPC在原SQL锁之外；实际DEK消费在同一原task/KEK-fence事务
 
 真实MySQL测试直接调用现有 `NewInstallationAuthorityWriter.Put` 导入原签名record，再保持registry的unwrap_revocation_json为空；覆盖初始正常解封→仅UnwrapRevoked后旧/新对象均拒绝，以及另一随机schema内仅GenerateRevoked仍可解封→再UnwrapRevoked拒绝。不是手工改registry列或fake epoch。A5 commit `40ba9d81`配合本补丁交付，不改写已推送历史。
 
+### A5.2 实际kube.Intent摘要对照修复
+
+独立提交/推送 `98ccb4d3`。监督真实D consumer证明原plan typed Job SpecSHA与Runner规范化后的runtime RequestSHA不等。公共 `loadOriginalCandidatePlan` 继续校验原SpecJSON完整SHA，并解typed batchv1.Job调用**同一** `kube.Intent("Job",...)`（补apiVersion/kind、删status、unstructured重编码），只以所得RequestSHA对照runtime_resources.request_sha256。没有放松比较，也没有只改D fixture。A SQL正例改存真实RequestSHA/RequestJSON，断言两SHA不同，旧/新verifier均拒绝把SpecSHA替换进runtime；两场实际原SQL+TLS测试PASS，pkg8.844秒。公共workload/plan认证仅抽取复用，保留原签名/当前授权/身份守卫，供后续issuer共享。
+
 ## 第六切片：原SQL四分区来源census与原事务冻结（首个实际scanner切片）
 
 新增 `systembackupkekadapter.NewSQLCoverageCensus(db, databasePin, installation)`，不是对candidate/registry的DTO转换。直接遍历当前172迁移中49张原业务/历史来源表，包括079旧任务/manifest/attempt/send/staging/restore和v2原backup/计划/加密record/evidence/unknown actions/runtime/hold/promotion/lease/import/drill/prune/tombstone，整个数据库保守扫描而非按terminal/deleted/TTL排除。扫描之前枚举所有backup命名空间表，未审查新表或缺失必需表直接失败；派生KEK索引、认证与无引用协调表的排除列表固定在代码，不接收请求提供的表名/布尔值。
@@ -165,6 +169,36 @@ Provider RPC在原SQL锁之外；实际DEK消费在同一原task/KEK-fence事务
 验证：真实MySQL `-tags=systembackup_mysql -run '^TestSQLCoverageCensusOriginalSourcesMySQL$'` 最新增强版退出0，pkg17.850s；此前同生产代码完整tagged adapter suite退出0，21.115s。在随机 `ad_a_census_*` 空库运行**全部172个** `db.ApplyPinnedMigrations`（catalog `718e4509d2c83c73636dd9745ac7c2b350a57c01d75b5ac50e482ffcb4f537d8`），再实际运行原表枚举/EOF/重复稳定性/防别名、旧config表新增使旧准备失效、同原事务冻结/复查/跨事务拒绝、空来源旧writer精确等待/释放后成功、owner自身改动拒绝、rollback释锁、未知表拒绝、跨库拒绝和RC伪装反例。独立server UUID+fixture marker检查后删除本次随机schema，不修改监督/D测试库。
 
 明确尚未完成：这个对象**刻意不实现PreparedCoverage**，不会把SQL census直接升级为四分区完整性，更没有放开Bound.CompleteScan。外部immutable artifact/catalog全分页EOF、真实expected-request/envelope历史回填、未知provider调用处置、原source adoption签名与持续writer/GC共享fence hook仍待实际代码接入；不能用本地census、四行receipt或手填完成布尔值替代。此切片提供原SQL完整读取/锁定/重查的真实基础，后续将连接上述原owner记录和producer入口，保持完整KEK覆盖门禁关闭直到都满足。
+
+## A7进行中：解除未来permit摘要循环（优先实际producer接线）
+
+监督确认原FormalCaptureMaterials.Permit.PermitSHA256→materials hash→Invocation.Hash→permit.Identity.InvocationSHA256→PermitSHA256有摘要循环，且真实Job/Pod UID创建后才知。静态future permit文件不能作为自动页面路径。
+
+A/D消费ABI草稿（代码正在实现，尚未宣称接线完成）：
+
+```go
+// 冻结materials只含这个原Generate-owner部署pin，没有未来permit digest/JobUID/PodUID。
+pin := systembackupkms.PermitDeliveryPin{
+    Version: systembackupkms.PermitDeliveryVersion,
+    Issuer: independentGeneratePermitSigningPublicKey,
+    IssuerGrantSHA256: independentGenerateOwnerDelegationEnvelopeSHA256,
+}
+// 原mTLS/TokenReview/SQL key-reserve完成后，D lease返回同一原事务已持久化的原字节。
+delivery := systembackupkms.DeliveredProviderPermit{Payload: originalPayload, Signature: originalSignature}
+// OriginalPermitJobAuthority额外PermitNonce()来自原KeyUseLease.Nonce。
+// worker.OriginalKeyAuthority已实现该方法，绝不由delivery字段反向选择nonce。
+job, err := systembackupkms.NewDeliveredCaptureJob(ctx, admittedKMSConfig, pin, delivery, original, frozenRequest)
+```
+
+`DeliveredPermitPayload`签名域为 `system-backup-original-generate-permit-delivery.v1\x00`，内含schema_version、issuer_grant_sha256、原nonce、完整KeyRequest和原ProviderPermit。原ProviderPermit.Identity继续严格绑定真实namespace/JobUID/PodUID/SAUID/完整InvocationSHA/capture grant；只允许Generate+JWT，不接受静态凭证/Unwrap/其他source、旧v1裸payload签名。kms consumer每次Resolve及DEK使用前后均复验独立signature/grant pin/完整request/nonce，随后复用全部既有issuer/identity/context/provider/期限检查，无动态失败fallback。
+
+**A7.0 consumer ABI已实现并验证，先独立提交供D消费**：`systembackupkms/delivered_permit.go`、原Job resolver共用校验及NewDeliveredCaptureJob、worker.OriginalKeyAuthority.PermitNonce。KMS整包PASS3.786秒，worker整包PASS34.727秒。真实loopback TLS正例验证exact完整context/version/bits、原JWT→batch单policy生成、原DEK回调及原单次调用守卫；20类拒绝覆盖wrong grant/nonce/request/invocation/Job/Pod/SA/capture grant、Unwrap、静态凭证、未来/过期/越原权限、旧签名域、重复/未知JSON、issuer替换、构造后nonce变化/原授权撤销。DTO byte修改不改变已构造resolver。此阶段original authority为明确unit double，原producer SQL/K8s/签发授权测试仍在开发，未声称生产闭环。
+
+生产producer由 `ProviderPermitIssuer` 持独立原Generate-owner部署级签名delegation（签发专用公钥+真实controller workload/SQL账号/备份业务config/完整binding/精确Generate role-policy-JWT trust/worker namespace-SA/期限撤销），准备时核对原加密plan/真实Job和Pod；`Prepare`在SQL锁外完成，`Stage(ctx, originalTx, originalKeyUseLease)`在原owner所有业务锁之后、Commit之前写原public signed permit evidence并取得原KEK fence（planned/unknown引用仍在接入中）。签发使用专用被授权Ed25519签发key；不调用artifact三用途signer、worker身份CA或ACL观察签发业务grant。`ReadCommitted(ctx)`只回读已提交原字节，不为ACK不明重签/续期。D负责原ControlClient/lease/CLI/部署消费；A提供具体原owner签发权限和current Generate来源，不要求每任务手工材料。
+
+无环构造修正：**ProviderPermitIssuerGrant不包含Forward/CaptureGrantSHA，也不包含父DeploymentConfig/ProfileSHA**。其Workload.ConfigSHA只绑定既有备份业务配置（该schema不包含issuer delegation/未来permit）。可以先生成独立delegation→materials只pin独立公钥/delegationSHA→Invocation/Profile/DeploymentConfig→Forward grant→真实Job/Pod绑定→动态permit。`ProviderPermitIssuerConfig.CaptureGrantSHA256`仅在运行期绑定实际原recordKeys/SQL执行grant，不写回独立delegation。每份动态payload仍严格包含经原授权验证的Identity.ExecutionGrantSHA256，拒绝跨grant替换。D的外部启动材料包也不能把依赖Forward的派生摘要嵌回父config/profile/materials。
+
+planned/unknown草稿保持保守：key-reserve持久化planned，key-begin在provider I/O前同事务标unknown；key-end/candidate/status/TTL不释放；任何payload/ACK未知都保留原引用。CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks齐备。
 
 ## 现场事实边界（最终集中更新）
 

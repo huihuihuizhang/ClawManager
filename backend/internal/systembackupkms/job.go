@@ -26,6 +26,10 @@ func NewCaptureJob(ctx context.Context, c Config, m PermitMount, original Origin
 	if e != nil {
 		return nil, e
 	}
+	return newCaptureJob(ctx, c, r, original, frozen)
+}
+
+func newCaptureJob(ctx context.Context, c Config, r *PinnedJobResolver, original OriginalJobAuthority, frozen w.KeyRequest) (*CaptureJob, error) {
 	a := Access{Request: frozen, Operation: Generate, Endpoint: c.Endpoint, KeyName: c.KeyName}
 	if ctx == nil || original.Recheck(ctx, a) != nil {
 		return nil, ErrPermission
