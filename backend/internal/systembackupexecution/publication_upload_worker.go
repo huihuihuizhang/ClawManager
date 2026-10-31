@@ -36,6 +36,7 @@ type PublicationUploadRequest struct {
 	Deadline                                                  time.Time
 	Objects                                                   []PublicationUploadInput
 	ManifestInput                                             json.RawMessage
+	IndexBytes                                                []byte
 }
 type PublicationUploadInput struct {
 	Path, SHA256 string
@@ -54,12 +55,13 @@ type PublicationUploadResult struct {
 }
 
 const publicationUploadVersion = "system-backup-upload-only.v1"
+const publicationPresignedUploadVersion = "system-backup-upload-only.v2"
 
 func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	if p.CandidateOwnerHMAC != "" && !formalCandidateDigest(p.CandidateOwnerHMAC) {
 		return nil, "", errPublicationUnavailable
 	}
-	if p.Version != publicationUploadVersion || !strings.HasPrefix(p.Installation, "installation_") || len(p.Installation) > 128 || !strings.HasPrefix(p.Backup, "sbk_") || len(p.Backup) != 40 || p.Attempt < 1 || len(p.Objects) < 2 || len(p.Objects) > 20001 || p.Deadline.IsZero() || !formalCandidateDigest(p.CAHash) || !formalCandidateDigest(p.CredentialHash) {
+	if (p.Version != publicationUploadVersion && p.Version != publicationPresignedUploadVersion) || !strings.HasPrefix(p.Installation, "installation_") || len(p.Installation) > 128 || !strings.HasPrefix(p.Backup, "sbk_") || len(p.Backup) != 40 || p.Attempt < 1 || len(p.Objects) < 2 || len(p.Objects) > 20001 || p.Deadline.IsZero() || !formalCandidateDigest(p.CAHash) || (!formalCandidateDigest(p.CredentialHash) && !(p.Version == publicationPresignedUploadVersion && p.CredentialHash == "")) {
 		return nil, "", errPublicationUnavailable
 	}
 	if _, e := uuid.Parse(strings.TrimPrefix(p.Backup, "sbk_")); e != nil {
@@ -80,6 +82,7 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	seen := map[string]bool{}
 	index := false
 	indexSHA := ""
+	var indexSize int64
 	for _, object := range p.Objects {
 		if !safePublicationKey(object.Path) || path.Clean(object.Path) != object.Path || seen[object.Path] || !formalCandidateDigest(object.SHA256) || object.Bytes < 1 || object.Bytes > 8<<30 {
 			return nil, "", errPublicationUnavailable
@@ -88,6 +91,7 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 		if object.Path == "artifact-index.json" {
 			index = true
 			indexSHA = object.SHA256
+			indexSize = object.Bytes
 		} else if !strings.HasPrefix(object.Path, "parts/") && !strings.HasPrefix(object.Path, "control/") {
 			return nil, "", errPublicationUnavailable
 		} else if !strings.HasSuffix(base, ".enc") && !strings.HasSuffix(base, ".envelope.json") {
@@ -99,6 +103,9 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 		seen[object.Path] = true
 	}
 	if !index || len(p.ManifestInput) < 2 || len(p.ManifestInput) > 262144 {
+		return nil, "", errPublicationUnavailable
+	}
+	if len(p.IndexBytes) > 0 && (p.Version != publicationPresignedUploadVersion || int64(len(p.IndexBytes)) != indexSize || hash(p.IndexBytes) != indexSHA) {
 		return nil, "", errPublicationUnavailable
 	}
 	manifest, e := jsoncanonicalizer.Transform(p.ManifestInput)
@@ -166,7 +173,11 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 	if err != nil || len(ca) == 0 {
 		return zero, errPublicationUnavailable
 	}
-	private, err := readPrivate(credentialFile, 65536)
+	credentialLimit := int64(65536)
+	if p.Version == publicationPresignedUploadVersion {
+		credentialLimit = publicationPutGrantMaxBytes
+	}
+	private, err := readPrivate(credentialFile, credentialLimit)
 	if err != nil {
 		return zero, errPublicationUnavailable
 	}
@@ -175,11 +186,21 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 		return zero, errPublicationUnavailable
 	}
 	var credential nativePublicationCredential
-	if decodeProviderDeploymentJSON(private, &credential) != nil || len(credential.AccessKey) < 3 || len(credential.AccessKey) > 256 || strings.ContainsAny(credential.AccessKey, "\r\n") || len(credential.SecretKey) < 16 || len(credential.SecretKey) > 4096 || len(credential.SessionToken) > 16384 || credential.NotBefore.IsZero() || time.Now().Before(credential.NotBefore) || !time.Now().Before(credential.Until) || !credential.Until.After(credential.NotBefore) {
-		return zero, errPublicationUnavailable
+	var grants map[string]publicationPutGrant
+	var credentialUntil time.Time
+	if p.Version == publicationPresignedUploadVersion {
+		grants, credentialUntil, err = parsePublicationPutGrantSet(p, private)
+		if err != nil {
+			return zero, err
+		}
+	} else {
+		if decodeProviderDeploymentJSON(private, &credential) != nil || len(credential.AccessKey) < 3 || len(credential.AccessKey) > 256 || strings.ContainsAny(credential.AccessKey, "\r\n") || len(credential.SecretKey) < 16 || len(credential.SecretKey) > 4096 || len(credential.SessionToken) > 16384 || credential.NotBefore.IsZero() || time.Now().Before(credential.NotBefore) || !time.Now().Before(credential.Until) || !credential.Until.After(credential.NotBefore) {
+			return zero, errPublicationUnavailable
+		}
+		credentialUntil = credential.Until
 	}
-	if credential.Until.Before(p.Deadline) {
-		ctx, cancel = context.WithDeadline(ctx, credential.Until)
+	if credentialUntil.Before(p.Deadline) {
+		ctx, cancel = context.WithDeadline(ctx, credentialUntil)
 		defer cancel()
 	}
 	transport, err := newPublicationS3Transport(PublicationTargetMaterials{Endpoint: p.Endpoint, Region: p.Region, Bucket: p.Bucket, CAFile: caFile, CASHA256: p.CAHash})
@@ -187,6 +208,16 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 		return zero, err
 	}
 	defer transport.Close()
+	sendPut := func(key, digest string, size int64, body io.Reader) (PublicationUploadObservation, error) {
+		if p.Version == publicationPresignedUploadVersion {
+			grant, ok := grants[key]
+			if !ok || grant.SHA256 != digest || grant.Bytes != size {
+				return PublicationUploadObservation{}, errPublicationUnavailable
+			}
+			return usePublicationPutGrant(ctx, transport.client, grant, body)
+		}
+		return publicationUploadPut(ctx, transport.client, p, credential, key, digest, size, body)
+	}
 	// This private file must be exclusive even after an interrupted/unknown
 	// send. No retry path accepts or overwrites an earlier start witness.
 	if err = writeStageExclusive(output, "upload-started.json", []byte(`{"request_sha256":"`+hash(request)+`"}`)); err != nil {
@@ -198,17 +229,31 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 		if _, e := pinnedDeploymentFile(caFile, p.CAHash, 65536); e != nil {
 			return errPublicationUnavailable
 		}
-		raw, e := readPrivate(credentialFile, 65536)
+		raw, e := readPrivate(credentialFile, credentialLimit)
 		if e != nil {
 			return errPublicationUnavailable
 		}
 		defer clear(raw)
-		if hash(raw) != p.CredentialHash || ctx.Err() != nil || !time.Now().Before(credential.Until) {
+		if hash(raw) != p.CredentialHash || ctx.Err() != nil || !time.Now().Before(credentialUntil) {
 			return errPublicationUnavailable
 		}
 		return nil
 	}
 	for _, object := range p.Objects {
+		if object.Path == "artifact-index.json" && len(p.IndexBytes) > 0 {
+			if err = currentCredential(); err != nil {
+				return zero, err
+			}
+			observation, e := sendPut(prefix+object.Path, object.SHA256, object.Bytes, bytes.NewReader(p.IndexBytes))
+			if e != nil {
+				return zero, e
+			}
+			if e = currentCredential(); e != nil {
+				return zero, e
+			}
+			result.Objects = append(result.Objects, observation)
+			continue
+		}
 		file, err := input.Open(object.Path)
 		if err != nil {
 			return zero, errPublicationUnavailable
@@ -233,7 +278,7 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 			file.Close()
 			return zero, err
 		}
-		observation, err := publicationUploadPut(ctx, transport.client, p, credential, prefix+object.Path, object.SHA256, object.Bytes, publicationUploadReader{ctx: ctx, r: file})
+		observation, err := sendPut(prefix+object.Path, object.SHA256, object.Bytes, publicationUploadReader{ctx: ctx, r: file})
 		file.Close()
 		if err != nil {
 			return zero, err
@@ -243,7 +288,7 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 		}
 		result.Objects = append(result.Objects, observation)
 	}
-	result.Candidate, err = publicationUploadPut(ctx, transport.client, p, credential, candidateKey, hash(manifest), int64(len(manifest)), bytes.NewReader(manifest))
+	result.Candidate, err = sendPut(candidateKey, hash(manifest), int64(len(manifest)), bytes.NewReader(manifest))
 	if err != nil {
 		return zero, err
 	}
@@ -260,8 +305,8 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 	return result, nil
 }
 
-func publicationUploadPut(ctx context.Context, client *http.Client, p PublicationUploadRequest, credential nativePublicationCredential, key, digest string, size int64, body io.Reader) (PublicationUploadObservation, error) {
-	var zero PublicationUploadObservation
+func newPublicationUploadSignedPut(ctx context.Context, p PublicationUploadRequest, credential nativePublicationCredential, key, digest string, size int64, body io.Reader) (*http.Request, error) {
+	var zero *http.Request
 	if ctx.Err() != nil || !safePublicationKey(key) || !formalCandidateDigest(digest) || size < 1 || size > 8<<30 {
 		return zero, errPublicationUnavailable
 	}
@@ -321,6 +366,16 @@ func publicationUploadPut(ctx context.Context, client *http.Client, p Publicatio
 			return zero, errPublicationUnavailable
 		}
 	}
+	return r, nil
+}
+
+func publicationUploadPut(ctx context.Context, client *http.Client, p PublicationUploadRequest, credential nativePublicationCredential, key, digest string, size int64, body io.Reader) (PublicationUploadObservation, error) {
+	var zero PublicationUploadObservation
+	r, err := newPublicationUploadSignedPut(ctx, p, credential, key, digest, size, body)
+	if err != nil {
+		return zero, err
+	}
+	sum, _ := hex.DecodeString(digest)
 	response, err := client.Do(r)
 	if err != nil {
 		return zero, ErrJobUncertain
