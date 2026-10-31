@@ -25,6 +25,7 @@ type aNativePublicationServer struct {
 	objects               map[string][]byte
 	puts, gets, heads     int
 	lostACK, wrongVersion bool
+	getUnavailable        bool
 	delay                 time.Duration
 	deadline              time.Time
 	read, write           nativePublicationCredential
@@ -130,6 +131,10 @@ func (s *aNativePublicationServer) serve(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	s.gets++
+	if s.getUnavailable {
+		w.WriteHeader(503)
+		return
+	}
 	if s.onGet != nil {
 		s.onGet()
 	}
