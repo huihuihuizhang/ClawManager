@@ -38,10 +38,11 @@ func ProductionCaptureInputsFromEnvironment() []ProductionCaptureInput {
 // Original deployment templates contain no task/attempt/Job identity. The
 // factory binds those coordinates only after the original inventory freezes.
 type productionCaptureOperation struct {
-	Request  worker.Request
-	Formal   worker.FormalCaptureSpec
-	Provider k.Access
-	Workload kube.JobRequest
+	Request         worker.Request
+	Formal          worker.FormalCaptureSpec
+	Provider        k.Access
+	Workload        kube.JobRequest
+	MountIdentities []kube.MountIdentity `json:",omitempty"`
 }
 
 type productionCaptureMaterials struct {
@@ -56,6 +57,7 @@ type productionCaptureMaterials struct {
 	ResourceTypes                                                               []productionResourceType
 	ControlEvidence                                                             *ce.CaptureInput                   `json:"ControlEvidence,omitempty"`
 	ControlEvidenceSource                                                       *worker.ControlEvidenceSourceMount `json:"ControlEvidenceSource,omitempty"`
+	Discovery                                                                   *productionSourceDiscovery         `json:",omitempty"`
 }
 
 type productionResourceType struct {
@@ -105,6 +107,25 @@ func (s *DeploymentService) loadProductionCapture(inputs []ProductionCaptureInpu
 }
 
 func (s *DeploymentService) validateProductionCapture(m productionCaptureMaterials) error {
+	if m.Discovery != nil {
+		if s == nil || m.Discovery.validate() != nil {
+			return c.ErrExecutionAuthority
+		}
+		platform := map[string]bool{}
+		for _, writer := range s.Config.Writers {
+			platform["deployment/"+writer.Namespace+"/"+writer.Name] = true
+		}
+		for id := range m.Discovery.TeamPlatformUnits {
+			if !platform[id] {
+				return c.ErrExecutionAuthority
+			}
+		}
+		for _, operation := range m.Operations {
+			if operation.Formal.PermitDelivery != nil && bytes.Equal(m.Discovery.Issuer, operation.Formal.PermitDelivery.Issuer) {
+				return c.ErrExecutionAuthority
+			}
+		}
+	}
 	if s == nil || (m.ControlEvidence != nil) != (m.ControlEvidenceSource != nil) || m.ControlEvidence != nil && (m.ControlEvidence.Validate() != nil || m.ControlEvidenceSource.Validate() != nil || m.ControlEvidenceSource.ControllerGrantFile == "" || m.ControlEvidenceSource.Endpoint != s.Config.ControlURL) {
 		return c.ErrExecutionAuthority
 	}

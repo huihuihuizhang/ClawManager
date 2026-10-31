@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
@@ -36,6 +37,19 @@ func (o *PublicJobOwner) ensureStaging(task string) error {
 func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part b.JobPart) (kube.WorkerSecurity, error) {
 	s := o.Security
 	s.Volumes = append([]kube.MountIdentity(nil), s.Volumes...)
+	original, production, err := o.originalProductionMounts(ctx, a, part)
+	if err != nil {
+		return s, err
+	}
+	if production {
+		base := s.Volumes[:0]
+		for _, identity := range s.Volumes {
+			if identity.Volume != "source" && identity.Volume != "workspace" && !strings.HasPrefix(identity.Volume, "formal-") {
+				base = append(base, identity)
+			}
+		}
+		s.Volumes = append(base, original...)
+	}
 	tx, e := o.Gate.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return s, e

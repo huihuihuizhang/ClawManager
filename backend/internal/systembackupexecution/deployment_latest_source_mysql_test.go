@@ -185,6 +185,20 @@ func testLatestMigratedSourceMySQL(t *testing.T) {
 	if domain.VerifyBusinessCapturedSnapshot(snapshot, captureSchema) != nil {
 		t.Fatal("actual capture and independently observed schema diverged")
 	}
+	observedCensus, err := domain.ObserveBusinessSchemaCensus(ctx, reader, census)
+	if err != nil || len(observedCensus.Business) != selected || len(observedCensus.Control) != len(actual)-selected {
+		t.Fatal("complete original observed census metadata", err)
+	}
+	for _, table := range observedCensus.Business {
+		if !actual[table] || !known[table] || excluded[table] {
+			t.Fatal("observed business table reclassified", table)
+		}
+	}
+	for _, table := range observedCensus.Control {
+		if !actual[table] || !excluded[table] {
+			t.Fatal("observed excluded table reclassified", table)
+		}
+	}
 	var challenge, key bool
 	for _, table := range snapshot.Tables {
 		for _, row := range table.Rows {
@@ -296,6 +310,10 @@ func testLatestMigratedSourceMySQL(t *testing.T) {
 	}
 	if s.checkSourceIdentity(ctx, reader) == nil {
 		t.Fatal("actual optional table hidden by absent SELECT")
+	}
+	refusedCensus, e := domain.ObserveBusinessSchemaCensus(ctx, reader, census)
+	if e == nil || len(refusedCensus.Business) != 0 || len(refusedCensus.Control) != 0 {
+		t.Fatal("failed source census exposed partial trusted selection", e)
 	}
 	missingOptional, e := domain.CaptureBusinessSourceGuarded(ctx, reader, domain.Limits{MaxRows: 100000, MaxBytes: 32 << 20}, name, uuid, func(context.Context) error { return nil }, census)
 	if e == nil || len(missingOptional.Tables) != 0 {

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"regexp"
+	"sort"
 	"strings"
 
 	"clawreef/internal/systembackup/schemaobjects"
@@ -65,6 +66,22 @@ type schemaCensusReader interface {
 }
 
 func CheckBusinessSchemaCensus(ctx context.Context, q schemaCensusReader, spec SchemaCensusSpec) error {
+	return checkBusinessSchemaCensus(ctx, q, spec, nil)
+}
+
+type BusinessSchemaCensusObjects struct{ Business, Control []string }
+
+// Returns only names authenticated by the same complete definer census and
+// source privilege checks. An error never exposes a partial selection.
+func ObserveBusinessSchemaCensus(ctx context.Context, q schemaCensusReader, spec SchemaCensusSpec) (BusinessSchemaCensusObjects, error) {
+	var objects BusinessSchemaCensusObjects
+	if err := checkBusinessSchemaCensus(ctx, q, spec, &objects); err != nil {
+		return BusinessSchemaCensusObjects{}, err
+	}
+	return objects, nil
+}
+
+func checkBusinessSchemaCensus(ctx context.Context, q schemaCensusReader, spec SchemaCensusSpec, output *BusinessSchemaCensusObjects) error {
 	if ctx == nil || ctx.Err() != nil || q == nil || spec.Validate() != nil {
 		return ErrIsolation
 	}
@@ -192,5 +209,21 @@ func CheckBusinessSchemaCensus(ctx context.Context, q schemaCensusReader, spec S
 			return ErrIsolation
 		}
 	}
-	return ctx.Err()
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if output != nil {
+		observed := BusinessSchemaCensusObjects{Business: []string{}, Control: []string{}}
+		for name := range seen {
+			if business[name] {
+				observed.Business = append(observed.Business, name)
+			} else {
+				observed.Control = append(observed.Control, name)
+			}
+		}
+		sort.Strings(observed.Business)
+		sort.Strings(observed.Control)
+		*output = observed
+	}
+	return nil
 }
