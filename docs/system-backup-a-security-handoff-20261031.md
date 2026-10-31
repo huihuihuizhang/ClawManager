@@ -389,6 +389,42 @@ AcquireWithReceipt的真实CAS/原task锁定snapshot/099 durable event在同一�
 
 最终4个实际API/SQL/TLS重点用例PASS20.219s；增强“真实Sign后丢ACK并比较原Input/Signature”、合法1秒provider窗口后，在最新4cba3582基线上完整execution32.118s/controller4.822s PASS。没有发现需放松的生产保护，本切片修改仅A测试/fixture及交接；未改D capture/worker运行文件。Kube仍fake API，完整core/签名授权/原API/SQL/TLS为本地真实调用；不冒充现场、实际六模块输出、原immutable finalizer/journal/业务终态。D可直接沿已验证的AcquireWithReceipt→service当前token入口继续封存发布；KEK完整历史adoption/backfill/持续fence仍待办。
 
+## 第十三切片之一：具体publisher历史读取authority（供D受控Records API）
+
+新增security独立 `publisher_capture_authority.go`，不导入controller。独立原publisher-verifier business owner签发 `PublisherCaptureGrant`，域 `system-backup-original-publisher-verifier-grant.v1\x00` / version `system-backup-publisher-verifier-grant.v1`；包含原deployment/record-custody绑定、真实publisher workload、有界NotBefore/Until与Revoked。没有任务/未来claim hash，不从provider ACL/signing grant/capture grant推出此项业务授权。部署另给grant envelope SHA+issuer公钥；Workload.GrantSHA256在signed payload为空，runtime为完整envelope独立摘要，且不能等于capture grant SHA。
+
+准确公开类型/字段在该文件，可直接供D编译：
+
+- `PublisherCaptureAuthorityConfig{DB *sql.DB, Kubernetes kubernetes.Interface, Deployment PublisherCaptureDeployment, Workload PublisherCaptureWorkload, GrantMount PublisherCaptureGrantMount}`。
+- Deployment是原Forwards已认证的InstallationID/ServerUUID/Database/DatabaseAccount、**原capture ControllerOwner**、ConfigVersion/ConfigSHA256/ProfileSHA256/DeploymentConfigSHA256/CaptureGrantSHA256及其NotBefore/Until；这是record-custody绑定，不是旧live capture claim。读取层仍须校验其**实际**原deploymentAuthorization/record-key identity与此值一致。
+- Workload固定Namespace/NamespaceUID/PodName/PodUID/ServiceAccountName/ServiceAccountUID、PublisherOwner、GrantSHA256。PublisherOwner强制`public:<真实PodUID>`，且不能混成capture ControllerOwner。
+- Scope是`PublisherCaptureScope{BackupPublicID, Claim SQLSigningClaim{ControllerOwner:真实c.ClaimToken.Owner, RowVersion:真实token.RowVersion}, CaptureAttemptNo, Part}`。Part仅locator，不是存在/封存/解密权限证明。
+
+```go
+a, err := security.NewSQLPublisherCaptureAuthority(ctx, cfg, scope)
+lookup := a.Scope()                 // value copy，当前publisher scope
+deployment := a.Deployment()        // value copy，原record custody pins
+until := a.ValidUntil()             // 不可延长的最短当前授权窗口
+err = a.CheckWorkload(ctx)          // 本地grant + 真实Kube，SQL tx外
+err = a.Check(ctx)                  // workload→短SQL guard→rollback→workload
+guard, err := a.Bind(ctx, originalTx)
+facts := guard.Facts()              // 值拷贝，只读事实，绝非capture执行权
+err = guard.RecheckTx(ctx, originalTx)
+until = guard.ValidUntil()
+```
+
+Bind/RecheckTx仅SQL+有界本地原签名检查，不Kube/provider、不commit、不返回record key/DEK；guard绑定同一tx和相同comparable context，先拒绝不可比较/typed-nil ctx再比较，避免interface panic。构造和Check前后真实Kube校验namespace/Pod/SA UID、Running/deletion状态在短SQL事务外，fake reactor实际断言SQL pool无占用连接。grant closed/duplicate/case-alias严格JSON、独立域签名/固定hash/当前撤销和有效期每次检查，最长24h。cfg内issuer防别名复制，无授权callback或default-allow。
+
+当前原SQL要求真实当前publisher owner/精确row_version/活跃lease与任务deadline、原安装/SQL账户/server/db/config，允许validating/publishing/**finalization_unknown只读**；拒绝当前cancel、非最新或未sealed capture attempt、未真实记录source resumed、无capture_result SHA/不规范schema/task identity。初次完整facts、epoch/result hash和最短窗口被固定，后续不能换状态/结果/配置或悄悄更新claim来续长；新实际token必须重新构造。Facts含InstallationID/BackupPublicID/RequestID/Status、ConfigVersion/SHA/TaskPurpose/RequestedParts、CaptureAttemptNo/Epoch/ResultSHA、ClaimLeaseUntil/TaskDeadline/CollectorsStoppedAt/SourceResumedAt，SQL时钟单调复核。该阶段**未认证某一Part实际存在**，只限定后续读取者允许查看的原任务/attempt/part locator。
+
+D协调的新 `SQLExecutionRecords.LoadPublisherCapture(ctx, access *security.SQLPublisherCaptureAuthority)` 必须继续独立认证原sealed plan/result/candidate/finished key-use/Job journal唯一匹配，保留原记录密钥custody；不得借原LoadPlan/capture Gate绕授权。建议返回明确的历史不可变事实而不是伪造“原Input.Authority”：taskPlanBinding/runner.binding未绑定旧可续租claim，不能将当前pubclaim填为capture、或补造旧rowversion=1。认证candidate中真实保留的旧Authority可只作历史数据；缺失字段用受控纯历史解析，不改旧capture校验；原AuthoritySHA只能作原journal标识，不用新token重算替代。unknown状态只能读原candidate/part和D已冻结immutable locator/version/cipher/envelope receipts，不能Generate/重封装/换版本。
+
+真实本地SQL测试：独立UUID/自有schema与最小列权限，真实AcquireWithReceipt取得token，再独立签发本地business grant；3阶段、Renew后旧token拒绝/新token重建、撤销/材料替换/SA替换、错capture owner/version/task/attempt/peer、未sealed、capturing、cancel、过期task、未resume、result漂移、原tx内rowversion变化、最短独立grant到期、未来/过期/过长/错误版本/部署/workload/issuer/pin/domain/空Part/typed-nil client，以及不可比较/typed-nil context均通过；provider调用0，Part存在性未冒充。重点首次PASS10.168s，最终完整security20.722s/controller4.400s/execution39.434s；此前kekadapter5.221s完整PASS。Kube明确fake，独立业务授权临时keys仅本地测试，不冒充现场事实。
+
+后续A13.2将用此authority+ D受控历史读结果构造独立publisher exact-request unwrap，保留旧ForCandidate所有capture-only保护。当前没有提供任意解密/Generate/新封装或完整页面终态。实际A5 ownerchain需GET自身RS/Deployment/StatefulSet和可能独立namespace，官方RBAC旧清单仅list RS且只列source writers；该权限缺口已记录，A13.2必须按实际独立材料scope补同源精确只读generator/probe，不把controller加入source writers蹭权限，拒绝/provider0测试不可省。KEK完整历史adoption/backfill/持续fence仍未完成。
+
+A13.1最终安全同步D5.9 backup f9e2742f后，execution整包再次PASS39.687s，保留所有D代码与新增authority；未引入生产schema迁移。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
