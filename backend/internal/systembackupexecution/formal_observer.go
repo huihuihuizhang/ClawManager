@@ -9,6 +9,7 @@ import (
 	"os"
 
 	sourceData "clawreef/internal/systembackup"
+	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
@@ -101,6 +102,50 @@ func observeOriginalFormalCandidate(ctx context.Context, source, custody *os.Roo
 		return staging.FormalObservation{}, d.ErrNotReady
 	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	if database := i.Request.Database; database != nil {
+		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(compressed io.Reader) error {
+			z, err := gzip.NewReader(compressed)
+			if err != nil {
+				return d.ErrNotReady
+			}
+			defer z.Close()
+			snapshot, err := domain.Decode(z, domain.Limits{MaxRows: database.MaxRows, MaxBytes: i.Request.MaxArchiveBytes})
+			if err != nil {
+				return d.ErrNotReady
+			}
+			defer func() {
+				for _, table := range snapshot.Tables {
+					for _, row := range table.Rows {
+						for _, cell := range row {
+							clear(cell.Bytes)
+						}
+					}
+				}
+			}()
+			var rows, memory int64
+			for _, table := range snapshot.Tables {
+				rows += int64(len(table.Rows))
+				for _, row := range table.Rows {
+					for column, cell := range row {
+						memory += int64(len(cell.Bytes) + len(column) + 128)
+					}
+				}
+			}
+			if rows != candidate.Rows || len(snapshot.Tables) != candidate.Tables || memory > database.MaxMemoryBytes || z.Close() != nil {
+				return d.ErrNotReady
+			}
+			if database.SourceScope == domain.BusinessTableSourceScope && (database.CaptureSchema == nil || domain.VerifyBusinessCapturedSnapshot(snapshot, *database.CaptureSchema) != nil) {
+				return d.ErrNotReady
+			}
+			if database.TeamsInventory != nil && domain.VerifyTeamCapture(snapshot, *database.TeamsInventory) != nil {
+				return d.ErrNotReady
+			}
+			if database.SkillsInventory != nil && domain.VerifySkillCapture(snapshot, *database.SkillsInventory) != nil {
+				return d.ErrNotReady
+			}
+			return nil
+		})
+	}
 	if i.Request.SourceRedis != nil {
 		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(compressed io.Reader) error {
 			z, err := gzip.NewReader(compressed)

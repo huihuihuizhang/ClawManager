@@ -31,6 +31,9 @@ func TableRegistry() []TableRule {
 		{"users", Users, "preserve", nil, []string{"password_hash"}, "Preserve account identity, role, auth provider and password hash through encrypted backup, not the API JSON DTO."},
 		{"user_quotas", Users, "preserve", []string{"users"}, nil, "Preserve source resource limits and user ownership."},
 		{"enterprise_auth_settings", Users, "disable", []string{"users"}, []string{"ldap_bind_password_ciphertext"}, "Retain settings and encrypted secret dependency; disable external authentication in a drill."},
+		{"iei_session_revocations", Users, "drop", nil, []string{"session_id"}, "Archive authentication history through encryption; target sessions are always newly issued."},
+		{"northbound_auth_challenges", Users, "drop", nil, nil, "Archive original challenge rows, never replay source authentication challenges."},
+		{"northbound_sessions", Users, "drop", nil, nil, "Archive source sessions encrypted; never authenticate a restored source session."},
 		{"instances", Instances, "reset", []string{"users", "openclaw_injection_snapshots"}, []string{"access_token", "agent_bootstrap_token", "environment_overrides_json"}, "Preserve specification and ownership; stop instances, clear access tokens and map target resource identities."},
 		{"persistent_volumes", Instances, "reset", []string{"instances"}, nil, "Provision target storage; never adopt a source PVC by name alone."},
 		{"backups", Instances, "reference_only", []string{"instances"}, []string{"backup_path"}, "Historical instance backup metadata is not proof that its original artifact is portable."},
@@ -81,10 +84,10 @@ type Dependency struct {
 // been migrated. The shared coordinator must satisfy these dependencies.
 func CrossDomainDependencies() []Dependency {
 	return []Dependency{
-		{"ai_gateway", []string{"llm_models", "model_invocations", "audit_events", "cost_records", "risk_rules", "risk_hits", "instance_gateway_token_aliases", "chat_sessions", "chat_messages"}, "Model/provider configuration, platform chat history and gateway credentials require the AI Gateway collector and Secret resolver."},
+		{"ai_gateway", []string{"llm_models", "model_invocations", "audit_events", "cost_records", "risk_rules", "risk_hits", "instance_gateway_token_aliases", "chat_sessions", "chat_messages", "gateway_keys", "gateway_key_budget_reservations", "gateway_key_budget_ledger", "routing_classifier_settings", "llm_model_user_grants", "gateway_image_artifacts", "gateway_image_jobs"}, "Model/provider configuration, platform chat history and gateway credentials require the AI Gateway collector and Secret resolver."},
 		{"skill_hub", []string{"skills", "skill_versions", "instance_skills", "skill_blobs", "skill_package_materialize_jobs"}, "Workspace skill files do not replace Skill Hub metadata, bindings and package objects."},
 		{"teams", []string{"teams", "team_members", "team_tasks", "team_events", "team_work_items", "team_event_outbox", "team_workflow_phases", "custom_team_templates", "team_workspace_file_audits", "owner_team_provision_steps", "owner_team_admission_locks"}, "Team-owned task definitions and replayable work must be preserved and normalized by their owner."},
-		{"resources", []string{"system_image_settings", "egress_private_exceptions", "security_scan_configs", "security_scan_jobs", "security_scan_job_items", "security_scan_reports", "audit_logs"}, "Resource definitions and audit history are archived; execution and egress remain disabled in the drill."},
+		{"resources", []string{"system_image_settings", "egress_private_exceptions", "security_scan_configs", "security_scan_jobs", "security_scan_job_items", "security_scan_reports", "audit_logs", "northbound_admin_settings", "northbound_caller_policies", "northbound_owner_records", "northbound_settings_audit"}, "Resource definitions and audit history are archived; execution and egress remain disabled in the drill."},
 	}
 }
 

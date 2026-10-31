@@ -373,6 +373,12 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 	if err = tx.Commit(); err != nil {
 		return Snapshot{}, ErrDatabase
 	}
+	// Recheck the original session after the complete RR, before returning any
+	// source bytes to the encrypting collector. A mid-capture grant/identity
+	// change cannot be certified by an earlier admission observation.
+	if check != nil && check(conn) != nil {
+		return Snapshot{}, ErrIsolation
+	}
 	if sourceReadGuard(ctx, authorize) != nil {
 		return Snapshot{}, ErrIsolation
 	}
