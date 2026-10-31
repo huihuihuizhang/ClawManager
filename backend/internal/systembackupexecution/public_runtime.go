@@ -157,6 +157,12 @@ func configuredPublicSource(cfg PublicCaptureConfig) (b.LinuxProfileConfig, erro
 	}
 	if cfg.ModuleFactory != nil {
 		cfg.Source.BuildPartsWithWriters = func(in d.Input, inventory b.SourceInventory, hold time.Time, writers []b.FrozenWriter) ([]b.JobPart, error) {
+			if cfg.Source.RecoveryOnly {
+				return nil, d.ErrNotReady
+			}
+			if in.Authority.TaskType == "preflight" {
+				return []b.JobPart{{Part: "source_inventory", Category: "preflight"}}, nil
+			}
 			original := append([]b.FrozenWriter{}, writers...)
 			payload, err := json.Marshal(struct {
 				Input     d.Input

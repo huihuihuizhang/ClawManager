@@ -114,3 +114,7 @@
 - 动态目录输出的资源OriginalWriters逐项精确比对同次冻结快照；错UID/generation/running/checkpoint或缺原writer拒绝。原Authorize继续独立核原plan，archive header和plan因此有同一原来源。实际NewDeploymentService完整六项目录配置仍需下一步装配，未称本callback配置就是完整生产上线。
 - 两包完整回归退出0：publicadapter3.469s、execution3.621s。新增真实LinuxProfile.Discover路径验证Observe一次→parts调用一次、原计划不受callback改动、重复/坏状态/Observe失败不到parts；并覆盖资源原writer精确字段负例。SQL source为原已有严格driver fixture，不冒充新的MySQL验收。
 - 同步发现A6四文件718行，已保留并merge origin/backup@66440e80（e53753dd），无覆盖他人文件。
+## D5.2.1 preflight 分支修复
+
+- 监督复审发现新ModuleFactory闭包在preflight也调用实际backup-only目录；已在闭包入口恢复原source_inventory/preflight短路，RecoveryOnly继续拒绝。不是在factory执行后才绕过结果验证。
+- 新TestModuleFactoryPreflightDiscoverUsesOnlySourceInventoryMySQL通过真实configuredPublicSource→NewLinuxProfile→Discover读取独占本地SQL users/instances，返回唯一source_inventory、空writer、无Job spec，并断言动态factory/writer/provider/旧parts回调均0次；执行3.815s退出0。它验证预检只读路由，未将该测试账号称为生产源最小权限或完整schema验收。
