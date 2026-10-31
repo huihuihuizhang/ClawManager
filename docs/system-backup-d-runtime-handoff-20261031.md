@@ -383,3 +383,9 @@
 - 监督原factory跨1.1秒重建同输入在backup FAIL4.510（CE Job SpecSHA变动）；原因是factory按time.Until重算ActiveDeadlineSeconds。现只消费原独立签名operation.Workload.DeadlineSeconds（1..3600），不从更晚时钟重新生成值；原BuildCapturePart仍拒绝超过原hold剩余窗口的duration，未放宽deadline或延长旧key-use。
 - 新原factory完整Job/Invocation跨秒bytes比较、缺duration0/超3600/越原hold三反例全部通过；实际source Discovery材料加载也要求该原字段。生产source材料正例和startup模板示例已显式填写30；仓库无正式六部分capture bundle生成器，operator每个Operations.<operation>.Workload必须提供独立批准的固定DeadlineSeconds（30仅本机fixture示例），不存在省略为0或运行时改填的自动授权。
 - 原factory/WorkBuddy/挂载pin/startup模板定向4.801s PASS；加原SQL source授权与compose后10.909s PASS；监督独立candidate跨秒PASS4.471。V2seed桥接、同任务原Runtime/六worker和restore WIP不含此独立确定性小片。
+
+## D5.29 完整Source下的V2 CE seed桥接（2026-10-31）
+
+- 基于A b415ac72实际ABI，完整Source永远保留原V1 locator；factory先执行全部原构造器及BuildParts（SQL已附加原Teams/Skills inventory），从实际非CE InvocationSHA生成精确有序policy，再仅重建两个CE invocation为V2 seed。全局indices、业务invocation、完整Source字节及其InventorySHA不做字段排除，context包含同一完整Source和原writer集合。
+- 原productionInventory保留精确parts/operation/globalindices与SQLschema检查，另外要求两个seed均为V2、BaseSnapshot完全等于冻结V1、policy精确等于完整Source context与全部实际业务inv集合。Source含V2/缺CE/改base、context、checks version、part hash/op、增删policy或业务part、业务inv、原writer、hold、其他Source字段漂移均拒绝。
+- 定向原factory跨秒/六部分/seed与CE回归无需overlay通过：execution5.525s、publicadapter3.441s、controlevidence0.814s。先前只读A ABI overlay通过4.817s，不作为当前最终编译凭证。额外writer使排序不变性检查覆盖实际两个writer。此片不证明同任务六worker、物理来源、D owner complete或页面readiness；同publicID/attempt整链仍继续。

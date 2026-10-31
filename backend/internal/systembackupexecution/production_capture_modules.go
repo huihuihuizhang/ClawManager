@@ -63,7 +63,7 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 	var metadata productionCaptureMetadata
 	decoder := json.NewDecoder(bytes.NewReader(source.CaptureMetadata))
 	decoder.DisallowUnknownFields()
-	if decoder.Decode(&metadata) != nil || decoder.Decode(new(any)) != io.EOF || metadata.Version != productionCaptureMetadataVersion || len(metadata.Mounts) > 9996 || metadata.ControlEvidence.Validate() != nil || metadata.SQLSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() {
+	if decoder.Decode(&metadata) != nil || decoder.Decode(new(any)) != io.EOF || metadata.Version != productionCaptureMetadataVersion || len(metadata.Mounts) > 9996 || metadata.ControlEvidence.Version != "system-backup-control-evidence-source.v1" || metadata.ControlEvidence.Finalization != nil || metadata.ControlEvidence.Validate() != nil || metadata.SQLSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() {
 		return nil, d.ErrNotReady
 	}
 	canonical, err := json.Marshal(metadata)
@@ -304,7 +304,6 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 			}
 		}
 	}
-	registrations := []b.CaptureModuleRegistration{}
 	constructors := []func() (b.CaptureModuleRegistration, error){func() (b.CaptureModuleRegistration, error) { return b.NewUsersInstancesModule(users) }, func() (b.CaptureModuleRegistration, error) { return b.NewTeamsModule(teams) }, func() (b.CaptureModuleRegistration, error) { return b.NewSkillObjectsModule(skills) }, func() (b.CaptureModuleRegistration, error) {
 		return b.NewControlEvidenceModule(b.ControlEvidenceModuleConfig{Revision: revision, Sidecar: byPart[ce.Part], Proofs: byPart[ce.ProofPart]})
 	}, func() (b.CaptureModuleRegistration, error) {
@@ -312,16 +311,44 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 	}, func() (b.CaptureModuleRegistration, error) {
 		return b.NewSourceRedisModule(b.SourceRedisModuleConfig{Revision: revision, Source: source, Request: byPart[b.SourceRedisPart]})
 	}}
-	for index, constructor := range constructors {
-		registration, err := constructor()
-		if err != nil {
-			return nil, fmt.Errorf("capture module %d: %w", index, err)
+	construct := func() (*b.CaptureModules, error) {
+		registrations := []b.CaptureModuleRegistration{}
+		for index, constructor := range constructors {
+			registration, err := constructor()
+			if err != nil {
+				return nil, fmt.Errorf("capture module %d: %w", index, err)
+			}
+			registrations = append(registrations, registration)
 		}
-		registrations = append(registrations, registration)
+		return b.NewCaptureModules(registrations, func(actual d.Input, inventory b.SourceInventory, hold time.Time, catalog string) (b.ModuleCaptureContext, error) {
+			return productionModuleContext(actual, inventory, hold, writers, catalog)
+		})
 	}
-	return b.NewCaptureModules(registrations, func(actual d.Input, inventory b.SourceInventory, hold time.Time, catalog string) (b.ModuleCaptureContext, error) {
-		return productionModuleContext(actual, inventory, hold, writers, catalog)
-	})
+	// Materialize through the ORIGINAL constructors first: notably SQL adds
+	// its exact Teams/Skills projections. The complete Source stays unchanged.
+	// Only the CE pair receives the derived policy before the final plan freezes.
+	base, err := construct()
+	if err != nil {
+		return nil, err
+	}
+	parts, err := base.BuildParts(in, source, until)
+	if err != nil {
+		return nil, err
+	}
+	policy, err := productionFinalizationPolicy(point.CaptureContextSHA256, parts)
+	if err != nil {
+		return nil, err
+	}
+	seed, err := ce.RequireOwnedFinalization(metadata.ControlEvidence, policy)
+	if err != nil {
+		return nil, d.ErrNotReady
+	}
+	for _, name := range []string{ce.Part, ce.ProofPart} {
+		request := byPart[name]
+		request.Invocation.Request.ControlEvidence = &seed
+		byPart[name] = request
+	}
+	return construct()
 }
 
 func workBuddyUIDSource(instance b.InstanceIdentity) bool {
@@ -329,6 +356,8 @@ func workBuddyUIDSource(instance b.InstanceIdentity) bool {
 }
 
 func productionModuleContext(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, catalog string) (b.ModuleCaptureContext, error) {
+	writers = append([]b.FrozenWriter{}, writers...)
+	sort.Slice(writers, func(i, j int) bool { return writers[i].ID < writers[j].ID })
 	raw, err := json.Marshal(source)
 	if err != nil || len(raw) > 16<<20 {
 		return b.ModuleCaptureContext{}, d.ErrNotReady
