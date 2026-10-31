@@ -445,6 +445,24 @@ A13.1补充修复 `159717d0`：监督独立 overlay 复现最后 SA GET 内真�
 
 材料部署顺序必须明确：core 仅静态路径/协议；原 owner 签 core/Forward；实际 controller Pod/RS/owner UID 出现后，由可信独立 owner/provisioner 生成业务授权、capability 和独立材料 SHA，再向同一 Pod 交付并由独立启动机制提供 pin。不能把含该 Pod UID 的派生材料 SHA 再写回 Pod template 环境造成新 Pod UID/摘要循环。本地测试只实现并验证这些原始文件及独立 startup pin 的消费；尚未实现现场自动 provisioner、Pod 重建后的自动独立签发/交付机制，不能宣称每次重启或新部署已无人值守。相同真实 Pod 在其授权有效期内的后续任务不需要逐任务人工签名。
 
+## 第十三切片之二b：publisher 原始历史凭证与 exact unwrap
+
+新增 adapter `PublisherVerifierConfig` / `NewPublisherVerifierFactory`；输入是独立 publisher business grant/issuer/pin、原 KEK/安装 issuer、独立 Unwrap capability、真实 Pod/SA/owner 精确读取映射、原 SQL/Records/deployment wrapper。`ForPart(ctx, security.PublisherCaptureScope)` 只接收真实当前 publisher claim+backup/attempt/part locator，内部调用 D6c3ea956 的 `LoadPublisherCapture` 认证全部原记录。KeyRequest/AAD、原 Endpoint/KeyName/Generate、plan/result/candidate/finished key-use/Job 均从原记录取；没有接受调用方 Invocation/KeyRequest/hash 作为权限，也没有 Generate/重封装/换版本接口。旧 ControllerVerifierFactory.ForCandidate 所有 capture-only 保护保留；仅把其原始安装映射验证和严格 JWT login transport parser提为私有共享函数，独立业务授权没有混用。
+
+受控 reader 返回的 `PublisherCaptureRecord` 现在含只能由 reader 构造的私有 opaque receipt。reader 原 SQL snapshot 的有界读取拆出同事务内部 helper，仍由原 concrete publisher guard Bind/Recheck；无 Kube、密钥文件解析、AEAD、provider 或 commit。`record.RecheckTx(ctx,tx,access)` 必须同一 concrete access 指针、原 shortest window、完全相同 DTO 和原 SQL snapshot（含cipher/key ref/plan/result/candidate/Job request/binding/finished key-use/stop facts）。手造 DTO 没有 receipt；值拷贝后改任一字段也不能借原 receipt。JSON Marshal 会压紧 RawMessage，故 receipt 与 adapter history fingerprint 除有界整体字段外，另以长度前缀分别固定 Input.ConfigSnapshot、Plan.CanonicalJSON、CandidateJSON、PartResult.Checkpoint 的原始字节，空格变化同样拒绝；hash只是比较事实，不是权限。
+
+`PublisherVerifier.ValidUntil/Recheck/ExpectedRequest/Close`；`ForEnvelope(ctx, originalEnvelopeBytes)` 必须匹配原 sealed candidate 的 envelope name所属receipt、长度/SHA、单 entry closed canonical envelope 和原完整 StreamSpec，再返回只接受该确切 wrapped ciphertext 的 `PublisherEnvelopeVerifier`（Unwrap/Recheck/ValidUntil，可直接供 C InspectWrappedStream）。`WithDEK(ctx, originalEnvelopeBytes, callback)` 提供同样约束下的便捷入口。即使同 KeyRequest 的另一份合法 vault ciphertext，也在 provider 前拒绝；原 request/AAD 不重算。明文/密钥与原源对象/全帧认证/immutable版本及发布接受仍由后续 D 受控消费者完成，WithDEK本身不冒充已发布成功。
+
+每次 login前、login后、decrypt前和DEK callback前后，复查当前 concrete publisher claim/SQL时间/原业务grant/pin/真实UID与owner chain、原静态deployment/custody和当前ForwardEnabled、原安装Unwrap撤销、独立capability及同KEK fence。provider网络在SQL事务外；DEK callback处同一短原事务持有原claim/records/KEK fence，并用opaque receipt固定所有原记录；callback内Recheck复用该session，避免新事务自锁。rollback后再完整复查；不采用旧capture claim、续租不修改已构造对象窗口。新增实际 deploymentAuthorization.CheckPublisherVerifierDeployment 只查当前本地部署/材料绑定，无网络/新SQL；保留真正生产 wrapper，不换 bare record identity。
+
+A专用实际集成基于 D 原加密 history fixture，增加可选 A owned credentials/独立server UUID，创建随机 `ad_a_publisher_*` DB/`ad_a_pub_*` user，清理前核验UUID与本次run marker；不会触及任何已有D/监督库。额外权限直接采用官方 FormalCaptureGrantSQL 中所需原安装/registry五表项（fence SELECT/INSERT/UPDATE，其余 SELECT），未跳过Bind。原 Job deadline 用合法短测试窗口，实际等原 invocation deadline过期后，当前真实 AcquireWithReceipt 的publisher仍能读原历史并以TLS独立JWT/Unwrap获得确切DEK；task/business/capability/currentclaim窗口仍有效。Kube是fake API，原加密plan/result/candidate/finished-use/实际SQL+新claim与TLS真实本地执行。
+
+正例原单entry Envelope WithDEK；DTO修改Invocation/Request/CandidateJSON/Config/Plan/Checkpoint原字节/ValidUntil、手造无receipt、wrong part、合法JSON nonce/Job请求变更和candidate cipher变更均拒绝，明确读回实际变更后验证provider0/DEK callback0；同request换wrapped ciphertext或换原Envelope同样provider0。login期间真实Renew使decrypt0/旧对象拒绝、仅新真实token重建成功；login期间原安装Unwrap revoke使decrypt0；decrypt完成前原candidate被换使DEK callback0；当前actual deployment Forward关闭也provider0。旧对象ValidUntil不变。首次完整两suite PASS13.443s，监督独立复跑13.486s及独立精确RawMessage overlay4.346s均通过；最后扩充原字节/正式角色/部署关闭检查后完整相关回归见后续结果。
+
+最终相关五包完整回归 PASS security22.852s/controller4.934s/adapter5.317s/execution62.652s/kms3.139s，包含新增部署关闭、所有原字节负例和直接采用官方角色权限的实际SQL/TLS路径；已同步监督backup a51309f8，保留D自动Teams发现提交。没有生产迁移或修改任何远侧部署。
+
+此切片提供组件与同事务保证。真实 service 的独立材料输入、同一实际Pod可完成bootstrap及D实际publisher消费者仍在下一切片继续，不把 helper 当完整生产装配。时间预算另须在后续跨窗口流式对象用例明确：现有kms.Grant.CredentialExpiresAt只约束provider RPC，ExpiresAt是独立原DEK使用权限；原JWT batchTTL<=20s、当前claim/业务/原cap窗口各自保留，不能静默延长对象或把过期RPC credential用于新调用。长归档必须在其真正原DEK/claim窗口内完成全帧认证，否则不接受输出；合法分片/预算/显式新claim重建及D超时终态尚须整链验证。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。

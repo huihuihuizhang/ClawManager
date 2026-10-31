@@ -43,13 +43,16 @@ type publisherHistoryFixture struct {
 // production authorization wrapper; actual AcquireWithReceipt and A's concrete
 // independent grant. Stop/resume facts and Kubernetes remain named local
 // fixtures here, not a certification of Linux/CSI/physical business recovery.
-func newPublisherHistoryFixture(t *testing.T) *publisherHistoryFixture {
+func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixtureOptions)) *publisherHistoryFixture {
 	t.Helper()
-	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
+	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" && len(configure) == 0 {
 		t.Skip("requires disposable local MySQL")
 	}
 	ctx := context.Background()
 	options := &consumerFixtureOptions{ConfigureGrant: func(g *c.ExecutionGrant) { g.DeploymentConfigSHA256 = hash([]byte(`{"fixture":"pinned-deployment"}`)) }}
+	for _, apply := range configure {
+		apply(options)
+	}
 	owner, service, admin, db, a, job, candidate, _, refresh := newConsumerMySQLFixtureOptions(t, options)
 	service.Config.ControllerOwner = a.ClaimOwner
 	refresh()
