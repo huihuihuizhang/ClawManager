@@ -39,7 +39,10 @@ func (s *DeploymentService) bindDeploymentStartupInputs(inputs DeploymentStartup
 		if err = s.loadFormalVerifier(inputs.FormalVerifier); err != nil {
 			return err
 		}
-		return s.loadPublicationSignerInput(inputs.PublicationSigners)
+		if err = s.loadPublicationSignerInput(inputs.PublicationSigners); err != nil {
+			return err
+		}
+		return s.loadPublisherVerifierInput(inputs.PublisherVerifier)
 	}
 	return nil
 }

@@ -10,6 +10,9 @@ func (p deploymentAuthorization) CheckPublisherVerifierDeployment(ctx context.Co
 	if p.Service == nil || !p.Service.ForwardEnabled {
 		return c.ErrExecutionAuthority
 	}
+	if p.Service.checkPublisherVerifierBinding(ctx) != nil {
+		return c.ErrExecutionAuthority
+	}
 	return p.CheckPublisherCaptureCustody(ctx, deployment)
 }
 

@@ -27,16 +27,17 @@ import (
 )
 
 type publisherHistoryFixture struct {
-	owner     *PublicJobOwner
-	service   *DeploymentService
-	admin, db *sql.DB
-	original  d.Authority
-	job       d.JobBinding
-	token     c.ClaimToken
-	cfg       s.PublisherCaptureAuthorityConfig
-	scope     s.PublisherCaptureScope
-	access    *s.SQLPublisherCaptureAuthority
-	candidate worker.FormalCaptureResult
+	owner      *PublicJobOwner
+	service    *DeploymentService
+	admin, db  *sql.DB
+	original   d.Authority
+	job        d.JobBinding
+	token      c.ClaimToken
+	cfg        s.PublisherCaptureAuthorityConfig
+	scope      s.PublisherCaptureScope
+	access     *s.SQLPublisherCaptureAuthority
+	candidate  worker.FormalCaptureResult
+	invocation worker.Invocation
 }
 
 // Real original record-key custody, original encrypted plan/report/result and
@@ -125,13 +126,34 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 		t.Fatal("actual new publisher AcquireWithReceipt", err)
 	}
 	client := owner.Client
+	publisherNamespace, publisherNamespaceUID := "publisher-control", "publisher-namespace"
+	if service.Config.PublisherVerifier != nil {
+		publisherNamespace, publisherNamespaceUID = service.Config.Namespace, service.Config.NamespaceUID
+		// Independent owner preallocates this object before the Pod; controller
+		// CREATE rights cannot replace it and the official role has no UPDATE.
+		if _, err = client.CoreV1().Secrets(publisherNamespace).Create(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "publisher-materials", Namespace: publisherNamespace, UID: "owner-bootstrap-secret-uid"}, Data: map[string][]byte{}}, metav1.CreateOptions{}); err != nil {
+			t.Fatal("original owner empty pin Secret", err)
+		}
+	}
+	publisherPod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: publisherNamespace, Name: "publisher", UID: "history-publisher-pod"}, Spec: corev1.PodSpec{ServiceAccountName: "publisher-reader"}, Status: corev1.PodStatus{Phase: corev1.PodRunning}}
+	if service.Config.PublisherVerifier != nil {
+		publisherPod.Status.Phase = corev1.PodPending
+		publisherPod.Spec.Containers = []corev1.Container{{Name: "controller", Image: "fixture/controller", Env: []corev1.EnvVar{{Name: "SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_FILE", Value: service.Config.PublisherVerifier.Path}, {Name: "SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_SHA256", ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "publisher-materials"}, Key: "materials_sha256"}}}}}}
+	}
 	for _, object := range []kruntime.Object{
-		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "publisher-control", UID: types.UID("publisher-namespace")}},
-		&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: "publisher-control", Name: "publisher-reader", UID: types.UID("publisher-sa")}},
-		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "publisher-control", Name: "publisher", UID: types.UID("history-publisher-pod")}, Spec: corev1.PodSpec{ServiceAccountName: "publisher-reader"}, Status: corev1.PodStatus{Phase: corev1.PodRunning}},
+		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: publisherNamespace, UID: types.UID(publisherNamespaceUID)}},
+		&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: publisherNamespace, Name: "publisher-reader", UID: types.UID("publisher-sa")}},
+		publisherPod,
 	} {
 		switch v := object.(type) {
 		case *corev1.Namespace:
+			previous, getErr := client.CoreV1().Namespaces().Get(ctx, v.Name, metav1.GetOptions{})
+			if getErr == nil {
+				if previous.UID != v.UID {
+					t.Fatal("original publisher namespace UID")
+				}
+				continue
+			}
 			_, err = client.CoreV1().Namespaces().Create(ctx, v, metav1.CreateOptions{})
 		case *corev1.ServiceAccount:
 			_, err = client.CoreV1().ServiceAccounts(v.Namespace).Create(ctx, v, metav1.CreateOptions{})
@@ -143,7 +165,8 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 		}
 	}
 	fixture := &publisherHistoryFixture{owner: owner, service: service, admin: admin, db: db, original: a, job: job, token: token, candidate: candidate}
-	fixture.cfg = s.PublisherCaptureAuthorityConfig{DB: db, Kubernetes: client, Deployment: s.PublisherCaptureDeployment{InstallationID: grant.InstallationID, Database: grant.Database, DatabaseAccount: grant.DatabaseAccount, ServerUUID: grant.ServerUUID, ControllerOwner: grant.ControllerOwner, ConfigVersion: grant.ConfigVersion, ConfigSHA256: grant.ConfigSHA256, ProfileSHA256: grant.ProfileSHA256, DeploymentConfigSHA256: grant.DeploymentConfigSHA256, CaptureGrantSHA256: owner.Identity.GrantSHA256(), NotBefore: grant.NotBefore, Until: grant.ExpiresAt}, Workload: s.PublisherCaptureWorkload{Namespace: "publisher-control", NamespaceUID: "publisher-namespace", PodName: "publisher", PodUID: "history-publisher-pod", ServiceAccountName: "publisher-reader", ServiceAccountUID: "publisher-sa", PublisherOwner: service.PublisherOwner}}
+	fixture.invocation = invocation
+	fixture.cfg = s.PublisherCaptureAuthorityConfig{DB: db, Kubernetes: client, Deployment: s.PublisherCaptureDeployment{InstallationID: grant.InstallationID, Database: grant.Database, DatabaseAccount: grant.DatabaseAccount, ServerUUID: grant.ServerUUID, ControllerOwner: grant.ControllerOwner, ConfigVersion: grant.ConfigVersion, ConfigSHA256: grant.ConfigSHA256, ProfileSHA256: grant.ProfileSHA256, DeploymentConfigSHA256: grant.DeploymentConfigSHA256, CaptureGrantSHA256: owner.Identity.GrantSHA256(), NotBefore: grant.NotBefore, Until: grant.ExpiresAt}, Workload: s.PublisherCaptureWorkload{Namespace: publisherNamespace, NamespaceUID: publisherNamespaceUID, PodName: "publisher", PodUID: "history-publisher-pod", ServiceAccountName: "publisher-reader", ServiceAccountUID: "publisher-sa", PublisherOwner: service.PublisherOwner}}
 	pub, private, _ := ed25519.GenerateKey(rand.Reader)
 	defer clear(private)
 	issued := s.PublisherCaptureGrant{Version: s.PublisherCaptureGrantVersion, Deployment: fixture.cfg.Deployment, Workload: fixture.cfg.Workload, NotBefore: time.Now().Add(-time.Minute), Until: time.Now().Add(time.Minute)}
@@ -163,6 +186,9 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 		}
 		return false, nil, nil
 	})
+	if service.Config.PublisherVerifier != nil {
+		return fixture
+	}
 	fixture.access, err = s.NewSQLPublisherCaptureAuthority(ctx, fixture.cfg, fixture.scope)
 	if err != nil {
 		t.Fatal("concrete original publisher authority", err)

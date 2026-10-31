@@ -201,6 +201,28 @@ func (a *SQLPublisherCaptureAuthority) CheckWorkload(ctx context.Context) error 
 	return nil
 }
 
+// Startup observation only. It verifies the separately signed, pinned current
+// deployment/workload without selecting a task, record, KeyRequest or DEK.
+// Every later read/use still requires NewSQLPublisherCaptureAuthority.
+func CheckPublisherCaptureDeploymentWorkload(ctx context.Context, cfg PublisherCaptureAuthorityConfig) error {
+	if cfg.DB == nil || candidateAuthorityNil(cfg.Kubernetes) || !publisherCaptureContext(ctx) || cfg.Workload.PublisherOwner != "public:"+cfg.Workload.PodUID || cfg.Workload.PublisherOwner == cfg.Deployment.ControllerOwner {
+		return ErrRegistrationUnavailable
+	}
+	cfg.GrantMount.Issuer = append(ed25519.PublicKey(nil), cfg.GrantMount.Issuer...)
+	a := &SQLPublisherCaptureAuthority{cfg: cfg}
+	return a.CheckWorkload(ctx)
+}
+
+// Local pinned signature/window observation only, safe inside a short SQL
+// deployment probe. It grants no task, record or DEK use and performs no Kube.
+func CheckPublisherCaptureDeploymentGrant(ctx context.Context, cfg PublisherCaptureAuthorityConfig) (PublisherCaptureGrant, error) {
+	if cfg.DB == nil || !publisherCaptureContext(ctx) || cfg.Workload.PublisherOwner != "public:"+cfg.Workload.PodUID || cfg.Workload.PublisherOwner == cfg.Deployment.ControllerOwner {
+		return PublisherCaptureGrant{}, ErrRegistrationUnavailable
+	}
+	a := &SQLPublisherCaptureAuthority{cfg: cfg}
+	return a.grant(ctx)
+}
+
 func NewSQLPublisherCaptureAuthority(ctx context.Context, cfg PublisherCaptureAuthorityConfig, scope PublisherCaptureScope) (*SQLPublisherCaptureAuthority, error) {
 	if !publisherCaptureContext(ctx) || cfg.DB == nil || candidateAuthorityNil(cfg.Kubernetes) || !acceptanceBackupID.MatchString(scope.BackupPublicID) || scope.Claim.RowVersion == 0 || scope.CaptureAttemptNo == 0 || scope.CaptureAttemptNo > uint64(^uint32(0)) || !providerBoundedString(scope.Part) || len(scope.Part) > 128 || scope.Claim.ControllerOwner != cfg.Workload.PublisherOwner {
 		return nil, ErrRegistrationUnavailable
