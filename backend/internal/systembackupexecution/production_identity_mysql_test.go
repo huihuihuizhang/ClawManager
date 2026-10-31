@@ -236,7 +236,12 @@ func TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificat
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
-	if _, err := foreignRows.Load(ctx, tx, intent); err != sql.ErrNoRows {
+	if _, err := foreignRows.Load(ctx, tx, intent); err != kube.ErrJournal {
 		t.Fatal("other attempt read original Invocation row", err)
+	}
+	missing := intent
+	missing.Identity.Name += "-absent"
+	if _, err := foreignRows.Load(ctx, tx, missing); err != sql.ErrNoRows {
+		t.Fatal("true missing original row lost absence proof", err)
 	}
 }

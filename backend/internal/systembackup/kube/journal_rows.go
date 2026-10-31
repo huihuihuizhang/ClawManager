@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -17,8 +18,8 @@ type ResourceColumns struct {
 	Revision, Dispatched, UID, ResourceVersion, Lifecycle         string
 }
 type MappedResourceRows struct {
-	scope, created, load, insert, update string
-	attemptArgs                          []any
+	scope, created, load, insert, update, conflict string
+	attemptArgs                                    []any
 }
 
 var sqlColumn = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
@@ -63,6 +64,7 @@ func newMappedResourceRows(scope, table, created string, c ResourceColumns, atte
 				return nil, ErrJournal
 			}
 		}
+		r.conflict = "SELECT 1 FROM " + table + " WHERE " + key + " FOR UPDATE"
 		key += " AND `target_type` = ? AND `attempt_no` = ? AND `phase` = ?"
 		extraNames = ",`target_type`,`attempt_no`,`phase`"
 		extraMarks = ",?,?,?"
@@ -80,6 +82,15 @@ func (r *MappedResourceRows) Load(ctx context.Context, tx *sql.Tx, i ResourceInt
 	var state string
 	args := append([]any{r.scope, i.Kind, i.Identity.Namespace, i.Identity.Name}, r.attemptArgs...)
 	err := tx.QueryRowContext(ctx, r.load, args...).Scan(&n.Intent.Identity.Owner, &n.Intent.RequestSHA256, &n.Intent.RequestJSON, &n.Revision, &n.CreateDispatched, &n.UID, &n.ResourceVersion, &state)
+	if errors.Is(err, sql.ErrNoRows) && r.conflict != "" {
+		// A shadowed dispatched row must NEVER become an Undispatched proof.
+		// Recheck the original PK under the same lock before reporting absence.
+		var exists int
+		conflict := tx.QueryRowContext(ctx, r.conflict, r.scope, i.Kind, i.Identity.Namespace, i.Identity.Name).Scan(&exists)
+		if !errors.Is(conflict, sql.ErrNoRows) {
+			return ResourceRecord{}, ErrJournal
+		}
+	}
 	if err != nil {
 		return ResourceRecord{}, err
 	}

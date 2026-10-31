@@ -336,3 +336,9 @@
 - 实际原claim attempt3+独立签名worker issuer+原encrypted identity SQL journal：两份CE Job分别创建/重放成功；本机Kube fixture每次首create先落原对象却返回timeout，原生产代码只GET确认，重复ensure不再create。原同一个certificate校验函数用于public_jobs实际绑定及测试，跨part SPIFFE/原Invocation拒绝；强行恢复旧共享Secret模板由原ensureIdentity journal拒绝且零额外create；跨attempt也拒绝。该测试未冒充完整sixpart原plan/TokenReview，Kube create为明确fixture。
 - 同一原SQL实测Invocation ConfigMap行在attempt3/phase capture的原FK插入、dispatch CAS、observe CAS、重放成功，另一个attempt的映射Load返回sql.ErrNoRows。自建角色仅新增本fixture所需原runtime_resources INSERT，未改共享server/生产权限；创建/元数据始终在自建ad_d_consumer范围清理。
 - 定向identity/factory/原secret反例4.041s；加入原mapped SQL journal后kube3.451s/execution4.350s；最新原SQL consumer/concurrent结果/原provider permit mTLS handler/identity/factory组合kube3.240s、execution24.225s通过。source Discovery/原SourceProfile接线和恢复适配WIP继续留工作区，不含本小片；主任务仍优先实际NewDeploymentService装配。
+
+## D5.24 原资源scope冲突不能变成“未派发”（2026-10-31）
+
+- D5.23提交56892485。监督在新scope mapper上实测同一原PK的已派发Job被放入prior attempt1后，当前attempt3过滤查询返回sql.ErrNoRows，可能让Pending误作Undispatched，初始反例FAIL3.797s。现scoped Load未命中时，在同一原SQL事务用原PK FOR UPDATE再查：同PK存在任何其他target/attempt/phase或读取失败都返回ErrJournal；只有物理PK真正无行才返回sql.ErrNoRows。精确scope INSERT/CAS继续保留，未派发证明不因过滤而放宽。
+- Pending的实际缺席分支提为loadPendingOriginalJob，仍消费同一原锁内MappedResourceRows；错scope错误直接传播。实际SQL五模式覆盖真正缺席、错attempt、错phase、错target、显式prior-attempt错日志；对应原Pending分支不把任何冲突标Undispatched。完整owner.Pending在shadowed fixture同样返回错误且没有Undispatched条目；该fixture其他恢复inventory材料有限，不据此宣称完成全体writer恢复。
+- 原两identity测试的跨attempt期望改为ErrJournal；对真正不存在的名称仍要求sql.ErrNoRows。监督在干净候选树组合原身份/唯一mount/五模式/独立两反例全部PASS7.481s；本机定向回归另见本轮tool输出。仅本mapper、Pending helper与两份真实SQL回归交付，source Discovery/restore WIP不包含本片，生产接线继续推进。

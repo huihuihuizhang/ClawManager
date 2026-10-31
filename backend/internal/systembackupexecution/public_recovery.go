@@ -70,8 +70,8 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 	}
 	var missing []b.JobPart
 	for _, part := range desc.Parts {
-		record, e := repository.Load(ctx, tx, kube.ResourceIntent{Kind: "Job", Identity: kube.Identity{Namespace: part.Intent.Namespace, Name: part.Intent.Name}})
-		if errors.Is(e, sql.ErrNoRows) || e == nil && !record.CreateDispatched {
+		record, undispatched, e := loadPendingOriginalJob(ctx, tx, repository, part)
+		if undispatched {
 			out.Undispatched = append(out.Undispatched, part.Intent.JobUnitKey)
 			continue
 		}
@@ -107,6 +107,19 @@ func (o *PublicJobOwner) Pending(ctx context.Context, a d.Authority) (b.Recovery
 		return out, e
 	}
 	return out, nil
+}
+
+// Keep the actual Pending absence decision coupled to the original lock-bound
+// resource mapping. A same-key scope conflict must propagate as an error.
+func loadPendingOriginalJob(ctx context.Context, tx *sql.Tx, rows *kube.MappedResourceRows, part b.JobPart) (kube.ResourceRecord, bool, error) {
+	record, err := rows.Load(ctx, tx, kube.ResourceIntent{Kind: "Job", Identity: kube.Identity{Namespace: part.Intent.Namespace, Name: part.Intent.Name}})
+	if errors.Is(err, sql.ErrNoRows) {
+		return record, true, nil
+	}
+	if err != nil {
+		return kube.ResourceRecord{}, false, err
+	}
+	return record, !record.CreateDispatched, nil
 }
 
 var _ b.RecoveryInventory = (*PublicJobOwner)(nil)
