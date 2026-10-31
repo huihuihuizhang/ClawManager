@@ -18,14 +18,16 @@ import (
 	"testing"
 	"time"
 
-	"clawreef/internal/systembackupcontroller"
+	"clawreef/internal/migrationcatalog"
 	"github.com/go-sql-driver/mysql"
 )
 
-const configMaintenanceCandidateSHA256 = "e1a95c7863065580819e28353fa984fa8a98701ca2eeae57aff7ba5159a43b87"
+const configMaintenanceCandidateSHA256 = "620484c255fbcd9611bf0037d4f7b1ee4cb4f1a561621a1984255fa88bc06f24"
 
 //go:embed testdata/config_maintenance_candidate_082.sql
-var configMaintenanceCandidateFixture string
+var configMaintenanceCandidateFixtureRaw string
+
+var configMaintenanceCandidateFixture = strings.ReplaceAll(strings.ReplaceAll(configMaintenanceCandidateFixtureRaw, "\r\n", "\n"), "\r", "\n")
 
 var errMaintenanceProbeResultAudit = errors.New("maintenance_probe_result_audit")
 var errMaintenanceProbeReceipt = errors.New("maintenance_probe_receipt")
@@ -73,7 +75,7 @@ func maintenanceProbeScope(identity DatabaseIdentity, installation, key string, 
 	if err != nil {
 		return configMaintenanceScope{}, err
 	}
-	raw, err := json.Marshal(map[string]any{"domain": "clawmanager.system-backup.config-canonical-backfill-request.v1", "action": "config_canonical_backfill", "target_server_uuid": identity.ServerUUID, "target_database": identity.Database, "origin_installation_id": installation, "maintenance_actor_sha256": actor, "grant_identity_sha256": grant, "grant_version": "synthetic-v1", "config_version": 1, "original_config_sha256": registrationHash(string(original)), "original_config_size_bytes": len(original), "expected_row_sha256": rowSHA, "source_provenance_sha256": sourceSHA, "schema_sha256": registrationHash(configWriterCandidateFixture + configMaintenanceCandidateFixture), "catalog_sha256": systembackupcontroller.ContractMigrationCatalogHash, "migration_sha256": configMaintenanceCandidateSHA256, "reason": "synthetic maintenance storage probe"})
+	raw, err := json.Marshal(map[string]any{"domain": "clawmanager.system-backup.config-canonical-backfill-request.v1", "action": "config_canonical_backfill", "target_server_uuid": identity.ServerUUID, "target_database": identity.Database, "origin_installation_id": installation, "maintenance_actor_sha256": actor, "grant_identity_sha256": grant, "grant_version": "synthetic-v1", "config_version": 1, "original_config_sha256": registrationHash(string(original)), "original_config_size_bytes": len(original), "expected_row_sha256": rowSHA, "source_provenance_sha256": sourceSHA, "schema_sha256": registrationHash(configWriterCandidateFixture + configMaintenanceCandidateFixture), "catalog_sha256": migrationcatalog.ReviewedHash, "migration_sha256": configMaintenanceCandidateSHA256, "reason": "synthetic maintenance storage probe"})
 	if err != nil {
 		return configMaintenanceScope{}, err
 	}
@@ -536,8 +538,8 @@ func TestDConfigMaintenanceReceiptMySQL(t *testing.T) {
 }
 
 func TestDConfigMaintenanceReceiptMySQLSeed(t *testing.T) {
-	base := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: systembackupcontroller.ContractMigrationCatalogHash}
-	for n := 1; n <= systembackupcontroller.ContractMigrationCatalogFileCount; n++ {
+	base := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: migrationcatalog.ReviewedHash}
+	for n := 1; n <= migrationcatalog.ReviewedFileCount; n++ {
 		base.Filenames = append(base.Filenames, fmt.Sprintf("%03d_synthetic.sql", n))
 	}
 	b, err := json.Marshal(base)

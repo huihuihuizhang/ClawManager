@@ -55,7 +55,20 @@ A1 已提交并推自己的分支：`5b57f1f56ec9d7b3cf19343026d03d50332db710`�
 
 原 request_id 作为 `ArtifactSigningTask.OperationID`；`SQLSigningClaim` 必须是对应阶段**仍持有的当前正式owner claim**，不能沿用 FinishCapture 释放的 capture claim。主入口安排正式 publisher 领取同一 root task 后构造后两用途。
 
+A2 提交 `4490fc162706194ed246836dad2510f87ca7313d`，重试后已成功push自己的分支。未push backup。
+
 真实 MySQL 定向入口准备：计划使用 tag `systembackup_mysql`、测试 `TestSQLSigningOwnerMySQL`；仅允许本机TCP隔离服务，DSN从私有文件读，不进入stdout/Git。需原服务器UUID独立pin。最小表为 `system_backup_v2_backups/attempts/operations/runtime_captures/execution_records/evidence`，用生产字段和真实事务/唯一证据ID验证；fixture建库用独立本地root，签名reader用独立SELECT+INSERT-evidence用户，证明不能UPDATE源task。此定向fixture不声称全171迁移、全部FK或现场SQL profile验证。
+
+该 MySQL gate 代码已落地，tag编译通过（`-run '^$'`，2.308s）。发现既有三个 tagged fixture 测试经 controller 导回 security 导致编译环，已改为直接引用同一 `migrationcatalog.ReviewedHash/ReviewedFileCount`，没有修改catalog值或迁移。输入环境变量 `A_SIGNING_MYSQL_CREDENTIALS_FILE`（监督者本机JSON私有文件，替代DSN文件）与 `A_SIGNING_MYSQL_SERVER_UUID`（监督者独立取得的本机服务UUID）。测试自建随机 `ad_a_signing_*` 数据库和SELECT/INSERT用户，结束按UUID/marker严格核对后清理本次库/用户。
+
+## 第三切片：真实隔离 MySQL 验证
+
+- 监督者本机 MySQL 8.4.13，loopback端口59355，固定server_uuid `b9c4d686-d4d3-11f1-9eb5-745d22085e06`，未访问远侧。
+- `go test -mod=readonly -p=1 -count=1 -tags=systembackup_mysql -timeout=180s ./internal/systembackupsecurity -run '^TestSQLSigningOwnerMySQL$' -v` 退出0；测试3.60s，进程包6.117s。
+- 增补真实CHECK损坏拒绝并带三个历史seed回归后，最终 `-run '^Test(SQLSigningOwnerMySQL|(AConfigProof|DConfigWriter|DConfigMaintenanceReceipt)MySQLSeed)$'` 退出0，MySQL测试1.38s，包3.866s。旧tagged seed的候选SQL摘要仍指表名适配前内容，现按仓库中原fixture的**完整LF字节**重新固定两个测试pin，并显式LF归一化；不改fixture SQL、迁移或生产信任pin。错摘要/错字节/重复字段/未知字段负例继续拒绝。
+- 三用途自动SQL→JWT→TLS Transit→历史公钥独立验签实际成功。源记录来自原backup/attempt/source journal/capture_result；Stage原事务回滚后不可签，提交后可签，原字节重复freeze幂等。
+- 独立SQL签名用户只有六表SELECT及evidence INSERT，实际UPDATE源task和DELETE evidence均被MySQL拒绝；原owner推进claim版本后旧signer在登录前拒绝。
+- 按本轮随机数据库/用户名、原服务器UUID与fixture marker核对后清理本次资源；未修改其他schema、系统库或停止共享服务器。该测试的最小DDL验证真实事务/CHECK/grants，不声称整套应用迁移/FK或正式六域业务采集通过。
 
 ## 现场事实边界（最终集中更新）
 

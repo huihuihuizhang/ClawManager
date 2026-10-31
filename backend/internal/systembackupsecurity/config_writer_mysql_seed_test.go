@@ -6,21 +6,24 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
-	"clawreef/internal/systembackupcontroller"
+	"clawreef/internal/migrationcatalog"
 )
 
 // Embed the exact LF-normalized candidate solely for detached seed tests.
 // Both this copy and the actual runner proposal must match the compiled SHA.
 //
 //go:embed testdata/config_writer_candidate_081.sql
-var configWriterCandidateFixture string
+var configWriterCandidateFixtureRaw string
+
+var configWriterCandidateFixture = strings.ReplaceAll(strings.ReplaceAll(configWriterCandidateFixtureRaw, "\r\n", "\n"), "\r", "\n")
 
 func TestDConfigWriterMySQLSeed(t *testing.T) {
 	assertConfigProofInstallationStateSeed(t, configProofInstallationSchema)
-	base := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: systembackupcontroller.ContractMigrationCatalogHash}
-	for n := 1; n <= systembackupcontroller.ContractMigrationCatalogFileCount; n++ {
+	base := configProofProbeInputs{Kind: "a_config_proof_probe_inputs.v1", Catalog: migrationcatalog.ReviewedHash}
+	for n := 1; n <= migrationcatalog.ReviewedFileCount; n++ {
 		base.Filenames = append(base.Filenames, fmt.Sprintf("%03d_synthetic.sql", n))
 	}
 	baseRaw, err := json.Marshal(base)
