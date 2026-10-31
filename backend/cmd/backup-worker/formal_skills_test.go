@@ -346,6 +346,11 @@ func skillCLIInspectArchive(t *testing.T, i worker.Invocation, frames, envelope 
 }
 
 func skillCLIMTLS(t *testing.T, handler http.Handler) *worker.ControlClient {
+	client, _ := skillCLIMTLSAt(t, handler)
+	return client
+}
+
+func skillCLIMTLSAt(t *testing.T, handler http.Handler) (*worker.ControlClient, string) {
 	t.Helper()
 	now := time.Now()
 	caKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -399,7 +404,7 @@ func skillCLIMTLS(t *testing.T, handler http.Handler) *worker.ControlClient {
 		t.Fatal(e)
 	}
 	t.Cleanup(client.Close)
-	return client
+	return client, server.URL
 }
 func skillCLIDecrypt(t *testing.T, i worker.Invocation, frames, envelope []byte) []byte {
 	t.Helper()

@@ -31,6 +31,9 @@ func NewTeamWorkspaceSpec(source domain.Snapshot, inventory team.Inventory, team
 }
 
 func validTeamWorkspace(r Request) bool {
+	if r.ControlEvidence != nil {
+		return false
+	}
 	s := r.TeamWorkspace
 	if s == nil || s.Version != TeamWorkspaceVersion || s.TeamID <= 0 || !keyUseHash.MatchString(s.InventorySHA256) || !keyUseHash.MatchString(s.SourceSQLCiphertextSHA256) || len(s.ArtifactRefs) > 100000 || r.Version != Version || (r.Operation != "restore-workspace" && r.Operation != "verify-team-workspace") || r.PolicyVersion != TeamWorkspaceVersion || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil || r.Teams != nil || r.Database != nil || len(r.Files) != 0 || r.ArtifactName != "" || !validReceipt(r.Receipt) || r.MaxFiles <= 0 || r.MaxFiles > 1_000_000 || r.MaxFileBytes <= 0 || r.MaxArchiveBytes < r.MaxFileBytes || r.MaxArchiveBytes > 1<<50 || r.MaxCompressedBytes <= 0 || r.MaxCompressedBytes > 1<<50 || !time.Now().Before(r.Deadline) {
 		return false
