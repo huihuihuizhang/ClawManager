@@ -78,7 +78,7 @@ func TestAutomaticTeamsDiscoveryUsesOriginalSnapshotAndAcceptsNewTeamsMySQL(t *t
 			}
 		}
 	}
-	for _, mode := range []string{"freeze-after-rr", "freeze-replaced-sql-facts"} {
+	for _, mode := range []string{"freeze-after-rr", "freeze-replaced-sql-facts", "freeze-after-original-writers"} {
 		t.Run(mode, func(t *testing.T) {
 			frozenConfig := cfg
 			frozenConfig.ReadTeams = nil
@@ -101,6 +101,32 @@ func TestAutomaticTeamsDiscoveryUsesOriginalSnapshotAndAcceptsNewTeamsMySQL(t *t
 				}
 				metadata, _ := json.Marshal(struct{ Version, PVCUID, ObjectVersion string }{"named-provider-metadata-fixture", metadataVersion, metadataVersion})
 				return inventory, metadata, err
+			}
+			observations := 0
+			if mode == "freeze-after-original-writers" {
+				originalState := f.x.Writers[0].Original
+				frozenConfig.BuildWriters = func(context.Context, d.Input, SourceInventory, []FrozenWriter) ([]flow.Writer, error) {
+					if calls != 0 {
+						t.Fatal("source metadata was read before original writer preparation")
+					}
+					return []flow.Writer{onceObservedWriter{Writer: fixtureWriter{f}, calls: &observations, state: originalState}}, nil
+				}
+				legacy := frozenConfig.FreezeSources
+				frozenConfig.FreezeSources = nil
+				frozenConfig.FreezeSourcesWithWriters = func(ctx context.Context, in d.Input, observed SourceInventory, writers []FrozenWriter) (*team.Inventory, json.RawMessage, error) {
+					if observations != 1 || len(writers) != 1 || writers[0].Original != originalState || reader.Stats().InUse != 0 {
+						t.Fatal("source resolver did not receive exact original post-RR writer snapshot")
+					}
+					writers[0].Original.Checkpoint = "resolver-mutated-detached-copy"
+					return legacy(ctx, in, observed)
+				}
+				frozenConfig.BuildParts = nil
+				frozenConfig.BuildPartsWithWriters = func(in d.Input, source SourceInventory, _ time.Time, writers []FrozenWriter) ([]JobPart, error) {
+					if in.Authority.TaskType == "backup" && (calls != 1 || source.Teams == nil || len(source.CaptureMetadata) == 0 || len(writers) != 1 || writers[0].Original != originalState) {
+						t.Fatal("module factory ran before resolved source or used a different writer snapshot")
+					}
+					return f.x.Parts, nil
+				}
 			}
 			frozenConfig = WithTeamsSourceFacts(frozenConfig)
 			profile, err := NewLinuxProfile(frozenConfig)
