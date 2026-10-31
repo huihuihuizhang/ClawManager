@@ -415,7 +415,63 @@ func (v *PublisherEnvelopeVerifier) Recheck(ctx context.Context) error {
 
 // The complete C and plaintext readers check original current authority around
 // each bounded read. No DEK, claim, provider credential or deadline is renewed.
-func (v *PublisherEnvelopeVerifier) RecheckStream(ctx context.Context) error { return v.Recheck(ctx) }
+func (v *PublisherEnvelopeVerifier) RecheckStream(ctx context.Context) error {
+	if v == nil || v.parent == nil {
+		return kms.ErrPermission
+	}
+	return v.parent.recheckStreamAuthority(ctx)
+}
+
+// An exact CURRENT permission check, not a cached authorization. Immutable
+// history is fully authenticated before/after Unwrap. Reading a 64KiB chunk
+// must not decrypt/hash the entire frozen plan again, but must observe current
+// claim/stop-resume facts, grant/workload, KEK fences and original provider
+// withdrawal on every boundary, including after a blocked native read.
+func (v *PublisherVerifier) recheckStreamAuthority(ctx context.Context) error {
+	if v == nil || nilSource(ctx) || ctx.Err() != nil || !time.Now().Before(v.until) {
+		return kms.ErrPermission
+	}
+	v.checkMu.Lock()
+	defer v.checkMu.Unlock()
+	cfg := v.factory.cfg
+	if cfg.Records.Authority.Authorization.(c.PublisherVerifierDeploymentBinding).CheckPublisherVerifierDeployment(ctx, v.access.Deployment()) != nil || cfg.KubernetesReads.Check(ctx, cfg.Kubernetes, cfg.Workload) != nil || v.access.CheckWorkload(ctx) != nil {
+		return kms.ErrPermission
+	}
+	tx, err := cfg.Authority.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	if err != nil {
+		return kms.ErrPermission
+	}
+	defer tx.Rollback()
+	guard, err := v.access.Bind(ctx, tx)
+	if err != nil {
+		return kms.ErrPermission
+	}
+	kek, locked, err := (reg.SQLStore{}).Bind(ctx, tx, cfg.Binding.InstallationID)
+	if err != nil || locked.Facts().Database != cfg.Capabilities.database || kek.RequireUnrevoked(cfg.Binding.ConfigRef, reg.UnwrapRevocation) != nil {
+		return kms.ErrPermission
+	}
+	found := false
+	for _, fact := range locked.Facts().Bindings {
+		if fact.Binding.ConfigRef == cfg.Binding.ConfigRef && reg.SameSecurityBinding(fact.Binding, cfg.Binding) {
+			found = true
+		}
+	}
+	if !found {
+		return kms.ErrPermission
+	}
+	var now time.Time
+	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || !now.Before(v.until) || v.capability.Recheck(ctx, tx, locked, now) != nil {
+		return kms.ErrPermission
+	}
+	original, err := currentVerifierOriginalMapping(ctx, tx, cfg.Binding, cfg.InstallationIssuer, now, true)
+	if err != nil || original.Until.Before(v.until) || guard.RecheckTx(ctx, tx) != nil {
+		return kms.ErrPermission
+	}
+	if tx.Rollback() != nil || ctx.Err() != nil || !time.Now().Before(v.until) {
+		return kms.ErrPermission
+	}
+	return nil
+}
 func (v *PublisherEnvelopeVerifier) Unwrap(ctx context.Context, expected w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
 	if v == nil || v.parent == nil || v.parent.unwrap == nil || nilSource(ctx) || ctx.Err() != nil || use == nil || expected != v.wrapped.Request || wrapped.Request != v.wrapped.Request || wrapped.Algorithm != v.wrapped.Algorithm || !bytes.Equal(wrapped.Ciphertext, v.wrapped.Ciphertext) {
 		return kms.ErrPermission
