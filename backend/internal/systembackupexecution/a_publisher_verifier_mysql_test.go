@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -34,25 +35,31 @@ import (
 )
 
 type aPublisherVerifierFixture struct {
-	history            *publisherHistoryFixture
-	cfg                a.PublisherVerifierConfig
-	factory            *a.PublisherVerifierFactory
-	envelope           []byte
-	logins, decrypts   atomic.Int64
-	onLogin, onDecrypt func()
-	original           a.OriginalRecord
-	putOriginal        func(a.OriginalRecord, uint64)
-	captureDeadline    time.Time
-	materials          PublisherVerifierMaterials
-	credentialIssuedAt atomic.Int64
+	history                *publisherHistoryFixture
+	cfg                    a.PublisherVerifierConfig
+	factory                *a.PublisherVerifierFactory
+	envelope               []byte
+	logins, decrypts       atomic.Int64
+	generates              atomic.Int64
+	controlGenerateRequest *w.KeyRequest
+	onLogin, onDecrypt     func()
+	original               a.OriginalRecord
+	putOriginal            func(a.OriginalRecord, uint64)
+	captureDeadline        time.Time
+	materials              PublisherVerifierMaterials
+	credentialIssuedAt     atomic.Int64
 }
 
 type aPublisherVerifierFixtureOptions struct {
-	FullService       bool
-	SourceBytes       int
-	CapabilityWindow  time.Duration
-	PublicationTarget *PublicationTargetMaterials
-	ControlEvidence   bool
+	FullService           bool
+	SourceBytes           int
+	CapabilityWindow      time.Duration
+	PublicationTarget     *PublicationTargetMaterials
+	ControlEvidence       bool
+	ControlURL            string
+	ControlRequestedParts []string
+	ConfigSnapshot        []byte
+	WrapControlConnector  func(driver.Connector) driver.Connector
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -78,6 +85,38 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 	provider := httptest.NewTLSServer(http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
 		wr.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
+		case "/v1/auth/controller-jwt/login":
+			var login map[string]string
+			if !fixture.ControlEvidence || json.NewDecoder(r.Body).Decode(&login) != nil || login["role"] != "controller-unwrap-role" || login["jwt"] != "local-controller-projected-jwt-only" {
+				wr.WriteHeader(403)
+				return
+			}
+			json.NewEncoder(wr).Encode(map[string]any{"auth": map[string]any{"client_token": "local-controller-unwrap-token-only", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{"controller-unwrap-policy"}, "metadata": map[string]string{"role": login["role"], "namespace": "controller", "pod_uid": "controller-pod-uid", "service_account_uid": "controller-sa"}}})
+		case "/v1/auth/capture-jwt/login":
+			if !fixture.ControlEvidence {
+				wr.WriteHeader(403)
+				return
+			}
+			var login map[string]string
+			if json.NewDecoder(r.Body).Decode(&login) != nil || login["role"] != "capture-generate-role" || login["jwt"] != "local-capture-projected-jwt-only" {
+				wr.WriteHeader(403)
+				return
+			}
+			json.NewEncoder(wr).Encode(map[string]any{"auth": map[string]any{"client_token": "local-control-generate-token", "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{"capture-generate-policy"}, "metadata": map[string]string{"role": login["role"], "namespace": "backup", "pod_uid": "capture-pod-uid", "service_account_uid": "capture-sa"}}})
+		case "/v1/transit/datakey/plaintext/original-key":
+			if !fixture.ControlEvidence || x.history == nil || x.controlGenerateRequest == nil {
+				wr.WriteHeader(403)
+				return
+			}
+			var references int
+			var request map[string]string
+			expected, _ := k.TransitContext(*x.controlGenerateRequest)
+			if x.history.db.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM system_backup_v2_kek_references WHERE reference_state='unknown'").Scan(&references) != nil || references < 1 || r.Header.Get("X-Vault-Token") != "local-control-generate-token" || json.NewDecoder(r.Body).Decode(&request) != nil || request["bits"] != "256" || request["key_version"] != "1" || request["context"] != expected {
+				wr.WriteHeader(403)
+				return
+			}
+			x.generates.Add(1)
+			json.NewEncoder(wr).Encode(map[string]any{"data": map[string]any{"plaintext": base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{9}, 32)), "ciphertext": "vault:v1:" + base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)), "key_version": 1}})
 		case "/v1/auth/publisher-jwt/login":
 			x.logins.Add(1)
 			var request map[string]string
@@ -93,6 +132,19 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 		case "/v1/transit/decrypt/original-key":
 			x.decrypts.Add(1)
 			var request map[string]string
+			if fixture.ControlEvidence && r.Header.Get("X-Vault-Token") == "local-controller-unwrap-token-only" {
+				if x.controlGenerateRequest == nil {
+					wr.WriteHeader(403)
+					return
+				}
+				currentContext, contextErr := k.TransitContext(*x.controlGenerateRequest)
+				if contextErr != nil || json.NewDecoder(r.Body).Decode(&request) != nil || len(request) != 2 || request["context"] != currentContext || request["ciphertext"] != "vault:v1:"+base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)) {
+					wr.WriteHeader(403)
+					return
+				}
+				json.NewEncoder(wr).Encode(map[string]any{"data": map[string]string{"plaintext": base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{9}, 32))}})
+				return
+			}
 			if json.NewDecoder(r.Body).Decode(&request) != nil || request["context"] != expectedContext || request["ciphertext"] != "vault:v1:"+base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)) || r.Header.Get("X-Vault-Token") != "local-publisher-batch-token-only" {
 				wr.WriteHeader(403)
 				return
@@ -107,6 +159,8 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 	}))
 	t.Cleanup(provider.Close)
 	x.history = newPublisherHistoryFixture(t, func(options *consumerFixtureOptions) {
+		options.WrapControlConnector = fixture.WrapControlConnector
+		options.ConfigSnapshot = fixture.ConfigSnapshot
 		options.OwnedCredentialsFile, options.OwnedServerUUID = credentials, serverUUID
 		options.JobDeadlineSeconds = 1
 		if fixture.FullService {
@@ -115,6 +169,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				if fixture.ControlEvidence {
 					cfg = runtimeDeploymentFixture(t)
 					cfg.CaptureScope = "six-part"
+					cfg.TrustDomain = "fixture.invalid"
 					cfg.FormalVerifier = &FormalVerifierReference{Protocol: formalVerifierMaterialsVersion, Path: filepath.Join(dir, "formal-materials.json")}
 					cfg.CaptureModules = &ProductionCaptureReference{Protocol: productionCaptureMaterialsVersion, Path: filepath.Join(dir, "capture-materials.json")}
 					cfg.SourceServerUUID, cfg.SourceDatabase = g.ServerUUID, g.Database
@@ -123,6 +178,12 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				cfg.ControllerOwner = g.ControllerOwner
 				cfg.ApplicationScope = "original-app"
 				cfg.Namespace = "ns"
+				if fixture.ControlEvidence {
+					cfg.Namespace = "backup"
+				}
+				if fixture.ControlURL != "" {
+					cfg.ControlURL = fixture.ControlURL
+				}
 				if cfg.RuntimeSources != nil {
 					cfg.RuntimeSources.Namespaces = []string{cfg.Namespace}
 				}

@@ -474,12 +474,12 @@ type readCloseBuffer struct{ *bytes.Reader }
 
 func (*readCloseBuffer) Close() error { return nil }
 
-func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql.DB, authority d.Authority, binding d.JobBinding, inv worker.Invocation) *fake.Clientset {
+func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql.DB, authority d.Authority, binding d.JobBinding, inv worker.Invocation, mountedData ...map[string]map[string]string) *fake.Clientset {
 	t.Helper()
 	ctx := context.Background()
 	immutable, controller := true, true
 	var raw []byte
-	if admin.QueryRow(`SELECT request_json FROM system_backup_v2_runtime_resources WHERE resource_kind='Job'`).Scan(&raw) != nil {
+	if admin.QueryRow(`SELECT request_json FROM system_backup_v2_runtime_resources WHERE resource_kind='Job' AND task_public_id=? AND namespace_name=? AND resource_name=? AND observed_uid=?`, authority.TaskPublicID, binding.Namespace, binding.Name, binding.UID).Scan(&raw) != nil {
 		t.Fatal("original Job unavailable")
 	}
 	var job batchv1.Job
@@ -498,6 +498,10 @@ func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql
 	client := fake.NewSimpleClientset(&job, pod, workload, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: o.Namespace, UID: types.UID(o.NamespaceUID)}}, &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "worker-node", UID: "worker-node-uid", Labels: map[string]string{corev1.LabelOSStable: "linux"}}}, &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "capture", Namespace: o.Namespace, UID: "capture-sa"}}, &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "controller", Namespace: "controller", UID: "controller-sa"}}, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "controller-rs", Namespace: "controller", UID: "controller-rs-uid", OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "Deployment", Name: "controller-deployment", UID: "controller-deployment-uid", Controller: &controller}}}}, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "controller-deployment", Namespace: "controller", UID: "controller-deployment-uid"}})
 	o.Client = client
 	o.Security.NodeUIDs = map[string]string{"worker-node": "worker-node-uid"}
+	// This helper replaces the entire named local Kubernetes surface. Retain
+	// only pins for objects on that surface, never the previous pair member's
+	// same-volume-name ConfigMap pin after its original Job has completed.
+	o.Security.Volumes = nil
 	for _, volume := range pod.Spec.Volumes {
 		switch {
 		case volume.PersistentVolumeClaim != nil:
@@ -510,6 +514,9 @@ func installOriginalWorkerAPIFixture(t *testing.T, o *PublicJobOwner, admin *sql
 			o.Security.Volumes = append(o.Security.Volumes, kube.MountIdentity{Volume: volume.Name, Kind: "PersistentVolumeClaim", Name: name, UID: uid, PVName: pv.Name, PVUID: string(pv.UID), SHA256: kube.ContentHash(pv.Spec)})
 		case volume.ConfigMap != nil:
 			cm := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: volume.ConfigMap.Name, Namespace: o.Namespace, UID: types.UID(volume.ConfigMap.Name + "-uid")}, Immutable: &immutable, Data: map[string]string{"fixture": "original pinned mount"}}
+			if len(mountedData) == 1 && mountedData[0][cm.Name] != nil {
+				cm.Data = mountedData[0][cm.Name]
+			}
 			if volume.Name == "worker-request" {
 				cm.Data = map[string]string{"invocation.json": string(mustJSON(t, inv))}
 				desired, err := kube.WorkerConfigMap(kube.Identity{Name: cm.Name, Namespace: o.Namespace, Owner: authority.TaskPublicID}, inv)
@@ -560,10 +567,17 @@ func mustJSON(t *testing.T, value any) []byte {
 }
 
 func originalMTLSControlClient(t *testing.T, o *PublicJobOwner, authority d.Authority, inv worker.Invocation, handler http.Handler) *worker.ControlClient {
+	_, makeClient := originalMTLSControlServer(t, handler)
+	return makeClient(o, authority, inv)
+}
+
+// Reserve the actual TLS endpoint before the signed core/source grants are
+// frozen. Worker identity is issued only after the original invocation exists.
+func originalMTLSControlServer(t *testing.T, handler http.Handler) (string, func(*PublicJobOwner, d.Authority, worker.Invocation, ...string) *worker.ControlClient) {
 	t.Helper()
 	now := time.Now()
 	pub, key, _ := ed25519.GenerateKey(rand.Reader)
-	defer clear(key)
+	t.Cleanup(func() { clear(key) })
 	rootTemplate := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "local original control CA"}, NotBefore: now.Add(-time.Minute), NotAfter: now.Add(time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature}
 	rootDER, err := x509.CreateCertificate(rand.Reader, rootTemplate, rootTemplate, pub, key)
 	if err != nil {
@@ -584,33 +598,40 @@ func originalMTLSControlClient(t *testing.T, o *PublicJobOwner, authority d.Auth
 	if err != nil {
 		t.Fatal(err)
 	}
-	invHash, _ := inv.Hash()
-	identity, err := (control.IdentityIssuer{Certificate: root, Signer: key, TrustDomain: o.TrustDomain, ServerRoots: ca}).IssueWorker(authority.TaskPublicID, authority.DeadlineAt, invHash)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer identity.Clear()
 	pool := x509.NewCertPool()
 	pool.AppendCertsFromPEM(ca)
 	server := httptest.NewUnstartedServer(handler)
 	server.TLS = &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{serverCert}, ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: pool}
 	server.StartTLS()
 	t.Cleanup(server.Close)
-	dir := t.TempDir()
-	for name, raw := range identity.Data {
-		if os.WriteFile(filepath.Join(dir, name), raw, 0600) != nil {
-			t.Fatal("identity write failed")
+	return server.URL, func(o *PublicJobOwner, authority d.Authority, inv worker.Invocation, endpointOverride ...string) *worker.ControlClient {
+		t.Helper()
+		invHash, _ := inv.Hash()
+		identity, err := (control.IdentityIssuer{Certificate: root, Signer: key, TrustDomain: o.TrustDomain, ServerRoots: ca}).IssueWorker(authority.TaskPublicID, authority.DeadlineAt, invHash)
+		if err != nil {
+			t.Fatal(err)
 		}
+		defer identity.Clear()
+		dir := t.TempDir()
+		for name, raw := range identity.Data {
+			if os.WriteFile(filepath.Join(dir, name), raw, 0600) != nil {
+				t.Fatal("identity write failed")
+			}
+		}
+		tokenFile := filepath.Join(dir, "token")
+		os.WriteFile(tokenFile, []byte("local-current-worker-pod-token"), 0600)
+		controlURL := server.URL
+		if len(endpointOverride) == 1 {
+			controlURL = endpointOverride[0]
+		}
+		client, err := worker.NewControlClient(controlURL, filepath.Join(dir, "ca.crt"), filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if client.WithWorkloadToken(tokenFile) != nil {
+			t.Fatal("bound token missing")
+		}
+		t.Cleanup(client.Close)
+		return client
 	}
-	tokenFile := filepath.Join(dir, "token")
-	os.WriteFile(tokenFile, []byte("local-current-worker-pod-token"), 0600)
-	client, err := worker.NewControlClient(server.URL, filepath.Join(dir, "ca.crt"), filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if client.WithWorkloadToken(tokenFile) != nil {
-		t.Fatal("bound token missing")
-	}
-	t.Cleanup(client.Close)
-	return client
 }
