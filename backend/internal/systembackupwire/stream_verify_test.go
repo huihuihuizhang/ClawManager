@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 type streamVerifyUnwrapper struct {
@@ -18,6 +19,42 @@ type streamVerifyUnwrapper struct {
 	key         []byte
 	calls       int
 	deny, after bool
+}
+
+type deadlineStreamReader struct {
+	src   io.Reader
+	ctx   context.Context
+	reads int
+}
+
+func (r *deadlineStreamReader) Read(p []byte) (int, error) {
+	r.reads++
+	n, err := r.src.Read(p)
+	<-r.ctx.Done()
+	return n, err
+}
+
+func TestStreamVerifierStopsFurtherReadsWhenDeadlineExpiresInsideFrame(t *testing.T) {
+	spec := streamFixture()
+	key := bytes.Repeat([]byte{9}, 32)
+	defer clear(key)
+	var encrypted bytes.Buffer
+	seal, err := EncryptStream(context.Background(), spec, key, &encrypted, func(dst io.Writer) error { _, err := dst.Write([]byte("original content")); return err })
+	if err != nil {
+		t.Fatal(err)
+	}
+	envelope, err := seal.EnvelopeJSON(WrappedKey{Request: spec.Request, Algorithm: "provider-native", Ciphertext: []byte("opaque")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	src := &deadlineStreamReader{src: bytes.NewReader(encrypted.Bytes()), ctx: ctx}
+	keys := &streamVerifyUnwrapper{request: spec.Request, key: key}
+	verified, err := VerifyWrappedStream(ctx, spec, envelope, src, keys)
+	if err == nil || verified.CiphertextSHA256() != "" || src.reads != 1 || keys.calls != 1 {
+		t.Fatal("expired frame read continued or produced verification", err, src.reads, keys.calls)
+	}
 }
 
 func (u *streamVerifyUnwrapper) Unwrap(ctx context.Context, expected KeyRequest, wrapped WrappedKey, use WithDEK) error {

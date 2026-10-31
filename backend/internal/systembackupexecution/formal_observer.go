@@ -50,6 +50,8 @@ func (o *PublicJobOwner) observeFormalCandidateResult(ctx context.Context, a d.A
 		return nil, err
 	}
 	defer keys.Close()
+	ctx, cancel := context.WithDeadline(ctx, keys.ValidUntil())
+	defer cancel()
 	custody, err := staging.OpenSealCustody(o.Staging)
 	if err != nil {
 		return nil, err

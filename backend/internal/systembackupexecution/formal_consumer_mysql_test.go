@@ -74,7 +74,7 @@ func TestFormalCandidateMySQLActualEvidenceConsumer(t *testing.T) {
 	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires disposable local MySQL")
 	}
-	for _, fault := range []string{"", "wrong-attempt", "newer-attempt", "job-revoked", "wrapper-revoked", "claim-changed-during-unwrap", "ciphertext", "envelope"} {
+	for _, fault := range []string{"", "wrong-attempt", "newer-attempt", "job-revoked", "wrapper-revoked", "claim-changed-during-unwrap", "expired-during-unwrap", "ciphertext", "envelope"} {
 		t.Run(fault, func(t *testing.T) {
 			owner, service, admin, db, a, j, candidate, keys, refresh := newConsumerMySQLFixture(t)
 			if _, ok := owner.Gate.Authority.Authorization.(deploymentAuthorization); !ok {
@@ -109,6 +109,10 @@ func TestFormalCandidateMySQLActualEvidenceConsumer(t *testing.T) {
 						t.Error(err)
 					}
 				}
+			}
+			if fault == "expired-during-unwrap" {
+				keys.until = time.Now().Add(300 * time.Millisecond)
+				keys.after = func() { <-time.After(time.Until(keys.until) + time.Millisecond) }
 			}
 			if fault == "ciphertext" || fault == "envelope" {
 				receipt := candidate.Ciphertext
@@ -593,7 +597,7 @@ func newConsumerMySQLFixture(t *testing.T) (*PublicJobOwner, *DeploymentService,
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)
 	}
-	keyUse := &consumerCurrentKeyUse{gate: gate, authority: a, scopedKeyUseFixture: &scopedKeyUseFixture{inner: contentKeys, identity: FormalVerifierIdentity{Namespace: "control", PodName: "controller-pod", PodUID: "controller-pod-uid", ServiceAccountName: "controller", ServiceAccountUID: "controller-sa", OwnerKind: "Deployment", OwnerUID: "controller-deployment-uid", GrantSHA256: strings.Repeat("f", 64)}}}
+	keyUse := &consumerCurrentKeyUse{gate: gate, authority: a, scopedKeyUseFixture: &scopedKeyUseFixture{inner: contentKeys, until: a.DeadlineAt, identity: FormalVerifierIdentity{Namespace: "control", PodName: "controller-pod", PodUID: "controller-pod-uid", ServiceAccountName: "controller", ServiceAccountUID: "controller-sa", OwnerKind: "Deployment", OwnerUID: "controller-deployment-uid", GrantSHA256: strings.Repeat("f", 64)}}}
 	owner.FormalKeys = func(ctx context.Context, s FormalCandidateReadScope) (FormalCandidateKeyUse, error) {
 		raw, _ := json.Marshal(s)
 		keyUse.original = raw

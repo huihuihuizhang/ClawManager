@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"time"
 
 	"clawreef/internal/systembackup/worker"
 	d "clawreef/internal/systembackupdispatch"
@@ -30,6 +31,9 @@ type FormalCandidateReadScope struct {
 type FormalCandidateKeyUse interface {
 	w.Unwrapper
 	Identity() FormalVerifierIdentity
+	// Bound by the actual independent grant/capability/task authority. Zero
+	// means unavailable; callers cannot turn it into an unbounded callback.
+	ValidUntil() time.Time
 	Recheck(context.Context, FormalCandidateReadScope) error
 	Close()
 }
@@ -55,9 +59,10 @@ func (s FormalCandidateReadScope) ExpectedUnwrapAccess() (k.Access, error) {
 }
 
 type scopedFormalCandidateKeys struct {
-	use      FormalCandidateKeyUse
-	scope    FormalCandidateReadScope
-	identity FormalVerifierIdentity
+	use               FormalCandidateKeyUse
+	scope             FormalCandidateReadScope
+	identity          FormalVerifierIdentity
+	grantUntil, until time.Time
 }
 
 func cloneFormalReadScope(s FormalCandidateReadScope) (FormalCandidateReadScope, error) {
@@ -73,8 +78,8 @@ func openFormalCandidateKeys(ctx context.Context, factory FormalCandidateKeyFact
 	if ctx == nil || ctx.Err() != nil || factory == nil || scope.Invocation.ProviderKey == nil || !worker.ValidateFormalCaptureResult(scope.Invocation, &scope.Candidate) || scope.CapturePod.UID == "" || scope.CapturePod.ServiceAccountUID == "" || !formalCandidateDigest(scope.CaptureGrantSHA256) {
 		return nil, d.ErrNotReady
 	}
-	context := scope.Invocation.ProviderKey.Request.Context
-	if scope.Authority.TaskType != "backup" || scope.Authority.Phase != "capture" || scope.Authority.InstallationID != context.InstallationID || scope.Authority.TaskPublicID != context.BackupPublicID || strconv.FormatUint(scope.Authority.AttemptNo, 10) != context.AttemptNo || scope.Authority.ConfigVersion == 0 || !formalCandidateDigest(scope.Authority.ConfigSHA256) || scope.CapturePod.Namespace != scope.Job.Namespace {
+	keyContext := scope.Invocation.ProviderKey.Request.Context
+	if scope.Authority.TaskType != "backup" || scope.Authority.Phase != "capture" || scope.Authority.InstallationID != keyContext.InstallationID || scope.Authority.TaskPublicID != keyContext.BackupPublicID || strconv.FormatUint(scope.Authority.AttemptNo, 10) != keyContext.AttemptNo || scope.Authority.ConfigVersion == 0 || !formalCandidateDigest(scope.Authority.ConfigSHA256) || scope.CapturePod.Namespace != scope.Job.Namespace {
 		return nil, d.ErrNotReady
 	}
 	frozen, err := cloneFormalReadScope(scope)
@@ -96,12 +101,25 @@ func openFormalCandidateKeys(ctx context.Context, factory FormalCandidateKeyFact
 		return nil, d.ErrNotReady
 	}
 	identity := use.Identity()
+	grantUntil := use.ValidUntil()
 	ownerOK := identity.OwnerKind == "Deployment" || identity.OwnerKind == "StatefulSet" || identity.OwnerKind == "Job"
 	if identity.Namespace == "" || identity.PodName == "" || identity.PodUID == "" || identity.ServiceAccountName == "" || identity.ServiceAccountUID == "" || !ownerOK || identity.OwnerUID == "" || !formalCandidateDigest(identity.GrantSHA256) || identity.PodUID == scope.CapturePod.UID || identity.ServiceAccountUID == scope.CapturePod.ServiceAccountUID || identity.OwnerUID == scope.Job.UID || identity.GrantSHA256 == scope.CaptureGrantSHA256 {
 		use.Close()
 		return nil, d.ErrNotReady
 	}
-	keys := &scopedFormalCandidateKeys{use: use, scope: frozen, identity: identity}
+	until := grantUntil
+	for _, bound := range []time.Time{scope.Authority.DeadlineAt, scope.Invocation.Request.Deadline, scope.Job.RelayExpiresAt} {
+		if !bound.IsZero() && bound.Before(until) {
+			until = bound
+		}
+	}
+	if grantUntil.IsZero() || !time.Now().Before(until) {
+		use.Close()
+		return nil, d.ErrNotReady
+	}
+	keys := &scopedFormalCandidateKeys{use: use, scope: frozen, identity: identity, grantUntil: grantUntil, until: until}
+	ctx, cancel := context.WithDeadline(ctx, until)
+	defer cancel()
 	if err = keys.recheck(ctx); err != nil {
 		use.Close()
 		return nil, err
@@ -110,9 +128,11 @@ func openFormalCandidateKeys(ctx context.Context, factory FormalCandidateKeyFact
 }
 
 func (s *scopedFormalCandidateKeys) recheck(ctx context.Context) error {
-	if s == nil || s.use == nil || ctx == nil || ctx.Err() != nil || s.use.Identity() != s.identity {
+	if s == nil || s.use == nil || ctx == nil || ctx.Err() != nil || !time.Now().Before(s.until) || !s.use.ValidUntil().Equal(s.grantUntil) || s.use.Identity() != s.identity {
 		return w.ErrStreamAuthority
 	}
+	ctx, cancel := context.WithDeadline(ctx, s.until)
+	defer cancel()
 	copy, err := cloneFormalReadScope(s.scope)
 	if err != nil {
 		return err
@@ -120,15 +140,23 @@ func (s *scopedFormalCandidateKeys) recheck(ctx context.Context) error {
 	if err = s.use.Recheck(ctx, copy); err != nil {
 		return err
 	}
-	if s.use.Identity() != s.identity {
+	if !time.Now().Before(s.until) || !s.use.ValidUntil().Equal(s.grantUntil) || s.use.Identity() != s.identity {
 		return w.ErrStreamAuthority
 	}
 	return nil
 }
+func (s *scopedFormalCandidateKeys) ValidUntil() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return s.until
+}
 func (s *scopedFormalCandidateKeys) Unwrap(ctx context.Context, expected w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
-	if s == nil || s.scope.Invocation.ProviderKey == nil || expected != s.scope.Invocation.ProviderKey.Request || wrapped.Request != expected || use == nil {
+	if s == nil || ctx == nil || ctx.Err() != nil || s.scope.Invocation.ProviderKey == nil || expected != s.scope.Invocation.ProviderKey.Request || wrapped.Request != expected || use == nil {
 		return w.ErrStreamAuthority
 	}
+	ctx, cancel := context.WithDeadline(ctx, s.until)
+	defer cancel()
 	if err := s.recheck(ctx); err != nil {
 		return err
 	}
