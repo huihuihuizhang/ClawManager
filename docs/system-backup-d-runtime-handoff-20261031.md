@@ -239,3 +239,4 @@
 - 原DatabaseJobRequest新字段仅用于capture-database；restore/verify携带formal capture材料失败。缺材料、非法挂载目录或附加source filesystem均在实际builder拒绝；没有凭据fallback或任意shell。
 - 原 usersInstancesModuleFixture 的真实DB请求，显式先通过worker.ValidateRecordedInvocation，再实际 BuildCapturePart并解码batch/v1 Job：static/delivered permit两正例直接核CLI flag、全部readonly挂载、ConfigMap/Secret原引用、staging task子目录及无源volume；missing/invalid/source volume三负例无Job，纯构造不dispatch。完整kube3.213s/publicadapter5.360s通过，D本机MySQL opt-in开启。
 - 监督原字节overlay已在修复前独立复现该问题（3.308s FAIL），交付后可复跑原overlay。此独立提交只包含数据库材料传递与真实manifest回归，不依赖仍未提交的SourceRedisCaptureJob/完整Redis/六项factory WIP。六项页面闭环仍继续实现，readiness未放开。
+- 补强static permit缺材料边界：原顶部检查仅覆盖delivered pin；现capture-database分支对任意FormalCapture非nil但FormalMaterials缺失都拒绝。六场景分别含missing-static/missing-delivered，两者均无Job；旧纯functional DB捕获完整回归保留。受影响publicadapter完整5.398s通过，D本机SQL opt-in开启。此补强仍独立于SourceRedis WIP。

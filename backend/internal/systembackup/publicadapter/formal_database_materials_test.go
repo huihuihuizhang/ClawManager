@@ -16,7 +16,7 @@ import (
 )
 
 func TestActualFormalDatabaseJobRetainsOriginalReadonlyMaterials(t *testing.T) {
-	for _, mode := range []string{"static-permit", "delivered-permit", "missing-materials", "invalid-material-mount", "source-filesystem"} {
+	for _, mode := range []string{"static-permit", "delivered-permit", "missing-static-materials", "missing-delivered-materials", "invalid-material-mount", "source-filesystem"} {
 		t.Run(mode, func(t *testing.T) {
 			f, cfg := usersInstancesModuleFixture(t)
 			r := cfg.Database
@@ -28,14 +28,14 @@ func TestActualFormalDatabaseJobRetainsOriginalReadonlyMaterials(t *testing.T) {
 			r.Invocation.FormalCapture = &worker.FormalCaptureSpec{Version: worker.FormalCaptureVersion, ConfigSHA256: strings.Repeat("a", 64), EnvelopeName: "database.envelope", MaxFrames: 8, SourceConfigSHA256: f.in.Authority.ConfigSHA256}
 			binding := r.Invocation.Request.Binding
 			r.Invocation.ProviderKey = &k.Access{Operation: k.Generate, Endpoint: "https://bao.invalid", KeyName: "backup-key", Request: w.KeyRequest{Key: w.KeyBinding{Provider: "external-kms", IdentityHash: strings.Repeat("a", 64), RegistryVersion: "r1", ProviderKeyID: "backup-key", ProviderVersion: "1"}, Context: w.KeyContext{InstallationID: f.in.Authority.InstallationID, BackupPublicID: binding.BackupID, AttemptNo: binding.Attempt, Phase: "capture", Part: binding.Path, PartIndex: strconv.FormatUint(uint64(binding.PartIndex), 10), EnvelopeID: binding.EnvelopeID, CaptureContextHash: binding.CaptureContextHash}}}
-			if mode != "static-permit" {
+			if mode != "static-permit" && mode != "missing-static-materials" {
 				r.Invocation.FormalCapture.PermitDelivery = &k.PermitDeliveryPin{Version: k.PermitDeliveryVersion, Issuer: bytes.Repeat([]byte{4}, 32), IssuerGrantSHA256: strings.Repeat("b", 64)}
 			}
 			if !worker.ValidateRecordedInvocation(r.Invocation) {
 				t.Fatal("formal DB invocation invalid before builder")
 			}
 			switch mode {
-			case "missing-materials":
+			case "missing-static-materials", "missing-delivered-materials":
 				r.Workload.FormalMaterials = nil
 			case "invalid-material-mount":
 				r.Workload.FormalMaterials.Inputs[0].Directory = "/workspace"

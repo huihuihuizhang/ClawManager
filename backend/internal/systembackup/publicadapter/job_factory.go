@@ -45,7 +45,7 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 		job, err = kube.Job(w)
 	case "capture-database":
 		// Database capture has no source filesystem or extra evidence mount.
-		if w.Source.Name != "" || w.SourceSubPath != "" {
+		if w.Source.Name != "" || w.SourceSubPath != "" || (req.Invocation.FormalCapture != nil && w.FormalMaterials == nil) {
 			return zero, d.ErrNotReady
 		}
 		job, err = kube.DatabaseJob(kube.DatabaseJobRequest{Identity: w.Identity, Image: w.Image, ServiceAccount: w.ServiceAccount, StagingClaim: w.StagingClaim, NodeName: w.NodeName, DeadlineSeconds: w.DeadlineSeconds, Operation: "capture-database", Control: *w.WorkerControl, FormalMaterials: w.FormalMaterials})
