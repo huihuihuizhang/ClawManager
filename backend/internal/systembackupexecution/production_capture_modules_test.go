@@ -87,6 +87,7 @@ func productionModuleFixture(t *testing.T) (d.Input, b.SourceInventory, time.Tim
 		if operation == "capture-database" {
 			x.Request.Database = &worker.DatabaseSpec{Name: source.Database, ServerUUID: source.ServerUUID, Address: "source.fixture.invalid:3306", TLSServerName: "source.fixture.invalid", RootCA: []byte("named public CA fixture"), MaxRows: 100000, MaxMemoryBytes: 16 << 20, SchemaCensus: &domain.SchemaCensusSpec{Version: domain.SchemaCensusVersion, Definer: "original_owner@localhost", DefinitionSHA256: strings.Repeat("a", 64)}}
 		}
+		x.Workload.DeadlineSeconds = 30
 		operations[operation] = x
 	}
 	writers := []b.FrozenWriter{{ID: "original-writer", Original: flow.State{UID: "original-writer-uid", Generation: 3, Running: true, Checkpoint: "original-checkpoint"}}}
@@ -195,5 +196,42 @@ func TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs(t *tes
 				t.Fatal("incomplete original assembly accepted")
 			}
 		})
+	}
+}
+
+func TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes(t *testing.T) {
+	in, source, hold, writers, operations := productionModuleFixture(t)
+	first, err := productionCaptureModules(in, source, hold, writers, operations, "stable-r1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts, err := first.BuildParts(in, source, hold)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, _ := json.Marshal(parts)
+	// Rebuilding across a wall-clock second must not mint a different original
+	// Job deadline/spec hash for identical frozen inputs.
+	time.Sleep(1100 * time.Millisecond)
+	second, err := productionCaptureModules(in, source, hold, writers, operations, "stable-r1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rebuilt, err := second.BuildParts(in, source, hold)
+	after, _ := json.Marshal(rebuilt)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("same original inputs rebuilt different Job/Invocation bytes", err)
+	}
+	for _, fault := range []int64{0, 3601, int64(time.Until(hold).Seconds()) + 1} {
+		operation := operations["capture-workspace"]
+		operation.Workload.DeadlineSeconds = fault
+		operations["capture-workspace"] = operation
+		candidate, err := productionCaptureModules(in, source, hold, writers, operations, "stable-r1")
+		if err == nil {
+			_, err = candidate.BuildParts(in, source, hold)
+		}
+		if err == nil {
+			t.Fatal("missing/outside original hold template duration accepted", fault)
+		}
 	}
 }

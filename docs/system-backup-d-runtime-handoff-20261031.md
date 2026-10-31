@@ -377,3 +377,9 @@
 - 新真实runner/flow单元夹具（明确port/evidence模型，非SQL或物理证明）故意令canonical计划CE排在第一；CE Ensure若业务Evidence未全部Read即返回错误。旧顺序正例会失败；现四个原Job依次业务→CE、结果仍canonical、计划bytes不变且全collector Stop后原writer Resume。业务Ensure失败反例不派发CE、不返回完成parts。定向3.267s、完整publicadapter3.591s PASS。
 - 专用63507 SAN/TLS库上的production_same_task_mysql_test.go施工检查点：完整原迁移/非空Teams和Skills八表/运行与停机实例/原签名session+RBAC+HTTP acceptance六项/有限controller direct grants+原queue拿同一task与capture+secret_capture两attempt单元已PASS18.259s。这不是完整捕获：source hooks、SavePlan/reTake/held gate、实际worker/Evidence/Stop/Resume仍须在同一个fixture继续。该整链WIP未含本调度小片，readiness仍关闭。
 - 与A采用无环方案：完整Source只保留完整V1 base locator，原context仍哈希完整Source；最终TaskPlan冻结前仅CE两个Invocation绑定V2 policy。factory须先用原构造器得到准确business Invocation（注意SQL构造器会附加Teams/Skills inventory，不能提前哈希draft），再绑定CE seed并重建；productionInventory精确验证V2.BaseSnapshot==冻结base、policy context与全体准确business inv集合。没有排除Source字段的哈希投影。
+
+## D5.28 原签名Job duration保持重建确定性（2026-10-31）
+
+- 监督原factory跨1.1秒重建同输入在backup FAIL4.510（CE Job SpecSHA变动）；原因是factory按time.Until重算ActiveDeadlineSeconds。现只消费原独立签名operation.Workload.DeadlineSeconds（1..3600），不从更晚时钟重新生成值；原BuildCapturePart仍拒绝超过原hold剩余窗口的duration，未放宽deadline或延长旧key-use。
+- 新原factory完整Job/Invocation跨秒bytes比较、缺duration0/超3600/越原hold三反例全部通过；实际source Discovery材料加载也要求该原字段。生产source材料正例和startup模板示例已显式填写30；仓库无正式六部分capture bundle生成器，operator每个Operations.<operation>.Workload必须提供独立批准的固定DeadlineSeconds（30仅本机fixture示例），不存在省略为0或运行时改填的自动授权。
+- 原factory/WorkBuddy/挂载pin/startup模板定向4.801s PASS；加原SQL source授权与compose后10.909s PASS；监督独立candidate跨秒PASS4.471。V2seed桥接、同任务原Runtime/六worker和restore WIP不含此独立确定性小片。

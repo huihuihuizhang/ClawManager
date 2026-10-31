@@ -121,6 +121,9 @@ func (s *DeploymentService) validateProductionCapture(m productionCaptureMateria
 			}
 		}
 		for _, operation := range m.Operations {
+			if operation.Workload.DeadlineSeconds < 1 || operation.Workload.DeadlineSeconds > 3600 {
+				return c.ErrExecutionAuthority
+			}
 			if operation.Formal.PermitDelivery != nil && bytes.Equal(m.Discovery.Issuer, operation.Formal.PermitDelivery.Issuer) {
 				return c.ErrExecutionAuthority
 			}
