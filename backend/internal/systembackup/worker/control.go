@@ -50,13 +50,14 @@ type ControlRequest struct {
 	Candidate        *FormalCaptureResult `json:"candidate,omitempty"`
 }
 type Lease struct {
-	Relay            *relaywire.RelayMessage `json:"relay,omitempty"`
-	InvocationSHA256 string                  `json:"invocation_sha256"`
-	ExpiresAt        time.Time               `json:"expires_at"`
-	DEK              []byte                  `json:"dek,omitempty"`
-	Database         *DatabaseCredential     `json:"database,omitempty"`
-	KeyUse           *KeyUseLease            `json:"key_use,omitempty"`
-	CandidateSHA256  string                  `json:"candidate_sha256,omitempty"`
+	Relay            *relaywire.RelayMessage                  `json:"relay,omitempty"`
+	InvocationSHA256 string                                   `json:"invocation_sha256"`
+	ExpiresAt        time.Time                                `json:"expires_at"`
+	DEK              []byte                                   `json:"dek,omitempty"`
+	Database         *DatabaseCredential                      `json:"database,omitempty"`
+	KeyUse           *KeyUseLease                             `json:"key_use,omitempty"`
+	CandidateSHA256  string                                   `json:"candidate_sha256,omitempty"`
+	ProviderPermit   *systembackupkms.DeliveredProviderPermit `json:"provider_permit,omitempty"`
 }
 
 // Clear releases mutable credential buffers. Driver password strings cannot be
@@ -69,6 +70,14 @@ func (l *Lease) Clear() {
 }
 func validLeasePayload(l Lease, r ControlRequest) bool {
 	if !validLease(l, r) || !validLeaseRelay(l.Relay, r) {
+		return false
+	}
+	dynamic := r.Invocation.FormalCapture != nil && r.Invocation.FormalCapture.PermitDelivery != nil
+	if dynamic && r.Action == "key-reserve" {
+		if l.ProviderPermit == nil || len(l.ProviderPermit.Payload) == 0 || len(l.ProviderPermit.Payload) > 32768 || len(l.ProviderPermit.Signature) != 64 {
+			return false
+		}
+	} else if l.ProviderPermit != nil {
 		return false
 	}
 	if r.Invocation.ProviderKey != nil {

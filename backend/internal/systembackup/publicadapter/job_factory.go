@@ -27,6 +27,9 @@ type CapturePartRequest struct {
 func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPart, error) {
 	var zero JobPart
 	w := req.Workload
+	if req.Invocation.FormalCapture != nil && req.Invocation.FormalCapture.PermitDelivery != nil && w.FormalMaterials == nil {
+		return zero, d.ErrNotReady
+	}
 	if validateInput(in, false) != nil || in.Authority.TaskType != "backup" || w.Identity.Owner != in.Authority.TaskPublicID || w.Restore || w.WorkerControl == nil || len(w.Command) != 0 || req.Generation == 0 || hold.After(in.Authority.DeadlineAt) || !time.Now().Before(hold) || w.DeadlineSeconds <= 0 || w.DeadlineSeconds > 3600 || time.Duration(w.DeadlineSeconds)*time.Second > time.Until(req.Invocation.Request.Deadline) {
 		return zero, d.ErrNotReady
 	}

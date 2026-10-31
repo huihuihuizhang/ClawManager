@@ -88,3 +88,36 @@ func TestOriginalJobKeyUseIsBoundedAndNonReplayable(t *testing.T) {
 		}
 	}
 }
+
+func TestDeliveredReserveACKReplaysOnlySameOriginalReservedNonce(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	current := worker.KeyUseLease{Identity: k.JobIdentity{PodUID: "original-pod"}, Nonce: strings.Repeat("d", 32), Until: now.Add(time.Minute)}
+	reserved, _, err := advanceDeliveredKeyUse(nil, current, "key-reserve", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := json.Marshal(reserved)
+	got, changed, err := advanceDeliveredKeyUse(raw, current, "key-reserve", now)
+	if err != nil || changed || got != reserved {
+		t.Fatal("same reserve ACK changed original", err)
+	}
+	for _, mode := range []string{"nonce", "pod", "shorter", "using", "finished"} {
+		t.Run(mode, func(t *testing.T) {
+			bad, state := current, reserved
+			switch mode {
+			case "nonce":
+				bad.Nonce = strings.Repeat("e", 32)
+			case "pod":
+				bad.Identity.PodUID = "replacement"
+			case "shorter":
+				bad.Until = now.Add(time.Second)
+			default:
+				state.State = mode
+			}
+			encoded, _ := json.Marshal(state)
+			if _, _, err := advanceDeliveredKeyUse(encoded, bad, "key-reserve", now); err == nil {
+				t.Fatal("reissued or renewed reserve")
+			}
+		})
+	}
+}

@@ -19,6 +19,10 @@ import (
 // Revoke serializes on that row. A completed revoke still requires Stopped;
 // this record must never be treated as proof that a process was terminated.
 func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority, binding d.JobBinding, pod BoundPod, req worker.ControlRequest, until time.Time) (*worker.KeyUseLease, error) {
+	// All owner/permit/capability/relay minima are fixed BEFORE the original
+	// lease is persisted or signed. DATETIME(6) cannot retain nanoseconds; floor
+	// in UTC once here, never round up or repair a signed lease on readback.
+	until = until.UTC().Truncate(time.Microsecond)
 	var old []byte
 	if tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND attempt_no=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND revoked=FALSE AND lifecycle='ready' AND stopped_at IS NULL FOR UPDATE`, a.TaskPublicID, a.AttemptNo, binding.Namespace, binding.Name, binding.UID).Scan(&old) != nil {
 		return nil, c.ErrExecutionAuthority
@@ -32,7 +36,11 @@ func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	next, changed, e := advanceKeyUse(old, current, req.Action, now)
+	advance := advanceKeyUse
+	if req.Invocation.FormalCapture != nil && req.Invocation.FormalCapture.PermitDelivery != nil {
+		advance = advanceDeliveredKeyUse
+	}
+	next, changed, e := advance(old, current, req.Action, now)
 	if e != nil {
 		return nil, e
 	}
@@ -50,6 +58,17 @@ func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority
 		}
 	}
 	return &next, nil
+}
+
+func advanceDeliveredKeyUse(raw []byte, current worker.KeyUseLease, action string, now time.Time) (worker.KeyUseLease, bool, error) {
+	if action == "key-reserve" && len(raw) != 0 {
+		original, _, err := advanceKeyUse(raw, current, "key-check", now)
+		if err != nil || original.State != "reserved" {
+			return worker.KeyUseLease{}, false, c.ErrExecutionAuthority
+		}
+		return original, false, nil
+	}
+	return advanceKeyUse(raw, current, action, now)
 }
 
 func advanceKeyUse(raw []byte, current worker.KeyUseLease, action string, now time.Time) (worker.KeyUseLease, bool, error) {

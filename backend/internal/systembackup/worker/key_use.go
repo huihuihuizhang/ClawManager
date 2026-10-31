@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -107,6 +108,7 @@ type OriginalKeyAuthority struct {
 	mu         sync.Mutex
 	failed     bool
 	used       bool
+	delivery   k.DeliveredProviderPermit
 }
 
 func NewOriginalKeyAuthority(ctx context.Context, client *ControlClient, invocation Invocation) (*OriginalKeyAuthority, error) {
@@ -125,7 +127,30 @@ func NewOriginalKeyAuthority(ctx context.Context, client *ControlClient, invocat
 		return nil, ErrExecution
 	}
 	hash, _ := frozen.Hash()
-	l, e := client.send(ctx, ControlRequest{Invocation: frozen, InvocationSHA256: hash, Action: "key-reserve", Point: hex.EncodeToString(nonce)})
+	request := ControlRequest{Invocation: frozen, InvocationSHA256: hash, Action: "key-reserve", Point: hex.EncodeToString(nonce)}
+	var l Lease
+	dynamic := frozen.FormalCapture != nil && frozen.FormalCapture.PermitDelivery != nil
+	if dynamic {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, frozen.Request.Deadline)
+		defer cancel()
+	}
+	for tries := 0; ; tries++ {
+		l, e = client.send(ctx, request)
+		if !dynamic || !errors.Is(e, ErrNotReady) || tries >= 2 || ctx.Err() != nil {
+			break
+		}
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			e = ctx.Err()
+		case <-timer.C:
+		}
+		if ctx.Err() != nil {
+			break
+		}
+	}
 	defer l.Clear()
 	if e != nil || l.KeyUse == nil {
 		if errors.Is(e, ErrNotReady) {
@@ -133,7 +158,14 @@ func NewOriginalKeyAuthority(ctx context.Context, client *ControlClient, invocat
 		}
 		return nil, ErrExecution
 	}
-	return &OriginalKeyAuthority{client: client, invocation: frozen, lease: *l.KeyUse}, nil
+	result := &OriginalKeyAuthority{client: client, invocation: frozen, lease: *l.KeyUse}
+	if dynamic {
+		if l.ProviderPermit == nil {
+			return nil, ErrExecution
+		}
+		result.delivery = k.DeliveredProviderPermit{Payload: bytes.Clone(l.ProviderPermit.Payload), Signature: bytes.Clone(l.ProviderPermit.Signature)}
+	}
+	return result, nil
 }
 
 func (a *OriginalKeyAuthority) Identity() k.JobIdentity {
@@ -201,6 +233,9 @@ func (a *OriginalKeyAuthority) WithUse(ctx context.Context, access k.Access, use
 // NewCaptureKeyJob is B's production constructor on the existing mTLS control
 // client. Missing frozen C metadata is rejected; it never derives staging keys.
 func NewCaptureKeyJob(ctx context.Context, client *ControlClient, invocation Invocation, config k.Config, permit k.PermitMount) (*CaptureKeyJob, error) {
+	if invocation.FormalCapture != nil && invocation.FormalCapture.PermitDelivery != nil {
+		return nil, ErrExecution
+	}
 	access := invocation.ProviderKey
 	// Reject an incompatible admitted mapping before reserving the original
 	// Job's single-use key window. NewCaptureJob repeats the binding check at
@@ -218,6 +253,24 @@ func NewCaptureKeyJob(ctx context.Context, client *ControlClient, invocation Inv
 		return nil, e
 	}
 	return &CaptureKeyJob{job: job, until: job.ValidUntil(), original: a, access: *access}, nil
+}
+
+// The delivered bytes come ONLY from the original authenticated reserve ACK.
+// Callers supply the previously frozen issuer/delegation pin, never a permit.
+func NewDeliveredCaptureKeyJob(ctx context.Context, client *ControlClient, invocation Invocation, config k.Config, pin k.PermitDeliveryPin) (*CaptureKeyJob, error) {
+	access := invocation.ProviderKey
+	if invocation.FormalCapture == nil || invocation.FormalCapture.PermitDelivery == nil || !samePermitDeliveryPin(pin, *invocation.FormalCapture.PermitDelivery) || access == nil || access.Operation != k.Generate || access.Endpoint != config.Endpoint || access.KeyName != config.KeyName || access.Request.Key != config.Key || access.Request.Context.InstallationID != config.InstallationID {
+		return nil, ErrExecution
+	}
+	original, err := NewOriginalKeyAuthority(ctx, client, invocation)
+	if err != nil {
+		return nil, err
+	}
+	job, err := k.NewDeliveredCaptureJob(ctx, config, pin, original.delivery, original, access.Request)
+	if err != nil {
+		return nil, err
+	}
+	return &CaptureKeyJob{job: job, until: job.ValidUntil(), original: original, access: *access}, nil
 }
 
 // CaptureKeyJob exposes the original shortest deadline to the streaming writer.
