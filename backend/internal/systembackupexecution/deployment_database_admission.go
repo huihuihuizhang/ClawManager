@@ -10,7 +10,7 @@ import (
 // CheckDeploymentDatabase admits the production metadata connection using the
 // same pinned identities and mode as NewDeploymentService. It never migrates,
 // publishes readiness, or grants permissions. Service construction rechecks.
-func CheckDeploymentDatabase(ctx context.Context, db *sql.DB, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool) error {
+func CheckDeploymentDatabase(ctx context.Context, db *sql.DB, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, verifierInputs ...FormalVerifierInput) error {
 	cfg, err := LoadDeploymentConfig(path, digest)
 	if err != nil {
 		return err
@@ -18,6 +18,11 @@ func CheckDeploymentDatabase(ctx context.Context, db *sql.DB, path, digest, forw
 	s := &DeploymentService{Config: cfg, ConfigPath: path, ConfigDigest: digest, ForwardEnabled: forwardEnabled}
 	if err = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest); err != nil {
 		return err
+	}
+	if s.ForwardEnabled {
+		if err = s.loadFormalVerifier(verifierInputs); err != nil {
+			return err
+		}
 	}
 	return s.checkControlGrants(ctx, db)
 }

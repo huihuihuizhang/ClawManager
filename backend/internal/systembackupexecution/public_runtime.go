@@ -207,6 +207,12 @@ func configuredPublicSource(cfg PublicCaptureConfig) (b.LinuxProfileConfig, erro
 				if !worker.ValidateRecordedInvocation(invocation) || (cfg.FormalKeys == nil && (cfg.Owner == nil || cfg.Owner.FormalKeys == nil)) {
 					return nil, d.ErrNotReady
 				}
+				if invocation.FormalCapture != nil && invocation.FormalCapture.PermitDelivery != nil && (cfg.Owner == nil || !cfg.Owner.validProviderPermitPin(invocation)) {
+					return nil, d.ErrNotReady
+				}
+				if cfg.Owner != nil && cfg.Owner.providerPermits != nil && !cfg.Owner.validProviderPermitPin(invocation) {
+					return nil, d.ErrNotReady
+				}
 			}
 		}
 		return parts, nil

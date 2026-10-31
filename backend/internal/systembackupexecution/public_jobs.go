@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"io"
 	"os"
 	"strconv"
@@ -53,7 +54,8 @@ type PublicJobOwner struct {
 	RelayEnabled                         bool
 	// Each original task/attempt/part opens its own independently authenticated
 	// verifier workload/unwrap scope. There is no process-wide worker resolver.
-	FormalKeys FormalCandidateKeyFactory
+	FormalKeys      FormalCandidateKeyFactory
+	providerPermits *deploymentProviderPermitIssuer
 }
 
 func hash(v []byte) string { s := sha256.Sum256(v); return hex.EncodeToString(s[:]) }
@@ -473,6 +475,11 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrExecution
 	}
 	task := req.Invocation.Request.Binding.BackupID
+	attempt, e := o.originalWorkerAttempt(ctx, task, pod)
+	pendingObservation := attempt != 0 && errors.Is(e, worker.ErrNotReady)
+	if e != nil && !pendingObservation {
+		return lease, worker.ErrExecution
+	}
 	var a d.Authority
 	var owner, request, configHash string
 	var version, configVersion, fence uint64
@@ -481,7 +488,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if e := db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence); e != nil {
 		return lease, worker.ErrNotReady
 	}
-	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: 1, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
+	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
 	in, plan, desc, e := o.input(ctx, a, false)
 	if e != nil {
 		return lease, worker.ErrExecution
@@ -524,6 +531,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		}
 	}
 	var rawBinding []byte
+	if pendingObservation {
+		return lease, worker.PendingControl("job_observation_pending")
+	}
 	var revoked bool
 	if e = db.QueryRowContext(ctx, "SELECT binding_json,revoked FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=?", task, part.Intent.Namespace, part.Intent.Name).Scan(&rawBinding, &revoked); e != nil || len(rawBinding) == 0 {
 		return lease, worker.PendingControl("job_binding_pending")
@@ -545,6 +555,10 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.PendingControl("worker_" + kube.ObservationStage(e) + "_pending")
 	}
 	if process.Name != pod.Name || process.UID != pod.UID {
+		return lease, worker.ErrExecution
+	}
+	preparedPermit, e := o.prepareProviderPermit(ctx, in, binding, pod, req)
+	if e != nil {
 		return lease, worker.ErrExecution
 	}
 	var candidateRef, candidateDigest string
@@ -590,6 +604,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	}
 	if req.Invocation.Request.Deadline.Before(until) {
 		until = req.Invocation.Request.Deadline
+	}
+	if preparedPermit != nil && preparedPermit.ValidUntil().Before(until) {
+		until = preparedPermit.ValidUntil()
 	}
 	if !time.Now().Before(until) {
 		return lease, worker.ErrExecution
@@ -643,11 +660,23 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
+	if preparedPermit != nil {
+		if lease.KeyUse == nil || preparedPermit.Stage(ctx, tx, *lease.KeyUse, req.Action) != nil {
+			return worker.Lease{}, worker.ErrExecution
+		}
+	}
 	if e = tx.Commit(); e != nil {
 		return lease, worker.ErrNotReady
 	}
 	if e = o.Gate.ValidateCollectors(ctx, a); e != nil {
 		return lease, worker.ErrExecution
+	}
+	if preparedPermit != nil && req.Action == "key-reserve" {
+		delivery, err := preparedPermit.ReadCommitted(ctx)
+		if err != nil {
+			return worker.Lease{}, worker.ErrNotReady
+		}
+		lease.ProviderPermit = &delivery
 	}
 	switch req.Action {
 	case "ready", "check", "key-reserve", "key-check", "key-begin", "key-end", "candidate":

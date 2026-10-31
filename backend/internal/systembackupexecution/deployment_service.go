@@ -369,6 +369,9 @@ func checkDeploymentGrantMode(ctx context.Context, forward bool, recovery, captu
 func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *sql.DB) error {
 	g := s.Forward.DeploymentBinding()
 	if s.Config.FormalVerifier != nil {
+		if s.formalVerifier != nil && s.formalVerifier.ProviderPermits != nil {
+			return (c.SQLFormalProviderPermitGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil}).Check(ctx)
+		}
 		return (c.SQLFormalCaptureGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil}).Check(ctx)
 	}
 	if s.Config.RuntimeSources != nil {
