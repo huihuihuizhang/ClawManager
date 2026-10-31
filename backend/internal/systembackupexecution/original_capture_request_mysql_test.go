@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -47,9 +48,16 @@ func assertOriginalCaptureRequestMutations(t *testing.T, owner *PublicJobOwner, 
 			if m.column == "profile_sha256" || m.column == "payload_sha256" {
 				value = []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 			}
-			if _, err := admin.Exec("UPDATE "+m.table+" SET "+m.column+"=?", value); err != nil {
+			result, err := admin.Exec("UPDATE "+m.table+" SET "+m.column+"=?", value)
+			if err != nil {
 				t.Error(err)
 				return true, nil, err
+			}
+			count, err := result.RowsAffected()
+			var actual []byte
+			if err != nil || count != 1 || admin.QueryRow("SELECT "+m.column+" FROM "+m.table).Scan(&actual) != nil || !bytes.Equal(actual, value) || bytes.Equal(actual, original) {
+				t.Error("mutation did not change exactly one original row to the requested bytes", m.column, count, err)
+				return true, nil, errors.New("original mutation was not applied")
 			}
 			changed.Store(true)
 			return false, nil, nil
