@@ -46,6 +46,14 @@ import (
 // InnoDB/SQL authority and TLS provider. Kubernetes reads use client-go fake;
 // this is not an actual cluster/Runtime or complete six-domain page acceptance.
 func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
+	aControllerVerifierOriginalSQLAndTLS(t, false)
+}
+
+func TestAControllerVerifierOriginalUnwrapOnlyRevocation(t *testing.T) {
+	aControllerVerifierOriginalSQLAndTLS(t, true)
+}
+
+func aControllerVerifierOriginalSQLAndTLS(t *testing.T, unwrapOnly bool) {
 	file := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE")
 	expectedUUID := os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
 	if file == "" {
@@ -263,6 +271,22 @@ func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
 		return reg.TypedReference{RawJSON: raw, SHA256: hash(raw)}
 	}
 	binding := reg.Binding{InstallationID: in.Authority.InstallationID, ConfigRef: reg.ReferencePin{IdentityHash: request.Key.IdentityHash, Version: request.Key.RegistryVersion}, Key: request.Key, Provider: reg.ProviderBinding{Endpoint: server.URL, KeyName: "original-key", ProviderIdentityHash: strings.Repeat("e", 64), ScopeHash: strings.Repeat("f", 64), CAPEMSHA256: caHash, CASource: reg.SourceRecord{SourceID: "original-ca", RecordID: "ca", RecordVersion: "v1", ContentSHA256: caHash}}, GenerateRef: ref("data_key_generation", "generate_data_key", strings.Repeat("1", 64)), UnwrapRef: ref("kek_unwrap", "unwrap_data_key", strings.Repeat("2", 64))}
+	installationIssuer, installationKey, _ := ed25519.GenerateKey(rand.Reader)
+	t.Cleanup(func() { clear(installationKey) })
+	bindingBytes, _ := json.Marshal(binding)
+	originalMapping := a.OriginalRecord{Binding: binding, Source: reg.SourceRecord{SourceID: "original-installation-owner", RecordID: "original-kek", RecordVersion: "v1", ContentSHA256: hash(bindingBytes)}, Revision: "owner-r1", NotBefore: now.Add(-time.Minute), Until: now.Add(5 * time.Minute)}
+	originalWriter, err := a.NewInstallationAuthorityWriter(owner, binding.InstallationID, verifierGrant.Database, installationIssuer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	putOriginal := func(record a.OriginalRecord, expected uint64) {
+		t.Helper()
+		raw, _ := json.Marshal(record)
+		if version, err := originalWriter.Put(ctx, raw, ed25519.Sign(installationKey, append([]byte("system-backup-original-kek.v1\x00"), raw...)), expected); err != nil || version != expected+1 {
+			t.Fatal("original installation owner write failed", err)
+		}
+	}
+	putOriginal(originalMapping, 0)
 	capRecord := a.ProviderCapabilityRecord{Facts: a.ProviderCapabilityFacts{Binding: binding, Operation: k.Unwrap, Permission: a.ProviderCapabilityPermission{Path: "transit/decrypt/original-key", ProviderVersion: "1", AuthMount: "controller-jwt", Role: "controller-unwrap-role", Policy: "controller-unwrap-policy", PolicySHA256: strings.Repeat("a", 64), RoleSHA256: strings.Repeat("b", 64), JWTTrustSHA256: strings.Repeat("c", 64), Reference: binding.UnwrapRef, ControllerVerifier: &workload}}, Source: reg.SourceRecord{SourceID: "original-provider-observer", RecordID: "sev_controller_unwrap", RecordVersion: "v1"}, Revision: "r1", NotBefore: now.Add(-time.Minute), Until: now.Add(time.Minute)}
 	factsRaw, _ := json.Marshal(capRecord.Facts)
 	capRecord.Source.ContentSHA256 = hash(factsRaw)
@@ -279,7 +303,7 @@ func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
 	}
 	jwtFile := filepath.Join(t.TempDir(), "controller.jwt")
 	os.WriteFile(jwtFile, []byte("local-controller-projected-jwt-only"), 0600)
-	vcfg := a.ControllerVerifierConfig{Capabilities: capabilities, Binding: binding, CAPEM: ca, JWTFile: jwtFile, Workload: workload, Kubernetes: kubeClient, Authority: authority, Records: records, GrantMount: a.ControllerVerifierGrantMount{File: verifierFile, SHA256: workload.GrantSHA256, Issuer: verifierIssuer}, CaptureGrantSHA256: forward.GrantSHA256()}
+	vcfg := a.ControllerVerifierConfig{Capabilities: capabilities, Binding: binding, CAPEM: ca, JWTFile: jwtFile, Workload: workload, Kubernetes: kubeClient, Authority: authority, Records: records, GrantMount: a.ControllerVerifierGrantMount{File: verifierFile, SHA256: workload.GrantSHA256, Issuer: verifierIssuer}, CaptureGrantSHA256: forward.GrantSHA256(), InstallationIssuer: installationIssuer}
 	factory, err := a.NewControllerVerifierFactory(vcfg)
 	if err != nil {
 		t.Fatal("actual deploymentAuthorization + original Forward record keys + independent grant rejected", err)
@@ -317,7 +341,6 @@ func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
 	exec(`INSERT INTO system_backup_v2_execution_records VALUES (?,?,3,'capture','plan',?,'original-record',?)`, in.Authority.InstallationID, in.Authority.TaskPublicID, plan.SHA256, sealed.Bytes())
 	candidateHash := strings.Repeat("d", 64)
 	exec(`INSERT INTO system_backup_v2_runtime_resources VALUES (?,3,'capture','Job',?,?,?, ?,?,FALSE,'ready',NULL)`, in.Authority.TaskPublicID, j.Namespace, j.Name, j.UID, candidateHash, hash(jobRaw))
-	exec(`INSERT INTO system_backup_v2_kek_fences(installation_id,epoch) VALUES (?,1)`, in.Authority.InstallationID)
 	core, _ := json.Marshal(binding)
 	semantic := binding
 	for _, r := range []*reg.TypedReference{&semantic.GenerateRef, &semantic.UnwrapRef} {
@@ -337,6 +360,15 @@ func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
 		t.Fatal("automatic original controller candidate scope rejected", err)
 	}
 	defer verifier.Close()
+	wrongIssuer := vcfg
+	wrongIssuer.InstallationIssuer, _, _ = ed25519.GenerateKey(rand.Reader)
+	wrongFactory, err := a.NewControllerVerifierFactory(wrongIssuer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = wrongFactory.ForCandidate(ctx, scope); err == nil || logins != 0 {
+		t.Fatal("substituted installation issuer admitted")
+	}
 	if !verifier.ValidUntil().Equal(verifierGrant.Until) {
 		t.Fatal("independent original grant did not bound complete verification")
 	}
@@ -379,77 +411,117 @@ func TestAControllerVerifierOriginalDeploymentSQLAndTLS(t *testing.T) {
 		t.Fatal("failed scope exposed DEK")
 	}
 	exec(`DELETE FROM system_backup_v2_operations`)
-	t.Run("independent_grant_expires_during_use", func(t *testing.T) {
-		// Reissue both independent ORIGINAL owners' signed fixture records;
-		// never mutate a grant hash in place or substitute an ACL for authority.
-		shortGrant := verifierGrant
-		shortGrant.Until = time.Now().UTC().Add(3500 * time.Millisecond)
-		grantRaw, _ := json.Marshal(shortGrant)
-		grantEnvelope, _ := json.Marshal(a.SignedControllerVerifierGrant{Record: grantRaw, Signature: ed25519.Sign(verifierPrivate, append([]byte(a.ControllerVerifierGrantDomain), grantRaw...))})
-		grantFile := filepath.Join(t.TempDir(), "short-original-verifier.json")
-		if err := os.WriteFile(grantFile, grantEnvelope, 0600); err != nil {
-			t.Fatal(err)
-		}
-		shortWorkload := workload
-		shortWorkload.GrantSHA256 = hash(grantEnvelope)
-		shortCap := capRecord
-		shortCap.Facts.Permission.ControllerVerifier = &shortWorkload
-		facts, _ := json.Marshal(shortCap.Facts)
-		shortCap.Source.ContentSHA256 = hash(facts)
-		raw, _ := json.Marshal(shortCap)
-		capEnvelope, _ := json.Marshal(a.SignedProviderCapabilityRecord{Record: raw, Signature: ed25519.Sign(capPrivate, append([]byte(a.ProviderCapabilityDomain), raw...))})
-		exec(`UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, capEnvelope, hash(capEnvelope), len(capEnvelope), shortCap.Source.RecordID)
-		shortCaps, err := a.NewSQLProviderCapabilityPreparation(db, shortGrant.Database, binding.InstallationID, dummyGenerate, a.ProviderCapabilityPin{Source: shortCap.Source, Issuer: capIssuer})
-		if err != nil {
-			t.Fatal(err)
-		}
-		shortCfg := vcfg
-		shortCfg.Capabilities, shortCfg.Workload = shortCaps, shortWorkload
-		shortCfg.GrantMount = a.ControllerVerifierGrantMount{File: grantFile, SHA256: shortWorkload.GrantSHA256, Issuer: verifierIssuer}
-		shortFactory, err := a.NewControllerVerifierFactory(shortCfg)
-		if err != nil {
-			t.Fatal(err)
-		}
-		shortVerifier, err := shortFactory.ForCandidate(ctx, scope)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer shortVerifier.Close()
-		loginTTL.Store(1)
-		defer loginTTL.Store(10)
-		g, err := shortVerifier.Resolve(ctx, shortVerifier.ExpectedAccess())
-		if err != nil {
-			t.Fatal("short independent grant still admits bounded login", err)
-		}
-		clear(g.Secret)
-		if !g.ExpiresAt.Equal(shortGrant.Until) || g.CredentialExpiresAt.After(shortGrant.Until) || g.NotBefore.Before(shortGrant.NotBefore) || !shortVerifier.ValidUntil().Equal(shortGrant.Until) {
-			t.Fatal("provider credential or DEK grant escaped independent authorization window")
-		}
-		// The production D adapter must use this context for candidate streams
-		// and private custody I/O, so a blocked read ends BEFORE callback return.
-		streamCtx, stop := context.WithDeadline(ctx, shortVerifier.ValidUntil())
-		defer stop()
-		entered, canceledInside := false, false
-		err = shortVerifier.Unwrap(streamCtx, request, wrapped, func(key []byte) error {
-			entered = true
-			if !bytes.Equal(key, dek) {
-				t.Fatal("wrong bounded DEK")
+	if !unwrapOnly {
+		t.Run("independent_grant_expires_during_use", func(t *testing.T) {
+			// Reissue both independent ORIGINAL owners' signed fixture records;
+			// never mutate a grant hash in place or substitute an ACL for authority.
+			shortGrant := verifierGrant
+			shortGrant.Until = time.Now().UTC().Add(3500 * time.Millisecond)
+			grantRaw, _ := json.Marshal(shortGrant)
+			grantEnvelope, _ := json.Marshal(a.SignedControllerVerifierGrant{Record: grantRaw, Signature: ed25519.Sign(verifierPrivate, append([]byte(a.ControllerVerifierGrantDomain), grantRaw...))})
+			grantFile := filepath.Join(t.TempDir(), "short-original-verifier.json")
+			if err := os.WriteFile(grantFile, grantEnvelope, 0600); err != nil {
+				t.Fatal(err)
 			}
-			<-streamCtx.Done()
-			canceledInside = streamCtx.Err() == context.DeadlineExceeded
-			if shortVerifier.Recheck(streamCtx) == nil {
-				t.Fatal("expired scope rechecked during callback")
+			shortWorkload := workload
+			shortWorkload.GrantSHA256 = hash(grantEnvelope)
+			shortCap := capRecord
+			shortCap.Facts.Permission.ControllerVerifier = &shortWorkload
+			facts, _ := json.Marshal(shortCap.Facts)
+			shortCap.Source.ContentSHA256 = hash(facts)
+			raw, _ := json.Marshal(shortCap)
+			capEnvelope, _ := json.Marshal(a.SignedProviderCapabilityRecord{Record: raw, Signature: ed25519.Sign(capPrivate, append([]byte(a.ProviderCapabilityDomain), raw...))})
+			exec(`UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, capEnvelope, hash(capEnvelope), len(capEnvelope), shortCap.Source.RecordID)
+			shortCaps, err := a.NewSQLProviderCapabilityPreparation(db, shortGrant.Database, binding.InstallationID, dummyGenerate, a.ProviderCapabilityPin{Source: shortCap.Source, Issuer: capIssuer})
+			if err != nil {
+				t.Fatal(err)
 			}
-			return streamCtx.Err()
+			shortCfg := vcfg
+			shortCfg.Capabilities, shortCfg.Workload = shortCaps, shortWorkload
+			shortCfg.GrantMount = a.ControllerVerifierGrantMount{File: grantFile, SHA256: shortWorkload.GrantSHA256, Issuer: verifierIssuer}
+			shortFactory, err := a.NewControllerVerifierFactory(shortCfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			shortVerifier, err := shortFactory.ForCandidate(ctx, scope)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer shortVerifier.Close()
+			loginTTL.Store(1)
+			defer loginTTL.Store(10)
+			g, err := shortVerifier.Resolve(ctx, shortVerifier.ExpectedAccess())
+			if err != nil {
+				t.Fatal("short independent grant still admits bounded login", err)
+			}
+			clear(g.Secret)
+			if !g.ExpiresAt.Equal(shortGrant.Until) || g.CredentialExpiresAt.After(shortGrant.Until) || g.NotBefore.Before(shortGrant.NotBefore) || !shortVerifier.ValidUntil().Equal(shortGrant.Until) {
+				t.Fatal("provider credential or DEK grant escaped independent authorization window")
+			}
+			// The production D adapter must use this context for candidate streams
+			// and private custody I/O, so a blocked read ends BEFORE callback return.
+			streamCtx, stop := context.WithDeadline(ctx, shortVerifier.ValidUntil())
+			defer stop()
+			entered, canceledInside := false, false
+			err = shortVerifier.Unwrap(streamCtx, request, wrapped, func(key []byte) error {
+				entered = true
+				if !bytes.Equal(key, dek) {
+					t.Fatal("wrong bounded DEK")
+				}
+				<-streamCtx.Done()
+				canceledInside = streamCtx.Err() == context.DeadlineExceeded
+				if shortVerifier.Recheck(streamCtx) == nil {
+					t.Fatal("expired scope rechecked during callback")
+				}
+				return streamCtx.Err()
+			})
+			if err == nil || !entered || !canceledInside {
+				t.Fatal("independent deadline failed to cancel active read", err, entered, canceledInside)
+			}
+			beforeLogin := logins
+			if err = shortVerifier.Unwrap(ctx, request, wrapped, func([]byte) error { t.Fatal("expired callback"); return nil }); err == nil || logins != beforeLogin {
+				t.Fatal("expired original verifier grant reached login")
+			}
 		})
-		if err == nil || !entered || !canceledInside {
-			t.Fatal("independent deadline failed to cancel active read", err, entered, canceledInside)
+	}
+	// Restore the original capability after the short-grant fixture. The real
+	// owner writer advances the SAME KEK fence without touching registry flags.
+	exec(`UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, capEnvelope, hash(capEnvelope), len(capEnvelope), capRecord.Source.RecordID)
+	nextVersion := uint64(1)
+	if !unwrapOnly {
+		originalMapping.GenerateRevoked = true
+		originalMapping.Revision = "owner-r2"
+		putOriginal(originalMapping, 1)
+		nextVersion = 2
+		beforeGenerateOnly := logins
+		if err = verifier.Unwrap(ctx, request, wrapped, func(key []byte) error {
+			if !bytes.Equal(key, dek) {
+				t.Fatal("wrong retained DEK")
+			}
+			return nil
+		}); err != nil || logins != beforeGenerateOnly+1 {
+			t.Fatal("Generate-only revocation wrongly disabled retained Unwrap", err)
 		}
-		beforeLogin := logins
-		if err = shortVerifier.Unwrap(ctx, request, wrapped, func([]byte) error { t.Fatal("expired callback"); return nil }); err == nil || logins != beforeLogin {
-			t.Fatal("expired original verifier grant reached login")
+		newVerifier, err := factory.ForCandidate(ctx, scope)
+		if err != nil {
+			t.Fatal("new Unwrap scope after Generate-only revocation", err)
 		}
-	})
+		newVerifier.Close()
+	}
+	originalMapping.UnwrapRevoked = true
+	originalMapping.Revision = "owner-r3"
+	putOriginal(originalMapping, nextVersion)
+	var registryUnwrapRevoked bool
+	if db.QueryRowContext(ctx, `SELECT unwrap_revocation_json IS NOT NULL FROM system_backup_v2_kek_bindings WHERE installation_id=? AND identity_hash=? AND registry_version=?`, binding.InstallationID, binding.Key.IdentityHash, binding.Key.RegistryVersion).Scan(&registryUnwrapRevoked) != nil || registryUnwrapRevoked {
+		t.Fatal("fixture must keep registry revocation empty to verify original owner enforcement")
+	}
+	beforeUnwrapRevocation := logins
+	if err = verifier.Unwrap(ctx, request, wrapped, func([]byte) error { t.Fatal("revoked Unwrap exposed DEK"); return nil }); err == nil || logins != beforeUnwrapRevocation {
+		t.Fatal("existing verifier ignored original owner Unwrap revocation")
+	}
+	if _, err = factory.ForCandidate(ctx, scope); err == nil || logins != beforeUnwrapRevocation {
+		t.Fatal("new verifier ignored original owner Unwrap revocation")
+	}
 }
 
 func aVerifierTaskPlan(t *testing.T, in d.Input, part b.JobPart) d.Plan {

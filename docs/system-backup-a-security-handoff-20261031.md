@@ -109,6 +109,7 @@ factory, err := systembackupkekadapter.NewControllerVerifierFactory(ControllerVe
     },
     Kubernetes: actualClient, Authority: owner.Gate.Authority, Records: owner.Gate.Records,
     CaptureGrantSHA256: owner.Identity.GrantSHA256(),
+    InstallationIssuer: independentOriginalInstallationPublicKey,
     GrantMount: ControllerVerifierGrantMount{File: independentVerifierGrantFile,
         SHA256: independentVerifierGrantEnvelopeHash, Issuer: originalVerifierOwnerPublicKey},
 })
@@ -142,6 +143,14 @@ Provider RPC在原SQL锁之外；实际DEK消费在同一原task/KEK-fence事务
 本机数据库是随机 `ad_a_controller_*`，独立UUID+fixture marker校验后清理；最小原业务DDL和精确127/128迁移，不冒充完整现库。K8s身份链使用client-go fake，TLS provider和签发材料为本地fixture，未运行实际集群/现场KMS/正式六域任务。D仍需在实际observer的FormalKeys闭包及部署配置中作上述适配，且保留独立identity/hash拒绝守卫；不应再要求controller提供不存在的JobUID。
 
 已同步监督D4.1 `b399efc7`，其原 `captureGate` 可直接供本工厂使用。后续A代码责任继续四分区scanner/adoption/backfill及旧writer/GC fence参与；不能将缺失实现改记为现场事实。
+
+### A5.1 原installation owner用途撤销补丁
+
+监督复审指出 `InstallationAuthorityWriter.Put` 只写原authority/history并推进共享fence，不改registry purpose revocation列；A5若只查registry，重试读取新epoch后可能遗漏原Unwrap撤销。修复不依赖registry同步：`ControllerVerifierConfig.InstallationIssuer`新增独立原安装owner公钥pin，ForCandidate预读原SQL记录并验签，原SQL/KEK-fence事务内每次`session.check`重读当前signed_record/signature、严格解码并验证完整原binding、原NotBefore/Until及**仅UnwrapRevoked**。原record.Until也纳入整个ValidUntil，缩短窗口将拒绝旧对象，绝不续期。
+
+只撤销Generate不阻断历史Unwrap，因此没有复用“必须两用途都有效”的admission authenticate函数。原安装writer的fence/authority锁顺序保持一致，DEK使用中该原事实受同一事务锁保护；失效后旧verifier、新ForCandidate都在登录前拒绝。新增独立原issuer替换反例。
+
+真实MySQL测试直接调用现有 `NewInstallationAuthorityWriter.Put` 导入原签名record，再保持registry的unwrap_revocation_json为空；覆盖初始正常解封→仅UnwrapRevoked后旧/新对象均拒绝，以及另一随机schema内仅GenerateRevoked仍可解封→再UnwrapRevoked拒绝。不是手工改registry列或fake epoch。A5 commit `40ba9d81`配合本补丁交付，不改写已推送历史。
 
 ## 现场事实边界（最终集中更新）
 

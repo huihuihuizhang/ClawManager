@@ -3,6 +3,7 @@ package systembackupkekadapter
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -56,6 +57,9 @@ type ControllerVerifierConfig struct {
 	// is a separate original-owner authorization and must have a distinct hash.
 	GrantMount         ControllerVerifierGrantMount
 	CaptureGrantSHA256 string
+	// Independent original installation-owner issuer; never inferred from a
+	// registry row, config reference, verifier grant or provider observation.
+	InstallationIssuer ed25519.PublicKey
 }
 
 type ControllerVerifierCandidate struct {
@@ -76,7 +80,7 @@ func NewControllerVerifierFactory(cfg ControllerVerifierConfig) (*ControllerVeri
 	_, bareForward := cfg.Authority.Authorization.(*c.PinnedExecutionIdentity)
 	if cfg.Capabilities == nil || cfg.Authority.DB == nil || cfg.Records.Authority.DB != cfg.Authority.DB || cfg.Capabilities.db != cfg.Authority.DB ||
 		cfg.Authority.InstallationID != cfg.Binding.InstallationID || cfg.Capabilities.installation != cfg.Binding.InstallationID || !cfg.Authority.DeploymentEnabled || cfg.Authority.ApplicationScope == "" ||
-		bareForward || nilSource(cfg.Authority.Authorization) || !reflect.DeepEqual(cfg.Records.Authority.Authorization, cfg.Authority.Authorization) || !recordKeysOK || recordKeys == nil || recordKeys.GrantSHA256() != cfg.CaptureGrantSHA256 || cfg.CaptureGrantSHA256 == cfg.Workload.GrantSHA256 || cfg.Records.Authority.ApplicationScope != cfg.Authority.ApplicationScope || nilSource(cfg.Kubernetes) || !filepath.IsAbs(cfg.JWTFile) || len(cfg.CAPEM) == 0 || len(cfg.CAPEM) > 65536 {
+		bareForward || nilSource(cfg.Authority.Authorization) || !reflect.DeepEqual(cfg.Records.Authority.Authorization, cfg.Authority.Authorization) || !recordKeysOK || recordKeys == nil || recordKeys.GrantSHA256() != cfg.CaptureGrantSHA256 || cfg.CaptureGrantSHA256 == cfg.Workload.GrantSHA256 || cfg.Records.Authority.ApplicationScope != cfg.Authority.ApplicationScope || nilSource(cfg.Kubernetes) || !filepath.IsAbs(cfg.JWTFile) || len(cfg.CAPEM) == 0 || len(cfg.CAPEM) > 65536 || len(cfg.InstallationIssuer) != ed25519.PublicKeySize {
 		return nil, kms.ErrPermission
 	}
 	for _, v := range []string{cfg.Workload.Namespace, cfg.Workload.PodName, cfg.Workload.PodUID, cfg.Workload.ServiceAccountName, cfg.Workload.ServiceAccountUID, cfg.Workload.OwnerKind, cfg.Workload.OwnerUID, cfg.Workload.ControllerOwner} {
@@ -98,6 +102,7 @@ func NewControllerVerifierFactory(cfg ControllerVerifierConfig) (*ControllerVeri
 	cfg.Binding.GenerateRef.RawJSON = bytes.Clone(cfg.Binding.GenerateRef.RawJSON)
 	cfg.Binding.UnwrapRef.RawJSON = bytes.Clone(cfg.Binding.UnwrapRef.RawJSON)
 	cfg.GrantMount.Issuer = bytes.Clone(cfg.GrantMount.Issuer)
+	cfg.InstallationIssuer = bytes.Clone(cfg.InstallationIssuer)
 	if _, err := readControllerVerifierGrant(context.Background(), cfg.GrantMount, cfg.Workload, cfg.Binding.InstallationID, cfg.CaptureGrantSHA256, cfg.Capabilities.database); err != nil {
 		return nil, err
 	}
@@ -155,6 +160,14 @@ func (f *ControllerVerifierFactory) ForCandidate(ctx context.Context, scope Cont
 	}
 	if originalGrant.Until.Before(v.until) {
 		v.until = originalGrant.Until
+	}
+	originalMapping, err := v.currentOriginalMapping(ctx, f.cfg.Authority.DB, time.Now(), false)
+	if err != nil {
+		v.Close()
+		return nil, err
+	}
+	if originalMapping.Until.Before(v.until) {
+		v.until = originalMapping.Until
 	}
 	if a.DeadlineAt.Before(v.until) {
 		v.until = a.DeadlineAt
@@ -380,7 +393,33 @@ func (s *controllerVerifierSession) check(ctx context.Context) error {
 	if s.tx.QueryRowContext(s.ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || s.guard.RecheckAfter(s.ctx, s.tx, now) != nil || s.verifier.capability.Recheck(s.ctx, s.tx, s.locked, now) != nil || s.kek.RequireUnrevoked(s.verifier.factory.cfg.Binding.ConfigRef, reg.UnwrapRevocation) != nil {
 		return kms.ErrPermission
 	}
+	original, err := s.verifier.currentOriginalMapping(s.ctx, s.tx, now, true)
+	if err != nil || original.Until.Before(s.verifier.until) {
+		return kms.ErrPermission
+	}
 	return nil
+}
+
+func (v *ControllerVerifier) currentOriginalMapping(ctx context.Context, view reg.SQLReadView, now time.Time, locked bool) (OriginalRecord, error) {
+	var raw, sig []byte
+	var err error
+	cfg := v.factory.cfg
+	if locked {
+		raw, sig, err = (SQLOriginalReader{}).RecheckOriginal(ctx, view, cfg.Binding.InstallationID, cfg.Binding.ConfigRef)
+	} else {
+		raw, sig, err = readOriginal(ctx, view, cfg.Binding.InstallationID, cfg.Binding.ConfigRef)
+	}
+	if err != nil {
+		return OriginalRecord{}, kms.ErrPermission
+	}
+	// Admission needs BOTH purposes; this current execution check intentionally
+	// checks Unwrap alone. Retained ciphertext must remain readable when only
+	// new generation was revoked by the original installation owner.
+	r, err := decodeOwnerRecord(raw, sig, cfg.InstallationIssuer)
+	if err != nil || !reflect.DeepEqual(r.Binding, cfg.Binding) || now.Before(r.NotBefore) || !now.Before(r.Until) || r.UnwrapRevoked {
+		return OriginalRecord{}, kms.ErrPermission
+	}
+	return r, nil
 }
 
 func (v *ControllerVerifier) originalGrant(ctx context.Context) (ControllerVerifierGrant, error) {
