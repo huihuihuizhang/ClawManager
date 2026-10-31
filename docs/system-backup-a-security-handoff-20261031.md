@@ -255,10 +255,41 @@ CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks�
 
 直接阻塞同一正式v2六项封存/签名/发布的最小本地剩余项：
 
-1. D将A7生产issuer的Prepare/Stage/ReadCommitted接进实际mTLS/TokenReview控制入口，当前worker/lease/CLI消费已进20cc8235，不能仅依赖测试桥。
+1. D5.5已将A7生产issuer的Prepare/Stage/ReadCommitted接进实际mTLS/TokenReview控制入口，合入8d25bcf5；实际attempt3原handler→同SQL事务→JWT Generate→candidate由D及监督独立验证。保留启动pending guard，不能把该单模块链路等同六模块完整封存。
 2. 六类正式ModuleFactory与原Runtime/参与者停采和恢复在同一原任务执行；FinishCapture成功释放capture claim并进入validating后，D必须取得**当前publisher新claim**。A下一切片提供三用途签名对正式v2发布的最小适配，在该原业务tx StageSigningInput，不沿用capture authority。
 3. 当前recovery.Publisher仍用Signer.Private/旧签名Seal，旧control publisher写system_backup_catalog_actions等旧表；不能作为正式v2终结器。需保持C既定JWS字节/域/三用途历史独立验签，冻结真实原输入→原owner commit/readback→独立JWT/TLS签名→不可变finalizer原字节/ACK未知读回→所有终态前提真实成立。A负责安全签名适配，D负责当前claim/原事务/六模块/终态路径。
 4. KEK四源adoption/backfill及持续hold/catalog/restore/prune/GC fence仍是代码待办。A6原SQL和本切片原生S3是可消费来源，不是完整准入；此项继续保留，不改记成现场材料。
+
+## 第九切片：正式v2原publisher claim的三用途JCS/JWS签名适配
+
+新增 `systembackupsecurity/publication_record.go`，只适配已存在的 `public-c-crypto.v1` 三用途profile，不调用legacy recovery.Seal、不接收/导出私钥。部署适配仍从 `NewSQLInstallationArtifactSigners` 的原安装授权/三份JWT mount开始；当前publisher自行取得新claim后构造该实例，不复用FinishCapture释放的capture claim。
+
+接入顺序：
+
+```go
+keyRef, err := signers.PublicationSigningKey(ctx, purpose)
+// 原C/D publisher将keyRef放入完整业务payload，校验全部六模块/Job/结果/前置条件。
+prepared, err := signers.PreparePublicationRecord(ctx, purpose, payloadJSON)
+// 在同一个原业务事务、业务锁及当前publisher claim下，完成真实业务校验后：
+err = prepared.Stage(ctx, originalTx)
+// 原owner commit/readback；provider RPC必须在事务提交后。
+recordJCS, objectSHA256, err := prepared.SignCommitted(ctx)
+// 原不可变finalizer用recordJCS原字节；固定原immutable version并readback。
+history, err := signers.History(ctx)
+observedSHA256, err := history.VerifyPublicationRecord(readbackBytes, originalTask, purpose)
+// 原owner必须比较expected objectSHA256/immutable locator及完整业务字段，
+// 并在终态原事务再次校验当前claim/全部发布前提。
+```
+
+`capture_certificate` / `acceptance_record` / `catalog_record`各自固定安装的当前key，payload/header/task/attempt/origin/purpose必须一致。JCS header恰为alg/key_version/kid/purpose/typ；签名输入保留完整canonical payload。最终对象为JCS `{payload,signature}`，对象SHA覆盖完整签名envelope。对独立历史按issued_at/decision_at/recorded_at检验artifact-time窗口及当前撤销；完整closed schema、业务接受性、六模块清单与原输出正确性仍归C/D原owner，签名成功不证明不可变写入/本地acceptance/终态成功。四个公开C向量（capture/acceptance/registration/tombstone）输入、JCS record及对象SHA逐字节匹配；篡改签名、payload、purpose/domain/version/header、重复字段、未知signature字段、非canonical/尾随JSON、其他attempt及已撤销历史key均拒绝。
+
+完整多Job容量：原输入上限从4096对齐Transit接口16384字节，按base64后的完整JWS input检查，超限拒绝且不截取Job、不把payload换成hash。冻结JSON总量最多32768字节。**现有096 evidence列仍VARBINARY(8192)，迁移与公共inline契约均不改**：冻结JSON超过8192时，在同一原事务/同一registry写4096-byte原始片段的严格JSON包装（最多8块）及deterministic root index。每行<=8192，固定parent/ordinal/count/总字节/总SHA/同expires；完整读回组装原输入，缺块/错序/错parent/hash/窗口不一致拒绝。旧小记录布局继续可读；没有独立task表、第二提交或provider网络锁。
+
+实际MySQL测试使用独立UUID与随机自有DB/SELECT+INSERT受限用户，保留真实8192列宽及CHECK：六模块、2实例、每实例capture+verify共24 Job、6 checkpoint、12 staging的完整本地capture payload6128字节，input8396，frozen11922，3块，最大单行5637。原事务rollback后0行/禁止签名；重复Stage不改变输入；错ordinal/删块在JWT/provider前拒绝；独立历史验证最终record。原claim11释放/接管后拒绝；新publisher claim13复用原完整冻结输入签出完全相同原字节，旧claim仍不能恢复。该focused SQL fixture验证签名所有权/事务/列宽，不冒充actual controller Acquire API或完整现库部署；D负责该调用和原终态。K8s/provider仍本地TLS模拟，未接生产秘密。
+
+验证：重点公开向量/容量/实际SQL链路PASS2.332秒；最终四包完整回归security19.879s、execution3.870s、adapter5.690s、kms3.152s均退出0。未改动任何migration/catalog hash。正式六模块factory、Runtime参与者停采恢复、当前publisher业务事务、不可变finalizer/ACK未知读回/终态仍须D原链路连接；KEK完整coverage adoption/backfill/持续writer-GC fence仍未完成，保持fail closed。
+
+生命周期接线约束：原 `RenewClaimInInstallation` 自增row_version，A signer的精确claim版本及签名前后原SQL事实检查保持不变。D须协调有界签名动作与原renew/takeover；续租不能悄悄修改expectedRowVersion继续旧signer。原冻结evidence expires_at不会随新claim延长，已过期必须拒绝；未知外部ACK/已有签名结果必须由原journal精确读回。A实际SQL用例只模拟原表claim变化，不声称跑过实际publisher Acquire/Renew API；D实际调用测试仍需覆盖renew/takeover发生在sign前/期间及按原字节恢复。
 
 ## 现场事实边界（最终集中更新）
 
