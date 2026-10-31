@@ -1,0 +1,354 @@
+package systembackupsecurity
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"io"
+	"strings"
+	"time"
+
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
+)
+
+// SQLSigningOwnerGrant is an explicit original-owner capability in the
+// independently signed installation record. It authorizes only this SQL
+// workload to freeze/sign original public v2 task inputs. A config snapshot,
+// capture execution grant, DB login or provider ACL cannot create this grant.
+type SQLSigningOwnerGrant struct {
+	ServerUUID, Database, DatabaseAccount string
+	ControllerOwner                       string
+	ConfigVersion                         uint64
+	ConfigSHA256                          string
+	Workload                              SigningWorkloadIdentity
+}
+
+// SQLSigningClaim is the exact currently held ORIGINAL public task claim.
+// The original request_id is ArtifactSigningTask.OperationID. A heartbeat or
+// takeover must not silently substitute a new row version during signing.
+type SQLSigningClaim struct {
+	ControllerOwner string
+	RowVersion      uint64
+}
+
+type SQLInstallationArtifactSigners struct {
+	*InstallationArtifactSigners
+	owners map[string]*SQLArtifactSigningAuthority
+}
+
+// NewSQLInstallationArtifactSigners is the automatic production owner entry.
+// One owner-signed installation capability serves new original public tasks;
+// no per-task offline grant, private signing key or new task table is required.
+func NewSQLInstallationArtifactSigners(ctx context.Context, db *sql.DB, reader OriginalSigningRecordReader, pin InstallationSigningPin, mounts []SigningJWTMount, task ArtifactSigningTask, claim SQLSigningClaim) (*SQLInstallationArtifactSigners, error) {
+	if db == nil || candidateAuthorityNil(reader) || ctx == nil || ctx.Err() != nil || !providerBoundedString(claim.ControllerOwner) || claim.RowVersion == 0 {
+		return nil, ErrRegistrationUnavailable
+	}
+	raw, sig, err := reader.ReadSigningRecord(ctx)
+	if err != nil {
+		return nil, ErrRegistrationUnavailable
+	}
+	record, _, err := authenticateInstallationSigning(raw, sig, pin, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	owners := make(map[string]*SQLArtifactSigningAuthority, 3)
+	for _, p := range record.Permissions {
+		g := p.SQLOwner
+		if g == nil || !providerBoundedString(g.ServerUUID) || !providerBoundedString(g.Database) || !providerBoundedString(g.DatabaseAccount) ||
+			g.ControllerOwner != claim.ControllerOwner || g.Workload != task.Workload || g.ConfigVersion == 0 || !signingDigest.MatchString(g.ConfigSHA256) || owners[p.Binding.Purpose] != nil {
+			return nil, ErrRegistrationUnavailable
+		}
+		copyGrant := *g
+		owners[p.Binding.Purpose] = &SQLArtifactSigningAuthority{db: db, task: task, claim: claim, binding: p.Binding, grant: copyGrant, notBefore: record.NotBefore, until: record.Until}
+	}
+	if owners["capture_certificate"] == nil || owners["acceptance_record"] == nil || owners["catalog_record"] == nil {
+		return nil, ErrRegistrationUnavailable
+	}
+	s, err := NewInstallationArtifactSigners(ctx, reader, pin, mounts, task, ArtifactSigningAuthorities{Capture: owners["capture_certificate"], Acceptance: owners["acceptance_record"], Catalog: owners["catalog_record"]})
+	if err != nil {
+		return nil, err
+	}
+	for _, owner := range owners {
+		owner.materialCheck = s.check
+	}
+	return &SQLInstallationArtifactSigners{InstallationArtifactSigners: s, owners: owners}, nil
+}
+
+type frozenSQLSigningInput struct {
+	Version             string
+	Authorization       ArtifactSigningAuthorizationRequest
+	Input               []byte
+	CaptureResultSHA256 string
+	CaptureEpoch        uint64
+}
+
+type SQLArtifactSigningAuthority struct {
+	db               *sql.DB
+	task             ArtifactSigningTask
+	claim            SQLSigningClaim
+	binding          TransitSigningBinding
+	grant            SQLSigningOwnerGrant
+	notBefore, until time.Time
+	materialCheck    func(context.Context) error
+}
+
+type signingSQLView interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+type signingSQLFacts struct {
+	Status, CaptureHash string
+	Lease, Deadline     time.Time
+	Epoch               uint64
+}
+
+func signingInputEvidenceID(task ArtifactSigningTask, installation, purpose string) string {
+	raw, _ := json.Marshal([]any{installation, task, purpose})
+	h := sha256.Sum256(raw)
+	return "sev_asign_" + hex.EncodeToString(h[:])
+}
+
+// current reads the original task, latest attempt, authenticated source result
+// and actual collector/source recovery journal. It never derives permission
+// from status alone; the independent original-owner grant is also mandatory.
+func (a *SQLArtifactSigningAuthority) current(ctx context.Context, view signingSQLView, lock bool) (signingSQLFacts, time.Time, error) {
+	bad := func() (signingSQLFacts, time.Time, error) {
+		return signingSQLFacts{}, time.Time{}, ErrRegistrationUnavailable
+	}
+	if a == nil || ctx == nil || ctx.Err() != nil || view == nil || a.materialCheck == nil || a.materialCheck(ctx) != nil {
+		return bad()
+	}
+	var account, server, database string
+	var now time.Time
+	if view.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,DATABASE(),UTC_TIMESTAMP(6)").Scan(&account, &server, &database, &now) != nil || account != a.grant.DatabaseAccount || server != a.grant.ServerUUID || database != a.grant.Database || now.Before(a.notBefore) || !now.Before(a.until) {
+		return bad()
+	}
+	suffix := ""
+	if lock {
+		suffix = " FOR SHARE"
+	}
+	var origin, request, status, owner, configHash, purpose, parts string
+	var version, configVersion uint64
+	var facts signingSQLFacts
+	if view.QueryRowContext(ctx, `SELECT origin_installation_id,request_id,status,controller_owner,row_version,controller_lease_expires_at,deadline_at,config_version,config_snapshot_sha256,task_purpose,requested_parts FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=?`+suffix, a.binding.InstallationID, a.task.BackupPublicID).Scan(&origin, &request, &status, &owner, &version, &facts.Lease, &facts.Deadline, &configVersion, &configHash, &purpose, &parts) != nil ||
+		origin != a.binding.InstallationID || request != a.task.OperationID || owner != a.claim.ControllerOwner || version != a.claim.RowVersion || configVersion != a.grant.ConfigVersion || configHash != a.grant.ConfigSHA256 || purpose != "acceptance" || parts != "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle" || !now.Before(facts.Lease) || !now.Before(facts.Deadline) {
+		return bad()
+	}
+	if a.binding.Purpose == "capture_certificate" {
+		if status != "capturing" && status != "validating" && status != "publishing" {
+			return bad()
+		}
+	} else if status != "validating" && status != "publishing" {
+		return bad()
+	}
+	facts.Status = status
+	var latest uint64
+	var attemptStatus string
+	if view.QueryRowContext(ctx, `SELECT attempt_no,status FROM system_backup_v2_attempts WHERE target_type='backup' AND target_public_id=? AND phase='capture' ORDER BY attempt_no DESC LIMIT 1`+suffix, a.task.BackupPublicID).Scan(&latest, &attemptStatus) != nil || latest != uint64(a.task.AttemptNo) || (status == "capturing" && attemptStatus != "running") || (status != "capturing" && attemptStatus != "sealed") {
+		return bad()
+	}
+	var canceled int
+	if view.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_operations WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND operation_type='cancel' AND status IN ('pending','running')`+suffix, a.binding.InstallationID, a.task.BackupPublicID).Scan(&canceled) != nil || canceled != 0 {
+		return bad()
+	}
+	var stopped, resumed sql.NullTime
+	if view.QueryRowContext(ctx, `SELECT gate_generation,collectors_stopped_at,source_resumed_at FROM system_backup_v2_runtime_captures WHERE task_public_id=?`+suffix, a.task.BackupPublicID).Scan(&facts.Epoch, &stopped, &resumed) != nil || facts.Epoch == 0 || !stopped.Valid || !resumed.Valid || resumed.Time.Before(stopped.Time) || resumed.Time.After(now) {
+		return bad()
+	}
+	if view.QueryRowContext(ctx, `SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase='capture' AND record_kind='capture_result'`+suffix, a.binding.InstallationID, a.task.BackupPublicID, a.task.AttemptNo).Scan(&facts.CaptureHash) != nil || !signingDigest.MatchString(facts.CaptureHash) {
+		return bad()
+	}
+	until := a.until
+	for _, bound := range []time.Time{facts.Lease, facts.Deadline} {
+		if bound.Before(until) {
+			until = bound
+		}
+	}
+	return facts, until, nil
+}
+
+// validateFrozenSigningInput checks the existing public-c-crypto JWS framing
+// and exact task/key purpose identities. The original C owner remains
+// responsible for computing and validating its complete business payload.
+func validateFrozenSigningInput(input []byte, task ArtifactSigningTask, binding TransitSigningBinding) error {
+	if len(input) == 0 || len(input) > 4096 {
+		return ErrRegistrationUnavailable
+	}
+	parts := strings.Split(string(input), ".")
+	if len(parts) != 2 {
+		return ErrRegistrationUnavailable
+	}
+	h, err := base64.RawURLEncoding.Strict().DecodeString(parts[0])
+	if err != nil {
+		return ErrRegistrationUnavailable
+	}
+	p, err := base64.RawURLEncoding.Strict().DecodeString(parts[1])
+	if err != nil {
+		return ErrRegistrationUnavailable
+	}
+	for _, raw := range [][]byte{h, p} {
+		canonical, e := jsoncanonicalizer.Transform(raw)
+		if e != nil || !bytes.Equal(canonical, raw) {
+			return ErrRegistrationUnavailable
+		}
+	}
+	var header struct {
+		Algorithm string `json:"alg"`
+		KeyID     string `json:"kid"`
+		Version   string `json:"key_version"`
+		Purpose   string `json:"purpose"`
+		Type      string `json:"typ"`
+	}
+	d := json.NewDecoder(bytes.NewReader(h))
+	d.DisallowUnknownFields()
+	if d.Decode(&header) != nil || header.Algorithm != "EdDSA" || header.KeyID != binding.KeyID || header.Version != binding.KeyVersion || header.Purpose != binding.Purpose {
+		return ErrRegistrationUnavailable
+	}
+	typ := map[string]string{"capture_certificate": "clawmanager.system-backup.capture_certificate.v1", "acceptance_record": "clawmanager.system-backup.acceptance.v1", "catalog_record": "clawmanager.system-backup.catalog_record.v1"}[binding.Purpose]
+	var payload struct {
+		Installation string `json:"origin_installation_id"`
+		Backup       string `json:"backup_public_id"`
+		Attempt      int64  `json:"attempt_no"`
+		SigningKey   struct {
+			Purpose string `json:"purpose"`
+			ID      string `json:"key_id"`
+			Version string `json:"key_version"`
+		} `json:"signing_key"`
+	}
+	if json.Unmarshal(p, &payload) != nil || header.Type != typ || payload.Backup != task.BackupPublicID || payload.Attempt != task.AttemptNo || payload.SigningKey.Purpose != binding.Purpose || payload.SigningKey.ID != binding.KeyID || payload.SigningKey.Version != binding.KeyVersion ||
+		(binding.Purpose != "acceptance_record" && payload.Installation != binding.InstallationID) || (payload.Installation != "" && payload.Installation != binding.InstallationID) {
+		return ErrRegistrationUnavailable
+	}
+	return nil
+}
+
+// StageSigningInput runs INSIDE the original C owner transaction after its
+// capture/acceptance/catalog checks, before the external signing call. It
+// freezes exact public signing bytes into the existing evidence registry,
+// reusing the original task/attempt/claim. The caller commits or rolls back;
+// this method neither commits nor creates an authorization/task endpoint.
+func (s *SQLInstallationArtifactSigners) StageSigningInput(ctx context.Context, tx *sql.Tx, purpose string, input []byte) error {
+	if s == nil || tx == nil || s.owners[purpose] == nil {
+		return ErrRegistrationUnavailable
+	}
+	a := s.owners[purpose]
+	input = bytes.Clone(input)
+	if validateFrozenSigningInput(input, a.task, a.binding) != nil {
+		return ErrRegistrationUnavailable
+	}
+	facts, until, err := a.current(ctx, tx, true)
+	if err != nil {
+		return err
+	}
+	h := sha256.Sum256(input)
+	frozen := frozenSQLSigningInput{Version: "system-backup-original-sql-signing-input.v1", Authorization: ArtifactSigningAuthorizationRequest{Task: a.task, Signing: TransitSigningRequest{Binding: a.binding, InputSHA256: hex.EncodeToString(h[:])}}, Input: input, CaptureResultSHA256: facts.CaptureHash, CaptureEpoch: facts.Epoch}
+	raw, err := json.Marshal(frozen)
+	if err != nil || len(raw) > 8192 {
+		return ErrRegistrationUnavailable
+	}
+	id := signingInputEvidenceID(a.task, a.binding.InstallationID, purpose)
+	old, oldUntil, err := a.readFrozen(ctx, tx, true)
+	if err == nil {
+		if !bytes.Equal(old, raw) || !time.Now().Before(oldUntil) {
+			return ErrRegistrationUnavailable
+		}
+		return nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return ErrRegistrationUnavailable
+	}
+	digest := sha256.Sum256(raw)
+	result, err := tx.ExecContext(ctx, `INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'backup',?,'diagnostic','inline',?,?,?,'application/json','none','internal','healthy',?)`, id, a.task.BackupPublicID, raw, hex.EncodeToString(digest[:]), len(raw), until)
+	if err != nil {
+		return ErrRegistrationUnavailable
+	}
+	if n, e := result.RowsAffected(); e != nil || n != 1 {
+		return ErrRegistrationUnavailable
+	}
+	if again, end, e := a.current(ctx, tx, true); e != nil || again != facts || !end.Equal(until) {
+		return ErrRegistrationUnavailable
+	}
+	return nil
+}
+
+func (a *SQLArtifactSigningAuthority) readFrozen(ctx context.Context, view signingSQLView, lock bool) ([]byte, time.Time, error) {
+	suffix := ""
+	if lock {
+		suffix = " FOR SHARE"
+	}
+	var raw []byte
+	var hash, owner, ownerType, kind, state, health, encryption string
+	var size uint64
+	var until time.Time
+	err := view.QueryRowContext(ctx, `SELECT inline_payload,content_checksum,content_size_bytes,owner_target_type,owner_target_public_id,evidence_type,storage_state,observed_health,encryption,expires_at FROM system_backup_v2_evidence WHERE public_id=?`+suffix, signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)).Scan(&raw, &hash, &size, &ownerType, &owner, &kind, &state, &health, &encryption, &until)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	h := sha256.Sum256(raw)
+	if len(raw) == 0 || len(raw) > 8192 || size != uint64(len(raw)) || hash != hex.EncodeToString(h[:]) || ownerType != "backup" || owner != a.task.BackupPublicID || kind != "diagnostic" || state != "inline" || health != "healthy" || encryption != "none" {
+		return nil, time.Time{}, ErrRegistrationUnavailable
+	}
+	return raw, until, nil
+}
+
+func (a *SQLArtifactSigningAuthority) authorize(ctx context.Context, r ArtifactSigningAuthorizationRequest) (OriginalSigningUse, signingSQLFacts, error) {
+	if a == nil || ctx == nil || ctx.Err() != nil || r.Task != a.task || r.Signing.Binding != a.binding || !signingDigest.MatchString(r.Signing.InputSHA256) {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	tx, err := a.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	if err != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	defer tx.Rollback()
+	facts, until, err := a.current(ctx, tx, false)
+	if err != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, err
+	}
+	raw, evidenceUntil, err := a.readFrozen(ctx, tx, false)
+	if err != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	var frozen frozenSQLSigningInput
+	if _, e := jsoncanonicalizer.Transform(raw); e != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.DisallowUnknownFields()
+	if d.Decode(&frozen) != nil || d.Decode(new(any)) != io.EOF || frozen.Version != "system-backup-original-sql-signing-input.v1" || frozen.Authorization != r || frozen.CaptureResultSHA256 != facts.CaptureHash || frozen.CaptureEpoch != facts.Epoch || validateFrozenSigningInput(frozen.Input, a.task, a.binding) != nil {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	h := sha256.Sum256(frozen.Input)
+	if hex.EncodeToString(h[:]) != r.Signing.InputSHA256 {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	if evidenceUntil.Before(until) {
+		until = evidenceUntil
+	}
+	if !time.Now().Before(until) {
+		return OriginalSigningUse{}, signingSQLFacts{}, ErrRegistrationUnavailable
+	}
+	return OriginalSigningUse{Request: r.Signing, Workload: a.task.Workload, NotBefore: a.notBefore, ExpiresAt: until}, facts, nil
+}
+
+func (a *SQLArtifactSigningAuthority) AuthorizeArtifactSigning(ctx context.Context, r ArtifactSigningAuthorizationRequest) (AuthorizedArtifactSigningUse, error) {
+	use, facts, err := a.authorize(ctx, r)
+	if err != nil {
+		return AuthorizedArtifactSigningUse{}, err
+	}
+	use.Recheck = func(c context.Context, request TransitSigningRequest) error {
+		if request != r.Signing {
+			return ErrRegistrationUnavailable
+		}
+		current, again, e := a.authorize(c, r)
+		if e != nil || again != facts || !current.ExpiresAt.Equal(use.ExpiresAt) {
+			return ErrRegistrationUnavailable
+		}
+		return nil
+	}
+	return AuthorizedArtifactSigningUse{Task: a.task, Use: use}, nil
+}
