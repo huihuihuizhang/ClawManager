@@ -167,6 +167,9 @@ func (s SQLExecutionAuthority) snapshot(ctx context.Context, tx *sql.Tx, a dispa
 	if hex.EncodeToString(digest[:]) != a.ConfigSHA256 {
 		return v, ErrExecutionAuthority
 	}
+	if v.heldCapture && v.status == "capturing" && a.TaskType == "backup" {
+		return s.completeHeldSnapshot(ctx, tx, a, v, fence)
+	}
 	var original []byte
 	if tx.QueryRowContext(ctx, "SELECT canonical_config_json FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? AND config_sha256=? AND config_size_bytes=? FOR SHARE", a.InstallationID, a.ConfigVersion, a.ConfigSHA256, size).Scan(&original) != nil || !bytes.Equal(original, v.config) {
 		return v, ErrExecutionAuthority
