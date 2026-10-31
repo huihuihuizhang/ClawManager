@@ -7,7 +7,6 @@ import (
 	"errors"
 	"path"
 	"sort"
-	"strings"
 	"time"
 
 	"clawreef/internal/systembackup/kube"
@@ -30,7 +29,7 @@ type PublicationWorkerReference struct {
 }
 
 func (r PublicationWorkerReference) validate(captureName, captureUID string) error {
-	if r.Protocol != publicationPresignedUploadVersion || r.ServiceAccountName == "" || len(validation.IsDNS1123Subdomain(r.ServiceAccountName)) != 0 || r.ServiceAccountUID == "" || len(r.ServiceAccountUID) > 128 || strings.ContainsAny(r.ServiceAccountUID, "\x00\r\n/") || r.ServiceAccountName == captureName || r.ServiceAccountUID == captureUID {
+	if r.Protocol != publicationPresignedUploadVersion || r.ServiceAccountName == "" || len(validation.IsDNS1123Subdomain(r.ServiceAccountName)) != 0 || !planToken.MatchString(r.ServiceAccountUID) || r.ServiceAccountName == captureName || r.ServiceAccountUID == captureUID {
 		return c.ErrExecutionAuthority
 	}
 	return nil
@@ -130,7 +129,7 @@ func (s *DeploymentService) checkPublicationJobResources(ctx context.Context) er
 // actual UID-owned resources and original 107 receiving identity are bound.
 // A lost SQL or native ACK never grants a resend, even when GET returns absent.
 func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, request PublicationUploadRequest) (*batchv1.Job, error) {
-	if attempt != 1 || request.Version != publicationPresignedUploadVersion || !formalCandidateDigest(request.CredentialHash) || !formalCandidateDigest(request.CandidateOwnerHMAC) || s.publicationBinding() != nil || s.Forward.CheckDeployment(ctx, s.publisherVerifierDB) != nil || s.checkPublicationJobResources(ctx) != nil {
+	if attempt != 1 || request.Version != publicationPresignedUploadVersion || !formalCandidateDigest(request.CredentialHash) || !formalCandidateDigest(request.CandidateOwnerHMAC) || s.publicationBinding() != nil || s.publisherVerifierFactory == nil || s.publisherVerifierDB == nil || s.Forward.CheckDeployment(ctx, s.publisherVerifierDB) != nil || s.checkPublicationJobResources(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
 	if _, _, err := request.validate(); err != nil {
