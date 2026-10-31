@@ -79,14 +79,18 @@ func (s SQLExecutionRecords) OpenOriginalCapturePlan(ctx context.Context, in d.I
 	if !s.ready() || ctx == nil || !reflect.TypeOf(ctx).Comparable() || ctx.Err() != nil {
 		return d.Plan{}, desc, nil, ErrExecutionRecord
 	}
+	if err := s.Authority.Check(ctx, in.Authority); err != nil {
+		return d.Plan{}, desc, nil, err
+	}
 	stamp, err := readOriginalCaptureStamp(ctx, s.Authority.DB, in.Authority, false)
 	if err != nil || !stamp.matches(in) {
 		return d.Plan{}, desc, nil, ErrExecutionRecord
 	}
-	plan, err := s.LoadPlan(ctx, in)
+	rawPlan, err := s.readPlain(ctx, in.Authority, "plan")
 	if err != nil {
 		return d.Plan{}, desc, nil, err
 	}
+	plan := d.Plan{SchemaVersion: d.TaskPlanVersion, CanonicalJSON: rawPlan, SHA256: recordHash(rawPlan)}
 	failed := true
 	defer func() {
 		if failed {

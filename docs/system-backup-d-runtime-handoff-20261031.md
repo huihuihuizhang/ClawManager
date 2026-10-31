@@ -452,3 +452,10 @@
 - 新SQLExecutionRecords.OpenOriginalCapturePlan只从实际原SQL/原密钥解析与完整plan绑定签发私有OriginalCapturePlan历史凭据，绑定当前context及原Records配置；调用者不能由DTO构造。每个Authorize独立读取一次，不跨请求缓存，不延长claim/hold/DEK，不删减逐行/EOF guard。Read的原gate/资源journal、security的原CM/Secret/Pod挂载、issuer的原controller/worker/SA/grant/capability/mapping与Stage均继续。
 - 原始profile bytes/hash、config bytes、全部BackupSpec字段、原plan payload hash/key_ref、实际sealed_payload的SHA256与长度在签发前取样；原LoadPlan认证全部sealed bytes。原key-use事务提交前以FOR SHARE重读全部字段，与原样本逐字段等同；issuer Stage也重查该凭据，最终原guard Recheck及commit后的ValidateCollectors保留。原解密8MiB读取上限不变，预分配改为实际有界密文大小。
 - 实际mTLS Ready在原CM GET期间变更profile_json、profile_sha256、runner、config_snapshot_json、payload_sha256、key_ref、sealed_payload七反例均拒绝；异context与调用者零值凭据拒绝。实际TLS/SQL valid、unknown-reserve-ack与revoked-after-login三模式PASS10.47s/package13.709s；controller9.341s、adapter5.346s、execution8.245s全包PASS。完整原任务、173迁移/新staging producer、10 C/Evidence与Record(validating)待无overlay正向实跑，当前不能声称已解决默认窗口或A发布。
+
+## D5.39 请求内合并重复当前读取，公共历史读取边界保持
+
+- D5.38无overlay原173迁移完整任务`sbk_5b31eeca-4b3e-4c09-b793-adb6a370ff72`仍FAIL140.59s/package143.830s：前七实际native worker完成，SQL原窗口26.235秒内进行263次SourceAuthorize/25.862秒后拒绝；原失败Record=ok。未进入validating，不计正向成功。新的SQL-first logging-only profile保留`.tools/d-request-reuse-cost.log`/`d-request-reuse-cpu.pprof`，该轮FAIL57.98s；profile增加额外成本，不能与无profile延迟直接比较。
+- profile定位当前Authoritiy.Check重复开销：原readExecutionInput/Gate一次、LoadPlan两次、Read一次。Authorize现在先只重建原输入，再由OpenOriginalCapturePlan在任何解密/part使用之前进行一次完整当前Authority.Check。私有readPlain仍执行实际记录读取、原Keys.Resolve/AEAD/完整hash/8MiB边界；同次原Unwrap/Describe完整执行一次。公共SQLExecutionRecords.read/LoadPlan仍保留原前后两次Check，公共Read仍保留原额外Gate.Check，恢复入口不改。
+- 同次请求的当前事务Bind、原process/Job锁和原guard Recheck、issuer Stage（含独立Bind/current grants与原registry事务）、完整原input/sealed digest/key_ref末尾重查、最终guard Recheck及commit后ValidateCollectors全部保留。无跨请求history或授权缓存；每次原data row/EOF仍发起原完整控制请求。
+- 增加在原CM GET期间实际撤回controller_owner反例，八种mutation均确认affected=1且独立SELECT字节等于注入值并不同原值，再断言拒绝；这是窄fixture主动篡改验证，不证明完整原DDL允许这些UPDATE。实际D专用MySQL/TLS三场景PASS7.86s/package11.092s；完整controller9.390s/adapter5.803s/execution7.682s PASS。新完整原任务无overlay/default30秒窗口验证继续；尚未称全部437检查、10part或A发布成功。

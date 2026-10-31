@@ -127,6 +127,22 @@ func (s SQLExecutionRecords) read(ctx context.Context, a d.Authority, kind strin
 	if err := s.Authority.Check(ctx, a); err != nil {
 		return nil, err
 	}
+	plain, err := s.readPlain(ctx, a, kind)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.Authority.Check(ctx, a); err != nil {
+		clear(plain)
+		return nil, err
+	}
+	return plain, nil
+}
+
+// readPlain performs only authenticated record decryption. It is private and
+// called after the enclosing operation's current Authority.Check; public reads
+// still recheck above, while OriginalCapturePlan requires its final locked
+// input/ciphertext comparison and the caller's original current transaction.
+func (s SQLExecutionRecords) readPlain(ctx context.Context, a d.Authority, kind string) ([]byte, error) {
 	var ref, digest string
 	var sealed []byte
 	err := s.Authority.DB.QueryRowContext(ctx, "SELECT payload_sha256,key_ref,sealed_payload FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase=? AND record_kind=?", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, kind).Scan(&digest, &ref, &sealed)
@@ -147,9 +163,6 @@ func (s SQLExecutionRecords) read(ctx context.Context, a d.Authority, kind strin
 	defer func() { clear(plain.Bytes()) }()
 	if staging.Open(ctx, bytes.NewReader(sealed), plain, key, recordBinding(a, kind, digest), 8<<20) != nil || recordHash(plain.Bytes()) != digest {
 		return nil, ErrExecutionRecord
-	}
-	if err := s.Authority.Check(ctx, a); err != nil {
-		return nil, err
 	}
 	return bytes.Clone(plain.Bytes()), nil
 }
