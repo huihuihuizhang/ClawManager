@@ -51,6 +51,7 @@ type DeploymentService struct {
 	profileHash              string
 	tlsConfig                *tls.Config
 	staging                  *os.Root
+	formalVerifier           *FormalVerifierDeploymentConfig
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -76,7 +77,7 @@ func deploymentIdentity(ref GrantReference, digest, keys string) (*c.PinnedExecu
 	}
 	return c.NewPinnedExecutionIdentity(ref.Path, digest, keys, ed25519.PublicKey(public))
 }
-func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Interface, dyn dynamic.Interface, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool) (out *DeploymentService, resultErr error) {
+func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Interface, dyn dynamic.Interface, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, verifierInputs ...FormalVerifierInput) (out *DeploymentService, resultErr error) {
 	if runtime.GOOS != "linux" || db == nil || client == nil || dyn == nil {
 		return nil, d.ErrNotReady
 	}
@@ -95,20 +96,9 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 	if e = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest); e != nil {
 		return nil, e
 	}
-	stage = "profile"
-	s.profile, e = api.LoadExecutionProfile(cfg.ProfileFile)
-	if e != nil {
+	stage = "file-bindings"
+	if e = s.bindDeploymentFileInputs(verifierInputs); e != nil {
 		return nil, e
-	}
-	_, s.profileHash, e = s.profile.CanonicalIdentity()
-	if e != nil {
-		return nil, e
-	}
-	for _, identity := range []*c.PinnedExecutionIdentity{s.Forward, s.Recovery} {
-		grant := identity.DeploymentBinding()
-		if grant.DeploymentConfigSHA256 != digest || grant.InstallationID != cfg.InstallationID || grant.ControllerOwner != cfg.ControllerOwner || grant.ProfileSHA256 != s.profileHash || s.profile.InstallationID != cfg.InstallationID {
-			return nil, c.ErrExecutionAuthority
-		}
 	}
 	stage = "control-grants"
 	if e = s.checkControlGrants(ctx, db); e != nil {
@@ -221,6 +211,10 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 	recovery := gate.Recovery
 	owner := &PublicJobOwner{Gate: gate, Client: client, Dynamic: dyn, Namespace: cfg.Namespace, NamespaceUID: cfg.NamespaceUID, TrustDomain: cfg.TrustDomain, Security: cfg.Security, Identity: s.Forward, Issuer: control.IdentityIssuer{Certificate: root, Signer: signer, TrustDomain: cfg.TrustDomain, ServerRoots: rootRaw}, Staging: s.staging, AllowKubeletStopWitness: true}
 	owner.SealCustodyMaxBytes = cfg.SealCustodyMaxBytes
+	stage = "formal-verifier"
+	if e = s.attachFormalVerifier(owner); e != nil {
+		return nil, e
+	}
 	source, e := s.platformProfile(owner)
 	owner.RelayEnabled = cfg.RuntimeSources != nil
 	if e != nil {
@@ -374,6 +368,9 @@ func checkDeploymentGrantMode(ctx context.Context, forward bool, recovery, captu
 
 func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *sql.DB) error {
 	g := s.Forward.DeploymentBinding()
+	if s.Config.FormalVerifier != nil {
+		return (c.SQLFormalCaptureGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil}).Check(ctx)
+	}
 	if s.Config.RuntimeSources != nil {
 		return (c.SQLRuntimeControlGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0]}).Check(ctx)
 	}

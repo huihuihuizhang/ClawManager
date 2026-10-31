@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"os"
@@ -83,7 +84,7 @@ func formalObserverFixture(t *testing.T) (*os.Root, *os.Root, staging.SealScope,
 	if err != nil {
 		t.Fatal(err)
 	}
-	envelope, err := seal.EnvelopeJSON(w.WrappedKey{Request: keys.expected, Algorithm: "provider-native", Ciphertext: []byte("opaque-provider-fixture")})
+	envelope, err := seal.EnvelopeJSON(w.WrappedKey{Request: keys.expected, Algorithm: "provider-native", Ciphertext: []byte("vault:v1:" + base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, 60)))})
 	if err != nil {
 		t.Fatal(err)
 	}
