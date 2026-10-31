@@ -191,6 +191,13 @@ func (a *SQLPublisherCaptureAuthority) CheckWorkload(ctx context.Context) error 
 	if err != nil || string(sa.UID) != w.ServiceAccountUID || sa.DeletionTimestamp != nil {
 		return ErrRegistrationUnavailable
 	}
+	// Material replacement and expiry may occur during the final slow API GET.
+	// Re-read the same independently pinned grant after ALL workload I/O.
+	grant, err := a.grant(ctx)
+	now := time.Now()
+	if err != nil || now.Before(a.cfg.Deployment.NotBefore) || !now.Before(a.cfg.Deployment.Until) || now.Before(grant.NotBefore) || !now.Before(grant.Until) || !a.until.IsZero() && !now.Before(a.until) {
+		return ErrRegistrationUnavailable
+	}
 	return nil
 }
 
@@ -230,6 +237,11 @@ func NewSQLPublisherCaptureAuthority(ctx context.Context, cfg PublisherCaptureAu
 	a.facts = g.Facts()
 	a.bound = true
 	if tx.Rollback() != nil || a.CheckWorkload(ctx) != nil {
+		return nil, ErrRegistrationUnavailable
+	}
+	// The final workload/material I/O can race a real claim renewal. Do not
+	// return the earlier SQL proof or silently adopt the fresh token/facts.
+	if a.checkSQL(ctx) != nil {
 		return nil, ErrRegistrationUnavailable
 	}
 	return a, nil
@@ -318,6 +330,20 @@ func (a *SQLPublisherCaptureAuthority) Check(ctx context.Context) error {
 	if a == nil || a.CheckWorkload(ctx) != nil {
 		return ErrRegistrationUnavailable
 	}
+	if err := a.checkSQL(ctx); err != nil {
+		return err
+	}
+	if a.CheckWorkload(ctx) != nil {
+		return ErrRegistrationUnavailable
+	}
+	// Last external I/O precedes this short same-claim/facts/window check.
+	return a.checkSQL(ctx)
+}
+
+func (a *SQLPublisherCaptureAuthority) checkSQL(ctx context.Context) error {
+	if a == nil || !publisherCaptureContext(ctx) {
+		return ErrRegistrationUnavailable
+	}
 	tx, err := a.cfg.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return ErrRegistrationUnavailable
@@ -333,5 +359,5 @@ func (a *SQLPublisherCaptureAuthority) Check(ctx context.Context) error {
 	if tx.Rollback() != nil {
 		return ErrRegistrationUnavailable
 	}
-	return a.CheckWorkload(ctx)
+	return nil
 }
