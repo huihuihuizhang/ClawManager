@@ -7,6 +7,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -714,13 +715,24 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 						}
 						if releaseClaim || takeoverClaim {
 							token := c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: x.input.Authority.TaskPublicID}, Owner: x.input.Authority.ClaimOwner, RowVersion: x.input.Authority.ClaimRowVersion}
-							version, err := (c.ClaimCoordinator{Executor: h.db, InstallationID: x.input.Authority.InstallationID}).Release(useCtx, token, time.Microsecond)
+							version, err := (c.ClaimCoordinator{Executor: h.db, InstallationID: x.input.Authority.InstallationID}).Release(useCtx, token, time.Second)
 							if err != nil {
+								t.Error("actual original Release injection failed", err)
 								return err
 							}
 							if takeoverClaim {
-								_, err = c.AcquireClaimInInstallation(useCtx, h.db, x.input.Authority.InstallationID, token.Target, token.Owner+"-takeover", version, c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second})
+								takeoverCtx, cancelTakeover := context.WithDeadline(context.WithoutCancel(useCtx), x.input.Authority.DeadlineAt)
+								defer cancelTakeover()
+								timer := time.NewTimer(1100 * time.Millisecond)
+								select {
+								case <-timer.C:
+								case <-takeoverCtx.Done():
+									timer.Stop()
+									return takeoverCtx.Err()
+								}
+								_, err = c.AcquireClaimInInstallation(takeoverCtx, h.db, x.input.Authority.InstallationID, token.Target, token.Owner+"-takeover", version, c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second})
 								if err != nil {
+									t.Error("actual original takeover injection failed", err)
 									return err
 								}
 							}
@@ -777,6 +789,13 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 			o.FormalKeys = originalKeys
 			if firstCE && ownedFault {
 				id, _ := ce.FinalizedSourceEvidenceID(*seed)
+				if releaseClaim || takeoverClaim {
+					var owner sql.NullString
+					var revision uint64
+					if h.db.QueryRow(`SELECT controller_owner,row_version FROM system_backup_v2_backups WHERE public_id=?`, x.input.Authority.TaskPublicID).Scan(&owner, &revision) != nil || revision <= x.input.Authority.ClaimRowVersion || releaseClaim && owner.Valid || takeoverClaim && (!owner.Valid || owner.String != x.input.Authority.ClaimOwner+"-takeover") {
+						t.Fatal("original claim withdrawal did not actually change owner/epoch")
+					}
+				}
 				var seals, jobs int
 				if prepareErr == nil || !missingResult && !ownedReadEntered.Load() || f.x.generates.Load() != 1 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=?`, id).Scan(&seals) != nil || seals != 0 || h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND resource_name=?`, x.input.Authority.TaskPublicID, part.Intent.Name).Scan(&jobs) != nil || jobs != 0 {
 					t.Fatal("failed original owned admission left seal/CE Job/Generate", prepareErr)
