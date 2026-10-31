@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	c "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/team"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -19,6 +20,8 @@ type TeamsModuleConfig struct {
 	SharedWorkspaces map[string]CapturePartRequest // mount ID, never member instance mounts
 	Redis            map[string]CapturePartRequest // original server/database scope ID
 	Objects          *CapturePartRequest
+	SharedRedisPart  string
+	SharedRedis      *c.RedisCapturePolicy
 }
 
 // NewTeamsModule contributes C's data plane to B's existing module catalog.
@@ -55,7 +58,11 @@ func NewTeamsModule(cfg TeamsModuleConfig) (CaptureModuleRegistration, error) {
 		}
 		owners[instance.ID] = instance.UserID
 	}
-	if i.Validate(users, owners) != nil || len(cfg.SharedWorkspaces) != len(i.Mounts) || len(cfg.Redis) != len(i.Redis) || (len(i.Objects) == 0) != (cfg.Objects == nil) {
+	sharedRedis := cfg.SharedRedisPart != ""
+	if (sharedRedis && (cfg.SharedRedis == nil || cfg.SharedRedisPart != SourceRedisPart || len(cfg.Redis) != 0 || validateSharedTeamRedis(cfg.Source, *cfg.SharedRedis) != nil)) || (!sharedRedis && (cfg.SharedRedis != nil || len(cfg.Redis) != len(i.Redis))) {
+		return zero, d.ErrNotReady
+	}
+	if i.Validate(users, owners) != nil || len(cfg.SharedWorkspaces) != len(i.Mounts) || (len(i.Objects) == 0) != (cfg.Objects == nil) {
 		return zero, d.ErrNotReady
 	}
 	parts := []CaptureModulePart{}
@@ -75,6 +82,9 @@ func NewTeamsModule(cfg TeamsModuleConfig) (CaptureModuleRegistration, error) {
 		}
 	}
 	for _, scope := range i.Redis {
+		if sharedRedis {
+			continue
+		}
 		r, ok := cfg.Redis[scope.ID]
 		s := r.Invocation.Request.Teams
 		if !ok || s == nil || s.InventorySHA256 != i.SHA256() || s.Redis == nil || !reflect.DeepEqual(*s.Redis, scope) || !add("teams_redis_"+scope.ID, "redis", "capture-team-redis", r) {
@@ -90,6 +100,9 @@ func NewTeamsModule(cfg TeamsModuleConfig) (CaptureModuleRegistration, error) {
 	}
 	sourceRaw, _ := json.Marshal(cfg.Source)
 	registration := CaptureModuleRegistration{Descriptor: CaptureModuleDescriptor{ID: "teams", Owner: "C", Revision: cfg.Revision, Parts: parts, Requires: []CaptureModuleDependency{{Part: UsersInstancesDatabasePart, Owner: "B", RequestedPart: "mysql", Operation: "capture-database"}}, Required: true, DependencyOnly: len(parts) == 0}}
+	if sharedRedis {
+		registration.Descriptor.Requires = append(registration.Descriptor.Requires, CaptureModuleDependency{Part: SourceRedisPart, Owner: "D", RequestedPart: "redis", Operation: "capture-source-redis"})
+	}
 	registration.Build = func(input CaptureModuleInput) ([]CapturePartRequest, error) {
 		actual, _ := json.Marshal(input.Source)
 		if string(actual) != string(sourceRaw) || input.Source.Teams == nil || len(input.Parts) != len(parts) {

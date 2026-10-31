@@ -63,7 +63,7 @@ func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMateria
 	if (i.Request.Resources != nil) != (out.Resources != nil) {
 		return zero, ErrNotReady
 	}
-	if needsSource := i.Request.Database != nil || i.Request.Teams != nil || i.Request.SkillObjects != nil; needsSource != (out.Sources != nil) || (needsSource && (!keyUseHash.MatchString(i.FormalCapture.SourceConfigSHA256) || i.FormalCapture.PermitDelivery == nil || len(out.Sources.Issuer) != ed25519.PublicKeySize || bytes.Equal(out.Sources.Issuer, i.FormalCapture.PermitDelivery.Issuer))) {
+	if needsSource := i.Request.SourceRedis != nil || i.Request.Database != nil || i.Request.Teams != nil || i.Request.SkillObjects != nil; needsSource != (out.Sources != nil) || (needsSource && (!keyUseHash.MatchString(i.FormalCapture.SourceConfigSHA256) || i.FormalCapture.PermitDelivery == nil || len(out.Sources.Issuer) != ed25519.PublicKeySize || bytes.Equal(out.Sources.Issuer, i.FormalCapture.PermitDelivery.Issuer))) {
 		return zero, ErrNotReady
 	}
 	return out, nil

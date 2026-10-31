@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -51,6 +52,8 @@ type FormalSourceMount struct {
 	Redis, Objects                   *SourceTLSMapping
 	RedisScope                       *RedisSourceBoundary
 	ObjectPrefixes                   []ObjectSourcePrefix
+	RedisPrefixes                    []string `json:",omitempty"`
+	RedisExcludedPrefixes            []string `json:",omitempty"`
 }
 type RedisSourceBoundary struct {
 	ID, ServerID string
@@ -71,7 +74,21 @@ type formalSourceCredential struct {
 // original Invocation; they cannot widen a source owner's delegation.
 func FormalSourceScopeSHA256(i Invocation, m FormalSourceMount) (string, error) {
 	var scope any
-	if d := i.Request.Database; d != nil {
+	if redis := i.Request.SourceRedis; redis != nil {
+		boundary := m.RedisScope
+		if !validSourceRedisRequest(i.Request) || m.Redis == nil || m.Objects != nil || len(m.ObjectPrefixes) != 0 || boundary == nil || boundary.ID != redis.Policy.Source.ID || boundary.ServerID != redis.ServerID || boundary.Database != redis.Policy.DB || boundary.KeyPrefix != "" || !reflect.DeepEqual(m.RedisPrefixes, redis.Policy.Prefixes) || !reflect.DeepEqual(m.RedisExcludedPrefixes, redis.ExcludePrefixes) {
+			return "", ErrRequest
+		}
+		scope = struct {
+			Operation                                        string
+			Mapping                                          *SourceTLSMapping
+			Boundary                                         *RedisSourceBoundary
+			Prefixes, ExcludedPrefixes                       []string
+			SourceID, SourceVersion, SourceSHA256, TTLPolicy string
+		}{i.Request.Operation, m.Redis, boundary, m.RedisPrefixes, m.RedisExcludedPrefixes, redis.Policy.Source.ID, redis.Policy.Source.Version, redis.Policy.Source.SHA256, redis.Policy.TTLPolicy}
+	} else if len(m.RedisPrefixes) != 0 || len(m.RedisExcludedPrefixes) != 0 {
+		return "", ErrRequest
+	} else if d := i.Request.Database; d != nil {
 		if m.Redis != nil || m.Objects != nil || m.RedisScope != nil || len(m.ObjectPrefixes) != 0 || !validDatabaseSpec(d) {
 			return "", ErrRequest
 		}
@@ -143,6 +160,7 @@ func FormalSourceScopeSHA256(i Invocation, m FormalSourceMount) (string, error) 
 func sourceDigest(raw []byte) string { sum := sha256.Sum256(raw); return hex.EncodeToString(sum[:]) }
 
 type FormalCaptureSources struct {
+	SourceRedis   *source.RedisClient
 	Database      *sql.DB
 	Teams         *TeamCaptureSources
 	objects       *minio.Client
@@ -172,6 +190,9 @@ func (s *FormalCaptureSources) Close() {
 	}
 	if s.Teams != nil && s.Teams.Redis != nil {
 		s.Teams.Redis.Close()
+	}
+	if s.SourceRedis != nil {
+		s.SourceRedis.Close()
 	}
 	if s.transport != nil {
 		s.transport.CloseIdleConnections()
@@ -297,21 +318,31 @@ func OpenFormalCaptureSources(ctx context.Context, i Invocation, job *CaptureKey
 		if s.Database.QueryRowContext(ctx, "SELECT CURRENT_USER(),CURRENT_ROLE(),DATABASE(),@@server_uuid").Scan(&account, &role, &database, &uuid) != nil || !strings.HasPrefix(account, credential.Username+"@") || role != "NONE" || database != i.Request.Database.Name || uuid != i.Request.Database.ServerUUID {
 			return nil, ErrNotReady
 		}
-	case "capture-team-redis":
-		if i.Request.Teams == nil || i.Request.Teams.Redis == nil || mount.Redis == nil || mount.Objects != nil || credential.Username == "" || len(credential.Password) == 0 || credential.AccessKey != "" || len(credential.SecretKey) != 0 || len(credential.SessionToken) != 0 {
+	case "capture-source-redis", "capture-team-redis":
+		if (i.Request.SourceRedis == nil && (i.Request.Teams == nil || i.Request.Teams.Redis == nil)) || mount.Redis == nil || mount.Objects != nil || credential.Username == "" || len(credential.Password) == 0 || credential.AccessKey != "" || len(credential.SecretKey) != 0 || len(credential.SessionToken) != 0 {
 			return nil, ErrNotReady
 		}
 		tlsConfig, err := sourceTLS(*mount.Redis)
 		if err != nil {
 			return nil, err
 		}
-		client, err := source.ConnectRedis(ctx, source.RedisOptions{Address: mount.Redis.Address, Username: credential.Username, Password: string(credential.Password), Database: i.Request.Teams.Redis.Database, TLS: tlsConfig, MaxReplyBytes: 16 << 20})
+		database, serverID := 0, ""
+		if i.Request.SourceRedis != nil {
+			database, serverID = i.Request.SourceRedis.Policy.DB, i.Request.SourceRedis.ServerID
+		} else {
+			database, serverID = i.Request.Teams.Redis.Database, i.Request.Teams.Redis.ServerID
+		}
+		client, err := source.ConnectRedis(ctx, source.RedisOptions{Address: mount.Redis.Address, Username: credential.Username, Password: string(credential.Password), Database: database, TLS: tlsConfig, MaxReplyBytes: 64 << 20})
 		if err != nil {
 			return nil, ErrNotReady
 		}
-		s.Teams = &TeamCaptureSources{Redis: client, Authorize: s.Authorize}
-		id, database, err := client.Identity(ctx)
-		if err != nil || id != i.Request.Teams.Redis.ServerID || database != i.Request.Teams.Redis.Database {
+		if i.Request.SourceRedis != nil {
+			s.SourceRedis = client
+		} else {
+			s.Teams = &TeamCaptureSources{Redis: client, Authorize: s.Authorize}
+		}
+		id, actualDatabase, err := client.Identity(ctx)
+		if err != nil || id != serverID || actualDatabase != database {
 			return nil, ErrNotReady
 		}
 	case "capture-team-objects", "capture-skill-objects":

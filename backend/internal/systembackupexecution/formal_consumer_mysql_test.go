@@ -344,6 +344,9 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 }
 
 type consumerFixtureOptions struct {
+	PartName, Category                    string
+	RequestedParts                        []string
+	ConfigureWorkload                     func(*kube.JobRequest)
 	OwnedCredentialsFile, OwnedServerUUID string
 	DeploymentCore                        func(c.ExecutionGrant, ed25519.PublicKey, string) DeploymentConfig
 	JobDeadlineSeconds                    int64
@@ -500,6 +503,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	source, _, _, inv, candidate, contentKeys := formalObserverFixture(t, preparation...)
 	a, j, _ := resultEvidenceFixture()
 	a.ConfigVersion = 1
+	if options.PartName != "" {
+		j.JobUnitKey = options.PartName
+	}
 	a.ClaimOwner = "controller"
 	a.ClaimRowVersion = 19
 	a.RequestID = "request-original"
@@ -640,12 +646,30 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	seedConsumerRows(t, admin, a, config, profile, now, j)
 	refresh()
-	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: profileID, ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"workspace"}}}
+	requestedParts := []string{"workspace"}
+	if options.RequestedParts != nil {
+		requestedParts = append([]string{}, options.RequestedParts...)
+		if _, err := admin.Exec("UPDATE system_backup_v2_backups SET requested_parts=? WHERE public_id=?", strings.Join(requestedParts, ","), a.TaskPublicID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: profileID, ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: requestedParts}}
 	jobDeadlineSeconds := int64(200)
 	if options.JobDeadlineSeconds != 0 {
 		jobDeadlineSeconds = options.JobDeadlineSeconds
 	}
-	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: jobDeadlineSeconds, FormalMaterials: options.FormalMaterials, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}})
+	partName, category := "workspace", "workspace"
+	if options.PartName != "" {
+		partName = options.PartName
+	}
+	if options.Category != "" {
+		category = options.Category
+	}
+	workload := kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: jobDeadlineSeconds, FormalMaterials: options.FormalMaterials, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}
+	if options.ConfigureWorkload != nil {
+		options.ConfigureWorkload(&workload)
+	}
+	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: partName, Category: category, JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: workload})
 	if err != nil {
 		t.Fatal("original formal part assembly failed", err)
 	}

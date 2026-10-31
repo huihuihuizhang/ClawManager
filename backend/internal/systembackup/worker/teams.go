@@ -44,7 +44,7 @@ func teamCaptureOperation(op string) bool {
 	return op == "capture-team-redis" || op == "capture-team-objects"
 }
 func validTeamCapture(r Request) bool {
-	if r.Resources != nil || r.TeamWorkspace != nil {
+	if r.SourceRedis != nil || r.Resources != nil || r.TeamWorkspace != nil {
 		return false
 	}
 	s := r.Teams

@@ -26,7 +26,7 @@ func validWorkerPart(in d.Input, p JobPart, hold time.Time) bool {
 	if r.Binding.BackupID != in.Authority.TaskPublicID || r.Binding.Attempt != strconv.FormatUint(in.Authority.AttemptNo, 10) || r.Binding.Path != p.Part || r.Binding.EnvelopeID == "" || !hexHash.MatchString(r.Binding.CaptureContextHash) || r.Deadline.After(in.Authority.DeadlineAt) || r.Deadline.After(hold) {
 		return false
 	}
-	if r.Operation != "capture-workspace" && r.Operation != "capture-database" && r.Operation != "capture-team-redis" && r.Operation != "capture-team-objects" && r.Operation != "capture-deployment-resources" && r.Operation != "capture-secret-bundle" && r.Operation != "capture-skill-objects" {
+	if r.Operation != "capture-workspace" && r.Operation != "capture-database" && r.Operation != "capture-source-redis" && r.Operation != "capture-team-redis" && r.Operation != "capture-team-objects" && r.Operation != "capture-deployment-resources" && r.Operation != "capture-secret-bundle" && r.Operation != "capture-skill-objects" {
 		return false
 	}
 	if _, err := kube.WorkerConfigMap(kube.Identity{Namespace: p.Intent.Namespace, Name: p.InvocationConfigMap, Owner: in.Authority.TaskPublicID}, invocation); err != nil {

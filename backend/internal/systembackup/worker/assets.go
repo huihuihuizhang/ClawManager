@@ -18,7 +18,7 @@ import (
 
 func assetOperation(op string) bool { return op == "restore-assets" || op == "verify-assets" }
 func validAssetRequest(r Request) bool {
-	return r.Teams == nil && assetOperation(r.Operation) && r.Version == Version && time.Now().Before(r.Deadline) && r.Database == nil && r.RuntimePolicy == nil && len(r.Files) == 0 && r.PolicyVersion != "" && validReceipt(r.Receipt) && r.MaxCompressedBytes == 48<<20 && r.MaxArchiveBytes == 48<<20
+	return r.SourceRedis == nil && r.Teams == nil && assetOperation(r.Operation) && r.Version == Version && time.Now().Before(r.Deadline) && r.Database == nil && r.RuntimePolicy == nil && len(r.Files) == 0 && r.PolicyVersion != "" && validReceipt(r.Receipt) && r.MaxCompressedBytes == 48<<20 && r.MaxArchiveBytes == 48<<20
 }
 
 // Assets are restored into a dedicated isolated PVC, with a portable object-key

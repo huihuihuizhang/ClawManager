@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	sourceData "clawreef/internal/systembackup"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
@@ -100,6 +101,24 @@ func observeOriginalFormalCandidate(ctx context.Context, source, custody *os.Roo
 		return staging.FormalObservation{}, d.ErrNotReady
 	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	if i.Request.SourceRedis != nil {
+		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(compressed io.Reader) error {
+			z, err := gzip.NewReader(compressed)
+			if err != nil {
+				return d.ErrNotReady
+			}
+			defer z.Close()
+			snapshot, err := sourceData.ReadSourceRedisSnapshot(ctx, z, *i.Request.SourceRedis)
+			if err != nil {
+				return d.ErrNotReady
+			}
+			defer sourceData.ClearSourceRedisSnapshot(snapshot)
+			if z.Close() != nil {
+				return d.ErrNotReady
+			}
+			return nil
+		})
+	}
 	if i.Request.SkillWorkspace != nil {
 		// Inert proof derives from the exact authenticated captured tar, not a
 		// second source read or a worker-provided "proof succeeded" flag.

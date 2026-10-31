@@ -149,6 +149,9 @@ func (h ControlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func validControl(r ControlRequest) bool {
 	q := r.Invocation.Request
+	if q.SourceRedis != nil && !sourceRedisOperation(q.Operation) {
+		return false
+	}
 	if s := q.SkillWorkspace; s != nil {
 		if q.Operation != "capture-workspace" || r.Invocation.FormalCapture == nil || r.Invocation.ProviderKey == nil || q.RuntimePolicy == nil || s.Runtime != q.RuntimePolicy.Runtime || s.WorkspaceLayout != q.RuntimePolicy.WorkspaceLayout || s.Validate() != nil || s.MaxFiles > q.MaxFiles || s.MaxBytes > q.MaxFileBytes {
 			return false
@@ -176,6 +179,12 @@ func validControl(r ControlRequest) bool {
 			return false
 		}
 	} else if q.Resources != nil {
+		return false
+	} else if sourceRedisOperation(q.Operation) {
+		if !validSourceRedisRequest(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
+			return false
+		}
+	} else if q.SourceRedis != nil {
 		return false
 	} else if teamCaptureOperation(q.Operation) {
 		if !validTeamCapture(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
@@ -446,7 +455,7 @@ func decodeBounded(r io.Reader, dst any, limit int64) error {
 }
 func ReadInvocation(r io.Reader) (Invocation, error) {
 	var i Invocation
-	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && !teamCaptureOperation(i.Request.Operation) && !skillObjectOperation(i.Request.Operation) && !resourceCaptureOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
+	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && !sourceRedisOperation(i.Request.Operation) && !teamCaptureOperation(i.Request.Operation) && !skillObjectOperation(i.Request.Operation) && !resourceCaptureOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
 		return Invocation{}, ErrRequest
 	}
 	return i, nil
