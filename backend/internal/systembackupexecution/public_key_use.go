@@ -19,6 +19,10 @@ import (
 // Revoke serializes on that row. A completed revoke still requires Stopped;
 // this record must never be treated as proof that a process was terminated.
 func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority, binding d.JobBinding, pod BoundPod, req worker.ControlRequest, until time.Time) (*worker.KeyUseLease, error) {
+	// All owner/permit/capability/relay minima are fixed BEFORE the original
+	// lease is persisted or signed. DATETIME(6) cannot retain nanoseconds; floor
+	// in UTC once here, never round up or repair a signed lease on readback.
+	until = until.UTC().Truncate(time.Microsecond)
 	var old []byte
 	if tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND attempt_no=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND revoked=FALSE AND lifecycle='ready' AND stopped_at IS NULL FOR UPDATE`, a.TaskPublicID, a.AttemptNo, binding.Namespace, binding.Name, binding.UID).Scan(&old) != nil {
 		return nil, c.ErrExecutionAuthority
