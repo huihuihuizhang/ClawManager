@@ -416,3 +416,11 @@
 - 新本地payload构造在原HTTP admission之前创建实际确定性ZIP、未引用对象、运行/停机instance完整目录与Team结果文件。unpackaged Skill的demo/previous两原绑定都有SKILL.md、src/main.py与隐藏文件；沿原service目录/文件framing计算MD5，并对独立既有golden 7c876ed8f2fc9206f8cc0914cb0a24f0断言。SQL blob/content/archive hash、size、binding observed_hash与materialize job content_hash均在最初源种子中使用实际值，取消此前重复字母占位。
 - 原S3协议fixture固定version返回实际同一源body及Content-Length/ETag/Last-Modified/version头；原生产S3VersionReader通过同一签名源authority/TLS客户端逐个读取精确version，检验原Size/VersionID及body SHA。其余目录/隐藏文件保留原整体archive输入，不把legacy Skill MD5过滤当删除源数据。
 - 本地workspace上界在core签名之前明确为100files/4MiB file bytes/16MiB archive+compressed；workspace operation材料沿同一原上界，尚无现场物理PVC或真实Kube进程声明。完整同一task源freeze/原10part/V2检查+真实version body读取PASS24.315s；上一版实际文件/SQL绑定组合PASS21.598s。实际C worker、独立permit/verifier、原runner Prepare/SavePlan/reTake/held gate/Stop/Resume尚继续。
+
+## D5.34 同任务原NewPublicCapture/Prepare/SavePlan/reTake链路
+
+- 同一原任务内安装实际a.NewInstallationAuthorityWriter、签名Generate/Unwrap capability、独立verifier grant与Generate permit owner grant，经原loadFormalVerifier/attachFormalVerifier得到原真实FormalKeys与providerPermits构造器。每operation的formal mapping为实际immutable ConfigMap及内容pin；SQL source另有实际独立签名finite worker grant。当前TLS provider协议端明确拒绝全部业务调用，尚未假造Generate/Unwrap成功或使用替代key callback。
+- 原named Kubernetes reads材料与finite SelfSubjectAccessReview协议fixture支撑实际composeCaptureRuntime→NewPublicCapture。删除constructor中的手动Runtime.Prepare/writer.Observe与预先source freeze：现在原leased public runner Prepare经原LinuxProfile原路生成两custody、观察4writers、冻结完整source和CE cutoff一次，返回原TaskPlan。之后所有运行/停机/Skills/PVC/V2断言从该frozen plan读取；原saved CheckFrozenSources重检不增evidence、不改原cutoff。
+- 实际原DurableExecutionStore.Record执行SavePlan与public outcome CAS，密文record的SHA等于原Plan，public状态ready_for_capture并释放旧claim；随后原Loop.Store.Next/SQL queue重拿同publicID/attempt1，读取完全相同原plan字节，建立新current rowversion与原maintenance fence，原gate进入acquiring。该点Jobs仍0，未把acquiring称held；源writer真正Pause、held、六worker与Stop/Resume仍继续。
+- 原controller fixture role已收窄为实际capture/runtime/provider/CE权限，不预给未配置publication权限。容量仍明确独立LOCAL输入采样fixture（原SQL UTC、原WriteCapacityReport原子文件每秒更新），没有用controller伪造现场disk证明；生产freshness/reservation/collector接口未改。Linux NewDeploymentService启动守卫、生产readiness和签名规则未改。
+- 无overlay实际同任务Prepare/加密SavePlan PASS23.655s；加入原reTake/acquiring与窄role后PASS27.402s，已经同步监督4aed原heartbeat窄修。以上只证明当前明确本地SQL/TLS/元数据API协议环境中的原调用链，尚非真实节点/PVC/KMS生产验收或A最终发布。

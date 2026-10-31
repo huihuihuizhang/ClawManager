@@ -265,10 +265,6 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 	if err != nil || len(deployment.Selections) != 1 || len(secrets.Selections) != 1 {
 		t.Fatal("same-task original finite resource selection", err)
 	}
-	mounts, identities, records, err := authority.instanceMountMetadata(ctx, f.sourceInventory, f.frozenWriters, metadata, skills, nil)
-	if err != nil || len(mounts) != 2 || len(identities) != 2 || len(records) != 2 || mounts[0].Skills == nil || mounts[1].Skills != nil {
-		t.Fatal("same-task original custody/image/PVC/Skills workspace bindings", err)
-	}
 	if _, _, err := f.service.attachProductionSources(f.owner, b.LinuxProfileConfig{}); err == nil {
 		t.Fatal("incomplete original CE material enabled the six-worker path")
 	}
@@ -276,7 +272,9 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 	if f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", f.publicID).Scan(&jobs) != nil || jobs != 0 || f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=?", f.publicID).Scan(&evidence) != nil || evidence != 0 {
 		t.Fatal("metadata-only source stage dispatched Jobs or invented completion evidence")
 	}
-	f.sourceInventory = f.freezeOriginalSource(ctx, t, metadata)
+	f.installLocalOriginalControlApproval(ctx, t, metadata)
+	f.installOriginalFormalMaterials(ctx, t)
+	f.composeOriginalPublicRuntime(ctx, t)
 }
 
 // Pin the original public control trust anchor as an immutable formal input.
