@@ -143,28 +143,41 @@ func (s SQLExecutionRecords) read(ctx context.Context, a d.Authority, kind strin
 // still recheck above, while OriginalCapturePlan requires its final locked
 // input/ciphertext comparison and the caller's original current transaction.
 func (s SQLExecutionRecords) readPlain(ctx context.Context, a d.Authority, kind string) ([]byte, error) {
+	plain, _, err := s.readPlainRecord(ctx, a, kind)
+	return plain, err
+}
+
+type executionPlainFacts struct {
+	ref, digest, sealedHash, keyHash string
+	sealedSize                       int64
+}
+
+// Facts describe the exact bytes/key actually authenticated, never a separate
+// earlier metadata sample. This prevents a changed read from populating an
+// immutable-data cache under the wrong ciphertext identity.
+func (s SQLExecutionRecords) readPlainRecord(ctx context.Context, a d.Authority, kind string) ([]byte, executionPlainFacts, error) {
 	var ref, digest string
 	var sealed []byte
 	err := s.Authority.DB.QueryRowContext(ctx, "SELECT payload_sha256,key_ref,sealed_payload FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase=? AND record_kind=?", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, kind).Scan(&digest, &ref, &sealed)
 	if err != nil {
-		return nil, err
+		return nil, executionPlainFacts{}, err
 	}
 	if len(sealed) > (8<<20)+4096 || !executionHash.MatchString(digest) {
-		return nil, ErrExecutionRecord
+		return nil, executionPlainFacts{}, ErrExecutionRecord
 	}
 	resolved, key, err := s.Keys.Resolve(ctx, a, ref)
 	defer clear(key)
 	if err != nil || resolved != ref || len(key) != 32 {
-		return nil, ErrExecutionRecord
+		return nil, executionPlainFacts{}, ErrExecutionRecord
 	}
 	// The authenticated reader enforces the same 8 MiB maximum. Reserve only
 	// the actual bounded ciphertext size, rather than 8 MiB for every check.
 	plain := bytes.NewBuffer(make([]byte, 0, min(len(sealed), 8<<20)))
 	defer func() { clear(plain.Bytes()) }()
 	if staging.Open(ctx, bytes.NewReader(sealed), plain, key, recordBinding(a, kind, digest), 8<<20) != nil || recordHash(plain.Bytes()) != digest {
-		return nil, ErrExecutionRecord
+		return nil, executionPlainFacts{}, ErrExecutionRecord
 	}
-	return bytes.Clone(plain.Bytes()), nil
+	return bytes.Clone(plain.Bytes()), executionPlainFacts{ref: ref, digest: digest, sealedHash: recordHash(sealed), sealedSize: int64(len(sealed)), keyHash: recordHash(key)}, nil
 }
 
 func (s SQLExecutionRecords) SavePlan(ctx context.Context, in d.Input, plan d.Plan) error {
