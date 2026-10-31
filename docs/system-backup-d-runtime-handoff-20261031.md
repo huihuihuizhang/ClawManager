@@ -223,3 +223,12 @@
 - 真实本机MySQL+实际 LinuxProfile.Discover：在users已读后的同一RR中，另一个真实连接提交新Team/member，第一次发现仍只有旧Team，下一次同配置发现自动得到两个Team及真实成员；同一source的ONE domain.CaptureSource SQL导出同时通过Teams与非空Skills投影校验。原共享PVC `/team`、独立UID及固定对象版本正例另测；missing/extra/duplicate claim、foreign object/member、unknown schema六例全拒绝。
 - 该用例11表使用原 reviewed schema.json 在真实MySQL构造精确column/type/nullability/extra的具名fixture，不冒充原业务迁移/外键验收。BuildWriters/BuildParts是明确fixture，所以本项不等于生产六项factory、物理quiesce或完整source权限已完成。原B gate/writers/recovery包装未变，默认functional/workspace门禁未改。
 - 已保留WIP安全快进 backup@4ae5d729（含监督集成D5.10/A精确Kube reads）。完整team0.651s/publicadapter4.841s通过，D真实SQL opt-in开启；监督另独立定向8场景3.903s通过。git diff --check无错误。下一项继续实际service构造/同一acceptance六项spec/自动metadata/全部参与者与原冻结barrier；readiness必须来自真实探测后才放行。
+
+## D5.12 原 SQL 事实 / 事务后源身份绑定（2026-10-31）
+
+- team.ReadSourceFacts 在原认证RR内只读原schema、Team/PVC名称/namespace/root和实际成员/owner/instance关系，不虚构PVC UID或provider身份。新SourceFacts有明确版本、有界行数及关系验证；独立BindAutomaticStorage在事务外绑定原受信存储映射。ReadAutomaticInventory现在复用这两个阶段，保留原schema及完整关系/存储校验，D5.11旧接口行为不变。
+- LinuxProfile新增明确ReadTeamFacts/FreezeSources边界；SQL事实、users/instances和Skills仍在同一原RR。RR结束后只可加入具体Teams存储身份和有界CaptureMetadata；基础SQL DTO逐层深拷贝，MatchesInventory拒绝回调替换Team/member/PVC关系。原事实与实际存储身份一起进入同一SourceSHA，再由原模块工厂与writer snapshot消费。
+- CheckSource再次读取相同SQL事实并独立重做存储发现，要求同样SourceSHA；metadata不携带每次读取时间或临时令牌。preflight仅SQL，不调用FreezeSources/providers，不生成Job。配置ReadTeamFacts却缺FreezeSources或混用旧ReadTeams会在构造时拒绝。
+- 实际本机MySQL+LinuxProfile.Discover/CheckSource测试：FreezeSources入口断言原源DB Stats.InUse为0；尝试改users/instances/Skills及Team事实不能改变原库存；伪造已绑定Team状态被拒绝。相同固定metadata重读通过，原PVC UID/对象版本改变后拒绝。preflight调用次数证明不触发远端resolver。既有同RR外部提交/新Team下次纳入和8个原映射场景保留通过。
+- 最终完整team0.632s/publicadapter5.056s通过，D真实SQL opt-in开启；监督此前独立postRR及旧8场景4.181s通过。安全保留WIP快进backup81e418e4（A当前publisher verifier）；git diff --check无错误。
+- 本切片的FreezeSources测试明确使用具名provider metadata fixture；实际DeploymentService的capture材料加载、六模块工厂、远端发现及新完整Redis操作仍为未交付WIP，未包含进本提交。页面acceptance/六项guard/readiness未放开，不把本边界当生产装配或完整备份成功。

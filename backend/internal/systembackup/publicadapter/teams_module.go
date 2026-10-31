@@ -167,3 +167,19 @@ func WithAutomaticTeamsInventory(source LinuxProfileConfig, storage team.Automat
 	}
 	return source
 }
+
+// WithTeamsSourceFacts installs only the original SQL reader. A concrete
+// deployment FreezeSources must subsequently bind real PVC/provider metadata.
+func WithTeamsSourceFacts(source LinuxProfileConfig) LinuxProfileConfig {
+	source.ReadTeamFacts = func(ctx context.Context, tx *sql.Tx, inv SourceInventory) (*team.SourceFacts, error) {
+		users, owners := map[int]bool{}, map[int]int{}
+		for _, id := range inv.Users {
+			users[id] = true
+		}
+		for _, instance := range inv.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		return team.ReadSourceFacts(ctx, tx, users, owners)
+	}
+	return source
+}

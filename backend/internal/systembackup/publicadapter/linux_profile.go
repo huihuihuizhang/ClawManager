@@ -21,6 +21,8 @@ type SourceInventory struct {
 	Instances            []InstanceIdentity
 	Teams                *team.Inventory      `json:"Teams,omitempty"`
 	Skills               *sh.CaptureInventory `json:"Skills,omitempty"`
+	TeamFacts            *team.SourceFacts    `json:"TeamFacts,omitempty"`
+	CaptureMetadata      json.RawMessage      `json:"CaptureMetadata,omitempty"`
 }
 
 func cloneSourceInventory(in SourceInventory) SourceInventory {
@@ -28,6 +30,8 @@ func cloneSourceInventory(in SourceInventory) SourceInventory {
 	in.Instances = append([]InstanceIdentity(nil), in.Instances...)
 	in.Teams = team.CloneInventory(in.Teams)
 	in.Skills = sh.CloneCaptureInventory(in.Skills)
+	in.TeamFacts = team.CloneSourceFacts(in.TeamFacts)
+	in.CaptureMetadata = append(json.RawMessage(nil), in.CaptureMetadata...)
 	return in
 }
 
@@ -45,6 +49,10 @@ type LinuxProfileConfig struct {
 	// Optional C reader shares this exact authenticated SQL snapshot. A nil
 	// reader preserves historical user/instance plans and cannot enable Teams.
 	ReadTeams func(context.Context, *sql.Tx, SourceInventory) (*team.Inventory, error)
+	// Production discovery can read original SQL facts without inventing PVC
+	// identities; FreezeSources binds remote identities AFTER ending this RR.
+	ReadTeamFacts func(context.Context, *sql.Tx, SourceInventory) (*team.SourceFacts, error)
+	FreezeSources func(context.Context, d.Input, SourceInventory) (*team.Inventory, json.RawMessage, error)
 	// Optional Skills projection shares this same authenticated discovery RR
 	// transaction. Nil preserves legacy plans and cannot enable Skills.
 	ReadSkills func(context.Context, *sql.Tx, SourceInventory) (*sh.CaptureInventory, error)
@@ -64,6 +72,9 @@ type LinuxProfileConfig struct {
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
+	if cfg.ReadTeamFacts != nil && (cfg.ReadTeams != nil || cfg.FreezeSources == nil) {
+		return nil, d.ErrNotReady
+	}
 	if (cfg.Source == nil && !cfg.RecoveryOnly) || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || (cfg.BuildParts == nil && cfg.BuildPartsWithWriters == nil) {
 		return nil, d.ErrNotReady
 	}
@@ -136,6 +147,17 @@ func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 		}
 		out.Teams = team.CloneInventory(out.Teams)
 	}
+	if p.cfg.ReadTeamFacts != nil {
+		owners := map[int]int{}
+		for _, instance := range out.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		out.TeamFacts, err = p.cfg.ReadTeamFacts(ctx, tx, cloneSourceInventory(out))
+		if err != nil || out.TeamFacts == nil || out.TeamFacts.Validate(users, owners) != nil {
+			return SourceInventory{}, d.ErrNotReady
+		}
+		out.TeamFacts = team.CloneSourceFacts(out.TeamFacts)
+	}
 	if p.cfg.ReadSkills != nil {
 		out.Skills, err = p.cfg.ReadSkills(ctx, tx, cloneSourceInventory(out))
 		owners := map[int]int{}
@@ -158,6 +180,10 @@ func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 func (p *LinuxProfile) Discover(ctx context.Context, in d.Input) (Discovery, error) {
 	var out Discovery
 	inv, err := p.inventory(ctx)
+	if err != nil {
+		return out, err
+	}
+	inv, err = p.freezeSources(ctx, in, inv)
 	if err != nil {
 		return out, err
 	}
@@ -236,8 +262,11 @@ func (p *LinuxProfile) Preflight(ctx context.Context, in d.Input, x Discovery) (
 	return out, nil
 }
 
-func (p *LinuxProfile) CheckSource(ctx context.Context, _ d.Input, x Discovery) error {
+func (p *LinuxProfile) CheckSource(ctx context.Context, in d.Input, x Discovery) error {
 	current, err := p.inventory(ctx)
+	if err == nil {
+		current, err = p.freezeSources(ctx, in, current)
+	}
 	if err != nil {
 		return err
 	}
