@@ -34,6 +34,7 @@ type PublicationTargetMaterials struct {
 	Region                string `json:"region"`
 	Bucket                string `json:"bucket"`
 	Root                  string `json:"root"`
+	RemoteStagingRoot     string `json:"remote_staging_root,omitempty"`
 	ReadIdentityHash      string `json:"read_identity_hash"`
 	ReadRefVersion        string `json:"read_ref_version"`
 	WriteIdentityHash     string `json:"write_identity_hash"`
@@ -71,6 +72,9 @@ type nativePublicationS3 struct {
 }
 
 func (p PublicationTargetMaterials) validate() error {
+	if p.RemoteStagingRoot != "" && (!strings.HasSuffix(p.RemoteStagingRoot, "/") || !safePublicationKey(strings.TrimSuffix(p.RemoteStagingRoot, "/")) || strings.HasPrefix(p.RemoteStagingRoot, p.Root) || strings.HasPrefix(p.Root, p.RemoteStagingRoot)) {
+		return errPublicationUnavailable
+	}
 	u, err := url.Parse(p.Endpoint)
 	if p.Version != publicationTargetVersion || err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || strings.ContainsAny(p.Endpoint, "?#\r\n") || !regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`).MatchString(p.Region) || !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`).MatchString(p.Bucket) || strings.Contains(p.Bucket, "..") || p.InstallationID == "" || !strings.HasSuffix(p.Root, "/") || !safePublicationKey(strings.TrimSuffix(p.Root, "/")) || p.ReadIdentityHash == p.WriteIdentityHash {
 		return errPublicationUnavailable

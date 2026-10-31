@@ -23,7 +23,7 @@ import (
 // exact named LOCAL object policy, candidate transport and no-repeat behavior.
 // The local allowlist does not attest production provider permission materials.
 func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
-	for _, mode := range []string{"success", "lost-put-ack", "candidate-denied", "credential-withdrawn", "bad-input-sha", "bad-version", "final-object-in-request", "same-staging-root", "manifest-index-drift"} {
+	for _, mode := range []string{"success", "lost-put-ack", "candidate-denied", "credential-withdrawn", "bad-input-sha", "bad-version", "final-object-in-request", "same-staging-root", "manifest-index-drift", "missing-owner-marker"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			directory := t.TempDir()
@@ -53,6 +53,9 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 			}
 			p := PublicationUploadRequest{Version: publicationUploadVersion, Installation: "installation_upload", Backup: "sbk_11111111-1111-4111-8111-111111111111", Attempt: 1, Region: "local-1", Bucket: "original", ArtifactRoot: "installation_upload/", RemoteStagingRoot: "remote-staging/installation_upload/", CredentialHash: hash(private), Deadline: time.Now().Add(50 * time.Second), Objects: []PublicationUploadInput{{Path: "parts/original.enc", SHA256: hash(cipher), Bytes: int64(len(cipher))}, {Path: "artifact-index.json", SHA256: hash(index), Bytes: int64(len(index))}}}
 			p.ManifestInput = []byte(`{"schema_version":"system-backup.v1","origin_installation_id":"installation_upload","backup_public_id":"` + p.Backup + `","attempt_no":1,"artifact_index":{"path":"artifact-index.json","checksum":"` + hash(index) + `"}}`)
+			// Protocol DATA only; actual original 104 HMAC construction/recheck is
+			// separately tested against current publisher authority and real SQL.
+			p.CandidateOwnerHMAC = strings.Repeat("b", 64)
 			prefix := p.ArtifactRoot + p.Backup + "/1/"
 			candidate := p.RemoteStagingRoot + p.Backup + "/1/manifest-candidate.json"
 			allowed := map[string]bool{prefix + "parts/original.enc": true, prefix + "artifact-index.json": true, candidate: true}
@@ -70,7 +73,16 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 					return
 				}
 				puts++
-				for _, header := range []string{"content-length", "content-type", "if-none-match", "x-amz-content-sha256", "x-amz-checksum-sha256"} {
+				headers := []string{"content-length", "content-type", "if-none-match", "x-amz-content-sha256", "x-amz-checksum-sha256"}
+				if key == candidate {
+					headers = append(headers, "x-amz-meta-system-backup-owner")
+					if r.Header.Get("X-Amz-Meta-System-Backup-Owner") != p.CandidateOwnerHMAC {
+						t.Error("candidate metadata lost original owner marker")
+						out.WriteHeader(403)
+						return
+					}
+				}
+				for _, header := range headers {
 					found := false
 					for _, signed := range strings.Split(r.URL.Query().Get("X-Amz-SignedHeaders"), ";") {
 						if signed == header {
@@ -143,6 +155,8 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 				p.RemoteStagingRoot = p.ArtifactRoot + "remote/"
 			case "manifest-index-drift":
 				p.ManifestInput = bytes.ReplaceAll(p.ManifestInput, []byte(hash(index)), []byte(strings.Repeat("f", 64)))
+			case "missing-owner-marker":
+				p.CandidateOwnerHMAC = ""
 			}
 			raw, _ := json.Marshal(p)
 			result, err := RunPublicationUploadOnly(ctx, raw, caFile, credentialFile, input, output)
@@ -183,7 +197,7 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 			if mode == "credential-withdrawn" && before != 1 {
 				t.Fatal("withdrawn upload credential continued", before)
 			}
-			if mode == "bad-input-sha" || mode == "final-object-in-request" || mode == "same-staging-root" || mode == "manifest-index-drift" {
+			if mode == "bad-input-sha" || mode == "final-object-in-request" || mode == "same-staging-root" || mode == "manifest-index-drift" || mode == "missing-owner-marker" {
 				if before != 0 {
 					t.Fatal("invalid input reached provider", before)
 				}

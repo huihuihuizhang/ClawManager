@@ -32,6 +32,7 @@ type PublicationUploadRequest struct {
 	Attempt                                                   uint64
 	Endpoint, Region, Bucket, ArtifactRoot, RemoteStagingRoot string
 	CAHash, CredentialHash                                    string
+	CandidateOwnerHMAC                                        string
 	Deadline                                                  time.Time
 	Objects                                                   []PublicationUploadInput
 	ManifestInput                                             json.RawMessage
@@ -55,6 +56,9 @@ type PublicationUploadResult struct {
 const publicationUploadVersion = "system-backup-upload-only.v1"
 
 func (p PublicationUploadRequest) validate() ([]byte, string, error) {
+	if p.CandidateOwnerHMAC != "" && !formalCandidateDigest(p.CandidateOwnerHMAC) {
+		return nil, "", errPublicationUnavailable
+	}
 	if p.Version != publicationUploadVersion || !strings.HasPrefix(p.Installation, "installation_") || len(p.Installation) > 128 || !strings.HasPrefix(p.Backup, "sbk_") || len(p.Backup) != 40 || p.Attempt < 1 || len(p.Objects) < 2 || len(p.Objects) > 20001 || p.Deadline.IsZero() || !formalCandidateDigest(p.CAHash) || !formalCandidateDigest(p.CredentialHash) {
 		return nil, "", errPublicationUnavailable
 	}
@@ -149,6 +153,9 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 	manifest, candidateKey, err := p.validate()
 	if err != nil {
 		return zero, err
+	}
+	if !formalCandidateDigest(p.CandidateOwnerHMAC) {
+		return zero, errPublicationUnavailable
 	}
 	if !time.Now().Before(p.Deadline) || time.Until(p.Deadline) > 24*time.Hour {
 		return zero, errPublicationUnavailable
@@ -275,6 +282,14 @@ func publicationUploadPut(ctx context.Context, client *http.Client, p Publicatio
 	r.Header.Set("X-Amz-Content-Sha256", digest)
 	sum, _ := hex.DecodeString(digest)
 	r.Header.Set("X-Amz-Checksum-Sha256", base64.StdEncoding.EncodeToString(sum))
+	ownerHeader := ""
+	if key == p.RemoteStagingRoot+p.Backup+"/"+strconv.FormatUint(p.Attempt, 10)+"/manifest-candidate.json" {
+		if !formalCandidateDigest(p.CandidateOwnerHMAC) {
+			return zero, errPublicationUnavailable
+		}
+		ownerHeader = "x-amz-meta-system-backup-owner"
+		r.Header.Set(ownerHeader, p.CandidateOwnerHMAC)
+	}
 	until := p.Deadline
 	if credential.Until.Before(until) {
 		until = credential.Until
@@ -288,6 +303,17 @@ func publicationUploadPut(ctx context.Context, client *http.Client, p Publicatio
 		found := false
 		for _, name := range strings.Split(r.URL.Query().Get("X-Amz-SignedHeaders"), ";") {
 			if name == required {
+				found = true
+			}
+		}
+		if !found {
+			return zero, errPublicationUnavailable
+		}
+	}
+	if ownerHeader != "" {
+		found := false
+		for _, name := range strings.Split(r.URL.Query().Get("X-Amz-SignedHeaders"), ";") {
+			if name == ownerHeader {
 				found = true
 			}
 		}
