@@ -132,3 +132,32 @@ func TestOriginalGeneratePermitIssuerDelegation(t *testing.T) {
 		}
 	})
 }
+
+func TestOriginalGeneratePodProjectionCannotEscapeSignedPath(t *testing.T) {
+	root := t.TempDir()
+	template := filepath.Join(root, "workers", "{pod_uid}", "token")
+	first, err := workerJWTIdentityPath(template, "original-pod-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := workerJWTIdentityPath(template, "original-pod-2")
+	if err != nil || first == second || first != filepath.Join(root, "workers", "original-pod-1", "token") {
+		t.Fatal("distinct admitted Pods shared a projection")
+	}
+	static := filepath.Join(root, "static-token")
+	if got, err := workerJWTIdentityPath(static, "original-pod-1"); err != nil || got != static {
+		t.Fatal("static container path changed")
+	}
+	for _, item := range []struct{ path, uid string }{
+		{template, "../other"}, {template, `..\other`}, {template, ".."}, {template, ""}, {template, "pod/other"},
+		{filepath.Join(root, "prefix-{pod_uid}", "token"), "pod"},
+		{filepath.Join(root, "{pod_uid}", "{pod_uid}", "token"), "pod"},
+		{filepath.Join(root, "{other}", "{pod_uid}", "token"), "pod"},
+		{filepath.Join(root, "{pod_uid}", "token}"), "pod"},
+		{"relative/{pod_uid}/token", "pod"},
+	} {
+		if _, err := workerJWTIdentityPath(item.path, item.uid); err == nil {
+			t.Errorf("invalid signed projection admitted: %q %q", item.path, item.uid)
+		}
+	}
+}

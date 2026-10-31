@@ -244,7 +244,11 @@ func (p *PreparedProviderPermitIssue) Stage(ctx context.Context, tx *sql.Tx, lea
 		if err != nil {
 			return err
 		}
-		payload := kms.DeliveredPermitPayload{Version: kms.PermitDeliveryVersion, IssuerGrantSHA256: cfg.GrantMount.SHA256, Nonce: lease.Nonce, Request: lease.Access.Request, Permit: kms.ProviderPermit{Version: "system-backup-provider-permit.v1", Identity: lease.Identity, Operation: kms.Generate, Endpoint: lease.Access.Endpoint, KeyName: lease.Access.KeyName, ContextBase64: context64, NotBefore: now, ExpiresAt: lease.Until, JWT: kms.JWTIdentityGrant{Mount: p.grant.GeneratePermission.AuthMount, Role: p.grant.GeneratePermission.Role, Policy: p.grant.GeneratePermission.Policy, IdentityFile: p.grant.WorkerJWTIdentityFile}}}
+		identityFile, err := workerJWTIdentityPath(p.grant.WorkerJWTIdentityFile, lease.Identity.PodUID)
+		if err != nil {
+			return err
+		}
+		payload := kms.DeliveredPermitPayload{Version: kms.PermitDeliveryVersion, IssuerGrantSHA256: cfg.GrantMount.SHA256, Nonce: lease.Nonce, Request: lease.Access.Request, Permit: kms.ProviderPermit{Version: "system-backup-provider-permit.v1", Identity: lease.Identity, Operation: kms.Generate, Endpoint: lease.Access.Endpoint, KeyName: lease.Access.KeyName, ContextBase64: context64, NotBefore: now, ExpiresAt: lease.Until, JWT: kms.JWTIdentityGrant{Mount: p.grant.GeneratePermission.AuthMount, Role: p.grant.GeneratePermission.Role, Policy: p.grant.GeneratePermission.Policy, IdentityFile: identityFile}}}
 		payloadRaw, _ := json.Marshal(payload)
 		key, err := readPermitSigningKey(cfg.SigningKeyFile, p.grant.SigningPublicKey)
 		if err != nil {
@@ -374,7 +378,11 @@ func (p *PreparedProviderPermitIssue) authenticateDelivery(raw []byte, checksum 
 		return kms.DeliveredProviderPermit{}, kms.ErrPermission
 	}
 	context64, _ := kms.TransitContext(lease.Access.Request)
-	jwt := kms.JWTIdentityGrant{Mount: p.grant.GeneratePermission.AuthMount, Role: p.grant.GeneratePermission.Role, Policy: p.grant.GeneratePermission.Policy, IdentityFile: p.grant.WorkerJWTIdentityFile}
+	identityFile, err := workerJWTIdentityPath(p.grant.WorkerJWTIdentityFile, lease.Identity.PodUID)
+	if err != nil {
+		return kms.DeliveredProviderPermit{}, err
+	}
+	jwt := kms.JWTIdentityGrant{Mount: p.grant.GeneratePermission.AuthMount, Role: p.grant.GeneratePermission.Role, Policy: p.grant.GeneratePermission.Policy, IdentityFile: identityFile}
 	q := body.Permit
 	if body.Version != kms.PermitDeliveryVersion || body.IssuerGrantSHA256 != p.issuer.cfg.GrantMount.SHA256 || body.Nonce != lease.Nonce || body.Request != lease.Access.Request || q.Version != "system-backup-provider-permit.v1" || q.Identity != lease.Identity || q.Operation != kms.Generate || q.Endpoint != lease.Access.Endpoint || q.KeyName != lease.Access.KeyName || q.ContextBase64 != context64 || q.JWT != jwt || q.CredentialRef != "" || q.CredentialSHA256 != "" || now.Before(q.NotBefore) || !now.Before(q.ExpiresAt) || !q.ExpiresAt.Equal(lease.Until) || !expires.Equal(q.ExpiresAt) || q.ExpiresAt.After(p.until) {
 		return kms.DeliveredProviderPermit{}, kms.ErrPermission

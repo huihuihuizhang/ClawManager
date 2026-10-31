@@ -424,3 +424,9 @@
 - 实际原DurableExecutionStore.Record执行SavePlan与public outcome CAS，密文record的SHA等于原Plan，public状态ready_for_capture并释放旧claim；随后原Loop.Store.Next/SQL queue重拿同publicID/attempt1，读取完全相同原plan字节，建立新current rowversion与原maintenance fence，原gate进入acquiring。该点Jobs仍0，未把acquiring称held；源writer真正Pause、held、六worker与Stop/Resume仍继续。
 - 原controller fixture role已收窄为实际capture/runtime/provider/CE权限，不预给未配置publication权限。容量仍明确独立LOCAL输入采样fixture（原SQL UTC、原WriteCapacityReport原子文件每秒更新），没有用controller伪造现场disk证明；生产freshness/reservation/collector接口未改。Linux NewDeploymentService启动守卫、生产readiness和签名规则未改。
 - 无overlay实际同任务Prepare/加密SavePlan PASS23.655s；加入原reTake/acquiring与窄role后PASS27.402s，已经同步监督4aed原heartbeat窄修。以上只证明当前明确本地SQL/TLS/元数据API协议环境中的原调用链，尚非真实节点/PVC/KMS生产验收或A最终发布。
+
+## D5.35 原Generate owner签名的独立Pod JWT路径投影
+
+- 现有ProviderPermitIssuerGrant.WorkerJWTIdentityFile兼容静态容器绝对路径，并允许独立owner预签一个完整的`{pod_uid}`路径段。只由原已admit的lease.Identity.PodUID解析；产生的具体路径进入原delivered permit原签名，ReadCommitted重验相同派生值。没有客户端路径覆盖、替代resolver、改写冻结plan或延长key window。
+- 拒绝非法UID、相对/不规范路径、路径穿越、非完整模板段、重复模板及残留brace。两不同Job/Pod使用独立实际文件，两个原NewDeliveredCaptureJob的TLS login必须交错到达才释放；实际Generate返回各自不同DEK。错误namespace/Pod UID/SA UID在原jwtToken校验处拒绝，错误Job无Generate调用。
+- adapter全包PASS5.450s、KMS全包PASS3.295s。这是明确LOCAL协议及原客户端边界验证；同任务10worker整体Capture仍WIP，暂未通过Stop/Resume或A最终publication，生产readiness保持原值。
