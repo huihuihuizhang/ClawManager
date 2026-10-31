@@ -79,12 +79,26 @@ type PreparedProviderPermitIssue struct {
 	until              time.Time
 	id                 string
 	lease              *worker.KeyUseLease
+	original           *c.OriginalCapturePlan
 }
 
 // Prepare authenticates original frozen source/real controller and worker on
 // the original SQL/K8s chain OUTSIDE transaction locks. Only original owner pins
 // delegate signing; request DTOs, artifact signers and the identity CA cannot.
 func (i *ProviderPermitIssuer) Prepare(ctx context.Context, scope ProviderPermitIssueScope) (*PreparedProviderPermitIssue, error) {
+	return i.prepare(ctx, scope, nil)
+}
+
+// PrepareOriginal reuses only this request's controller-authenticated history.
+// Current workload, owner grant, capability, mapping and Stage checks remain.
+func (i *ProviderPermitIssuer) PrepareOriginal(ctx context.Context, scope ProviderPermitIssueScope, original *c.OriginalCapturePlan) (*PreparedProviderPermitIssue, error) {
+	if original == nil {
+		return nil, kms.ErrPermission
+	}
+	return i.prepare(ctx, scope, original)
+}
+
+func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermitIssueScope, original *c.OriginalCapturePlan) (*PreparedProviderPermitIssue, error) {
 	if i == nil || ctx == nil || ctx.Err() != nil || scope.Invocation.FormalCapture == nil || scope.Invocation.ProviderKey == nil || !worker.ValidateRecordedInvocation(scope.Invocation) {
 		return nil, kms.ErrPermission
 	}
@@ -128,7 +142,12 @@ func (i *ProviderPermitIssuer) Prepare(ctx context.Context, scope ProviderPermit
 	if err != nil || string(sa.UID) != identity.ServiceAccountUID || sa.DeletionTimestamp != nil {
 		return nil, kms.ErrPermission
 	}
-	planHash, specHash, err := loadOriginalCandidatePlan(ctx, i.cfg.Records, ControllerVerifierCandidate{Input: scope.Input, Job: scope.Job, Invocation: scope.Invocation})
+	var planHash, specHash string
+	if original != nil {
+		planHash, specHash, err = original.MatchPart(ctx, i.cfg.Records, scope.Input, scope.Job, scope.Invocation)
+	} else {
+		planHash, specHash, err = loadOriginalCandidatePlan(ctx, i.cfg.Records, ControllerVerifierCandidate{Input: scope.Input, Job: scope.Job, Invocation: scope.Invocation})
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +171,7 @@ func (i *ProviderPermitIssuer) Prepare(ctx context.Context, scope ProviderPermit
 		}
 	}
 	until = until.UTC().Truncate(time.Microsecond)
-	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, capability: capability, mapping: mapping, planHash: planHash, specHash: specHash, until: until}, nil
+	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, capability: capability, mapping: mapping, planHash: planHash, specHash: specHash, until: until, original: original}, nil
 }
 
 func (p *PreparedProviderPermitIssue) ValidUntil() time.Time {
@@ -169,6 +188,9 @@ const issuedPermitQuery = `SELECT inline_payload,content_checksum,content_size_b
 // It never commits and exposes no uncommitted signed payload to its caller.
 func (p *PreparedProviderPermitIssue) Stage(ctx context.Context, tx *sql.Tx, lease worker.KeyUseLease, action string) error {
 	if p == nil || ctx == nil || ctx.Err() != nil || tx == nil || lease.Identity != p.scope.WorkerIdentity || lease.Access != *p.scope.Invocation.ProviderKey || lease.Nonce == "" || len(lease.Nonce) != 32 || !authorityHash.MatchString(lease.Nonce+lease.Nonce) || !time.Now().Before(lease.Until) || lease.Until.After(p.until) || !lease.Until.Equal(lease.Until.Truncate(time.Microsecond)) || (lease.State != "reserved" && lease.State != "using" && lease.State != "finished") {
+		return kms.ErrPermission
+	}
+	if p.original != nil && p.original.RecheckTx(ctx, tx, p.issuer.cfg.Records, p.scope.Input) != nil {
 		return kms.ErrPermission
 	}
 	switch action {

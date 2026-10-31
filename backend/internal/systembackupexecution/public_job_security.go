@@ -23,6 +23,12 @@ func (o *PublicJobOwner) workerSecurity(ctx context.Context, a d.Authority, part
 	if err != nil {
 		return s, err
 	}
+	return o.workerSecurityWithMounts(ctx, a, part, original, production)
+}
+
+func (o *PublicJobOwner) workerSecurityWithMounts(ctx context.Context, a d.Authority, part b.JobPart, original []kube.MountIdentity, production bool) (kube.WorkerSecurity, error) {
+	s := o.Security
+	s.Volumes = append([]kube.MountIdentity(nil), s.Volumes...)
 	if production {
 		base := s.Volumes[:0]
 		for _, identity := range s.Volumes {
