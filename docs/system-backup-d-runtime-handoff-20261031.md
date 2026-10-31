@@ -232,3 +232,11 @@
 - 实际本机MySQL+LinuxProfile.Discover/CheckSource测试：FreezeSources入口断言原源DB Stats.InUse为0；尝试改users/instances/Skills及Team事实不能改变原库存；伪造已绑定Team状态被拒绝。相同固定metadata重读通过，原PVC UID/对象版本改变后拒绝。preflight调用次数证明不触发远端resolver。既有同RR外部提交/新Team下次纳入和8个原映射场景保留通过。
 - 最终完整team0.632s/publicadapter5.056s通过，D真实SQL opt-in开启；监督此前独立postRR及旧8场景4.181s通过。安全保留WIP快进backup81e418e4（A当前publisher verifier）；git diff --check无错误。
 - 本切片的FreezeSources测试明确使用具名provider metadata fixture；实际DeploymentService的capture材料加载、六模块工厂、远端发现及新完整Redis操作仍为未交付WIP，未包含进本提交。页面acceptance/六项guard/readiness未放开，不把本边界当生产装配或完整备份成功。
+
+## D5.13 实际 MySQL Job 保留 formal 材料（2026-10-31）
+
+- 修复真实 BuildCapturePart→kube.DatabaseJobRequest→DatabaseJob→job 的字段丢失：原 w.FormalMaterials 现在逐级传给原只读 attachFormalMaterials；生成的 MySQL Job 实际带 --formal-config /run/backup/formal/materials.json、原材料ConfigMap和独立SQL源credential/provider JWT/public CA的readonly挂载。数据库仍无源filesystem/evidence挂载，捕获staging仍在原task子目录。
+- 原DatabaseJobRequest新字段仅用于capture-database；restore/verify携带formal capture材料失败。缺材料、非法挂载目录或附加source filesystem均在实际builder拒绝；没有凭据fallback或任意shell。
+- 原 usersInstancesModuleFixture 的真实DB请求，显式先通过worker.ValidateRecordedInvocation，再实际 BuildCapturePart并解码batch/v1 Job：static/delivered permit两正例直接核CLI flag、全部readonly挂载、ConfigMap/Secret原引用、staging task子目录及无源volume；missing/invalid/source volume三负例无Job，纯构造不dispatch。完整kube3.213s/publicadapter5.360s通过，D本机MySQL opt-in开启。
+- 监督原字节overlay已在修复前独立复现该问题（3.308s FAIL），交付后可复跑原overlay。此独立提交只包含数据库材料传递与真实manifest回归，不依赖仍未提交的SourceRedisCaptureJob/完整Redis/六项factory WIP。六项页面闭环仍继续实现，readiness未放开。
+- 补强static permit缺材料边界：原顶部检查仅覆盖delivered pin；现capture-database分支对任意FormalCapture非nil但FormalMaterials缺失都拒绝。六场景分别含missing-static/missing-delivered，两者均无Job；旧纯functional DB捕获完整回归保留。受影响publicadapter完整5.398s通过，D本机SQL opt-in开启。此补强仍独立于SourceRedis WIP。
