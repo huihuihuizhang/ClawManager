@@ -34,6 +34,7 @@ type InstallationSigningPermission struct {
 	Binding                 TransitSigningBinding
 	AuthMount, Role, Policy string
 	CASHA256                string
+	SQLOwner                *SQLSigningOwnerGrant `json:",omitempty"`
 }
 
 // InstallationSigningPin must be deployed independently of the imported record.
