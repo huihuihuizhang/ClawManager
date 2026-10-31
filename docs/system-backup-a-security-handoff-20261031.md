@@ -74,6 +74,8 @@ A2 提交 `4490fc162706194ed246836dad2510f87ca7313d`，重试后已成功push自
 
 ## 第四切片：真实 SQL 原 KEK provider capability reader
 
+提交并推分支：`3ce1bc04c12434f6e5b921ae7786371885d985d3`，监督已独立复测/集成。
+
 新增 `systembackupkekadapter.NewSQLProviderCapabilityPreparation` 和 `NewSQLInstallationPreparation`。后者直接组合既有 `SQLOriginalReader`、独立安装issuer与两用途签名capability evidence，再供 D `WireServices` 消费；两服务与具体capability reader必须同一DB指针。没有新增表、迁移或默认能力。
 
 capability来源复用 `system_backup_v2_evidence` 的 `owner_target_type=system`、当前installation、`capability_snapshot/inline/healthy/none`。每用途固定独立 SourceRecord/issuer，原permission owner签 `ProviderCapabilityDomain + raw record`；完整绑定、typed ref、generate/decrypt精确路径、provider数字version、原AuthMount/Role/Policy及其hash/JWT trust hash必须一致。配置、review脚本或provider写成功不能生成这个原授权证据；本实现没有签发/回填接口。
@@ -89,6 +91,57 @@ prepare在SQL锁外短事务读取；原config/bootstrap事务内使用同一rea
 剩余代码/来源边界：四分区 `retained_artifacts / inflight_and_unknown_writes / holds_and_catalog / restore_and_prune` 的 C 原scanner/adoption/backfill和旧writer/GC mutation hooks在当前仓库仍未提供生产实现，只有DTO/parser/持久化协议；A没有将4行coverage或空References变成完整来源。需原C/业务owner交付其真实来源/分页EOF/旧历史回填及共享fence参与，再接 `PreparedCoverage`。这不是可由现场填一个布尔值解决的事项，也不能据本切片宣布KEK全覆盖。
 
 下一实际消费者为controller独立候选验证Unwrap，必须绑定真实controller workload、原task/attempt/part/config/candidate；A继续补专用resolver/构造，不复用capture Generate或隔离恢复权限。
+
+## 第五切片：controller真实执行身份独立Unwrap（本地验证完成，待D生产装配）
+
+实际代码在独立 `systembackupkekadapter/controller_verifier.go`，只依赖 controller/dispatch/publicadapter/worker/SQL/K8s DTO，**不反导入systembackupexecution**。
+
+D消费ABI：
+
+```go
+factory, err := systembackupkekadapter.NewControllerVerifierFactory(ControllerVerifierConfig{
+    Capabilities: originalSQLCapabilityPreparation, Binding: admittedBinding,
+    CAPEM: originalCA, JWTFile: controllerProjectedJWTFile,
+    Workload: ControllerVerifierWorkload{
+        Namespace: ..., PodName: ..., PodUID: ..., ServiceAccountName: ...,
+        ServiceAccountUID: ..., OwnerKind: ..., OwnerUID: ..., GrantSHA256: ...,
+        ControllerOwner: ..., ConfigVersion: ..., ConfigSHA256: ...,
+    },
+    Kubernetes: actualClient, Authority: owner.Gate.Authority, Records: owner.Gate.Records,
+    CaptureGrantSHA256: owner.Identity.GrantSHA256(),
+    GrantMount: ControllerVerifierGrantMount{File: independentVerifierGrantFile,
+        SHA256: independentVerifierGrantEnvelopeHash, Issuer: originalVerifierOwnerPublicKey},
+})
+// 在原scope恢复原in（D owner.input 已认证），把D3原candidate record完整JSON的SHA256传入。
+unwrapper, err := factory.ForCandidate(ctx, ControllerVerifierCandidate{
+    Input: originalInput, Job: originalCaptureJob, Invocation: originalInvocation,
+    CandidateSHA256: originalSQLCandidateHash, CaptureGrantSHA256: originalCaptureGrantHash,
+})
+// unwrapper实现wire.Unwrapper，另有Recheck(ctx)/Close()/ValidUntil()。
+// D适配FormalCandidateKeyUse.ValidUntil，并在open成功后以该deadline
+// context.WithDeadline包住源读取、AEAD校验、私有custody复制和saveResult/Gate。
+```
+
+Workload前8个身份字段对齐D的FormalVerifierIdentity。**GrantSHA256是独立verifier业务grant完整签名envelope的独立部署pin，必须不同于capture/record-key grant**。原 `Authority.Authorization` 保持实际 `deploymentAuthorization{Service:s}` wrapper；Records.Keys继续使用原s.Forward。工厂明确拒绝把裸PinnedExecutionIdentity当task authorization、错误recordKeys或复用capture grant。独立 `ControllerVerifierGrant` 是原verification业务owner按真实workload/installation/数据库账号/config/capture-grant引用签发的部署级授权，不含每任务未来input；文件+hash+issuer独立固定、期限/撤销每次复查，不能由provider ACL snapshot自证。
+
+支持真实Deployment（Pod→RS→Deployment）、StatefulSet或Job owner链，原captureJob UID仅定位candidate，绝不冒充controller身份。signed Unwrap capability中的 `Permission.ControllerVerifier` 只是该provider role授权给真实workload的观察绑定；它与独立业务grant及当前原task授权三者缺一不可。专用集成测试为 A 唯一文件 `backend/internal/systembackupexecution/a_controller_verifier_integration_test.go`，直接复用实际 `DeploymentService.captureGate(db)` 的deploymentAuthorization/Forward recordKeys，未修改D主文件。
+
+ForCandidate将重读原加密plan及完整invocation/Job spec身份，对照runtime_resources原candidate_sha256，当前SQLExecutionAuthority绑定原task/attempt/config/fence/claim；随后取得原KEK fence并检查保留mapping与Unwrap用途未撤销。只读取Unwrap capability，不要求Generate。原provider登录使用controller自己的JWT，校验batch/nonrenewable/1..20s/单一原policy与真实Pod/SA metadata。
+
+Provider RPC在原SQL锁之外；实际DEK消费在同一原task/KEK-fence事务保护内执行只读流校验/私有本地custody写入，前后重查原authority和provider evidence，完成后rollback释放只读事实锁，再检查实际K8s身份。callback失败不提交custody。回调中的Recheck复用当前原事务，避免新连接递归自锁；对象按Unwrap串行。此路径不提供Generate、独立恢复或裸DEK返回。
+
+`v.until`精确取独立原grant.Until、capability/evidence期限、task deadline和原authority guard的最小值；Config、返回Grant.ExpiresAt、login credentialUntil、解封RPC和WithUse均受它约束。login不接受超出该时间窗的provider TTL。`ValidUntil()`把同一期限暴露给D，wire回调没有context参数，D必须用此deadline派生完整流的context，不能只靠回调后的报错。
+
+验证（Go1.26.1，GOPROXY=off）：
+
+- 五包真实回归 `go test -mod=readonly -p=1 -count=1 -timeout=240s ./internal/systembackupkekadapter ./internal/systembackupexecution ./internal/systembackupkms ./internal/systembackupkekregistry ./internal/systembackupkekadmission` 退出0，3.033s/8.099s/3.755s/0.762s/1.073s。环境启用本机MySQL，execution确实运行A专用集成，没有skip该用例。
+- 专用SQL+TLS测试：原forward/independent grant分离、实际原SQL加密plan重读、真实SQL authority/KEK锁、独立controller JWT→TLS Transit解封→callback原DEK一次、派生context在原事务内Recheck均通过；没有Generate evidence也可Unwrap。裸Forward绕过原wrapper、复用capture grant、关闭原部署、替换原candidate、跨attempt、cancel均在provider登录前拒绝。
+- 独立grant有效期比task/capability早，正常用例断言ValidUntil相等；另以3.5s独立grant和1sprovider credential实际解封，候选流context在DEK回调**内部**到期取消，Recheck当场拒绝、Unwrap失败；之后重试不再login。没有将credential期限错误充当整个流期限。
+- 原grant单测覆盖独立issuer/已撤销/过期/未来/过长/安装/数据库server/账号/Pod/SA/owner/controller/config/capture来源/hash循环、重复/未知JSON成员、挂载字节替换等拒绝。
+
+本机数据库是随机 `ad_a_controller_*`，独立UUID+fixture marker校验后清理；最小原业务DDL和精确127/128迁移，不冒充完整现库。K8s身份链使用client-go fake，TLS provider和签发材料为本地fixture，未运行实际集群/现场KMS/正式六域任务。D仍需在实际observer的FormalKeys闭包及部署配置中作上述适配，且保留独立identity/hash拒绝守卫；不应再要求controller提供不存在的JobUID。
+
+已同步监督D4.1 `b399efc7`，其原 `captureGate` 可直接供本工厂使用。后续A代码责任继续四分区scanner/adoption/backfill及旧writer/GC fence参与；不能将缺失实现改记为现场事实。
 
 ## 现场事实边界（最终集中更新）
 

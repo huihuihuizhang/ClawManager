@@ -29,6 +29,7 @@ type ProviderCapabilityPermission struct {
 	AuthMount, Role, Policy                  string
 	PolicySHA256, RoleSHA256, JWTTrustSHA256 string
 	Reference                                reg.TypedReference
+	ControllerVerifier                       *ControllerVerifierWorkload `json:",omitempty"`
 }
 
 type ProviderCapabilityFacts struct {
@@ -216,6 +217,35 @@ type sqlPreparedCapability struct {
 	pin      ProviderCapabilityPin
 	evidence capabilityEvidence
 	until    time.Time
+}
+
+func (p *SQLProviderCapabilityPreparation) prepareOperation(ctx context.Context, binding reg.Binding, operation kms.Operation) (*sqlPreparedCapability, error) {
+	if p == nil || ctx == nil || ctx.Err() != nil || binding.InstallationID != p.installation || operation != kms.Unwrap {
+		return nil, admission.ErrCandidate
+	}
+	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	if err != nil {
+		return nil, admission.ErrCandidate
+	}
+	defer tx.Rollback()
+	var database reg.DatabaseIdentity
+	var now time.Time
+	if tx.QueryRowContext(ctx, `SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6)`).Scan(&database.ServerUUID, &database.Database, &now) != nil || database != p.database {
+		return nil, admission.ErrCandidate
+	}
+	e, err := readCapabilityEvidence(ctx, tx, p.installation, p.unwrap, false)
+	if err != nil {
+		return nil, err
+	}
+	r, err := authenticateProviderCapability(e, p.unwrap, binding, operation, now)
+	if err != nil {
+		return nil, err
+	}
+	until := r.Until
+	if e.until.Before(until) {
+		until = e.until
+	}
+	return &sqlPreparedCapability{database: p.database, record: r, pin: p.unwrap, evidence: e, until: until}, nil
 }
 
 func (p *sqlPreparedCapability) Source() reg.SourceRecord { return p.record.Source }
