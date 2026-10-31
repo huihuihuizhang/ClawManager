@@ -23,7 +23,7 @@ const original172Catalog = "718e4509d2c83c73636dd9745ac7c2b350a57c01d75b5ac50e48
 
 // Only new marker-owned schemas on the explicitly UUID-pinned local server.
 // The old 172-file install is prepared from its unchanged original SQL bytes;
-// both fresh installation and 172 -> 173 upgrade use ApplyPinnedMigrations.
+// fresh installation and 172/173 -> 174 upgrades use ApplyPinnedMigrations.
 func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 	file := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE")
 	expectedUUID := os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
@@ -55,12 +55,20 @@ func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 		t.Fatal("owned server UUID mismatch")
 	}
 	catalog, err := EmbeddedMigrationCatalog()
-	if err != nil || len(catalog.Filenames) != 173 || catalog.Hash != migrationcatalog.ReviewedHash {
-		t.Fatal("actual reviewed 173 catalog mismatch", err)
+	if err != nil || len(catalog.Filenames) != 174 || catalog.Hash != migrationcatalog.ReviewedHash {
+		t.Fatal("actual reviewed 174 catalog mismatch", err)
 	}
 	oldSources := fstest.MapFS{}
+	previousSources := fstest.MapFS{}
 	for _, name := range catalog.Filenames {
-		if name == stagingIdentityCorrection {
+		if name != "133_backup_v2_publish_original_plan_parent.sql" {
+			body, z := embeddedMigrations.ReadFile("migrations/" + name)
+			if z != nil {
+				t.Fatal(z)
+			}
+			previousSources["migrations/"+name] = &fstest.MapFile{Data: body}
+		}
+		if name == stagingIdentityCorrection || name == "133_backup_v2_publish_original_plan_parent.sql" {
 			continue
 		}
 		body, z := embeddedMigrations.ReadFile("migrations/" + name)
@@ -73,7 +81,11 @@ func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 	if err != nil || len(oldCatalog.Filenames) != 172 || oldCatalog.Hash != original172Catalog {
 		t.Fatal("original 172 SQL bytes/history changed", err)
 	}
-	for _, scenario := range []string{"fresh", "upgrade"} {
+	previousCatalog, err := migrationcatalog.Compute(previousSources, "migrations")
+	if err != nil || len(previousCatalog.Filenames) != 173 || previousCatalog.Hash != "afca74bc1665e536774dfb91f54fdf1bf583c94b393c2e0226268a6d185df4d4" {
+		t.Fatal("original 173 SQL bytes/history changed", err)
+	}
+	for _, scenario := range []string{"fresh", "upgrade172", "upgrade173", "upgrade173-invalid-publish"} {
 		t.Run(scenario, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 			defer cancel()
@@ -111,7 +123,11 @@ func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 					t.Error("owned migration cleanup", e)
 				}
 			}()
-			if scenario == "upgrade" {
+			if scenario != "fresh" {
+				preparationCatalog, preparationSources := oldCatalog, oldSources
+				if strings.HasPrefix(scenario, "upgrade173") {
+					preparationCatalog, preparationSources = previousCatalog, previousSources
+				}
 				func() {
 					conn, e := database.Conn(ctx)
 					if e != nil {
@@ -132,11 +148,11 @@ func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 					if e = ensureSchemaMigrationsTable(conn); e != nil {
 						t.Fatal(e)
 					}
-					for _, filename := range oldCatalog.Filenames {
+					for _, filename := range preparationCatalog.Filenames {
 						if e = assertBackupCaptureIdle(ctx, conn); e != nil {
 							t.Fatal(e)
 						}
-						body, e := oldSources.ReadFile("migrations/" + filename)
+						body, e := preparationSources.ReadFile("migrations/" + filename)
 						if e != nil {
 							t.Fatal(e)
 						}
@@ -151,23 +167,49 @@ func TestStagingIdentityFreshAndOriginal172UpgradeMySQL(t *testing.T) {
 					}
 				}()
 				var count int
-				if e := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); e != nil || count != 172 {
+				if e := database.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&count); e != nil || count != len(preparationCatalog.Filenames) {
 					t.Fatal("old actual migration ledger", count, e)
 				}
-				checkOriginalStagingIdentityExpression(t, ctx, database, false)
+				checkOriginalStagingIdentityExpression(t, ctx, database, strings.HasPrefix(scenario, "upgrade173"))
+				seedPublicationPlanParentFixtures(t, ctx, database, scenario == "upgrade173-invalid-publish")
 			}
-			if z = ApplyPinnedMigrations(ctx, database, MigrationTarget{ServerUUID: expectedUUID, Database: name, CatalogSHA256: catalog.Hash}); z != nil {
+			z = ApplyPinnedMigrations(ctx, database, MigrationTarget{ServerUUID: expectedUUID, Database: name, CatalogSHA256: catalog.Hash})
+			if scenario == "upgrade173-invalid-publish" {
+				if z == nil || !strings.Contains(z.Error(), "sbv2_fk_job_send_publication_plan") {
+					t.Fatal("old publish without original 122 plan did not fail closed", z)
+				}
+				var columns, oldFK, newFK, ledger, rows int
+				if database.QueryRowContext(ctx, `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='system_backup_v2_job_send_intents' AND COLUMN_NAME IN ('legacy_plan_task_public_id','publication_plan_task_public_id','publication_plan_phase','publication_plan_kind')`).Scan(&columns) != nil || columns != 0 {
+					t.Fatal("failed atomic ALTER left new columns", columns)
+				}
+				if database.QueryRowContext(ctx, `SELECT SUM(CONSTRAINT_NAME='sbv2_fk_job_send_plan'),SUM(CONSTRAINT_NAME='sbv2_fk_job_send_publication_plan') FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='system_backup_v2_job_send_intents'`).Scan(&oldFK, &newFK) != nil || oldFK != 1 || newFK != 0 {
+					t.Fatal("failed atomic ALTER switched foreign keys", oldFK, newFK)
+				}
+				if database.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&ledger) != nil || ledger != 173 {
+					t.Fatal("failed migration was recorded", ledger)
+				}
+				if database.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_job_send_intents`).Scan(&rows) != nil || rows != 3 {
+					t.Fatal("failed migration changed existing sends", rows)
+				}
+				t.Log("original 173 invalid publish parent refused; atomic old columns/FK/three rows/ledger retained; no plan manufactured")
+				return
+			}
+			if z != nil {
 				t.Fatal("actual pinned migration entrypoint", z)
 			}
+			if scenario == "fresh" {
+				seedPublicationPlanParentFixtures(t, ctx, database, false)
+			}
+			checkPublicationPlanParentConstraints(t, ctx, database)
 			var count, correction int
-			if z = database.QueryRowContext(ctx, "SELECT COUNT(*),SUM(filename=?) FROM schema_migrations", stagingIdentityCorrection).Scan(&count, &correction); z != nil || count != 173 || correction != 1 {
-				t.Fatal("actual 173 ledger", count, correction, z)
+			if z = database.QueryRowContext(ctx, "SELECT COUNT(*),SUM(filename=?) FROM schema_migrations", stagingIdentityCorrection).Scan(&count, &correction); z != nil || count != 174 || correction != 1 {
+				t.Fatal("actual 174 ledger", count, correction, z)
 			}
 			checkOriginalStagingIdentityExpression(t, ctx, database, true)
 			if z = ApplyPinnedMigrations(ctx, database, MigrationTarget{ServerUUID: expectedUUID, Database: name, CatalogSHA256: catalog.Hash}); z != nil {
 				t.Fatal("idempotent actual pinned migration", z)
 			}
-			t.Logf("%s: actual original ledger 173, correction once, UUID CHECK valid/bad cases, old 172 bytes pinned", scenario)
+			t.Logf("%s: actual original ledger 174, correction once, UUID CHECK valid/bad cases, old 172/173 bytes pinned", scenario)
 		})
 	}
 }
