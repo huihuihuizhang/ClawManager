@@ -56,3 +56,14 @@ func TestWireServicesPinsSQLOriginalReaderDatabase(t *testing.T) {
 		})
 	}
 }
+
+func TestWireServicesPinsConcreteCapabilityReaderToOriginalDatabase(t *testing.T) {
+	db, other := new(sql.DB), new(sql.DB)
+	for _, capDB := range []*sql.DB{db, other} {
+		original := InstallationPreparation{Reader: SQLOriginalReader{DB: db}, Issuer: make([]byte, 32), Capabilities: &SQLProviderCapabilityPreparation{db: capDB}, Now: time.Now}
+		_, _, err := WireServices(sec.ConfigBootstrapService{DB: db}, sec.ConfigMutationService{DB: db}, bootstrapSourceFixture{}, mutationSourceFixture{}, original)
+		if (err == nil) != (capDB == db) {
+			t.Fatal("provider capability reader escaped original database pin", err)
+		}
+	}
+}

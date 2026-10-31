@@ -63,12 +63,32 @@ A2 提交 `4490fc162706194ed246836dad2510f87ca7313d`，重试后已成功push自
 
 ## 第三切片：真实隔离 MySQL 验证
 
+提交并推自己的分支：`25fd3cb15e8e73fb4a14688f40b1835cd98f980d`；监督已独立复测并集成。
+
 - 监督者本机 MySQL 8.4.13，loopback端口59355，固定server_uuid `b9c4d686-d4d3-11f1-9eb5-745d22085e06`，未访问远侧。
 - `go test -mod=readonly -p=1 -count=1 -tags=systembackup_mysql -timeout=180s ./internal/systembackupsecurity -run '^TestSQLSigningOwnerMySQL$' -v` 退出0；测试3.60s，进程包6.117s。
 - 增补真实CHECK损坏拒绝并带三个历史seed回归后，最终 `-run '^Test(SQLSigningOwnerMySQL|(AConfigProof|DConfigWriter|DConfigMaintenanceReceipt)MySQLSeed)$'` 退出0，MySQL测试1.38s，包3.866s。旧tagged seed的候选SQL摘要仍指表名适配前内容，现按仓库中原fixture的**完整LF字节**重新固定两个测试pin，并显式LF归一化；不改fixture SQL、迁移或生产信任pin。错摘要/错字节/重复字段/未知字段负例继续拒绝。
 - 三用途自动SQL→JWT→TLS Transit→历史公钥独立验签实际成功。源记录来自原backup/attempt/source journal/capture_result；Stage原事务回滚后不可签，提交后可签，原字节重复freeze幂等。
 - 独立SQL签名用户只有六表SELECT及evidence INSERT，实际UPDATE源task和DELETE evidence均被MySQL拒绝；原owner推进claim版本后旧signer在登录前拒绝。
 - 按本轮随机数据库/用户名、原服务器UUID与fixture marker核对后清理本次资源；未修改其他schema、系统库或停止共享服务器。该测试的最小DDL验证真实事务/CHECK/grants，不声称整套应用迁移/FK或正式六域业务采集通过。
+
+## 第四切片：真实 SQL 原 KEK provider capability reader
+
+新增 `systembackupkekadapter.NewSQLProviderCapabilityPreparation` 和 `NewSQLInstallationPreparation`。后者直接组合既有 `SQLOriginalReader`、独立安装issuer与两用途签名capability evidence，再供 D `WireServices` 消费；两服务与具体capability reader必须同一DB指针。没有新增表、迁移或默认能力。
+
+capability来源复用 `system_backup_v2_evidence` 的 `owner_target_type=system`、当前installation、`capability_snapshot/inline/healthy/none`。每用途固定独立 SourceRecord/issuer，原permission owner签 `ProviderCapabilityDomain + raw record`；完整绑定、typed ref、generate/decrypt精确路径、provider数字version、原AuthMount/Role/Policy及其hash/JWT trust hash必须一致。配置、review脚本或provider写成功不能生成这个原授权证据；本实现没有签发/回填接口。
+
+prepare在SQL锁外短事务读取；原config/bootstrap事务内使用同一read view与当前FOR SHARE重读，核对原证据字节/期限/原数据库、用途及撤销。签名capability只是准入事实，不能授予Job Generate或controller verifier Unwrap，也不是恢复授权。
+
+验证：
+
+- `go test -mod=readonly -p=1 -count=1 -timeout=180s ./internal/systembackupkekadapter ./internal/systembackupkekadmission ./internal/systembackupkekregistry` 退出0，1.138s/0.979s/0.795s；包含错用途/typed ref/两种版本/错issuer/未来/过期/撤销/换原证据/期限续期/数据库越界/绑定材料副本。
+- 真实本机 MySQL：`-tags=systembackup_mysql -run '^TestSQLOriginalKEKCapabilityMySQL$' -v ./internal/systembackupkekadapter` 退出0，case0.38s/pkg1.620s。精确执行仓库127/128迁移；既有原authority writer导入、SQL reader验签、两用途准备及原KEK fence事务内复查、只读user禁止UPDATE/DELETE、原generate撤销与不可复活、历史2版本保留均真实执行。capability metadata evidence表为本轮最小SQLfixture，不冒充完整现库。
+- 同一真实事务的 `Bound.CompleteScan` 仍拒绝：全新空registry不能自证历史覆盖。没有为测试放开此门禁。
+
+剩余代码/来源边界：四分区 `retained_artifacts / inflight_and_unknown_writes / holds_and_catalog / restore_and_prune` 的 C 原scanner/adoption/backfill和旧writer/GC mutation hooks在当前仓库仍未提供生产实现，只有DTO/parser/持久化协议；A没有将4行coverage或空References变成完整来源。需原C/业务owner交付其真实来源/分页EOF/旧历史回填及共享fence参与，再接 `PreparedCoverage`。这不是可由现场填一个布尔值解决的事项，也不能据本切片宣布KEK全覆盖。
+
+下一实际消费者为controller独立候选验证Unwrap，必须绑定真实controller workload、原task/attempt/part/config/candidate；A继续补专用resolver/构造，不复用capture Generate或隔离恢复权限。
 
 ## 现场事实边界（最终集中更新）
 

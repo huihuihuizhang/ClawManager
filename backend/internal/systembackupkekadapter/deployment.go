@@ -55,6 +55,9 @@ func WireServices(bootstrap sec.ConfigBootstrapService, mutation sec.ConfigMutat
 	if authorityDB != bootstrap.DB {
 		return sec.ConfigBootstrapService{}, sec.ConfigMutationService{}, sec.ErrRegistrationUnavailable
 	}
+	if capabilities, ok := original.Capabilities.(*SQLProviderCapabilityPreparation); ok && capabilities.db != bootstrap.DB {
+		return sec.ConfigBootstrapService{}, sec.ConfigMutationService{}, sec.ErrRegistrationUnavailable
+	}
 	bootstrap.KEK = BootstrapComposition{Source: source, Validator: validator}
 	mutation.KEK = MutationComposition{Source: mutations, Validator: validator}
 	return bootstrap, mutation, nil
