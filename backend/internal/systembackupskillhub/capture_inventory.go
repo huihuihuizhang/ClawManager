@@ -44,7 +44,10 @@ type CaptureMaterializeJob struct {
 }
 type WorkspaceCaptureRequirement struct {
 	BlobID, InstanceID, BindingID, JobID int
-	RelativeDirectory, ContentMD5        string
+	// Original DB workspace_dir, relative to the runtime's Skill install root.
+	// It is NOT a path relative to the workspace mount. That mapping and its
+	// original mount identity must be resolved by the actual proof collector.
+	WorkspaceDirectory, ContentMD5 string
 }
 
 func CaptureTableNames() []string {
@@ -172,7 +175,7 @@ func (c CaptureInventory) WorkspaceRequirements() ([]WorkspaceCaptureRequirement
 		if !captureMD5(blob.ContentHash) || !strings.EqualFold(expected, blob.ContentHash) {
 			return nil
 		}
-		result = append(result, WorkspaceCaptureRequirement{BlobID: blobID, InstanceID: instanceID, BindingID: bindingID, JobID: jobID, RelativeDirectory: directory, ContentMD5: strings.ToLower(blob.ContentHash)})
+		result = append(result, WorkspaceCaptureRequirement{BlobID: blobID, InstanceID: instanceID, BindingID: bindingID, JobID: jobID, WorkspaceDirectory: directory, ContentMD5: strings.ToLower(blob.ContentHash)})
 		covered[blobID] = true
 		return nil
 	}
@@ -207,8 +210,8 @@ func (c CaptureInventory) WorkspaceRequirements() ([]WorkspaceCaptureRequirement
 		if a.BlobID != b.BlobID {
 			return a.BlobID < b.BlobID
 		}
-		if a.RelativeDirectory != b.RelativeDirectory {
-			return a.RelativeDirectory < b.RelativeDirectory
+		if a.WorkspaceDirectory != b.WorkspaceDirectory {
+			return a.WorkspaceDirectory < b.WorkspaceDirectory
 		}
 		if a.BindingID != b.BindingID {
 			return a.BindingID < b.BindingID

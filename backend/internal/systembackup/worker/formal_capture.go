@@ -300,6 +300,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
 						return ErrExecution
 					}
+					if r.Database.SkillsInventory != nil && domain.VerifySkillCapture(s, *r.Database.SkillsInventory) != nil {
+						return ErrExecution
+					}
 					counts := snapshotCounts(s)
 					result.Rows, result.Tables = counts.Rows, counts.Tables
 					return staging.Compress(stream, func(compressed io.Writer) error {

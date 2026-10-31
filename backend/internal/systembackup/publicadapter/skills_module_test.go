@@ -86,6 +86,9 @@ func TestSkillsModuleBuildsActualJobWithOneSharedSQLDependency(t *testing.T) {
 		}
 		if inv.Request.Database != nil {
 			databases++
+			if inv.Request.Database.SkillsInventory == nil || inv.Request.Database.SkillsInventory.SHA256() != b.Source.Skills.SHA256() {
+				t.Fatal("shared SQL lost original Skills inventory contract")
+			}
 		}
 		if inv.Request.SkillObjects == nil {
 			continue

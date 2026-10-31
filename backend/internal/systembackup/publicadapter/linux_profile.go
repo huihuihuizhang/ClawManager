@@ -45,6 +45,9 @@ type LinuxProfileConfig struct {
 	// Optional C reader shares this exact authenticated SQL snapshot. A nil
 	// reader preserves historical user/instance plans and cannot enable Teams.
 	ReadTeams func(context.Context, *sql.Tx, SourceInventory) (*team.Inventory, error)
+	// Optional Skills projection shares this same authenticated discovery RR
+	// transaction. Nil preserves legacy plans and cannot enable Skills.
+	ReadSkills func(context.Context, *sql.Tx, SourceInventory) (*sh.CaptureInventory, error)
 	// RecoveryOnly binds the original frozen plan without source discovery.
 	// It cannot produce a fresh source inventory or authorize another capture.
 	RecoveryOnly         bool
@@ -132,6 +135,17 @@ func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 			return SourceInventory{}, d.ErrNotReady
 		}
 		out.Teams = team.CloneInventory(out.Teams)
+	}
+	if p.cfg.ReadSkills != nil {
+		out.Skills, err = p.cfg.ReadSkills(ctx, tx, cloneSourceInventory(out))
+		owners := map[int]int{}
+		for _, instance := range out.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		if err != nil || out.Skills == nil || out.Skills.Validate(users, owners) != nil {
+			return SourceInventory{}, d.ErrNotReady
+		}
+		out.Skills = sh.CloneCaptureInventory(out.Skills)
 	}
 	if ctx.Err() != nil || (p.cfg.VerifySource != nil && p.cfg.VerifySource(ctx, tx) != nil) {
 		return SourceInventory{}, d.ErrNotReady

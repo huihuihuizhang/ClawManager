@@ -17,6 +17,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/team"
+	sh "clawreef/internal/systembackupskillhub"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -24,6 +25,7 @@ import (
 // Credentials only arrive in an acquire grant; source and drill identities,
 // placement and policy are bound to the complete invocation hash.
 type DatabaseSpec struct {
+	SkillsInventory *sh.CaptureInventory           `json:"skills_inventory,omitempty"`
 	TeamsInventory  *team.Inventory                `json:"teams_inventory,omitempty"`
 	InputFormat     string                         `json:"input_format,omitempty"`
 	Address         string                         `json:"address"`
@@ -67,10 +69,13 @@ func validDatabaseSpec(d *DatabaseSpec) bool {
 	return err == nil && host != "" && portErr == nil && n > 0 && n <= 65535
 }
 func validDatabaseRequest(r Request) bool {
-	if r.Resources != nil || r.TeamWorkspace != nil || r.Teams != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
+	if r.SkillObjects != nil || r.Resources != nil || r.TeamWorkspace != nil || r.Teams != nil || r.RuntimePolicy != nil || r.WorkBuddyIdentity != nil {
 		return false
 	}
 	d := r.Database
+	if d != nil && d.SkillsInventory != nil && (r.Operation != "capture-database" || d.SkillsInventory.Version != sh.CaptureInventoryVersion) {
+		return false
+	}
 	if d != nil && d.TeamsInventory != nil && (r.Operation != "capture-database" || d.TeamsInventory.SchemaSHA256 != team.SchemaSHA256() || d.TeamsInventory.Version != team.InventoryVersion) {
 		return false
 	}
@@ -187,6 +192,9 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 		}
 		defer clearSnapshot(s)
 		if d.TeamsInventory != nil && domain.VerifyTeamCapture(s, *d.TeamsInventory) != nil {
+			return Result{}, ErrExecution
+		}
+		if d.SkillsInventory != nil && domain.VerifySkillCapture(s, *d.SkillsInventory) != nil {
 			return Result{}, ErrExecution
 		}
 		if err = check("before-seal"); err != nil {
