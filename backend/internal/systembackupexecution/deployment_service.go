@@ -217,10 +217,8 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 	if e != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	authority := c.SQLExecutionAuthority{DB: db, InstallationID: cfg.InstallationID, ApplicationScope: cfg.ApplicationScope, Authorization: deploymentAuthorization{Service: s}, DeploymentEnabled: true}
-	recovery := c.SQLRecoveryAuthority{DB: db, InstallationID: cfg.InstallationID, ApplicationScope: cfg.ApplicationScope, Identity: s.Recovery}
-	records := c.SQLExecutionRecords{Authority: authority, Keys: s.Forward, CapacityReportFile: cfg.CapacityFile}
-	gate := c.SQLCaptureGate{Authority: authority, Recovery: recovery, Records: records, AcquisitionTimeout: time.Duration(cfg.AcquireSeconds) * time.Second, HoldTimeout: time.Duration(cfg.HoldSeconds) * time.Second}
+	gate := s.captureGate(db)
+	recovery := gate.Recovery
 	owner := &PublicJobOwner{Gate: gate, Client: client, Dynamic: dyn, Namespace: cfg.Namespace, NamespaceUID: cfg.NamespaceUID, TrustDomain: cfg.TrustDomain, Security: cfg.Security, Identity: s.Forward, Issuer: control.IdentityIssuer{Certificate: root, Signer: signer, TrustDomain: cfg.TrustDomain, ServerRoots: rootRaw}, Staging: s.staging, AllowKubeletStopWitness: true}
 	owner.SealCustodyMaxBytes = cfg.SealCustodyMaxBytes
 	source, e := s.platformProfile(owner)
@@ -241,6 +239,17 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 	}
 	s.Runtime.Loop.Store = deploymentStoreTrace{ExecutionWorkStore: s.Runtime.Loop.Store}
 	return s, nil
+}
+
+// Preserve the real production authorization wrapper in every consumer of the
+// task/record authority. Provider adapters must not replace it with the bare
+// record-key identity simply to satisfy a constructor type assertion.
+func (s *DeploymentService) captureGate(db *sql.DB) c.SQLCaptureGate {
+	cfg := s.Config
+	authority := c.SQLExecutionAuthority{DB: db, InstallationID: cfg.InstallationID, ApplicationScope: cfg.ApplicationScope, Authorization: deploymentAuthorization{Service: s}, DeploymentEnabled: true}
+	recovery := c.SQLRecoveryAuthority{DB: db, InstallationID: cfg.InstallationID, ApplicationScope: cfg.ApplicationScope, Identity: s.Recovery}
+	records := c.SQLExecutionRecords{Authority: authority, Keys: s.Forward, CapacityReportFile: cfg.CapacityFile}
+	return c.SQLCaptureGate{Authority: authority, Recovery: recovery, Records: records, AcquisitionTimeout: time.Duration(cfg.AcquireSeconds) * time.Second, HoldTimeout: time.Duration(cfg.HoldSeconds) * time.Second}
 }
 func (s *DeploymentService) Close() {
 	if s.Source != nil {

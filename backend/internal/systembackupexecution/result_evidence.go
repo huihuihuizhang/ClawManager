@@ -61,7 +61,10 @@ func (o *PublicJobOwner) registerResult(ctx context.Context, tx *sql.Tx, a d.Aut
 	var schema, ownerType, owner, kind, state, digest, media, encryption, classification, failure, health string
 	var size int64
 	var expires time.Time
-	err := tx.QueryRowContext(ctx, `SELECT schema_version,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,evidence_failure_code,observed_health,expires_at FROM system_backup_v2_evidence WHERE public_id=? FOR UPDATE`, ref.PublicID).Scan(&schema, &ownerType, &owner, &kind, &state, &stored, &digest, &size, &media, &encryption, &classification, &failure, &health, &expires)
+	// The original Job is already exclusively locked by saveResult. Evidence
+	// bytes are append-only for this account: a shared record/gap lock protects
+	// their comparison without granting UPDATE merely for a locking read.
+	err := tx.QueryRowContext(ctx, `SELECT schema_version,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,evidence_failure_code,observed_health,expires_at FROM system_backup_v2_evidence WHERE public_id=? FOR SHARE`, ref.PublicID).Scan(&schema, &ownerType, &owner, &kind, &state, &stored, &digest, &size, &media, &encryption, &classification, &failure, &health, &expires)
 	if err == nil {
 		var now time.Time
 		if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || schema != "system-backup-evidence.v1" || ownerType != "backup" || owner != a.TaskPublicID || kind != "diagnostic" || state != "inline" || !bytes.Equal(stored, raw) || digest != ref.SHA256 || size != int64(len(raw)) || media != "application/json" || encryption != "none" || classification != "internal" || failure != "none" || health != "healthy" || !now.Before(expires) {

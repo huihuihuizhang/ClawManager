@@ -16,6 +16,21 @@ var ErrExecutionRecoveryRequired = errors.New("backup execution requires origina
 // ExecutionInput restores the admitted profile and task's original config/spec.
 // It neither discovers source data nor substitutes the current deployment config.
 func (b ClaimedBackup) ExecutionInput(ctx context.Context, tx *sql.Tx) (d.Input, error) {
+	return b.executionInput(ctx, tx, 1)
+}
+
+// ExecutionInputForAttempt reconstructs only an already authenticated original
+// attempt. The caller supplies its authority; the journal must still agree.
+// It neither chooses a newer attempt nor creates another attempt.
+func (b ClaimedBackup) ExecutionInputForAttempt(ctx context.Context, tx *sql.Tx, attempt uint64) (d.Input, error) {
+	var latest uint64
+	if attempt == 0 || tx.QueryRowContext(ctx, "SELECT attempt_no FROM system_backup_v2_attempts WHERE target_type=? AND target_public_id=? AND phase=? ORDER BY attempt_no DESC LIMIT 1 FOR SHARE", "backup", b.Claim.Target.PublicID, "capture").Scan(&latest) != nil || latest != attempt {
+		return d.Input{}, ErrExecutionInput
+	}
+	return b.executionInput(ctx, tx, attempt)
+}
+
+func (b ClaimedBackup) executionInput(ctx context.Context, tx *sql.Tx, attempt uint64) (d.Input, error) {
 	var in d.Input
 	var p struct {
 		InstallationID string `json:"installation_id"`
@@ -25,7 +40,7 @@ func (b ClaimedBackup) ExecutionInput(ctx context.Context, tx *sql.Tx) (d.Input,
 	if json.Unmarshal(b.Profile, &p) != nil || p.InstallationID != b.InstallationID || p.Profile == "" || p.Revision == "" {
 		return in, ErrExecutionInput
 	}
-	in.Authority = d.Authority{InstallationID: b.InstallationID, TaskType: "backup", TaskPublicID: b.Claim.Target.PublicID, RequestID: b.RequestID, ConfigVersion: b.ConfigVersion, ConfigSHA256: b.ConfigSHA256, AttemptNo: 1, Phase: "capture", ClaimOwner: b.Claim.Owner, ClaimRowVersion: b.Claim.RowVersion, DeadlineAt: b.Deadline}
+	in.Authority = d.Authority{InstallationID: b.InstallationID, TaskType: "backup", TaskPublicID: b.Claim.Target.PublicID, RequestID: b.RequestID, ConfigVersion: b.ConfigVersion, ConfigSHA256: b.ConfigSHA256, AttemptNo: attempt, Phase: "capture", ClaimOwner: b.Claim.Owner, ClaimRowVersion: b.Claim.RowVersion, DeadlineAt: b.Deadline}
 	in.ConfigSnapshot = append(json.RawMessage(nil), b.Config...)
 	in.ProfileID = p.Profile
 	in.ProfileRevision = p.Revision

@@ -11,6 +11,7 @@ import (
 	"encoding/pem"
 	"io"
 	"os"
+	"strconv"
 	"time"
 
 	"clawreef/internal/systembackup/control"
@@ -93,7 +94,7 @@ func (o *PublicJobOwner) input(ctx context.Context, a d.Authority, recovery bool
 		return in, p, desc, c.ErrExecutionInput
 	}
 	bclaim := c.ClaimedBackup{Claim: c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: a.TaskPublicID}, Owner: a.ClaimOwner, RowVersion: a.ClaimRowVersion}, InstallationID: a.InstallationID, Profile: profile, Config: config, RequestID: a.RequestID, ConfigVersion: a.ConfigVersion, ConfigSHA256: a.ConfigSHA256, Deadline: a.DeadlineAt}
-	in, e = bclaim.ExecutionInput(ctx, tx)
+	in, e = bclaim.ExecutionInputForAttempt(ctx, tx, a.AttemptNo)
 	tx.Rollback()
 	if e != nil || in.Authority != a {
 		return in, p, desc, c.ErrExecutionAuthority
@@ -677,7 +678,7 @@ func (o *PublicJobOwner) saveResult(ctx context.Context, a d.Authority, binding 
 	defer clear(key)
 	digest := hash(raw)
 	var cipher bytes.Buffer
-	bnd := staging.Binding{BackupID: a.TaskPublicID, Attempt: "1", Path: "worker-result/" + binding.JobUnitKey, CaptureContextHash: a.ConfigSHA256, EnvelopeID: digest}
+	bnd := workerResultBinding(a, binding, digest)
 	if e = staging.Seal(ctx, &cipher, key, bnd, func(w io.Writer) error { _, z := w.Write(raw); return z }); e != nil {
 		return e
 	}
@@ -759,7 +760,7 @@ func (o *PublicJobOwner) ReadResult(ctx context.Context, a d.Authority, binding 
 	}
 	var plain bytes.Buffer
 	defer func() { clear(plain.Bytes()) }()
-	if staging.Open(ctx, bytes.NewReader(cipher), &plain, key, staging.Binding{BackupID: a.TaskPublicID, Attempt: "1", Path: "worker-result/" + binding.JobUnitKey, CaptureContextHash: a.ConfigSHA256, EnvelopeID: digest}, 1<<20) != nil || hash(plain.Bytes()) != digest {
+	if staging.Open(ctx, bytes.NewReader(cipher), &plain, key, workerResultBinding(a, binding, digest), 1<<20) != nil || hash(plain.Bytes()) != digest {
 		return nil, c.ErrExecutionRecord
 	}
 	// A valid envelope/hash proves byte integrity, not the report's frozen
@@ -787,6 +788,10 @@ func (o *PublicJobOwner) ReadResult(ctx context.Context, a d.Authority, binding 
 		return nil, e
 	}
 	return bytes.Clone(plain.Bytes()), nil
+}
+
+func workerResultBinding(a d.Authority, j d.JobBinding, digest string) staging.Binding {
+	return staging.Binding{BackupID: a.TaskPublicID, Attempt: strconv.FormatUint(a.AttemptNo, 10), Path: "worker-result/" + j.JobUnitKey, CaptureContextHash: a.ConfigSHA256, EnvelopeID: digest}
 }
 
 type PublicResults struct{ Owner *PublicJobOwner }
