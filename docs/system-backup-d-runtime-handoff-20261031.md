@@ -512,3 +512,8 @@
 - D5.46新174原顺序无overlay任务`sbk_af10aeac-3f6e-44a5-b81b-849c18304767`仍FAIL96.37s/package99.615s：SQL开流原剩27.424秒，localAuthorize697次/609.5463ms，stream27.297秒后拒绝，failed Record=ok。原30秒窗口未解决，未到validating。
 - 初始snapshot仍依原顺序取得engine/application/runtime、maintenance、installation、active config与task原锁，原task/config字节检查保持。仅在原application及metadata gate都held、status capturing的backup分支，把其后的原config历史、latest/current attempt、cancel与同一task维护owner/fence五份共享事实读取合为一条FOR SHARE；值/版本/完整config/取消/lease/hold全部验证，事实交付后独立SQL UTC时钟再查。其他状态、preflight/recovery路径不改；每处current调用/owner/Stage/EOF及固定期限不减少。
 - 真实signed owner grant、原分条forward对照、原三mTLS/18facts/input变化、旧held四期限与cache反例组合package29.697s PASS。新增仅延迟该新共享事实行交付2.5秒、原claim/task/gate/hold各2秒真实SQL界限的四反例，原Bind均拒绝，PASS10.82s/package14.035s。完整controller9.380s/execution8.566s PASS。同步监督7079d230后下一轮原174/default30完整任务继续；本项不代表D owner complete或A发布成功。
+
+### D5.47 后续：取消和最新attempt的真实SQL隔离
+
+- 在D专用63507真实MySQL窄fixture中，独立admin插入并确认affected=1及SELECT读回：同任务pending/running cancel拒绝，已完成cancel和其他任务pending cancel允许；同任务较新capture attempt拒绝，其他任务较新attempt允许。每例均实际Bind与Recheck，事务rollback后才清理插入行。六例PASS0.88s/package4.127s；不把窄fixture当完整原DDL/备份任务验收。
+- D5.47新174原顺序无overlay任务`sbk_96ccfed1-f311-42b3-81b1-030d31792cf8`仍FAIL96.73s/package99.984s：SQL开流剩27.23256秒，799次本地SourceAuthorize累计680.5178ms，stream27.1131秒后拒绝，原failed Record=ok。799是本地调用数，不能除以完整domain回调437当完成比例；尚未进入validating或完成A发布。监督已审查8c01075f并推送backup 975d2cec，独立当前事实/期限回归及初始Bind字段等价通过，每RPC少16查询。
