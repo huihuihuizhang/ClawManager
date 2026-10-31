@@ -72,11 +72,12 @@ type PermitMount struct {
 }
 
 type PinnedJobResolver struct {
-	mount    PermitMount
-	original OriginalJobAuthority
-	identity JobIdentity
-	until    time.Time
-	config   *Config
+	mount     PermitMount
+	original  OriginalJobAuthority
+	identity  JobIdentity
+	until     time.Time
+	config    *Config
+	delivered *deliveredPermitState
 }
 
 // NewJobResolver additionally admits projected-JWT exchange on the exact
@@ -148,6 +149,13 @@ func (r *PinnedJobResolver) permit(ctx context.Context, a Access) (ProviderPermi
 	if r == nil || absent(ctx) || ctx.Err() != nil || r.original.Identity() != r.identity || !r.original.ValidUntil().Equal(r.until) || !time.Now().Before(r.until) {
 		return p, ErrPermission
 	}
+	if r.delivered != nil {
+		p, e := r.deliveredPermit(ctx, a)
+		if e != nil {
+			return ProviderPermit{}, ErrPermission
+		}
+		return r.validatePermit(a, p)
+	}
 	b, e := readControlled(r.mount.PermitPath, 65536, false)
 	if e != nil {
 		return p, ErrPermission
@@ -169,6 +177,10 @@ func (r *PinnedJobResolver) permit(ctx context.Context, a Access) (ProviderPermi
 	if e != nil || !ed25519.Verify(r.mount.PublicKey, payload, sig) || closedJSON(payload, &p) != nil {
 		return ProviderPermit{}, ErrPermission
 	}
+	return r.validatePermit(a, p)
+}
+
+func (r *PinnedJobResolver) validatePermit(a Access, p ProviderPermit) (ProviderPermit, error) {
 	c, e := TransitContext(a.Request)
 	now := time.Now()
 	if e != nil || p.Version != "system-backup-provider-permit.v1" || p.Identity != r.identity || p.Operation != a.Operation || (a.Operation != Generate && a.Operation != Unwrap) || p.Endpoint != a.Endpoint || p.KeyName != a.KeyName || p.ContextBase64 != c || p.NotBefore.IsZero() || !p.ExpiresAt.After(p.NotBefore) || now.Before(p.NotBefore) || !now.Before(p.ExpiresAt) || p.ExpiresAt.After(r.until) {
