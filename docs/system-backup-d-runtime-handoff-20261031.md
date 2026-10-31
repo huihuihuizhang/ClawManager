@@ -484,3 +484,10 @@
 - DescribePlan仍完整loadPlan（canonical/unique JSON、原任务绑定、完整Discovery/全部worker part验证）；loadPlan解码产生的Source/parts/writers已是新内存，直接转移所有权，取消随后同份数据的Marshal/decodeStrict副本。其他跨owner回调的copyDiscovery保持。新增实际plan多次Describe与Source/Writer/SpecJSON/InvocationJSON/CM name调用者变更反例，其他观察和原plan bytes不变。
 - OriginalCapturePlan仍完整解密、Unwrap/Describe、验证全部part hash并在私有map克隆原SpecJSON；只在MatchPart中为当前原part执行kube.Intent规范化，与原job namespace/name/owner精确匹配。没有跨请求缓存或接受调用者Job字节。实际SQL/mTLS反例另将返回的plan/discovery字节原地破坏，原私有part MatchPart仍保持原值，异context与伪造对象拒绝。
 - 原SQL/mTLS三场景、8中途输入/密文变化、当前claim撤回、17 held当前字段反例与私有所有权验证PASS/package11.616s。合并监督87082fae及906时钟修正后，publicadapter3.636s/controller9.310s/kekadapter5.491s/execution7.871s全包PASS。下次完整新任务必须包含906修正，默认window/行和EOF guard不变；仍未声称完整positive或A发布。
+
+## D5.44 dedicated metadata使用驱动原生参数传输，真实二进制/协议验证
+
+- 当前go-sql-driver/mysql v1.9.0默认参数查询返回driver.ErrSkip，database/sql每次Prepare/Execute/Close；仅metadata连接启用原生Config.InterpolateParams的SQL-first诊断`.tools/d-metadata-interpolation-diagnostic.log`，完整默认window仍FAIL62.21s/package65.589s：domain guard344、本地Authorize689/594.1792ms、实际key-check353，stream29.532秒。平均plan21.616/Stage25.604/collectors11.885ms，较prepared诊断226次有明显收益，尚未完成原437 callbacks/10parts。
+- 只在实际ConnectPublicBackupMetadata连接选项增加interpolateParams=true，由驱动转义/参数类型编码，不拼接调用者值；现有utf8mb4/utf8mb4_unicode_ci、UTC、单语句、原pool admission/role及事务策略保持。business/source/observer连接选项未改，原SQL/guard/Keys/issuer/nonce/window无任何跳过。D完整TLS fixture后续只镜像该metadata driver flag，保留原TLS/账号/UTC，不将diagnostic overlay当生产入口已接入。
+- 新独立实际构造器test使用一次性schema/有限SELECT,INSERT,UPDATE role（仅LOCAL SQL参数协议证明）。两种SQL mode（STRICT_ALL_TABLES与NO_BACKSLASH_ESCAPES）下，引号/双引号/反斜线/NUL/0x1a/中文emoji/看似SQL的完整字串、全部256种字节与真实staging.Seal密文均byte-exact，实际staging.Open核验原明文。time.Time UTC微秒、decimal、bool一致，提交后密文一致。服务器Com_stmt_prepare在正常参数操作不增加、含字面问号时原prepared fallback确实增加，证明确实走实际constructor flag而非只测fixture布尔值。
+- 实际验证charset/collation/UTC、RepeatableRead与多语句拒绝；定向PASS0.07s/package1.375s，db全包1.710s/execution7.598s PASS。此项不证明TLS生产部署或完整capture，default30窗口/所有row EOF范围保持，仍需后续完整无overlay正向。
