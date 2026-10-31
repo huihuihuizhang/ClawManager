@@ -19,7 +19,7 @@ import (
 	mysql "github.com/go-sql-driver/mysql"
 )
 
-func aPublicationStartupSQL(t *testing.T, ctx context.Context) (*sql.DB, *sql.DB, string, string, string) {
+func aPublicationStartupSQL(t *testing.T, ctx context.Context, connectionOptions ...func(*mysql.Config)) (*sql.DB, *sql.DB, string, string, string) {
 	t.Helper()
 	file, pin := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE"), os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
 	if file == "" {
@@ -126,6 +126,9 @@ func aPublicationStartupSQL(t *testing.T, ctx context.Context) (*sql.DB, *sql.DB
 	}
 	cfg.User = user
 	cfg.Passwd = password
+	for _, capture := range connectionOptions {
+		capture(cfg.Clone())
+	}
 	password = ""
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {

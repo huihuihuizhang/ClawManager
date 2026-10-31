@@ -372,6 +372,23 @@ observedSHA, err := history.VerifyPublicationRecord(readbackBytes, originalTask,
 
 重点stage/拒绝/实际MySQL/CLI PASS execution4.307s +CLI2.870s；六包完整回归security21.285s/execution15.435s/adapter5.861s/kms3.120s/v2-controller3.179s/grantsCLI编译通过。最后RBAC补充后三个受影响包再次完整PASS execution14.878s/v2-controller2.854s/grantsCLI编译。实际CLI全启动仍需Linux部署/现场权限/材料，本机只验证同生产共享阶段。D后续直接消费上述service入口，继续真实新claim/renew/原事务/finalizer/终态；完整KEK历史adoption/backfill/持续fence仍待办，未改为现场事实或放开CompleteScan。
 
+## 第十二切片：实际AcquireWithReceipt/Renew/Release/接管与丢ACK
+
+新增A专用 `a_publication_claim_lifecycle_mysql_test.go`。正例初始只seed原业务任务的**未持有**validating行、sealed capture attempt/恢复结果；每个可用ClaimToken均来自真正 `SQLTaskClaimStore.AcquireWithReceipt` 或 `RenewClaimInInstallation`，没有手写owner/row_version代替获取。原Capture Config.ControllerOwner与service由实际Pod查询导出的`public:<PodUID>`不同。测试经完整A11文件bind/attach→service.PublicationSignersForTask→原SQL tx Stage/commit→三用途TLS signer→独立History，使用独立UUID/随机自有DB/marker/受限账号；本地schema加原task schema_version/task_type、heartbeat/next_reconcile，直接执行099原events CREATE段，额外权限仅backup五个claim列UPDATE与events SELECT/INSERT，未更改生产权限/迁移。
+
+AcquireWithReceipt的真实CAS/原task锁定snapshot/099 durable event在同一事务；逐次核验固定event协议、task/安装/request/status/无detail与条数，接管也走同入口。真实Renew递增row_version后旧service token和已构造signer均在JWT/Sign前拒绝；JWT login hook内调用真实Renew也使Transit Sign=0，新原始token必须重新经service取signer。真实Release清NULL owner/lease并设置DB retry时间；未到next_reconcile不能抢占，时间到后其他owner取得带receipt的新token；原service拒绝其他workload的token，旧owner续租返回ClaimLost。竞争owner再经真实Release后，原owner才能AcquireWithReceipt重新获取，不伪造接管事实。
+
+新原始token允许复用原**完全相同**冻结输入，三个签名record原字节相同，证据全行payload/SHA/size/expires snapshot一字未变。测试实际等到最初15秒冻结期限，保持后来45秒当前lease仍有效：Stage/Sign仍拒绝、JWT/Sign调用不增加，不能把续租/接管当作扩大原冻结授权；已签record仍由独立History验签。provider token也必须完整落在原剩余窗口内：回归曾用10秒fixture token在剩8秒时触发正确拒绝，本切片保持这条生产保护，生命周期fixture使用合法1秒batch token，不缩减/重签原记录或自动clip授权来凑正例。
+
+四类ACK/重试均按原事实核验：
+
+1. 透明包装真实MySQL connector，原Stage事务真实Commit成功后只丢调用方ACK，返回实际error；原证据已提交。按原输入readback/重复Stage后行数/字节/期限不变，再签名。
+2. 同一connector用于真正AcquireWithReceipt的Commit后丢ACK：API返回ErrTaskClaimCommitUnknown与**零token**；独立SQL读回确认owner/原request/schema/type/status/heartbeat/lease/row_version及唯一原receipt。用旧expected version重试不会新增receipt/token，不凭该error或readback制造token执行签名，provider0。
+3. 真正Renew primitive执行成功后丢ACK，返回零token；独立完整SQL读回确认版本已变，原Acquire receipt保留。旧token、零token均不能签名，原冻结输入/期限不变；本测试不自创D的未知续租恢复调度或fresh-version盲重试。
+4. TLS handler先实际执行Ed25519签名，再主动关闭连接丢响应；调用方拿不到record。保留的公共observed Input/Signature与原capture记录完全一致，后续只按同原输入、原key/version和当前真实token重试，输出仍为原JCS bytes；原freeze期限不延长。没有重封装/换payload/把provider ACK当不可变finalizer ACK。
+
+最终4个实际API/SQL/TLS重点用例PASS20.219s；增强“真实Sign后丢ACK并比较原Input/Signature”、合法1秒provider窗口后，在最新4cba3582基线上完整execution32.118s/controller4.822s PASS。没有发现需放松的生产保护，本切片修改仅A测试/fixture及交接；未改D capture/worker运行文件。Kube仍fake API，完整core/签名授权/原API/SQL/TLS为本地真实调用；不冒充现场、实际六模块输出、原immutable finalizer/journal/业务终态。D可直接沿已验证的AcquireWithReceipt→service当前token入口继续封存发布；KEK完整历史adoption/backfill/持续fence仍待办。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。

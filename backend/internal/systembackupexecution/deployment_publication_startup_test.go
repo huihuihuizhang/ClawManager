@@ -33,13 +33,19 @@ import (
 )
 
 type publicationStartupFixture struct {
-	service       *DeploymentService
-	inputs        DeploymentStartupInputs
-	client        *fake.Clientset
-	grant         c.ExecutionGrant
-	materials     PublicationSignerMaterials
-	logins, signs atomic.Int64
+	service          *DeploymentService
+	inputs           DeploymentStartupInputs
+	client           *fake.Clientset
+	grant            c.ExecutionGrant
+	materials        PublicationSignerMaterials
+	logins, signs    atomic.Int64
+	onLogin          func()
+	dropSignACK      atomic.Bool
+	unknownSignature atomic.Pointer[publicationObservedSignature]
+	tokenTTLSeconds  atomic.Int64
 }
+
+type publicationObservedSignature struct{ Input, Signature []byte }
 
 // The real production file-binding + attach stages are callable on Windows.
 // Native Kube and issuer records are local fixtures; no success state is made.
@@ -101,6 +107,9 @@ func newPublicationStartupFixture(t *testing.T, account, server, database string
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/v1/auth/publisher/login" {
 			x.logins.Add(1)
+			if x.onLogin != nil {
+				x.onLogin()
+			}
 			var body struct{ Role, JWT string }
 			if json.NewDecoder(r.Body).Decode(&body) != nil {
 				t.Error("login body")
@@ -113,7 +122,11 @@ func newPublicationStartupFixture(t *testing.T, account, server, database string
 				w.WriteHeader(403)
 				return
 			}
-			json.NewEncoder(w).Encode(map[string]any{"auth": map[string]any{"client_token": "opaque-token-for-" + purpose, "token_type": "batch", "renewable": false, "lease_duration": 10, "policies": []string{purpose + "-policy"}, "metadata": map[string]string{"role": body.Role, "namespace": cfg.Namespace, "pod_uid": "controller-pod-uid", "service_account_uid": "controller-sa-uid"}}})
+			ttl := x.tokenTTLSeconds.Load()
+			if ttl == 0 {
+				ttl = 10
+			}
+			json.NewEncoder(w).Encode(map[string]any{"auth": map[string]any{"client_token": "opaque-token-for-" + purpose, "token_type": "batch", "renewable": false, "lease_duration": ttl, "policies": []string{purpose + "-policy"}, "metadata": map[string]string{"role": body.Role, "namespace": cfg.Namespace, "pod_uid": "controller-pod-uid", "service_account_uid": "controller-sa-uid"}}})
 			return
 		}
 		purpose := strings.TrimPrefix(r.URL.Path, "/v1/transit/sign/")
@@ -133,8 +146,19 @@ func newPublicationStartupFixture(t *testing.T, account, server, database string
 			w.WriteHeader(400)
 			return
 		}
+		signature := ed25519.Sign(private, input)
 		x.signs.Add(1)
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"signature": "vault:v7:" + base64.StdEncoding.EncodeToString(ed25519.Sign(private, input))}})
+		if x.dropSignACK.Swap(false) {
+			x.unknownSignature.Store(&publicationObservedSignature{Input: append([]byte(nil), input...), Signature: append([]byte(nil), signature...)})
+			connection, _, e := w.(http.Hijacker).Hijack()
+			if e != nil {
+				t.Error(e)
+				return
+			}
+			connection.Close()
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"signature": "vault:v7:" + base64.StdEncoding.EncodeToString(signature)}})
 	}))
 	t.Cleanup(tls.Close)
 	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: tls.Certificate().Raw})
