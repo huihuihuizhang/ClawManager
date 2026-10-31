@@ -101,6 +101,8 @@ func (c *memoryConn) table(name string) *Table {
 func one(n int) driver.Rows { return rows([]string{"n"}, []driver.Value{int64(n)}) }
 func (c *memoryConn) QueryContext(_ context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
 	switch {
+	case q == sourceCatalogTables || q == sourceCatalogColumns || q == sourceCatalogKeys || q == sourceCatalogUnique:
+		return memoryCatalogAggregate(c.s.tables, q)
 	case q == "SELECT @@GLOBAL.partial_revokes":
 		if c.s.wildcardGrants {
 			return one(0), nil
