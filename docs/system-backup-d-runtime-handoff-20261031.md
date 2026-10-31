@@ -260,3 +260,10 @@
 - checkProductionCaptureMaterials 重读原 core 与独立文件，要求同一原字节摘要和对象；失败加载不保留可用 capture bundle。恢复路径跳过全部 forward material I/O；删除 capture 和 formal verifier 材料后，原恢复身份仍可启动。此检查是构造模板准入，不代替后续业务源权限、原 Job 工厂校验或运行能力探测。
 - 两个真实启动函数以原 Ed25519 grant/record-key 文件测试 11 模式：valid/missing/wrong-pin/wrong-file/extra/replaced/unknown-field/wrong-grant/missing-operation/optional-worker-command/recovery；SQL 身份和 SHOW GRANTS 是具名严格只读 driver，未声称本项实际访问源或执行六部分任务。另实际 CLI 测试保留不完整的 file/SHA 输入供统一 loader 明确拒绝，不静默丢弃。
 - 初稿夹具 installation ID 不满足原 profile 协议、Runtime SQL role 未包含原 relay 表；已修正为合法原 ID/原 FormalCaptureGrantSQL(runtime=true)，未放宽验证。定向旧正式 bootstrap/恢复/CLI 和新两入口 execution3.735s、CLI2.889s通过；扩大相关 deployment/Runtime/正式 bootstrap 回归 execution4.301s、CLI2.920s通过。剩余 production_capture_modules.go 仍不包含本提交；下一项实际元数据权限、源发现与 service ModuleFactory 接线继续实现。
+
+## D5.16 原 Runtime writer 快照之后冻结源身份（2026-10-31）
+
+- D5.15 最终 SHA 3e9d53cd9294ff6a72b58de7d406992d6d25b94d。新 FreezeSourcesWithWriters 是旧 FreezeSources 的互斥替代，只允许搭配 BuildPartsWithWriters；原已认证业务 RR 结束、原 BuildWriters/Observe 完成后才解析物理源身份，完整 metadata 和同一原 writer 切片在 module factory 之前进入最终 SourceSHA。旧回调与旧 BuildParts 顺序兼容；preflight 不读远端 metadata。
+- CheckSource 使用原 Discovery.Writers 再次发现 metadata，不调用 BuildWriters/Observe 或新建 reservation；传给 resolver 与工厂的 writer/source DTO 都深复制/分离，回调修改不能换掉原 plan。原 Team facts/关系验证与有界 metadata 规则全部保留。
+- 既有真实本机 MySQL 同 RR/新 Team 下次纳入测试新增 original-writers 模式：真实源连接 InUse=0、原 writer 只 Observe 一次，resolver 与工厂逐值比对同一原 State；连续 CheckSource 使用原快照，PVC/object version 变化拒绝，preflight 不调用 provider。另四个具名 driver 场景覆盖 Observe 失败、metadata 失败、双 hook 和 legacy-only 工厂误配：无可用 Source/parts、模块工厂调用零次。完整 publicadapter（真实 SQL opt-in）5.407s通过。
+- 安全保留 WIP 合并 backup@1469c77e（A 最后 Kube I/O 后原 inventory custody 短复核）；本提交不包含 production_capture_modules.go 草稿，不声称已开放六项服务或完成物理 source 停写。下一步在服务构造中使用本顺序及独立 controller 元数据授权，原 worker source grant 不能被伪造为 discovery Job。

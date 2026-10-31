@@ -53,6 +53,10 @@ type LinuxProfileConfig struct {
 	// identities; FreezeSources binds remote identities AFTER ending this RR.
 	ReadTeamFacts func(context.Context, *sql.Tx, SourceInventory) (*team.SourceFacts, error)
 	FreezeSources func(context.Context, d.Input, SourceInventory) (*team.Inventory, json.RawMessage, error)
+	// Original Runtime preparation may create durable source mapping receipts.
+	// This alternative runs after ONE writer observation and before the source
+	// hash/module factory. Rechecks consume saved writers without preparing again.
+	FreezeSourcesWithWriters func(context.Context, d.Input, SourceInventory, []FrozenWriter) (*team.Inventory, json.RawMessage, error)
 	// Optional Skills projection shares this same authenticated discovery RR
 	// transaction. Nil preserves legacy plans and cannot enable Skills.
 	ReadSkills func(context.Context, *sql.Tx, SourceInventory) (*sh.CaptureInventory, error)
@@ -72,7 +76,10 @@ type LinuxProfileConfig struct {
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
-	if cfg.ReadTeamFacts != nil && (cfg.ReadTeams != nil || cfg.FreezeSources == nil) {
+	if cfg.FreezeSourcesWithWriters != nil && (cfg.FreezeSources != nil || cfg.BuildPartsWithWriters == nil) {
+		return nil, d.ErrNotReady
+	}
+	if cfg.ReadTeamFacts != nil && (cfg.ReadTeams != nil || (cfg.FreezeSources == nil && cfg.FreezeSourcesWithWriters == nil)) {
 		return nil, d.ErrNotReady
 	}
 	if (cfg.Source == nil && !cfg.RecoveryOnly) || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || (cfg.BuildParts == nil && cfg.BuildPartsWithWriters == nil) {
@@ -183,16 +190,12 @@ func (p *LinuxProfile) Discover(ctx context.Context, in d.Input) (Discovery, err
 	if err != nil {
 		return out, err
 	}
-	inv, err = p.freezeSources(ctx, in, inv)
-	if err != nil {
-		return out, err
+	if p.cfg.FreezeSourcesWithWriters == nil {
+		inv, err = p.freezeSources(ctx, in, inv, nil)
+		if err != nil {
+			return out, err
+		}
 	}
-	encoded, err := json.Marshal(inv)
-	if err != nil {
-		return out, d.ErrNotReady
-	}
-	out.Source = encoded
-	out.SourceSHA256 = digest(encoded)
 	out.HoldUntil = time.Now().UTC().Add(p.cfg.HoldLimit)
 	if out.HoldUntil.After(in.Authority.DeadlineAt) {
 		out.HoldUntil = in.Authority.DeadlineAt.UTC()
@@ -229,11 +232,22 @@ func (p *LinuxProfile) Discover(ctx context.Context, in d.Input) (Discovery, err
 		}
 	}
 	if p.cfg.BuildPartsWithWriters != nil {
+		if p.cfg.FreezeSourcesWithWriters != nil {
+			inv, err = p.freezeSources(ctx, in, inv, out.Writers)
+			if err != nil {
+				return Discovery{}, err
+			}
+		}
 		out.Parts, err = p.cfg.BuildPartsWithWriters(cloneInput(in), cloneSourceInventory(inv), out.HoldUntil, append([]FrozenWriter{}, out.Writers...))
 		if err != nil {
 			return Discovery{}, classify(err)
 		}
 	}
+	encoded, err := json.Marshal(inv)
+	if err != nil {
+		return Discovery{}, d.ErrNotReady
+	}
+	out.Source, out.SourceSHA256 = encoded, digest(encoded)
 	return out, nil
 }
 
@@ -265,7 +279,7 @@ func (p *LinuxProfile) Preflight(ctx context.Context, in d.Input, x Discovery) (
 func (p *LinuxProfile) CheckSource(ctx context.Context, in d.Input, x Discovery) error {
 	current, err := p.inventory(ctx)
 	if err == nil {
-		current, err = p.freezeSources(ctx, in, current)
+		current, err = p.freezeSources(ctx, in, current, x.Writers)
 	}
 	if err != nil {
 		return err
