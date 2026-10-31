@@ -6,6 +6,7 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/worker"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 	batchv1 "k8s.io/api/batch/v1"
 )
@@ -55,6 +56,8 @@ func BuildCapturePart(in d.Input, hold time.Time, req CapturePartRequest) (JobPa
 		job, err = kube.SourceRedisCaptureJob(w)
 	case "capture-skill-objects":
 		job, err = kube.SkillObjectCaptureJob(w)
+	case ce.Operation:
+		job, err = kube.ControlEvidenceCaptureJob(w)
 	case "capture-deployment-resources", "capture-secret-bundle":
 		job, err = kube.ResourceCaptureJob(w, req.Invocation.Request.Operation)
 	default:

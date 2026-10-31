@@ -306,3 +306,10 @@
 - 三类原认证历史在target normalize明确drop；其余11个新业务/secret/config域的非空未知owner schema没有identity fallback，仍需完整exact owner restore adapter，失败回归保留。这里交付原源采集与独立观察，不能借此宣称这些域DR验证、完整六项服务或最终v12发布已完成。实际factory草稿已消费SQLSchema，但仍排除提交。
 - 完整root4.314s/domain3.784s/scope0.375s/publicadapter5.488s通过；UTC fixture修复后worker36.414s、实际SQL/custody/observer组合execution34.368s通过。安全保留两worker文件stash44084051f27b41d6685f2bd97288488d6115784f合并backup45ae224b（A control-evidence新operation/CLI/两份C流），无冲突，保留双方CE隔离guard与CaptureSchema/UTC。合并后完整worker36.498s/domain3.789s/backup-worker CLI5.024s、实际SQL/完整schema/旧原consumer/启动组合execution36.722s通过。监督独立原schema+frame overlay29.925s、原分类/不同policy3.202s通过。
 - 控制sidecar分工已更新：A交付原worker operation/pull/CLI；D接 ce.CaptureLocator 两份原control_evidence/control_evidence_proofs part、实际 source PrepareLocator/registered exclusion proof、observer、历史与全局排序。公开Invocation/ConfigMap只带locator/checksum，不包含SidecarJSON/ProofsJSON/body。默认六项guard/readiness保持关闭，源发现authority/完整模块factory/全体Runtime参与者和最终原v12成品链继续推进。
+
+## D5.20 两份原控制证据模块及正式Job接线（2026-10-31）
+
+- B原模块目录只接纳固定ID=control_evidence、Owner=D、Required=true、mysql存储selector下的control_evidence/control_evidence_proofs两份精确part，统一operation=capture-control-evidence/category=control_evidence。缺proof、重复/额外part、错owner、单独引入第七前端selector或借用保留名均拒绝；原六项请求协议不变。
+- NewControlEvidenceModule只接实际原FormalCapture/Generate/PermitDelivery/locator映射，禁止source卷与subPath，两份必须同一完整locator。Build绑定真实安装/config/task/attempt/context/hold和原provider全局PartIndex；BuildCapturePart使用A原kube.ControlEvidenceCaptureJob，保存原Invocation/Job字节与hash，不自行构造命令或上传证据body。目录末端也对raw registration的实际两份locator进行独立配对复查。
+- 监督指出初稿json.Unmarshal回同一含非nil指针cfg会复用入参，已改独立零值frozen深拷贝。反例在构造后修改caller locator refs/hash、permit公钥、provider地址、Workload挂载与InvocationConfigMap，要求原三份Job/Invocation/hash逐字不变；不是仅检查返回成功。
+- 自有pure assembly用明确synthetic locator（不声称真实注册proof），将两份原CE Job放在较早workspace Job后验证连续全局索引1/2、正式CLI参数及无源PVC。负例涵盖不同locator/源卷/错全局索引/不完整目录。定向B3.321s/execution纯内容3.244s通过，完整publicadapter3.529s通过。内容observer/真实SQL consumer已另在工作区测试，不包含本小片；生产factory/source发现与默认guards/readiness均不随本片开放。
