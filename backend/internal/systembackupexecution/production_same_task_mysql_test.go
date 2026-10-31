@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"net"
 	"net/http"
@@ -54,21 +55,25 @@ import (
 // is extended by the same-task source/worker tests; it never substitutes a
 // synthetic Prepare runner or a second task for an uncompleted capture.
 type dOriginalSixPartTask struct {
-	db, control                *sql.DB
-	service                    *DeploymentService
-	queue                      c.SQLExecutionQueue
-	claimed                    c.ClaimedBackup
-	publicID, database, server string
-	config                     []byte
-	profile                    deployment.ExecutionProfile
-	directory                  string
-	sourceSpec                 worker.DatabaseSpec
-	sourceMount                worker.FormalSourceMount
-	owner                      *PublicJobOwner
-	input                      d.Input
-	sourceInventory            b.SourceInventory
-	frozenWriters              []b.FrozenWriter
-	metadataSigner             ed25519.PrivateKey
+	db, control                             *sql.DB
+	service                                 *DeploymentService
+	queue                                   c.SQLExecutionQueue
+	claimed                                 c.ClaimedBackup
+	publicID, database, server              string
+	config                                  []byte
+	profile                                 deployment.ExecutionProfile
+	directory                               string
+	sourceSpec                              worker.DatabaseSpec
+	sourceMount                             worker.FormalSourceMount
+	owner                                   *PublicJobOwner
+	input                                   d.Input
+	sourceInventory                         b.SourceInventory
+	frozenWriters                           []b.FrozenWriter
+	metadataSigner                          ed25519.PrivateKey
+	objectBodies                            map[string][]byte
+	workspaceDirectories                    map[string]string
+	packageContentMD5, unpackagedContentMD5 string
+	unpackagedBytes                         int
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
@@ -116,6 +121,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	}
 	t.Cleanup(func() { admin.Close() })
 	f := &dOriginalSixPartTask{database: "ad_d_six_" + run, directory: t.TempDir()}
+	f.createOriginalPayloads(t)
 	ctx := context.Background()
 	if _, err = admin.ExecContext(ctx, "CREATE DATABASE `"+f.database+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"); err != nil {
 		t.Fatal("owned original task schema", err)
@@ -230,14 +236,14 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 		"INSERT INTO teams(id,user_id,name,status,communication_mode,redis_events_last_id,shared_pvc_name,shared_pvc_namespace,shared_mount_path,resource_scope) VALUES(20,42,'original-six-team','running','redis','0-0','d-team-20','backup','/team','cm')",
 		"INSERT INTO team_members(id,team_id,instance_id,user_id,member_key,display_name,role,runtime_type,instance_mode,status,progress,availability) VALUES(21,20,7,42,'original-member','Original member','worker','openclaw','pro','running',0,'available')",
 		"INSERT INTO skills(id,user_id,skill_key,name) VALUES(11,42,'original-six-skill','Original six-part skill')",
-		"INSERT INTO skill_blobs(id,content_hash,archive_hash,object_key,file_name,size_bytes) VALUES(12,REPEAT('b',32),REPEAT('c',64),'original.zip','original.zip',3),(18,REPEAT('a',32),'','','local',12)",
+		fmt.Sprintf("INSERT INTO skill_blobs(id,content_hash,archive_hash,object_key,file_name,size_bytes) VALUES(12,'%s','%s','original.zip','original.zip',%d),(18,'%s','','','local',%d)", f.packageContentMD5, hash(f.objectBodies["original.zip"]), len(f.objectBodies["original.zip"]), f.unpackagedContentMD5, f.unpackagedBytes),
 		"INSERT INTO skill_versions(id,skill_id,blob_id,version_no,manifest_json) VALUES(13,11,12,1,'{\"named_original_manifest\":true}'),(19,11,18,2,'{\"named_workspace_manifest\":true}')",
 		"UPDATE skills SET current_version_id=13 WHERE id=11",
-		"INSERT INTO instance_skills(id,instance_id,skill_id,skill_version_id,workspace_dir,observed_hash) VALUES(14,7,11,19,'demo',REPEAT('a',32))",
+		"INSERT INTO instance_skills(id,instance_id,skill_id,skill_version_id,workspace_dir,observed_hash) VALUES(14,7,11,19,'demo','" + f.unpackagedContentMD5 + "')",
 		"INSERT INTO skill_scan_results(id,blob_id,engine,findings_json) VALUES(15,12,'original-scan','{\"named_original_findings\":true}')",
 		"INSERT INTO skill_hub_tags(id,tag_key,name) VALUES(16,'original-six','Original six-part tag')",
 		"INSERT INTO skill_hub_tag_assignments(id,skill_id,tag_id) VALUES(17,11,16)",
-		"INSERT INTO skill_package_materialize_jobs(id,instance_id,skill_id,blob_id,workspace_dir,content_hash,idempotency_key) VALUES(20,7,11,18,'previous',REPEAT('a',32),'original-six-materialize')",
+		"INSERT INTO skill_package_materialize_jobs(id,instance_id,skill_id,blob_id,workspace_dir,content_hash,idempotency_key) VALUES(20,7,11,18,'previous','" + f.unpackagedContentMD5 + "','original-six-materialize')",
 	} {
 		if _, err = f.db.Exec(statement); err != nil {
 			t.Fatal("nonempty original Teams/Skills/runtime source fixture", err)
@@ -434,6 +440,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	core.InstallationID, core.ControllerOwner, core.ApplicationScope = installation, "d-six-controller-"+run, "installation"
 	core.SourceDatabase, core.SourceServerUUID = f.database, f.server
 	core.SourceUser = sourceUser
+	core.Workspace.MaxFiles, core.Workspace.MaxFileBytes, core.Workspace.MaxArchiveBytes, core.Workspace.MaxCompressedBytes = 100, 4<<20, 16<<20, 16<<20
 	// Pin the original observed PVC/PV content before the core is signed.
 	core.Security.Volumes[0].SHA256 = kube.ContentHash(corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "source", Namespace: core.Namespace, UID: "source-uid"}})
 	core.Security.Volumes[1].SHA256 = kube.ContentHash(corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "staging", Namespace: core.Namespace, UID: "stage-uid"}})

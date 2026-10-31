@@ -3,10 +3,13 @@ package systembackupexecution
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/md5"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -21,6 +24,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/scope"
 	"clawreef/internal/systembackup/worker"
+	sh "clawreef/internal/systembackupskillhub"
 	appsv1 "k8s.io/api/apps/v1"
 	authnv1 "k8s.io/api/authentication/v1"
 	authzv1 "k8s.io/api/authorization/v1"
@@ -47,6 +51,28 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		return path
 	}
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/skill-bucket/packages/") {
+			key := strings.TrimPrefix(r.URL.Path, "/skill-bucket/packages/")
+			body, exists := f.objectBodies[key]
+			version := "original-six-v1"
+			if key == "unreferenced.zip" {
+				version = "original-unreferenced-v1"
+			}
+			if !exists || (r.Method != "GET" && r.Method != "HEAD") || r.URL.Query().Get("versionId") != version || !strings.Contains(r.Header.Get("Authorization"), "Credential=d-object-access/") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			checksum := md5.Sum(body)
+			w.Header().Set("Content-Length", fmt.Sprint(len(body)))
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("ETag", `"`+hex.EncodeToString(checksum[:])+`"`)
+			w.Header().Set("Last-Modified", time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).Format(http.TimeFormat))
+			w.Header().Set("x-amz-version-id", version)
+			if r.Method == "GET" {
+				w.Write(body)
+			}
+			return
+		}
 		if r.URL.Path == "/skill-bucket" || r.URL.Path == "/skill-bucket/" {
 			if r.Method != "GET" || !strings.Contains(r.Header.Get("Authorization"), "Credential=d-object-access/") {
 				w.WriteHeader(http.StatusForbidden)
@@ -59,7 +85,7 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 			case r.URL.Query().Has("versioning"):
 				fmt.Fprint(w, `<VersioningConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Status>Enabled</Status></VersioningConfiguration>`)
 			case r.URL.Query().Has("versions") && r.URL.Query().Get("prefix") == "packages/":
-				fmt.Fprint(w, `<ListVersionsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>skill-bucket</Name><Prefix>packages/</Prefix><IsTruncated>false</IsTruncated><Version><Key>packages/original.zip</Key><VersionId>original-six-v1</VersionId><IsLatest>true</IsLatest><Size>3</Size></Version><Version><Key>packages/unreferenced.zip</Key><VersionId>original-unreferenced-v1</VersionId><IsLatest>true</IsLatest><Size>2</Size></Version></ListVersionsResult>`)
+				fmt.Fprintf(w, `<ListVersionsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>skill-bucket</Name><Prefix>packages/</Prefix><IsTruncated>false</IsTruncated><Version><Key>packages/original.zip</Key><VersionId>original-six-v1</VersionId><IsLatest>true</IsLatest><Size>%d</Size></Version><Version><Key>packages/unreferenced.zip</Key><VersionId>original-unreferenced-v1</VersionId><IsLatest>true</IsLatest><Size>%d</Size></Version></ListVersionsResult>`, len(f.objectBodies["original.zip"]), len(f.objectBodies["unreferenced.zip"]))
 			default:
 				w.WriteHeader(http.StatusForbidden)
 			}
@@ -119,6 +145,9 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		op.MountIdentities = []kube.MountIdentity{{Volume: "formal-mapping", Kind: "ConfigMap", Name: op.Workload.FormalMaterials.ConfigMap, UID: name + "-mapping-uid", SHA256: hash([]byte(name))}, caPin}
 		if name == "capture-database" {
 			op.Request.Database = &f.sourceSpec
+		}
+		if name == "capture-workspace" {
+			op.Request.MaxFiles, op.Request.MaxFileBytes = int64(s.Config.Workspace.MaxFiles), s.Config.Workspace.MaxFileBytes
 		}
 		m.Operations[name] = op
 	}
@@ -216,6 +245,21 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 	skills, err := authority.skillObjectMetadata(ctx, clients, f.sourceInventory.Skills)
 	if err != nil || len(skills.Objects) != 2 || !reflect.DeepEqual(skills.WorkspaceRequiredBlobIDs, []int{18}) {
 		t.Fatal("same-task original referenced/unreferenced/versioned/local Skills selection", err)
+	}
+	reader, err := sh.NewS3VersionReaderWithMetadata(clients.Objects, skills.Bucket, skills.Prefix, skills.UserMetadataAllowlist)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, object := range skills.Objects {
+		version, err := reader.OpenVersion(ctx, object.Key, object.VersionID)
+		if err != nil {
+			t.Fatal("original exact-version source byte read", err)
+		}
+		body, readErr := io.ReadAll(io.LimitReader(version.Body, skills.MaxObjectBytes+1))
+		closeErr := version.Body.Close()
+		if readErr != nil || closeErr != nil || version.VersionID != object.VersionID || version.Size != object.Size || hash(body) != hash(f.objectBodies[object.Key]) || int64(len(body)) != object.Size {
+			t.Fatal("original exact-version source bytes/metadata changed")
+		}
 	}
 	deployment, secrets, err := authority.resourceMetadata(ctx, clients)
 	if err != nil || len(deployment.Selections) != 1 || len(secrets.Selections) != 1 {
