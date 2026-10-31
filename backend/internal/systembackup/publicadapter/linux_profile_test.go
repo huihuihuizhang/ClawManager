@@ -123,6 +123,71 @@ func linuxFixture(t *testing.T, f *fixture, sqlf *sourceFixture) *LinuxProfile {
 	return p
 }
 
+type onceObservedWriter struct {
+	flow.Writer
+	calls *int
+	state flow.State
+}
+
+func (w onceObservedWriter) Observe(context.Context) (flow.State, error) {
+	*w.calls++
+	if *w.calls > 1 {
+		return flow.State{}, errors.New("writer was rediscovered")
+	}
+	return w.state, nil
+}
+
+func TestLinuxOriginalWriterFactoryReceivesTheSameSingleFrozenSnapshot(t *testing.T) {
+	for _, fault := range []string{"", "duplicate", "invalid-state", "failed-observe"} {
+		t.Run(fault, func(t *testing.T) {
+			f, _, _ := setup(t)
+			p := linuxFixture(t, f, &sourceFixture{})
+			cfg := p.cfg
+			parts := cfg.BuildParts
+			calls, builds := 0, 0
+			original := f.x.Writers[0].Original
+			if fault == "invalid-state" {
+				original.UID = ""
+			}
+			if fault == "failed-observe" {
+				calls = 1
+			}
+			cfg.BuildWriters = func(context.Context, d.Input, SourceInventory, []FrozenWriter) ([]flow.Writer, error) {
+				writer := onceObservedWriter{Writer: fixtureWriter{f}, calls: &calls, state: original}
+				out := []flow.Writer{writer}
+				if fault == "duplicate" {
+					out = append(out, writer)
+				}
+				return out, nil
+			}
+			cfg.BuildParts = nil
+			cfg.BuildPartsWithWriters = func(in d.Input, inv SourceInventory, hold time.Time, writers []FrozenWriter) ([]JobPart, error) {
+				builds++
+				if calls != 1 || len(writers) != 1 || writers[0].Original != original {
+					t.Fatal("parts factory did not consume exact first snapshot")
+				}
+				// A mutation of the callback DTO cannot change the frozen plan.
+				writers[0].Original.Checkpoint = "mutated-callback"
+				return parts(in, inv, hold)
+			}
+			profile, err := NewLinuxProfile(cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			discovery, err := profile.Discover(context.Background(), f.in)
+			if fault != "" {
+				if err == nil || builds != 0 {
+					t.Fatal("invalid original snapshot reached parts factory", err, builds)
+				}
+				return
+			}
+			if err != nil || calls != 1 || builds != 1 || len(discovery.Writers) != 1 || discovery.Writers[0].Original != original {
+				t.Fatal("plan and part snapshot diverged", err, calls, builds)
+			}
+		})
+	}
+}
+
 func TestRealCompositionEntryConstructsSharedDispatcherWithoutControlSQL(t *testing.T) {
 	f, _, _ := setup(t)
 	sf := &sourceFixture{}

@@ -30,8 +30,11 @@ type PublicCaptureConfig struct {
 	PlatformWriters *b.PlatformWriterGroup
 	// Optional B module intake. Nil preserves the current workspace-only factory;
 	// this does not widen supportedPublicCapture, admission, or readiness.
-	Modules    *b.CaptureModules
-	FormalKeys FormalCandidateKeyFactory
+	Modules *b.CaptureModules
+	// Original task-scoped modules are assembled after the SAME Discover's
+	// writer snapshot. A callback may not rediscover writer state or issue keys.
+	ModuleFactory func(d.Input, b.SourceInventory, time.Time, []b.FrozenWriter) (*b.CaptureModules, error)
+	FormalKeys    FormalCandidateKeyFactory
 }
 type PublicCapture struct {
 	Loop      c.TaskExecutionLoop
@@ -128,6 +131,9 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 // Optional B modules never replace D/C's writer authority or current guards.
 func configuredPublicSource(cfg PublicCaptureConfig) (b.LinuxProfileConfig, error) {
 	var e error
+	if cfg.Modules != nil && (cfg.ModuleFactory != nil || cfg.Source.BuildPartsWithWriters != nil) {
+		return b.LinuxProfileConfig{}, d.ErrNotReady
+	}
 	if cfg.RuntimeControl != nil {
 		if cfg.Owner == nil {
 			return b.LinuxProfileConfig{}, d.ErrNotReady
@@ -149,28 +155,93 @@ func configuredPublicSource(cfg PublicCaptureConfig) (b.LinuxProfileConfig, erro
 			return b.LinuxProfileConfig{}, e
 		}
 	}
-	if build := cfg.Source.BuildParts; build != nil {
-		cfg.Source.BuildParts = func(in d.Input, inv b.SourceInventory, hold time.Time) ([]b.JobPart, error) {
-			parts, err := build(in, inv, hold)
+	if cfg.ModuleFactory != nil {
+		cfg.Source.BuildPartsWithWriters = func(in d.Input, inventory b.SourceInventory, hold time.Time, writers []b.FrozenWriter) ([]b.JobPart, error) {
+			original := append([]b.FrozenWriter{}, writers...)
+			payload, err := json.Marshal(struct {
+				Input     d.Input
+				Inventory b.SourceInventory
+				Writers   []b.FrozenWriter
+			}{in, inventory, original})
+			var detached struct {
+				Input     d.Input
+				Inventory b.SourceInventory
+				Writers   []b.FrozenWriter
+			}
+			if err != nil || len(payload) > 16<<20 || json.Unmarshal(payload, &detached) != nil {
+				return nil, d.ErrNotReady
+			}
+			modules, err := cfg.ModuleFactory(detached.Input, detached.Inventory, hold, detached.Writers)
+			if err != nil || modules == nil {
+				return nil, d.ErrNotReady
+			}
+			parts, err := modules.BuildParts(in, inventory, hold)
 			if err != nil {
 				return nil, err
 			}
-			if in.Authority.TaskType == "preflight" {
-				return parts, nil
-			}
-			for _, part := range parts {
-				var invocation worker.Invocation
-				if json.Unmarshal(part.InvocationJSON, &invocation) != nil {
-					return nil, d.ErrNotReady
-				}
-				if invocation.FormalCapture != nil || invocation.ProviderKey != nil {
-					if !worker.ValidateRecordedInvocation(invocation) || (cfg.FormalKeys == nil && (cfg.Owner == nil || cfg.Owner.FormalKeys == nil)) {
-						return nil, d.ErrNotReady
-					}
-				}
+			if err = validateOriginalResourceWriters(parts, original); err != nil {
+				return nil, err
 			}
 			return parts, nil
 		}
 	}
+	validateParts := func(in d.Input, parts []b.JobPart, err error) ([]b.JobPart, error) {
+		if err != nil {
+			return nil, err
+		}
+		if in.Authority.TaskType == "preflight" {
+			return parts, nil
+		}
+		for _, part := range parts {
+			var invocation worker.Invocation
+			if json.Unmarshal(part.InvocationJSON, &invocation) != nil {
+				return nil, d.ErrNotReady
+			}
+			if invocation.FormalCapture != nil || invocation.ProviderKey != nil {
+				if !worker.ValidateRecordedInvocation(invocation) || (cfg.FormalKeys == nil && (cfg.Owner == nil || cfg.Owner.FormalKeys == nil)) {
+					return nil, d.ErrNotReady
+				}
+			}
+		}
+		return parts, nil
+	}
+	if build := cfg.Source.BuildParts; build != nil {
+		cfg.Source.BuildParts = func(in d.Input, inv b.SourceInventory, hold time.Time) ([]b.JobPart, error) {
+			parts, err := build(in, inv, hold)
+			return validateParts(in, parts, err)
+		}
+	}
+	if build := cfg.Source.BuildPartsWithWriters; build != nil {
+		cfg.Source.BuildPartsWithWriters = func(in d.Input, inv b.SourceInventory, hold time.Time, writers []b.FrozenWriter) ([]b.JobPart, error) {
+			parts, err := build(in, inv, hold, writers)
+			return validateParts(in, parts, err)
+		}
+	}
 	return cfg.Source, nil
+}
+
+func validateOriginalResourceWriters(parts []b.JobPart, writers []b.FrozenWriter) error {
+	frozen := map[string]b.FrozenWriter{}
+	for _, w := range writers {
+		if w.ID == "" || frozen[w.ID].ID != "" {
+			return d.ErrNotReady
+		}
+		frozen[w.ID] = w
+	}
+	for _, part := range parts {
+		var i worker.Invocation
+		if json.Unmarshal(part.InvocationJSON, &i) != nil {
+			return d.ErrNotReady
+		}
+		if i.Request.Resources == nil {
+			continue
+		}
+		for _, saved := range i.Request.Resources.OriginalWriters {
+			original, ok := frozen[saved.ID]
+			if !ok || original.Original != saved.State {
+				return d.ErrNotReady
+			}
+		}
+	}
+	return nil
 }
