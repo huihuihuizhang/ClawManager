@@ -54,7 +54,11 @@ func TestAProviderPermitIssuerRevokedAfterLogin(t *testing.T) {
 	aProviderPermitIssuerOriginalSQLAndTLS(t, true)
 }
 
-func aProviderPermitIssuerOriginalSQLAndTLS(t *testing.T, revokedAfterLogin bool) {
+func TestAProviderPermitIssuerNanosecondAuthorizationDeadline(t *testing.T) {
+	aProviderPermitIssuerOriginalSQLAndTLS(t, false, true)
+}
+
+func aProviderPermitIssuerOriginalSQLAndTLS(t *testing.T, revokedAfterLogin bool, nanos ...bool) {
 	aControllerVerifierOriginalSQLAndTLS(t, false, func(f aOriginalIssuerFixture) {
 		ctx, db := f.ctx, f.db
 		exec := func(query string, args ...any) {
@@ -92,6 +96,10 @@ func aProviderPermitIssuerOriginalSQLAndTLS(t *testing.T, revokedAfterLogin bool
 			t.Fatal("original issuer SQL account unavailable")
 		}
 		grant := a.ProviderPermitIssuerGrant{Version: "system-backup-provider-permit-issuer-grant.v1", Binding: f.cfg.Binding, Database: f.originalDatabase(), DatabaseAccount: account, Workload: workload, SigningPublicKey: issuerPublic, GeneratePermission: permission, WorkerNamespace: f.job.Namespace, WorkerServiceAccountName: "capture-worker", WorkerServiceAccountUID: "capture-sa-uid", WorkerJWTIdentityFile: jwtFile, NotBefore: now.Add(-time.Minute), Until: now.Add(time.Minute)}
+		nanosecondMinimum := len(nanos) > 0 && nanos[0]
+		if nanosecondMinimum {
+			grant.Until = now.Truncate(time.Second).Add(35*time.Second + 123456789*time.Nanosecond)
+		}
 		grantRaw, _ := json.Marshal(grant)
 		// The delegation has no Forward/capture grant/profile/deployment digest.
 		// Its independent pin can be frozen into materials BEFORE those parents.
@@ -132,7 +140,7 @@ func aProviderPermitIssuerOriginalSQLAndTLS(t *testing.T, revokedAfterLogin bool
 		}
 		invocationHash, _ := f.invocation.Hash()
 		scope := a.ProviderPermitIssueScope{Input: f.in, Job: f.job, Invocation: f.invocation, WorkerIdentity: k.JobIdentity{Namespace: f.job.Namespace, PodUID: "capture-pod-uid", ServiceAccountUID: "capture-sa-uid", JobUID: f.job.UID, InvocationSHA256: invocationHash, ExecutionGrantSHA256: f.cfg.CaptureGrantSHA256}, WorkerPodName: "capture-pod"}
-		original := &aSQLPermitOriginal{fixture: f, issuer: issuer, scope: scope, nonce: strings.Repeat("d", 32), until: now.Add(40 * time.Second).Truncate(time.Microsecond), owner: &PublicJobOwner{Gate: c.SQLCaptureGate{Authority: f.cfg.Authority, Records: f.cfg.Records}, Identity: f.cfg.Records.Keys.(*c.PinnedExecutionIdentity)}}
+		original := &aSQLPermitOriginal{fixture: f, issuer: issuer, scope: scope, nonce: strings.Repeat("d", 32), until: now.Add(40 * time.Second), owner: &PublicJobOwner{Gate: c.SQLCaptureGate{Authority: f.cfg.Authority, Records: f.cfg.Records}, Identity: f.cfg.Records.Keys.(*c.PinnedExecutionIdentity)}}
 		// Rollback does not publish a permit or a planned reference.
 		if _, err = original.control(ctx, "key-reserve", false); !errors.Is(err, aExpectedPermitRollback) {
 			t.Fatal("actual Stage must succeed then rollback deny committed readback", err)
@@ -144,6 +152,20 @@ func aProviderPermitIssuerOriginalSQLAndTLS(t *testing.T, revokedAfterLogin bool
 		delivery, err := original.control(ctx, "key-reserve", true)
 		if err != nil {
 			t.Fatal("original provider permit reserve failed", err)
+		}
+		var body k.DeliveredPermitPayload
+		if json.Unmarshal(delivery.Payload, &body) != nil {
+			t.Fatal("issued payload unavailable")
+		}
+		var sqlExpires time.Time
+		if db.QueryRowContext(ctx, `SELECT expires_at FROM system_backup_v2_evidence WHERE evidence_type='diagnostic' AND owner_target_type='backup'`).Scan(&sqlExpires) != nil || !body.Permit.ExpiresAt.Equal(original.lease.Until) || !sqlExpires.Equal(original.lease.Until) || !original.until.Equal(original.until.UTC().Truncate(time.Microsecond)) {
+			t.Fatal("original lease, signature and DATETIME(6) precision diverged")
+		}
+		if nanosecondMinimum {
+			want := grant.Until.UTC().Truncate(time.Microsecond)
+			if grant.Until.Equal(want) || !original.until.Equal(want) || !original.until.Before(grant.Until) {
+				t.Fatal("nanosecond independent owner minimum was rounded/extended", original.until, grant.Until)
+			}
 		}
 		var state string
 		if db.QueryRowContext(ctx, `SELECT reference_state FROM system_backup_v2_kek_references`).Scan(&state) != nil || state != "planned" {
@@ -316,7 +338,14 @@ func (o *aSQLPermitOriginal) control(ctx context.Context, action string, commit 
 	}
 	req := worker.ControlRequest{Invocation: o.scope.Invocation, InvocationSHA256: o.scope.WorkerIdentity.InvocationSHA256, Action: action, Point: o.nonce}
 	pod := BoundPod{Namespace: o.scope.WorkerIdentity.Namespace, Name: o.scope.WorkerPodName, UID: o.scope.WorkerIdentity.PodUID, ServiceAccountUID: o.scope.WorkerIdentity.ServiceAccountUID}
-	lease, err := o.owner.keyUseTx(ctx, tx, o.scope.Input.Authority, o.scope.Job, pod, req, o.until)
+	until := o.until
+	if p.ValidUntil().Before(until) {
+		until = p.ValidUntil()
+	}
+	if guard.ValidUntil().Before(until) {
+		until = guard.ValidUntil()
+	}
+	lease, err := o.owner.keyUseTx(ctx, tx, o.scope.Input.Authority, o.scope.Job, pod, req, until)
 	if err != nil {
 		return k.DeliveredProviderPermit{}, err
 	}
@@ -345,5 +374,6 @@ func (o *aSQLPermitOriginal) control(ctx context.Context, action string, commit 
 		return k.DeliveredProviderPermit{}, err
 	}
 	o.lease = *lease
+	o.until = lease.Until
 	return delivery, nil
 }

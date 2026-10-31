@@ -233,6 +233,12 @@ planned/unknown保持保守：reserve原事务持久化planned。**kms Transit�
 
 CompleteScan持续关闭直到外部EOF/adoption/backfill/持续writer-GC hooks齐备。
 
+### A7.2 原key-use持久化前统一微秒窗口
+
+原 `PublicJobOwner.keyUseTx` 现在在读取/构造原lease之前统一 `until.UTC().Truncate(time.Microsecond)`，覆盖全部原claim/relay/task/issuer/capability最短窗口；不在签名后修改lease，也不向上取整。A7.1 `PreparedProviderPermitIssue.ValidUntil` 也先向下截微秒，Stage拒绝不规范的纳秒lease；D仍须在原keyUseTx之前min准备期限与原guard/relay/task。
+
+真实SQL新用例 `TestAProviderPermitIssuerNanosecondAuthorizationDeadline`：独立issuer grant的最短期限显式含123456789纳秒，小于task/relay/Generate capability；从真实Prepare.ValidUntil→原keyUseTx首次写入→签名payload→真实evidence DATETIME(6)→ReadCommitted→JWT/TLS Generate完整跑通，断言各处期限完全一致且严格早于未截断授权期限。普通正例也不再在fixture手工截断原until，原生产入口自身负责规范化。三条issuer实际SQL+TLS测试PASS，pkg7.432秒。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
