@@ -84,7 +84,7 @@ func (o *PublicJobOwner) saveFormalCandidateTx(ctx context.Context, tx *sql.Tx, 
 	if tx.QueryRowContext(ctx, `SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=?`, a.InstallationID, a.ConfigVersion).Scan(&capacity) != nil {
 		return c.ErrExecutionRecord
 	}
-	if err := (security.RegistrationCapacity{ReportFile: o.Gate.Records.CapacityReportFile}).Reserve(ctx, tx, capacity, len(sealed)); err != nil {
+	if err := (security.RegistrationCapacity{ReportFile: o.Gate.Records.CapacityReportFile}).ReserveExecutionPayload(ctx, tx, capacity, len(sealed)); err != nil {
 		return err
 	}
 	result, err := tx.ExecContext(ctx, `UPDATE system_backup_v2_runtime_resources SET candidate_cipher=?,candidate_key_ref=?,candidate_sha256=?,row_version=row_version+1 WHERE task_public_id=? AND attempt_no=? AND phase=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND candidate_sha256 IS NULL AND revoked=FALSE AND stopped_at IS NULL`, sealed, ref, digest, a.TaskPublicID, a.AttemptNo, a.Phase, j.Namespace, j.Name, j.UID)
