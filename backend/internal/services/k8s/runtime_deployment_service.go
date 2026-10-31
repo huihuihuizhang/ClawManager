@@ -117,6 +117,9 @@ func (s *runtimeDeploymentService) EnsureUpgradeLabPool(ctx context.Context, nam
 	}
 	deployments := s.client.AppsV1().Deployments(namespace)
 	if existing, err := deployments.Get(ctx, name, metav1.GetOptions{}); err == nil {
+		if nativeSlotTemplate(existing.Spec.Template) {
+			return fmt.Errorf("legacy upgrade lab cannot manage native pool/slot deployment")
+		}
 		if existing.Labels[upgradeLabPurposeLabel] != upgradeLabPurposeValue || existing.Labels[upgradeLabRunLabel] != runID {
 			return fmt.Errorf("deployment %s/%s is not owned by upgrade lab run %s", namespace, name, runID)
 		}
@@ -130,6 +133,9 @@ func (s *runtimeDeploymentService) EnsureUpgradeLabPool(ctx context.Context, nam
 	template, err := deployments.Get(ctx, templateName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get upgrade lab template deployment %s/%s: %w", namespace, templateName, err)
+	}
+	if nativeSlotTemplate(template.Spec.Template) {
+		return fmt.Errorf("legacy upgrade lab cannot clone native pool/slot deployment")
 	}
 	target := template.DeepCopy()
 	target.TypeMeta = metav1.TypeMeta{}
@@ -190,8 +196,11 @@ func (s *runtimeDeploymentService) DeleteUpgradeLabPool(ctx context.Context, nam
 	if existing.Labels[upgradeLabPurposeLabel] != upgradeLabPurposeValue || existing.Labels[upgradeLabRunLabel] != strings.TrimSpace(runID) {
 		return fmt.Errorf("refusing to delete non-lab deployment %s/%s", namespace, name)
 	}
+	if nativeSlotTemplate(existing.Spec.Template) {
+		return fmt.Errorf("legacy upgrade lab cannot delete native pool/slot deployment")
+	}
 	foreground := metav1.DeletePropagationForeground
-	if err := deployments.Delete(ctx, name, metav1.DeleteOptions{PropagationPolicy: &foreground}); err != nil && !errors.IsNotFound(err) {
+	if err := deployments.Delete(ctx, name, metav1.DeleteOptions{PropagationPolicy: &foreground, Preconditions: &metav1.Preconditions{UID: &existing.UID, ResourceVersion: &existing.ResourceVersion}}); err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("delete upgrade lab pool %s/%s: %w", namespace, name, err)
 	}
 	// A successful Deployment DELETE is asynchronous. Waiting for foreground
@@ -232,6 +241,9 @@ func (s *runtimeDeploymentService) EnsureUpgradePool(ctx context.Context, namesp
 	}
 	deployments := s.client.AppsV1().Deployments(namespace)
 	if existing, err := deployments.Get(ctx, targetName, metav1.GetOptions{}); err == nil {
+		if nativeSlotTemplate(existing.Spec.Template) {
+			return fmt.Errorf("legacy upgrade cannot manage native pool/slot deployment")
+		}
 		if runtimeContainerImage(existing.Spec.Template.Spec.Containers) != strings.TrimSpace(image) || existing.Labels["clawmanager.io/upgrade-id"] != upgradeID || existing.Labels["clawmanager.io/source-deployment"] != sourceName {
 			return fmt.Errorf("existing upgrade pool %s/%s does not match rollout", namespace, targetName)
 		}
@@ -242,6 +254,9 @@ func (s *runtimeDeploymentService) EnsureUpgradePool(ctx context.Context, namesp
 	source, err := deployments.Get(ctx, sourceName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get source runtime deployment %s/%s: %w", namespace, sourceName, err)
+	}
+	if nativeSlotTemplate(source.Spec.Template) {
+		return fmt.Errorf("legacy upgrade cannot clone native pool/slot deployment")
 	}
 	target := source.DeepCopy()
 	target.TypeMeta = metav1.TypeMeta{}
@@ -321,6 +336,9 @@ func (s *runtimeDeploymentService) setUpgradePoolActive(ctx context.Context, nam
 			if err != nil {
 				return err
 			}
+			if nativeSlotTemplate(deployment.Spec.Template) {
+				return fmt.Errorf("legacy upgrade cannot change native pool/slot scheduling")
+			}
 			if validateTarget && (deployment.Labels[runtimePoolRoleLabel] != "upgrade-target" || deployment.Labels[runtimeUpgradeIDLabel] != upgradeID || deployment.Labels[runtimeSourceLabel] != sourceName) {
 				return fmt.Errorf("deployment %s/%s is not upgrade target %s for source %s", namespace, name, upgradeID, sourceName)
 			}
@@ -373,11 +391,14 @@ func (s *runtimeDeploymentService) DeleteUpgradePool(ctx context.Context, namesp
 	if target.Labels[runtimePoolRoleLabel] != "upgrade-target" || target.Labels[runtimeUpgradeIDLabel] != upgradeID || target.Labels[runtimeSourceLabel] != sourceName {
 		return fmt.Errorf("refusing to delete deployment %s/%s without matching upgrade ownership", namespace, targetName)
 	}
+	if nativeSlotTemplate(target.Spec.Template) {
+		return fmt.Errorf("legacy upgrade cannot delete native pool/slot deployment")
+	}
 	if target.Spec.Replicas != nil && *target.Spec.Replicas != 0 {
 		return fmt.Errorf("refusing to delete upgrade target %s/%s before it is scaled to zero", namespace, targetName)
 	}
 	policy := metav1.DeletePropagationBackground
-	if err := deployments.Delete(ctx, targetName, metav1.DeleteOptions{PropagationPolicy: &policy}); err != nil && !errors.IsNotFound(err) {
+	if err := deployments.Delete(ctx, targetName, metav1.DeleteOptions{PropagationPolicy: &policy, Preconditions: &metav1.Preconditions{UID: &target.UID, ResourceVersion: &target.ResourceVersion}}); err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("delete failed upgrade pool %s/%s: %w", namespace, targetName, err)
 	}
 	return nil
@@ -633,19 +654,33 @@ func (s *runtimeDeploymentService) Scale(ctx context.Context, namespace, name st
 		return fmt.Errorf("k8s client not initialized")
 	}
 
+	if replicas < 0 {
+		return fmt.Errorf("runtime replicas must be nonnegative")
+	}
 	deployments := s.client.AppsV1().Deployments(namespace)
-	patch, err := json.Marshal(map[string]interface{}{
-		"spec": map[string]interface{}{
-			"replicas": replicas,
-		},
+	var originalUID types.UID
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existing, err := deployments.Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		if nativeSlotTemplate(existing.Spec.Template) {
+			return fmt.Errorf("legacy Scale cannot manage native pool/slot deployment")
+		}
+		if originalUID != "" && existing.UID != originalUID {
+			return fmt.Errorf("runtime deployment identity changed during scale")
+		}
+		originalUID = existing.UID
+		// ResourceVersion protects the inspected layout against a concurrent
+		// cutover. A blind replicas patch could stop native slots after admission.
+		// Retain the existing patch-only control-plane RBAC.
+		patch, err := json.Marshal(map[string]any{"metadata": map[string]any{"uid": existing.UID, "resourceVersion": existing.ResourceVersion}, "spec": map[string]any{"replicas": replicas}})
+		if err != nil {
+			return err
+		}
+		_, err = deployments.Patch(ctx, name, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
+		return err
 	})
-	if err != nil {
-		return fmt.Errorf("failed to build runtime deployment scale patch %s/%s: %w", namespace, name, err)
-	}
-	if _, err := deployments.Patch(ctx, name, types.StrategicMergePatchType, patch, metav1.PatchOptions{}); err != nil {
-		return fmt.Errorf("failed to scale runtime deployment %s/%s: %w", namespace, name, err)
-	}
-	return nil
 }
 
 func (s *runtimeDeploymentService) RolloutImage(ctx context.Context, namespace, name, image, upgradeID string, maxUnavailable, maxSurge int) error {
@@ -666,6 +701,9 @@ func (s *runtimeDeploymentService) rolloutImage(ctx context.Context, namespace, 
 		existing, err := deployments.Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return err
+		}
+		if nativeSlotTemplate(existing.Spec.Template) {
+			return fmt.Errorf("legacy rollout cannot manage native pool/slot deployment")
 		}
 
 		updated := existing.DeepCopy()
