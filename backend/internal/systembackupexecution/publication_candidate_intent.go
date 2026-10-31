@@ -54,6 +54,9 @@ func (s *DeploymentService) beginPublicationCandidate(ctx context.Context, claim
 	}
 	baseRequest := request
 	baseRequest.CandidateOwnerHMAC = ""
+	if baseRequest.Version == publicationPresignedUploadVersion {
+		baseRequest.CredentialHash = ""
+	}
 	requestBytes, _ := json.Marshal(baseRequest)
 	locationBytes, _ := json.Marshal(struct{ Endpoint, Bucket, Key string }{target.Endpoint, target.Bucket, key})
 	owner := originalStageOwner{Schema: "system-backup-original-stage-owner.v1", Installation: target.InstallationID, Task: claim.Target.PublicID, Attempt: attempt, Phase: "publish", PhaseUID: "publish-" + hash(requestBytes), Location: string(locationBytes)}

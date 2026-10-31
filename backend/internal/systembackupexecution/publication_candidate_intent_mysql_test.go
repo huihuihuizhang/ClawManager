@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"database/sql/driver"
@@ -21,7 +22,7 @@ func TestPublicationCandidateUsesOriginal104BeforeOwnerKeyMySQL(t *testing.T) {
 	if os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE") == "" {
 		t.Skip("requires owned local MySQL")
 	}
-	for _, mode := range []string{"exact-retry", "creating-ack-lost", "owner-key-lost", "request-drift", "root-alias", "released-claim", "owner-hmac-drift"} {
+	for _, mode := range []string{"exact-retry", "creating-ack-lost", "owner-key-lost", "request-drift", "root-alias", "released-claim", "owner-hmac-drift", "presigned-authorized", "presigned-released"} {
 		t.Run(mode, func(t *testing.T) {
 			boundary := &aStageCommitBoundary{}
 			store, state := newANativePublicationStore(t, time.Minute)
@@ -37,6 +38,10 @@ func TestPublicationCandidateUsesOriginal104BeforeOwnerKeyMySQL(t *testing.T) {
 			indexSHA := hash([]byte("candidate intent index DATA"))
 			p := PublicationUploadRequest{Version: publicationUploadVersion, Installation: h.original.InstallationID, Backup: h.original.TaskPublicID, Attempt: h.original.AttemptNo, Endpoint: store.config.Endpoint, Region: store.config.Region, Bucket: store.config.Bucket, ArtifactRoot: store.config.Root, RemoteStagingRoot: store.config.RemoteStagingRoot, CAHash: store.config.CASHA256, CredentialHash: strings.Repeat("f", 64), Deadline: h.original.DeadlineAt.Add(-time.Second), Objects: []PublicationUploadInput{{Path: "parts/original.enc", SHA256: hash([]byte("inert original C locator")), Bytes: 24}, {Path: "artifact-index.json", SHA256: indexSHA, Bytes: 27}}}
 			p.ManifestInput = []byte(`{"schema_version":"system-backup.v1","origin_installation_id":"` + p.Installation + `","backup_public_id":"` + p.Backup + `","attempt_no":` + strconv.FormatUint(p.Attempt, 10) + `,"artifact_index":{"path":"artifact-index.json","checksum":"` + indexSHA + `"}}`)
+			if strings.HasPrefix(mode, "presigned-") {
+				p.Version = publicationPresignedUploadVersion
+				p.CredentialHash = ""
+			}
 			countRows := func() int {
 				t.Helper()
 				var count int
@@ -110,11 +115,45 @@ func TestPublicationCandidateUsesOriginal104BeforeOwnerKeyMySQL(t *testing.T) {
 					p.Deadline = p.Deadline.Add(-time.Second)
 				}
 				p.CandidateOwnerHMAC = first.MAC
+				if strings.HasPrefix(mode, "presigned-") {
+					if mode == "presigned-released" {
+						if _, e := (c.ClaimCoordinator{Executor: h.admin, InstallationID: p.Installation}).Release(ctx, h.token, time.Second); e != nil {
+							t.Fatal(e)
+						}
+						var owner sql.NullString
+						var version uint64
+						if h.admin.QueryRow("SELECT controller_owner,row_version FROM system_backup_v2_backups WHERE public_id=?", p.Backup).Scan(&owner, &version) != nil || owner.Valid || version <= h.token.RowVersion {
+							t.Fatal("actual post-intent release did not occur")
+						}
+					}
+					raw, e := h.service.issuePublicationPutGrants(ctx, h.token, p.Attempt, store.config, p)
+					if mode == "presigned-released" {
+						if e == nil || len(raw) != 0 {
+							t.Fatal("released publisher received delegated PUT capability")
+						}
+						return
+					}
+					if e != nil {
+						t.Fatal("actual current publisher PUT delegation", e)
+					}
+					if bytes.Contains(raw, []byte(state.write.SecretKey)) {
+						t.Fatal("native issuer signing key entered Job material")
+					}
+					p.CredentialHash = hash(raw)
+					grants, until, e := parsePublicationPutGrantSet(p, raw)
+					if e != nil || len(grants) != len(p.Objects)+1 || until.After(p.Deadline) {
+						t.Fatal("current-authorized finite native grants", e)
+					}
+					var leaks int
+					if e = h.admin.QueryRow("SELECT COUNT(*) FROM system_backup_v2_evidence WHERE LOCATE('X-Amz-Signature',inline_payload)>0").Scan(&leaks); e != nil || leaks != 0 {
+						t.Fatal("delegated bearer capability entered SQL evidence", leaks, e)
+					}
+				}
 				if mode == "owner-hmac-drift" {
 					p.CandidateOwnerHMAC = strings.Repeat("e", 64)
 				}
 				second, e := h.service.beginPublicationCandidate(ctx, h.token, p.Attempt, store.config, p)
-				if mode == "exact-retry" {
+				if mode == "exact-retry" || mode == "presigned-authorized" {
 					if e != nil || first != second {
 						t.Fatal("exact original candidate readback", e)
 					}
