@@ -438,3 +438,10 @@
 - 明确断言provider拒绝1次、成功Generate/Unwrap均0、一个实际admitted/held Job与一个SQL原签名projection、没有candidate/result或成功密文/envelope。随后实际原Loop.Store.Record写失败密文结果、FinishCapture落failed并释放claim/lease。无overlay定向PASS34.24s（package37.466s）。
 - 该提交保留原AdmissionAndQueue测试的Prepare/SavePlan/reTake边界；独立完整正向测试仍在D工作区继续，当前已实际完成前六worker/C候选/独立Evidence，后续因原120秒固定hold余量不足拒绝。新任务在core签名与plan之前声明300秒，原gate600秒上界、原DEK窗口、所有校验不变。完整10parts/validating/A发布尚未完成，不能把本负向证明称完整正向成功。
 - 所有API/kubelet/Redis/Transit仍是明确LOCAL协议模型，实际TLS/SQL/原客户端及同步C代码调用不等于真实Linux节点/PVC/线上KMS验收。同步主分支2107a4a4，生产readiness未变。
+
+## D5.37 完整SQL目录有界聚合，保留默认固定窗口与逐次当前授权
+
+- 实际同任务正向已到第8个users_instances_database worker；原key window约29秒，logging-only诊断测得SQL目录阶段25.966秒后context deadline exceeded，随后原Stop/Resume恢复。默认30秒claim、5秒heartbeat与旧DEK固定Until未改，没有以抬高ClaimTTL替代修复。
+- 仅reviewed-business source分支改为四个有界JSON metadata结果（tables/columns/PK+FK/原WorkBuddy unique），在同一原RR中重建完整原Table形状。每个真实SQL Query及Next前后仍调用原source guard，业务DATA每行与最后原session/schema/census检查保持；没有授权缓存、schema字段删减、额外SQL权限、源数据重编码或旧hash重写。legacy Catalog/Capture路径保持。
+- 约束名只作metadata排序，不新增SQL标识符限制；PK/FK和unique的排序由原MySQL ORDER BY生成ROW_NUMBER ordinal，避免Go字节排序改变原外键数组/hash。监督独立真实MySQL ordinary、合法fk$owner和a_owner/B_creator三类probe全部PASS；domain全包（含metadata全部边界撤权、data/final读取撤权）PASS3.464s。
+- 实际D独立SAN/TLS MySQL原172迁移、原SELECT-only source角色完整capture与旧Catalog逐字段等价，含schema/PK/FK/unique/defaults，原frozen schema验证PASS19.08s（package22.469s）；完整RR/data path当前授权437次、SQL耗时123.7841ms（该低层对照无HTTP key-check延迟，不冒充完整native任务成功）。完整同任务默认30秒key window、10parts/C/Evidence/原Record(validating)仍继续。

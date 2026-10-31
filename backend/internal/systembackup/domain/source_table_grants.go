@@ -88,7 +88,7 @@ func CaptureBusinessSourceGuarded(ctx context.Context, db *sql.DB, limits Limits
 	if !identifier.MatchString(database) || serverUUID == "" || authorize == nil || len(census) != 1 || census[0].Validate() != nil {
 		return Snapshot{}, ErrIsolation
 	}
-	return capture(ctx, db, limits, func(conn *sql.Conn) error {
+	return captureWithCatalog(ctx, db, limits, func(conn *sql.Conn) error {
 		var actualDB, actualUUID, role string
 		if conn.QueryRowContext(ctx, "SELECT DATABASE(), @@server_uuid").Scan(&actualDB, &actualUUID) != nil || actualDB != database || actualUUID != serverUUID {
 			return ErrIsolation
@@ -116,5 +116,5 @@ func CaptureBusinessSourceGuarded(ctx context.Context, db *sql.DB, limits Limits
 			return err
 		}
 		return CheckBusinessSchemaCensus(ctx, conn, census[0])
-	}, func() error { return authorize(ctx) })
+	}, catalogBusinessGuarded, func() error { return authorize(ctx) })
 }

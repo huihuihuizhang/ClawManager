@@ -239,6 +239,10 @@ func captureSourceGuarded(ctx context.Context, db *sql.DB, limits Limits, databa
 }
 
 func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, sourceChecks ...func() error) (Snapshot, error) {
+	return captureWithCatalog(ctx, db, limits, check, catalogGuarded, sourceChecks...)
+}
+
+func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), sourceChecks ...func() error) (Snapshot, error) {
 	var authorize func() error
 	if len(sourceChecks) > 1 {
 		return Snapshot{}, ErrIsolation
@@ -270,7 +274,7 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 		return Snapshot{}, ErrDatabase
 	}
 	defer tx.Rollback()
-	tables, err := catalogGuarded(ctx, tx, authorize)
+	tables, err := readCatalog(ctx, tx, authorize)
 	if err != nil {
 		return Snapshot{}, err
 	}
