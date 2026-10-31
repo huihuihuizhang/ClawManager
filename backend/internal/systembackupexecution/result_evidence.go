@@ -21,7 +21,12 @@ var formalResultID = regexp.MustCompile(`^sev_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4
 // A content-addressed UUID keeps retries on the same original Job/report. It
 // grants no authority: the caller must lock the Job and compare every byte.
 func resultEvidenceRef(a d.Authority, j d.JobBinding, digest string) d.EvidenceRef {
-	raw, _ := json.Marshal([]any{"public-job-result.v1", a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, j.JobUnitKey, j.UID, j.Generation, digest})
+	return resultEvidenceCoordinates(a.InstallationID, a.TaskPublicID, a.AttemptNo, a.Phase, j, digest)
+}
+
+// Pure historical identity calculation, without constructing an old live claim.
+func resultEvidenceCoordinates(installation, backup string, attempt uint64, phase string, j d.JobBinding, digest string) d.EvidenceRef {
+	raw, _ := json.Marshal([]any{"public-job-result.v1", installation, backup, attempt, phase, j.JobUnitKey, j.UID, j.Generation, digest})
 	sum := sha256.Sum256(raw)
 	sum[6] = (sum[6] & 15) | 0x80
 	sum[8] = (sum[8] & 63) | 0x80

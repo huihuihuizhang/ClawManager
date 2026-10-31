@@ -35,6 +35,20 @@ type publicationPayloadObservation struct {
 	Size                                      int64
 }
 
+// Only the independent full-body reader constructs this inert observation.
+// It is not task authority; the current original guard is still mandatory.
+type publicationPayloadReadReceipt struct {
+	target                             PublicationTargetMaterials
+	intentSHA256, key, version, sha256 string
+	size                               int64
+}
+
+func (object nativePublicationObject) checkedPayloadRead(target PublicationTargetMaterials, intent publicationPayloadIntent) bool {
+	raw, err := ce.Canonical(intent)
+	r := object.payloadRead
+	return err == nil && r != nil && r.target == target && r.intentSHA256 == hash(raw) && r.key == object.Key && r.version == object.Version && r.sha256 == object.SHA256 && r.size == object.Size && object.Key == intent.Key && object.Size == intent.Size && object.SHA256 == intent.SHA256 && object.Version != "" && object.Version != "null"
+}
+
 func publicationPartPaths(part string, index uint32, invocation string) (string, string) {
 	if part == ce.Part {
 		return ce.CipherPath, ce.EnvelopePath
@@ -208,6 +222,10 @@ func (s *DeploymentService) beginPublicationPayload(ctx context.Context, claim c
 // Complete EOF read with the independent read principal; HEAD/PUT headers do
 // not authorize a receipt. A nonempty immutable version pins this exact body.
 func readPublicationPayload(ctx context.Context, store *nativePublicationS3, intent publicationPayloadIntent, version string, until time.Time) (nativePublicationObject, error) {
+	return readPublicationPayloadTo(ctx, store, intent, version, until, io.Discard)
+}
+
+func readPublicationPayloadTo(ctx context.Context, store *nativePublicationS3, intent publicationPayloadIntent, version string, until time.Time, destination io.Writer) (nativePublicationObject, error) {
 	object, err := store.stat(ctx, intent.Key, version, until)
 	if err != nil {
 		return nativePublicationObject{}, err
@@ -220,7 +238,7 @@ func readPublicationPayload(ctx context.Context, store *nativePublicationS3, int
 		return nativePublicationObject{}, err
 	}
 	digest := sha256.New()
-	n, readErr := io.Copy(digest, io.LimitReader(reader, intent.Size+1))
+	n, readErr := io.Copy(io.MultiWriter(digest, destination), io.LimitReader(reader, intent.Size+1))
 	closeErr := reader.Close()
 	if readErr != nil || closeErr != nil || n != intent.Size {
 		return nativePublicationObject{}, errPublicationUnavailable
@@ -229,6 +247,11 @@ func readPublicationPayload(ctx context.Context, store *nativePublicationS3, int
 	if object.SHA256 != intent.SHA256 {
 		return nativePublicationObject{}, errPublicationConflict
 	}
+	raw, err := ce.Canonical(intent)
+	if err != nil {
+		return nativePublicationObject{}, c.ErrExecutionRecord
+	}
+	object.payloadRead = &publicationPayloadReadReceipt{target: store.config, intentSHA256: hash(raw), key: object.Key, version: object.Version, sha256: object.SHA256, size: object.Size}
 	return object, nil
 }
 
@@ -293,6 +316,13 @@ func (s *DeploymentService) publishOriginalPayload(ctx context.Context, claim c.
 	}
 	if part.check(ctx) != nil {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
+	}
+	return s.recordPublicationPayloadObservation(ctx, claim, attempt, store, intent, object)
+}
+
+func (s *DeploymentService) recordPublicationPayloadObservation(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationPayloadIntent, object nativePublicationObject) (nativePublicationObject, error) {
+	if store == nil || !object.checkedPayloadRead(store.config, intent) {
+		return nativePublicationObject{}, c.ErrExecutionRecord
 	}
 	access, err := s.publicationAccess(ctx, claim, attempt)
 	if err != nil || access.Check(ctx) != nil {

@@ -62,6 +62,7 @@ type nativePublicationObject struct {
 	Key, Version, SHA256 string
 	Size                 int64
 	receipt              *publicationObjectReceipt
+	payloadRead          *publicationPayloadReadReceipt
 }
 type nativePublicationS3 struct {
 	config PublicationTargetMaterials
