@@ -150,6 +150,32 @@ func TestOriginalSigningResolverRequiresOriginalWorkload(t *testing.T) {
 	}
 }
 
+func TestOriginalSigningResolverAcceptsNewJWTIssuanceTimeAndRejectsRollback(t *testing.T) {
+	start := time.Now().UTC()
+	current := start
+	auth := signingAuthorityFixture(func(_ context.Context, r TransitSigningRequest) (OriginalSigningUse, error) {
+		return OriginalSigningUse{Request: r, Workload: SigningWorkloadIdentity{"backup", "pod", "sa"}, NotBefore: start.Add(-time.Minute), ExpiresAt: start.Add(time.Minute), Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+	})
+	tokens := signingTokensFixture(func(_ context.Context, use OriginalSigningUse) (SigningToken, error) {
+		current = start.Add(time.Second)
+		return SigningToken{Request: use.Request, Secret: []byte(strings.Repeat("t", 32)), NotBefore: current, ExpiresAt: current.Add(10 * time.Second), Recheck: func(context.Context, TransitSigningRequest) error { return nil }}, nil
+	})
+	r, request, err := signingResolverFixture(t, start, false, auth, tokens)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.now = func() time.Time { return current }
+	c, err := r.ResolveSigning(context.Background(), request)
+	if err != nil {
+		t.Fatal("new JWT rejected against stale pre-login time", err)
+	}
+	defer clearSigningToken(c.Secret)
+	current = start
+	if c.Recheck(context.Background(), request) == nil {
+		t.Fatal("clock rollback predating token issuance accepted")
+	}
+}
+
 func TestOriginalSigningResolverEnforcesCurrentKeyWindow(t *testing.T) {
 	base := time.Now().UTC()
 	current := base

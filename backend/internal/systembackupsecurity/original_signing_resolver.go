@@ -37,6 +37,10 @@ type SigningToken struct {
 	Recheck              func(context.Context, TransitSigningRequest) error
 }
 
+func (SigningToken) String() string               { return "SigningToken" }
+func (SigningToken) GoString() string             { return "SigningToken" }
+func (SigningToken) MarshalJSON() ([]byte, error) { return nil, ErrRegistrationUnavailable }
+
 type SigningTokenSource interface {
 	ResolveSigningToken(context.Context, OriginalSigningUse) (SigningToken, error)
 }
@@ -118,8 +122,12 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 		return fail()
 	}
 	token, err := r.tokens.ResolveSigningToken(ctx, use)
+	// JWT exchange creates the token AFTER the original owner was checked.
+	// Its NotBefore cannot be compared to the pre-login sample: that rejects
+	// every real JWT token. Sample again without accepting a clock rollback.
+	resolvedAt := r.now()
 	if err != nil || token.Request != request || token.Recheck == nil || token.NotBefore.IsZero() ||
-		now.Before(token.NotBefore) || !now.Before(token.ExpiresAt) || token.ExpiresAt.After(now.Add(20*time.Second)) ||
+		resolvedAt.Before(now) || resolvedAt.Before(token.NotBefore) || !resolvedAt.Before(token.ExpiresAt) || token.ExpiresAt.After(resolvedAt.Add(20*time.Second)) ||
 		len(token.Secret) < 16 || len(token.Secret) > 4096 {
 		clearSigningToken(token.Secret)
 		return fail()
@@ -138,7 +146,7 @@ func (r *OriginalSigningResolver) ResolveSigning(ctx context.Context, request Tr
 	credential := TransitSigningCredential{Request: request, Secret: token.Secret, NotBefore: token.NotBefore, ExpiresAt: until}
 	credential.Recheck = func(c context.Context, got TransitSigningRequest) error {
 		at := r.now()
-		if c == nil || c.Err() != nil || got != request || at.Before(window.start) || !at.Before(until) || use.Recheck(c, request) != nil || token.Recheck(c, request) != nil {
+		if c == nil || c.Err() != nil || got != request || at.Before(resolvedAt) || at.Before(window.start) || at.Before(use.NotBefore) || at.Before(token.NotBefore) || !at.Before(until) || use.Recheck(c, request) != nil || token.Recheck(c, request) != nil {
 			return ErrRegistrationUnavailable
 		}
 		return nil
