@@ -354,6 +354,7 @@ type consumerFixtureOptions struct {
 	JobDeadlineSeconds                    int64
 	WorkerIssuerSHA256                    string
 	ConfigureGrant                        func(*c.ExecutionGrant)
+	FinalizeGrant                         func(*c.ExecutionGrant)
 	PrepareSource                         func(*os.Root, *worker.Invocation)
 	RewriteCandidate                      func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
 
@@ -603,6 +604,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		if os.WriteFile(configured.ProfileFile, profile, 0600) != nil {
 			t.Fatal("owned full profile")
 		}
+	}
+	if options.FinalizeGrant != nil {
+		options.FinalizeGrant(&grant)
 	}
 	body, _ := json.Marshal(grant)
 	envelope, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(private, body))})

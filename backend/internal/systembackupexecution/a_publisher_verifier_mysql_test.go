@@ -55,16 +55,17 @@ type aPublisherVerifierFixture struct {
 }
 
 type aPublisherVerifierFixtureOptions struct {
-	FullService           bool
-	SourceBytes           int
-	CapabilityWindow      time.Duration
-	PublicationTarget     *PublicationTargetMaterials
-	ControlEvidence       bool
-	ControlURL            string
-	ControlRequestedParts []string
-	ConfigSnapshot        []byte
-	WrapControlConnector  func(driver.Connector) driver.Connector
-	WorkerIssuer          *control.IdentityIssuer
+	FullService             bool
+	SourceBytes             int
+	CapabilityWindow        time.Duration
+	PublicationTarget       *PublicationTargetMaterials
+	ControlEvidence         bool
+	ControlURL              string
+	ControlRequestedParts   []string
+	ConfigSnapshot          []byte
+	WrapControlConnector    func(driver.Connector) driver.Connector
+	WorkerIssuer            *control.IdentityIssuer
+	ConfigureExecutionGrant func(*c.ExecutionGrant)
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -172,6 +173,9 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 			options.WorkerIssuerSHA256 = hash(fixture.WorkerIssuer.Certificate.Raw)
 		}
 		options.WrapControlConnector = fixture.WrapControlConnector
+		if fixture.ConfigureExecutionGrant != nil {
+			options.FinalizeGrant = fixture.ConfigureExecutionGrant
+		}
 		options.ConfigSnapshot = fixture.ConfigSnapshot
 		options.OwnedCredentialsFile, options.OwnedServerUUID = credentials, serverUUID
 		options.JobDeadlineSeconds = 1
@@ -204,6 +208,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				cfg.Security.ServiceAccountUID = "capture-sa"
 				cfg.KeyDirectory = dir
 				if fixture.WorkerIssuer != nil {
+					cfg.TrustDomain = fixture.WorkerIssuer.TrustDomain
 					cfg.IssuerSHA256 = hash(fixture.WorkerIssuer.Certificate.Raw)
 					cfg.IssuerCertificate, cfg.IssuerKey = filepath.Join(dir, "worker-ca.crt"), filepath.Join(dir, "worker-ca.key")
 					key, err := x509.MarshalPKCS8PrivateKey(fixture.WorkerIssuer.Signer)
