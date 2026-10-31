@@ -36,6 +36,7 @@ type installationSigningFixture struct {
 	login, signed, authorized int
 	mutateOwner               func(*AuthorizedArtifactSigningUse)
 	afterSign                 func()
+	afterLogin                func()
 	revoked                   bool
 }
 
@@ -66,6 +67,9 @@ func newInstallationSigningFixture(t *testing.T) *installationSigningFixture {
 				return
 			}
 			purpose := strings.TrimSuffix(in.Role, "-role")
+			if f.afterLogin != nil {
+				f.afterLogin()
+			}
 			if _, ok := privateKeys[purpose]; !ok || in.JWT != "projected-jwt-for-"+purpose {
 				t.Error("wrong purpose JWT")
 				w.WriteHeader(403)

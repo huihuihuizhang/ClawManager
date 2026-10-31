@@ -291,6 +291,44 @@ observedSHA256, err := history.VerifyPublicationRecord(readbackBytes, originalTa
 
 生命周期接线约束：原 `RenewClaimInInstallation` 自增row_version，A signer的精确claim版本及签名前后原SQL事实检查保持不变。D须协调有界签名动作与原renew/takeover；续租不能悄悄修改expectedRowVersion继续旧signer。原冻结evidence expires_at不会随新claim延长，已过期必须拒绝；未知外部ACK/已有签名结果必须由原journal精确读回。A实际SQL用例只模拟原表claim变化，不声称跑过实际publisher Acquire/Renew API；D实际调用测试仍需覆盖renew/takeover发生在sign前/期间及按原字节恢复。
 
+## 第十切片：部署外部材料→当前publisher claim的生产三用途工厂
+
+独立文件 `systembackupsecurity/publication_factory.go` 提供具体 `NewSQLPublicationSignerFactory`；D的独立桥 `systembackupexecution/deployment_publication_signers.go` 提供 `NewDeploymentPublicationSignerFactory` 和 `ForTask(ctx, original ClaimToken)`。不修改D的deployment config/service/启动文件，避免并行覆盖。工厂没有任意授权callback、私钥、capture authority、task/claim缓存，也不获取/续租/替换claim。
+
+外部接口已固定，D可直接使用：
+
+```go
+factory, err := execution.NewDeploymentPublicationSignerFactory(ctx, controlDB, actualKubeClient,
+  execution.PublicationSignerRuntime{
+    InstallationID: installationID, ServerUUID: originalControlServerUUID, Database: originalControlDatabase,
+    PublisherOwner: actualPublisherOwner, // 原AcquireClaim使用的owner，例如实际public:<PodUID>
+    Namespace: namespace, NamespaceUID: actualNamespaceUID,
+    PodName: actualControllerPodName, PodUID: actualControllerPodUID,
+    ServiceAccountName: actualControllerSAName, ServiceAccountUID: actualControllerSAUID,
+  }, execution.PublicationSignerInput{File: independentlyDeployedFile, SHA256: independentlyDeployedSHA})
+taskSigners, err := factory.ForTask(ctx, originalPublisherClaimToken)
+defer taskSigners.Close()
+keyRef, err := taskSigners.PublicationSigningKey(ctx, purpose)
+// 原owner构造并验证完整payload，将keyRef纳入既定payload。
+prepared, err := taskSigners.PreparePublicationRecord(ctx, purpose, originalPayloadJSON)
+err = prepared.Stage(ctx, originalBusinessTx) // 此处只有本地文件/原SQL，不做Kube/provider网络
+// 原owner自行commit/readback；之后调用：
+recordJCS, objectSHA, err := prepared.SignCommitted(ctx)
+history, err := factory.History(ctx) // 也可taskSigners.History；没有活跃claim依赖
+```
+
+`PublicationSignerInput` 必须由独立部署/启动信任通道给定，不从导入文件现算SHA、不来自HTTP任务。建议D启动使用独立 `SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE/SHA256`；本切片未擅自修改实际启动解析。父Config/Grant只需固定路径/协议（如D接线需要），不包含该材料SHA；材料不含capture grant/profile/parent deployment hash，保持无哈希环。外部JSON请用导出类型 `PublicationSignerMaterials` marshal：`schema_version=system-backup-publication-signers.v1`，`record`是原`FileSigningRecordReader`（RecordFile/SignatureFile），`pin`是原`InstallationSigningPin`（InstallationID/Revision/RecordSHA256/Issuer），`mounts`恰好三项（binding、auth_mount、role、policy、jwt_file、ca_file、ca_sha256）。原Binding/Pin/Record内部字段保留既有Go JSON字段名；严格解码/roundtrip拒绝重复/缺失/大小写别名/未知字段。不合成原安装授权、不自签、不回填。
+
+构造时实际验证DB CURRENT_USER/server_uuid/database、原record独立签名/精确pin和三用途SQLOwner、精确当前controller workload、三用途key/role/policy/CA、各JWT绝对路径。三份原SQL授权必须属于同一个原业务config版本/SHA，不能把`cfg.ControllerOwner`或已释放capture claim硬当原publisher owner。当前Pod/Namespace/SA的UID、Running/deletion状态来自实际Kube客户端；独立原安装授权仍须允许该精确workload/SQL账号/owner/config。重启Pod/owner变更不能在代码里自动重签授权。
+
+每次ForTask只接受调用方原ClaimToken；从原SQL取request_id及**最新**sealed capture attempt，随后在原SQL authority中复核当前owner/row_version、安装/账号/配置/状态/期限/取消/采集恢复和capture_result。Prepare/Sign不能悄悄采用更新版本。Stage继续在原业务事务冻结完整输入；SignCommitted前后核验workload和原SQL，并将工厂私有workload检查接入原authority的use recheck：**每次原只读SQL事务开始前及结束后**检查，尤其JWT login之后/Transit Sign之前；没有将Kube网络塞入current(tx)或reader/materialCheck。材料/CA原SHA每次原material检查重读，provider JWT按既有安全源读取/轮换。权限、当前claim、完整原输入及三用途签名检查均保留。
+
+`LoadPublicationSignerHistory`/factory.History只读独立材料pin+原签名公钥历史，不要求当前claim、原controller存活、CA/JWT存在或签名permission未过期；不恢复任何签名授权。原record当前撤销/材料替换仍严格拒绝旧pin。这样原不可变finalizer在任务完成后仍可按原checksum/version独立回读验签。
+
+验证：最终实际MySQL签名测试已改走此生产工厂，保留原8192列/受限用户/24Job完整证书/原事务分块rollback/损坏拒绝与新claim13原字节恢复；新增真实TLS JWT login hook替换Pod，严格login+1而Transit Sign不增加。单测也覆盖login期间Pod替换/SA删除、claim版本变化均Sign0，provider签名期间删除SA则丢弃输出，材料替换/错误runtime DB/安装/owner/Pod/Namespace/SA及独立bundle尝试换purpose/key/role/root-policy/CA/issuer/revision均拒绝。fake Kube reactor实际断言每次Kube调用时原SQL pool无占用连接；不是只读代码断言。历史用例删除Pod/CA/JWT、状态succeeded/claim变化以及独立发布当前expired permission后仍可读取公钥历史，JWT调用0。Kube仍是fake API，SQL+TLS是真本地协议，不冒充现场原授权或实际controller Acquire/Renew API。
+
+最终重点factory+实际MySQL链路PASS4.515s；四包完整回归security25.004s/execution4.144s/adapter4.942s/kms3.151s均退出0。D实际启动/当前publisher acquire-renew调度/业务closed schema/原journal/不可变finalizer/终态还未由本工厂替代或验证，需接线继续完成；KEK完整adoption/backfill/持续writer-GC fence待办保持。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
