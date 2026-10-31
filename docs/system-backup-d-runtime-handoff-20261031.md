@@ -396,3 +396,10 @@
 - 同一source-owner签名绑定该core/Forward/config与完整有限metadata bundle及原controller Pod→RS→Deployment/SA链；实际原SQL RR同时读Teams/Skills与用户实例。随后同一authority消费原只读TLS源角色，完整census返回82业务/95控制表、实际schema与两原镜像；原TLS RESP metadata fixture、S3 versioning/全部当前版本（含未引用对象）、Kubernetes SSR/SSRR/PartialObjectMetadata均通过原客户端。原custody spec、immutable policy、PVC/PV与unpackaged Skill workspace绑定验证通过。
 - Forward的WorkerIssuerSHA256已指向独立生成的实际本地CA；原worker IdentityIssuer与TLS1.3 control server使用其真实证书/独立server key，core签名前写入全部pin。此检查点尚未调用worker/Generate/Job admission。缺CE材料时原attachProductionSources拒绝，原任务Job/evidence计数均为0。
 - 最新同任务定向PASS20.976s（此前metadata组合25.126s）。当前仓库schema registry仍draft，只有36个system_backup对象，不能直接覆盖实际95控制表；生产拒绝保留。监督明确允许后续完整本地测试使用按原逐表分类/实际DDL观测装配的明确本地owner材料fixture，仅证明代码调用；现场原始审批及KMS等材料仍列最终清单。此检查点不声称freeze/SavePlan/held gate/六worker/Stop/Resume或终态已完成。
+
+## D5.31 有限控制表离线draft与批准材料精确范围检查
+
+- 新system-backup-control-proposal命令只从独立observer的SQLTable元数据JSON生成新draft文件：`-observed <原控制表观察JSON> -server-uuid <原UUID> -database <原schema> -out <新文件>`。绑定当前原172迁移catalog及原RegistryHash；每表分类/backup/restore仅查既有有限Policy，未知表、业务表、重复表、缺column/PK及坏key拒绝。输出始终draft_requires_independent_owner_review，各表owner_and_cross_review_required，不自动标批准，不写repo registry，不产生grant/readiness，也不查询SQL或KMS。
+- 原ObserveControlScopeSchemas仅对原已分类控制表读取column/PK/生成表达式等惰性元数据；ReadTableSchema默认业务捕获的生成列拒绝保持。离线proposal记录这份明确形状的hash，并不把纯DTO当现场来源证明。实际源census、原独立owner批准的frozen v12 bytes及pin仍由现有source grant与ReadPolicies入口验证。
+- 原registerSourceExclusion在ReadPolicies之后新增精确校验：批准控制表集合必须等于同次完整原census；逐表category/classification/backup/restore必须等于原已审查Policy，不能用metadata_only统配新表。新增缺项/未知/错分类/业务冒名/捕获control/重复反例；离线draft排序/数据独立性/形状漂移与五类非法观察组合root3.151s、execution3.259s PASS，CLI编译通过。
+- 同任务扩展WIP已用明确LOCAL owner/cross-review fixture、真实95表惰性schema观察、原8KiB evidence边界内的实际观察摘要注册，经过原NewPinnedCaptureScope/ReadPolicies与原freezeProductionSource→CE base注册PASS21.587s；未把draft就地改frozen，未放宽原8KiB限制。该整链测试扩展尚未含本独立小片：最新继续到all-constructor阶段出现原BuildCapturePart拒绝，正在定位原模板，不改变task/parts/构造器检查。没有声称原runner SavePlan或六worker完成。
