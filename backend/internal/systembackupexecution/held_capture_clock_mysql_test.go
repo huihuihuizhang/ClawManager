@@ -16,6 +16,7 @@ import (
 type dHeldClockDelay struct {
 	armed, fired atomic.Bool
 	ownerFacts   bool
+	initialFacts bool
 	duration     time.Duration
 }
 type dHeldClockConnector struct {
@@ -57,6 +58,12 @@ func (c *dHeldClockConn) ExecContext(ctx context.Context, q string, args []drive
 	return c.Conn.(driver.ExecerContext).ExecContext(ctx, q, args)
 }
 func (c *dHeldClockConn) wrap(q string, r driver.Rows) driver.Rows {
+	if c.delay.initialFacts {
+		if strings.HasPrefix(q, "SELECT original.canonical_config_json,t.status,t.row_version,") {
+			return &dHeldClockRows{Rows: r, delay: c.delay}
+		}
+		return r
+	}
 	if c.delay.ownerFacts {
 		if strings.HasPrefix(q, "SELECT b.status,p.profile_json,p.profile_sha256,i.last_effective_enabled FROM") {
 			return &dHeldClockRows{Rows: r, delay: c.delay}
@@ -67,6 +74,58 @@ func (c *dHeldClockConn) wrap(q string, r driver.Rows) driver.Rows {
 		return &dHeldClockRows{Rows: r, delay: c.delay}
 	}
 	return r
+}
+
+func TestInitialHeldSnapshotRechecksClockAfterSharedFacts(t *testing.T) {
+	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
+		t.Skip("requires disposable local MySQL")
+	}
+	delay := &dHeldClockDelay{initialFacts: true}
+	owner, _, _, _, a, _, _, _, refresh := newConsumerMySQLFixtureOptions(t, &consumerFixtureOptions{WrapControlConnector: func(conn driver.Connector) driver.Connector {
+		return dHeldClockConnector{Connector: conn, delay: delay}
+	}})
+	refresh()
+	ctx := context.Background()
+	for _, bound := range []string{"claim", "task-deadline", "gate-lease", "hold"} {
+		t.Run(bound, func(t *testing.T) {
+			delay.armed.Store(false)
+			delay.fired.Store(false)
+			tx, err := owner.Gate.Authority.DB.BeginTx(ctx, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer tx.Rollback()
+			expires := time.Now().UTC().Add(2 * time.Second).Truncate(time.Microsecond)
+			authority := a
+			var query string
+			switch bound {
+			case "claim":
+				query = "UPDATE system_backup_v2_backups SET controller_lease_expires_at=?"
+			case "task-deadline":
+				query = "UPDATE system_backup_v2_backups SET deadline_at=?"
+				authority.DeadlineAt = expires
+			case "gate-lease":
+				query = "UPDATE system_backup_v2_maintenance_locks SET lease_expires_at=?"
+			case "hold":
+				query = "UPDATE system_backup_v2_maintenance_locks SET absolute_hold_deadline_at=?"
+			}
+			result, err := tx.ExecContext(ctx, query, expires)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if count, e := result.RowsAffected(); e != nil || count != 1 {
+				t.Fatal("original bound not actually set", count, e)
+			}
+			delay.armed.Store(true)
+			_, err = owner.Gate.Authority.Bind(ctx, tx, authority)
+			if !delay.fired.Load() || time.Now().Before(expires) {
+				t.Fatal("initial shared facts did not actually cross the original bound")
+			}
+			if err == nil {
+				t.Fatal("initial snapshot accepted expiry during actual shared facts delivery")
+			}
+		})
+	}
 }
 
 type dHeldClockStmt struct {
