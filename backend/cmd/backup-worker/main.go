@@ -26,6 +26,9 @@ func main() {
 	}
 }
 func run(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) error {
+	if len(args) > 0 && args[0] == "publish-upload-only" {
+		return runPublicationUpload(ctx, args[1:], stdout)
+	}
 	f := flag.NewFlagSet("backup-worker", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	requestPath := f.String("request", "-", "credential-free invocation JSON, or stdin")
