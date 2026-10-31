@@ -72,8 +72,7 @@ func ResourceSourceRules(s ResourceCaptureSpec, rules authzv1.SubjectRulesReview
 		for _, verb := range r.Verbs {
 			for _, group := range r.APIGroups {
 				for _, resource := range r.Resources {
-					self := (group == "authentication.k8s.io" && resource == "selfsubjectreviews") || (group == "authorization.k8s.io" && (resource == "selfsubjectaccessreviews" || resource == "selfsubjectrulesreviews"))
-					if verb == "create" && self && len(r.ResourceNames) == 0 {
+					if SourceSelfReviewRule(verb, group, resource, r.ResourceNames) {
 						continue
 					}
 					if verb != "get" || len(r.ResourceNames) == 0 {
@@ -91,8 +90,27 @@ func ResourceSourceRules(s ResourceCaptureSpec, rules authzv1.SubjectRulesReview
 	}
 	// Exact known discovery patterns only. Their '*' is scoped by RBAC to
 	// non-resource discovery requests, never resource objects under /apis.
-	discovery := map[string]bool{"/api": true, "/api/*": true, "/apis": true, "/apis/*": true, "/openapi": true, "/openapi/*": true, "/version": true, "/version/": true, "/healthz": true, "/livez": true, "/readyz": true}
-	for _, r := range rules.NonResourceRules {
+	if !SourceDiscoveryNonResourceRules(rules.NonResourceRules) {
+		return false
+	}
+	// This is the API's view of THIS namespace, not proof about bindings in
+	// other namespaces. Installation admission owns that independent inventory.
+	return len(covered) == len(allowed)
+}
+
+// SourceSelfReviewRule recognizes only the API's non-mutating self reviews.
+func SourceSelfReviewRule(verb, group, resource string, names []string) bool {
+	self := (group == "authentication.k8s.io" && resource == "selfsubjectreviews") || (group == "authorization.k8s.io" && (resource == "selfsubjectaccessreviews" || resource == "selfsubjectrulesreviews"))
+	return verb == "create" && self && len(names) == 0
+}
+
+// Exact Kubernetes v1.32.3 basic-user, discovery, public-info and service-account
+// issuer-discovery defaults. None of these RBAC non-resource URLs authorize a
+// resource object. The issuer URLs come from system:service-account-issuer-discovery:
+// https://github.com/kubernetes/kubernetes/blob/v1.32.3/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go
+func SourceDiscoveryNonResourceRules(rules []authzv1.NonResourceRule) bool {
+	discovery := map[string]bool{"/api": true, "/api/*": true, "/apis": true, "/apis/*": true, "/openapi": true, "/openapi/*": true, "/version": true, "/version/": true, "/healthz": true, "/livez": true, "/readyz": true, "/.well-known/openid-configuration": true, "/.well-known/openid-configuration/": true, "/openid/v1/jwks": true, "/openid/v1/jwks/": true}
+	for _, r := range rules {
 		if len(r.Verbs) == 0 || len(r.NonResourceURLs) == 0 {
 			return false
 		}
@@ -107,9 +125,7 @@ func ResourceSourceRules(s ResourceCaptureSpec, rules authzv1.SubjectRulesReview
 			}
 		}
 	}
-	// This is the API's view of THIS namespace, not proof about bindings in
-	// other namespaces. Installation admission owns that independent inventory.
-	return len(covered) == len(allowed)
+	return true
 }
 
 func OpenResourceCaptureSources(ctx context.Context, i Invocation, mount *ResourceSourceMount) (*ResourceCaptureSources, error) {
