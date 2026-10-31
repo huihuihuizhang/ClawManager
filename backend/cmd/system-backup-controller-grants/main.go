@@ -25,6 +25,7 @@ func main() {
 	kubeDigest := flag.String("kubernetes-config-sha256", "", "exact public deployment JSON SHA256")
 	verifierMaterialsSHA := flag.String("verifier-materials-sha256", "", "independently deployed formal verifier materials SHA256 for exact read-only actor/owner RBAC")
 	controllerSA := flag.String("controller-service-account", "", "pre-created dedicated capture controller ServiceAccount")
+	publisherMaterialsSHA := flag.String("publisher-verifier-materials-sha256", "", "independent publisher verifier materials SHA256 for exact named GET roles")
 	flag.Parse()
 	if *runtimeControl && *publicCapture {
 		fmt.Fprintln(os.Stderr, "SQL grant modes are exclusive")
@@ -60,7 +61,15 @@ func main() {
 			}
 			verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: cfg.FormalVerifier.Path, SHA256: *verifierMaterialsSHA})
 		}
-		objects, err := execution.CaptureKubernetesGrants(cfg, *controllerSA, verifierInputs...)
+		inputs := execution.DeploymentStartupInputs{FormalVerifier: verifierInputs}
+		if *publisherMaterialsSHA != "" {
+			if cfg.PublisherVerifier == nil {
+				fmt.Fprintln(os.Stderr, "publisher verifier reference required")
+				os.Exit(2)
+			}
+			inputs.PublisherVerifier = append(inputs.PublisherVerifier, execution.PublisherVerifierInput{File: cfg.PublisherVerifier.Path, SHA256: *publisherMaterialsSHA})
+		}
+		objects, err := execution.CaptureKubernetesGrantsWithInputs(cfg, *controllerSA, inputs)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "public Kubernetes access inventory invalid")
 			os.Exit(2)
@@ -70,7 +79,7 @@ func main() {
 		}
 		return
 	}
-	if *kubeDigest != "" || *controllerSA != "" || *verifierMaterialsSHA != "" {
+	if *kubeDigest != "" || *controllerSA != "" || *verifierMaterialsSHA != "" || *publisherMaterialsSHA != "" {
 		fmt.Fprintln(os.Stderr, "Kubernetes configuration required")
 		os.Exit(2)
 	}

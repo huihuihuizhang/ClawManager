@@ -58,6 +58,7 @@ type DeploymentConfig struct {
 	RuntimeSources      *RuntimeSourceConfig        `json:"runtime_sources,omitempty"`
 	FormalVerifier      *FormalVerifierReference    `json:"formal_verifier,omitempty"`
 	PublicationSigners  *PublicationSignerReference `json:"publication_signers,omitempty"`
+	PublisherVerifier   *PublisherVerifierReference `json:"publisher_verifier,omitempty"`
 }
 type GrantReference struct {
 	Path      string `json:"path"`
@@ -130,6 +131,9 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 }
 func (cnf DeploymentConfig) Validate() error {
 	if cnf.PublicationSigners != nil && cnf.PublicationSigners.validate() != nil {
+		return c.ErrExecutionAuthority
+	}
+	if cnf.PublisherVerifier != nil && cnf.PublisherVerifier.validate() != nil {
 		return c.ErrExecutionAuthority
 	}
 	if cnf.FormalVerifier != nil && cnf.FormalVerifier.validate(cnf) != nil {

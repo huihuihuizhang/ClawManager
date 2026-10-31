@@ -124,11 +124,18 @@ func sortedUnique(values []string) []string {
 // CaptureKubernetesGrants renders reviewable RBAC only. Applying it requires
 // the installation administrator. No controller can create its own roles.
 func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string, verifierInputs ...FormalVerifierInput) ([]runtime.Object, error) {
-	verifier, err := loadVerifierKubernetesGrantInputs(cfg, verifierInputs)
+	return CaptureKubernetesGrantsWithInputs(cfg, controllerSA, DeploymentStartupInputs{FormalVerifier: verifierInputs})
+}
+func CaptureKubernetesGrantsWithInputs(cfg DeploymentConfig, controllerSA string, inputs DeploymentStartupInputs) ([]runtime.Object, error) {
+	verifier, err := loadVerifierKubernetesGrantInputs(cfg, inputs.FormalVerifier)
 	if err != nil {
 		return nil, err
 	}
-	access, err := RequiredDeploymentCaptureAccess(cfg, controllerSA, verifier)
+	publisher, err := loadPublisherVerifierMaterials(cfg, inputs.PublisherVerifier)
+	if err != nil {
+		return nil, err
+	}
+	access, err := RequiredDeploymentCaptureAccess(cfg, controllerSA, verifier, publisher)
 	if err != nil || len(validation.IsDNS1123Subdomain(controllerSA)) != 0 || controllerSA == cfg.Security.ServiceAccountName {
 		return nil, c.ErrExecutionAuthority
 	}

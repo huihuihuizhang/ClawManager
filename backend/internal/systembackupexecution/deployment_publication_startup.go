@@ -23,6 +23,7 @@ type PublicationSignerReference struct {
 type DeploymentStartupInputs struct {
 	FormalVerifier     []FormalVerifierInput
 	PublicationSigners []PublicationSignerInput
+	PublisherVerifier  []PublisherVerifierInput
 	ControllerPodName  string
 }
 
@@ -102,7 +103,7 @@ func (d *DeploymentService) attachPublicationSigners(ctx context.Context, db *sq
 		return c.ErrExecutionAuthority
 	}
 	if podName == "" {
-		if d.ForwardEnabled && (d.Config.PublicationSigners != nil || d.Config.FormalVerifier != nil) {
+		if d.ForwardEnabled && (d.Config.PublicationSigners != nil || d.Config.FormalVerifier != nil || d.Config.PublisherVerifier != nil) {
 			return c.ErrExecutionAuthority
 		}
 		return nil

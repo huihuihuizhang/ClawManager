@@ -30,6 +30,7 @@ import (
 	c "clawreef/internal/systembackupcontroller"
 	api "clawreef/internal/systembackupdeployment"
 	d "clawreef/internal/systembackupdispatch"
+	a "clawreef/internal/systembackupkekadapter"
 	"github.com/go-sql-driver/mysql"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
@@ -57,6 +58,10 @@ type DeploymentService struct {
 	publicationDB            *sql.DB
 	publicationRuntime       PublicationSignerRuntime
 	controllerActor          controllerObservedActor
+	publisherVerifier        *PublisherVerifierMaterials
+	publisherVerifierInput   *PublisherVerifierInput
+	publisherVerifierFactory *a.PublisherVerifierFactory
+	publisherVerifierDB      *sql.DB
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -228,6 +233,10 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 	if e = s.attachFormalVerifier(owner); e != nil {
 		return nil, e
 	}
+	stage = "publisher-verifier"
+	if e = s.attachPublisherVerifier(ctx, db, client, gate.Records); e != nil {
+		return nil, e
+	}
 	source, e := s.platformProfile(owner)
 	owner.RelayEnabled = cfg.RuntimeSources != nil
 	if e != nil {
@@ -270,7 +279,10 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	if e := s.recoveryAdmit(ctx, in); e != nil {
 		return e
 	}
-	return CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier)
+	if s.Config.PublisherVerifier != nil && s.CheckPublisherVerifierReadiness(ctx) != nil {
+		return c.ErrExecutionAuthority
+	}
+	return CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier)
 }
 func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	if supportedPublicCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
@@ -381,7 +393,7 @@ func checkDeploymentGrantMode(ctx context.Context, forward bool, recovery, captu
 
 func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *sql.DB) error {
 	g := s.Forward.DeploymentBinding()
-	if s.Config.FormalVerifier != nil {
+	if s.Config.FormalVerifier != nil || s.Config.PublisherVerifier != nil {
 		if s.formalVerifier != nil && s.formalVerifier.ProviderPermits != nil {
 			return (c.SQLFormalProviderPermitGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil}).Check(ctx)
 		}
@@ -430,7 +442,10 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 		return e
 	}
 	stage = "kubernetes-access"
-	if e := CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier); e != nil {
+	if s.Config.PublisherVerifier != nil && s.CheckPublisherVerifierReadiness(ctx) != nil {
+		return c.ErrExecutionAuthority
+	}
+	if e := CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier); e != nil {
 		return e
 	}
 	stage = "recovery-grant"

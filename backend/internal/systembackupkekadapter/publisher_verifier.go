@@ -62,12 +62,78 @@ func NewPublisherVerifierFactory(cfg PublisherVerifierConfig) (*PublisherVerifie
 	if hex.EncodeToString(sum[:]) != cfg.Binding.Provider.CAPEMSHA256 {
 		return nil, kms.ErrPermission
 	}
+	// Validate the SAME transport contract at startup as actual Unwrap uses,
+	// including exact key version, HTTPS endpoint and a parseable pinned CA.
+	// Construct/close performs no RPC and needs no task or KeyRequest.
+	probe, err := kms.NewRecoveryUnwrapper(kms.Config{Endpoint: cfg.Binding.Provider.Endpoint, InstallationID: cfg.Binding.InstallationID, KeyName: cfg.Binding.Provider.KeyName, Key: cfg.Binding.Key, CAPEM: cfg.CAPEM, CASHA256: cfg.Binding.Provider.CAPEMSHA256, NotBefore: d.NotBefore, NotAfter: d.Until}, publisherVerifierResolver{})
+	if err != nil {
+		return nil, kms.ErrPermission
+	}
+	probe.Close()
 	cfg.CAPEM = bytes.Clone(cfg.CAPEM)
 	cfg.InstallationIssuer = bytes.Clone(cfg.InstallationIssuer)
 	cfg.Authority.GrantMount.Issuer = bytes.Clone(cfg.Authority.GrantMount.Issuer)
 	cfg.Binding.GenerateRef.RawJSON = bytes.Clone(cfg.Binding.GenerateRef.RawJSON)
 	cfg.Binding.UnwrapRef.RawJSON = bytes.Clone(cfg.Binding.UnwrapRef.RawJSON)
 	return &PublisherVerifierFactory{cfg: cfg}, nil
+}
+
+// CheckDeployment does not authenticate any task or perform provider I/O.
+// Startup checks all independent original sources, exact real owner mapping,
+// private projected JWT and original SQL peer before exposing the factory.
+func (f *PublisherVerifierFactory) CheckDeployment(ctx context.Context) error {
+	if f == nil || nilSource(ctx) || ctx.Err() != nil {
+		return kms.ErrPermission
+	}
+	cfg := f.cfg
+	if cfg.Records.Authority.Authorization.(c.PublisherVerifierDeploymentBinding).CheckPublisherVerifierDeployment(ctx, cfg.Authority.Deployment) != nil || cfg.KubernetesReads.Check(ctx, cfg.Kubernetes, cfg.Workload) != nil || security.CheckPublisherCaptureDeploymentWorkload(ctx, cfg.Authority) != nil {
+		return kms.ErrPermission
+	}
+	jwt, err := readVerifierJWT(cfg.JWTFile)
+	clear(jwt)
+	if err != nil {
+		return kms.ErrPermission
+	}
+	if cfg.Records.Keys.(*c.PinnedExecutionIdentity).CheckDeployment(ctx, cfg.Authority.DB) != nil {
+		return kms.ErrPermission
+	}
+	capability, err := cfg.Capabilities.prepareOperation(ctx, cfg.Binding, kms.Unwrap)
+	if err != nil || capability.record.Facts.Permission.ControllerVerifier == nil || *capability.record.Facts.Permission.ControllerVerifier != cfg.Workload {
+		return kms.ErrPermission
+	}
+	tx, err := cfg.Authority.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	if err != nil {
+		return kms.ErrPermission
+	}
+	defer tx.Rollback()
+	var account, server, database string
+	var now time.Time
+	d := cfg.Authority.Deployment
+	if tx.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,DATABASE(),UTC_TIMESTAMP(6)").Scan(&account, &server, &database, &now) != nil || account != d.DatabaseAccount || server != d.ServerUUID || database != d.Database || now.Before(d.NotBefore) || !now.Before(d.Until) {
+		return kms.ErrPermission
+	}
+	kek, locked, err := (reg.SQLStore{}).Bind(ctx, tx, cfg.Binding.InstallationID)
+	if err != nil || locked.Facts().Database != cfg.Capabilities.database || kek.RequireUnrevoked(cfg.Binding.ConfigRef, reg.UnwrapRevocation) != nil {
+		return kms.ErrPermission
+	}
+	found := false
+	for _, fact := range locked.Facts().Bindings {
+		if fact.Binding.ConfigRef == cfg.Binding.ConfigRef && reg.SameSecurityBinding(fact.Binding, cfg.Binding) {
+			found = true
+		}
+	}
+	if !found {
+		return kms.ErrPermission
+	}
+	original, err := currentVerifierOriginalMapping(ctx, tx, cfg.Binding, cfg.InstallationIssuer, now, true)
+	if err != nil || !now.Before(original.Until) || capability.Recheck(ctx, tx, locked, now) != nil {
+		return kms.ErrPermission
+	}
+	grant, err := security.CheckPublisherCaptureDeploymentGrant(ctx, cfg.Authority)
+	if err != nil || now.Before(grant.NotBefore) || !now.Before(grant.Until) {
+		return kms.ErrPermission
+	}
+	return tx.Rollback()
 }
 
 // ForPart accepts only the real current publisher scope. The concrete Records

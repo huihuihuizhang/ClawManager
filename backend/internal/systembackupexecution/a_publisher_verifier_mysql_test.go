@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
@@ -42,9 +43,10 @@ type aPublisherVerifierFixture struct {
 	original           a.OriginalRecord
 	putOriginal        func(a.OriginalRecord, uint64)
 	captureDeadline    time.Time
+	materials          PublisherVerifierMaterials
 }
 
-func newAPublisherVerifierFixture(t *testing.T) *aPublisherVerifierFixture {
+func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
 	t.Helper()
 	credentials, serverUUID := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE"), os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
 	if credentials == "" {
@@ -89,6 +91,29 @@ func newAPublisherVerifierFixture(t *testing.T) *aPublisherVerifierFixture {
 	x.history = newPublisherHistoryFixture(t, func(options *consumerFixtureOptions) {
 		options.OwnedCredentialsFile, options.OwnedServerUUID = credentials, serverUUID
 		options.JobDeadlineSeconds = 1
+		if len(fullService) > 0 && fullService[0] {
+			options.DeploymentCore = func(g c.ExecutionGrant, issuer ed25519.PublicKey, dir string) DeploymentConfig {
+				cfg := testDeploymentConfiguration(t)
+				cfg.InstallationID = g.InstallationID
+				cfg.ControllerOwner = g.ControllerOwner
+				cfg.ApplicationScope = "original-app"
+				cfg.Namespace = "ns"
+				cfg.NamespaceUID = "ns-original"
+				cfg.Security.ServiceAccountName = "capture"
+				cfg.Security.ServiceAccountUID = "capture-sa"
+				cfg.KeyDirectory = dir
+				cfg.ProfileFile = filepath.Join(dir, "profile.json")
+				cfg.CapacityFile = filepath.Join(dir, "capacity.json")
+				cfg.ForwardGrant = GrantReference{Path: filepath.Join(dir, "grant.json"), PublicKey: base64.StdEncoding.EncodeToString(issuer)}
+				cfg.RecoveryGrant = GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(issuer)}
+				cfg.PublisherVerifier = &PublisherVerifierReference{Protocol: PublisherVerifierMaterialsVersion, Path: filepath.Join(dir, "publisher-materials.json")}
+				for i := range cfg.Writers {
+					cfg.Writers[i].Namespace = cfg.Namespace
+				}
+				cfg.Security.Volumes = []kube.MountIdentity{{Kind: "PersistentVolumeClaim", Name: "source", UID: "source-uid", PVName: "source-pv", PVUID: "source-pv-uid"}, {Kind: "PersistentVolumeClaim", Name: "staging", UID: "staging-uid", PVName: "staging-pv", PVUID: "staging-pv-uid"}}
+				return cfg
+			}
+		}
 		options.PrepareSource = func(_ *os.Root, inv *worker.Invocation) { inv.ProviderKey.Endpoint = provider.URL }
 		options.Configure = func(inv *worker.Invocation, _db, _admin *sql.DB, _ d.Authority) {
 			x.captureDeadline = time.Now().UTC().Add(3 * time.Second)
@@ -149,11 +174,15 @@ func newAPublisherVerifierFixture(t *testing.T) *aPublisherVerifierFixture {
 	if _, err = h.owner.Client.AppsV1().Deployments(actor.Namespace).Create(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: reads.OwnerName, Namespace: actor.Namespace, UID: "publisher-deployment-uid"}}, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
-	record, err := h.owner.Gate.Records.LoadPublisherCapture(ctx, h.access)
-	if err != nil {
-		t.Fatal(err)
+	invocation := h.invocation
+	if h.access != nil {
+		record, err := h.owner.Gate.Records.LoadPublisherCapture(ctx, h.access)
+		if err != nil {
+			t.Fatal(err)
+		}
+		invocation = record.Invocation
 	}
-	request := record.Invocation.ProviderKey.Request
+	request := invocation.ProviderKey.Request
 	expectedContext, err = k.TransitContext(request)
 	if err != nil {
 		t.Fatal(err)
@@ -217,6 +246,11 @@ func newAPublisherVerifierFixture(t *testing.T) *aPublisherVerifierFixture {
 		t.Fatal("JWT fixture")
 	}
 	x.cfg = a.PublisherVerifierConfig{Capabilities: capabilities, Binding: binding, CAPEM: ca, JWTFile: jwt, InstallationIssuer: installationIssuer, Workload: wk, KubernetesReads: reads, Kubernetes: h.owner.Client, Authority: h.cfg, Records: h.owner.Gate.Records}
+	caFile := filepath.Join(t.TempDir(), "publisher-ca.crt")
+	if os.WriteFile(caFile, ca, 0600) != nil {
+		t.Fatal("CA fixture")
+	}
+	x.materials = PublisherVerifierMaterials{Version: PublisherVerifierMaterialsVersion, Database: reg.DatabaseIdentity{ServerUUID: g.ServerUUID, Database: g.Database}, Binding: binding, GenerateCapability: unused, UnwrapCapability: capPin, InstallationIssuer: installationIssuer, CAFile: caFile, JWTFile: jwt, Workload: wk, KubernetesReads: reads, Grant: h.cfg.GrantMount}
 	x.factory, err = a.NewPublisherVerifierFactory(x.cfg)
 	if err != nil {
 		t.Fatal("concrete publisher factory", err)

@@ -151,6 +151,7 @@ func configuredPublicStartupInputs() execution.DeploymentStartupInputs {
 		inputs.PublicationSigners = append(inputs.PublicationSigners, execution.PublicationSignerInput{File: os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_SHA256")})
 	}
 	inputs.ControllerPodName = os.Getenv("POD_NAME")
+	inputs.PublisherVerifier = execution.PublisherVerifierInputsFromEnvironment()
 	if inputs.ControllerPodName == "" {
 		inputs.ControllerPodName, _ = os.Hostname()
 	}

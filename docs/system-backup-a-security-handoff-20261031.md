@@ -463,6 +463,60 @@ A专用实际集成基于 D 原加密 history fixture，增加可选 A owned cre
 
 此切片提供组件与同事务保证。真实 service 的独立材料输入、同一实际Pod可完成bootstrap及D实际publisher消费者仍在下一切片继续，不把 helper 当完整生产装配。时间预算另须在后续跨窗口流式对象用例明确：现有kms.Grant.CredentialExpiresAt只约束provider RPC，ExpiresAt是独立原DEK使用权限；原JWT batchTTL<=20s、当前claim/业务/原cap窗口各自保留，不能静默延长对象或把过期RPC credential用于新调用。长归档必须在其真正原DEK/claim窗口内完成全帧认证，否则不接受输出；合法分片/预算/显式新claim重建及D超时终态尚须整链验证。
 
+## 第十三切片之二c：真实service、当前就绪检查与同Pod独立pin装配
+
+配置增加独立 `publisher_verifier:{protocol:"system-backup-publisher-verifier-materials.v1",path:"固定绝对路径"}`，仍仅静态协议/路径进入原core完整SHA；派生bundle SHA不写回core或Pod template。`DeploymentStartupInputs.PublisherVerifier []PublisherVerifierInput{File,SHA256}` 经实际CLI `SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_FILE/SHA256` 进入早期 `CheckDeploymentDatabaseWithInputs` 与真实 `NewDeploymentServiceWithInputs` 共用file-binding阶段。`PublisherVerifierInputsFromEnvironment()` 是CLI实际调用的同一解析入口，既不读取bundle推算可信hash，也不发起任务/签名/授权。
+
+独立 `PublisherVerifierMaterials` 包含原database/binding/安装issuer、provider capability pins、CA/JWT固定路径、实际publisher workload、具体 `kubernetes_reads` 与独立 business grant mount/issuer/pin。file loader严格独立摘要、版本、closed JSON、部署/原Forward config绑定；worker SA不能混用。生产构造器的 `publisher-verifier` stage 经 `attachPublisherVerifier(ctx,db,client,gate.Records)` 保留原actual deploymentAuthorization/record-key custody，验证真实startup PodName/UID/SAName、namespace UID、business grant、owner chain、原安装/registry/cap/current peer、私有JWT/固定CA，不联系provider；原Linux完整构造守卫没有绕过。主体在独立新文件，共享文件仅publisher字段/输入/调用点；没有复制D未提交六项factory。
+
+公开实际service入口：
+
+```go
+use, err := service.PublisherVerifierForPart(ctx, realClaimToken, captureAttempt, part)
+err = service.CheckPublisherVerifierReadiness(ctx)
+```
+
+前者必须真实 `c.ClaimToken.TargetBackup`、当前实际 `public:<PodUID>` owner与原rowversion，随后仍经A13.2b具体ForPart/原history/SQL权限；不会接受DTO代替claim。后者是当前no-task/no-provider部署检查，缺feature/factory/原材料时明确拒绝，供D的六项readiness消费；旧legacy无此feature的真实admit/PublishReadiness保留原路径。启用时，两处实际service admit/PublishReadiness均在SQL事务外调用此probe并经相同精确Kube SSAR清单，不能只信startup一次检查。实际wrapper在每次provider/DEK边界内还做本地有界core/材料pin/CA复核，payload来源修改会使既有对象拒绝。
+
+`PublisherVerifierFactory.CheckDeployment` 在Kube与JWT/原record-key部署观察之后，用短原SQL事务读取真实peer/SQL clock、同KEK fence、exact registry security binding/Unwrap撤销、原安装Unwrap撤销、原capability与本地pinned publisher grant窗口。没有CompleteScan/全coverage推断。监督先独立复现registry-only Unwrap revoke后ForPart拒绝但readiness仍nil，本切片已补同源registry检查；监督原只读overlay转PASS5.228s。正式测试现同时覆盖owner/registry各自Generate-only撤销仍可unwrap、Unwrap撤销readiness/ForPart都拒绝/provider0，保持用途隔离。
+
+权限生成增加 `CaptureKubernetesGrantsWithInputs(cfg,actualControllerSA,DeploymentStartupInputs)`，旧函数仍兼容原FormalVerifier参数；publisher映射同源进入RequiredDeploymentCaptureAccess、official role与两处真实SSAR。CLI新 `--publisher-verifier-materials-sha256` 只配固定core reference路径，不由本地bundle自算信任摘要。SQL模式沿用官方formal-verifier扩展role；启用publisher verifier的早期DB检查确切选择此role，普通base role不能冒充足够权限。没有给controller新增source writer角色。
+
+可实现的同Pod bootstrap契约（本机验证，未apply任何部署）：部署模板固定材料Secret名称、环境变量SecretKeyRef、volume/path及POD_NAME downward field；模板中**不放派生SHA字面值或该Secret内容checksum annotation**。独立原owner先创建并持有空的固定Secret对象，记录其UID；再创建Pod/RS，必需pin key尚不存在时容器可Pending。独立原owner观察其实际Pod/RS UID后签业务授权/能力材料，只UPDATE这个原有Secret的data一次交付文件及独立pin，并核对Secret UID未变。controller官方role只有Secret get/create，没有update/patch/delete，因对象已存在，不能抢先create自选材料作为独立信任源；原owner的签发/更新principal须独立于controller能创建Pod/Job所可选的SA与其运行namespace。不能把controller自己创建或可改写的Secret当独立pin。Kubelet随后启动同一Pod内的容器，从SecretKeyRef注入SHA；实际controller仍要求Running并复核全部UID。Secret名称/路径可固定在部署协议内，文件中的grant/CA/JWT指向各独立只读挂载。一个最小模板片段如下（仅契约示例）：
+
+```yaml
+env:
+  - name: POD_NAME
+    valueFrom:
+      fieldRef: {fieldPath: metadata.name}
+  - name: SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_FILE
+    value: /run/backup-publisher/materials.json
+  - name: SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_SHA256
+    valueFrom:
+      secretKeyRef:
+        name: publisher-materials
+        key: materials_sha256
+volumeMounts:
+  - {name: publisher-materials, mountPath: /run/backup-publisher, readOnly: true}
+# Pod spec volumes:
+volumes:
+  - name: publisher-materials
+    secret:
+      secretName: publisher-materials
+      items:
+        - {key: materials.json, path: materials.json}
+```
+
+固定单Secret的契约要求单active publisher按受控Recreate/租约交接顺序更新材料，不能让两个不同UID的Pod同时共享同一份UID绑定bundle并宣称都就绪。材料或Secret版本传播不一致会因独立pin失败而拒绝；应等待一致后重启同Pod容器读取环境值，不修改template来注入派生pin。同Pod容器重启保留Pod/RS UID；新Pod/RS需独立owner重新授权并更新材料。此处提供可实现的签发/交付契约与消费代码，本仓库尚未实现外部原owner自动provisioner，不能宣称现场自动签发或任意滚动升级已验收。后续同一真实Pod/授权窗口内的新任务无需逐任务人工签名。
+
+新A本地测试扩展原D历史fixture为可选完整合法core/profile与分别签名Forward/Recovery，原record/candidate/AEAD仍真实；原owner先持有空的固定Secret，然后创建带固定SecretKeyRef、实际UID的Pending Pod（尚无pin/material data），原owner随后生成当前UID/RS材料与独立pin、更新同UID的原Secret。通过本地Secret投影/Kubelet状态模拟、**真实CLI同一env parser**、真实文件绑定/attach/current claim service入口与SQL/TLS完成unwrap；对比确认Secret UID、Pod UID/spec/完整core SHA与原Forward parent hash未替换，official role没有Secret update/patch/delete，Pending状态在生产authority中拒绝。该模拟不是现场Kubelet/CSI验收，原业务SQL/claim/密文/签名/TLS调用均实际执行。
+
+重点结果：同Podactualservice与当前材料/SA/owner/原grant/core/缺pin负例及删除全部publisher文件后独立Recovery通过（首轮execution7.217s）；补owner/registry用途撤销、独立输入路径/摘要/数量、official named RS role及**实际service.admit** denied-SSAR后全部PASS16.781s，CLI实际输入测试PASS2.839s；早期DB入口同原core/签名/材料文件+严格只读SQL driver检验valid、base-role-only、缺/错pin、Recovery五种模式通过。此处SQL driver仅用于early SHOW GRANTS模式验证，actualservice消费的history/claim/KEK/TLS仍为上述真实本地SQL。初次完整七包PASS security21.107s/controller5.431s/adapter5.339s/execution77.331s/kms3.081s/v2-controller2.822s/grantsCLI编译；随后补startup与actualUnwrap共享HTTPS/确切keyversion/parseableCA契约，全部publisher suites再次PASS29.206s。空Secret预分配强化及最新D已提交修复同步后最终回归另记。
+
+与D的后续接线边界：D实际六项factory/不可变publisher应使用上述service方法和ForEnvelope返回的exact Unwrapper，继续冻结原cipher/envelope receipts及最终locator/version、全帧/域认证、独立读回与真实终态。当前未宣称实际页面完整六项封存/发布成功；跨短token TTL的全帧正例、跨固定DEK/claim窗口拒绝与业务恢复仍要在后续本地流式用例验证。
+
+A13.2c最终已同步监督42f321fa（D已提交formal MySQL材料修复，未复制D CaptureModules大装配WIP），空Secret预分配/不替换UID、所有当前材料/用途/registry/readiness/原SQL/TLS路径与实际CLI输入在最终完整回归中PASS：security21.561s/controller4.453s/adapter5.860s/execution77.417s/kms5.256s/v2-controller3.065s/grantsCLI编译通过。没有远侧部署、权限放宽、生产DDL或CompleteScan放行。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。

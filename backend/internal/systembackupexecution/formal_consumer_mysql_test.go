@@ -23,6 +23,7 @@ import (
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
+	api "clawreef/internal/systembackupdeployment"
 	d "clawreef/internal/systembackupdispatch"
 	security "clawreef/internal/systembackupsecurity"
 	w "clawreef/internal/systembackupwire"
@@ -344,6 +345,7 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 
 type consumerFixtureOptions struct {
 	OwnedCredentialsFile, OwnedServerUUID string
+	DeploymentCore                        func(c.ExecutionGrant, ed25519.PublicKey, string) DeploymentConfig
 	JobDeadlineSeconds                    int64
 	ConfigureGrant                        func(*c.ExecutionGrant)
 	PrepareSource                         func(*os.Root, *worker.Invocation)
@@ -523,7 +525,16 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	invHash, _ := inv.Hash()
 	candidate.InvocationSHA256 = invHash
-	profile, _ := json.Marshal(map[string]string{"installation_id": a.InstallationID, "source_profile": "original-linux", "revision": "original-r1"})
+	profileID := "original-linux"
+	profile, _ := json.Marshal(map[string]string{"installation_id": a.InstallationID, "source_profile": profileID, "revision": "original-r1"})
+	if options.DeploymentCore != nil {
+		p := api.ExecutionProfile{InstallationID: a.InstallationID, Revision: "original-r1", Orchestrator: "kubernetes", Profile: "cluster", TargetClass: "dr-ready-external", TargetRisks: []string{}, FailureDomain: "local-test", RestoreTargetRef: "isolated-target", RestoreTargetHash: strings.Repeat("f", 64)}
+		profile, _, err = p.CanonicalIdentity()
+		if err != nil {
+			t.Fatal(err)
+		}
+		profileID = p.Profile
+	}
 	dir := t.TempDir()
 	key := make([]byte, 32)
 	rand.Read(key)
@@ -539,6 +550,22 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	if options.ConfigureGrant != nil {
 		options.ConfigureGrant(&grant)
 	}
+	var fullCore *DeploymentConfig
+	coreRaw := []byte(`{"fixture":"pinned-deployment"}`)
+	if options.DeploymentCore != nil {
+		configured := options.DeploymentCore(grant, pub, dir)
+		if configured.Validate() != nil {
+			t.Fatal("owned full deployment config")
+		}
+		fullCore = &configured
+		coreRaw, _ = json.Marshal(configured)
+		grant.DeploymentConfigSHA256 = hash(coreRaw)
+		grant.Actions = []string{"prepare", "capture", "issue_worker"}
+		grant.WorkerIssuerSHA256 = strings.Repeat("f", 64)
+		if os.WriteFile(configured.ProfileFile, profile, 0600) != nil {
+			t.Fatal("owned full profile")
+		}
+	}
 	body, _ := json.Marshal(grant)
 	envelope, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(private, body))})
 	grantFile := filepath.Join(dir, "grant.json")
@@ -548,7 +575,22 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		t.Fatal("fixture signed record identity failed", err)
 	}
 	pinnedConfig := filepath.Join(dir, "deployment.json")
-	os.WriteFile(pinnedConfig, []byte(`{"fixture":"pinned-deployment"}`), 0600)
+	recoveryIdentity := identity
+	if fullCore != nil {
+		recovery := grant
+		recovery.Actions = []string{"recover"}
+		recovery.WorkerIssuerSHA256 = ""
+		body, _ := json.Marshal(recovery)
+		raw, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(private, body))})
+		if os.WriteFile(fullCore.RecoveryGrant.Path, raw, 0600) != nil {
+			t.Fatal("owned recovery identity")
+		}
+		recoveryIdentity, err = c.NewPinnedExecutionIdentity(fullCore.RecoveryGrant.Path, hash(raw), dir, pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	os.WriteFile(pinnedConfig, coreRaw, 0600)
 	stagePath := t.TempDir()
 	stage, err := os.OpenRoot(stagePath)
 	if err != nil {
@@ -574,7 +616,11 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 			t.Fatal(err)
 		}
 	}
-	service := &DeploymentService{ForwardEnabled: true, Forward: identity, Recovery: identity, ConfigPath: pinnedConfig, ConfigDigest: hash([]byte(`{"fixture":"pinned-deployment"}`)), Config: DeploymentConfig{InstallationID: a.InstallationID, ApplicationScope: "original-app", AcquireSeconds: 60, HoldSeconds: 240, CapacityFile: filepath.Join(dir, "capacity.json")}}
+	serviceConfig := DeploymentConfig{InstallationID: a.InstallationID, ApplicationScope: "original-app", AcquireSeconds: 60, HoldSeconds: 240, CapacityFile: filepath.Join(dir, "capacity.json")}
+	if fullCore != nil {
+		serviceConfig = *fullCore
+	}
+	service := &DeploymentService{ForwardEnabled: true, Forward: identity, Recovery: recoveryIdentity, ConfigPath: pinnedConfig, ConfigDigest: hash(coreRaw), Config: serviceConfig}
 	gate := service.captureGate(db)
 	if _, ok := gate.Records.Authority.Authorization.(deploymentAuthorization); !ok {
 		t.Fatal("record authority lost production wrapper")
@@ -594,7 +640,7 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	seedConsumerRows(t, admin, a, config, profile, now, j)
 	refresh()
-	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: "original-linux", ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"workspace"}}}
+	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: profileID, ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"workspace"}}}
 	jobDeadlineSeconds := int64(200)
 	if options.JobDeadlineSeconds != 0 {
 		jobDeadlineSeconds = options.JobDeadlineSeconds
