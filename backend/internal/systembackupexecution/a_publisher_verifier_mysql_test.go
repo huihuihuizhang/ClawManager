@@ -52,6 +52,7 @@ type aPublisherVerifierFixtureOptions struct {
 	SourceBytes       int
 	CapabilityWindow  time.Duration
 	PublicationTarget *PublicationTargetMaterials
+	ControlEvidence   bool
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -111,10 +112,20 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 		if fixture.FullService {
 			options.DeploymentCore = func(g c.ExecutionGrant, issuer ed25519.PublicKey, dir string) DeploymentConfig {
 				cfg := testDeploymentConfiguration(t)
+				if fixture.ControlEvidence {
+					cfg = runtimeDeploymentFixture(t)
+					cfg.CaptureScope = "six-part"
+					cfg.FormalVerifier = &FormalVerifierReference{Protocol: formalVerifierMaterialsVersion, Path: filepath.Join(dir, "formal-materials.json")}
+					cfg.CaptureModules = &ProductionCaptureReference{Protocol: productionCaptureMaterialsVersion, Path: filepath.Join(dir, "capture-materials.json")}
+					cfg.SourceServerUUID, cfg.SourceDatabase = g.ServerUUID, g.Database
+				}
 				cfg.InstallationID = g.InstallationID
 				cfg.ControllerOwner = g.ControllerOwner
 				cfg.ApplicationScope = "original-app"
 				cfg.Namespace = "ns"
+				if cfg.RuntimeSources != nil {
+					cfg.RuntimeSources.Namespaces = []string{cfg.Namespace}
+				}
 				cfg.NamespaceUID = "ns-original"
 				cfg.Security.ServiceAccountName = "capture"
 				cfg.Security.ServiceAccountUID = "capture-sa"
