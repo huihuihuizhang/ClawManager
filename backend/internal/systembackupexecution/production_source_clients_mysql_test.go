@@ -26,8 +26,12 @@ import (
 // A finite TLS/RESP protocol fixture, not a real Redis server or Lua/DUMP
 // acceptance. It exercises the original client's AUTH/SELECT/INFO boundaries.
 func startDMetadataRedis(t *testing.T, f *dProductionSourceFixture) string {
+	return startDMetadataRedisTLS(t, f.server.TLS)
+}
+
+func startDMetadataRedisTLS(t *testing.T, config *tls.Config) string {
 	t.Helper()
-	listener, err := tls.Listen("tcp", "127.0.0.1:0", f.server.TLS.Clone())
+	listener, err := tls.Listen("tcp", "127.0.0.1:0", config.Clone())
 	if err != nil {
 		t.Fatal(err)
 	}

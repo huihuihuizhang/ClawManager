@@ -389,3 +389,10 @@
 - 基于A b415ac72实际ABI，完整Source永远保留原V1 locator；factory先执行全部原构造器及BuildParts（SQL已附加原Teams/Skills inventory），从实际非CE InvocationSHA生成精确有序policy，再仅重建两个CE invocation为V2 seed。全局indices、业务invocation、完整Source字节及其InventorySHA不做字段排除，context包含同一完整Source和原writer集合。
 - 原productionInventory保留精确parts/operation/globalindices与SQLschema检查，另外要求两个seed均为V2、BaseSnapshot完全等于冻结V1、policy精确等于完整Source context与全部实际业务inv集合。Source含V2/缺CE/改base、context、checks version、part hash/op、增删policy或业务part、业务inv、原writer、hold、其他Source字段漂移均拒绝。
 - 定向原factory跨秒/六部分/seed与CE回归无需overlay通过：execution5.525s、publicadapter3.441s、controlevidence0.814s。先前只读A ABI overlay通过4.817s，不作为当前最终编译凭证。额外writer使排序不变性检查覆盖实际两个writer。此片不证明同任务六worker、物理来源、D owner complete或页面readiness；同publicID/attempt整链仍继续。
+
+## D5.30 同一原HTTP任务的SQL/TLS、Runtime custody及source元数据检查点
+
+- 新same-task fixture在独立63507实例使用原172迁移、实际非空Teams/Skills八表、原签名session/RBAC/HTTP六部分acceptance入口、原有限controller/source角色、原SQL queue TakeBackup与同publicID/attempt1。一个运行Pro实例和一个原停机Pro实例，经原SQLRuntimeControl Prepare生成两个加密custody胶囊；平台、原participant、运行和停机四个writer各Observe一次，停机状态未提升。readiness/capacity为明确本地输入fixture，不代表PublishReadiness/实际磁盘认证。
+- 同一source-owner签名绑定该core/Forward/config与完整有限metadata bundle及原controller Pod→RS→Deployment/SA链；实际原SQL RR同时读Teams/Skills与用户实例。随后同一authority消费原只读TLS源角色，完整census返回82业务/95控制表、实际schema与两原镜像；原TLS RESP metadata fixture、S3 versioning/全部当前版本（含未引用对象）、Kubernetes SSR/SSRR/PartialObjectMetadata均通过原客户端。原custody spec、immutable policy、PVC/PV与unpackaged Skill workspace绑定验证通过。
+- Forward的WorkerIssuerSHA256已指向独立生成的实际本地CA；原worker IdentityIssuer与TLS1.3 control server使用其真实证书/独立server key，core签名前写入全部pin。此检查点尚未调用worker/Generate/Job admission。缺CE材料时原attachProductionSources拒绝，原任务Job/evidence计数均为0。
+- 最新同任务定向PASS20.976s（此前metadata组合25.126s）。当前仓库schema registry仍draft，只有36个system_backup对象，不能直接覆盖实际95控制表；生产拒绝保留。监督明确允许后续完整本地测试使用按原逐表分类/实际DDL观测装配的明确本地owner材料fixture，仅证明代码调用；现场原始审批及KMS等材料仍列最终清单。此检查点不声称freeze/SavePlan/held gate/六worker/Stop/Resume或终态已完成。
