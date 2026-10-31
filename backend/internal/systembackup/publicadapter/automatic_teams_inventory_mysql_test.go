@@ -78,6 +78,64 @@ func TestAutomaticTeamsDiscoveryUsesOriginalSnapshotAndAcceptsNewTeamsMySQL(t *t
 			}
 		}
 	}
+	for _, mode := range []string{"freeze-after-rr", "freeze-replaced-sql-facts"} {
+		t.Run(mode, func(t *testing.T) {
+			frozenConfig := cfg
+			frozenConfig.ReadTeams = nil
+			calls := 0
+			metadataVersion := "original-version"
+			frozenConfig.FreezeSources = func(ctx context.Context, in d.Input, observed SourceInventory) (*team.Inventory, json.RawMessage, error) {
+				calls++
+				if reader.Stats().InUse != 0 || observed.TeamFacts == nil || len(observed.TeamFacts.Teams) != 2 || observed.Teams != nil {
+					t.Fatal("remote source metadata boundary still holds the SQL snapshot")
+				}
+				inventory, err := team.BindAutomaticStorage(ctx, *observed.TeamFacts, storage, map[int]bool{1: true}, map[int]int{7: 1})
+				observed.Users[0] = 999
+				observed.Instances[0].ID = 999
+				observed.Skills.Blobs[0].ObjectKey = "foreign-object"
+				if mode == "freeze-replaced-sql-facts" && err == nil {
+					// Even a valid storage inventory cannot replace original SQL
+					// names/relationships. Callback also cannot alias the source.
+					inventory.Teams[0].Status = "failed"
+					observed.TeamFacts.Teams[0].Status = "failed"
+				}
+				metadata, _ := json.Marshal(struct{ Version, PVCUID, ObjectVersion string }{"named-provider-metadata-fixture", metadataVersion, metadataVersion})
+				return inventory, metadata, err
+			}
+			frozenConfig = WithTeamsSourceFacts(frozenConfig)
+			profile, err := NewLinuxProfile(frozenConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			original = nil
+			result, err := profile.Discover(context.Background(), f.in)
+			if mode == "freeze-replaced-sql-facts" {
+				if err == nil || len(result.Source) != 0 {
+					t.Fatal("storage resolver replaced original SQL facts")
+				}
+				return
+			}
+			var source SourceInventory
+			if err != nil || calls != 1 || json.Unmarshal(result.Source, &source) != nil || source.TeamFacts == nil || source.Teams == nil || len(source.CaptureMetadata) == 0 || !source.TeamFacts.MatchesInventory(*source.Teams) || source.Users[0] != 1 || source.Instances[0].ID != 7 || source.Skills.Blobs[0].ObjectKey != "original.zip" {
+				t.Fatal("post-RR metadata did not join the original frozen inventory", err)
+			}
+			original = nil
+			if profile.CheckSource(context.Background(), f.in, result) != nil || calls != 2 {
+				t.Fatal("source recheck omitted metadata boundary")
+			}
+			metadataVersion = "changed-original-source-version"
+			original = nil
+			if profile.CheckSource(context.Background(), f.in, result) == nil || calls != 3 {
+				t.Fatal("changed original PVC/object version reused frozen source")
+			}
+			preflight := cloneInput(f.in)
+			preflight.Authority.TaskType = "preflight"
+			original = nil
+			if _, err := profile.Discover(context.Background(), preflight); err != nil || calls != 3 {
+				t.Fatal("preflight called source providers", err)
+			}
+		})
+	}
 	t.Run("original-pvc-and-fixed-objects", func(t *testing.T) {
 		if _, err := admin.Exec("UPDATE teams SET shared_pvc_name='original-team',shared_pvc_namespace='source',shared_mount_path='/team' WHERE id=20"); err != nil {
 			t.Fatal(err)

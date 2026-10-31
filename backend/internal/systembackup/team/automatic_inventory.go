@@ -23,11 +23,21 @@ type AutomaticStorageMapping struct {
 type SharedClaimIdentity struct{ Namespace, PVC, UID string }
 
 // ReadAutomaticInventory discovers every current Team from the caller's SAME
-// authenticated read-only RR transaction, then uses ReadInventory for the
-// original schema, owner, member and finite-storage consistency checks. There
+// authenticated read-only RR transaction, then binds its actual SQL facts to
+// the independently observed finite storage mapping. There
 // is no Kube/provider I/O, new transaction, caller-supplied Team list or commit.
 func ReadAutomaticInventory(ctx context.Context, tx *sql.Tx, storage AutomaticStorageMapping, users map[int]bool, instanceOwners map[int]int) (*Inventory, error) {
-	if ctx == nil || ctx.Err() != nil || tx == nil || !inventoryID.MatchString(storage.RedisID) || !redisServer.MatchString(storage.RedisServerID) || storage.RedisDatabase < 0 || storage.RedisDatabase > 15 || len(storage.Claims) > 10000 || len(storage.Objects) > 100000 || len(storage.Writers) > 10000 {
+	facts, err := ReadSourceFacts(ctx, tx, users, instanceOwners)
+	if err != nil {
+		return nil, err
+	}
+	return BindAutomaticStorage(ctx, *facts, storage, users, instanceOwners)
+}
+
+// BindAutomaticStorage is pure. SQL facts remain distinct from physical
+// identities so callers can perform remote discovery only AFTER ending RR.
+func BindAutomaticStorage(ctx context.Context, facts SourceFacts, storage AutomaticStorageMapping, users map[int]bool, instanceOwners map[int]int) (*Inventory, error) {
+	if ctx == nil || ctx.Err() != nil || facts.Validate(users, instanceOwners) != nil || !inventoryID.MatchString(storage.RedisID) || !redisServer.MatchString(storage.RedisServerID) || storage.RedisDatabase < 0 || storage.RedisDatabase > 15 || len(storage.Claims) > 10000 || len(storage.Objects) > 100000 || len(storage.Writers) > 10000 {
 		return nil, ErrInventory
 	}
 	// Detach the independently observed mapping as well as nested writer units.
@@ -44,42 +54,35 @@ func ReadAutomaticInventory(ctx context.Context, tx *sql.Tx, storage AutomaticSt
 		}
 		claims[key] = claim
 	}
-	// Validate finite column widths before reading any original Team values.
-	if CheckSQLSchema(ctx, tx) != nil {
-		return nil, ErrInventory
-	}
 	mapped := Inventory{Version: InventoryVersion, SchemaSHA256: SchemaSHA256(), Teams: []SourceTeam{}, Mounts: []SharedMount{}, Redis: []RedisScope{}, Objects: frozen.Objects, Writers: frozen.Writers}
 	redis := RedisScope{ID: frozen.RedisID, ServerID: frozen.RedisServerID, Database: frozen.RedisDatabase, TeamIDs: []int{}}
-	rows, err := tx.QueryContext(ctx, "SELECT id,user_id,resource_scope,COALESCE(owner,''),status,COALESCE(shared_pvc_name,''),COALESCE(shared_pvc_namespace,''),COALESCE(shared_mount_path,'') FROM teams WHERE status<>'deleted' ORDER BY id")
-	if err != nil {
-		return nil, ErrInventory
-	}
 	usedClaims := map[string]bool{}
-	for rows.Next() {
-		var team SourceTeam
-		var pvc, namespace, root string
-		if ctx.Err() != nil || rows.Scan(&team.ID, &team.UserID, &team.ResourceScope, &team.Owner, &team.Status, &pvc, &namespace, &root) != nil || len(mapped.Teams) >= 10000 {
-			rows.Close()
+	teamIndex := map[int]int{}
+	for _, value := range facts.Teams {
+		if ctx.Err() != nil {
 			return nil, ErrInventory
 		}
-		team.RedisScopeID = redis.ID
-		if pvc != "" {
-			key := namespace + "\x00" + pvc
+		team := SourceTeam{ID: value.ID, UserID: value.UserID, ResourceScope: value.ResourceScope, Owner: value.Owner, Status: value.Status, RedisScopeID: redis.ID, Members: []SourceMember{}}
+		if value.PVC != "" {
+			key := value.Namespace + "\x00" + value.PVC
 			claim, ok := claims[key]
 			if !ok || usedClaims[key] {
-				rows.Close()
 				return nil, ErrInventory
 			}
 			usedClaims[key] = true
 			team.SharedMountID = "team_" + strconv.Itoa(team.ID) + "_shared"
-			mapped.Mounts = append(mapped.Mounts, SharedMount{ID: team.SharedMountID, TeamID: team.ID, Namespace: namespace, PVC: pvc, UID: claim.UID, Root: root})
+			mapped.Mounts = append(mapped.Mounts, SharedMount{ID: team.SharedMountID, TeamID: team.ID, Namespace: value.Namespace, PVC: value.PVC, UID: claim.UID, Root: value.Root})
 		}
+		teamIndex[team.ID] = len(mapped.Teams)
 		mapped.Teams = append(mapped.Teams, team)
 		redis.TeamIDs = append(redis.TeamIDs, team.ID)
 	}
-	readErr, closeErr := rows.Err(), rows.Close()
-	if readErr != nil || closeErr != nil || ctx.Err() != nil || len(usedClaims) != len(claims) {
+	if ctx.Err() != nil || len(usedClaims) != len(claims) {
 		return nil, ErrInventory
+	}
+	for _, value := range facts.Members {
+		index := teamIndex[value.TeamID]
+		mapped.Teams[index].Members = append(mapped.Teams[index].Members, SourceMember{ID: value.ID, InstanceID: value.InstanceID})
 	}
 	if len(redis.TeamIDs) > 0 {
 		mapped.Redis = append(mapped.Redis, redis)
@@ -92,5 +95,8 @@ func ReadAutomaticInventory(ctx context.Context, tx *sql.Tx, storage AutomaticSt
 		}
 		return a.Key < b.Key
 	})
-	return ReadInventory(ctx, tx, mapped, users, instanceOwners)
+	if mapped.Validate(users, instanceOwners) != nil || ctx.Err() != nil {
+		return nil, ErrInventory
+	}
+	return &mapped, nil
 }
