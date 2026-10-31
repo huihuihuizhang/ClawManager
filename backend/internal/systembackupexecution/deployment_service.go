@@ -52,6 +52,10 @@ type DeploymentService struct {
 	tlsConfig                *tls.Config
 	staging                  *os.Root
 	formalVerifier           *FormalVerifierDeploymentConfig
+	publicationInput         *PublicationSignerInput
+	publicationFactory       *DeploymentPublicationSignerFactory
+	publicationDB            *sql.DB
+	publicationRuntime       PublicationSignerRuntime
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -78,6 +82,10 @@ func deploymentIdentity(ref GrantReference, digest, keys string) (*c.PinnedExecu
 	return c.NewPinnedExecutionIdentity(ref.Path, digest, keys, ed25519.PublicKey(public))
 }
 func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Interface, dyn dynamic.Interface, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, verifierInputs ...FormalVerifierInput) (out *DeploymentService, resultErr error) {
+	return NewDeploymentServiceWithInputs(ctx, db, client, dyn, path, digest, forwardDigest, recoveryDigest, forwardEnabled, DeploymentStartupInputs{FormalVerifier: verifierInputs})
+}
+
+func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kubernetes.Interface, dyn dynamic.Interface, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, inputs DeploymentStartupInputs) (out *DeploymentService, resultErr error) {
 	if runtime.GOOS != "linux" || db == nil || client == nil || dyn == nil {
 		return nil, d.ErrNotReady
 	}
@@ -97,11 +105,15 @@ func NewDeploymentService(ctx context.Context, db *sql.DB, client kubernetes.Int
 		return nil, e
 	}
 	stage = "file-bindings"
-	if e = s.bindDeploymentFileInputs(verifierInputs); e != nil {
+	if e = s.bindDeploymentStartupInputs(inputs); e != nil {
 		return nil, e
 	}
 	stage = "control-grants"
 	if e = s.checkControlGrants(ctx, db); e != nil {
+		return nil, e
+	}
+	stage = "publication-signers"
+	if e = s.attachPublicationSigners(ctx, db, client, inputs.ControllerPodName); e != nil {
 		return nil, e
 	}
 	stage = "issuer"
@@ -257,7 +269,7 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	if e := s.recoveryAdmit(ctx, in); e != nil {
 		return e
 	}
-	return CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config)
+	return CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.publicationRuntime.ServiceAccountName)
 }
 func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	if supportedPublicCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
@@ -417,7 +429,7 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 		return e
 	}
 	stage = "kubernetes-access"
-	if e := CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config); e != nil {
+	if e := CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.publicationRuntime.ServiceAccountName); e != nil {
 		return e
 	}
 	stage = "recovery-grant"

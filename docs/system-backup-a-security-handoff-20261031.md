@@ -329,6 +329,49 @@ history, err := factory.History(ctx) // 也可taskSigners.History；没有活跃
 
 最终重点factory+实际MySQL链路PASS4.515s；四包完整回归security25.004s/execution4.144s/adapter4.942s/kms3.151s均退出0。D实际启动/当前publisher acquire-renew调度/业务closed schema/原journal/不可变finalizer/终态还未由本工厂替代或验证，需接线继续完成；KEK完整adoption/backfill/持续writer-GC fence待办保持。
 
+## 第十一切片：实际service/CLI启动与当前ClaimToken consumer
+
+A10现已接进真正的生产共享构造流程：`NewDeploymentServiceWithInputs` 保留原Linux守卫和全部旧构造阶段，旧 `NewDeploymentService` 委托到同一实现。`CheckDeploymentDatabaseWithInputs` 与实际constructor使用相同独立输入；旧DB准入函数也保留兼容委托。`DeploymentStartupInputs{FormalVerifier,PublicationSigners,ControllerPodName}` 不嵌入任何任务/claim。真正 `runConfiguredPublic` 已改为向早期DB准入和service构造传同一inputs，构造成功后才进入health/election；不存在另一个跳过平台守卫的生产constructor。
+
+实际CLI现读 `SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE` 与 `SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_SHA256`，现有verifier输入继续独立传入；Pod名由原 `POD_NAME`/hostname入口给定。父core新增可选静态字段：
+
+```json
+"publication_signers": {
+  "protocol": "system-backup-publication-signers.v1",
+  "path": "/run/backup/publication-signers/materials.json"
+}
+```
+
+该core只有固定path/protocol，外部材料SHA仍仅由独立启动信任通道给定，不写回父core/Forward；原record签名和pin也不在启动现算/自签。Forward且配置此ref时，缺失/额外/错路径/错SHA材料一律拒绝；无此ref仍兼容原workspace非acceptance能力，但`PublicationSignersForTask`不可用，不能借此宣称六项发布就绪。已签原安装record的三用途SQLOwner须与原Forward的installation、DB/server/account、business config版本/SHA和core namespace一致。完整core路径/原SHA、原Forward controller owner/profile/core SHA在共享file-binding阶段核对，实际ForTask入口再次读原core并验证原Forward文件/真实DB身份，不用bare记录key identity替代原授权。
+
+service在source/staging连接前调用真正 `attachPublicationSigners`：从实际client查controller Pod，再查Namespace/SA并核对原UID、Running/deletion状态，拒绝使用capture worker的SA UID；PublisherOwner由查询结果导出`public:<真实controller PodUID>`。**它与 `Config.ControllerOwner`（原capture deployment owner）是两种身份**，后者仍用于Forward绑定；原签名SQLOwner.ControllerOwner必须允许实际publisher owner，D不得把二者覆盖为同一字符串。检查三份私有projected JWT文件实际可读/容量/私密模式，不做provider login或生成秘密，然后构造A10具体factory。Recovery/fallback模式不加载或认证signer文件/CA/JWT/issuer材料，只沿原Pod查询建立election owner；坏/缺签名材料不阻断原恢复。损坏的原core/Recovery授权仍不能绕过。
+
+D实际publisher应使用这两个service方法，不能再单独New一个裸signer：
+
+```go
+// 原Acquire/Renew及业务状态变更返回的精确当前token，由D串行协调：
+taskSigners, err := service.PublicationSignersForTask(ctx, originalClaimToken)
+defer taskSigners.Close()
+keyRef, err := taskSigners.PublicationSigningKey(ctx, purpose)
+prepared, err := taskSigners.PreparePublicationRecord(ctx, purpose, completeOriginalPayload)
+err = prepared.Stage(ctx, originalBusinessTx)
+// D原owner commit/readback；不得在SQL锁内进行sign/network：
+recordJCS, objectSHA, err := prepared.SignCommitted(ctx)
+// 原immutable locator/checksum固定后，从provider读回相同原字节：
+history, err := service.PublicationSigningHistory(ctx)
+observedSHA, err := history.VerifyPublicationRecord(readbackBytes, originalTask, purpose)
+```
+
+每次consumer入口核对实际publisher owner、当前Forward/core/DB和A10完整原SQL claim；不获得、模拟或刷新token。A10 login后、provider前的私有workload检查及原SQL/原安装授权复查继续有效。公钥History仍独立于当前claim/生命周期，不能由签名权限过期推断丢弃旧key。D须在原事务完成完整closed payload/六项/所有Job/slot/验收条件校验、协调真实renew/takeover，以及在终态前验证原journal与不可变provider ACK/readback；A没有代写业务成功。
+
+验证走同一生产共享stage，Windows未绕过Linux守卫：完整真实core→签名Forward/Recovery→外部原record/pin/三JWT/CA文件，无父哈希环。有效原issuer签名但wrong ConfigVersion/SHA、DB/account/server/installation、Pod/SA UID，worker SA混用，缺JWT、替换core静态reference/pin及startup参数错路径/摘要/数量均拒绝且provider0；每条错scope先用独立原公钥History证明原issuer签名有效，避免把坏签名当作scope检查。Recovery删除材料/record/signature/CA/JWT仍通过同一file+attach恢复阶段、不保留Forward signer。
+
+新增 `TestAPublicationSignerActualServiceStartupToSQLAndTLS` 使用独立UUID、随机自有DB/用户、marker检查后清理，受限SELECT六表+INSERT evidence、8192列/CHECK的focused原表结构；没有迁移/改监督DB。完整文件bind→实际attach→`service.PublicationSignersForTask`当前原表ClaimToken→原SQL tx Stage/commit→三个purpose独立JWT/TLS Sign→`service.PublicationSigningHistory`独立读回验签全通，login/sign均3。后续原表row_version变更使service旧token及已取task signer拒绝，不自动采用12；Forward关闭禁止新consumer。该claim为明确种子SQL fixture，**没有声称调用了原Acquire/Renew API**；C payload取公开向量替换本地身份/时间，不冒充真实六模块完整验收/终态。Kube为fake API、签名为本地TLS，现场事实边界未改变。
+
+实际最小RBAC也已补齐：启用PublicationSigners时，官方grant CLI使用的 `CaptureKubernetesGrants(cfg, controllerSA)` 经同一 `RequiredCaptureAccess` 增加**cfg.Namespace中传入controller SA的精确get**，与worker SA get分开；无wildcard/新增写权限，不把SA名或派生pin写回父core。`RequiredCaptureAccess`/`CheckCaptureKubernetesAccess`增加可选controllerSA参数，配置signer时必须提供唯一且非worker的实际controller名。service两处真实capture probe均从startup冻结的actual controller身份传此值，缺自身SA读权限会阻止forward readiness。生成角色启用/未启用正反例、空/worker/wildcard身份拒绝、准确SelfSubjectAccessReview允许/拒绝均通过；startup原SA GET返回真实Forbidden语义时同样拒绝且provider0。Recovery不依赖该forward probe，原捕获/恢复权限继续独立。
+
+重点stage/拒绝/实际MySQL/CLI PASS execution4.307s +CLI2.870s；六包完整回归security21.285s/execution15.435s/adapter5.861s/kms3.120s/v2-controller3.179s/grantsCLI编译通过。最后RBAC补充后三个受影响包再次完整PASS execution14.878s/v2-controller2.854s/grantsCLI编译。实际CLI全启动仍需Linux部署/现场权限/材料，本机只验证同生产共享阶段。D后续直接消费上述service入口，继续真实新claim/renew/原事务/finalizer/终态；完整KEK历史adoption/backfill/持续fence仍待办，未改为现场事实或放开CompleteScan。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。

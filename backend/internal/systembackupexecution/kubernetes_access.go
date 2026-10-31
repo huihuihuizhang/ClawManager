@@ -23,7 +23,7 @@ type CaptureAccess struct {
 // It grants no exec/log, source Secret access, source lifecycle creation/deletion,
 // node proxy, role management or cluster wildcard. Dynamic worker names require
 // get/create within the dedicated capture namespace, not the source namespaces.
-func RequiredCaptureAccess(cfg DeploymentConfig) ([]CaptureAccess, error) {
+func RequiredCaptureAccess(cfg DeploymentConfig, controllerSA ...string) ([]CaptureAccess, error) {
 	if cfg.Validate() != nil || len(validation.IsDNS1123Label(cfg.Namespace)) != 0 || len(validation.IsDNS1123Subdomain(cfg.Security.ServiceAccountName)) != 0 {
 		return nil, c.ErrExecutionAuthority
 	}
@@ -36,6 +36,14 @@ func RequiredCaptureAccess(cfg DeploymentConfig) ([]CaptureAccess, error) {
 	add(cfg.Namespace, "", "secrets", []string{"get", "create"}, nil)
 	add(cfg.Namespace, "batch", "jobs", []string{"get", "create", "delete"}, nil)
 	add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{cfg.Security.ServiceAccountName})
+	if cfg.PublicationSigners != nil {
+		if len(controllerSA) != 1 || len(validation.IsDNS1123Subdomain(controllerSA[0])) != 0 || controllerSA[0] == cfg.Security.ServiceAccountName {
+			return nil, c.ErrExecutionAuthority
+		}
+		// Actual signer startup/use GETs its own SA UID. Keep this named read
+		// separate from the worker SA; no wildcard or mutation is introduced.
+		add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{controllerSA[0]})
+	}
 	claims := []string{cfg.StagingClaim}
 	if cfg.Workspace.Claim != "" {
 		claims = append(claims, cfg.Workspace.Claim)
@@ -116,7 +124,7 @@ func sortedUnique(values []string) []string {
 // CaptureKubernetesGrants renders reviewable RBAC only. Applying it requires
 // the installation administrator. No controller can create its own roles.
 func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string) ([]runtime.Object, error) {
-	access, err := RequiredCaptureAccess(cfg)
+	access, err := RequiredCaptureAccess(cfg, controllerSA)
 	if err != nil || len(validation.IsDNS1123Subdomain(controllerSA)) != 0 || controllerSA == cfg.Security.ServiceAccountName {
 		return nil, c.ErrExecutionAuthority
 	}
@@ -147,8 +155,8 @@ func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string) ([]runti
 // This probe tests the current Kubernetes principal, not the configured name.
 // No denial/error becomes readiness. Recovery itself does not depend on this
 // forward-work probe and still uses original journals plus independent grants.
-func CheckCaptureKubernetesAccess(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig) error {
-	access, err := RequiredCaptureAccess(cfg)
+func CheckCaptureKubernetesAccess(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig, controllerSA ...string) error {
+	access, err := RequiredCaptureAccess(cfg, controllerSA...)
 	if err != nil || client == nil || ctx == nil || ctx.Err() != nil {
 		return c.ErrExecutionAuthority
 	}

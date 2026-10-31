@@ -9,6 +9,10 @@ import (
 // already chose current Forward or independent Recovery mode; no provider,
 // source/staging IO, platform bypass or SQL authorization is performed here.
 func (s *DeploymentService) bindDeploymentFileInputs(inputs []FormalVerifierInput) error {
+	return s.bindDeploymentStartupInputs(DeploymentStartupInputs{FormalVerifier: inputs})
+}
+
+func (s *DeploymentService) bindDeploymentStartupInputs(inputs DeploymentStartupInputs) error {
 	cfg, err := LoadDeploymentConfig(s.ConfigPath, s.ConfigDigest)
 	if err != nil {
 		return err
@@ -32,7 +36,10 @@ func (s *DeploymentService) bindDeploymentFileInputs(inputs []FormalVerifierInpu
 	}
 	s.Config, s.profile, s.profileHash = cfg, profile, profileHash
 	if s.ForwardEnabled {
-		return s.loadFormalVerifier(inputs)
+		if err = s.loadFormalVerifier(inputs.FormalVerifier); err != nil {
+			return err
+		}
+		return s.loadPublicationSignerInput(inputs.PublicationSigners)
 	}
 	return nil
 }

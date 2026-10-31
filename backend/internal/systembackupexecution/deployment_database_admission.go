@@ -11,6 +11,10 @@ import (
 // same pinned identities and mode as NewDeploymentService. It never migrates,
 // publishes readiness, or grants permissions. Service construction rechecks.
 func CheckDeploymentDatabase(ctx context.Context, db *sql.DB, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, verifierInputs ...FormalVerifierInput) error {
+	return CheckDeploymentDatabaseWithInputs(ctx, db, path, digest, forwardDigest, recoveryDigest, forwardEnabled, DeploymentStartupInputs{FormalVerifier: verifierInputs})
+}
+
+func CheckDeploymentDatabaseWithInputs(ctx context.Context, db *sql.DB, path, digest, forwardDigest, recoveryDigest string, forwardEnabled bool, inputs DeploymentStartupInputs) error {
 	cfg, err := LoadDeploymentConfig(path, digest)
 	if err != nil {
 		return err
@@ -20,7 +24,10 @@ func CheckDeploymentDatabase(ctx context.Context, db *sql.DB, path, digest, forw
 		return err
 	}
 	if s.ForwardEnabled {
-		if err = s.loadFormalVerifier(verifierInputs); err != nil {
+		if err = s.loadFormalVerifier(inputs.FormalVerifier); err != nil {
+			return err
+		}
+		if err = s.loadPublicationSignerInput(inputs.PublicationSigners); err != nil {
 			return err
 		}
 	}

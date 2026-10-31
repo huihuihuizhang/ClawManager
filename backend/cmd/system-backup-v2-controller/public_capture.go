@@ -16,7 +16,6 @@ import (
 	"clawreef/internal/services/leader"
 	c "clawreef/internal/systembackupcontroller"
 	execution "clawreef/internal/systembackupexecution"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -31,12 +30,9 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e := c.ValidateControllerDatabaseCredentials(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), cfg.Database.User); e != nil {
 		return e
 	}
-	var verifierInputs []execution.FormalVerifierInput
-	if os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256") != "" {
-		verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256")})
-	}
+	inputs := configuredPublicStartupInputs()
 	session, e := db.ConnectPublicBackupMetadata(cfg.Database, func(ctx context.Context, pool *sql.DB) error {
-		return execution.CheckDeploymentDatabase(ctx, pool, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", verifierInputs...)
+		return execution.CheckDeploymentDatabaseWithInputs(ctx, pool, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", inputs)
 	})
 	if e != nil {
 		return errors.New("public control database unavailable")
@@ -71,21 +67,12 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	if e != nil {
 		return errors.New("public Kubernetes dynamic client unavailable")
 	}
-	service, e := execution.NewDeploymentService(ctx, control, publicClient, dyn, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", verifierInputs...)
+	service, e := execution.NewDeploymentServiceWithInputs(ctx, control, publicClient, dyn, os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_FILE"), os.Getenv("SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256"), os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"), os.Getenv("SYSTEM_BACKUP_ENABLED") == "true", inputs)
 	if e != nil {
 		return fmt.Errorf("public deployment unavailable: %w", e)
 	}
 	defer service.Close()
 	service.Runtime.Owner.WatchClient = watchClient
-	podName := os.Getenv("POD_NAME")
-	if podName == "" {
-		podName, _ = os.Hostname()
-	}
-	pod, z := publicClient.CoreV1().Pods(service.Config.Namespace).Get(ctx, podName, metav1.GetOptions{})
-	if z != nil || pod.UID == "" || pod.DeletionTimestamp != nil {
-		return errors.New("public controller Pod identity unavailable")
-	}
-	service.PublisherOwner = "public:" + string(pod.UID)
 	active, cancel := context.WithCancel(ctx)
 	defer cancel()
 	failures := make(chan error, 1)
@@ -153,6 +140,21 @@ func runConfiguredPublic(ctx context.Context, cfg *config.Config) error {
 	default:
 		return nil
 	}
+}
+
+func configuredPublicStartupInputs() execution.DeploymentStartupInputs {
+	var inputs execution.DeploymentStartupInputs
+	if os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256") != "" {
+		inputs.FormalVerifier = append(inputs.FormalVerifier, execution.FormalVerifierInput{File: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256")})
+	}
+	if os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE") != "" || os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_SHA256") != "" {
+		inputs.PublicationSigners = append(inputs.PublicationSigners, execution.PublicationSignerInput{File: os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_SHA256")})
+	}
+	inputs.ControllerPodName = os.Getenv("POD_NAME")
+	if inputs.ControllerPodName == "" {
+		inputs.ControllerPodName, _ = os.Hostname()
+	}
+	return inputs
 }
 
 // Health denotes a live recovery controller, not permission to start capture.
