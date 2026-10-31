@@ -90,6 +90,9 @@ func (s SQLExecutionRecords) PublisherCaptureParts(ctx context.Context, access *
 	if err != nil || !publisherSameBase(first, second) || binding.CheckPublisherCaptureCustody(ctx, deployment) != nil || access.Check(ctx) != nil {
 		return nil, ErrExecutionAuthority
 	}
+	if binding.CheckPublisherCaptureCustody(ctx, deployment) != nil || identity.CheckDeployment(ctx, s.Authority.DB) != nil {
+		return nil, ErrExecutionAuthority
+	}
 	// No external I/O may follow this last original-byte snapshot. A final
 	// workload GET can change the plan/keyref/profile after the preceding read.
 	last, err := s.publisherReadSnapshot(ctx, access, nil)
