@@ -54,8 +54,9 @@ type PublicJobOwner struct {
 	RelayEnabled                         bool
 	// Each original task/attempt/part opens its own independently authenticated
 	// verifier workload/unwrap scope. There is no process-wide worker resolver.
-	FormalKeys      FormalCandidateKeyFactory
-	providerPermits *deploymentProviderPermitIssuer
+	FormalKeys       FormalCandidateKeyFactory
+	providerPermits  *deploymentProviderPermitIssuer
+	productionSource *productionSourceBinding
 }
 
 func hash(v []byte) string { s := sha256.Sum256(v); return hex.EncodeToString(s[:]) }
@@ -102,7 +103,9 @@ func (o *PublicJobOwner) input(ctx context.Context, a d.Authority, recovery bool
 		return in, p, desc, c.ErrExecutionAuthority
 	}
 	if in.Backup.TaskPurpose != "functional_test" {
-		return in, p, desc, d.ErrNotReady
+		if o.supportsCapture(in) != nil {
+			return in, p, desc, d.ErrNotReady
+		}
 	}
 	if recovery {
 		p, e = o.Gate.Records.LoadRecoveryPlan(ctx, in, o.Gate.Recovery)

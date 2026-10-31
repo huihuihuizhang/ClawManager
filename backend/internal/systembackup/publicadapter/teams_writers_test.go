@@ -36,10 +36,16 @@ func teamsWriterFixture(t *testing.T) (SourceInventory, []FrozenWriter) {
 }
 
 func TestTeamsFrozenCoverageUsesOriginalNativeWriters(t *testing.T) {
-	for _, mode := range []string{"valid", "missing-platform", "missing-unit", "missing-runtime", "duplicate", "uid", "generation", "checkpoint", "power", "foreign-instance", "participant-as-platform", "wrong-native-id", "unknown-unit", "stopped", "stopped-but-running", "running-writer-for-stopped"} {
+	for _, mode := range []string{"valid", "native-gateway-state", "foreign-gateway-generation", "missing-platform", "missing-unit", "missing-runtime", "duplicate", "uid", "generation", "checkpoint", "power", "foreign-instance", "participant-as-platform", "wrong-native-id", "unknown-unit", "stopped", "stopped-but-running", "running-writer-for-stopped"} {
 		t.Run(mode, func(t *testing.T) {
 			source, frozen := teamsWriterFixture(t)
 			switch mode {
+			case "native-gateway-state", "foreign-gateway-generation":
+				source.Teams.Writers[1].UID += "/gw-7-3"
+				if mode == "foreign-gateway-generation" {
+					source.Teams.Writers[1].UID += "-foreign"
+				}
+				frozen[1].Original.UID = source.Teams.Writers[1].UID
 			case "missing-platform":
 				source.Teams.Writers = source.Teams.Writers[1:]
 			case "missing-unit":
@@ -86,7 +92,7 @@ func TestTeamsFrozenCoverageUsesOriginalNativeWriters(t *testing.T) {
 				}
 			}
 			err := ValidateTeamsWriters(source, frozen)
-			if (err == nil) != (mode == "valid" || mode == "stopped") {
+			if (err == nil) != (mode == "valid" || mode == "stopped" || mode == "native-gateway-state") {
 				t.Fatalf("coverage error = %v", err)
 			}
 		})

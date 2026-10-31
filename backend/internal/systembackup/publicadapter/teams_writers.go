@@ -106,7 +106,12 @@ func validTeamsRuntimeBinding(b team.WriterBinding, i InstanceIdentity) bool {
 	case "stopped":
 		return i.Status == "stopped" && !b.Running && b.ID == "stopped/"+strconv.Itoa(i.ID)
 	case "gateway":
-		return b.Running && b.ID == "gateway/"+b.UID+"/"+strconv.Itoa(i.ID)
+		original := b.UID
+		suffix := "/gw-" + strconv.Itoa(i.ID) + "-" + strconv.Itoa(i.Generation)
+		if strings.HasSuffix(original, suffix) {
+			original = strings.TrimSuffix(original, suffix)
+		}
+		return b.Running && b.ID == "gateway/"+original+"/"+strconv.Itoa(i.ID)
 	case "pod", "deployment":
 		parts := strings.Split(b.ID, "/")
 		return b.Running && len(parts) == 3 && parts[0] == b.Kind && parts[1] != "" && parts[2] != "" && (i.Namespace == "" || parts[1] == i.Namespace) && (b.Kind != "pod" || i.Pod == "" || parts[2] == i.Pod)

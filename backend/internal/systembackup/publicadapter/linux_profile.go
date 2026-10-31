@@ -57,6 +57,9 @@ type LinuxProfileConfig struct {
 	// This alternative runs after ONE writer observation and before the source
 	// hash/module factory. Rechecks consume saved writers without preparing again.
 	FreezeSourcesWithWriters func(context.Context, d.Input, SourceInventory, []FrozenWriter) (*team.Inventory, json.RawMessage, error)
+	// Recheck the original frozen remote selection without re-registering a new
+	// cutoff or proof locator. Current SQL facts remain independently observed.
+	CheckFrozenSources func(context.Context, d.Input, SourceInventory, SourceInventory, []FrozenWriter) error
 	// Optional Skills projection shares this same authenticated discovery RR
 	// transaction. Nil preserves legacy plans and cannot enable Skills.
 	ReadSkills func(context.Context, *sql.Tx, SourceInventory) (*sh.CaptureInventory, error)
@@ -76,6 +79,9 @@ type LinuxProfileConfig struct {
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
+	if cfg.CheckFrozenSources != nil && (cfg.FreezeSourcesWithWriters == nil || cfg.ReadTeamFacts == nil) {
+		return nil, d.ErrNotReady
+	}
 	if cfg.FreezeSourcesWithWriters != nil && (cfg.FreezeSources != nil || cfg.BuildPartsWithWriters == nil) {
 		return nil, d.ErrNotReady
 	}
@@ -278,7 +284,14 @@ func (p *LinuxProfile) Preflight(ctx context.Context, in d.Input, x Discovery) (
 
 func (p *LinuxProfile) CheckSource(ctx context.Context, in d.Input, x Discovery) error {
 	current, err := p.inventory(ctx)
-	if err == nil {
+	if err == nil && p.cfg.CheckFrozenSources != nil && in.Authority.TaskType == "backup" {
+		var frozen SourceInventory
+		if decodeStrict(x.Source, &frozen) != nil || digest(x.Source) != x.SourceSHA256 || p.cfg.CheckFrozenSources(ctx, cloneInput(in), cloneSourceInventory(current), cloneSourceInventory(frozen), append([]FrozenWriter{}, x.Writers...)) != nil {
+			return d.ErrNotReady
+		}
+		current.Teams = team.CloneInventory(frozen.Teams)
+		current.CaptureMetadata = append(json.RawMessage(nil), frozen.CaptureMetadata...)
+	} else if err == nil {
 		current, err = p.freezeSources(ctx, in, current, x.Writers)
 	}
 	if err != nil {

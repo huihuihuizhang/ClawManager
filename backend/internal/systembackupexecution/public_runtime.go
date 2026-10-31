@@ -94,7 +94,7 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 		return nil, e
 	}
 	admit := func(ctx context.Context, in d.Input) error {
-		if e := supportedPublicCapture(in); e != nil {
+		if e := o.supportsCapture(in); e != nil {
 			return e
 		}
 		return cfg.Admission(ctx, in)
@@ -102,7 +102,7 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 	recoveryAdmit := admit
 	if cfg.RecoveryAdmission != nil {
 		recoveryAdmit = func(ctx context.Context, in d.Input) error {
-			if e := supportedPublicCapture(in); e != nil {
+			if e := o.supportsCapture(in); e != nil {
 				return e
 			}
 			return cfg.RecoveryAdmission(ctx, in)

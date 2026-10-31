@@ -353,3 +353,13 @@
 
 - 监督补充原scope.PlanRuntime允许ModeLite/backend空、mode空/backend gateway两种归一化边界。RequiresWorkBuddyUIDIdentity现以原已验证RuntimePlan的Type+Mode判断，所有已知Linux WorkBuddy Lite必须保留身份，不能因raw backend缺失转入普通workspace；Pro仍不借Lite身份，Windows/未知runtime仍拒绝。
 - 新增factory缺UID的blank-backend、inferred-mode反例，以及共同predicate两边界正分类；与原Pro/Lite/UsersInstances/binder/诊断组合publicadapter3.274s、execution见本轮日志通过。TLS原客户端（明确RESP协议fixture）及Kubernetes元数据实际客户端组合8.246s PASS，属于source WIP未含本补片。
+
+## D5.26 原服务六部分source接线与组件验证（2026-10-31，尚非完整任务验收）
+
+- Linux NewDeploymentService保留原OS/身份/签名/正式verifier入口，通过同一composeCaptureRuntime实际安装platformProfile→原SQLRuntimeControl→production source hooks→原NewPublicCapture ModuleFactory。明确sourceMetadata controller delegation由独立owner签名，绑定原core/Forward/config、源范围、controller Pod→RS→Deployment/SA链和有界期限；不是未来Job/Invocation/Generate authority。每次原HTTP边界前后、最后Kube GET后重查原SQL claim与原文件。RecoveryOnly不重新发现或加载forward source材料。
+- 原SELECT-only源RR输出完整census业务/控制表名和SQLschema，原所有Teams事实与Skills八表、全部当前versioned Skills prefix（含未引用对象）、finite PartialObjectMetadata GVR+UID、实际原Runtime custody spec、共享workspace/PVC/PV身份一起冻结；结束SQL RR后才进行远程IO。业务writer仅观察一次，CheckSource重用原locator/cutoff并重查当前SQL与远程选择，不重做Prepare/注册新的CE cutoff。
+- 镜像源key保留原type/mode/backend/variant/OS、os_version和nullable registry/tag。仅原full-registry分支直接匹配；默认/managed image由独立source-owner明确签名的typed输入→immutable policy映射，不猜Docker名、不把tag当完整镜像、不使用任意Pod sidecar证明。Pro不借Lite UID，所有canonical Linux Lite WorkBuddy仍按最终D5.25a合同严格检查。
+- 实际Job卷名是workspace（kube builder重命名），每part源PVC/PV pin使用此原名；正式ConfigMap/Secret期望按原operation保存在同一sealed Source内，原workerSecurity先验证同一原part/spec/invocation，再用对应pin。缺operation/formal input/source UID/PV UID、不同CM/claim和重复volume均拒绝，避免全局formal/source同名误绑定。
+- 实际原SQL preparing AcquireWithReceipt/签名deployment和本机TLS组件测试：签名grant配置/范围/撤销/过期/未来/workload替换及原claim丢失均拒绝；原AUTH/SELECT/INFO客户端使用明确TLS RESP协议fixture（非真实Redis Lua/DUMP），原S3版本列表及Kubernetes SSR/SSRR/PartialObjectMetadata客户端使用明确TLS protocol fixtures。未引用对象保留，版本/新key/UID漂移反映在原frozen selection；null版本、foreign prefix/namespace、duplicate latest/delete marker、deleting对象、写权限、错SA和最终响应期间token替换均关闭。
+- 原172迁移完整非空SQL+原捕获/独立observer+census新返回值及失败零partial输出组合47.399s/publicadapter3.869s PASS。最终source authority/client/compose/metadata/image/各part pins/factory/WorkBuddy/原frozen重检组合execution22.774s、publicadapter3.229s PASS。另实际文件归属/回环可用下非SQL全三包execution7.295s/publicadapter3.990s/domain3.288s PASS；sandbox内首次全包失败为回环/文件identity权限，未修改安全检查。Windows未装WSL，Linux启动守卫未删。
+- 本提交不包括restore adapters WIP。readiness仍原supported_parts=workspace/acceptance_ready=false；尚未证明一个原API/queue任务完成全六项、真实quiesce/Resume、CE晚报告时序及A最终发布。CE当前仍复用A现有locator，A v2part-basis/CE-last施工后需一起接入。独立可信容量collector原CLI已每秒采样，controller消费只读报告；本机夹具的刷新不代表已部署该collector。继续同一实际任务验收，不据组件通过标D owner complete。

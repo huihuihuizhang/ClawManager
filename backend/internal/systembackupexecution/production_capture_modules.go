@@ -11,6 +11,7 @@ import (
 
 	c "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/domain"
+	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
@@ -27,22 +28,25 @@ const productionCaptureMetadataVersion = "original-six-part-source-metadata.v1"
 // These are independently observed SOURCE coordinates, never prepared Job
 // requests. They cannot contain a task claim, provider permit or bearer key.
 type productionCaptureMetadata struct {
-	Version             string
-	SQLSchema           domain.BusinessCaptureSchema
-	ControlEvidence     ce.CaptureLocator
-	Mounts              []productionInstanceMount
-	Skills              worker.SkillObjectCaptureSpec
-	Redis               c.RedisCapturePolicy
-	Deployment, Secrets worker.ResourceCaptureSpec
+	Version               string
+	SQLSchema             domain.BusinessCaptureSchema
+	ControlEvidence       ce.CaptureLocator
+	MountIdentities       map[string]kube.MountIdentity   `json:",omitempty"`
+	FormalMountIdentities map[string][]kube.MountIdentity `json:",omitempty"`
+	Mounts                []productionInstanceMount
+	Skills                worker.SkillObjectCaptureSpec
+	Redis                 c.RedisCapturePolicy
+	Deployment, Secrets   worker.ResourceCaptureSpec
 }
 
 type productionInstanceMount struct {
-	InstanceID                 int
-	MountID, SubPath, NodeName string
-	Source                     corev1.Volume
-	Policy                     worker.RuntimePolicy
-	Skills                     *sh.WorkspaceCaptureSpec
-	WorkBuddy                  *domain.WorkBuddyUIDIdentity
+	InstanceID                             int
+	MountID, SubPath, NodeName             string
+	Source                                 corev1.Volume
+	Policy                                 worker.RuntimePolicy
+	Skills                                 *sh.WorkspaceCaptureSpec
+	WorkBuddy                              *domain.WorkBuddyUIDIdentity
+	SourceImageReference, SourceSpecSHA256 string
 }
 
 type productionPartDraft struct {

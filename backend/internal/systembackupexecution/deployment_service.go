@@ -231,7 +231,6 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 		return nil, c.ErrExecutionAuthority
 	}
 	gate := s.captureGate(db)
-	recovery := gate.Recovery
 	owner := &PublicJobOwner{Gate: gate, Client: client, Dynamic: dyn, Namespace: cfg.Namespace, NamespaceUID: cfg.NamespaceUID, TrustDomain: cfg.TrustDomain, Security: cfg.Security, Identity: s.Forward, Issuer: control.IdentityIssuer{Certificate: root, Signer: signer, TrustDomain: cfg.TrustDomain, ServerRoots: rootRaw}, Staging: s.staging, AllowKubeletStopWitness: true}
 	owner.SealCustodyMaxBytes = cfg.SealCustodyMaxBytes
 	stage = "formal-verifier"
@@ -242,24 +241,45 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 	if e = s.attachPublisherVerifier(ctx, db, client, gate.Records); e != nil {
 		return nil, e
 	}
+	stage, e = s.composeCaptureRuntime(db, owner)
+	if e != nil {
+		return nil, e
+	}
+	return s, nil
+}
+
+// Shared by the Linux startup constructor and local component integration
+// tests. The caller must already bind the original deployment and owner; this
+// performs no source discovery and does not bypass the public Linux guard.
+func (s *DeploymentService) composeCaptureRuntime(db *sql.DB, owner *PublicJobOwner) (string, error) {
+	if s == nil || db == nil || owner == nil {
+		return "composition", d.ErrNotReady
+	}
+	cfg := s.Config
+	stage := "source-profile"
 	source, e := s.platformProfile(owner)
 	owner.RelayEnabled = cfg.RuntimeSources != nil
 	if e != nil {
-		return nil, e
+		return stage, e
 	}
 	stage = "runtime-sources"
 	source, e = s.attachRuntimeSources(owner, source)
 	if e != nil {
-		return nil, e
+		return stage, e
 	}
-	queue := c.SQLExecutionQueue{DB: db, InstallationID: cfg.InstallationID, Owner: cfg.ControllerOwner, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}, Authorization: deploymentAuthorization{Service: s}, ApplicationScope: cfg.ApplicationScope, Recovery: &recovery}
-	stage = "composition"
-	s.Runtime, e = NewPublicCapture(PublicCaptureConfig{Owner: owner, Queue: queue, Source: source, Profile: b.ProfileKey{ID: s.profile.Profile, Revision: s.profile.Revision}, Guard: deploymentBaseProbe{Service: s}, Admission: s.admit, RecoveryAdmission: s.recoveryAdmit, Inventory: s.inventory, RecoveryTimeout: 2 * time.Minute})
+	stage = "production-source-modules"
+	source, moduleFactory, e := s.attachProductionSources(owner, source)
 	if e != nil {
-		return nil, e
+		return stage, e
+	}
+	queue := c.SQLExecutionQueue{DB: db, InstallationID: cfg.InstallationID, Owner: cfg.ControllerOwner, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}, Authorization: deploymentAuthorization{Service: s}, ApplicationScope: cfg.ApplicationScope, Recovery: &owner.Gate.Recovery}
+	stage = "composition"
+	s.Runtime, e = NewPublicCapture(PublicCaptureConfig{Owner: owner, Queue: queue, Source: source, ModuleFactory: moduleFactory, Profile: b.ProfileKey{ID: s.profile.Profile, Revision: s.profile.Revision}, Guard: deploymentBaseProbe{Service: s}, Admission: s.admit, RecoveryAdmission: s.recoveryAdmit, Inventory: s.inventory, RecoveryTimeout: 2 * time.Minute})
+	if e != nil {
+		return stage, e
 	}
 	s.Runtime.Loop.Store = deploymentStoreTrace{ExecutionWorkStore: s.Runtime.Loop.Store}
-	return s, nil
+	return stage, nil
 }
 
 // Preserve the real production authorization wrapper in every consumer of the
@@ -290,12 +310,15 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	return CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier)
 }
 func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
-	if supportedPublicCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
+	if s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner.supportsCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
 		return d.ErrNotReady
 	}
 	return nil // Original journal reads/effects still require SQLRecoveryAuthority.
 }
 func (s *DeploymentService) inventory(ctx context.Context, in d.Input, x b.Discovery) error {
+	if s.Config.CaptureScope == "six-part" && s.Runtime != nil && s.Runtime.Owner != nil && s.Runtime.Owner.productionSource != nil {
+		return s.productionInventory(ctx, in, x)
+	}
 	if len(x.Parts) != 1 || x.Parts[0].Part != "workspace" {
 		return d.ErrNotReady
 	}
