@@ -65,6 +65,8 @@ type DeploymentService struct {
 	publisherVerifierInput   *PublisherVerifierInput
 	publisherVerifierFactory *a.PublisherVerifierFactory
 	publisherVerifierDB      *sql.DB
+	publicationTarget        *PublicationTargetMaterials
+	publicationTargetInput   *PublicationTargetInput
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -410,6 +412,9 @@ func checkDeploymentGrantMode(ctx context.Context, forward bool, recovery, captu
 
 func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *sql.DB) error {
 	g := s.Forward.DeploymentBinding()
+	if s.Config.PublicationTarget != nil {
+		return (c.SQLPublicationGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil, ProviderPermits: s.formalVerifier != nil && s.formalVerifier.ProviderPermits != nil}).Check(ctx)
+	}
 	if s.Config.FormalVerifier != nil || s.Config.PublisherVerifier != nil {
 		if s.formalVerifier != nil && s.formalVerifier.ProviderPermits != nil {
 			return (c.SQLFormalProviderPermitGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil}).Check(ctx)
@@ -563,7 +568,7 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 	}
 	go func() {
 		defer close(loopDone)
-		failures <- runDeploymentPasses(active, s.Runtime.Loop.RunOnce, s.Runtime.Loop.Interval, func(e error) {
+		failures <- runDeploymentPasses(active, s.runCaptureAndPublicationPass, s.Runtime.Loop.Interval, func(e error) {
 			if e != nil {
 				s.executionUnavailable.Store(true)
 			}

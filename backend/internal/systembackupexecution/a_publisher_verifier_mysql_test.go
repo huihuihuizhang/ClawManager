@@ -48,9 +48,10 @@ type aPublisherVerifierFixture struct {
 }
 
 type aPublisherVerifierFixtureOptions struct {
-	FullService      bool
-	SourceBytes      int
-	CapabilityWindow time.Duration
+	FullService       bool
+	SourceBytes       int
+	CapabilityWindow  time.Duration
+	PublicationTarget *PublicationTargetMaterials
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -123,6 +124,17 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				cfg.ForwardGrant = GrantReference{Path: filepath.Join(dir, "grant.json"), PublicKey: base64.StdEncoding.EncodeToString(issuer)}
 				cfg.RecoveryGrant = GrantReference{Path: filepath.Join(dir, "recovery.json"), PublicKey: base64.StdEncoding.EncodeToString(issuer)}
 				cfg.PublisherVerifier = &PublisherVerifierReference{Protocol: PublisherVerifierMaterialsVersion, Path: filepath.Join(dir, "publisher-materials.json")}
+				if fixture.PublicationTarget != nil {
+					fixture.PublicationTarget.InstallationID = g.InstallationID
+					fixture.PublicationTarget.Root = g.InstallationID + "/"
+					cfg.PublicationTarget = &PublicationTargetReference{Protocol: publicationTargetVersion, Path: filepath.Join(dir, "publication-target.json")}
+					raw, _ := json.Marshal(fixture.PublicationTarget)
+					if os.WriteFile(cfg.PublicationTarget.Path, raw, 0600) != nil {
+						t.Fatal("owner target material")
+					}
+					t.Setenv("SYSTEM_BACKUP_PUBLICATION_TARGET_FILE", cfg.PublicationTarget.Path)
+					t.Setenv("SYSTEM_BACKUP_PUBLICATION_TARGET_SHA256", hash(raw))
+				}
 				for i := range cfg.Writers {
 					cfg.Writers[i].Namespace = cfg.Namespace
 				}

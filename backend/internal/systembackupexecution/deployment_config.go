@@ -60,6 +60,7 @@ type DeploymentConfig struct {
 	PublicationSigners  *PublicationSignerReference `json:"publication_signers,omitempty"`
 	PublisherVerifier   *PublisherVerifierReference `json:"publisher_verifier,omitempty"`
 	CaptureModules      *ProductionCaptureReference `json:"capture_modules,omitempty"`
+	PublicationTarget   *PublicationTargetReference `json:"publication_target,omitempty"`
 }
 type GrantReference struct {
 	Path      string `json:"path"`
@@ -135,6 +136,9 @@ func (cnf DeploymentConfig) Validate() error {
 		return c.ErrExecutionAuthority
 	}
 	if cnf.CaptureScope == "six-part" && cnf.CaptureModules == nil {
+		return c.ErrExecutionAuthority
+	}
+	if cnf.PublicationTarget != nil && cnf.PublicationTarget.validate() != nil {
 		return c.ErrExecutionAuthority
 	}
 	if cnf.PublicationSigners != nil && cnf.PublicationSigners.validate() != nil {

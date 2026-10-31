@@ -153,6 +153,7 @@ func configuredPublicStartupInputs() execution.DeploymentStartupInputs {
 	inputs.ControllerPodName = os.Getenv("POD_NAME")
 	inputs.PublisherVerifier = execution.PublisherVerifierInputsFromEnvironment()
 	inputs.CaptureModules = execution.ProductionCaptureInputsFromEnvironment()
+	inputs.PublicationTarget = execution.PublicationTargetInputsFromEnvironment()
 	if inputs.ControllerPodName == "" {
 		inputs.ControllerPodName, _ = os.Hostname()
 	}
