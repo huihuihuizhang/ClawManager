@@ -42,7 +42,10 @@ func (s *DeploymentService) bindDeploymentStartupInputs(inputs DeploymentStartup
 		if err = s.loadPublicationSignerInput(inputs.PublicationSigners); err != nil {
 			return err
 		}
-		return s.loadPublisherVerifierInput(inputs.PublisherVerifier)
+		if err = s.loadPublisherVerifierInput(inputs.PublisherVerifier); err != nil {
+			return err
+		}
+		return s.loadProductionCapture(inputs.CaptureModules)
 	}
 	return nil
 }

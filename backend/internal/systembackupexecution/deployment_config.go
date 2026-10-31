@@ -59,6 +59,7 @@ type DeploymentConfig struct {
 	FormalVerifier      *FormalVerifierReference    `json:"formal_verifier,omitempty"`
 	PublicationSigners  *PublicationSignerReference `json:"publication_signers,omitempty"`
 	PublisherVerifier   *PublisherVerifierReference `json:"publisher_verifier,omitempty"`
+	CaptureModules      *ProductionCaptureReference `json:"capture_modules,omitempty"`
 }
 type GrantReference struct {
 	Path      string `json:"path"`
@@ -130,6 +131,12 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.CaptureModules != nil && (cnf.CaptureModules.validate() != nil || cnf.CaptureScope != "six-part") {
+		return c.ErrExecutionAuthority
+	}
+	if cnf.CaptureScope == "six-part" && cnf.CaptureModules == nil {
+		return c.ErrExecutionAuthority
+	}
 	if cnf.PublicationSigners != nil && cnf.PublicationSigners.validate() != nil {
 		return c.ErrExecutionAuthority
 	}
@@ -150,13 +157,13 @@ func (cnf DeploymentConfig) Validate() error {
 			return c.ErrExecutionAuthority
 		}
 	}
-	if cnf.CaptureScope != "platform-workspace" && cnf.CaptureScope != "runtime-workspace" {
+	if cnf.CaptureScope != "platform-workspace" && cnf.CaptureScope != "runtime-workspace" && cnf.CaptureScope != "six-part" {
 		return c.ErrExecutionAuthority
 	}
-	if cnf.Workspace.NFS != nil && cnf.CaptureScope != "runtime-workspace" {
+	if cnf.Workspace.NFS != nil && cnf.CaptureScope != "runtime-workspace" && cnf.CaptureScope != "six-part" {
 		return c.ErrExecutionAuthority
 	}
-	if (cnf.CaptureScope == "runtime-workspace") != (cnf.RuntimeSources != nil) || (cnf.RuntimeSources != nil && cnf.RuntimeSources.validate() != nil) {
+	if (cnf.CaptureScope == "runtime-workspace" || cnf.CaptureScope == "six-part") != (cnf.RuntimeSources != nil) || (cnf.RuntimeSources != nil && cnf.RuntimeSources.validate() != nil) {
 		return c.ErrExecutionAuthority
 	}
 	if cnf.RuntimeSources != nil && cnf.RuntimeSources.Namespaces[0] != cnf.Namespace {

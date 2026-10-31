@@ -53,6 +53,8 @@ type DeploymentService struct {
 	tlsConfig                *tls.Config
 	staging                  *os.Root
 	formalVerifier           *FormalVerifierDeploymentConfig
+	captureMaterials         *productionCaptureMaterials
+	captureInput             *ProductionCaptureInput
 	publicationInput         *PublicationSignerInput
 	publicationFactory       *DeploymentPublicationSignerFactory
 	publicationDB            *sql.DB

@@ -33,6 +33,9 @@ func CheckDeploymentDatabaseWithInputs(ctx context.Context, db *sql.DB, path, di
 		if err = s.loadPublisherVerifierInput(inputs.PublisherVerifier); err != nil {
 			return err
 		}
+		if err = s.loadProductionCapture(inputs.CaptureModules); err != nil {
+			return err
+		}
 	}
 	return s.checkControlGrants(ctx, db)
 }
