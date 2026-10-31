@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	reg "clawreef/internal/systembackupkekregistry"
@@ -34,7 +35,7 @@ type ProviderPermitIssuerGrant struct {
 	SigningPublicKey                                                   ed25519.PublicKey
 	GeneratePermission                                                 ProviderCapabilityPermission
 	WorkerNamespace, WorkerServiceAccountName, WorkerServiceAccountUID string
-	WorkerJWTIdentityFile                                              string
+	WorkerJWTIdentityFile                                              string // absolute mount path; optional whole {pod_uid} component
 	NotBefore, Until                                                   time.Time
 	Revoked                                                            bool
 }
@@ -87,7 +88,36 @@ func readPermitIssuerGrant(ctx context.Context, cfg ProviderPermitIssuerConfig) 
 	if g.Version != "system-backup-provider-permit-issuer-grant.v1" || !reflect.DeepEqual(g.Binding, cfg.Binding) || g.Database != cfg.Capabilities.database || g.DatabaseAccount == "" || g.Workload != w || len(g.SigningPublicKey) != ed25519.PublicKeySize || bytes.Equal(g.SigningPublicKey, m.Issuer) || g.WorkerNamespace == "" || g.WorkerServiceAccountName == "" || g.WorkerServiceAccountUID == "" || !filepath.IsAbs(g.WorkerJWTIdentityFile) || g.GeneratePermission.ControllerVerifier != nil || g.NotBefore.IsZero() || now.Before(g.NotBefore) || !now.Before(g.Until) || g.Until.Sub(g.NotBefore) > 24*time.Hour || g.Revoked {
 		return bad()
 	}
+	if _, err := workerJWTIdentityPath(g.WorkerJWTIdentityFile, "validation-only"); err != nil {
+		return bad()
+	}
 	return g, nil
+}
+
+// A signed optional Pod directory is resolved only from the ORIGINAL admitted
+// Job identity, before signing its delivered permit. It cannot select a role,
+// credential root or caller path. Static in-container paths remain unchanged.
+func workerJWTIdentityPath(template, podUID string) (string, error) {
+	if !filepath.IsAbs(template) || filepath.Clean(template) != template || strings.ContainsAny(template, "\x00\r\n") {
+		return "", kms.ErrPermission
+	}
+	if !strings.ContainsAny(template, "{}") {
+		return template, nil
+	}
+	if strings.Count(template, "{pod_uid}") != 1 || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$`).MatchString(podUID) {
+		return "", kms.ErrPermission
+	}
+	component := false
+	for _, part := range strings.FieldsFunc(template, func(r rune) bool { return r == '/' || r == '\\' }) {
+		if part == "{pod_uid}" {
+			component = true
+		}
+	}
+	resolved := strings.Replace(template, "{pod_uid}", podUID, 1)
+	if !component || strings.ContainsAny(resolved, "{}") || filepath.Clean(resolved) != resolved {
+		return "", kms.ErrPermission
+	}
+	return resolved, nil
 }
 
 func strictPermitIssuerJSON(raw []byte, out any) error {
