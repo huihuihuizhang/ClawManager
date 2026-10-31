@@ -23,7 +23,7 @@ import (
 // exact named LOCAL object policy, candidate transport and no-repeat behavior.
 // The local allowlist does not attest production provider permission materials.
 func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
-	for _, mode := range []string{"success", "lost-put-ack", "candidate-denied", "credential-withdrawn", "bad-input-sha", "bad-version", "final-object-in-request", "same-staging-root"} {
+	for _, mode := range []string{"success", "lost-put-ack", "candidate-denied", "credential-withdrawn", "bad-input-sha", "bad-version", "final-object-in-request", "same-staging-root", "manifest-index-drift"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			directory := t.TempDir()
@@ -42,7 +42,7 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 			}
 			cipher := []byte("opaque encrypted upload protocol DATA")
 			index := []byte(`{"original":"public index transport DATA"}`)
-			if input.WriteFile("parts/original.enc", cipher, 0400) != nil || input.WriteFile("index.json", index, 0400) != nil {
+			if input.WriteFile("parts/original.enc", cipher, 0400) != nil || input.WriteFile("artifact-index.json", index, 0400) != nil {
 				t.Fatal("owned input")
 			}
 			credential := nativePublicationCredential{AccessKey: "upload-only-principal", SecretKey: strings.Repeat("u", 32), SessionToken: "original-upload-only-session", NotBefore: time.Now().Add(-time.Minute), Until: time.Now().Add(time.Minute)}
@@ -51,11 +51,11 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 			if os.WriteFile(credentialFile, private, 0600) != nil {
 				t.Fatal("owned upload credential")
 			}
-			p := PublicationUploadRequest{Version: publicationUploadVersion, Installation: "installation_upload", Backup: "sbk_11111111-1111-4111-8111-111111111111", Attempt: 1, Region: "local-1", Bucket: "original", ArtifactRoot: "installation_upload/", RemoteStagingRoot: "remote-staging/installation_upload/", CredentialHash: hash(private), Deadline: time.Now().Add(50 * time.Second), Objects: []PublicationUploadInput{{Path: "parts/original.enc", SHA256: hash(cipher), Bytes: int64(len(cipher))}, {Path: "index.json", SHA256: hash(index), Bytes: int64(len(index))}}}
-			p.ManifestInput = []byte(`{"schema_version":"system-backup.v1","origin_installation_id":"installation_upload","backup_public_id":"` + p.Backup + `","attempt_no":1}`)
+			p := PublicationUploadRequest{Version: publicationUploadVersion, Installation: "installation_upload", Backup: "sbk_11111111-1111-4111-8111-111111111111", Attempt: 1, Region: "local-1", Bucket: "original", ArtifactRoot: "installation_upload/", RemoteStagingRoot: "remote-staging/installation_upload/", CredentialHash: hash(private), Deadline: time.Now().Add(50 * time.Second), Objects: []PublicationUploadInput{{Path: "parts/original.enc", SHA256: hash(cipher), Bytes: int64(len(cipher))}, {Path: "artifact-index.json", SHA256: hash(index), Bytes: int64(len(index))}}}
+			p.ManifestInput = []byte(`{"schema_version":"system-backup.v1","origin_installation_id":"installation_upload","backup_public_id":"` + p.Backup + `","attempt_no":1,"artifact_index":{"path":"artifact-index.json","checksum":"` + hash(index) + `"}}`)
 			prefix := p.ArtifactRoot + p.Backup + "/1/"
 			candidate := p.RemoteStagingRoot + p.Backup + "/1/manifest-candidate.json"
-			allowed := map[string]bool{prefix + "parts/original.enc": true, prefix + "index.json": true, candidate: true}
+			allowed := map[string]bool{prefix + "parts/original.enc": true, prefix + "artifact-index.json": true, candidate: true}
 			mu := sync.Mutex{}
 			objects := map[string][]byte{}
 			puts := 0
@@ -141,6 +141,8 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 				p.Objects[0].Path = "manifest.json"
 			case "same-staging-root":
 				p.RemoteStagingRoot = p.ArtifactRoot + "remote/"
+			case "manifest-index-drift":
+				p.ManifestInput = bytes.ReplaceAll(p.ManifestInput, []byte(hash(index)), []byte(strings.Repeat("f", 64)))
 			}
 			raw, _ := json.Marshal(p)
 			result, err := RunPublicationUploadOnly(ctx, raw, caFile, credentialFile, input, output)
@@ -181,7 +183,7 @@ func TestPublicationUploadOnlyNativeProtocol(t *testing.T) {
 			if mode == "credential-withdrawn" && before != 1 {
 				t.Fatal("withdrawn upload credential continued", before)
 			}
-			if mode == "bad-input-sha" || mode == "final-object-in-request" || mode == "same-staging-root" {
+			if mode == "bad-input-sha" || mode == "final-object-in-request" || mode == "same-staging-root" || mode == "manifest-index-drift" {
 				if before != 0 {
 					t.Fatal("invalid input reached provider", before)
 				}
