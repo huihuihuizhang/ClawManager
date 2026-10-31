@@ -144,3 +144,26 @@ func WithTeamsInventory(source LinuxProfileConfig, mapped team.Inventory) LinuxP
 	}
 	return source
 }
+
+// WithAutomaticTeamsInventory uses original SQL Team/member rows rather than
+// a manually maintained Team list. The independently discovered storage map
+// remains credential-free; original source admission must authenticate it.
+func WithAutomaticTeamsInventory(source LinuxProfileConfig, storage team.AutomaticStorageMapping) LinuxProfileConfig {
+	raw, err := json.Marshal(storage)
+	var frozen team.AutomaticStorageMapping
+	valid := err == nil && len(raw) <= 16<<20 && json.Unmarshal(raw, &frozen) == nil
+	source.ReadTeams = func(ctx context.Context, tx *sql.Tx, inv SourceInventory) (*team.Inventory, error) {
+		if !valid {
+			return nil, d.ErrNotReady
+		}
+		users, owners := map[int]bool{}, map[int]int{}
+		for _, id := range inv.Users {
+			users[id] = true
+		}
+		for _, instance := range inv.Instances {
+			owners[instance.ID] = instance.UserID
+		}
+		return team.ReadAutomaticInventory(ctx, tx, frozen, users, owners)
+	}
+	return source
+}
