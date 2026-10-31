@@ -29,7 +29,7 @@ import (
 // signed dynamic Generate permit and C framing. SQL/TokenReview are NOT claimed
 // by these named control/source/provider fixtures; the service tests own those.
 func TestFormalControlEvidenceCLIOriginalKeyUseAndCompleteReadback(t *testing.T) {
-	for _, mode := range []string{"sidecar", "proofs", "scope-mismatch", "source-grant-revoked", "pull-grant-revoked", "wrong-nonce", "missing-proof", "forged-body", "trailing-json", "claim-lost", "revoke-after-pull"} {
+	for _, mode := range []string{"sidecar", "sidecar-original-control-path", "proofs", "scope-mismatch", "source-grant-revoked", "pull-grant-revoked", "wrong-nonce", "missing-proof", "forged-body", "trailing-json", "claim-lost", "revoke-after-pull"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			dir, stage := t.TempDir(), t.TempDir()
@@ -167,7 +167,11 @@ func TestFormalControlEvidenceCLIOriginalKeyUseAndCompleteReadback(t *testing.T)
 					out.Write([]byte(`{}`))
 				}
 			})
-			client, endpoint := skillCLIMTLSAt(t, handler)
+			controlPath := ""
+			if mode == "sidecar-original-control-path" {
+				controlPath = "/worker/v1"
+			}
+			client, endpoint := skillCLIMTLSAt(t, handler, controlPath)
 			if err := client.WithWorkloadToken(skillCLIWrite(t, dir, "bound-token", []byte("original-bound-workload-token"))); err != nil {
 				t.Fatal(err)
 			}
@@ -215,7 +219,7 @@ func TestFormalControlEvidenceCLIOriginalKeyUseAndCompleteReadback(t *testing.T)
 			err = runFormalInvocation(ctx, decoded, client, materialFile, root, &stdout)
 			mu.Lock()
 			defer mu.Unlock()
-			valid := mode == "sidecar" || mode == "proofs"
+			valid := mode == "sidecar" || mode == "sidecar-original-control-path" || mode == "proofs"
 			if !valid {
 				if err == nil || stdout.Len() != 0 || candidates != 0 {
 					t.Fatal("invalid pull produced candidate", err, generates, pulls, candidates)

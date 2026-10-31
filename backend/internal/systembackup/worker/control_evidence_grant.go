@@ -46,7 +46,7 @@ type ControlEvidenceSourceMount struct {
 
 func (m ControlEvidenceSourceMount) Validate() error {
 	u, err := url.Parse(m.Endpoint)
-	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.RawPath != "" || u.Fragment != "" || strings.ContainsAny(m.Endpoint, "?#\r\n") || u.Opaque != "" || u.Path != "" && u.Path != "/" || !filepath.IsAbs(m.GrantFile) || filepath.Clean(m.GrantFile) != m.GrantFile || m.ControllerGrantFile != "" && (!filepath.IsAbs(m.ControllerGrantFile) || filepath.Clean(m.ControllerGrantFile) != m.ControllerGrantFile) || !keyUseHash.MatchString(m.GrantSHA256) || len(m.Issuer) != ed25519.PublicKeySize {
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.RawPath != "" || u.Fragment != "" || strings.ContainsAny(m.Endpoint, "?#\r\n") || u.Opaque != "" || !filepath.IsAbs(m.GrantFile) || filepath.Clean(m.GrantFile) != m.GrantFile || m.ControllerGrantFile != "" && (!filepath.IsAbs(m.ControllerGrantFile) || filepath.Clean(m.ControllerGrantFile) != m.ControllerGrantFile) || !keyUseHash.MatchString(m.GrantSHA256) || len(m.Issuer) != ed25519.PublicKeySize {
 		return ErrNotReady
 	}
 	return nil

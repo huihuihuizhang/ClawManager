@@ -350,7 +350,7 @@ func skillCLIMTLS(t *testing.T, handler http.Handler) *worker.ControlClient {
 	return client
 }
 
-func skillCLIMTLSAt(t *testing.T, handler http.Handler) (*worker.ControlClient, string) {
+func skillCLIMTLSAt(t *testing.T, handler http.Handler, controlPath ...string) (*worker.ControlClient, string) {
 	t.Helper()
 	now := time.Now()
 	caKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -399,12 +399,16 @@ func skillCLIMTLSAt(t *testing.T, handler http.Handler) (*worker.ControlClient, 
 			t.Fatal(e)
 		}
 	}
-	client, e := worker.NewControlClient(server.URL, filepath.Join(dir, "ca.pem"), filepath.Join(dir, "client.pem"), filepath.Join(dir, "client.key"))
+	endpoint := server.URL
+	if len(controlPath) == 1 {
+		endpoint += controlPath[0]
+	}
+	client, e := worker.NewControlClient(endpoint, filepath.Join(dir, "ca.pem"), filepath.Join(dir, "client.pem"), filepath.Join(dir, "client.key"))
 	if e != nil {
 		t.Fatal(e)
 	}
 	t.Cleanup(client.Close)
-	return client, server.URL
+	return client, endpoint
 }
 func skillCLIDecrypt(t *testing.T, i worker.Invocation, frames, envelope []byte) []byte {
 	t.Helper()
