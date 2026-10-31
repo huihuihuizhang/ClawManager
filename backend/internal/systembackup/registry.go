@@ -1,6 +1,7 @@
 package systembackup
 
 import (
+	"clawreef/internal/systembackup/schemaobjects"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -50,6 +51,9 @@ func Registry() []ObjectPolicy {
 			out = append(out, ObjectPolicy{name, category, "secret", "mysql_dump", "normalize"})
 		}
 	}
+	for _, name := range schemaobjects.OptionalBusinessTables() {
+		out = append(out, ObjectPolicy{name, "instances", "secret", "mysql_dump", "normalize"})
+	}
 	for _, name := range controlTables {
 		out = append(out, ObjectPolicy{name, "system_backup", "internal", "metadata_only", "reference_only"})
 	}
@@ -94,7 +98,8 @@ func CheckCoverage(actual []string) Coverage {
 		}
 	}
 	for _, p := range Registry() {
-		if p.Category != "system_backup" && !slices.Contains(actual, p.Name) {
+		optional := slices.Contains(schemaobjects.OptionalBusinessTables(), p.Name)
+		if p.Category != "system_backup" && !optional && !slices.Contains(actual, p.Name) {
 			r.Missing = append(r.Missing, p.Name)
 		}
 	}

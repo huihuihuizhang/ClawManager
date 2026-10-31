@@ -306,19 +306,32 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 					capture := domain.CaptureSource
 					if env.SourceAuthorize != nil {
 						capture = func(ctx context.Context, db *sql.DB, limits domain.Limits, name, uuid string) (domain.Snapshot, error) {
-							return domain.CaptureSourceGuarded(ctx, db, limits, name, uuid, func(ctx context.Context) error {
+							checkSource := func(ctx context.Context) error {
 								if env.SourceAuthorize(ctx, i) != nil {
 									return ErrNotReady
 								}
 								return inUseCheck()
-							})
+							}
+							if r.Database.SourceScope == domain.BusinessTableSourceScope {
+								if r.Database.SchemaCensus == nil {
+									return domain.Snapshot{}, ErrNotReady
+								}
+								return domain.CaptureBusinessSourceGuarded(ctx, db, limits, name, uuid, checkSource, *r.Database.SchemaCensus)
+							}
+							return domain.CaptureSourceGuarded(ctx, db, limits, name, uuid, checkSource)
 						}
+					}
+					if r.Database.SourceScope != "" && env.SourceAuthorize == nil {
+						return ErrNotReady
 					}
 					s, e := capture(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
 					if e != nil {
 						return ErrExecution
 					}
 					defer clearSnapshot(s)
+					if r.Database.SourceScope == domain.BusinessTableSourceScope && (r.Database.CaptureSchema == nil || r.Database.CaptureSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || domain.VerifyBusinessCapturedSnapshot(s, *r.Database.CaptureSchema) != nil) {
+						return ErrExecution
+					}
 					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
 						return ErrExecution
 					}
