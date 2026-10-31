@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -93,5 +94,70 @@ func TestCaptureKubernetesProbeRejectsDeniedUnavailableAndInconclusive(t *testin
 				t.Fatal("inconclusive permissions became readiness", err)
 			}
 		})
+	}
+}
+
+func TestPublicationSignerKubernetesGrantsAndProbeUseExactControllerSA(t *testing.T) {
+	cfg := captureAccessFixture(t)
+	for _, enabled := range []bool{false, true} {
+		if enabled {
+			cfg.PublicationSigners = &PublicationSignerReference{Protocol: PublicationSignerMaterialsVersion, Path: filepath.Join(t.TempDir(), "materials.json")}
+		}
+		objects, err := CaptureKubernetesGrants(cfg, "publisher-controller")
+		if err != nil {
+			t.Fatal(err)
+		}
+		worker, controller := 0, 0
+		for _, object := range objects {
+			if role, ok := object.(*rbacv1.Role); ok {
+				for _, rule := range role.Rules {
+					if slices.Contains(rule.Resources, "serviceaccounts") {
+						if role.Namespace != cfg.Namespace || len(rule.APIGroups) != 1 || rule.APIGroups[0] != "" || len(rule.Verbs) != 1 || rule.Verbs[0] != "get" || len(rule.ResourceNames) != 1 {
+							t.Fatal("unbounded or writable ServiceAccount access")
+						}
+						switch rule.ResourceNames[0] {
+						case cfg.Security.ServiceAccountName:
+							worker++
+						case "publisher-controller":
+							controller++
+						default:
+							t.Fatal("unrelated ServiceAccount granted")
+						}
+					}
+				}
+			}
+		}
+		if worker != 1 || (controller == 1) != enabled {
+			t.Fatal("controller self-SA read did not match publication feature")
+		}
+	}
+	for _, sa := range []string{"", "*", cfg.Security.ServiceAccountName} {
+		if _, err := CaptureKubernetesGrants(cfg, sa); err == nil {
+			t.Fatal("invalid/worker controller SA admitted")
+		}
+	}
+	if _, err := RequiredCaptureAccess(cfg); err == nil {
+		t.Fatal("publication permission inventory silently omitted controller identity")
+	}
+	for _, allow := range []bool{true, false} {
+		client := fake.NewSimpleClientset()
+		ownReads := 0
+		client.PrependReactor("create", "selfsubjectaccessreviews", func(action kt.Action) (bool, runtime.Object, error) {
+			r := action.(kt.CreateAction).GetObject().(*authv1.SelfSubjectAccessReview)
+			a := r.Spec.ResourceAttributes
+			r.Status.Allowed = true
+			if a.Resource == "serviceaccounts" && a.Name == "publisher-controller" {
+				ownReads++
+				if a.Namespace != cfg.Namespace || a.Group != "" || a.Verb != "get" {
+					t.Fatal("wrong own-SA probe")
+				}
+				r.Status.Allowed = allow
+				r.Status.Denied = !allow
+			}
+			return true, r, nil
+		})
+		if err := CheckCaptureKubernetesAccess(context.Background(), client, cfg, "publisher-controller"); (err == nil) != allow || ownReads != 1 {
+			t.Fatal("own-SA denial not reflected in real capture probe", err)
+		}
 	}
 }

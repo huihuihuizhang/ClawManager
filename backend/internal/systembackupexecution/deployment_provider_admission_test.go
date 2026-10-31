@@ -114,6 +114,9 @@ func (p providerAdmissionConn) QueryContext(_ context.Context, q string, args []
 	case "SELECT CURRENT_USER()":
 		rows.columns = []string{"account"}
 		rows.values = [][]driver.Value{{p.p.grant.DatabaseAccount}}
+	case "SELECT CURRENT_USER(),@@server_uuid,DATABASE()":
+		rows.columns = []string{"account", "server", "database"}
+		rows.values = [][]driver.Value{{p.p.grant.DatabaseAccount, p.p.grant.ServerUUID, p.p.grant.Database}}
 	case "SELECT CURRENT_ROLE()":
 		rows.columns = []string{"role"}
 		rows.values = [][]driver.Value{{"NONE"}}
