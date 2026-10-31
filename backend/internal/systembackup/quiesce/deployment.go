@@ -40,6 +40,24 @@ type deploymentCheckpoint struct {
 	Pods                                          []PodIdentity
 }
 
+// DeploymentOriginalReplicas reads data from the exact frozen checkpoint.
+// It does not inspect or change the current, possibly paused Deployment.
+func DeploymentOriginalReplicas(namespace, name string, original flow.State) (int32, error) {
+	if namespace == "" || name == "" || original.UID == "" {
+		return 0, flow.ErrQuiesce
+	}
+	var p deploymentCheckpoint
+	if json.Unmarshal([]byte(original.Checkpoint), &p) != nil {
+		return 0, flow.ErrQuiesce
+	}
+	w := DeploymentWriter{Namespace: namespace, Name: name, UID: original.UID, FenceID: p.FenceID}
+	parsed, err := w.checkpoint(original)
+	if err != nil || parsed.FenceID == "" {
+		return 0, flow.ErrQuiesce
+	}
+	return parsed.Replicas, nil
+}
+
 // DeploymentWriter handles registered Linux Pro Deployments. Guard must prove
 // full writer inventory, autoscaler/reconciler fencing and pause/recovery intent
 // ownership. ConfirmStopped must prove the recorded containers cannot still

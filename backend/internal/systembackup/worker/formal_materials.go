@@ -16,9 +16,10 @@ import (
 // private key or unverified "approved" flag. The original frozen invocation
 // pins the exact bytes; the existing A resolver authenticates the permit/Job.
 type FormalCaptureMaterials struct {
-	Version string        `json:"schema_version"`
-	KMS     k.Config      `json:"kms"`
-	Permit  k.PermitMount `json:"permit"`
+	Version   string               `json:"schema_version"`
+	KMS       k.Config             `json:"kms"`
+	Permit    k.PermitMount        `json:"permit"`
+	Resources *ResourceSourceMount `json:"resources,omitempty"`
 }
 
 func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMaterials, error) {
@@ -49,6 +50,9 @@ func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMateria
 		return zero, ErrNotReady
 	}
 	if out.Permit.PermitPath == "" || out.Permit.CredentialDirectory == "" || !keyUseHash.MatchString(out.Permit.PermitSHA256) || len(out.Permit.PublicKey) != ed25519.PublicKeySize {
+		return zero, ErrNotReady
+	}
+	if (i.Request.Resources != nil) != (out.Resources != nil) {
 		return zero, ErrNotReady
 	}
 	return out, nil

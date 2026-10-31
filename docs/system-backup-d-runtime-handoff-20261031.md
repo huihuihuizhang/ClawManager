@@ -94,3 +94,16 @@
 - 真实MySQL新增expired-during-unwrap，原task/claim仍有效但独立verifier窗到期时不登记任何结果/evidence。工厂零窗/过期/延期负例、原窗有效正例通过。
 - 三包完整回归退出0：execution11.282s、wire0.414s、staging13.404s；后续最后小型nil-context/期限不可延期检查以最终复测为准。曾有局部变量context遮蔽包名导致构建失败，修正为keyContext后上述三包通过，不抹除该失败。
 - 最后nil-context/期限不可延期定向回归：execution3.101s、wire0.809s，退出0。Windows沙箱内文件权限测试拒绝，按既有真实本机文件权限方式复测通过。
+## D5.1 部署资源 / Secret 的实际数据面
+
+- 新增 capture-deployment-resources 和 capture-secret-bundle 两个真实worker操作；它们读取原Namespace/固定GVR+name+UID清单，分别调用既有Kubernetes历史序列化器，压缩后经原CMBKGC01流/KMS单次使用，复用原ReportCandidate。实际CLI已调用OpenResourceCaptureSources/RunFormalCapture；无源文件系统、无ServiceAccount token automount、无源写权限或恢复Apply。此项没有宣称NewDeploymentService六项生产构造已经完成。
+- ResourceSourceMount属于原FormalCaptureSpec SHA固定材料，指向独立API endpoint/CA SHA/只读source token文件；不读kubeconfig、control JWT或KEK令牌。实际TLS客户端无重定向、无ambient root/凭据。每个GET及记录/EOF前后检查原Job控制权限和独立源SelfSubjectReview（精确SA名称/UID）及当前namespace SelfSubjectRulesReview；额外get对象名、list/watch/mutation、未知nonresource权限、incomplete均拒绝。该API只说明请求namespace里的权限，不证明其他namespace或集群bindings没有额外权限，完整安装owner仍需独立审查其bindings。
+- NonResourceRules仅允许列明的标准discovery/health/version路径。/api/*、/apis/*、/openapi/*仅为RBAC非资源discovery规则的精确已知模式，不授予resource请求；独立测试拒绝全局*、/logs/*、/debug/*、/metrics、/healthz/*等其他模式/路径。
+- 实际Job模板新增FormalJobMaterials，传--formal-config /run/backup/formal/materials.json并只读挂载原ConfigMap和显式Secret/ConfigMap refs。拒绝挂载目录越界/重名/权限override/任意shell，无workspace或DAC_READ_SEARCH。原worker mount observer必须按部署提供的每个UID/hash核对这些refs；builder本身不伪造现场UID证明。
+- 新NewResourceCaptureModule真正物化两个上述Job，经B原CaptureModules/BuildCapturePart。两项均required，缺secret不降级，源SA UID和材料mapping必须独立，错误原namespace/task/attempt/context/index/formal shape拒绝。它是D对六项目录的实际贡献，仍需接入动态完整模块生产工厂。
+- 暂停中的Deployment archive同时保留精确原writer checkpoint和当前维护态对象。ResourceCaptureSpec.OriginalWriters由原冻结计划提供，原控制Authorize逐字节对比desc.Writers；API NamespaceUID由controller独立GET核对，源SA UID由实际源API认证。归档header把原checkpoint与对象清单一起加密；独立ReadResourceCaptureArchive核namespace UID/原header/完整精确selection+UID/EOF，并可从DeploymentOriginalReplicas读取原replicas。未从当前0反猜原态，也不改源对象。
+- 现有writer adapter尚无CronJob原suspend checkpoint，因此新资源操作遇CronJob明确拒绝，不能保存临时suspend而冒充原始desired。完整profile实现须补对应原writer adapter后才可覆盖此类对象。
+- 本地测试：独立TLS源API真实HTTP身份/权限/源GET，两类candidate成功；源SA替换、额外权限、对象UID替换、GET后撤权、scope变化、错namespace读回和截断拒绝。实际DeploymentWriter Observe/Pause/CheckPaused/Resume的client-go fake case记录非零1→0捕获视图→原态1，并序列化保存原checkpoint和历史后独立读回；停止proof是既有fixture，不冒充真实CRI。KMS仍为严格本地fixture，未连接在线KMS。
+- 六包整包退出0：worker34.950s、kube3.142s、publicadapter3.401s、quiesce3.137s、execution3.621s、cmd/backup-worker2.862s；本轮未设置SQL opt-in，不能将该execution整包称为新的真实MySQL验收。新增D模块两真实Job物化/缺域/错误独立SA专项另通过3.160s。
+- 生产后续仍需：实际6parts完整来源/模块工厂、A5 FormalKeys闭包、source credential生命周期/全部binding准入、publisher新claim/正式三用途签名/immutable finalizer+独立成品读回/终态。另原worker ProviderPermit包含实际Job/Pod身份而FormalCaptureMaterials整体SHA预先冻结，需用原Job自动发行/挂载流程闭合顺序，不能要求用户逐任务人工提供permit，也不能删验签放过。
+- 最后原Kubernetes历史兼容/实际pause-archive-resume/双Job物化定向回归退出0：root3.141s、quiesce2.946s、publicadapter3.182s。
