@@ -10,13 +10,19 @@ import (
 )
 
 func TestProductionWorkBuddyProAndLiteUseTheirOwnIdentityScope(t *testing.T) {
-	for _, fault := range []string{"pro", "pro-with-lite-identity", "lite", "lite-missing", "lite-wrong-owner", "lite-wrong-instance", "lite-wrong-gid", "lite-outside-range"} {
+	for _, fault := range []string{"pro", "pro-with-lite-identity", "lite", "lite-missing", "lite-blank-backend", "lite-inferred-mode", "lite-wrong-owner", "lite-wrong-instance", "lite-wrong-gid", "lite-outside-range"} {
 		t.Run(fault, func(t *testing.T) {
 			in, source, hold, writers, operations := productionModuleFixture(t)
 			instance := &source.Instances[1]
 			instance.Type, instance.Mode, instance.Backend = "workbuddy", "lite", "gateway"
 			if fault == "pro" || fault == "pro-with-lite-identity" {
 				instance.Mode, instance.Backend = "pro", "desktop"
+			}
+			if fault == "lite-blank-backend" {
+				instance.Backend = ""
+			}
+			if fault == "lite-inferred-mode" {
+				instance.Mode = ""
 			}
 			var metadata productionCaptureMetadata
 			if json.Unmarshal(source.CaptureMetadata, &metadata) != nil {
@@ -30,7 +36,7 @@ func TestProductionWorkBuddyProAndLiteUseTheirOwnIdentityScope(t *testing.T) {
 				mount.Policy.Runtime = scope.Runtime{Type: instance.Type, Mode: instance.Mode, Backend: instance.Backend, Variant: instance.Variant, OS: instance.OS}
 				mount.WorkBuddy = &domain.WorkBuddyUIDIdentity{Schema: 1, InstanceID: instance.ID, UserID: instance.UserID, UID: 10007, GID: 10007}
 				switch fault {
-				case "pro", "lite-missing":
+				case "pro", "lite-missing", "lite-blank-backend", "lite-inferred-mode":
 					mount.WorkBuddy = nil
 				case "lite-wrong-owner":
 					mount.WorkBuddy.UserID++

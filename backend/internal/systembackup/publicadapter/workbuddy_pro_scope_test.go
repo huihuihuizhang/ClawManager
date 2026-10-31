@@ -46,6 +46,17 @@ func TestWorkBuddyUIDScopeRejectsWindowsUnknownAndPro(t *testing.T) {
 	if !RequiresWorkBuddyUIDIdentity(valid) {
 		t.Fatal("original Lite scope omitted")
 	}
+	for _, fault := range []string{"blank-backend", "inferred-mode"} {
+		instance := valid
+		if fault == "blank-backend" {
+			instance.Backend = ""
+		} else {
+			instance.Mode = ""
+		}
+		if !RequiresWorkBuddyUIDIdentity(instance) {
+			t.Fatal("canonical Lite escaped UID scope", fault)
+		}
+	}
 	for _, fault := range []string{"windows", "unknown", "pro", "foreign-backend"} {
 		instance := valid
 		switch fault {

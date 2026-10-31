@@ -2,7 +2,6 @@ package publicadapter
 
 import (
 	"strconv"
-	"strings"
 
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/scope"
@@ -64,7 +63,7 @@ func isWorkBuddySource(i InstanceIdentity) bool {
 // identity contract. Pro workspaces never borrow Lite allocator identities.
 func RequiresWorkBuddyUIDIdentity(i InstanceIdentity) bool {
 	runtime, err := scope.PlanRuntime(scope.Runtime{Type: i.Type, Mode: i.Mode, Backend: i.Backend, Variant: i.Variant, OS: i.OS})
-	return err == nil && runtime.Type == "workbuddy" && runtime.Mode == "lite" && strings.EqualFold(strings.TrimSpace(i.Backend), "gateway") && strings.EqualFold(strings.TrimSpace(i.Variant), "linux")
+	return err == nil && runtime.Type == "workbuddy" && runtime.Mode == "lite"
 }
 
 func snapshotMatchesInventory(snapshot domain.Snapshot, source SourceInventory) bool {
