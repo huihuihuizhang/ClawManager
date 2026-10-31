@@ -86,3 +86,11 @@
 - 新结果 AAD 使用真实 attempt。旧版本 attempt>1 若曾经绕过既有输入校验存有 Attempt=1 的密文，新读法明确拒绝；本轮没有原部署数据不存在的证据，也没有重封存、重新采集或旧 AAD 回退。该类历史数据只能在取得原版本与 checkpoint/Job/attempt 的独立认证后另行设计受限迁移。
 - 本测试 surrounding control DDL 是 focused 当前列夹具，123 runtime_resources/runtime_captures、125、131 为仓库实际 DDL；不是完整172迁移消费者验收。监督的完整catalog迁移证据见 docs/evidence/ad-supervisor-local-migrations-20261031.json，二者不混称。
 - 最终 Go1.26.1 / GOPROXY=off 整包：systembackupexecution 10.428s，systembackupcontroller 4.355s，退出0；本地 MySQL 8.4.13，精确服务UUID固定为 b9c4d686-d4d3-11f1-9eb5-745d22085e06。所有临时用户/库均由测试清理，凭据不输出不提交。原签名/正式发布/六项Runtime生产构造仍继续开发。
+## D4.2 独立 verifier 有效期接口
+
+- FormalCandidateKeyUse 增加 ValidUntil() time.Time，必须来自实际独立 grant/capability/task/authority 最早有效期；零值或已到期拒绝并Close。D封存该值与identity，后续改变（包括延长）拒绝，额外以原task/invocation/Job窗取最早限制。
+- 原消费者open后立即context.WithDeadline，覆盖custody复制、完整AEAD读取、Gate复查与saveResult。initial Recheck、每次Recheck和Unwrap也使用有界context；没有修改全局WithDEK签名。
+- 流验证新增逐次底层Read前后检查context，帧header/payload/EOF间到期不发起后续读取；实际阻塞中的普通文件Read本身由OS返回，但返回后不得继续认证/读取。测试以第一段header读取期间到期证明底层read总数恰好1、零认证结果。
+- 真实MySQL新增expired-during-unwrap，原task/claim仍有效但独立verifier窗到期时不登记任何结果/evidence。工厂零窗/过期/延期负例、原窗有效正例通过。
+- 三包完整回归退出0：execution11.282s、wire0.414s、staging13.404s；后续最后小型nil-context/期限不可延期检查以最终复测为准。曾有局部变量context遮蔽包名导致构建失败，修正为keyContext后上述三包通过，不抹除该失败。
+- 最后nil-context/期限不可延期定向回归：execution3.101s、wire0.809s，退出0。Windows沙箱内文件权限测试拒绝，按既有真实本机文件权限方式复测通过。

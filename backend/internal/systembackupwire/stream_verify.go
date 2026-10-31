@@ -181,11 +181,30 @@ func (v StreamVerification) CiphertextSHA256() string { return v.sha }
 func (v StreamVerification) CiphertextBytes() int64   { return v.encrypted }
 func (v StreamVerification) PlaintextBytes() int64    { return v.plain }
 
+// A frame can require several underlying reads. Recheck between every read,
+// including header/payload/EOF, so an expired grant cannot start another read.
+type streamContextReader struct {
+	ctx context.Context
+	src io.Reader
+}
+
+func (r streamContextReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	n, err := r.src.Read(p)
+	if expired := r.ctx.Err(); expired != nil {
+		return n, expired
+	}
+	return n, err
+}
+
 func (e *StreamEnvelope) authenticate(ctx context.Context, src io.Reader, key []byte) (StreamVerification, error) {
 	var zero StreamVerification
 	if e == nil || ctx == nil || ctx.Err() != nil || src == nil || len(key) != 32 {
 		return zero, ErrStreamAuthority
 	}
+	src = streamContextReader{ctx, src}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return zero, ErrBinding

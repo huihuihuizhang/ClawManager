@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	k "clawreef/internal/systembackupkms"
 	w "clawreef/internal/systembackupwire"
@@ -17,9 +18,11 @@ type scopedKeyUseFixture struct {
 	identity FormalVerifierIdentity
 	closes   int
 	mutate   bool
+	until    time.Time
 }
 
 func (f *scopedKeyUseFixture) Identity() FormalVerifierIdentity { return f.identity }
+func (f *scopedKeyUseFixture) ValidUntil() time.Time            { return f.until }
 func (f *scopedKeyUseFixture) Recheck(_ context.Context, s FormalCandidateReadScope) error {
 	raw, _ := json.Marshal(s)
 	if f.closes != 0 || !bytes.Equal(raw, f.original) {
@@ -42,12 +45,16 @@ func TestFormalKeyFactoryScopesEachOriginalTaskAndVerifierWorkload(t *testing.T)
 	a.DeadlineAt = i.Request.Deadline
 	scope := FormalCandidateReadScope{Authority: a, Job: j, Invocation: i, Candidate: candidate, CapturePod: BoundPod{Namespace: j.Namespace, Name: "capture", UID: "capture-pod", ServiceAccountUID: "capture-sa"}, CaptureGrantSHA256: strings.Repeat("a", 64)}
 	identity := FormalVerifierIdentity{Namespace: "verification", PodName: "controller-pod", PodUID: "verifier-pod", ServiceAccountName: "controller", ServiceAccountUID: "verifier-sa", OwnerKind: "Deployment", OwnerUID: "controller-deployment", GrantSHA256: strings.Repeat("f", 64)}
-	for _, fault := range []string{"", "task", "attempt", "config", "source-pod", "source-sa", "verifier-pod", "verifier-sa", "verifier-job", "capture-grant", "factory-error", "callback-mutation"} {
+	for _, fault := range []string{"", "task", "attempt", "config", "source-pod", "source-sa", "verifier-pod", "verifier-sa", "verifier-job", "capture-grant", "factory-error", "callback-mutation", "zero-deadline", "expired"} {
 		t.Run(fault, func(t *testing.T) {
 			changed, _ := cloneFormalReadScope(scope)
 			raw, _ := json.Marshal(scope)
-			use := &scopedKeyUseFixture{inner: inner, original: raw, identity: identity}
+			use := &scopedKeyUseFixture{inner: inner, original: raw, identity: identity, until: i.Request.Deadline}
 			switch fault {
+			case "zero-deadline":
+				use.until = time.Time{}
+			case "expired":
+				use.until = time.Now().Add(-time.Second)
 			case "task":
 				changed.Authority.TaskPublicID = "sbk_other"
 			case "attempt":
@@ -102,6 +109,9 @@ func TestFormalKeyFactoryScopesEachOriginalTaskAndVerifierWorkload(t *testing.T)
 				return
 			}
 			request := i.ProviderKey.Request
+			if !keys.ValidUntil().Equal(i.Request.Deadline) {
+				t.Fatal("factory lost original bounded deadline")
+			}
 			wrapped := w.WrappedKey{Request: request, Algorithm: "provider-native", Ciphertext: []byte("opaque")}
 			before := inner.calls
 			if err = keys.Unwrap(context.Background(), request, wrapped, func(key []byte) error {
@@ -120,6 +130,10 @@ func TestFormalKeyFactoryScopesEachOriginalTaskAndVerifierWorkload(t *testing.T)
 			}
 			if inner.calls != before+1 {
 				t.Fatal("foreign request reached provider")
+			}
+			use.until = use.until.Add(time.Minute)
+			if err = keys.Unwrap(context.Background(), request, w.WrappedKey{Request: request}, func([]byte) error { t.Fatal("extended grant reached callback"); return nil }); err == nil {
+				t.Fatal("factory changed deadline after original authorization")
 			}
 			keys.Close()
 			if use.closes != 1 {
