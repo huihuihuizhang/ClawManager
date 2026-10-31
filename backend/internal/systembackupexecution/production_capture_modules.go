@@ -134,14 +134,24 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 	}
 	for _, mount := range metadata.Mounts {
 		mount := mount
+		var instance b.InstanceIdentity
+		for _, original := range source.Instances {
+			if original.ID == mount.InstanceID {
+				instance = original
+				break
+			}
+		}
+		if instance.ID == 0 || mount.Policy.Runtime.Type != instance.Type || mount.Policy.Runtime.Mode != instance.Mode || mount.Policy.Runtime.Backend != instance.Backend || mount.Policy.Runtime.Variant != instance.Variant || mount.Policy.Runtime.OS != instance.OS {
+			return nil, d.ErrNotReady
+		}
 		part := "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID
 		if add("users_instances", part, "instances", "capture-workspace", func(r *b.CapturePartRequest) error {
 			r.Invocation.WorkspacePath = "/workspace"
 			r.Invocation.Request.RuntimePolicy = &mount.Policy
 			r.Invocation.Request.SkillWorkspace = mount.Skills
 			r.Workload.Source, r.Workload.SourceSubPath, r.Workload.NodeName = mount.Source, mount.SubPath, mount.NodeName
-			if mount.Policy.Runtime.Type == "workbuddy" {
-				if mount.WorkBuddy == nil {
+			if workBuddyUIDSource(instance) {
+				if mount.WorkBuddy == nil || mount.WorkBuddy.Schema != 1 || mount.WorkBuddy.InstanceID != instance.ID || mount.WorkBuddy.UserID != instance.UserID || mount.WorkBuddy.UID < 10000 || mount.WorkBuddy.UID > 65533 || mount.WorkBuddy.GID != mount.WorkBuddy.UID {
 					return d.ErrNotReady
 				}
 				r.Invocation.Request.WorkBuddyIdentity = mount.WorkBuddy
@@ -306,6 +316,10 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 	return b.NewCaptureModules(registrations, func(actual d.Input, inventory b.SourceInventory, hold time.Time, catalog string) (b.ModuleCaptureContext, error) {
 		return productionModuleContext(actual, inventory, hold, writers, catalog)
 	})
+}
+
+func workBuddyUIDSource(instance b.InstanceIdentity) bool {
+	return b.RequiresWorkBuddyUIDIdentity(instance)
 }
 
 func productionModuleContext(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, catalog string) (b.ModuleCaptureContext, error) {

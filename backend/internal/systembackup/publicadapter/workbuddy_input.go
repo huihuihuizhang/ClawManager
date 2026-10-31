@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"clawreef/internal/systembackup/domain"
+	"clawreef/internal/systembackup/scope"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -56,7 +57,14 @@ func WithWorkBuddyIdentities(cfg UsersInstancesModuleConfig, snapshot domain.Sna
 }
 
 func isWorkBuddySource(i InstanceIdentity) bool {
-	return strings.EqualFold(strings.TrimSpace(i.Type), "workbuddy")
+	return RequiresWorkBuddyUIDIdentity(i)
+}
+
+// RequiresWorkBuddyUIDIdentity follows the original Linux Lite gateway SQL
+// identity contract. Pro workspaces never borrow Lite allocator identities.
+func RequiresWorkBuddyUIDIdentity(i InstanceIdentity) bool {
+	runtime, err := scope.PlanRuntime(scope.Runtime{Type: i.Type, Mode: i.Mode, Backend: i.Backend, Variant: i.Variant, OS: i.OS})
+	return err == nil && runtime.Type == "workbuddy" && runtime.Mode == "lite" && strings.EqualFold(strings.TrimSpace(i.Backend), "gateway") && strings.EqualFold(strings.TrimSpace(i.Variant), "linux")
 }
 
 func snapshotMatchesInventory(snapshot domain.Snapshot, source SourceInventory) bool {
