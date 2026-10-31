@@ -556,6 +556,7 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 	expireDEK := mode == "owned-fixed-dek-expired"
 	ownedFault := withdrawSource || cancelRead || releaseClaim || takeoverClaim || revokeProvider || revokeIssuer || expireDEK || missingResult
 	var ownedReadEntered atomic.Bool
+	var ownedFaultApplied atomic.Bool
 	replaceGrant, stopJob := mode == "controller-grant-replaced-during-final-sql", mode == "job-stopped-before-final-sql"
 	fault := replaceGrant || stopJob
 	var s *DeploymentService
@@ -642,6 +643,16 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 		}()
 		ctx = <-started
 		defer func() {
+			// Audit the live SQL epoch BEFORE intentionally stopping the named
+			// fixture. The actual coordinator must report cooperative stop cleanly;
+			// no real renewal error is swallowed here.
+			healthyBeforeStop := ctx.Err() == nil
+			var live int
+			liveErr := h.db.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_backups WHERE public_id=? AND controller_owner=? AND row_version=? AND controller_lease_expires_at>UTC_TIMESTAMP(6)`, x.input.Authority.TaskPublicID, x.input.Authority.ClaimOwner, x.input.Authority.ClaimRowVersion).Scan(&live)
+			healthyBeforeStop = healthyBeforeStop && ctx.Err() == nil && liveErr == nil && live == 1
+			if !releaseClaim && !takeoverClaim && !healthyBeforeStop {
+				t.Error("original heartbeat epoch was not live when owned read finished")
+			}
 			cancelHeartbeat()
 			if err := <-done; err != nil && !((releaseClaim || takeoverClaim) && errors.Is(err, c.ErrClaimLost)) {
 				t.Error("actual original capture heartbeat", err)
@@ -680,9 +691,14 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 				}
 			}
 			if firstCE && missingResult {
-				if _, err := h.admin.Exec(`UPDATE system_backup_v2_runtime_resources SET result_sha256=NULL WHERE task_public_id=? AND resource_kind='Job'`, x.input.Authority.TaskPublicID); err != nil {
+				changed, err := h.admin.Exec(`UPDATE system_backup_v2_runtime_resources SET result_sha256=NULL WHERE task_public_id=? AND resource_kind='Job'`, x.input.Authority.TaskPublicID)
+				if err != nil {
 					t.Fatal(err)
 				}
+				if n, err := changed.RowsAffected(); err != nil || n != 1 {
+					t.Fatal("missing-business-result fault did not change original row", n, err)
+				}
+				ownedFaultApplied.Store(true)
 			}
 			if firstCE && (longBatch || ownedFault && !missingResult) {
 				if longBatch {
@@ -711,6 +727,11 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 						ownedReadEntered.Store(true)
 						if expireDEK {
 							<-useCtx.Done()
+							if !errors.Is(useCtx.Err(), context.DeadlineExceeded) || time.Now().Before(actual.ValidUntil()) {
+								t.Error("fixed DEK negative exited before its original fixed deadline")
+							} else {
+								ownedFaultApplied.Store(true)
+							}
 							return useCtx.Err()
 						}
 						if releaseClaim || takeoverClaim {
@@ -736,18 +757,42 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 									return err
 								}
 							}
+							ownedFaultApplied.Store(true)
 						}
 						if revokeProvider {
 							record := f.x.original
 							record.UnwrapRevoked = true
 							record.Revision = "owner-revoked-during-owned-C-read"
 							f.x.putOriginal(record, 1)
+							var stored []byte
+							var revision uint64
+							var observed a.OriginalRecord
+							pin := f.x.cfg.Binding.ConfigRef
+							if h.admin.QueryRow(`SELECT signed_record,row_version FROM system_backup_installation_kek_authority WHERE installation_id=? AND identity_hash=? AND registry_version=?`, x.input.Authority.InstallationID, pin.IdentityHash, pin.Version).Scan(&stored, &revision) != nil || json.Unmarshal(stored, &observed) != nil || !observed.UnwrapRevoked || observed.Revision != record.Revision || revision != 2 {
+								t.Error("provider withdrawal did not reach original signed SQL record")
+								return errors.New("original provider revocation fault failed")
+							}
+							ownedFaultApplied.Store(true)
 						}
 						if revokeIssuer && os.WriteFile(s.formalVerifier.Grant.File, []byte("independent verifier issuer withdrew during original C read"), 0600) != nil {
+							t.Error("independent verifier issuer fault could not write its projection")
 							return errors.New("owned verifier issuer withdrawal failed")
+						}
+						if revokeIssuer {
+							body, err := os.ReadFile(s.formalVerifier.Grant.File)
+							if err != nil || hash(body) == s.formalVerifier.Grant.SHA256 {
+								t.Error("independent verifier projection did not change")
+								return errors.New("verifier fault not applied")
+							}
+							ownedFaultApplied.Store(true)
 						}
 						if cancelRead {
 							cancelAdmission()
+							if !errors.Is(admissionCtx.Err(), context.Canceled) {
+								t.Error("admission cancel did not occur")
+							} else {
+								ownedFaultApplied.Store(true)
+							}
 							return admissionCtx.Err()
 						}
 						if longBatch {
@@ -767,7 +812,16 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 							aRefreshControlSourceCapacity(t, f)
 						}
 						if withdrawSource && os.WriteFile(f.materials.ControlEvidenceSource.ControllerGrantFile, []byte("independent source owner withdrew during original C read"), 0600) != nil {
+							t.Error("independent source-owner fault could not write its projection")
 							return errors.New("owned source fault injection failed")
+						}
+						if withdrawSource {
+							body, err := os.ReadFile(f.materials.ControlEvidenceSource.ControllerGrantFile)
+							if err != nil || hash(body) == f.materials.ControlEvidenceSource.GrantSHA256 {
+								t.Error("independent source-owner projection did not change")
+								return errors.New("source fault not applied")
+							}
+							ownedFaultApplied.Store(true)
 						}
 						return nil
 					}}, nil
@@ -788,6 +842,9 @@ func testAControlEvidenceOriginalCapture(t *testing.T, mode string) {
 			cancelAdmission()
 			o.FormalKeys = originalKeys
 			if firstCE && ownedFault {
+				if !ownedFaultApplied.Load() {
+					t.Fatal("negative returned without applying its intended original authority/data fault", prepareErr)
+				}
 				id, _ := ce.FinalizedSourceEvidenceID(*seed)
 				if releaseClaim || takeoverClaim {
 					var owner sql.NullString
