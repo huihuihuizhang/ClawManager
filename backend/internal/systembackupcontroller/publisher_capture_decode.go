@@ -29,6 +29,7 @@ type HistoricalCaptureInput struct {
 }
 
 type PublisherCaptureRecord struct {
+	receipt                                             *publisherCaptureReceipt
 	Input                                               HistoricalCaptureInput
 	Plan                                                d.Plan
 	Job                                                 d.JobBinding

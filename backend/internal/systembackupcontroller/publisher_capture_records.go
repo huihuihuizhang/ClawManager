@@ -167,6 +167,8 @@ func (s SQLExecutionRecords) LoadPublisherCapture(ctx context.Context, access *s
 		return zero, ErrExecutionRecord
 	}
 	output.ValidUntil = until
+	output.receipt = &publisherCaptureReceipt{records: s, access: access, part: part, snapshot: final}
+	output.receipt.recordSHA = publisherCaptureRecordHash(output)
 	return output, nil
 }
 
@@ -209,6 +211,20 @@ func (s SQLExecutionRecords) publisherReadSnapshot(ctx context.Context, access *
 		return zero, ErrExecutionRecord
 	}
 	defer tx.Rollback()
+	snapshot, err := s.publisherReadSnapshotTx(ctx, tx, access, part)
+	if err != nil {
+		return zero, err
+	}
+	if tx.Rollback() != nil || ctx.Err() != nil {
+		return zero, ErrExecutionRecord
+	}
+	return snapshot, nil
+}
+
+// SQL-only half shared with the opaque authenticated read receipt. Its caller
+// owns this original transaction; no Kube, key resolution or AEAD happens here.
+func (s SQLExecutionRecords) publisherReadSnapshotTx(ctx context.Context, tx *sql.Tx, access *security.SQLPublisherCaptureAuthority, part *b.JobPart) (publisherHistorySnapshot, error) {
+	var zero publisherHistorySnapshot
 	guard, err := access.Bind(ctx, tx)
 	if err != nil {
 		return zero, ErrExecutionAuthority
@@ -253,9 +269,6 @@ func (s SQLExecutionRecords) publisherReadSnapshot(ctx context.Context, access *
 	}
 	if guard.RecheckTx(ctx, tx) != nil {
 		return zero, ErrExecutionAuthority
-	}
-	if tx.Rollback() != nil || ctx.Err() != nil {
-		return zero, ErrExecutionRecord
 	}
 	return snapshot, nil
 }

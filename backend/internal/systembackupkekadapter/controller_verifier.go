@@ -442,13 +442,17 @@ func (s *controllerVerifierSession) check(ctx context.Context) error {
 }
 
 func (v *ControllerVerifier) currentOriginalMapping(ctx context.Context, view reg.SQLReadView, now time.Time, locked bool) (OriginalRecord, error) {
+	cfg := v.factory.cfg
+	return currentVerifierOriginalMapping(ctx, view, cfg.Binding, cfg.InstallationIssuer, now, locked)
+}
+
+func currentVerifierOriginalMapping(ctx context.Context, view reg.SQLReadView, binding reg.Binding, issuer ed25519.PublicKey, now time.Time, locked bool) (OriginalRecord, error) {
 	var raw, sig []byte
 	var err error
-	cfg := v.factory.cfg
 	if locked {
-		raw, sig, err = (SQLOriginalReader{}).RecheckOriginal(ctx, view, cfg.Binding.InstallationID, cfg.Binding.ConfigRef)
+		raw, sig, err = (SQLOriginalReader{}).RecheckOriginal(ctx, view, binding.InstallationID, binding.ConfigRef)
 	} else {
-		raw, sig, err = readOriginal(ctx, view, cfg.Binding.InstallationID, cfg.Binding.ConfigRef)
+		raw, sig, err = readOriginal(ctx, view, binding.InstallationID, binding.ConfigRef)
 	}
 	if err != nil {
 		return OriginalRecord{}, kms.ErrPermission
@@ -456,8 +460,8 @@ func (v *ControllerVerifier) currentOriginalMapping(ctx context.Context, view re
 	// Admission needs BOTH purposes; this current execution check intentionally
 	// checks Unwrap alone. Retained ciphertext must remain readable when only
 	// new generation was revoked by the original installation owner.
-	r, err := decodeOwnerRecord(raw, sig, cfg.InstallationIssuer)
-	if err != nil || !reflect.DeepEqual(r.Binding, cfg.Binding) || now.Before(r.NotBefore) || !now.Before(r.Until) || r.UnwrapRevoked {
+	r, err := decodeOwnerRecord(raw, sig, issuer)
+	if err != nil || !reflect.DeepEqual(r.Binding, binding) || now.Before(r.NotBefore) || !now.Before(r.Until) || r.UnwrapRevoked {
 		return OriginalRecord{}, kms.ErrPermission
 	}
 	return r, nil
@@ -597,27 +601,32 @@ func readVerifierJWT(path string) ([]byte, error) {
 }
 
 func (v *ControllerVerifier) login(ctx context.Context) ([]byte, time.Time, time.Time, [32]byte, error) {
+	return loginVerifier(ctx, v.client, v.factory.cfg.Binding.Provider.Endpoint, v.factory.cfg.JWTFile, v.capability.record.Facts.Permission, v.factory.cfg.Workload, v.until)
+}
+
+// Transport parsing is shared; callers retain their distinct concrete
+// capture or publisher authorization before/after every provider boundary.
+func loginVerifier(ctx context.Context, client *http.Client, endpoint, jwtFile string, p ProviderCapabilityPermission, wk ControllerVerifierWorkload, until time.Time) ([]byte, time.Time, time.Time, [32]byte, error) {
 	deny := func() ([]byte, time.Time, time.Time, [32]byte, error) {
 		return nil, time.Time{}, time.Time{}, [32]byte{}, kms.ErrPermission
 	}
-	jwt, err := readVerifierJWT(v.factory.cfg.JWTFile)
+	jwt, err := readVerifierJWT(jwtFile)
 	defer clear(jwt)
 	if err != nil {
 		return deny()
 	}
 	jwtHash := sha256.Sum256(jwt)
-	p := v.capability.record.Facts.Permission
 	body, _ := json.Marshal(map[string]string{"role": p.Role, "jwt": string(jwt)})
 	defer clear(body)
-	ctx, cancel := context.WithDeadline(ctx, v.until)
+	ctx, cancel := context.WithDeadline(ctx, until)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, v.factory.cfg.Binding.Provider.Endpoint+"/v1/auth/"+p.AuthMount+"/login", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint+"/v1/auth/"+p.AuthMount+"/login", bytes.NewReader(body))
 	if err != nil {
 		return deny()
 	}
 	req.Header.Set("Content-Type", "application/json")
 	started := time.Now()
-	res, err := v.client.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return deny()
 	}
@@ -651,7 +660,6 @@ func (v *ControllerVerifier) login(ctx context.Context) ([]byte, time.Time, time
 		return deny()
 	}
 	auth := response.Auth
-	wk := v.factory.cfg.Workload
 	if len(response.Errors) != 0 || len(response.WrapInfo) != 0 && !bytes.Equal(bytes.TrimSpace(response.WrapInfo), []byte("null")) || auth.Type != "batch" || auth.Renewable == nil || *auth.Renewable || auth.TTL < 1 || auth.TTL > 20 || len(auth.Token) < 16 || len(auth.Token) > 4096 || len(auth.Policies) != 1 || auth.Policies[0] != p.Policy || auth.TokenPolicies != nil && (len(auth.TokenPolicies) != 1 || auth.TokenPolicies[0] != p.Policy) || len(auth.IdentityPolicies) != 0 || auth.Metadata["role"] != p.Role || auth.Metadata["namespace"] != wk.Namespace || auth.Metadata["pod_uid"] != wk.PodUID || auth.Metadata["service_account_uid"] != wk.ServiceAccountUID {
 		return deny()
 	}
@@ -661,7 +669,7 @@ func (v *ControllerVerifier) login(ctx context.Context) ([]byte, time.Time, time
 		}
 	}
 	expires := started.Add(time.Duration(auth.TTL) * time.Second)
-	if expires.After(v.until) || !time.Now().Before(expires) {
+	if expires.After(until) || !time.Now().Before(expires) {
 		return deny()
 	}
 	return []byte(auth.Token), started, expires, jwtHash, nil

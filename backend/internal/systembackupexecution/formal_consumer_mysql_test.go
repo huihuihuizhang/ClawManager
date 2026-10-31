@@ -343,9 +343,11 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 }
 
 type consumerFixtureOptions struct {
-	ConfigureGrant   func(*c.ExecutionGrant)
-	PrepareSource    func(*os.Root, *worker.Invocation)
-	RewriteCandidate func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
+	OwnedCredentialsFile, OwnedServerUUID string
+	JobDeadlineSeconds                    int64
+	ConfigureGrant                        func(*c.ExecutionGrant)
+	PrepareSource                         func(*os.Root, *worker.Invocation)
+	RewriteCandidate                      func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
 
 	FormalMaterials *kube.FormalJobMaterials
 	Configure       func(*worker.Invocation, *sql.DB, *sql.DB, d.Authority)
@@ -359,7 +361,14 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		Port           int
 		User, Password string
 	}
-	raw, err := os.ReadFile(os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS"))
+	credentialsFile := os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS")
+	if options.OwnedCredentialsFile != "" {
+		credentialsFile = options.OwnedCredentialsFile
+		if options.OwnedServerUUID == "" {
+			t.Fatal("owned fixture requires independent server UUID")
+		}
+	}
+	raw, err := os.ReadFile(credentialsFile)
 	if err != nil || json.Unmarshal(raw, &cred) != nil || cred.Host != "127.0.0.1" {
 		t.Fatal("local consumer fixture credentials unavailable")
 	}
@@ -379,12 +388,21 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		t.Fatal("local MySQL open failed")
 	}
 	t.Cleanup(func() { root.Close() })
+	if options.OwnedCredentialsFile != "" {
+		var server string
+		if root.QueryRow("SELECT @@server_uuid").Scan(&server) != nil || server != options.OwnedServerUUID {
+			t.Fatal("owned fixture server UUID mismatch")
+		}
+	}
 	var nonce [8]byte
 	if _, err = rand.Read(nonce[:]); err != nil {
 		t.Fatal(err)
 	}
 	run := hex.EncodeToString(nonce[:])
 	database, user := "ad_d_consumer_"+run, "ad_d_read_"+run
+	if options.OwnedCredentialsFile != "" {
+		database, user = "ad_a_publisher_"+run, "ad_a_pub_"+run
+	}
 	if _, err = root.Exec("CREATE DATABASE `" + database + "`"); err != nil {
 		t.Fatal("local schema creation failed")
 	}
@@ -396,6 +414,13 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	t.Cleanup(func() { admin.Close() })
 	createdUser := false
 	t.Cleanup(func() {
+		if options.OwnedCredentialsFile != "" {
+			var server, marker string
+			if root.QueryRow("SELECT @@server_uuid").Scan(&server) != nil || server != options.OwnedServerUUID || admin.QueryRow("SELECT run_id FROM _ad_a_publisher_marker").Scan(&marker) != nil || marker != run {
+				t.Error("owned publisher cleanup UUID/marker mismatch; retained")
+				return
+			}
+		}
 		if createdUser {
 			if _, err := root.Exec("DROP USER '" + user + "'@'127.0.0.1'"); err != nil {
 				t.Error("local consumer user cleanup failed")
@@ -405,6 +430,14 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 			t.Error("local consumer schema cleanup failed")
 		}
 	})
+	if options.OwnedCredentialsFile != "" {
+		if _, err = admin.Exec("CREATE TABLE _ad_a_publisher_marker(run_id VARCHAR(64) PRIMARY KEY)"); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = admin.Exec("INSERT INTO _ad_a_publisher_marker VALUES (?)", run); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for _, ddl := range consumerDDL() {
 		if _, err = admin.Exec(ddl); err != nil {
 			t.Fatal("consumer schema DDL failed", err)
@@ -562,7 +595,11 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	seedConsumerRows(t, admin, a, config, profile, now, j)
 	refresh()
 	in := d.Input{Authority: a, ConfigSnapshot: config, ProfileID: "original-linux", ProfileRevision: "original-r1", Backup: &d.BackupSpec{SourceOrchestrator: "kubernetes", SourceProfile: "cluster", MatrixKey: "k8s-cluster", DatasourceTopology: "in_cluster", Runner: "k8s", TaskPurpose: "functional_test", RequestedParts: []string{"workspace"}}}
-	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: 200, FormalMaterials: options.FormalMaterials, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}})
+	jobDeadlineSeconds := int64(200)
+	if options.JobDeadlineSeconds != 0 {
+		jobDeadlineSeconds = options.JobDeadlineSeconds
+	}
+	part, err := b.BuildCapturePart(in, a.DeadlineAt, b.CapturePartRequest{Part: "workspace", Category: "workspace", JobUnitKey: j.JobUnitKey, Generation: j.Generation, Invocation: inv, Workload: kube.JobRequest{Identity: kube.Identity{Namespace: j.Namespace, Name: j.Name, Owner: a.TaskPublicID}, Image: "fixture/worker@sha256:" + strings.Repeat("a", 64), ServiceAccount: "capture", Source: corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "fixture-source"}}}, StagingClaim: "fixture-staging", DeadlineSeconds: jobDeadlineSeconds, FormalMaterials: options.FormalMaterials, WorkerControl: &kube.WorkerControl{URL: "https://control.fixture.invalid", InvocationConfigMap: "original-invocation", IdentitySecret: "original-identity", BoundPodIdentity: true}}})
 	if err != nil {
 		t.Fatal("original formal part assembly failed", err)
 	}
