@@ -74,9 +74,9 @@ func (s *DeploymentService) productionInventory(ctx context.Context, in d.Input,
 		if invocation.Request.Database != nil && (invocation.Request.Database.SourceScope != domain.BusinessTableSourceScope || invocation.Request.Database.CaptureSchema == nil || !reflect.DeepEqual(*invocation.Request.Database.CaptureSchema, metadata.SQLSchema) || invocation.Request.Database.TeamsInventory == nil || invocation.Request.Database.TeamsInventory.SHA256() != source.Teams.SHA256() || invocation.Request.Database.SkillsInventory == nil || invocation.Request.Database.SkillsInventory.SHA256() != source.Skills.SHA256()) {
 			return d.ErrNotReady
 		}
-		if invocation.Request.ControlEvidence != nil && !reflect.DeepEqual(*invocation.Request.ControlEvidence, metadata.ControlEvidence) {
-			return d.ErrNotReady
-		}
+	}
+	if err := validateProductionControlSeeds(in, source, metadata, discovery); err != nil {
+		return err
 	}
 	platform := map[string]bool{}
 	for _, writer := range s.Config.Writers {
