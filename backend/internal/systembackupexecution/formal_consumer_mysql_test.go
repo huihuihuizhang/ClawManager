@@ -343,6 +343,7 @@ func newConsumerMySQLFixture(t *testing.T, configure ...func(*worker.Invocation)
 }
 
 type consumerFixtureOptions struct {
+	ConfigureGrant   func(*c.ExecutionGrant)
 	PrepareSource    func(*os.Root, *worker.Invocation)
 	RewriteCandidate func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
 
@@ -502,6 +503,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		t.Fatal(err)
 	}
 	grant := c.ExecutionGrant{Version: "system-backup-execution-grant.v1", InstallationID: a.InstallationID, ControllerOwner: a.ClaimOwner, DatabaseAccount: user + "@127.0.0.1", ServerUUID: server, Database: database, ConfigVersion: 1, ConfigSHA256: a.ConfigSHA256, ProfileSHA256: hash(profile), NotBefore: now.Add(-time.Minute), ExpiresAt: a.DeadlineAt, Actions: []string{"capture"}, RecordKeys: []c.ExecutionRecordKey{{Ref: "record-v1", SHA256: hash(key)}}}
+	if options.ConfigureGrant != nil {
+		options.ConfigureGrant(&grant)
+	}
 	body, _ := json.Marshal(grant)
 	envelope, _ := json.Marshal(map[string]string{"payload_base64": base64.StdEncoding.EncodeToString(body), "signature_base64": base64.StdEncoding.EncodeToString(ed25519.Sign(private, body))})
 	grantFile := filepath.Join(dir, "grant.json")
