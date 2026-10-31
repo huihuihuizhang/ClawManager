@@ -3,9 +3,12 @@ package systembackupexecution
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"reflect"
 	"sort"
 	"time"
 
+	root "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/domain"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
@@ -36,7 +39,7 @@ func (x *originalSourceMetadataAuthority) registerSourceExclusion(ctx context.Co
 		return zero, d.ErrNotReady
 	}
 	schemaPin, _, names, err := ce.ReadPolicies(schemaRaw, redactionRaw, input)
-	if err != nil {
+	if err != nil || validateOriginalControlPolicy(schemaRaw, names, observed.Census.Control) != nil {
 		return zero, d.ErrNotReady
 	}
 	excluded := map[string]bool{}
@@ -115,4 +118,47 @@ func (x *originalSourceMetadataAuthority) registerSourceExclusion(ctx context.Co
 		return zero, d.ErrNotReady
 	}
 	return ref, nil
+}
+
+// ReadPolicies authenticates the independently pinned frozen v12 decisions.
+// This additionally binds their finite control scope and classifications to
+// the actual complete original census and existing reviewed SQL policy map.
+func validateOriginalControlPolicy(raw []byte, policyNames, observed []string) error {
+	if len(observed) == 0 || !sort.StringsAreSorted(observed) || !reflect.DeepEqual(policyNames, observed) {
+		return d.ErrNotReady
+	}
+	// Use explicit wire names; unknown fields remain owned by ReadPolicies.
+	var document struct {
+		Objects []struct {
+			Type           string `json:"object_type"`
+			Name           string `json:"name"`
+			Category       string `json:"category"`
+			Classification string `json:"data_classification"`
+			Backup         string `json:"backup_strategy"`
+			Restore        string `json:"restore_strategy"`
+		} `json:"objects"`
+	}
+	if json.Unmarshal(raw, &document) != nil {
+		return d.ErrNotReady
+	}
+	seen := map[string]bool{}
+	for _, object := range document.Objects {
+		if object.Category != "system_backup" || object.Type != "table" {
+			continue
+		}
+		policy, known := root.Policy(object.Name)
+		if !known || seen[object.Name] || policy.Category != object.Category || policy.Classification != object.Classification || policy.BackupStrategy != object.Backup || policy.RestoreStrategy != object.Restore {
+			return d.ErrNotReady
+		}
+		seen[object.Name] = true
+	}
+	if len(seen) != len(observed) {
+		return d.ErrNotReady
+	}
+	for _, name := range observed {
+		if !seen[name] {
+			return d.ErrNotReady
+		}
+	}
+	return nil
 }

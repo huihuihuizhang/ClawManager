@@ -77,6 +77,10 @@ func discoverTables(ctx context.Context, q SQLQueryer, teamData bool) ([]string,
 }
 
 func ReadTableSchema(ctx context.Context, q SQLQueryer, name string) (SQLTable, error) {
+	return readTableSchema(ctx, q, name, false)
+}
+
+func readTableSchema(ctx context.Context, q SQLQueryer, name string, controlMetadata bool) (SQLTable, error) {
 	t := SQLTable{Name: name, Columns: []SQLColumn{}, PrimaryKey: []string{}}
 	if _, err := QuoteIdentifier(name); err != nil {
 		return t, err
@@ -91,7 +95,7 @@ func ReadTableSchema(ctx context.Context, q SQLQueryer, name string) (SQLTable, 
 			rows.Close()
 			return t, err
 		}
-		if c.GenerationExpression != "" && !((name == "instances" && c.Name == "owner_normalized") || (name == "users" && c.Name == "local_username_key")) {
+		if c.GenerationExpression != "" && !controlMetadata && !((name == "instances" && c.Name == "owner_normalized") || (name == "users" && c.Name == "local_username_key")) {
 			rows.Close()
 			return t, fmt.Errorf("generated column requires explicit policy: %s", name)
 		}
