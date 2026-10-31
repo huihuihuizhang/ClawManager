@@ -16,12 +16,13 @@ import (
 // private key or unverified "approved" flag. The original frozen invocation
 // pins the exact bytes; the existing A resolver authenticates the permit/Job.
 type FormalCaptureMaterials struct {
-	Version        string               `json:"schema_version"`
-	KMS            k.Config             `json:"kms"`
-	Permit         k.PermitMount        `json:"permit"`
-	Resources      *ResourceSourceMount `json:"resources,omitempty"`
-	PermitDelivery *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
-	Sources        *FormalSourceMount   `json:"sources,omitempty"`
+	Version         string                      `json:"schema_version"`
+	KMS             k.Config                    `json:"kms"`
+	Permit          k.PermitMount               `json:"permit"`
+	Resources       *ResourceSourceMount        `json:"resources,omitempty"`
+	PermitDelivery  *k.PermitDeliveryPin        `json:"permit_delivery,omitempty"`
+	Sources         *FormalSourceMount          `json:"sources,omitempty"`
+	ControlEvidence *ControlEvidenceSourceMount `json:"control_evidence,omitempty"`
 }
 
 func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMaterials, error) {
@@ -61,6 +62,9 @@ func LoadFormalCaptureMaterials(path string, i Invocation) (FormalCaptureMateria
 		}
 	}
 	if (i.Request.Resources != nil) != (out.Resources != nil) {
+		return zero, ErrNotReady
+	}
+	if (i.Request.ControlEvidence != nil) != (out.ControlEvidence != nil) || (out.ControlEvidence != nil && (out.ControlEvidence.Validate() != nil || out.PermitDelivery == nil || bytes.Equal(out.ControlEvidence.Issuer, out.PermitDelivery.Issuer) || i.FormalCapture.SourceConfigSHA256 != i.Request.ControlEvidence.Expected.ConfigSHA256)) {
 		return zero, ErrNotReady
 	}
 	if needsSource := i.Request.SourceRedis != nil || i.Request.Database != nil || i.Request.Teams != nil || i.Request.SkillObjects != nil; needsSource != (out.Sources != nil) || (needsSource && (!keyUseHash.MatchString(i.FormalCapture.SourceConfigSHA256) || i.FormalCapture.PermitDelivery == nil || len(out.Sources.Issuer) != ed25519.PublicKeySize || bytes.Equal(out.Sources.Issuer, i.FormalCapture.PermitDelivery.Issuer))) {

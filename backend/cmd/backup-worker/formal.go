@@ -32,7 +32,14 @@ func runFormalInvocation(ctx context.Context, i worker.Invocation, control *work
 	}
 	defer job.Close()
 	env := worker.FormalCaptureEnvironment{Staging: store}
-	if i.Request.SourceRedis != nil || i.Request.Teams != nil || i.Request.Database != nil || i.Request.SkillObjects != nil {
+	if i.Request.ControlEvidence != nil {
+		env.ControlEvidence, err = worker.OpenControlEvidenceCaptureSources(ctx, i, job, materials.ControlEvidence)
+		if err != nil {
+			return err
+		}
+		defer env.ControlEvidence.Close()
+		env.SourceAuthorize, env.SourceValidUntil = env.ControlEvidence.Authorize, env.ControlEvidence.ValidUntil()
+	} else if i.Request.SourceRedis != nil || i.Request.Teams != nil || i.Request.Database != nil || i.Request.SkillObjects != nil {
 		sources, err := worker.OpenFormalCaptureSources(ctx, i, job, materials.Sources)
 		if err != nil {
 			return err
