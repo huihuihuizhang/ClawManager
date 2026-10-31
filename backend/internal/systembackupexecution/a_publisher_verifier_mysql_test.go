@@ -44,9 +44,24 @@ type aPublisherVerifierFixture struct {
 	putOriginal        func(a.OriginalRecord, uint64)
 	captureDeadline    time.Time
 	materials          PublisherVerifierMaterials
+	credentialIssuedAt atomic.Int64
+}
+
+type aPublisherVerifierFixtureOptions struct {
+	FullService      bool
+	SourceBytes      int
+	CapabilityWindow time.Duration
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
+	options := aPublisherVerifierFixtureOptions{}
+	if len(fullService) > 0 {
+		options.FullService = fullService[0]
+	}
+	return newAPublisherVerifierFixtureOptions(t, options)
+}
+
+func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifierFixtureOptions) *aPublisherVerifierFixture {
 	t.Helper()
 	credentials, serverUUID := os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE"), os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
 	if credentials == "" {
@@ -71,6 +86,7 @@ func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisher
 			if x.onLogin != nil {
 				x.onLogin()
 			}
+			x.credentialIssuedAt.Store(time.Now().UnixNano())
 			json.NewEncoder(wr).Encode(map[string]any{"auth": map[string]any{"client_token": "local-publisher-batch-token-only", "token_type": "batch", "renewable": false, "lease_duration": 1, "policies": []string{"publisher-unwrap-policy"}, "metadata": map[string]string{"role": "publisher-unwrap", "namespace": wk.Namespace, "pod_uid": wk.PodUID, "service_account_uid": wk.ServiceAccountUID}}})
 		case "/v1/transit/decrypt/original-key":
 			x.decrypts.Add(1)
@@ -91,7 +107,7 @@ func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisher
 	x.history = newPublisherHistoryFixture(t, func(options *consumerFixtureOptions) {
 		options.OwnedCredentialsFile, options.OwnedServerUUID = credentials, serverUUID
 		options.JobDeadlineSeconds = 1
-		if len(fullService) > 0 && fullService[0] {
+		if fixture.FullService {
 			options.DeploymentCore = func(g c.ExecutionGrant, issuer ed25519.PublicKey, dir string) DeploymentConfig {
 				cfg := testDeploymentConfiguration(t)
 				cfg.InstallationID = g.InstallationID
@@ -114,7 +130,19 @@ func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisher
 				return cfg
 			}
 		}
-		options.PrepareSource = func(_ *os.Root, inv *worker.Invocation) { inv.ProviderKey.Endpoint = provider.URL }
+		options.PrepareSource = func(root *os.Root, inv *worker.Invocation) {
+			inv.ProviderKey.Endpoint = provider.URL
+			if fixture.SourceBytes > 0 {
+				data := make([]byte, fixture.SourceBytes)
+				defer clear(data)
+				if _, err := rand.Read(data); err != nil {
+					t.Fatal(err)
+				}
+				if root.WriteFile("bounded-stream-payload.bin", data, 0600) != nil {
+					t.Fatal("bounded stream fixture")
+				}
+			}
+		}
 		options.Configure = func(inv *worker.Invocation, _db, _admin *sql.DB, _ d.Authority) {
 			x.captureDeadline = time.Now().UTC().Add(3 * time.Second)
 			inv.Request.Deadline = x.captureDeadline
@@ -225,6 +253,9 @@ func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisher
 		t.Fatal(err)
 	}
 	capRecord := a.ProviderCapabilityRecord{Facts: a.ProviderCapabilityFacts{Binding: binding, Operation: k.Unwrap, Permission: a.ProviderCapabilityPermission{Path: "transit/decrypt/original-key", ProviderVersion: "1", AuthMount: "publisher-jwt", Role: "publisher-unwrap", Policy: "publisher-unwrap-policy", PolicySHA256: strings.Repeat("a", 64), RoleSHA256: strings.Repeat("b", 64), JWTTrustSHA256: strings.Repeat("c", 64), Reference: binding.UnwrapRef, ControllerVerifier: &wk}}, Source: reg.SourceRecord{SourceID: "original-provider-observer", RecordID: "sev_publisher_unwrap", RecordVersion: "v1"}, Revision: "r1", NotBefore: now.Add(-time.Minute), Until: now.Add(time.Minute)}
+	if fixture.CapabilityWindow > 0 {
+		capRecord.Until = now.Add(fixture.CapabilityWindow)
+	}
 	facts, _ := json.Marshal(capRecord.Facts)
 	capRecord.Source.ContentSHA256 = hash(facts)
 	capIssuer, capKey, _ := ed25519.GenerateKey(rand.Reader)
