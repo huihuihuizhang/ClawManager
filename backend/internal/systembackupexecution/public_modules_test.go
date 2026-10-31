@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -53,6 +54,37 @@ func TestPublicSourceModuleOptInPreservesOriginalWriterAndDefaultParts(t *testin
 	}
 	if _, err = configuredPublicSource(PublicCaptureConfig{Source: source, Modules: &b.CaptureModules{}}); err == nil {
 		t.Fatal("uninitialized module directory accepted")
+	}
+}
+
+func TestFormalSourceRequiresIndependentUnwrapperBeforeWritersOrDispatch(t *testing.T) {
+	_, _, _, invocation, _, keys := formalObserverFixture(t)
+	raw, _ := json.Marshal(invocation)
+	builds := 0
+	source := b.LinuxProfileConfig{BuildParts: func(d.Input, b.SourceInventory, time.Time) ([]b.JobPart, error) {
+		builds++
+		return []b.JobPart{{InvocationJSON: raw}}, nil
+	}}
+	profile, err := configuredPublicSource(PublicCaptureConfig{Source: source})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = profile.BuildParts(d.Input{}, b.SourceInventory{}, time.Now()); err == nil {
+		t.Fatal("formal capture admitted before independent unwrap assembly")
+	}
+	if builds != 1 || keys.calls != 0 {
+		t.Fatal("assembly performed provider operation")
+	}
+	profile, err = configuredPublicSource(PublicCaptureConfig{Source: source, FormalKeys: func(context.Context, FormalCandidateReadScope) (FormalCandidateKeyUse, error) {
+		t.Fatal("assembly opened provider factory")
+		return nil, errors.New("not called during assembly")
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts, err := profile.BuildParts(d.Input{}, b.SourceInventory{}, time.Now())
+	if err != nil || len(parts) != 1 || string(parts[0].InvocationJSON) != string(raw) || keys.calls != 0 {
+		t.Fatal("source composition changed original invocation or performed IO", err)
 	}
 }
 

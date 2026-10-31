@@ -50,6 +50,9 @@ type PublicJobOwner struct {
 	Proof                                StopProof
 	AllowKubeletStopWitness              bool
 	RelayEnabled                         bool
+	// Each original task/attempt/part opens its own independently authenticated
+	// verifier workload/unwrap scope. There is no process-wide worker resolver.
+	FormalKeys FormalCandidateKeyFactory
 }
 
 func hash(v []byte) string { s := sha256.Sum256(v); return hex.EncodeToString(s[:]) }
@@ -719,7 +722,7 @@ func (o *PublicJobOwner) Evidence(ctx context.Context, a d.Authority, binding d.
 		return nil, e
 	}
 	if !digest.Valid {
-		return nil, nil
+		return o.observeFormalCandidateResult(ctx, a, binding)
 	}
 	ref := resultEvidenceRef(a, binding, digest.String)
 	var registered string

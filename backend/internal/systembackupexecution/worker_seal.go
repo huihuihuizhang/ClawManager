@@ -58,6 +58,24 @@ func (o *PublicJobOwner) checkWorkerSeal(ctx context.Context, a d.Authority, j d
 				return err
 			}
 			defer custody.Close()
+			if i.FormalCapture != nil {
+				record, err := o.ReadFormalCandidate(ctx, a, j, false)
+				if err != nil {
+					return err
+				}
+				if record.Candidate.Ciphertext.SHA256 != cp.ContentSHA256 || uint64(record.Candidate.Ciphertext.Size) != result.Statistics["sealed_bytes"] {
+					return c.ErrExecutionRecord
+				}
+				files, observed, err := staging.OpenFormalObserved(ctx, custody, workerSealScope(a, j, i), record.Candidate.Ciphertext, record.Candidate.Envelope)
+				files.Close()
+				if err != nil {
+					return err
+				}
+				if observed.Reference() != cp.SealedRef {
+					return c.ErrExecutionRecord
+				}
+				return nil
+			}
 			original := staging.Receipt{Name: i.Request.ArtifactName, Size: int64(result.Statistics["sealed_bytes"]), SHA256: cp.ContentSHA256}
 			file, observed, err := staging.OpenObserved(ctx, custody, workerSealScope(a, j, i), original)
 			if err != nil {

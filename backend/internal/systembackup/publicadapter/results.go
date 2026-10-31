@@ -46,6 +46,18 @@ type SealedPart struct {
 // original bytes before putting that reference in the public Job observation.
 // It never signs, publishes, creates evidence or mutates task/attempt state.
 func BuildPartResult(in d.Input, plan d.Plan, unitKey string, job d.JobBinding, result worker.Result, seal SealedPart) (d.ModuleResult, error) {
+	return buildPartResult(in, plan, unitKey, job, result, seal, nil)
+}
+
+// Formal candidates use their own original-invocation validation and only an
+// independently authenticated immutable stream observation may supply seal.
+// Legacy Complete/CMSTG01 reports cannot enter this conversion.
+func BuildFormalPartResult(in d.Input, plan d.Plan, unitKey string, job d.JobBinding, candidate worker.FormalCaptureResult, seal SealedPart) (d.ModuleResult, error) {
+	result := worker.Result{Receipt: candidate.Ciphertext, Files: candidate.Files, Bytes: candidate.Bytes, Rows: candidate.Rows, Tables: candidate.Tables}
+	return buildPartResult(in, plan, unitKey, job, result, seal, &candidate)
+}
+
+func buildPartResult(in d.Input, plan d.Plan, unitKey string, job d.JobBinding, result worker.Result, seal SealedPart, formal *worker.FormalCaptureResult) (d.ModuleResult, error) {
 	var zero d.ModuleResult
 	f, err := loadPlan(in, plan)
 	if err != nil {
@@ -65,8 +77,15 @@ func BuildPartResult(in d.Input, plan d.Plan, unitKey string, job d.JobBinding, 
 		return zero, d.ErrNotReady
 	}
 	var invocation worker.Invocation
-	if decodeStrict(part.InvocationJSON, &invocation) != nil || !worker.ValidateResult(invocation.Request, &result) || result.Receipt.SHA256 != seal.ContentSHA256 {
+	if decodeStrict(part.InvocationJSON, &invocation) != nil || result.Receipt.SHA256 != seal.ContentSHA256 {
 		return zero, &Failure{"checksum_mismatch"}
+	}
+	if formal == nil {
+		if invocation.FormalCapture != nil || !worker.ValidateResult(invocation.Request, &result) {
+			return zero, d.ErrNotReady
+		}
+	} else if !worker.ValidateFormalCaptureResult(invocation, formal) {
+		return zero, d.ErrNotReady
 	}
 	cp := Checkpoint{SchemaVersion: "system-backup-b-checkpoint.v1", InstallationID: in.Authority.InstallationID, ConfigVersion: in.Authority.ConfigVersion, TaskPublicID: in.Authority.TaskPublicID, AttemptNo: in.Authority.AttemptNo, Phase: in.Authority.Phase, ConfigSHA256: in.Authority.ConfigSHA256, InventorySHA256: f.Discovery.SourceSHA256, Part: part.Part, JobUID: job.UID, JobGeneration: job.Generation, InvocationSHA256: part.InvocationSHA256, SealedRef: seal.Reference, ContentSHA256: seal.ContentSHA256}
 	raw, err := json.Marshal(cp)
