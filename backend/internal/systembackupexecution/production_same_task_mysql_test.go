@@ -74,6 +74,9 @@ type dOriginalSixPartTask struct {
 	workspaceDirectories                    map[string]string
 	packageContentMD5, unpackagedContentMD5 string
 	unpackagedBytes                         int
+	provider                                *dOriginalProvider
+	resourceSources                         map[string]worker.ResourceSourceMount
+	workers                                 *dOriginalWorkers
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
@@ -437,11 +440,15 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	}
 	core := runtimeDeploymentFixture(t)
 	core.CaptureScope = "six-part"
+	// Declare the full ten-part bound BEFORE core signing/Prepare. No frozen
+	// hold or old key lease is extended when a shorter run fails closed.
+	core.HoldSeconds = 300
 	core.InstallationID, core.ControllerOwner, core.ApplicationScope = installation, "d-six-controller-"+run, "installation"
 	core.SourceDatabase, core.SourceServerUUID = f.database, f.server
 	core.SourceUser = sourceUser
 	core.Workspace.MaxFiles, core.Workspace.MaxFileBytes, core.Workspace.MaxArchiveBytes, core.Workspace.MaxCompressedBytes = 100, 4<<20, 16<<20, 16<<20
 	// Pin the original observed PVC/PV content before the core is signed.
+	core.Security.Volumes[0].Volume, core.Security.Volumes[1].Volume = "workspace", "staging"
 	core.Security.Volumes[0].SHA256 = kube.ContentHash(corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "source", Namespace: core.Namespace, UID: "source-uid"}})
 	core.Security.Volumes[1].SHA256 = kube.ContentHash(corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "staging", Namespace: core.Namespace, UID: "stage-uid"}})
 	core.CapacityFile = capacityFile
@@ -507,7 +514,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
-		f.service.Runtime.Control.ServeHTTP(w, r)
+		f.service.controlHandler().ServeHTTP(w, r)
 	}))
 	controlServer.TLS = &tls.Config{Certificates: []tls.Certificate{{Certificate: [][]byte{serverDER}, PrivateKey: serverPrivate}}, MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: issuerRoots}
 	controlServer.StartTLS()
@@ -569,7 +576,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	client := kubefake.NewSimpleClientset(
 		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: core.Namespace, UID: "ns-uid"}},
 		&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node", UID: "node-uid", Labels: map[string]string{corev1.LabelOSStable: "linux"}}},
-		&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "source-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "source-pv"}},
+		&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "source-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "source-pv"}, Status: corev1.PersistentVolumeClaimStatus{Phase: corev1.ClaimBound}},
 		&corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: "source-pv", UID: "source-pv-uid"}, Spec: corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "source", Namespace: core.Namespace, UID: "source-uid"}}},
 		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-original-7", Namespace: core.Namespace, UID: "d-original-7-uid", ResourceVersion: "1"}, Spec: corev1.PodSpec{NodeName: "node", Volumes: []corev1.Volume{{Name: "data", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "source"}}}}, Containers: []corev1.Container{{Name: "desktop", Image: "original/openclaw@sha256:" + strings.Repeat("a", 64), VolumeMounts: []corev1.VolumeMount{{Name: "data", MountPath: "/workspaces"}}}}}, Status: corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}, ContainerStatuses: []corev1.ContainerStatus{{Name: "desktop", ContainerID: "containerd://d-original-7", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}}}}},
 		&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "dep-uid", Generation: 1, ResourceVersion: "1"}, Spec: appsv1.DeploymentSpec{Replicas: &one, Selector: &metav1.LabelSelector{MatchLabels: labels}, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: labels}, Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "platform", Image: core.WorkerImage}}}}}, Status: appsv1.DeploymentStatus{ObservedGeneration: 1, Replicas: 1, ReadyReplicas: 1}},
@@ -578,6 +585,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	)
 	f.owner = &PublicJobOwner{Gate: gate, Identity: forward, Client: client, Dynamic: fake.NewSimpleDynamicClient(runtime.NewScheme()), Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, TrustDomain: core.TrustDomain, Security: core.Security, Staging: stage, AllowKubeletStopWitness: true}
 	f.owner.Issuer = control.IdentityIssuer{Certificate: issuer, Signer: issuerPrivate, ServerRoots: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: issuerDER}), TrustDomain: core.TrustDomain}
+	f.owner.SealCustodyMaxBytes = core.SealCustodyMaxBytes
 	f.service.tlsConfig = controlServer.TLS.Clone()
 	// The original platform guard resolves its client through this same owner.
 	// This component-only owner link is not NewPublicCapture composition or an
@@ -649,6 +657,15 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 }
 
 func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
+	runDOriginalSixPartCapture(t, false, false)
+}
+
+func TestProductionSameTaskOriginalProviderDeniedStopsBeforeResumeMySQL(t *testing.T) {
+	runDOriginalSixPartCapture(t, true, true)
+}
+
+func runDOriginalSixPartCapture(t *testing.T, denyGenerate, completeCapture bool) {
+	t.Helper()
 	f := newDOriginalSixPartTask(t)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
@@ -716,5 +733,57 @@ func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
 	var jobs int
 	if f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", f.publicID).Scan(&jobs) != nil || jobs != 0 {
 		t.Fatal("reTake dispatched collectors before actual writer pause")
+	}
+	if !completeCapture {
+		return
+	}
+	f.installOriginalWorkers(ctx, t)
+	if denyGenerate {
+		f.provider.mu.Lock()
+		f.provider.refuseGenerate = true
+		f.provider.mu.Unlock()
+	}
+	results, err := f.service.Runtime.Loop.Dispatch.Capture(ctx, capture.Input, capture.Plan)
+	if denyGenerate {
+		f.checkOriginalProviderDeniedOutcome(ctx, t, *capture, discovery, results, err)
+		return
+	}
+	if err != nil {
+		f.workers.cancel()
+		f.workers.active.Wait()
+		rows, queryErr := f.control.QueryContext(context.Background(), "SELECT writer_id,paused,resumed FROM system_backup_v2_runtime_writers WHERE task_public_id=? ORDER BY writer_id", f.publicID)
+		if queryErr == nil {
+			for rows.Next() {
+				var id string
+				var paused, resumed bool
+				if rows.Scan(&id, &paused, &resumed) == nil {
+					t.Log("original writer state", id, paused, resumed)
+				}
+			}
+			rows.Close()
+		}
+		client := f.owner.Client.(*kubefake.Clientset)
+		actions := client.Actions()
+		start := len(actions) - 22
+		if start < 0 {
+			start = 0
+		}
+		for _, action := range actions[start:] {
+			t.Log("original API action", action.GetVerb(), action.GetResource().Resource, action.GetNamespace())
+		}
+		f.workers.mu.Lock()
+		for name, workerErr := range f.workers.errors {
+			if workerErr != nil {
+				t.Log("original worker", name, workerErr)
+			}
+		}
+		f.workers.mu.Unlock()
+		t.Fatal("same-task original Pause/worker/Evidence/Stop/Resume Capture", err)
+	}
+	if len(results) != 10 {
+		t.Fatalf("original same-task captured %d parts, expected 10", len(results))
+	}
+	if err = f.service.Runtime.Loop.Store.Record(ctx, *capture, c.ExecutionOutcome{Results: results}); err != nil {
+		t.Fatal("same-task original encrypted capture-result/validating outcome", err)
 	}
 }
