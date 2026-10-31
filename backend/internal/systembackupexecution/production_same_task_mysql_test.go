@@ -340,7 +340,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 			t.Error(err)
 		}
 	})
-	grants, err := c.ControlEvidenceGrantSQL(f.database, user, "127.0.0.1", false, true, true, true)
+	grants, err := c.ControlEvidenceGrantSQL(f.database, user, "127.0.0.1", false, true, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -357,7 +357,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { f.control.Close() })
-	if err = (c.SQLControlEvidenceGrantProbe{DB: f.control, Schema: f.database, User: user, Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx); err != nil {
+	if err = (c.SQLControlEvidenceGrantProbe{DB: f.control, Schema: f.database, User: user, Runtime: true, ProviderPermits: true}).Check(ctx); err != nil {
 		t.Fatal("original controller direct grants", err)
 	}
 	sourceUser := "ad_d_six_src_" + run
@@ -645,33 +645,6 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	if err = f.service.RuntimeControl.Ready(ctx); err != nil {
 		t.Fatal("original runtime SQL schema readiness", err)
 	}
-	specs, err := f.service.RuntimeControl.Prepare(ctx, f.input.Authority)
-	if err != nil || len(specs) != 2 {
-		t.Fatal("original runtime custody preparation", len(specs), err)
-	}
-	writers, err := profile.BuildWriters(ctx, f.input, inventory, nil)
-	if err != nil || len(writers) != 4 {
-		t.Fatal("original same-task Runtime/platform/participant writers", len(writers), err)
-	}
-	for _, writer := range writers {
-		original, err := writer.Observe(ctx)
-		if err != nil {
-			t.Fatal("original writer observation", writer.ID(), err)
-		}
-		f.frozenWriters = append(f.frozenWriters, b.FrozenWriter{ID: writer.ID(), Original: original})
-	}
-	var controls int
-	if f.control.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_controls WHERE task_public_id=? AND attempt_no=1", f.publicID).Scan(&controls) != nil || controls != 2 {
-		t.Fatal("same original running/stopped runtime custody")
-	}
-	var stoppedSpec []byte
-	if f.control.QueryRow("SELECT spec_json FROM system_backup_v2_runtime_controls WHERE task_public_id=? AND instance_id=9", f.publicID).Scan(&stoppedSpec) != nil {
-		t.Fatal("original stopped custody")
-	}
-	var stopped b.RuntimeWriterSpec
-	if json.Unmarshal(stoppedSpec, &stopped) != nil || stopped.Kind != "stopped" || stopped.Stopped.Running {
-		t.Fatal("original stopped instance was promoted to running")
-	}
 	return f
 }
 
@@ -679,12 +652,36 @@ func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
 	f := newDOriginalSixPartTask(t)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
+	stopCapacity := f.startLocalCapacityInput(ctx, t)
+	defer stopCapacity()
 	store := c.SQLExecutionWorkStore{Queue: f.queue}
 	if err := store.RunWithExecutionHeartbeat(ctx, f.input.Authority, func(active context.Context) error {
 		f.checkOriginalMetadataSources(active, t)
 		return nil
 	}); err != nil {
 		t.Fatal("original same-epoch source preparation heartbeat", err)
+	}
+	plan, err := f.service.Runtime.Loop.Dispatch.Prepare(ctx, f.input)
+	if err != nil {
+		t.Fatal("same-task original leased public runner Prepare", err)
+	}
+	inner, err := d.UnwrapTaskPlan(f.input, plan, b.PlanVersion)
+	if err != nil {
+		t.Fatal("original task plan wrapper", err)
+	}
+	discovery, err := b.DescribePlan(f.input, inner)
+	clear(inner.CanonicalJSON)
+	if err != nil {
+		t.Fatal("original Prepare frozen plan", err)
+	}
+	f.checkOriginalFrozenDiscovery(ctx, t, discovery)
+	if err := f.service.Runtime.Loop.Store.Record(ctx, c.ExecutionWork{Step: c.ExecutionPrepare, Input: f.input}, c.ExecutionOutcome{Plan: plan}); err != nil {
+		t.Fatal("same-task original DurableExecutionStore SavePlan/outcome", err)
+	}
+	var status, storedSHA string
+	var encrypted []byte
+	if f.control.QueryRowContext(ctx, "SELECT b.status,r.payload_sha256,r.sealed_payload FROM system_backup_v2_backups b JOIN system_backup_v2_execution_records r ON r.task_public_id=b.public_id AND r.record_kind='plan' AND r.attempt_no=1 AND r.phase='capture' WHERE b.public_id=?", f.publicID).Scan(&status, &storedSHA, &encrypted) != nil || status != "ready_for_capture" || storedSHA != plan.SHA256 || len(encrypted) == 0 || bytes.Equal(encrypted, plan.CanonicalJSON) {
+		t.Fatal("original encrypted same-task plan/outcome not persisted")
 	}
 	var attempts int
 	if f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_attempts WHERE target_type='backup' AND target_public_id=? AND attempt_no=1 AND phase IN ('capture','secret_capture') AND status='preparing'", f.publicID).Scan(&attempts) != nil || attempts != 2 {
@@ -696,5 +693,27 @@ func TestProductionSameTaskOriginalAdmissionAndQueueMySQL(t *testing.T) {
 	}
 	if len(f.claimed.Request) == 0 || f.claimed.ConfigSHA256 != hash(f.config) {
 		t.Fatal("queue lost admitted original request/config")
+	}
+	// The real scheduler's original ready_for_capture reconciliation is one
+	// second later. Re-take the SAME task; never substitute another acceptance.
+	timer := time.NewTimer(time.Second + 100*time.Millisecond)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	case <-timer.C:
+	}
+	capture, err := f.service.Runtime.Loop.Store.Next(ctx)
+	if err != nil || capture == nil || capture.Step != c.ExecutionCapture || capture.Input.Authority.TaskPublicID != f.publicID || capture.Input.Authority.AttemptNo != 1 || capture.Plan.SHA256 != plan.SHA256 || !bytes.Equal(capture.Plan.CanonicalJSON, plan.CanonicalJSON) || capture.Input.Authority.ClaimRowVersion <= f.input.Authority.ClaimRowVersion || capture.Input.Authority.MaintenanceOwner != f.publicID || capture.Input.Authority.MaintenanceFencingToken == 0 {
+		t.Fatal("original same-task reTake/acquiring epoch/frozen plan", err)
+	}
+	var phase, gateOwner string
+	var generation uint64
+	if f.control.QueryRowContext(ctx, "SELECT phase,owner,generation FROM system_backup_gate WHERE scope=?", f.service.Config.ApplicationScope).Scan(&phase, &gateOwner, &generation) != nil || phase != "acquiring" || gateOwner != f.publicID || generation != capture.Input.Authority.MaintenanceFencingToken {
+		t.Fatal("original acquiring gate not bound to same task/fence")
+	}
+	var jobs int
+	if f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", f.publicID).Scan(&jobs) != nil || jobs != 0 {
+		t.Fatal("reTake dispatched collectors before actual writer pause")
 	}
 }

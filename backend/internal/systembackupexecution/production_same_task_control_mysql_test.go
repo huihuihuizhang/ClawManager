@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
@@ -16,7 +17,6 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
 	ce "clawreef/internal/systembackupcontrolevidence"
-	security "clawreef/internal/systembackupsecurity"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -216,46 +216,55 @@ func (f *dOriginalSixPartTask) repinOriginalMetadataSource(t *testing.T) {
 	}
 }
 
-func (f *dOriginalSixPartTask) freezeOriginalSource(ctx context.Context, t *testing.T, observed productionSQLSourceMetadata) b.SourceInventory {
+func (f *dOriginalSixPartTask) checkOriginalFrozenDiscovery(ctx context.Context, t *testing.T, discovery b.Discovery) {
 	t.Helper()
-	f.installLocalOriginalControlApproval(ctx, t, observed)
-	var now time.Time
-	if f.db.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil {
-		t.Fatal("original local capacity fixture clock")
+	var source b.SourceInventory
+	if decodeMetadataCanonical(discovery.Source, &source) != nil || hash(discovery.Source) != discovery.SourceSHA256 || len(discovery.Parts) != 10 || len(discovery.Writers) != 4 || source.Teams == nil || len(source.Teams.Teams) != 1 {
+		t.Fatal("original Prepare did not return complete same-task frozen source")
 	}
-	raw, _ := json.Marshal(security.CapacityReport{ServerUUID: f.server, Database: f.database, ObservedAt: now, AvailableBytes: 4 << 30})
-	if os.WriteFile(f.service.Config.CapacityFile, raw, 0600) != nil {
-		t.Fatal("named local capacity fixture")
+	var metadata productionCaptureMetadata
+	if decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.ControlEvidence.Version != "system-backup-control-evidence-source.v1" || metadata.ControlEvidence.Finalization != nil {
+		t.Fatal("original Prepare full Source did not retain V1 base")
 	}
-	teams, metadata, err := f.service.freezeProductionSource(ctx, f.owner, f.input, f.sourceInventory, f.frozenWriters, nil)
-	if err != nil || teams == nil || len(teams.Teams) != 1 || len(metadata) == 0 {
-		t.Fatal("same-task original source freeze and base CE registration", err)
-	}
-	source := f.sourceInventory
-	source.Teams, source.CaptureMetadata = teams, metadata
-	var frozen productionCaptureMetadata
-	if decodeMetadataCanonical(metadata, &frozen) != nil || frozen.ControlEvidence.Version != "system-backup-control-evidence-source.v1" || frozen.ControlEvidence.Finalization != nil {
-		t.Fatal("original full Source did not retain V1 base locator")
-	}
-	if _, _, err := f.service.attachProductionSources(f.owner, b.LinuxProfileConfig{}); err != nil {
-		t.Fatal("same-task complete original source hook attachment", err)
-	}
-	hold := time.Now().UTC().Add(time.Duration(f.service.Config.HoldSeconds) * time.Second)
-	if hold.After(f.input.Authority.DeadlineAt) {
-		hold = f.input.Authority.DeadlineAt
-	}
-	modules, err := productionCaptureModules(f.input, source, hold, f.frozenWriters, f.service.captureMaterials.Operations, f.service.captureMaterials.Revision)
-	if err != nil {
-		t.Fatal("same-task original six-constructor assembly", err)
-	}
-	parts, err := modules.BuildParts(f.input, source, hold)
-	if err != nil || len(parts) != 10 {
-		t.Fatal("same-task original SQL/CE/Teams/Skills/Redis/resource parts", len(parts), err)
-	}
-	sourceRaw, _ := json.Marshal(source)
-	discovery := b.Discovery{Source: sourceRaw, SourceSHA256: hash(sourceRaw), Parts: parts, Writers: f.frozenWriters, HoldUntil: hold}
+	f.frozenWriters = append([]b.FrozenWriter{}, discovery.Writers...)
 	if err := f.service.productionInventory(ctx, f.input, discovery); err != nil {
-		t.Fatal("same-task original source/invocation/V2 inventory guard", err)
+		t.Fatal("same-task original frozen source/parts/V2 inventory guard", err)
 	}
-	return source
+	var controls int
+	if f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_controls WHERE task_public_id=? AND attempt_no=1", f.publicID).Scan(&controls) != nil || controls != 2 {
+		t.Fatal("original Prepare did not retain both runtime custody capsules")
+	}
+	var stoppedRaw []byte
+	if f.control.QueryRowContext(ctx, "SELECT spec_json FROM system_backup_v2_runtime_controls WHERE task_public_id=? AND instance_id=9", f.publicID).Scan(&stoppedRaw) != nil {
+		t.Fatal("original stopped custody")
+	}
+	var stopped b.RuntimeWriterSpec
+	if json.Unmarshal(stoppedRaw, &stopped) != nil || stopped.Kind != "stopped" || stopped.Stopped.Running {
+		t.Fatal("original stopped runtime became running")
+	}
+	authority, err := f.service.sourceMetadataAuthority(ctx, f.owner, f.input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlMetadata, err := authority.sqlMetadata(ctx, source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mounts, identities, records, err := authority.instanceMountMetadata(ctx, source, discovery.Writers, sqlMetadata, metadata.Skills, &metadata)
+	if err != nil || len(mounts) != 2 || len(identities) != 2 || len(records) != 2 || mounts[0].Skills == nil || mounts[1].Skills != nil {
+		t.Fatal("original frozen custody/image/PVC/Skill workspace recheck", err)
+	}
+	var before int
+	if f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=?", f.publicID).Scan(&before) != nil {
+		t.Fatal("original evidence census")
+	}
+	teams, current, err := f.service.freezeProductionSource(ctx, f.owner, f.input, f.sourceInventory, discovery.Writers, &metadata)
+	if err != nil || teams == nil || !bytes.Equal(source.CaptureMetadata, current) {
+		t.Fatal("original CheckFrozenSources changed source/base cutoff", err)
+	}
+	var after int
+	if f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=?", f.publicID).Scan(&after) != nil || after != before {
+		t.Fatal("original frozen source recheck registered another cutoff")
+	}
+	f.sourceInventory = source
 }
