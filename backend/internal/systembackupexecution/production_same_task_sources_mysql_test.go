@@ -23,6 +23,7 @@ import (
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/scope"
+	"clawreef/internal/systembackup/testfixture"
 	"clawreef/internal/systembackup/worker"
 	sh "clawreef/internal/systembackupskillhub"
 	appsv1 "k8s.io/api/apps/v1"
@@ -51,6 +52,9 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		return path
 	}
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if f.handleOriginalResourceAPI(w, r) {
+			return
+		}
 		if strings.HasPrefix(r.URL.Path, "/skill-bucket/packages/") {
 			key := strings.TrimPrefix(r.URL.Path, "/skill-bucket/packages/")
 			body, exists := f.objectBodies[key]
@@ -123,6 +127,10 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 	u, _ := url.Parse(server.URL)
 	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
 	caFile := write("original-metadata-ca.pem", ca)
+	f.resourceSources = map[string]worker.ResourceSourceMount{}
+	for part, actor := range map[string]string{"deployment_resources": "d-resources", "secret_bundle": "d-secrets"} {
+		f.resourceSources[part] = worker.ResourceSourceMount{Server: server.URL, CAFile: caFile, CASHA256: hash(ca), TokenFile: write("original-"+actor+"-token", []byte("named-"+actor+"-token"))}
+	}
 	token := []byte("named-d-metadata-token")
 	public, private, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -166,7 +174,9 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 			mount.Objects, mount.ObjectPrefixes = mapping, []worker.ObjectSourcePrefix{{Bucket: m.SkillBucket, Prefix: m.SkillPrefix + "/"}}
 			request.SkillObjects = &worker.SkillObjectCaptureSpec{Version: worker.SkillObjectCaptureVersion, InventorySHA256: f.sourceInventory.Skills.SHA256(), Bucket: m.SkillBucket, Prefix: m.SkillPrefix, MaxObjects: m.MaxObjects, MaxObjectBytes: m.MaxObjectBytes, MaxTotalBytes: m.MaxObjectTotalBytes, MaxIndexBytes: 65536}
 		} else {
-			mapping.Address = startDMetadataRedisTLS(t, server.TLS)
+			redis := testfixture.NewRedisProtocol(t, testfixture.RedisScenario{TLS: true, ExpectedUser: "d-redis", ExpectedPassword: "named-local-fixture", ServerID: metadata.Redis.ServerID, Keys: []testfixture.RedisKey{{Key: metadata.Redis.Policy.Prefixes[0] + "original", Type: "string", Dump: []byte("named-local-redis-dump-protocol-bytes"), PTTL: -1}}})
+			mapping.Address, mapping.ServerName = redis.Address, "127.0.0.1"
+			mapping.CAFile, mapping.CASHA256 = write("original-redis-ca.pem", redis.CAPEM), hash(redis.CAPEM)
 			mount.Redis, mount.RedisScope, mount.RedisPrefixes = mapping, &worker.RedisSourceBoundary{ID: metadata.Redis.Policy.Source.ID, ServerID: metadata.Redis.ServerID, Database: metadata.Redis.Policy.DB}, append([]string{}, metadata.Redis.Policy.Prefixes...)
 			request.SourceRedis = &metadata.Redis
 		}
@@ -200,8 +210,8 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "d-resources", Namespace: s.Config.Namespace, UID: "d-resources-uid"}},
 		&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "d-secrets", Namespace: s.Config.Namespace, UID: "d-secrets-uid"}},
 		&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: discovery.ControllerDeployment, Namespace: s.Config.Namespace, UID: types.UID(discovery.ControllerDeploymentUID)}, Spec: appsv1.DeploymentSpec{Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{ServiceAccountName: discovery.ControllerServiceAccount}}}},
-		&appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "d-source-rs", Namespace: s.Config.Namespace, UID: "d-source-rs-uid", OwnerReferences: []metav1.OwnerReference{{Kind: "Deployment", Name: discovery.ControllerDeployment, UID: types.UID(discovery.ControllerDeploymentUID), Controller: &controller}}}},
-		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-source-pod", Namespace: s.Config.Namespace, UID: "d-source-pod-uid", OwnerReferences: []metav1.OwnerReference{{Kind: "ReplicaSet", Name: "d-source-rs", UID: "d-source-rs-uid", Controller: &controller}}}, Spec: corev1.PodSpec{ServiceAccountName: discovery.ControllerServiceAccount}, Status: corev1.PodStatus{Phase: corev1.PodRunning}},
+		&appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "d-source-rs", Namespace: s.Config.Namespace, UID: "d-source-rs-uid", OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "Deployment", Name: discovery.ControllerDeployment, UID: types.UID(discovery.ControllerDeploymentUID), Controller: &controller}}}},
+		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-source-pod", Namespace: s.Config.Namespace, UID: "d-source-pod-uid", OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "ReplicaSet", Name: "d-source-rs", UID: "d-source-rs-uid", Controller: &controller}}}, Spec: corev1.PodSpec{ServiceAccountName: discovery.ControllerServiceAccount}, Status: corev1.PodStatus{Phase: corev1.PodRunning}},
 	} {
 		// This is finite named API fixture setup, not controller production writes.
 		if err := owner.Client.(*kubefake.Clientset).Tracker().Add(object); err != nil {

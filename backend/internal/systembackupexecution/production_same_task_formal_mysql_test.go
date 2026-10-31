@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -32,12 +31,12 @@ import (
 
 // Original constructors consume separate local installation-owner, provider,
 // verifier-owner and Generate-owner signatures on this SAME task/control pool.
-// This stage grants no replacement key callback. The finite TLS provider below
-// refuses calls until the original worker protocol execution is installed.
+// No replacement key callback is granted by the local TLS protocol model.
 func (f *dOriginalSixPartTask) installOriginalFormalMaterials(ctx context.Context, t *testing.T) {
 	t.Helper()
 	s, owner := f.service, f.owner
-	provider := httptest.NewUnstartedServer(http.HandlerFunc(func(out http.ResponseWriter, r *http.Request) { out.WriteHeader(http.StatusForbidden) }))
+	f.provider = newDOriginalProvider(s.Config.Namespace, s.controllerActor.PodUID, s.captureMaterials.Discovery.ControllerServiceAccountUID)
+	provider := httptest.NewUnstartedServer(f.provider)
 	provider.TLS = &tls.Config{MinVersion: tls.VersionTLS13, Certificates: append([]tls.Certificate{}, s.tlsConfig.Certificates...)}
 	provider.StartTLS()
 	t.Cleanup(provider.Close)
@@ -127,7 +126,8 @@ func (f *dOriginalSixPartTask) installOriginalFormalMaterials(ctx context.Contex
 	defer clear(permitRootKey)
 	permitPublic, permitSigning, _ := ed25519.GenerateKey(rand.Reader)
 	defer clear(permitSigning)
-	workerJWT := write("original-worker-provider.jwt", []byte("explicit-local-original-worker-projected-jwt"))
+	workerJWT := filepath.Join(f.directory, "workers", "{pod_uid}", "provider-token")
+	f.provider.workerJWTFile = workerJWT
 	permitGrant := a.ProviderPermitIssuerGrant{Version: "system-backup-provider-permit-issuer-grant.v1", Binding: binding, Database: databaseID, DatabaseAccount: account, Workload: baseWorkload, SigningPublicKey: permitPublic, GeneratePermission: permission(true), WorkerNamespace: s.Config.Namespace, WorkerServiceAccountName: s.Config.Security.ServiceAccountName, WorkerServiceAccountUID: s.Config.Security.ServiceAccountUID, WorkerJWTIdentityFile: workerJWT, NotBefore: now.Add(-time.Minute), Until: f.input.Authority.DeadlineAt}
 	raw, _ = json.Marshal(permitGrant)
 	permitEnvelope, _ := json.Marshal(a.SignedProviderPermitIssuerGrant{Record: raw, Signature: ed25519.Sign(permitRootKey, append([]byte(a.ProviderPermitIssuerGrantDomain), raw...))})
@@ -191,7 +191,11 @@ func (f *dOriginalSixPartTask) installOriginalFormalMaterials(ctx context.Contex
 			mapping.Sources = &f.sourceMount
 		}
 		if strings.HasSuffix(name, "deployment-resources") || strings.HasSuffix(name, "secret-bundle") {
-			source := s.captureMaterials.Discovery.SourceAPI
+			part := "deployment_resources"
+			if strings.HasSuffix(name, "secret-bundle") {
+				part = "secret_bundle"
+			}
+			source := f.resourceSources[part]
 			mapping.Resources = &source
 		}
 		raw, _ := json.Marshal(mapping)
@@ -241,4 +245,5 @@ func (f *dOriginalSixPartTask) composeOriginalPublicRuntime(ctx context.Context,
 	if err := s.Runtime.Loop.Guard.Check(ctx); err != nil {
 		t.Fatal("original runtime guard", err)
 	}
+	f.installOriginalKubeLifecycle(ctx, t)
 }

@@ -430,3 +430,11 @@
 - 现有ProviderPermitIssuerGrant.WorkerJWTIdentityFile兼容静态容器绝对路径，并允许独立owner预签一个完整的`{pod_uid}`路径段。只由原已admit的lease.Identity.PodUID解析；产生的具体路径进入原delivered permit原签名，ReadCommitted重验相同派生值。没有客户端路径覆盖、替代resolver、改写冻结plan或延长key window。
 - 拒绝非法UID、相对/不规范路径、路径穿越、非完整模板段、重复模板及残留brace。两不同Job/Pod使用独立实际文件，两个原NewDeliveredCaptureJob的TLS login必须交错到达才释放；实际Generate返回各自不同DEK。错误namespace/Pod UID/SA UID在原jwtToken校验处拒绝，错误Job无Generate调用。
 - adapter全包PASS5.450s、KMS全包PASS3.295s。这是明确LOCAL协议及原客户端边界验证；同任务10worker整体Capture仍WIP，暂未通过Stop/Resume或A最终publication，生产readiness保持原值。
+
+## D5.36 同一原任务真实provider拒绝→collector stop→原状态恢复→失败Record
+
+- 新独立负向测试`TestProductionSameTaskOriginalProviderDeniedStopsBeforeResumeMySQL`每次只创建一个原HTTP任务，实际原Prepare/SavePlan/reTake/acquiring，四原writer Pause/ACK之后的首个Job只能在原held gate派发。原issued mTLS Secret、TokenReview与live Pod/SA核验、原Ready/relay、SQL issuer Stage签名permit及每Pod独立JWT路径均走原代码；只在明确LOCAL TLS provider端主动拒绝实际Generate一次。没有将失败的正向任务复位/改成预期失败。
+- 实际worker退出后，本地API/kubelet模型才记录同原container ID的Terminated状态。原StopWitness/SQL stop proof、Job revoke/删除/stopped_at与collectors_stopped_at进入原链路；实际原Pro Create和platform恢复前另只读断言全部collector已停且无native worker活跃。验证四writer paused/resumed、3份原终止witness、gate idle；原Pro新PodUID/原fence/running且SQL generation仍3，原stopped实例保持4和stopped，platform原replicas1/ready，只有原Pro被重建。
+- 明确断言provider拒绝1次、成功Generate/Unwrap均0、一个实际admitted/held Job与一个SQL原签名projection、没有candidate/result或成功密文/envelope。随后实际原Loop.Store.Record写失败密文结果、FinishCapture落failed并释放claim/lease。无overlay定向PASS34.24s（package37.466s）。
+- 该提交保留原AdmissionAndQueue测试的Prepare/SavePlan/reTake边界；独立完整正向测试仍在D工作区继续，当前已实际完成前六worker/C候选/独立Evidence，后续因原120秒固定hold余量不足拒绝。新任务在core签名与plan之前声明300秒，原gate600秒上界、原DEK窗口、所有校验不变。完整10parts/validating/A发布尚未完成，不能把本负向证明称完整正向成功。
+- 所有API/kubelet/Redis/Transit仍是明确LOCAL协议模型，实际TLS/SQL/原客户端及同步C代码调用不等于真实Linux节点/PVC/线上KMS验收。同步主分支2107a4a4，生产readiness未变。

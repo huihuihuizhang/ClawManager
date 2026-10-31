@@ -177,7 +177,7 @@ func (f *dOriginalSixPartTask) installLocalOriginalControlApproval(ctx context.C
 		if fact.PVC == "" {
 			continue
 		}
-		claim := &corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: fact.PVC, Namespace: fact.Namespace, UID: "original-six-team-pvc-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "original-six-team-pv"}}
+		claim := &corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: fact.PVC, Namespace: fact.Namespace, UID: "original-six-team-pvc-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "original-six-team-pv"}, Status: corev1.PersistentVolumeClaimStatus{Phase: corev1.ClaimBound}}
 		if _, err := f.owner.Client.CoreV1().PersistentVolumeClaims(fact.Namespace).Create(ctx, claim, metav1.CreateOptions{}); err != nil {
 			t.Fatal(err)
 		}
