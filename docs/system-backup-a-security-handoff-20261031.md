@@ -425,6 +425,26 @@ D协调的新 `SQLExecutionRecords.LoadPublisherCapture(ctx, access *security.SQ
 
 A13.1最终安全同步D5.9 backup f9e2742f后，execution整包再次PASS39.687s，保留所有D代码与新增authority；未引入生产schema迁移。
 
+A13.1补充修复 `159717d0`：监督独立 overlay 复现最后 SA GET 内真实 Renew 或替换为已撤销 business grant 后 Check 仍 nil。现 CheckWorkload 在最后 Kube I/O 后重验原 grant/pin/时间与原固定窗；constructor/Check 在末次 workload/material I/O 之后另开短 SQL 事务，重新 Bind/Recheck 同一原 claim/事实/最短窗口再 rollback，Kube 不进 SQL。正式新测试同时覆盖 constructor/Check 中真实 Renew、末次撤销和慢 GET 跨原窗口，旧 token 拒绝，实际 fresh token 重新全构造正例；provider0。相关 authority 完整重点 PASS14.179s；监督原 overlay 两个 FAIL 转 PASS3.781s。
+
+## 第十三切片之二a：独立验证器实际 GET、角色生成与 readiness 同源
+
+新增 adapter `VerifierKubernetesReads`，版本 `system-backup-verifier-kubernetes-reads.v1`，经独立 SHA 固定的 formal verifier materials 可选 `kubernetes_reads` 字段提供 namespace 名/UID、Pod 名/UID、SA 名/UID、OwnerKind/Name/UID；Deployment 额外要求 ReplicaSetName/UID，StatefulSet/Job 不接受 RS 字段。映射是读取坐标，业务授权仍来自独立 business grant 与 provider capability 中完全相同的 ControllerVerifierWorkload；不能以 DTO/hash 代替授权。构造器复制映射，防止外部指针别名修改。
+
+实际检查精确读取 namespace→Pod→SA→RS→Deployment（或 StatefulSet/Job），核验 UID/Running/deletion 和完整 controller owner chain。Pod 或 RS 所指父名称/UID 与固定映射不符，在父 GET 前拒绝；无 list/猜名/宽泛 GET 回退。旧 ForCandidate 的原 capture-only 权限、旧 deadline/claim、原计划及 journal 检查完全保留；没有映射的既有底层 factory 仍保留原保护路径，未开放 publisher 解密。
+
+`RequiredDeploymentCaptureAccess` 将原 capture 清单与映射的精确命名 GET 合成；official `CaptureKubernetesGrants` 与 service 两处实际 forward/readiness probe 均走同一清单。配置 FormalVerifier 后官方角色生成和实际探测必须提供完整映射，且 verifier 的 namespace/SA 必须与真实 controller namespace/SA 相同；旧无 FormalVerifier 配置保持原行为。CLI 新增 `--verifier-materials-sha256`，材料路径只取原 core 静态 reference，摘要必须由独立部署参数提供；缺 pin/错 pin/缺映射 fail closed，不自动读取文件计算摘要。没有把 controller 加进 source writers，没有新增 verifier 写权限；Recovery 继续不依赖此 forward probe。
+
+测试覆盖三种 owner 的实际 client-go GET 与 RequiredReads 精确一致；Pod/namespace/SA/RS/owner UID 替换、父名称变化、API Forbidden、缺映射拒绝；生成角色和实际 SelfSubjectAccessReview 都包含所有指定坐标，RS GET denied 阻止 readiness。真实本地原 MySQL authority/独立 grant/TLS provider 加真实 client-go HTTP API fixture：正例完成 exact DEK unwrap；RS 或 Deployment GET 返回实际 HTTP 403 后，已构造 verifier.Recheck/Unwrap 和新 ForCandidate 均拒绝，provider login+decrypt 总计数不增加，DEK callback 不调用。Kubernetes API 是隔离 HTTP fixture，不是现场集群。
+
+本切片只封闭实际读取权限缺口。A13.2b 的当前 publisher claim→受控历史 reader→原 exact-request unwrap 仍在继续；不把旧 capture ForCandidate 用于停止/恢复后的 publisher。D 新受控 reader 尚未进入此切片基线，未复制或绕开它。
+
+验证：精确清单/三种 owner/角色/probe 重点 PASS adapter3.074s/execution3.296s；真实 SQL/TLS/HTTP403/provider0 PASS11.269s。受影响完整回归 adapter5.043s/execution47.171s/v2-controller3.319s/grantsCLI编译通过；随后独立竞态修复另经上述正式用例与监督 overlay 验证。
+
+独立 verifier-only 组合补充：真实 startup Pod GET 观测的 PodName/PodUID/SAName 保存到独立 controllerActor，service 两处实际探测使用该观测值，即使 PublicationSigners 未启用也不从材料 DTO 猜 SA；mapped verifier attach 将 namespace UID、Pod/SA 坐标与真实 startup 观测匹配。缺 controller Pod 参数时 Forward verifier-only startup 拒绝。此组合重点 PASS3.397s；最终完整 security21.569s/adapter5.149s/execution52.011s/v2-controller3.383s/grantsCLI编译通过，HTTP403 实际用例同步修正后再次 PASS10.252s。
+
+材料部署顺序必须明确：core 仅静态路径/协议；原 owner 签 core/Forward；实际 controller Pod/RS/owner UID 出现后，由可信独立 owner/provisioner 生成业务授权、capability 和独立材料 SHA，再向同一 Pod 交付并由独立启动机制提供 pin。不能把含该 Pod UID 的派生材料 SHA 再写回 Pod template 环境造成新 Pod UID/摘要循环。本地测试只实现并验证这些原始文件及独立 startup pin 的消费；尚未实现现场自动 provisioner、Pod 重建后的自动独立签发/交付机制，不能宣称每次重启或新部署已无人值守。相同真实 Pod 在其授权有效期内的后续任务不需要逐任务人工签名。
+
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。

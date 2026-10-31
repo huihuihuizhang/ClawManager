@@ -56,6 +56,7 @@ type DeploymentService struct {
 	publicationFactory       *DeploymentPublicationSignerFactory
 	publicationDB            *sql.DB
 	publicationRuntime       PublicationSignerRuntime
+	controllerActor          controllerObservedActor
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -269,7 +270,7 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	if e := s.recoveryAdmit(ctx, in); e != nil {
 		return e
 	}
-	return CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.publicationRuntime.ServiceAccountName)
+	return CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier)
 }
 func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	if supportedPublicCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
@@ -429,7 +430,7 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 		return e
 	}
 	stage = "kubernetes-access"
-	if e := CheckCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.publicationRuntime.ServiceAccountName); e != nil {
+	if e := CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier); e != nil {
 		return e
 	}
 	stage = "recovery-grant"

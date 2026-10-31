@@ -62,6 +62,7 @@ type ControllerVerifierConfig struct {
 	// Independent original installation-owner issuer; never inferred from a
 	// registry row, config reference, verifier grant or provider observation.
 	InstallationIssuer ed25519.PublicKey
+	KubernetesReads    *VerifierKubernetesReads
 }
 
 type ControllerVerifierCandidate struct {
@@ -78,6 +79,13 @@ type ControllerVerifierFactory struct{ cfg ControllerVerifierConfig }
 // needs the existing original SQL authority/record custody and actual K8s
 // client; there are no caller-supplied authentication callbacks or Job stand-ins.
 func NewControllerVerifierFactory(cfg ControllerVerifierConfig) (*ControllerVerifierFactory, error) {
+	if cfg.KubernetesReads != nil {
+		if cfg.KubernetesReads.Validate(cfg.Workload) != nil {
+			return nil, kms.ErrPermission
+		}
+		reads := *cfg.KubernetesReads
+		cfg.KubernetesReads = &reads
+	}
 	recordKeys, recordKeysOK := cfg.Records.Keys.(*c.PinnedExecutionIdentity)
 	_, bareForward := cfg.Authority.Authorization.(*c.PinnedExecutionIdentity)
 	if cfg.Capabilities == nil || cfg.Authority.DB == nil || cfg.Records.Authority.DB != cfg.Authority.DB || cfg.Capabilities.db != cfg.Authority.DB ||
@@ -232,6 +240,9 @@ func (v *ControllerVerifier) checkWorkload(ctx context.Context) error {
 	}
 	if _, err := v.originalGrant(ctx); err != nil {
 		return err
+	}
+	if reads := v.factory.cfg.KubernetesReads; reads != nil {
+		return reads.Check(ctx, v.factory.cfg.Kubernetes, v.factory.cfg.Workload)
 	}
 	return checkControllerWorkload(ctx, v.factory.cfg.Kubernetes, v.factory.cfg.Workload)
 }

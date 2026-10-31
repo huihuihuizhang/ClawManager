@@ -40,6 +40,7 @@ type aOriginalIssuerFixture struct {
 	dek             []byte
 	onCaptureLogin  func(func() error)
 	generationCalls func() int64
+	providerCalls   func() int64
 	updateOriginal  func(a.OriginalRecord, uint64) error
 }
 

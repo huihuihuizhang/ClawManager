@@ -23,6 +23,7 @@ func main() {
 	providerPermits := flag.Bool("formal-provider-permits", false, "add original Generate permit planned/unknown reference writes; requires formal-verifier")
 	kubeConfig := flag.String("kubernetes-config", "", "render Kubernetes RBAC for this pinned public deployment JSON")
 	kubeDigest := flag.String("kubernetes-config-sha256", "", "exact public deployment JSON SHA256")
+	verifierMaterialsSHA := flag.String("verifier-materials-sha256", "", "independently deployed formal verifier materials SHA256 for exact read-only actor/owner RBAC")
 	controllerSA := flag.String("controller-service-account", "", "pre-created dedicated capture controller ServiceAccount")
 	flag.Parse()
 	if *runtimeControl && *publicCapture {
@@ -51,7 +52,15 @@ func main() {
 			fmt.Fprintln(os.Stderr, "pinned public deployment unavailable")
 			os.Exit(2)
 		}
-		objects, err := execution.CaptureKubernetesGrants(cfg, *controllerSA)
+		var verifierInputs []execution.FormalVerifierInput
+		if *verifierMaterialsSHA != "" {
+			if cfg.FormalVerifier == nil {
+				fmt.Fprintln(os.Stderr, "formal verifier reference required")
+				os.Exit(2)
+			}
+			verifierInputs = append(verifierInputs, execution.FormalVerifierInput{File: cfg.FormalVerifier.Path, SHA256: *verifierMaterialsSHA})
+		}
+		objects, err := execution.CaptureKubernetesGrants(cfg, *controllerSA, verifierInputs...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "public Kubernetes access inventory invalid")
 			os.Exit(2)
@@ -61,7 +70,7 @@ func main() {
 		}
 		return
 	}
-	if *kubeDigest != "" || *controllerSA != "" {
+	if *kubeDigest != "" || *controllerSA != "" || *verifierMaterialsSHA != "" {
 		fmt.Fprintln(os.Stderr, "Kubernetes configuration required")
 		os.Exit(2)
 	}
