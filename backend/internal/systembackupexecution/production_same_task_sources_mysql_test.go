@@ -35,10 +35,9 @@ import (
 // pool, original source role, claim, runtime custody and writer observations.
 // The remote APIs are explicit local TLS protocol fixtures. No Job, KMS use,
 // owner-complete evidence, frozen schema approval or readiness is invented.
-func (f *dOriginalSixPartTask) installOriginalMetadataSources(t *testing.T) *originalSourceMetadataAuthority {
+func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Context, t *testing.T) *originalSourceMetadataAuthority {
 	t.Helper()
 	s, owner := f.service, f.owner
-	ctx := context.Background()
 	write := func(name string, raw []byte) string {
 		t.Helper()
 		path := filepath.Join(f.directory, name)
@@ -104,18 +103,20 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(t *testing.T) *ori
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { clear(private) })
+	f.metadataSigner = private
 	// Reuse ONLY the pure constructor input templates, never another task or
 	// another SQL authority fixture. Worker admission is not called here.
 	_, templateSource, _, _, templates := productionModuleFixture(t)
 	var metadata productionCaptureMetadata
 	json.Unmarshal(templateSource.CaptureMetadata, &metadata)
+	caInput, caPin := f.originalPublicCAInput(ctx, t)
 	m := productionCaptureMaterials{Version: productionCaptureMaterialsVersion, Revision: "original-six-metadata-r1", InstallationID: s.Config.InstallationID, ControllerOwner: s.Config.ControllerOwner, DeploymentConfigSHA256: s.ConfigDigest, CaptureGrantSHA256: s.Forward.GrantSHA256(), Operations: map[string]productionCaptureOperation{}, SkillBucket: "skill-bucket", SkillPrefix: "packages", MaxObjects: 100, MaxObjectBytes: 1024, MaxObjectTotalBytes: 4096, ResourceTypes: []productionResourceType{{Part: "deployment_resources", Version: "v1", Resource: "configmaps"}, {Part: "secret_bundle", Version: "v1", Resource: "secrets"}}}
 	for _, name := range []string{"capture-database", "capture-workspace", "capture-source-redis", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle"} {
 		op := templates[name]
 		op.Workload.Identity.Namespace, op.Workload.Image, op.Workload.StagingClaim, op.Workload.ServiceAccount = s.Config.Namespace, s.Config.WorkerImage, s.Config.StagingClaim, s.Config.Security.ServiceAccountName
 		op.Workload.WorkerControl.URL = s.Config.ControlURL
-		op.Workload.FormalMaterials.Inputs = nil
-		op.MountIdentities = []kube.MountIdentity{{Volume: "formal-mapping", Kind: "ConfigMap", Name: op.Workload.FormalMaterials.ConfigMap, UID: name + "-mapping-uid", SHA256: hash([]byte(name))}}
+		op.Workload.FormalMaterials.Inputs = []kube.FormalInputMount{caInput}
+		op.MountIdentities = []kube.MountIdentity{{Volume: "formal-mapping", Kind: "ConfigMap", Name: op.Workload.FormalMaterials.ConfigMap, UID: name + "-mapping-uid", SHA256: hash([]byte(name))}, caPin}
 		if name == "capture-database" {
 			op.Request.Database = &f.sourceSpec
 		}
@@ -200,11 +201,9 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(t *testing.T) *ori
 	return authority
 }
 
-func (f *dOriginalSixPartTask) checkOriginalMetadataSources(t *testing.T) {
+func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context, t *testing.T) {
 	t.Helper()
-	authority := f.installOriginalMetadataSources(t)
-	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
-	defer cancel()
+	authority := f.installOriginalMetadataSources(ctx, t)
 	metadata, err := authority.sqlMetadata(ctx, f.sourceInventory)
 	if err != nil || len(metadata.Census.Business) != 82 || len(metadata.Census.Control) != 95 || !reflect.DeepEqual(metadata.Schema, *f.sourceSpec.CaptureSchema) || len(metadata.Images) != 2 {
 		t.Fatal("same-task original SQL source census/schema/images", len(metadata.Census.Business), len(metadata.Census.Control), err)
@@ -233,4 +232,25 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(t *testing.T) {
 	if f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job'", f.publicID).Scan(&jobs) != nil || jobs != 0 || f.db.QueryRow("SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=?", f.publicID).Scan(&evidence) != nil || evidence != 0 {
 		t.Fatal("metadata-only source stage dispatched Jobs or invented completion evidence")
 	}
+	f.sourceInventory = f.freezeOriginalSource(ctx, t, metadata)
+}
+
+// Pin the original public control trust anchor as an immutable formal input.
+// This manifest binding is not worker or KMS material admission; those still
+// require the original independent formal-material setup and live checks.
+func (f *dOriginalSixPartTask) originalPublicCAInput(ctx context.Context, t *testing.T) (kube.FormalInputMount, kube.MountIdentity) {
+	t.Helper()
+	const name = "d-original-kms-ca"
+	immutable := true
+	cm := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: f.service.Config.Namespace, UID: "d-original-kms-ca-uid"}, Immutable: &immutable, Data: map[string]string{"ca.pem": string(f.owner.Issuer.ServerRoots)}}
+	existing, err := f.owner.Client.CoreV1().ConfigMaps(cm.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if err == nil {
+		if string(existing.UID) != string(cm.UID) || !reflect.DeepEqual(existing.Data, cm.Data) {
+			t.Fatal("original public CA input replaced")
+		}
+		cm = existing
+	} else if _, err := f.owner.Client.CoreV1().ConfigMaps(cm.Namespace).Create(ctx, cm, metav1.CreateOptions{}); err != nil {
+		t.Fatal("original public CA input", err)
+	}
+	return kube.FormalInputMount{Volume: "formal-kms-ca", Kind: "ConfigMap", Name: name, Directory: "/run/backup/materials/kms-ca", Items: []corev1.KeyToPath{{Key: "ca.pem", Path: "ca.pem"}}}, kube.MountIdentity{Volume: "formal-kms-ca", Kind: "ConfigMap", Name: name, UID: string(cm.UID), SHA256: kube.ContentHash([]any{cm.Data, cm.BinaryData})}
 }
