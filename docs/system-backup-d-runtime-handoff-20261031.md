@@ -107,3 +107,14 @@
 - 六包整包退出0：worker34.950s、kube3.142s、publicadapter3.401s、quiesce3.137s、execution3.621s、cmd/backup-worker2.862s；本轮未设置SQL opt-in，不能将该execution整包称为新的真实MySQL验收。新增D模块两真实Job物化/缺域/错误独立SA专项另通过3.160s。
 - 生产后续仍需：实际6parts完整来源/模块工厂、A5 FormalKeys闭包、source credential生命周期/全部binding准入、publisher新claim/正式三用途签名/immutable finalizer+独立成品读回/终态。另原worker ProviderPermit包含实际Job/Pod身份而FormalCaptureMaterials整体SHA预先冻结，需用原Job自动发行/挂载流程闭合顺序，不能要求用户逐任务人工提供permit，也不能删验签放过。
 - 最后原Kubernetes历史兼容/实际pause-archive-resume/双Job物化定向回归退出0：root3.141s、quiesce2.946s、publicadapter3.182s。
+## D5.2 同一次 Discover 的原 writer 快照与模块工厂
+
+- LinuxProfileConfig 新增可选 BuildPartsWithWriters；使用时同一Discover先构造writers、逐个Observe一次并验证非空/唯一ID与原UID/generation，再把完整冻结[]FrozenWriter显式传给parts工厂。out.Writers保存同一快照；callback只收独立slice，不能改计划。旧BuildParts路径顺序保留，无新任务/二次发现或恢复时重采集。
+- 实际NewPublicCapture的configuredPublicSource增加ModuleFactory(in,inventory,hold,writers)，每个原任务据同一次原快照生成CaptureModules。factory收到deep-copy的input/inventory/writers；目录BuildParts仍使用未被callback修改的原输入。静态Modules与动态factory不能同时指定，原formal key工厂缺失仍拒绝。
+- 动态目录输出的资源OriginalWriters逐项精确比对同次冻结快照；错UID/generation/running/checkpoint或缺原writer拒绝。原Authorize继续独立核原plan，archive header和plan因此有同一原来源。实际NewDeploymentService完整六项目录配置仍需下一步装配，未称本callback配置就是完整生产上线。
+- 两包完整回归退出0：publicadapter3.469s、execution3.621s。新增真实LinuxProfile.Discover路径验证Observe一次→parts调用一次、原计划不受callback改动、重复/坏状态/Observe失败不到parts；并覆盖资源原writer精确字段负例。SQL source为原已有严格driver fixture，不冒充新的MySQL验收。
+- 同步发现A6四文件718行，已保留并merge origin/backup@66440e80（e53753dd），无覆盖他人文件。
+## D5.2.1 preflight 分支修复
+
+- 监督复审发现新ModuleFactory闭包在preflight也调用实际backup-only目录；已在闭包入口恢复原source_inventory/preflight短路，RecoveryOnly继续拒绝。不是在factory执行后才绕过结果验证。
+- 新TestModuleFactoryPreflightDiscoverUsesOnlySourceInventoryMySQL通过真实configuredPublicSource→NewLinuxProfile→Discover读取独占本地SQL users/instances，返回唯一source_inventory、空writer、无Job spec，并断言动态factory/writer/provider/旧parts回调均0次；执行3.815s退出0。它验证预检只读路由，未将该测试账号称为生产源最小权限或完整schema验收。

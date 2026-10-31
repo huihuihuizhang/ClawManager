@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/systembackup/flow"
 	b "clawreef/internal/systembackup/publicadapter"
+	"clawreef/internal/systembackup/worker"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -18,6 +19,36 @@ import (
 // control SQL implementation or a shadow task. Positive SQL semantics remain
 // covered by D's runtime-control tests, not by a model masquerading as that DB.
 var _ b.WriterBuilder = (&c.SQLRuntimeControl{}).BuildWriters
+
+func TestResourcePartsUseOnlyTheExactFrozenWriterCheckpoint(t *testing.T) {
+	state := flow.State{UID: "original-deployment", Generation: 3, Running: true, Checkpoint: "original-checkpoint"}
+	writers := []b.FrozenWriter{{ID: "deployment/source/app", Original: state}}
+	for _, fault := range []string{"", "missing", "checkpoint", "uid", "generation", "running", "duplicate"} {
+		t.Run(fault, func(t *testing.T) {
+			saved := worker.ResourceWriterOriginal{ID: writers[0].ID, State: state}
+			frozen := append([]b.FrozenWriter{}, writers...)
+			switch fault {
+			case "missing":
+				frozen = nil
+			case "checkpoint":
+				saved.State.Checkpoint = "maintenance-current"
+			case "uid":
+				saved.State.UID = "replacement"
+			case "generation":
+				saved.State.Generation++
+			case "running":
+				saved.State.Running = false
+			case "duplicate":
+				frozen = append(frozen, frozen[0])
+			}
+			raw, _ := json.Marshal(worker.Invocation{Request: worker.Request{Resources: &worker.ResourceCaptureSpec{OriginalWriters: []worker.ResourceWriterOriginal{saved}}}})
+			err := validateOriginalResourceWriters([]b.JobPart{{InvocationJSON: raw}}, frozen)
+			if (err == nil) != (fault == "") {
+				t.Fatal("wrong frozen writer binding", err)
+			}
+		})
+	}
+}
 
 func TestPublicSourceModuleOptInPreservesOriginalWriterAndDefaultParts(t *testing.T) {
 	writers, oldParts := 0, 0

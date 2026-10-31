@@ -51,11 +51,14 @@ type LinuxProfileConfig struct {
 	HoldLimit            time.Duration
 	BuildWriters         func(context.Context, d.Input, SourceInventory, []FrozenWriter) ([]flow.Writer, error)
 	BuildParts           func(d.Input, SourceInventory, time.Time) ([]JobPart, error)
+	// Optional original-writer-aware factory. Discover takes and validates ONE
+	// writer snapshot before calling it; invocation/header and plan share it.
+	BuildPartsWithWriters func(d.Input, SourceInventory, time.Time, []FrozenWriter) ([]JobPart, error)
 }
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
-	if (cfg.Source == nil && !cfg.RecoveryOnly) || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || cfg.BuildParts == nil {
+	if (cfg.Source == nil && !cfg.RecoveryOnly) || cfg.Database == "" || cfg.ServerUUID == "" || len(cfg.Supported) == 0 || cfg.HoldLimit <= 0 || cfg.HoldLimit > time.Hour || cfg.BuildWriters == nil || (cfg.BuildParts == nil && cfg.BuildPartsWithWriters == nil) {
 		return nil, d.ErrNotReady
 	}
 	copyKinds := map[AgentKind]bool{}
@@ -151,11 +154,14 @@ func (p *LinuxProfile) Discover(ctx context.Context, in d.Input) (Discovery, err
 	if out.HoldUntil.After(in.Authority.DeadlineAt) {
 		out.HoldUntil = in.Authority.DeadlineAt.UTC()
 	}
-	out.Parts, err = p.cfg.BuildParts(cloneInput(in), cloneSourceInventory(inv), out.HoldUntil)
-	if err != nil {
-		return Discovery{}, classify(err)
+	if p.cfg.BuildPartsWithWriters == nil {
+		out.Parts, err = p.cfg.BuildParts(cloneInput(in), cloneSourceInventory(inv), out.HoldUntil)
+		if err != nil {
+			return Discovery{}, classify(err)
+		}
 	}
 	out.Writers = []FrozenWriter{}
+	seen := map[string]bool{}
 	if in.Authority.TaskType == "backup" {
 		writers, err := p.cfg.BuildWriters(ctx, cloneInput(in), cloneSourceInventory(inv), nil)
 		if err != nil {
@@ -165,11 +171,24 @@ func (p *LinuxProfile) Discover(ctx context.Context, in d.Input) (Discovery, err
 			if nilValue(w) {
 				return Discovery{}, d.ErrNotReady
 			}
+			if w.ID() == "" || seen[w.ID()] || len(out.Writers) >= 10000 {
+				return Discovery{}, d.ErrNotReady
+			}
 			s, err := w.Observe(ctx)
 			if err != nil {
 				return Discovery{}, classify(err)
 			}
+			if s.UID == "" || s.Generation <= 0 {
+				return Discovery{}, d.ErrNotReady
+			}
+			seen[w.ID()] = true
 			out.Writers = append(out.Writers, FrozenWriter{w.ID(), s})
+		}
+	}
+	if p.cfg.BuildPartsWithWriters != nil {
+		out.Parts, err = p.cfg.BuildPartsWithWriters(cloneInput(in), cloneSourceInventory(inv), out.HoldUntil, append([]FrozenWriter{}, out.Writers...))
+		if err != nil {
+			return Discovery{}, classify(err)
 		}
 	}
 	return out, nil
