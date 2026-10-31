@@ -11,6 +11,7 @@ import (
 	"clawreef/internal/systembackup/flow"
 	"clawreef/internal/systembackup/team"
 	d "clawreef/internal/systembackupdispatch"
+	sh "clawreef/internal/systembackupskillhub"
 )
 
 type InstanceIdentity = domain.SourceInstance
@@ -18,13 +19,15 @@ type SourceInventory struct {
 	Database, ServerUUID string
 	Users                []int
 	Instances            []InstanceIdentity
-	Teams                *team.Inventory `json:"Teams,omitempty"`
+	Teams                *team.Inventory      `json:"Teams,omitempty"`
+	Skills               *sh.CaptureInventory `json:"Skills,omitempty"`
 }
 
 func cloneSourceInventory(in SourceInventory) SourceInventory {
 	in.Users = append([]int(nil), in.Users...)
 	in.Instances = append([]InstanceIdentity(nil), in.Instances...)
 	in.Teams = team.CloneInventory(in.Teams)
+	in.Skills = sh.CloneCaptureInventory(in.Skills)
 	return in
 }
 

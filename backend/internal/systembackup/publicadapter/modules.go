@@ -106,6 +106,10 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 				return nil, d.ErrNotReady
 			}
 			switch part.Operation {
+			case "capture-skill-objects":
+				if descriptor.Owner != "D" || part.RequestedPart != "object_storage" {
+					return nil, d.ErrNotReady
+				}
 			case "capture-deployment-resources":
 				if descriptor.Owner != "D" || part.RequestedPart != "deployment_resources" {
 					return nil, d.ErrNotReady

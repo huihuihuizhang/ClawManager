@@ -149,6 +149,9 @@ func (h ControlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func validControl(r ControlRequest) bool {
 	q := r.Invocation.Request
+	if q.SkillObjects != nil && !skillObjectOperation(q.Operation) {
+		return false
+	}
 	if r.Invocation.FormalCapture != nil && !validFormalInvocation(r.Invocation) {
 		return false
 	}
@@ -157,6 +160,10 @@ func validControl(r ControlRequest) bool {
 	}
 	if q.TeamWorkspace != nil || q.Operation == "verify-team-workspace" {
 		if !validTeamWorkspace(q) || r.Invocation.WorkspacePath == "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" || r.Invocation.ProviderKey != nil {
+			return false
+		}
+	} else if skillObjectOperation(q.Operation) {
+		if !validSkillObjectRequest(q) || r.Invocation.ProviderKey == nil || r.Invocation.FormalCapture == nil || r.Invocation.WorkspacePath != "" || r.Invocation.StagingPath == "" || r.Invocation.EvidencePath != "" {
 			return false
 		}
 	} else if resourceCaptureOperation(q.Operation) {
@@ -434,7 +441,7 @@ func decodeBounded(r io.Reader, dst any, limit int64) error {
 }
 func ReadInvocation(r io.Reader) (Invocation, error) {
 	var i Invocation
-	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && !teamCaptureOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
+	if decodeBounded(r, &i, 1<<20) != nil || (!databaseOperation(i.Request.Operation) && !teamCaptureOperation(i.Request.Operation) && !skillObjectOperation(i.Request.Operation) && !resourceCaptureOperation(i.Request.Operation) && i.WorkspacePath == "") || i.StagingPath == "" || strings.ContainsAny(i.WorkspacePath+i.StagingPath+i.EvidencePath, "\x00\r\n") {
 		return Invocation{}, ErrRequest
 	}
 	return i, nil

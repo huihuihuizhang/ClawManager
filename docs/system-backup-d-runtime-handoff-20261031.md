@@ -164,3 +164,16 @@
 - 源S3实际TLS协议fixture+原C collector+文件CMBKGC01：同一原签名grant/credential/prefix，两次连续capture使用不同taskID、TeamID、v1/v2内容与摘要，grant原字节不变，无重签；只读两个指定版本。跨bucket/prefix、原config变更、credential/grant替换均在data GET前拒绝。原control身份为实际mTLS夹具，KMS帧key为明确fixture；不是完整SQL issuer/真实K8s六项验收。Redis scope纯契约用例另验证新TeamIDs/InventorySHA保持同一静态scope，换server/db/scope/全局prefix拒绝。
 - 合入 A9/backup@92ec4e7a，未修改A源码。A/D本机MySQL opt-in完整五包退出0：worker35.816s、domain3.232s、execution42.332s、publicadapter3.474s、backup-worker2.883s。此后仅把连续S3测试第二次改为明确不同taskID，定向复测3.044s通过；git diff --check无错误。
 - 下一项直接推进 NewDeploymentService 六模块生产factory/原Teams实际inventory与Runtime/参与者，以及新publisher claim/三用途签名/immutable发布独立读回终态。当前默认workspace-only门禁未放开，不以source材料/协议测试宣布完整页面备份成功；完整KEK coverage/adoption/backfill与现场CSI/CRI/RBAC仍未伪造。
+
+
+## D5.7 Skills 固定版本对象实际 worker / CLI / Job（2026-10-31）
+
+- 新增独立 capture-skill-objects，不借用 TeamID。原冻结请求包含明确 blob ID/key/size、整个原 prefix 的固定版本清单（含未被引用对象）、SQL投影摘要和未打包 blob 的 workspace 需求ID。复用原 Skill PrepareObjectCapture/CopyFrozenObject/WriteCapturedObjectIndex，逐版本核实 response version/size、SHA、真正 EOF 和同一次 GET 的原 metadata；当前 omitted metadata 非零直接失败，不静默丢弃。
+- 在原 RunFormalCapture/动态 CaptureKeyJob 路径内生成有界 tar（绑定原 Invocation 的 header、完整对象字节、规范 index），压缩后由 CMBKGC01 原帧实现加密、封存、原 ReportCandidate ACK。每次打开/读取/EOF 前后复查原 Job 和独立 source grant，错误不保留 cipher/envelope/partial。source grant 静态范围只固定独立 TLS endpoint/CA 与精确 bucket/prefix，仍不纳入未来任务/版本，不借用KEK授权。
+- 实际 Linux CLI formal 分支抽取为 runFormalInvocation 共用生产阶段；Linux guard 保留。Windows测试经 ReadInvocation→实际 mTLS Ready→该共用生产阶段→独立源签名与 TLS S3→原动态许可消费→TLS JWT/Generate→C帧→原 candidate ACK。authorizer/unknown提交明确为状态夹具，未冒充 D5.5 原SQL issuer；不是完整 Linux 二进制启动或现场S3权限证明。
+- CLI八场景通过：正例解密并核实原 blob + 未引用对象和每条 index 的固定版本/size/SHA；错 request.Version、版本缺失/响应版本改变、错SHA、截断EOF、源grant中途失效、跨prefix均零候选，错误版本/越界零源GET/Generate，错误版本零reserve。另补资源操作空workspace的实际 ReadInvocation 回归，修正旧解析器与资源网络捕获契约的矛盾；旧functional workspace不能混带Skills source。
+- NewSkillObjectsModule 进入原 module catalog/BuildCapturePart/SkillObjectCaptureJob/immutable WorkerConfigMap。required skill_hub 精确依赖唯一 B users_instances_database，整个原 Source.Skills DTO验证所有8表keyset、owner/version/blob关系。实际4parts装配通过，源投影漂移/错误请求版本/外来blob/重复user/混Team/缺材料拒绝；任何未打包blob仍因缺实际workspace证明而关闭，空对象归档不等于证明。
+- 初次 module→Job正例失败原因是测试 materials 仅有 ConfigMap、遗漏正式 attachFormalMaterials 所需至少一个只读 Inputs；补齐明确源 credential Secret mount后，通过实际 BuildCapturePart/4parts断言，没有放宽生产guard。Job测试保证原 backup-worker CLI、显式只读材料、无source filesystem/DAC能力/ambient SA token/arbitrary shell。
+- CaptureInventory是显式计划DTO，避免业务models的json:"-"漏字段；完整manifest/findings等仍应由单一原rawSQL快照保存。当前尚未给生产 discovery ReadSkills 赋值、尚未将该投影接入原SQL collector、尚未在默认service注册六模块。未提交的 domain/skill_capture.go 留给紧接着的同一discovery RR/原rawSQL对照切片，不把 helper存在算生产闭环。readiness及默认workspace-only门禁保持。
+- 已保留本地改动快进合入 backup@6b360148（A11真实 signer startup）；未修改 A 当前publisher claim生命周期工作。新publisher编排仍须真实 public:PodUID owner、FinishCapture后新Acquire的当时claim，不复用capture token或绕过原guard。
+- 合入A11后受影响7包完整回归（A/D真实本机MySQL opt-in启用）退出0：backup-worker3.223s、worker35.604s、kube3.121s、publicadapter3.468s、skillhub1.622s、domain3.209s、execution36.382s；git diff --check无错误。
