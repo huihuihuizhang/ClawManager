@@ -526,3 +526,5 @@ A13.2c最终已同步监督42f321fa（D已提交formal MySQL材料修复，未�
 ## 现场事实边界（最终集中更新）
 
 未提供真实安装签发者记录/独立部署 pin、真实 owner task/workload 授权和现场 JWT/Transit 回执；代码接入和本地拒绝测试不能替代这些事实。本轮不索取或生成生产秘密。
+
+A15.1 (publisher assembly input): original encrypted-plan part inventory and detached authenticated record access. Final workload reads precede a final short exact SQL snapshot; original plan ciphertext/keyref/profile/grant mutations reject. Every part still requires concrete ForPart. Local real SQL/TLS six inventory/detach cases PASS 12.486s. No artifact/terminal success claimed; native immutable transport and original-journal finalizer are ongoing separate WIP.
