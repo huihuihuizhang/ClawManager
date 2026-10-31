@@ -194,17 +194,16 @@ func (f *PublisherVerifierFactory) ForPart(ctx context.Context, scope security.P
 }
 
 type PublisherVerifier struct {
-	factory           *PublisherVerifierFactory
-	access            *security.SQLPublisherCaptureAuthority
-	history           c.PublisherCaptureRecord
-	historyHash       string
-	request           w.KeyRequest
-	capability        *sqlPreparedCapability
-	until             time.Time
-	client            *http.Client
-	unwrap            *kms.RecoveryUnwrapper
-	callMu, sessionMu sync.Mutex
-	active            *publisherVerifierSession
+	factory         *PublisherVerifierFactory
+	access          *security.SQLPublisherCaptureAuthority
+	history         c.PublisherCaptureRecord
+	historyHash     string
+	request         w.KeyRequest
+	capability      *sqlPreparedCapability
+	until           time.Time
+	client          *http.Client
+	unwrap          *kms.RecoveryUnwrapper
+	callMu, checkMu sync.Mutex
 }
 
 func (v *PublisherVerifier) ValidUntil() time.Time {
@@ -237,7 +236,7 @@ func publisherVerifierHistoryHash(record c.PublisherCaptureRecord) string {
 	}
 	defer clear(raw)
 	digest := sha256.New()
-	for _, part := range [][]byte{[]byte("system-backup-publisher-verifier-history.v1\x00"), raw, record.Input.ConfigSnapshot, record.Plan.CanonicalJSON, record.CandidateJSON, record.PartResult.Checkpoint} {
+	for _, part := range [][]byte{[]byte("system-backup-publisher-verifier-history.v1\x00"), raw, record.Input.ConfigSnapshot, record.Input.SourceSnapshot, record.Plan.CanonicalJSON, record.CandidateJSON, record.PartResult.Checkpoint} {
 		var size [8]byte
 		binary.BigEndian.PutUint64(size[:], uint64(len(part)))
 		digest.Write(size[:])
@@ -342,12 +341,11 @@ func (v *PublisherVerifier) Recheck(ctx context.Context) error {
 	if v == nil {
 		return kms.ErrPermission
 	}
-	v.sessionMu.Lock()
-	active := v.active
-	v.sessionMu.Unlock()
-	if active != nil {
-		return active.check(ctx)
-	}
+	// Cipher and plaintext pipe readers run concurrently. Serialize each full
+	// external-read/short-SQL check so neither starts workload I/O while the
+	// other's original metadata snapshot is locked.
+	v.checkMu.Lock()
+	defer v.checkMu.Unlock()
 	session, err := v.begin(ctx)
 	if err != nil {
 		return err
@@ -414,6 +412,10 @@ func (v *PublisherEnvelopeVerifier) Recheck(ctx context.Context) error {
 	}
 	return v.parent.Recheck(ctx)
 }
+
+// The complete C and plaintext readers check original current authority around
+// each bounded read. No DEK, claim, provider credential or deadline is renewed.
+func (v *PublisherEnvelopeVerifier) RecheckStream(ctx context.Context) error { return v.Recheck(ctx) }
 func (v *PublisherEnvelopeVerifier) Unwrap(ctx context.Context, expected w.KeyRequest, wrapped w.WrappedKey, use w.WithDEK) error {
 	if v == nil || v.parent == nil || v.parent.unwrap == nil || nilSource(ctx) || ctx.Err() != nil || use == nil || expected != v.wrapped.Request || wrapped.Request != v.wrapped.Request || wrapped.Algorithm != v.wrapped.Algorithm || !bytes.Equal(wrapped.Ciphertext, v.wrapped.Ciphertext) {
 		return kms.ErrPermission
@@ -459,37 +461,23 @@ func (r publisherVerifierResolver) Resolve(ctx context.Context, access kms.Acces
 		}
 		c, cancel := context.WithDeadline(c, v.until)
 		defer cancel()
-		session, err := v.begin(c)
-		if err != nil {
-			return err
-		}
-		defer session.tx.Rollback()
-		v.sessionMu.Lock()
-		if v.active != nil {
-			v.sessionMu.Unlock()
-			return kms.ErrPermission
-		}
-		v.active = session
-		v.sessionMu.Unlock()
-		defer func() { v.sessionMu.Lock(); v.active = nil; v.sessionMu.Unlock() }()
+		// Each check opens and closes the SAME original authority/KEK snapshot.
+		// Holding it during remote C body reads blocks actual claim withdrawal
+		// and makes revocation invisible. Read boundaries plus this final full
+		// check reject the entire callback before any observation is committed.
 		if check(c, a) != nil {
 			return kms.ErrPermission
 		}
-		if err = use(); err != nil {
+		if err := use(); err != nil {
 			return err
 		}
 		if check(c, a) != nil {
 			return kms.ErrPermission
 		}
-		if session.tx.Rollback() != nil {
-			return kms.ErrPermission
-		}
-		v.sessionMu.Lock()
-		v.active = nil
-		v.sessionMu.Unlock()
-		return v.Recheck(c)
+		return v.access.Check(c)
 	}}, nil
 }
 
 var _ w.Unwrapper = (*PublisherEnvelopeVerifier)(nil)
+var _ w.StreamReadAuthority = (*PublisherEnvelopeVerifier)(nil)
 var _ kms.Resolver = publisherVerifierResolver{}
