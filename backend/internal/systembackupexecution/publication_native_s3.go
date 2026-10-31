@@ -65,8 +65,9 @@ type nativePublicationObject struct {
 	payloadRead          *publicationPayloadReadReceipt
 }
 type nativePublicationS3 struct {
-	config PublicationTargetMaterials
-	client *http.Client
+	config   PublicationTargetMaterials
+	client   *http.Client
+	readOnly bool
 }
 
 func (p PublicationTargetMaterials) validate() error {
@@ -99,6 +100,10 @@ func newNativePublicationS3(p PublicationTargetMaterials) (*nativePublicationS3,
 	if p.validate() != nil {
 		return nil, errPublicationUnavailable
 	}
+	return newPublicationS3Transport(p)
+}
+
+func newPublicationS3Transport(p PublicationTargetMaterials) (*nativePublicationS3, error) {
 	ca, err := pinnedDeploymentFile(p.CAFile, p.CASHA256, 65536)
 	if err != nil {
 		return nil, errPublicationUnavailable
@@ -129,7 +134,17 @@ func safePublicationKey(key string) bool {
 }
 
 func (s *nativePublicationS3) credential(write bool) (nativePublicationCredential, error) {
-	if s == nil || s.config.validate() != nil {
+	if s == nil || s.readOnly && write {
+		return nativePublicationCredential{}, errPublicationUnavailable
+	}
+	if s.readOnly {
+		if artifactReadMaterials(s.config).validate() != nil {
+			return nativePublicationCredential{}, errPublicationUnavailable
+		}
+		if _, err := pinnedDeploymentFile(s.config.CAFile, s.config.CASHA256, 65536); err != nil {
+			return nativePublicationCredential{}, errPublicationUnavailable
+		}
+	} else if s.config.validate() != nil {
 		return nativePublicationCredential{}, errPublicationUnavailable
 	}
 	path, pin := s.config.ReadCredentialFile, s.config.ReadCredentialSHA256
