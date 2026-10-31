@@ -366,6 +366,13 @@ func (s *DeploymentService) checkSourceIdentity(ctx context.Context, source sour
 		if rows.Err() != nil || domain.ValidateBusinessSourceGrants(database, businessGrants) != nil {
 			return c.ErrExecutionAuthority
 		}
+		if rows.Close() != nil || s.captureMaterials == nil {
+			return c.ErrExecutionAuthority
+		}
+		db := s.captureMaterials.Operations["capture-database"].Request.Database
+		if db == nil || db.SourceScope != domain.BusinessTableSourceScope || db.SchemaCensus == nil || db.Name != database || db.ServerUUID != server || domain.CheckBusinessSchemaCensus(ctx, source, *db.SchemaCensus) != nil {
+			return c.ErrExecutionAuthority
+		}
 		return nil
 	}
 	if rows.Err() != nil || !seen["users"] || !seen["instances"] {

@@ -95,13 +95,14 @@ func FormalSourceScopeSHA256(i Invocation, m FormalSourceMount) (string, error) 
 		}
 		scope = struct{ Operation, Address, Database, ServerUUID, TLSServerName, CA string }{i.Request.Operation, d.Address, d.Name, d.ServerUUID, d.TLSServerName, sourceDigest(d.RootCA)}
 		if d.SourceScope != "" {
-			if d.SourceScope != domain.BusinessTableSourceScope {
+			if d.SourceScope != domain.BusinessTableSourceScope || d.SchemaCensus == nil || d.SchemaCensus.Validate() != nil {
 				return "", ErrRequest
 			}
 			scope = struct {
-				Operation, Address, Database, ServerUUID, TLSServerName, CA, SourceScope string
-				Tables                                                                   []string
-			}{i.Request.Operation, d.Address, d.Name, d.ServerUUID, d.TLSServerName, sourceDigest(d.RootCA), d.SourceScope, domain.BusinessCaptureTables()}
+				Operation, Address, Database, ServerUUID, TLSServerName, CA, SourceScope, SchemaPolicy string
+				Census                                                                                 domain.SchemaCensusSpec
+				Tables                                                                                 []string
+			}{i.Request.Operation, d.Address, d.Name, d.ServerUUID, d.TLSServerName, sourceDigest(d.RootCA), d.SourceScope, domain.SchemaCensusPolicySHA256(), *d.SchemaCensus, domain.BusinessCaptureTables()}
 		}
 	} else if t := i.Request.Teams; t != nil {
 		if (t.Redis != nil) != (m.Redis != nil) || (len(t.Objects) > 0) != (m.Objects != nil) {

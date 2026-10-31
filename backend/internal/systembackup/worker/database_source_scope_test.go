@@ -13,6 +13,7 @@ func TestFormalBusinessSourceScopeBindsOriginalSourceGrant(t *testing.T) {
 		t.Fatal("original database source shape", err)
 	}
 	i.Request.Database.SourceScope = domain.BusinessTableSourceScope
+	i.Request.Database.SchemaCensus = &domain.SchemaCensusSpec{Version: domain.SchemaCensusVersion, Definer: "owner@localhost", DefinitionSHA256: sourceDigest([]byte("original-source-owner-census-view"))}
 	finite, err := FormalSourceScopeSHA256(i, FormalSourceMount{})
 	if err != nil || finite == legacy || !validDatabaseRequest(i.Request) {
 		t.Fatal("finite scope not bound to independent source grant", err)

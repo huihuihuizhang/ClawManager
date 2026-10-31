@@ -15,12 +15,17 @@ func TestFiniteBusinessSourceGrantMatrix(t *testing.T) {
 	for _, name := range tables {
 		grants = append(grants, "GRANT SELECT ON `source`.`"+name+"` TO 'reader'@'127.0.0.1'")
 	}
-	for _, mode := range []string{"valid", "missing", "wildcard", "global", "control", "unknown", "write", "grant-option", "duplicate", "other-database", "role"} {
+	grants = append(grants, "GRANT EXECUTE ON PROCEDURE `source`.`"+SchemaCensusRoutine+"` TO 'reader'@'127.0.0.1'", "GRANT SHOW_ROUTINE ON *.* TO 'reader'@'127.0.0.1'")
+	for _, mode := range []string{"valid", "missing", "missing-census", "missing-routine-metadata", "wildcard", "global", "control", "unknown", "write", "grant-option", "duplicate", "other-database", "role"} {
 		t.Run(mode, func(t *testing.T) {
 			actual := append([]string{}, grants...)
 			switch mode {
 			case "missing":
 				actual = actual[1:]
+			case "missing-census":
+				actual = append(actual[:len(actual)-2], actual[len(actual)-1])
+			case "missing-routine-metadata":
+				actual = actual[:len(actual)-1]
 			case "wildcard":
 				actual = []string{"GRANT SELECT ON `source`.* TO 'reader'@'127.0.0.1'"}
 			case "global":
