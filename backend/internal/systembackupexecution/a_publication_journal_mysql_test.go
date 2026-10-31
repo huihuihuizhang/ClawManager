@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -59,7 +59,9 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	var version uint64
 	var heartbeat, lease, deadline time.Time
 	var originalCapacity int64
-	if h.admin.QueryRow("SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=1",h.original.InstallationID).Scan(&originalCapacity)!=nil{t.Fatal("original metadata capacity")}
+	if h.admin.QueryRow("SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=1", h.original.InstallationID).Scan(&originalCapacity) != nil {
+		t.Fatal("original metadata capacity")
+	}
 	originalKEKIdentity, originalKEKVersion := x.cfg.Binding.ConfigRef.IdentityHash, x.cfg.Binding.ConfigRef.Version
 	if h.admin.QueryRow("SELECT config_snapshot_json,row_version,heartbeat_at,controller_lease_expires_at,deadline_at FROM system_backup_v2_backups WHERE public_id=?", h.original.TaskPublicID).Scan(&config, &version, &heartbeat, &lease, &deadline) != nil {
 		t.Fatal("original task metadata")
@@ -68,6 +70,11 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	// original mutually-referencing production tables are created, then restored
 	// before any seed or production operation. No CHECK/unique is disabled.
 	exec("SET FOREIGN_KEY_CHECKS=0")
+	// Preserve the already-created original directory's exact 104 facts while
+	// replacing its narrow parent tables. Recreate all 104 FKs against the new
+	// production parents; do not manufacture an intent after directory creation.
+	exec("CREATE TEMPORARY TABLE a_original_staging_rows AS SELECT * FROM system_backup_v2_staging_resources")
+	exec("DROP TABLE system_backup_v2_staging_resources")
 	for _, table := range []string{"system_backup_v2_configs", "system_backup_v2_backups", "system_backup_v2_operations", "system_backup_v2_evidence", "system_backup_v2_events"} {
 		exec("RENAME TABLE " + table + " TO " + table + "_a_narrow_fixture")
 	}
@@ -75,6 +82,12 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	for _, item := range tables {
 		exec(aPublicationActualTable(t, item[0], item[1]))
 	}
+	exec(aPublicationActualTable(t, "104_backup_v2_add_system_backup_staging_resources.sql", "system_backup_v2_staging_resources"))
+	stagingIdentityDDL, err := os.ReadFile(filepath.Join("..", "db", "migrations", "132_backup_v2_staging_backup_identity.sql"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec(string(stagingIdentityDDL))
 	exec(aPublicationActualTable(t, "096_backup_v2_add_system_backup_control_metadata_core.sql", "system_backup_v2_evidence_chunks"))
 	exec("ALTER TABLE system_backup_v2_backups ADD CONSTRAINT sbv2_fk_sb_backup_finalization_action FOREIGN KEY(finalization_action_public_id) REFERENCES system_backup_v2_external_actions(public_id) ON DELETE RESTRICT")
 	exec("SET FOREIGN_KEY_CHECKS=1")
@@ -103,7 +116,7 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	if json.Unmarshal(example.Request.Config, &values) != nil {
 		t.Fatal("config values")
 	}
-	values.Capacity["control_metadata_capacity_bytes"]=json.Number(strconv.FormatInt(originalCapacity,10))
+	values.Capacity["control_metadata_capacity_bytes"] = json.Number(strconv.FormatInt(originalCapacity, 10))
 	columns := []string{"origin_installation_id", "version", "config_sha256", "config_size_bytes", "enabled", "alert_profile", "minimum_recovery_points", "created_by"}
 	args := []any{h.original.InstallationID, 1, hash(config), len(config), true, values.Alert, values.Minimum.String(), "system:controller"}
 	for group, members := range map[string]map[string]json.Number{"durations": values.Durations, "capacity": values.Capacity, "concurrency": values.Concurrency, "preflight_limits": values.Preflight} {
@@ -137,6 +150,8 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	marks := strings.TrimSuffix(strings.Repeat("?,", len(args)), ",")
 	exec("INSERT INTO system_backup_v2_configs("+strings.Join(columns, ",")+") VALUES("+marks+")", args...)
 	exec(`INSERT INTO system_backup_v2_backups(public_id,origin_installation_id,actor_type,actor_id,endpoint,idempotency_key,request_hash,request_id,status,config_version,config_snapshot_json,config_snapshot_size_bytes,config_snapshot_sha256,controller_owner,row_version,heartbeat_at,controller_lease_expires_at,deadline_at,started_at,source_orchestrator,source_profile,matrix_key,runner,task_purpose,requested_parts,artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version,target_class,target_risks,target_failure_domain_id,maintenance_lock_owner,maintenance_fencing_token,created_at) VALUES(?,?,'system','system:controller','ActualPublicationFixture','actual-publication-fixture',?,?,'validating',1,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(6),'kubernetes','cluster','k8s-cluster','k8s','functional_test','workspace',?,?,?,?,'same-cluster-copy','','local',?,?,TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)))`, h.original.TaskPublicID, h.original.InstallationID, hash([]byte("original-create")), h.original.RequestID, config, len(config), hash(config), h.token.Owner, version, heartbeat, lease, deadline, target.ReadIdentityHash, target.ReadRefVersion, target.CAIdentityHash, target.CARefVersion, h.original.MaintenanceOwner, h.original.MaintenanceFencingToken)
+	exec("INSERT INTO system_backup_v2_staging_resources SELECT * FROM a_original_staging_rows")
+	exec("DROP TEMPORARY TABLE a_original_staging_rows")
 	account := strings.Split(h.owner.Identity.DeploymentBinding().DatabaseAccount, "@")[0]
 	database := h.owner.Identity.DeploymentBinding().Database
 	grants, err := c.PublicationGrantSQL(database, account, "127.0.0.1", false, false, false)

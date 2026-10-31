@@ -3,33 +3,15 @@ package systembackupexecution
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"os"
 	"strings"
 
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
-	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func (o *PublicJobOwner) ensureStaging(task string) error {
-	if o.Staging == nil || len(task) != 40 {
-		return c.ErrExecutionRecord
-	}
-	e := o.Staging.Mkdir(task, 0700)
-	if e != nil && !errors.Is(e, os.ErrExist) {
-		return e
-	}
-	info, e := o.Staging.Lstat(task)
-	if e != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
-		return c.ErrExecutionRecord
-	}
-	return nil
-}
 
 // The invocation ConfigMap is created after Prepare. Bind its actual UID from
 // the original resource journal, not from an arbitrary same-name live object.

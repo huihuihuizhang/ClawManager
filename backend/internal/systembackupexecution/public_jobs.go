@@ -173,9 +173,6 @@ func (o *PublicJobOwner) Admit(ctx context.Context, a d.Authority, intent d.JobI
 	if e = o.Gate.ValidateCollectors(ctx, a); e != nil {
 		return in, p, kube.Runner{}, e
 	}
-	if e = o.ensureStaging(a.TaskPublicID); e != nil {
-		return in, p, kube.Runner{}, e
-	}
 	found := false
 	for _, part := range desc.Parts {
 		if part.Intent.JobUnitKey == intent.JobUnitKey && part.Intent.Name == intent.Name && part.Intent.Generation == intent.Generation && part.Intent.SpecSHA256 == intent.SpecSHA256 && bytes.Equal(part.Intent.SpecJSON, intent.SpecJSON) {
@@ -184,6 +181,9 @@ func (o *PublicJobOwner) Admit(ctx context.Context, a d.Authority, intent d.JobI
 	}
 	if !found {
 		return in, p, kube.Runner{}, c.ErrExecutionRecord
+	}
+	if e = o.ensureStaging(ctx, a); e != nil {
+		return in, p, kube.Runner{}, e
 	}
 	for _, part := range desc.Parts {
 		if part.Intent.JobUnitKey == intent.JobUnitKey {

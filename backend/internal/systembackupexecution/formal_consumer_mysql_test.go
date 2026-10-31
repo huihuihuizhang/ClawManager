@@ -311,11 +311,10 @@ func consumerDDL() []string {
 		`CREATE TABLE system_backup_v2_installation_state(origin_installation_id VARCHAR(128) PRIMARY KEY,schema_version VARCHAR(64) NOT NULL,row_version BIGINT UNSIGNED NOT NULL,active_config_version BIGINT UNSIGNED NOT NULL,last_effective_enabled BOOLEAN NOT NULL) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_maintenance_locks(origin_installation_id VARCHAR(128),scope VARCHAR(128),lock_name VARCHAR(128),gate_state VARCHAR(32),lock_owner VARCHAR(128),fencing_token BIGINT UNSIGNED,row_version BIGINT UNSIGNED,lease_expires_at DATETIME(6),absolute_hold_deadline_at DATETIME(6),PRIMARY KEY(origin_installation_id,scope,lock_name)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_engine_bindings(scope VARCHAR(128) PRIMARY KEY,engine VARCHAR(32)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_gate(scope VARCHAR(128) PRIMARY KEY,phase VARCHAR(32),owner VARCHAR(128),fencing_token BIGINT UNSIGNED,generation BIGINT UNSIGNED) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_inputs(origin_installation_id VARCHAR(128),task_public_id CHAR(40),task_type VARCHAR(32),profile_json MEDIUMBLOB,profile_sha256 CHAR(64),PRIMARY KEY(origin_installation_id,task_public_id,task_type)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_execution_records(origin_installation_id VARCHAR(128),task_public_id CHAR(40),attempt_no INT UNSIGNED,phase VARCHAR(32),record_kind VARCHAR(32),payload_sha256 CHAR(64),key_ref VARCHAR(256),sealed_payload MEDIUMBLOB,PRIMARY KEY(origin_installation_id,task_public_id,attempt_no,phase,record_kind)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_operations(origin_installation_id VARCHAR(128),target_type VARCHAR(32),target_public_id CHAR(40),operation_type VARCHAR(32),status VARCHAR(32)) ENGINE=InnoDB`,
-		`CREATE TABLE system_backup_v2_evidence(public_id VARCHAR(128) PRIMARY KEY,schema_version VARCHAR(64) DEFAULT 'system-backup-evidence.v1',owner_target_type VARCHAR(32),owner_target_public_id CHAR(40),evidence_type VARCHAR(32),storage_state VARCHAR(32),inline_payload MEDIUMBLOB,content_checksum CHAR(64),content_size_bytes BIGINT,media_type VARCHAR(64),encryption VARCHAR(32),redaction_classification VARCHAR(32),evidence_failure_code VARCHAR(32) DEFAULT 'none',observed_health VARCHAR(32),expires_at DATETIME(6),protected_until DATETIME(6),created_at DATETIME(6)) ENGINE=InnoDB`,
+		`CREATE TABLE system_backup_v2_operations(id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,origin_installation_id VARCHAR(128),target_type VARCHAR(32),target_public_id CHAR(40),operation_type VARCHAR(32),status VARCHAR(32)) ENGINE=InnoDB`,
+		`CREATE TABLE system_backup_v2_evidence(id BIGINT UNSIGNED AUTO_INCREMENT UNIQUE,public_id VARCHAR(128) PRIMARY KEY,schema_version VARCHAR(64) DEFAULT 'system-backup-evidence.v1',owner_target_type VARCHAR(32),owner_target_public_id CHAR(40),evidence_type VARCHAR(32),storage_state VARCHAR(32),inline_payload MEDIUMBLOB,content_checksum CHAR(64),content_size_bytes BIGINT,media_type VARCHAR(64),encryption VARCHAR(32),redaction_classification VARCHAR(32),evidence_failure_code VARCHAR(32) DEFAULT 'none',observed_health VARCHAR(32),expires_at DATETIME(6),protected_until DATETIME(6),created_at DATETIME(6)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_job_observations(origin_installation_id VARCHAR(128),target_type VARCHAR(32),target_public_id CHAR(40),attempt_no BIGINT UNSIGNED,phase VARCHAR(32),job_unit_key VARCHAR(64),job_uid VARCHAR(256),job_generation BIGINT UNSIGNED,relay_identity_ref VARCHAR(256),relay_identity_version VARCHAR(128),relay_identity_bound_at DATETIME(6),relay_identity_expires_at DATETIME(6),last_accepted_sequence BIGINT UNSIGNED,last_accepted_body_sha256 CHAR(64),last_observed_status VARCHAR(32),last_observed_at DATETIME(6),progress_sequence BIGINT UNSIGNED,progress_digest_sha256 CHAR(64),last_business_progress_at DATETIME(6),created_at DATETIME(6),row_version BIGINT UNSIGNED DEFAULT 1,PRIMARY KEY(origin_installation_id,target_type,target_public_id,attempt_no,phase,job_unit_key)) ENGINE=InnoDB`,
 		`CREATE TABLE system_backup_v2_metadata_reservations(id BIGINT PRIMARY KEY,sample_at DATETIME(6) NOT NULL,reserved_bytes BIGINT NOT NULL) ENGINE=InnoDB`,
 	}
@@ -335,7 +334,7 @@ func seedConsumerRows(t *testing.T, db *sql.DB, a d.Authority, config, profile [
 	exec(`INSERT INTO system_backup_v2_installation_state VALUES(?,'system-backup-installation-state.v1',1,1,TRUE)`, a.InstallationID)
 	exec(`INSERT INTO system_backup_v2_maintenance_locks VALUES(?,?,'system_backup_capture_gate','held',?,?,1,?,?)`, a.InstallationID, c.CaptureGateScope, a.MaintenanceOwner, a.MaintenanceFencingToken, a.DeadlineAt, a.DeadlineAt)
 	exec(`INSERT INTO system_backup_v2_engine_bindings VALUES('installation','v2')`)
-	exec(`INSERT INTO system_backup_gate(scope,phase,owner,fencing_token,generation) VALUES('original-app','held',?,10,?)`, a.TaskPublicID, a.MaintenanceFencingToken)
+	exec(`INSERT INTO system_backup_gate(scope,phase,owner,fencing_token,generation,hold_deadline) VALUES('original-app','held',?,10,?,?)`, a.TaskPublicID, a.MaintenanceFencingToken, a.DeadlineAt)
 	exec(`INSERT INTO system_backup_v2_execution_inputs VALUES(?,?,'backup',?,?)`, a.InstallationID, a.TaskPublicID, profile, hash(profile))
 	exec(`INSERT INTO system_backup_v2_runtime_captures(task_public_id,application_scope,gate_generation,acquire_token,held_token,registry_sha256,writers_json,acquire_until,hold_until) VALUES(?,'original-app',?,9,10,?,'[]',?,?)`, a.TaskPublicID, a.MaintenanceFencingToken, strings.Repeat("a", 64), a.DeadlineAt, a.DeadlineAt)
 }
@@ -452,6 +451,21 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 			t.Fatal("consumer schema DDL failed", err)
 		}
 	}
+	if _, err = admin.Exec(aPublicationActualTable(t, "104_backup_v2_add_system_backup_staging_resources.sql", "system_backup_v2_staging_resources")); err != nil {
+		t.Fatal("actual staging resource migration", err)
+	}
+	stagingIdentityDDL, err := os.ReadFile(filepath.Join("..", "db", "migrations", "132_backup_v2_staging_backup_identity.sql"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = admin.Exec(string(stagingIdentityDDL)); err != nil {
+		t.Fatal("actual staging identity correction", err)
+	}
+	for _, table := range []string{"system_backup_gate", "system_backup_participants"} {
+		if _, err = admin.Exec(aPublicationActualTable(t, "079_add_system_backup_control.sql", table)); err != nil {
+			t.Fatal("actual collector gate migration", err)
+		}
+	}
 	base, err := os.ReadFile(filepath.Join("..", "db", "migrations", "123_backup_v2_runtime_execution_journal.sql"))
 	if err != nil {
 		t.Fatal(err)
@@ -481,12 +495,15 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		t.Fatal("local consumer account failed")
 	}
 	createdUser = true
-	for table, verbs := range map[string]string{"backups": "SELECT,UPDATE", "attempts": "SELECT,UPDATE", "maintenance_locks": "SELECT,UPDATE", "installation_state": "SELECT,UPDATE", "configs": "SELECT", "execution_inputs": "SELECT", "execution_records": "SELECT,INSERT", "runtime_resources": "SELECT,UPDATE", "runtime_captures": "SELECT", "operations": "SELECT", "evidence": "SELECT,INSERT", "job_observations": "SELECT,INSERT,UPDATE", "metadata_reservations": "SELECT,INSERT,UPDATE"} {
+	for table, verbs := range map[string]string{"backups": "SELECT,UPDATE", "attempts": "SELECT,UPDATE", "maintenance_locks": "SELECT,UPDATE", "installation_state": "SELECT,UPDATE", "configs": "SELECT", "execution_inputs": "SELECT", "execution_records": "SELECT,INSERT", "runtime_resources": "SELECT,UPDATE", "runtime_captures": "SELECT", "operations": "SELECT", "evidence": "SELECT,INSERT", "job_observations": "SELECT,INSERT,UPDATE", "metadata_reservations": "SELECT,INSERT,UPDATE", "staging_resources": "SELECT,INSERT,UPDATE"} {
 		if _, err = root.Exec("GRANT " + verbs + " ON `" + database + "`.`system_backup_v2_" + table + "` TO '" + user + "'@'127.0.0.1'"); err != nil {
 			t.Fatal("local table-scoped consumer grant failed")
 		}
 	}
 	if _, err = root.Exec("GRANT SELECT ON `" + database + "`.`system_backup_gate` TO '" + user + "'@'127.0.0.1'"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = root.Exec("GRANT SELECT ON `" + database + "`.`system_backup_participants` TO '" + user + "'@'127.0.0.1'"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = root.Exec("GRANT SELECT ON `" + database + "`.`system_backup_v2_engine_bindings` TO '" + user + "'@'127.0.0.1'"); err != nil {
@@ -618,25 +635,6 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { stage.Close() })
-	if err = stage.Mkdir(a.TaskPublicID, 0700); err != nil {
-		t.Fatal(err)
-	}
-	taskStage, err := stage.OpenRoot(a.TaskPublicID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer taskStage.Close()
-	for _, receipt := range []staging.Receipt{candidate.Ciphertext, candidate.Envelope} {
-		reader, err := staging.OpenFile(ctx, source, receipt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = staging.WriteUnpublishedFile(ctx, taskStage, receipt.Name, func(dst io.Writer) error { _, err := io.Copy(dst, reader); return err })
-		reader.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
 	serviceConfig := DeploymentConfig{InstallationID: a.InstallationID, ApplicationScope: "original-app", AcquireSeconds: 60, HoldSeconds: 240, CapacityFile: filepath.Join(dir, "capacity.json")}
 	if fullCore != nil {
 		serviceConfig = *fullCore
@@ -661,6 +659,25 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	seedConsumerRows(t, admin, a, config, profile, now, j)
 	refresh()
+	if err = owner.ensureStaging(ctx, a); err != nil {
+		t.Fatal("original pre-create staging intent", err)
+	}
+	taskStage, err := stage.OpenRoot(a.TaskPublicID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer taskStage.Close()
+	for _, receipt := range []staging.Receipt{candidate.Ciphertext, candidate.Envelope} {
+		reader, err := staging.OpenFile(ctx, source, receipt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = staging.WriteUnpublishedFile(ctx, taskStage, receipt.Name, func(dst io.Writer) error { _, err := io.Copy(dst, reader); return err })
+		reader.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 	requestedParts := []string{"workspace"}
 	if options.RequestedParts != nil {
 		requestedParts = append([]string{}, options.RequestedParts...)
