@@ -553,7 +553,7 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 	}
 	go func() {
 		defer close(loopDone)
-		failures <- runDeploymentPasses(active, s.Runtime.Loop.RunOnce, s.Runtime.Loop.Interval, func(e error) {
+		failures <- runDeploymentPasses(active, s.runCaptureAndPublicationPass, s.Runtime.Loop.Interval, func(e error) {
 			if e != nil {
 				s.executionUnavailable.Store(true)
 			}
