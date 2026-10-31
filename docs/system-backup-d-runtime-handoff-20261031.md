@@ -472,3 +472,9 @@
 - 首次SQLExecutionAuthority.snapshot仍按原gate→business顺序、原全部SQL锁/owner授权取得完整状态；只在同一guard、context/tx且原application及metadata gate都held时，后续RecheckAfter把原当前SQL字段重读合为一条FOR SHARE查询。现有owner/grant回调仍每次执行；SQL时间下界/原固定until、全部原字段、config完整字节、原config历史、latest attempt、当前cancel、原app/public gate/fence/lease保持核验。其他阶段/恢复/无application-scope仍走原完整snapshot。没有跨请求/跨事务缓存或首次JOIN取锁顺序变化。
 - 明确BINARY比较原Go精确比较的字符串与完整config，防止默认SQL collation掩盖大小写/尾空格变化。真实原SQL事务17种已独立读回实际变更（含rowversion/claim lease延长/owner尾空格/schema与task/status大小写/request尾空格/config/maintenance fence+lease+hold+owner/installation/attempt）均由末尾guard拒绝并锁定失败；每例rollback保留原fixture。原mTLS/TLS provider三场景、8种中途input/sealed变更与key-reserve当前claim撤回组合PASS8.71s/package11.927s；完整controller9.312s/adapter6.361s/execution8.244s PASS。
 - 这是当前检查SQL往返优化，不代表完整新任务通过。完整原173/default30秒任务仍需无overlay完成原row/EOF、10 C/Evidence/Stop/Resume和实际Record(validating)，A发布/生产readiness均未声称完成。
+
+## D5.42 批量事实读取之后重新采SQL时钟，修复监督过期反例
+
+- 监督真实透传driver只延迟原SQL事实行交付2.5秒：旧末尾采时钟路径PASS6.507s，6ce批量查询在语句开头采UTC时间、返回时原2秒claim已过期却返回nil，candidate FAIL6.472s。因此6ce单独不安全且未被监督集成，D5.41的17种字段漂移/全包通过不能替代该时序证明。
+- 在整条当前事实Query/Scan完成后增加独立SELECT UTC_TIMESTAMP(6)，严格检查时间不早于事实sample/原snapshot时间，且严格早于原claimUntil/taskDeadline/gateUntil/holdUntil；外层仍检查原owner until与beforeOwner/floor，并保留原当前grant回调。无原expiry延长、无caller时钟或权限伪造。
+- 监督同一真实SQL probe复制为repo独立回归（原透传连接/真实SQL、仅事实行延迟），扩展claim、task deadline、gate lease、hold四种原2秒上界，每次实际更新一行、原Bind健康、delay真实触发且跨过原界限，四例全部拒绝且guard锁失败。定向PASS10.84s/package14.056s；最初同监督单claim例PASS3.31s/package6.531s。完整任务尚待，不能把修复和6ce字段测试称完整备份通过。

@@ -41,5 +41,13 @@ WHERE g.scope=? AND BINARY b.origin_installation_id=BINARY ? FOR SHARE`
 	if err != nil || !valid {
 		return executionSnapshot{}, ErrExecutionAuthority
 	}
+	// A lock wait or delayed result delivery may cross an original expiry.
+	// MySQL's UTC_TIMESTAMP above belongs to the start of that statement;
+	// sample again AFTER the complete current facts have actually been read.
+	factsAt := v.now
+	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&v.now) != nil || v.now.Before(factsAt) || v.now.Before(first.now) ||
+		!v.now.Before(first.claimUntil) || !v.now.Before(a.DeadlineAt) || !v.now.Before(first.gateUntil) || !v.now.Before(first.holdUntil) {
+		return executionSnapshot{}, ErrExecutionAuthority
+	}
 	return v, nil
 }
