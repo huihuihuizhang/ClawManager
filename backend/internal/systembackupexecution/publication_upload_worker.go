@@ -75,13 +75,15 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	}
 	seen := map[string]bool{}
 	index := false
+	indexSHA := ""
 	for _, object := range p.Objects {
 		if !safePublicationKey(object.Path) || path.Clean(object.Path) != object.Path || seen[object.Path] || !formalCandidateDigest(object.SHA256) || object.Bytes < 1 || object.Bytes > 8<<30 {
 			return nil, "", errPublicationUnavailable
 		}
 		base := path.Base(object.Path)
-		if object.Path == "index.json" {
+		if object.Path == "artifact-index.json" {
 			index = true
+			indexSHA = object.SHA256
 		} else if !strings.HasPrefix(object.Path, "parts/") && !strings.HasPrefix(object.Path, "control/") {
 			return nil, "", errPublicationUnavailable
 		} else if !strings.HasSuffix(base, ".enc") && !strings.HasSuffix(base, ".envelope.json") {
@@ -100,12 +102,13 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 		return nil, "", errPublicationUnavailable
 	}
 	var binding struct {
-		Schema       string `json:"schema_version"`
-		Installation string `json:"origin_installation_id"`
-		Backup       string `json:"backup_public_id"`
-		Attempt      uint64 `json:"attempt_no"`
+		Schema       string                          `json:"schema_version"`
+		Installation string                          `json:"origin_installation_id"`
+		Backup       string                          `json:"backup_public_id"`
+		Attempt      uint64                          `json:"attempt_no"`
+		Index        struct{ Path, Checksum string } `json:"artifact_index"`
 	}
-	if json.Unmarshal(manifest, &binding) != nil || binding.Schema != "system-backup.v1" || binding.Installation != p.Installation || binding.Backup != p.Backup || binding.Attempt != p.Attempt {
+	if json.Unmarshal(manifest, &binding) != nil || binding.Schema != "system-backup.v1" || binding.Installation != p.Installation || binding.Backup != p.Backup || binding.Attempt != p.Attempt || binding.Index.Path != "artifact-index.json" || binding.Index.Checksum != indexSHA {
 		return nil, "", errPublicationUnavailable
 	}
 	// Full v12 schema/business/certificate verification belongs to the current
