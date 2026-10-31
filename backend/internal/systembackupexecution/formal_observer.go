@@ -102,6 +102,11 @@ func observeOriginalFormalCandidate(ctx context.Context, source, custody *os.Roo
 		return staging.FormalObservation{}, d.ErrNotReady
 	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	if locator := i.Request.ControlEvidence; locator != nil {
+		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(plaintext io.Reader) error {
+			return inspectControlEvidencePart(ctx, plaintext, i.Request.Binding.Path, *locator)
+		})
+	}
 	if database := i.Request.Database; database != nil {
 		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(compressed io.Reader) error {
 			z, err := gzip.NewReader(compressed)

@@ -313,3 +313,9 @@
 - NewControlEvidenceModule只接实际原FormalCapture/Generate/PermitDelivery/locator映射，禁止source卷与subPath，两份必须同一完整locator。Build绑定真实安装/config/task/attempt/context/hold和原provider全局PartIndex；BuildCapturePart使用A原kube.ControlEvidenceCaptureJob，保存原Invocation/Job字节与hash，不自行构造命令或上传证据body。目录末端也对raw registration的实际两份locator进行独立配对复查。
 - 监督指出初稿json.Unmarshal回同一含非nil指针cfg会复用入参，已改独立零值frozen深拷贝。反例在构造后修改caller locator refs/hash、permit公钥、provider地址、Workload挂载与InvocationConfigMap，要求原三份Job/Invocation/hash逐字不变；不是仅检查返回成功。
 - 自有pure assembly用明确synthetic locator（不声称真实注册proof），将两份原CE Job放在较早workspace Job后验证连续全局索引1/2、正式CLI参数及无源PVC。负例涵盖不同locator/源卷/错全局索引/不完整目录。定向B3.321s/execution纯内容3.244s通过，完整publicadapter3.529s通过。内容observer/真实SQL consumer已另在工作区测试，不包含本小片；生产factory/source发现与默认guards/readiness均不随本片开放。
+
+## D5.21 原控制证据C流独立内容观察（2026-10-31）
+
+- D5.20提交5f4ed3b1。当前observer在原ObserveFormalManaged独立unwrap/AEAD/private custody流程内直接检查两份未gzip的canonical JSON。每份均受独立locator精确hash与字节上限约束；sidecar核closed JCS/scope/固定registry/原cutoff，proofs核完整原bundle并用ce.Rebuild离线重建/ce.Verify全部组/排除/脱敏/owner证明，不能从SQL补丢失body。最终publisher仍必须对两份实际读回的原C流一起ce.Verify，本观察不替代最终v12成品验收。
+- 纯内容反例将修改后的payload重新计算合法locator hash，仍拒绝missing/forged body、错误scope、suffix、unknown field、不同cutoff/registry；正例含非空event。实际原SQL encrypted plan/candidate/Job→Evidence/deployment wrapper→独立内容observer/custody→原ModuleResult/evidence，两份合法part分别成功，suffix/缺proof/错payloadhash即使AEAD有效也零result/evidence。producer key/unwrap、source proof注册及Kubernetes/finished-use明确为命名本机fixture，不能声称原SQL source producer/mTLS拉取或完整六项已验收。
+- 真实SQL CE consumer8例9.152s通过；合并后CE+既有正式observer组合10.060s通过。一次未提权的旧filesystem observer fixture在staging原文件identity创建阶段失败；按既有约定用本机原filesystem权限重跑全部相关observer通过，没有修改seal/owner guard。保留WIP同步监督原backup源完整链及A7f19da41 source endpoint兼容；本片未含production factory/discovery材料。
