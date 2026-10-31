@@ -102,6 +102,13 @@ func (o *PublicJobOwner) executionInput(ctx context.Context, a d.Authority, reco
 	if e != nil {
 		return in, e
 	}
+	return o.readExecutionInput(ctx, a)
+}
+
+// Reconstructs detached original input only. Forward authorization authenticates
+// it through OpenOriginalCapturePlan before decrypting or using any part.
+func (o *PublicJobOwner) readExecutionInput(ctx context.Context, a d.Authority) (d.Input, error) {
+	var in d.Input
 	tx, e := o.Gate.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return in, e
@@ -365,11 +372,22 @@ func (o *PublicJobOwner) Read(ctx context.Context, a d.Authority, binding d.JobB
 	if e != nil {
 		return kube.Runner{}, record, e
 	}
+	if recovery {
+		if e := o.Gate.Recovery.Check(ctx, a); e != nil {
+			return kube.Runner{}, record, e
+		}
+	} else {
+		if e := o.Gate.Check(ctx, a); e != nil {
+			return kube.Runner{}, record, e
+		}
+	}
 	return o.readOriginalPart(ctx, a, binding, recovery, part)
 }
 
 // Only callers that have authenticated the original plan in this request may
-// use this projection; all current gate and resource journal checks remain.
+// use this projection. The public Read keeps its current gate check above;
+// Authorize has the same request's original-plan current authority check and
+// its final current transaction/issuer/gate checks. Resource checks stay here.
 func (o *PublicJobOwner) readOriginalPart(ctx context.Context, a d.Authority, binding d.JobBinding, recovery bool, part b.JobPart) (kube.Runner, kube.ResourceRecord, error) {
 	var record kube.ResourceRecord
 	var originalJob batchv1.Job
@@ -379,15 +397,6 @@ func (o *PublicJobOwner) readOriginalPart(ctx context.Context, a d.Authority, bi
 	expected, e := kube.Intent("Job", &originalJob)
 	if e != nil {
 		return kube.Runner{}, record, e
-	}
-	if recovery {
-		if e := o.Gate.Recovery.Check(ctx, a); e != nil {
-			return kube.Runner{}, record, e
-		}
-	} else {
-		if e := o.Gate.Check(ctx, a); e != nil {
-			return kube.Runner{}, record, e
-		}
 	}
 	rows, e := o.rows(a)
 	if e != nil {
@@ -518,7 +527,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrNotReady
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
-	in, e := o.executionInput(ctx, a, false)
+	in, e := o.readExecutionInput(ctx, a)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
