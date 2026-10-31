@@ -98,3 +98,45 @@ func assertOriginalCaptureRequestMutations(t *testing.T, owner *PublicJobOwner, 
 		t.Fatal("caller-constructed plan credential accepted")
 	}
 }
+
+func assertOriginalClaimWithdrawnBeforeReserve(t *testing.T, client *fake.Clientset, admin *sql.DB, controlClient *worker.ControlClient, invocation worker.Invocation, generates *atomic.Int32) {
+	t.Helper()
+	var original string
+	if admin.QueryRow("SELECT controller_owner FROM system_backup_v2_backups").Scan(&original) != nil {
+		t.Fatal("original claim owner")
+	}
+	withdrawn := original + "-withdrawn"
+	var armed, changed atomic.Bool
+	armed.Store(true)
+	client.PrependReactor("get", "configmaps", func(action ktest.Action) (bool, runtime.Object, error) {
+		if !armed.CompareAndSwap(true, false) {
+			return false, nil, nil
+		}
+		result, err := admin.Exec("UPDATE system_backup_v2_backups SET controller_owner=?", withdrawn)
+		if err != nil {
+			t.Error(err)
+			return true, nil, err
+		}
+		count, err := result.RowsAffected()
+		var actual string
+		if err != nil || count != 1 || admin.QueryRow("SELECT controller_owner FROM system_backup_v2_backups").Scan(&actual) != nil || actual != withdrawn || actual == original {
+			t.Error("current claim withdrawal not independently observed")
+			return true, nil, errors.New("claim not withdrawn")
+		}
+		changed.Store(true)
+		return false, nil, nil
+	})
+	before := generates.Load()
+	_, err := worker.NewOriginalKeyAuthority(context.Background(), controlClient, invocation)
+	if _, restore := admin.Exec("UPDATE system_backup_v2_backups SET controller_owner=?", original); restore != nil {
+		t.Fatal(restore)
+	}
+	if !changed.Load() || err == nil {
+		t.Fatal("mid-request withdrawn claim admitted original key reserve", changed.Load(), err)
+	}
+	var uses, permits, candidates int
+	if admin.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE key_use_json IS NOT NULL").Scan(&uses) != nil || admin.QueryRow("SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id LIKE 'sev_apermit_%'").Scan(&permits) != nil || admin.QueryRow("SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE candidate_cipher IS NOT NULL OR result_cipher IS NOT NULL").Scan(&candidates) != nil || uses != 0 || permits != 0 || candidates != 0 || generates.Load() != before {
+		t.Fatal("withdrawn current claim produced key use, signed permit, accepted candidate or Generate", uses, permits, candidates, generates.Load()-before)
+	}
+	t.Log("actual key-reserve rejected independently observed mid-request claim withdrawal before all key/candidate/provider effects")
+}

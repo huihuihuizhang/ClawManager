@@ -459,3 +459,9 @@
 - profile定位当前Authoritiy.Check重复开销：原readExecutionInput/Gate一次、LoadPlan两次、Read一次。Authorize现在先只重建原输入，再由OpenOriginalCapturePlan在任何解密/part使用之前进行一次完整当前Authority.Check。私有readPlain仍执行实际记录读取、原Keys.Resolve/AEAD/完整hash/8MiB边界；同次原Unwrap/Describe完整执行一次。公共SQLExecutionRecords.read/LoadPlan仍保留原前后两次Check，公共Read仍保留原额外Gate.Check，恢复入口不改。
 - 同次请求的当前事务Bind、原process/Job锁和原guard Recheck、issuer Stage（含独立Bind/current grants与原registry事务）、完整原input/sealed digest/key_ref末尾重查、最终guard Recheck及commit后ValidateCollectors全部保留。无跨请求history或授权缓存；每次原data row/EOF仍发起原完整控制请求。
 - 增加在原CM GET期间实际撤回controller_owner反例，八种mutation均确认affected=1且独立SELECT字节等于注入值并不同原值，再断言拒绝；这是窄fixture主动篡改验证，不证明完整原DDL允许这些UPDATE。实际D专用MySQL/TLS三场景PASS7.86s/package11.092s；完整controller9.390s/adapter5.803s/execution7.682s PASS。新完整原任务无overlay/default30秒窗口验证继续；尚未称全部437检查、10part或A发布成功。
+
+## D5.40 当前claim中途撤销必须先于key-reserve，计数口径校正
+
+- 窄真实mTLS/SQL fixture新增独立admin actor：在首轮当前授权/完整原plan认证之后的原CM GET实际撤回controller_owner，affected=1并独立SELECT确认。原NewOriginalKeyAuthority发送真实key-reserve必须拒绝；SQL key_use、签名sev_apermit、candidate/result均0，provider Generate计数未变。原三场景与八种输入/密文变更组合PASS8.34s/package11.597s。该测试不证明完整原DDL可篡改，也不是同任务Stop/Resume验收。
+- D5.39无overlay完整任务`sbk_d189b9eb-d17c-4157-b08d-7bf26a73bac7`仍FAIL118.41s/package121.647s：SQL窗口24.835秒，279次env.SourceAuthorize后24.560秒拒绝；原失败Record=ok。未进入validating。
+- 监督纠正：domain完整RR/data的437是checkSource回调数；原checkSource调用一次本地env.SourceAuthorize，随后inUseCheck执行一次实际Control key-check并再次env.SourceAuthorize，因此263/279等本地计数不能除以437作为完成比例。原437回调通常会产生约874次本地grant/file授权及额外流前后检查。后续分别记录本地Authorize次数/累计耗时、实际Control key-check请求次数与domain guard回调数，保持所有原row/EOF范围；不以调整预期或删除边界宣称完成。
