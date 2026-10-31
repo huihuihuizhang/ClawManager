@@ -3,6 +3,7 @@ package kube
 import (
 	"encoding/hex"
 	"path"
+	"regexp"
 	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -21,7 +22,12 @@ type PublishJobRequest struct {
 	InvocationConfigMap, UploadCredentialSecret         string
 	RequestSHA256                                       string
 	DeadlineSeconds                                     int64
+	InputFiles                                          []PublishInputFile
 }
+
+type PublishInputFile struct{ Path, SubPath string }
+
+var publicationSealedInput = regexp.MustCompile(`^\.controller-seals/seal-[0-9a-f]{64}\.enc$`)
 
 // PublishJob never uses the capture constructor: no source volume, capture
 // identity, workload token, KMS/key material, arbitrary command or environment.
@@ -41,12 +47,38 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 			return nil, ErrResource
 		}
 	}
-	if r.StagingSubPath == "" || path.IsAbs(r.StagingSubPath) || path.Clean(r.StagingSubPath) != r.StagingSubPath || strings.ContainsAny(r.StagingSubPath, "\\\x00\r\n:") || !strings.HasPrefix(r.StagingSubPath, "publication/"+r.Identity.Owner+"/") {
-		return nil, ErrResource
-	}
-	for _, segment := range strings.Split(r.StagingSubPath, "/") {
-		if segment == "" || segment == "." || segment == ".." {
+	if len(r.InputFiles) == 0 {
+		if r.StagingSubPath == "" || path.IsAbs(r.StagingSubPath) || path.Clean(r.StagingSubPath) != r.StagingSubPath || strings.ContainsAny(r.StagingSubPath, "\\\x00\r\n:") || !strings.HasPrefix(r.StagingSubPath, "publication/"+r.Identity.Owner+"/") {
 			return nil, ErrResource
+		}
+		for _, segment := range strings.Split(r.StagingSubPath, "/") {
+			if segment == "" || segment == "." || segment == ".." {
+				return nil, ErrResource
+			}
+		}
+	} else {
+		if r.StagingSubPath != "" {
+			return nil, ErrResource
+		}
+		seen := map[string]bool{}
+		paths := []string{}
+		for _, file := range r.InputFiles {
+			if !publicationSealedInput.MatchString(file.SubPath) || file.Path == "" || path.IsAbs(file.Path) || path.Clean(file.Path) != file.Path || strings.ContainsAny(file.Path, "\\\x00\r\n:") || (!strings.HasPrefix(file.Path, "parts/") && !strings.HasPrefix(file.Path, "control/")) || (!strings.HasSuffix(file.Path, ".enc") && !strings.HasSuffix(file.Path, ".envelope.json")) {
+				return nil, ErrResource
+			}
+			if seen["path:"+file.Path] || seen["source:"+file.SubPath] {
+				return nil, ErrResource
+			}
+			seen["path:"+file.Path] = true
+			seen["source:"+file.SubPath] = true
+			paths = append(paths, file.Path)
+		}
+		for _, file := range paths {
+			for parent := path.Dir(file); parent != "."; parent = path.Dir(parent) {
+				if seen["path:"+parent] {
+					return nil, ErrResource
+				}
+			}
 		}
 	}
 	no, yes := false, true
@@ -68,5 +100,16 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 			{Name: "memory", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{Medium: corev1.StorageMediumMemory, SizeLimit: quantity("32Mi")}}},
 		},
 	}}}}
+	if len(r.InputFiles) > 0 {
+		pod := &job.Spec.Template.Spec
+		mounts := append([]corev1.VolumeMount(nil), pod.Containers[0].VolumeMounts[2:]...)
+		for _, file := range r.InputFiles {
+			mounts = append(mounts, corev1.VolumeMount{Name: "staging", MountPath: "/input/" + file.Path, SubPath: file.SubPath, ReadOnly: true})
+		}
+		mounts = append(mounts, corev1.VolumeMount{Name: "publication-result", MountPath: "/result"})
+		pod.Containers[0].VolumeMounts = mounts
+		pod.Volumes[0].PersistentVolumeClaim.ReadOnly = true
+		pod.Volumes = append(pod.Volumes, corev1.Volume{Name: "publication-result", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{Medium: corev1.StorageMediumMemory, SizeLimit: quantity("16Mi")}}})
+	}
 	return job, nil
 }
