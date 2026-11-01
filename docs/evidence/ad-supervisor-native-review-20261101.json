@@ -1043,6 +1043,24 @@
         "path": ".tools/supervisor-source-transport-final-packages.log",
         "sha256": "08ab775bafc99857e7873ba104c764a7c3e690821898864a6074defea1e94d18"
       }
-    ]
+    ],
+    "preserved_external_restoration_integration": {
+      "remote_backup": "55b62cf02a1a60b1e87894146d7aaa3a148ad3e3",
+      "local_merge": "e7366691d46ff4a1d29370da9e5907b06d731c02",
+      "scope": "Preserved other authorized supervisor reviewed28-file restore delivery and both different worker/database.go hunks. No conflicts, no force/reset. Source transport InterpolateParams retained; newSkillsRestore/frozenrestore request retained.",
+      "post_merge_default_package_seconds": {
+        "domain": 3.615,
+        "worker": 36.566,
+        "profile": 3.173,
+        "systembackupskillhub": 1.71,
+        "execution": 9.726
+      },
+      "session": 57410,
+      "terminal_exit": 0,
+      "closed": true,
+      "log": ".tools/supervisor-container-transport-merged-restoration-packages.log",
+      "log_sha256": "d161a61ffbda4d9780e31edcc0689bacc571b51025a2c0c7ca549737b837fc9c",
+      "native_scope": "Actual full originalC/cert/container proof remains exactpre-merge0e8 commit as recorded, not silently relabeled as another linkedHEAD. Restore-only integration separately covered by these five packages; no formal complete artifact/restore claimed."
+    }
   }
 }
