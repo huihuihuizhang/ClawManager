@@ -257,6 +257,10 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: r.ArtifactName, MaxPlaintextBytes: r.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
 	var seal w.StreamSeal
 	ceUseStarted := time.Now()
+	ceOriginalKeyUntil := time.Time{}
+	if originalJob, ok := job.(*CaptureKeyJob); ok && originalJob != nil {
+		ceOriginalKeyUntil = originalJob.until
+	}
 	ceCallbackEntered, ceCallbackSucceeded := false, false
 	ceFirstFailure := ""
 	wrapped, err := job.WithDEK(ctx, func(useCtx context.Context, key []byte) error {
@@ -401,8 +405,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			} else if ceFirstFailure == "" {
 				ceFirstFailure = "worker-formal-dek-post-use-authority"
 			}
-			until, _ := ctx.Deadline()
-			logControlEvidenceRejection(ceFirstFailure, ctx, until, ceUseStarted, ceCallbackEntered, ceCallbackSucceeded)
+			logControlEvidenceRejection(ceFirstFailure, ctx, ceOriginalKeyUntil, ceUseStarted, ceCallbackEntered, ceCallbackSucceeded)
 		}
 		return zero, formalFailure(err)
 	} // unknown use/provider outcome is never retried here

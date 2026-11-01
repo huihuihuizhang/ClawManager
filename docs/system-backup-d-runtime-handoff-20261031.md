@@ -742,3 +742,8 @@
 - 以干净真实dcb2360d658cd3d5f162c3eb5f74b7b4fed4d7de在capture前ldflags链接，63507授权串行窗口只跑直接反例TestAOriginalSixPartDurableContainerInputsMySQL。49756自然exit0，原任务sbk_f4e242dd-4efd-41cc-8177-2776f5e5b375，case154.45s/package157.767s：DB880 checks、local0.8027275s/stream29.3064612s成功；CE两个原窗口29.4199959/29.3729285s，stream2.0928551/1.6276887s均成功，完整10worker/C、oneSign原证书及六durable容器54115bytes/原精确reopen通过。此是有效组件成功观察，**不是旧CE失败复现或修复证据**，也不验证5ca新remote-C函数、MF/upload/cleanup/验收/catalog/终态。
 - 两条controller-finalized-seal-checksum日志是准备阶段首次sql.ErrNoRows正常创建前探测，不能据ce_rejected当根因。后续仅对该预期缺行抑制helper拒绝日志；实际caller处理/拒绝仍保留，真实pull缺seal仍由外层原source-SQL门拒绝。加CE DEK callback_entered/callback_succeeded及首个固定失败阶段，覆盖可能未进入source.Pull便被ErrPermission归一化的边界。原90282 CE RED149.713s和D38783 DB RED135.286s完整保留，未裸重试求绿。
 - 新隐私/保持拒绝测试检查实际nil-source及controller deny路径不输出私密body/token/query，保留ErrNotReady/403。细化后两包PASS35.643/9.106s；保留全部WIP SHA安全合并最新共享a0086acf至22038880后最终两包PASS worker36.346/execution9.066s（12317自然terminal0），所有SQL opt-in关闭。49756已关闭；63507由D保留待下一次明确带新阶段的诊断，未有新live SQL。结构化证据docs/evidence/d-ce-stage-diagnostic-observation-20261101.json；原native sourceledger和log SHA已固定。
+
+### D5.77 监督预审后的精确细化
+
+- 抑制条件已精确收窄为stage=controller-finalized-seal-checksum且errors.Is(sql.ErrNoRows)，后续真实registered-proof/chunk缺行继续记录。不是把任意缺行都当作正常创建探测，caller返回/拒绝行为不改。
+- formal WithDEK诊断从真实*CaptureKeyJob.until取得原使用界限，并把key_remaining_us与context_remaining_us/context_deadline_known分开；不再用可能属于source/task的ctx.Deadline冒充原key窗口，不重算或延长任何Until。privacy测试PASS worker2.918/execution3.248s（79570自然terminal0）。下一次带此额外回调/时钟阶段的原生运行尚待执行，原dcb49756成功观察的源码和结果保持原称谓。
