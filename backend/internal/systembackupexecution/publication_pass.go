@@ -36,7 +36,7 @@ func (d *DeploymentService) RunPublicationPass(ctx context.Context) (resultErr e
 	var ttl, heartbeat, reconcile int64
 	err = db.QueryRowContext(ctx, `SELECT b.public_id,b.row_version,a.attempt_no,cfg.controller_claim_ttl_seconds,cfg.controller_claim_heartbeat_seconds,cfg.controller_reconcile_interval_seconds FROM system_backup_v2_backups b JOIN system_backup_v2_configs cfg ON cfg.origin_installation_id=b.origin_installation_id AND cfg.version=b.config_version AND cfg.config_sha256=b.config_snapshot_sha256 JOIN system_backup_v2_attempts a ON a.target_type='backup' AND a.target_public_id=b.public_id AND a.phase='capture' AND a.status='sealed' WHERE b.origin_installation_id=? AND b.status IN ('publishing','finalization_unknown') AND b.deadline_at>UTC_TIMESTAMP(6) AND (b.next_reconcile_at IS NULL OR b.next_reconcile_at<=UTC_TIMESTAMP(6)) AND (b.controller_owner IS NULL OR b.controller_lease_expires_at<=UTC_TIMESTAMP(6)) AND a.attempt_no=(SELECT MAX(a2.attempt_no) FROM system_backup_v2_attempts a2 WHERE a2.target_type='backup' AND a2.target_public_id=b.public_id AND a2.phase='capture') AND EXISTS(SELECT 1 FROM system_backup_v2_external_actions x WHERE x.origin_installation_id=b.origin_installation_id AND x.target_type='backup' AND x.target_public_id=b.public_id AND x.state IN ('request_sent','provider_unreachable')) ORDER BY b.id LIMIT 1`, d.Config.InstallationID).Scan(&backup, &version, &attempt, &ttl, &heartbeat, &reconcile)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil
+		return d.runPublicationContinuation(ctx, store)
 	}
 	if err != nil {
 		return errPublicationUnavailable

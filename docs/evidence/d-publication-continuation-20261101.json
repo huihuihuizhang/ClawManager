@@ -1,0 +1,70 @@
+{
+  "schema_version": "d-publication-continuation-local-evidence.v1",
+  "source_base": "28d74beedf0a66d9b74863eb257fa89383d63095",
+  "mysql_endpoint": "127.0.0.1:65298",
+  "mysql_server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+  "initial_wip": {
+    "session": 47740,
+    "passed": false,
+    "cleanup_verified": false,
+    "exit_code": 1,
+    "stopped": "Ctrl-C after fixture detected Kubernetes I/O while SQL held"
+  },
+  "earlier_eight_case_seconds": 27.682,
+  "final_native": {
+    "session": 73251,
+    "package_seconds": 30.614,
+    "case_seconds": 27.29,
+    "exit_code": 0,
+    "cases": 9
+  },
+  "execution_package": {
+    "session": 64424,
+    "seconds": 8.446,
+    "exit_code": 0
+  },
+  "interfaces": [
+    "preparePublicationContinuation",
+    "recheckTx in same caller transaction",
+    "publishNext for original marker",
+    "close joins and releases exact claim"
+  ],
+  "actual_scope": [
+    "same publishing task and latest sealed attempt",
+    "real CAS claim receipt",
+    "original immutable payload/version/full EOF/hash readback",
+    "actual RunPublicationPass unknown recovery then confirmed continuation",
+    "next marker actual PUT and protected readback failure",
+    "reentry and concurrent CAS",
+    "outer same-task write-lock recheck without Kube I/O",
+    "close joins in-flight GET"
+  ],
+  "temporary_refusals": [
+    "ErrPublicationNextIntentRequired before A next producer is connected",
+    "ErrPublicationFinalizationRequired for acceptance/catalog/final success"
+  ],
+  "not_claimed": [
+    "formal signed artifact payloads (native fixture JSON DATA)",
+    "full immutable publication or succeeded",
+    "independent acceptance and catalog terminal CAS",
+    "cross-process restart"
+  ],
+  "logs": [
+    {
+      "sha256": "a868dbc40e9cc852cfb30719142795d835d9c45b11f19b08adbbbbb7a28e426b",
+      "path": ".tools/d-publication-continuation-access-in-tx-baseline.log"
+    },
+    {
+      "sha256": "d07f21c0242214e98500d9e6d0940d796a905b90e71a28a6d372da8922af2291",
+      "path": ".tools/d-publication-continuation-native-eight.log"
+    },
+    {
+      "sha256": "0afeafb708bdc4cde4c975dcd014ae6be6529b3850c7a0e770ec7ac7af24b5fa",
+      "path": ".tools/d-publication-continuation-native-nine.log"
+    },
+    {
+      "sha256": "ef4de95be30522da3beeaf0e4c006fc3f2ea611ad3857a8ca680c6404e903639",
+      "path": ".tools/d-publication-continuation-package.log"
+    }
+  ]
+}
