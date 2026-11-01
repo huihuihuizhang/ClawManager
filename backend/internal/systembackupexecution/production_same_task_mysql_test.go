@@ -362,7 +362,15 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	// Match the dedicated public metadata constructor's driver transport.
 	// All TLS/UTC/account pins, SQL locks and parameter values stay original.
 	connection.InterpolateParams = true
-	f.control, err = sql.Open("mysql", connection.FormatDSN())
+	if options.ControlCommitACKLoss == nil {
+		f.control, err = sql.Open("mysql", connection.FormatDSN())
+	} else {
+		connector, connectorErr := mysql.NewConnector(connection)
+		err = connectorErr
+		if connectorErr == nil {
+			f.control = sql.OpenDB(aCertificateWriteACKConnector{Connector: connector, lose: options.ControlCommitACKLoss})
+		}
+	}
 	connection.Passwd = ""
 	pass = ""
 	if err != nil {
