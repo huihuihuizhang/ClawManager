@@ -109,8 +109,8 @@ type preparedPublicationCaptureCertificate struct {
 }
 
 // Stage checks the SAME original facts in the caller's real signing-input
-// transaction. No Kubernetes/provider network I/O occurs while SQL is held;
-// bounded local material and signature checks remain mandatory.
+// transaction. Local material checks and original SQL share that transaction;
+// workload and provider network calls remain outside it.
 // A failed Stage requires the caller to roll back the transaction.
 func (p *preparedPublicationCaptureCertificate) Stage(ctx context.Context, tx *sql.Tx) error {
 	if p == nil || p.service == nil || p.access == nil || p.record == nil || tx == nil || !p.capture.checked() {
