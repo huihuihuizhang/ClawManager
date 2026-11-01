@@ -36,6 +36,9 @@ type TableAdapter struct {
 	// Normalizer selects a reviewed owner transform after exact schema checks.
 	// Empty retains the existing explicit per-column adapter contract.
 	Normalizer string `json:",omitempty"`
+	// InterruptedAt is the frozen plan's UTC restore time, used only by owner
+	// normalizers that mark interrupted work. It is never taken from wall time.
+	InterruptedAt string `json:",omitempty"`
 	// Every column must occur exactly once. Actions: preserve, null, stub, or
 	// fixed:<terminal value>. Definitions/JSON still use the config registry.
 	Columns map[string]string

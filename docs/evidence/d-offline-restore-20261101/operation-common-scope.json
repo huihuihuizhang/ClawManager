@@ -1,0 +1,54 @@
+{
+  "parent_commit": "b3fd69fda8997723cc3dd19abeca330c9f455461",
+  "scope": "operation 077 owner state machine consumed by public SQL Normalize, RunDatabase and VerifyDrill; pre-write native JSON rendering",
+  "native_mysql_port": 50830,
+  "native_mysql_version": "8.4.13",
+  "native_migrations": [
+    "045_add_northbound_api.sql",
+    "066_add_northbound_api_keys.sql",
+    "077_add_northbound_owner_teams.sql"
+  ],
+  "production_source_authenticated": false,
+  "production_schema_pin_added": false,
+  "publication_eligible": false,
+  "public_restore_dispatch_complete": false,
+  "remaining_owner_tables": 10,
+  "source_hashes": {
+    "backend/internal/systembackup/domain/operation_restore.go": {
+      "sha256": "87daed9032c987cc83c9143b497327c1d3a2c04232bbb5f2ead6fa168553dd84",
+      "git_blob": "56459b377221056a451ca788446aead3e18ee74c"
+    },
+    "backend/internal/systembackup/domain/operation_restore_test.go": {
+      "sha256": "07aa59fab6c2dbb3b6a8a7f6339e1b0835b136ac628412ab1bd51460126e8ab6",
+      "git_blob": "c2de66bad28a7e6b0a02f53439478f5f332b4c43"
+    },
+    "backend/internal/systembackup/domain/operation_worker_integration_test.go": {
+      "sha256": "336a5a9aeb381a573995fabeacea8499f8f5d8ec904bae423853803a4ec0c5f1",
+      "git_blob": "7f1f55d44e6e94e2f016633779158de74947e993"
+    },
+    "backend/internal/systembackup/domain/caller_restore.go": {
+      "sha256": "c4bfc716aa66ca33fbc626921c217db39dc442b2031849cbf77cb6d8eea86401",
+      "git_blob": "839d8ca22b02b607d02f2d0bfef8d94e4d941240"
+    },
+    "backend/internal/systembackup/domain/dependencies.go": {
+      "sha256": "d1d89965e7eafd9faec3ba9c4ee0fc4640348eaeab0a94861f49b23376dbb2d0",
+      "git_blob": "3f4e9dcae4d12805362cd885ada3dad9473d0e71"
+    },
+    "backend/internal/systembackup/domain/normalize.go": {
+      "sha256": "27bf0eaf6952434076bcefea590c7e26bca4c0dee3bbdd5fd70e059cac3d2b1d",
+      "git_blob": "b1c3a37a006d2b3e193cdc45169e8dd61b491f44"
+    },
+    "backend/internal/systembackup/domain/restore.go": {
+      "sha256": "f11570fa819020a0cfa0699e559e74aba8bd8f7b34dc0666bff7a5212e375dd3",
+      "git_blob": "3863ad7383ba724c34b742843892b87506bcd0f9"
+    },
+    "backend/internal/systembackup/domain/export_test.go": {
+      "sha256": "0715036b1d512397a7aabbafe653f1ed7ba9b92824856df02b8c5bdf76f841d1",
+      "git_blob": "750be4a40bda27f36a4af5715912047452d8bba5"
+    },
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": {
+      "sha256": "5e2c029fe827bf2cebc5956b9f2a7d364e86107811309cdf00838f2fee8e5c80",
+      "git_blob": "031d18a8ee993661d3ec3abb2c67201642e64bf7"
+    }
+  }
+}

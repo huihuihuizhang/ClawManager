@@ -78,6 +78,9 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	if err = checkBlankPolicy(ctx, tx, catalog, policy); err != nil {
 		return RestorePlan{}, err
 	}
+	if err = canonicalizeTargetJSON(ctx, tx, &plan); err != nil {
+		return RestorePlan{}, err
+	}
 	// Check observed resource identity again at the first write boundary.
 	if err = target.check(ctx, conn); err != nil {
 		return RestorePlan{}, err
@@ -138,6 +141,32 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 		return RestorePlan{}, ErrDatabase
 	}
 	return plan, nil
+}
+
+// Config normalizers emit valid JSON, but MySQL's JSON column renderer can
+// change whitespace/key order on insert. Ask the same isolated target to render
+// the approved value BEFORE any write, then seal those exact expected bytes.
+// This does not read source/target business rows or loosen independent readback.
+func canonicalizeTargetJSON(ctx context.Context, tx *sql.Tx, plan *RestorePlan) error {
+	for _, table := range plan.Data.Tables {
+		for _, column := range table.Columns {
+			if !strings.EqualFold(column.Type, "json") {
+				continue
+			}
+			for _, row := range table.Rows {
+				value := row[column.Name]
+				if value.Null {
+					continue
+				}
+				var rendered string
+				if err := tx.QueryRowContext(ctx, "SELECT CAST(? AS JSON)", string(value.Bytes)).Scan(&rendered); err != nil {
+					return ErrDatabase
+				}
+				row[column.Name] = Text(rendered)
+			}
+		}
+	}
+	return nil
 }
 
 func checkBlank(ctx context.Context, tx *sql.Tx, tables []Table) error {
@@ -217,6 +246,12 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 // The grant check rejects roles, wildcard grants and write privileges rather
 // than accepting a read-only transaction as proof of independent permissions.
 func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan RestorePlan) error {
+	if err := VerifyRoutingQuarantine(ctx, plan.Data); err != nil {
+		return err
+	}
+	if err := VerifyOperationQuarantine(ctx, plan.Data); err != nil {
+		return err
+	}
 	if err := VerifyCallerQuarantine(ctx, plan.Data); err != nil {
 		return err
 	}

@@ -117,6 +117,36 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 这完成了一个 owner 的实际公共消费者接线。剩余十张 owner 表、northbound_operations 的完整当前列、跨域共同 snapshot/receipt、正式源认证后的公开 restore/verify dispatch 仍需继续。没有新增静态生产 schema pin、源认证结果、最终资格或 CAS；正式历史 source 的完整 Invocation/inventory 承载由原发布 owner 补齐后才可接入。
 
+### Operation 077 公共消费者与下一批 dispatcher 接线位置
+
+`northbound-operation.077` 沿 caller 的具名 TableAdapter 入口接入公共 Normalize/RunDatabase；精确源/目标指纹之外，明确要求 045/066/077 的全部 26 列、id 主键、全 preserve 输入列策略。`InterruptedAt` 是冻结计划的 UTC 微秒时间字符串；缺失、非 UTC Z、超微秒精度或早于该历史行创建/更新均拒绝，不能用当前进程时间补齐。实际调用已有 `team.Normalize`，不复制另一套运行态判断；三种 active → failed，三种终态保留，双 lease=NULL，仅 active 且原 finished_at=NULL 时填冻结时间。原始错误、历史 session/key/owner/team/template 引用保留；这些引用不授予重新创建/运行源业务的能力，历史 team/template 无 FK 的旧删除关系不被擅自改成强制存在。
+
+请求 JSON 仍经过原显式 Config/Secret registry；未配置策略或未知字段拒绝。测试 fixture 只批准 message 保留、api_token 替换，原 Secret 只在源加密快照保留。真实 JSON 列经 Secret 策略改写后，公共事务在**首次写入前**用同一隔离目标的参数化 `SELECT CAST(? AS JSON)` 得到 MySQL 实际渲染字节，再用于插入和加密预期证据；独立 verifier 保持逐字节比较，未降级为模糊 JSON 比较。VARCHAR/TEXT 和 SQL NULL 不受这一步影响。
+
+`operation-077-worker.txt` 为命名 SQL driver 的公开 worker 流程（非 production proof），验证源关闭、6 条历史、原输入和 callback 企图改冻结时间无效、final fence 写后回滚、writer 关闭后独立 reader。真实 MySQL 使用另一个独占 loopback **50830**，加载实际 045/066/077；6 状态、旧 finished_at 不改、9007199254740993 bigint、UTC 微秒、原 JSON Secret 归档/目标脱敏与含空格渲染均有断言，同库保留先前 caller/Skills/Teams 非空组合，三种失败仍验证整事务回滚且源不变。`operation-final-four-packages-native-mysql.txt` 全 PASS：domain 37.197s（native 33.45s）、worker 36.574s、profile 3.223s、team 0.302s；`operation-mysql-cleanup.json` 确认专用 server/datadir 已关闭删除。源文件精确指纹见 `operation-common-scope.json`。
+
+追加审查反例（仅测试/证据，生产代码保持 d3a180cc）：JSON canonicalization 适用于**所有**实际 JSON 列，故 `TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites` 用有真实 json 列型的命名 driver 注入 CAST 失败/取消，确认 CAST 恰好执行一次，全部业务 writes/commits/evidence=0，等待回滚完成后源/目标 digest 均未变。`native-json-boundaries` 在真实 MySQL **54774** 调用同一生产函数，区分 SQL NULL、JSON null、空对象/数组，逐项核对 9007199254740993、9223372036854775807、18446744073709551615，TEXT 不规范化，源 clone 不被修改；另执行原生非法 JSON CAST 和已取消上下文拒绝。完整 domain 包包含先前 native 恢复四场景全 PASS 13.012s（native 9.55s），见 `json-boundaries-domain-native-mysql.txt`。新专用 server/datadir 同样关闭删除，见 `json-mysql-cleanup.json`；测试文件指纹见 `json-boundaries-scope.json`。
+
+正式公共调用链的下一批边界（以下是待实现接线，**不是**已有入口）：
+
+1. 当前 `systembackupdispatch.Runner` 只有 Prepare/Capture/Recover，`BindTaskRunner` 只接受 sbk/spf；Recover 是捕获中断的源 writer 恢复，不是灾备恢复。不得把 sdr 伪装为 capture、复用恢复源 writer 的补偿流程，或将本地 profile.Driver 当公开恢复入口。
+2. A 的 WIP 位于 execution 层，并已依赖 publicadapter；B 不能从 publicadapter 反向 import execution 造成循环。完整源具体类型可构造/释放后，应由更高层的 restore composition（可在独立 `systembackuprestore` 包，由服务组合根装配）消费该具体类型，并调用 B 目标侧组件。此入口先核对完整成员、原 Invocation/inventory、SQL descriptor、同次捕获证书和内容生命周期；单 `RestoreSourceContainer`、DTO、hash 或结构 helper 不接目标写端。
+3. 目标计划使用独立版本，冻结目标 SQL/namespace UID、对象 bucket/root/version 归属、workspace/Team claim+PV、Redis server/database 分配、逐表 owner/Secret 策略和 interruption time。D 需将它绑定真实 sdr task/attempt/阶段/current claim/fence，并提供独立目标观测与账户证明。现有 `CheckRestoreTarget` 只覆盖 SQL/storage 描述，不能当作对象或 Redis 身份证明。A 原 source attempt/AAD 与新 restore attempt 分开保留。
+4. Restore 的实际 dispatch 次序：完整源和所有目标身份/必需成员预检 → 建立持久目标写意图 → 受控对象/version 和 workspace/Team 文件恢复及读回 → 按独立 DB 分配恢复 Redis 历史 → 将真实物理结果映射交给同一公共 SQL 事务 → 保存受保护预期证据。多个 Redis member 不逐个写同一空 DB。每步必须在外部调用前后复核当前 authority，未知执行结果留 journal，不能当失败重放或删除不确定目标。
+5. Verify 独立入口只在恢复 Job 结束、写凭据撤销/认证失败证据齐备后运行，使用独立只读 SQL/确切对象版本/文件挂载/Redis读者，核对同一任务/源/目标/成员集合。失败只记录本任务隔离目标与已知结果；不激活 agent/队列，不自行签名或生成 D 最终 CAS。
+
+其余十张 owner 表的接线顺序：先 A 的当前 llm_models/062 扩展、`llm_model_user_grants` 与 `routing_classifier_settings` 的闭合模型/用户与 Secret 策略；再 `gateway_keys`、budget reservations/ledger 的同组映射与原账务状态；然后绑定真实对象版本的 image artifacts/jobs；最后 resources 的 northbound_admin_settings（35 列）、owner_records、settings_audit，保持目标观测 version/absence 与 CAS 的区别。不会用十张表统一 preserve 或静态固定值代替 owner 合同。
+
+### Routing 061 公共 SQL 适配已完成
+
+新增 `routing-classifier.061`：明确匹配 060/061 六列、全 NOT NULL、id 主键及源/目标精确 SchemaDigest，源列只能 preserve 后再执行 owner 规则。singleton 必须 id=1、timeout 遵循现有服务 100–30000 范围，源 mode 只接受空默认/rules/hybrid/laya；未知模式、缺字段、nullable/schema 漂移、固定值掩盖原 credential 均拒绝。
+
+旧 `NormalizeDataRow` 和新公共 Normalize 都调用新提取的 `gatewaypolicy.DisableRoutingClassifier`，避免两套去活逻辑：目标 mode=rules，base_url/encrypted_api_key 清空，id/timeout/updated_at 精确保留。新路径不解密旧 ciphertext、不调用原 endpoint，也不把旧 credential 作为目标凭据。公共 VerifyDrill 先检查预期隔离语义，再独立读回。旧路径仍尊重原列 nullability：YES→SQL NULL、NO→非 NULL empty；Reason=restore_disabled、Quarantined、Before 与 After/source 的独立字节副本全部已有专门回归。
+
+`routing-final-four-packages-native-mysql.txt`：domain 13.671s（native 10.04s）、worker 35.977s、profile 3.206s、gatewaypolicy 0.349s，全 PASS；具名 driver 的 worker 测试关闭源后恢复、关闭 writer 后独立读回，authority callback 仍明确仅 fixture。真实 MySQL 8.4.13 专用端口 **53611** 加载实际 060/061，非空 endpoint/ciphertext/mode 与 caller/operations/Skills/Teams 共用原事务，验证目标 non-NULL empty、规则模式、原 timeout/更新时间、三种失败全回滚、撤权后认证失败和源快照未变。`routing-legacy-owner-pass.txt` 是根 systembackup 包相关 owner 回归 3.181s（非该包全部测试）；未修改其他旧 switch 分支。专用 server/datadir 已关闭删除，见 `routing-mysql-cleanup.json`，精确源指纹见 `routing-common-scope.json`。
+
+剩余 owner 表现为九张。模型授权的下一个具体缺口是：当前 llm_models 相比已接旧列还包含组/优先级/并发/上下文、能力与 override、reasoning mode、visibility/access version、图像能力/价格等 migration 049–071 扩展；A 的完整 batch 还要求非空 credential 的不可变 Secret 版本与真实 source proof。不能为了让 grants 成功而给模型临时 generic preserve 或编造版本。先补 owner 当前投影/版本合同和闭合模型/用户映射，再接 `llm_model_user_grants`；正式 dispatcher 的完整源句柄依赖和后续顺序仍如上一节。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。

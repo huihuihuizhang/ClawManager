@@ -1,0 +1,36 @@
+=== RUN   TestOperation077CommonSQLPreservesTerminalHistoryAndClearsLeases
+--- PASS: TestOperation077CommonSQLPreservesTerminalHistoryAndClearsLeases (0.00s)
+=== RUN   TestOperation077CommonSQLFailsClosed
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-clock
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-offset
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-submicrosecond
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-before-source
+=== RUN   TestOperation077CommonSQLFailsClosed/unknown-state
+=== RUN   TestOperation077CommonSQLFailsClosed/negative-attempts
+=== RUN   TestOperation077CommonSQLFailsClosed/invalid-payload
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-owner-column
+=== RUN   TestOperation077CommonSQLFailsClosed/fixed-status
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-unique
+=== RUN   TestOperation077CommonSQLFailsClosed/old-primary-key
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-secret-policy
+=== RUN   TestOperation077CommonSQLFailsClosed/unknown-secret-field
+--- PASS: TestOperation077CommonSQLFailsClosed (0.05s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-clock (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-offset (0.04s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-submicrosecond (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-before-source (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/unknown-state (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/negative-attempts (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/invalid-payload (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-owner-column (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/fixed-status (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-unique (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/old-primary-key (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-secret-policy (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/unknown-secret-field (0.00s)
+=== RUN   TestOperation077VerifierRejectsExecutableExpectedData
+--- PASS: TestOperation077VerifierRejectsExecutableExpectedData (0.00s)
+=== RUN   TestOperation077PublicWorkerFreezesPlanAndRollsBack
+--- PASS: TestOperation077PublicWorkerFreezesPlanAndRollsBack (0.08s)
+PASS
+ok  	clawreef/internal/systembackup/domain	3.118s

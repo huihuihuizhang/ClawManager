@@ -16,7 +16,10 @@ import (
 )
 
 type memoryDB struct {
-	wildcardGrants                             bool // explicit fixture default: partial_revokes=ON
+	rollbackDone                               chan struct{} // optional synchronization for cancellation tests
+	castQueries                                int
+	castJSON                                   func(context.Context, string) (string, error) // injected failure/cancellation only; native MySQL tests render JSON
+	wildcardGrants                             bool                                          // explicit fixture default: partial_revokes=ON
 	tables                                     []Table
 	name, uuid, grants, failInsert             string
 	writes, commits, rollbacks, readOnlyBegins int
@@ -68,6 +71,9 @@ func (t memoryTx) Rollback() error {
 	t.c.s.tables = t.c.before
 	t.c.inTx = false
 	t.c.s.rollbacks++
+	if t.c.s.rollbackDone != nil {
+		close(t.c.s.rollbackDone)
+	}
 	return nil
 }
 
@@ -99,8 +105,18 @@ func (c *memoryConn) table(name string) *Table {
 	return nil
 }
 func one(n int) driver.Rows { return rows([]string{"n"}, []driver.Value{int64(n)}) }
-func (c *memoryConn) QueryContext(_ context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
+func (c *memoryConn) QueryContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
 	switch {
+	case q == "SELECT CAST(? AS JSON)":
+		c.s.castQueries++
+		if c.s.castJSON == nil {
+			return nil, errors.New("fixture JSON rendering not configured")
+		}
+		value, err := c.s.castJSON(ctx, args[0].Value.(string))
+		if err != nil {
+			return nil, err
+		}
+		return rows([]string{"json"}, []driver.Value{value}), nil
 	case q == sourceCatalogTables || q == sourceCatalogColumns || q == sourceCatalogKeys || q == sourceCatalogUnique:
 		return memoryCatalogAggregate(c.s.tables, q)
 	case q == "SELECT @@GLOBAL.partial_revokes":
