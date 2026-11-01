@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/pem"
 	"errors"
 	"time"
 
@@ -70,6 +71,22 @@ func (s *DeploymentService) readBoundPublicationJob(ctx context.Context, claim c
 		tx.Rollback()
 		return nil, "", c.ErrExecutionRecord
 	}
+	activation, err := s.loadPublicationActivationTx(ctx, tx, m.intent)
+	if err != nil {
+		tx.Rollback()
+		return nil, "", c.ErrExecutionRecord
+	}
+	if activation != nil {
+		leaf, _ := pem.Decode(m.secret.Data["tls.crt"])
+		if leaf == nil || activation.SecretUID != string(m.secret.UID) || activation.IdentityVersion != hash(leaf.Bytes) {
+			tx.Rollback()
+			return nil, "", c.ErrExecutionRecord
+		}
+	}
+	if guard.RecheckTx(ctx, tx) != nil {
+		tx.Rollback()
+		return nil, "", c.ErrExecutionAuthority
+	}
 	if tx.Rollback() != nil {
 		return nil, "", c.ErrExecutionAuthority
 	}
@@ -80,8 +97,25 @@ func (s *DeploymentService) readBoundPublicationJob(ctx context.Context, claim c
 	bounded, cancel := context.WithDeadline(ctx, nativeDeadline)
 	defer cancel()
 	job, err := s.Runtime.Owner.Client.BatchV1().Jobs(namespace).Get(bounded, name, metav1.GetOptions{})
-	if err != nil || string(job.UID) != uid || job.DeletionTimestamp != nil || job.Generation < 1 || !sameJob(want, job) || job.Spec.Suspend == nil || !*job.Spec.Suspend || access.Check(ctx) != nil || s.checkPublicationJobResources(ctx) != nil {
+	if err != nil || string(job.UID) != uid || !publicationJobMatchesActivation(want, job, activation) || access.Check(ctx) != nil || s.checkPublicationJobResources(ctx) != nil {
 		return nil, "", c.ErrExecutionAuthority
+	}
+	final, err := s.publisherVerifierDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, "", err
+	}
+	defer final.Rollback()
+	last, err := access.Bind(ctx, final)
+	if err != nil {
+		return nil, "", err
+	}
+	var finalUID, finalSpec, finalState, finalNamespace, finalNamespaceUID, finalName string
+	if final.QueryRowContext(ctx, `SELECT job_uid,spec_sha256,send_state,namespace_name,namespace_uid,job_name FROM system_backup_v2_job_send_intents WHERE origin_installation_id=? AND task_public_id=? AND phase='publish' AND job_unit_key='artifact-upload' FOR SHARE`, m.intent.Installation, m.intent.Backup).Scan(&finalUID, &finalSpec, &finalState, &finalNamespace, &finalNamespaceUID, &finalName) != nil || finalUID != uid || finalSpec != specSHA || finalState != "bound" || finalNamespace != namespace || finalNamespaceUID != namespaceUID || finalName != name {
+		return nil, "", c.ErrExecutionRecord
+	}
+	currentActivation, err := s.loadPublicationActivationTx(ctx, final, m.intent)
+	if err != nil || (activation == nil) != (currentActivation == nil) || (activation != nil && *activation != *currentActivation) || last.RecheckTx(ctx, final) != nil || bounded.Err() != nil {
+		return nil, "", c.ErrExecutionRecord
 	}
 	return job, specSHA, nil
 }
@@ -110,7 +144,11 @@ func (s *DeploymentService) checkPublicationMaterialOwner(ctx context.Context, c
 		return err
 	}
 	reference := m.secret.OwnerReferences[0]
-	if owner.JobUID != string(job.UID) || owner.JobSpecSHA256 != specSHA || owner.Generation != job.Generation || reference.APIVersion != "batch/v1" || reference.Kind != "Job" || reference.Name != job.Name || reference.UID != job.UID || reference.Controller == nil || !*reference.Controller || reference.BlockOwnerDeletion == nil || *reference.BlockOwnerDeletion {
+	expectedGeneration := owner.Generation
+	if job.Spec.Suspend != nil && !*job.Spec.Suspend {
+		expectedGeneration++ // readBoundPublicationJob verified original activation
+	}
+	if owner.JobUID != string(job.UID) || owner.JobSpecSHA256 != specSHA || expectedGeneration != job.Generation || reference.APIVersion != "batch/v1" || reference.Kind != "Job" || reference.Name != job.Name || reference.UID != job.UID || reference.Controller == nil || !*reference.Controller || reference.BlockOwnerDeletion == nil || *reference.BlockOwnerDeletion {
 		return c.ErrExecutionRecord
 	}
 	return nil

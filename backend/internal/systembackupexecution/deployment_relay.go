@@ -30,6 +30,11 @@ func (s *DeploymentService) controlHandler() http.Handler {
 		mux.Handle(ControlEvidencePullPath, s.controlEvidenceSourceHandler())
 	}
 	mux.Handle("/", control)
+	if s.Config.PublicationWorker != nil {
+		o := s.Runtime.Owner
+		identity := s.Config.PublicationWorker
+		mux.Handle(PublicationResultPath, WorkloadIdentity{Client: o.Client, Namespace: s.Config.Namespace, ServiceAccount: identity.ServiceAccountName, ServiceAccountUID: identity.ServiceAccountUID, Next: s.publicationResultHandler()})
+	}
 	if s.Config.RuntimeSources != nil {
 		o := s.Runtime.Owner
 		mux.Handle("/relay", WorkloadIdentity{Client: o.Client, Namespace: o.Namespace, ServiceAccount: o.Security.ServiceAccountName, ServiceAccountUID: o.Security.ServiceAccountUID, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
