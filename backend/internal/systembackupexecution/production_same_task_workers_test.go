@@ -254,6 +254,7 @@ func (f *dOriginalSixPartTask) checkOriginalStoppedBeforePhysicalResume(ctx cont
 	}
 	f.workers.mu.Lock()
 	running := f.workers.running
+	resumed := f.workers.resumeChecks
 	f.workers.mu.Unlock()
 	if running != 0 {
 		return fmt.Errorf("source resume with %d native workers still active", running)
@@ -265,6 +266,11 @@ func (f *dOriginalSixPartTask) checkOriginalStoppedBeforePhysicalResume(ctx cont
 	}
 	if err := f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE AND (revoked=FALSE OR stopped_at IS NULL)", f.publicID).Scan(&unresolved); err != nil || unresolved != 0 {
 		return fmt.Errorf("source resume before all original Job stop proofs")
+	}
+	if resumed == 0 {
+		if err := f.background.checkHeld(ctx); err != nil {
+			return fmt.Errorf("source background changed before first original resume: %w", err)
+		}
 	}
 	f.workers.mu.Lock()
 	f.workers.resumeChecks++

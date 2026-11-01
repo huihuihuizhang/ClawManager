@@ -183,6 +183,9 @@ func (b *dOriginalBackground) checkHeld(ctx context.Context) error {
 		if b.counters[id] == nil || b.counters[id].Load() < 2 {
 			return fmt.Errorf("original background %s did not write before pause", id)
 		}
+		if b.before != nil && b.counters[id].Load() != b.before[id] {
+			return fmt.Errorf("original background %s successful write counter changed inside held observations", id)
+		}
 	}
 	var progress string
 	if err := b.f.db.QueryRowContext(ctx, "SELECT CAST(progress AS CHAR) FROM team_members WHERE id=21").Scan(&progress); err != nil {
@@ -218,7 +221,7 @@ func (b *dOriginalBackground) checkResumed(ctx context.Context, t *testing.T) {
 		t.Fatal("original background writers were not installed")
 	}
 	b.mu.Lock()
-	complete := len(b.before) == 3 && len(b.counters) == 3 && len(b.heldHashes) == 2 && b.heldProgress != "" && b.heldObservations > 0
+	complete := len(b.before) == 3 && len(b.counters) == 3 && len(b.heldHashes) == 2 && b.heldProgress != "" && b.heldObservations >= 2
 	for _, id := range []string{"application-mutations", "d-original-7", "d-platform-pod"} {
 		complete = complete && b.before[id] > 1 && b.counters[id] != nil
 	}

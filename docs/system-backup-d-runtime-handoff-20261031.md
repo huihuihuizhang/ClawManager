@@ -540,3 +540,9 @@
 - 首版比较错误地在原NewDeliveredCaptureKeyJob已经真实key-check、引用进入unknown后重放key-reserve，旧健康也拒绝，FAIL6.756s；拒绝site定位RetainPlanned。改为先独立SELECT确认原unknown，再用当前合法key-check，不改引用/门控/nonce/许可，PASS6.696s。后续三mTLS/consumer/当前事实/四SQL期限/最新attempt及cancel/真实owner grant与事实行交付延迟期限组合PASS41.524s。
 - 新独立issuer-expiry模式在新fixture签名冻结前将issuer设为8秒（其他原窗口不变），实际构造器/SQL保留原lease+签名until，健康business guard更长，等待原until自然到期并以SQL UTC确认；旧Stage和StageOriginal均拒绝，无新增permit/reference/epoch、provider Generate/login均0且原guard不能复活。PASS8.94s/package12.163s。三包全量（本地TLS/文件身份可用、未启实际MySQL环境变量）controller9.812s/kekadapter5.182s/execution8.764s PASS。
 - 同源透明native参数RPC对照17次key-check：原Stage 151/149次SQL调用→145/143（少6，含事务），中位43.2154→40.9483ms，均值43.6718→40.7010ms；package6.937/6.133s均PASS。日志`.tools/d-stage-original-native-{baseline,current}.log`，仅诊断，不称完整六项通过。原174/default30/原顺序无overlay正向仍待新任务验证；A发布未验收。
+
+## D5.51 背景held观察补充单调计数与首次恢复前采样
+
+- D5.49的单Job拒绝任务只有一次Job-dispatch held基线，不能单凭32.373s负例宣称整个held期间SQL始终稳定。现在每个后续held观察除实际SQL progress与两文件哈希外，还要求三个成功写单调counter精确等于首个baseline；原所有worker实际停止及SQL stop barrier之后、首个Source Resume之前再次检查。第二个writer恢复时已有第一个writer运行，按原resumeChecks只在首次恢复前取全静止样本。checkResumed要求至少两次held观察。
+- 新独立观察反例先在尚未取得capture gate的私有fixture实际运行原三个writer，各自成功至少两次，再停止并取得健康观察；随后真实启动Pro文件writer完成一次写入、停止，确认实际文件内容和成功counter均改变，再恢复原文件字节模拟ABA。下一次checkHeld必须因真实成功counter变化拒绝，没有手改counter、backup状态、门控、许可、nonce或receipt。该测试不声明自己进入原held capture，也不是同任务正向验收。
+- 原实际writer ABA反例PASS15.42s；加强后的原provider拒绝新174任务`sbk_1ebd5531-29b0-4a37-86e9-c3d56735808f`PASS29.21s，两测试合包47.899s（`.tools/d-background-monotonic-and-denial.log`）。该原负任务仍由failed Record收敛，非成功任务。背景进度/文件内容因实际写入变化，后续恢复验收应比较实际held快照，不对照启动前写死值，也不缩减数据范围。
