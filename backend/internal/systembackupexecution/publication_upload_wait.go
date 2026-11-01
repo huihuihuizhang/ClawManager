@@ -122,72 +122,80 @@ func originalPublicationUploadDeadline(request PublicationUploadRequest, materia
 	return until, nil
 }
 
-func (s *DeploymentService) readOriginalPublicationUploadCompletion(ctx context.Context, claim c.ClaimToken, m *publicationJobMaterials, job *batchv1.Job) (bool, error) {
+// Observation DATA contains no grant or successful-validation callback. The
+// production reader obtains it under the original current SQL/native binding;
+// the poller performs the closed consistency check itself.
+type publicationUploadPollData struct {
+	Request            PublicationUploadRequest
+	RequestSHA, JobUID string
+	Generation         int64
+	Job                *batchv1.Job
+	Cursor             publicationUploadCursor
+	Messages           []publicationResultMessage
+}
+
+func (s *DeploymentService) readOriginalPublicationUploadCompletion(ctx context.Context, claim c.ClaimToken, m *publicationJobMaterials, job *batchv1.Job) (publicationUploadPollData, error) {
 	if m == nil || m.intent.Claim != claim {
-		return false, c.ErrClaimLost
+		return publicationUploadPollData{}, c.ErrClaimLost
 	}
 	if s == nil || s.publicationTarget == nil {
-		return false, c.ErrExecutionAuthority
+		return publicationUploadPollData{}, c.ErrExecutionAuthority
 	}
 	access, err := s.publicationAccess(ctx, claim, m.intent.Attempt)
 	if err != nil || access.Check(ctx) != nil {
-		return false, c.ErrClaimLost
+		return publicationUploadPollData{}, c.ErrClaimLost
 	}
 	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
-		return false, err
+		return publicationUploadPollData{}, err
 	}
 	defer tx.Rollback()
 	guard, err := access.Bind(ctx, tx)
 	if err != nil {
-		return false, err
+		return publicationUploadPollData{}, err
 	}
 	activation, err := s.loadPublicationActivationTx(ctx, tx, m.intent)
 	if err != nil {
-		return false, err
+		return publicationUploadPollData{}, err
 	}
 	if activation == nil {
-		return false, ErrJobUncertain
+		return publicationUploadPollData{}, ErrJobUncertain
 	}
 	if s.checkPublicationTargetTx(ctx, tx, guard.Facts(), *s.publicationTarget) != nil {
-		return false, c.ErrExecutionAuthority
+		return publicationUploadPollData{}, c.ErrExecutionAuthority
 	}
 	cursor, err := scanPublicationUploadCursor(tx.QueryRowContext(ctx, `SELECT last_accepted_sequence,last_observed_status,last_accepted_body_sha256 FROM system_backup_v2_job_observations WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND attempt_no=? AND phase='publish' AND job_unit_key='artifact-upload' AND job_uid=? AND job_generation=? FOR SHARE`, m.intent.Installation, m.intent.Backup, m.intent.Attempt, activation.JobUID, activation.AfterGeneration), uint64(len(m.request.Objects)+1))
 	if err != nil {
-		return false, err
+		return publicationUploadPollData{}, err
 	}
 	sequence := cursor.Sequence
 	messages := make([]publicationResultMessage, 0, sequence)
 	for i := uint64(1); i <= sequence; i++ {
 		raw, err := loadPublicationMetadata(ctx, tx, m.intent.Backup, publicationResultID(m.intent, i))
 		if err != nil {
-			return false, err
+			return publicationUploadPollData{}, err
 		}
 		var message publicationResultMessage
 		if decodeProviderDeploymentJSON(raw, &message) != nil {
-			return false, c.ErrExecutionRecord
+			return publicationUploadPollData{}, c.ErrExecutionRecord
 		}
 		canonical, err := ce.Canonical(message)
 		if err != nil || !bytes.Equal(canonical, raw) || i == sequence && !cursor.matchesLastBody(raw) {
-			return false, c.ErrExecutionRecord
+			return publicationUploadPollData{}, c.ErrExecutionRecord
 		}
 		messages = append(messages, message)
 	}
-	complete, err := publicationUploadCompletion(m.request, m.intent.RequestSHA256, activation.JobUID, activation.AfterGeneration, job, sequence, cursor.Status.String, messages)
-	if err != nil {
-		return false, err
-	}
 	if guard.RecheckTx(ctx, tx) != nil {
-		return false, c.ErrClaimLost
+		return publicationUploadPollData{}, c.ErrClaimLost
 	}
-	return complete, nil
+	return publicationUploadPollData{Request: m.request, RequestSHA: m.intent.RequestSHA256, JobUID: activation.JobUID, Generation: activation.AfterGeneration, Job: job, Cursor: cursor, Messages: messages}, nil
 }
 
 // Keep the exact claim alive by retaining it, not by extending/replacing it.
 // Every poll uses current original SQL and the already bound native Job; no
 // Create/Patch, new grant, signer, claim Renew or new task is reachable here.
 // Cancellation/claim loss stops immediately. Native exit alone is insufficient.
-func (s *DeploymentService) awaitOriginalPublicationUpload(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, interval time.Duration) error {
+func (s *DeploymentService) awaitOriginalPublicationUpload(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, interval time.Duration, sendErr error) error {
 	if ctx == nil || ctx.Err() != nil {
 		if ctx != nil {
 			return ctx.Err()
@@ -207,34 +215,62 @@ func (s *DeploymentService) awaitOriginalPublicationUpload(ctx context.Context, 
 	if err != nil {
 		return err
 	}
-	if !time.Now().Before(until) {
-		return errors.Join(ErrJobUncertain, ErrPublicationUploadWindowClosed)
+	return pollOriginalPublicationUpload(ctx, until, interval, sendErr, func(bounded context.Context) (publicationUploadPollData, error) {
+		if access.Check(bounded) != nil {
+			return publicationUploadPollData{}, c.ErrClaimLost
+		}
+		job, _, err := s.readBoundPublicationJob(bounded, claim, attempt, m)
+		if err != nil {
+			return publicationUploadPollData{}, err
+		}
+		return s.readOriginalPublicationUploadCompletion(bounded, claim, m, job)
+	})
+}
+
+// Only observation DATA can enter this loop. It has no sender, grant issuer,
+// claim renewal/release or successful-validation callback. Unknown reads can
+// be observed again within the same original window, never resent here.
+func pollOriginalPublicationUpload(ctx context.Context, until time.Time, interval time.Duration, sendErr error, observe func(context.Context) (publicationUploadPollData, error)) error {
+	if sendErr != nil && !errors.Is(sendErr, ErrJobUncertain) {
+		return sendErr
+	}
+	if ctx == nil || observe == nil || until.IsZero() {
+		return c.ErrExecutionAuthority
 	}
 	bounded, cancel := context.WithDeadline(ctx, until)
 	defer cancel()
 	if interval < 100*time.Millisecond || interval > 5*time.Second {
 		interval = time.Second
 	}
-	for {
-		if bounded.Err() != nil {
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
+	stopped := func() error {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if bounded.Err() != nil || !time.Now().Before(until) {
 			return errors.Join(ErrJobUncertain, ErrPublicationUploadWindowClosed)
 		}
-		if access.Check(bounded) != nil {
-			return c.ErrClaimLost
-		}
-		job, _, err := s.readBoundPublicationJob(bounded, claim, attempt, m)
-		if err != nil {
+		return nil
+	}
+	for {
+		if err := stopped(); err != nil {
 			return err
 		}
-		complete, err := s.readOriginalPublicationUploadCompletion(bounded, claim, m, job)
-		if err != nil {
+		data, readErr := observe(bounded)
+		// A query finishing after cancellation/expiry cannot report completion.
+		if err := stopped(); err != nil {
 			return err
 		}
-		if complete {
-			return nil
+		if readErr != nil && !errors.Is(readErr, ErrJobUncertain) {
+			return readErr
+		}
+		if readErr == nil {
+			complete, err := publicationUploadCompletion(data.Request, data.RequestSHA, data.JobUID, data.Generation, data.Job, data.Cursor.Sequence, data.Cursor.Status.String, data.Messages)
+			if err != nil {
+				return err
+			}
+			if complete {
+				return nil
+			}
 		}
 		timer := time.NewTimer(interval)
 		select {
@@ -260,7 +296,7 @@ func (s *DeploymentService) startAndAwaitOriginalPublicationUpload(ctx context.C
 	// A lost activation ACK permits observation only. If original immutable
 	// records prove actual completion, no resend is needed; otherwise preserve
 	// uncertainty and leave finalization to its independent current authority.
-	err := s.awaitOriginalPublicationUpload(ctx, claim, attempt, target, interval)
+	err := s.awaitOriginalPublicationUpload(ctx, claim, attempt, target, interval, sendErr)
 	if err == nil {
 		return nil
 	}

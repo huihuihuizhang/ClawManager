@@ -2,6 +2,7 @@ package systembackupexecution
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -150,7 +151,120 @@ func TestOriginalUploadWaitUsesShortestOriginalDeadlineData(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	var service *DeploymentService
-	if err := service.awaitOriginalPublicationUpload(ctx, c.ClaimToken{}, 1, PublicationTargetMaterials{}, time.Second); !errors.Is(err, context.Canceled) {
+	if err := service.awaitOriginalPublicationUpload(ctx, c.ClaimToken{}, 1, PublicationTargetMaterials{}, time.Second, nil); !errors.Is(err, context.Canceled) {
 		t.Fatal("cancel did not stop before touching SQL/native/material", err)
+	}
+}
+
+func originalUploadPollFixtureData(t *testing.T) publicationUploadPollData {
+	t.Helper()
+	request, _, _ := publicationContainerRequestData(t)
+	raw, err := json.Marshal(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sha := hash(raw)
+	no := false
+	job := &batchv1.Job{ObjectMeta: metav1.ObjectMeta{UID: types.UID("original-poll-data-job"), Generation: 2}, Spec: batchv1.JobSpec{Suspend: &no}, Status: batchv1.JobStatus{Succeeded: 1, Conditions: []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}}}
+	prefix := request.ArtifactRoot + request.Backup + "/" + strconv.FormatUint(request.Attempt, 10) + "/"
+	var messages []publicationResultMessage
+	for i, object := range request.Objects {
+		messages = append(messages, publicationResultMessage{Version: publicationResultVersion, Installation: request.Installation, Backup: request.Backup, Attempt: request.Attempt, RequestSHA256: sha, Sequence: uint64(i + 1), Object: PublicationUploadObservation{Key: prefix + object.Path, Version: "fixed-native-poll-data", SHA256: object.SHA256, Bytes: object.Bytes}})
+	}
+	manifest, candidate, err := request.validate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	messages = append(messages, publicationResultMessage{Version: publicationResultVersion, Installation: request.Installation, Backup: request.Backup, Attempt: request.Attempt, RequestSHA256: sha, Sequence: uint64(len(messages) + 1), Object: PublicationUploadObservation{Key: candidate, Version: "fixed-native-poll-data", SHA256: hash(manifest), Bytes: int64(len(manifest))}})
+	return publicationUploadPollData{Request: request, RequestSHA: sha, JobUID: string(job.UID), Generation: job.Generation, Job: job, Cursor: publicationUploadCursor{Sequence: uint64(len(messages)), Status: sql.NullString{String: "upload_candidate", Valid: true}}, Messages: messages}
+}
+
+// These are local typed observation/control-flow counterexamples. No fake
+// current-SQL authority or C receipt is returned by the observation callback.
+// The loop exposes no Create/Patch, grant, claim renewal or release operation.
+func TestOriginalUploadPollStopsWithinOriginalWindowData(t *testing.T) {
+	for _, mode := range []string{"pending-then-complete", "cancel-during-read", "cancel-between-reads", "claim-lost", "already-expired", "expires-during-read", "expires-between-reads", "unknown-send-ack", "unknown-read", "complete-missing-results", "failed-job", "invalid-data", "known-send-failure"} {
+		t.Run(mode, func(t *testing.T) {
+			complete := originalUploadPollFixtureData(t)
+			pending := complete
+			pending.Job = complete.Job.DeepCopy()
+			pending.Job.Status = batchv1.JobStatus{}
+			pending.Cursor = publicationUploadCursor{}
+			pending.Messages = nil
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			until := time.Now().Add(2 * time.Second)
+			var sendErr, want error
+			wantReads := 1
+			switch mode {
+			case "pending-then-complete", "unknown-read":
+				wantReads = 2
+			case "cancel-during-read", "cancel-between-reads":
+				want = context.Canceled
+			case "claim-lost":
+				want, wantReads = c.ErrClaimLost, 2
+			case "already-expired":
+				until, want, wantReads = time.Now().Add(-time.Second), ErrPublicationUploadWindowClosed, 0
+			case "expires-during-read", "expires-between-reads":
+				until, want = time.Now().Add(30*time.Millisecond), ErrPublicationUploadWindowClosed
+			case "unknown-send-ack":
+				sendErr = ErrJobUncertain
+			case "complete-missing-results":
+				want = ErrPublicationUploadMissingResults
+			case "failed-job":
+				want = ErrPublicationUploadFailed
+			case "invalid-data":
+				want = c.ErrExecutionRecord
+			case "known-send-failure":
+				sendErr, want, wantReads = c.ErrExecutionAuthority, c.ErrExecutionAuthority, 0
+			}
+			reads := 0
+			started := time.Now()
+			err := pollOriginalPublicationUpload(ctx, until, 100*time.Millisecond, sendErr, func(observationCtx context.Context) (publicationUploadPollData, error) {
+				reads++
+				deadline, ok := observationCtx.Deadline()
+				if !ok || !deadline.Equal(until) {
+					t.Fatal("poll changed original shortest window", deadline, until)
+				}
+				switch mode {
+				case "cancel-during-read":
+					cancel()
+				case "cancel-between-reads":
+					timer := time.AfterFunc(10*time.Millisecond, cancel)
+					t.Cleanup(func() { timer.Stop() })
+					return pending, nil
+				case "expires-during-read":
+					<-observationCtx.Done()
+				case "expires-between-reads":
+					return pending, nil
+				case "claim-lost":
+					if reads == 2 {
+						return publicationUploadPollData{}, c.ErrClaimLost
+					}
+					return pending, nil
+				case "pending-then-complete":
+					if reads == 1 {
+						return pending, nil
+					}
+				case "unknown-read":
+					if reads == 1 {
+						return publicationUploadPollData{}, ErrJobUncertain
+					}
+				case "complete-missing-results":
+					complete.Cursor, complete.Messages = publicationUploadCursor{}, nil
+				case "failed-job":
+					complete.Job.Status.Failed = 1
+				case "invalid-data":
+					complete.RequestSHA = hash([]byte("foreign request"))
+				}
+				return complete, nil
+			})
+			if want == nil && err != nil || want != nil && !errors.Is(err, want) || reads != wantReads {
+				t.Fatal("wrong poll outcome/count", mode, err, want, reads, wantReads)
+			}
+			if time.Since(started) > time.Second {
+				t.Fatal("poll did not stop promptly", mode)
+			}
+		})
 	}
 }
