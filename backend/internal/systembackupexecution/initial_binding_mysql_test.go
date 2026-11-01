@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"os"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -23,7 +25,11 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires isolated local MySQL")
 	}
-	owner, _, admin, db, authority, originalJob, _, _, _ := newConsumerMySQLFixture(t)
+	var loseCommit atomic.Bool
+	options := &consumerFixtureOptions{WrapControlConnector: func(conn driver.Connector) driver.Connector {
+		return aPublicationACKConnector{Connector: conn, lose: &loseCommit}
+	}}
+	owner, _, admin, db, authority, originalJob, _, _, _ := newConsumerMySQLFixtureOptions(t, options)
 	ctx := context.Background()
 	// This focused current-column fixture predates heartbeat writes. Match the
 	// real 098 migration column; do not change any role or production schema.
@@ -233,6 +239,91 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 			}
 		})
 	}
+	t.Run("actual-commit-ack-loss-read-only", func(t *testing.T) {
+		setLease()
+		before := readLease(admin)
+		binding := d.JobBinding{JobUnitKey: "initial-binding-data", Namespace: intent.Identity.Namespace, Name: intent.Identity.Name, UID: record.UID, Generation: 1}
+		bindingRaw, err := json.Marshal(binding)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = store.RunWithExecutionHeartbeat(ctx, authority, func(active context.Context) error {
+			_, err := c.WithOriginalControllerBinding(active, authority, record, func(scoped context.Context) (d.JobBinding, error) {
+				tx, err := db.BeginTx(scoped, nil)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				defer tx.Rollback()
+				guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				fresh, err := c.PrepareOriginalFirstBinding(scoped, tx, authority, guard)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				result, err := tx.ExecContext(scoped, `UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE observed_uid=? AND binding_json IS NULL`, bindingRaw, record.UID)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				n, err := result.RowsAffected()
+				if err != nil || n != 1 {
+					t.Fatal("original binding first write", n, err)
+				}
+				if err := c.RecheckOriginalFirstBindingCommit(scoped, tx, authority, fresh, bindingRaw); err != nil {
+					return d.JobBinding{}, err
+				}
+				loseCommit.Store(true)
+				if err := tx.Commit(); !errors.Is(err, errAPublicationACKLost) {
+					t.Fatal("native committed transaction did not lose only ACK", err)
+				}
+				return d.JobBinding{}, c.ErrExecutionCommitUnknown
+			})
+			if !errors.Is(err, c.ErrExecutionCommitUnknown) {
+				t.Fatal("unknown first commit changed", err)
+			}
+			var observed []byte
+			if err := admin.QueryRowContext(ctx, `SELECT binding_json FROM system_backup_v2_runtime_resources WHERE observed_uid=?`, record.UID).Scan(&observed); err != nil || !bytes.Equal(bindingRaw, observed) {
+				t.Fatal("lost ACK did not leave actual committed original binding", err)
+			}
+			afterCommit := readLease(admin)
+			if !afterCommit.After(before) {
+				t.Fatal("native first commit did not persist its fresh claim")
+			}
+			// This is a native helper/SQL readback, not PublicJobOwner.Bind's
+			// certificate/plan admission. The complete fixture covers that entry.
+			got, err := c.WithOriginalControllerBinding(active, authority, record, func(scoped context.Context) (d.JobBinding, error) {
+				tx, err := db.BeginTx(scoped, nil)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				defer tx.Rollback()
+				guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				var raw []byte
+				var current d.JobBinding
+				if err := tx.QueryRowContext(scoped, `SELECT binding_json FROM system_backup_v2_runtime_resources WHERE observed_uid=? FOR UPDATE`, record.UID).Scan(&raw); err != nil {
+					return d.JobBinding{}, err
+				}
+				if err := json.Unmarshal(raw, &current); err != nil || current != binding {
+					t.Fatal("existing binding readback differs", err)
+				}
+				if err := guard.Recheck(scoped, tx); err != nil {
+					return d.JobBinding{}, err
+				}
+				return current, tx.Commit()
+			})
+			if err != nil || got != binding || !readLease(admin).Equal(afterCommit) {
+				t.Fatal("unknown retry renewed or replaced committed binding", err)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 	var oldKey []byte
 	if err := admin.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE observed_uid=?`, originalJob.UID).Scan(&oldKey); err != nil {
 		t.Fatal(err)

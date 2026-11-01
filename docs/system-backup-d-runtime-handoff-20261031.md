@@ -630,3 +630,8 @@
 - 十个源打开前原观测窗口依次29.6410837、29.673631、29.665803、29.6756631、29.6582491、29.6722328、29.6651952、29.6640764、29.4478253、29.4238142秒。SQL完整880次本地SourceAuthorize/756.921ms，RunFormalCapture25.1295495s，SQL ReportCandidate成功；这些是本轮实际观测，不把880除437作完成比例，也不据一次任务断言任意数据量都适用静态30秒许可。
 - afterValidated确已进入A原回调。A在原validating/释放capture claim之后，以原默认policy取得同任务publisher claim receipt；随后`verifyOriginalPublicationCapture`返回0 parts/`execution record unavailable or conflicting`，在d910测试publication_same_task_mysql_test.go255失败。尚未进入prepareOriginalCaptureCertificate，也未签出证书；完整test FAIL130.97s/package134.209s、exit1。失败不可改记为A healthy通过；后续firstForward/v12不可变最终发布/目录/独立native readback仍未完成。
 - `.tools/d-first-binding-a-d910-full.log` SHA256=`e1f51d81db81d5cb35af12ac9d4f7bef7d8e23a9d6f1436692f50148a68e610b`，结构化终态在`docs/evidence/d-first-binding-full-task-20261101.json`。session57967已terminal1，63507已释放给监督/A定位；fixture清理后不能复用旧task/C/DEK补做发布。真实ACK未知/重复实际Bind只读、原cutoff行交付延迟、committed cancel与定向并发尚待后续独立测试；当前不再为同候选盲重跑完整任务。
+
+## D5.63 实际commit后丢ACK及同run只读查询的窄SQL补充
+
+- 只增加测试，生产eff7不变。原consumer fixture的受限连接使用既有透明aPublicationACKConnector；仅在新case的实际first-binding UPDATE、完整tail检查之后把lose flag置true。底层原生Commit成功后返回专用ACK错误，包装为原ErrExecutionCommitUnknown；独立admin SELECT确认binding_json确已提交且与原字节相同、续后claim确已提交。随后同run创建只读frame，按当前完整authority锁和实际原binding读取/解码/commit，所得JobBinding相同，committed lease不再改变。原其他Job的key_use_json完整字节仍不变。
+- 65298当时已明确释放后运行，原13case加此实际ACK case PASS1.19s/package4.469s（`.tools/d-first-binding-native-actual-ack.log`），session45102已terminal0并释放；此后按监督最新安排等待65298新窗口，不再起SQL。明确这是原生helper事务/同run SQL读回，**没有**把命名SQL DATA当真实Kube观察、原PublicJobOwner.Bind证书/冻结plan准入或跨进程恢复验收；先前rollback后模拟domain unknown的case仍独立保留，不与真实Commit ACK丢失混为一谈。原cutoff交付延迟、committed cancel、实际Bind重复/unknown恢复与定向并发仍待覆盖。
