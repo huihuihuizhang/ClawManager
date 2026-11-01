@@ -28,6 +28,7 @@ type publicationUploadExit struct {
 	activation         publicationActivation
 	jobResourceVersion string
 	pods               map[string]quiesce.PodIdentity
+	process            publicationUploadProcess
 }
 
 func (p *publicationUploadExit) recheckTx(ctx context.Context, tx *sql.Tx) error {
@@ -201,6 +202,9 @@ func publicationUploadPodIdentities(job *batchv1.Job, pods []corev1.Pod) ([]quie
 			}
 		}
 		if !owned {
+			if publicationUploadPodRelated(job, pod) {
+				return nil, c.ErrExecutionRecord
+			}
 			continue
 		}
 		if len(pod.OwnerReferences) != 1 {
@@ -271,6 +275,11 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 		return nil, c.ErrExecutionRecord
 	}
 	p.activation = *a
+	process, processRaw, err := loadPublicationProcessTx(ctx, tx, p.material, *a)
+	if err != nil || hash(processRaw) != parent.completion.uploadSnapshot.processSHA256 || process.NodeUID != s.Config.Security.NodeUIDs[process.Pod.Node] || process.ServiceAccountUID != s.Config.PublicationWorker.ServiceAccountUID {
+		return nil, c.ErrExecutionRecord
+	}
+	p.process = process
 	if tx.Rollback() != nil {
 		return nil, errPublicationUnavailable
 	}
@@ -286,7 +295,7 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 	if err != nil || list.Continue != "" || len(list.Items) > 1000 {
 		return nil, ErrJobUncertain
 	}
-	pods, err := publicationUploadPodIdentities(job, list.Items)
+	pods, err := publicationOriginalUploadExitPods(job, list.Items, p.process)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +319,7 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 	if err != nil || last.Continue != "" || len(last.Items) > 1000 {
 		return nil, ErrJobUncertain
 	}
-	lastPods, err := publicationUploadPodIdentities(current, last.Items)
+	lastPods, err := publicationOriginalUploadExitPods(current, last.Items, p.process)
 	wantBytes, _ := json.Marshal(pods)
 	lastBytes, _ := json.Marshal(lastPods)
 	if err != nil || !bytes.Equal(wantBytes, lastBytes) {

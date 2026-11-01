@@ -132,6 +132,7 @@ type publicationUploadPollData struct {
 	Job                *batchv1.Job
 	Cursor             publicationUploadCursor
 	Messages           []publicationResultMessage
+	ProcessSHA256      string
 }
 
 func (s *DeploymentService) readOriginalPublicationUploadCompletion(ctx context.Context, claim c.ClaimToken, m *publicationJobMaterials, job *batchv1.Job) (publicationUploadPollData, error) {
@@ -169,6 +170,14 @@ func (s *DeploymentService) readOriginalPublicationUploadCompletion(ctx context.
 		return publicationUploadPollData{}, err
 	}
 	sequence := cursor.Sequence
+	processSHA := ""
+	if sequence > 0 {
+		process, raw, err := loadPublicationProcessTx(ctx, tx, m.intent, *activation)
+		if err != nil || s.Config.PublicationWorker == nil || process.ServiceAccountUID != s.Config.PublicationWorker.ServiceAccountUID || process.NodeUID != s.Config.Security.NodeUIDs[process.Pod.Node] {
+			return publicationUploadPollData{}, c.ErrExecutionRecord
+		}
+		processSHA = hash(raw)
+	}
 	messages := make([]publicationResultMessage, 0, sequence)
 	for i := uint64(1); i <= sequence; i++ {
 		raw, err := loadPublicationMetadata(ctx, tx, m.intent.Backup, publicationResultID(m.intent, i))
@@ -188,7 +197,7 @@ func (s *DeploymentService) readOriginalPublicationUploadCompletion(ctx context.
 	if guard.RecheckTx(ctx, tx) != nil {
 		return publicationUploadPollData{}, c.ErrClaimLost
 	}
-	return publicationUploadPollData{Request: m.request, RequestSHA: m.intent.RequestSHA256, JobUID: activation.JobUID, Generation: activation.AfterGeneration, Job: job, Cursor: cursor, Messages: messages}, nil
+	return publicationUploadPollData{Request: m.request, RequestSHA: m.intent.RequestSHA256, JobUID: activation.JobUID, Generation: activation.AfterGeneration, Job: job, Cursor: cursor, Messages: messages, ProcessSHA256: processSHA}, nil
 }
 
 // Keep the exact claim alive by retaining it, not by extending/replacing it.

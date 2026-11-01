@@ -228,10 +228,14 @@ func (s *DeploymentService) acceptPublicationResult(r *http.Request, message pub
 	if !sameJob(job, podJob) {
 		return c.ErrExecutionRecord
 	}
-	return s.recordPublicationResult(ctx, intent.Claim, m, job, message, body)
+	process, err := s.originalPublicationProcessFromPod(ctx, job, nativePod, m.intent, message.Sequence)
+	if err != nil {
+		return err
+	}
+	return s.recordPublicationResult(ctx, intent.Claim, m, job, message, body, process)
 }
 
-func (s *DeploymentService) recordPublicationResult(ctx context.Context, claim c.ClaimToken, m *publicationJobMaterials, job *batchv1.Job, message publicationResultMessage, body []byte) error {
+func (s *DeploymentService) recordPublicationResult(ctx context.Context, claim c.ClaimToken, m *publicationJobMaterials, job *batchv1.Job, message publicationResultMessage, body []byte, process publicationUploadProcess) error {
 	ctx, cancel := context.WithDeadline(ctx, m.intent.Deadline)
 	defer cancel()
 	access, err := s.publicationAccess(ctx, claim, m.intent.Attempt)
@@ -255,6 +259,12 @@ func (s *DeploymentService) recordPublicationResult(ctx context.Context, claim c
 	a, err := s.loadPublicationActivationTx(ctx, tx, m.intent)
 	if err != nil || a == nil || a.SecretUID != string(m.secret.UID) || a.JobUID != string(job.UID) || a.AfterGeneration != job.Generation {
 		return c.ErrExecutionRecord
+	}
+	if sequence > 0 {
+		original, _, err := loadPublicationProcessTx(ctx, tx, m.intent, *a)
+		if err != nil || !samePublicationUploadProcess(original, process) {
+			return c.ErrExecutionRecord
+		}
 	}
 	if sequence > 0 {
 		old, err := loadPublicationMetadata(ctx, tx, m.intent.Backup, publicationResultID(m.intent, sequence))
@@ -283,6 +293,25 @@ func (s *DeploymentService) recordPublicationResult(ctx context.Context, claim c
 	}
 	if err = (security.RegistrationCapacity{ReportFile: s.Config.CapacityFile}).Reserve(ctx, tx, capacity, len(body)); err != nil {
 		return err
+	}
+	if sequence == 0 {
+		if _, err = loadPublicationMetadata(ctx, tx, m.intent.Backup, publicationProcessID(m.intent)); !errors.Is(err, sql.ErrNoRows) {
+			return c.ErrExecutionRecord
+		}
+		process.ObservedAt = now
+		if !process.valid(m.intent, *a) {
+			return c.ErrExecutionRecord
+		}
+		processRaw, err := ce.Canonical(process)
+		if err != nil {
+			return c.ErrExecutionRecord
+		}
+		if err = (security.RegistrationCapacity{ReportFile: s.Config.CapacityFile}).Reserve(ctx, tx, capacity, len(processRaw)); err != nil {
+			return err
+		}
+		if err = registerPublicationMetadata(ctx, tx, m.intent.Installation, m.intent.Backup, publicationProcessID(m.intent), processRaw, now.Add(time.Duration(retention)*time.Second)); err != nil {
+			return err
+		}
 	}
 	if err = registerPublicationMetadata(ctx, tx, m.intent.Installation, m.intent.Backup, id, body, now.Add(time.Duration(retention)*time.Second)); err != nil {
 		return err
