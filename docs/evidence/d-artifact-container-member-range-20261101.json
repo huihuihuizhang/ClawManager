@@ -1,0 +1,71 @@
+{
+  "schema_version": "d-artifact-container-member-range-review.v1",
+  "updated_at_utc": "2026-11-01T08:05:14.215139+00:00",
+  "source_base": "c1e784d6a9c0d6a6d6f7f84021d3d9d4b7b42a73",
+  "shared_backup_preserved": "73d35f3b7d0ee9e829df3d511bd8d6fe3c5648f5",
+  "scope": "read-only fixed-version member range transport and complete C wire inspection leaf; no SQL/private finalization proof",
+  "production": [
+    "Existing native request wrapper remains unchanged for callers; optional Range is set before SigV4 signing on fixed-version GET only.",
+    "openRange validates offsets by subtraction, exact 206/Content-Range/total/content length/version and no encoding/delete marker. A provider ignoring Range fails.",
+    "ReadContainerEnvelope reads at most original envelope bytes+1 within 32MiB, verifies full body EOF/hash/spec/current pinned credential and absolute deadline.",
+    "InspectContainerCipher validates a private copy of the exact envelope before network/provider use, streams only the original cipher range through existing InspectWrappedStream and an inert domain callback, then checks full C size/hash, close/deadline and current read credential.",
+    "Caller obtains the CURRENT independently authorized exact-envelope Unwrapper; no local key fallback, source authority, new epoch adoption or signing grant is added."
+  ],
+  "tests": {
+    "fixture": "actual local AES-GCM C bytes, cleared named local test key and modeled post-use revocation; actual local TLS HTTP transport, not an independent provider/SQL/production business verifier",
+    "protocol_cases": 14,
+    "pre_io_boundary_cases": 4,
+    "positive_requests": "one complete container GET plus exactly two signed range GETs; zero PUT; original write credential removed",
+    "rejects": [
+      "member corruption after whole-container inspection",
+      "envelope corruption before Unwrap",
+      "wrong range/end/total/version",
+      "HTTP 200 ignoring Range",
+      "short envelope/cipher bodies",
+      "modeled provider post-use revocation",
+      "unread plaintext suffix",
+      "inert domain parser failure",
+      "read credential withdrawal",
+      "overflow/overlap/unfixed version/foreign key before any HTTP request"
+    ],
+    "owned_bytes": "caller envelope mutation after checked copy during cipher request does not replace bytes used by provider/AEAD verifier",
+    "results_seconds": {
+      "initial_14_package": 4.538,
+      "final_18_package": 3.556,
+      "final_execution_package": 11.967,
+      "final_part_container_package": 5.857,
+      "final_wire_package": 0.865
+    }
+  },
+  "sessions": {
+    "8079": "terminal0",
+    "55180": "terminal0",
+    "88523": "terminal0"
+  },
+  "sql": "No SQL opt-in; 65298 exclusively handed to root review and not used by these tests; no 63507 use",
+  "limitations": [
+    "Not a full publication, original full-six task, real independently authorized provider test or business-verifier proof.",
+    "No full v12 manifest/capture-certificate/acceptance/catalog trust chain, staging cleanup, signing journal/final CAS or DR verified here.",
+    "Methods consume caller-resolved authenticated member facts; public DTOs are inert and cannot be used as finalization receipts.",
+    "No multi-GiB object transferred."
+  ],
+  "source_sha256": {
+    "publication_native_s3.go": "5b7fbea3e7ebb82e9c1d59d2a890608e6f8917ba3876c11398d65d4c23d30e6b",
+    "artifact_read_container_range.go": "e9608e3c95d5e4eb2c6642ff939c68df526e2685221077db23389b9606eb1044",
+    "artifact_read_container_range_test.go": "9b2c5c13965226cd2a0391b3ffe8cd4c95b1d33db14c344aae4506f29c160a28"
+  },
+  "logs": {
+    "d-artifact-container-range-native-tls.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-range-native-tls.log",
+      "sha256": "870fcd22442c4c038aafeabde486ccd63074c1c53f96e3214374d89fb476e6f7"
+    },
+    "d-artifact-container-range-final-native-tls.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-range-final-native-tls.log",
+      "sha256": "25e926d1de9b5bce807eb40f51fbd276e0c6a471cdaf12188e7636178b200096"
+    },
+    "d-artifact-container-range-final-packages.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-range-final-packages.log",
+      "sha256": "99fd1b7ffd2415507061643c005d3b92ce2b750c090e369882a477bc078fc2ed"
+    }
+  }
+}
