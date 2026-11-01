@@ -26,8 +26,9 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 		t.Skip("requires isolated local MySQL")
 	}
 	var loseCommit atomic.Bool
+	delivery := &dHeldClockDelay{initialFacts: true, duration: 2500 * time.Millisecond}
 	options := &consumerFixtureOptions{WrapControlConnector: func(conn driver.Connector) driver.Connector {
-		return aPublicationACKConnector{Connector: conn, lose: &loseCommit}
+		return aPublicationACKConnector{Connector: dHeldClockConnector{Connector: conn, delay: delivery}, lose: &loseCommit}
 	}}
 	owner, _, admin, db, authority, originalJob, _, _, _ := newConsumerMySQLFixtureOptions(t, options)
 	ctx := context.Background()
@@ -239,6 +240,50 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 			}
 		})
 	}
+	t.Run("actual-original-cutoff-after-renewal-row-delivery", func(t *testing.T) {
+		result, err := admin.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,2,UTC_TIMESTAMP(6)) WHERE public_id=?`, authority.TaskPublicID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n, e := result.RowsAffected(); e != nil || n != 1 {
+			t.Fatal("actual short original claim", n, e)
+		}
+		originalUntil := readLease(admin)
+		delivery.armed.Store(false)
+		delivery.fired.Store(false)
+		delivery.armAfterInitialBinding.Store(true)
+		err = store.RunWithExecutionHeartbeat(ctx, authority, func(active context.Context) error {
+			_, err := c.WithOriginalControllerBinding(active, authority, record, func(scoped context.Context) (d.JobBinding, error) {
+				tx, err := db.BeginTx(scoped, nil)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				defer tx.Rollback()
+				guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				if _, err := c.PrepareOriginalFirstBinding(scoped, tx, authority, guard); err == nil {
+					t.Fatal("fresh claim revived an original cutoff crossed during actual row delivery")
+				}
+				var now time.Time
+				if err := tx.QueryRowContext(scoped, "SELECT UTC_TIMESTAMP(6)").Scan(&now); err != nil || now.Before(originalUntil) || !delivery.fired.Load() || delivery.armAfterInitialBinding.Load() {
+					t.Fatal("post-renewal original cutoff fault did not actually trigger", err, now, originalUntil)
+				}
+				if !guard.ValidUntil().IsZero() {
+					t.Fatal("retired original guard revived after actual cutoff")
+				}
+				return d.JobBinding{}, nil
+			})
+			return err
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !readLease(admin).Equal(originalUntil) {
+			t.Fatal("expired original scope committed its provisional new lease")
+		}
+	})
 	t.Run("actual-commit-ack-loss-read-only", func(t *testing.T) {
 		setLease()
 		before := readLease(admin)

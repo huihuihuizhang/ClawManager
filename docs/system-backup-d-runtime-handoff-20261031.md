@@ -635,3 +635,8 @@
 
 - 只增加测试，生产eff7不变。原consumer fixture的受限连接使用既有透明aPublicationACKConnector；仅在新case的实际first-binding UPDATE、完整tail检查之后把lose flag置true。底层原生Commit成功后返回专用ACK错误，包装为原ErrExecutionCommitUnknown；独立admin SELECT确认binding_json确已提交且与原字节相同、续后claim确已提交。随后同run创建只读frame，按当前完整authority锁和实际原binding读取/解码/commit，所得JobBinding相同，committed lease不再改变。原其他Job的key_use_json完整字节仍不变。
 - 65298当时已明确释放后运行，原13case加此实际ACK case PASS1.19s/package4.469s（`.tools/d-first-binding-native-actual-ack.log`），session45102已terminal0并释放；此后按监督最新安排等待65298新窗口，不再起SQL。明确这是原生helper事务/同run SQL读回，**没有**把命名SQL DATA当真实Kube观察、原PublicJobOwner.Bind证书/冻结plan准入或跨进程恢复验收；先前rollback后模拟domain unknown的case仍独立保留，不与真实Commit ACK丢失混为一谈。原cutoff交付延迟、committed cancel、实际Bind重复/unknown恢复与定向并发仍待覆盖。
+
+## D5.64 原cutoff在真实续租后行交付延迟中到期仍拒绝
+
+- 仅测试扩展现有透明dHeldClockConnector：当且仅当实际first-binding UPDATE执行成功/affected1时arm，随后原fresh Bind的实际initial facts行交付延迟2.5秒。保持真实defaultPolicy30/5，把本case进入协调前的原SQL claim设为实际UTC+2秒；不是改TTL/heartbeat，也没有伪造SQL UTC。确认delay.fired和arm已消费，独立实际SQL时钟已越过原cutoff；尽管事务内已写入新30秒claim，Prepare仍拒绝且旧guard保持失效，实际rollback后committed lease仍精确等于原cutoff。
+- 监督重新明确分配65298后，原13case+真实ACK丢失+上述实际延迟组合PASS3.69s/package6.912s，延迟case2.52s（`.tools/d-first-binding-native-cutoff.log`）；session70224已terminal0，无活跃D SQL handle。生产源码仍eff7，旧case默认不arm，不改语义；已有binding实际PublicJobOwner.Bind查询、committed cancel和定向并发仍未以本项替代。后续正式publication测试还必须在捕获前以ldflags链接真实Git HEAD，D5.62未带该链接的失败只保留其真实采集阶段证据，A正独立核验unknown build的消费门原因，尚不称唯一根因。

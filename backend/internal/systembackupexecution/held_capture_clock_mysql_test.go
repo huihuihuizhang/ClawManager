@@ -14,12 +14,13 @@ import (
 // Real SQL/current authority with delayed delivery of one actual fact row.
 // Delays are transport observations, not fabricated time or authorization.
 type dHeldClockDelay struct {
-	armed, fired   atomic.Bool
-	ownerFacts     bool
-	initialFacts   bool
-	heldOwnerFacts bool
-	identityField  string
-	duration       time.Duration
+	armed, fired           atomic.Bool
+	armAfterInitialBinding atomic.Bool
+	ownerFacts             bool
+	initialFacts           bool
+	heldOwnerFacts         bool
+	identityField          string
+	duration               time.Duration
 }
 type dHeldClockConnector struct {
 	driver.Connector
@@ -57,7 +58,16 @@ func (c *dHeldClockConn) Prepare(q string) (driver.Stmt, error) {
 	return dHeldClockStmt{Stmt: s, conn: c, query: q}, nil
 }
 func (c *dHeldClockConn) ExecContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Result, error) {
-	return c.Conn.(driver.ExecerContext).ExecContext(ctx, q, args)
+	r, err := c.Conn.(driver.ExecerContext).ExecContext(ctx, q, args)
+	c.observeInitialBinding(q, r, err)
+	return r, err
+}
+func (c *dHeldClockConn) observeInitialBinding(q string, r driver.Result, err error) {
+	if err == nil && strings.HasPrefix(q, "UPDATE system_backup_v2_backups SET heartbeat_at=UTC_TIMESTAMP(6)") && strings.Contains(q, "AND UTC_TIMESTAMP(6)<?") && c.delay.armAfterInitialBinding.CompareAndSwap(true, false) {
+		if n, e := r.RowsAffected(); e == nil && n == 1 {
+			c.delay.armed.Store(true)
+		}
+	}
 }
 func (c *dHeldClockConn) wrap(q string, r driver.Rows) driver.Rows {
 	if c.delay.identityField != "" {
@@ -146,6 +156,12 @@ type dHeldClockStmt struct {
 	driver.Stmt
 	conn  *dHeldClockConn
 	query string
+}
+
+func (s dHeldClockStmt) Exec(args []driver.Value) (driver.Result, error) {
+	r, err := s.Stmt.Exec(args)
+	s.conn.observeInitialBinding(s.query, r, err)
+	return r, err
 }
 
 func (s dHeldClockStmt) Query(args []driver.Value) (driver.Rows, error) {
