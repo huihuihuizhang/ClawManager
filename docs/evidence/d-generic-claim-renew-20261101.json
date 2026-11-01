@@ -1,0 +1,60 @@
+{
+  "schema_version": "d-generic-claim-renew-local-evidence.v1",
+  "date": "2026-11-01",
+  "source_base": "a836e77ff6e82ae87d378d7a69072846a82196f2",
+  "mysql_endpoint": "127.0.0.1:65298",
+  "mysql_server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+  "old_red": {
+    "expired_lease_was_revived": true,
+    "rv_after": 20,
+    "rv_before": 19,
+    "package_seconds": 6.364,
+    "case_seconds": 3.03
+  },
+  "fixed_exact_overlay_seconds": 6.711,
+  "native_matrix_seconds": 8.381,
+  "publisher_tls_and_real_commit_ack_seconds": 19.521,
+  "package_seconds": {
+    "execution": 8.307,
+    "controller": 9.359
+  },
+  "supported_renew_executors": [
+    "*sql.DB",
+    "*sql.Conn"
+  ],
+  "unsupported_before_effect": [
+    "Exec-only",
+    "externally owned *sql.Tx"
+  ],
+  "unsupported_error": "ErrClaimTransactionRequired; errors.Is ErrClaimLost",
+  "rv_semantics": "success increments exactly once; failed or ambiguous result never supplies a token",
+  "not_claimed": [
+    "31-second long stream (skipped)",
+    "firstForward or final immutable publication",
+    "actual PublicJobOwner.Bind readback (separate WIP)",
+    "cross-process recovery",
+    "production Kubernetes or online KMS"
+  ],
+  "logs": [
+    {
+      "sha256": "e59e2b9d8026fd9b411d44ab44ead959ca2151ce4afa52dfc7e93151c42ee033",
+      "path": ".tools/supervisor-publisher-claim-expired-wait-baseline.log"
+    },
+    {
+      "sha256": "8b4f2cc1371327eddcdbd6e09035613d3ce30cf27dbce3224590f117c81b274f",
+      "path": ".tools/d-publisher-claim-expired-wait-fixed.log"
+    },
+    {
+      "sha256": "61b7cf88f17c2ee0c444e11ef5e420e28fb5bdd3273156c469a92797f5714ecc",
+      "path": ".tools/d-generic-claim-native.log"
+    },
+    {
+      "sha256": "88a64aac0db9725df656e5cf0a2e4f42c4c3505ec441b0183953d844e9ddb8a5",
+      "path": ".tools/d-generic-claim-publisher-native.log"
+    },
+    {
+      "sha256": "9db97bbd1d8fe3cbd4bbfe40ebbd49c85fa58ccb6e8019d6fb75e6d6167a6e83",
+      "path": ".tools/d-generic-claim-packages.log"
+    }
+  ]
+}
