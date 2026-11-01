@@ -128,7 +128,15 @@ func (s *DeploymentService) publishOriginalCommittedMarkerAfterManifest(ctx cont
 		deadline = completed.intent.Deadline
 	}
 	p := &publicationPostManifestMarker{service: s, claim: claim, attempt: attempt, target: store.config, manifest: manifest, completion: completed, intent: publicationJSONIntent{Kind: "marker_put", Key: store.config.Root + claim.Target.PublicID + "/" + strconv.FormatUint(attempt, 10) + "/_COMMITTED", Payload: raw, Deadline: deadline}}
-	return s.publishOriginalJSONWithStageProof(ctx, claim, attempt, store, p.intent, nil, nil, p)
+	marker, err := s.publishOriginalJSONWithStageProof(ctx, claim, attempt, store, p.intent, nil, nil, p)
+	if err != nil {
+		return zero, err
+	}
+	if marker.receipt == nil {
+		return zero, c.ErrExecutionRecord
+	}
+	marker.receipt.postManifestMarker = p
+	return marker, nil
 }
 
 // Actual first-forward caller consumes both stages in the SAME latest original
