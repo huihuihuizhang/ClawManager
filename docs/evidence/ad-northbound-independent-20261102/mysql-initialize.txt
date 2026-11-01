@@ -1,0 +1,8 @@
+2026-11-01T18:59:52.514122Z 0 [System] [MY-015017] [Server] MySQL Server Initialization - start.
+2026-11-01T18:59:52.527133Z 0 [System] [MY-013169] [Server] C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\bin\mysqld.exe (mysqld 8.4.13) initializing of server in progress as process 15648
+2026-11-01T18:59:52.527140Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T18:59:52.576130Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-11-01T18:59:52.938712Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-11-01T18:59:53.626935Z 0 [Warning] [MY-013829] [Server] Missing data directory for ICU regular expressions: C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\lib\private\.
+2026-11-01T18:59:53.830579Z 5 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-11-01T18:59:55.301605Z 0 [System] [MY-015018] [Server] MySQL Server Initialization - end.

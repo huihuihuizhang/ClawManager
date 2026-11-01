@@ -1,0 +1,30 @@
+$ErrorActionPreference='Stop'
+$repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$expected='C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-3d9078af971e4f37bd4512590c20eac5'
+$nonce='63d35aed9a52418b83ca82740a8db450'
+$expectedUUID='c3c5502d-d623-11f1-b899-745d22085e06'
+$caHash='fdf8fbcfb587f396559a6025f7f56ee306c3d1f9387374b4667f0473465e0bd9'
+$resolved=(Resolve-Path -LiteralPath $expected).Path
+if ($resolved -cne $expected -or (Get-Content -LiteralPath (Join-Path $resolved 'owner-nonce.txt') -Raw).Trim() -cne $nonce) { throw 'Exact owned root or nonce mismatch' }
+if ((Get-FileHash -LiteralPath (Join-Path $resolved 'ca.pem') -Algorithm SHA256).Hash.ToLowerInvariant() -cne $caHash) { throw 'Owned CA mismatch' }
+$process=Get-CimInstance Win32_Process -Filter 'ProcessId = 31928'
+if ($null -eq $process -or $process.ExecutablePath -ine (Join-Path $resolved 'bin\mysqld.exe') -or !$process.CommandLine.Contains($resolved)) { throw 'Owned PID/executable/command line mismatch' }
+$mysql=Join-Path $resolved 'bin\mysql.exe'
+$common=@('--no-defaults','--host=127.0.0.1','--port=62877','--user=root','--protocol=TCP','--ssl-mode=VERIFY_IDENTITY',"--ssl-ca=$resolved\ca.pem")
+$facts=@(& $mysql @common --batch --skip-column-names '--execute=SELECT @@server_uuid; SELECT @@port; SELECT @@require_secure_transport; SELECT @@event_scheduler; SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME; SELECT CONCAT(User,''@'',Host,'':'',account_locked) FROM mysql.user ORDER BY User,Host; SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID<>CONNECTION_ID();')
+if ($LASTEXITCODE -ne 0) { throw 'Owned final observations failed' }
+$expectedFacts=@($expectedUUID,'62877','1','OFF','information_schema','mysql','performance_schema','sys','mysql.infoschema@localhost:Y','mysql.session@localhost:Y','mysql.sys@localhost:Y','root@localhost:N','0')
+if (($facts -join "`n") -cne ($expectedFacts -join "`n")) { throw ('Unexpected own server residue: '+($facts -join ', ')) }
+Copy-Item -LiteralPath (Join-Path $resolved 'ca.pem') -Destination (Join-Path $repo '.local\northbound-native-public-ca.pem') -Force
+Copy-Item -LiteralPath (Join-Path $resolved 'initialize.err') -Destination (Join-Path $repo '.local\northbound-mysql-initialize.log') -Force
+& (Join-Path $resolved 'bin\mysqladmin.exe') @common shutdown
+if ($LASTEXITCODE -ne 0) { throw 'Normal owned TLS shutdown was not acknowledged' }
+$deadline=(Get-Date).AddSeconds(20)
+while (Get-Process -Id 31928 -ErrorAction SilentlyContinue) { if ((Get-Date) -gt $deadline) { throw 'Own server did not exit naturally' }; Start-Sleep -Milliseconds 100 }
+Copy-Item -LiteralPath (Join-Path $resolved 'server.err') -Destination (Join-Path $repo '.local\northbound-mysql-shutdown.log') -Force
+if ((Resolve-Path -LiteralPath $resolved).Path -cne $expected -or (Get-Content -LiteralPath (Join-Path $resolved 'owner-nonce.txt') -Raw).Trim() -cne $nonce) { throw 'Deletion exact path or owner marker changed' }
+Remove-Item -LiteralPath $resolved -Recurse -Force
+if (Test-Path -LiteralPath $expected) { throw 'Own temporary root remains' }
+$proof=[ordered]@{scope='D own disposable Northbound ordinary SQL data-plane fixture only';port=62877;pid=31928;server_uuid=$expectedUUID;owner_nonce=$nonce;ca_sha256=$caHash;front_session=$null;shutdown='TLS VERIFY_IDENTITY mysqladmin normal shutdown acknowledged and exact own process naturally exited';schemas_before_shutdown=@('information_schema','mysql','performance_schema','sys');accounts_before_shutdown=@('mysql.infoschema@localhost:Y','mysql.session@localhost:Y','mysql.sys@localhost:Y','root@localhost:N');other_sessions_before_shutdown=0;temporary_root=$expected;temporary_root_removed=$true;shared_instances_touched=$false;observed_utc=(Get-Date).ToUniversalTime().ToString('o')}
+$proof | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $repo '.local\northbound-mysql-cleanup.json') -Encoding utf8
+$proof | ConvertTo-Json -Depth 5

@@ -1,0 +1,15 @@
+--- v2/native_test
++++ v3/native_test
+@@ -276,7 +276,11 @@
+ 			if reader.QueryRowContext(f.ctx, "SELECT password_hash FROM users WHERE id=1").Scan(&password) != nil || password == "bootstrap" {
+ 				t.Fatal("source administrator with same bootstrap ID not restored")
+ 			}
+-			stale, e := admin.ExecContext(f.ctx, "UPDATE northbound_admin_settings SET version=version+1 WHERE id=1 AND version=1")
++			staleQuery := "UPDATE northbound_admin_settings SET version=version+1 WHERE id=1 AND version=1"
++			if mode == "success-absent-settings" {
++				staleQuery = "UPDATE northbound_admin_settings SET version=version+1 WHERE id=1 AND version=0"
++			}
++			stale, e := admin.ExecContext(f.ctx, staleQuery)
+ 			if e != nil {
+ 				t.Fatal(e)
+ 			}

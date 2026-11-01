@@ -1,0 +1,12 @@
+{
+  "classification": "CLI administrative setup error, not native test failure",
+  "initial_tool_chunk": "77fb3c",
+  "initial_exit_code": 1,
+  "observed_stderr_extract": "mysqladmin: [ERROR] unknown option '--batch'.",
+  "same_server_remained_running_session": 93244,
+  "corrected_tool_chunk": "d64216",
+  "correction": "Remove mysql query-only --batch and --skip-column-names; retain same TLS VERIFY_IDENTITY CA/port and normal shutdown",
+  "corrected_exit_code": 0,
+  "original_server_natural_exit_code": 0,
+  "no_restart": true
+}

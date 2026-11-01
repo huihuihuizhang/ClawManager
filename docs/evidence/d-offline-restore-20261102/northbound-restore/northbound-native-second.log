@@ -1,0 +1,5 @@
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL
+    northbound_native_fixture_test.go:50: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    northbound_native_fixture_test.go:67: trusted gateway migration unavailable
+--- FAIL: TestNorthboundPublicWorkerActualTLSMySQL (0.29s)
+FAIL

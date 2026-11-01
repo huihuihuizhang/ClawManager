@@ -1,0 +1,326 @@
+{
+  "recorded_at": "2026-11-01T19:19:27.760463+00:00",
+  "classification": "Independent ordinary encrypted SQL three-table Northbound component acceptance; no formal fullC source/physical target or full backup success claim",
+  "base": "b1ffafe22150001e87ec5601916d0cc1085a502b",
+  "owner_single_delta": "8197c591b0b6c7fa205836d6c8f69d1caec59381",
+  "owner_parent": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "tested_candidate": "4568eb79085a0bb96f5e0c89ebed35b8a3589af8",
+  "composition": "Only8197 single-commit delta applied on39fa; no owner ancestry/held175.13Go blobs equal owner; worker retains only4 reviewed InterpolateParams lines already on39fa. Final14 source blobs equal independently tested4568 exactly; only evidence added afterward.",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "tested_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773",
+      "staged_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "tested_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a",
+      "staged_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "tested_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7",
+      "staged_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "tested_blob": "f82879a3566b8460cd007d5a892f704958fcb57e",
+      "staged_blob": "f82879a3566b8460cd007d5a892f704958fcb57e",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "tested_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18",
+      "staged_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "tested_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8",
+      "staged_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "tested_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639",
+      "staged_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "tested_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8",
+      "staged_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "tested_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71",
+      "staged_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "tested_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d",
+      "staged_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "tested_blob": "50575731520984327461c349bf3247bfff3beeaf",
+      "staged_blob": "50575731520984327461c349bf3247bfff3beeaf",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "tested_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485",
+      "staged_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "tested_blob": "214a28a263eb75c8198d566581d6e5dc15c96075",
+      "staged_blob": "214a28a263eb75c8198d566581d6e5dc15c96075",
+      "exact": true
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "tested_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90",
+      "staged_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90",
+      "exact": true
+    }
+  ],
+  "owner_evidence_audit": "Actual14source+28evidence+5unchangedmigrations=47 original and Git lengths/SHA/blob verified; actual scoped source9scenario8PASS+fixtureFAIL24.53 and onlyfailedcase7.16PASS retained as distinct runs, not owner whole9PASS",
+  "independent_four_packages": {
+    "session": 43460,
+    "closed": true,
+    "exit_code": 0,
+    "domain_seconds": 3.503,
+    "resources_seconds": 1.751,
+    "worker_seconds": 35.764,
+    "execution_seconds": 14.091,
+    "SQL": "all native/SQL credential variables removed; native cases skip honestly",
+    "command": "go test -count=1 -p1 ./internal/systembackup/domain ./internal/systembackupresources ./internal/systembackup/worker ./internal/systembackupexecution"
+  },
+  "independent_native": {
+    "session": 54913,
+    "closed": true,
+    "exit_code": 0,
+    "package_seconds": 34.974,
+    "nine_case_seconds": 27.42,
+    "missing_target_range_counter_seconds": 4.72,
+    "candidate_buildinfo_commit": "4568eb79085a0bb96f5e0c89ebed35b8a3589af8",
+    "counter_overlay_raw_sha256": "fd1f5a71389eb0ed621bf5d84d44003363ae24ab938023b1bbf069e4c3b59c08",
+    "command": "go test -count=1 -p1 -overlay overlay-gap.json -ldflags '-X clawreef/internal/buildinfo.Commit=4568eb79085a0bb96f5e0c89ebed35b8a3589af8' -run '^(TestNorthboundPublicWorkerActualTLSMySQL|TestSupervisorNorthboundAbsentSingletonLocksBeforeDML)$' -timeout4m -v ./internal/systembackup/domain",
+    "native_source": "Actual5unchanged057/058/066/067/077 migrations; complete35/6/56 owner columns. Core/empty supporting tables explicitly tiny fixtures, not full175 production schema.",
+    "actual_positive_and_negative_proofs": [
+      "Private CA/SAN TLS; actual plaintext login denied3159.",
+      "Real source repository CAS78 without audit and real StoreBind/Apply/savedReport; actual InstanceRepository.Delete preserves historical owner data; unsignedmax/NULL/DECIMAL/bitmap/privatepayload preserved.",
+      "Missing observation, same-version fullrow drift, version drift, custody/evidence failure and cancel-before-COMMIT all preserve original bootstrap/settings and empty targetaudit/owner after rollback.",
+      "Four positive cases: empty audit, heterogeneous audit, absent targetsettings->version1 and actual targetversion5->6. Sourceversion remains historical and never becomes targetversion+1.",
+      "Controlled common SERIALIZABLE Tx; complete original source/audit/bindings comparison. Arbitrary READCOMMITTED/crossTx/UUID/originalauditdifferent-but-sameredaction/manualNULL refused with real rollback.",
+      "Existing targetsettings CAS and emptyaudit INSERT in second real SQL session both rejected1205 while actual restore holds locks.",
+      "All35/6/56 raw SQL cells compared independently, and fresh Go process reopens authenticated expected SQL/EOF and creates new restrictive SELECT-only SQL reader; actual DML1142 and no old source/writer/observation/CAS object transferred.",
+      "Same-ID sourceuser recreation after real bootstrapDELETE remains legal; stale repository CAS does not alter restored rows.",
+      "Independent extra absence counter: actual targetsettings empty, Prepare+CheckBefore before any restoreDML, second session INSERT validsingleton blocked1205; ROLLBACK then exact same SQL succeeds RowsAffected1/defaultversion1. One-connection writer and actual SELECT-only reader denial1142 checked."
+    ]
+  },
+  "static_security_review": {
+    "reviewer": "NewA finite read-only audit of immutable7production14file freeze",
+    "source_set": "ac486ef8f412f5f39c6f7461675ec686923c16a37cb8090a385b57f6c6bfc969",
+    "finding": "No confirmed new logic defect. Known4worker baseline lines must be retained; actual composedsource preserves them. V2/V3 only2test fixture changes, production7 unchanged.",
+    "not_claimed": "A ran no Go/SQL and did not grant formal source or physical target qualification"
+  },
+  "cleanup": {
+    "candidate": "4568eb79085a0bb96f5e0c89ebed35b8a3589af8",
+    "port": 61189,
+    "pid": 28016,
+    "server_uuid": "6b7e0e04-d626-11f1-8c3e-745d22085e06",
+    "owner_nonce": "333f85e8ca9d4d15b2dfbbdb27a9335d",
+    "mysql_session": 93244,
+    "mysql_exit": 0,
+    "native_session": 54913,
+    "native_exit": 0,
+    "native_package_seconds": 34.974,
+    "public_native_nine_case_seconds": 27.42,
+    "pre_DML_absence_gap_seconds": 4.72,
+    "package_session": 43460,
+    "package_exit": 0,
+    "normal_TLS_shutdown_ack": true,
+    "original_PID_absent": true,
+    "schemas_before_shutdown": "four system schemas only",
+    "accounts_before_shutdown": "root plus three locked builtins",
+    "other_sessions_before_shutdown": 0,
+    "resolved_exact_nonce_root_removed": true,
+    "runtime": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\nb9\\cm-gateway-restore-333f85e8ca9d",
+    "reused_binary_basedir_removed": false,
+    "old175data_untouched": true,
+    "peer_SQL_touched": false,
+    "initial_admin_CLI_failure": "Unsupported --batch copied from mysql read CLI; server remained live, same session then shut down with correct mysqladmin options; not native test failure"
+  },
+  "environment": {
+    "Go": "1.26.1 local existing runtime",
+    "GOMAXPROCS": 2,
+    "package_parallelism": 1,
+    "downloads": "off",
+    "MySQL": "8.4.13 ownfresh61189 UUID6b7e0e04-d626-11f1-8c3e-745d22085e06 nonce333f85e8ca9d4d15b2dfbbdb27a9335d",
+    "old175": "only read existing ASCII bin/share; olddata untouched; explicit freshdatadir/CA",
+    "peerSQL": "none accessed",
+    "root_active_Go_SQL_after_cleanup": "none"
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/composed-four-packages.log",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\composed-four-packages.log",
+      "raw_bytes": 210,
+      "raw_sha256": "1c544e97f547f06cbe3d7a2fe8715dd7cb2eeeff78ffa8f13f2e98e809eb855e",
+      "committed_bytes": 206,
+      "committed_sha256": "76137ea08334c872a44a2ee21496c7dc109522efdbbe73c37f058c53a89335d3",
+      "git_blob": "894e6f3cc0997276090a617a0a99bb21500fd164",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/composed-native-nine-and-gap.log",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\composed-native-nine-and-gap.log",
+      "raw_bytes": 6386,
+      "raw_sha256": "b46d2b25815203313fa369fac1b6f2c7caf5ea25ce8ed448fcb342188fedc592",
+      "committed_bytes": 6330,
+      "committed_sha256": "10c4ef1cedb1f3f72bc315f54a4fdeb158513d30260f1ed5648664affaf9d36d",
+      "git_blob": "2d3f7763609421f89c0a7c902c258501a9bd9844",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/mysql-cleanup.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\mysql-cleanup.json",
+      "raw_bytes": 1187,
+      "raw_sha256": "2263c730bf05c5575a540841d611d9fbd008282717661ba47222bccfff352931",
+      "committed_bytes": 1161,
+      "committed_sha256": "2c47e30a2d4841de95960175ae189645949d9cb2b497b64818955c98191aee9d",
+      "git_blob": "de05dbba4e0f4ca3a623bbd7ed5741219ded7b53",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/mysql-normal-shutdown.txt",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\mysql-normal-shutdown.txt",
+      "raw_bytes": 2050,
+      "raw_sha256": "fe2ba7e58d7ccfa9675205d0707aa4fa8903e581c46a9331f7278e81f37e0e80",
+      "committed_bytes": 2037,
+      "committed_sha256": "e0538aa44a876f9d1c0720c673754118bed472a11f908b6a11c59652f082c4da",
+      "git_blob": "26344b33cad4cee8124f4ee49ee013f40805a64c",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/mysql-initialize.txt",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\mysql-initialize.txt",
+      "raw_bytes": 1105,
+      "raw_sha256": "fd219198fedc119e6ad9d360eb7870fce9584673d2393d187a426d633fc28512",
+      "committed_bytes": 1097,
+      "committed_sha256": "e95abd4d0e8810435e29ff0ec8bf36f2ead7c8b4be4ad8fe0a8590702860798d",
+      "git_blob": "b63538cdf1701f4f8dbb127b5e6eaca2c9167ffb",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/cleanup-before-shutdown.txt",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\cleanup-before-shutdown.txt",
+      "raw_bytes": 168,
+      "raw_sha256": "53a57c3ea72cebf95b215ab4456d249842da01bafd7b7d8697e8f79265c109d9",
+      "committed_bytes": 159,
+      "committed_sha256": "fee1857d7a70b26124d041e5e513f4874a1028a936fca6e23a3cdd7b5d42535b",
+      "git_blob": "f69251ee2e88f0569097625e7782c072f7c3b59c",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/public-ca.pem",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\public-ca.pem",
+      "raw_bytes": 562,
+      "raw_sha256": "c174a816457d03fa2bfe409ef36f37da9ce4ceca0c10e1873ef29855c311b54d",
+      "committed_bytes": 562,
+      "committed_sha256": "c174a816457d03fa2bfe409ef36f37da9ce4ceca0c10e1873ef29855c311b54d",
+      "git_blob": "5bc7a38d19492f5b5fe9379eba8e035ed1f24852",
+      "normalization": "none"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/final-v3-composition.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\final-v3-composition.json",
+      "raw_bytes": 5466,
+      "raw_sha256": "ba4fa4d3553394c72bf28d7deaedfec4a3c5f2ba78e0aa26b298ce29688f6843",
+      "committed_bytes": 5356,
+      "committed_sha256": "109281f16440208450c83942bdd2089bf53d317942916baf2339465785d71292",
+      "git_blob": "9b92cdca2151ebda4ca628ee0d048be77e47ff64",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/final-owner-commit-verification.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\final-owner-commit-verification.json",
+      "raw_bytes": 8434,
+      "raw_sha256": "90dc66b8f02dbdc87c730ed4a1119106889b393ea52150782e0bba349d47e4ca",
+      "committed_bytes": 8281,
+      "committed_sha256": "f61c7f68fd16a64280c6da53ac3083c5a3c57ad88cfdf4572f1828ea657f3aa4",
+      "git_blob": "81c397dc8ebbbce71d99fdeefc40cd6fffb69570",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/owner-evidence-verification.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\owner-evidence-verification.json",
+      "raw_bytes": 13282,
+      "raw_sha256": "f354458cda35e0050d92cf3331d05157c2ae62627e5e9d35b524dbb8abd1f381",
+      "committed_bytes": 12944,
+      "committed_sha256": "a7e1e77d0c59df3fd2b15eb4097bf76d589458554f82e794de1e789861a78482",
+      "git_blob": "8fe3ce35a63dca3b41a1d1d13870f37cda5275f2",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/final-staged-source-verification.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\final-staged-source-verification.json",
+      "raw_bytes": 3797,
+      "raw_sha256": "4bb5cfe12d5e8f9bdf807a736947d6dbce816f366c1f80860033bececc6a7643",
+      "committed_bytes": 3704,
+      "committed_sha256": "995b74696e789c610c5b8a884b040c38f633bc6bcc6065d051567fb2c2d39451",
+      "git_blob": "617da39e242b4c74c8f92c0609120efed2bae0a7",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/cleanup-cli-correction.json",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\cleanup-cli-correction.json",
+      "raw_bytes": 545,
+      "raw_sha256": "cfcff3b5db386dc6621bb393e6df96ad1774155fe8e6a7243fd870343e56f0ab",
+      "committed_bytes": 533,
+      "committed_sha256": "5f1ea3f48fa763aa11e218241cc5af538efee459d957f625e63e6ba008abf020",
+      "git_blob": "050bfc4f502a49605b4e84b7bedfae521ccbe819",
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-northbound-independent-20261102/supervisor_northbound_gap_test.go.txt",
+      "raw_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-northbound9\\supervisor_northbound_gap_test.go",
+      "raw_bytes": 3636,
+      "raw_sha256": "fd1f5a71389eb0ed621bf5d84d44003363ae24ab938023b1bbf069e4c3b59c08",
+      "committed_bytes": 3583,
+      "committed_sha256": "35caccbd24d9de3a7d2831e6f57d4266dde3bea35cd5ee54edcc45763546381c",
+      "git_blob": "283d0a82da7904b055dfb5dff9c19a073f3b3efe",
+      "normalization": "CRLF-to-LF"
+    }
+  ],
+  "limits": [
+    "Ordinary local three-table SQL data-plane only. Formal B unavailable-source refusal remains; no historical fullC authentication authority minted.",
+    "No all-consumer physical target isolation, provider/IAM/node/Runtime/NFS onsite qualification, activation or real backup page terminal success.",
+    "Gateway3/image2 and Northbound3 individual acceptance does not prove all8nonempty in one consistent capture/restore cohort; joint test follow-up explicitly remains.",
+    "Owner recorded failures remain genuine: startupCLI/cwd/fixture066 and V2 absent staleprobe failure not rewritten as green. Root native final9 run is separate evidence.",
+    "No old nine-table resources writer/proof semantics or source permissions/config windows loosened; held175 excluded."
+  ],
+  "next": [
+    "Original primary final static scope/source/evidence review and exact serial fast-forwardpush coordination",
+    "NewD implement test-only simultaneous8owner nonempty cohort with fixedimageversions/NB CAS in one public path; source authority/fullC and any new productionshared change requires separate concrete scope review",
+    "Keep A uniquev13 native window free; root no further Go/SQL while it runs"
+  ],
+  "tested_base": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+  "previous_frozen_final_candidate": "15e1e2f58582b99580eaee5e57c83f64333d1223",
+  "post_test_composition": {
+    "retained_upstream": "b1ffafe22150001e87ec5601916d0cc1085a502b",
+    "upstream_scope": "Three already-reviewed original publication file-helper/test files and evidence; separate execution-only component, no NB/domain/worker source overlap.",
+    "NB_source14": "Every staged Go blob still equals actually tested4568; no production or test logic changed.",
+    "new_tests": "None repeated after unchanged-source composition; earlier four-package/native evidence explicitly retains39fa tested base.",
+    "held175_or_owner_ancestry": false
+  }
+}

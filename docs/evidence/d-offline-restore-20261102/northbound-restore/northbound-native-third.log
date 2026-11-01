@@ -1,0 +1,31 @@
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL
+    northbound_native_fixture_test.go:50: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+2026/11/02 02:42:42 	Session ID:     00005
+	Transaction ID: 00004
+	Query:          SELECT * FROM `gateway_runtime_upgrades` WHERE (`instance_id` = ?) LIMIT 1
+	Arguments:      []interface {}{8}
+	Stack:          
+		fmt.(*pp).handleMethods@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/fmt/print.go:674
+		fmt.(*pp).printArg@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/fmt/print.go:757
+		fmt.(*pp).doPrint@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/fmt/print.go:1206
+		fmt.Append@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/fmt/print.go:290
+		log.(*Logger).Print.func1@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/log/log.go:260
+		log.(*Logger).output@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/log/log.go:237
+		log.(*Logger).Print@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/log/log.go:259
+		clawreef/internal/repository.(*runtimeUpgradeRepository).Get@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/runtime_upgrade_repository.go:29
+		clawreef/internal/repository.checkRuntimeUpgrade@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/runtime_upgrade_repository.go:40
+		clawreef/internal/repository.(*instanceRepository).withUnfencedInstance.func1@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/instance_upgrade_guard.go:16
+		clawreef/internal/repository.(*instanceRepository).withUnfencedInstance.(*instanceRepository).withInstanceRowLock.func2@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/instance_upgrade_guard.go:35
+		clawreef/internal/repository.(*instanceRepository).withInstanceRowLock@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/instance_upgrade_guard.go:26
+		clawreef/internal/repository.(*instanceRepository).withUnfencedInstance@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/instance_upgrade_guard.go:15
+		clawreef/internal/repository.(*instanceRepository).Delete@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/repository/instance_repository.go:975
+		clawreef/internal/systembackup/domain_test.northboundNativeSetup@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/systembackup/domain/northbound_native_fixture_test.go:133
+		clawreef/internal/systembackup/domain_test.TestNorthboundPublicWorkerActualTLSMySQL@C:/Users/13542/Desktop/新建文件夹/ClawManager-D-offline-restore/backend/internal/systembackup/domain/northbound_native_test.go:128
+		testing.tRunner@C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2036
+	Error:          Error 1146 (42S02): Table 'nb_source_63d35aed9a52418b.gateway_runtime_upgrades' doesn't exist
+	Time taken:     0.00051s
+	Context:        context.Background
+
+    northbound_native_fixture_test.go:134: actual instance deletion history Error 1146 (42S02): Table 'nb_source_63d35aed9a52418b.gateway_runtime_upgrades' doesn't exist
+--- FAIL: TestNorthboundPublicWorkerActualTLSMySQL (1.76s)
+FAIL

@@ -1,0 +1,141 @@
+{
+  "parent": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "status": "Frozen native-prepared source: SQL/native unexecuted pending exclusive scheduling",
+  "files": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "bytes": 22803,
+      "raw_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "git_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "bytes": 8267,
+      "raw_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "git_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "bytes": 5986,
+      "raw_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "git_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "bytes": 9488,
+      "raw_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "git_blob": "f82879a3566b8460cd007d5a892f704958fcb57e"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "bytes": 15991,
+      "raw_sha256": "381e42df72fd164c037dc1011fedf42b618068a1383b9c024ccca501cb5364ff",
+      "git_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "bytes": 7963,
+      "raw_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "git_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "bytes": 6758,
+      "raw_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "git_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "bytes": 1737,
+      "raw_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "git_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "bytes": 5160,
+      "raw_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "git_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "bytes": 14946,
+      "raw_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "git_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "bytes": 16076,
+      "raw_sha256": "4187a92a4ea8caf575b274bc3697ac710e0e8926e32d9faa9efda0adda041359",
+      "git_blob": "fb0b3a8afb1aa79e3be47e44277be64cec024a2c"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "bytes": 1911,
+      "raw_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "git_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "bytes": 23165,
+      "raw_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "git_blob": "214a28a263eb75c8198d566581d6e5dc15c96075"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "bytes": 3392,
+      "raw_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "git_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90"
+    }
+  ],
+  "existing_shared": [
+    "backend/internal/systembackup/domain/normalize.go",
+    "backend/internal/systembackup/domain/restore.go",
+    "backend/internal/systembackup/worker/database.go"
+  ],
+  "unchanged_actual_migrations": [
+    {
+      "path": "backend/internal/db/migrations/057_add_northbound_admin_settings.sql",
+      "raw_sha256": "f39cc72244d6fd2fc301d10b530f9fe13397485b8b303fb98594ab60c653aad8",
+      "git_blob": "2fd834a3a328705c1b075f3ca4fe1f20543aca22"
+    },
+    {
+      "path": "backend/internal/db/migrations/058_enable_deepseek_harness_pro.sql",
+      "raw_sha256": "b1541217cab1007c1701d2e234f604d28dd66ded1bb5a3d9a528807a4e0861d2",
+      "git_blob": "d7e8ee9beb86a662b67d0182d5e20062bd385d87"
+    },
+    {
+      "path": "backend/internal/db/migrations/067_add_northbound_owner_records.sql",
+      "raw_sha256": "bbbfeaa92296e43d3864c8be44248206e8fc0d308bb12a81d2b19bf57d57e041",
+      "git_blob": "65c6368cf6a037d13d81f376a48729db52578904"
+    },
+    {
+      "path": "backend/internal/db/migrations/077_add_northbound_owner_teams.sql",
+      "raw_sha256": "a0309500067bbf1aff8bdb475b1e62992f1688f45c7ed7ebf68484d61d96a07d",
+      "git_blob": "5ca9cd4ac225434e44f7e68b53c6fecbb6e27856"
+    },
+    {
+      "path": "backend/internal/db/migrations/066_add_runtime_upgrade_fence.sql",
+      "raw_sha256": "2d3f622291139a932273eb9ba9138b6c0e99bb4b36b2337add6edb9f8e1fde9a",
+      "git_blob": "4737ec1378ca7ff5c5b087727fc12542acbeeaa3"
+    }
+  ],
+  "filtered_test_evidence": ".local/northbound-first-compiled-scope.json",
+  "post_filtered_test_changes": [
+    "backend/internal/systembackup/domain/northbound_native_fixture_test.go"
+  ],
+  "native_command": "frozen binary -test.run=^TestNorthboundPublicWorkerActualTLSMySQL$/^success-absent-settings$",
+  "native_cases": [
+    "missing-observation",
+    "same-version-content-drift",
+    "version-drift",
+    "evidence-failure",
+    "cancel-before-commit",
+    "success-empty-audit",
+    "success-full-audit",
+    "success-absent-settings",
+    "success-target-version5"
+  ],
+  "resources": "No Go/MySQL currently running from this chat; startup script only prepared. Need explicit scheduled native window.",
+  "qualification": "Ordinary local encrypted SQL data-plane candidate only; no formal fullC source authority, complete release qualification or all-consumer physical isolation",
+  "revision": "v3: only absent-settings test stale-CAS probe uses0, because newly inserted actual version1 legitimately matches1; production7 and other8 case logic unchanged"
+}

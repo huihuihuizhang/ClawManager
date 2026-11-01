@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"reflect"
 	"strings"
+
+	resources "clawreef/internal/systembackupresources"
 )
 
 // DrillTarget can only name an isolated temporary database. CheckIsolation is
@@ -62,7 +64,17 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	if err = target.check(ctx, conn); err != nil {
 		return RestorePlan{}, err
 	}
-	tx, err := conn.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	var tx *sql.Tx
+	if northboundSettingsSelected(source) {
+		// This constructor owns the one common SERIALIZABLE transaction. Its
+		// private observation cannot be reused with an arbitrary external TX.
+		var bound *resources.NorthboundTargetObservation
+		tx, bound, err = resources.BeginNorthboundRestoreTransaction(ctx, conn, policy.NorthboundTarget)
+		policy.NorthboundTarget = bound
+		policy.northboundScope = resources.NorthboundRestoreScope{Database: target.Database, ServerUUID: target.ServerUUID}
+	} else {
+		tx, err = conn.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	}
 	if err != nil {
 		return RestorePlan{}, ErrDatabase
 	}
@@ -70,6 +82,19 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	catalog, err := Catalog(ctx, tx)
 	if err != nil {
 		return RestorePlan{}, err
+	}
+	if northboundSettingsSelected(source) {
+		if err = validateSnapshot(source); err != nil {
+			return RestorePlan{}, err
+		}
+		original, e := northboundBridgeSource(ctx, source)
+		if e != nil {
+			return RestorePlan{}, e
+		}
+		policy.northboundCandidate, err = resources.PrepareNorthboundRestoreInTransaction(ctx, tx, policy.NorthboundTarget, original, northboundBudget())
+		if err != nil {
+			return RestorePlan{}, err
+		}
 	}
 	plan, err := Normalize(ctx, source, catalog, policy)
 	if err != nil {
@@ -95,11 +120,23 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 		statements = append(statements, "DELETE FROM `workbuddy_linux_identity_allocator`")
 	}
 	for _, statement := range statements {
+		if statement == "DELETE FROM `users`" && policy.northboundCandidate != nil {
+			if err = resources.DeleteNorthboundBootstrapInTransaction(ctx, tx, policy.northboundCandidate); err != nil {
+				return RestorePlan{}, err
+			}
+			continue
+		}
 		if _, err = tx.ExecContext(ctx, statement); err != nil {
 			return RestorePlan{}, ErrDatabase
 		}
 	}
 	for _, t := range plan.Data.Tables {
+		if t.Name == "northbound_admin_settings" && policy.northboundCandidate != nil {
+			if err = resources.ApplyNorthboundSettingsCAS(ctx, tx, policy.northboundCandidate, northboundExportTable(t)); err != nil {
+				return RestorePlan{}, err
+			}
+			continue
+		}
 		name, _ := quoted(t.Name)
 		var cols, marks []string
 		for _, c := range t.Columns {
@@ -144,6 +181,11 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	}
 	if HasGatewayImageData(source) {
 		if err = policy.GatewayImages.verify(ctx, source, false, target.Database, target.ServerUUID); err != nil {
+			return RestorePlan{}, err
+		}
+	}
+	if policy.northboundCandidate != nil {
+		if err = policy.northboundCandidate.CheckApplied(ctx, tx); err != nil {
 			return RestorePlan{}, err
 		}
 	}
@@ -244,6 +286,12 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 			}
 			continue
 		}
+		if t.Name == "northbound_admin_settings" && policy.northboundCandidate != nil {
+			if err := policy.northboundCandidate.CheckBefore(ctx, tx, policy.northboundScope); err != nil {
+				return err
+			}
+			continue
+		}
 		if count != 0 {
 			return ErrNotEmpty
 		}
@@ -256,6 +304,9 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 // The grant check rejects roles, wildcard grants and write privileges rather
 // than accepting a read-only transaction as proof of independent permissions.
 func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan RestorePlan) error {
+	if err := VerifyNorthboundQuarantine(ctx, plan.Data); err != nil {
+		return err
+	}
 	if err := verifyGatewayBudgetWithImages(ctx, plan.Data, plan.GatewayImages); err != nil {
 		return err
 	}

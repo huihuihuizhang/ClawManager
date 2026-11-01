@@ -1,0 +1,27 @@
+{
+  "scope": "D own disposable Northbound ordinary SQL data-plane fixture only",
+  "port": 62877,
+  "pid": 31928,
+  "server_uuid": "c3c5502d-d623-11f1-b899-745d22085e06",
+  "owner_nonce": "63d35aed9a52418b83ca82740a8db450",
+  "ca_sha256": "fdf8fbcfb587f396559a6025f7f56ee306c3d1f9387374b4667f0473465e0bd9",
+  "front_session": null,
+  "shutdown": "TLS VERIFY_IDENTITY mysqladmin normal shutdown acknowledged and exact own process naturally exited",
+  "schemas_before_shutdown": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ],
+  "accounts_before_shutdown": [
+    "mysql.infoschema@localhost:Y",
+    "mysql.session@localhost:Y",
+    "mysql.sys@localhost:Y",
+    "root@localhost:N"
+  ],
+  "other_sessions_before_shutdown": 0,
+  "temporary_root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-3d9078af971e4f37bd4512590c20eac5",
+  "temporary_root_removed": true,
+  "shared_instances_touched": false,
+  "observed_utc": "2026-11-01T18:47:32.4925210Z"
+}

@@ -1,0 +1,17 @@
+{
+  "build_sha256": "063119f9df67435a453fc64490670db96f477275cd31fca6eaae760e6e988076",
+  "source_manifest": ".local/northbound-native-prepared-scope.json",
+  "source_files": 14,
+  "source_pins_verified_before_run": true,
+  "mysql": {
+    "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-3d9078af971e4f37bd4512590c20eac5",
+    "port": 62877,
+    "pid": 31928,
+    "owner_nonce": "63d35aed9a52418b83ca82740a8db450",
+    "server_uuid": "c3c5502d-d623-11f1-b899-745d22085e06",
+    "ca_sha256": "fdf8fbcfb587f396559a6025f7f56ee306c3d1f9387374b4667f0473465e0bd9"
+  },
+  "test": "^TestNorthboundPublicWorkerActualTLSMySQL$",
+  "max_procs": 2,
+  "build_parallel_packages": 1
+}

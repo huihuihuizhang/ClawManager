@@ -1,0 +1,338 @@
+{
+  "source": "8197c591b0b6c7fa205836d6c8f69d1caec59381",
+  "sources": 14,
+  "evidence": 28,
+  "unchanged_migrations": 5,
+  "all47_actual_raw_and_committed_length_hash_blob_verified": [
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/worker/database.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "sources",
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "unchanged_migrations",
+      "path": "backend/internal/db/migrations/057_add_northbound_admin_settings.sql",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "unchanged_migrations",
+      "path": "backend/internal/db/migrations/058_enable_deepseek_harness_pro.sql",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "unchanged_migrations",
+      "path": "backend/internal/db/migrations/067_add_northbound_owner_records.sql",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "unchanged_migrations",
+      "path": "backend/internal/db/migrations/077_add_northbound_owner_teams.sql",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "unchanged_migrations",
+      "path": "backend/internal/db/migrations/066_add_runtime_upgrade_fence.sql",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/cleanup_northbound.ps1.txt",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v1-to-v2.diff",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v2-to-v3.diff",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-cleanup.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-compiled-scope.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-native-run.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-minimal-first.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-cleanup.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-initialize.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server-raw.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-shutdown.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fifth.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-first.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fourth.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-scope.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v2-scope.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v3-scope.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-public-ca.pem",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-second.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-third.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-partial-setup-cleanup.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-resume.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-start-third.log",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/README.md",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/resume_northbound.ps1.txt",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "none"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/setup-failures.json",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    },
+    {
+      "category": "evidence",
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/start_northbound.ps1.txt",
+      "raw_bytes_and_hash_verified": true,
+      "committed_bytes_hash_blob_verified": true,
+      "normalization": "CRLF to LF by Git"
+    }
+  ],
+  "code_exact_to_tested4568_except_retained_baseline4": true
+}

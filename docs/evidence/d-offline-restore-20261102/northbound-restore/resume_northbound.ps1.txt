@@ -1,0 +1,30 @@
+$ErrorActionPreference='Stop'
+$repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$taskTools=Join-Path (Split-Path -Parent $repo) '.tools'
+$goExe=Join-Path $taskTools 'go1.26.1\go\bin\go.exe'
+$mysqlDist=Join-Path $taskTools 'mysql-dist\mysql-8.4.13-winx64'
+foreach ($required in @($repo,$goExe,(Join-Path $mysqlDist 'bin'),(Join-Path $mysqlDist 'share'))) { if (!(Test-Path -LiteralPath $required)) { throw ('Required existing path missing: '+$required) } }
+$ownedRoot='C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-3d9078af971e4f37bd4512590c20eac5'
+$nonce='63d35aed9a52418b83ca82740a8db450'
+$port=62877
+if ((Resolve-Path -LiteralPath $ownedRoot).Path -cne $ownedRoot -or (Get-Content -LiteralPath (Join-Path $ownedRoot 'owner-nonce.txt') -Raw).Trim() -cne $nonce) { throw 'Resume exact owned allocation mismatch' }
+if (Test-Path -LiteralPath (Join-Path $ownedRoot 'data')) { throw 'Resume requires uninitialized own allocation' }
+$env:GOMAXPROCS='2'; $env:GOMODCACHE=Join-Path $taskTools 'gomodcache'; $env:GOTOOLCHAIN='local'; $env:GOPROXY='off'; $env:GOSUMDB='off'; $env:GOCACHE=Join-Path $repo '.local\gocache'
+& $goExe run (Join-Path $repo ".local\gateway_native_tls.go") $ownedRoot
+if ($LASTEXITCODE -ne 0) { throw 'Private certificates failed' }
+& "$ownedRoot\bin\mysqld.exe" --no-defaults --initialize-insecure "--basedir=$ownedRoot" "--datadir=$ownedRoot\data" "--log-error=$ownedRoot\initialize.err"
+if ($LASTEXITCODE -ne 0) { throw 'Owned initialize failed' }
+$arguments=@('--no-defaults',"--basedir=$ownedRoot","--datadir=$ownedRoot\data",'--bind-address=127.0.0.1',"--port=$port",'--mysqlx=OFF','--event-scheduler=OFF','--performance-schema=OFF','--innodb-buffer-pool-size=32M','--innodb-log-buffer-size=4M','--table-open-cache=128','--table-definition-cache=400','--tmp-table-size=16M','--max-heap-table-size=16M','--max-connections=24','--require-secure-transport=ON',"--ssl-ca=$ownedRoot\ca.pem","--ssl-cert=$ownedRoot\server.pem","--ssl-key=$ownedRoot\server-key.pem","--log-error=$ownedRoot\server.err")
+$server=Start-Process -FilePath "$ownedRoot\bin\mysqld.exe" -ArgumentList $arguments -WindowStyle Hidden -PassThru
+$common=@('--no-defaults','--host=127.0.0.1',"--port=$port",'--user=root','--protocol=TCP','--ssl-mode=VERIFY_IDENTITY',"--ssl-ca=$ownedRoot\ca.pem",'--batch','--skip-column-names')
+$until=(Get-Date).AddSeconds(25)
+do {
+    $uuid=(& "$ownedRoot\bin\mysql.exe" @common --execute='SELECT @@server_uuid' 2>$null)
+    if ($LASTEXITCODE -eq 0 -and $uuid) { break }
+    if ($server.HasExited -or (Get-Date) -gt $until) { throw 'Owned startup failed' }
+    Start-Sleep -Milliseconds 200
+} while ($true)
+$meta=[ordered]@{root=$ownedRoot;port=$port;pid=$server.Id;owner_nonce=$nonce;server_uuid=[string]$uuid;ca_sha256=(Get-FileHash -LiteralPath "$ownedRoot\ca.pem" -Algorithm SHA256).Hash.ToLowerInvariant()}
+$meta | ConvertTo-Json | Set-Content -LiteralPath "$repo\.local\northbound-mysql-server.json" -Encoding utf8
+$meta | ConvertTo-Json
+

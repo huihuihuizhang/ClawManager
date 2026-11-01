@@ -1,0 +1,16 @@
+[
+  {
+    "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-74efe80cfb9c4ae5a83890555e3ebd5b",
+    "owner_nonce": "2d85cbc7036e40238fadcb31df2e3c73",
+    "before": "only32byte owner marker; no data/binary directories or MySQL process",
+    "removed": true,
+    "method": "exact marker removed and empty directory deleted nonrecursively"
+  },
+  {
+    "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-0d36c2f71d7c4d8d8ff3308ceeebbce6",
+    "owner_nonce": "7d46efd50d594f3cac82a9f3aabddcc6",
+    "before": "only32byte owner marker; no data/binary directories or MySQL process",
+    "removed": true,
+    "method": "exact marker removed and empty directory deleted nonrecursively"
+  }
+]

@@ -1,0 +1,523 @@
+{
+  "parent": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "classification": "Northbound3 ordinary SQL restore candidate only; exact14Go delta, not owner branch ancestry",
+  "existing_shared": [
+    "backend/internal/systembackup/domain/normalize.go",
+    "backend/internal/systembackup/domain/restore.go",
+    "backend/internal/systembackup/worker/database.go"
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "bytes": 22803,
+      "raw_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "committed_bytes": 22803,
+      "committed_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "normalization": "none",
+      "git_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "bytes": 8267,
+      "raw_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "committed_bytes": 8267,
+      "committed_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "normalization": "none",
+      "git_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "bytes": 5986,
+      "raw_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "committed_bytes": 5986,
+      "committed_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "normalization": "none",
+      "git_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "bytes": 9488,
+      "raw_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "committed_bytes": 9488,
+      "committed_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "normalization": "none",
+      "git_blob": "f82879a3566b8460cd007d5a892f704958fcb57e"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "bytes": 15991,
+      "raw_sha256": "381e42df72fd164c037dc1011fedf42b618068a1383b9c024ccca501cb5364ff",
+      "committed_bytes": 15991,
+      "committed_sha256": "381e42df72fd164c037dc1011fedf42b618068a1383b9c024ccca501cb5364ff",
+      "normalization": "none",
+      "git_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "bytes": 7963,
+      "raw_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "committed_bytes": 7963,
+      "committed_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "normalization": "none",
+      "git_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "bytes": 6758,
+      "raw_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "committed_bytes": 6758,
+      "committed_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "normalization": "none",
+      "git_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "bytes": 1737,
+      "raw_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "committed_bytes": 1737,
+      "committed_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "normalization": "none",
+      "git_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "bytes": 5160,
+      "raw_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "committed_bytes": 5160,
+      "committed_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "normalization": "none",
+      "git_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "bytes": 14946,
+      "raw_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "committed_bytes": 14946,
+      "committed_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "normalization": "none",
+      "git_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "bytes": 16076,
+      "raw_sha256": "4187a92a4ea8caf575b274bc3697ac710e0e8926e32d9faa9efda0adda041359",
+      "committed_bytes": 16076,
+      "committed_sha256": "4187a92a4ea8caf575b274bc3697ac710e0e8926e32d9faa9efda0adda041359",
+      "normalization": "none",
+      "git_blob": "fb0b3a8afb1aa79e3be47e44277be64cec024a2c"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "bytes": 1911,
+      "raw_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "committed_bytes": 1911,
+      "committed_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "normalization": "none",
+      "git_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "bytes": 23165,
+      "raw_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "committed_bytes": 23165,
+      "committed_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "normalization": "none",
+      "git_blob": "214a28a263eb75c8198d566581d6e5dc15c96075"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "bytes": 3392,
+      "raw_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "committed_bytes": 3392,
+      "committed_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "normalization": "none",
+      "git_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90"
+    }
+  ],
+  "production_count": 7,
+  "unchanged_migrations": [
+    {
+      "path": "backend/internal/db/migrations/057_add_northbound_admin_settings.sql",
+      "bytes": 3140,
+      "raw_sha256": "f39cc72244d6fd2fc301d10b530f9fe13397485b8b303fb98594ab60c653aad8",
+      "committed_bytes": 3140,
+      "committed_sha256": "f39cc72244d6fd2fc301d10b530f9fe13397485b8b303fb98594ab60c653aad8",
+      "normalization": "none",
+      "git_blob": "2fd834a3a328705c1b075f3ca4fe1f20543aca22"
+    },
+    {
+      "path": "backend/internal/db/migrations/058_enable_deepseek_harness_pro.sql",
+      "bytes": 675,
+      "raw_sha256": "b1541217cab1007c1701d2e234f604d28dd66ded1bb5a3d9a528807a4e0861d2",
+      "committed_bytes": 675,
+      "committed_sha256": "b1541217cab1007c1701d2e234f604d28dd66ded1bb5a3d9a528807a4e0861d2",
+      "normalization": "none",
+      "git_blob": "d7e8ee9beb86a662b67d0182d5e20062bd385d87"
+    },
+    {
+      "path": "backend/internal/db/migrations/067_add_northbound_owner_records.sql",
+      "bytes": 3541,
+      "raw_sha256": "bbbfeaa92296e43d3864c8be44248206e8fc0d308bb12a81d2b19bf57d57e041",
+      "committed_bytes": 3541,
+      "committed_sha256": "bbbfeaa92296e43d3864c8be44248206e8fc0d308bb12a81d2b19bf57d57e041",
+      "normalization": "none",
+      "git_blob": "65c6368cf6a037d13d81f376a48729db52578904"
+    },
+    {
+      "path": "backend/internal/db/migrations/077_add_northbound_owner_teams.sql",
+      "bytes": 7929,
+      "raw_sha256": "a0309500067bbf1aff8bdb475b1e62992f1688f45c7ed7ebf68484d61d96a07d",
+      "committed_bytes": 7929,
+      "committed_sha256": "a0309500067bbf1aff8bdb475b1e62992f1688f45c7ed7ebf68484d61d96a07d",
+      "normalization": "none",
+      "git_blob": "5ca9cd4ac225434e44f7e68b53c6fecbb6e27856"
+    },
+    {
+      "path": "backend/internal/db/migrations/066_add_runtime_upgrade_fence.sql",
+      "bytes": 498,
+      "raw_sha256": "2d3f622291139a932273eb9ba9138b6c0e99bb4b36b2337add6edb9f8e1fde9a",
+      "committed_bytes": 498,
+      "committed_sha256": "2d3f622291139a932273eb9ba9138b6c0e99bb4b36b2337add6edb9f8e1fde9a",
+      "normalization": "none",
+      "git_blob": "4737ec1378ca7ff5c5b087727fc12542acbeeaa3"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/cleanup_northbound.ps1.txt",
+      "bytes": 3972,
+      "raw_sha256": "d5eec15107d13e63515652d3eced1a887c5ae6cb8d38f014d679164a47561f32",
+      "committed_bytes": 3972,
+      "committed_sha256": "d5eec15107d13e63515652d3eced1a887c5ae6cb8d38f014d679164a47561f32",
+      "normalization": "none",
+      "git_blob": "23f3d7c52148d51b33dc6905dde7ef054849ae69"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v1-to-v2.diff",
+      "bytes": 683,
+      "raw_sha256": "810530ed07fbcc64c1a5e829d821b6cec659067c261538c915ce274116efd7a0",
+      "committed_bytes": 672,
+      "committed_sha256": "ea20cdd7d51674e096069c07b6e1a5be059d16a9e37f50e97018661c9ba597d0",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "e603d23e10ac085abb2e7c2eae05e548902d019f"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v2-to-v3.diff",
+      "bytes": 754,
+      "raw_sha256": "3fa2a93c99dbd352ef2f684481ccf0d26206dd632a0825fa19d0e49bfe661ff0",
+      "committed_bytes": 739,
+      "committed_sha256": "ad518236d5be19fe69d15c0efe3cc6940112080131d2dfa4cc779204f42c643b",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "a7a2525cafa3a78f1966d359e656e1652c171331"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-cleanup.log",
+      "bytes": 1020,
+      "raw_sha256": "7686e8e402444ff83034991cc95d417a875f5164b0c13aaf2d33d471ad29de5e",
+      "committed_bytes": 993,
+      "committed_sha256": "c5cb811d93c6ebd01bfaf4b10a33c358e66c120a9c4eb3db94459b650f025947",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "d6697a642dc347ad07c1f42d7506e9751023803d"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-compiled-scope.json",
+      "bytes": 4753,
+      "raw_sha256": "80044b54b71e4b9a624df7d8f9564463bfd4bc1b0f8259d6ec5befe1dd9313b4",
+      "committed_bytes": 4638,
+      "committed_sha256": "f21ac0bbff9ae1437418b026d9eb9ee746b1fa2dec45898a490d4dc53e65f233",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "248840503cd08b734ade16975ecbc7d19472cb64"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-native-run.json",
+      "bytes": 706,
+      "raw_sha256": "17c5e6718b5f32311d3ff27d3994f86e98739ebf10fb9929afeba796fae02ed5",
+      "committed_bytes": 689,
+      "committed_sha256": "8697196f16d1434936739480172ef3d9955e4ab78bf4dee8e9931f73e7cfdc15",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "8677c1637391167a7d7728eda1ff9397d669cec1"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-minimal-first.log",
+      "bytes": 4403,
+      "raw_sha256": "fb47a8a4acf8d8fd3b65af06851502e5aef7a37796eac3885319123305d94536",
+      "committed_bytes": 4351,
+      "committed_sha256": "9f73d2597417d5ba9a1bf5884aa653c0d5996d17b82f41a50ab638df70ee1def",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "dfbe8eb0662d679840e7e70c36c716b072d49efb"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-cleanup.json",
+      "bytes": 1020,
+      "raw_sha256": "7686e8e402444ff83034991cc95d417a875f5164b0c13aaf2d33d471ad29de5e",
+      "committed_bytes": 993,
+      "committed_sha256": "c5cb811d93c6ebd01bfaf4b10a33c358e66c120a9c4eb3db94459b650f025947",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "d6697a642dc347ad07c1f42d7506e9751023803d"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-initialize.log",
+      "bytes": 1105,
+      "raw_sha256": "1c6a4e53da400378cca221949091bef5b3bf67d997d57d350b434d66090f93cb",
+      "committed_bytes": 1097,
+      "committed_sha256": "c2d74636a2578f28da98bc8c16870ed300af143c219603aa74ca0412b29130c5",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "a9f4ded494baa698014f29b5e7199cb98cf8656d"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server-raw.json",
+      "bytes": 342,
+      "raw_sha256": "2f0dc752f51a47e5ec917dd7809f4e91693dab554767a286ecd451d79b6fd4e5",
+      "committed_bytes": 334,
+      "committed_sha256": "4c2f2fb0124178576f1704b6cdff73e4c5055b8e4e5c242935e8abcbd7912e38",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "8c340e920a9072fbf2bdb140f9facfa8c6f9a008"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server.json",
+      "bytes": 342,
+      "raw_sha256": "2f0dc752f51a47e5ec917dd7809f4e91693dab554767a286ecd451d79b6fd4e5",
+      "committed_bytes": 334,
+      "committed_sha256": "4c2f2fb0124178576f1704b6cdff73e4c5055b8e4e5c242935e8abcbd7912e38",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "8c340e920a9072fbf2bdb140f9facfa8c6f9a008"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-shutdown.log",
+      "bytes": 2028,
+      "raw_sha256": "249a9d9e5f7585146fb095b963a2a83e7c2c333226498a463a4e68a5534365cd",
+      "committed_bytes": 2015,
+      "committed_sha256": "01636ec5fc2dcdcf1a314e53f7032a725c5ef004b00b12fe32620c511598c09a",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "f42d57be92abbbd5fdd036cf543660499b2a223c"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fifth.log",
+      "bytes": 1530,
+      "raw_sha256": "d139457311e36386cfd1ca3f23999ad98ad26dd5423618908a973c759e4a7f59",
+      "committed_bytes": 1517,
+      "committed_sha256": "014a90ef7965de063308d0b83e1a4faabaa3ffa609bda3c337412cfc1d6ffa38",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "9eb94484a371fd1d29f28af9bcbaddd279047003"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-first.log",
+      "bytes": 2840,
+      "raw_sha256": "35e95d2916d555f2ea4f320eb7f48d28b7cb986856088a22e57e8448008cf33e",
+      "committed_bytes": 2770,
+      "committed_sha256": "2e64b4040f746987eeb1d54deb9f01204cd08ccce47f5fe0b87109ca957e5663",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "da78e152d2a093301685cf542c5d2da2e0413fda"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fourth.log",
+      "bytes": 4980,
+      "raw_sha256": "f08bb391e2a207b99ad6d70538cda96df5c8a06d388f52a45f8a7627a9939939",
+      "committed_bytes": 4934,
+      "committed_sha256": "3f543b02738c6822b308cb76ed448332fd3b2a1585062638b09937888f9e00d6",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "2f9a27d8ebe56dfcaa261844e8c59593e91624d1"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-scope.json",
+      "bytes": 6131,
+      "raw_sha256": "ca82bbd63a022abde624650a7abeff7d852c6ff3a0c0061694b45789d015ab9e",
+      "committed_bytes": 5996,
+      "committed_sha256": "9b28988d99ce5a2f91e116d7f58c7d78eaf8c3c5cd1d396c54ff221296731da1",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "a702830aae653e1bc721b1843371ba7d5a2a3f8b"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v2-scope.json",
+      "bytes": 6549,
+      "raw_sha256": "bfed64cb9c557e079e0a429fe15c5946cc0e472b6cbac2252b5eeebd25b27fa8",
+      "committed_bytes": 6408,
+      "committed_sha256": "44565bea12033f12a79efab0e104f144ccd280977b936cacb69be5796ebab2b5",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "f31504d9a0cfcae2409a109493f87ba85fe0c051"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v3-scope.json",
+      "bytes": 6544,
+      "raw_sha256": "034d5427d7fdd0635d6e9d83629ccb98d08d408d719a754ed0ae961931cd5a22",
+      "committed_bytes": 6403,
+      "committed_sha256": "97c06e654bbae94e1851b0bd641ae33a07c3a358f38ad62baf88a39ecf4c19b2",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "965f6865c41d3ba65b5de3348a8c30339d811578"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-public-ca.pem",
+      "bytes": 1127,
+      "raw_sha256": "fdf8fbcfb587f396559a6025f7f56ee306c3d1f9387374b4667f0473465e0bd9",
+      "committed_bytes": 1127,
+      "committed_sha256": "fdf8fbcfb587f396559a6025f7f56ee306c3d1f9387374b4667f0473465e0bd9",
+      "normalization": "none",
+      "git_blob": "70193a915942a4a924f73e1c080fdd11abbbc08e"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-second.log",
+      "bytes": 315,
+      "raw_sha256": "1a386ea8458581fffd78004392209f050ed32f273c9f6c3447c37ac3d9c18932",
+      "committed_bytes": 310,
+      "committed_sha256": "bcfa62ef03a83a6536f60c10b2fb230a258ce2d84d23aee27059a07349daf6f8",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "35e98d7038c9102b2c675608ea11e76d04a2a721"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-third.log",
+      "bytes": 3465,
+      "raw_sha256": "db6df6b5e4ef4d25aa788ff7db055bc502a2a3235493075714cc776f08170264",
+      "committed_bytes": 3434,
+      "committed_sha256": "2010c4edacdf342a0d185b22e477adc59e91e5d4303b8acaafcfbff87e35e7d0",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "14b3e428432027f9f238c5c8b78dab179c410467"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-partial-setup-cleanup.json",
+      "bytes": 735,
+      "raw_sha256": "593c5c73a54753f84cfc73cdcd8f7169959f9c1ac9bbd6b2b62990deacfad8c3",
+      "committed_bytes": 719,
+      "committed_sha256": "84c999d8c6ff73322bba7cacc6e977ad4a2d0828a2a3fecaa59a7e77e996d264",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "d76332eba9257531c9a1d7031adb27ff080ed24c"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-resume.log",
+      "bytes": 342,
+      "raw_sha256": "2f0dc752f51a47e5ec917dd7809f4e91693dab554767a286ecd451d79b6fd4e5",
+      "committed_bytes": 334,
+      "committed_sha256": "4c2f2fb0124178576f1704b6cdff73e4c5055b8e4e5c242935e8abcbd7912e38",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "8c340e920a9072fbf2bdb140f9facfa8c6f9a008"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-start-third.log",
+      "bytes": 355,
+      "raw_sha256": "b4cbbd39278c7406a9d55077edc446aa826819792e54e126d9d5086e066e5e5c",
+      "committed_bytes": 352,
+      "committed_sha256": "e86fad69e271a53eb52856574b70451049ec86019540b22489b50781eac98552",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "594b33bf5d588248caba12d163c5e2c3611ed38a"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/README.md",
+      "bytes": 8467,
+      "raw_sha256": "1a2cdd4c922351f2f55f9e08657e2da08189f866868388b02d9a7837d8513c83",
+      "committed_bytes": 8467,
+      "committed_sha256": "1a2cdd4c922351f2f55f9e08657e2da08189f866868388b02d9a7837d8513c83",
+      "normalization": "none",
+      "git_blob": "3f7c147ac2531af2ea85a35bef66eabdcc02976f"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/resume_northbound.ps1.txt",
+      "bytes": 3056,
+      "raw_sha256": "2f64f3fc53bc302355405ab48f9bf5fdffe2e1419fd110d7a4e8fa4a6df3911f",
+      "committed_bytes": 3056,
+      "committed_sha256": "2f64f3fc53bc302355405ab48f9bf5fdffe2e1419fd110d7a4e8fa4a6df3911f",
+      "normalization": "none",
+      "git_blob": "0d89321a1eedc176685d42beaab0dda84ed4dbbd"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/setup-failures.json",
+      "bytes": 1190,
+      "raw_sha256": "f96efd3f45064ab47ee4cf535e0359df9e6dca3e665f4cec4e6ee7f72e952588",
+      "committed_bytes": 1169,
+      "committed_sha256": "5beb7c33ed532c85909f6a0722e15719e4e1c587051d72a2e3c52b89edfb48ae",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "5770e7761ccc398a0f7ad8d09e32843c3a482a76"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/northbound-restore/start_northbound.ps1.txt",
+      "bytes": 3449,
+      "raw_sha256": "9be08ef7d01baba46b73b8c7c9ce8e81f0f785d70c90a1b3ec44291e6f7de234",
+      "committed_bytes": 3412,
+      "committed_sha256": "79faa467e5696fcf795934dcd0f094f0578b58e07a9b7209fae1d6fc7e554284",
+      "normalization": "CRLF to LF by Git",
+      "git_blob": "86ce6eee0e6f93ab210bae94b3020489de94a011"
+    }
+  ],
+  "source_evolution": "All7 production files unchanged across SQLoff/v1/v2/v3. Only v2 trusted066 fixture addition and v3 absent-version stale-probe correction; exact earlier text SHA checked before diff creation.",
+  "encoding": "bytes/raw_sha256 describe original local artifacts. committed_bytes/committed_sha256/git_blob describe actual Git content. Original files remain untouched; normalization is explicit.",
+  "builds": [
+    {
+      "version": "v1",
+      "sha256": "063119f9df67435a453fc64490670db96f477275cd31fca6eaae760e6e988076"
+    },
+    {
+      "version": "v2",
+      "sha256": "a5cb48a6f5732dd6cff890791c8d2693555b561cc240d029a00640cd80f8fa5f"
+    },
+    {
+      "version": "v3",
+      "sha256": "b6093f8a747b9c34cfb846e1071d3f3294b92fd6f038db03f963a2bafbee9142"
+    }
+  ],
+  "build_output_note": "All3 go test -c commands exited0 with empty compiler stdout; Tee created no log file. Actual executable SHA values were returned by Get-FileHash and are rechecked against retained ignored binaries before this freeze.",
+  "results": {
+    "sql_off": {
+      "session": 79504,
+      "exit": 0,
+      "closed": true,
+      "top_level_passed": [
+        3,
+        3,
+        1
+      ],
+      "package_seconds": [
+        0.68,
+        2.564,
+        2.938
+      ],
+      "native": "explicitSKIP"
+    },
+    "cli": {
+      "exit": 2,
+      "classification": "bad CLI argument before tests"
+    },
+    "cwd": {
+      "exit": 1,
+      "test_seconds": 0.29,
+      "classification": "wrong binary cwd: trusted fixture migration unavailable"
+    },
+    "v1": {
+      "exit": 1,
+      "test_seconds": 1.76,
+      "classification": "source InstanceRepository.Delete fixture lacked trusted066; before public restore cases"
+    },
+    "v2": {
+      "session": 10305,
+      "exit": 1,
+      "closed": true,
+      "test_seconds": 24.53,
+      "passed": 8,
+      "failed": 1,
+      "classification": "OVERALL FAIL preserved; absent-target fixture treated actual version1 as stale"
+    },
+    "v3": {
+      "session": null,
+      "exit": 0,
+      "closed": true,
+      "test_seconds": 7.16,
+      "run": "^TestNorthboundPublicWorkerActualTLSMySQL$/^success-absent-settings$",
+      "classification": "Only previously failed absent-settings subcase rerun; original8 passing cases not repeated"
+    }
+  },
+  "target": {
+    "port": 62877,
+    "pid": 31928,
+    "front_session": null,
+    "uuid": "c3c5502d-d623-11f1-b899-745d22085e06",
+    "nonce": "63d35aed9a52418b83ca82740a8db450",
+    "shutdown": "normal TLS mysqladmin; only builtin accounts/schemas and0 other sessions; exact root removed; two marker-only failed-setup roots removed nonrecursively"
+  },
+  "not_claimed": [
+    "single final full9-case PASS run",
+    "production full175 schema qualification",
+    "deployed source/fullC authentication",
+    "all-consumer physical target isolation",
+    "formalB sourceVerified capability or final activation",
+    "original nine-table resources writer proof",
+    "all8 owner tables tested together with nonempty data in one cohort"
+  ],
+  "remaining": "Primary exact latest-combination review/merge and qualification outside this narrow component remain required."
+}

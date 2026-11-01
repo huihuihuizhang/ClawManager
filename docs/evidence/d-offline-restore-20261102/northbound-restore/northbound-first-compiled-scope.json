@@ -1,0 +1,115 @@
+{
+  "parent": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "status": "First SQLoff Northbound compilation and filtered tests passed; actual native remains unexecuted",
+  "files": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "bytes": 22803,
+      "raw_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "git_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "bytes": 8267,
+      "raw_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "git_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "bytes": 5986,
+      "raw_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "git_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "bytes": 8305,
+      "raw_sha256": "f1bd266a4e9f60b400c6083adc407dbb8f7ea6850670fdee4d8f2444eafb5896",
+      "git_blob": "1a6a2bd654a5e5ccab6267ecba89164484add152"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "bytes": 15817,
+      "raw_sha256": "c2711eba0daf22ca1c5eaf5da916d43f73efef0ad6cf93e15aded74f3a029033",
+      "git_blob": "231633b9dbf5db97d57b3efc77e5383c4f25aa45"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "bytes": 7963,
+      "raw_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "git_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "bytes": 6758,
+      "raw_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "git_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "bytes": 1737,
+      "raw_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "git_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "bytes": 5160,
+      "raw_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "git_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "bytes": 14946,
+      "raw_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "git_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "bytes": 16076,
+      "raw_sha256": "4187a92a4ea8caf575b274bc3697ac710e0e8926e32d9faa9efda0adda041359",
+      "git_blob": "fb0b3a8afb1aa79e3be47e44277be64cec024a2c"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "bytes": 1911,
+      "raw_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "git_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "bytes": 23165,
+      "raw_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "git_blob": "214a28a263eb75c8198d566581d6e5dc15c96075"
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "bytes": 3392,
+      "raw_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "git_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90"
+    }
+  ],
+  "first_minimal_test": {
+    "handle": 79504,
+    "exit_code": 0,
+    "closed": true,
+    "pattern": "^TestNorthbound",
+    "packages": [
+      "systembackupresources",
+      "systembackup/domain",
+      "systembackup/worker"
+    ],
+    "passed_top_level": [
+      3,
+      3,
+      1
+    ],
+    "package_seconds": [
+      0.68,
+      2.564,
+      2.938
+    ],
+    "native": "explicit SKIP: no owned SQL metadata",
+    "log": ".local/northbound-minimal-first.log",
+    "log_raw_sha256": "fb47a8a4acf8d8fd3b65af06851502e5aef7a37796eac3885319123305d94536"
+  },
+  "format_note": "Initial gofmt path was wrong because command cwd was backend; after natural test completion only new worker test whitespace was formatted at correct path, no logic changes"
+}

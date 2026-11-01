@@ -1,0 +1,110 @@
+{
+  "base": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+  "files": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "owner_raw_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "composed_sha256": "d2e82c1486367b65ad94f8fc6d2417309c45d38028a0f8c065b96458e3652c80",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "owner_raw_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "composed_sha256": "6122a15cbeb0a1cc1cd4fd7d62f5654e4280fcc066328850e48debcbed3fc7e7",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "owner_raw_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "composed_sha256": "285814693941efe6a96764372f0fa105a0e6e2371a0ba802c4592db16063f25f",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "owner_raw_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "composed_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "owner_raw_sha256": "381e42df72fd164c037dc1011fedf42b618068a1383b9c024ccca501cb5364ff",
+      "composed_sha256": "381e42df72fd164c037dc1011fedf42b618068a1383b9c024ccca501cb5364ff",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "owner_raw_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "composed_sha256": "000ee3f804ef4430ecd621d2025296deddb41a6b1946921dd020b70eab13be55",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "owner_raw_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "composed_sha256": "ff63be7ec348b52f51a86c0cced8041bd77fba20012fb801e8dfa7f17adfd7f0",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "owner_raw_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "composed_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "owner_raw_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "composed_sha256": "4edf12f97bbb8f6b31c58c804b112fa340011483483f387b118a766c682f5736",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "owner_raw_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "composed_sha256": "0a99a90c6896fbc538b390e963be092923eab2222099a0c761a3fe657da65cbf",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "owner_raw_sha256": "4187a92a4ea8caf575b274bc3697ac710e0e8926e32d9faa9efda0adda041359",
+      "composed_sha256": "992fd8c57dca73877cff9baaaabdf736f261582c35bd729fbeda799b926889aa",
+      "owner_equal": false,
+      "only_retained_interpolate4": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "owner_raw_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "composed_sha256": "882c2189c95da0f31286281bd9feb7f26735c757d4de44934cf9aeda7a456fbb",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "owner_raw_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "composed_sha256": "d6ab8ae36578e1f90d704796f9873d7d30efd92cf4ac0d8dc0d874bd95616295",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "owner_raw_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "composed_sha256": "df9fb3011c22fe85466b96dc8f1ca044d51158e08f480ccf5e9d554308729f6f",
+      "owner_equal": true,
+      "only_retained_interpolate4": false
+    }
+  ],
+  "v1_changes_only_two_test_files": [
+    "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+    "backend/internal/systembackup/domain/northbound_native_test.go"
+  ],
+  "owner_base": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "no175_or_authority_WIP": true,
+  "classification": "Frozen v3 NB14 source only local review candidate, native acceptance pending"
+}

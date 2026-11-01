@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"clawreef/internal/systembackup/scope"
+	resources "clawreef/internal/systembackupresources"
 	sh "clawreef/internal/systembackupskillhub"
 )
 
@@ -22,13 +23,16 @@ type Placement struct {
 	Workspace, MountPath, PVC, Namespace, StorageClass string
 }
 type Policy struct {
-	Placements     map[string]Placement // source instance ID -> observed drill storage
-	Configs        ConfigNormalizer
-	WorkBuddy      *WorkBuddySchema
-	Dependencies   map[string]TableAdapter
-	TeamPlacements map[string]Placement // separately restored/verified Team shared volumes
-	Skills         *sh.RestoreMapping   // authenticated target object/workspace mapping; IDs must remain stable
-	GatewayImages  *GatewayImageReceipt `json:"-"` // concrete actual object readback; never decoded from request JSON
+	Placements          map[string]Placement // source instance ID -> observed drill storage
+	Configs             ConfigNormalizer
+	WorkBuddy           *WorkBuddySchema
+	Dependencies        map[string]TableAdapter
+	TeamPlacements      map[string]Placement                   // separately restored/verified Team shared volumes
+	Skills              *sh.RestoreMapping                     // authenticated target object/workspace mapping; IDs must remain stable
+	GatewayImages       *GatewayImageReceipt                   `json:"-"` // concrete actual object readback; never decoded from request JSON
+	NorthboundTarget    *resources.NorthboundTargetObservation `json:"-"`
+	northboundCandidate *resources.NorthboundCASCandidate
+	northboundScope     resources.NorthboundRestoreScope
 }
 type RestorePlan struct {
 	Data             Snapshot
@@ -146,6 +150,10 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err != nil {
 		return RestorePlan{}, err
 	}
+	northbound, err := validateNorthboundRestore(ctx, source, target, policy)
+	if err != nil {
+		return RestorePlan{}, err
+	}
 	targets := map[string]Table{}
 	for _, t := range target {
 		if _, ok := targets[t.Name]; ok {
@@ -171,7 +179,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		// Empty tables absent on the target need no writes. Nonempty unknown
 		// identity schemas require a deliberate version adapter, not field loss.
-		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) && !(gatewayBudget && isGatewayBudgetTable(t.Name)) && !(gatewayImages && isGatewayImageTable(t.Name)) {
+		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) && !(gatewayBudget && isGatewayBudgetTable(t.Name)) && !(gatewayImages && isGatewayImageTable(t.Name)) && !(northboundName(t.Name) && policy.Dependencies[t.Name].Normalizer != "") {
 			continue
 		}
 		dest, ok := targets[t.Name]
@@ -193,7 +201,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		adapter, adapted := policy.Dependencies[t.Name]
 		if adapted {
-			if rule.Domain == scope.Users || rule.Domain == scope.Instances || validateRestoreTableAdapter(adapter, t) != nil || validateRestoreTableAdapter(adapter, dest) != nil {
+			if rule.Domain == scope.Users || rule.Domain == scope.Instances || validateRestoreAdapterWithNorthbound(adapter, t) != nil || validateRestoreAdapterWithNorthbound(adapter, dest) != nil {
 				return RestorePlan{}, ErrSchema
 			}
 			for c := range adapter.Columns {
@@ -246,7 +254,15 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 			}
 		}
 		for _, r := range t.Rows {
-			n := cloneRow(r)
+			original := r
+			if projected, ok := northbound[t.Name]; ok {
+				row, exists := projected[r["id"].String()]
+				if !exists {
+					return RestorePlan{}, ErrData
+				}
+				original = row
+			}
+			n := cloneRow(original)
 			if legacyTeamScope && hasColumn(out, "resource_scope") {
 				n["resource_scope"] = Text("cm") // Historical CM Teams never acquire an inferred owner.
 			}
@@ -336,6 +352,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	if err := VerifySkillQuarantineContext(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
+	if err := VerifyNorthboundQuarantine(ctx, plan.Data); err != nil {
 		return RestorePlan{}, err
 	}
 	return plan, nil
@@ -554,6 +573,12 @@ func validateRelationshipsWithHistory(s Snapshot, validatedUIDHistory bool) erro
 			}
 			if validatedUIDHistory && t.Name == workBuddyIdentities {
 				continue
+			}
+			if t.Name == "northbound_owner_records" {
+				if northboundOwnerShape(t) != nil {
+					return ErrSchema
+				}
+				continue // Historical owner/instance IDs intentionally have no FK.
 			}
 			if v, ok := r["user_id"]; ok && !v.Null && !users[v.String()] {
 				return ErrData

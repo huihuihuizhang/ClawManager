@@ -1,0 +1,13 @@
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL
+    northbound_native_fixture_test.go:50: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    northbound_native_fixture_test.go:157: real repository source CAS78 with no audit; real owner Bind/Apply/saved Report producers completed before capture; unsigned-max bitmap/deleted instance/DECIMAL boundary fixture added
+    northbound_native_test.go:167: actual scoped bridge: arbitrary READ COMMITTED, different TX/UUID, original raw audit drift and manual actor NULL all refused; real rollback retained bootstrap in cm_drill_nb_boundary_63d35aed9a52418b
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/success-absent-settings
+    northbound_native_test.go:300: === RUN   TestNorthboundNativeVerifyChild
+            northbound_native_child_test.go:139: fresh child public verify: actual expected SQL AEAD/EOF, 35/6/56 full raw cells and restrictive SELECT-only grants; no old observation/CAS/source/writer; actual UPDATE denied1142 PASS
+        --- PASS: TestNorthboundNativeVerifyChild (0.14s)
+        PASS
+    northbound_native_test.go:307: public capture/one-TX CAS+audit+owner restore/new-process SELECT-only verify; 35/6/56 actual raw columns, uint64/NULL/DECIMAL/private history, source-max version -> actual observed target+1/absence1, same-ID bootstrap and stale CAS rejection PASS
+--- PASS: TestNorthboundPublicWorkerActualTLSMySQL (7.16s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/success-absent-settings (2.02s)
+PASS

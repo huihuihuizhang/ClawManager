@@ -1,0 +1,46 @@
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL
+    northbound_native_fixture_test.go:50: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    northbound_native_fixture_test.go:157: real repository source CAS78 with no audit; real owner Bind/Apply/saved Report producers completed before capture; unsigned-max bitmap/deleted instance/DECIMAL boundary fixture added
+    northbound_native_test.go:167: actual scoped bridge: arbitrary READ COMMITTED, different TX/UUID, original raw audit drift and manual actor NULL all refused; real rollback retained bootstrap in cm_drill_nb_boundary_63d35aed9a52418b
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/missing-observation
+    northbound_native_test.go:266: public failure retained bootstrap, original settings and empty audit/owner tables
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/same-version-content-drift
+    northbound_native_test.go:266: public failure retained bootstrap, original settings and empty audit/owner tables
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/version-drift
+    northbound_native_test.go:266: public failure retained bootstrap, original settings and empty audit/owner tables
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/evidence-failure
+    northbound_native_test.go:266: public failure retained bootstrap, original settings and empty audit/owner tables
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/cancel-before-commit
+    northbound_native_test.go:266: public failure retained bootstrap, original settings and empty audit/owner tables
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/success-empty-audit
+    northbound_native_test.go:296: === RUN   TestNorthboundNativeVerifyChild
+            northbound_native_child_test.go:139: fresh child public verify: actual expected SQL AEAD/EOF, 35/6/56 full raw cells and restrictive SELECT-only grants; no old observation/CAS/source/writer; actual UPDATE denied1142 PASS
+        --- PASS: TestNorthboundNativeVerifyChild (0.13s)
+        PASS
+    northbound_native_test.go:303: public capture/one-TX CAS+audit+owner restore/new-process SELECT-only verify; 35/6/56 actual raw columns, uint64/NULL/DECIMAL/private history, source-max version -> actual observed target+1/absence1, same-ID bootstrap and stale CAS rejection PASS
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/success-full-audit
+    northbound_native_test.go:250: second actual SQL session: concurrent version CAS and empty-audit-range INSERT both denied with real1205 while the common SERIALIZABLE restore TX holds locks
+    northbound_native_test.go:296: === RUN   TestNorthboundNativeVerifyChild
+            northbound_native_child_test.go:139: fresh child public verify: actual expected SQL AEAD/EOF, 35/6/56 full raw cells and restrictive SELECT-only grants; no old observation/CAS/source/writer; actual UPDATE denied1142 PASS
+        --- PASS: TestNorthboundNativeVerifyChild (0.13s)
+        PASS
+    northbound_native_test.go:303: public capture/one-TX CAS+audit+owner restore/new-process SELECT-only verify; 35/6/56 actual raw columns, uint64/NULL/DECIMAL/private history, source-max version -> actual observed target+1/absence1, same-ID bootstrap and stale CAS rejection PASS
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/success-absent-settings
+    northbound_native_test.go:285: stale real CAS changed restored settings
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL/success-target-version5
+    northbound_native_test.go:296: === RUN   TestNorthboundNativeVerifyChild
+            northbound_native_child_test.go:139: fresh child public verify: actual expected SQL AEAD/EOF, 35/6/56 full raw cells and restrictive SELECT-only grants; no old observation/CAS/source/writer; actual UPDATE denied1142 PASS
+        --- PASS: TestNorthboundNativeVerifyChild (0.14s)
+        PASS
+    northbound_native_test.go:303: public capture/one-TX CAS+audit+owner restore/new-process SELECT-only verify; 35/6/56 actual raw columns, uint64/NULL/DECIMAL/private history, source-max version -> actual observed target+1/absence1, same-ID bootstrap and stale CAS rejection PASS
+--- FAIL: TestNorthboundPublicWorkerActualTLSMySQL (24.53s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/missing-observation (1.49s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/same-version-content-drift (1.57s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/version-drift (1.62s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/evidence-failure (1.66s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/cancel-before-commit (1.63s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/success-empty-audit (2.44s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/success-full-audit (3.99s)
+    --- FAIL: TestNorthboundPublicWorkerActualTLSMySQL/success-absent-settings (1.71s)
+    --- PASS: TestNorthboundPublicWorkerActualTLSMySQL/success-target-version5 (1.95s)
+FAIL

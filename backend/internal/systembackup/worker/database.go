@@ -18,6 +18,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/team"
+	resources "clawreef/internal/systembackupresources"
 	sh "clawreef/internal/systembackupskillhub"
 	"github.com/go-sql-driver/mysql"
 )
@@ -64,6 +65,7 @@ type DatabaseEnvironment struct {
 	GatewayImageReader           *domain.GatewayImageObjectClient             // verify only; independently supplied reader
 	GatewayImageEvidence         staging.Receipt                              // encrypted metadata to reopen on verify, never a proof DTO
 	GatewayImageEvidenceRecorded func(context.Context, staging.Receipt) error // custody output before SQL COMMIT
+	NorthboundTarget             *resources.NorthboundTargetObservation       // restore only; actual read-only target observation, never request JSON
 }
 
 var databaseName = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
@@ -184,10 +186,10 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	if env.Check == nil {
 		return Result{}, ErrNotReady
 	}
-	if r.Operation == "capture-database" && (env.GatewayImages != nil || env.GatewayImageReader != nil || env.GatewayImageEvidence.Name != "" || env.GatewayImageEvidenceRecorded != nil) {
+	if r.Operation == "capture-database" && (env.GatewayImages != nil || env.GatewayImageReader != nil || env.GatewayImageEvidence.Name != "" || env.GatewayImageEvidenceRecorded != nil || env.NorthboundTarget != nil) {
 		return Result{}, ErrRequest
 	}
-	if r.Operation == "verify-database" && env.GatewayImages != nil {
+	if r.Operation == "verify-database" && (env.GatewayImages != nil || env.NorthboundTarget != nil) {
 		return Result{}, ErrRequest
 	}
 	if r.Operation == "restore-database" && (env.Evidence == nil || !separateRoots(env.Staging, env.Evidence)) {
@@ -317,7 +319,7 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	var evidence staging.Receipt
 	var normalized domain.Snapshot
 	defer func() { clearSnapshot(normalized) }()
-	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements, Skills: d.SkillsRestore, GatewayImages: env.GatewayImages}, func(ctx context.Context, p domain.RestorePlan) error {
+	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements, Skills: d.SkillsRestore, GatewayImages: env.GatewayImages, NorthboundTarget: env.NorthboundTarget}, func(ctx context.Context, p domain.RestorePlan) error {
 		normalized = p.Data
 		if e := check("before-evidence"); e != nil {
 			return e

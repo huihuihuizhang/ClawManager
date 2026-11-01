@@ -1,0 +1,153 @@
+{
+  "source": "8197c591b0b6c7fa205836d6c8f69d1caec59381",
+  "parent": "87ff105458aae4cabee143624c638f9556d8d7fb",
+  "files": [
+    "backend/internal/systembackup/domain/normalize.go",
+    "backend/internal/systembackup/domain/northbound_integration.go",
+    "backend/internal/systembackup/domain/northbound_native_child_test.go",
+    "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+    "backend/internal/systembackup/domain/northbound_native_test.go",
+    "backend/internal/systembackup/domain/northbound_owner_restore.go",
+    "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+    "backend/internal/systembackup/domain/northbound_restore_test.go",
+    "backend/internal/systembackup/domain/northbound_settings_restore.go",
+    "backend/internal/systembackup/domain/restore.go",
+    "backend/internal/systembackup/worker/database.go",
+    "backend/internal/systembackup/worker/northbound_database_test.go",
+    "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+    "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/README.md",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/cleanup_northbound.ps1.txt",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v1-to-v2.diff",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/fixture-v2-to-v3.diff",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-cleanup.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-compiled-scope.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-first-native-run.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-minimal-first.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-cleanup.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-initialize.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server-raw.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-server.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-mysql-shutdown.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fifth.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-first.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-fourth.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-scope.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v2-scope.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-prepared-v3-scope.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-public-ca.pem",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-second.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-native-third.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-partial-setup-cleanup.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-resume.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/northbound-server-start-third.log",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/resume_northbound.ps1.txt",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/scope.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/setup-failures.json",
+    "docs/evidence/d-offline-restore-20261102/northbound-restore/start_northbound.ps1.txt"
+  ],
+  "Go14_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "owner_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773",
+      "tested_blob": "6b502931ceea22f7f7f973d560b6c46b788f4773",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_integration.go",
+      "owner_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a",
+      "tested_blob": "ae16d2bc32b5a1c2475d7e810b04ab3b4186452a",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_child_test.go",
+      "owner_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7",
+      "tested_blob": "b5921e73f74769350b76cf805da1b2ecddfd9bc7",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "owner_blob": "f82879a3566b8460cd007d5a892f704958fcb57e",
+      "tested_blob": "f82879a3566b8460cd007d5a892f704958fcb57e",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_test.go",
+      "owner_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18",
+      "tested_blob": "bc1ebc93f1f6d95b96446ad6a19274c67b29cf18",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore.go",
+      "owner_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8",
+      "tested_blob": "31725f80fd88a770049ec49890f26e48cbb0fea8",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_owner_restore_test.go",
+      "owner_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639",
+      "tested_blob": "15700c1ae5e1cd6e84bd36769bac0ab4a95a5639",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "owner_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8",
+      "tested_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_settings_restore.go",
+      "owner_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71",
+      "tested_blob": "38e7b905914ac7264c96d923e1b0ee4f9b94fe71",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "owner_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d",
+      "tested_blob": "1f2cdf9237625147b95c05e8ef5980c288e4ea6d",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "owner_blob": "fb0b3a8afb1aa79e3be47e44277be64cec024a2c",
+      "tested_blob": "50575731520984327461c349bf3247bfff3beeaf",
+      "owner_equal": false,
+      "only_retained_Interpolate4": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/northbound_database_test.go",
+      "owner_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485",
+      "tested_blob": "b647794b6e5f14ce0bcc9eb38b5a11f22cf8f485",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge.go",
+      "owner_blob": "214a28a263eb75c8198d566581d6e5dc15c96075",
+      "tested_blob": "214a28a263eb75c8198d566581d6e5dc15c96075",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    },
+    {
+      "path": "backend/internal/systembackupresources/restore_northbound_sql_bridge_test.go",
+      "owner_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90",
+      "tested_blob": "a8d4c2b7cbd8371c77f1ce3e47c4a04abd28ae90",
+      "owner_equal": true,
+      "only_retained_Interpolate4": false
+    }
+  ],
+  "identity": "huihuihuizhang <1825973571@qq.com> / huihuihuizhang <1825973571@qq.com>",
+  "code_equals_independently_tested_4568_except_retained_baseline4lines": true,
+  "no175_or_other_WIP_delta": true,
+  "integration_rule": "SINGLE8197delta only, never owner ancestry"
+}

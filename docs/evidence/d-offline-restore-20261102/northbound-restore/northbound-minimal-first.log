@@ -1,0 +1,52 @@
+=== RUN   TestNorthboundBridgeBoundBeforeCopyAndRawSourceBinding
+--- PASS: TestNorthboundBridgeBoundBeforeCopyAndRawSourceBinding (0.00s)
+=== RUN   TestNorthboundBridgeRequiresControlledTransactionAndRealDeletion
+--- PASS: TestNorthboundBridgeRequiresControlledTransactionAndRealDeletion (0.00s)
+=== RUN   TestNorthboundOwnerTeamCreationUserRequiresExplicitMapping
+--- PASS: TestNorthboundOwnerTeamCreationUserRequiresExplicitMapping (0.00s)
+PASS
+ok  	clawreef/internal/systembackupresources	0.680s
+=== RUN   TestNorthboundOwnerUnsignedNullPrivateHistoryAndBitmapStayExact
+--- PASS: TestNorthboundOwnerUnsignedNullPrivateHistoryAndBitmapStayExact (0.00s)
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/unknown-column
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/signed-id-schema
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/new-fk
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/wrong-unique-order
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/uint64-overflow
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/uint32-overflow
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/negative-unsigned
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/overprecise-rank
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/negative-zero-rank
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/noncanonical-time
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/future-schema-version
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/duplicate-key
+=== RUN   TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/payload-null-versus-SQL-NULL
+--- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/unknown-column (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/signed-id-schema (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/new-fk (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/wrong-unique-order (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/uint64-overflow (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/uint32-overflow (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/negative-unsigned (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/overprecise-rank (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/negative-zero-rank (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/noncanonical-time (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/future-schema-version (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/duplicate-key (0.00s)
+    --- PASS: TestNorthboundOwnerRejectsFutureShapeOverflowAndNeverInventsLiveParent/payload-null-versus-SQL-NULL (0.00s)
+=== RUN   TestNorthboundOwnerCommonNormalizePreservesDeletedReferencesAndAllCells
+--- PASS: TestNorthboundOwnerCommonNormalizePreservesDeletedReferencesAndAllCells (0.00s)
+=== RUN   TestNorthboundNativeVerifyChild
+    northbound_native_child_test.go:58: owned native parent helper only
+--- SKIP: TestNorthboundNativeVerifyChild (0.00s)
+=== RUN   TestNorthboundPublicWorkerActualTLSMySQL
+    northbound_native_fixture_test.go:50: requires D owned UUID/marker/CA-pinned disposable TLS MySQL
+--- SKIP: TestNorthboundPublicWorkerActualTLSMySQL (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.564s
+=== RUN   TestNorthboundObservationCannotEnterCaptureVerifyOrPolicyJSON
+--- PASS: TestNorthboundObservationCannotEnterCaptureVerifyOrPolicyJSON (0.01s)
+PASS
+ok  	clawreef/internal/systembackup/worker	2.938s

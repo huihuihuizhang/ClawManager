@@ -1,0 +1,53 @@
+package domain_test
+
+import (
+ "strings"
+ "testing"
+
+ "clawreef/internal/systembackup/domain"
+ resources "clawreef/internal/systembackupresources"
+)
+
+// Confirm actual missing-singleton range exclusion before any restore DML.
+// The same independent connection and INSERT must succeed after ROLLBACK so
+// an invalid SQL statement or privilege denial cannot masquerade as a lock.
+func TestSupervisorNorthboundAbsentSingletonLocksBeforeDML(t *testing.T) {
+ f,sourceAdmin:=northboundNativeSetup(t)
+ defer sourceAdmin.Close()
+ sourceUser:="sgaps_"+f.nonce[:12]
+ sourceReader:=f.principal(sourceUser,f.source,"SELECT")
+ source,e:=domain.CaptureSource(f.ctx,sourceReader,domain.Limits{MaxRows:1000,MaxBytes:8<<20},f.source,f.uuid)
+ if e!=nil{t.Fatal("independent actual source capture",e)}
+ original,e:=domain.NorthboundNativeBridgeSourceForTest(f.ctx,source)
+ if e!=nil{t.Fatal("exact original source fields",e)}
+ name:="cm_drill_nb_gap_"+f.nonce[:16]
+ admin:=f.schema(name)
+ northboundNativeMigrations(f,admin)
+ f.exec(admin,"DELETE FROM northbound_admin_settings")
+ writer:=f.principal("sgapw_"+f.nonce[:12],name,"SELECT,INSERT,UPDATE,DELETE")
+ writer.SetMaxOpenConns(1)
+ reader:=f.principal("sgapr_"+f.nonce[:12],name,"SELECT")
+ observation,e:=northboundNativeObserve(f.ctx,reader,name,f.uuid)
+ if e!=nil{t.Fatal("actual absent target observation",e)}
+ conn,e:=writer.Conn(f.ctx);if e!=nil{t.Fatal(e)};defer conn.Close()
+ tx,bound,e:=resources.BeginNorthboundRestoreTransaction(f.ctx,conn,observation)
+ if e!=nil{t.Fatal("actual controlled SERIALIZABLE constructor",e)}
+ defer tx.Rollback()
+ candidate,e:=resources.PrepareNorthboundRestoreInTransaction(f.ctx,tx,bound,original,northboundNativeBudget())
+ if e!=nil{t.Fatal("prepare absent singleton before any DML",e)}
+ if e=candidate.CheckBefore(f.ctx,tx,resources.NorthboundRestoreScope{Database:name,ServerUUID:f.uuid});e!=nil{t.Fatal(e)}
+ var count int
+ if tx.QueryRowContext(f.ctx,"SELECT COUNT(*) FROM northbound_admin_settings").Scan(&count)!=nil||count!=0{t.Fatal("setup is not genuinely empty before DML")}
+ probe,e:=admin.Conn(f.ctx);if e!=nil{t.Fatal(e)};defer probe.Close()
+ if _,e=probe.ExecContext(f.ctx,"SET SESSION innodb_lock_wait_timeout=1");e!=nil{t.Fatal(e)}
+ insert:="INSERT INTO northbound_admin_settings(id,allowed_lite_types,allowed_pro_types,created_at,updated_at) VALUES(1,JSON_ARRAY('openclaw'),JSON_ARRAY('openclaw'),UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))"
+ if _,e=probe.ExecContext(f.ctx,insert);nativeImageMySQLNumber(e)!=1205{t.Fatalf("missing-singleton range not excluded before DML: mysql=%d err=%v",nativeImageMySQLNumber(e),e)}
+ if e=tx.Rollback();e!=nil{t.Fatal("release actual range locks",e)}
+ result,e:=probe.ExecContext(f.ctx,insert)
+ if e!=nil{t.Fatal("same SQL must be valid after range unlock",e)}
+ changed,e:=result.RowsAffected();if e!=nil||changed!=1{t.Fatal("post-rollback INSERT did not really create singleton",e)}
+ var actualVersion string
+ if probe.QueryRowContext(f.ctx,"SELECT version FROM northbound_admin_settings WHERE id=1").Scan(&actualVersion)!=nil||strings.TrimSpace(actualVersion)!="1"{t.Fatal("actual post-unlock row/version unavailable")}
+ if _,e=reader.ExecContext(f.ctx,"DELETE FROM northbound_admin_settings WHERE 1=0");nativeImageMySQLNumber(e)!=1142{t.Fatal("independent reader grants were not actually SELECT-only",e)}
+ t.Log("actual absent target: controlled SERIALIZABLE Prepare/CheckBefore, zero target DML, independent INSERT denied1205; same INSERT after ROLLBACK succeeds1/defaultversion1; independent SELECT-only reader denied1142; one-connection writer used")
+}

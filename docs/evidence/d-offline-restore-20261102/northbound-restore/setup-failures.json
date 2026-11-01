@@ -1,0 +1,21 @@
+{
+  "kind": "Summary of original tool-result errors, not a raw stdout capture",
+  "attempts": [
+    {
+      "tool_chunk": "08e63b",
+      "exit": 1,
+      "phase": "Copy-Item before binary copy",
+      "error": "Reused script contained a garbled literal tools path; source path did not exist",
+      "allocated_root": "cm-gateway-restore-74efe80cfb9c4ae5a83890555e3ebd5b"
+    },
+    {
+      "tool_chunk": "a0814b",
+      "exit": 1,
+      "phase": "Copy-Item before binary copy",
+      "error": "Adding UTF8 BOM did not repair the already garbled literal; the same source path did not exist",
+      "allocated_root": "cm-gateway-restore-0d36c2f71d7c4d8d8ff3308ceeebbce6"
+    }
+  ],
+  "capture_note": "Both intended Tee paths were never created because no pipeline stdout was emitted before the script terminated. Original errors remain in the task tool transcript; no empty or invented raw logs are substituted.",
+  "repair": "ASCII script resolves repository from PSScriptRoot and existing tools from its parent, validates all prerequisite paths before allocation. Both marker-only allocations are exactly nonce-checked and removed; see partial setup cleanup proof."
+}

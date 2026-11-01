@@ -1,0 +1,11 @@
+--- v1/native_fixture
++++ v2/native_fixture
+@@ -38,7 +38,7 @@
+ 	} {
+ 		f.exec(db, q)
+ 	}
+-	for _, name := range []string{"057_add_northbound_admin_settings.sql", "058_enable_deepseek_harness_pro.sql", "067_add_northbound_owner_records.sql", "077_add_northbound_owner_teams.sql"} {
++	for _, name := range []string{"057_add_northbound_admin_settings.sql", "058_enable_deepseek_harness_pro.sql", "066_add_runtime_upgrade_fence.sql", "067_add_northbound_owner_records.sql", "077_add_northbound_owner_teams.sql"} {
+ 		raw, e := os.ReadFile(filepath.Join("..", "..", "db", "migrations", name))
+ 		if e != nil {
+ 			f.t.Fatal("trusted complete Northbound migration unavailable")
