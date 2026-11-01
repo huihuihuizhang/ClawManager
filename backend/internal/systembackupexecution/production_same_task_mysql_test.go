@@ -716,7 +716,7 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 	}
 	store := c.SQLExecutionWorkStore{Queue: f.queue}
 	if err := store.RunWithExecutionHeartbeat(ctx, f.input.Authority, func(active context.Context) error {
-		f.checkOriginalMetadataSources(active, t)
+		f.checkOriginalMetadataSources(active, t, options.BeforeRuntimeComposition)
 		if options.BeforePrepare != nil {
 			if err := options.BeforePrepare(active, t, f); err != nil {
 				return err

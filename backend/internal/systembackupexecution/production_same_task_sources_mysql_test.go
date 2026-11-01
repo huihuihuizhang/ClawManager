@@ -240,7 +240,7 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 	return authority
 }
 
-func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context, t *testing.T) {
+func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context, t *testing.T, beforeCompose ...func(context.Context, *testing.T, *dOriginalSixPartTask) error) {
 	t.Helper()
 	authority := f.installOriginalMetadataSources(ctx, t)
 	metadata, err := authority.sqlMetadata(ctx, f.sourceInventory)
@@ -284,6 +284,17 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 	}
 	f.installLocalOriginalControlApproval(ctx, t, metadata)
 	f.installOriginalFormalMaterials(ctx, t)
+	if len(beforeCompose) > 1 {
+		t.Fatal("ambiguous original runtime composition callback")
+	}
+	if len(beforeCompose) == 1 && beforeCompose[0] != nil {
+		if err := beforeCompose[0](ctx, t, f); err != nil {
+			t.Fatal("original declared publication materials before runtime composition", err)
+		}
+		if err := checkDOriginalCoreUnchanged(f.service, f.sealedCore); err != nil {
+			t.Fatal(err)
+		}
+	}
 	f.composeOriginalPublicRuntime(ctx, t)
 }
 

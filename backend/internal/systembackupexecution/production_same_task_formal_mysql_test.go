@@ -214,7 +214,7 @@ func (f *dOriginalSixPartTask) installOriginalFormalMaterials(ctx context.Contex
 func (f *dOriginalSixPartTask) composeOriginalPublicRuntime(ctx context.Context, t *testing.T) {
 	t.Helper()
 	s := f.service
-	access, err := RequiredDeploymentCaptureAccess(s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier)
+	access, err := RequiredDeploymentCaptureAccess(s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier)
 	if err != nil {
 		t.Fatal("original complete named runtime access inventory", err)
 	}
