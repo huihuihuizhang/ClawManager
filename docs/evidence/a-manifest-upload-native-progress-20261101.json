@@ -1,0 +1,60 @@
+{
+  "schema_version": "a-original-manifest-upload-native-progress.v1",
+  "date": "2026-11-01",
+  "scope": "Original local synthetic same-task native MF/upload attempts; both RED, no artifact acceptance",
+  "attempts": [
+    {
+      "Head": "69a154083993bd86d526d0c7dc4c44973cd64eb6",
+      "ExitCode": 1,
+      "Session": 76432,
+      "SessionClosed": true,
+      "CaseSeconds": 173.32,
+      "PackageSeconds": 176.54,
+      "TaskID": "sbk_270789a0-eb0e-408a-a3a7-c05de5888b42",
+      "Namespace": "ad_d_six_0e712c45f2ed1e8b",
+      "LogSHA256": "1d1967004469e10e060b38717776f5f270eba316656f90ba52f6a5fa175c7745",
+      "Completed": "all11 original workers, known certificate, full28-field MF request",
+      "FirstFailure": "ensureStartedPublicationJob execution record unavailable or conflicting; Create=0 Patch=0",
+      "RetainedNamespace": true,
+      "Scope": "No upload, remote complete C or acceptance passed",
+      "EndedAt": "2026-11-01T14:44:35.748784+00:00",
+      "SourceLedger": ".tools/a-original-manifest-upload-native-source-v3.json",
+      "SourceLedgerSHA256": "8f7b242c7914188245a516d458da69c6cbd8ade7fcd352809ebf64aac441cfb9",
+      "Log": ".tools/a-original-manifest-upload-native-v3.log"
+    },
+    {
+      "Head": "f91aad2a2830edbfba728d5a6ca694d54d8dd83d",
+      "ExitCode": 1,
+      "Session": 83879,
+      "SessionClosed": true,
+      "CaseSeconds": 104.3,
+      "PackageSeconds": 107.521,
+      "TaskID": "sbk_d1b6ba47-c342-4e09-bdfa-d94c7506b8ba",
+      "Namespace": "ad_d_six_6200911892747505",
+      "LogSHA256": "e064d733cad6d4518078e50e3d212554f188bfa931f8e358eb1903bf8fd98200",
+      "FirstFailure": "database native worker original candidate context deadline exceeded after880 checks and29.421232s source stream; source opened with29.6018512s",
+      "RetainedNamespace": true,
+      "Scope": "No MF or upload reached; Secret fixture repair not native verified",
+      "EndedAt": "2026-11-01T14:51:37.491138+00:00",
+      "SourceLedger": ".tools/a-original-manifest-upload-native-source-v4.json",
+      "SourceLedgerSHA256": "240a2a09ff346ea4aea9de59fd2ed4cf718fdde09d0bb1e3f739829615f2d065",
+      "Log": ".tools/a-original-manifest-upload-native-v4.log"
+    }
+  ],
+  "fixture_fix": {
+    "commit": "f91aad2a2830edbfba728d5a6ca694d54d8dd83d",
+    "scope": "Only local fake Kubernetes Secret native UID/RV and unchanged immutable body update semantics",
+    "red_log": ".tools/a-upload-native-secret-identity-red-v1.log",
+    "green_log": ".tools/a-upload-native-secret-identity-green-v1.log",
+    "source_ledger": ".tools/a-upload-native-secret-identity-source-v1.json",
+    "read_only_SQL_boundary": ".tools/a-original-manifest-upload-sql-boundary-v3.log",
+    "not_native_verified": "v4 failed earlier in database candidate report"
+  },
+  "preserved": [
+    "All old task namespaces/records and old logs retained; no old authority was refreshed",
+    "30 second original key use and5 second heartbeat unchanged",
+    "No upload Create/Patch in v3; v4 did not reach MF/upload",
+    "No complete remote C, seal, marker, acceptance, catalog or terminal success"
+  ],
+  "SQL63507": "A sessions closed after v4; original SAN/TLS UUID unchanged"
+}

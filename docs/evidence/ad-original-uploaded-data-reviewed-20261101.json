@@ -1,0 +1,48 @@
+{
+  "schema": "supervisor-original-uploaded-data-reviewed.v1",
+  "generated_at": "2026-11-01T15:07:21.489571+00:00",
+  "source_commit": "eb179f5f9531bae6307cc1be3e12af7a221e8751",
+  "base_backup": "6b5dc7a75661a30ad4eb08ce4820f45b2984b417",
+  "review": [
+    "All original SQL/native upload-result consistency checks remain mandatory.",
+    "Only complete original bound Job and all typed fixed-version registered results can produce DATA.",
+    "Public manifest/index/certificate/bootstrap bytes are cloned before original private materials close.",
+    "No credential/grant/HMAC/C receipt, signature validity, seal or acceptance authority is minted.",
+    "Current entry requires identical original claim and rechecks current access after reads; expired original material is not regenerated.",
+    "Secret fake-native UID/RV model preserves immutable bytes and UID/CAS checks; production checks unchanged."
+  ],
+  "merge": "Preserved current D PublicationTarget pre-admission mapping helper; duplicate gate/scheduler fixture changes did not replace current mainline.",
+  "independent_merged_test": {
+    "session": 29081,
+    "natural_exit": 0,
+    "session_closed": true,
+    "package": "clawreef/internal/systembackupexecution",
+    "seconds": 13.823,
+    "sql": "disabled",
+    "log": ".tools/supervisor-a-eb179-uploaded-data-merged-execution.log",
+    "log_sha256": "bb3546200dfc90258a56927eae6cf5893db68a2de7ca1a7a6a9fc1f770087411"
+  },
+  "source_blobs": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "blob": "d606fc9cf1e89515fa674e7915a6f4cdbd541da5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data.go",
+      "blob": "e507f99c58382f98c33168489cd17f1a6613c92a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data_test.go",
+      "blob": "4a995c79965aba4bba79594a2a3a0234f4cf580a"
+    },
+    {
+      "path": "docs/evidence/a-manifest-upload-native-progress-20261101.json",
+      "blob": "704d0ef4d1008133ae9a8005d79d13ebbe6d6e7c"
+    }
+  ],
+  "limits": [
+    "The complete-transport unit fixture supplies inert DATA; actual SQL/native completed upload and remote C are not proven by this unit test.",
+    "A native v3/v4/v5 remain failures, no actual upload-success claim.",
+    "No seal/markers/catalog/cleanup/terminal or historical restore acceptance."
+  ]
+}
