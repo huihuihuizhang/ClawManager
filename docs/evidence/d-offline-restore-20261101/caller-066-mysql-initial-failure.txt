@@ -1,0 +1,16 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+    offline_business_mysql_test.go:256: independent SELECT-only verification failed
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:289: local MySQL only; actual Skills and caller 057/066 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- FAIL: TestOfflineBusinessRestoreMySQL (20.80s)
+    --- FAIL: TestOfflineBusinessRestoreMySQL/success (3.13s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (3.59s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (3.66s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (3.18s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	23.714s
+FAIL
