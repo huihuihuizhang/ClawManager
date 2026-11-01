@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -389,13 +390,20 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	// Match the dedicated public metadata constructor's driver transport.
 	// All TLS/UTC/account pins, SQL locks and parameter values stay original.
 	connection.InterpolateParams = true
-	if options.ControlCommitACKLoss == nil {
+	if options.ControlCommitACKLoss == nil && options.ControlBeforeQuery == nil && options.ControlAfterQuery == nil {
 		f.control, err = sql.Open("mysql", connection.FormatDSN())
 	} else {
 		connector, connectorErr := mysql.NewConnector(connection)
 		err = connectorErr
 		if connectorErr == nil {
-			f.control = sql.OpenDB(aCertificateWriteACKConnector{Connector: connector, lose: options.ControlCommitACKLoss})
+			var controlConnector driver.Connector = connector
+			if options.ControlCommitACKLoss != nil {
+				controlConnector = aCertificateWriteACKConnector{Connector: controlConnector, lose: options.ControlCommitACKLoss}
+			}
+			if options.ControlBeforeQuery != nil || options.ControlAfterQuery != nil {
+				controlConnector = dOriginalGateQueryConnector{Connector: controlConnector, before: options.ControlBeforeQuery, after: options.ControlAfterQuery}
+			}
+			f.control = sql.OpenDB(controlConnector)
 		}
 	}
 	connection.Passwd = ""
@@ -741,6 +749,9 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 	if afterValidated != nil && (denyGenerate || !completeCapture) {
 		t.Fatal("validated continuation requires the complete successful original capture")
 	}
+	if options.AfterOriginalPrepare != nil && (completeCapture || afterValidated != nil) {
+		t.Fatal("pre-collector diagnostic cannot substitute validated capture")
+	}
 	f := newDOriginalSixPartTaskWithOptions(t, options)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
@@ -795,6 +806,12 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 	}
 	if len(f.claimed.Request) == 0 || f.claimed.ConfigSHA256 != hash(f.config) {
 		t.Fatal("queue lost admitted original request/config")
+	}
+	if options.AfterOriginalPrepare != nil {
+		if err := options.AfterOriginalPrepare(ctx, t, f, plan); err != nil {
+			t.Fatal("controlled original pre-collector diagnostic", err)
+		}
+		return
 	}
 	// The real scheduler's original ready_for_capture reconciliation is one
 	// second later. Re-take the SAME task; never substitute another acceptance.
