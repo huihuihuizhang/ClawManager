@@ -25,7 +25,11 @@ func TestDOriginalUploadedManifestAndCommittedMarkerMySQL(t *testing.T) {
 	runDOriginalUploadedManifestThroughRemoteCAnd102(t, true)
 }
 
-func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker bool) {
+func TestDOriginalUploadedManifestMarkerAndUploadExitMySQL(t *testing.T) {
+	runDOriginalUploadedManifestThroughRemoteCAnd102(t, true, true)
+}
+
+func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker bool, withExit ...bool) {
 	runAOriginalSixPartManifestUploadJob(t, func(ctx context.Context, t *testing.T, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture, store *nativePublicationS3, native *aNativePublicationServer) {
 		var ranges atomic.Int32
 		native.onRead = func(dst http.ResponseWriter, request *http.Request) bool {
@@ -106,11 +110,27 @@ func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker b
 				t.Fatal("marker changed terminal/eligibility contract", status, usable)
 			}
 			t.Log("same real original C-gated manifest receipt consumed for exact v12 _COMMITTED; parent/current SQL rechecked; no acceptance/catalog/cleanup/terminal success", f.publicID)
+			if len(withExit) == 1 && withExit[0] {
+				exit, err := f.service.observeOriginalPublicationUploadExit(ctx, *claim, capture.Input.CaptureAttemptNo, marker)
+				if err != nil || exit == nil || len(exit.pods) != 1 || exit.process.Pod.UID == "" {
+					t.Fatal("actual returned upload/result invocation to current SQL kubelet exit", err)
+				}
+				var proofs int
+				if f.control.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_runtime_stop_proofs WHERE task_public_id=? AND pod_uid=?`, f.publicID, exit.process.Pod.UID).Scan(&proofs) != nil || proofs != 1 {
+					t.Fatal("original kubelet stop proof missing")
+				}
+				t.Log("same first authenticated107 Pod/container/node identity explicitly exited after real local upload/result invocation returned; actual current marker consumer persisted stop witness; no cleanup/acceptance/catalog/terminal success", f.publicID)
+			}
 			fresh, err := (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Renew(ctx, *claim, policy)
 			if err != nil {
 				t.Fatal("actual next claim transition for stale-parent negative", err)
 			}
 			*claim = fresh
+			if len(withExit) == 1 && withExit[0] {
+				if denied, err := f.service.observeOriginalPublicationUploadExit(ctx, *claim, capture.Input.CaptureAttemptNo, marker); err == nil || denied != nil {
+					t.Fatal("old marker/process receipt adopted actual renewed claim", err)
+				}
+			}
 			if denied, err := f.service.publishOriginalCommittedMarkerAfterManifest(ctx, *claim, capture.Input.CaptureAttemptNo, store, object); err == nil || denied.Key != "" {
 				t.Fatal("old manifest/C completion adopted renewed claim", err)
 			}

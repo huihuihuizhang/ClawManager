@@ -20,6 +20,7 @@ type publicationUploadedCaptureData struct {
 	// Original sequence-validated canonical bodies, not current-SQL or C
 	// authority. A later transaction must compare rather than redefine them.
 	ResultBodySHA256 [16]string
+	ProcessSHA256    string
 }
 
 func originalPublicationUploadedData(observed publicationUploadPollData) (*publicationUploadedCaptureData, error) {
@@ -44,6 +45,7 @@ func originalPublicationUploadedData(observed publicationUploadPollData) (*publi
 		result.Objects[expected.Path] = ArtifactReadObject{Key: object.Key, Version: object.Version, SHA256: object.SHA256, Size: object.Bytes}
 	}
 	object := observed.Messages[len(request.Objects)].Object
+	result.ProcessSHA256 = observed.ProcessSHA256
 	result.Candidate = ArtifactReadObject{Key: object.Key, Version: object.Version, SHA256: object.SHA256, Size: object.Bytes}
 	for i, message := range observed.Messages {
 		raw, err := ce.Canonical(message)

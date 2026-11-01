@@ -38,6 +38,7 @@ type publicationPostCUploadSnapshot struct {
 	claim          c.ClaimToken
 	materialSHA256 string
 	resultsSHA256  [16]string
+	processSHA256  string
 }
 
 func originalPostCUploadResultPin(raw []byte, sequence uint64, data *publicationUploadedCaptureData) (string, error) {
@@ -61,14 +62,14 @@ func decodeOriginalPostCUploadResult(raw []byte, sequence uint64, snapshot publi
 
 func (s *DeploymentService) snapshotOriginalPostCUpload(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, original publicationMaterialIntent, data *publicationUploadedCaptureData) (publicationPostCUploadSnapshot, error) {
 	var zero publicationPostCUploadSnapshot
-	if original.Claim != claim || data == nil || original.RequestSHA256 != data.RequestSHA256 {
+	if original.Claim != claim || data == nil || original.RequestSHA256 != data.RequestSHA256 || !formalCandidateDigest(data.ProcessSHA256) {
 		return zero, c.ErrClaimLost
 	}
 	raw, err := ce.Canonical(original)
 	if err != nil {
 		return zero, c.ErrExecutionRecord
 	}
-	snapshot := publicationPostCUploadSnapshot{claim: claim, materialSHA256: hash(raw)}
+	snapshot := publicationPostCUploadSnapshot{claim: claim, materialSHA256: hash(raw), processSHA256: data.ProcessSHA256}
 	access, err := s.publicationAccess(ctx, claim, attempt)
 	if err != nil || access.Check(ctx) != nil {
 		return zero, c.ErrExecutionAuthority
@@ -122,6 +123,7 @@ func originalPostCManifestData(capture publicationVerifiedCapture, target Public
 		}
 	}
 	owned := &publicationUploadedCaptureData{RequestSHA256: data.RequestSHA256, JobUID: data.JobUID, JobGeneration: data.JobGeneration, Manifest: bytes.Clone(data.Manifest), Index: bytes.Clone(data.Index), Certificate: bytes.Clone(data.Certificate), Bootstrap: bytes.Clone(data.Bootstrap), Objects: make(map[string]ArtifactReadObject, 15), Candidate: data.Candidate, ResultBodySHA256: data.ResultBodySHA256}
+	owned.ProcessSHA256 = data.ProcessSHA256
 	m, err := decodePublicationManifestV12(owned.Manifest)
 	if err != nil || m.Installation != capture.Input.InstallationID || m.Backup != capture.Input.TaskPublicID || m.Attempt != capture.Input.CaptureAttemptNo || m.Config.Version != capture.Input.ConfigVersion || m.Config.SHA256 != capture.Input.ConfigSHA256 || m.CaptureContext != capture.CaptureContextSHA256 {
 		return nil, zero, c.ErrExecutionRecord
@@ -267,6 +269,10 @@ func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sq
 	}
 	activation, err := p.service.loadPublicationActivationTx(ctx, tx, material)
 	if err != nil || activation == nil || activation.JobUID != p.uploaded.JobUID || activation.AfterGeneration != p.uploaded.JobGeneration {
+		return c.ErrExecutionRecord
+	}
+	process, processRaw, err := loadPublicationProcessTx(ctx, tx, material, *activation)
+	if err != nil || !formalCandidateDigest(p.uploadSnapshot.processSHA256) || hash(processRaw) != p.uploadSnapshot.processSHA256 || p.uploaded.ProcessSHA256 != p.uploadSnapshot.processSHA256 || p.service.Config.PublicationWorker == nil || process.ServiceAccountUID != p.service.Config.PublicationWorker.ServiceAccountUID || process.NodeUID != p.service.Config.Security.NodeUIDs[process.Pod.Node] {
 		return c.ErrExecutionRecord
 	}
 	cursor, err := scanPublicationUploadCursor(tx.QueryRowContext(ctx, `SELECT last_accepted_sequence,last_observed_status,last_accepted_body_sha256 FROM system_backup_v2_job_observations WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND attempt_no=? AND phase='publish' AND job_unit_key='artifact-upload' AND job_uid=? AND job_generation=? FOR SHARE`, material.Installation, material.Backup, material.Attempt, activation.JobUID, activation.AfterGeneration), 16)

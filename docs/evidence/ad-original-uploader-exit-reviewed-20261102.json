@@ -1,0 +1,133 @@
+{
+  "schema_version": "supervisor-original-uploader-exit-reviewed.v1",
+  "base": "7e129bae4499656b76590de6cccab4783376d8f6",
+  "components": [
+    "122cae4d554a1569828d298ef8ac7cd43674ee26",
+    "fb5e51a310fa4034e30f0d528744b63fa7d95ece"
+  ],
+  "decision": "accept corrected component; original122 alone rejected",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "blob": "69e1bf078068036e9e83fe6323d1f7c2060e84e7",
+      "sha256": "b1b7f17b365253a15af882b9c5ef5eba72cbd2a5e044f057cb059a9966e5af5f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "blob": "37e4d70ece9ab0da98de76ae6248820e567e6156",
+      "sha256": "4391e1d3ef558bd66e414f7c2db686ac1bad6b2cb9dad6d613c68f06d4e45803"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "blob": "d268502ed46eefe38a970df106710a563221b3dc",
+      "sha256": "f6702f70a510d20f59fdec52af3f36d13c4d66741f0afdc9cb9bb3b8d62170e8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_manifest_marker.go",
+      "blob": "03e13889339378e0ab1235a8e4365ad86bca75ec",
+      "sha256": "85c3490b43ba5ad22c21f631ac6674580f9b3da0c4d75cde1de78f58f3d74393"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_receipt.go",
+      "blob": "68d5af151574534ef9a2de378b48afe465efa251",
+      "sha256": "dbbda172914b504c85f947d8a5806c69d6a9284f0706b8581b39fbe74258bf7a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_result_relay.go",
+      "blob": "32599cf89bfe02a99a0f9287d10f76439e87fbe1",
+      "sha256": "ebca644bc6b07f25e1fcc60236f1eb38b21d8042de4c2f5872b2ac8950b18811"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_result_relay_mysql_test.go",
+      "blob": "ecd5259dde767aa6b8f82d1b3e2dc2ed609706a0",
+      "sha256": "0d8094f134dbdd8c40b6c33ac52bdd69b773c4182c1a98bb7b5532921e7011c1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "blob": "2fa376c030b6b0fc0dac30a2c517876ed98170f4",
+      "sha256": "f6de683ee1ccb090a00fa506ea9fb28698271d04c9a203bc8ca260410aa1430c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "blob": "209a2148ceb0772b809b80189e9bd40d127a330f",
+      "sha256": "cdda7d95d5eb388d27f08dce9274be0ea04bfa6089f0abca432610223e3b81fc"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit_test.go",
+      "blob": "23a125c1a4d61efd1beb40b36a02093f49af19cd",
+      "sha256": "50def1eb47e5e8345516048cf2d96cad5ade40592061cae33eb5c8a5fed6202f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_process.go",
+      "blob": "4799f8184440dcf3d32ed170861e95ffd92ec05c",
+      "sha256": "47a50489a19151ab23b5968b42cc537005d80e20fb04446dbac426be184aeed7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_process_test.go",
+      "blob": "dd4a1b9f7ae5aaf34d472a2ee6fe383a16c4aae4",
+      "sha256": "d1691077e57f87e24871fe449a39aac6053cf497183c8706394c02a0f2708157"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_wait.go",
+      "blob": "81f8507113ce45cbf4df8a114c98dafea078ec3f",
+      "sha256": "40952b206bf823421303bf2aaa08741a8993725fd0313387bf6a95606183747b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data.go",
+      "blob": "5cfe1f57521f80101dea445ae0b4528600fc14e6",
+      "sha256": "2d6a10cafa934dbd327123deacb1ed0c20cd8abaf9785aadf02ef50e1f5cc231"
+    }
+  ],
+  "owner_frozen_source_pins_matched": 10,
+  "review": [
+    "Read entire342line exit observer/store and175line original-process collector, all actual result/mTLS/TokenReview registration call sites.",
+    "Sequence1 original process record, result body and107 cursor commit in same current-authority SQL transaction; later messages/duplicates must retain original process.",
+    "Previously validated process hash crosses complete C snapshot and is compared with original metadata during manifest/marker/exit, never redefined from later SQL.",
+    "Whole namespace scans and pinned original UID/container/node prevent orphaned/running original, replacement Pod or hidden original private credential Secret holder from minting exit proof.",
+    "Observed explicit kubelet termination, pinned actual Node UID, immutable bound original Job/generation and current SQL marker predecessor. Pod absence/JobComplete alone are insufficient.",
+    "Actual first-forward fresh and existing-material call sites consume exit observer; publication pass returns no terminal/eligibility write.",
+    "Read prepared same original native upload/C/manifest/marker/exit test. It remains unexecuted and does not prove native integration."
+  ],
+  "primary_validation": {
+    "original_counterexample": {
+      "session": 44570,
+      "exit_code": 1,
+      "closed": true,
+      "package_seconds": 3.341,
+      "candidate": "122cae4d554a1569828d298ef8ac7cd43674ee26"
+    },
+    "fixed_candidate": {
+      "session": 10156,
+      "exit_code": 0,
+      "closed": true,
+      "counterexample_seconds": 3.306,
+      "full_execution_seconds": 14.133,
+      "SQL": "off",
+      "downloads": "off"
+    }
+  },
+  "logs": {
+    "original_red": {
+      "file": "supervisor-upload-exit-orphan-122cae-red.log",
+      "sha256": "78aa8dc51b5ae3d7a6a7ef70676f30ab42c0f80f0a1ba2377a3034fc9b02e09d"
+    },
+    "fixed_counterexample": {
+      "file": "supervisor-upload-exit-orphan-fb5-green.log",
+      "sha256": "df405d08f093d25d91d7df36da93e6daaec61e79717c3358fa42bcd4808e552f"
+    },
+    "composed_package": {
+      "file": "supervisor-upload-process-fb5-composed-execution.log",
+      "sha256": "d1b725dc634dc4c42f30318e3cba48eeaaf15215b621b729aaae0be7ffd02e48"
+    }
+  },
+  "not_proven": [
+    "Full native original upload->complete C->manifest102->marker102->exit SQL positive path",
+    "Real production kubelet/cluster/node permission verification",
+    "artifact_delete cleanup",
+    "Acceptance signature/catalog registration/correct successful terminal",
+    "Full isolated restore and onsite deployment"
+  ],
+  "candidate_delete_WIP_included": false,
+  "migration175_included": false,
+  "recorded_at": "2026-11-01T16:53:43.161053+00:00"
+}

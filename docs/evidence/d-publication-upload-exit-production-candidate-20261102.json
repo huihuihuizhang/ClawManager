@@ -1,0 +1,44 @@
+{
+  "base_head": "59551f6c897634757361f3dfa82cdd561c298c42",
+  "production_call": "runPublicationForwardPreparation -> completeOriginalPublicationThroughUploadExit -> actual C -> manifest102 -> marker102 -> observeOriginalPublicationUploadExit",
+  "schema_version": "d-publication-upload-exit-production-candidate.v1",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256": "b1b7f17b365253a15af882b9c5ef5eba72cbd2a5e044f057cb059a9966e5af5f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_manifest_marker.go",
+      "sha256": "85c3490b43ba5ad22c21f631ac6674580f9b3da0c4d75cde1de78f58f3d74393"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_receipt.go",
+      "sha256": "dbbda172914b504c85f947d8a5806c69d6a9284f0706b8581b39fbe74258bf7a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "sha256": "f675fc52b89545d5ecb20cdd84366325dcb8e759b5ce4d28c9131627c0dee112"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit_test.go",
+      "sha256": "50def1eb47e5e8345516048cf2d96cad5ade40592061cae33eb5c8a5fed6202f"
+    }
+  ],
+  "boundaries": [
+    "Original UID/generation/121/107 metadata retained; old upload grants are not reopened",
+    "Whole-namespace bounded Pod listing, complete terminal container IDs, pinned Node UID, finish times and actual API resource versions",
+    "JobComplete alone, absent Pod, replaced identities, extra/duplicate containers, future or pre-activation finish timestamps rejected",
+    "Save/Load use current marker SQL authority and immutable original provenance; no capture recovery authority adopted",
+    "Full native upload/C/MF/marker/exit chain remains unverified; no cleanup success recorded"
+  ],
+  "scope": "Actual kubelet termination witness persisted under current publisher marker receipt. Not cleanup_result, artifact deletion, acceptance, catalog or terminal success.",
+  "checks": {
+    "fake_kubernetes": true,
+    "test_session": 68927,
+    "loopback_tls_only": true,
+    "sql_off_execution_seconds": 14.887,
+    "mysql_disabled": true,
+    "result": "PASS"
+  },
+  "date": "2026-11-02"
+}

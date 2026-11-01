@@ -50,7 +50,7 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 		if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, PublicationUploadRequest{}, policy.ReconcileInterval); err != nil {
 			return err
 		}
-		_, err := s.completeOriginalPublicationManifestAndMarker(ctx, &claim, attempt, policy, store, publicationVerifiedCapture{})
+		_, err := s.completeOriginalPublicationThroughUploadExit(ctx, &claim, attempt, policy, store, publicationVerifiedCapture{})
 		return err
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return err
@@ -69,6 +69,6 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, request, policy.ReconcileInterval); err != nil {
 		return err
 	}
-	_, err = s.completeOriginalPublicationManifestAndMarker(ctx, &claim, attempt, policy, store, capture)
+	_, err = s.completeOriginalPublicationThroughUploadExit(ctx, &claim, attempt, policy, store, capture)
 	return err
 }

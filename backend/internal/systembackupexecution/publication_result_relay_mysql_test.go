@@ -66,7 +66,7 @@ func TestPublicationAuthenticatedResultOriginal107CursorAndRefusalMySQL(t *testi
 			defer m.Close()
 			yes := true
 			pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: job.Namespace, Name: job.Name + "-worker", UID: types.UID(uuid.NewString()), Labels: job.Spec.Template.Labels, OwnerReferences: []metav1.OwnerReference{{APIVersion: "batch/v1", Kind: "Job", Name: job.Name, UID: job.UID, Controller: &yes}}}, Spec: *job.Spec.Template.Spec.DeepCopy()}
-			pod.Spec.NodeName = "actual-scheduled-node"
+			aOriginalPublicationRunningPod(t, f.client, h.service.Config, pod)
 			if mode == "foreign-job-owner" {
 				pod.OwnerReferences[0].UID = types.UID(uuid.NewString())
 			}
@@ -221,7 +221,7 @@ func TestPublicationAuthenticatedResultOriginal107CursorAndRefusalMySQL(t *testi
 					t.Fatal("actual original receipt", mode, status)
 				}
 				after := aPublicationReceiveState(t, f)
-				if after.Sequence != before.Sequence+1 || after.RowVersion != before.RowVersion+1 || after.Evidence != before.Evidence+1 || post(message) != 204 || aPublicationReceiveState(t, f) != after {
+				if after.Sequence != before.Sequence+1 || after.RowVersion != before.RowVersion+1 || after.Evidence != before.Evidence+2 || post(message) != 204 || aPublicationReceiveState(t, f) != after {
 					t.Fatal("duplicate/SQL ACK recovery rewrote cursor or evidence")
 				}
 				if mode == "current-and-duplicate" {
