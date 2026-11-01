@@ -7,6 +7,8 @@ import (
 	"errors"
 	"sync/atomic"
 	"testing"
+
+	d "clawreef/internal/systembackupdispatch"
 )
 
 // These fixture-only callbacks prepare A's real publication declarations and
@@ -25,6 +27,11 @@ type dOriginalSixPartFixtureOptions struct {
 	// Transparent native-driver fault, armed only at a publication boundary.
 	// Nil keeps the original production-fixture connection path unchanged.
 	ControlCommitACKLoss *atomic.Bool
+	// Controlled pre-collector diagnostics only; nil preserves the original
+	// connector and continuation. These cannot replace a validated capture.
+	ControlBeforeQuery   func(context.Context, string) error
+	ControlAfterQuery    func(string, error)
+	AfterOriginalPrepare func(context.Context, *testing.T, *dOriginalSixPartTask, d.Plan) error
 }
 
 func prepareDOriginalPublicationReferences(values map[string]any, target PublicationTargetMaterials) error {
