@@ -91,12 +91,14 @@ func TestPostCManifestInputSelectsExactOriginalObjectsData(t *testing.T) {
 			manifest, index := bytes.Clone(owned.Manifest), bytes.Clone(owned.Index)
 			certificate, bootstrap := bytes.Clone(owned.Certificate), bytes.Clone(owned.Bootstrap)
 			object := objects.Containers["mysql"]
+			originalPins := owned.ResultBodySHA256
 			clear(data.Manifest)
 			clear(data.Index)
 			clear(data.Certificate)
 			clear(data.Bootstrap)
 			delete(data.Objects, "parts/mysql/container.enc")
-			if !bytes.Equal(owned.Manifest, manifest) || !bytes.Equal(owned.Index, index) || !bytes.Equal(owned.Certificate, certificate) || !bytes.Equal(owned.Bootstrap, bootstrap) || owned.Objects["parts/mysql/container.enc"] != object || objects.Containers["mysql"] != object {
+			data.ResultBodySHA256[0] = hash([]byte("changed input pin DATA"))
+			if !bytes.Equal(owned.Manifest, manifest) || !bytes.Equal(owned.Index, index) || !bytes.Equal(owned.Certificate, certificate) || !bytes.Equal(owned.Bootstrap, bootstrap) || owned.Objects["parts/mysql/container.enc"] != object || objects.Containers["mysql"] != object || owned.ResultBodySHA256 != originalPins {
 				t.Fatal("input or object map aliased its caller")
 			}
 		})
@@ -114,7 +116,7 @@ func TestPostCManifestProductionGateRejectsMissingRealReceipt(t *testing.T) {
 	claim := c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: capture.Input.TaskPublicID}, Owner: "controller:inert-DATA", RowVersion: 1}
 	// Neither nil nor a zero-value receipt has a real final SQL authority.
 	for _, receipt := range []*publicationRemoteContainerReceipt{nil, {}} {
-		object, err := service.publishOriginalManifestAfterRemoteCapture(context.Background(), claim, 1, store, capture, objects, receipt, owned, hash([]byte("inert material DATA")))
+		object, err := service.publishOriginalManifestAfterRemoteCapture(context.Background(), claim, 1, store, capture, objects, receipt, owned, publicationPostCUploadSnapshot{})
 		if !errors.Is(err, c.ErrExecutionAuthority) || object.Key != "" {
 			t.Fatal("inert DATA minted a manifest or touched absent SQL", err)
 		}
