@@ -170,23 +170,36 @@ type formalKeyUse interface {
 }
 
 type originalUseSink struct {
-	ctx context.Context
-	job formalKeyUse
-	dst io.Writer
+	ctx        context.Context
+	job        formalKeyUse
+	dst        io.Writer
+	onRejected func(string, context.Context)
 }
 
 func (s originalUseSink) Write(p []byte) (int, error) {
 	if s.ctx.Err() != nil {
+		if s.onRejected != nil {
+			s.onRejected("database-cipher-sink-context", s.ctx)
+		}
 		return 0, s.ctx.Err()
 	}
 	if s.job.recheckDuringUse(s.ctx) != nil {
+		if s.onRejected != nil {
+			s.onRejected("database-cipher-sink-key-before", s.ctx)
+		}
 		return 0, w.ErrStreamAuthority
 	}
 	n, e := s.dst.Write(p)
 	if e != nil {
+		if s.onRejected != nil {
+			s.onRejected("database-cipher-sink-write", s.ctx)
+		}
 		return n, e
 	}
 	if s.job.recheckDuringUse(s.ctx) != nil {
+		if s.onRejected != nil {
+			s.onRejected("database-cipher-sink-key-tail", s.ctx)
+		}
 		return n, w.ErrStreamAuthority
 	}
 	return n, nil
@@ -278,16 +291,24 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 	}
 	ceCallbackEntered, ceCallbackSucceeded := false, false
 	ceFirstFailure := ""
+	var databaseFailure databaseCaptureFailure
+	recordDatabaseFailure := func(stage string, failedCtx context.Context) {
+		if r.Database != nil {
+			databaseFailure.observe(stage, failedCtx, ceOriginalKeyUntil, env.SourceValidUntil, ceUseStarted)
+		}
+	}
 	wrapped, err := job.WithDEK(ctx, func(useCtx context.Context, key []byte) error {
 		ceCallbackEntered = true
 		inUseCheck := func() error {
 			if useCtx.Err() != nil {
+				recordDatabaseFailure("database-dek-context", useCtx)
 				if ceFirstFailure == "" {
 					ceFirstFailure = "worker-formal-dek-context"
 				}
 				return useCtx.Err()
 			}
 			if job.recheckDuringUse(useCtx) != nil {
+				recordDatabaseFailure("database-using-key-check", useCtx)
 				if ceFirstFailure == "" {
 					ceFirstFailure = "worker-formal-dek-using-key-check"
 				}
@@ -300,6 +321,10 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 				return ErrNotReady
 			}
 			if (r.CaptureDescription != nil || r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(useCtx, i) != nil {
+				if ceFirstFailure == "" {
+					ceFirstFailure = "worker-formal-dek-source-authorize"
+				}
+				recordDatabaseFailure("database-source-authorize", useCtx)
 				return ErrNotReady
 			}
 			return nil
@@ -310,7 +335,11 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		var err error
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
-			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{useCtx, job, dst}, func(stream io.Writer) error {
+			var observeSink func(string, context.Context)
+			if r.Database != nil {
+				observeSink = recordDatabaseFailure
+			}
+			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{ctx: useCtx, job: job, dst: dst, onRejected: observeSink}, func(stream io.Writer) error {
 				if r.CaptureDescription != nil {
 					return captureDescription(useCtx, i, env.CaptureDescription, stream, inUseCheck)
 				}
@@ -343,12 +372,14 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 						capture = func(ctx context.Context, db *sql.DB, limits domain.Limits, name, uuid string) (domain.Snapshot, error) {
 							checkSource := func(ctx context.Context) error {
 								if env.SourceAuthorize(ctx, i) != nil {
+									recordDatabaseFailure("database-guard-source-authorize", ctx)
 									return ErrNotReady
 								}
 								return inUseCheck()
 							}
 							if r.Database.SourceScope == domain.BusinessTableSourceScope {
 								if r.Database.SchemaCensus == nil {
+									recordDatabaseFailure("database-source-schema-census", ctx)
 									return domain.Snapshot{}, ErrNotReady
 								}
 								return domain.CaptureBusinessSourceGuarded(ctx, db, limits, name, uuid, checkSource, *r.Database.SchemaCensus)
@@ -357,26 +388,32 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 						}
 					}
 					if r.Database.SourceScope != "" && env.SourceAuthorize == nil {
+						recordDatabaseFailure("database-source-authorizer-missing", useCtx)
 						return ErrNotReady
 					}
 					s, e := capture(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
 					if e != nil {
+						recordDatabaseFailure("database-source-capture", useCtx)
 						return ErrExecution
 					}
 					defer clearSnapshot(s)
 					if r.Database.SourceScope == domain.BusinessTableSourceScope && (r.Database.CaptureSchema == nil || r.Database.CaptureSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || domain.VerifyBusinessCapturedSnapshot(s, *r.Database.CaptureSchema) != nil) {
+						recordDatabaseFailure("database-snapshot-domain", useCtx)
 						return ErrExecution
 					}
 					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
+						recordDatabaseFailure("database-snapshot-teams", useCtx)
 						return ErrExecution
 					}
 					if r.Database.SkillsInventory != nil && domain.VerifySkillCapture(s, *r.Database.SkillsInventory) != nil {
+						recordDatabaseFailure("database-snapshot-skills", useCtx)
 						return ErrExecution
 					}
 					counts := snapshotCounts(s)
 					result.Rows, result.Tables = counts.Rows, counts.Tables
 					return staging.Compress(stream, func(compressed io.Writer) error {
 						if e := domain.Encode(&budgetWriter{w: compressed, left: r.MaxArchiveBytes}, s); e != nil {
+							recordDatabaseFailure("database-snapshot-encode", useCtx)
 							return ErrExecution
 						}
 						return inUseCheck()
@@ -411,12 +448,23 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			return e
 		})
 		ceCallbackSucceeded = err == nil
+		if err != nil {
+			recordDatabaseFailure("database-stream-or-staging", useCtx)
+		}
 		if err != nil && ceFirstFailure == "" {
 			ceFirstFailure = "worker-formal-dek-callback-stream-or-staging"
 		}
 		return err
 	})
 	if err != nil {
+		if r.Database != nil {
+			stage := "database-dek-post-use-authority"
+			if !ceCallbackEntered {
+				stage = "database-dek-before-callback"
+			}
+			recordDatabaseFailure(stage, ctx)
+			databaseFailure.log(ceCallbackEntered, ceCallbackSucceeded)
+		}
 		if r.ControlEvidence != nil {
 			if !ceCallbackEntered {
 				ceFirstFailure = "worker-formal-dek-before-callback"
