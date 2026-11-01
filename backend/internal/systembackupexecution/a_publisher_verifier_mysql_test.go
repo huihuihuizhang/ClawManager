@@ -68,6 +68,7 @@ type aPublisherVerifierFixtureOptions struct {
 	ConfigureExecutionGrant func(*c.ExecutionGrant)
 	AttemptNo               uint64
 	PublicationWorker       *PublicationWorkerReference
+	ObserveControlDSN       func(string)
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -176,6 +177,7 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 		}
 		options.WrapControlConnector = fixture.WrapControlConnector
 		options.AttemptNo = fixture.AttemptNo
+		options.ObserveControlDSN = fixture.ObserveControlDSN
 		if fixture.ConfigureExecutionGrant != nil {
 			options.FinalizeGrant = fixture.ConfigureExecutionGrant
 		}
