@@ -16,6 +16,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/workspace"
+	cd "clawreef/internal/systembackupcapturedescription"
 	k "clawreef/internal/systembackupkms"
 	w "clawreef/internal/systembackupwire"
 )
@@ -38,6 +39,7 @@ type FormalCaptureSpec struct {
 }
 
 type FormalCaptureEnvironment struct {
+	CaptureDescription func(context.Context, Invocation) ([]byte, error)
 	ControlEvidence    *ControlEvidenceCaptureSources
 	Teams              *TeamCaptureSources
 	SourceRedis        *c.RedisClient
@@ -74,7 +76,7 @@ func ValidateFormalCaptureResult(i Invocation, r *FormalCaptureResult) bool {
 	if i.Request.Database != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows <= i.Request.Database.MaxRows && r.Tables > 0 && r.Tables <= 1000
 	}
-	if i.Request.ControlEvidence != nil || i.Request.SourceRedis != nil || i.Request.Teams != nil || i.Request.Resources != nil || i.Request.SkillObjects != nil {
+	if i.Request.CaptureDescription != nil || i.Request.ControlEvidence != nil || i.Request.SourceRedis != nil || i.Request.Teams != nil || i.Request.Resources != nil || i.Request.SkillObjects != nil {
 		return r.Files == 0 && r.Bytes == 0 && r.Rows == 0 && r.Tables == 0
 	}
 	return r.Files <= int64(i.Request.MaxFiles) && r.Bytes <= i.Request.MaxFileBytes && r.Rows == 0 && r.Tables == 0
@@ -152,10 +154,13 @@ func validFormalInvocation(i Invocation) bool {
 	if i.Request.ControlEvidence != nil && (f.PermitDelivery == nil || f.SourceConfigSHA256 != i.Request.ControlEvidence.Expected.ConfigSHA256) {
 		return false
 	}
-	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.ControlEvidence == nil && i.Request.SourceRedis == nil && i.Request.Database == nil && i.Request.Teams == nil && i.Request.SkillObjects == nil)) {
+	if i.Request.CaptureDescription != nil && (f.PermitDelivery == nil || !keyUseHash.MatchString(f.SourceConfigSHA256)) {
 		return false
 	}
-	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (controlEvidenceOperation(i.Request.Operation) && validControlEvidenceRequest(i.Request)) || (sourceRedisOperation(i.Request.Operation) && validSourceRedisRequest(i.Request)) || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request)) || (skillObjectOperation(i.Request.Operation) && validSkillObjectRequest(i.Request))
+	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.CaptureDescription == nil && i.Request.ControlEvidence == nil && i.Request.SourceRedis == nil && i.Request.Database == nil && i.Request.Teams == nil && i.Request.SkillObjects == nil)) {
+		return false
+	}
+	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (captureDescriptionOperation(i.Request.Operation) && validCaptureDescriptionRequest(i.Request)) || (controlEvidenceOperation(i.Request.Operation) && validControlEvidenceRequest(i.Request)) || (sourceRedisOperation(i.Request.Operation) && validSourceRedisRequest(i.Request)) || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request)) || (skillObjectOperation(i.Request.Operation) && validSkillObjectRequest(i.Request))
 }
 
 type formalKeyUse interface {
@@ -202,7 +207,17 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		return zero, ErrRequest
 	}
 	r := i.Request
-	if (r.ControlEvidence != nil && env.ControlEvidence == nil) || (r.ControlEvidence == nil && r.SourceRedis == nil && r.Teams == nil && r.Resources == nil && r.Database == nil && r.SkillObjects == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.SourceRedis != nil && (env.SourceRedis == nil || env.SourceAuthorize == nil)) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) || (r.Resources != nil && (env.Resources == nil || env.Resources.Client == nil || env.Resources.Authorize == nil)) || (r.SkillObjects != nil && (env.SkillObjects == nil || env.SkillObjects.Reader == nil || env.SkillObjects.Authorize == nil)) {
+	if r.CaptureDescription != nil {
+		release, err := cd.AdmitDecodeMemory(*r.CaptureDescription)
+		if err != nil {
+			return zero, ErrNotReady
+		}
+		defer release()
+	}
+	if r.CaptureDescription != nil && env.CaptureDescription == nil {
+		return zero, ErrNotReady
+	}
+	if (r.ControlEvidence != nil && env.ControlEvidence == nil) || (r.CaptureDescription == nil && r.ControlEvidence == nil && r.SourceRedis == nil && r.Teams == nil && r.Resources == nil && r.Database == nil && r.SkillObjects == nil && (env.Workspace == nil || !separateRoots(env.Workspace, env.Staging))) || (r.SourceRedis != nil && (env.SourceRedis == nil || env.SourceAuthorize == nil)) || (r.Database != nil && env.Database == nil) || (r.Teams != nil && (env.Teams == nil || env.Teams.Authorize == nil || (r.Teams.Redis != nil && env.Teams.Redis == nil) || (len(r.Teams.Objects) > 0 && env.Teams.Objects == nil))) || (r.Resources != nil && (env.Resources == nil || env.Resources.Client == nil || env.Resources.Authorize == nil)) || (r.SkillObjects != nil && (env.SkillObjects == nil || env.SkillObjects.Reader == nil || env.SkillObjects.Authorize == nil)) {
 		return zero, ErrNotReady
 	}
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
@@ -225,7 +240,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		if r.ControlEvidence != nil && env.ControlEvidence.Authorize(ctx, i) != nil {
 			return ErrNotReady
 		}
-		if (r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(ctx, i) != nil {
+		if (r.CaptureDescription != nil || r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(ctx, i) != nil {
 			return ErrNotReady
 		}
 		if r.Teams != nil && authorizeTeamSources(ctx, env.Teams, i) != nil {
@@ -284,7 +299,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 				}
 				return ErrNotReady
 			}
-			if (r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(useCtx, i) != nil {
+			if (r.CaptureDescription != nil || r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(useCtx, i) != nil {
 				return ErrNotReady
 			}
 			return nil
@@ -296,6 +311,9 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
 			seal, e = w.EncryptStream(useCtx, spec, key, originalUseSink{useCtx, job, dst}, func(stream io.Writer) error {
+				if r.CaptureDescription != nil {
+					return captureDescription(useCtx, i, env.CaptureDescription, stream, inUseCheck)
+				}
 				if r.ControlEvidence != nil {
 					return captureControlEvidence(useCtx, i, env.ControlEvidence, &budgetWriter{w: stream, left: r.MaxArchiveBytes}, inUseCheck)
 				}

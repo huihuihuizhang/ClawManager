@@ -15,6 +15,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 	k "clawreef/internal/systembackupkms"
@@ -98,6 +99,7 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 		r.Invocation.Request.Deadline = until
 		r.Invocation.Request.Resources, r.Invocation.Request.Teams, r.Invocation.Request.SkillObjects, r.Invocation.Request.SkillWorkspace = nil, nil, nil, nil
 		r.Invocation.Request.ControlEvidence, r.Invocation.Request.SourceRedis = nil, nil
+		r.Invocation.Request.CaptureDescription = nil
 		r.Invocation.Request.RuntimePolicy, r.Invocation.Request.WorkBuddyIdentity = nil, nil
 		if operation != "capture-database" {
 			r.Invocation.Request.Database = nil
@@ -132,6 +134,14 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 			if part == ce.ProofPart {
 				r.Invocation.Request.MaxArchiveBytes, r.Invocation.Request.MaxCompressedBytes = ce.MaxProofBytes, ce.MaxProofBytes
 			}
+			return nil
+		}) != nil {
+			return nil, d.ErrNotReady
+		}
+	}
+	if _, exists := operations[cd.Operation]; exists {
+		if add(cd.Part, cd.Part, cd.Part, cd.Operation, func(r *b.CapturePartRequest) error {
+			r.Invocation.Request.MaxFiles, r.Invocation.Request.MaxFileBytes = 0, 0
 			return nil
 		}) != nil {
 			return nil, d.ErrNotReady
@@ -252,9 +262,12 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 		if draft.part == ce.ProofPart {
 			r.Invocation.Request.ArtifactName = ce.LogicalProofCipherName
 		}
+		if draft.part == cd.Part {
+			r.Invocation.Request.ArtifactName = cd.LogicalCipherName
+		}
 		r.Invocation.FormalCapture.EnvelopeName = name + ".envelope.json"
 		r.Invocation.FormalCapture.SourceConfigSHA256 = ""
-		if r.Invocation.Request.ControlEvidence != nil || r.Invocation.Request.SourceRedis != nil || r.Invocation.Request.Database != nil || r.Invocation.Request.Teams != nil || r.Invocation.Request.SkillObjects != nil {
+		if draft.part == cd.Part || r.Invocation.Request.ControlEvidence != nil || r.Invocation.Request.SourceRedis != nil || r.Invocation.Request.Database != nil || r.Invocation.Request.Teams != nil || r.Invocation.Request.SkillObjects != nil {
 			r.Invocation.FormalCapture.SourceConfigSHA256 = in.Authority.ConfigSHA256
 		}
 		r.Invocation.ProviderKey.Request.Context = w.KeyContext{InstallationID: in.Authority.InstallationID, BackupPublicID: binding.BackupID, AttemptNo: binding.Attempt, Phase: "capture", Part: binding.Path, PartIndex: strconv.Itoa(index), EnvelopeID: binding.EnvelopeID, CaptureContextHash: binding.CaptureContextHash}
@@ -271,6 +284,22 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 			return nil, d.ErrNotReady
 		}
 		byPart[r.Part] = r
+	}
+	if request, exists := byPart[cd.Part]; exists {
+		seed := cd.Seed{Version: cd.SeedVersion, Members: []cd.Selection{}}
+		for index, draft := range drafts {
+			if cd.BusinessOperation(draft.operation) {
+				seed.Members = append(seed.Members, cd.Selection{Part: draft.part, Operation: draft.operation, PartIndex: uint32(index)})
+			}
+		}
+		sort.Slice(seed.Members, func(i, j int) bool { return seed.Members[i].Part < seed.Members[j].Part })
+		seed.MaxPlaintextBytes, err = cd.Budget(len(seed.Members))
+		if err != nil || seed.Validate() != nil || seed.MaxPlaintextBytes > operations[cd.Operation].Request.MaxArchiveBytes || operations[cd.Operation].Request.MaxCompressedBytes != operations[cd.Operation].Request.MaxArchiveBytes {
+			return nil, d.ErrNotReady
+		}
+		request.Invocation.Request.CaptureDescription = &seed
+		request.Invocation.Request.MaxArchiveBytes, request.Invocation.Request.MaxCompressedBytes = seed.MaxPlaintextBytes, seed.MaxPlaintextBytes
+		byPart[cd.Part] = request
 	}
 	users := b.UsersInstancesModuleConfig{Revision: revision, Source: source, Database: byPart[b.UsersInstancesDatabasePart]}
 	for _, mount := range metadata.Mounts {
@@ -321,6 +350,13 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 			}
 			registrations = append(registrations, registration)
 		}
+		if request, exists := byPart[cd.Part]; exists {
+			registration, err := b.NewCaptureDescriptionModule(revision, request)
+			if err != nil {
+				return nil, fmt.Errorf("capture description constructor: %w", err)
+			}
+			registrations = append(registrations, registration)
+		}
 		return b.NewCaptureModules(registrations, func(actual d.Input, inventory b.SourceInventory, hold time.Time, catalog string) (b.ModuleCaptureContext, error) {
 			return productionModuleContext(actual, inventory, hold, writers, catalog)
 		})
@@ -334,7 +370,7 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 	}
 	parts, err := base.BuildParts(in, source, until)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("base original capture parts: %w", err)
 	}
 	policy, err := productionFinalizationPolicy(point.CaptureContextSHA256, parts)
 	if err != nil {

@@ -28,6 +28,7 @@ func (s *DeploymentService) controlHandler() http.Handler {
 		o := s.Runtime.Owner
 		control = WorkloadIdentity{Client: o.Client, Namespace: o.Namespace, ServiceAccount: o.Security.ServiceAccountName, ServiceAccountUID: o.Security.ServiceAccountUID, Next: worker.ControlHandler{Authorizer: deploymentControlAuthorizer{service: s, owner: o}}}
 		mux.Handle(ControlEvidencePullPath, s.controlEvidenceSourceHandler())
+		mux.Handle(worker.CaptureDescriptionPullPath, s.captureDescriptionHandler())
 	}
 	mux.Handle("/", control)
 	if s.Config.PublicationWorker != nil {

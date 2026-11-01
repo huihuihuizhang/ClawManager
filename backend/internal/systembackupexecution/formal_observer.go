@@ -13,6 +13,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	sh "clawreef/internal/systembackupskillhub"
@@ -71,7 +72,12 @@ func (o *PublicJobOwner) observeFormalCandidateResult(ctx context.Context, a d.A
 		return nil, err
 	}
 	var observed staging.FormalObservation
-	if seed := invocation.Request.ControlEvidence; seed != nil && seed.Finalization != nil {
+	if invocation.Request.CaptureDescription != nil {
+		spec := w.StreamSpec{Request: invocation.ProviderKey.Request, Path: invocation.Request.ArtifactName, MaxPlaintextBytes: invocation.Request.MaxCompressedBytes, MaxFrames: invocation.FormalCapture.MaxFrames}
+		observed, err = staging.ObserveFormalManaged(ctx, source, custody, staging.CustodyPolicy{Installation: a.InstallationID, MaxBytes: o.SealCustodyMaxBytes}, workerSealScope(a, j, invocation), record.Candidate.Ciphertext, record.Candidate.Envelope, spec, keys, func(plaintext io.Reader) error {
+			return inspectOriginalDescriptionPart(ctx, plaintext, invocation, &desc, cd.Scope{InstallationID: a.InstallationID, TaskPublicID: a.TaskPublicID, ConfigVersion: a.ConfigVersion, ConfigSHA256: a.ConfigSHA256, AttemptNo: a.AttemptNo, CaptureContextSHA256: invocation.Request.Binding.CaptureContextHash})
+		})
+	} else if seed := invocation.Request.ControlEvidence; seed != nil && seed.Finalization != nil {
 		final, readErr := o.finalizedControlLocator(ctx, a, *seed)
 		if readErr != nil {
 			return nil, readErr
@@ -114,6 +120,11 @@ func observeOriginalFormalCandidate(ctx context.Context, source, custody *os.Roo
 		return staging.FormalObservation{}, d.ErrNotReady
 	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	if i.Request.CaptureDescription != nil {
+		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(plaintext io.Reader) error {
+			return inspectOriginalDescriptionPart(ctx, plaintext, i, nil, cd.Scope{InstallationID: scope.Installation, TaskPublicID: scope.Task, ConfigVersion: scope.ConfigVersion, ConfigSHA256: scope.ConfigSHA256, AttemptNo: scope.Attempt, CaptureContextSHA256: scope.Binding.CaptureContextHash})
+		})
+	}
 	if locator := i.Request.ControlEvidence; locator != nil {
 		return staging.ObserveFormalManaged(ctx, source, custody, policy, scope, candidate.Ciphertext, candidate.Envelope, spec, keys, func(plaintext io.Reader) error {
 			return inspectControlEvidencePart(ctx, plaintext, i.Request.Binding.Path, *locator)

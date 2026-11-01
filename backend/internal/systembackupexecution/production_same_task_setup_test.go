@@ -15,7 +15,9 @@ import (
 type dOriginalSixPartFixtureOptions struct {
 	// Actual artifact purpose mapping declared before original config/task
 	// admission. No existing JSON, source settings or claim is rewritten.
-	PublicationTarget        *PublicationTargetMaterials
+	PublicationTarget *PublicationTargetMaterials
+	// Explicit new pre-capture protocol variant. Legacy ten workers stay ten.
+	CaptureDescription       bool
 	BeforeCoreSeal           func(context.Context, *testing.T, *dOriginalSixPartTask, *DeploymentConfig) error
 	AfterOwnerReady          func(context.Context, *testing.T, *dOriginalSixPartTask) error
 	BeforeRuntimeComposition func(context.Context, *testing.T, *dOriginalSixPartTask) error

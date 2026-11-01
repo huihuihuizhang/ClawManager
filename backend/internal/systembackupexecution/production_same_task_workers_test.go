@@ -390,6 +390,8 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 	defer stage.Close()
 	env := worker.FormalCaptureEnvironment{Staging: stage}
 	switch {
+	case inv.Request.CaptureDescription != nil:
+		err = worker.ConfigureCaptureDescription(ctx, inv, keyJob, &env)
 	case inv.Request.ControlEvidence != nil:
 		env.ControlEvidence, err = worker.OpenControlEvidenceCaptureSources(ctx, inv, keyJob, materials.ControlEvidence)
 		if err == nil {
@@ -454,7 +456,7 @@ func (f *dOriginalSixPartTask) checkOriginalIssuedProjection(ctx context.Context
 	invHash, _ := inv.Hash()
 	for rows.Next() {
 		count++
-		if count > 10 {
+		if count > f.capturePartCount() {
 			return fmt.Errorf("unexpected original permit count")
 		}
 		var raw []byte

@@ -6,6 +6,7 @@ import (
 
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -26,6 +27,12 @@ func productionFinalizationPolicy(contextSHA string, parts []b.JobPart) (ce.Fina
 			return zero, d.ErrNotReady
 		}
 		seen[part.Part] = true
+		if part.Part == cd.Part {
+			if invocation.Request.Operation != cd.Operation || invocation.Request.CaptureDescription == nil || invocation.Request.CaptureDescription.Validate() != nil {
+				return zero, d.ErrNotReady
+			}
+			continue
+		}
 		if part.Part == ce.Part || part.Part == ce.ProofPart {
 			if invocation.Request.Operation != ce.Operation || invocation.Request.ControlEvidence == nil {
 				return zero, d.ErrNotReady

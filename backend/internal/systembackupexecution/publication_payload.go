@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	security "clawreef/internal/systembackupsecurity"
@@ -50,6 +51,9 @@ func (object nativePublicationObject) checkedPayloadRead(target PublicationTarge
 }
 
 func publicationPartPaths(part string, index uint32, invocation string) (string, string) {
+	if part == cd.Part {
+		return cd.CipherPath, cd.EnvelopePath
+	}
 	if part == ce.Part {
 		return ce.CipherPath, ce.EnvelopePath
 	}

@@ -32,17 +32,18 @@ func PublisherVerifierInputsFromEnvironment() []PublisherVerifierInput {
 }
 
 type PublisherVerifierMaterials struct {
-	Version            string                       `json:"schema_version"`
-	Database           reg.DatabaseIdentity         `json:"database"`
-	Binding            reg.Binding                  `json:"binding"`
-	GenerateCapability a.ProviderCapabilityPin      `json:"generate_capability"`
-	UnwrapCapability   a.ProviderCapabilityPin      `json:"unwrap_capability"`
-	InstallationIssuer ed25519.PublicKey            `json:"installation_issuer"`
-	CAFile             string                       `json:"ca_file"`
-	JWTFile            string                       `json:"jwt_file"`
-	Workload           a.ControllerVerifierWorkload `json:"workload"`
-	KubernetesReads    a.VerifierKubernetesReads    `json:"kubernetes_reads"`
-	Grant              s.PublisherCaptureGrantMount `json:"grant"`
+	DescriptionMaxPlaintextBytes int64                        `json:"description_max_plaintext_bytes,omitempty"`
+	Version                      string                       `json:"schema_version"`
+	Database                     reg.DatabaseIdentity         `json:"database"`
+	Binding                      reg.Binding                  `json:"binding"`
+	GenerateCapability           a.ProviderCapabilityPin      `json:"generate_capability"`
+	UnwrapCapability             a.ProviderCapabilityPin      `json:"unwrap_capability"`
+	InstallationIssuer           ed25519.PublicKey            `json:"installation_issuer"`
+	CAFile                       string                       `json:"ca_file"`
+	JWTFile                      string                       `json:"jwt_file"`
+	Workload                     a.ControllerVerifierWorkload `json:"workload"`
+	KubernetesReads              a.VerifierKubernetesReads    `json:"kubernetes_reads"`
+	Grant                        s.PublisherCaptureGrantMount `json:"grant"`
 }
 
 func (r PublisherVerifierReference) validate() error {
@@ -52,6 +53,9 @@ func (r PublisherVerifierReference) validate() error {
 	return nil
 }
 func (p PublisherVerifierMaterials) validate(cfg DeploymentConfig) error {
+	if err := p.validateDescriptionMemoryShape(); err != nil {
+		return err
+	}
 	if p.Version != PublisherVerifierMaterialsVersion || p.Database.Database == "" || p.Database.ServerUUID == "" || p.Binding.InstallationID != cfg.InstallationID || p.Workload.ControllerOwner != "public:"+p.Workload.PodUID || p.Workload.Namespace != cfg.Namespace || p.KubernetesReads.NamespaceUID != cfg.NamespaceUID || p.Workload.ServiceAccountUID == cfg.Security.ServiceAccountUID || p.Workload.ServiceAccountName == cfg.Security.ServiceAccountName || p.KubernetesReads.Validate(p.Workload) != nil || len(p.InstallationIssuer) != ed25519.PublicKeySize || len(p.GenerateCapability.Issuer) != ed25519.PublicKeySize || len(p.UnwrapCapability.Issuer) != ed25519.PublicKeySize || len(p.Grant.Issuer) != ed25519.PublicKeySize || !formalCandidateDigest(p.Grant.SHA256) || p.Workload.GrantSHA256 != p.Grant.SHA256 {
 		return c.ErrExecutionAuthority
 	}
@@ -81,8 +85,11 @@ func loadPublisherVerifierMaterials(cfg DeploymentConfig, inputs []PublisherVeri
 		return nil, err
 	}
 	var p PublisherVerifierMaterials
-	if decodeProviderDeploymentJSON(raw, &p) != nil || p.validate(cfg) != nil {
+	if decodeProviderDeploymentJSON(raw, &p) != nil {
 		return nil, c.ErrExecutionAuthority
+	}
+	if err = p.validate(cfg); err != nil {
+		return nil, err
 	}
 	return &p, nil
 }
@@ -93,6 +100,9 @@ func (d *DeploymentService) loadPublisherVerifierInput(inputs []PublisherVerifie
 	}
 	if p == nil {
 		return nil
+	}
+	if err = p.validateDescriptionMemoryDeclaration(); err != nil {
+		return err
 	}
 	if d.publicationBinding() != nil {
 		return c.ErrExecutionAuthority
@@ -190,6 +200,9 @@ func (d *DeploymentService) checkPublisherVerifierBinding(ctx context.Context) e
 	p, err := loadPublisherVerifierMaterials(d.Config, []PublisherVerifierInput{*d.publisherVerifierInput})
 	if err != nil || !reflect.DeepEqual(p, d.publisherVerifier) {
 		return c.ErrExecutionAuthority
+	}
+	if err = p.validateDescriptionMemoryDeclaration(); err != nil {
+		return err
 	}
 	if _, err := pinnedDeploymentFile(p.CAFile, p.Binding.Provider.CAPEMSHA256, 65536); err != nil {
 		return c.ErrExecutionAuthority

@@ -10,6 +10,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -34,6 +35,9 @@ func (s *DeploymentService) productionInventory(ctx context.Context, in d.Input,
 	}
 	type expectedPart struct{ module, part, operation string }
 	expected := []expectedPart{{ce.Part, ce.Part, ce.Operation}, {ce.Part, ce.ProofPart, ce.Operation}, {"deployment_and_secrets", "deployment_resources", "capture-deployment-resources"}, {"deployment_and_secrets", "secret_bundle", "capture-secret-bundle"}, {"skill_hub", b.SkillObjectsPart, "capture-skill-objects"}, {b.SourceRedisPart, b.SourceRedisPart, "capture-source-redis"}, {"users_instances", b.UsersInstancesDatabasePart, "capture-database"}}
+	if _, exists := s.captureMaterials.Operations[cd.Operation]; exists {
+		expected = append(expected, expectedPart{cd.Part, cd.Part, cd.Operation})
+	}
 	instances := map[int]bool{}
 	for _, instance := range source.Instances {
 		instances[instance.ID] = false

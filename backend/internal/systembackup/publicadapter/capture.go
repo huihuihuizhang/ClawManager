@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"clawreef/internal/systembackup/flow"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -186,7 +187,13 @@ func (r *runner) Capture(ctx context.Context, in d.Input, plan d.Plan, ports d.P
 	for _, part := range f.Discovery.Parts {
 		c := &jobCollector{in: in, spec: part, sourceSHA: f.Discovery.SourceSHA256, ports: ports, reader: r.deps.Results}
 		jobs = append(jobs, c)
-		if part.Part != ce.Part && part.Part != ce.ProofPart {
+		if part.Part != cd.Part && part.Part != ce.Part && part.Part != ce.ProofPart {
+			collectors = append(collectors, c)
+		}
+	}
+	// The predeclared description observes B before either CE final result.
+	for _, c := range jobs {
+		if c.spec.Part == cd.Part {
 			collectors = append(collectors, c)
 		}
 	}
