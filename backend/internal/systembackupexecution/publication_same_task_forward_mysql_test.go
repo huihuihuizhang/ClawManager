@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -298,6 +299,13 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer material.Close()
+		initial, err := f.service.readOriginalPublicationUploadCompletion(ctx, *claim, material, job)
+		if err != nil {
+			t.Fatal("original SQL NULL upload cursor before first result", err)
+		}
+		if data, err := originalPublicationUploadedData(initial); !errors.Is(err, ErrJobUncertain) || data != nil {
+			t.Fatal("original empty upload was treated as complete", err)
+		}
 		input, err := os.OpenRoot(t.TempDir())
 		if err != nil {
 			t.Fatal(err)
@@ -363,6 +371,20 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 		}
 		// Result hints still enter the original mTLS + Pod TokenReview receiver.
 		aSendOriginalForwardResults(ctx, t, f, job, material, result, directory)
+		// The actual local upload-only worker and result sender have returned.
+		// Model that native exit fact; it cannot replace SQL result validation.
+		finished := job.DeepCopy()
+		finished.Status = batchv1.JobStatus{Succeeded: 1, Conditions: []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}}
+		if err = f.owner.Client.(*kubefake.Clientset).Tracker().Update(batchv1.SchemeGroupVersion.WithResource("jobs"), finished, finished.Namespace); err != nil {
+			t.Fatal(err)
+		}
+		if err = f.service.awaitOriginalPublicationUpload(ctx, *claim, capture.Input.CaptureAttemptNo, store.config, time.Second, nil); err != nil {
+			t.Fatal("original SQL/native upload completion wait", err)
+		}
+		uploaded, err := f.service.readOriginalPublicationUploadedData(ctx, *claim, capture.Input.CaptureAttemptNo, store.config)
+		if err != nil || uploaded == nil || len(uploaded.Objects) != 15 || !bytes.Equal(uploaded.Manifest, request.ManifestInput) || uploaded.Candidate.Version != result.Candidate.Version || *creates != 1 || *patches != 1 {
+			t.Fatal("original public upload DATA for independent C", err, *creates, *patches)
+		}
 		t.Log("same original task complete MF / actual one-send upload Job / fifteen fixed native bytes", f.publicID, "job", string(job.UID), "objects", len(result.Objects), "candidate-version", result.Candidate.Version, "signs", fixture.signs.Load())
 		t.Log("No complete remote-C, marker, acceptance/catalog or terminal-success claim is made by byte readback alone")
 	})
