@@ -1,0 +1,34 @@
+{
+  "schema": "supervisor-upload-relative-path-fixture-reviewed.v1",
+  "at": "2026-11-01T15:43:47.917722+00:00",
+  "source_commit": "ac15dfa476f71d058aa65c93918ab998b5f4578d",
+  "scope": "One local native test fixture projection change; production selector and all original authorization/capture/upload code unchanged.",
+  "change": "Map original request.Objects[i].Path to returned observations[i] exact Key/Version/SHA/Bytes, preserving the production relative-path selector contract.",
+  "owner_red": {
+    "log": ".tools/a-upload-relative-path-red-v1.log",
+    "sha256": "cae2a3ab236588339d1976c2eeb618240ae4fba009eb2f089142f700bd8bba51",
+    "seconds": 3.31,
+    "natural_exit": 1,
+    "failure": "Same real selector rejects old full-key map with native immutable object conflict."
+  },
+  "owner_full_green": {
+    "log": ".tools/a-upload-relative-path-full-green-v1.log",
+    "sha256": "a83c3566707afb3511e6cc12c6b10333ce65c4669e70066d434d1fb97e78140b",
+    "execution_seconds": 13.523,
+    "natural_exit": 0
+  },
+  "root_merged_targeted": {
+    "session": 63188,
+    "closed": true,
+    "natural_exit": 0,
+    "seconds": 3.3,
+    "log": ".tools/supervisor-a-ac15-relative-path-merged-targeted.log",
+    "sha256": "fbd5250fab1dd9981cbcb4038beada4a79bae14b6ac6c17240beb6800fa80c04",
+    "sql": "disabled",
+    "test": "TestOriginalForwardUploadReadSetRequiresRelativePathMapData"
+  },
+  "limits": [
+    "A v6 native remains RED, despite actual upload code returning15 objects.",
+    "No native readback/receiver/wait/C/102 success claim until a new frozen task actually completes."
+  ]
+}

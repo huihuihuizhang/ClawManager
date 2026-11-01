@@ -1,0 +1,43 @@
+{
+  "schema": "supervisor-original-description-refusal-diagnostics.v1",
+  "at": "2026-11-01T15:38:04.905497+00:00",
+  "sources": [
+    "c98f7324834fe0827c409f13ad0df7bbbec119c3",
+    "4770e122b1186272a7c9cd65f846126efcd7ae81"
+  ],
+  "base_composition": "66a791bbed733af9a35e3fa987a9f743fa5b9a68",
+  "review": [
+    "Original control SQL, predicates, return statuses, current Gate Bind/rechecks and30/5 policy preserved.",
+    "Failure-only diagnostics use fixed stage/class/action/driver number/state plus bounded original time/version/epoch metadata; no error.Message, request/SQL arguments,token,body or private source row is formatted.",
+    "Descriptor Bind uses same existing BindObserved implementation; no authority is granted by diagnostic callbacks.",
+    "4770 retains exact single-query driver failure across prior variable-shadow boundaries; error-only database/sql fixture proves one query, original rejection3572/HY000 and private message exclusion."
+  ],
+  "independent_merged_test": {
+    "session": 7461,
+    "natural_exit": 0,
+    "closed": true,
+    "sql": "disabled",
+    "worker_seconds": 35.933,
+    "execution_seconds": 14.721,
+    "log": ".tools/supervisor-a-description-c98-477-merged-packages.log",
+    "sha256": "d364fbe9acc001ea563d436fa0e78f383e185a1d1f5851d5f31e7f1950069f42"
+  },
+  "native_observation": {
+    "source": "c98f7324834fe0827c409f13ad0df7bbbec119c3",
+    "session": 74486,
+    "natural_exit": 1,
+    "closed": true,
+    "task": "sbk_e7d58855-3776-4f07-9dfe-c5b5421eed98",
+    "retained_schema": "ad_d_six_8b9b257a835a3af4",
+    "case_seconds": 183.4,
+    "package_seconds": 186.653,
+    "log_sha256": "89b7a12688099dd4eb2e852d5f7a231f4d2cc0929d341a4b1fff0dae277c8201",
+    "completed": "All11 original capture workers,MF,exact1Create/1Patch,actual upload-only code returned15objects.",
+    "first_failure": "Readback fixture supplied full object keys instead of required relative path map; no receiver/wait/fullC/102 proof.",
+    "descriptor": "One transient startup503 recovered; descriptor12source checks6.093s normal; prior v5 refusal not reproduced, no unique cause inferred."
+  },
+  "limits": [
+    "Diagnostics are not a permission fix, renewed grant or complete-backup evidence.",
+    "4770 native has not run; current full native remainsRED until readback fixture fixed."
+  ]
+}
