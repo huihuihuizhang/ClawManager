@@ -78,9 +78,14 @@ type dOriginalSixPartTask struct {
 	resourceSources                         map[string]worker.ResourceSourceMount
 	workers                                 *dOriginalWorkers
 	background                              *dOriginalBackground
+	sealedCore                              []byte
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
+	return newDOriginalSixPartTaskWithOptions(t, dOriginalSixPartFixtureOptions{})
+}
+
+func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFixtureOptions) *dOriginalSixPartTask {
 	t.Helper()
 	path := os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS")
 	if path == "" {
@@ -527,7 +532,16 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	if os.WriteFile(core.ProfileFile, profileRaw, 0600) != nil {
 		t.Fatal("profile")
 	}
+	if options.BeforeCoreSeal != nil {
+		core, err = prepareDOriginalCore(core, func(proposed *DeploymentConfig) error {
+			return options.BeforeCoreSeal(ctx, t, f, proposed)
+		})
+		if err != nil {
+			t.Fatal("original publication declarations before core seal", err)
+		}
+	}
 	coreRaw, _ := json.Marshal(core)
+	f.sealedCore = append([]byte(nil), coreRaw...)
 	corePath := filepath.Join(f.directory, "core.json")
 	if os.WriteFile(corePath, coreRaw, 0600) != nil {
 		t.Fatal("core")
@@ -657,6 +671,14 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	if err = f.service.RuntimeControl.Ready(ctx); err != nil {
 		t.Fatal("original runtime SQL schema readiness", err)
 	}
+	if options.AfterOwnerReady != nil {
+		if err := options.AfterOwnerReady(ctx, t, f); err != nil {
+			t.Fatal("declared publication materials after original owner setup", err)
+		}
+		if err := checkDOriginalCoreUnchanged(f.service, f.sealedCore); err != nil {
+			t.Fatal(err)
+		}
+	}
 	return f
 }
 
@@ -676,11 +698,15 @@ func runDOriginalSixPartCapture(t *testing.T, denyGenerate, completeCapture bool
 // native candidate files and local services remain live. The callback runs only
 // after successful original Store.Record has really entered validating.
 func runDOriginalSixPartCaptureValidated(t *testing.T, denyGenerate, completeCapture bool, afterValidated func(context.Context, *dOriginalSixPartTask, c.ExecutionWork, []d.ModuleResult)) {
+	runDOriginalSixPartCaptureWithOptions(t, denyGenerate, completeCapture, dOriginalSixPartFixtureOptions{}, afterValidated)
+}
+
+func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeCapture bool, options dOriginalSixPartFixtureOptions, afterValidated func(context.Context, *dOriginalSixPartTask, c.ExecutionWork, []d.ModuleResult)) {
 	t.Helper()
 	if afterValidated != nil && (denyGenerate || !completeCapture) {
 		t.Fatal("validated continuation requires the complete successful original capture")
 	}
-	f := newDOriginalSixPartTask(t)
+	f := newDOriginalSixPartTaskWithOptions(t, options)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
 	stopCapacity := f.startLocalCapacityInput(ctx, t)
@@ -691,6 +717,12 @@ func runDOriginalSixPartCaptureValidated(t *testing.T, denyGenerate, completeCap
 	store := c.SQLExecutionWorkStore{Queue: f.queue}
 	if err := store.RunWithExecutionHeartbeat(ctx, f.input.Authority, func(active context.Context) error {
 		f.checkOriginalMetadataSources(active, t)
+		if options.BeforePrepare != nil {
+			if err := options.BeforePrepare(active, t, f); err != nil {
+				return err
+			}
+			return checkDOriginalCoreUnchanged(f.service, f.sealedCore)
+		}
 		return nil
 	}); err != nil {
 		t.Fatal("original same-epoch source preparation heartbeat", err)
@@ -824,6 +856,12 @@ func runDOriginalSixPartCaptureValidated(t *testing.T, denyGenerate, completeCap
 		t.Fatal("original positive Record did not enter validating", finalStatus)
 	}
 	if afterValidated != nil {
+		if err := checkDOriginalCoreUnchanged(f.service, f.sealedCore); err != nil {
+			t.Fatal(err)
+		}
 		afterValidated(ctx, f, *capture, results)
+		if err := checkDOriginalCoreUnchanged(f.service, f.sealedCore); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
