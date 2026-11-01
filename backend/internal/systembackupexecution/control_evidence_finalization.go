@@ -19,7 +19,9 @@ import (
 func loadFinalizedControlSourceSQL(ctx context.Context, tx *sql.Tx, seed ce.CaptureLocator) (_ ce.PreparedSource, _ []ce.RegisteredEvidence, resultErr error) {
 	stage, started := "controller-finalized-seal-id", time.Now()
 	defer func() {
-		if resultErr != nil {
+		// First-time finalization probes this helper before creating its seal.
+		// The caller handles sql.ErrNoRows; it is not itself a rejected pull.
+		if resultErr != nil && !errors.Is(resultErr, sql.ErrNoRows) {
 			until, _ := ctx.Deadline()
 			logOriginalControlEvidenceRejection(stage, ctx, until, started)
 		}

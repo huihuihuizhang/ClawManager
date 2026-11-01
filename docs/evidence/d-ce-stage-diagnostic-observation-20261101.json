@@ -1,0 +1,65 @@
+{
+  "schema_version": "d-control-evidence-stage-diagnostic-observation.v1",
+  "recorded_at_utc": "2026-11-01T09:09:31.946999+00:00",
+  "classification": "successful instrumented component observation; previous intermittent CE failure not reproduced or fixed",
+  "native": {
+    "linked_before_capture": "dcb2360d658cd3d5f162c3eb5f74b7b4fed4d7de",
+    "baseline": "80baf84da2276ce87344ee307f4bc23a513df3b6",
+    "test": "TestAOriginalSixPartDurableContainerInputsMySQL",
+    "session": 49756,
+    "terminal_exit": 0,
+    "closed": true,
+    "task": "sbk_f4e242dd-4efd-41cc-8177-2776f5e5b375",
+    "case_seconds": 154.45,
+    "package_seconds": 157.767,
+    "database_source_checks": 880,
+    "database_local_source_authorize_seconds": 0.8027275,
+    "database_stream_seconds": 29.3064612,
+    "ce_source_open_key_window_seconds": [
+      29.4199959,
+      29.3729285
+    ],
+    "ce_stream_seconds": [
+      2.0928551,
+      1.6276887
+    ],
+    "original_parts": 10,
+    "external_certificate_signs": 1,
+    "capture_certificate_sha256": "198e04d3e846c1db54dc1806f27332b82d406631b93d2052a4039ae1a5558ad4",
+    "durable_container_count": 6,
+    "durable_container_bytes": 54115,
+    "durable_input_evidence": "sev_pub_containers_05b52388f391ff02c0eadcab09a4a4c345260ed682923ce7e3ad9e869e24e061",
+    "scope": "one actual original synthetic task, full data, 10 native workers, C, certificate and six private durable inputs/reopen; no upload/MF/acceptance/catalog/terminal claim"
+  },
+  "prior_reds_retained": {
+    "supervisor_90282": "exact80baf84d; DB880 checks/28.4635669s succeeded, CE0.602673s failed; package149.713s",
+    "D_38783": "exact5ca3608b; DB807 checks/29.5082909s failed before new remote consumer; package135.286s"
+  },
+  "normal_probe_logs": "Two controller-finalized-seal-checksum ce_rejected lines occurred during expected first sql.ErrNoRows creation probes, not an actual rejected CE request. Refined diagnostics suppress only this expected missing-row helper log; callers still handle/reject exactly as before.",
+  "refinement": "Add CE-only DEK callback-entered/callback-succeeded booleans and first static context/key-check/source/stream/post-use phase to distinguish before-callback failures previously normalized to ErrPermission. No raw errors, requests, credentials, grants, keys or business payload.",
+  "checks": {
+    "initial_stage_two_packages_seconds": [
+      35.711,
+      9.24
+    ],
+    "refined_two_packages_seconds": [
+      35.643,
+      9.106
+    ],
+    "post_a008_final_two_packages_seconds": [
+      36.346,
+      9.066
+    ],
+    "privacy_tests": "Actual nil-source/denied-request paths keep original errors/status and do not expose private fixture body/token/query values."
+  },
+  "final_shared_baseline": "a0086acf4abb1125293456dddb9551fc3ba1234f",
+  "sql": "49756 naturally closed; 63507 currently held by D for explicitly instrumented next diagnostic, no live D SQL at this record.",
+  "log": {
+    "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-direct-regression-stage-native.log",
+    "sha256": "8144363760ded4229fb7c8d4bdf51f99a66337edc4164cb8e077eeaa81994d46"
+  },
+  "source_ledger": {
+    "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-native-stage-diagnostic-source-ledger.json",
+    "sha256": "0e9316f987ec79775bb5329cc486303ed520a65a4e417a4b888a7af9b03a9d27"
+  }
+}
