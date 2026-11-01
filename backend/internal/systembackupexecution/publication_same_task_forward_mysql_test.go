@@ -305,6 +305,7 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 			t.Fatal(err)
 		}
 		defer material.Close()
+		t.Log("original upload material remaining before input projection", time.Until(material.intent.Deadline))
 		initial, err := f.service.readOriginalPublicationUploadCompletion(ctx, *claim, material, job)
 		if err != nil {
 			t.Fatal("original SQL NULL upload cursor before first result", err)
@@ -378,6 +379,7 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 			}
 		}
 		// Result hints still enter the original mTLS + Pod TokenReview receiver.
+		t.Log("original upload material remaining before result delivery", time.Until(material.intent.Deadline))
 		aSendOriginalForwardResults(ctx, t, f, job, material, result, directory)
 		// The actual local upload-only worker and result sender have returned.
 		// Model that native exit fact; it cannot replace SQL result validation.
