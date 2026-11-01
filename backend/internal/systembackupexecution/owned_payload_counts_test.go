@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	cd "clawreef/internal/systembackupcapturedescription"
+
 	"clawreef/internal/systembackup/worker"
 	w "clawreef/internal/systembackupwire"
 )
@@ -68,7 +70,7 @@ func TestOwnedPayloadCountsRequireCompleteOriginalArchive(t *testing.T) {
 // Named count-mapping DATA. These rows have no current C/SQL authority; they
 // exercise the exact gate used by the real complete-capture producer above.
 func TestPublicationInputRejectsUnavailablePayloadCountsData(t *testing.T) {
-	for _, mode := range []string{"complete", "unavailable", "default-zero", "wrong-unit", "negative", "sql-omission"} {
+	for _, mode := range []string{"complete", "description-admin", "description-wrong-operation", "description-wrong-domain", "description-imposter", "description-with-missing-business-counts", "unavailable", "default-zero", "wrong-unit", "negative", "sql-omission"} {
 		t.Run(mode, func(t *testing.T) {
 			operations := []string{"capture-database", "capture-source-redis", "capture-skill-objects", "capture-workspace", "capture-deployment-resources", "capture-secret-bundle"}
 			kinds := []string{"sql_raw_cell_bytes", "redis_key_dump_group_bytes", "object_payload_bytes", "archive_entry_bytes", "kubernetes_captured_json_bytes", "kubernetes_captured_json_bytes"}
@@ -82,6 +84,20 @@ func TestPublicationInputRejectsUnavailablePayloadCountsData(t *testing.T) {
 				parts = append(parts, publicationVerifiedPart{Part: operation, Operation: operation, RequestedPart: publicationRequestedPart(operation), Counts: counts})
 			}
 			switch mode {
+			case "description-admin", "description-wrong-operation", "description-wrong-domain", "description-with-missing-business-counts":
+				part := publicationVerifiedPart{Part: cd.Part, Operation: cd.Operation}
+				if mode == "description-wrong-operation" {
+					part.Operation = "capture-database"
+				}
+				if mode == "description-wrong-domain" {
+					part.RequestedPart = "mysql"
+				}
+				if mode == "description-with-missing-business-counts" {
+					parts[0].Counts = ownedPayloadCounts{}
+				}
+				parts = append(parts, part)
+			case "description-imposter":
+				parts = append(parts, publicationVerifiedPart{Part: "foreign_description_DATA", Operation: cd.Operation})
 			case "unavailable":
 				parts[3].Counts.Complete = false
 				parts[3].Counts.Kind = "skill_workspace_counts_unavailable"
@@ -94,7 +110,7 @@ func TestPublicationInputRejectsUnavailablePayloadCountsData(t *testing.T) {
 			case "sql-omission":
 				parts[0].Counts.SQLTables = nil
 			}
-			if got := publicationPayloadCountsComplete(parts); got != (mode == "complete") {
+			if got := publicationPayloadCountsComplete(parts); got != (mode == "complete" || mode == "description-admin") {
 				t.Fatal("publication input accepted incomplete/unknown count metadata", mode, got)
 			}
 		})

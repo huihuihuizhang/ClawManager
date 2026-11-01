@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"clawreef/internal/systembackup/domain"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 )
 
@@ -72,6 +73,14 @@ func publicationPayloadCountsComplete(parts []publicationVerifiedPart) bool {
 	}
 	domains := map[string]bool{}
 	for _, part := range parts {
+		// The independently verified description is an administrative carrier,
+		// like E/P, and cannot supply or replace any business-domain counts.
+		if part.Part == cd.Part {
+			if part.Operation != cd.Operation || part.RequestedPart != "" {
+				return false
+			}
+			continue
+		}
 		if part.Part == ce.Part || part.Part == ce.ProofPart {
 			continue
 		}
