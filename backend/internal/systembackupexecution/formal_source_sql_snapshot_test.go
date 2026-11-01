@@ -92,5 +92,36 @@ func forgeActualSQLSnapshotCandidate(t *testing.T, i worker.Invocation, candidat
 	if mode == "count" {
 		candidate.Rows++
 	}
+	if mode == "valid" {
+		candidate.InvocationSHA256, err = i.Hash()
+		if err != nil {
+			t.Fatal("actual original SQL invocation binding", err)
+		}
+		var counts ownedPayloadCounts
+		countKeys := &candidateContentUnwrapper{expected: keys.expected, key: keys.key}
+		if _, err := w.InspectWrappedStream(context.Background(), spec, envelope, bytes.NewReader(frames.Bytes()), countKeys, func(src io.Reader) error {
+			return inspectOwnedBusinessPayloadCounts(context.Background(), i, candidate, src, &counts)
+		}); err != nil || !counts.Complete || counts.Items != int64(len(snapshot.Tables)) || counts.Kind != "sql_raw_cell_bytes" {
+			t.Fatal("actual captured original SQL byte/row counts", err, counts)
+		}
+		var rows, valueBytes int64
+		for _, table := range snapshot.Tables {
+			rows += int64(len(table.Rows))
+			for _, row := range table.Rows {
+				for _, cell := range row {
+					if !cell.Null {
+						valueBytes += int64(len(cell.Bytes))
+					}
+				}
+			}
+		}
+		var observedRows int64
+		for _, table := range counts.SQLTables {
+			observedRows += table.Rows
+		}
+		if rows <= 0 || valueBytes <= 0 || observedRows != rows || counts.ContentBytes != valueBytes || candidate.Files != 0 || candidate.Bytes != 0 {
+			t.Fatal("SQL statistics came from placeholder Files/Bytes instead of actual captured rows", rows, valueBytes, counts)
+		}
+	}
 	return source, candidate
 }

@@ -114,6 +114,23 @@ func captureHidden(name string) bool {
 // Success discharges only these exact requirements, not cross-part coverage,
 // task consistency or immutable publication. Any failure returns no proof.
 func VerifyWorkspaceCapture(ctx context.Context, src io.Reader, s WorkspaceCaptureSpec) error {
+	return verifyWorkspaceCapture(ctx, src, s, nil)
+}
+
+// WorkspaceCaptureCounts reports entries and entry-content bytes only after
+// complete archive/EOF, policy and original Skill MD5 verification. It is
+// inert metadata, not capture or task authority.
+type WorkspaceCaptureCounts struct{ Entries, Bytes int64 }
+
+func VerifyWorkspaceCaptureWithCounts(ctx context.Context, src io.Reader, s WorkspaceCaptureSpec) (WorkspaceCaptureCounts, error) {
+	var counts WorkspaceCaptureCounts
+	if err := verifyWorkspaceCapture(ctx, src, s, &counts); err != nil {
+		return WorkspaceCaptureCounts{}, err
+	}
+	return counts, nil
+}
+
+func verifyWorkspaceCapture(ctx context.Context, src io.Reader, s WorkspaceCaptureSpec, counts *WorkspaceCaptureCounts) error {
 	if ctx == nil || ctx.Err() != nil || src == nil || s.Validate() != nil {
 		return ErrWorkspaceProof
 	}
@@ -247,7 +264,13 @@ func VerifyWorkspaceCapture(ctx context.Context, src io.Reader, s WorkspaceCaptu
 	if archivePolicy.Finish() != nil {
 		return ErrWorkspaceProof
 	}
-	return ctx.Err()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if counts != nil {
+		*counts = WorkspaceCaptureCounts{Entries: count, Bytes: total}
+	}
+	return nil
 }
 
 func workspaceContentMD5(ctx context.Context, files map[string][]byte, maxIndexBytes int64) (string, error) {

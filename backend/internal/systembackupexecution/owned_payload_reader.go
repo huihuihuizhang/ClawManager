@@ -26,6 +26,14 @@ import (
 // it with the independent current C Unwrap and complete AEAD/EOF verification.
 // It reads no current source/restore target and never extracts an archive.
 func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader) error {
+	return inspectOwnedBusinessPayloadCounts(ctx, i, candidate, plaintext, nil)
+}
+
+func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, out *ownedPayloadCounts) error {
+	if out != nil {
+		*out = ownedPayloadCounts{}
+	}
+	observed := ownedPayloadCounts{Version: "system-backup-inert-payload-counts.v1", Complete: true}
 	if ctx == nil || ctx.Err() != nil || plaintext == nil || !worker.ValidateFormalCaptureResult(i, &candidate) || i.Request.ControlEvidence != nil {
 		return d.ErrNotReady
 	}
@@ -38,6 +46,7 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 	r := i.Request
 	switch {
 	case r.Database != nil:
+		observed.Kind = "sql_raw_cell_bytes"
 		spec := r.Database
 		snapshot, err := domain.Decode(limited, domain.Limits{MaxRows: spec.MaxRows, MaxBytes: r.MaxArchiveBytes})
 		if err != nil {
@@ -70,25 +79,41 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 		if spec.SkillsInventory != nil && domain.VerifySkillCapture(snapshot, *spec.SkillsInventory) != nil {
 			return d.ErrNotReady
 		}
+		observed = countOwnedSQLSnapshot(snapshot)
 	case r.SourceRedis != nil:
+		observed.Kind = "redis_key_dump_group_bytes"
 		snapshot, err := source.ReadSourceRedisSnapshot(ctx, limited, *r.SourceRedis)
 		if err != nil {
 			return d.ErrNotReady
 		}
+		observed.Items = int64(len(snapshot.Items))
+		for _, item := range snapshot.Items {
+			observed.ContentBytes += int64(len(item.Key) + len(item.Dump) + len(item.StreamGroups))
+		}
 		source.ClearSourceRedisSnapshot(snapshot)
 	case r.Resources != nil:
-		if err = worker.ReadResourceCaptureArchive(ctx, limited, *r.Resources, r.MaxArchiveBytes, nil); err != nil {
+		observed.Kind = "kubernetes_captured_json_bytes"
+		if err = worker.ReadResourceCaptureArchive(ctx, limited, *r.Resources, r.MaxArchiveBytes, func(_ source.KubernetesSelection, raw json.RawMessage) error {
+			observed.Items++
+			observed.ContentBytes += int64(len(raw))
+			return nil
+		}); err != nil {
 			return d.ErrNotReady
 		}
 	case r.SkillObjects != nil:
-		if inspectOwnedSkillObjects(ctx, i, limited) != nil {
+		observed.Kind = "object_payload_bytes"
+		if inspectOwnedSkillObjects(ctx, i, limited, &observed) != nil {
 			return d.ErrNotReady
 		}
 	case r.SkillWorkspace != nil:
-		if sh.VerifyWorkspaceCapture(ctx, limited, *r.SkillWorkspace) != nil {
+		observed.Kind = "archive_entry_bytes"
+		counts, err := sh.VerifyWorkspaceCaptureWithCounts(ctx, limited, *r.SkillWorkspace)
+		if err != nil || counts.Entries != candidate.Files || counts.Bytes != candidate.Bytes {
 			return d.ErrNotReady
 		}
+		observed.ArchiveEntries, observed.ContentBytes = counts.Entries, counts.Bytes
 	case r.Teams != nil && r.Teams.Redis != nil:
+		observed.Kind = "redis_key_dump_bytes"
 		reader := bufio.NewReaderSize(limited, 64<<10)
 		headerRaw, headerErr := reader.ReadSlice('\n')
 		var header source.RedisRecord
@@ -107,6 +132,8 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 			}
 			for prefix := range allowed {
 				if strings.HasPrefix(string(record.Key), prefix) {
+					observed.Items++
+					observed.ContentBytes += int64(len(record.Key) + len(record.Dump))
 					return nil
 				}
 			}
@@ -115,11 +142,13 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 			return d.ErrNotReady
 		}
 	case r.Teams != nil && r.Operation == "capture-team-objects":
-		if inspectOwnedTeamObjects(ctx, i, limited) != nil {
+		observed.Kind = "object_payload_bytes"
+		if inspectOwnedTeamObjects(ctx, i, limited, &observed) != nil {
 			return d.ErrNotReady
 		}
 	case r.Operation == "capture-workspace":
-		if inspectOwnedWorkspace(ctx, i, candidate, limited) != nil {
+		observed.Kind = "archive_entry_bytes"
+		if inspectOwnedWorkspace(ctx, i, candidate, limited, &observed) != nil {
 			return d.ErrNotReady
 		}
 	default:
@@ -129,6 +158,9 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 	n, tailErr := limited.Read(extra[:])
 	if n != 0 || tailErr != io.EOF || limited.N <= 0 || z.Close() != nil || ctx.Err() != nil {
 		return d.ErrNotReady
+	}
+	if out != nil {
+		*out = observed
 	}
 	return nil
 }
@@ -154,7 +186,10 @@ func zeroArchiveTail(r io.Reader) error {
 	}
 }
 
-func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, src io.Reader) error {
+func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, src io.Reader, counts ...*ownedPayloadCounts) error {
+	if len(counts) > 1 {
+		return d.ErrNotReady
+	}
 	r := i.Request
 	layout := workspace.Layout("")
 	if r.RuntimePolicy != nil {
@@ -215,10 +250,16 @@ func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate w
 	if validator.Finish() != nil || files != candidate.Files || total != candidate.Bytes || r.WorkBuddyIdentity != nil && (!marker || !home) || zeroArchiveTail(src) != nil {
 		return d.ErrNotReady
 	}
+	if len(counts) == 1 && counts[0] != nil {
+		counts[0].ArchiveEntries, counts[0].ContentBytes = files, total
+	}
 	return nil
 }
 
-func inspectOwnedTeamObjects(ctx context.Context, i worker.Invocation, src io.Reader) error {
+func inspectOwnedTeamObjects(ctx context.Context, i worker.Invocation, src io.Reader, counts ...*ownedPayloadCounts) error {
+	if len(counts) > 1 {
+		return d.ErrNotReady
+	}
 	expected := map[string]struct {
 		version, sha string
 		size         int64
@@ -233,6 +274,7 @@ func inspectOwnedTeamObjects(ctx context.Context, i worker.Invocation, src io.Re
 			size         int64
 		}{ref.Version, ref.SHA256, ref.Size}
 	}
+	var objects, contentBytes int64
 	err := source.ReadObjectSnapshot(ctx, src, source.ObjectBudget{MaxItems: i.Request.Teams.MaxItems, MaxBytes: i.Request.MaxArchiveBytes}, func(meta source.ObjectMetadata) (io.WriteCloser, error) {
 		key := meta.Bucket + "\x00" + meta.Key
 		want, ok := expected[key]
@@ -240,12 +282,17 @@ func inspectOwnedTeamObjects(ctx context.Context, i worker.Invocation, src io.Re
 			return nil, d.ErrNotReady
 		}
 		delete(expected, key)
+		objects++
+		contentBytes += meta.Size
 		digest := sha256.New()
 		var size int64
 		return &ownedCountedObjectSink{digest: digest, count: &size, expectedSize: want.size, expectedSHA: want.sha}, nil
 	})
 	if err != nil || len(expected) != 0 {
 		return d.ErrNotReady
+	}
+	if len(counts) == 1 && counts[0] != nil {
+		counts[0].Items, counts[0].ContentBytes = objects, contentBytes
 	}
 	return nil
 }
@@ -275,7 +322,10 @@ func (s *ownedCountedObjectSink) Close() error {
 	return nil
 }
 
-func inspectOwnedSkillObjects(ctx context.Context, i worker.Invocation, src io.Reader) error {
+func inspectOwnedSkillObjects(ctx context.Context, i worker.Invocation, src io.Reader, counts ...*ownedPayloadCounts) error {
+	if len(counts) > 1 {
+		return d.ErrNotReady
+	}
 	spec := *i.Request.SkillObjects
 	blobs := make([]models.SkillBlob, len(spec.Blobs))
 	for index, blob := range spec.Blobs {
@@ -375,6 +425,12 @@ func inspectOwnedSkillObjects(ctx context.Context, i worker.Invocation, src io.R
 	}
 	if _, err = reader.Next(); err != io.EOF || zeroArchiveTail(src) != nil {
 		return d.ErrNotReady
+	}
+	if len(counts) == 1 && counts[0] != nil {
+		counts[0].Items = int64(len(actual))
+		for _, object := range actual {
+			counts[0].ContentBytes += object.Digest.Size
+		}
 	}
 	return nil
 }

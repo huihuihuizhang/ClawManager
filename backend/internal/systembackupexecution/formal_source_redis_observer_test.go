@@ -120,6 +120,19 @@ func TestIndependentFormalRedisObserverRejectsValidAEADWithBadSourceRecords(t *t
 				if err != nil || observed.Reference() == "" {
 					t.Fatal("independent source observer rejected original records", err)
 				}
+				var counts ownedPayloadCounts
+				if _, err = w.InspectWrappedStream(context.Background(), streamSpec, envelope, bytes.NewReader(frames.Bytes()), keys, func(src io.Reader) error {
+					return inspectOwnedBusinessPayloadCounts(context.Background(), inv, candidate, src, &counts)
+				}); err != nil || !counts.Complete || counts.Kind != "redis_key_dump_group_bytes" {
+					t.Fatal("actual original Redis payload counts", err, counts)
+				}
+				var items, contentBytes int64
+				if mode == "valid-nonempty" {
+					items, contentBytes = 1, int64(len("app:state")+len("named-private-original-dump"))
+				}
+				if counts.Items != items || counts.ContentBytes != contentBytes || candidate.Files != 0 || candidate.Bytes != 0 {
+					t.Fatal("Redis counts reused placeholder report fields", counts)
+				}
 				return
 			}
 			if err == nil || observed.Reference() != "" || keys.calls != 1 {

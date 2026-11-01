@@ -23,6 +23,7 @@ type publicationVerifiedPart struct {
 	ResultEvidenceIDs                                      []string
 	Checkpoint                                             json.RawMessage
 	ResultEvidenceRef                                      string
+	Counts                                                 ownedPayloadCounts
 }
 
 type publicationVerifiedCapture struct {
@@ -172,6 +173,7 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			cipherPath, envelopePath := publicationPartPaths(name, invocation.Request.Binding.PartIndex, invSHA)
 			result.Parts = append(result.Parts, publicationVerifiedPart{Part: name, Category: record.PartResult.Category, Operation: invocation.Request.Operation, RequestedPart: requested, Index: invocation.Request.Binding.PartIndex, InvocationSHA256: invSHA, CandidateSHA256: record.CandidateSHA256, ResultSHA256: hash(resultRaw), CipherPath: cipherPath, EnvelopePath: envelopePath, CipherSHA256: part.stream.CiphertextSHA256(), EnvelopeSHA256: hash(part.envelope), CipherBytes: part.stream.CiphertextBytes(), EnvelopeBytes: int64(len(part.envelope)), ResultEvidenceIDs: append([]string{}, record.PartResult.EvidenceIDs...), Checkpoint: bytes.Clone(record.PartResult.Checkpoint)})
 			result.Parts[len(result.Parts)-1].ResultEvidenceRef = resultEvidenceCoordinates(record.Input.InstallationID, record.Input.TaskPublicID, record.Input.CaptureAttemptNo, "capture", record.Job, hash(resultRaw)).PublicID
+			result.Parts[len(result.Parts)-1].Counts = part.counts
 			return part.check(ctx)
 		}()
 		if err != nil {
@@ -220,6 +222,9 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 		if part.Index != uint32(index) {
 			return zero, c.ErrExecutionRecord
 		}
+	}
+	if !publicationPayloadCountsComplete(result.Parts) {
+		return zero, c.ErrExecutionRecord
 	}
 	digest := publicationVerifiedCaptureHash(result)
 	if digest == "" {
