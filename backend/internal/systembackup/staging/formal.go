@@ -38,14 +38,18 @@ func (f FormalFiles) Close() {
 // OpenFormalObserved rehashes both ORIGINAL private copies. It never consults
 // a worker mount as fallback. Authentication/publication remain separate.
 func OpenFormalObserved(ctx context.Context, custody *os.Root, scope SealScope, ciphertext, envelope Receipt) (FormalFiles, FormalObservation, error) {
+	return OpenFormalObservedGuarded(ctx, custody, scope, ciphertext, envelope, func(ctx context.Context) error { return ctx.Err() })
+}
+
+func OpenFormalObservedGuarded(ctx context.Context, custody *os.Root, scope SealScope, ciphertext, envelope Receipt, check func(context.Context) error) (FormalFiles, FormalObservation, error) {
 	var files FormalFiles
 	var observation FormalObservation
-	f, c, err := OpenObserved(ctx, custody, scope, ciphertext)
+	f, c, err := OpenObservedGuarded(ctx, custody, scope, ciphertext, check)
 	if err != nil {
 		return files, observation, err
 	}
 	files.Ciphertext = f
-	f, e, err := OpenObserved(ctx, custody, formalEnvelopeScope(scope), envelope)
+	f, e, err := OpenObservedGuarded(ctx, custody, formalEnvelopeScope(scope), envelope, check)
 	if err != nil {
 		files.Close()
 		return FormalFiles{}, observation, err

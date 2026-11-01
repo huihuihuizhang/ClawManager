@@ -233,7 +233,7 @@ func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
 	}
 }
 
-func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
+func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
 	t.Helper()
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") != "" {
 		if !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(buildinfo.Commit) {
@@ -401,5 +401,8 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		}
 		checkAOriginalCertificateKnownResume(t, ctx, f, claim, capture, prepared, signers, raw, sum, &fixture.signs)
 		t.Log("same original task certificate only", f.publicID, len(capture.Parts), sum)
+		for _, next := range after {
+			next(ctx, f, &claim, capture)
+		}
 	})
 }

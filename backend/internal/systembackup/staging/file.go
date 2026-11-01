@@ -104,6 +104,15 @@ func (w *countWriter) Write(p []byte) (int, error) {
 // handle for decryption. It never follows a staging leaf symlink. AEAD still has
 // to be checked by Open, including its mandatory final frame.
 func OpenFile(ctx context.Context, root *os.Root, r Receipt) (*os.File, error) {
+	return OpenFileGuarded(ctx, root, r, func(ctx context.Context) error { return ctx.Err() })
+}
+
+// Guarded verification allows a publisher to maintain its CURRENT task claim
+// while hashing large immutable C copies. It never renews a DEK/provider grant.
+func OpenFileGuarded(ctx context.Context, root *os.Root, r Receipt, check func(context.Context) error) (*os.File, error) {
+	if ctx == nil || ctx.Err() != nil || check == nil || check(ctx) != nil || ctx.Err() != nil {
+		return nil, ErrFile
+	}
 	if root == nil || !fileName.MatchString(r.Name) || r.Size <= 0 || len(r.SHA256) != 64 {
 		return nil, ErrFile
 	}
@@ -132,8 +141,14 @@ func OpenFile(ctx context.Context, root *os.Root, r Receipt) (*os.File, error) {
 	buf := make([]byte, 128<<10)
 	var total int64
 	for {
-		if e = ctx.Err(); e != nil {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		if e = check(ctx); e != nil {
 			return nil, e
+		}
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
 		n, readErr := f.Read(buf)
 		if n > 0 {
@@ -150,7 +165,7 @@ func OpenFile(ctx context.Context, root *os.Root, r Receipt) (*os.File, error) {
 			return nil, ErrFile
 		}
 	}
-	if total != r.Size || hex.EncodeToString(h.Sum(nil)) != r.SHA256 {
+	if ctx.Err() != nil || total != r.Size || hex.EncodeToString(h.Sum(nil)) != r.SHA256 || check(ctx) != nil || ctx.Err() != nil {
 		return nil, ErrFile
 	}
 	if _, e = f.Seek(0, io.SeekStart); e != nil {
