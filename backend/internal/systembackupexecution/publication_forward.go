@@ -47,7 +47,11 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	// mint another certificate clock or regenerate expired upload grants when
 	// any original material intent already exists.
 	if _, err := s.loadPublicationMaterialIntent(ctx, claim, attempt); err == nil {
-		return s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, PublicationUploadRequest{}, policy.ReconcileInterval)
+		if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, PublicationUploadRequest{}, policy.ReconcileInterval); err != nil {
+			return err
+		}
+		_, err := s.completeOriginalPublicationUploadedManifest(ctx, &claim, attempt, policy, store, publicationVerifiedCapture{})
+		return err
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
@@ -62,5 +66,9 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	// Actual native CreatePublishJob stays behind the original durable private
 	// material/104 intent and 121 one-send boundary. Activation and 107 result
 	// delivery are reused; Job success alone cannot commit the artifact.
-	return s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, request, policy.ReconcileInterval)
+	if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, request, policy.ReconcileInterval); err != nil {
+		return err
+	}
+	_, err = s.completeOriginalPublicationUploadedManifest(ctx, &claim, attempt, policy, store, capture)
+	return err
 }

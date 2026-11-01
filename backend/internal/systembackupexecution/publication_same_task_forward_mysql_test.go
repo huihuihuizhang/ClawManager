@@ -271,6 +271,12 @@ func aInstallOriginalUploadNativeAPI(t *testing.T, f *dOriginalSixPartTask) (*in
 }
 
 func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
+	runAOriginalSixPartManifestUploadJob(t, nil)
+}
+
+// An optional continuation receives only this actually completed original
+// upload. Default A transport test retains its narrower original scope.
+func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(context.Context, *testing.T, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture, *nativePublicationS3, *aNativePublicationServer)) {
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires exclusively handed-over original SAN/TLS MySQL")
 	}
@@ -387,6 +393,10 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 		}
 		t.Log("same original task complete MF / actual one-send upload Job / fifteen fixed native bytes", f.publicID, "job", string(job.UID), "objects", len(result.Objects), "candidate-version", result.Candidate.Version, "signs", fixture.signs.Load())
 		t.Log("No complete remote-C, marker, acceptance/catalog or terminal-success claim is made by byte readback alone")
+		if afterUploaded != nil {
+			material.Close()
+			afterUploaded(ctx, t, f, claim, capture, store, native)
+		}
 	})
 }
 
