@@ -1,0 +1,104 @@
+{
+  "schema": "clawmanager-supervisor-native-review.v1",
+  "generated_at_utc": "2026-11-01T02:03:39.629624+00:00",
+  "scope": "Local native MySQL/TLS and named Kubernetes/provider/runtime protocol fixtures; no deployed Linux or online provider claim.",
+  "reviewed_sources": {
+    "A_materials": "05040bee78f3f36e514111287d153833de4e1f64",
+    "D_scope": "332db56bb75223410bcb168685682972484e01cf",
+    "D_capability": "faadd9b80051d6a33fa0424fa18bccfbbb67df71",
+    "D_stage": "f83062bd0f0345cd8c5661b9049489d5819c332e",
+    "D_background": "8deabc9da72178b21f360da44220fdc5f98c07f7",
+    "D_current_grant": "c076ceeb4d51247b86103494108b45c3fd8fe76d"
+  },
+  "native_test_instances": {
+    "A_supervisor": {
+      "port": 65298,
+      "observed_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+      "verification": "SQL @@server_uuid equals its new datadir auto.cnf; new isolated fixture pin."
+    },
+    "D_window": {
+      "port": 63507,
+      "observed_uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+      "coordination": "Owner confirmed no active test handles; exclusive supervisor windows released after terminal results."
+    }
+  },
+  "original_59355": {
+    "observed_exit_code": 1,
+    "original_session": 11194,
+    "failure_utc": "2026-11-01T01:31:31Z",
+    "failure": "Missing InnoDB redo file; error1504 and fatal exit. Runtime auto.cnf also absent.",
+    "snapshot_relative_to_workspace_parent": ".tools/mysql-local/crash-20261101-013131Z",
+    "preserved_files": 756,
+    "preserved_bytes": 256376832,
+    "status": "Offline surviving data preserved; no forced recovery, initialization, or replacement identity."
+  },
+  "runs": {
+    "a_materials": {
+      "outcome": "PASS",
+      "package_seconds": 27.442,
+      "log_relative_to_workspace_parent": ".tools/supervisor-publication-materials-05040bee-new-instance.log",
+      "log_sha256": "208d45b41feb4d842569b292cfaf609f22111b77d562dafd2b2c4760e1489264"
+    },
+    "d_stage_current": {
+      "outcome": "PASS",
+      "package_seconds": 43.373,
+      "log_relative_to_workspace_parent": ".tools/supervisor-stage-original-native-new-instance.log",
+      "log_sha256": "0ba089cf164f0a02c18164cbcc037665735472bf1ade06e04d2cbd2a9e75468a"
+    },
+    "d_initial_clock_and_scope": {
+      "outcome": "PASS",
+      "package_seconds": 22.107,
+      "log_relative_to_workspace_parent": ".tools/supervisor-stage-original-extra-boundaries.log",
+      "log_sha256": "2d4655d0459c41ae45b39248b5f7b67b8e4fd8a029bf1fcac25d437d332a42d5"
+    },
+    "d_capability_sql_tagged": {
+      "outcome": "PASS",
+      "package_seconds": 3.484,
+      "log_relative_to_workspace_parent": ".tools/supervisor-capability-final-native.log",
+      "log_sha256": "20ad7ce27414aaa03d77b48f1f5c2cd3cbb8c6965386ddb66ab3fc758617c5fc"
+    },
+    "d_background_aba_and_provider_failure": {
+      "outcome": "PASS",
+      "package_seconds": 49.54,
+      "log_relative_to_workspace_parent": ".tools/supervisor-d-background-original-native.log",
+      "log_sha256": "a5030d9261286fbcc2edf52dcba1a1a917accb452f3b8fdcb538be768da1c59f"
+    },
+    "d_current_grant_native": {
+      "outcome": "PASS",
+      "package_seconds": 37.084,
+      "log_relative_to_workspace_parent": ".tools/supervisor-current-grant-reuse-native.log",
+      "log_sha256": "aa743e5c35e2033136e0f61b76ec8798c153c449559195d738ece8426e9cf835"
+    },
+    "d_complete_capture_independent": {
+      "outcome": "FAIL",
+      "package_seconds": 100.445,
+      "log_relative_to_workspace_parent": ".tools/supervisor-d-sixpart-through-validating.log",
+      "log_sha256": "af576c66d8d1cb8ca21f475e5c150989aa84296f91a5d15207545a9ba4e7e38c"
+    }
+  },
+  "complete_capture_independent": {
+    "task_id": "sbk_ddf14508-51e9-49b2-b226-3060010dc23c",
+    "compiled_base": "278ee6c5d9d02680e4582afbddc3217c1e6d512d",
+    "exact_four_file_overlay_source": "56033d79",
+    "case_seconds": 97.2,
+    "observed_failure": "capture-database provider_permission_denied; failure Store.Record returned ok.",
+    "sql_source_open_remaining_seconds": 28.834051,
+    "source_local_authorize_calls": 867,
+    "source_local_authorize_seconds": 0.7523392,
+    "source_stream_seconds": 28.720169,
+    "validating_proved": false,
+    "fixture_schema_cleanup": "Owned fixture schema cleaned at test exit; no later SQL observation is claimed."
+  },
+  "owner_success_not_independently_reproduced": {
+    "task_id": "sbk_6381882a-acee-428f-a737-00722c43b785",
+    "package_seconds": 130.819,
+    "observed_by": "D owner native log; reviewed by supervisor",
+    "source_local_authorize_calls": 880,
+    "source_stream_seconds": 28.9898405,
+    "claim": "One local capture passed; default-window repeatability is not established by the independent failure."
+  },
+  "complete_backup_claim": "Not established. Capture repeatability, A activation/authenticated relay final review, same-task formal v12 publication and independent read/restore remain incomplete.",
+  "remote_activity": false,
+  "readiness_state_changes": false,
+  "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push."
+}
