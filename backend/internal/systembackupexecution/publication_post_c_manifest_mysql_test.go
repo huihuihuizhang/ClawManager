@@ -82,7 +82,7 @@ func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker b
 			return true
 		}
 		before := *claim
-		policy := c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}
+		policy := aOriginalPublicationFixturePolicy(t, f)
 		object, err := f.service.completeOriginalPublicationUploadedManifest(ctx, claim, capture.Input.CaptureAttemptNo, policy, store, capture)
 		if err != nil || object.receipt == nil || object.Key != store.config.Root+f.publicID+"/1/manifest.json" || ranges.Load() != 16 || claim.RowVersion <= before.RowVersion {
 			t.Fatal("actual current C to original102 manifest", err, ranges.Load())
