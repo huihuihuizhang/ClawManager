@@ -69,6 +69,38 @@
       "worker": 2.918,
       "execution": 3.248
     },
-    "native_status": "Refined callback/precise-clock diagnostics not yet native run; dcb49756 remains the exact prior positive observation."
+    "native_status": "Exact689122b1/26350 naturally PASS154.383s; no rejection branch fired, so old cause not identified. Original dcb observation remains separate."
+  },
+  "refined_callback_clock_native": {
+    "linked_before_capture": "689122b1862bd5f49f8985582e3fab0f0622d7a7",
+    "session": 26350,
+    "terminal_exit": 0,
+    "closed": true,
+    "test": "TestAOriginalSixPartDurableContainerInputsMySQL",
+    "task": "sbk_e0ba79ed-43f4-4a1a-9e27-517a46e094a0",
+    "case_seconds": 150.93,
+    "package_seconds": 154.383,
+    "database_source_line": [
+      "    production_same_task_workers_test.go:437: original stream local source Authorize calls/local elapsed/stream elapsed capture-database 880 794.6152ms 26.4865283s"
+    ],
+    "ce_stream_seconds": [
+      1.7555979,
+      1.7254526
+    ],
+    "certificate_sha256": "fbbfc41a3fcec448369f309d5e5c8f1b93aa89f6b867ee775412f07d4964aedc",
+    "durable_containers": 6,
+    "durable_bytes": 54124,
+    "durable_evidence": "sev_pub_containers_70472e0c2008fe259bb0abfc88ab2bbb99948a96688a145ab080d1e98dfdec0a",
+    "rejected_stage_lines": 0,
+    "classification": "Second instrumented successful observation; old intermittent CE failure still not reproduced/fixed. No object upload or new remote-C consumer proof.",
+    "ownership": "26350 naturally closed; 63507 explicitly returned to supervisor, no D SQL live.",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-callback-clock-native.log",
+      "sha256": "de271345320e39b3b538ec8f50d534ab88565b4197580351926ae9ca88040d06"
+    },
+    "source_ledger": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-callback-clock-native-source-ledger.json",
+      "sha256": "dc8cf7f7e17101da18926ef22e21a6df19d1bfa6b2805e205e1897a24e4b3aff"
+    }
   }
 }
