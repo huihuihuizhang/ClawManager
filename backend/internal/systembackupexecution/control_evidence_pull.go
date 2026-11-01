@@ -239,7 +239,7 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 		return nil, c.ErrExecutionAuthority
 	}
 	stage = "controller-source-execution-bind"
-	guard, err := gate.Bind(ctx, tx, authority)
+	guard, err := gate.BindObserved(ctx, tx, authority, logOriginalExecutionBindDiagnostic)
 	if err != nil {
 		return nil, err
 	}
