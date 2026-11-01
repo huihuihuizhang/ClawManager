@@ -1,0 +1,4 @@
+# clawreef/internal/systembackup/domain_test [clawreef/internal/systembackup/domain.test]
+internal\systembackup\domain\gateway_budget_native_test.go:88:21: sourceInstances.UpsertGatewayTokenAlias undefined (type repository.InstanceRepository has no field or method UpsertGatewayTokenAlias)
+FAIL	clawreef/internal/systembackup/domain [build failed]
+FAIL

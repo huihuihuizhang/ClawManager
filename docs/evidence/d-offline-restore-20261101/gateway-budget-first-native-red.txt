@@ -1,0 +1,7 @@
+=== RUN   TestGatewayBudgetPublicWorkerActualTLSMySQL
+    gateway_budget_native_test.go:290: actual public capture -> restore -> writer exit/3118 -> independent SELECT-only verify PASS; unsafe GetBudgetUsage still mutates revoked-key data and subsequent verifier rejects
+    gateway_budget_native_test.go:236: public restore did not execute observed checks
+--- FAIL: TestGatewayBudgetPublicWorkerActualTLSMySQL (4.30s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	7.357s
+FAIL

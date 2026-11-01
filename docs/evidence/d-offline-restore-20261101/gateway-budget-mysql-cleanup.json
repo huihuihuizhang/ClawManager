@@ -1,0 +1,28 @@
+{
+  "scope": "D owned disposable gateway three-table fixture only",
+  "port": 56251,
+  "server_uuid": "81275efe-d604-11f1-b2ac-745d22085e06",
+  "pid": 14420,
+  "owner_nonce": "43f11718a30b4ca0b1b02e231088822c",
+  "ca_sha256": "d75dc0109ba366b73feb1f43da6eb31e0f5487b5471f3b1d7bd3e1f28b56a7a0",
+  "shutdown": "mysqladmin TLS VERIFY_IDENTITY acknowledged; exact owned process naturally exited",
+  "schemas_before_shutdown": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ],
+  "accounts_before_shutdown": [
+    "root@localhost:N",
+    "mysql.infoschema@localhost:Y",
+    "mysql.session@localhost:Y",
+    "mysql.sys@localhost:Y"
+  ],
+  "sessions_before_shutdown": "cleanup CLI only; all fixture source/writer/reader accounts and schemas removed",
+  "require_secure_transport": 1,
+  "event_scheduler": "OFF",
+  "temporary_root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-c8a568f8dee7485f97d4005cbbefad6c",
+  "temporary_root_removed": true,
+  "shared_instances_touched": false,
+  "observed_utc": "2026-11-01T15:37:01.6190657Z"
+}

@@ -1,0 +1,165 @@
+{
+  "version": "gateway-budget-candidate-scope.v1",
+  "scope": "three-table isolated restore candidate; image_pending rejected before writes; original A review pending",
+  "immutable_earlier_custody_commit": "7a415209f6a0f3a7b7856de678166482052e4bd3",
+  "parent_commit": "30ac4f1c801543306fc52e3c095dc40b9e129edd",
+  "runtime_authorization": false,
+  "formal_fullC_source_authenticated": false,
+  "eight_table_completion": false,
+  "source_set_sha256": "5ccc9c371828189fb46ebfabba09a291ed82367c2d9c82b2f7cc8472d6bd24ed",
+  "production_source_set_sha256": "cde562a89451a667ee3d07a928606be8c72740904fd83624004b899b9e314888",
+  "evidence_set_sha256": "04610667dfcd0e35b18863dc1ac37d34ff139eef8112187d13350a637b83c274",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/domain/caller_restore.go",
+      "bytes": 5863,
+      "raw_sha256": "0100da765fe32b1e347025de281db5ffdb49d9cf6d63ae63a80e7eeeb513ba02",
+      "lf_sha256": "0100da765fe32b1e347025de281db5ffdb49d9cf6d63ae63a80e7eeeb513ba02",
+      "git_blob": "47bb8772847831679c4be8b78549018f78f0dd62"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/crossdomain.go",
+      "bytes": 3294,
+      "raw_sha256": "87b4736fed900e5ba515b55682a7d0fab7638fc3ba339a160592184e78492e4d",
+      "lf_sha256": "87b4736fed900e5ba515b55682a7d0fab7638fc3ba339a160592184e78492e4d",
+      "git_blob": "104360d8bb7837f202c66dce76dddf178e3d0a61"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/export_test.go",
+      "bytes": 8068,
+      "raw_sha256": "88a69efe061e6d3ead6d914ab243e1b2e1388c13f0a348960505ab4f653c98af",
+      "lf_sha256": "88a69efe061e6d3ead6d914ab243e1b2e1388c13f0a348960505ab4f653c98af",
+      "git_blob": "aee8164b908dc18c27b993c864d105a1664b4e55"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+      "bytes": 9666,
+      "raw_sha256": "48b3c60639020952272e479dc4547fe14eddb55d3912f09e21059bae1e38745c",
+      "lf_sha256": "48b3c60639020952272e479dc4547fe14eddb55d3912f09e21059bae1e38745c",
+      "git_blob": "87661a43143b22a91cbbdf46c1cedeb8bc05032d"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_readback_test.go",
+      "bytes": 4167,
+      "raw_sha256": "f8533b4c24dee74f65766d814e7de91b979732c74efa593c6885a9914abbb085",
+      "lf_sha256": "f8533b4c24dee74f65766d814e7de91b979732c74efa593c6885a9914abbb085",
+      "git_blob": "38f9047564c7e5477bc1bad9222a22fb2405d362"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_test.go",
+      "bytes": 13123,
+      "raw_sha256": "3acec8a26c1d3ed041f1ae83eb897363c08f55b3ef702d6d9c93b25b5393542e",
+      "lf_sha256": "3acec8a26c1d3ed041f1ae83eb897363c08f55b3ef702d6d9c93b25b5393542e",
+      "git_blob": "28ed60bce359c5f57532fcdd12b5380571a118b6"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_restore.go",
+      "bytes": 16085,
+      "raw_sha256": "0a7efb2136b5235044f8cba4bf8207a0e5b3076ad0a872fe08b48815bfed4ce4",
+      "lf_sha256": "0a7efb2136b5235044f8cba4bf8207a0e5b3076ad0a872fe08b48815bfed4ce4",
+      "git_blob": "aac0dbd050a4fe40063f8a9f18da99904f50d006"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_restore_test.go",
+      "bytes": 13433,
+      "raw_sha256": "56cef0655d9d19ceab543236383993e5ecdfdd8cbfa98e779b43132dab3e279c",
+      "lf_sha256": "56cef0655d9d19ceab543236383993e5ecdfdd8cbfa98e779b43132dab3e279c",
+      "git_blob": "0a35f9a94b8025ff158011659657c38ac0e74a11"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "bytes": 20574,
+      "raw_sha256": "118b8d879262e83a8417aca138ef6acd2871b064910a1036aee7e9cc7e355e92",
+      "lf_sha256": "118b8d879262e83a8417aca138ef6acd2871b064910a1036aee7e9cc7e355e92",
+      "git_blob": "b4bf8b623da8b7800cad5ec5063c01ec122b4d77"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "bytes": 12480,
+      "raw_sha256": "dcfdb9b37395fcc8915d02678426507c25c0e852cb07b21bc8de0b85c50aeb3a",
+      "lf_sha256": "dcfdb9b37395fcc8915d02678426507c25c0e852cb07b21bc8de0b85c50aeb3a",
+      "git_blob": "843e702c239ab7a98670708578074637673fd210"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-first-native-red.txt",
+      "bytes": 486,
+      "raw_sha256": "187adbc8c38a3da0be4f1b2602e8aadacacf4640d500eb6b7f90fd9ed0c6081f",
+      "lf_sha256": "601aa18006784dc5f35325b0360a487112f6da82b4aaac26aeaf34bcde30cd76",
+      "git_blob": "3566a307b4b7d05cd7ec24a2793ed3dea06126ee"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-first-unit-red.txt",
+      "bytes": 3967,
+      "raw_sha256": "b6decbde66a109576d161cb2e95930f373a90a112134ed18d68c76b494360ddf",
+      "lf_sha256": "c9ead1a91243c4685628e28cdfd0a4d0bc90954a9337433bf6794538fe6337e4",
+      "git_blob": "a3022c834f583ad2765c3699be628b263c97a9f7"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-mysql-cleanup.json",
+      "bytes": 1101,
+      "raw_sha256": "4e11fd70631471d39c96a8c3daa2755ed2ce8b977a9f41d10cb1ac130fa54119",
+      "lf_sha256": "6c7736c69e1f9826e3ae10800ed3dc4aeed9ace51d4279eef8e3bcca898841da",
+      "git_blob": "822cd1d55a329a8ded7ce5b3f475ef7b80615d38"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-mysql-shutdown.txt",
+      "bytes": 2028,
+      "raw_sha256": "56bdd9ad5c4e9ed60e644c39253f92b0462ef3f66414d550ad3a9b4a96eaacc4",
+      "lf_sha256": "7adcd028926121cd6ca99403d76d7c1cc84135ff84cfce91d59d1c81e34921dc",
+      "git_blob": "c62c603b70d05cb734a9cb89022c3ca071abef47"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-native-build-red.txt",
+      "bytes": 357,
+      "raw_sha256": "dd77c0f17657d19a32451f6ea5538a7a3d73caaf16b2c1cb97204f0a0563403a",
+      "lf_sha256": "250ee64cc9deb0aa4ea9e046b5d101ca122f8b67e0ffea3d6e159ddb411d2adf",
+      "git_blob": "e0878f12a0785fcf3b9f3bd4fb8fe84ecba7637a"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-native-frozen.txt",
+      "bytes": 2740,
+      "raw_sha256": "ebdcd75fbb9a73edff027ca4b779b929c8811c558d2481e1291a7b5bb3798aa0",
+      "lf_sha256": "ddf1143a5f3659b269f67fd0c180dec1c1567f5ec73e28dca0364dc26535f7af",
+      "git_blob": "a61a196bdbe4b635abdae12dd17c8d2a21a5679b"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-second-unit-red.txt",
+      "bytes": 3925,
+      "raw_sha256": "ce4e33ef304d8c5f2a22f5fbced175bef6db22fdf74afed553f46158c26e8662",
+      "lf_sha256": "9c1081a365ff1b62cae308de5d8cf2d765e0f2dc89704e61c698e691ef32dfd4",
+      "git_blob": "4b2ac8f881aaab00ddf1f5ac3b9768ed766978d0"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-twelve-packages-frozen.txt",
+      "bytes": 612,
+      "raw_sha256": "2f8ffe4674bc84a7e1b9148510081336097714832f798fde3e10a4a470fcecff",
+      "lf_sha256": "3c493a3fbb41afc4d678847f470668e369c701311581b077c2166d3af57f49ae",
+      "git_blob": "2d1d62a92a90d757dbe6464f4fd45c3b726a56f5"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-budget-unit-frozen.txt",
+      "bytes": 4198,
+      "raw_sha256": "29f2783234cc44c7934308996c145a9b19122d5d9ae95f058cbc97ed6a207be1",
+      "lf_sha256": "90d9a8386fcf9aec2481720c0f897b3646150b993c0b1c91719fcc49568a750c",
+      "git_blob": "a3b8dd66c7fd86f41539335a847ffbae64801a24"
+    }
+  ],
+  "handoff": {
+    "path": "docs/system-backup-d-offline-business-restore-20261101.md",
+    "bytes": 68501,
+    "raw_sha256": "0783af8a8956763093b5f23250e64497cf2c3122e1090cf0d5f4361d47f6d186",
+    "lf_sha256": "0783af8a8956763093b5f23250e64497cf2c3122e1090cf0d5f4361d47f6d186",
+    "git_blob": "fbf1fcfc6ba7d5fbec49de47eff9e2676b3b2f3e"
+  },
+  "native_cases": [
+    "success",
+    "evidence-failure",
+    "cancel-before-commit",
+    "credential-revoked"
+  ],
+  "native_result": "PASS domain 11.555s; actual test 7.91s",
+  "package_result": "all twelve appropriate offline packages PASS",
+  "cleanup": "owned 56251 normal TLS shutdown; exact private root removed; shared instances untouched"
+}
