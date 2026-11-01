@@ -139,6 +139,10 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal("owned original task schema", err)
 	}
 	t.Cleanup(func() {
+		if t.Failed() {
+			t.Log("retained failed original SQL namespace", f.database, "task", f.publicID)
+			return
+		}
 		if _, err := admin.Exec("DROP DATABASE `" + f.database + "`"); err != nil {
 			t.Error(err)
 		}
@@ -357,6 +361,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	if len(f.publicID) != 40 {
 		t.Fatal("original HTTP task location")
 	}
+	t.Log("new original task coordinates", f.database, f.publicID)
 	// Only the controller gets the original finite controller table/verb role.
 	user := "ad_d_six_ctl_" + run
 	password := make([]byte, 24)
@@ -399,7 +404,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { f.control.Close() })
-	if err = (c.SQLControlEvidenceGrantProbe{DB: f.control, Schema: f.database, User: user, Runtime: true, ProviderPermits: true}).Check(ctx); err != nil {
+	if err = (c.SQLControlEvidenceGrantProbe{DB: f.control, Schema: f.database, User: user, Runtime: true, ProviderPermits: true, Publication: options.PublicationForward}).Check(ctx); err != nil {
 		t.Fatal("original controller direct grants", err)
 	}
 	sourceUser := "ad_d_six_src_" + run
