@@ -747,3 +747,9 @@
 
 - 抑制条件已精确收窄为stage=controller-finalized-seal-checksum且errors.Is(sql.ErrNoRows)，后续真实registered-proof/chunk缺行继续记录。不是把任意缺行都当作正常创建探测，caller返回/拒绝行为不改。
 - formal WithDEK诊断从真实*CaptureKeyJob.until取得原使用界限，并把key_remaining_us与context_remaining_us/context_deadline_known分开；不再用可能属于source/task的ctx.Deadline冒充原key窗口，不重算或延长任何Until。privacy测试PASS worker2.918/execution3.248s（79570自然terminal0）。下一次带此额外回调/时钟阶段的原生运行尚待执行，原dcb49756成功观察的源码和结果保持原称谓。
+
+### D5.77 真实key/context时钟细化后的原生观察
+
+- 精确689122b1862bd5f49f8985582e3fab0f0622d7a7干净源码在capture前真实ldflags链接，仍按原同量合成数据/30/5，26350自然exit0，case150.93s/package154.383s。原任务sbk_e0ba79ed-43f4-4a1a-9e27-517a46e094a0的DB和两个CE、完整10worker/C/certificate、六durable容器54124bytes全部通过；两个CE stream1.7555979/1.7254526s，原证书SHA fbbfc41a3fcec448369f309d5e5c8f1b93aa89f6b867ee775412f07d4964aedc。本轮无ce_rejected行，正常首次缺行不再误报。
+- 这是第二个带缺失边界诊断的有效成功观察，**没有**复现/修复旧90282 CE拒绝；回调失败分支本轮未触发，不能冒称其首因已知。原5ca DB RED、80ba CE RED和dcb49756阳性全部分开保留，不把本轮叫未来提交，不当新remote-C/MF/Job/验收/catalog/终态证明。原log/sourceledger另名保存并记录SHA，未覆盖旧日志。
+- 26350自然关闭，D无SQL活跃句柄，63507已明确归还监督；之后仅归档和同步共享更新，不裸重试求绿。
