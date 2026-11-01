@@ -7,17 +7,23 @@ import (
 	"time"
 
 	"clawreef/internal/models"
+	"clawreef/internal/nbkeys"
 )
 
-// NorthboundCallerPolicyRestoreSource carries only migration-057 SQL columns.
-// Username, email and the DTO-only Scopes field are not source table data.
+// NorthboundCallerPolicyRestoreSource carries migration-057 columns and the
+// explicit migration-066 extension. A nil APIKeysVersion means the old schema,
+// not version zero; a current-schema reader must set it even when SQL stores 0.
+// APIKeysJSON nil with a nonnil version means SQL NULL. The authenticated source
+// schema must match this selection. Display-only username/email are not columns.
 type NorthboundCallerPolicyRestoreSource struct {
-	UserID     int
-	Enabled    bool
-	ScopesJSON string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	UpdatedBy  *int
+	UserID         int
+	Enabled        bool
+	ScopesJSON     string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	UpdatedBy      *int
+	APIKeysJSON    *string
+	APIKeysVersion *int64
 }
 
 var ErrNorthboundCallerPolicyRestore = errors.New("A northbound caller policy restore normalization failed")
@@ -63,6 +69,26 @@ func NormalizeNorthboundCallerPolicyForRestore(users *UserRestoreBatch,
 		!validMySQLDateTime(updated) || updated.Before(created) {
 		return models.NorthboundCallerPolicy{}, ErrNorthboundCallerPolicyRestore
 	}
+	var disabledKeys *string
+	var keyVersion int64
+	if source.APIKeysVersion == nil {
+		if source.APIKeysJSON != nil {
+			return models.NorthboundCallerPolicy{}, ErrNorthboundCallerPolicyRestore
+		}
+	} else {
+		keyVersion = *source.APIKeysVersion
+		if keyVersion < 0 || (source.APIKeysJSON != nil && (len(*source.APIKeysJSON) > nbkeys.MaxDocumentBytes || !json.Valid([]byte(*source.APIKeysJSON)))) {
+			return models.NorthboundCallerPolicy{}, ErrNorthboundCallerPolicyRestore
+		}
+		if _, err := nbkeys.Decode(source.APIKeysJSON); err != nil {
+			return models.NorthboundCallerPolicy{}, ErrNorthboundCallerPolicyRestore
+		}
+		// Never carry a source hash into a target credential. This is the
+		// existing isolated-copy rule, not key rotation or a successful CAS.
+		// The source document/version stay in the protected original evidence.
+		empty := "[]"
+		disabledKeys = &empty
+	}
 	targetUserID, ok := users.TargetID(source.UserID)
 	if !ok {
 		return models.NorthboundCallerPolicy{}, ErrNorthboundCallerPolicyRestore
@@ -89,5 +115,6 @@ func NormalizeNorthboundCallerPolicyForRestore(users *UserRestoreBatch,
 	return models.NorthboundCallerPolicy{
 		UserID: targetUserID, Enabled: false, ScopesJSON: scopesJSON,
 		CreatedAt: created, UpdatedAt: updated, UpdatedBy: targetUpdatedBy,
+		APIKeysJSON: disabledKeys, APIKeysVersion: keyVersion,
 	}, nil
 }

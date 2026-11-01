@@ -1,0 +1,11 @@
+{
+  "parent_commit": "a0257636704863fe5835d48eb98821bad7d5ef9f",
+  "scope": "explicit caller policy migration 066 source fields and frozen input",
+  "production_domain_writer_wired": false,
+  "external_mysql_tests_run": false,
+  "source_sha256": {
+    "backend/internal/systembackupbusinessa/northbound_caller_policy_restore.go": "a24c20502e2805d10f01c2a71d4e8eced27aa9df103f859aa5750a925012b845",
+    "backend/internal/systembackupbusinessa/business_restore.go": "8cb53173963bf16fc93dbdb04b9a4092c32c94d29a129a4e3a0ccab1e5573e88",
+    "backend/internal/systembackupbusinessa/northbound_caller_keys_restore_test.go": "f273baf04f061bf186e0d178f0ca92407e2f8ff945234af48a45bed14a7d5068"
+  }
+}
