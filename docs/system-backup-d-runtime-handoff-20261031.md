@@ -517,3 +517,17 @@
 
 - 在D专用63507真实MySQL窄fixture中，独立admin插入并确认affected=1及SELECT读回：同任务pending/running cancel拒绝，已完成cancel和其他任务pending cancel允许；同任务较新capture attempt拒绝，其他任务较新attempt允许。每例均实际Bind与Recheck，事务rollback后才清理插入行。六例PASS0.88s/package4.127s；不把窄fixture当完整原DDL/备份任务验收。
 - D5.47新174原顺序无overlay任务`sbk_96ccfed1-f311-42b3-81b1-030d31792cf8`仍FAIL96.73s/package99.984s：SQL开流剩27.23256秒，799次本地SourceAuthorize累计680.5178ms，stream27.1131秒后拒绝，原failed Record=ok。799是本地调用数，不能除以完整domain回调437当完成比例；尚未进入validating或完成A发布。监督已审查8c01075f并推送backup 975d2cec，独立当前事实/期限回归及初始Bind字段等价通过，每RPC少16查询。
+
+## D5.48 相同已认证能力字节复用，当前证据仍逐次锁定读取
+
+- `faadd9b8`只改三个能力文件。Prepare继续认证完整原签名文档；私有prepared对象在每次Recheck仍实际FOR SHARE读取原证据，核验system owner/installation、capability_snapshot、inline/healthy/none、完整SHA256/size与8192上限，要求当前raw及原expires_at逐字节/时间相同，并检查原database/installation/NotBefore/最短until。仅移除相同字节的再次JSON解析/签名/DeepEqual，无跨请求授权缓存、无权限读取跳过。
+- 监督指出候选入口遗漏原authenticate的显式now.IsZero拒绝：合法签名NotBefore可为非零year0000，零时钟不一定Before它。原基线PASS3.472s/旧候选FAIL3.086s；现已补回显式拒绝，repo包含原签名year0000健康正向与零时钟拒绝。监督独立修复探针PASS3.060s/签名变更组合3.069s。
+- 增加签名revoked/revision/破坏envelope、原时间上下边界反例；实际D63507 MySQL逐一变更owner type/id、evidence type、storage、health、encryption、expiry延长/缩短，affected=1且独立SELECT确认后旧prepared均拒绝；签名撤销同样确认实际raw/hash/size变更且旧prepared拒绝。最终真实SQL/签名定向package3.406s、原mTLS/consumer两组12.532s PASS；此前适配器全包在支持本地TLS/文件身份的执行环境5.103s PASS。普通沙箱的原Generate文件委派与S3 census失败不混作生产回归，监督同条件旧基线也复现。
+- `.tools/d-prepared-capability-benchmark_test.go`仅诊断：同一元数据driver完整当前证据读，旧重复认证219071ns/op、168198B/op、848alloc；当前7821ns/op、6736B/op、27alloc，package5.566s。不能将微基准当完整备份通过。
+- 原顺序、全量数据、默认期限的日志/CPU透明诊断任务`sbk_adad8c33-e660-43f9-88f1-f53937114a40`仍FAIL98.50s/package102.330s，source-open剩26.8636168s，domain437范围内实际完成386次回调、本地773次Authorize/691.8219ms，stream26.7400574s后拒绝，原failed Record=ok；尚无validating。日志/CPU profile位于`.tools/d-current-capability-cost.*`，持续plan cache hit，单请求132成功SELECT+3DML、事务计数另算。Stage通常58增量SELECT，collectors19；CPU样本Stage5.86s、PinnedExecutionIdentity.current5.09s（包含文件read3.93s），这些累计值重叠、且profiling增加成本，不能与无overlay延迟直接对比。后续优先Stage三次current/rebind路径实际测量，不延长原窗口或删减row/EOF。
+
+## D5.49 原provider拒绝负任务增加实际背景写入与恢复证明
+
+- 原公开HTTP/原Prepare、SavePlan、reTake任务`sbk_e0e24ecb-5295-44f1-ae92-ad9900e17a8d`，无overlay、当时HEAD真实build commit及174迁移，显式Generate拒绝的独立负测试PASS29.09s/package32.373s（`.tools/d-provider-denied-strong-background.log`）。该失败任务没有被转为成功：断言实际denied=1、Generate/Unwrap=0，candidate/result和C/envelope不存在，原Store.Record(Err)到failed并释放claim。
+- 背景SQL使用原AcquireMutation/WriteWithLease/ReleaseMutation gate，另两协程实际写Pro7 sessions及Team20 artifacts文件；三个writer先各有至少两次成功写入。原模型进程终止ACK前停止并join物理文件writer；每次原Job dispatch要求2文件哈希、SQL progress和三个计数的非空held观察保持。原Resume后要求三个进程都运行、计数均超过held前值，且确实观察过application gate拒绝写入。原停止屏障/7运行且9仍停止/仅一次Pro重建等既有负例断言保留。
+- 控制调用使用原service完整controlHandler（保留CE/relay等原路由），不再用trace handler替代。完整TLS fixture只镜像实际metadata constructor的InterpolateParams flag；原TTL/heartbeat、所有源数据和权限边界保持。流日志明确是localAuthorize次数与耗时，不拿它除以437估计domain完成比例。此有限提交不包含未成功的正向wrapper、validating延续hook或正向成功声明；仍为本地代码调用证据，不是生产kubelet/PVC认证。

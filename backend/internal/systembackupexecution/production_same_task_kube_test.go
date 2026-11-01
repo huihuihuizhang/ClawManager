@@ -51,6 +51,9 @@ func (f *dOriginalSixPartTask) installOriginalKubeLifecycle(ctx context.Context,
 		if pod.UID != expected || pod.Spec.NodeName != "node" {
 			return fmt.Errorf("original source process identity changed")
 		}
+		if f.background != nil {
+			f.background.stop(name)
+		}
 		pod.ResourceVersion = nextRV(pod.ResourceVersion)
 		pod.Status.Phase = corev1.PodSucceeded
 		for index, status := range pod.Status.ContainerStatuses {
@@ -112,6 +115,9 @@ func (f *dOriginalSixPartTask) installOriginalKubeLifecycle(ctx context.Context,
 				if err := client.Tracker().Create(pods, resumed, ns); err != nil {
 					return true, nil, err
 				}
+				if f.background != nil {
+					f.background.start(platform.Name)
+				}
 			} else {
 				return true, nil, fmt.Errorf("unsupported original platform replicas")
 			}
@@ -143,6 +149,9 @@ func (f *dOriginalSixPartTask) installOriginalKubeLifecycle(ctx context.Context,
 		pod.Status = corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}, ContainerStatuses: []corev1.ContainerStatus{{Name: pod.Spec.Containers[0].Name, ContainerID: "containerd://d-original-7-resumed", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.NewTime(time.Now().UTC())}}}}}
 		if err := client.Tracker().Create(pods, pod, ns); err != nil {
 			return true, nil, err
+		}
+		if f.background != nil {
+			f.background.start(pod.Name)
 		}
 		return true, pod, nil
 	})

@@ -125,4 +125,5 @@ func (f *dOriginalSixPartTask) checkOriginalPhysicalRecovery(ctx context.Context
 	if creates != 1 {
 		t.Fatal("original source restart count", creates)
 	}
+	f.background.checkResumed(ctx, t)
 }
