@@ -117,6 +117,11 @@ func aOriginalPublicationFixturePolicy(t *testing.T, f *dOriginalSixPartTask) c.
 	ttl, e1 := config.Durations["controller_claim_ttl_seconds"].Int64()
 	heartbeat, e2 := config.Durations["controller_claim_heartbeat_seconds"].Int64()
 	reconcile, e3 := config.Durations["controller_reconcile_interval_seconds"].Int64()
+	// Reject original seconds BEFORE multiplication; wrapped int64 duration
+	// arithmetic must not turn an invalid config into a valid short policy.
+	if e1 != nil || e2 != nil || e3 != nil || ttl < int64(c.MinClaimTTL/time.Second) || ttl > int64(c.MaxClaimTTL/time.Second) || heartbeat < int64(c.MinHeartbeatInterval/time.Second) || heartbeat > ttl/3 || reconcile < int64(c.MinReconcileInterval/time.Second) || reconcile > int64(c.MaxReconcileInterval/time.Second) {
+		t.Fatal("invalid original fixture config policy seconds")
+	}
 	policy := c.LeasePolicy{TTL: time.Duration(ttl) * time.Second, HeartbeatInterval: time.Duration(heartbeat) * time.Second, ReconcileInterval: time.Duration(reconcile) * time.Second}
 	if e1 != nil || e2 != nil || e3 != nil || policy.Validate() != nil {
 		t.Fatal("invalid original fixture config policy")

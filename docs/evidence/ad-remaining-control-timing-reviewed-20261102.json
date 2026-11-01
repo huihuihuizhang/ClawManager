@@ -1,0 +1,70 @@
+{
+  "recorded_at": "2026-11-01T17:49:22.922388+00:00",
+  "classification": "Optional actual-stage diagnostic component and original fixture overflow rejection; no claim of latency fix or full backup acceptance",
+  "base": "a830ffe141f4813ef593b65101883db4792cbe68",
+  "owner_components": [
+    "2daf3f51f55901a0ad170100f9672a0a4be03c14",
+    "66d41720812661a0b6f561a8ef9b80d78a628d2c"
+  ],
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/original_control_timing.go",
+      "git_blob": "7ddd86024605cce68a4ee39e80f41e2758f81388",
+      "owner_frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_control_timing_test.go",
+      "git_blob": "fd4936c9d5e8cf1378eaef66ead79b950ef53b03",
+      "owner_frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_jobs.go",
+      "git_blob": "c2ffa7b8ecfbd5c45a9fb9e9446ccfcccc262435",
+      "owner_frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "git_blob": "1e991b561aa64f1489239474dae30c72600145cf",
+      "owner_frozen_equal": true
+    }
+  ],
+  "independent_validation": {
+    "session": 57189,
+    "closed": true,
+    "exit_code": 0,
+    "execution_seconds": 16.499,
+    "command": "go test -count=1 -p=1 ./internal/systembackupexecution",
+    "SQL": "environment removed; native cases not executed",
+    "log": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-remaining-control-timing-66d-a830-composed.log",
+    "log_sha256": "4d4d8aa87e5506c3b9a1bd515bb7b82bdbe5b14ad6dbac4da64637ce8cb9f8bc"
+  },
+  "review": [
+    "Optional private timers now cover actual dependency checks, original worker lookup, task locator, observation serialization/write, observation guard, provider permit stage, plan tail, final guard, commit and collectors.",
+    "Every original security call, argument, result and short-circuit order remains. Splitting OR checks preserves that a failed plan tail never calls final guard. Neither duration nor failure counter affects permissions or retries.",
+    "Real authority rejection test checks dependency failure accounting and still observes the same missing-authority error. Reading timing data cannot authorize unknown requests.",
+    "Fixture checks raw integer seconds bounds before multiplying into time.Duration; no overflow can wrap invalid original policy to a short valid duration. This is preexisting test fixture input validation, no production TTL/config/old-task rewrite.",
+    "D original resource cleanup and exact namespace permission changes on a830 remain untouched."
+  ],
+  "actual_native_still_failed": {
+    "version": 11,
+    "session": 98848,
+    "exit_code": 1,
+    "closed": true,
+    "case_seconds": 104.03,
+    "package_seconds": 107.285,
+    "task": "sbk_6aec0bff-0901-4c83-b55e-d0f830670e64",
+    "retained_schema": "ad_d_six_099b2086bcd30de3",
+    "boundary": "Database candidate report exhausted the original deadline: remaining124.34ms, report124.3659ms ending-26us. No upload delegation. Latest expanded timers were not yet part of that run.",
+    "config": "Actual read-only observation original snapshot/materialized config/caller all30/5/1; fixture policy mismatch corrected, postcapture upload path still untested.",
+    "log_sha256": "5830dbdd47109c7edfbd62148274264eb893f6793ac676ce141b144c03e7aaa8"
+  },
+  "limits": [
+    "No measured bottleneck fix yet; no permission to skip current SQL/Pod/revocation checks, cache passed authority or widen original window.",
+    "A inert-data benchmark first request shape setup failure is not performance evidence.",
+    "Full original capture/upload/C/manifest/marker/all cleanup/acceptance/catalog/terminal and isolated restore remain unproven."
+  ],
+  "next": [
+    "Measure actual uncovered cost using frozen code and preserved inert data or one owned native run after other confirmed handles close",
+    "Implement evidence-driven optimization retaining original checks and all original data, then counterexample/regression and same-task native acceptance"
+  ]
+}
