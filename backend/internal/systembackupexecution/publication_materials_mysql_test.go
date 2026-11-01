@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/x509"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -46,17 +47,34 @@ type aPublicationMaterialFixture struct {
 	secretCreates, secretUpdates, jobCreates int
 	omitSecretCreate, omitSecretUpdate       bool
 	secretCreateError, secretUpdateError     error
+	resultURL                                string
+	resultHandler                            http.Handler
 }
 
-func newAPublicationMaterialFixture(t *testing.T) *aPublicationMaterialFixture {
+func newAPublicationMaterialFixture(t *testing.T, enableResult ...bool) *aPublicationMaterialFixture {
+	return newAPublicationMaterialFixtureControl(t, len(enableResult) == 1 && enableResult[0], nil)
+}
+
+func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap func(driver.Connector) driver.Connector) *aPublicationMaterialFixture {
 	t.Helper()
 	f := &aPublicationMaterialFixture{}
 	f.store, f.provider = newANativePublicationStore(t, time.Minute)
 	t.Cleanup(f.store.Close)
 	f.store.config.RemoteStagingRoot = "remote-staging/installation_test/"
 	var issuer control.IdentityIssuer
-	originalMTLSControlServer(t, http.NotFoundHandler(), func(value control.IdentityIssuer) { issuer = value })
-	f.x = newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &f.store.config, AttemptNo: 1, PublicationWorker: &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}, WorkerIssuer: &issuer, ObserveControlDSN: func(dsn string) { f.controlDSN = dsn }})
+	f.resultURL, _ = originalMTLSControlServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if f.resultHandler == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		f.resultHandler.ServeHTTP(w, r)
+	}), func(value control.IdentityIssuer) { issuer = value })
+	options := aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &f.store.config, AttemptNo: 1, PublicationWorker: &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}, WorkerIssuer: &issuer, ObserveControlDSN: func(dsn string) { f.controlDSN = dsn }}
+	options.WrapControlConnector = wrap
+	if enableResult {
+		options.ControlURL = f.resultURL
+	}
+	f.x = newAPublisherVerifierFixtureOptions(t, options)
 	f.inputs = aStartPublisherVerifierSamePod(t, f.x)
 	aUseActualPublicationDDL(t, f.x, f.store.config)
 	aUseActualPublicationJobDDL(t, f.x)
@@ -216,6 +234,8 @@ type aPublicationReopenProof struct {
 	RequestSHA256, CredentialSHA256, MaterialBodySHA256, SecretUID, JobUID string
 	Deadline                                                               time.Time
 	JobOwner                                                               bool
+	JobGeneration                                                          int64
+	Suspended                                                              bool
 }
 
 func TestPublicationMaterialReopenProcessChild(t *testing.T) {
@@ -296,7 +316,7 @@ func TestPublicationMaterialReopenProcessChild(t *testing.T) {
 		t.Fatal("child query-only original Job recovery", err)
 	}
 	defer materials.Close()
-	proof, _ := json.Marshal(aPublicationReopenProof{RequestSHA256: materials.intent.RequestSHA256, CredentialSHA256: materials.intent.CredentialSHA256, MaterialBodySHA256: materials.intent.BodySHA256, SecretUID: string(materials.secret.UID), JobUID: string(job.UID), Deadline: materials.intent.Deadline, JobOwner: len(materials.secret.OwnerReferences) == 1})
+	proof, _ := json.Marshal(aPublicationReopenProof{RequestSHA256: materials.intent.RequestSHA256, CredentialSHA256: materials.intent.CredentialSHA256, MaterialBodySHA256: materials.intent.BodySHA256, SecretUID: string(materials.secret.UID), JobUID: string(job.UID), Deadline: materials.intent.Deadline, JobOwner: len(materials.secret.OwnerReferences) == 1, JobGeneration: job.Generation, Suspended: job.Spec.Suspend != nil && *job.Spec.Suspend})
 	if os.WriteFile(input.ProofFile, proof, 0600) != nil {
 		t.Fatal("child proof write")
 	}
@@ -314,7 +334,7 @@ func TestPublicationMaterialsDurableBefore121AndActualProcessReopenMySQL(t *test
 			if err != nil {
 				t.Fatal("durable original Secret before Job", err)
 			}
-			expected := aPublicationReopenProof{RequestSHA256: materials.intent.RequestSHA256, CredentialSHA256: materials.intent.CredentialSHA256, MaterialBodySHA256: materials.intent.BodySHA256, SecretUID: string(materials.secret.UID), Deadline: materials.intent.Deadline, JobOwner: mode == "job-owner-bound"}
+			expected := aPublicationReopenProof{RequestSHA256: materials.intent.RequestSHA256, CredentialSHA256: materials.intent.CredentialSHA256, MaterialBodySHA256: materials.intent.BodySHA256, SecretUID: string(materials.secret.UID), Deadline: materials.intent.Deadline, JobOwner: mode == "job-owner-bound", JobGeneration: 1, Suspended: true}
 			var sends int
 			if h.admin.QueryRow(`SELECT COUNT(*) FROM system_backup_v2_job_send_intents WHERE phase='publish'`).Scan(&sends) != nil || sends != 0 {
 				t.Fatal("121 preceded durable original Secret")

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"net/url"
 	"path"
 	"sort"
 	"time"
@@ -145,7 +146,12 @@ func (s *DeploymentService) publicationJobDefinition(ctx context.Context, claim 
 	if seconds < 1 || seconds > 86400 || !time.Now().Before(request.Deadline) {
 		return nil, "", c.ErrExecutionAuthority
 	}
-	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs})
+	endpoint, err := url.Parse(s.Config.ControlURL)
+	if err != nil || endpoint.Scheme != "https" || endpoint.Host == "" || endpoint.User != nil || endpoint.RawQuery != "" || endpoint.Fragment != "" {
+		return nil, "", c.ErrExecutionAuthority
+	}
+	endpoint.Path, endpoint.RawPath = PublicationResultPath, ""
+	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs, ResultRelayURL: endpoint.String()})
 	if err != nil {
 		return nil, "", err
 	}
@@ -162,8 +168,9 @@ func (s *DeploymentService) publicationJobDefinition(ctx context.Context, claim 
 	return want, specSHA, nil
 }
 
-// Actual original 121 one-send boundary. The Job remains suspended until its
-// actual UID-owned resources and original 107 receiving identity are bound.
+// Actual original 121 one-send boundary. Fresh creation stays suspended until
+// its actual UID-owned resources and original 107 receiving identity are bound.
+// Reopen accepts a started Job only with that immutable original activation.
 // A lost SQL or native ACK never grants a resend, even when GET returns absent.
 func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, request PublicationUploadRequest) (*batchv1.Job, error) {
 	if attempt != 1 || request.Version != publicationPresignedUploadVersion || !formalCandidateDigest(request.CredentialHash) || !formalCandidateDigest(request.CandidateOwnerHMAC) || s.publicationBinding() != nil || s.publisherVerifierFactory == nil || s.publisherVerifierDB == nil || s.Forward.CheckDeployment(ctx, s.publisherVerifierDB) != nil || s.checkPublicationJobResources(ctx) != nil {
@@ -238,6 +245,14 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 			return nil, err
 		}
 	}
+	originalRequest, err := json.Marshal(request)
+	if err != nil {
+		return nil, c.ErrExecutionRecord
+	}
+	activation, err := s.loadPublicationJobActivationTx(ctx, tx, claim, attempt, hash(originalRequest))
+	if err != nil || (send && activation != nil) {
+		return nil, c.ErrExecutionRecord
+	}
 	if err = guard.RecheckTx(ctx, tx); err != nil {
 		return nil, err
 	}
@@ -270,7 +285,7 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 			return nil, err
 		}
 	}
-	if !sameJob(want, got) || got.DeletionTimestamp != nil || got.Spec.Suspend == nil || !*got.Spec.Suspend || (uid.Valid && uid.String != string(got.UID)) {
+	if !publicationJobMatchesActivation(want, got, activation) || (uid.Valid && uid.String != string(got.UID)) {
 		return nil, c.ErrExecutionRecord
 	}
 	if parsed, err := uuid.Parse(string(got.UID)); err != nil || parsed.String() != string(got.UID) || got.Generation < 1 {
@@ -299,6 +314,10 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 		return nil, err
 	}
 	if finalDigest != specSHA || finalNamespace != want.Namespace || finalNamespaceUID != s.Config.NamespaceUID || finalName != name {
+		return nil, c.ErrExecutionRecord
+	}
+	currentActivation, err := s.loadPublicationJobActivationTx(ctx, final, claim, attempt, hash(originalRequest))
+	if err != nil || (activation == nil) != (currentActivation == nil) || (activation != nil && *activation != *currentActivation) {
 		return nil, c.ErrExecutionRecord
 	}
 	if finalState == "bound" {

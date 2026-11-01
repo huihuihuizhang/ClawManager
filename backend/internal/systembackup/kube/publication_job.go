@@ -2,6 +2,7 @@ package kube
 
 import (
 	"encoding/hex"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -23,6 +24,7 @@ type PublishJobRequest struct {
 	RequestSHA256                                       string
 	DeadlineSeconds                                     int64
 	InputFiles                                          []PublishInputFile
+	ResultRelayURL                                      string
 }
 
 type PublishInputFile struct{ Path, SubPath string }
@@ -30,11 +32,18 @@ type PublishInputFile struct{ Path, SubPath string }
 var publicationSealedInput = regexp.MustCompile(`^\.controller-seals/seal-[0-9a-f]{64}\.enc$`)
 
 // PublishJob never uses the capture constructor: no source volume, capture
-// identity, workload token, KMS/key material, arbitrary command or environment.
+// identity, KMS/key material, arbitrary command or environment. A result relay
+// explicitly projects a bound Pod token and the separate publication identity.
 // Input is read-only and the worker can write only its distinct result subtree.
 // Controller must first persist the exact original 121 send intent and 104
 // resource intents, then validate immutable ConfigMap/Secret/PVC identities.
 func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
+	if r.ResultRelayURL != "" {
+		u, err := url.Parse(r.ResultRelayURL)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "/publication-result" || len(r.InputFiles) == 0 {
+			return nil, ErrResource
+		}
+	}
 	decoded, err := hex.DecodeString(r.RequestSHA256)
 	if err != nil || len(decoded) != 32 || hex.EncodeToString(decoded) != r.RequestSHA256 {
 		return nil, ErrResource
@@ -110,6 +119,20 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 		pod.Containers[0].VolumeMounts = mounts
 		pod.Volumes[0].PersistentVolumeClaim.ReadOnly = true
 		pod.Volumes = append(pod.Volumes, corev1.Volume{Name: "publication-result", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{Medium: corev1.StorageMediumMemory, SizeLimit: quantity("16Mi")}}})
+	}
+	if r.ResultRelayURL != "" {
+		pod := &job.Spec.Template.Spec
+		// All original bytes already reside in the immutable, UID-owned capsule.
+		// A second request ConfigMap is unnecessary and cannot select other bytes.
+		pod.Volumes[1].ConfigMap = nil
+		pod.Volumes[1].Secret = &corev1.SecretVolumeSource{SecretName: r.UploadCredentialSecret, DefaultMode: &mode, Items: []corev1.KeyToPath{{Key: "request.json", Path: "request.json"}, {Key: "artifact-ca.crt", Path: "ca.crt"}}}
+		expires := int64(600)
+		pod.Volumes = append(pod.Volumes,
+			corev1.Volume{Name: "publication-identity", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: r.UploadCredentialSecret, DefaultMode: &mode, Items: []corev1.KeyToPath{{Key: "ca.crt", Path: "ca.crt"}, {Key: "tls.crt", Path: "tls.crt"}, {Key: "tls.key", Path: "tls.key"}}}}},
+			corev1.Volume{Name: "publication-pod", VolumeSource: corev1.VolumeSource{Projected: &corev1.ProjectedVolumeSource{DefaultMode: &mode, Sources: []corev1.VolumeProjection{{ServiceAccountToken: &corev1.ServiceAccountTokenProjection{Audience: WorkerTokenAudience, ExpirationSeconds: &expires, Path: "token"}}}}}},
+		)
+		pod.Containers[0].VolumeMounts = append(pod.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "publication-identity", MountPath: "/run/publication-identity", ReadOnly: true}, corev1.VolumeMount{Name: "publication-pod", MountPath: "/run/publication-pod", ReadOnly: true})
+		pod.Containers[0].Command = append(pod.Containers[0].Command, "--result-relay", r.ResultRelayURL, "--identity-dir", "/run/publication-identity", "--pod-token", "/run/publication-pod/token")
 	}
 	return job, nil
 }
