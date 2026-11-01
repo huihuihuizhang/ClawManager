@@ -1,0 +1,46 @@
+{
+  "schema": "a-original-c-part-container-codec-review.v1",
+  "base_git_head": "67b8cc7f3c726255c1227fc75bf075ad1b6f54dc",
+  "scope": "physical byte codec and independent Reader DATA only",
+  "artifact_contract_max_bytes": 966367641600,
+  "index_contract_max_bytes": 8589934592,
+  "actual_config_limits_required": true,
+  "max_members_original_capture_limit": 10000,
+  "header_streamed": true,
+  "whole_hash_binds_actual_parsed_header": true,
+  "new_public_artifact_index_version_field": false,
+  "source_files": {
+    "container_test.go": "5cdc8b52aa35dab2ea3684ba3a1fba1df378ef4dfaf972e9f91c43bf2f588edb",
+    "reader.go": "e74daca8b46e467c5d0e70010342795d9db1cd7afe36cced56f4e6f3ff347a29",
+    "capacity_test.go": "fd1e4ce17c6f61c70141743b010dbb02b2d653b9db609bc599e70a58239cbd98",
+    "writer.go": "8c6c2c34cb0526c667200ca1a79b05b05464b0ebc419ad023fa1b5a02fc21413",
+    "types.go": "10d64877b2479f523a02313f09eaa0211feded61777d22fb7cbe3dda77d9b962",
+    "reader_header_test.go": "62641d45461f4ec786ca8a97eeccc2ab601df704b499c48f9e9f3599e75da1d5",
+    "header.go": "c89e897bd51e2ea95324b9fc7d4f338a648238267529673bf3e7ced4615c3232"
+  },
+  "tests": [
+    {
+      "log": "a-part-container-codec-data-v1.log",
+      "sha256": "a60d750b6296c57c811be504415b61cdaf945d49239eb8dd90dda217ac3b629c"
+    },
+    {
+      "log": "supervisor-container-header-baseline.log",
+      "sha256": "baa4f4c23d853f8bf7a9399597b6137f2e8b86170b04d07c79cd650549a7ddea"
+    },
+    {
+      "log": "a-part-container-capacity-header-aba-data-v3.log",
+      "sha256": "0497b9da897d25ab389ba043f5708435bd39191cdeac55bdd094e1b7bd5403e2"
+    },
+    {
+      "log": "a-part-container-codec-final-local-v4.log",
+      "sha256": "8e745b18c0f83ecb45035aad59725d79f4d531e23388da1714b761935a4dfb8f"
+    }
+  ],
+  "limitations": [
+    "not wired to RunPublicationPass/upload-only Job",
+    "no SourceGrant/capture Authority/SQL/KMS/DEK input",
+    "no AEAD/domain/native object readback acceptance inferred",
+    "large sizes test layout/gate arithmetic only; no multi-GiB allocation or capture",
+    "downstream static 8 GiB upload/assembly guards remain separate follow-up"
+  ]
+}
