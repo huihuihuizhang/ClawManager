@@ -1,0 +1,38 @@
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope
+--- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess (0.10s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy (0.04s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format (0.02s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope (0.03s)
+=== RUN   TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay
+--- PASS: TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay (0.05s)
+=== RUN   TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify
+--- PASS: TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify (0.03s)
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit
+--- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish (0.21s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid (0.03s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision (0.05s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit (0.03s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit (0.04s)
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant
+--- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants (0.01s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid (0.01s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	3.274s

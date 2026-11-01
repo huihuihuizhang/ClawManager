@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
+	"encoding/json"
 	"io"
 	"net"
 	"os"
@@ -43,6 +44,7 @@ type DatabaseSpec struct {
 	WorkBuddy       *domain.WorkBuddySchema        `json:"workbuddy,omitempty"`
 	Dependencies    map[string]domain.TableAdapter `json:"dependencies,omitempty"`
 	TeamPlacements  map[string]domain.Placement    `json:"team_placements,omitempty"`
+	SkillsRestore   *sh.RestoreMapping             `json:"skills_restore,omitempty"`
 	EvidenceName    string                         `json:"evidence_name,omitempty"`
 	EvidenceBinding staging.Binding                `json:"evidence_binding"`
 }
@@ -104,7 +106,7 @@ func validDatabaseRequest(r Request) bool {
 		return false
 	}
 	if r.Operation == "capture-database" {
-		return d.InputFormat == "" && r.ArtifactName != "" && r.PolicyVersion == "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
+		return d.SkillsRestore == nil && d.InputFormat == "" && r.ArtifactName != "" && r.PolicyVersion == "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
 	}
 	if !strings.HasPrefix(d.Name, "cm_drill_") {
 		return false
@@ -112,7 +114,7 @@ func validDatabaseRequest(r Request) bool {
 	if r.Operation == "restore-database" {
 		return r.PolicyVersion != "" && d.EvidenceName != "" && d.EvidenceBinding != r.Binding
 	}
-	return r.PolicyVersion != "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
+	return d.SkillsRestore == nil && r.PolicyVersion != "" && len(d.Placements) == 0 && len(d.TeamPlacements) == 0 && len(d.Configs) == 0 && d.EvidenceName == ""
 }
 
 // OpenDatabase never parses an arbitrary DSN, runs schema migrations, enables
@@ -179,13 +181,28 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	if r.Operation == "restore-database" && (env.Evidence == nil || !separateRoots(env.Staging, env.Evidence)) {
 		return Result{}, ErrRequest
 	}
+	// Freeze mappings/config before invoking an authority adapter. Neither the
+	// caller's maps nor a callback's private request may rewrite target intent.
+	rawRequest, err := json.Marshal(r)
+	if err != nil || len(rawRequest) > 1<<20 {
+		return Result{}, ErrRequest
+	}
+	var frozen Request
+	if json.Unmarshal(rawRequest, &frozen) != nil {
+		return Result{}, ErrRequest
+	}
+	r = frozen
 	ctx, cancel := context.WithDeadline(ctx, r.Deadline)
 	defer cancel()
 	check := func(point string) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if env.Check(ctx, point, r) != nil {
+		var detached Request
+		if json.Unmarshal(rawRequest, &detached) != nil {
+			return ErrRequest
+		}
+		if env.Check(ctx, point, detached) != nil {
 			return ErrNotReady
 		}
 		return ctx.Err()
@@ -275,7 +292,7 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	var evidence staging.Receipt
 	var normalized domain.Snapshot
 	defer func() { clearSnapshot(normalized) }()
-	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements}, func(ctx context.Context, p domain.RestorePlan) error {
+	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements, Skills: d.SkillsRestore}, func(ctx context.Context, p domain.RestorePlan) error {
 		normalized = p.Data
 		if e := check("before-evidence"); e != nil {
 			return e

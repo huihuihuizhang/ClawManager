@@ -15,7 +15,7 @@ func dependencyRules() []scope.TableRule {
 	for _, d := range scope.CrossDomainDependencies() {
 		for _, name := range d.Tables {
 			action := "preserve"
-			if name == "instance_gateway_token_aliases" || name == "skill_package_materialize_jobs" || name == "team_event_outbox" || name == "owner_team_admission_locks" {
+			if name == "instance_gateway_token_aliases" || name == "team_event_outbox" || name == "owner_team_admission_locks" {
 				action = "drop"
 			}
 			out = append(out, scope.TableRule{Name: name, Domain: d.Domain, RestoreAction: action, Reason: "Portable users/instances dependency; preserve encrypted source rows and normalize with the owning schema."})
@@ -73,16 +73,17 @@ func applyAdapter(ctx context.Context, r Row, a TableAdapter) error {
 }
 
 var dependencyColumns = map[string]string{
-	"llm_models":                "id display_name description provider_type protocol_type base_url provider_model_name provider_models_json reasoning_enabled api_key api_key_secret_ref is_secure is_active input_price output_price currency created_at updated_at",
-	"chat_sessions":             "id session_id user_id instance_id title last_trace_id started_at last_activity_at",
-	"chat_messages":             "id trace_id session_id request_id user_id instance_id invocation_id role content sequence_no created_at",
-	"skills":                    "id user_id skill_key name description current_version_id source_type status visibility published_at published_by risk_level last_scanned_at last_scan_result_id created_at updated_at",
-	"skill_versions":            "id skill_id blob_id version_no manifest_json source_type created_at updated_at",
-	"skill_blobs":               "id content_hash archive_hash object_key file_name media_type size_bytes scan_status risk_level last_scanned_at last_scan_result_id created_at updated_at",
-	"instance_skills":           "id instance_id skill_id skill_version_id source_type install_path workspace_dir observed_hash status last_seen_at removed_at created_at updated_at",
-	"skill_hub_tags":            "id tag_key name description sort_order admin_only created_at updated_at",
-	"skill_hub_tag_assignments": "id skill_id tag_id created_at",
-	"skill_scan_results":        "id blob_id engine risk_level status summary findings_json scanned_at created_at",
+	"llm_models":                     "id display_name description provider_type protocol_type base_url provider_model_name provider_models_json reasoning_enabled api_key api_key_secret_ref is_secure is_active input_price output_price currency created_at updated_at",
+	"chat_sessions":                  "id session_id user_id instance_id title last_trace_id started_at last_activity_at",
+	"chat_messages":                  "id trace_id session_id request_id user_id instance_id invocation_id role content sequence_no created_at",
+	"skills":                         "id user_id skill_key name description current_version_id source_type status visibility published_at published_by risk_level last_scanned_at last_scan_result_id created_at updated_at",
+	"skill_versions":                 "id skill_id blob_id version_no manifest_json source_type created_at updated_at",
+	"skill_blobs":                    "id content_hash archive_hash object_key file_name media_type size_bytes scan_status risk_level last_scanned_at last_scan_result_id created_at updated_at",
+	"instance_skills":                "id instance_id skill_id skill_version_id source_type install_path workspace_dir observed_hash status last_seen_at removed_at created_at updated_at",
+	"skill_hub_tags":                 "id tag_key name description sort_order admin_only created_at updated_at",
+	"skill_hub_tag_assignments":      "id skill_id tag_id created_at",
+	"skill_scan_results":             "id blob_id engine risk_level status summary findings_json scanned_at created_at updated_at",
+	"skill_package_materialize_jobs": "id instance_id skill_id blob_id workspace_dir content_hash status attempt_count max_attempts last_error idempotency_key trigger_source started_at finished_at created_at updated_at",
 }
 
 // validateForeignKeys prevents an apparently successful partial restore with
