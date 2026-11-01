@@ -1,0 +1,464 @@
+=== RUN   TestBrowserWorkerRestoreKeepsSettingsAndDisablesRuntime
+--- PASS: TestBrowserWorkerRestoreKeepsSettingsAndDisablesRuntime (0.00s)
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/orphan
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-source
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-target
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/missing-target
+--- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/orphan (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-source (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-target (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/missing-target (0.00s)
+=== RUN   TestCaller066CommonSQLNormalization
+--- PASS: TestCaller066CommonSQLNormalization (0.00s)
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/wrong-table
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/source-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/target-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-actor
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-scope
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-keys
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/null-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/negative-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/old-schema
+--- PASS: TestCaller066CommonSQLRejectsUnsafeInput (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/wrong-table (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/source-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/target-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-actor (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-scope (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-keys (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/null-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/negative-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/old-schema (0.00s)
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor
+--- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor (0.00s)
+=== RUN   TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions
+--- PASS: TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions (0.01s)
+=== RUN   TestConfigRegistryStubsSecretsDisablesTasksAndPreservesDefinitions
+--- PASS: TestConfigRegistryStubsSecretsDisablesTasksAndPreservesDefinitions (0.00s)
+=== RUN   TestCrossDomainRestoreKeepsDefinitionsAndDisablesExecution
+--- PASS: TestCrossDomainRestoreKeepsDefinitionsAndDisablesExecution (0.00s)
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-volume
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/source-namespace
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/orphan-task
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-status
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-column
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-json-policy
+--- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-volume (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/source-namespace (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/orphan-task (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-status (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-column (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-json-policy (0.00s)
+=== RUN   TestCurrentAuthenticationHistoryNeverRestoresSourceSessions
+--- PASS: TestCurrentAuthenticationHistoryNeverRestoresSourceSessions (0.00s)
+=== RUN   TestCurrentBusinessSecretsAndConfigRequireExactOwnerRestoreAdapters
+--- PASS: TestCurrentBusinessSecretsAndConfigRequireExactOwnerRestoreAdapters (0.00s)
+=== RUN   TestDependencyRowsSurviveNormalizationAndDanglingLinksFail
+--- PASS: TestDependencyRowsSurviveNormalizationAndDanglingLinksFail (0.00s)
+=== RUN   TestWorkBuddyIdentityRequiresExactSchemaAndStableOwnership
+--- PASS: TestWorkBuddyIdentityRequiresExactSchemaAndStableOwnership (0.00s)
+=== RUN   TestWorkBuddyWithoutIdentityLayoutDoesNotPretendToBeLegacy
+--- PASS: TestWorkBuddyWithoutIdentityLayoutDoesNotPretendToBeLegacy (0.00s)
+=== RUN   TestDependencyAdapterRejectsSchemaDrift
+--- PASS: TestDependencyAdapterRejectsSchemaDrift (0.00s)
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/yaml
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/toml
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/json
+--- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/yaml (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/toml (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/json (0.00s)
+=== RUN   TestDotenvExplicitDisableRules
+--- PASS: TestDotenvExplicitDisableRules (0.00s)
+=== RUN   TestFormatsRejectAmbiguousAndUnregisteredContent
+--- PASS: TestFormatsRejectAmbiguousAndUnregisteredContent (0.00s)
+=== RUN   TestVerifierRejectsWildcardSchemaGrants
+--- PASS: TestVerifierRejectsWildcardSchemaGrants (0.00s)
+=== RUN   TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites
+=== RUN   TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites/failure
+=== RUN   TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites/cancel
+--- PASS: TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites (0.00s)
+    --- PASS: TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites/failure (0.00s)
+    --- PASS: TestJSONCastFailureAndCancellationPrecedeAllBusinessWrites/cancel (0.00s)
+=== RUN   TestMySQLCaptureIsReadOnlyAndLossless
+--- PASS: TestMySQLCaptureIsReadOnlyAndLossless (0.00s)
+=== RUN   TestMySQLRestoreAdminTransactionAndReadOnlyVerify
+--- PASS: TestMySQLRestoreAdminTransactionAndReadOnlyVerify (0.00s)
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/insert-failure
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/nonempty
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/source-target
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/bad-isolation
+--- PASS: TestMySQLRestoreRollbackAndNonemptyTarget (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/insert-failure (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/nonempty (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/source-target (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/bad-isolation (0.00s)
+=== RUN   TestNormalizeKeepsLoginQuotaOwnershipAndStopsWork
+--- PASS: TestNormalizeKeepsLoginQuotaOwnershipAndStopsWork (0.00s)
+=== RUN   TestNormalizeDoesNotReplayRolloutCheckpointsOrWorkspaceWrites
+--- PASS: TestNormalizeDoesNotReplayRolloutCheckpointsOrWorkspaceWrites (0.00s)
+=== RUN   TestNormalizeFailsClosed
+=== RUN   TestNormalizeFailsClosed/orphan
+=== RUN   TestNormalizeFailsClosed/no-admin
+=== RUN   TestNormalizeFailsClosed/unknown-field
+=== RUN   TestNormalizeFailsClosed/missing-target-field
+=== RUN   TestNormalizeFailsClosed/missing-placement
+=== RUN   TestNormalizeFailsClosed/windows
+=== RUN   TestNormalizeFailsClosed/missing-secret-adapter
+=== RUN   TestNormalizeFailsClosed/new-target-executor
+--- PASS: TestNormalizeFailsClosed (0.00s)
+    --- PASS: TestNormalizeFailsClosed/orphan (0.00s)
+    --- PASS: TestNormalizeFailsClosed/no-admin (0.00s)
+    --- PASS: TestNormalizeFailsClosed/unknown-field (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-target-field (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-placement (0.00s)
+    --- PASS: TestNormalizeFailsClosed/windows (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-secret-adapter (0.00s)
+    --- PASS: TestNormalizeFailsClosed/new-target-executor (0.00s)
+=== RUN   TestCaptureDataRoundTripTypesAndCapacity
+--- PASS: TestCaptureDataRoundTripTypesAndCapacity (0.00s)
+=== RUN   TestNormalizeTwentyTwoLinuxLiteInstances
+--- PASS: TestNormalizeTwentyTwoLinuxLiteInstances (0.00s)
+=== RUN   TestCommandHistoryCannotReplayAndConfigurationChecksumMatches
+--- PASS: TestCommandHistoryCannotReplayAndConfigurationChecksumMatches (0.00s)
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/native-json-boundaries
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:347: local MySQL only; actual Skills, caller 057/066 and operations 045/066/077 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- PASS: TestOfflineBusinessRestoreMySQL (9.55s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/native-json-boundaries (0.00s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/success (1.63s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (1.71s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (1.65s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (1.64s)
+=== RUN   TestOperation077CommonSQLPreservesTerminalHistoryAndClearsLeases
+--- PASS: TestOperation077CommonSQLPreservesTerminalHistoryAndClearsLeases (0.00s)
+=== RUN   TestOperation077CommonSQLFailsClosed
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-clock
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-offset
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-submicrosecond
+=== RUN   TestOperation077CommonSQLFailsClosed/clock-before-source
+=== RUN   TestOperation077CommonSQLFailsClosed/unknown-state
+=== RUN   TestOperation077CommonSQLFailsClosed/negative-attempts
+=== RUN   TestOperation077CommonSQLFailsClosed/invalid-payload
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-owner-column
+=== RUN   TestOperation077CommonSQLFailsClosed/fixed-status
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-unique
+=== RUN   TestOperation077CommonSQLFailsClosed/old-primary-key
+=== RUN   TestOperation077CommonSQLFailsClosed/missing-secret-policy
+=== RUN   TestOperation077CommonSQLFailsClosed/unknown-secret-field
+--- PASS: TestOperation077CommonSQLFailsClosed (0.04s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-clock (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-offset (0.04s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-submicrosecond (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/clock-before-source (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/unknown-state (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/negative-attempts (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/invalid-payload (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-owner-column (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/fixed-status (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-unique (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/old-primary-key (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/missing-secret-policy (0.00s)
+    --- PASS: TestOperation077CommonSQLFailsClosed/unknown-secret-field (0.00s)
+=== RUN   TestOperation077VerifierRejectsExecutableExpectedData
+--- PASS: TestOperation077VerifierRejectsExecutableExpectedData (0.00s)
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_keys
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_reservations
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_ledger
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_artifacts
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_jobs
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/llm_model_user_grants
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/routing_classifier_settings
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_admin_settings
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_caller_policies
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_owner_records
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_settings_audit
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_operations
+--- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_keys (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_reservations (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_ledger (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_artifacts (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_jobs (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/llm_model_user_grants (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/routing_classifier_settings (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_admin_settings (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_caller_policies (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_owner_records (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_settings_audit (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_operations (0.00s)
+=== RUN   TestCurrentOwnerTeamDefinitionsSurviveIsolatedRestore
+--- PASS: TestCurrentOwnerTeamDefinitionsSurviveIsolatedRestore (0.00s)
+=== RUN   TestLegacyTeamReceivesOnlyExplicitCMResourceScope
+--- PASS: TestLegacyTeamReceivesOnlyExplicitCMResourceScope (0.00s)
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/valid
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-table
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/changed-column
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-placement
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/wrong-owner
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/workbuddy-without-adapter
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/nonempty-target
+--- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/valid (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-table (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/changed-column (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-placement (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/wrong-owner (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/workbuddy-without-adapter (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/nonempty-target (0.00s)
+=== RUN   TestIsolatedDomainBackupRestoreRoundTrip
+--- PASS: TestIsolatedDomainBackupRestoreRoundTrip (0.02s)
+=== RUN   TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations
+--- PASS: TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations (0.00s)
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object
+--- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object (0.00s)
+=== RUN   TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns
+--- PASS: TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns (0.00s)
+=== RUN   TestSkillRestoreValidationInheritsTaskCancellation
+--- PASS: TestSkillRestoreValidationInheritsTaskCancellation (0.00s)
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation
+--- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation (0.01s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation (0.00s)
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table
+--- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table (0.00s)
+=== RUN   TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards
+--- PASS: TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards (0.00s)
+=== RUN   TestBusinessAggregateCaptureKeepsDataRowAndFinalRevocationGuards
+--- PASS: TestBusinessAggregateCaptureKeepsDataRowAndFinalRevocationGuards (0.00s)
+=== RUN   TestCensusGeneratorBindsLiteralSchemaGrantSemantics
+--- PASS: TestCensusGeneratorBindsLiteralSchemaGrantSemantics (0.00s)
+=== RUN   TestFiniteBusinessSourceGrantMatrix
+=== RUN   TestFiniteBusinessSourceGrantMatrix/valid
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing-census
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing-routine-metadata
+=== RUN   TestFiniteBusinessSourceGrantMatrix/wildcard
+=== RUN   TestFiniteBusinessSourceGrantMatrix/global
+=== RUN   TestFiniteBusinessSourceGrantMatrix/control
+=== RUN   TestFiniteBusinessSourceGrantMatrix/unknown
+=== RUN   TestFiniteBusinessSourceGrantMatrix/write
+=== RUN   TestFiniteBusinessSourceGrantMatrix/grant-option
+=== RUN   TestFiniteBusinessSourceGrantMatrix/duplicate
+=== RUN   TestFiniteBusinessSourceGrantMatrix/other-database
+=== RUN   TestFiniteBusinessSourceGrantMatrix/role
+--- PASS: TestFiniteBusinessSourceGrantMatrix (0.03s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/valid (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing-census (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing-routine-metadata (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/wildcard (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/global (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/control (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/unknown (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/write (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/grant-option (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/duplicate (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/other-database (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/role (0.00s)
+=== RUN   TestTeamArtifactReferencesUseOriginalSQLAndRejectUncoveredPaths
+--- PASS: TestTeamArtifactReferencesUseOriginalSQLAndRejectUncoveredPaths (0.00s)
+=== RUN   TestTeamCoverageRequiresValidOriginalSQLSnapshot
+--- PASS: TestTeamCoverageRequiresValidOriginalSQLSnapshot (0.00s)
+=== RUN   TestTeamWorkspaceSpecDoesNotPublishPlainSQLFingerprint
+--- PASS: TestTeamWorkspaceSpecDoesNotPublishPlainSQLFingerprint (0.00s)
+=== RUN   TestOwnerTeamProvisionHistoryIsCapturedAndCannotReplay
+--- PASS: TestOwnerTeamProvisionHistoryIsCapturedAndCannotReplay (0.00s)
+=== RUN   TestTeamArtifactReferencesCannotBeSilentlyRedactedByConfigPolicy
+--- PASS: TestTeamArtifactReferencesCannotBeSilentlyRedactedByConfigPolicy (0.00s)
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/member
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/workflow
+--- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState (0.00s)
+    --- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/member (0.00s)
+    --- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/workflow (0.00s)
+=== RUN   TestDeletedTeamHistoryDoesNotRequireDeletedSharedVolume
+--- PASS: TestDeletedTeamHistoryDoesNotRequireDeletedSharedVolume (0.00s)
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/valid
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/team
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/member
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/work
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/workflow
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/credentials
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/outbox
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/locks
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/owner-operation
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/template-operation
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/source-volume
+--- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/valid (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/team (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/member (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/work (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/workflow (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/credentials (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/outbox (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/locks (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/owner-operation (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/template-operation (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/source-volume (0.00s)
+=== RUN   TestWorkBuddyBatchIdentityUsesValidatedLiveRowsOnly
+--- PASS: TestWorkBuddyBatchIdentityUsesValidatedLiveRowsOnly (0.00s)
+=== RUN   TestWorkBuddyBatchIdentityPreservesRequestedOrder
+--- PASS: TestWorkBuddyBatchIdentityPreservesRequestedOrder (0.00s)
+=== RUN   TestObservedWorkBuddyShapeCapturePreservesHistoricalIdentityAndAllocator
+--- PASS: TestObservedWorkBuddyShapeCapturePreservesHistoricalIdentityAndAllocator (0.00s)
+=== RUN   TestObservedWorkBuddyShapeCannotUseUnprovenAdapterOrWriteBootstrap
+--- PASS: TestObservedWorkBuddyShapeCannotUseUnprovenAdapterOrWriteBootstrap (0.00s)
+=== RUN   TestWorkBuddyUIDRestorePreservesReservationsAndHighWater
+--- PASS: TestWorkBuddyUIDRestorePreservesReservationsAndHighWater (0.00s)
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/duplicate-uid
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-low
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-high
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/owner
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/missing-live
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/collision-non-wb
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/storage-nonnull
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/pro
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-regression
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-missing
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-multiple
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-high
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unknown-layout
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/fingerprint
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-index
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-fk
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-bootstrap-advanced
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unrelated-orphan
+--- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/duplicate-uid (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-low (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-high (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/owner (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/missing-live (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/collision-non-wb (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/storage-nonnull (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/pro (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-regression (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-missing (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-multiple (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-high (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unknown-layout (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/fingerprint (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-index (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-fk (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-bootstrap-advanced (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unrelated-orphan (0.00s)
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion/insert
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion/evidence
+--- PASS: TestWorkBuddyUIDRollbackAndExhaustion (0.00s)
+    --- PASS: TestWorkBuddyUIDRollbackAndExhaustion/insert (0.00s)
+    --- PASS: TestWorkBuddyUIDRollbackAndExhaustion/evidence (0.00s)
+=== RUN   TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping
+--- PASS: TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping (0.07s)
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back
+--- PASS: TestCaller066DatabaseWorkerTransactionAndReadback (0.04s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify (0.02s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back (0.02s)
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope
+--- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess (0.07s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy (0.03s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format (0.02s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope (0.03s)
+=== RUN   TestOperation077PublicWorkerFreezesPlanAndRollsBack
+--- PASS: TestOperation077PublicWorkerFreezesPlanAndRollsBack (0.04s)
+=== RUN   TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay
+--- PASS: TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay (0.02s)
+=== RUN   TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify
+--- PASS: TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify (0.02s)
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit
+--- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish (0.12s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit (0.02s)
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant
+--- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants (0.01s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid (0.00s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	13.012s

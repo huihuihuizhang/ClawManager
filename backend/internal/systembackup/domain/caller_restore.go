@@ -16,7 +16,10 @@ const CallerPolicy066Normalizer = "northbound-caller-policy.066"
 const caller066Columns = "user_id enabled scopes_json created_at updated_at updated_by api_keys_json api_keys_version"
 
 func validateOwnerNormalizer(a TableAdapter, t Table) error {
-	if a.Normalizer != CallerPolicy066Normalizer || t.Name != "northbound_caller_policies" || len(t.Columns) != 8 || len(t.PrimaryKey) != 1 || t.PrimaryKey[0] != "user_id" {
+	if a.Normalizer == NorthboundOperation077Normalizer {
+		return validateOperation077Adapter(a, t)
+	}
+	if a.Normalizer != CallerPolicy066Normalizer || a.InterruptedAt != "" || t.Name != "northbound_caller_policies" || len(t.Columns) != 8 || len(t.PrimaryKey) != 1 || t.PrimaryKey[0] != "user_id" {
 		return ErrSchema
 	}
 	for _, name := range strings.Fields(caller066Columns) {
