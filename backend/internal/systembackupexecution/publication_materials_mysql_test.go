@@ -55,7 +55,7 @@ func newAPublicationMaterialFixture(t *testing.T, enableResult ...bool) *aPublic
 	return newAPublicationMaterialFixtureControl(t, len(enableResult) == 1 && enableResult[0], nil)
 }
 
-func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap func(driver.Connector) driver.Connector) *aPublicationMaterialFixture {
+func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap func(driver.Connector) driver.Connector, concurrentTrace ...*aPublisherConcurrentSQLTrace) *aPublicationMaterialFixture {
 	t.Helper()
 	f := &aPublicationMaterialFixture{}
 	f.store, f.provider = newANativePublicationStore(t, time.Minute)
@@ -71,6 +71,9 @@ func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap
 	}), func(value control.IdentityIssuer) { issuer = value })
 	options := aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &f.store.config, AttemptNo: 1, PublicationWorker: &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}, WorkerIssuer: &issuer, ObserveControlDSN: func(dsn string) { f.controlDSN = dsn }}
 	options.WrapControlConnector = wrap
+	if len(concurrentTrace) == 1 {
+		options.ConcurrentPublisherSQLTrace = concurrentTrace[0]
+	}
 	if enableResult {
 		options.ControlURL = f.resultURL
 	}

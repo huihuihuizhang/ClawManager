@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/base64"
@@ -349,6 +351,7 @@ type consumerFixtureOptions struct {
 	RequestedParts                        []string
 	ConfigureWorkload                     func(*kube.JobRequest)
 	WrapControlConnector                  func(driver.Connector) driver.Connector
+	ConcurrentPublisherSQLTrace           *aPublisherConcurrentSQLTrace
 	ConfigSnapshot                        []byte
 	OwnedCredentialsFile, OwnedServerUUID string
 	DeploymentCore                        func(c.ExecutionGrant, ed25519.PublicKey, string) DeploymentConfig
@@ -369,9 +372,10 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	t.Helper()
 	ctx := context.Background()
 	var cred struct {
-		Host           string
-		Port           int
-		User, Password string
+		Host                              string
+		Port                              int
+		User, Password                    string
+		CAFile, TLSServerName, ServerUUID string
 	}
 	credentialsFile := os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS")
 	if options.OwnedCredentialsFile != "" {
@@ -395,6 +399,28 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	cfg.Params = map[string]string{"time_zone": "'+00:00'"}
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 10 * time.Second
+	// Owned SAN/TLS fixtures retain their independent server/CA identity. Old
+	// plaintext fixtures keep their existing path; TLS is never downgraded.
+	if cred.CAFile != "" || cred.TLSServerName != "" || cred.ServerUUID != "" {
+		if options.OwnedCredentialsFile == "" || cred.ServerUUID != options.OwnedServerUUID || cred.TLSServerName == "" || !filepath.IsAbs(cred.CAFile) || filepath.Clean(cred.CAFile) != cred.CAFile {
+			t.Fatal("owned TLS fixture requires independently pinned UUID and absolute CA")
+		}
+		pem, err := os.ReadFile(cred.CAFile)
+		pool := x509.NewCertPool()
+		if err != nil || !pool.AppendCertsFromPEM(pem) {
+			t.Fatal("owned TLS fixture CA unavailable")
+		}
+		var tlsNonce [16]byte
+		if _, err := rand.Read(tlsNonce[:]); err != nil {
+			t.Fatal(err)
+		}
+		name := "a-owned-" + hex.EncodeToString(tlsNonce[:])
+		if err := mysql.RegisterTLSConfig(name, &tls.Config{MinVersion: tls.VersionTLS13, RootCAs: pool, ServerName: cred.TLSServerName}); err != nil {
+			t.Fatal("owned TLS registration failed")
+		}
+		t.Cleanup(func() { mysql.DeregisterTLSConfig(name) })
+		cfg.TLSConfig = name
+	}
 	root, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		t.Fatal("local MySQL open failed")

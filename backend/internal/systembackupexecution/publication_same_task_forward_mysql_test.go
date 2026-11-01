@@ -296,6 +296,9 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		if err != nil || m.Purpose != "acceptance" || len(m.Eligibility.Disqualifiers) != 0 || len(request.Objects) != 15 {
 			t.Fatal("original complete acceptance MF facts", err)
 		}
+		if err = f.service.renewFreshOriginalPublicationPreparation(ctx, claim, capture.Input.CaptureAttemptNo, policy, store.config, request); err != nil {
+			t.Fatal("fresh original preparation before first upload delegation", err)
+		}
 		job, err := f.service.ensureStartedPublicationJob(ctx, *claim, capture.Input.CaptureAttemptNo, store.config, request)
 		if err != nil || job == nil || job.Spec.Suspend == nil || *job.Spec.Suspend || *creates != 1 || *patches != 1 {
 			t.Fatal("original native upload Job create/activation", err, *creates, *patches)

@@ -51,18 +51,18 @@ func (s *DeploymentService) prepareOriginalForwardRequest(ctx context.Context, c
 	if claim == nil || !capture.checked() {
 		return zero, c.ErrExecutionRecord
 	}
-	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy}
+	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy, freshPreparation: true}
 	if err := guard.current(ctx, true); err != nil {
 		return zero, err
 	}
 	if _, err := s.ensureOriginalForwardCertificate(ctx, *claim, attempt, capture); err != nil {
 		return zero, err
 	}
-	files, err := s.preparePublicationContainerFiles(ctx, claim, attempt, policy, capture)
+	files, err := s.preparePublicationContainerFilesMode(ctx, claim, attempt, policy, capture, true)
 	if err != nil {
 		return zero, err
 	}
-	bootstrap, err := s.prepareOriginalPublicationBootstrap(ctx, claim, attempt, policy, capture)
+	bootstrap, err := s.prepareOriginalPublicationBootstrapMode(ctx, claim, attempt, policy, capture, true)
 	if err != nil {
 		return zero, err
 	}

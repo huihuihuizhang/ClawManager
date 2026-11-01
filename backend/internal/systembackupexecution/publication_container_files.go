@@ -35,13 +35,17 @@ var publicationRequestedParts = []string{"deployment_resources", "mysql", "objec
 // These physical file facts are created from actual bytes under the current
 // publisher. They are still not native object versions or artifact acceptance.
 func (s *DeploymentService) preparePublicationContainerFiles(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture) (publicationContainerFileSet, error) {
+	return s.preparePublicationContainerFilesMode(ctx, claim, attempt, policy, capture, false)
+}
+
+func (s *DeploymentService) preparePublicationContainerFilesMode(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture, freshPreparation bool) (publicationContainerFileSet, error) {
 	var zero publicationContainerFileSet
-	dir, err := s.ensurePublicationContainerDirectory(ctx, claim, attempt, policy, capture)
+	dir, err := s.ensurePublicationContainerDirectoryMode(ctx, claim, attempt, policy, capture, freshPreparation)
 	if err != nil {
 		return zero, err
 	}
 	defer dir.Close()
-	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy}
+	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy, freshPreparation: freshPreparation}
 	if err = guard.current(ctx, true); err != nil {
 		return zero, err
 	}
@@ -65,7 +69,7 @@ func (s *DeploymentService) preparePublicationContainerFiles(ctx context.Context
 			// The committed exact plan and authenticated parent/child markers
 			// precede this private create-only write. A partial is never adopted.
 			_, err = staging.WriteUnpublishedFile(ctx, dir.root, name, func(dst io.Writer) error {
-				_, err := s.writeOriginalPublicationContainer(ctx, claim, attempt, policy, capture, requested, dst)
+				_, err := s.writeOriginalPublicationContainerMode(ctx, claim, attempt, policy, capture, requested, dst, freshPreparation)
 				return err
 			})
 			if err != nil {
