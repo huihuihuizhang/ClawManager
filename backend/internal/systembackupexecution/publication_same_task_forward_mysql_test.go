@@ -355,10 +355,7 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		if err != nil || len(result.Objects) != 15 {
 			t.Fatal("actual upload-only worker", err)
 		}
-		objects := map[string]ArtifactReadObject{}
-		for _, observed := range result.Objects {
-			objects[observed.Key] = ArtifactReadObject{Key: observed.Key, Version: observed.Version, SHA256: observed.SHA256, Size: observed.Bytes}
-		}
+		objects := aOriginalUploadReadObjectsData(material.request.Objects, result.Objects)
 		limits, err := artifactLimitsFromConfigSnapshot(capture.Input.ConfigSnapshot, capture.Input.ConfigSHA256)
 		if err != nil {
 			t.Fatal(err)
@@ -398,6 +395,42 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 			afterUploaded(ctx, t, f, claim, capture, store, native)
 		}
 	})
+}
+
+func aOriginalUploadReadObjectsData(expected []PublicationUploadInput, observations []PublicationUploadObservation) map[string]ArtifactReadObject {
+	if len(expected) != len(observations) {
+		return nil
+	}
+	objects := make(map[string]ArtifactReadObject, len(expected))
+	for i, observed := range observations {
+		objects[expected[i].Path] = ArtifactReadObject{Key: observed.Key, Version: observed.Version, SHA256: observed.SHA256, Size: observed.Bytes}
+	}
+	return objects
+}
+
+func TestOriginalForwardUploadReadSetRequiresRelativePathMapData(t *testing.T) {
+	observed := originalUploadPollFixtureData(t)
+	request := observed.Request
+	manifest, err := decodePublicationManifestV12(request.ManifestInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var uploaded []PublicationUploadObservation
+	for _, message := range observed.Messages[:len(request.Objects)] {
+		uploaded = append(uploaded, message.Object)
+	}
+	objects := aOriginalUploadReadObjectsData(request.Objects, uploaded)
+	limits := ArtifactReadLimits{MaxArtifactBytes: 64 << 20, MaxIndexBytes: 1 << 20}
+	set, err := selectPublicationRemoteCaptureSet(request.Installation, request.Backup, request.Attempt, request.ArtifactRoot, manifest.CaptureContext, request.IndexBytes, hash(request.IndexBytes), objects, limits)
+	if err != nil || set == nil {
+		t.Fatal("native upload observations were not projected as relative-path DATA", err)
+	}
+	for i, input := range request.Objects {
+		object, exists := objects[input.Path]
+		if !exists || object.Key != uploaded[i].Key || object.Version != uploaded[i].Version {
+			t.Fatal("relative-path projection changed original fixed key/version")
+		}
+	}
 }
 
 func aSendOriginalForwardResults(ctx context.Context, t *testing.T, f *dOriginalSixPartTask, job *batchv1.Job, m *publicationJobMaterials, result PublicationUploadResult, directory string) {
