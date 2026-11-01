@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -116,7 +117,7 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 	if err != nil {
 		return zero, false, err
 	}
-	if err = d.checkPublicationTargetTx(ctx, tx, guard.Facts(), target); err != nil {
+	if err = d.checkPublicationActionTargetTx(ctx, tx, guard.Facts(), target, intent.Kind); err != nil {
 		return zero, false, err
 	}
 	if continuation != nil {
@@ -140,12 +141,18 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 	if !errors.Is(err, sql.ErrNoRows) || status == "finalization_unknown" || status != "validating" && status != "publishing" {
 		return zero, false, errPublicationUnavailable
 	}
+	// A valid catalog transport/current purpose mapping is not independent
+	// artifact acceptance. Existing actions remain query-only above; creation
+	// waits for the typed verified-artifact/catalog-signature producer.
+	if intent.Kind == "catalog_registration_append" {
+		return zero, false, ErrPublicationFinalizationRequired
+	}
 	if intent.Deadline.After(access.ValidUntil()) || !time.Now().Before(intent.Deadline) {
-		return zero, false, errPublicationUnavailable
+		return zero, false, fmt.Errorf("%w: dispatch deadline outside original authority", errPublicationUnavailable)
 	}
 	var capacity int64
 	if tx.QueryRowContext(ctx, "SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? FOR SHARE", d.Config.InstallationID, guard.Facts().ConfigVersion).Scan(&capacity) != nil || (security.RegistrationCapacity{ReportFile: d.Config.CapacityFile}).ReserveExecutionPayload(ctx, tx, capacity, len(intent.Payload)) != nil {
-		return zero, false, errPublicationUnavailable
+		return zero, false, fmt.Errorf("%w: original metadata capacity reservation rejected", errPublicationUnavailable)
 	}
 	id := "sxa_" + uuid.NewString()
 	logical := publicationLogicalHash(d.Config.InstallationID, claim.Target.PublicID, attempt, intent)
@@ -184,11 +191,7 @@ func (d *DeploymentService) checkPublicationTargetTx(ctx context.Context, tx *sq
 	if target.validate() != nil || target.InstallationID != facts.InstallationID {
 		return c.ErrExecutionAuthority
 	}
-	var write, writeVersion, read, readVersion, ca, caVersion string
-	if tx.QueryRowContext(ctx, `SELECT artifact_write_identity_hash,artifact_write_ref_version,artifact_read_identity_hash,artifact_read_ref_version,artifact_ca_identity_hash,artifact_ca_ref_version FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? AND config_sha256=? FOR SHARE`, facts.InstallationID, facts.ConfigVersion, facts.ConfigSHA256).Scan(&write, &writeVersion, &read, &readVersion, &ca, &caVersion) != nil || write != target.WriteIdentityHash || writeVersion != target.WriteRefVersion || read != target.ReadIdentityHash || readVersion != target.ReadRefVersion || ca != target.CAIdentityHash || caVersion != target.CARefVersion {
-		return c.ErrExecutionAuthority
-	}
-	return nil
+	return checkOriginalPublicationReferencesTx(ctx, tx, facts, publicationConfigReference{"artifact_write", target.WriteIdentityHash, target.WriteRefVersion}, publicationConfigReference{"artifact_read", target.ReadIdentityHash, target.ReadRefVersion}, publicationConfigReference{"artifact_ca", target.CAIdentityHash, target.CARefVersion})
 }
 
 // Observe only the ORIGINAL key and version. A complete independently read
@@ -226,6 +229,11 @@ func readPublicationJSON(ctx context.Context, store *nativePublicationS3, action
 // original action under the CURRENT acquired claim after network completion.
 // Unknown does not become absence, failure, cancellation or a new write.
 func (d *DeploymentService) recordPublicationObservation(ctx context.Context, claim c.ClaimToken, attempt uint64, action publicationJournalAction, object nativePublicationObject, observationErr error) error {
+	store, err := d.publicationStoreForAction(ctx, action.Kind)
+	if err != nil {
+		return err
+	}
+	defer store.Close()
 	access, err := d.publicationAccess(ctx, claim, attempt)
 	if err != nil {
 		return err
@@ -241,6 +249,9 @@ func (d *DeploymentService) recordPublicationObservation(ctx context.Context, cl
 	}
 	guard, err := access.Bind(ctx, tx)
 	if err != nil {
+		return err
+	}
+	if err := d.checkPublicationActionTargetTx(ctx, tx, guard.Facts(), store.config, action.Kind); err != nil {
 		return err
 	}
 	current, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND public_id=? FOR UPDATE", d.Config.InstallationID, claim.Target.PublicID, action.ID))
@@ -308,6 +319,9 @@ func (d *DeploymentService) publishOriginalJSON(ctx context.Context, claim c.Cla
 }
 
 func (d *DeploymentService) publishOriginalJSONWithContinuation(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation) (nativePublicationObject, error) {
+	if store == nil || intent.Kind == "catalog_registration_append" && store.catalog == nil || intent.Kind != "catalog_registration_append" && store.catalog != nil {
+		return nativePublicationObject{}, ErrPublicationCatalogUnavailable
+	}
 	action, send, err := d.beginPublicationActionWithContinuation(ctx, claim, attempt, store.config, intent, continuation)
 	if err != nil {
 		return nativePublicationObject{}, err
@@ -331,7 +345,7 @@ func (d *DeploymentService) publishOriginalJSONWithContinuation(ctx context.Cont
 	if access.Check(ctx) != nil || d.checkPublisherVerifierBinding(ctx) != nil || d.publicationBinding() != nil {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
 	}
-	currentStore, checkErr := d.publicationStore(ctx)
+	currentStore, checkErr := d.publicationStoreForAction(ctx, intent.Kind)
 	if checkErr != nil {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
 	}

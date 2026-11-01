@@ -1,0 +1,117 @@
+{
+  "schema_version": "d-publication-original-reference-catalog-review.v1",
+  "updated_at_utc": "2026-11-01T07:45:39.473836+00:00",
+  "source_base": "4d2e1e491f168b23bb0cd74e563e3742efe9530a",
+  "classification": "bounded original-reference and independent catalog transport/recovery implementation; full publication still incomplete",
+  "mysql": {
+    "port": 65298,
+    "server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+    "scope": "private UUID-checked native MySQL fixtures and exact production DDL; all D processes terminal; no 63507 use"
+  },
+  "changes": [
+    "Original task snapshot exact bytes/size/SHA/JCS and unique purpose refs must equal both target mapping and current materialized columns in the same transaction.",
+    "Separate parent-pinned catalog materials, distinct catalog read/append identities and credential paths; shared original artifact_ca trust reference because no catalog CA column exists.",
+    "Existing catalog request_sent recovery uses catalog read transport only; original key/payload/logical action/deadline retained; one old PUT and one GET, no artifact I/O and no success promotion.",
+    "New catalog action still refuses without typed independently verified artifact and catalog signature.",
+    "Purpose refs are frozen into complete fixture configuration before capture; no post-capture snapshot rewrite.",
+    "Safe phase errors retain errors.Is sentinel; fixture capacity samples are refreshed at explicitly modeled new reservation boundaries, never old claims/DEK/grants."
+  ],
+  "limitations": [
+    "No full artifact business validation, signed acceptance/catalog generation, staging cleanup or final success CAS proved here.",
+    "Catalog bodies in native transport/recovery tests are explicitly protocol JSON DATA, not valid signed registration records.",
+    "Initial combined native failure is retained and not attributed to one proven cause. Sample-age diagnostics passed without refresh; five-second freshness is a plausible timing boundary, not a demonstrated unique cause of that old failure.",
+    "Initial restricted package failed on native file/socket access; the final elevated full package passed.",
+    "Independent supervisor probe is a test-only overlay; no production overlay."
+  ],
+  "sessions": {
+    "79935": "terminal0",
+    "49013": "terminal1 restricted-host access failures",
+    "65035": "terminal0",
+    "87785": "terminal0",
+    "46506": "terminal1 retained combined failure",
+    "92889": "terminal0",
+    "80083": "terminal0",
+    "26980": "terminal0",
+    "34800": "terminal0",
+    "68681": "terminal0"
+  },
+  "logs": {
+    "independent_reference_red": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-publication-ref-snapshot-native-baseline.log",
+      "sha256": "370546b2303329138a04b758e9cb7b43424ec03bb8d11e95932e034a2409427d",
+      "exit_code": 1,
+      "package_seconds": 12.841
+    },
+    "early_reference_and_nine": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-publication-ref-fixed-native.log",
+      "sha256": "d71ea587eebdc1c63b19f8649180d4f9aa961c5b7150fd8b80ab04d64ec9cf8d",
+      "exit_code": 0,
+      "package_seconds": 77.943
+    },
+    "catalog_two_initial": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-purpose-native.log",
+      "sha256": "62667a6a07683b10ff5c93dd0c4ba4d4c0ca88117ffbb52b1a302a107db83b06",
+      "exit_code": 0,
+      "package_seconds": 16.584
+    },
+    "unresolved_combination_red": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-original-reference-final-native.log",
+      "sha256": "f7d49b140c97234399c92edf4ac649951675a4843e8b486a4550db7d87eb4941",
+      "exit_code": 1,
+      "package_seconds": 117.936
+    },
+    "capacity_age_single_diagnostic": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-continuation-capacity-diagnostic.log",
+      "sha256": "fd19674d9afd13dcc0583ba476c00b9f5811de10d7c34f0ba6190bc6a36bc6f5",
+      "exit_code": 0,
+      "package_seconds": 10.78
+    },
+    "phase_diagnostic_nine": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-continuation-phase-diagnostic.log",
+      "sha256": "9642b1eaa35177333d3bdfa7f881f427e358487dca36e3a9a7e713e5f039acd8",
+      "exit_code": 0,
+      "package_seconds": 77.205
+    },
+    "final_native_combination": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-original-reference-final-with-samples-native.log",
+      "sha256": "186af64a134d7ba91d7e138fda4baff189d362978d9eb865bd8020f88d1dfcee",
+      "exit_code": 0,
+      "package_seconds": 128.708
+    },
+    "original_journal_regressions": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-original-journal-regression-native.log",
+      "sha256": "9b64cd427d754a7c43b938f1ee4e7789dad589d068ee8e5c006221d4ee3b2a1f",
+      "exit_code": 0,
+      "package_seconds": 72.993
+    },
+    "owner_three_artifact_refs": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-original-reference-owner-native.log",
+      "sha256": "0440ce379fcd274d488391546417c628b5790be63e079522585119ded72db650",
+      "exit_code": 0,
+      "package_seconds": 11.372
+    },
+    "final_execution_package": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-original-reference-final-package.log",
+      "sha256": "932ba697ac75d9a04b85078a76616a0b9487a2f22e28b9dbc03658c09bc5ab17",
+      "exit_code": 0,
+      "package_seconds": 10.05
+    },
+    "initial_restricted_package": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-reference-package.log",
+      "sha256": "41f725d6baab03b81935f18ad095ffe554fb119489dc6f5f6f8ea11859e30316",
+      "exit_code": 1,
+      "package_seconds": 8.973
+    }
+  },
+  "independent_probe_sha256": "569f6e51902fb18e989f00a78fbc25bbecd9e1b0744427ab6d97ee2f19c25ad8",
+  "production_sources": {
+    "publication_catalog_target.go": "9bbb15e6622e293f511ee2ca7aaa47a82806343f117e719740101a8e42aa5912",
+    "publication_config_references.go": "e21396b32fc8379d3cec15a92879cab7e90e12f4e53f722df6aaebf6db636545",
+    "publication_capacity.go": "c8d1730bcc1fbd978f4881ecd45d989a0ffb21e3e7fd2e5d2f4df1e0c5cb3cfa",
+    "publication_continuation.go": "80c6d1e167b6452f235d5f598efd0e4ec8887a688f6b7f9d2ee0bd7f10f87566",
+    "publication_journal.go": "3bfaa7410ab2dfbe1a2a4fde7891ba54b2af94ce3dfc8b4d0b49887bdba62307",
+    "publication_native_s3.go": "220ce78d73f83cbe9ad5c37c4454a0f89b25b48ad509081cb11194df7cc1773a",
+    "publication_pass.go": "add8bf95dfab03ee850b6a938b26cce2491434d6d2ed5fc1d087a2ece50cdc16",
+    "publication_receipt.go": "8710ad1b236ea4007d4594ae88f218e227cd84607954ae26f0b73747ade0fc41"
+  }
+}

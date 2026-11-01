@@ -37,7 +37,7 @@ func (d *DeploymentService) publicationReceipt(ctx context.Context, claim c.Clai
 	if err != nil {
 		return nativePublicationObject{}, err
 	}
-	if d.checkPublicationTargetTx(ctx, tx, guard.Facts(), target) != nil {
+	if d.checkPublicationActionTargetTx(ctx, tx, guard.Facts(), target, action.Kind) != nil {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
 	}
 	current, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND public_id=? FOR SHARE", d.Config.InstallationID, claim.Target.PublicID, action.ID))
@@ -75,12 +75,12 @@ func (object nativePublicationObject) recheckPublicationReceiptTx(ctx context.Co
 	d := receipt.service
 	// These checks are bounded local file/JSON/TLS-material checks, no network
 	// and no nested SQL. The independently pinned target must still be original.
-	store, err := d.publicationStore(ctx)
+	store, err := d.publicationStoreForAction(ctx, receipt.action.Kind)
 	if err != nil {
 		return err
 	}
 	store.Close()
-	if store.config != receipt.target || d.checkPublicationTargetTx(ctx, tx, guard.Facts(), receipt.target) != nil {
+	if store.config != receipt.target || d.checkPublicationActionTargetTx(ctx, tx, guard.Facts(), receipt.target, receipt.action.Kind) != nil {
 		return c.ErrExecutionAuthority
 	}
 	current, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND public_id=? FOR SHARE", d.Config.InstallationID, scope.BackupPublicID, receipt.action.ID))

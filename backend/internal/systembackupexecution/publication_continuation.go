@@ -80,6 +80,14 @@ ORDER BY b.id LIMIT 1`, s.Config.InstallationID).Scan(&backup, &version, &attemp
 			p.close()
 		}
 	}()
+	var catalog *nativePublicationS3
+	if store.config.CatalogMaterialsFile != "" {
+		catalog, err = s.catalogStore(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer catalog.Close()
+	}
 	access, err := s.publicationAccess(ctx, claim, attempt)
 	if err != nil {
 		return nil, err
@@ -116,8 +124,15 @@ ORDER BY b.id LIMIT 1`, s.Config.InstallationID).Scan(&backup, &version, &attemp
 		return nil, c.ErrExecutionRecord
 	}
 	for i, action := range p.actions {
+		actionStore := store
+		if action.Kind == "catalog_registration_append" {
+			if catalog == nil {
+				return nil, ErrPublicationCatalogUnavailable
+			}
+			actionStore = catalog
+		}
 		intent := publicationJSONIntent{Kind: action.Kind, Key: action.Key, Payload: action.Payload, Deadline: action.Deadline}
-		if action.Kind != publicationContinuationOrder[i] || action.State != "confirmed_present" || !action.ObjectVersion.Valid || action.ObjectVersion.String == "" || !action.ObjectSHA.Valid || action.ObjectSHA.String != action.PayloadSHA || intent.validate(store.config) != nil || action.ActionKey != publicationActionKey(backup, attempt, action.Kind) || action.LogicalSHA != publicationLogicalHash(s.Config.InstallationID, backup, attempt, intent) {
+		if action.Kind != publicationContinuationOrder[i] || action.State != "confirmed_present" || !action.ObjectVersion.Valid || action.ObjectVersion.String == "" || !action.ObjectSHA.Valid || action.ObjectSHA.String != action.PayloadSHA || intent.validate(actionStore.config) != nil || action.ActionKey != publicationActionKey(backup, attempt, action.Kind) || action.LogicalSHA != publicationLogicalHash(s.Config.InstallationID, backup, attempt, intent) {
 			return nil, c.ErrExecutionRecord
 		}
 	}
@@ -131,9 +146,13 @@ ORDER BY b.id LIMIT 1`, s.Config.InstallationID).Scan(&backup, &version, &attemp
 		p.next = publicationContinuationOrder[len(p.actions)]
 	}
 	for _, action := range p.actions {
+		actionStore := store
+		if action.Kind == "catalog_registration_append" {
+			actionStore = catalog
+		}
 		// Existing confirmed actions ALWAYS use the original version and complete
 		// EOF readback. This existing helper cannot issue a second PUT for them.
-		object, err := s.publishOriginalJSON(ctx, claim, attempt, store, publicationJSONIntent{Kind: action.Kind, Key: action.Key, Payload: action.Payload, Deadline: action.Deadline})
+		object, err := s.publishOriginalJSON(ctx, claim, attempt, actionStore, publicationJSONIntent{Kind: action.Kind, Key: action.Key, Payload: action.Payload, Deadline: action.Deadline})
 		if err != nil {
 			return nil, err
 		}
