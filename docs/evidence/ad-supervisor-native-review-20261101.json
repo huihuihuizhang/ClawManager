@@ -1298,5 +1298,49 @@
       "Explicit supported-format changes for descriptor member; no arbitrary extra members and no fabricated historical metadata for old missing artifacts."
     ],
     "component_disposition": "Accepted as inert protocol component after final root tests and failure-clear fix review. Full encrypted capture and source authentication still explicitly required."
+  },
+  "D_CE_diagnostics_independent": {
+    "classification": "Reviewed and independently tested diagnostics only; prior intermittent CE failure remains unresolved.",
+    "reviewed_head": "44ec92266b735be97227a3bf420028d64e409c91",
+    "source_commits": [
+      "60e4681d",
+      "0f81893fe56e3004f4faac8d34e4a579ce68129e",
+      "689122b1862bd5f49f8985582e3fab0f0622d7a7",
+      "514bb97d"
+    ],
+    "changes": [
+      "Static rejection stages at worker/source/pull/controller SQL boundaries.",
+      "DEK callback entered/succeeded flags; actual original key deadline separated from context deadline.",
+      "Only first controller-finalized-seal-checksum sql.ErrNoRows probe log suppressed; all caller checks and later missing proof/chunk rejection retained."
+    ],
+    "preserved": [
+      "Original authorization predicates, return errors, HTTP status, SQL queries, key-use windows, 30-second claim and 5-second heartbeat.",
+      "No raw request, error text, token, grant, key or business payload in new diagnostics.",
+      "No remote-container candidate 5ca3608b functionality integrated by this review."
+    ],
+    "independent_regression": {
+      "session": 95201,
+      "terminal_exit": 0,
+      "closed": true,
+      "sql_opt_in": false,
+      "worker_seconds": 36.154,
+      "execution_seconds": 9.335,
+      "log_relative_to_workspace_parent": ".tools/supervisor-ce-diagnostics-merged-packages.log"
+    },
+    "owner_native_observation_independently_read": {
+      "source": "689122b1862bd5f49f8985582e3fab0f0622d7a7",
+      "session": 26350,
+      "task": "sbk_e0ba79ed-43f4-4a1a-9e27-517a46e094a0",
+      "case_seconds": 150.93,
+      "package_seconds": 154.383,
+      "durable_containers": 6,
+      "durable_bytes": 54124,
+      "log_sha256": "de271345320e39b3b538ec8f50d534ab88565b4197580351926ae9ca88040d06",
+      "scope": "Actual original synthetic ten-worker task, C, certificate and durable containers/reopen. Root read and hashed owner log; root did not run this native process."
+    },
+    "limits": [
+      "No rejection branch fired in the new native observation; no proven cause or fix for earlier 90282 CE failure or 38783 database failure.",
+      "No eleven-member description-native proof, remote-C consumer proof, complete manifest/upload/acceptance/catalog, final success or onsite certification."
+    ]
   }
 }

@@ -64,12 +64,18 @@ func (s *DeploymentService) controlEvidenceSourceHandler() http.Handler {
 
 func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
-	deny := func() { w.WriteHeader(http.StatusForbidden) }
+	stage, started := "controller-pull-input-materials-tls", time.Now()
+	diagnosticContext, diagnosticUntil := r.Context(), time.Time{}
+	deny := func() {
+		logOriginalControlEvidenceRejection(stage, diagnosticContext, diagnosticUntil, started)
+		w.WriteHeader(http.StatusForbidden)
+	}
 	if r.Method != http.MethodPost || s == nil || !s.ForwardEnabled || s.Runtime == nil || s.Runtime.Owner == nil || s.captureMaterials == nil || s.captureMaterials.ControlEvidence == nil || s.checkProductionCaptureMaterials() != nil || r.TLS == nil || len(r.TLS.VerifiedChains) == 0 || len(r.TLS.PeerCertificates) == 0 {
 		deny()
 		return
 	}
 	cert := r.TLS.PeerCertificates[0]
+	stage = "controller-pull-peer-uri"
 	if len(cert.URIs) != 1 || cert.URIs[0].Scheme != "spiffe" || cert.URIs[0].Host == "" {
 		deny()
 		return
@@ -77,37 +83,45 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 	var request worker.ControlRequest
 	decoder := json.NewDecoder(io.LimitReader(r.Body, (1<<20)+1))
 	decoder.DisallowUnknownFields()
+	stage = "controller-pull-request-decode"
 	if decoder.Decode(&request) != nil || decoder.Decode(new(any)) != io.EOF || !worker.ValidateControl(request) {
 		deny()
 		return
 	}
+	stage = "controller-pull-original-locator"
 	locator, err := originalControlEvidenceLocator(request)
 	if err != nil {
 		deny()
 		return
 	}
+	stage = "controller-pull-installation"
 	if locator.Expected.Installation != s.Config.InstallationID {
 		deny()
 		return
 	}
 	peer := cert.URIs[0].String()
 	owner := s.Runtime.Owner
+	stage = "controller-pull-authorize-before"
 	first, err := owner.Authorize(r.Context(), peer, request)
 	defer first.Clear()
 	if err != nil || first.KeyUse == nil || first.KeyUse.State != "using" || first.KeyUse.Nonce != request.Point || first.InvocationSHA256 != request.InvocationSHA256 {
 		deny()
 		return
 	}
+	diagnosticUntil = first.ExpiresAt
+	stage = "controller-pull-source-materials"
 	operation, exists := s.captureMaterials.Operations[ce.Operation]
 	if !exists || operation.Formal.PermitDelivery == nil || s.captureMaterials.ControlEvidenceSource == nil {
 		deny()
 		return
 	}
 	mount := *s.captureMaterials.ControlEvidenceSource
+	stage = "controller-pull-source-mount"
 	if mount.Endpoint != s.Config.ControlURL || request.Invocation.FormalCapture.PermitDelivery == nil || bytes.Equal(mount.Issuer, request.Invocation.FormalCapture.PermitDelivery.Issuer) {
 		deny()
 		return
 	}
+	stage = "controller-pull-source-grant-before"
 	firstGrant, err := worker.ReadControlEvidenceSourceGrant(r.Context(), mount, locator.Expected, first.KeyUse.Identity, true)
 	if err != nil {
 		deny()
@@ -119,11 +133,14 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 	}
 	ctx, cancel := context.WithDeadline(r.Context(), until)
 	defer cancel()
+	diagnosticContext, diagnosticUntil = ctx, until
+	stage = "controller-pull-source-sql-before"
 	entries, err := s.readOriginalControlEvidenceEntries(ctx, request, locator, first)
 	if err != nil {
 		deny()
 		return
 	}
+	stage = "controller-pull-rebuild-snapshot"
 	prepared, finalSeal, responseEntries, locatorChunks, err := rebuildControlSourceSnapshot(ctx, locator, entries)
 	if err != nil {
 		deny()
@@ -133,23 +150,27 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 	defer clear(prepared.ProofsJSON)
 	// Last workload/provider/Job checks finish before the final short original
 	// task/key-use/evidence SQL snapshot. No SQL lock is held over network I/O.
+	stage = "controller-pull-authorize-after"
 	last, err := owner.Authorize(ctx, peer, request)
 	defer last.Clear()
 	if err != nil || last.KeyUse == nil || *last.KeyUse != *first.KeyUse || !last.ExpiresAt.Equal(first.ExpiresAt) || last.InvocationSHA256 != first.InvocationSHA256 {
 		deny()
 		return
 	}
+	stage = "controller-pull-source-grant-after"
 	lastGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, locator.Expected, first.KeyUse.Identity, true)
 	if err != nil || lastGrant != firstGrant {
 		deny()
 		return
 	}
+	stage = "controller-pull-source-sql-after"
 	finalEntries, err := s.readOriginalControlEvidenceEntries(ctx, request, locator, first)
 	if err != nil || len(finalEntries) != len(entries) {
 		deny()
 		return
 	}
 	for i := range entries {
+		stage = "controller-pull-source-snapshot-match"
 		if entries[i].PublicID != finalEntries[i].PublicID || entries[i].SHA256 != finalEntries[i].SHA256 || !bytes.Equal(entries[i].Payload, finalEntries[i].Payload) {
 			deny()
 			return
@@ -158,11 +179,13 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 	// The final SQL snapshot can itself outlive a source-owner revocation. This
 	// bounded local check follows SQL and cannot adopt a replacement grant or
 	// extend the original fixed source/key-use deadline. No network follows it.
+	stage = "controller-pull-source-grant-tail"
 	finalGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, locator.Expected, first.KeyUse.Identity, true)
 	if err != nil || finalGrant != firstGrant {
 		deny()
 		return
 	}
+	stage = "controller-pull-materials-and-clock-tail"
 	if s.checkProductionCaptureMaterials() != nil || ctx.Err() != nil || !time.Now().Before(first.ExpiresAt) {
 		deny()
 		return
@@ -174,6 +197,7 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 		response.FinalizedLocatorChunks = locatorChunks
 		response.Evidence = responseEntries
 	}
+	stage = "controller-pull-response-canonical"
 	raw, err := ce.CanonicalProofs(response)
 	if err != nil {
 		deny()
@@ -187,39 +211,52 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 
 // SQL-only exact original scope. It cannot revive an old capture claim or
 // substitute current publisher permission for a live original Job/key-use.
-func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Context, request worker.ControlRequest, locator ce.CaptureLocator, lease worker.Lease) ([]ce.RegisteredEvidence, error) {
+func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Context, request worker.ControlRequest, locator ce.CaptureLocator, lease worker.Lease) (_ []ce.RegisteredEvidence, resultErr error) {
+	stage, started := "controller-source-using-lease", time.Now()
+	defer func() {
+		if resultErr != nil {
+			logOriginalControlEvidenceRejection(stage, ctx, lease.ExpiresAt, started)
+		}
+	}()
 	if lease.KeyUse == nil || lease.KeyUse.State != "using" || lease.KeyUse.Identity.InvocationSHA256 != request.InvocationSHA256 || ctx.Err() != nil {
 		return nil, c.ErrExecutionAuthority
 	}
 	gate := s.Runtime.Owner.Gate.Authority
+	stage = "controller-source-begin-snapshot"
 	tx, err := gate.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, c.ErrExecutionAuthority
 	}
 	defer tx.Rollback()
 	authority := d.Authority{InstallationID: locator.Expected.Installation, TaskPublicID: locator.Expected.Backup, TaskType: "backup", Phase: "capture", AttemptNo: locator.Expected.Attempt, MaintenanceOwner: locator.Expected.Backup}
+	stage = "controller-source-original-claim-config"
 	if tx.QueryRowContext(ctx, `SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? FOR SHARE`, authority.InstallationID, authority.TaskPublicID).Scan(&authority.ClaimOwner, &authority.ClaimRowVersion, &authority.RequestID, &authority.ConfigVersion, &authority.ConfigSHA256, &authority.DeadlineAt, &authority.MaintenanceFencingToken) != nil || authority.ConfigSHA256 != locator.Expected.ConfigSHA256 {
 		return nil, c.ErrExecutionAuthority
 	}
 	authorityRaw, _ := json.Marshal(authority)
+	stage = "controller-source-original-authority-hash"
 	if hash(authorityRaw) != lease.KeyUse.AuthoritySHA256 {
 		return nil, c.ErrExecutionAuthority
 	}
+	stage = "controller-source-execution-bind"
 	guard, err := gate.Bind(ctx, tx, authority)
 	if err != nil {
 		return nil, err
 	}
 	var originalUse []byte
+	stage = "controller-source-original-runtime-key-row"
 	if tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE target_type=? AND task_public_id=? AND attempt_no=? AND phase=? AND resource_kind='Job' AND observed_uid=? AND namespace_name=? AND revoked=FALSE AND lifecycle='ready' AND create_dispatched=TRUE AND stopped_at IS NULL FOR SHARE`, authority.TaskType, authority.TaskPublicID, authority.AttemptNo, authority.Phase, lease.KeyUse.Identity.JobUID, lease.KeyUse.Identity.Namespace).Scan(&originalUse) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
 	var actual worker.KeyUseLease
+	stage = "controller-source-original-runtime-key-match"
 	if decodeProviderDeploymentJSON(originalUse, &actual) != nil || actual != *lease.KeyUse || !time.Now().Before(actual.Until) || actual.State != "using" {
 		return nil, c.ErrExecutionAuthority
 	}
 	effective := locator
 	var finalized []ce.RegisteredEvidence
 	if locator.Finalization != nil {
+		stage = "controller-source-finalized-business-sql"
 		prepared, seal, err := loadFinalizedControlSourceSQL(ctx, tx, locator)
 		if err != nil {
 			return nil, err
@@ -231,6 +268,7 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 	}
 	out := make([]ce.RegisteredEvidence, 0, len(effective.Evidence)+1)
 	for _, ref := range effective.Evidence {
+		stage = "controller-source-registered-evidence"
 		entry, err := ce.LoadRegisteredSQL(ctx, tx, locator.Expected.Scope, ref)
 		if err != nil {
 			return nil, err
@@ -238,13 +276,16 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 		out = append(out, entry)
 	}
 	out = append(out, finalized...)
+	stage = "controller-source-guard-tail"
 	if guard.Recheck(ctx, tx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
 	var now time.Time
+	stage = "controller-source-delivered-clock"
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || !now.Before(actual.Until) || !now.Before(lease.ExpiresAt) || guard.Recheck(ctx, tx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
+	stage = "controller-source-close-snapshot"
 	if tx.Rollback() != nil {
 		return nil, c.ErrExecutionAuthority
 	}

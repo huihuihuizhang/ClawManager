@@ -256,15 +256,32 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 	result := FormalCaptureResult{Version: "public-c-stream-candidate.v1alpha1", InvocationSHA256: invocationHash}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: r.ArtifactName, MaxPlaintextBytes: r.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
 	var seal w.StreamSeal
+	ceUseStarted := time.Now()
+	ceOriginalKeyUntil := time.Time{}
+	if originalJob, ok := job.(*CaptureKeyJob); ok && originalJob != nil {
+		ceOriginalKeyUntil = originalJob.until
+	}
+	ceCallbackEntered, ceCallbackSucceeded := false, false
+	ceFirstFailure := ""
 	wrapped, err := job.WithDEK(ctx, func(useCtx context.Context, key []byte) error {
+		ceCallbackEntered = true
 		inUseCheck := func() error {
 			if useCtx.Err() != nil {
+				if ceFirstFailure == "" {
+					ceFirstFailure = "worker-formal-dek-context"
+				}
 				return useCtx.Err()
 			}
 			if job.recheckDuringUse(useCtx) != nil {
+				if ceFirstFailure == "" {
+					ceFirstFailure = "worker-formal-dek-using-key-check"
+				}
 				return ErrNotReady
 			}
 			if r.ControlEvidence != nil && env.ControlEvidence.Authorize(useCtx, i) != nil {
+				if ceFirstFailure == "" {
+					ceFirstFailure = "worker-formal-dek-source-authorize"
+				}
 				return ErrNotReady
 			}
 			if (r.SourceRedis != nil || r.Database != nil) && env.SourceAuthorize != nil && env.SourceAuthorize(useCtx, i) != nil {
@@ -375,9 +392,21 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			})
 			return e
 		})
+		ceCallbackSucceeded = err == nil
+		if err != nil && ceFirstFailure == "" {
+			ceFirstFailure = "worker-formal-dek-callback-stream-or-staging"
+		}
 		return err
 	})
 	if err != nil {
+		if r.ControlEvidence != nil {
+			if !ceCallbackEntered {
+				ceFirstFailure = "worker-formal-dek-before-callback"
+			} else if ceFirstFailure == "" {
+				ceFirstFailure = "worker-formal-dek-post-use-authority"
+			}
+			logControlEvidenceRejection(ceFirstFailure, ctx, ceOriginalKeyUntil, ceUseStarted, ceCallbackEntered, ceCallbackSucceeded)
+		}
 		return zero, formalFailure(err)
 	} // unknown use/provider outcome is never retried here
 	if result.Ciphertext.SHA256 != seal.CiphertextSHA256() || result.Ciphertext.Size != seal.CiphertextBytes() {

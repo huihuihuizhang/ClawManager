@@ -16,45 +16,62 @@ import (
 	security "clawreef/internal/systembackupsecurity"
 )
 
-func loadFinalizedControlSourceSQL(ctx context.Context, tx *sql.Tx, seed ce.CaptureLocator) (ce.PreparedSource, []ce.RegisteredEvidence, error) {
+func loadFinalizedControlSourceSQL(ctx context.Context, tx *sql.Tx, seed ce.CaptureLocator) (_ ce.PreparedSource, _ []ce.RegisteredEvidence, resultErr error) {
+	stage, started := "controller-finalized-seal-id", time.Now()
+	defer func() {
+		// First-time finalization probes this helper before creating its seal.
+		// The caller handles sql.ErrNoRows; it is not itself a rejected pull.
+		if resultErr != nil && !(stage == "controller-finalized-seal-checksum" && errors.Is(resultErr, sql.ErrNoRows)) {
+			until, _ := ctx.Deadline()
+			logOriginalControlEvidenceRejection(stage, ctx, until, started)
+		}
+	}()
 	id, err := ce.FinalizedSourceEvidenceID(seed)
 	if err != nil {
 		return ce.PreparedSource{}, nil, err
 	}
 	var checksum string
+	stage = "controller-finalized-seal-checksum"
 	if err = tx.QueryRowContext(ctx, `SELECT content_checksum FROM system_backup_v2_evidence WHERE public_id=? FOR SHARE`, id).Scan(&checksum); err != nil {
 		return ce.PreparedSource{}, nil, err
 	}
+	stage = "controller-finalized-seal-evidence"
 	seal, err := ce.LoadRegisteredSQL(ctx, tx, seed.Expected.Scope, ce.EvidenceRef{PublicID: id, SHA256: checksum})
 	if err != nil {
 		return ce.PreparedSource{}, nil, err
 	}
+	stage = "controller-finalized-chunk-references"
 	refs, err := ce.FinalizedSourceReferences(seed, seal)
 	if err != nil {
 		return ce.PreparedSource{}, nil, err
 	}
 	chunks := []ce.RegisteredEvidence{}
 	for _, ref := range refs {
+		stage = "controller-finalized-registered-chunk"
 		entry, err := ce.LoadRegisteredSQL(ctx, tx, seed.Expected.Scope, ref)
 		if err != nil {
 			return ce.PreparedSource{}, nil, err
 		}
 		chunks = append(chunks, entry)
 	}
+	stage = "controller-finalized-read-seal"
 	final, err := ce.ReadFinalizedSourceSeal(seed, seal, chunks...)
 	if err != nil {
 		return ce.PreparedSource{}, nil, err
 	}
 	entries := make([]ce.RegisteredEvidence, 0, len(final.Evidence))
 	for _, ref := range final.Evidence {
+		stage = "controller-finalized-registered-proof"
 		entry, err := ce.LoadRegisteredSQL(ctx, tx, seed.Expected.Scope, ref)
 		if err != nil {
 			return ce.PreparedSource{}, nil, err
 		}
 		entries = append(entries, entry)
 	}
+	stage = "controller-finalized-verify-proof"
 	prepared, err := ce.VerifyFinalized(ctx, seed, final, entries)
 	if err == nil {
+		stage = "controller-finalized-business-sql-recheck"
 		err = recheckFinalizedBusinessSQL(ctx, tx, seed, prepared)
 	}
 	if err != nil {

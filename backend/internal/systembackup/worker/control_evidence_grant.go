@@ -186,16 +186,28 @@ func (s *ControlEvidenceCaptureSources) Authorize(ctx context.Context, i Invocat
 	_, err = s.readGrant(ctx, true)
 	return err
 }
-func (s *ControlEvidenceCaptureSources) Read(ctx context.Context, i Invocation) (ce.PreparedSource, error) {
+func (s *ControlEvidenceCaptureSources) Read(ctx context.Context, i Invocation) (_ ce.PreparedSource, resultErr error) {
+	stage, started := "worker-source-authorize-before", time.Now()
+	defer func() {
+		if resultErr != nil {
+			until := time.Time{}
+			if s != nil {
+				until = s.until
+			}
+			logControlEvidenceRejection(stage, ctx, until, started)
+		}
+	}()
 	if s.Authorize(ctx, i) != nil {
 		return ce.PreparedSource{}, ErrNotReady
 	}
 	ctx, cancel := context.WithDeadline(ctx, s.until)
 	defer cancel()
+	stage = "worker-source-pull"
 	out, err := s.job.ControlEvidenceSource(ctx)
 	if err != nil {
 		return ce.PreparedSource{}, err
 	}
+	stage = "worker-source-authorize-after"
 	if s.Authorize(ctx, i) != nil || ctx.Err() != nil {
 		clear(out.SidecarJSON)
 		clear(out.ProofsJSON)

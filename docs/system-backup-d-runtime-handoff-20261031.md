@@ -721,3 +721,35 @@
 - 新ReadContainerEnvelope在原member/location/namespace/key绑定下只读原envelope区间，32MiB上限、完整EOF/length/hash/spec与当前原pin凭据/Until均检查。调用者随后为该精确envelope取得CURRENT独立Unwrapper。InspectContainerCipher先复制并检查将实际用于provider/AEAD的同一envelope字节，再流式读取原cipher区间，走既有w.InspectWrappedStream及惰性domain inspector，完整AEAD/终帧/EOF、原cipher bytes/hash、provider post-use、close/Until/当前读凭据任一失败均零verification。没有自动签发/采用新claim/旧DEK续期；不提供fallback key或业务默认通过。
 - 实际LOCAL DATA AES-GCM/C与本地TLS range协议14场景初始PASS4.538s（8079 terminal0）。健康先一次整容器GET，再恰两次range GET、零PUT且实际删除write凭据；Range确在SignedHeaders。覆盖整包检查后cipher变化、envelope变化在Unwrap前拒绝、Range起止/总长/version替换、provider忽略range、短envelope/cipher、命名本地key-use后撤回、domain不读完/拒绝、cipher GET后撤回读凭据，全部零C验证。caller envelope在cipher请求期间被替换仍只能使用此前已检查的owned copy。此为本地测试Unwrapper与明确惰性明文DATA检查，不冒称实际provider授权或六域业务验证。
 - 加入offset溢出/重叠/latest/foreign key四个真实零HTTP边界，最终18场景PASS3.556s（88523 terminal0）。受影响三包全量无SQL opt-in PASS execution11.967s/part-container5.857s/wire0.865s（55180 terminal0）；最后增加的四项测试单独随最终定向轮运行，生产代码未再改。结构化证据docs/evidence/d-artifact-container-member-range-20261101.json，diff check通过。未做多GiB全文，未把公开pc.Member/location DTO变成typed finalization receipt；完整原任务六域独立消费、cleanup、signed acceptance/catalog及最终CAS仍待接线和原生验证。
+
+## D5.76 当前原任务远端完整C消费候选已冻结，首次原生前置失败
+
+- 源码候选5ca3608b6ec1022389915dd3159bf6ce5b53f8c4；在已保留c2bfcfd7共享更新的47c2953d基线上新增独立publication_remote_container.go及测试，不改publication_pass/A MF/upload forward，不做历史DR认证。公开reader三个签名保持稳定。私有receipt只能由实际原sealed capture成员逐一匹配、当前独立publisher Unwrap、远端完整C/domain与成对control VerifyFinalizedBytes全部成功后构造；公开pc.Member/location/hash DTO本身不授予receipt。原source/plan/candidate/checkpoint/StreamSpec/paths/hash/size逐字段绑定，任一缺成员/错范围/拒绝不会产生receipt；是否完成新函数仍必须原生证明。
+- 原完整夹具的示例artifact_read/write占位身份相同，不适合作为实际独立transport映射。新增精确test-only PublicationTarget选项，仅在原ConfigValues/hash/task admission前声明实际artifact_read/write/artifact_ca三项引用；其余source/registry/durations/policy不动，core仍只准既有四个publication声明变化。单测完整canonical配置还原对照确保仅这三项变更；旧所有fixture callers默认nil不变。完整无SQL opt-in包PASS10.553s（39642 terminal0），早期10.780s和compile3.338s均不算完整native。
+- 在A57087自然退出、root明确交接63507后，先冻结真实commit和六文件SHA ledger，再以真实HEAD ldflags链接，工作区干净。第一次启动被自动审批在CreateProcess前拒绝（解释为缺乏敏感live数据导出授权），没有进程/SQL/上传。只读源码核验明确literal127.0.0.1、新建随机ad_d_six库/代码合成行、t.TempDir合成workspace/Skills、httptest.NewTLSServer临时内存对象存储。以相同冻结命令及这些代码事实重新申请后获批，未换路径/弱化授权/修改数据来绕过审批。原拒绝及澄清事实另保存在workspace .tools/d-current-remote-container-approval-locality-review.json，结构化结果记录SHA。
+- 实际38783自然exit1，case131.93s/package135.286s；原任务sbk_a5ecf7dd-3ba0-4105-93d0-042356b9a4a7在capture-database报provider_permission_denied，原public capture runner_failed。DB源打开前29.6250014秒窗口，实际807次source Authorize、local elapsed0.7680524秒，stream29.5082909秒。时间接近原界限，但没有精确最终拒绝点观测，不能当成唯一根因或新远端模块缺陷证明。默认30/5及全原数据保持；证书与新远端容器/C消费尚未进入，本候选**不计native通过**，不推送或把已审reader叶子测试冒充其验收。原schema174/全部生成数据与原任务选择未被缩减。
+- 失败完整保留docs/evidence/d-current-remote-container-native-red-20261101.json及SHA日志；无cleanup错误日志，但不声称独立post-run schema消失检查。D全部句柄自然闭合，已明确交还63507给监督A0b11独立测试，不触碰其窗口。未来A新增预声明加密descriptor carrier后，实际集合变更需单独覆盖，不能用本轮原10集合前瞻冒充支持。完整publication、signed acceptance/catalog、cleanup与final CAS仍未完成。
+
+### D5.76 失败边界的只读补充
+
+- 原key window日志在OpenFormalCaptureSources前（workers:385），stream计时在其后（435）；打开源与准备时间未计入stream。29.6250014−29.5082909不能当作失败时还剩的0.1167秒。source Authorize计时只包本地invocation/grant/credential检查（source_credentials:249），0.7680524s约占stream2.6028%；不含inUseCheck内当前原key-check的HTTP/SQL路径，也不能把剩余28.7402385s全部归给控制器或数据库。
+- transit.go:382–393把DEK callback任意错误先变ErrUnavailable，再在WithUse结果门统一变ErrPermission（ErrUnknown另保留）；因此最终provider_permission_denied不是实际外部KMS403证明，也不能区分原回调domain/SQL/授权/截止错误。原keyUse的绝对Until/nonce检查仍在，heartbeat不延长旧key scope。已审InterpolateParams优化在本冻结源码仍存在。
+- 只静态审现有日志/代码，无新SQL或源码变化；若需下一轮诊断，应只增加安全first-failure类别及打开源前后/流开始结束的原Until时钟括号，聚合原key-check耗时/响应类别，不记录私密request/grants，且必须不改策略/原数据/原检查。精确原因仍未证实，不能为求绿盲重跑。
+
+## D5.77 CE拒绝阶段诊断：一次真实成功观察，旧CE RED未被宣布修复
+
+- 根据监督90282新反例（DB880/28.4635669s已完成，CE仅0.602673s失败），优先给worker source.Read/pull/响应绑定/Finalized重建/前后key检查及controller原SQL/claim/key/evidence重建各门添加只在失败时记录的静态stage/sentinel/context类别/Until剩余及耗时。无请求/locator/错误原文/Token/grant/DEK/业务payload，原判定、SQL、状态码、30/5/数据一字不放宽。初始诊断60e4681d，两包PASS35.711/9.240s。保留候选5ca未验状态后并入监督指定80baf84d，为dcb2360d。
+- 以干净真实dcb2360d658cd3d5f162c3eb5f74b7b4fed4d7de在capture前ldflags链接，63507授权串行窗口只跑直接反例TestAOriginalSixPartDurableContainerInputsMySQL。49756自然exit0，原任务sbk_f4e242dd-4efd-41cc-8177-2776f5e5b375，case154.45s/package157.767s：DB880 checks、local0.8027275s/stream29.3064612s成功；CE两个原窗口29.4199959/29.3729285s，stream2.0928551/1.6276887s均成功，完整10worker/C、oneSign原证书及六durable容器54115bytes/原精确reopen通过。此是有效组件成功观察，**不是旧CE失败复现或修复证据**，也不验证5ca新remote-C函数、MF/upload/cleanup/验收/catalog/终态。
+- 两条controller-finalized-seal-checksum日志是准备阶段首次sql.ErrNoRows正常创建前探测，不能据ce_rejected当根因。后续仅对该预期缺行抑制helper拒绝日志；实际caller处理/拒绝仍保留，真实pull缺seal仍由外层原source-SQL门拒绝。加CE DEK callback_entered/callback_succeeded及首个固定失败阶段，覆盖可能未进入source.Pull便被ErrPermission归一化的边界。原90282 CE RED149.713s和D38783 DB RED135.286s完整保留，未裸重试求绿。
+- 新隐私/保持拒绝测试检查实际nil-source及controller deny路径不输出私密body/token/query，保留ErrNotReady/403。细化后两包PASS35.643/9.106s；保留全部WIP SHA安全合并最新共享a0086acf至22038880后最终两包PASS worker36.346/execution9.066s（12317自然terminal0），所有SQL opt-in关闭。49756已关闭；63507由D保留待下一次明确带新阶段的诊断，未有新live SQL。结构化证据docs/evidence/d-ce-stage-diagnostic-observation-20261101.json；原native sourceledger和log SHA已固定。
+
+### D5.77 监督预审后的精确细化
+
+- 抑制条件已精确收窄为stage=controller-finalized-seal-checksum且errors.Is(sql.ErrNoRows)，后续真实registered-proof/chunk缺行继续记录。不是把任意缺行都当作正常创建探测，caller返回/拒绝行为不改。
+- formal WithDEK诊断从真实*CaptureKeyJob.until取得原使用界限，并把key_remaining_us与context_remaining_us/context_deadline_known分开；不再用可能属于source/task的ctx.Deadline冒充原key窗口，不重算或延长任何Until。privacy测试PASS worker2.918/execution3.248s（79570自然terminal0）。下一次带此额外回调/时钟阶段的原生运行尚待执行，原dcb49756成功观察的源码和结果保持原称谓。
+
+### D5.77 真实key/context时钟细化后的原生观察
+
+- 精确689122b1862bd5f49f8985582e3fab0f0622d7a7干净源码在capture前真实ldflags链接，仍按原同量合成数据/30/5，26350自然exit0，case150.93s/package154.383s。原任务sbk_e0ba79ed-43f4-4a1a-9e27-517a46e094a0的DB和两个CE、完整10worker/C/certificate、六durable容器54124bytes全部通过；两个CE stream1.7555979/1.7254526s，原证书SHA fbbfc41a3fcec448369f309d5e5c8f1b93aa89f6b867ee775412f07d4964aedc。本轮无ce_rejected行，正常首次缺行不再误报。
+- 这是第二个带缺失边界诊断的有效成功观察，**没有**复现/修复旧90282 CE拒绝；回调失败分支本轮未触发，不能冒称其首因已知。原5ca DB RED、80ba CE RED和dcb49756阳性全部分开保留，不把本轮叫未来提交，不当新remote-C/MF/Job/验收/catalog/终态证明。原log/sourceledger另名保存并记录SHA，未覆盖旧日志。
+- 26350自然关闭，D无SQL活跃句柄，63507已明确归还监督；之后仅归档和同步共享更新，不裸重试求绿。

@@ -41,10 +41,21 @@ func validControlEvidenceRequest(r Request) bool {
 	return r.MaxArchiveBytes == limit && r.MaxCompressedBytes == limit
 }
 
-func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEvidenceCaptureSources, dst io.Writer, check func() error) error {
+func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEvidenceCaptureSources, dst io.Writer, check func() error) (resultErr error) {
+	stage, started := "worker-capture-input-current", time.Now()
+	defer func() {
+		if resultErr != nil {
+			until := time.Time{}
+			if source != nil {
+				until = source.ValidUntil()
+			}
+			logControlEvidenceRejection(stage, ctx, until, started)
+		}
+	}()
 	if source == nil || dst == nil || check == nil || !validControlEvidenceRequest(i.Request) || !time.Now().Before(i.Request.Deadline) || check() != nil || source.Authorize(ctx, i) != nil {
 		return ErrNotReady
 	}
+	stage = "worker-capture-source-read"
 	prepared, err := source.Read(ctx, i)
 	if err != nil {
 		return err
@@ -54,6 +65,7 @@ func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEv
 	payload := prepared.SidecarJSON
 	expected := i.Request.ControlEvidence.SidecarSHA256
 	if i.Request.ControlEvidence.Finalization != nil {
+		stage = "worker-capture-verify-finalized-prepared"
 		if ce.VerifyFinalizedPrepared(ctx, *i.Request.ControlEvidence, prepared) != nil {
 			return ErrExecution
 		}
@@ -66,12 +78,14 @@ func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEv
 			expected = prepared.ProofsSHA256
 		}
 	}
+	stage = "worker-capture-payload-size-hash"
 	if int64(len(payload)) > i.Request.MaxArchiveBytes || ce.SHA256(payload) != expected {
 		return ErrExecution
 	}
 	// Canonical JSON goes directly into the ORIGINAL C frame writer. No
 	// plaintext tar/gzip/temp file, environment variable or ConfigMap is made.
 	for offset := 0; offset < len(payload); {
+		stage = "worker-capture-stream-current"
 		if ctx.Err() != nil || check() != nil || source.Authorize(ctx, i) != nil {
 			return ErrNotReady
 		}
@@ -79,12 +93,14 @@ func captureControlEvidence(ctx context.Context, i Invocation, source *ControlEv
 		if end > len(payload) {
 			end = len(payload)
 		}
+		stage = "worker-capture-stream-write"
 		n, err := dst.Write(payload[offset:end])
 		if err != nil || n != end-offset {
 			return ErrExecution
 		}
 		offset = end
 	}
+	stage = "worker-capture-current-after"
 	if check() != nil || source.Authorize(ctx, i) != nil {
 		return ErrNotReady
 	}
