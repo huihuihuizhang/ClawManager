@@ -261,7 +261,7 @@ func (p *publicationPostCManifest) recheckClockTx(ctx context.Context, tx *sql.T
 // Read ORIGINAL immutable transport provenance in the same 102 transaction.
 // The old upload intent is historical DATA here, never a renewed upload grant.
 // No Secret/Kube/provider operation and no old deadline refresh occurs here.
-func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sql.Tx) error {
+func (p *publicationPostCManifest) recheckUploadedProvenanceTx(ctx context.Context, tx *sql.Tx) error {
 	raw, err := loadPublicationMetadata(ctx, tx, p.claim.Target.PublicID, publicationMaterialID(p.target.InstallationID, p.claim.Target.PublicID, p.attempt))
 	var material publicationMaterialIntent
 	if err != nil || hash(raw) != p.materialSHA256 || p.materialSHA256 != p.uploadSnapshot.materialSHA256 || decodeProviderDeploymentJSON(raw, &material) != nil || material.Version != "system-backup-original-publication-materials.v1" || material.Installation != p.target.InstallationID || material.Backup != p.claim.Target.PublicID || material.Attempt != p.attempt || material.Namespace != p.service.Config.Namespace || material.RequestSHA256 != p.uploaded.RequestSHA256 || material.Claim != p.uploadSnapshot.claim || material.Claim.Target != p.claim.Target || material.Claim.Owner != p.claim.Owner || material.Claim.RowVersion == 0 || material.Claim.RowVersion > p.claim.RowVersion {
@@ -303,6 +303,18 @@ func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sq
 			return c.ErrExecutionRecord
 		}
 		seen[actual.Key] = true
+	}
+	return nil
+}
+
+func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sql.Tx) error {
+	if err := p.recheckUploadedProvenanceTx(ctx, tx); err != nil {
+		return err
+	}
+	raw, err := loadPublicationMetadata(ctx, tx, p.claim.Target.PublicID, publicationMaterialID(p.target.InstallationID, p.claim.Target.PublicID, p.attempt))
+	var material publicationMaterialIntent
+	if err != nil || hash(raw) != p.materialSHA256 || decodeProviderDeploymentJSON(raw, &material) != nil {
+		return c.ErrExecutionRecord
 	}
 	var locator, checksum, mac, lifecycle string
 	var size int64

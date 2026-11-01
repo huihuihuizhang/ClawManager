@@ -56,7 +56,7 @@ func checkOriginalPublicationReferencesTx(ctx context.Context, tx *sql.Tx, facts
 	seen := map[string]bool{}
 	for _, ref := range expected {
 		switch ref.Purpose {
-		case "artifact_write", "artifact_read", "artifact_ca", "catalog_read", "catalog_append", "acceptance_signing", "catalog_signing", "capture_signing":
+		case "artifact_write", "artifact_read", "artifact_delete", "artifact_ca", "catalog_read", "catalog_append", "acceptance_signing", "catalog_signing", "capture_signing":
 		default:
 			return c.ErrExecutionAuthority
 		}
