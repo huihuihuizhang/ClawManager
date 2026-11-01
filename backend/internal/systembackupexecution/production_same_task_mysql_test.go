@@ -57,6 +57,7 @@ import (
 // is extended by the same-task source/worker tests; it never substitutes a
 // synthetic Prepare runner or a second task for an uncompleted capture.
 type dOriginalSixPartTask struct {
+	controlCosts                                           originalControlTimingRegistry
 	captureDescription                                     bool
 	db, control                                            *sql.DB
 	service                                                *DeploymentService
@@ -571,6 +572,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
+		r = r.WithContext(context.WithValue(r.Context(), originalControlTimingContextKey{}, &f.controlCosts))
 		f.service.controlHandler().ServeHTTP(w, r)
 	}))
 	controlServer.TLS = &tls.Config{Certificates: []tls.Certificate{{Certificate: [][]byte{serverDER}, PrivateKey: serverPrivate}}, MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: issuerRoots}

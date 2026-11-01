@@ -303,9 +303,10 @@ func validLease(l Lease, r ControlRequest) bool {
 }
 
 type ControlClient struct {
-	endpoint  string
-	http      *http.Client
-	tokenFile string
+	endpoint     string
+	http         *http.Client
+	tokenFile    string
+	captureCosts captureControlCosts
 }
 
 func (c *ControlClient) WithWorkloadToken(file string) error {
@@ -355,9 +356,14 @@ func (c *ControlClient) call(ctx context.Context, i Invocation, action, point st
 	request := ControlRequest{Invocation: i, InvocationSHA256: hash, Action: action, Point: point}
 	return c.send(ctx, request)
 }
-func (c *ControlClient) send(ctx context.Context, request ControlRequest) (Lease, error) {
+func (c *ControlClient) send(ctx context.Context, request ControlRequest) (_ Lease, resultErr error) {
 	if c == nil || c.http == nil {
 		return Lease{}, ErrNotReady
+	}
+	httpAttempted := false
+	if request.Invocation.ProviderKey != nil {
+		started := time.Now()
+		defer func() { c.captureCosts.record(request.Action, time.Since(started), resultErr != nil, httpAttempted) }()
 	}
 	if !validControl(request) {
 		return Lease{}, ErrRequest
@@ -379,6 +385,7 @@ func (c *ControlClient) send(ctx context.Context, request ControlRequest) (Lease
 		}
 		r.Header.Set("Authorization", "Bearer "+string(token))
 	}
+	httpAttempted = true
 	response, e := c.http.Do(r)
 	if e != nil {
 		if request.Invocation.Request.CaptureDescription != nil {
