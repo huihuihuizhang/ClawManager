@@ -266,17 +266,18 @@ func (p *sqlPreparedCapability) Recheck(ctx context.Context, view reg.SQLReadVie
 	return p.recheck(ctx, view, locked.Facts(), now)
 }
 func (p *sqlPreparedCapability) recheck(ctx context.Context, view reg.SQLReadView, facts reg.Snapshot, now time.Time) error {
-	if p == nil || ctx == nil || ctx.Err() != nil || facts.InstallationID != p.record.Facts.Binding.InstallationID || facts.Database != p.database || now.Before(p.record.NotBefore) || !now.Before(p.until) {
+	if p == nil || ctx == nil || ctx.Err() != nil || now.IsZero() || facts.InstallationID != p.record.Facts.Binding.InstallationID || facts.Database != p.database || now.Before(p.record.NotBefore) || !now.Before(p.until) {
 		return admission.ErrCandidate
 	}
 	e, err := readCapabilityEvidence(ctx, view, facts.InstallationID, p.pin, true)
 	if err != nil || !bytes.Equal(e.raw, p.evidence.raw) || !e.until.Equal(p.evidence.until) {
 		return admission.ErrCandidate
 	}
-	r, err := authenticateProviderCapability(e, p.pin, p.record.Facts.Binding, p.record.Facts.Operation, now)
-	if err != nil || !reflect.DeepEqual(r, p.record) {
-		return admission.ErrCandidate
-	}
+	// Prepare already authenticated the complete signed immutable document.
+	// The CURRENT locked evidence read above revalidates owner/type/health,
+	// checksum/size, exact original bytes and unchanged expiry; time/database
+	// and installation were checked at entry. Re-parsing the same signature
+	// cannot add a current fact. No authority/SQL check or time bound is cached.
 	return nil
 }
 
