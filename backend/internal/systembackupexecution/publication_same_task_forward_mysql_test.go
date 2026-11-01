@@ -39,12 +39,24 @@ type aOriginalForwardFixture struct {
 	store   *nativePublicationS3
 	native  *aNativePublicationServer
 	domains []byte
+	task    *dOriginalSixPartTask
+	test    *testing.T
 }
 
 func (x *aOriginalForwardFixture) options(o *dOriginalSixPartFixtureOptions) {
 	o.CaptureDescription = true
 	o.PublicationForward = true
+	previousAfterQuery := o.ControlAfterQuery
+	o.ControlAfterQuery = func(query string, cause error) {
+		if previousAfterQuery != nil {
+			previousAfterQuery(query, cause)
+		}
+		if x.task != nil && x.test != nil && dOriginalGateNOWAITQuery(query, cause) {
+			logDOriginalGateLocks(x.test, x.task)
+		}
+	}
 	o.BeforeOriginalConfig = func(_ context.Context, t *testing.T, f *dOriginalSixPartTask, values map[string]any) error {
+		x.task, x.test = f, t
 		// Freeze this fixture's EXISTING 30/5/1 controller policy in the
 		// original admitted JSON AND its materialized SQL columns. The
 		// redacted example defaults to30/10/10; never repair an old task.

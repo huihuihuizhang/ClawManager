@@ -1,0 +1,4 @@
+# clawreef/internal/systembackupexecution [clawreef/internal/systembackupexecution.test]
+internal\systembackupexecution\production_same_task_gate_observation_test.go:5:2: "database/sql" imported and not used
+FAIL	clawreef/internal/systembackupexecution [build failed]
+FAIL

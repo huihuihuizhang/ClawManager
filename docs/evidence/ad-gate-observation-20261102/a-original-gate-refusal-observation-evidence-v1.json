@@ -1,0 +1,69 @@
+{
+  "schema": "a-original-gate-refusal-observation-v1",
+  "commit": "83f04a29a266ff1ef12a596b11dafc955dd82cd8",
+  "base": "5334ad1cd17b9b1512e069ac1645ecc4696c4860",
+  "scope": "Three test files only. Actual gate FORUPDATE NOWAIT3572 triggers read-only PFS through existing fixture admin, keeping prior hook and all original controller driver results,SQL,reset/check/ping interfaces and permissions.",
+  "sql_off": {
+    "session": 12154,
+    "exit": 0,
+    "closed": true,
+    "seconds": 14.131
+  },
+  "real_SQL": {
+    "session": 65669,
+    "exit": 0,
+    "closed": true,
+    "case_seconds": 55.96,
+    "package_seconds": 59.232,
+    "schema": "ad_d_six_9933ecfca4622dc4",
+    "task": "sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15",
+    "observed_connection": 1806,
+    "controlled_holder_connection": 1806,
+    "mode": "S,REC_NOT_GAP",
+    "status": "GRANTED",
+    "work_after_holder_release": true,
+    "schema_accounts_sessions_after_cleanup": 0
+  },
+  "limits": [
+    "This controlled holder is DATA only, not retrospective v12 ownership or an HTTP authorization",
+    "Locks may disappear before read-only sample; zero or missing sample cannot prove absence",
+    "No source permission/TTL/claim/gate timeouts changed, no source data removed or current safety query skipped",
+    "No performance fix or full backup/restore claim"
+  ],
+  "next": "One new frozen unified native in confirmed exclusive window can now surface actual terminal immediately and record gate blocker DATA if actual3572 recurs; retain real remaining21stage cost diagnostics",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_observation_test.go",
+      "blob": "33788401b11675145433da95bb89f9663918cb86",
+      "sha256": "45bcd2138ad666383f57a832f22663091e982255a7b0b60c3ed4232b147949e9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go",
+      "blob": "e79e418d8b5a36f95e510a5574397acd2ad10fe0",
+      "sha256": "25129e5511eb3ac636efa72ae9ada32cde76a65606317004ea006bb3cdde14be"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "blob": "1478bb489e87d78c375b5a49d77a313f074db84b",
+      "sha256": "a1f0ff223bf4fcb56c5c69260c2cae7da3c046ea9090712d1b8a9a20b4231a1d"
+    }
+  ],
+  "logs": [
+    {
+      "path": "a-original-gate-lock-observation-sql-off-v1.log",
+      "sha256": "64cbfce56b93c9f2dd130acb18c7f3205af7850e24b6e8bad25ed5e41f99c76d"
+    },
+    {
+      "path": "a-original-gate-lock-observation-sql-off-v2.log",
+      "sha256": "394250c7ebd38a5b8bf9a6eb1ae61e1308c5cebf317a4261c30feaf0ce0ba014"
+    },
+    {
+      "path": "a-original-gate-lock-observation-real-sql-v1.log",
+      "sha256": "951d9dd11e49b120adfaa2161683f4ce3056c67e0759a65e0f67d0ae22af0525"
+    },
+    {
+      "path": "a-original-gate-lock-counter-cleanup-v1.log",
+      "sha256": "2e5ba55969406bd8f0637fd25b5da1c40aa37887a7ed03f011b851c3cca59b6a"
+    }
+  ]
+}

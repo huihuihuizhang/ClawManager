@@ -1,0 +1,134 @@
+{
+  "schema_version": "ad-original-gate-observation-reviewed.v1",
+  "recorded_at": "2026-11-01T18:53:21.900032+00:00",
+  "baseline": "5334ad1cd17b9b1512e069ac1645ecc4696c4860",
+  "owner_commit": "83f04a29a266ff1ef12a596b11dafc955dd82cd8",
+  "scope": "Three test files only; actual NOWAIT3572 invokes bounded read-only PFS through the existing fixture admin, with controller permissions, original query outcomes, claim and timing budgets unchanged. No unrelated owner benchmark ancestor included.",
+  "source_files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_observation_test.go",
+      "blob": "33788401b11675145433da95bb89f9663918cb86",
+      "exact_owner_delta": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go",
+      "blob": "e79e418d8b5a36f95e510a5574397acd2ad10fe0",
+      "exact_owner_delta": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "blob": "1478bb489e87d78c375b5a49d77a313f074db84b",
+      "exact_owner_delta": true
+    }
+  ],
+  "primary": {
+    "session": 26350,
+    "closed": true,
+    "natural_exit": 0,
+    "package": "systembackupexecution",
+    "seconds": 14.616,
+    "SQL": "disabled; native cases skipped"
+  },
+  "owner": {
+    "initial_pre_freeze_build_failure": "Unused import, retained as first raw SQLoff log; not a passing test. Frozen source removed that unused import.",
+    "SQLoff": {
+      "session": 12154,
+      "natural_exit": 0,
+      "seconds": 14.131
+    },
+    "actual_SQL": {
+      "session": 65669,
+      "closed": true,
+      "natural_exit": 0,
+      "case_seconds": 55.96,
+      "package_seconds": 59.232,
+      "schema": "ad_d_six_9933ecfca4622dc4",
+      "task": "sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15",
+      "controlled_holder_and_observed_connection": 1806,
+      "observed_lock": "S,REC_NOT_GAP GRANTED",
+      "work_after_release": true,
+      "schemas_accounts_sessions_after_cleanup": 0
+    }
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-gate-lock-observation-sql-off-v1.log",
+      "raw_bytes": 277,
+      "raw_sha256": "64cbfce56b93c9f2dd130acb18c7f3205af7850e24b6e8bad25ed5e41f99c76d",
+      "committed_bytes": 273,
+      "committed_sha256": "3959db623429f5b3dc435faf095a43a9c4d4cf01222676630dfb17646eada75b",
+      "git_blob": "5db8cc902871b967a8aca22e8356168e005a82f4"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-gate-lock-observation-sql-off-v2.log",
+      "raw_bytes": 54,
+      "raw_sha256": "394250c7ebd38a5b8bf9a6eb1ae61e1308c5cebf317a4261c30feaf0ce0ba014",
+      "committed_bytes": 53,
+      "committed_sha256": "4c07db1497aebf6088df13a79df94f6edcc08ebb6662841d65dbcc573639bf0b",
+      "git_blob": "51bba3babecaae9358e30b1373bd9d465d91ca06"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-gate-lock-observation-real-sql-v1.log",
+      "raw_bytes": 17332,
+      "raw_sha256": "951d9dd11e49b120adfaa2161683f4ce3056c67e0759a65e0f67d0ae22af0525",
+      "committed_bytes": 17139,
+      "committed_sha256": "e495d298762a1670f957d76dd4a1438b43d91535f2f807e4624efdfd1d4cdd79",
+      "git_blob": "f2ab554b1bf0ee7094ae8c0a1a38255c790377fb"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-gate-lock-counter-cleanup-v1.log",
+      "raw_bytes": 175,
+      "raw_sha256": "2e5ba55969406bd8f0637fd25b5da1c40aa37887a7ed03f011b851c3cca59b6a",
+      "committed_bytes": 173,
+      "committed_sha256": "7eabf3d6f1833598677f1bdd8000aced54dba6f958c552032f70e03b3c23d172",
+      "git_blob": "34464df22c4328f86d102abef3083eddc098a63b"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-gate-refusal-observation-evidence-v1.json",
+      "raw_bytes": 3067,
+      "raw_sha256": "12dfc42e88d7451f219ae9fb703717f970f83ef5734b04aa9cc144ea7637199c",
+      "committed_bytes": 2998,
+      "committed_sha256": "e6e2a0bbb5f082ffb4503328dba0152425248c9af760cc09f7806e785cfdd951",
+      "git_blob": "4c0b7002ff49ee8ef275b3327dba514434206580"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-original-mutation-history-v12.log",
+      "raw_bytes": 741,
+      "raw_sha256": "c7f6b7a4bf1c233181c1cb844a673fc84e2a8bd40ce8e8107945d06e72e97a10",
+      "committed_bytes": 737,
+      "committed_sha256": "e76161994c138ec50113cb065dbb146f0035be770eb96e3b0ceb88d83d0e8792",
+      "git_blob": "150e65a71b7190dc95d165027959fe3b339a3caa"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/a-v12-original-mutation-history-evidence-v1.json",
+      "raw_bytes": 1464,
+      "raw_sha256": "cffcf364cfe4027534b79f9b2970c56704177ad5840d733c254e69bf965a9f7b",
+      "committed_bytes": 1434,
+      "committed_sha256": "36c21195cb712189c5640dadc8ce778e2e932f4651d7cc03df996f148a2a4652",
+      "git_blob": "dc1e4575db3369a02eb6783d99a5face3c1b3663"
+    },
+    {
+      "path": "docs/evidence/ad-gate-observation-20261102/supervisor-PFS83-5334-composed-execution.log",
+      "raw_bytes": 54,
+      "raw_sha256": "02af10c1fe4fd23ef1dc21e0fdeb7b180aeb6759d8c7db74a6f127f005db8a1c",
+      "committed_bytes": 53,
+      "committed_sha256": "86249e005e7ec62db27bed19225b56d3a953ea9dd6166ef52e69d57c325e7e28",
+      "git_blob": "73cce620af6cbba54d58a4a06792c2ba17683ed0"
+    }
+  ],
+  "review": {
+    "bounded_rows": 128,
+    "observation_budget_ms": 250,
+    "trigger": "Actual MySQL3572 on exact original gate NOWAIT query; no text-only error or other query.",
+    "credential_output": false,
+    "query_output": false,
+    "failure_semantics": "Missing/error/empty PFS sample cannot prove absence and does not change original scheduling result."
+  },
+  "v12_read_only_history": "Stored expires_at minus fixture fixed5s is derived statement-start DATA, not an independent creation timestamp. Original acquire window contained1496 released mutation leases. This does not establish the historical gate holder or prove that a84 fixes unified task acquisition.",
+  "limits": [
+    "No latency fix.",
+    "No full same-task native backup, cleanup, acceptance/catalog/terminal or isolated restore acceptance.",
+    "A controlled real holder observed now is not retrospective proof of v12 holder."
+  ],
+  "full_page_acceptance": false
+}

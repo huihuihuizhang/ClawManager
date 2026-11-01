@@ -1,0 +1,193 @@
+=== RUN   TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL
+=== RUN   TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL/release-after-first-real-NOWAIT
+2026/11/02 02:38:39 Applied database migration 001_init_schema.sql
+2026/11/02 02:38:39 Applied database migration 002_add_webtop_instance_type.sql
+2026/11/02 02:38:39 Applied database migration 003_add_system_image_settings.sql
+2026/11/02 02:38:40 Applied database migration 004_fix_seeded_admin_password.sql
+2026/11/02 02:38:40 Applied database migration 005_update_openclaw_default_image.sql
+2026/11/02 02:38:40 Applied database migration 006_add_openclaw_config_center.sql
+2026/11/02 02:38:40 Applied database migration 007_add_instance_agent_control_plane.sql
+2026/11/02 02:38:40 Applied database migration 008_add_skill_management.sql
+2026/11/02 02:38:40 Applied database migration 009_cpu_cores_decimal.sql
+2026/11/02 02:38:40 Applied database migration 010_add_instance_environment_overrides.sql
+2026/11/02 02:38:40 Applied database migration 011_add_hermes_instance_type.sql
+2026/11/02 02:38:40 Applied database migration 012_update_agents_runtime_default_images.sql
+2026/11/02 02:38:40 Applied database migration 013_normalize_agents_runtime_image_names.sql
+2026/11/02 02:38:40 Applied database migration 014_add_team_mvp.sql
+2026/11/02 02:38:40 Applied database migration 015_add_team_member_description.sql
+2026/11/02 02:38:40 Applied database migration 016_release_deleted_team_names.sql
+2026/11/02 02:38:41 Applied database migration 017_add_team_member_runtime_state.sql
+2026/11/02 02:38:41 Applied database migration 018_add_team_member_runtime_type.sql
+2026/11/02 02:38:41 Applied database migration 019_add_instance_runtime_type.sql
+2026/11/02 02:38:41 Applied database migration 020_add_system_image_runtime_type.sql
+2026/11/02 02:38:41 Applied database migration 021_add_openclaw_shell_runtime_image.sql
+2026/11/02 02:38:41 Applied database migration 022_add_openclaw_config_bundle_skills.sql
+2026/11/02 02:38:41 Applied database migration 023_add_runtime_pool_v2.sql
+2026/11/02 02:38:41 Applied database migration 023_add_skill_hub.sql
+2026/11/02 02:38:41 Applied database migration 023_normalize_runtime_config_mounts.sql
+2026/11/02 02:38:41 Applied database migration 024_add_gateway_runtime_type.sql
+2026/11/02 02:38:42 Applied database migration 025_add_instance_mode.sql
+2026/11/02 02:38:42 Applied database migration 027_add_instance_external_access.sql
+2026/11/02 02:38:42 Applied database migration 028_add_ai_gateway_runtime_attribution.sql
+2026/11/02 02:38:42 Applied database migration 029_add_short_external_access_links.sql
+2026/11/02 02:38:42 Applied database migration 030_add_external_access_password_value.sql
+2026/11/02 02:38:42 Applied database migration 031_add_hermes_lite_runtime_image.sql
+2026/11/02 02:38:42 Applied database migration 032_add_team_member_instance_mode.sql
+2026/11/02 02:38:42 Applied database migration 033_system_image_gateway_runtime_type.sql
+2026/11/02 02:38:42 Applied database migration 034_update_lite_default_images.sql
+2026/11/02 02:38:42 Applied database migration 035_harden_team_event_protocol.sql
+2026/11/02 02:38:42 Applied database migration 036_add_team_event_outbox.sql
+2026/11/02 02:38:42 Applied database migration 037_add_team_workflow_ledger.sql
+2026/11/02 02:38:42 Applied database migration 038_add_instance_gateway_token_aliases.sql
+2026/11/02 02:38:42 Applied database migration 039_add_skill_package_materialize.sql
+2026/11/02 02:38:42 Applied database migration 040_fix_injected_skill_provenance.sql
+2026/11/02 02:38:42 Applied database migration 041_add_session_usage_indexes.sql
+2026/11/02 02:38:42 Applied database migration 042_add_skill_summary_status.sql
+2026/11/02 02:38:42 Applied database migration 042_add_team_review_contract.sql
+2026/11/02 02:38:43 Applied database migration 043_add_external_access_workspace_scope.sql
+2026/11/02 02:38:43 Applied database migration 043_drop_skill_summary_status.sql
+2026/11/02 02:38:43 Applied database migration 044_add_egress_private_exceptions.sql
+2026/11/02 02:38:43 Applied database migration 044_add_workbuddy_instance_type.sql
+2026/11/02 02:38:44 Applied database migration 045_add_llm_model_reasoning_control.sql
+2026/11/02 02:38:44 Applied database migration 045_add_northbound_api.sql
+2026/11/02 02:38:44 Applied database migration 045_add_opencode_instance_type.sql
+2026/11/02 02:38:44 Applied database migration 046_add_custom_team_templates.sql
+2026/11/02 02:38:45 Applied database migration 046_add_enterprise_auth_identity.sql
+2026/11/02 02:38:45 Applied database migration 046_add_opencode_lite_runtime.sql
+2026/11/02 02:38:45 Applied database migration 047_add_deepseek_harness_runtime.sql
+2026/11/02 02:38:45 Applied database migration 047_add_instance_owner.sql
+2026/11/02 02:38:45 Applied database migration 048_add_workbuddy_instance_type.sql
+2026/11/02 02:38:45 Applied database migration 048_fix_instance_type_enum.sql
+2026/11/02 02:38:46 Applied database migration 049_add_ldap_login_alias.sql
+2026/11/02 02:38:46 Applied database migration 049_add_llm_model_groups.sql
+2026/11/02 02:38:46 Applied database migration 049_add_opencode_instance_type.sql
+2026/11/02 02:38:46 Applied database migration 050_add_enterprise_auth_settings.sql
+2026/11/02 02:38:46 Applied database migration 050_add_gateway_keys.sql
+2026/11/02 02:38:46 Applied database migration 050_update_workbuddy_windows_runtime.sql
+2026/11/02 02:38:46 Applied database migration 051_add_codex_and_claude_code_instance_types.sql
+2026/11/02 02:38:46 Applied database migration 051_add_gateway_key_rate_limits.sql
+2026/11/02 02:38:46 Applied database migration 052_add_gateway_key_budget_and_attribution.sql
+2026/11/02 02:38:47 Applied database migration 052_add_instance_pvc_name.sql
+2026/11/02 02:38:47 Applied database migration 053_add_instance_runtime_variant.sql
+2026/11/02 02:38:47 Applied database migration 053_add_llm_model_context_window.sql
+2026/11/02 02:38:47 Applied database migration 054_add_llm_model_quality_tier.sql
+2026/11/02 02:38:47 Applied database migration 054_add_system_image_runtime_variant.sql
+2026/11/02 02:38:47 Applied database migration 055_gateway_budget_currency_review.sql
+2026/11/02 02:38:47 Applied database migration 055_reconcile_instance_type_enum.sql
+2026/11/02 02:38:47 Applied database migration 056_add_gateway_deployment_routing.sql
+2026/11/02 02:38:47 Applied database migration 056_add_llm_provider_models.sql
+2026/11/02 02:38:47 Applied database migration 057_add_llm_model_capabilities.sql
+2026/11/02 02:38:48 Applied database migration 057_add_northbound_admin_settings.sql
+2026/11/02 02:38:48 Applied database migration 058_add_llm_model_tools_override.sql
+2026/11/02 02:38:48 Applied database migration 058_add_openclaw_runtime_upgrade_safety.sql
+2026/11/02 02:38:48 Applied database migration 058_enable_deepseek_harness_pro.sql
+2026/11/02 02:38:48 Applied database migration 059_add_llm_reasoning_control_mode.sql
+2026/11/02 02:38:48 Applied database migration 059_pin_openclaw_2026_8_1_images.sql
+2026/11/02 02:38:48 Applied database migration 060_add_routing_classifier_settings.sql
+2026/11/02 02:38:48 Applied database migration 060_allow_terminal_runtime_upgrade_instance_deletion.sql
+2026/11/02 02:38:48 Applied database migration 061_add_routing_classifier_mode.sql
+2026/11/02 02:38:48 Applied database migration 061_persist_runtime_upgrade_source_identity.sql
+2026/11/02 02:38:48 Applied database migration 062_add_model_user_access.sql
+2026/11/02 02:38:48 Applied database migration 062_follow_openclaw_latest_images.sql
+2026/11/02 02:38:48 Applied database migration 063_add_gateway_runtime_tasks.sql
+2026/11/02 02:38:48 Applied database migration 063_add_instance_alias.sql
+2026/11/02 02:38:48 Applied database migration 063_unique_usernames.sql
+2026/11/02 02:38:48 Applied database migration 064_add_instance_browser_workers.sql
+2026/11/02 02:38:48 Applied database migration 064_add_instance_lifecycle_batches.sql
+2026/11/02 02:38:48 Applied database migration 064_add_runtime_protocol.sql
+2026/11/02 02:38:48 Applied database migration 065_add_lifecycle_batch_retry_policy.sql
+2026/11/02 02:38:48 Applied database migration 065_add_runtime_maintenance.sql
+2026/11/02 02:38:49 Applied database migration 066_add_northbound_api_keys.sql
+2026/11/02 02:38:49 Applied database migration 066_add_runtime_upgrade_fence.sql
+2026/11/02 02:38:49 Applied database migration 067_add_northbound_owner_records.sql
+2026/11/02 02:38:49 Applied database migration 067_add_runtime_upgrade_stop.sql
+2026/11/02 02:38:49 Applied database migration 068_add_runtime_rollout_checkpoints.sql
+2026/11/02 02:38:49 Applied database migration 068_add_workspace_write_intents.sql
+2026/11/02 02:38:49 Applied database migration 069_add_instance_runtime_error_code.sql
+2026/11/02 02:38:49 Applied database migration 069_add_llm_model_vision_override.sql
+2026/11/02 02:38:49 Applied database migration 070_add_llm_model_image_operations.sql
+2026/11/02 02:38:49 Applied database migration 070_add_upgrade_restart_attempts.sql
+2026/11/02 02:38:49 Applied database migration 071_add_image_budget_price.sql
+2026/11/02 02:38:49 Applied database migration 071_add_team_member_icon.sql
+2026/11/02 02:38:49 Applied database migration 072_add_gateway_image_artifacts.sql
+2026/11/02 02:38:49 Applied database migration 072_add_team_workspace_file_audits.sql
+2026/11/02 02:38:49 Applied database migration 073_add_gateway_image_jobs.sql
+2026/11/02 02:38:49 Applied database migration 073_add_upgrade_operation_claims.sql
+2026/11/02 02:38:49 Applied database migration 074_add_image_analytics_outbox.sql
+2026/11/02 02:38:49 Applied database migration 074_add_upgrade_recovery_key.sql
+2026/11/02 02:38:50 Applied database migration 075_add_upgrade_retry_diagnostics.sql
+2026/11/02 02:38:50 Applied database migration 076_add_upgrade_item_isolation.sql
+2026/11/02 02:38:50 Applied database migration 077_add_northbound_owner_teams.sql
+2026/11/02 02:38:50 Applied database migration 078_move_repository_schema_to_migrations.sql
+2026/11/02 02:38:51 Applied database migration 079_add_system_backup_control.sql
+2026/11/02 02:38:51 Applied database migration 080_add_backup_dependency_health.sql
+2026/11/02 02:38:51 Applied database migration 081_add_backup_controller_coordination.sql
+2026/11/02 02:38:51 Applied database migration 082_add_backup_attempt_request.sql
+2026/11/02 02:38:51 Applied database migration 083_add_backup_strong_auth_nonce.sql
+2026/11/02 02:38:51 Applied database migration 084_add_backup_external_actions.sql
+2026/11/02 02:38:51 Applied database migration 085_add_backup_capture_coordination.sql
+2026/11/02 02:38:51 Applied database migration 086_add_backup_capture_abort.sql
+2026/11/02 02:38:51 Applied database migration 087_add_backup_stage_resources.sql
+2026/11/02 02:38:51 Applied database migration 088_add_backup_core_publication.sql
+2026/11/02 02:38:51 Applied database migration 089_add_backup_gate_admission.sql
+2026/11/02 02:38:51 Applied database migration 090_add_backup_restore_job_executions.sql
+2026/11/02 02:38:51 Applied database migration 091_add_backup_job_send_intents.sql
+2026/11/02 02:38:51 Applied database migration 092_allow_owned_backup_restore_workspaces.sql
+2026/11/02 02:38:51 Applied database migration 093_add_team_data_backup_jobs.sql
+2026/11/02 02:38:51 Applied database migration 094_add_team_data_backup_management_operations.sql
+2026/11/02 02:38:51 Applied database migration 095_add_team_data_provisioning_receipts.sql
+2026/11/02 02:38:52 Applied database migration 096_backup_v2_add_system_backup_control_metadata_core.sql
+2026/11/02 02:38:52 Applied database migration 097_backup_v2_add_system_backup_config_and_operations.sql
+2026/11/02 02:38:52 Applied database migration 098_backup_v2_add_system_backup_task_execution_core.sql
+2026/11/02 02:38:52 Applied database migration 099_backup_v2_add_system_backup_coordination_observability.sql
+2026/11/02 02:38:52 Applied database migration 100_backup_v2_add_system_backup_promotion_authority.sql
+2026/11/02 02:38:52 Applied database migration 101_backup_v2_add_system_backup_prune_authority.sql
+2026/11/02 02:38:53 Applied database migration 102_backup_v2_add_system_backup_external_action_authority.sql
+2026/11/02 02:38:53 Applied database migration 103_backup_v2_add_system_backup_check_authority.sql
+2026/11/02 02:38:53 Applied database migration 104_backup_v2_add_system_backup_staging_resources.sql
+2026/11/02 02:38:53 Applied database migration 105_backup_v2_add_system_maintenance_participants.sql
+2026/11/02 02:38:53 Applied database migration 106_backup_v2_add_system_backup_strong_auth_nonces.sql
+2026/11/02 02:38:53 Applied database migration 107_backup_v2_add_system_backup_job_observations.sql
+2026/11/02 02:38:53 Applied database migration 108_backup_v2_add_system_restore_drill_resources.sql
+2026/11/02 02:38:53 Applied database migration 109_backup_v2_add_system_backup_registration_runtime.sql
+2026/11/02 02:38:53 Applied database migration 110_backup_v2_fix_system_backup_prune_item_identity.sql
+2026/11/02 02:38:53 Applied database migration 111_backup_engine_selection.sql
+2026/11/02 02:38:53 Applied database migration 112_backup_v2_system-backup-d-config-canonical-081-proposal-20261014.sql
+2026/11/02 02:38:53 Applied database migration 113_backup_v2_system-backup-d-config-maintenance-082-proposal-20261015.sql
+2026/11/02 02:38:53 Applied database migration 114_backup_v2_system-backup-d-control-health-proposal-20261016.sql
+2026/11/02 02:38:53 Applied database migration 115_backup_v2_producer-recovery-authority-candidate.sql
+2026/11/02 02:38:53 Applied database migration 116_backup_v2_producer-recovery-revocation-candidate.sql
+2026/11/02 02:38:54 Applied database migration 117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql
+2026/11/02 02:38:54 Applied database migration 118_backup_v2_import_journal.sql
+2026/11/02 02:38:54 Applied database migration 119_backup_v2_execution_admission.sql
+2026/11/02 02:38:54 Applied database migration 120_backup_v2_execution_plans.sql
+2026/11/02 02:38:54 Applied database migration 121_backup_v2_job_send_intents.sql
+2026/11/02 02:38:54 Applied database migration 122_backup_v2_execution_records.sql
+2026/11/02 02:38:54 Applied database migration 123_backup_v2_runtime_execution_journal.sql
+2026/11/02 02:38:54 Applied database migration 124_backup_v2_runtime_control.sql
+2026/11/02 02:38:54 Applied database migration 125_backup_v2_job_key_use.sql
+2026/11/02 02:38:54 Applied database migration 126_backup_v2_gateway_proofs.sql
+2026/11/02 02:38:54 Applied database migration 127_backup_v2_kek_registry.sql
+2026/11/02 02:38:54 Applied database migration 128_backup_installation_kek_authority.sql
+2026/11/02 02:38:54 Applied database migration 129_backup_v2_source_gate_wait.sql
+2026/11/02 02:38:55 Applied database migration 130_backup_v2_capture_reconcile.sql
+2026/11/02 02:38:55 Applied database migration 131_backup_v2_formal_job_candidates.sql
+2026/11/02 02:38:55 Applied database migration 132_backup_v2_staging_backup_identity.sql
+2026/11/02 02:38:55 Applied database migration 133_backup_v2_publish_original_plan_parent.sql
+    production_same_task_gate_schedule_mysql_test.go:351: new original task coordinates ad_d_six_9933ecfca4622dc4 sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15
+    production_same_task_gate_schedule_mysql_test.go:351: actual local source partial_revokes=false; underscore schema grants use original quoting
+2026/11/02 02:39:01 [system-backup-public] task=sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15 step=prepare runner=ok record=ok
+2026/11/02 02:39:01 [system-backup-public] execution=ok
+    production_same_task_gate_schedule_mysql_test.go:206: original gate real3572 read-only lock DATA 2026-11-01T18:39:02.1800952Z ad_d_six_9933ecfca4622dc4 sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15 rows 1
+    production_same_task_gate_schedule_mysql_test.go:206: original gate lock DATA connection=1806 transaction=283344500693000 table=system_backup_gate mode=S,REC_NOT_GAP status=GRANTED
+2026/11/02 02:39:02 [system-backup-gate] stage=begin-acquire-rejected reason=gate-row-nowait sql_number=3572 sql_state=HY000
+2026/11/02 02:39:02 [system-backup-public] next-work=unavailable
+    production_same_task_gate_schedule_mysql_test.go:272: PFS controlled in-flight-request DATA holder connection/transaction/mode 1806 283344500693000 S,REC_NOT_GAP actual NOWAIT3572; existing deployment scheduler retains task
+2026/11/02 02:39:02 [system-backup-public] execution=unavailable
+2026/11/02 02:39:04 [system-backup-public] execution=ok
+2026/11/02 02:39:32 [system-backup-public] task=sbk_24d9799f-b95b-4c4d-bac1-5b146888ae15 step=capture
+    production_same_task_gate_schedule_mysql_test.go:348: same original task/plan/config/first wait/admission deadline; existing interval and30/5 claim policy unchanged; no collector/key/capture receipt; release true
+--- PASS: TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL (55.96s)
+    --- PASS: TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL/release-after-first-real-NOWAIT (55.96s)
+PASS
+ok  	clawreef/internal/systembackupexecution	59.232s

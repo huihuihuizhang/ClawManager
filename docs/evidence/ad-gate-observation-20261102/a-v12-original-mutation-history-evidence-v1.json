@@ -1,0 +1,30 @@
+{
+  "schema": "a-v12-original-mutation-lease-history-v1",
+  "source_run": "d380a04105a2a56f11ed87881bc46a968877fe5d",
+  "task": "sbk_c7588ab8-6f3f-4dc9-b971-a2d4bde8409a",
+  "database": "ad_d_six_5ec399b352a10492",
+  "read_only": true,
+  "source_calls": "production_same_task_background_test.go application-mutations: root.Gate.AcquireMutation5s,WriteWithLease,ReleaseMutation every40ms",
+  "timestamp_meaning": "Derived statement start=stored expires_at minus fixed5s. Not independently stored creation time. No lease changed.",
+  "before": {
+    "count": 157,
+    "unreleased": 0,
+    "first": "2026-11-01 17:56:28.946201",
+    "last": "2026-11-01 17:56:35.185941"
+  },
+  "during_original_acquisition": {
+    "count": 1496,
+    "unreleased": 0,
+    "first": "2026-11-01 17:56:35.232577",
+    "last": "2026-11-01 17:57:35.548616"
+  },
+  "after_failed": {
+    "count": 12804,
+    "unreleased": 0,
+    "first": "2026-11-01 17:57:35.585781",
+    "last": "2026-11-01 18:06:12.387188"
+  },
+  "conclusion": "Actual test fixture continued new legacy mutation units during original source acquisition. This does not identify old NOWAIT holder or prove legacy API repair resolves the full chain. Production complete request uses backupgate.grantRequestLease admission->gate shared locks; do not conflate paths.",
+  "log": "a-original-mutation-history-v12.log",
+  "sha256": "c7f6b7a4bf1c233181c1cb844a673fc84e2a8bd40ce8e8107945d06e72e97a10"
+}

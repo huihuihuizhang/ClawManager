@@ -195,6 +195,7 @@ func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.
 			var fixture *dOriginalSixPartTask
 			var armed, fired atomic.Bool
 			var actualNOWAIT atomic.Uint64
+			var actualHolderObserved atomic.Bool
 			var holder dOriginalInflightGateData
 			options := dOriginalSixPartFixtureOptions{}
 			options.ControlAfterQuery = func(q string, err error) {
@@ -202,6 +203,11 @@ func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.
 					var rejection *mysql.MySQLError
 					if errors.As(err, &rejection) && rejection.Number == 3572 && string(rejection.SQLState[:]) == "HY000" {
 						actualNOWAIT.Add(1)
+						for _, value := range logDOriginalGateLocks(t, fixture) {
+							if value.Connection == holder.connection && value.Table == "system_backup_gate" && strings.HasPrefix(value.Mode, "S") && value.Status == "GRANTED" {
+								actualHolderObserved.Store(true)
+							}
+						}
 					}
 				}
 			}
@@ -250,6 +256,10 @@ func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.
 					if fired.Load() && passErr != nil {
 						if closedExecutionCode(passErr) != "unavailable" || actualNOWAIT.Load() == 0 {
 							fail("controlled gate yielded an unrelated scheduling error")
+							return
+						}
+						if !actualHolderObserved.Load() {
+							fail("actual refusal PFS sample did not identify the controlled real holder")
 							return
 						}
 						busy++
