@@ -311,7 +311,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T05:34:53.273346+00:00",
+  "updated_at_utc": "2026-11-01T05:45:45.851215+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -512,5 +512,54 @@
     "next": "D to fix actual publisher renewal entry with delivered SQL clock under original lock, preserve RV-increment and original CAS/identity semantics; no old key/Job may adopt a new epoch. Other generic methods are not claimed safe by execution-heartbeat proof.",
     "log_relative_to_workspace_parent": ".tools/supervisor-publisher-claim-expired-wait-baseline.log",
     "log_sha256": "e59e2b9d8026fd9b411d44ab44ead959ca2151ce4afa52dfc7e93151c42ee033"
+  },
+  "reviewed_commits": {
+    "A_original_certificate_known_bytes": "1a3ef4fcdb9b5f7c2dce6ac845b3fb833ed57926"
+  },
+  "A_original_certificate_known_bytes_independent": {
+    "outcome": "PASS",
+    "source": "1a3ef4fcdb9b5f7c2dce6ac845b3fb833ed57926",
+    "integration_and_linked_build_commit": "7b206c8529269d2a5f6bea6f2340c062166cef36",
+    "exact_source_files": {
+      "backend/internal/systembackupexecution/production_same_task_mysql_test.go": "150427eaaf22d43af8fbb90ef083a0c7d4a498e3c79646b32195b16d54a73f86",
+      "backend/internal/systembackupexecution/production_same_task_setup_test.go": "95e43ab95af63bb8a78db2608e35b0a6e83d298052467d0e52069f96b217c811",
+      "backend/internal/systembackupexecution/publication_capture_certificate.go": "2d63b3b863a5b651ac820dc175a024407420a675c27db8cafdd0781049be19a5",
+      "backend/internal/systembackupexecution/publication_capture_certificate_intent.go": "851f19ead30505bcd6833f6d59425240a6cb1305fc95b4c767ae86da9d0d5f07",
+      "backend/internal/systembackupexecution/publication_capture_certificate_record.go": "2007b3d664f7ba43c6512c3db957b37c47446b2a12690e9a031aaa45d78ad6df",
+      "backend/internal/systembackupexecution/publication_capture_certificate_record_test.go": "cecb80cbeb8c0f6669f753869bee33ea73ce630b134e2bfabc922cee9b744274",
+      "backend/internal/systembackupexecution/publication_capture_certificate_resume_mysql_test.go": "97426d5edacc1ae683caa76dd8218b1998a5e87b85f542d18e9c8c9b1f40c92d",
+      "backend/internal/systembackupexecution/publication_capture_certificate_store.go": "09e4bc53f9efea70902b149d4d63fe859fb43e7961231e073145cd3e0d1a43f7",
+      "backend/internal/systembackupexecution/publication_certificate_ack_fault_test.go": "c378dcbe55a3038affc98915678d310ae5e99ddb359715b48c3cff1a7d28051a",
+      "backend/internal/systembackupexecution/publication_same_task_mysql_test.go": "4b84c44cba1d96e46cf4dd01b48a8badb7902a14ab1bb750c0e97da6b734cd85"
+    },
+    "native_session": 89977,
+    "terminal_exit": 0,
+    "closed": true,
+    "native_package_seconds": 274.748,
+    "subcase_seconds": {
+      "dispatch-commit-ack-unknown": "135.89",
+      "store-commit-ack-unknown": "135.56"
+    },
+    "native_log": ".tools/supervisor-a-known-bytes-native-commit-ack.log",
+    "native_log_sha256": "d57e8d972bfd2a1f7de8f15ab06dfbbf4214cf1debaa4586a5e62202525cc1c0",
+    "tasks": [
+      "sbk_4f89921a-33c8-4962-b659-34ff1582ecf5",
+      "sbk_b12d0a2c-e10b-47a3-be36-b957723e0ecf"
+    ],
+    "certificate_observations": [
+      [
+        "sbk_b12d0a2c-e10b-47a3-be36-b957723e0ecf",
+        "10",
+        "ff9bf2b2652c174f1e47967df95e3b252772b0812435d27a09e6868f91f96ce4"
+      ]
+    ],
+    "scope": "Two new original HTTP tasks; local174 migrations/TLS/10 native workers/default30s claim and5s heartbeat. Complete capture, stop/resume, original current publisher C/domain/counts. Actual native Commit succeeds before deliberately withheld ACK. Dispatch ACK unknown remains query-only/zero Sign; known-byte write ACK unknown independently reads committed exact bytes and reentry Sign remains1; original immutable evidence snapshots and8 rolled-back SQL codec faults checked. No production overlay.",
+    "default_regression": {
+      "controller_seconds": 9.407,
+      "execution_seconds": 8.405,
+      "skills_seconds": 1.691,
+      "note": "Combined command34007 exit1 because requested nonexistent internal/skillhub; actual two package results PASS retained. Correct systembackupskillhub separate command exit0. Overall failed invocation is not relabeled PASS."
+    },
+    "remaining": "Provider-unknown signature is conservatively query-only and not independently recoverable here. No final manifest/index/upload/seal/immutable catalog/independent restore/terminal success. Not production Linux or remote validation."
   }
 }
