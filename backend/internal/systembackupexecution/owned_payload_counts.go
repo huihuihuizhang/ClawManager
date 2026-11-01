@@ -73,7 +73,15 @@ func publicationPayloadCountsComplete(parts []publicationVerifiedPart) bool {
 	}
 	domains := map[string]bool{}
 	for _, part := range parts {
-		if part.Part == cd.Part || part.Part == ce.Part || part.Part == ce.ProofPart {
+		// The independently verified description is an administrative carrier,
+		// like E/P, and cannot supply or replace any business-domain counts.
+		if part.Part == cd.Part {
+			if part.Operation != cd.Operation || part.RequestedPart != "" {
+				return false
+			}
+			continue
+		}
+		if part.Part == ce.Part || part.Part == ce.ProofPart {
 			continue
 		}
 		count := part.Counts

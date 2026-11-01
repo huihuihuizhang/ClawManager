@@ -152,7 +152,16 @@ func assembleOriginalPublicationManifest(capture publicationVerifiedCapture, cer
 			return zero, c.ErrExecutionRecord
 		}
 		m.Parts[name] = summary
-		if part.Operation != "capture-database" {
+		binding := publicationBusinessMemberBinding(part, hash(cp))
+		if part.Operation == "capture-database" {
+			// Every SQL category is a projection of this independently read
+			// original full SQL C stream. Bind its actual content/result/CP,
+			// not only equal table/row/byte statistics. This hash is comparison
+			// DATA and never a replacement for the complete C verification.
+			for category := range sqlCounts {
+				summaryInputs[category] = append(summaryInputs[category], binding)
+			}
+		} else {
 			category := publicationOperationBusinessCategory(part.Operation, part.Category)
 			business, ok := m.Business[category]
 			if !ok {
@@ -162,10 +171,7 @@ func assembleOriginalPublicationManifest(capture publicationVerifiedCapture, cer
 				return zero, c.ErrExecutionRecord
 			}
 			m.Business[category] = business
-			summaryInputs[category] = append(summaryInputs[category], struct {
-				Part, Result, Checkpoint string
-				Counts                   ownedPayloadCounts
-			}{part.Part, part.ResultSHA256, hash(cp), part.Counts})
+			summaryInputs[category] = append(summaryInputs[category], binding)
 		}
 	}
 	stage = "six requested-part aggregates"
@@ -189,7 +195,10 @@ func assembleOriginalPublicationManifest(capture publicationVerifiedCapture, cer
 		m.Parts[name] = summary
 	}
 	for category, inputs := range summaryInputs {
-		raw, err := ce.Canonical(inputs)
+		raw, err := ce.Canonical(struct {
+			Version, Category string
+			Inputs            []any
+		}{"system-backup-original-business-summary-inputs.v1", category, inputs})
 		if err != nil {
 			return zero, err
 		}
@@ -269,6 +278,14 @@ func addPublicationManifestCounts(dst *int64, value int64) bool {
 	}
 	*dst += value
 	return true
+}
+
+func publicationBusinessMemberBinding(part publicationVerifiedPart, checkpoint string) any {
+	return struct {
+		Part, Operation, InvocationSHA256, CandidateSHA256, ResultSHA256  string
+		CheckpointSHA256, CipherSHA256, EnvelopeSHA256, ResultEvidenceRef string
+		Counts                                                            ownedPayloadCounts
+	}{part.Part, part.Operation, part.InvocationSHA256, part.CandidateSHA256, part.ResultSHA256, checkpoint, part.CipherSHA256, part.EnvelopeSHA256, part.ResultEvidenceRef, part.Counts}
 }
 
 // SQL ownership is defined by the original schema registry. Non-SQL units are

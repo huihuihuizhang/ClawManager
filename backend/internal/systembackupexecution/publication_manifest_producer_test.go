@@ -187,3 +187,71 @@ func TestOriginalManifestAssemblerRequiresCompleteBoundInputsData(t *testing.T) 
 		})
 	}
 }
+
+// Identical SQL table/row/byte counts do not imply identical verified content.
+// These are local assembly DATA receipts, never a successful original C claim.
+func TestOriginalBusinessSummaryBindsContentWhenSQLCountsAreEqualData(t *testing.T) {
+	capture, certificate, files, bootstrap, recovery, target, now := publicationAssemblyData(t)
+	limits := ArtifactReadLimits{MaxArtifactBytes: 16 << 20, MaxIndexBytes: 1 << 20}
+	first, err := assembleOriginalPublicationManifest(capture, certificate, files, bootstrap, recovery, target, limits, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, err := decodePublicationManifestV12(first.Manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range capture.Parts {
+		part := &capture.Parts[i]
+		if part.Operation != "capture-database" {
+			continue
+		}
+		part.CipherSHA256 = hash([]byte("different original SQL encrypted content with equal counts"))
+		var checkpoint b.Checkpoint
+		json.Unmarshal(part.Checkpoint, &checkpoint)
+		checkpoint.ContentSHA256 = part.CipherSHA256
+		part.Checkpoint, _ = json.Marshal(checkpoint)
+		var result d.ModuleResult
+		json.Unmarshal(part.ResultJSON, &result)
+		result.Checkpoint = part.Checkpoint
+		part.ResultJSON, _ = json.Marshal(result)
+		part.ResultSHA256 = hash(part.ResultJSON)
+	}
+	capture.receipt = &publicationVerifiedCaptureReceipt{sha256: publicationVerifiedCaptureHash(capture)}
+	var envelope originalCaptureCertificateEnvelope
+	json.Unmarshal(certificate.bytes, &envelope)
+	var payload publicationCaptureCertificatePayload
+	json.Unmarshal(envelope.Payload, &payload)
+	for i := range payload.Checkpoints {
+		for _, part := range capture.Parts {
+			if payload.Checkpoints[i].Part == part.Part {
+				cp, _ := ce.Canonical(json.RawMessage(part.Checkpoint))
+				payload.Checkpoints[i].SHA256 = hash(cp)
+			}
+		}
+	}
+	envelope.Payload, _ = ce.Canonical(payload)
+	certificate.bytes, _ = ce.Canonical(envelope)
+	certificate.sha256 = hash(certificate.bytes)
+	certificate.captureSHA256 = capture.receipt.sha256
+	recovery.captureSHA256 = capture.receipt.sha256
+	for i := range files.Files {
+		if files.Files[i].Part == "mysql" {
+			files.Files[i].Receipt.SHA256 = hash([]byte("different physical SQL container with equal reader counts"))
+		}
+	}
+	second, err := assembleOriginalPublicationManifest(capture, certificate, files, bootstrap, recovery, target, limits, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after, err := decodePublicationManifestV12(second.Manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for category, old := range before.Business {
+		current := after.Business[category]
+		if old.Objects != current.Objects || old.Rows != current.Rows || old.Bytes != current.Bytes || old.VerifierSHA256 == current.VerifierSHA256 {
+			t.Fatal("same counts hid a change to original verified SQL C", category)
+		}
+	}
+}
