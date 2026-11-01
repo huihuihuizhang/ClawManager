@@ -170,12 +170,14 @@ func Encode(d Description) ([]byte, error) {
 	if d.Validate() != nil {
 		return nil, ErrDescription
 	}
-	raw, err := json.Marshal(d)
+	input, err := json.Marshal(d)
+	defer clear(input)
 	if err != nil {
 		return nil, ErrDescription
 	}
-	raw, err = jsoncanonicalizer.Transform(raw)
+	raw, err := jsoncanonicalizer.Transform(input)
 	if err != nil || int64(len(raw)) > d.Seed.MaxPlaintextBytes {
+		clear(raw)
 		return nil, ErrDescription
 	}
 	return raw, nil
@@ -183,6 +185,12 @@ func Encode(d Description) ([]byte, error) {
 
 func Decode(raw []byte, expected Seed) (Description, error) {
 	var d Description
+	keep := false
+	defer func() {
+		if !keep {
+			d.Clear()
+		}
+	}()
 	if expected.Validate() != nil || len(raw) == 0 || int64(len(raw)) > expected.MaxPlaintextBytes {
 		return d, ErrDescription
 	}
@@ -197,9 +205,11 @@ func Decode(raw []byte, expected Seed) (Description, error) {
 		return Description{}, ErrDescription
 	}
 	canonical, err := Encode(d)
+	defer clear(canonical)
 	if err != nil || !bytes.Equal(canonical, raw) {
 		return Description{}, ErrDescription
 	}
+	keep = true
 	return d, nil
 }
 
