@@ -1,0 +1,65 @@
+{
+  "schema_version": "d-original-source-lock-order-real-counterexample.v1",
+  "date": "2026-11-01",
+  "base_head": "ef154a592da0c158a37185dad864dcf885809442",
+  "dependencies": [
+    "A descriptor component ef42878d742ef5701fab0031485aa97e294421a3",
+    "A pre-Prepare fixture order f9ab5e81729b7793ff627ef320c9eea82321be8a",
+    "D diagnostic-only 45b4ec3be42178786a0ed77716bf24a3abdd55cc and clock-only ef154a592da0c158a37185dad864dcf885809442"
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/original_capture_authority_lookup.go",
+      "sha256": "5055e4e8adbb7160d23241500139ac9b00ca096bdce8d8f50aa95a5340eef2da"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_capture_lock_order_mysql_test.go",
+      "sha256": "a9815a56668455d57febb3da3e915b9ee97f2253635771e8e0a472937868c526"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_pull.go",
+      "sha256": "b72e07a69de704d730d05005e61474e338470361d9972726c8d1a9b18d69517f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/capture_description_producer.go",
+      "sha256": "e4622bc46eabb648e38f437caae7d3011aeefab7ff19e2e52fde389bd77f0ca8"
+    }
+  ],
+  "change": [
+    "Both CE and description source preliminarily read original authority locator DATA using a shared ordinary SELECT, without first locking the backup row.",
+    "The SAME original transaction then calls unchanged strong Gate.Bind in the existing gate-before-task order. Original config/authority hash checks, full current task/owner/row-version/config/claim/gate/deadline checks, runtime using-key equality and all tails remain.",
+    "No retry, new source/key grant, original window extension, status transition or permission weakening."
+  ],
+  "native": {
+    "source_freeze": "../.tools/d-gate-task-lock-final-source-ledger.json",
+    "log": "../.tools/d-gate-task-lock-final-native.log",
+    "server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+    "package_seconds": 3.467,
+    "exit_code": 0,
+    "observations": [
+      "Old Task FOR SHARE then Gate order: performance_schema observed actual heartbeat task lock wait; actual Bind encountered MySQL1213/SQLSTATE40001 at bind-snapshot-maintenance-gate.",
+      "New ordinary locator then Gate order: performance_schema observed actual source gate wait, heartbeat release unblocked complete real Bind and tail Recheck successfully, with zero retries or diagnostic rejections.",
+      "After ordinary RR locator, independent TX committed a higher task row_version; same source TX subsequent locking Bind rejected stale locator at bind-snapshot-task/predicate. This is DATA drift protection, not an actual claim-loss authorization test."
+    ],
+    "session": 91273,
+    "fixture": "127.0.0.1:65298",
+    "cleanup": "Test creates/drops only its own random schema and closes sessions. No established 65298 or 63507 connection remained in post-run check.",
+    "log_sha256": "36281962afda472cd4d8919661820fc717f0060d78797f85fa9745b597d4eefb",
+    "scope": "Fresh random schema; five minimal synthetic metadata tables; inert DATA authorization owner, no actual deployment/A/capture authority claim",
+    "test_seconds": 0.19
+  },
+  "full_no_sql": {
+    "result": "PASS",
+    "log": "../.tools/d-gate-task-lock-final-no-sql.log",
+    "log_sha256": "f483eb5fd1d44007548be4a1f484878d2849b51dbf5bb16dc13dcfe6da05c918",
+    "exit_code": 0,
+    "controller_seconds": 9.714,
+    "execution_seconds": 13.071,
+    "session": 35532
+  },
+  "limits": [
+    "This proves a reachable lock-order bug and its minimal correction; it does not uniquely prove the cause of prior A task sbk_bc8d2ac7-e5ba-4a42-96ff-06d0a7233b80 because that failure lacked structured driver detail.",
+    "Full original 11-member/new remote C native remains NOT RUN until the new clean committed HEAD is linked before capture on the explicitly returned 63507 slot.",
+    "No historical DR, upload Job, MF, acceptance/catalog/cleanup or terminal backup success claim. No D push."
+  ]
+}

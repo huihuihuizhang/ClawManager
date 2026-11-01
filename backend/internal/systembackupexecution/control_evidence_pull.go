@@ -230,7 +230,7 @@ func (s *DeploymentService) readOriginalControlEvidenceEntries(ctx context.Conte
 	defer tx.Rollback()
 	authority := d.Authority{InstallationID: locator.Expected.Installation, TaskPublicID: locator.Expected.Backup, TaskType: "backup", Phase: "capture", AttemptNo: locator.Expected.Attempt, MaintenanceOwner: locator.Expected.Backup}
 	stage = "controller-source-original-claim-config"
-	if tx.QueryRowContext(ctx, `SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? FOR SHARE`, authority.InstallationID, authority.TaskPublicID).Scan(&authority.ClaimOwner, &authority.ClaimRowVersion, &authority.RequestID, &authority.ConfigVersion, &authority.ConfigSHA256, &authority.DeadlineAt, &authority.MaintenanceFencingToken) != nil || authority.ConfigSHA256 != locator.Expected.ConfigSHA256 {
+	if readOriginalCaptureAuthorityLookup(ctx, tx, &authority) != nil || authority.ConfigSHA256 != locator.Expected.ConfigSHA256 {
 		return nil, c.ErrExecutionAuthority
 	}
 	authorityRaw, _ := json.Marshal(authority)
