@@ -1,0 +1,19 @@
+{
+  "correction": "Start-Process returned Windows launcher PID16828; actual mysqld child PID26704 is printed in original immutable server startup log. Historical metadata pid field remains the launcher identifier, not the actual server PID.",
+  "launcher_pid": 16828,
+  "actual_mysqld_pid_from_original_log": 26704,
+  "original_log": "shutdown.log",
+  "original_start_line_utc": "2026-11-01T20:23:45.215248Z",
+  "normal_shutdown_complete_utc": "2026-11-01T20:25:02.267691Z",
+  "server_uuid": "1f3495c1-d632-11f1-b677-745d22085e06",
+  "nonce": "0865790ccda842f695ea6d13171f082f",
+  "observation": {
+    "observed_utc": "2026-11-01T20:36:36.8278053Z",
+    "recorded_id_processes": [],
+    "owned_mysqld_processes": [],
+    "exact_root_exists": false
+  },
+  "original_final_state_and_logs_unchanged": true,
+  "source_tests_and_results_unchanged": true,
+  "CIM_filter_note": "Only exact recorded process IDs and exact own mysqld executable. Audit shell command-line mentions are not database processes."
+}
