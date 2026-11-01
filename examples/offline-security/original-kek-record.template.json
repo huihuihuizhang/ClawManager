@@ -1,0 +1,48 @@
+{
+  "Binding": {
+    "InstallationID": "",
+    "ConfigRef": {
+      "IdentityHash": "",
+      "Version": ""
+    },
+    "Key": {
+      "Provider": "",
+      "IdentityHash": "",
+      "RegistryVersion": "",
+      "ProviderKeyID": "",
+      "ProviderVersion": ""
+    },
+    "Provider": {
+      "Endpoint": "",
+      "KeyName": "",
+      "ProviderIdentityHash": "",
+      "ScopeHash": "",
+      "CAPEMSHA256": "",
+      "CASource": {
+        "SourceID": "",
+        "RecordID": "",
+        "RecordVersion": "",
+        "ContentSHA256": ""
+      }
+    },
+    "GenerateRef": {
+      "RawJSON": null,
+      "SHA256": ""
+    },
+    "UnwrapRef": {
+      "RawJSON": null,
+      "SHA256": ""
+    }
+  },
+  "Source": {
+    "SourceID": "",
+    "RecordID": "",
+    "RecordVersion": "",
+    "ContentSHA256": ""
+  },
+  "Revision": "",
+  "NotBefore": "0001-01-01T00:00:00Z",
+  "Until": "0001-01-01T00:00:00Z",
+  "GenerateRevoked": false,
+  "UnwrapRevoked": false
+}

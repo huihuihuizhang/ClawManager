@@ -1,0 +1,13 @@
+{
+  "Protocol": "system-backup-offline-security-materials.v1",
+  "Status": "review_only_not_authorized",
+  "MaterialKind": "template",
+  "Signing": null,
+  "KEK": null,
+  "SecretPolicy": null,
+  "Capabilities": {},
+  "SourceGrants": {},
+  "SourceRules": null,
+  "SourceSQL": null,
+  "Coverage": null
+}

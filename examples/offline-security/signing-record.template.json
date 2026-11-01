@@ -1,0 +1,85 @@
+{
+  "InstallationID": "",
+  "Revision": 0,
+  "NotBefore": "0001-01-01T00:00:00Z",
+  "Until": "0001-01-01T00:00:00Z",
+  "Keys": [
+    {
+      "InstallationID": "",
+      "Purpose": "capture_certificate",
+      "KeyID": "",
+      "KeyVersion": "",
+      "PublicKey": null,
+      "NotBefore": "0001-01-01T00:00:00Z",
+      "NotAfter": "0001-01-01T00:00:00Z",
+      "Revoked": false
+    },
+    {
+      "InstallationID": "",
+      "Purpose": "acceptance_record",
+      "KeyID": "",
+      "KeyVersion": "",
+      "PublicKey": null,
+      "NotBefore": "0001-01-01T00:00:00Z",
+      "NotAfter": "0001-01-01T00:00:00Z",
+      "Revoked": false
+    },
+    {
+      "InstallationID": "",
+      "Purpose": "catalog_record",
+      "KeyID": "",
+      "KeyVersion": "",
+      "PublicKey": null,
+      "NotBefore": "0001-01-01T00:00:00Z",
+      "NotAfter": "0001-01-01T00:00:00Z",
+      "Revoked": false
+    }
+  ],
+  "Permissions": [
+    {
+      "Binding": {
+        "InstallationID": "",
+        "Purpose": "capture_certificate",
+        "KeyID": "",
+        "KeyVersion": "",
+        "Endpoint": "",
+        "KeyName": "",
+        "ProviderVersion": ""
+      },
+      "AuthMount": "",
+      "Role": "",
+      "Policy": "",
+      "CASHA256": ""
+    },
+    {
+      "Binding": {
+        "InstallationID": "",
+        "Purpose": "acceptance_record",
+        "KeyID": "",
+        "KeyVersion": "",
+        "Endpoint": "",
+        "KeyName": "",
+        "ProviderVersion": ""
+      },
+      "AuthMount": "",
+      "Role": "",
+      "Policy": "",
+      "CASHA256": ""
+    },
+    {
+      "Binding": {
+        "InstallationID": "",
+        "Purpose": "catalog_record",
+        "KeyID": "",
+        "KeyVersion": "",
+        "Endpoint": "",
+        "KeyName": "",
+        "ProviderVersion": ""
+      },
+      "AuthMount": "",
+      "Role": "",
+      "Policy": "",
+      "CASHA256": ""
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": "system-backup-original-source-grant.v1",
+  "InstallationID": "",
+  "ConfigSHA256": "",
+  "WorkerNamespace": "",
+  "WorkerServiceAccountUID": "",
+  "Operation": "",
+  "ScopeSHA256": "",
+  "CredentialSHA256": "",
+  "NotBefore": "0001-01-01T00:00:00Z",
+  "Until": "0001-01-01T00:00:00Z",
+  "Revoked": false
+}
