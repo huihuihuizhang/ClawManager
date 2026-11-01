@@ -250,7 +250,7 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 		if err != nil || job == nil || job.Spec.Suspend == nil || *job.Spec.Suspend || *creates != 1 || *patches != 1 {
 			t.Fatal("original native upload Job create/activation", err, *creates, *patches)
 		}
-		material, err := f.service.bindPublicationMaterialJobOwner(ctx, *claim, capture.Input.CaptureAttemptNo, store.config)
+		material, err := f.service.preparePublicationJobMaterials(ctx, *claim, capture.Input.CaptureAttemptNo, store.config, PublicationUploadRequest{})
 		if err != nil {
 			t.Fatal(err)
 		}
