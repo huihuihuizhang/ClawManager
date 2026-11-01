@@ -31,6 +31,19 @@ type PublishInputFile struct{ Path, SubPath string }
 
 var publicationSealedInput = regexp.MustCompile(`^\.controller-seals/seal-[0-9a-f]{64}\.enc$`)
 
+var publicationContainerInput = regexp.MustCompile(`^sbk_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/publication-[0-9a-f]{64}/container-(deployment_resources|mysql|object_storage|redis|secret_bundle|workspace)\.enc$`)
+
+func validPublicationInputOwner(file PublishInputFile, owner string) bool {
+	if publicationSealedInput.MatchString(file.SubPath) {
+		return true
+	}
+	if !publicationContainerInput.MatchString(file.SubPath) || !strings.HasPrefix(file.SubPath, owner+"/publication-") {
+		return false
+	}
+	part := strings.TrimSuffix(strings.TrimPrefix(path.Base(file.SubPath), "container-"), ".enc")
+	return file.Path == "parts/"+part+"/container.enc"
+}
+
 // PublishJob never uses the capture constructor: no source volume, capture
 // identity, KMS/key material, arbitrary command or environment. A result relay
 // explicitly projects a bound Pod token and the separate publication identity.
@@ -72,7 +85,7 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 		seen := map[string]bool{}
 		paths := []string{}
 		for _, file := range r.InputFiles {
-			if !publicationSealedInput.MatchString(file.SubPath) || file.Path == "" || path.IsAbs(file.Path) || path.Clean(file.Path) != file.Path || strings.ContainsAny(file.Path, "\\\x00\r\n:") || (!strings.HasPrefix(file.Path, "parts/") && !strings.HasPrefix(file.Path, "control/")) || (!strings.HasSuffix(file.Path, ".enc") && !strings.HasSuffix(file.Path, ".envelope.json")) {
+			if !validPublicationInputOwner(file, r.Identity.Owner) || file.Path == "" || path.IsAbs(file.Path) || path.Clean(file.Path) != file.Path || strings.ContainsAny(file.Path, "\\\x00\r\n:") || (!strings.HasPrefix(file.Path, "parts/") && !strings.HasPrefix(file.Path, "control/")) || (!strings.HasSuffix(file.Path, ".enc") && !strings.HasSuffix(file.Path, ".envelope.json")) {
 				return nil, ErrResource
 			}
 			if seen["path:"+file.Path] || seen["source:"+file.SubPath] {

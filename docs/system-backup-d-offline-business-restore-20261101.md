@@ -100,6 +100,23 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 ## 远侧可连接后的剩余验收
 
+### Caller 066 已接入公共事务（本地目标侧组件验证）
+
+`TableAdapter.Normalizer="northbound-caller-policy.066"` 已由公共 `Normalize` 消费，沿现有 `RunDatabase`/profile 的 Dependencies 进入同一 SQL 事务；没有修改 `worker/database.go` 的连接/传输函数。适配要求源和目标各自匹配同一精确 schema 指纹、八个完整列和 user_id 主键，并且列动作全部 preserve，先校验原数据再调用 A 的 owner normalizer。未知名称、不同表、schema 漂移、先 fixed/null 掩盖坏原数据均拒绝。默认空 Normalizer 的 JSON 序列化不增加字段。
+
+从实际捕获 users 的 ID、用户名、邮箱、角色和时间构造闭合的恒等 ID 映射；不编造缺失用户信息、不改公共 SQL 原用户策略。目标 enabled=0、api_keys_json=[]；原 key 文档/SQL NULL 留在源加密归档，version（含最大 int64）、actor NULL、微秒时间和 scopes 原 SQL 字节保留。066 不接受旧 057 缺列冒充当前列。`VerifyDrill` 在独立读库前调用 `VerifyCallerQuarantine`，预期文件自身若含启用状态、keys、非法 actor 或未知 schema 即拒绝；随后仍逐字段读回并检查额外行。
+
+证据分两层：
+
+- `caller_restore_test.go` / `caller_worker_integration_test.go` 使用具名合成 SQL driver，验证非空原 keys、最大版本、原 scopes 空格、源未改、关闭源后恢复、关闭 target writer 后独立读回、目标 key 篡改拒绝，以及写入后 final fence 丢失整事务回滚。这里的 allowWorker 仍只是夹具，不是正式源/目标认证。
+- `offline_business_mysql_test.go` 在本窗口专用 MySQL 8.4.13 loopback **61674** 上加载实际 057/066（及原 Skills 008/023/039）migrations；验证真实 JSON/时间/整数类型、两条 caller 历史（非空 key + 最大版本；SQL NULL key/actor + 版本 0）、三个失败回滚场景、锁定 writer 后认证失败、独立 SELECT-only 读回及源快照未改。users/instance/Teams 和空 operations 仍是明确夹具，不代表全量当前生产 schema。夹具只清理本次随机创建的库/用户。
+
+初始 native MySQL 失败日志保留。**最终诊断显示失败停在权限检查，不能把早期失败日志说成已经证明 JSON 比对错误**：新服务器默认 partial_revokes=OFF，旧夹具直接 GRANT 含下划线库名会产生通配权限。现改为复用 `QuotedGrantDatabase` 生成精确授权，不放松 verifier。诊断读回各字段一致。另保留 scopes 原字节以避免 owner 的压缩格式与 MySQL JSON 表示不同，并以含空格 fixture 和实际 MySQL 精确读回固化。
+
+最终完整回归见 `caller-final-four-packages-native-mysql.txt`：domain 25.933s（含 native MySQL 22.02s）、worker 36.702s、profile 3.307s、businessa 2.193s 全 PASS。其他外部服务 opt-in 环境变量已清空。专用进程按可执行文件身份确认后正常 shutdown，临时根路径校验后删除，见 `caller-mysql-cleanup.json`。精确代码 SHA256 / Git blob 见 `caller-common-scope.json`。
+
+这完成了一个 owner 的实际公共消费者接线。剩余十张 owner 表、northbound_operations 的完整当前列、跨域共同 snapshot/receipt、正式源认证后的公开 restore/verify dispatch 仍需继续。没有新增静态生产 schema pin、源认证结果、最终资格或 CAS；正式历史 source 的完整 Invocation/inventory 承载由原发布 owner 补齐后才可接入。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。
