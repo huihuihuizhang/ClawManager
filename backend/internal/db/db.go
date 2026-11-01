@@ -78,7 +78,8 @@ func connectWithGateOptions(cfg config.DatabaseConfig, extra map[string]string, 
 	// P0 restored databases are data-only drill targets. Every official business
 	// process uses this connection path; none may start consumers, retry Owner
 	// operations, reconcile upgrades, seed data or migrate a restored copy.
-	if regexp.MustCompile(`^cm_(restore|import)_[a-f0-9]{32}$`).MatchString(cfg.Database) {
+	isolatedName := strings.ToLower(cfg.Database)
+	if regexp.MustCompile(`^cm_(restore|import)_[a-f0-9]{32}$`).MatchString(isolatedName) || strings.HasPrefix(isolatedName, "cm_drill_") {
 		return nil, fmt.Errorf("isolated restore databases cannot run business services")
 	}
 	options := map[string]string{"charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "parseTime": "true"}
