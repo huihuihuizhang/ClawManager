@@ -1,0 +1,81 @@
+{
+  "validation": {
+    "minimum_original_identity": {
+      "result": "PASS",
+      "seconds": 3.283,
+      "session": 77415
+    },
+    "supervisor_prior_red_overlay": {
+      "result": "PASS",
+      "scope": "Before additional private-Secret-holder scan; final full package covers the stronger new counterexamples",
+      "seconds": 3.558,
+      "session": 11972
+    },
+    "final_sql_off_execution": {
+      "result": "PASS",
+      "seconds": 14.198,
+      "session": 35481
+    }
+  },
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_process.go",
+      "sha256": "47a50489a19151ab23b5968b42cc537005d80e20fb04446dbac426be184aeed7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_process_test.go",
+      "sha256": "d1691077e57f87e24871fe449a39aac6053cf497183c8706394c02a0f2708157"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "sha256": "cdda7d95d5eb388d27f08dce9274be0ea04bfa6089f0abca432610223e3b81fc"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_result_relay.go",
+      "sha256": "ebca644bc6b07f25e1fcc60236f1eb38b21d8042de4c2f5872b2ac8950b18811"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_result_relay_mysql_test.go",
+      "sha256": "0d8094f134dbdd8c40b6c33ac52bdd69b773c4182c1a98bb7b5532921e7011c1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_wait.go",
+      "sha256": "40952b206bf823421303bf2aaa08741a8993725fd0313387bf6a95606183747b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data.go",
+      "sha256": "2d6a10cafa934dbd327123deacb1ed0c20cd8abaf9785aadf02ef50e1f5cc231"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256": "4391e1d3ef558bd66e414f7c2db686ac1bad6b2cb9dad6d613c68f06d4e45803"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "sha256": "f6702f70a510d20f59fdec52af3f36d13c4d66741f0afdc9cb9bb3b8d62170e8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "sha256": "f6de683ee1ccb090a00fa506ea9fb28698271d04c9a203bc8ca260410aa1430c"
+    }
+  ],
+  "corrects": "122cae4d current-child discovery could ignore an orphaned live original uploader and accept a replacement Pod",
+  "date": "2026-11-02",
+  "limits": [
+    "Full native upload/C/MF/marker/exit run has not been performed",
+    "No real production Kubernetes/SSH/KMS calls; tests use fake Kubernetes and local TLS",
+    "No deletion, cleanup_result, acceptance signature, catalog append, artifact usability or terminal success",
+    "Independent candidate-delete WIP remains in git stash and is excluded"
+  ],
+  "schema_version": "d-original-publication-process-identity-fix.v1",
+  "base_head": "760306b7ea00f5a8ac06811365bc47147f9d8bb7",
+  "production": [
+    "Actual mTLS/TokenReview/native Pod receiver records first process identity atomically with original107 sequence1",
+    "Original Pod UID/name, node name and pinned actual Node UID, container ID, Job UID/generation, service account UID and original request are fixed",
+    "Later results including duplicates compare original identity before acceptance",
+    "First process performs bounded namespace scan for another original Job or original private upload Secret holder",
+    "Earlier validated ProcessSHA256 copied through upload DTO and pre-C snapshot; immutable process bytes rechecked after C and during manifest/marker/exit",
+    "Exit must observe exactly the previously authenticated process; orphan, missing, replaced, changed node/container/owner/label and hidden original grant holders deny",
+    "Prepared same actual upload invocation native test continues real C/MF/marker then actual SQL exit observer and stale-receipt actual Renew refusal"
+  ]
+}

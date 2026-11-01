@@ -387,9 +387,30 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		// The actual local upload-only worker and result sender have returned.
 		// Model that native exit fact; it cannot replace SQL result validation.
 		finished := job.DeepCopy()
-		finished.Status = batchv1.JobStatus{Succeeded: 1, Conditions: []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}}
+		finishedAt := metav1.Now()
+		finished.Status = batchv1.JobStatus{Succeeded: 1, CompletionTime: &finishedAt, Conditions: []batchv1.JobCondition{{Type: batchv1.JobComplete, Status: corev1.ConditionTrue}}}
 		if err = f.owner.Client.(*kubefake.Clientset).Tracker().Update(batchv1.SchemeGroupVersion.WithResource("jobs"), finished, finished.Namespace); err != nil {
 			t.Fatal(err)
+		}
+		// The actual upload and authenticated result sender returned above. The
+		// fake API now exposes that same pinned process's explicit termination;
+		// only the production exit observer may turn it into a SQL stop proof.
+		pods, err := f.owner.Client.CoreV1().Pods(job.Namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := range pods.Items {
+			pod := pods.Items[i].DeepCopy()
+			if len(pod.OwnerReferences) != 1 || pod.OwnerReferences[0].UID != job.UID {
+				continue
+			}
+			pod.ResourceVersion = "original-upload-exited"
+			pod.Status.Phase = corev1.PodSucceeded
+			status := &pod.Status.ContainerStatuses[0]
+			status.State = corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ContainerID: status.ContainerID, ExitCode: 0, FinishedAt: finishedAt}}
+			if err = f.owner.Client.(*kubefake.Clientset).Tracker().Update(corev1.SchemeGroupVersion.WithResource("pods"), pod, pod.Namespace); err != nil {
+				t.Fatal(err)
+			}
 		}
 		if err = f.service.awaitOriginalPublicationUpload(ctx, *claim, capture.Input.CaptureAttemptNo, store.config, time.Second, nil); err != nil {
 			t.Fatal("original SQL/native upload completion wait", err)
@@ -450,6 +471,7 @@ func aSendOriginalForwardResults(ctx context.Context, t *testing.T, f *dOriginal
 	client := f.owner.Client.(*kubefake.Clientset)
 	yes := true
 	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: job.Namespace, Name: job.Name + "-pod", UID: types.UID(uuid.NewString()), Labels: map[string]string{"backup.clawmanager.io/v2-task": f.publicID}, OwnerReferences: []metav1.OwnerReference{{APIVersion: "batch/v1", Kind: "Job", Name: job.Name, UID: job.UID, Controller: &yes}}}, Spec: *job.Spec.Template.Spec.DeepCopy()}
+	aOriginalPublicationRunningPod(t, client, f.service.Config, pod)
 	if err := client.Tracker().Add(pod); err != nil {
 		t.Fatal(err)
 	}
