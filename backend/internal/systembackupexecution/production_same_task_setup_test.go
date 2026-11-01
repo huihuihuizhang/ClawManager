@@ -15,6 +15,9 @@ import (
 // materials on the SAME original task. They cannot change capture settings or
 // re-sign a core after capture. The original claim/TTL/data/ten workers remain.
 type dOriginalSixPartFixtureOptions struct {
+	// Actual artifact purpose mapping declared before original config/task
+	// admission. No existing JSON, source settings or claim is rewritten.
+	PublicationTarget *PublicationTargetMaterials
 	// Explicit new pre-capture protocol variant. Legacy ten workers stay ten.
 	CaptureDescription       bool
 	PublicationForward       bool
@@ -31,6 +34,42 @@ type dOriginalSixPartFixtureOptions struct {
 	ControlBeforeQuery   func(context.Context, string) error
 	ControlAfterQuery    func(string, error)
 	AfterOriginalPrepare func(context.Context, *testing.T, *dOriginalSixPartTask, d.Plan) error
+}
+
+func prepareDOriginalPublicationReferences(values map[string]any, target PublicationTargetMaterials) error {
+	if target.validate() != nil {
+		return errDOriginalCoreChanged
+	}
+	refs, ok := values["references"].([]any)
+	if !ok {
+		return errDOriginalCoreChanged
+	}
+	found := map[string]bool{}
+	for _, value := range refs {
+		ref, ok := value.(map[string]any)
+		if !ok {
+			return errDOriginalCoreChanged
+		}
+		purpose, _ := ref["purpose"].(string)
+		switch purpose {
+		case "artifact_read":
+			ref["identity_hash"], ref["version"] = target.ReadIdentityHash, target.ReadRefVersion
+		case "artifact_write":
+			ref["identity_hash"], ref["version"] = target.WriteIdentityHash, target.WriteRefVersion
+		case "artifact_ca":
+			ref["identity_hash"], ref["version"] = target.CAIdentityHash, target.CARefVersion
+		default:
+			continue
+		}
+		if found[purpose] {
+			return errDOriginalCoreChanged
+		}
+		found[purpose] = true
+	}
+	if len(found) != 3 {
+		return errDOriginalCoreChanged
+	}
+	return nil
 }
 
 var errDOriginalCoreChanged = errors.New("original fixture capture core changed outside its pre-seal publication declarations")

@@ -1,0 +1,42 @@
+{
+  "schema": "supervisor-original-upload-wait-reviewed.v1",
+  "generated_at": "2026-11-01T15:02:08.468348+00:00",
+  "source_commit": "f5a8cc66243bb2dc7ab11807f65d40cdcc19dc26",
+  "composed_head_before_report": "a477548fd641f1b9bb512c9f2e61184a8c0021e3",
+  "review": [
+    "The original minimum claim/material/request/certificate deadline bounds every SQL/native observation.",
+    "Observe callback carries DATA only; production closure retains current original SQL access and already-bound native Job.",
+    "Checks original deadline/cancellation again after each read, rejecting late completion.",
+    "Unknown send/read ACK is observation-only, no resend, grant renewal or task substitution.",
+    "Typed registered results plus original native exit required; JobComplete alone is insufficient."
+  ],
+  "control_flow_cases": [
+    "pending-then-complete",
+    "cancel-during-read",
+    "cancel-between-reads",
+    "claim-lost",
+    "already-expired",
+    "expires-during-read",
+    "expires-between-reads",
+    "unknown-send-ack",
+    "unknown-read",
+    "complete-missing-results",
+    "failed-job",
+    "invalid-data",
+    "known-send-failure"
+  ],
+  "independent_merged_test": {
+    "session": 30630,
+    "natural_exit": 0,
+    "session_closed": true,
+    "package": "clawreef/internal/systembackupexecution",
+    "seconds": 13.943,
+    "sql": "disabled",
+    "log": ".tools/supervisor-a-f5a8-merged-execution.log",
+    "log_sha256": "81917e960febdec3955e227b2315c70997e4d9853b7a1589d077839b325efeca"
+  },
+  "limits": [
+    "Control-flow and full SQL-off package regression only; no upload native success or complete finalization claimed.",
+    "A native upload v3 reached complete MF but was rejected before Create by fixture Secret identity; v4 failed earlier at original database candidate deadline. These remain RED."
+  ]
+}

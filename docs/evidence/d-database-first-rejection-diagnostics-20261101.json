@@ -1,0 +1,89 @@
+{
+  "schema_version": "d-database-first-rejection-diagnostics-only.v1",
+  "date": "2026-11-01",
+  "base_head": "198d1a30d20567c45f13fea5b914b7e21a4c271d",
+  "dependencies": [
+    "D original held clock reasons ef154a592da0c158a37185dad864dcf885809442",
+    "A descriptor worker code ef42878d742ef5701fab0031485aa97e294421a3 in D source; compose formal_capture hunk when integrating an older worker",
+    "Reviewed backup4773a761b6681d04fccf60225a329ec9b7965e5c safely merged; four repeated v1 conflict files matched prior HEAD byte-for-byte after hunk resolution"
+  ],
+  "sources": [
+    {
+      "sha256": "2bc04df16a1aecc7559bead14156de2b7a7c98a4667e3184aee08f768a4d7159",
+      "path": "backend/internal/systembackup/worker/formal_capture.go"
+    },
+    {
+      "sha256": "ac1b413c06d4aa80fe8b6aa9764debde64b11f1f01acdbab4b30c2d36097edf7",
+      "path": "backend/internal/systembackup/worker/database_capture_diagnostics.go"
+    },
+    {
+      "sha256": "3c430a756b90b182d1ae9718d66c7c8a3f1d5cea9da3c72cdc227975264f2261",
+      "path": "backend/internal/systembackup/worker/database_capture_diagnostics_test.go"
+    },
+    {
+      "sha256": "9b600873d3232e109b6d820d542fe9a7f9c9674a42288c34a539940e87bdae02",
+      "path": "backend/internal/systembackupexecution/database_capture_diagnostics.go"
+    },
+    {
+      "sha256": "206576443d8e396ec14f7da3cff5044b1272af8f9d968047510747f5c20ec1f1",
+      "path": "backend/internal/systembackupexecution/database_capture_diagnostics_test.go"
+    },
+    {
+      "sha256": "acf611d0b780e70790b9cf80382a48beaf2d0bdc337e7cd60ac2ad30b628b6a4",
+      "path": "backend/internal/systembackupexecution/public_jobs.go"
+    },
+    {
+      "sha256": "910ff7abf9359006010c3fcca012fc7736c2cc0debb85fc7d38d4e1e56e7faf9",
+      "path": "backend/internal/systembackupexecution/public_key_use.go"
+    }
+  ],
+  "scope": [
+    "Worker records first fixed failure boundary for sourceAuthorize, using-key, actual DEK callback context, cipher sink, source capture, domain/teams/skills validation, snapshot encoding, staging and pre/post callback.",
+    "First-failure clock/context DATA is sampled INSIDE the live callback before deferred WithDEK cancellation; later generic errors cannot overwrite it. Original key, callback context and original SourceValidUntil clocks are separate.",
+    "Only original database key-check control action opts into existing SQL BindObserved: original held claim/task/gate/hold first reasons and safe structured driver classifications are emitted on Bind refusal. Tail Recheck logs its fixed boundary and previously observed composite execution bound.",
+    "After an already rejected key-use transition, its already read original private key row is parsed with the same closed decoder solely for fixed SQL-clock/current-versus-original-key-window reason. The original return error and immutable Until remain unchanged.",
+    "No extra SQL, provider operation, permission cache, skipped check, retried task/use, window or payload change. All logs omit raw errors/SQL/args/grant/token/request/body/identity."
+  ],
+  "prior_native_red": {
+    "observation": "Gate passed; database returned provider_permission_denied after733 local sourceAuthorize calls, 723.8218ms local time and29.4913163s stream; before-source-open key window29.6209275s. These clocks alone do not identify the first failed authority/window.",
+    "log": "../.tools/d-original-eleven-remote-capture-921-native.log",
+    "reached_remote_C": false,
+    "head": "921f56e1f6de4bceb9340edaae4bd35202d3021e",
+    "session": 65665,
+    "sha256": "3773716957d98406944169eafdc6c25cb8a5c6970d2d62f0447b5762d4f03a06",
+    "task": "sbk_4c29ddf3-6a53-4a58-9e9e-4a5eee0eb378",
+    "exit_code": 1,
+    "test_seconds": 118.33,
+    "package_seconds": 121.68,
+    "reached_certificate": false,
+    "reached_description": false
+  },
+  "validation": {
+    "merge_setup_red": "Full log ../.tools/d-database-first-boundary-diagnostics-full-no-sql.log contains unresolved-merge setup failure; not a valid regression result. It is preserved.",
+    "final_full_no_sql": {
+      "sha256": "5a796e00b1b13c1ed1f98f45f9303a391936e4b0f4eb5050d02d90a3eb877751",
+      "execution_seconds": 12.739,
+      "exit_code": 0,
+      "result": "PASS",
+      "controller_seconds": 9.295,
+      "worker_seconds": 36.398,
+      "log": "../.tools/d-database-first-boundary-diagnostics-final-full-no-sql.log",
+      "session": 12973
+    },
+    "unit_initial": {
+      "worker_seconds": 2.905,
+      "session": 90964,
+      "exit_code": 0,
+      "result": "PASS before added live-callback integration",
+      "execution_seconds": 3.259
+    },
+    "unit_correction": "Added callback test initially retained workspace path in a database invocation and correctly failed existing input validation before checks; fixture now obeys original database request shape, without production validation bypass. Original failed log retained."
+  },
+  "limits": [
+    "Diagnostics only: the prior921 actual database first cause remains unproven until a fresh original task reaches this exact instrumented code.",
+    "Individual claim/gate/hold reasons are available at the original Bind boundary; worker source clock is original source-grant bound, not a SQL gate fact. Tail formatter gives the composite original execution bound only.",
+    "Local callback and key-row models are DATA; hard-rejecting fake connector ensures zero external SQL I/O. They do not prove actual SQL/A permissions or full native success.",
+    "No D SQL while A owned63507. Root has since explicitly handed63507 back to D; new native still pending new clean HEAD linked BEFORE capture.",
+    "No private remote C receipt, upload Job, MF/acceptance/cleanup/catalog or terminal backup success yet. No D push."
+  ]
+}

@@ -192,6 +192,11 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal("original config example")
 	}
 	values := document.Request.Config
+	if options.PublicationTarget != nil {
+		if err := prepareDOriginalPublicationReferences(values, *options.PublicationTarget); err != nil {
+			t.Fatal("actual original artifact references before config/task admission", err)
+		}
+	}
 	// Independent, fixed LOCAL owner policy declared before config admission or
 	// any source metadata/UID observation. Counts are never supplied here.
 	policyVersion := "original-local-secret-policy-r1"

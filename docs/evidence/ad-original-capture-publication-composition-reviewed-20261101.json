@@ -1,0 +1,187 @@
+{
+  "schema": "supervisor-original-capture-publication-composition.v1",
+  "generated_at": "2026-11-01T15:00:14.842394+00:00",
+  "original_backup_base": "9137576d5b704495800a069915f3bf3db08279b5",
+  "a_source": "5393ef13d0d3dae197f7a358ee4d32160d1a31db",
+  "d_source": "e59fce759ea05f95aa7c8ff21e18ed2b852588d5",
+  "conflict_resolution": [
+    "Shared plain original-capture locator; same-TX Gate.Bind locking and revalidation preserved.",
+    "Both A fixture materials/publisher configuration and D explicit pre-admission configuration callers retained."
+  ],
+  "preserved_a": [
+    "publication_payload original config limits",
+    "publication_verified_capture ResultJSON",
+    "original publication policy and positive recovery trust readiness",
+    "original claim-retaining upload wait"
+  ],
+  "a_review": {
+    "schema": "supervisor-a-forward-eight-packages.v1",
+    "source_commit": "5393ef13d0d3dae197f7a358ee4d32160d1a31db",
+    "session": 75470,
+    "natural_exit": 0,
+    "session_closed": true,
+    "sql": "disabled",
+    "log": ".tools/supervisor-a-forward-5393ef13-eight-packages.log",
+    "log_sha256": "e22126477f9f8820ff3c76a42d1f3ff792dba7ff9e5a01d5d3fce498d005ee6d",
+    "packages": [
+      "ok  \tclawreef/internal/systembackupexecution\t10.591s",
+      "ok  \tclawreef/internal/systembackupkekadapter\t7.164s",
+      "ok  \tclawreef/internal/systembackupcapturedescription\t0.603s",
+      "ok  \tclawreef/internal/systembackup/worker\t35.727s",
+      "ok  \tclawreef/internal/systembackup/publicadapter\t3.588s",
+      "ok  \tclawreef/internal/systembackup/kube\t3.074s",
+      "ok  \tclawreef/cmd/system-backup-v2-controller\t2.844s",
+      "ok  \tclawreef/cmd/backup-worker\t4.344s"
+    ],
+    "scope": "Exact frozen A5393 complete eight-package local regression; no native upload or terminal success claim"
+  },
+  "merged_review": {
+    "session": 95536,
+    "natural_exit": 0,
+    "session_closed": true,
+    "sql": "disabled",
+    "log": ".tools/supervisor-a5393-d-e59-merged-packages.log",
+    "log_sha256": "25cc19ee5e9e094c7c445b514c367a9efa81b04fa1509352fb1f2e7e2f9050d2",
+    "packages": [
+      "ok  \tclawreef/internal/systembackup\t3.989s",
+      "ok  \tclawreef/internal/systembackupexecution\t16.487s"
+    ]
+  },
+  "d_native": {
+    "test": "TestDOriginalDescriptionRemoteContainerCaptureNativeMySQL",
+    "source_commit": "e59fce759ea05f95aa7c8ff21e18ed2b852588d5",
+    "session": 82493,
+    "natural_exit": 0,
+    "case_seconds": 282.85,
+    "package_seconds": 286.09,
+    "log_sha256": "ae144e21c021bb8bbb0a756b0d5f574c8d75eb48f2ec844c955c324143d433ce",
+    "task_id": "sbk_23aefbab-0342-4cba-a53a-5501f47be936",
+    "scope": "Same original eleven-worker capture and independent complete fifteen-object remote C only",
+    "final_status": "validating",
+    "artifact_usable": false
+  },
+  "merged_files": [
+    {
+      "path": "backend/internal/systembackup/gate.go",
+      "sha256": "aa262474e0b0438e4f5e5bd628e902711f20fc4c396ba488b51c8280eec52eb9"
+    },
+    {
+      "path": "backend/internal/systembackup/gate_acquire_diagnostics.go",
+      "sha256": "3ad0321e7d9c1618d4beb9622ba3744a59c3c68f8fbec5f362b742e2cab5a48e"
+    },
+    {
+      "path": "backend/internal/systembackup/gate_acquire_diagnostics_test.go",
+      "sha256": "712f5bec5ef20a9813acf37b5d8e081c4efe1f8a6da611acb47129b07f0a6d51"
+    },
+    {
+      "path": "backend/internal/systembackup/gate_admission.go",
+      "sha256": "d24b37178d1a81c0e78d612db448ac433c00113366309582f3c6006f14520d19"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/capture_description_producer.go",
+      "sha256": "305153d086978d3a25ca88f13812c16c1c55c7c71bedefece351a3d9c185de2d"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go",
+      "sha256": "2bb28ea1d1abe408508a7e94be99c6cddf9a82f81298d58c7afb7393d03259df"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_mysql_test.go",
+      "sha256": "216beb40ce38c43decee613e01e4c2d493657da856ea58683e71ccc9f5483e15"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_setup_test.go",
+      "sha256": "c8dfc5bfcefb8c253d05dc57fd2f295860bcb682df801b9afa5fd3a72c617baf"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata.go",
+      "sha256": "af3ed5f6c1c110e43478e915b42987186db6e012bd9487b681a36b653494187c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata_test.go",
+      "sha256": "36a4427830cb4da9c1e0a97966e964b4c22850bd2ff707be719f8d7ef95dc0e7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "sha256": "9e246b59021d953f67b598a12a54879908f4235ce45cd0b71508598d65f91e12"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container_mysql_test.go",
+      "sha256": "4d4c8e7e7e39f6bac49148547ed8cdaf2e7f38aea0181ee4f56db83bc2235e19"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container_test.go",
+      "sha256": "caf328bd546c56efd411b60e73a27e1cd7fb73e0d422faddba2ab4b632bbd6af"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_mysql_test.go",
+      "sha256": "97b09025501e300b2298022b2b52603fa29175b3959f93888355b174ae5d8463"
+    },
+    {
+      "path": "docs/evidence/d-ce-bind-clock-diagnostic-only-20261101.json",
+      "sha256": "1cbcb46a7016899b090efde74dc1155cce7d19fd52792aa3ec89a1acf6e9e98b"
+    },
+    {
+      "path": "docs/evidence/d-ce-diagnostics-only-source-delivery-20261101.json",
+      "sha256": "b58d7a55146f8b45b61d9fe0974745ac0b7f944fe175b4c8e83d6e08968d5e0e"
+    },
+    {
+      "path": "docs/evidence/d-current-remote-container-native-plan-20261101.json",
+      "sha256": "d9cad0b1dbaec40b11b49d9b35a1c19930a8453ca299e221656a254b2a63083f"
+    },
+    {
+      "path": "docs/evidence/d-current-remote-container-native-red-20261101.json",
+      "sha256": "ee51a21e03140bcad9987bddbf6947806dc38e41607b887f72d6d00f14d42031"
+    },
+    {
+      "path": "docs/evidence/d-database-first-rejection-diagnostics-20261101.json",
+      "sha256": "21f5df442f0be20147b1f91fc0779f2eafc8a9bc291d7bbf5c39441909cf3a19"
+    },
+    {
+      "path": "docs/evidence/d-description-count-admission-fix-20261101.json",
+      "sha256": "0b7e43c7a1a35c5823db6105f92edb31294596b21a0ea191abc4024ef4a18e58"
+    },
+    {
+      "path": "docs/evidence/d-description-remote-capture-candidate-20261101.json",
+      "sha256": "483364a1b360e75cceb4d50a0b3dbe4c95a9387bfa2c7919897d880662c0d334"
+    },
+    {
+      "path": "docs/evidence/d-description-remote-capture-inflight-candidate-20261101.json",
+      "sha256": "bce894fa3c5e7bfcbfcae87c0affb1a040c9fab84a04f0aa80377fd8c4814a3d"
+    },
+    {
+      "path": "docs/evidence/d-first-binding-full-task-20261101.json",
+      "sha256": "dec1b5b589b37a36e32360dfeded3a684eb6db4fb27e1bd4ca46d7895f30df5a"
+    },
+    {
+      "path": "docs/evidence/d-gate-acquire-diagnostics-only-20261101.json",
+      "sha256": "1d31f15dd170f825930c2b0a94e493d0655de586b7792784fc0fb6a405979661"
+    },
+    {
+      "path": "docs/evidence/d-original-eleven-gate-nowait-20261101.json",
+      "sha256": "9b4eca6f3c540f2f59d9baf4a1e1c6f1cb71bf455f717160f418cbd46362ae29"
+    },
+    {
+      "path": "docs/evidence/d-original-gate-scheduling-counter-candidate-20261101.json",
+      "sha256": "62c08681b7c0d556369ebd437da261915814395a3a112358c563ade6099cf86d"
+    },
+    {
+      "path": "docs/evidence/d-original-gate-scheduling-counter-native-20261101.json",
+      "sha256": "4c22bf1b5bf9decb94f6d415940fe9177b025056bc016c7b43089bce9a020477"
+    },
+    {
+      "path": "docs/evidence/d-original-gate-selection-scheduler-candidate-20261101.json",
+      "sha256": "a6c13d0001fcf0e3730d1813bff603c16efa2696c2e0804eab3d81fb923ce9eb"
+    },
+    {
+      "path": "docs/evidence/d-original-source-lock-order-counterexample-20261101.json",
+      "sha256": "957425a3df18baeeb83d9c6019012ee157f64e4f23a011e8d2fd9ad54159c9ac"
+    }
+  ],
+  "not_accepted": [
+    "Upload Job and MF upload completion",
+    "Seal,_COMMITTED,_ACCEPTANCE,signed catalog,cleanup,terminal success",
+    "Historical isolated restore",
+    "Onsite deployment/provider verification"
+  ]
+}

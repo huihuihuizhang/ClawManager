@@ -1,0 +1,74 @@
+{
+  "schema_version": "d-original-description-count-admission-fix.v1",
+  "date": "2026-11-01",
+  "base_head": "f7ce34a8a9bbadfe4a01b08d022e8383b2035c52",
+  "sources": [
+    {
+      "sha256": "5565d68cc6e881590597f26d40a767e51933cd6095bd8ad261e0a9fd2dfdd452",
+      "path": "backend/internal/systembackupexecution/owned_payload_counts.go"
+    },
+    {
+      "sha256": "2ba34a9bfa1d372b042ba28ec3a8005f43e975c407564fad993fdc2571e89ef8",
+      "path": "backend/internal/systembackupexecution/owned_payload_counts_test.go"
+    }
+  ],
+  "prior_native": {
+    "task": "sbk_645b606e-d1c9-4126-90f4-4d81ea997a53",
+    "reached_certificate_producer": false,
+    "exit_code": 1,
+    "status": "All original 11 capture workers and runner record succeeded; independent original current publisher reader reached final count admission, which rejected the new description administrative member before returning its private capture receipt.",
+    "timings": {
+      "proof_seconds": 1.7986274,
+      "control_seconds": 1.7362723,
+      "description_checks": 12,
+      "description_stream_seconds": 6.273989,
+      "database_checks": 880,
+      "description_local_ms": 1.0434,
+      "database_stream_seconds": 28.1131996,
+      "database_local_ms": 749.6296
+    },
+    "package_seconds": 164.56,
+    "log": "../.tools/d-original-eleven-remote-capture-f7-native.log",
+    "ce_rejection_lines": 0,
+    "sha256": "cafe10ed19fd9637ed329dec1f9adbc891dc8c1d7464f0a1ff8ce9ef2e56d82a",
+    "test_seconds": 161.27,
+    "head": "f7ce34a8a9bbadfe4a01b08d022e8383b2035c52",
+    "session": 70501,
+    "reached_remote_entry": false
+  },
+  "fix": "Only the already independently verified capture_description administrative part with operation capture-description and empty RequestedPart bypasses BUSINESS count aggregation, like E/P. All existing per-business count gates and six-domain coverage remain.",
+  "validation": {
+    "minimal_red": {
+      "exit_code": 1,
+      "session": 87685,
+      "package_seconds": 3.316,
+      "result": "expected FAIL only description-admin",
+      "log": "../.tools/d-description-counts-red.log"
+    },
+    "full_execution_green_no_sql": {
+      "sha256": "be3845f81b5c596f8381113cb5fb6ebbb97fe8de897240cce398fb6e3c1069ec",
+      "result": "PASS",
+      "exit_code": 0,
+      "log": "../.tools/d-description-counts-green-full.log",
+      "session": 73290,
+      "seconds": 14.576
+    }
+  },
+  "negative_cases": [
+    "description-wrong-operation",
+    "description-wrong-domain",
+    "description-imposter",
+    "description-with-missing-business-counts",
+    "unavailable",
+    "default-zero",
+    "wrong-unit",
+    "negative",
+    "sql-omission"
+  ],
+  "limits": [
+    "Successful D/E/P in this one f7 run is a bounded observation after the proven lock-order correction; it does not uniquely establish the earlier A failure cause or prove all intermittent failures fixed.",
+    "No private remote C receipt or end-to-end publication success yet; new clean committed HEAD must start a new original capture, never reuse the failed task/nonce/key/window.",
+    "Frozen source contains historical current migration catalog 174, not unmerged current175 support.",
+    "63507 remains explicitly D-owned with no active session after this run; no D push."
+  ]
+}

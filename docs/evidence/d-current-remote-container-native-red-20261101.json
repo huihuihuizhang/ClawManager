@@ -1,0 +1,116 @@
+{
+  "schema_version": "d-current-remote-container-native-result.v1",
+  "recorded_at_utc": "2026-11-01T08:30:43.535923+00:00",
+  "candidate_head": "5ca3608b6ec1022389915dd3159bf6ce5b53f8c4",
+  "linked_before_capture": "5ca3608b6ec1022389915dd3159bf6ce5b53f8c4",
+  "worktree": "clean before and throughout native execution",
+  "status": "FAIL before new remote consumer; candidate NOT native verified",
+  "native": {
+    "session": 38783,
+    "terminal_exit": 1,
+    "closed": true,
+    "case_seconds": 131.93,
+    "package_seconds": 135.286,
+    "task": "sbk_a5ecf7dd-3ba0-4105-93d0-042356b9a4a7",
+    "mysql_port": 63507,
+    "server_uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+    "original_claim_policy": "TTL30/heartbeat5 unchanged",
+    "capture_failure": "capture-database formal capture failed provider_permission_denied; original public capture runner_failed",
+    "source_authorize_calls": 807,
+    "local_authorize_elapsed_seconds": 0.7680524,
+    "database_stream_seconds": 29.5082909,
+    "key_window_seconds_before_source_open": 29.6250014,
+    "limitations": "Original source time is near its boundary, but the exact final denial cause is not instrumented. No unique cause is claimed. Certificate/remote container reader/paired remote C verification were NOT reached. No retry merely for green is claimed.",
+    "cleanup": "Go fixture naturally exited; no cleanup error logged. No independent post-run schema-absence query claimed.",
+    "ownership": "No remaining D native SQL handle; explicitly returned 63507 to supervisor for A0b11 verification."
+  },
+  "pre_native_checks": {
+    "full_execution_package_seconds": 10.553,
+    "earlier_full_execution_package_seconds": 10.78,
+    "compile_only_seconds": 3.338,
+    "scope": "Opt-ins disabled; full remote native test skipped. No full task claim from these results."
+  },
+  "approval": {
+    "initial": "Rejected before process creation; no test/session/SQL/PUT launched.",
+    "reason": "Review interpreted full capture/PUT as export of sensitive existing database data without destination authorization.",
+    "read_only_verified_facts": "Fresh random ad_d_six_* schema on literal127.0.0.1; all source rows/temporary workspace/Skills are code-generated; destination is new loopback httptest TLS in-memory map; no existing user source or external storage.",
+    "resolution": "Same frozen command re-presented with those verified facts, then auto-review allowed it; no code/TTL/data/destination workaround.",
+    "locality_review_path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-current-remote-container-approval-locality-review.json",
+    "locality_review_sha256": "49fd52f7f267f5b3c96e7f46e040ad423b2dde7ff17ff9b0632a9c53b3dfa0dc"
+  },
+  "native_log": {
+    "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-current-remote-container-linked-native.log",
+    "sha256": "f2b94e5c214d4d99f59d7da92dc1b41dad4c04e9acfe8eee92b825a966c7b332"
+  },
+  "next": "Resolve/review original capture precondition without data/TTL weakening, then verify the private current-publication complete-remote-C receipt on a new actual task. The candidate remains isolated and does not alter publication_pass/finalization gates.",
+  "read_only_failure_analysis": {
+    "updated_at_utc": "2026-11-01T08:36:36.919258+00:00",
+    "scope": "Static source review plus existing exact5ca native log only; no new SQL/native run or production change",
+    "facts": [
+      {
+        "file": "backend/internal/systembackupexecution/production_same_task_workers_test.go",
+        "lines": [
+          385,
+          401,
+          435,
+          437
+        ],
+        "finding": "Remaining key window is sampled BEFORE OpenFormalCaptureSources; stream elapsed begins AFTER source opening. Source-open/setup time is unmeasured. Subtracting29.5082909 from29.6250014 is not a measurement of time left at failure."
+      },
+      {
+        "file": "backend/internal/systembackupkms/transit.go",
+        "lines": [
+          382,
+          383,
+          389,
+          393
+        ],
+        "finding": "Any error returned by the DEK callback becomes internal ErrUnavailable and then ErrPermission at the WithUse result gate (except ErrUnknown). provider_permission_denied cannot identify an external provider403 or distinguish a callback domain/SQL/authority/deadline error."
+      },
+      {
+        "file": "backend/internal/systembackup/worker/formal_capture.go",
+        "lines": [
+          309,
+          313,
+          319
+        ],
+        "finding": "Guarded source checks include local env.SourceAuthorize AND inUseCheck, which sends a current original key-check and then checks local source authority again. The local source timer excludes that original control-key-check HTTP/SQL path."
+      },
+      {
+        "file": "backend/internal/systembackup/worker/source_credentials.go",
+        "lines": [
+          249,
+          253,
+          257,
+          261
+        ],
+        "finding": "Measured local Authorize checks invocation hash, original source grant and pinned source credential, not the controller HTTP/SQL cost."
+      },
+      {
+        "file": "backend/internal/systembackup/worker/key_use.go",
+        "lines": [
+          183,
+          184,
+          188,
+          317,
+          321
+        ],
+        "finding": "Original authority rejects failed/canceled/mismatched/expired original lease and uses unchanged key-check nonce. WithDEK binds the original absolute Until; task heartbeat cannot extend this old key scope."
+      },
+      {
+        "file": "backend/internal/systembackup/worker/database.go",
+        "lines": [
+          154
+        ],
+        "finding": "The accepted source InterpolateParams transport improvement is present in frozen5ca. No fallback to the earlier prepare-per-query source driver is observed in static code."
+      }
+    ],
+    "measured_local_authorize_percent": 2.6028,
+    "unattributed_stream_seconds": 28.7402385,
+    "inferences": [
+      "Proximity to the original cutoff is supported; exact first refusal and all remaining time are not instrumented.",
+      "Remaining walltime includes original controller key-check HTTP/SQL, source SQL/encoding and other work; it cannot be wholly assigned to any one component."
+    ],
+    "next_diagnostic_if_needed": "Record only safe first-failure stage/category plus original absolute Until and monotonic source-open/start/end clock brackets; aggregate original control-key-check duration and response category without private request bodies, grants or credentials. Keep policy/data/checks unchanged. Do not rerun merely to obtain PASS."
+  }
+}

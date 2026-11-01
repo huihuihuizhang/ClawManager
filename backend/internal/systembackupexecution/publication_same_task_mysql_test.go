@@ -244,7 +244,11 @@ func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
 }
 
 func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
-	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
+	runAOriginalSixPartCertificatePublicationConfigured(t, mode, nil, after...)
+}
+
+func runAOriginalSixPartCertificatePublicationConfigured(t *testing.T, mode string, configure func(*dOriginalSixPartFixtureOptions), after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
+	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown", configureOptions: configure}
 	runAOriginalSixPartCertificatePublicationFixture(t, mode, fixture, after...)
 }
 

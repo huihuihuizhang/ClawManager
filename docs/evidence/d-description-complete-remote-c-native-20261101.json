@@ -1,0 +1,463 @@
+{
+  "schema_version": "d-original-description-complete-remote-c-native.v1",
+  "date": "2026-11-01",
+  "scope": "Fresh original eleven-member capture and independent current publisher complete remote C verification only",
+  "source_commit": "e59fce759ea05f95aa7c8ff21e18ed2b852588d5",
+  "source_clean_before_and_during_native": true,
+  "build_flags": "-ldflags=-X clawreef/internal/buildinfo.Commit=e59fce759ea05f95aa7c8ff21e18ed2b852588d5",
+  "native": {
+    "test": "TestDOriginalDescriptionRemoteContainerCaptureNativeMySQL",
+    "session": 82493,
+    "natural_exit": 0,
+    "case_seconds": 282.85,
+    "package_seconds": 286.09,
+    "task_public_id": "sbk_23aefbab-0342-4cba-a53a-5501f47be936",
+    "capture_members": 11,
+    "original_known_certificate_sha256": "2404e9f7fc368df94f09527a5d9c948ba7edc98adcef8cd3e3a8b3a9dbeea2df",
+    "healthy_objects_put": 15,
+    "healthy_business_ranges": 16,
+    "final_status": "validating",
+    "artifact_usable": false
+  },
+  "actual_capture": {
+    "all_eleven_workers": "normal exits; original capture runner=ok record=ok",
+    "database": {
+      "source_checks": 880,
+      "source_local_seconds": 0.7725864,
+      "stream_seconds": 28.9671606,
+      "seconds_before_original_source_open": 29.5979247
+    },
+    "description": {
+      "source_checks": 12,
+      "stream_seconds": 6.5622131
+    },
+    "control_evidence_seconds": 1.8181987,
+    "proofs_seconds": 1.8711056
+  },
+  "healthy_verification": [
+    "Six fixed-version complete container body reads and container/member hashes/checkpoints.",
+    "Eight business members independently unwrapped and fully consumed through C/domain read paths, sixteen actual version-pinned Range reads.",
+    "Remote description independently unwrapped, bounded-memory strict decoded and compared to original scope/source/seed/business candidate/result and administrative invocation facts.",
+    "Remote E/P pair VerifyFinalizedBytes and exact expected original index/certificate/bootstrap before and after C checks.",
+    "Original current claim/config/target and known certificate history final rechecks before private C receipt."
+  ],
+  "same_task_rejections": {
+    "range_403": true,
+    "actual_body_corruption": [
+      "bootstrap",
+      "artifact-index.json",
+      "control/capture-certificate.json",
+      "control/capture-description.json.enc",
+      "control/evidence-proofs.json.enc",
+      "parts/mysql/container.enc"
+    ],
+    "foreign_fixed_versions": [
+      "bootstrap",
+      "control/capture-certificate.json",
+      "control/capture-description.json.enc",
+      "mysql container"
+    ],
+    "actual_in_flight_claim_loss": "Second/final bootstrap GET flushes half body after complete C checks; bounded actual current-owner/version SQL read plus coordinator Release CAS succeeds before EOF. Current call rejects with zero receipt. Legitimate AcquireWithReceipt then succeeds and stale original token separately rejects."
+  },
+  "scheduling_basis": {
+    "counter_source": "3b608bd29004d146857a1f4171f8c45664e8ceea",
+    "counter_evidence_commit": "bf69149d",
+    "fixture_correction": "e59fce759ea05f95aa7c8ff21e18ed2b852588d5",
+    "counter": "Real original task and PFS shared record holder; actual3572/HY000; existing runDeploymentPasses release and immutable original-budget paths passed.",
+    "preserved": "No new production retry, original SQL/authority/checks,30/5 policy, source/provider/DEK windows, original task data and first source wait budget unchanged."
+  },
+  "log": ".tools/d-original-eleven-remote-capture-e59f-native.log",
+  "log_sha256": "ae144e21c021bb8bbb0a756b0d5f574c8d75eb48f2ec844c955c324143d433ce",
+  "closure": "Session exited naturally; no established D63507 connections after completion. Source remains clean. No D push.",
+  "supersedes_pending_status_only": [
+    "d-description-remote-capture-candidate-20261101.json",
+    "d-description-remote-capture-inflight-candidate-20261101.json",
+    "d-original-gate-selection-scheduler-candidate-20261101.json"
+  ],
+  "limits": [
+    "Local synthetic random SQL schema, fake client-go Kubernetes and loopback TLS in-memory S3; no production SSH/Kubernetes/KMS or data.",
+    "Remote objects are actual local transport of original C DATA; this test does not prove upload Job execution.",
+    "No MF,_COMMITTED,_ACCEPTANCE,signed catalog,cleanup or terminal task success is claimed.",
+    "Current original SQL publication proof, not historical disaster recovery.",
+    "Database failure from earlier tasks did not recur; no unique historical cause or intermittent fix is claimed.",
+    "Root must review/cherry-pick or compose by hunk, preserving A publication roles and schema-retention logic; do not whole-file overwrite."
+  ],
+  "source_ledger": {
+    "comparison_base": "9137576d5b704495800a069915f3bf3db08279b5",
+    "meaning": "Exact backend file differences from reviewed root9137, includes A descriptor prerequisites and already individually reviewed D pieces; not a cherry-pick manifest. Runtime source remains source_commit.",
+    "files": [
+      {
+        "path": "backend/cmd/backup-worker/formal.go",
+        "git_blob": "dcdc34c906a24f6ec9b9e812f7bc37aae253e8c9",
+        "sha256_raw": "d7ab858860550548afeddb4cecd714e1441c50d5a247954e9f10e7e1fe534954",
+        "sha256_lf": "a96451b52ed7435b629fb42d67b3bdf3b5a4f3e13cb43f3c0040738db318d78f"
+      },
+      {
+        "path": "backend/internal/systembackup/gate.go",
+        "git_blob": "9ccc573cfa3665a40fb96a32712176c6611f3318",
+        "sha256_raw": "aa262474e0b0438e4f5e5bd628e902711f20fc4c396ba488b51c8280eec52eb9",
+        "sha256_lf": "aa262474e0b0438e4f5e5bd628e902711f20fc4c396ba488b51c8280eec52eb9"
+      },
+      {
+        "path": "backend/internal/systembackup/gate_acquire_diagnostics.go",
+        "git_blob": "abdf5fd7fdf230a5a9f31e369e45ad8130ba8aab",
+        "sha256_raw": "3ad0321e7d9c1618d4beb9622ba3744a59c3c68f8fbec5f362b742e2cab5a48e",
+        "sha256_lf": "3ad0321e7d9c1618d4beb9622ba3744a59c3c68f8fbec5f362b742e2cab5a48e"
+      },
+      {
+        "path": "backend/internal/systembackup/gate_acquire_diagnostics_test.go",
+        "git_blob": "1f022e6c47a035835e4912c851161745e8038267",
+        "sha256_raw": "712f5bec5ef20a9813acf37b5d8e081c4efe1f8a6da611acb47129b07f0a6d51",
+        "sha256_lf": "712f5bec5ef20a9813acf37b5d8e081c4efe1f8a6da611acb47129b07f0a6d51"
+      },
+      {
+        "path": "backend/internal/systembackup/gate_admission.go",
+        "git_blob": "0348a221b65ff46f068c2b3e24f0e78119ab24eb",
+        "sha256_raw": "d24b37178d1a81c0e78d612db448ac433c00113366309582f3c6006f14520d19",
+        "sha256_lf": "d24b37178d1a81c0e78d612db448ac433c00113366309582f3c6006f14520d19"
+      },
+      {
+        "path": "backend/internal/systembackup/kube/capture_description_job.go",
+        "git_blob": "0b3a44565424d2fbac3a035fbb25581149ff10ce",
+        "sha256_raw": "752d8695e939acfad9af22872aebd2d3c6cdae3644a46ca010d436955d2c6bfb",
+        "sha256_lf": "752d8695e939acfad9af22872aebd2d3c6cdae3644a46ca010d436955d2c6bfb"
+      },
+      {
+        "path": "backend/internal/systembackup/kube/worker_config.go",
+        "git_blob": "f379f91dc3367a6ed65892e4ff9c039a5c27d9c3",
+        "sha256_raw": "31a01db01f920e25d84d7303b296e5cacdf4c274fa87292e6e17979807a2d908",
+        "sha256_lf": "31a01db01f920e25d84d7303b296e5cacdf4c274fa87292e6e17979807a2d908"
+      },
+      {
+        "path": "backend/internal/systembackup/publicadapter/capture.go",
+        "git_blob": "c3ae036c1164c643aaad7f2d12250d78238c6851",
+        "sha256_raw": "790cb5c4fe5f25017338ab5f2045bf6a946c925575e538775cab2bb5c6d6353e",
+        "sha256_lf": "790cb5c4fe5f25017338ab5f2045bf6a946c925575e538775cab2bb5c6d6353e"
+      },
+      {
+        "path": "backend/internal/systembackup/publicadapter/capture_description_module.go",
+        "git_blob": "63cf4ab6424080eb39932e7c82a504cfc15bcd8d",
+        "sha256_raw": "8133774bdd512f1378d1c3dca1c0e1ae339032c7b9ea5f5d2edc13bdb78ffd8e",
+        "sha256_lf": "8133774bdd512f1378d1c3dca1c0e1ae339032c7b9ea5f5d2edc13bdb78ffd8e"
+      },
+      {
+        "path": "backend/internal/systembackup/publicadapter/job_factory.go",
+        "git_blob": "16f272a9579c1a538aaac6907e8e72e5f3233676",
+        "sha256_raw": "8e9b3a9c395a746bb93845bd1e2ceceacbc1db5f229895f9fb1cd92bc1d61f76",
+        "sha256_lf": "8e9b3a9c395a746bb93845bd1e2ceceacbc1db5f229895f9fb1cd92bc1d61f76"
+      },
+      {
+        "path": "backend/internal/systembackup/publicadapter/jobs.go",
+        "git_blob": "a62bde49f0488a4d667794211433bf7e82c7f522",
+        "sha256_raw": "07809fb24af4d0c09897448574c8eb044621a00cd8a4b30a10f1ea005ef7a69a",
+        "sha256_lf": "07809fb24af4d0c09897448574c8eb044621a00cd8a4b30a10f1ea005ef7a69a"
+      },
+      {
+        "path": "backend/internal/systembackup/publicadapter/modules.go",
+        "git_blob": "1eb1707d389ea1f228934e74b792612f531e34d6",
+        "sha256_raw": "4a8a61fa51bc19a7e7d021f80ce73c3fb2f6648843af8e2d7f35d1c067a8866c",
+        "sha256_lf": "4a8a61fa51bc19a7e7d021f80ce73c3fb2f6648843af8e2d7f35d1c067a8866c"
+      },
+      {
+        "path": "backend/internal/systembackup/worker/capture_description.go",
+        "git_blob": "ce47ab628c6891c15d0824c3686c3e44ec7a89bf",
+        "sha256_raw": "04641071fcebf03e40c7b8234664db87e727165127b9fd4ccad9225c8e0c29d8",
+        "sha256_lf": "04641071fcebf03e40c7b8234664db87e727165127b9fd4ccad9225c8e0c29d8"
+      },
+      {
+        "path": "backend/internal/systembackup/worker/capture_description_test.go",
+        "git_blob": "85104f0e00622d3915feef13f13ec8cf2f8d63c1",
+        "sha256_raw": "fb1ef3ce9794665d39b06cae84f5a5d2080bc59292bbb1d5309323e468a78a1a",
+        "sha256_lf": "fb1ef3ce9794665d39b06cae84f5a5d2080bc59292bbb1d5309323e468a78a1a"
+      },
+      {
+        "path": "backend/internal/systembackup/worker/control.go",
+        "git_blob": "b8fc61fd21ddd6a50b03d8a838c9f47144758b2a",
+        "sha256_raw": "3fde83d519523df2424179fbc4e806bea057e2a1d02389c78b8df4a83aa26dfc",
+        "sha256_lf": "3fde83d519523df2424179fbc4e806bea057e2a1d02389c78b8df4a83aa26dfc"
+      },
+      {
+        "path": "backend/internal/systembackup/worker/formal_capture.go",
+        "git_blob": "1765b322a4bea06d96dab2b78d8c608ff30dae23",
+        "sha256_raw": "2bc04df16a1aecc7559bead14156de2b7a7c98a4667e3184aee08f768a4d7159",
+        "sha256_lf": "2bc04df16a1aecc7559bead14156de2b7a7c98a4667e3184aee08f768a4d7159"
+      },
+      {
+        "path": "backend/internal/systembackup/worker/workspace.go",
+        "git_blob": "1ee34cfaf63bc23ed0306f9591493a75bce98274",
+        "sha256_raw": "757045a37bef98bd5b7a498f368ff2cc68dfaf257c2f6b435e1d3a5cf98d75cb",
+        "sha256_lf": "757045a37bef98bd5b7a498f368ff2cc68dfaf257c2f6b435e1d3a5cf98d75cb"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/admission.go",
+        "git_blob": "060a15ed0cf0d28f9f103f2a9818ddd7938cd182",
+        "sha256_raw": "8e518c5f94e059403bfb7ed6d21246142bcc6220611a793c2d226bc09de4444e",
+        "sha256_lf": "8e518c5f94e059403bfb7ed6d21246142bcc6220611a793c2d226bc09de4444e"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/admission_test.go",
+        "git_blob": "bad35401edf280b429bb91b5284b123fa701e909",
+        "sha256_raw": "7ba77aa6db088334860d0ce8515dda36f5abfd0996e6897374a52b1deba727e5",
+        "sha256_lf": "7ba77aa6db088334860d0ce8515dda36f5abfd0996e6897374a52b1deba727e5"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/bootstrap.go",
+        "git_blob": "3921b3c489779f3ebb968322dc23bcfe0b8010c7",
+        "sha256_raw": "5a8422003b77f6d511a1cd957c8e6d2a7df34bb49b562f1a8e38a2d9e0979612",
+        "sha256_lf": "5a8422003b77f6d511a1cd957c8e6d2a7df34bb49b562f1a8e38a2d9e0979612"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/bootstrap_test.go",
+        "git_blob": "f4760e40e1e1628cc609bbff5d40494b6bf327ba",
+        "sha256_raw": "b04ec4181037a85e0a0a20db3854145b740edabde62b9ed99186aaf2ac6347a8",
+        "sha256_lf": "b04ec4181037a85e0a0a20db3854145b740edabde62b9ed99186aaf2ac6347a8"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/description.go",
+        "git_blob": "c113ab0d11d7883210c26f88fb384b9686102d26",
+        "sha256_raw": "f708fde03622d4959775d51861bf485a92d5d2caaedd2b525079f4426291f5a0",
+        "sha256_lf": "f708fde03622d4959775d51861bf485a92d5d2caaedd2b525079f4426291f5a0"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/memory.go",
+        "git_blob": "baab29d722fe284500b043449ae125af01d333d5",
+        "sha256_raw": "e40f6632d5542af605b8d647f97023f63eec781ca2c67f606dac19f05ac76794",
+        "sha256_lf": "e40f6632d5542af605b8d647f97023f63eec781ca2c67f606dac19f05ac76794"
+      },
+      {
+        "path": "backend/internal/systembackupcapturedescription/memory_test.go",
+        "git_blob": "4f83bdc6956e3874a7fe8084ee2b02a250a82773",
+        "sha256_raw": "6a5fd49e167588448dd585935bf831a3a1062520d50fc1833027847062db6688",
+        "sha256_lf": "6a5fd49e167588448dd585935bf831a3a1062520d50fc1833027847062db6688"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_capacity_test.go",
+        "git_blob": "665dad94432475423b38c2653510c86e6a8b2bc3",
+        "sha256_raw": "ac0f460fb474833a45b737c5143da8b271f0f04d0a1e6b0da02345504a3f67ea",
+        "sha256_lf": "ac0f460fb474833a45b737c5143da8b271f0f04d0a1e6b0da02345504a3f67ea"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_mysql_test.go",
+        "git_blob": "a227403af5f06aba3385a884929c8e599713eab5",
+        "sha256_raw": "2e6d367e87fb5ccbe3b83e0b6671f88d187df6f820b1a5093ba67002e8462f1f",
+        "sha256_lf": "2e6d367e87fb5ccbe3b83e0b6671f88d187df6f820b1a5093ba67002e8462f1f"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_producer.go",
+        "git_blob": "94c392e8e1ecf9492123deb969ebbb9cd374cc31",
+        "sha256_raw": "e4622bc46eabb648e38f437caae7d3011aeefab7ff19e2e52fde389bd77f0ca8",
+        "sha256_lf": "e4622bc46eabb648e38f437caae7d3011aeefab7ff19e2e52fde389bd77f0ca8"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_rbac_test.go",
+        "git_blob": "ab9c327f06c290a5cc2ec22a74b1c150a4f52474",
+        "sha256_raw": "c4234a39b7adba58d39d418dd06b776e7e651f2f00dba78a8eb1d03e7934d662",
+        "sha256_lf": "c4234a39b7adba58d39d418dd06b776e7e651f2f00dba78a8eb1d03e7934d662"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_reader.go",
+        "git_blob": "54455be2e24a2cdbadd8d724295aa512b598f747",
+        "sha256_raw": "e6958c753053c4e200b127b542e328337609f1ae3b7d071c082ebf9afac055bd",
+        "sha256_lf": "e6958c753053c4e200b127b542e328337609f1ae3b7d071c082ebf9afac055bd"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_startup.go",
+        "git_blob": "e4a1762d4cd01a2bb51296180560a5fce6c954b7",
+        "sha256_raw": "b8cbc9f840a3c1d5978872f21caf6425b7617d01a4e31fad529748e1b6684723",
+        "sha256_lf": "b8cbc9f840a3c1d5978872f21caf6425b7617d01a4e31fad529748e1b6684723"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_startup_test.go",
+        "git_blob": "707920963cc4e646058e79a814df89a8615da17a",
+        "sha256_raw": "55e463c32b1e067d1c9c014d872dbed611a81cc4111753c7e4107f53ac212a53",
+        "sha256_lf": "55e463c32b1e067d1c9c014d872dbed611a81cc4111753c7e4107f53ac212a53"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/capture_description_test.go",
+        "git_blob": "aef21b64852f95e740da372da3f09d7abb2b6f15",
+        "sha256_raw": "591ad2b98e14fa2fd53696df0a171e6440f49ac0cbcb0dfba354a3ab5e53ec12",
+        "sha256_lf": "591ad2b98e14fa2fd53696df0a171e6440f49ac0cbcb0dfba354a3ab5e53ec12"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/control_evidence_owned_source.go",
+        "git_blob": "a6c4636ea8776efdf590225b672a5ee9f1ec6190",
+        "sha256_raw": "b7415cd4e7498809ba8a6574dfda23b6ba1f7a4670b4d67b9f911efa14933a63",
+        "sha256_lf": "b7415cd4e7498809ba8a6574dfda23b6ba1f7a4670b4d67b9f911efa14933a63"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/deployment_capture_materials.go",
+        "git_blob": "7fa5cf33df94983b7e9384afefd7f061704359e9",
+        "sha256_raw": "94127d07c4ac1bb1124871424335816380fe846389d455b1630bbf93b098deff",
+        "sha256_lf": "94127d07c4ac1bb1124871424335816380fe846389d455b1630bbf93b098deff"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/deployment_capture_materials_test.go",
+        "git_blob": "8ec63f46628af964f35be3c65e7711079b0199e1",
+        "sha256_raw": "a6b114b0c8953ed22315dc9f034d6dbbe4e9f4faa3ea7b0a15eca1b48014357e",
+        "sha256_lf": "a6b114b0c8953ed22315dc9f034d6dbbe4e9f4faa3ea7b0a15eca1b48014357e"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/deployment_publisher_verifier_startup.go",
+        "git_blob": "dca20fa5c69b6ad2aea12ce5fd2aa73ad67c33cd",
+        "sha256_raw": "9a91810d65e72bf34a03bb4416e5b51d418f88ac75413c4c1db2297e22575f61",
+        "sha256_lf": "9a91810d65e72bf34a03bb4416e5b51d418f88ac75413c4c1db2297e22575f61"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/deployment_relay.go",
+        "git_blob": "260c80e5c4d78db7a209dfca6c76d17f29db8f30",
+        "sha256_raw": "26243836f2610f90dbafc413496c2a49a1479149216e82785f43bef1aa7b8cfc",
+        "sha256_lf": "26243836f2610f90dbafc413496c2a49a1479149216e82785f43bef1aa7b8cfc"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/formal_candidate.go",
+        "git_blob": "fa698df1600064687057a214075720c64d06cac1",
+        "sha256_raw": "d65e34d38eee53412b09ce65e126f91b20f22910cdab16b8f2e4c8d1dd7fc352",
+        "sha256_lf": "d65e34d38eee53412b09ce65e126f91b20f22910cdab16b8f2e4c8d1dd7fc352"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/formal_observer.go",
+        "git_blob": "8f279b28af4eab8c7579506224cca4428b41b52e",
+        "sha256_raw": "2ff874ff5ee7aa34dcda07b24c77281ca2ad8c96f1b46d85779651c45714b13c",
+        "sha256_lf": "2ff874ff5ee7aa34dcda07b24c77281ca2ad8c96f1b46d85779651c45714b13c"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/owned_payload_counts.go",
+        "git_blob": "226ad5fe157dcd19234cb82d70906123d2dfa792",
+        "sha256_raw": "5565d68cc6e881590597f26d40a767e51933cd6095bd8ad261e0a9fd2dfdd452",
+        "sha256_lf": "5565d68cc6e881590597f26d40a767e51933cd6095bd8ad261e0a9fd2dfdd452"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/owned_payload_counts_test.go",
+        "git_blob": "513eee47ef9171c1247c9cf4aae5192054222547",
+        "sha256_raw": "2ba34a9bfa1d372b042ba28ec3a8005f43e975c407564fad993fdc2571e89ef8",
+        "sha256_lf": "2ba34a9bfa1d372b042ba28ec3a8005f43e975c407564fad993fdc2571e89ef8"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_capture_modules.go",
+        "git_blob": "7c050dbafc04f5af1248a576bfe2b94e9231ccaa",
+        "sha256_raw": "2e55b062c77c7def6bad2bd9a11fc347a262af0478ffd63b0df7dfe95fcc2402",
+        "sha256_lf": "2e55b062c77c7def6bad2bd9a11fc347a262af0478ffd63b0df7dfe95fcc2402"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_control_seed.go",
+        "git_blob": "619ef477210f9e008fa235a66b79dd5941ba22a6",
+        "sha256_raw": "562bebd93a92d5bbcd8160c1159f93908842a68e7179a6019066bb8d66e2404d",
+        "sha256_lf": "562bebd93a92d5bbcd8160c1159f93908842a68e7179a6019066bb8d66e2404d"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_control_mysql_test.go",
+        "git_blob": "bd475db58051e68b151d299f2ca2a86e8cfac454",
+        "sha256_raw": "020cf72b07ad84e2dbce01c50fe97a048a47f832c660c4d16bc3386cbbc765e9",
+        "sha256_lf": "020cf72b07ad84e2dbce01c50fe97a048a47f832c660c4d16bc3386cbbc765e9"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go",
+        "git_blob": "9101d15326031886b8ea51ff56d27e381efd50bd",
+        "sha256_raw": "2bb28ea1d1abe408508a7e94be99c6cddf9a82f81298d58c7afb7393d03259df",
+        "sha256_lf": "2bb28ea1d1abe408508a7e94be99c6cddf9a82f81298d58c7afb7393d03259df"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_mysql_test.go",
+        "git_blob": "44b236e0ad11e0ce171c91cc68970b2acd93a5d8",
+        "sha256_raw": "5943590a9bf73b4418c0764f8f67285975d279cc928599ba973a5f9514314e32",
+        "sha256_lf": "5943590a9bf73b4418c0764f8f67285975d279cc928599ba973a5f9514314e32"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_positive_mysql_test.go",
+        "git_blob": "7c150a4b7cbdbe8c93ad662aca23a795a3a8fa62",
+        "sha256_raw": "b9e6e4d2a0bb2b904df08c58a2b22bd0ca16206e11bb32eaf0d76bcfe7b16374",
+        "sha256_lf": "b9e6e4d2a0bb2b904df08c58a2b22bd0ca16206e11bb32eaf0d76bcfe7b16374"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_setup_test.go",
+        "git_blob": "d011623c95535f3a12b9f2d8dcfb4bab65a130b8",
+        "sha256_raw": "d067423a1be08981619fd62e46fe78ba9d9bef3fc4f2361ffa837c8f99c35397",
+        "sha256_lf": "d067423a1be08981619fd62e46fe78ba9d9bef3fc4f2361ffa837c8f99c35397"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+        "git_blob": "487f0026d9b26b3175d0124c44cff5d9d305e706",
+        "sha256_raw": "bd4de65e1b5e830a1f43c6de333fbc2e567a136da7b1bfcf8147f214759e57b0",
+        "sha256_lf": "bd4de65e1b5e830a1f43c6de333fbc2e567a136da7b1bfcf8147f214759e57b0"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_workers_test.go",
+        "git_blob": "0a6a055b0c0ace0902583f50add68e96f25da391",
+        "sha256_raw": "f65ff1d94625dc7fa289b44d649fb9166934f72d15821e0c2e63d79e34d065d3",
+        "sha256_lf": "f65ff1d94625dc7fa289b44d649fb9166934f72d15821e0c2e63d79e34d065d3"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_source_inventory.go",
+        "git_blob": "89a0769ad1e9c2f86a65089cfada2668ea5a82af",
+        "sha256_raw": "e43c810e6d673800bbb49812a912acde3d39eac95fdffd498b220f422229aba5",
+        "sha256_lf": "e43c810e6d673800bbb49812a912acde3d39eac95fdffd498b220f422229aba5"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_capture_bootstrap.go",
+        "git_blob": "25f8b976ed9a3add78ed3a7ab144b3bfe37899d7",
+        "sha256_raw": "09bb86664e159c3b3583dfbb93d1e6d4ee0aa24617cb4c42445e29f48647251b",
+        "sha256_lf": "09bb86664e159c3b3583dfbb93d1e6d4ee0aa24617cb4c42445e29f48647251b"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_capture_files.go",
+        "git_blob": "174ccac46d24cde24ffafcec316b2ad7af7fe631",
+        "sha256_raw": "c0d18181207d4893d0b91ba86b160dff3be4cab0cd355bf23719f5ee5f67d357",
+        "sha256_lf": "c0d18181207d4893d0b91ba86b160dff3be4cab0cd355bf23719f5ee5f67d357"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_payload.go",
+        "git_blob": "0019d8f6ae2d71edd6346c39d56881c136bb2400",
+        "sha256_raw": "ab44143a70bd670c6db0686af12dabec252a8c0a45e702396842211dfd1f26b7",
+        "sha256_lf": "ab44143a70bd670c6db0686af12dabec252a8c0a45e702396842211dfd1f26b7"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata.go",
+        "git_blob": "8898abc26af7515364a341e06db1e86a5b115664",
+        "sha256_raw": "af3ed5f6c1c110e43478e915b42987186db6e012bd9487b681a36b653494187c",
+        "sha256_lf": "af3ed5f6c1c110e43478e915b42987186db6e012bd9487b681a36b653494187c"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata_test.go",
+        "git_blob": "27a95987a7ad89d118181675c34886a7ba2ec406",
+        "sha256_raw": "36a4427830cb4da9c1e0a97966e964b4c22850bd2ff707be719f8d7ef95dc0e7",
+        "sha256_lf": "36a4427830cb4da9c1e0a97966e964b4c22850bd2ff707be719f8d7ef95dc0e7"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+        "git_blob": "4340d60daed1eb10294e9c6a527ac89b6f03090d",
+        "sha256_raw": "9e246b59021d953f67b598a12a54879908f4235ce45cd0b71508598d65f91e12",
+        "sha256_lf": "9e246b59021d953f67b598a12a54879908f4235ce45cd0b71508598d65f91e12"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_remote_container_mysql_test.go",
+        "git_blob": "9c3f079d7ffd17d7ae4c2dec0516fb523109b09d",
+        "sha256_raw": "4d4c8e7e7e39f6bac49148547ed8cdaf2e7f38aea0181ee4f56db83bc2235e19",
+        "sha256_lf": "4d4c8e7e7e39f6bac49148547ed8cdaf2e7f38aea0181ee4f56db83bc2235e19"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_remote_container_test.go",
+        "git_blob": "8b73299e39d19116b220cf275dcba6d41561353b",
+        "sha256_raw": "caf328bd546c56efd411b60e73a27e1cd7fb73e0d422faddba2ab4b632bbd6af",
+        "sha256_lf": "caf328bd546c56efd411b60e73a27e1cd7fb73e0d422faddba2ab4b632bbd6af"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_same_task_mysql_test.go",
+        "git_blob": "19933e4992f7b6a62d104e854f1963ea88ab4f2d",
+        "sha256_raw": "3057f95f6e48b97674f5fbb0568202702de1d1d2f00b5805ce8360690c2059e9",
+        "sha256_lf": "3057f95f6e48b97674f5fbb0568202702de1d1d2f00b5805ce8360690c2059e9"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_verified_capture.go",
+        "git_blob": "229e930b9d6da203fa04e9bf2e4d8eb19bd8640b",
+        "sha256_raw": "314f2535a1788abd2353d488175dd13a347324fca7bde8b7cc307982642dfb78",
+        "sha256_lf": "314f2535a1788abd2353d488175dd13a347324fca7bde8b7cc307982642dfb78"
+      },
+      {
+        "path": "backend/internal/systembackupwire/stream_spec.go",
+        "git_blob": "8749ddb02b48db4cd6e6992a9bf9d33197186c54",
+        "sha256_raw": "1da95a8fb861d2d4d02ab54d5e601b78f369b53e302b2141b748afe569683c1a",
+        "sha256_lf": "1da95a8fb861d2d4d02ab54d5e601b78f369b53e302b2141b748afe569683c1a"
+      }
+    ]
+  }
+}
