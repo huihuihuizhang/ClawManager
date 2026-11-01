@@ -1,0 +1,42 @@
+=== RUN   TestAcceptanceTerminalSequenceCommitsOnlyAfterOneRowTaskCAS
+--- PASS: TestAcceptanceTerminalSequenceCommitsOnlyAfterOneRowTaskCAS (0.00s)
+=== RUN   TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS
+=== RUN   TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS/lost_terminal_CAS
+=== RUN   TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS/lost_sequence_CAS
+--- PASS: TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS/lost_terminal_CAS (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS/lost_sequence_CAS (0.00s)
+=== RUN   TestAcceptanceTerminalCommitACKLossReturnsUnknownWithoutReplay
+--- PASS: TestAcceptanceTerminalCommitACKLossReturnsUnknownWithoutReplay (0.00s)
+=== RUN   TestAcceptanceTerminalEligibleSuccessRequiresRecordedDecision
+--- PASS: TestAcceptanceTerminalEligibleSuccessRequiresRecordedDecision (0.00s)
+=== RUN   TestAcceptanceTerminalSequenceSkipsNonSequenceOutcomes
+--- PASS: TestAcceptanceTerminalSequenceSkipsNonSequenceOutcomes (0.00s)
+=== RUN   TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence
+=== RUN   TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence/missing_event_row
+=== RUN   TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence/event_insert_error
+--- PASS: TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence (0.00s)
+    --- PASS: TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence/missing_event_row (0.00s)
+    --- PASS: TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence/event_insert_error (0.00s)
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/already_terminal
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/stale_version
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_status
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_purpose
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_config
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_version
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_eligibility
+=== RUN   TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_decision_state
+--- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/already_terminal (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/stale_version (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_status (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_purpose (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_config (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_version (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_eligibility (0.00s)
+    --- PASS: TestAcceptanceTerminalSequenceRejectsWrongTaskFactsBeforeSequenceWrite/wrong_decision_state (0.00s)
+=== RUN   TestAcceptanceTerminalSequenceRejectsInvalidTargetBeforeTransaction
+--- PASS: TestAcceptanceTerminalSequenceRejectsInvalidTargetBeforeTransaction (0.00s)
+PASS
+ok  	clawreef/internal/systembackupcontroller	3.048s

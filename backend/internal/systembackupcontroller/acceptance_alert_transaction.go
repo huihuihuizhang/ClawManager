@@ -127,7 +127,10 @@ WHERE origin_installation_id = ? AND public_id = ? AND row_version = ? AND statu
 		return err
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit acceptance terminal transaction: %w", err)
+		// The server may already have committed terminal/event/sequence. Keep
+		// that uncertainty distinct from a rejected CAS; never imply rollback
+		// or authorize replay of external signing/publication from this error.
+		return fmt.Errorf("%w: commit acceptance terminal transaction: %w", ErrExecutionCommitUnknown, err)
 	}
 	return nil
 }

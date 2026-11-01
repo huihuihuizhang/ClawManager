@@ -26,6 +26,7 @@ type acceptanceTransactionTestState struct {
 	postDecided  bool
 	eventZero    bool
 	eventErr     error
+	commitErr    error
 	order        []string
 	updateArgs   []driver.NamedValue
 	taskArgs     [][]driver.NamedValue
@@ -142,7 +143,7 @@ type acceptanceTransactionTx struct {
 
 func (t acceptanceTransactionTx) Commit() error {
 	t.state.order = append(t.state.order, "commit")
-	return nil
+	return t.state.commitErr
 }
 func (t acceptanceTransactionTx) Rollback() error {
 	t.state.order = append(t.state.order, "rollback")
@@ -223,6 +224,26 @@ func TestAcceptanceTerminalSequenceRollsBackLostTaskOrSequenceCAS(t *testing.T) 
 				t.Fatalf("unsafe terminal transaction: err=%v order=%#v", err, state.order)
 			}
 		})
+	}
+}
+
+// Driver protocol DATA only: this proves classification and no local replay,
+// not that a real server committed or that the native backup chain succeeded.
+func TestAcceptanceTerminalCommitACKLossReturnsUnknownWithoutReplay(t *testing.T) {
+	ackLost := errors.New("explicit terminal commit acknowledgement loss")
+	state := &acceptanceTransactionTestState{now: time.Unix(2_000_000_000, 0).UTC(), terminalRows: 1, sequenceRows: 1, preStatus: "validating", postStatus: "succeeded", postEligible: true, postDecided: true, commitErr: ackLost}
+	db := sql.OpenDB(acceptanceTransactionConnector{state: state})
+	defer db.Close()
+	err := ApplyAcceptanceTerminalWithSequence(context.Background(), db, "installation_test", 7, acceptanceTarget(), 4, AcceptanceTerminalOutcome{TaskType: TargetBackup, Purpose: "acceptance", Status: "succeeded", EligibilityDecided: true, Eligible: true}, acceptanceSuccessCASTest)
+	if !errors.Is(err, ErrExecutionCommitUnknown) || !errors.Is(err, ackLost) {
+		t.Fatal("commit ACK loss was returned as success or an ordinary rejection", err)
+	}
+	counts := map[string]int{}
+	for _, step := range state.order {
+		counts[step]++
+	}
+	if counts["commit"] != 1 || counts["task-cas"] != 1 || counts["event"] != 1 || counts["sequence-cas"] != 1 || counts["rollback"] != 0 {
+		t.Fatal("unknown commit replayed the transaction or claimed rollback", state.order)
 	}
 }
 

@@ -1,0 +1,69 @@
+{
+  "schema_version": "ad-terminal-commit-unknown-reviewed.v1",
+  "recorded_at": "2026-11-01T20:02:42.035467+00:00",
+  "parent": "225fd6396ed1e298bb3185823d40369101b0dfc3",
+  "owner_commit": "5044f4df2b9480697bcc64dce159950b1cf07ddf",
+  "scope": "Only controller2Go exactsinglecommitdelta. Acceptance terminal Commit error wraps ErrExecutionCommitUnknown while retaining driver cause. Transaction and no replay unchanged. No finalization/signing/native-cleanup chain integrated here.",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupcontroller/acceptance_alert_transaction.go",
+      "git_blob": "340cdfcee4014befbf54eb0a41c806feb11e05e5",
+      "exact_frozen_owner": true
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/acceptance_alert_transaction_test.go",
+      "git_blob": "bdea7dd90138612acef26336d47cc11ca9e938ee",
+      "exact_frozen_owner": true
+    }
+  ],
+  "review": {
+    "problem": "Server may commit task terminal,event and acceptance sequence even when caller loses Commit acknowledgement; plain error cannot assert rollback.",
+    "change": "Preserve both typed uncertainty and actual driver cause. No retry, compensating rollback claim, sign, publication or additional mutation added.",
+    "validation": "Current225 plus exact5044; SQL env removed; Go1.26.1/local/offline/p1. Mock driver fault asserts one CAS/event/sequence/commit and zero replay/rollback. Existing CAS/sequence/eligibility/wrong-facts/event failure cases pass.",
+    "limits": "Driver-protocol proof only. Not proof of real MySQL commit, no duplicate external Sign RPC, native recovery, page success or full six-part artifact."
+  },
+  "owner_test": {
+    "handle": 92312,
+    "closed": true,
+    "natural_exit": 0,
+    "package_seconds": 3.048,
+    "GOMAXPROCS": 1,
+    "top_level_pass": 8,
+    "subcase_pass": 12,
+    "skipped": 0,
+    "command": "go -C backend test -mod=readonly -p=1 -count=1 -v -run '^TestAcceptanceTerminal' ./internal/systembackupcontroller"
+  },
+  "primary_test": {
+    "handle": 19891,
+    "closed": true,
+    "natural_exit": 0,
+    "package_seconds": 3.121,
+    "GOMAXPROCS": 2,
+    "top_level_pass": 8,
+    "subcase_pass": 12,
+    "skipped": 0,
+    "command": "go test -p=1 -count=1 -run '^TestAcceptanceTerminal' -v ./internal/systembackupcontroller"
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-terminal-unknown-20261102/d-terminal-unknown-unit-v1.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-terminal-unknown-unit-v1.log",
+      "raw_bytes": 3716,
+      "raw_sha256": "6e15e51608f1cd25f9d99ab15ed29833755c7be6ca1da56e9e37fcb759722f07",
+      "committed_bytes": 3674,
+      "committed_sha256": "e9479ff2e5658778eb410aba455013a4af0037d0376facf159bd7803402dba44",
+      "git_blob": "2b591a7efff6ed3e608805a880b36cd1d8880dce"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-unknown-20261102/supervisor-terminal5044-focused-v1.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-terminal5044-focused-v1.log",
+      "raw_bytes": 3716,
+      "raw_sha256": "2d2d1546c8ef6417d992f450d074d074a699d8ab0aa8d416966c23ca940ed0ec",
+      "committed_bytes": 3674,
+      "committed_sha256": "95975ba8fd534ce804a670a37f3f99de6b6c8fd3cd0b9ccd97f68e16b64d663e",
+      "git_blob": "44ae198c56a98b34090fef3fb5a8ce559ffd25f0"
+    }
+  ],
+  "pending": "Real SQL ACK-loss/no-resign80878 and full finalization chain remain unmerged/native notrun; A fresh120 original-admission assembly underreview.",
+  "full_page_acceptance": false
+}
