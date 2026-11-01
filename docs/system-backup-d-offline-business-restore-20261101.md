@@ -80,6 +80,11 @@ C 侧需要将真实 Teams 对象、共享文件和 Redis 历史恢复结果，�
 
 ## 下一批可以离线继续的工作
 
+已补齐两个已核对的原 normalizer 合同缺口（仍未据此放行十一表公共恢复）：
+
+- `NormalizeDataRow` 接受图像服务已存在的 `unknown` 终态并保留它；只将 preparing/running 转成 failed。目标 settled/analytics_recorded 按原去重放规则设 1，原 false 标记、charge/estimate、reservation、结果与 SQL NULL 仍保留在独立 `Change.Before`；不能用目标标记宣称原结算成功。五状态正向及未知状态拒绝见 `image-unknown-history-pass.txt`。
+- resources 私有 northbound 候选及读写闭合集合补齐 migration 077 的 `owner_teams_enabled/owner_team_creation_user_id`：目标开关关闭，零哨兵保留，正用户 ID 必须显式映射，非法/缺失映射拒绝。旧 33 列不再冒充当前 35 列；未来需要旧版迁移时必须增加具名版本适配。资源包默认离线全包测试通过，见 `resources-owner-team-schema-pass.txt`；需要外部 MySQL 的 opt-in 测试未运行，本项不证明生产事务或目标事实认证。
+
 以下是本地代码工作，不应全部推给现场：
 
 - 为上述 owner 表整理实际 schema、全列策略与既有 owner 私有 normalizer 的公共事务桥接，增加真实 migrations 非空测试。需要相应 owner 合同和目标语义的明确输入；不能用泛化 preserve 或假 proof 代替。

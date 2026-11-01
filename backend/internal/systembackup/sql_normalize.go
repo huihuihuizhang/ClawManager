@@ -155,7 +155,9 @@ func NormalizeDataRow(table SQLTable, row team.Row, now time.Time) (team.Change,
 		set("ready", "0")
 		set("expires_at", "2000-01-01 00:00:00")
 	case "gateway_image_jobs":
-		err = stopState("state", "failed", []string{"preparing", "running"}, []string{"completed", "failed"})
+		// The image service's unknown terminal state records an uncertain
+		// provider outcome. Keep that uncertainty; it must not become failed.
+		err = stopState("state", "failed", []string{"preparing", "running"}, []string{"completed", "failed", "unknown"})
 		// Preserve charge/estimate and the original encrypted row for review;
 		// an isolated restore must not settle or emit accounting a second time.
 		set("settled", "1")
