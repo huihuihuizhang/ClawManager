@@ -1,0 +1,101 @@
+{
+  "schema": "a-original-certificate-known-bytes-review.v1",
+  "base_git_head": "915cf5e44a5bbf292b3d7184762db27dfd58440b",
+  "includes_backup": "f4acfd22fcd456a82398b27069f5ea78ec6dc084",
+  "production_files": 4,
+  "go_files": 10,
+  "actual_capture_authority_fabricated": false,
+  "metadata_ledger": "original system_backup_v2_evidence immutable diagnostic",
+  "provider_sign_retry_allowed": false,
+  "source_files_current": {
+    "production_same_task_mysql_test.go": "150427eaaf22d43af8fbb90ef083a0c7d4a498e3c79646b32195b16d54a73f86",
+    "publication_capture_certificate_resume_mysql_test.go": "97426d5edacc1ae683caa76dd8218b1998a5e87b85f542d18e9c8c9b1f40c92d",
+    "publication_capture_certificate_store.go": "09e4bc53f9efea70902b149d4d63fe859fb43e7961231e073145cd3e0d1a43f7",
+    "production_same_task_setup_test.go": "95e43ab95af63bb8a78db2608e35b0a6e83d298052467d0e52069f96b217c811",
+    "publication_capture_certificate_record.go": "2007b3d664f7ba43c6512c3db957b37c47446b2a12690e9a031aaa45d78ad6df",
+    "publication_capture_certificate_record_test.go": "cecb80cbeb8c0f6669f753869bee33ea73ce630b134e2bfabc922cee9b744274",
+    "publication_capture_certificate.go": "2d63b3b863a5b651ac820dc175a024407420a675c27db8cafdd0781049be19a5",
+    "publication_certificate_ack_fault_test.go": "c378dcbe55a3038affc98915678d310ae5e99ddb359715b48c3cff1a7d28051a",
+    "publication_same_task_mysql_test.go": "4b84c44cba1d96e46cf4dd01b48a8badb7902a14ab1bb750c0e97da6b734cd85",
+    "publication_capture_certificate_intent.go": "851f19ead30505bcd6833f6d59425240a6cb1305fc95b4c767ae86da9d0d5f07"
+  },
+  "scenarios": [
+    {
+      "name": "current-and-eight-rollback-codec-faults",
+      "task": "sbk_b0b8dd92-294f-41fa-b4dd-99aa0a1a62b7",
+      "log": "a-certificate-durable-original-current-v1.log",
+      "linked_commit": "242e64b74e4ac57ce4728f877b6219f129bade23",
+      "pass": true,
+      "package_seconds": 134.628,
+      "case_seconds": 131.36,
+      "session": "75776 terminal0",
+      "sign_calls": 1,
+      "known_bytes": true,
+      "certificate_sha256": "61e0ecbf672289f371c2e7bd0bfabe58fbe239d225d7b550c10153abafde0ae5",
+      "log_sha256": "b7b483b47b45df54b5df8d46ff70b2d6cf1d39282f5f79ae3f7ccf6628ce3517"
+    },
+    {
+      "name": "provider-signed-but-withheld-result",
+      "task": "sbk_a869e3c6-5d55-489e-b3d7-15bc7698be07",
+      "log": "a-certificate-durable-provider-unknown-v1.log",
+      "linked_commit": "915cf5e44a5bbf292b3d7184762db27dfd58440b",
+      "pass": true,
+      "package_seconds": 135.773,
+      "case_seconds": 132.49,
+      "session": "66773 terminal0",
+      "sign_calls": 1,
+      "known_bytes": false,
+      "reentry": "query-only; fresh Prepare refused",
+      "log_sha256": "b69e0c4050a6aa453f09987250dba96eab6d159383368593a679d249fd941cf1"
+    },
+    {
+      "name": "dispatch-native-commit-ack-unknown",
+      "task": "sbk_6e1f066d-a202-410b-98fe-e25600907e4b",
+      "log": "a-certificate-durable-native-commit-ack-v1.log",
+      "linked_commit": "915cf5e44a5bbf292b3d7184762db27dfd58440b",
+      "pass": true,
+      "case_seconds": 135.09,
+      "session": "76261 overall terminal1",
+      "sign_calls": 0,
+      "known_bytes": false,
+      "independent_readback": "exact committed original dispatch intent",
+      "log_sha256": "39d7039b5ebdef4e3807177331eb990dd15b0d64f6a9ced7c1243937fcfdcc73"
+    },
+    {
+      "name": "first-store-ack-fault-hit-read-only-post-sign-validation",
+      "task": "sbk_c06060c9-7b91-4440-b1b7-75a475ade892",
+      "log": "a-certificate-durable-native-commit-ack-v1.log",
+      "linked_commit": "915cf5e44a5bbf292b3d7184762db27dfd58440b",
+      "pass": false,
+      "case_seconds": 133.98,
+      "package_seconds": 272.357,
+      "session": "76261 terminal1",
+      "sign_calls": 1,
+      "known_bytes": false,
+      "failure": "independent native readback lacks original signed bytes; test fault consumed by legitimate read-only q.check Commit",
+      "log_sha256": "39d7039b5ebdef4e3807177331eb990dd15b0d64f6a9ced7c1243937fcfdcc73"
+    },
+    {
+      "name": "store-native-write-commit-ack-unknown-corrected-fault",
+      "task": "sbk_60330eb6-5ec4-45f6-b2b5-6caffff8cd04",
+      "log": "a-certificate-durable-store-write-commit-ack-v2.log",
+      "linked_commit": "915cf5e44a5bbf292b3d7184762db27dfd58440b",
+      "pass": true,
+      "case_seconds": 134.24,
+      "package_seconds": 137.568,
+      "session": "41294 terminal0",
+      "sign_calls": 1,
+      "known_bytes": true,
+      "independent_readback": "complete committed original signed bytes; exact reentry without Sign",
+      "certificate_sha256": "3b811e40022d68b60eaff9e6f9ce0ac593b321e1fb461be188e66078553418ff",
+      "log_sha256": "def0922cfc70bcde0e277595f1b7ee4e481570b56156ec9037bd15f18423aa32"
+    }
+  ],
+  "limitations": [
+    "not full final manifest/native publication/ACCEPTANCE/catalog/standalone DR",
+    "three original postPrepare business-fault tasks remain unrun",
+    "cross-Pod unknown provider result retrieval not implemented; conservative query-only",
+    "final strict envelope typed roundtrip added after native SQL runs; valid and alias named signed DATA tested separately",
+    "old forward/index WIP is outside this component"
+  ]
+}

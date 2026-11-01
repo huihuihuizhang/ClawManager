@@ -31,11 +31,20 @@ import (
 // material loaders. They do not replace the original task, capture Authority,
 // encrypted plan, ten worker results or current publication claim.
 type aSameTaskCertificateMaterials struct {
-	signs atomic.Int64
+	signs          atomic.Int64
+	loseSignResult bool
+	commitACKFault bool
+	loseStoreACK   bool
+	loseCommit     atomic.Bool
 }
 
 func (aFixture *aSameTaskCertificateMaterials) options() dOriginalSixPartFixtureOptions {
+	var commitACKLoss *atomic.Bool
+	if aFixture.commitACKFault {
+		commitACKLoss = &aFixture.loseCommit
+	}
 	return dOriginalSixPartFixtureOptions{
+		ControlCommitACKLoss: commitACKLoss,
 		BeforeCoreSeal: func(_ context.Context, _ *testing.T, f *dOriginalSixPartTask, core *DeploymentConfig) error {
 			core.PublicationSigners = &PublicationSignerReference{Protocol: PublicationSignerMaterialsVersion, Path: filepath.Join(f.directory, "a-original-publication-signers.json")}
 			core.PublisherVerifier = &PublisherVerifierReference{Protocol: PublisherVerifierMaterialsVersion, Path: filepath.Join(f.directory, "a-original-publisher-verifier.json")}
@@ -170,6 +179,15 @@ func (aFixture *aSameTaskCertificateMaterials) installSigners(t *testing.T, f *d
 		}
 		signature := ed25519.Sign(keys[purpose], raw)
 		aFixture.signs.Add(1)
+		if aFixture.loseSignResult {
+			// The real external signing operation happened; its public result
+			// is deliberately withheld. The publisher may never Sign again.
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		if aFixture.loseStoreACK {
+			aFixture.loseCommit.Store(true)
+		}
 		json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"signature": "vault:v7:" + base64.StdEncoding.EncodeToString(signature)}})
 	}))
 	t.Cleanup(provider.Close)
@@ -210,7 +228,7 @@ func (aFixture *aSameTaskCertificateMaterials) installSigners(t *testing.T, f *d
 // actually reached validating. A failed capture never enters this callback.
 // No remote publication, marker, acceptance or catalog success is inferred.
 func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
-	for _, mode := range []string{"current", "stage-version-after-prepare", "finished-at-after-prepare", "task-version-after-prepare"} {
+	for _, mode := range []string{"current", "stage-version-after-prepare", "finished-at-after-prepare", "task-version-after-prepare", "provider-sign-result-unknown", "dispatch-commit-ack-unknown", "store-commit-ack-unknown"} {
 		t.Run(mode, func(t *testing.T) { runAOriginalSixPartCertificatePublication(t, mode) })
 	}
 }
@@ -223,7 +241,7 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		}
 		t.Log("original pre-capture linked build commit", buildinfo.Commit)
 	}
-	fixture := &aSameTaskCertificateMaterials{}
+	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
 	runDOriginalSixPartCaptureWithOptions(t, false, true, fixture.options(), func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
 		var version uint64
 		var delay int64
@@ -275,7 +293,8 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		if err = f.control.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=?`, f.publicID).Scan(&evidenceBefore); err != nil {
 			t.Fatal("original evidence before Stage", err)
 		}
-		if mode != "current" {
+		stageFault := mode == "stage-version-after-prepare" || mode == "finished-at-after-prepare" || mode == "task-version-after-prepare"
+		if stageFault {
 			query, args, readback, readArgs := "", []any{}, "", []any{}
 			switch mode {
 			case "stage-version-after-prepare":
@@ -308,7 +327,7 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 			t.Fatal(err)
 		}
 		err = prepared.Stage(ctx, tx)
-		if mode != "current" {
+		if stageFault {
 			tx.Rollback()
 			if err == nil || fixture.signs.Load() != 0 {
 				t.Fatal("changed original business facts reached signing input/provider", mode, err)
@@ -330,7 +349,33 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		if fixture.signs.Load() != 0 {
 			t.Fatal("artifact signing occurred before original Stage commit")
 		}
+		if mode == "dispatch-commit-ack-unknown" {
+			fixture.loseCommit.Store(true)
+		}
 		raw, sum, err := prepared.SignCommitted(ctx)
+		if mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown" {
+			raw, sum = checkAOriginalCertificateCommitACK(t, ctx, f, claim, capture, prepared, mode, raw, sum, err, fixture)
+			if mode == "dispatch-commit-ack-unknown" {
+				if _, err = f.service.prepareOriginalCaptureCertificate(ctx, claim, work.Input.Authority.AttemptNo, capture, signers); !errors.Is(err, c.ErrExecutionCommitUnknown) || fixture.signs.Load() != 0 {
+					t.Fatal("unknown dispatch commit admitted another preparation", err)
+				}
+				return
+			}
+			err = nil
+		}
+		if mode == "provider-sign-result-unknown" {
+			if !errors.Is(err, c.ErrExecutionCommitUnknown) || fixture.signs.Load() != 1 || len(raw) != 0 || sum != "" {
+				t.Fatal("actual provider unknown result did not retain single-send boundary", err)
+			}
+			if _, _, err = prepared.SignCommitted(ctx); !errors.Is(err, c.ErrExecutionCommitUnknown) || fixture.signs.Load() != 1 {
+				t.Fatal("unknown external signature was sent again", err)
+			}
+			if _, err = f.service.prepareOriginalCaptureCertificate(ctx, claim, work.Input.Authority.AttemptNo, capture, signers); !errors.Is(err, c.ErrExecutionCommitUnknown) || fixture.signs.Load() != 1 {
+				t.Fatal("unknown signature admitted another timestamp/input", err)
+			}
+			t.Log("same original provider Sign result unknown; reentry remained query only", f.publicID, fixture.signs.Load())
+			return
+		}
 		if err != nil || hash(raw) != sum || fixture.signs.Load() != 1 {
 			t.Fatal("same-task externally signed capture certificate", err)
 		}
@@ -348,6 +393,7 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		if decodeProviderDeploymentJSON(raw, &envelope) != nil || envelope.Payload.Installation != f.service.Config.InstallationID || envelope.Payload.Backup != f.publicID || envelope.Payload.Attempt != work.Input.Authority.AttemptNo || envelope.Payload.Context != capture.CaptureContextSHA256 || len(envelope.Payload.Jobs) != 10 || len(envelope.Payload.Checkpoints) != 10 || len(envelope.Payload.Stages) != 1 || envelope.Payload.Stages[0].UID != prepared.original.stage.owner.Resource || !envelope.Payload.CompletedAt.Equal(prepared.original.completed) || !envelope.Payload.ExpiresAt.Equal(envelope.Payload.IssuedAt.Add(time.Duration(prepared.original.ttl)*time.Second)) {
 			t.Fatal("signed certificate changed actual original task/completion/staging facts")
 		}
+		checkAOriginalCertificateKnownResume(t, ctx, f, claim, capture, prepared, signers, raw, sum, &fixture.signs)
 		t.Log("same original task certificate only", f.publicID, len(capture.Parts), sum)
 	})
 }
