@@ -220,7 +220,10 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 		return zero, err
 	}
 	defer tx.Rollback()
-	if tx.QueryRowContext(ctx, `SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? FOR SHARE`, a.InstallationID, a.TaskPublicID).Scan(&a.ClaimOwner, &a.ClaimRowVersion, &a.RequestID, &a.ConfigVersion, &a.ConfigSHA256, &a.DeadlineAt, &a.MaintenanceFencingToken) != nil || a.ConfigSHA256 != request.Invocation.FormalCapture.SourceConfigSHA256 {
+	// Preliminary locator only: do not lock Task before Bind acquires the
+	// original Gate -> Task order. Bind below independently validates/locks
+	// this exact current authority; a concurrent claim change fails closed.
+	if tx.QueryRowContext(ctx, `SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=?`, a.InstallationID, a.TaskPublicID).Scan(&a.ClaimOwner, &a.ClaimRowVersion, &a.RequestID, &a.ConfigVersion, &a.ConfigSHA256, &a.DeadlineAt, &a.MaintenanceFencingToken) != nil || a.ConfigSHA256 != request.Invocation.FormalCapture.SourceConfigSHA256 {
 		return zero, c.ErrExecutionAuthority
 	}
 	authorityRaw, _ := json.Marshal(a)
