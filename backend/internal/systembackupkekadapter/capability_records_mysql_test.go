@@ -3,6 +3,7 @@
 package systembackupkekadapter
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -206,6 +207,60 @@ func TestSQLOriginalKEKCapabilityMySQL(t *testing.T) {
 	if err = tx.Rollback(); err != nil {
 		t.Fatal(err)
 	}
+	// Recheck prepared data only while the CURRENT locked original row still
+	// has exactly its authenticated bytes, metadata and original expiry.
+	var original capabilityEvidence
+	if owner.QueryRowContext(ctx, "SELECT inline_payload,expires_at FROM system_backup_v2_evidence WHERE public_id=?", gpin.Source.RecordID).Scan(&original.raw, &original.until) != nil {
+		t.Fatal("original evidence readback")
+	}
+	for _, test := range []struct {
+		name, column string
+		value        any
+	}{
+		{"owner type", "owner_target_type", "backup"},
+		{"owner id", "owner_target_public_id", "other-installation"},
+		{"type", "evidence_type", "diagnostic"},
+		{"storage", "storage_state", "external"},
+		{"health", "observed_health", "degraded"},
+		{"encryption", "encryption", "other"},
+		{"expiry renewal", "expires_at", original.until.Add(time.Second)},
+		{"expiry shortening", "expires_at", original.until.Add(-time.Second)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var before any
+			if owner.QueryRowContext(ctx, "SELECT "+test.column+" FROM system_backup_v2_evidence WHERE public_id=?", gpin.Source.RecordID).Scan(&before) != nil {
+				t.Fatal("original column readback")
+			}
+			result, e := owner.ExecContext(ctx, "UPDATE system_backup_v2_evidence SET "+test.column+"=? WHERE public_id=?", test.value, gpin.Source.RecordID)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if count, e := result.RowsAffected(); e != nil || count != 1 {
+				t.Fatal("mutation not applied", count, e)
+			}
+			defer func() {
+				if _, e := owner.ExecContext(ctx, "UPDATE system_backup_v2_evidence SET "+test.column+"=? WHERE public_id=?", before, gpin.Source.RecordID); e != nil {
+					t.Error(e)
+				}
+			}()
+			var changed int
+			if owner.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_evidence WHERE public_id=? AND "+test.column+"=?", gpin.Source.RecordID, test.value).Scan(&changed) != nil || changed != 1 {
+				t.Fatal("mutation independent readback")
+			}
+			tx, e := owner.BeginTx(ctx, nil)
+			if e != nil {
+				t.Fatal(e)
+			}
+			defer tx.Rollback()
+			_, current, e := (reg.SQLStore{}).Bind(ctx, tx, r.Binding.InstallationID)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if caps.Generate.Recheck(ctx, tx, current, time.Now()) == nil {
+				t.Fatal("changed current original evidence accepted")
+			}
+		})
+	}
 	if _, err = reader.ExecContext(ctx, "UPDATE system_backup_v2_evidence SET observed_health='degraded'"); err == nil {
 		t.Fatal("capability reader can mutate original evidence")
 	}
@@ -240,9 +295,33 @@ func TestSQLOriginalKEKCapabilityMySQL(t *testing.T) {
 	g.Revoked = true
 	e := signCapabilityFixture(t, g, gkey)
 	h := sha256.Sum256(e.raw)
-	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, e.raw, hex.EncodeToString(h[:]), len(e.raw), gpin.Source.RecordID); err != nil {
+	result, err := owner.ExecContext(ctx, `UPDATE system_backup_v2_evidence SET inline_payload=?,content_checksum=?,content_size_bytes=? WHERE public_id=?`, e.raw, hex.EncodeToString(h[:]), len(e.raw), gpin.Source.RecordID)
+	if err != nil {
 		t.Fatal(err)
 	}
+	if count, err := result.RowsAffected(); err != nil || count != 1 {
+		t.Fatal("signed revocation not applied", count, err)
+	}
+	var actual []byte
+	var checksum string
+	var size uint64
+	if owner.QueryRowContext(ctx, "SELECT inline_payload,content_checksum,content_size_bytes FROM system_backup_v2_evidence WHERE public_id=?", gpin.Source.RecordID).Scan(&actual, &checksum, &size) != nil || !bytes.Equal(actual, e.raw) || bytes.Equal(actual, original.raw) || checksum != hex.EncodeToString(h[:]) || size != uint64(len(actual)) {
+		t.Fatal("signed revocation independent readback")
+	}
+	tx, err = owner.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, locked, err = (reg.SQLStore{}).Bind(ctx, tx, r.Binding.InstallationID)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(err)
+	}
+	if caps.Generate.Recheck(ctx, tx, locked, time.Now()) == nil {
+		tx.Rollback()
+		t.Fatal("current signed revocation reused prior authentication")
+	}
+	tx.Rollback()
 	if _, err = preparation.Capabilities.PrepareCapabilities(ctx, r.Binding); err == nil {
 		t.Fatal("revoked provider capability prepared")
 	}

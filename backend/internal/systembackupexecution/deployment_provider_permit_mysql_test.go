@@ -49,7 +49,7 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 	if os.Getenv("TEST_D_LOCAL_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires disposable local MySQL")
 	}
-	for _, mode := range []string{"valid", "unknown-reserve-ack", "revoked-after-login"} {
+	for _, mode := range []string{"valid", "unknown-reserve-ack", "revoked-after-login", "issuer-expiry"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			var db *sql.DB
@@ -190,6 +190,9 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 					t.Fatal("issuer materials unavailable")
 				}
 				minimum = now.Truncate(time.Second).Add(75*time.Second + 123456789*time.Nanosecond)
+				if mode == "issuer-expiry" {
+					minimum = now.Add(8 * time.Second).Truncate(time.Microsecond)
+				}
 				grant := a.ProviderPermitIssuerGrant{Version: "system-backup-provider-permit-issuer-grant.v1", Binding: binding, Database: databaseID, DatabaseAccount: account, Workload: workload, SigningPublicKey: issuerPub, GeneratePermission: permission, WorkerNamespace: "backup", WorkerServiceAccountName: "capture", WorkerServiceAccountUID: "capture-sa", WorkerJWTIdentityFile: jwtFile, NotBefore: now.Add(-time.Minute), Until: minimum}
 				grantRaw, _ := json.Marshal(grant)
 				grantEnvelope, _ := json.Marshal(a.SignedProviderPermitIssuerGrant{Record: grantRaw, Signature: ed25519.Sign(rootKey, append([]byte(a.ProviderPermitIssuerGrantDomain), grantRaw...))})
@@ -444,6 +447,16 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 			var payload k.DeliveredPermitPayload
 			if json.Unmarshal(rawLease, &lease) != nil || json.Unmarshal(deliveryRaw, &delivery) != nil || json.Unmarshal(delivery.Payload, &payload) != nil || !expires.Equal(minimum.UTC().Truncate(time.Microsecond)) || !expires.Equal(lease.Until) || !expires.Equal(payload.Permit.ExpiresAt) {
 				t.Fatal("actual shortest signed/SQL nanosecond boundary diverged")
+			}
+			if mode == "valid" {
+				assertProviderStageOriginalCurrentSQL(t, owner, admin, authority, job, invocation, lease)
+			}
+			if mode == "issuer-expiry" {
+				assertProviderStageOriginalIssuerExpiry(t, owner, authority, job, invocation, lease)
+				if generates.Load() != 0 || logins.Load() != 0 {
+					t.Fatal("expired issuer original use reached provider", generates.Load(), logins.Load())
+				}
+				return
 			}
 			result, err := worker.RunFormalCapture(ctx, invocation, capture, worker.FormalCaptureEnvironment{Workspace: source, Staging: staging})
 			if mode == "revoked-after-login" {

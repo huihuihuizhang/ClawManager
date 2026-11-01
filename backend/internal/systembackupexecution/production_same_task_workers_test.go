@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -47,23 +48,6 @@ type dOriginalWorkers struct {
 type dOriginalTracePorts struct {
 	*c.ExecutionJobPorts
 	t *testing.T
-}
-
-type dOriginalTraceAuthorizer struct {
-	owner *PublicJobOwner
-	t     *testing.T
-	seen  sync.Map
-}
-
-func (p *dOriginalTraceAuthorizer) Authorize(ctx context.Context, peer string, request worker.ControlRequest) (worker.Lease, error) {
-	value, err := p.owner.Authorize(ctx, peer, request)
-	if err != nil {
-		key := request.Action + ":" + err.Error()
-		if _, loaded := p.seen.LoadOrStore(key, true); !loaded {
-			p.t.Log("original worker authorization", request.Action, err)
-		}
-	}
-	return value, err
 }
 
 func (p dOriginalTracePorts) EnsureJob(ctx context.Context, a d.Authority, i d.JobIntent) (d.JobBinding, error) {
@@ -110,12 +94,6 @@ func (f *dOriginalSixPartTask) installOriginalWorkers(ctx context.Context, t *te
 		t.Fatal("original job ports type")
 	}
 	f.service.Runtime.Loop.Dispatch.Ports = dOriginalTracePorts{ports, t}
-	identity, ok := f.service.Runtime.Control.(WorkloadIdentity)
-	if !ok {
-		t.Fatal("original workload identity handler type")
-	}
-	identity.Next = worker.ControlHandler{Authorizer: &dOriginalTraceAuthorizer{owner: f.owner, t: t}}
-	f.service.Runtime.Control = identity
 	t.Cleanup(func() { cancel(); w.active.Wait() })
 	client := f.owner.Client.(*kubefake.Clientset)
 	ns := f.service.Config.Namespace
@@ -135,6 +113,9 @@ func (f *dOriginalSixPartTask) installOriginalWorkers(ctx context.Context, t *te
 			return true, nil, fmt.Errorf("original worker create request identity")
 		}
 		job.UID = types.UID(uuid.NewString())
+		if err := f.background.checkHeld(ctx); err != nil {
+			return true, nil, err
+		}
 		var gatePhase, gateOwner string
 		if err := f.control.QueryRowContext(ctx, "SELECT phase,owner FROM system_backup_gate WHERE scope=?", f.service.Config.ApplicationScope).Scan(&gatePhase, &gateOwner); err != nil || gatePhase != "held" || gateOwner != f.publicID {
 			return true, nil, fmt.Errorf("original Job dispatched outside same-task held gate: %s", gatePhase)
@@ -273,6 +254,7 @@ func (f *dOriginalSixPartTask) checkOriginalStoppedBeforePhysicalResume(ctx cont
 	}
 	f.workers.mu.Lock()
 	running := f.workers.running
+	resumed := f.workers.resumeChecks
 	f.workers.mu.Unlock()
 	if running != 0 {
 		return fmt.Errorf("source resume with %d native workers still active", running)
@@ -284,6 +266,11 @@ func (f *dOriginalSixPartTask) checkOriginalStoppedBeforePhysicalResume(ctx cont
 	}
 	if err := f.control.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND create_dispatched=TRUE AND (revoked=FALSE OR stopped_at IS NULL)", f.publicID).Scan(&unresolved); err != nil || unresolved != 0 {
 		return fmt.Errorf("source resume before all original Job stop proofs")
+	}
+	if resumed == 0 {
+		if err := f.background.checkHeld(ctx); err != nil {
+			return fmt.Errorf("source background changed before first original resume: %w", err)
+		}
 	}
 	f.workers.mu.Lock()
 	f.workers.resumeChecks++
@@ -434,7 +421,20 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 	if err != nil {
 		return fmt.Errorf("worker original source open %s: %w", inv.Request.Operation, err)
 	}
+	var sourceChecks atomic.Int64
+	var sourceCheckNanos atomic.Int64
+	if env.SourceAuthorize != nil {
+		authorize := env.SourceAuthorize
+		env.SourceAuthorize = func(ctx context.Context, value worker.Invocation) error {
+			started := time.Now()
+			defer func() { sourceCheckNanos.Add(time.Since(started).Nanoseconds()) }()
+			sourceChecks.Add(1)
+			return authorize(ctx, value)
+		}
+	}
+	streamStarted := time.Now()
 	result, err := worker.RunFormalCapture(ctx, inv, keyJob, env)
+	t.Log("original stream local source Authorize calls/local elapsed/stream elapsed", inv.Request.Operation, sourceChecks.Load(), time.Duration(sourceCheckNanos.Load()), time.Since(streamStarted))
 	if err != nil {
 		return fmt.Errorf("worker original encrypted capture %s: %w", inv.Request.Operation, err)
 	}

@@ -134,6 +134,50 @@ func TestSQLProviderCapabilityPreparationReadsAndRechecksOriginalEvidence(t *tes
 	if prepared.Recheck(context.Background(), db, reg.LockedSnapshot{}, state.now) == nil {
 		t.Fatal("unbound/foreign locked snapshot accepted")
 	}
+	original := state.items[gpin.Source.RecordID]
+	for name, mutate := range map[string]func(ProviderCapabilityRecord) capabilityEvidence{
+		"signed revocation": func(record ProviderCapabilityRecord) capabilityEvidence {
+			record.Revoked = true
+			return signCapabilityFixture(t, record, gkey)
+		},
+		"signed revision": func(record ProviderCapabilityRecord) capabilityEvidence {
+			record.Revision = "observer-r6"
+			return signCapabilityFixture(t, record, gkey)
+		},
+		"corrupt envelope": func(ProviderCapabilityRecord) capabilityEvidence {
+			raw := append([]byte(nil), original.raw...)
+			raw[len(raw)-1] ^= 1
+			return capabilityEvidence{raw: raw}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			changed := mutate(g)
+			changed.until = original.until
+			state.items[gpin.Source.RecordID] = changed
+			if prepared.recheck(context.Background(), db, facts, state.now) == nil {
+				t.Fatal("changed current bytes reused prior authentication")
+			}
+			state.items[gpin.Source.RecordID] = original
+		})
+	}
+	for _, now := range []time.Time{g.NotBefore.Add(-time.Nanosecond), prepared.ValidUntil(), prepared.ValidUntil().Add(time.Second)} {
+		if prepared.recheck(context.Background(), db, facts, now) == nil {
+			t.Fatal("current time escaped original capability interval", now)
+		}
+	}
+	t.Run("signed year zero rejects zero clock", func(t *testing.T) {
+		ancient := g
+		ancient.NotBefore = time.Date(0, time.January, 1, 0, 0, 0, 0, time.UTC)
+		state.items[gpin.Source.RecordID] = signCapabilityFixture(t, ancient, gkey)
+		defer func() { state.items[gpin.Source.RecordID] = original }()
+		current, err := p.prepareOperation(context.Background(), b, kms.Generate)
+		if err != nil || current.recheck(context.Background(), db, facts, state.now) != nil {
+			t.Fatal("legitimate signed original record rejected", err)
+		}
+		if current.recheck(context.Background(), db, facts, time.Time{}) == nil {
+			t.Fatal("zero clock accepted for signed nonzero year-zero NotBefore")
+		}
+	})
 	e := state.items[gpin.Source.RecordID]
 	e.until = e.until.Add(time.Second)
 	state.items[gpin.Source.RecordID] = e

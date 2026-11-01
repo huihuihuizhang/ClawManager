@@ -512,3 +512,37 @@
 - D5.46新174原顺序无overlay任务`sbk_af10aeac-3f6e-44a5-b81b-849c18304767`仍FAIL96.37s/package99.615s：SQL开流原剩27.424秒，localAuthorize697次/609.5463ms，stream27.297秒后拒绝，failed Record=ok。原30秒窗口未解决，未到validating。
 - 初始snapshot仍依原顺序取得engine/application/runtime、maintenance、installation、active config与task原锁，原task/config字节检查保持。仅在原application及metadata gate都held、status capturing的backup分支，把其后的原config历史、latest/current attempt、cancel与同一task维护owner/fence五份共享事实读取合为一条FOR SHARE；值/版本/完整config/取消/lease/hold全部验证，事实交付后独立SQL UTC时钟再查。其他状态、preflight/recovery路径不改；每处current调用/owner/Stage/EOF及固定期限不减少。
 - 真实signed owner grant、原分条forward对照、原三mTLS/18facts/input变化、旧held四期限与cache反例组合package29.697s PASS。新增仅延迟该新共享事实行交付2.5秒、原claim/task/gate/hold各2秒真实SQL界限的四反例，原Bind均拒绝，PASS10.82s/package14.035s。完整controller9.380s/execution8.566s PASS。同步监督7079d230后下一轮原174/default30完整任务继续；本项不代表D owner complete或A发布成功。
+
+### D5.47 后续：取消和最新attempt的真实SQL隔离
+
+- 在D专用63507真实MySQL窄fixture中，独立admin插入并确认affected=1及SELECT读回：同任务pending/running cancel拒绝，已完成cancel和其他任务pending cancel允许；同任务较新capture attempt拒绝，其他任务较新attempt允许。每例均实际Bind与Recheck，事务rollback后才清理插入行。六例PASS0.88s/package4.127s；不把窄fixture当完整原DDL/备份任务验收。
+- D5.47新174原顺序无overlay任务`sbk_96ccfed1-f311-42b3-81b1-030d31792cf8`仍FAIL96.73s/package99.984s：SQL开流剩27.23256秒，799次本地SourceAuthorize累计680.5178ms，stream27.1131秒后拒绝，原failed Record=ok。799是本地调用数，不能除以完整domain回调437当完成比例；尚未进入validating或完成A发布。监督已审查8c01075f并推送backup 975d2cec，独立当前事实/期限回归及初始Bind字段等价通过，每RPC少16查询。
+
+## D5.48 相同已认证能力字节复用，当前证据仍逐次锁定读取
+
+- `faadd9b8`只改三个能力文件。Prepare继续认证完整原签名文档；私有prepared对象在每次Recheck仍实际FOR SHARE读取原证据，核验system owner/installation、capability_snapshot、inline/healthy/none、完整SHA256/size与8192上限，要求当前raw及原expires_at逐字节/时间相同，并检查原database/installation/NotBefore/最短until。仅移除相同字节的再次JSON解析/签名/DeepEqual，无跨请求授权缓存、无权限读取跳过。
+- 监督指出候选入口遗漏原authenticate的显式now.IsZero拒绝：合法签名NotBefore可为非零year0000，零时钟不一定Before它。原基线PASS3.472s/旧候选FAIL3.086s；现已补回显式拒绝，repo包含原签名year0000健康正向与零时钟拒绝。监督独立修复探针PASS3.060s/签名变更组合3.069s。
+- 增加签名revoked/revision/破坏envelope、原时间上下边界反例；实际D63507 MySQL逐一变更owner type/id、evidence type、storage、health、encryption、expiry延长/缩短，affected=1且独立SELECT确认后旧prepared均拒绝；签名撤销同样确认实际raw/hash/size变更且旧prepared拒绝。最终真实SQL/签名定向package3.406s、原mTLS/consumer两组12.532s PASS；此前适配器全包在支持本地TLS/文件身份的执行环境5.103s PASS。普通沙箱的原Generate文件委派与S3 census失败不混作生产回归，监督同条件旧基线也复现。
+- `.tools/d-prepared-capability-benchmark_test.go`仅诊断：同一元数据driver完整当前证据读，旧重复认证219071ns/op、168198B/op、848alloc；当前7821ns/op、6736B/op、27alloc，package5.566s。不能将微基准当完整备份通过。
+- 原顺序、全量数据、默认期限的日志/CPU透明诊断任务`sbk_adad8c33-e660-43f9-88f1-f53937114a40`仍FAIL98.50s/package102.330s，source-open剩26.8636168s，domain437范围内实际完成386次回调、本地773次Authorize/691.8219ms，stream26.7400574s后拒绝，原failed Record=ok；尚无validating。日志/CPU profile位于`.tools/d-current-capability-cost.*`，持续plan cache hit，单请求132成功SELECT+3DML、事务计数另算。Stage通常58增量SELECT，collectors19；CPU样本Stage5.86s、PinnedExecutionIdentity.current5.09s（包含文件read3.93s），这些累计值重叠、且profiling增加成本，不能与无overlay延迟直接对比。后续优先Stage三次current/rebind路径实际测量，不延长原窗口或删减row/EOF。
+
+## D5.49 原provider拒绝负任务增加实际背景写入与恢复证明
+
+- 原公开HTTP/原Prepare、SavePlan、reTake任务`sbk_e0e24ecb-5295-44f1-ae92-ad9900e17a8d`，无overlay、当时HEAD真实build commit及174迁移，显式Generate拒绝的独立负测试PASS29.09s/package32.373s（`.tools/d-provider-denied-strong-background.log`）。该失败任务没有被转为成功：断言实际denied=1、Generate/Unwrap=0，candidate/result和C/envelope不存在，原Store.Record(Err)到failed并释放claim。
+- 背景SQL使用原AcquireMutation/WriteWithLease/ReleaseMutation gate，另两协程实际写Pro7 sessions及Team20 artifacts文件；三个writer先各有至少两次成功写入。原模型进程终止ACK前停止并join物理文件writer；每次原Job dispatch要求2文件哈希、SQL progress和三个计数的非空held观察保持。原Resume后要求三个进程都运行、计数均超过held前值，且确实观察过application gate拒绝写入。原停止屏障/7运行且9仍停止/仅一次Pro重建等既有负例断言保留。
+- 控制调用使用原service完整controlHandler（保留CE/relay等原路由），不再用trace handler替代。完整TLS fixture只镜像实际metadata constructor的InterpolateParams flag；原TTL/heartbeat、所有源数据和权限边界保持。流日志明确是localAuthorize次数与耗时，不拿它除以437估计domain完成比例。此有限提交不包含未成功的正向wrapper、validating延续hook或正向成功声明；仍为本地代码调用证据，不是生产kubelet/PVC认证。
+
+## D5.50 Stage复用同一原事务已持锁guard，仍完整当前重查
+
+- PublicJobOwner的StageOriginal仅接受同一原context/tx、完整Authority、DB指针、installation/application scope/enabled及同一个可比较Authorization对象；不同但字段相同的可变owner也拒绝。Stage入口以原guard执行完整RecheckOriginal（当前owner/grant/profile/effective、完整held事实、独立SQL UTC和原first期限），替代再次初始Bind/重新取得同样锁；随后所有原registry Bind、三次current/capability/mapping/grant回调、原DEK/nonce、末尾UTC和最终public guard/collectors均保留。独立Stage入口保持原Bind路径。StageOriginal任何失败都Invalidate原共享latch，不能由早期校验失败继续提交。
+- ctx/tx/input/DB/installation/scope/enabled/相同字段不同owner身份八反例与健康当前回调/SQL读取，以及八事实漂移unit均通过；监督发现首版owneridentity测试的回调赋值使两边内容不等，已修为该case不加回调，监督独立PASS3.089s。此为模型driver，不替代真实SQL。
+- 原mTLS fixture在原Bind后由同一实际事务变更20项字段，affected=1且独立SELECT确认，旧Stage与新StageOriginal健康都通过；四种SQL到期均拒绝。部分version/lease延长旧Stage内部新Bind可通过、新原guard拒绝；旧public最终guard本来也会拒绝，不能称Stage内部决定全部相同。另在明确核验私有schema/账号身份后仅授该窄fixture两表INSERT，用同一事务新增latest attempt/pending与running cancel，两路径均拒绝，permit/reference/binding/coverage数量及epoch不变，原失败latch保持。不是生产角色/完整DDL准入验收。
+- 首版比较错误地在原NewDeliveredCaptureKeyJob已经真实key-check、引用进入unknown后重放key-reserve，旧健康也拒绝，FAIL6.756s；拒绝site定位RetainPlanned。改为先独立SELECT确认原unknown，再用当前合法key-check，不改引用/门控/nonce/许可，PASS6.696s。后续三mTLS/consumer/当前事实/四SQL期限/最新attempt及cancel/真实owner grant与事实行交付延迟期限组合PASS41.524s。
+- 新独立issuer-expiry模式在新fixture签名冻结前将issuer设为8秒（其他原窗口不变），实际构造器/SQL保留原lease+签名until，健康business guard更长，等待原until自然到期并以SQL UTC确认；旧Stage和StageOriginal均拒绝，无新增permit/reference/epoch、provider Generate/login均0且原guard不能复活。PASS8.94s/package12.163s。三包全量（本地TLS/文件身份可用、未启实际MySQL环境变量）controller9.812s/kekadapter5.182s/execution8.764s PASS。
+- 同源透明native参数RPC对照17次key-check：原Stage 151/149次SQL调用→145/143（少6，含事务），中位43.2154→40.9483ms，均值43.6718→40.7010ms；package6.937/6.133s均PASS。日志`.tools/d-stage-original-native-{baseline,current}.log`，仅诊断，不称完整六项通过。原174/default30/原顺序无overlay正向仍待新任务验证；A发布未验收。
+
+## D5.51 背景held观察补充单调计数与首次恢复前采样
+
+- D5.49的单Job拒绝任务只有一次Job-dispatch held基线，不能单凭32.373s负例宣称整个held期间SQL始终稳定。现在每个后续held观察除实际SQL progress与两文件哈希外，还要求三个成功写单调counter精确等于首个baseline；原所有worker实际停止及SQL stop barrier之后、首个Source Resume之前再次检查。第二个writer恢复时已有第一个writer运行，按原resumeChecks只在首次恢复前取全静止样本。checkResumed要求至少两次held观察。
+- 新独立观察反例先在尚未取得capture gate的私有fixture实际运行原三个writer，各自成功至少两次，再停止并取得健康观察；随后真实启动Pro文件writer完成一次写入、停止，确认实际文件内容和成功counter均改变，再恢复原文件字节模拟ABA。下一次checkHeld必须因真实成功counter变化拒绝，没有手改counter、backup状态、门控、许可、nonce或receipt。该测试不声明自己进入原held capture，也不是同任务正向验收。
+- 原实际writer ABA反例PASS15.42s；加强后的原provider拒绝新174任务`sbk_1ebd5531-29b0-4a37-86e9-c3d56735808f`PASS29.21s，两测试合包47.899s（`.tools/d-background-monotonic-and-denial.log`）。该原负任务仍由failed Record收敛，非成功任务。背景进度/文件内容因实际写入变化，后续恢复验收应比较实际held快照，不对照启动前写死值，也不缩减数据范围。

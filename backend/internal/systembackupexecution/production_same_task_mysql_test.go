@@ -77,6 +77,7 @@ type dOriginalSixPartTask struct {
 	provider                                *dOriginalProvider
 	resourceSources                         map[string]worker.ResourceSourceMount
 	workers                                 *dOriginalWorkers
+	background                              *dOriginalBackground
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
@@ -353,6 +354,8 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 		}
 	}
 	connection.User, connection.Passwd = user, pass
+	// Match the dedicated public metadata constructor's driver transport.
+	connection.InterpolateParams = true
 	f.control, err = sql.Open("mysql", connection.FormatDSN())
 	connection.Passwd = ""
 	pass = ""
@@ -671,6 +674,9 @@ func runDOriginalSixPartCapture(t *testing.T, denyGenerate, completeCapture bool
 	defer cancel()
 	stopCapacity := f.startLocalCapacityInput(ctx, t)
 	defer stopCapacity()
+	if completeCapture {
+		f.startOriginalBackground(ctx, t)
+	}
 	store := c.SQLExecutionWorkStore{Queue: f.queue}
 	if err := store.RunWithExecutionHeartbeat(ctx, f.input.Authority, func(active context.Context) error {
 		f.checkOriginalMetadataSources(active, t)
