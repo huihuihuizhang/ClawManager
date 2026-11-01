@@ -28,6 +28,7 @@ type publicationCaptureFiles struct {
 	verifier       *a.PublisherVerifier
 	until          time.Time
 	domainVerified bool
+	counts         ownedPayloadCounts
 	controlPlain   []byte
 }
 
@@ -40,6 +41,7 @@ func (p *publicationCaptureFiles) Close() {
 	p.envelope = nil
 	clear(p.controlPlain)
 	p.controlPlain = nil
+	p.counts = ownedPayloadCounts{}
 	if p.verifier != nil {
 		p.verifier.Close()
 		p.verifier = nil
@@ -107,7 +109,7 @@ func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, cla
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
 	verified, err := w.InspectWrappedStream(bounded, spec, envelope, files.Ciphertext, bound, func(plaintext io.Reader) error {
 		if i.Request.ControlEvidence == nil {
-			if err := inspectOwnedBusinessPayload(bounded, i, original.Candidate, plaintext); err != nil {
+			if err := inspectOwnedBusinessPayloadCounts(bounded, i, original.Candidate, plaintext, &p.counts); err != nil {
 				return err
 			}
 			p.domainVerified = true
