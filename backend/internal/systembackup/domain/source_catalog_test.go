@@ -33,7 +33,7 @@ func memoryCatalogAggregate(tables []Table, statement string) (driver.Rows, erro
 				items = append(items, sourceCatalogItem{Table: table.Name, Name: key.Column, Constraint: "fk", Position: index + 1, ReferenceTable: &refTable, ReferenceColumn: &refColumn})
 			}
 		case sourceCatalogUnique:
-			if table.Name != "workbuddy_linux_identities" && table.Name != "workbuddy_linux_identity_allocator" {
+			if !requiresUniqueCatalog(table.Name) {
 				continue
 			}
 			for _, key := range table.UniqueKeys {

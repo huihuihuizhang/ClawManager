@@ -1,0 +1,12 @@
+{
+  "parent_commit": "a5fed25c84f55c5a262dc5e0f3d35c9d0975c4b1",
+  "scope": "owner uniqueness metadata prerequisite; no owner table restoration policy enabled",
+  "external_mysql_tests_run": false,
+  "source_sha256": {
+    "backend/internal/systembackup/domain/owner_schema.go": "b732bd12251f065389b99a7d320a8896961c3f5534cef6e867e37b7500799588",
+    "backend/internal/systembackup/domain/owner_schema_test.go": "272c07bf834c370748009b14805cf686c19896e8e4629b0e2036bf055b064402",
+    "backend/internal/systembackup/domain/mysql.go": "e097083e61939b3ad101fd19d97d6b4d3d7c6a4d24ebc193d684343be1a1e74b",
+    "backend/internal/systembackup/domain/source_catalog.go": "70ed5436fe3ce0e1cb944cab54de1c9bfa756fac29939232451551cd11079c16",
+    "backend/internal/systembackup/domain/source_catalog_test.go": "646d2f01551dfe0d9e3f8db2eb474e038536885c55b056b844a8cd454a6baa2d"
+  }
+}

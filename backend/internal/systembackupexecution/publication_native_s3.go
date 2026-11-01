@@ -28,25 +28,27 @@ var errPublicationConflict = errors.New("native publication immutable object con
 // transport mapping, not task/claim/append authorization or a readiness proof.
 // The production publication pass supplies the original journal's exact scope.
 type PublicationTargetMaterials struct {
-	Version               string `json:"schema_version"`
-	InstallationID        string `json:"installation_id"`
-	Endpoint              string `json:"endpoint"`
-	Region                string `json:"region"`
-	Bucket                string `json:"bucket"`
-	Root                  string `json:"root"`
-	RemoteStagingRoot     string `json:"remote_staging_root,omitempty"`
-	ReadIdentityHash      string `json:"read_identity_hash"`
-	ReadRefVersion        string `json:"read_ref_version"`
-	WriteIdentityHash     string `json:"write_identity_hash"`
-	WriteRefVersion       string `json:"write_ref_version"`
-	CAIdentityHash        string `json:"ca_identity_hash"`
-	CARefVersion          string `json:"ca_ref_version"`
-	CAFile                string `json:"ca_file"`
-	CASHA256              string `json:"ca_sha256"`
-	ReadCredentialFile    string `json:"read_credential_file"`
-	ReadCredentialSHA256  string `json:"read_credential_sha256"`
-	WriteCredentialFile   string `json:"write_credential_file"`
-	WriteCredentialSHA256 string `json:"write_credential_sha256"`
+	Version                string `json:"schema_version"`
+	InstallationID         string `json:"installation_id"`
+	Endpoint               string `json:"endpoint"`
+	Region                 string `json:"region"`
+	Bucket                 string `json:"bucket"`
+	Root                   string `json:"root"`
+	RemoteStagingRoot      string `json:"remote_staging_root,omitempty"`
+	ReadIdentityHash       string `json:"read_identity_hash"`
+	ReadRefVersion         string `json:"read_ref_version"`
+	WriteIdentityHash      string `json:"write_identity_hash"`
+	WriteRefVersion        string `json:"write_ref_version"`
+	CAIdentityHash         string `json:"ca_identity_hash"`
+	CARefVersion           string `json:"ca_ref_version"`
+	CAFile                 string `json:"ca_file"`
+	CASHA256               string `json:"ca_sha256"`
+	ReadCredentialFile     string `json:"read_credential_file"`
+	ReadCredentialSHA256   string `json:"read_credential_sha256"`
+	WriteCredentialFile    string `json:"write_credential_file"`
+	WriteCredentialSHA256  string `json:"write_credential_sha256"`
+	CatalogMaterialsFile   string `json:"catalog_materials_file,omitempty"`
+	CatalogMaterialsSHA256 string `json:"catalog_materials_sha256,omitempty"`
 }
 
 const publicationTargetVersion = "system-backup-native-publication-s3.v1"
@@ -70,9 +72,15 @@ type nativePublicationS3 struct {
 	client         *http.Client
 	readOnly       bool
 	maxObjectBytes int64
+	catalog        *PublicationCatalogMaterials
 }
 
 func (p PublicationTargetMaterials) validate() error {
+	if p.CatalogMaterialsFile != "" || p.CatalogMaterialsSHA256 != "" {
+		if !filepath.IsAbs(p.CatalogMaterialsFile) || filepath.Clean(p.CatalogMaterialsFile) != p.CatalogMaterialsFile || !formalCandidateDigest(p.CatalogMaterialsSHA256) {
+			return errPublicationUnavailable
+		}
+	}
 	if p.RemoteStagingRoot != "" && (!strings.HasSuffix(p.RemoteStagingRoot, "/") || !safePublicationKey(strings.TrimSuffix(p.RemoteStagingRoot, "/")) || strings.HasPrefix(p.RemoteStagingRoot, p.Root) || strings.HasPrefix(p.Root, p.RemoteStagingRoot)) {
 		return errPublicationUnavailable
 	}

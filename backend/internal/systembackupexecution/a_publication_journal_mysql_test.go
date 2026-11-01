@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	security "clawreef/internal/systembackupsecurity"
 )
@@ -117,6 +116,14 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 	if json.Unmarshal(example.Request.Config, &values) != nil {
 		t.Fatal("config values")
 	}
+	// Original purpose refs are frozen before capture. Do not synthesize
+	// catalog identities from current columns or replace the admitted body.
+	var sourceRefs struct {
+		References []security.BootstrapSecretRef `json:"references"`
+	}
+	if json.Unmarshal(config, &sourceRefs) == nil && len(sourceRefs.References) > 0 {
+		values.References = sourceRefs.References
+	}
 	values.Capacity["control_metadata_capacity_bytes"] = json.Number(strconv.FormatInt(originalCapacity, 10))
 	columns := []string{"origin_installation_id", "version", "config_sha256", "config_size_bytes", "enabled", "alert_profile", "minimum_recovery_points", "created_by"}
 	args := []any{h.original.InstallationID, 1, hash(config), len(config), true, values.Alert, values.Minimum.String(), "system:controller"}
@@ -193,13 +200,8 @@ func aUseActualPublicationDDL(t *testing.T, x *aPublisherVerifierFixture, target
 }
 
 func TestAPublicationOriginalJournalRealDDLAndLostAcknowledgements(t *testing.T) {
-	x := newAPublisherVerifierFixture(t, true)
-	aStartPublisherVerifierSamePod(t, x)
+	x, store, state := newAOriginalPublicationService(t)
 	h := x.history
-	store, state := newANativePublicationStore(t, time.Minute)
-	store.config.InstallationID = h.original.InstallationID
-	store.config.Root = h.original.InstallationID + "/"
-	aUseActualPublicationDDL(t, x, store.config)
 	ctx := context.Background()
 	access, err := h.service.publicationAccess(ctx, h.token, h.original.AttemptNo)
 	if err != nil {
@@ -250,39 +252,13 @@ func TestAPublicationOriginalJournalRealDDLAndLostAcknowledgements(t *testing.T)
 func newAOriginalPublicationService(t *testing.T) (*aPublisherVerifierFixture, *nativePublicationS3, *aNativePublicationServer) {
 	t.Helper()
 	store, state := newANativePublicationStore(t, time.Minute)
-	// Full original ConfigValues JSON is frozen BEFORE capture/authority/key
-	// creation, matching the real 097 capacity values below. Never replace an
-	// already admitted snapshot/hash to make a new validation check pass.
-	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "contracts", "system-backup", "v12", "admin-control-redacted-examples.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var example struct {
-		Request struct {
-			Config map[string]json.RawMessage `json:"config"`
-		} `json:"config_update_request"`
-	}
-	if json.Unmarshal(raw, &example) != nil || len(example.Request.Config) == 0 {
-		t.Fatal("full original config fixture unavailable")
-	}
-	var capacity map[string]json.RawMessage
-	if json.Unmarshal(example.Request.Config["capacity"], &capacity) != nil {
-		t.Fatal("full original capacity fixture unavailable")
-	}
-	capacity["control_metadata_capacity_bytes"] = json.RawMessage(strconv.FormatInt(1<<30, 10))
-	capacityRaw, err := ce.Canonical(capacity)
-	if err != nil {
-		t.Fatal(err)
-	}
-	example.Request.Config["capacity"] = capacityRaw
-	example.Request.Config["enabled"] = json.RawMessage("true")
-	snapshot, err := ce.Canonical(example.Request.Config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	snapshot := publicationOriginalFixtureConfig(t, store.config, nil)
 	x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config, ConfigSnapshot: snapshot})
 	aStartPublisherVerifierSamePod(t, x)
 	aUseActualPublicationDDL(t, x, store.config)
+	// Production DDL setup can outlive the model report's five-second sample.
+	// Sample this named capacity boundary again; no authority/claim is renewed.
+	aRefreshPublicationPayloadCapacity(t, x)
 	return x, store, state
 }
 

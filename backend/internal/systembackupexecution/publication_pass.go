@@ -79,12 +79,20 @@ func (d *DeploymentService) RunPublicationPass(ctx context.Context) (resultErr e
 	if err != nil {
 		return err
 	}
-	if err = d.checkPublicationTargetTx(ctx, tx, guard.Facts(), store.config); err != nil {
-		return err
-	}
 	action, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND state IN ('request_sent','provider_unreachable') ORDER BY id LIMIT 1 FOR SHARE", d.Config.InstallationID, backup))
 	if err != nil || guard.RecheckTx(ctx, tx) != nil {
 		return errPublicationUnavailable
+	}
+	if action.Kind == "catalog_registration_append" {
+		catalog, err := d.catalogStore(ctx)
+		if err != nil {
+			return err
+		}
+		defer catalog.Close()
+		store = catalog
+	}
+	if err := d.checkPublicationActionTargetTx(ctx, tx, guard.Facts(), store.config, action.Kind); err != nil {
+		return err
 	}
 	originalIntent := publicationJSONIntent{Kind: action.Kind, Key: action.Key, Payload: action.Payload, Deadline: action.Deadline}
 	if originalIntent.validate(store.config) != nil || action.ActionKey != publicationActionKey(backup, attempt, action.Kind) || action.LogicalSHA != publicationLogicalHash(d.Config.InstallationID, backup, attempt, originalIntent) {
@@ -97,7 +105,7 @@ func (d *DeploymentService) RunPublicationPass(ctx context.Context) (resultErr e
 	if access.Check(ctx) != nil {
 		return c.ErrClaimLost
 	}
-	currentStore, err := d.publicationStore(ctx)
+	currentStore, err := d.publicationStoreForAction(ctx, action.Kind)
 	if err != nil {
 		return err
 	}

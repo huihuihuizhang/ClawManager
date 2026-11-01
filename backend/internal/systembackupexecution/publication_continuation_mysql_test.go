@@ -3,11 +3,13 @@ package systembackupexecution
 import (
 	"context"
 	"errors"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	c "clawreef/internal/systembackupcontroller"
+	security "clawreef/internal/systembackupsecurity"
 )
 
 // Actual native SQL/locally signed HTTPS immutable-object protocol. Payloads
@@ -18,6 +20,25 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 			x, store, state := newAOriginalPublicationService(t)
 			h := x.history
 			ctx := context.Background()
+			logCapacityAge := func(label string) {
+				t.Helper()
+				raw, err := os.ReadFile(h.service.Config.CapacityFile)
+				if err != nil {
+					t.Fatal(err)
+				}
+				report, err := security.ParseCapacityReport(raw)
+				var now time.Time
+				if err != nil || h.admin.QueryRow("SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil {
+					t.Fatal("capacity diagnostic sample", err)
+				}
+				t.Log(label, "original capacity sample age", now.Sub(report.ObservedAt))
+			}
+			logCapacityAge("before first action")
+			defer func() {
+				if t.Failed() {
+					logCapacityAge("at failure")
+				}
+			}()
 			intent := func(kind string) publicationJSONIntent {
 				suffix := map[string]string{"manifest_put": "manifest.json", "marker_put": "_COMMITTED", "acceptance_put": "_ACCEPTANCE", "catalog_registration_append": "catalog/registration.json"}[kind]
 				return publicationJSONIntent{Kind: kind, Key: store.config.Root + h.original.TaskPublicID + "/" + strconv.FormatUint(h.original.AttemptNo, 10) + "/" + suffix, Payload: []byte(`{"local":"original continuation protocol DATA"}`), Deadline: time.Now().Add(8 * time.Second)}
@@ -44,10 +65,14 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 				t.Fatal(err)
 			}
 			if mode == "finalization-required" {
-				for _, kind := range publicationContinuationOrder[1:] {
+				for _, kind := range publicationContinuationOrder[1:3] {
+					aRefreshPublicationPayloadCapacity(t, x)
 					if _, err := h.service.publishOriginalJSON(ctx, h.token, h.original.AttemptNo, store, intent(kind)); err != nil {
 						t.Fatal(err)
 					}
+				}
+				if _, err := h.service.publishOriginalJSON(ctx, h.token, h.original.AttemptNo, store, intent("catalog_registration_append")); !errors.Is(err, ErrPublicationCatalogUnavailable) {
+					t.Fatal("artifact writer was treated as catalog append authority", err)
 				}
 			}
 			release(h.token)
@@ -99,7 +124,7 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 				}
 				var status string
 				var usable bool
-				if err := h.admin.QueryRow(`SELECT status,artifact_usable FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&status, &usable); err != nil || status != "publishing" || usable || state.puts != 4 {
+				if err := h.admin.QueryRow(`SELECT status,artifact_usable FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&status, &usable); err != nil || status != "publishing" || usable || state.puts != 3 {
 					t.Fatal("premature success", status, usable, state.puts, err)
 				}
 				return
@@ -164,6 +189,7 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 					}
 				}
 				state.mu.Unlock()
+				aRefreshPublicationPayloadCapacity(t, x)
 				published, closed := make(chan error, 1), make(chan error, 2)
 				go func() { _, err := p.publishNext(ctx, store, intent("marker_put")); published <- err }()
 				select {
@@ -199,6 +225,7 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 				state.getUnavailable = true
 				state.mu.Unlock()
 			}
+			aRefreshPublicationPayloadCapacity(t, x)
 			object, err := p.publishNext(ctx, store, intent("marker_put"))
 			if mode == "next-readback-failure" {
 				if err == nil || object.receipt != nil || state.puts != 2 {

@@ -23,6 +23,7 @@ func northboundNormalizeFixture() restoreNorthboundInput {
 	row["external_node_port"] = fieldString("30100")
 	row["version"] = fieldString("77")
 	row["updated_by"] = fieldString("7")
+	row["owner_team_creation_user_id"] = fieldString("7")
 	row["require_explicit_callers"] = fieldString("0")
 	row["created_at"] = fieldString("2026-10-22 01:02:03.000001")
 	row["updated_at"] = fieldString("2026-10-22 01:02:03.000002")
@@ -41,7 +42,7 @@ func TestNormalizeRestoreNorthboundCompleteClosedCandidate(t *testing.T) {
 		t.Fatal(err)
 	}
 	row := got.Table.Rows[0]
-	if len(row) != 33 || !reflect.DeepEqual(got.Table.Columns, i.Source.Columns) || *row["api_enabled"] != "0" || *row["require_explicit_callers"] != "1" || *row["version"] != "6" || *row["external_node_port"] != "30200" || *row["updated_by"] != "17" || *got.SourceVersion != 77 || *got.ObservedTargetVersion != 5 {
+	if len(row) != 35 || !reflect.DeepEqual(got.Table.Columns, i.Source.Columns) || *row["api_enabled"] != "0" || *row["require_explicit_callers"] != "1" || *row["version"] != "6" || *row["external_node_port"] != "30200" || *row["updated_by"] != "17" || *row["owner_teams_enabled"] != "0" || *row["owner_team_creation_user_id"] != "17" || *got.SourceVersion != 77 || *got.ObservedTargetVersion != 5 {
 		t.Fatal("incomplete/misbound candidate")
 	}
 	if *row["allowed_lite_types"] != i.Policy.ProjectedLiteTypesJSON || *row["lite_cpu_cores"] != "0.10" {
@@ -169,7 +170,7 @@ func TestNormalizeRestoreNorthboundEmptyCapacityAndCancellation(t *testing.T) {
 	i := northboundNormalizeFixture()
 	i.Source.Rows = nil
 	got, err := normalizeRestoreNorthbound(context.Background(), i)
-	if err != nil || len(got.Table.Rows) != 0 || len(got.Table.Columns) != 33 || got.SourceVersion != nil {
+	if err != nil || len(got.Table.Rows) != 0 || len(got.Table.Columns) != 35 || got.SourceVersion != nil {
 		t.Fatal("empty source created defaults")
 	}
 	i = northboundNormalizeFixture()

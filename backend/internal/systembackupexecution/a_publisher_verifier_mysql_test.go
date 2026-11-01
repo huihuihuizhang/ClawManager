@@ -55,20 +55,21 @@ type aPublisherVerifierFixture struct {
 }
 
 type aPublisherVerifierFixtureOptions struct {
-	FullService             bool
-	SourceBytes             int
-	CapabilityWindow        time.Duration
-	PublicationTarget       *PublicationTargetMaterials
-	ControlEvidence         bool
-	ControlURL              string
-	ControlRequestedParts   []string
-	ConfigSnapshot          []byte
-	WrapControlConnector    func(driver.Connector) driver.Connector
-	WorkerIssuer            *control.IdentityIssuer
-	ConfigureExecutionGrant func(*c.ExecutionGrant)
-	AttemptNo               uint64
-	PublicationWorker       *PublicationWorkerReference
-	ObserveControlDSN       func(string)
+	FullService              bool
+	SourceBytes              int
+	CapabilityWindow         time.Duration
+	PublicationTarget        *PublicationTargetMaterials
+	ControlEvidence          bool
+	ControlURL               string
+	ControlRequestedParts    []string
+	ConfigSnapshot           []byte
+	WrapControlConnector     func(driver.Connector) driver.Connector
+	WorkerIssuer             *control.IdentityIssuer
+	ConfigureExecutionGrant  func(*c.ExecutionGrant)
+	AttemptNo                uint64
+	PublicationWorker        *PublicationWorkerReference
+	ObserveControlDSN        func(string)
+	PreparePublicationTarget func(*PublicationTargetMaterials)
 }
 
 func newAPublisherVerifierFixture(t *testing.T, fullService ...bool) *aPublisherVerifierFixture {
@@ -87,6 +88,17 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 	}
 	if serverUUID == "" {
 		t.Fatal("independent UUID required")
+	}
+	if len(fixture.ConfigSnapshot) == 0 && fixture.PublicationTarget != nil {
+		var catalog *PublicationCatalogMaterials
+		if fixture.PublicationTarget.CatalogMaterialsFile != "" {
+			m, err := loadPinnedPublicationCatalog(*fixture.PublicationTarget)
+			if err != nil {
+				t.Fatal(err)
+			}
+			catalog = &m
+		}
+		fixture.ConfigSnapshot = publicationOriginalFixtureConfig(t, *fixture.PublicationTarget, catalog)
 	}
 	x := &aPublisherVerifierFixture{}
 	var wk a.ControllerVerifierWorkload
@@ -231,6 +243,9 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 				if fixture.PublicationTarget != nil {
 					fixture.PublicationTarget.InstallationID = g.InstallationID
 					fixture.PublicationTarget.Root = g.InstallationID + "/"
+					if fixture.PreparePublicationTarget != nil {
+						fixture.PreparePublicationTarget(fixture.PublicationTarget)
+					}
 					cfg.PublicationTarget = &PublicationTargetReference{Protocol: publicationTargetVersion, Path: filepath.Join(dir, "publication-target.json")}
 					raw, _ := json.Marshal(fixture.PublicationTarget)
 					if os.WriteFile(cfg.PublicationTarget.Path, raw, 0600) != nil {

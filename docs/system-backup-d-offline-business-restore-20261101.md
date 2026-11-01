@@ -80,6 +80,15 @@ C 侧需要将真实 Teams 对象、共享文件和 Redis 历史恢复结果，�
 
 ## 下一批可以离线继续的工作
 
+已补齐两个已核对的原 normalizer 合同缺口（仍未据此放行十一表公共恢复）：
+
+- `NormalizeDataRow` 接受图像服务已存在的 `unknown` 终态并保留它；只将 preparing/running 转成 failed。目标 settled/analytics_recorded 按原去重放规则设 1，原 false 标记、charge/estimate、reservation、结果与 SQL NULL 仍保留在独立 `Change.Before`；不能用目标标记宣称原结算成功。五状态正向及未知状态拒绝见 `image-unknown-history-pass.txt`。
+- resources 私有 northbound 候选及读写闭合集合补齐 migration 077 的 `owner_teams_enabled/owner_team_creation_user_id`：目标开关关闭，零哨兵保留，正用户 ID 必须显式映射，非法/缺失映射拒绝。旧 33 列不再冒充当前 35 列；未来需要旧版迁移时必须增加具名版本适配。资源包默认离线全包测试通过，见 `resources-owner-team-schema-pass.txt`；需要外部 MySQL 的 opt-in 测试未运行，本项不证明生产事务或目标事实认证。
+
+十一表适配前置修复：普通 SQL catalog 与四批聚合源 catalog 原先只读取 WorkBuddy 的唯一索引。现在对十一表及 `northbound_operations` 显式读取唯一索引名称、列及顺序，纳入原 `SchemaDigest`；缺失/改名/换列/换序都会改变适配指纹。此前 WIP 中不带这些索引的指纹不能继续当作当前完整指纹。该变化不等于覆盖完整 schema：collation、CHECK、trigger 和非唯一索引仍由独立 schema census/目标观测认证。四包离线回归通过（`owner-unique-four-packages-pass.txt`），外部 MySQL opt-in 未运行；尚未为这十一表添加 preserve 放行。
+
+Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `APIKeysVersion`；version=nil 明确是旧 057 schema，current 066 读取器必须设置 version 指针（包括零），JSON=nil 此时才表示 SQL NULL。当前版本输出 disabled policy、`api_keys_json=[]`，保留版本作为历史值（不代表完成目标 CAS）；原文档及 NULL 留原输入/加密证据。缺版本、负版本、超限/畸形文档拒绝，公共 business normalizer 的冻结副本也复制新增指针，callback/调用者不能改变已冻结值。`caller-066-businessa-pass.txt` 是 A business 包默认离线全包通过；具名 proof fixture 只验证既有回调与冻结边界，不是生产 authority，实际 066 SQL 映射与公共 domain writer 尚需接线。
+
 以下是本地代码工作，不应全部推给现场：
 
 - 为上述 owner 表整理实际 schema、全列策略与既有 owner 私有 normalizer 的公共事务桥接，增加真实 migrations 非空测试。需要相应 owner 合同和目标语义的明确输入；不能用泛化 preserve 或假 proof 代替。

@@ -157,7 +157,7 @@ func catalogGuarded(ctx context.Context, original queryer, check func() error) (
 		if err != nil {
 			return nil, ErrDatabase
 		}
-		if t.Name == "workbuddy_linux_identities" || t.Name == "workbuddy_linux_identity_allocator" {
+		if requiresUniqueCatalog(t.Name) {
 			rows, err = q.QueryContext(ctx, `SELECT INDEX_NAME, COLUMN_NAME, SEQ_IN_INDEX, SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND NON_UNIQUE = 0 AND INDEX_NAME <> 'PRIMARY' ORDER BY INDEX_NAME, SEQ_IN_INDEX`, t.Name)
 			if err != nil {
 				return nil, ErrDatabase
