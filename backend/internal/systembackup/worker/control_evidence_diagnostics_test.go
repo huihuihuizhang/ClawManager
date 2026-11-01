@@ -25,7 +25,7 @@ func TestControlEvidenceRejectDiagnosticOmitsPrivateInput(t *testing.T) {
 	}
 	logControlEvidenceRejection("worker-formal-dek-before-callback", context.Background(), time.Now().Add(time.Second), time.Now(), false, false)
 	got := output.String()
-	if strings.Contains(got, secret) || !strings.Contains(got, "stage=worker-capture-input-current sentinel=ce_rejected") || !strings.Contains(got, "callback_entered=false callback_succeeded=false") {
+	if strings.Contains(got, secret) || !strings.Contains(got, "stage=worker-capture-input-current sentinel=ce_rejected") || !strings.Contains(got, "key_remaining_us=") || !strings.Contains(got, "context_remaining_us=") || !strings.Contains(got, "callback_entered=false callback_succeeded=false") {
 		t.Fatal("unsafe or missing fixed CE diagnostic fields")
 	}
 }

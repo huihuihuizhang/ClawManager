@@ -21,7 +21,7 @@ func loadFinalizedControlSourceSQL(ctx context.Context, tx *sql.Tx, seed ce.Capt
 	defer func() {
 		// First-time finalization probes this helper before creating its seal.
 		// The caller handles sql.ErrNoRows; it is not itself a rejected pull.
-		if resultErr != nil && !errors.Is(resultErr, sql.ErrNoRows) {
+		if resultErr != nil && !(stage == "controller-finalized-seal-checksum" && errors.Is(resultErr, sql.ErrNoRows)) {
 			until, _ := ctx.Deadline()
 			logOriginalControlEvidenceRejection(stage, ctx, until, started)
 		}

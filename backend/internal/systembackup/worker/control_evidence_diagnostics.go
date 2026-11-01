@@ -22,7 +22,13 @@ func logControlEvidenceRejection(stage string, ctx context.Context, until time.T
 		remaining = time.Until(until).Microseconds()
 	}
 	if len(callbackState) == 2 {
-		log.Printf("[system-backup-ce] stage=%s sentinel=ce_rejected context=%s remaining_us=%d elapsed_us=%d callback_entered=%t callback_succeeded=%t", stage, state, remaining, time.Since(started).Microseconds(), callbackState[0], callbackState[1])
+		contextRemaining, contextKnown := int64(0), false
+		if ctx != nil {
+			if deadline, ok := ctx.Deadline(); ok {
+				contextRemaining, contextKnown = time.Until(deadline).Microseconds(), true
+			}
+		}
+		log.Printf("[system-backup-ce] stage=%s sentinel=ce_rejected context=%s key_remaining_us=%d context_remaining_us=%d context_deadline_known=%t elapsed_us=%d callback_entered=%t callback_succeeded=%t", stage, state, remaining, contextRemaining, contextKnown, time.Since(started).Microseconds(), callbackState[0], callbackState[1])
 		return
 	}
 	log.Printf("[system-backup-ce] stage=%s sentinel=ce_rejected context=%s remaining_us=%d elapsed_us=%d", stage, state, remaining, time.Since(started).Microseconds())

@@ -61,5 +61,14 @@
   "source_ledger": {
     "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-native-stage-diagnostic-source-ledger.json",
     "sha256": "0e9316f987ec79775bb5329cc486303ed520a65a4e417a4b888a7af9b03a9d27"
+  },
+  "post_review_refinement": {
+    "missing_row": "Suppress only stage controller-finalized-seal-checksum with errors.Is(sql.ErrNoRows). Missing registered proof/chunk entries still log their rejected stage. No caller behavior changes.",
+    "formal_clock": "DEK failure log gets actual CaptureKeyJob.until; it records key_remaining_us separately from context_remaining_us/context_deadline_known. It never treats a task/source context deadline as the original key window.",
+    "privacy_regression_seconds": {
+      "worker": 2.918,
+      "execution": 3.248
+    },
+    "native_status": "Refined callback/precise-clock diagnostics not yet native run; dcb49756 remains the exact prior positive observation."
   }
 }
