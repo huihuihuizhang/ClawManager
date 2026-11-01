@@ -546,3 +546,10 @@
 - D5.49的单Job拒绝任务只有一次Job-dispatch held基线，不能单凭32.373s负例宣称整个held期间SQL始终稳定。现在每个后续held观察除实际SQL progress与两文件哈希外，还要求三个成功写单调counter精确等于首个baseline；原所有worker实际停止及SQL stop barrier之后、首个Source Resume之前再次检查。第二个writer恢复时已有第一个writer运行，按原resumeChecks只在首次恢复前取全静止样本。checkResumed要求至少两次held观察。
 - 新独立观察反例先在尚未取得capture gate的私有fixture实际运行原三个writer，各自成功至少两次，再停止并取得健康观察；随后真实启动Pro文件writer完成一次写入、停止，确认实际文件内容和成功counter均改变，再恢复原文件字节模拟ABA。下一次checkHeld必须因真实成功counter变化拒绝，没有手改counter、backup状态、门控、许可、nonce或receipt。该测试不声明自己进入原held capture，也不是同任务正向验收。
 - 原实际writer ABA反例PASS15.42s；加强后的原provider拒绝新174任务`sbk_1ebd5531-29b0-4a37-86e9-c3d56735808f`PASS29.21s，两测试合包47.899s（`.tools/d-background-monotonic-and-denial.log`）。该原负任务仍由failed Record收敛，非成功任务。背景进度/文件内容因实际写入变化，后续恢复验收应比较实际held快照，不对照启动前写死值，也不缩减数据范围。
+
+## D5.52 每次重开并核对完整当前grant文件，只复用原验签解释
+
+- D5.50/51同步backup975d2cec后，以8deabc9d真实build commit、原174迁移/默认30秒/原顺序/无overlay新任务`sbk_0e2fb80e-a202-4d69-867d-fde180dd5364`仍FAIL96.47s/package99.695s：SQL source-open原剩27.939337s，857次localAuthorize/740.8679ms，stream27.8258414s后provider_permission_denied；原failed Record=ok，没有validating。日志`.tools/d-same-task-174-stage-original.log`，857不除以437估计domain进度。
+- 原profile中PinnedExecutionIdentity.current累计5.09s，实际readExecutionFile3.93s，其余包括重复签名/解析。构造器仍完整decode/Ed25519/字段验证，并私有拥有有界65536字节原文副本；current每次仍同一路径os.Open/Stat规则/有界ReadAll/SHA256，再要求完整raw逐字节等于构造器认证的原文。删除/替换（包括同issuer合法重签续期/改purpose）仍拒绝；只消除相同字节的再次decode/verify。原grant本来已私有存储，所有SQL、current purpose/profile/effective、原time、每次key-file读取与digest及最终guard不变，无当前授权决定或DEK缓存。
+- 新签名文件回归覆盖删除、目录、空、超限、额外字节、破坏签名、合法新签renewal/purpose、原NotBefore/Until与当前installation/owner/config版本/hash；构造器public输入、调用方raw与DeploymentBinding返回Actions/RecordKeys/CaptureKeys破坏均不影响私有数据。原TaskCaptureKey实际文件撤销/密钥变化反例保留。真实文件微基准重复认证210756ns/op、11657B/58alloc；当前完整读/hash/byte-equal131630ns/op、3665B/12alloc，unit+bench package5.751s PASS；不替代原任务验收。
+- 实际D63507当前SQL/mTLS/四模式含原issuer自然到期、consumer/完整20字段及latest attempt/cancel、当前key/cipher/缓存污染反例、原claim/task/gate/hold/owner signed-grant真实延迟期限组合PASS50.804s。三包全量controller9.366s/kekadapter4.972s/execution8.216s PASS。后续必须重新以真实build创建原任务，无诊断overlay全六部分验证；当前未声称完整正向或A发布。
