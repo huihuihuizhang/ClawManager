@@ -76,6 +76,9 @@ type PreparedProviderPermitIssue struct {
 	grantProof         *authenticatedPermitIssuerGrant
 	capability         *sqlPreparedCapability
 	mapping            OriginalRecord
+	mappingRaw         []byte
+	mappingSignature   []byte
+	mappingIssuer      ed25519.PublicKey
 	planHash, specHash string
 	until              time.Time
 	id                 string
@@ -173,7 +176,7 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 		}
 	}
 	until = until.UTC().Truncate(time.Microsecond)
-	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, grantProof: grantProof, capability: capability, mapping: mapping, planHash: planHash, specHash: specHash, until: until, original: original}, nil
+	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, grantProof: grantProof, capability: capability, mapping: mapping, mappingRaw: bytes.Clone(mappingRaw), mappingSignature: bytes.Clone(mappingSig), mappingIssuer: bytes.Clone(i.cfg.InstallationIssuer), planHash: planHash, specHash: specHash, until: until, original: original}, nil
 }
 
 func (p *PreparedProviderPermitIssue) ValidUntil() time.Time {
@@ -402,8 +405,7 @@ func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, g
 	if err != nil {
 		return kms.ErrPermission
 	}
-	m, err := decodeOwnerRecord(raw, sig, p.issuer.cfg.InstallationIssuer)
-	if err != nil || !reflect.DeepEqual(m.Binding, p.mapping.Binding) || m.GenerateRevoked || now.Before(m.NotBefore) || !now.Before(m.Until) || m.Until.Before(p.until) {
+	if p.recheckMapping(raw, sig, now) != nil {
 		return kms.ErrPermission
 	}
 	for _, fact := range locked.Facts().Bindings {
@@ -412,6 +414,25 @@ func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, g
 		}
 	}
 	return kms.ErrPermission
+}
+
+// Every call is preceded by the original current FOR SHARE row read. Equal
+// authenticated data needs no second decode/signature check. A changed current
+// revision is fully authenticated as before, including legitimate renewals;
+// it never extends this prepared request's original minimum lifetime.
+func (p *PreparedProviderPermitIssue) recheckMapping(raw, sig []byte, now time.Time) error {
+	m := p.mapping
+	if len(p.mappingRaw) == 0 || !bytes.Equal(raw, p.mappingRaw) || !bytes.Equal(sig, p.mappingSignature) || !bytes.Equal(p.issuer.cfg.InstallationIssuer, p.mappingIssuer) {
+		var err error
+		m, err = decodeOwnerRecord(raw, sig, p.issuer.cfg.InstallationIssuer)
+		if err != nil {
+			return kms.ErrPermission
+		}
+	}
+	if !reflect.DeepEqual(m.Binding, p.mapping.Binding) || m.GenerateRevoked || now.Before(m.NotBefore) || !now.Before(m.Until) || m.Until.Before(p.until) {
+		return kms.ErrPermission
+	}
+	return nil
 }
 
 func (p *PreparedProviderPermitIssue) authenticateDelivery(raw []byte, checksum string, size uint64, expires time.Time, lease worker.KeyUseLease, now time.Time) (kms.DeliveredProviderPermit, error) {
