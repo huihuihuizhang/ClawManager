@@ -12,11 +12,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"clawreef/internal/buildinfo"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
 	a "clawreef/internal/systembackupkekadapter"
@@ -215,6 +217,12 @@ func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
 
 func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 	t.Helper()
+	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") != "" {
+		if !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(buildinfo.Commit) {
+			t.Fatal("original publication SQL test requires a real Git commit linked before capture with -ldflags -X clawreef/internal/buildinfo.Commit=<git HEAD>")
+		}
+		t.Log("original pre-capture linked build commit", buildinfo.Commit)
+	}
 	fixture := &aSameTaskCertificateMaterials{}
 	runDOriginalSixPartCaptureWithOptions(t, false, true, fixture.options(), func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
 		var version uint64

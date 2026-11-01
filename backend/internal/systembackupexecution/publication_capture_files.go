@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"time"
 
@@ -59,9 +60,16 @@ func (p *publicationCaptureFiles) check(ctx context.Context) error {
 // C bytes. Control parts remain bounded in-memory inputs for the paired final
 // source verification; neither individual part grants artifact acceptance.
 func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, claim c.ClaimToken, attempt uint64, part string) (out *publicationCaptureFiles, resultErr error) {
+	stage := "service readiness"
+	defer func() {
+		if resultErr != nil {
+			resultErr = fmt.Errorf("original publication files %s: %w", stage, resultErr)
+		}
+	}()
 	if s == nil || s.staging == nil || ctx == nil || ctx.Err() != nil {
 		return nil, c.ErrExecutionAuthority
 	}
+	stage = "current part verifier"
 	verifier, err := s.PublisherVerifierForPart(ctx, claim, attempt, part)
 	if err != nil {
 		return nil, err
@@ -74,39 +82,47 @@ func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, cla
 	}()
 	bounded, cancel := context.WithDeadline(ctx, p.until)
 	defer cancel()
+	stage = "original captured record"
 	record, err := verifier.CapturedRecord(bounded)
 	if err != nil {
 		return nil, err
 	}
+	stage = "original candidate"
 	var original FormalCandidateRecord
 	if decodeProviderDeploymentJSON(record.CandidateJSON, &original) != nil || hash(record.CandidateJSON) != record.CandidateSHA256 || !worker.ValidateFormalCaptureResult(record.Invocation, &original.Candidate) || record.Invocation.ProviderKey == nil || record.Invocation.FormalCapture == nil || record.Invocation.Request.Binding.Path != part {
 		return nil, c.ErrExecutionRecord
 	}
+	stage = "sealed file custody"
 	custody, err := staging.OpenSealCustody(s.staging)
 	if err != nil {
 		return nil, err
 	}
 	defer custody.Close()
+	stage = "original observed files"
 	files, observed, err := staging.OpenFormalObserved(bounded, custody, record.SealScope, original.Candidate.Ciphertext, original.Candidate.Envelope)
 	if err != nil {
 		return nil, err
 	}
 	p.files = files
+	stage = "original checkpoint"
 	var checkpoint b.Checkpoint
 	if json.Unmarshal(record.PartResult.Checkpoint, &checkpoint) != nil || checkpoint.SealedRef != observed.Reference() || checkpoint.ContentSHA256 != original.Candidate.Ciphertext.SHA256 {
 		return nil, c.ErrExecutionRecord
 	}
+	stage = "original envelope bytes"
 	envelope, err := io.ReadAll(io.LimitReader(files.Envelope, (32<<20)+1))
 	p.envelope = envelope
 	if err != nil || int64(len(envelope)) != original.Candidate.Envelope.Size || len(envelope) > 32<<20 || hash(envelope) != original.Candidate.Envelope.SHA256 {
 		return nil, c.ErrExecutionRecord
 	}
+	stage = "current envelope binding"
 	bound, err := verifier.ForEnvelope(bounded, envelope)
 	if err != nil {
 		return nil, err
 	}
 	i := record.Invocation
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
+	stage = "whole authenticated stream and payload"
 	verified, err := w.InspectWrappedStream(bounded, spec, envelope, files.Ciphertext, bound, func(plaintext io.Reader) error {
 		if i.Request.ControlEvidence == nil {
 			if err := inspectOwnedBusinessPayloadCounts(bounded, i, original.Candidate, plaintext, &p.counts); err != nil {
@@ -130,12 +146,14 @@ func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, cla
 	if err != nil {
 		return nil, err
 	}
+	stage = "stream totals and final authority"
 	if verified.CiphertextBytes() != original.Candidate.Ciphertext.Size || verified.CiphertextSHA256() != original.Candidate.Ciphertext.SHA256 || p.check(bounded) != nil {
 		return nil, c.ErrExecutionRecord
 	}
 	// Retain the SAME authenticated private file descriptors, not reopened
 	// mutable worker paths. Any upload must still hash bytes through EOF and
 	// independently GET the immutable remote version before it can be trusted.
+	stage = "retained file rewind"
 	if _, err = files.Ciphertext.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}

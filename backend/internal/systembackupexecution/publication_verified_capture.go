@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	ce "clawreef/internal/systembackupcontrolevidence"
@@ -84,12 +85,19 @@ func publicationRequestedPart(operation string) string {
 // encrypted plan. Every part then opens its own current publisher Unwrap and
 // complete inert reader. Explicit claim renewal happens only after closing the
 // previous verifier/files; no old object or DEK adopts the renewed claim.
-func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy) (publicationVerifiedCapture, error) {
+func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy) (out publicationVerifiedCapture, resultErr error) {
+	stage := "publisher binding"
+	defer func() {
+		if resultErr != nil {
+			resultErr = fmt.Errorf("original publication capture %s: %w", stage, resultErr)
+		}
+	}()
 	var zero publicationVerifiedCapture
 	if s == nil || claim == nil || policy.Validate() != nil || s.checkPublisherVerifierBinding(ctx) != nil || claim.Owner != s.PublisherOwner {
 		return zero, c.ErrExecutionAuthority
 	}
 	scope := security.PublisherCaptureScope{BackupPublicID: claim.Target.PublicID, Claim: security.SQLSigningClaim{ControllerOwner: claim.Owner, RowVersion: claim.RowVersion}, CaptureAttemptNo: attempt}
+	stage = "original part enumeration"
 	names, err := s.publisherVerifierFactory.CaptureParts(ctx, scope)
 	if err != nil {
 		return zero, err
@@ -111,6 +119,7 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 	indices := map[uint32]bool{}
 	requests := map[string]bool{}
 	for index, name := range names {
+		stage = fmt.Sprintf("part %d claim renewal", index)
 		if index != 0 {
 			fresh, err := (c.ClaimCoordinator{Executor: s.publisherVerifierDB, InstallationID: s.Config.InstallationID}).Renew(ctx, *claim, policy)
 			if err != nil {
@@ -118,12 +127,14 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			}
 			*claim = fresh
 		}
+		stage = fmt.Sprintf("part %d current files and payload", index)
 		part, err := s.openPublicationCaptureFiles(ctx, *claim, attempt, name)
 		if err != nil {
 			return zero, err
 		}
 		err = func() error {
 			defer part.Close()
+			stage = fmt.Sprintf("part %d original input consistency", index)
 			record, invocation := part.record, part.record.Invocation
 			input, err := json.Marshal(record.Input)
 			if err != nil || invocation.ProviderKey == nil || record.Input.CaptureAttemptNo != attempt || indices[invocation.Request.Binding.PartIndex] {
@@ -136,6 +147,7 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			} else if !bytes.Equal(input, originalInput) || record.Plan.SHA256 != result.PlanSHA256 || record.CaptureResultSHA256 != result.CaptureResultSHA256 || invocation.Request.Binding.CaptureContextHash != result.CaptureContextSHA256 {
 				return c.ErrExecutionRecord
 			}
+			stage = fmt.Sprintf("part %d invocation consistency", index)
 			invSHA, err := invocation.Hash()
 			if err != nil || invSHA != part.candidate.InvocationSHA256 {
 				return c.ErrExecutionRecord
@@ -144,6 +156,7 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			if err != nil {
 				return c.ErrExecutionRecord
 			}
+			stage = fmt.Sprintf("part %d control or business classification", index)
 			requested := publicationRequestedPart(invocation.Request.Operation)
 			if requested == "" {
 				seed := invocation.Request.ControlEvidence
@@ -174,12 +187,14 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			result.Parts = append(result.Parts, publicationVerifiedPart{Part: name, Category: record.PartResult.Category, Operation: invocation.Request.Operation, RequestedPart: requested, Index: invocation.Request.Binding.PartIndex, InvocationSHA256: invSHA, CandidateSHA256: record.CandidateSHA256, ResultSHA256: hash(resultRaw), CipherPath: cipherPath, EnvelopePath: envelopePath, CipherSHA256: part.stream.CiphertextSHA256(), EnvelopeSHA256: hash(part.envelope), CipherBytes: part.stream.CiphertextBytes(), EnvelopeBytes: int64(len(part.envelope)), ResultEvidenceIDs: append([]string{}, record.PartResult.EvidenceIDs...), Checkpoint: bytes.Clone(record.PartResult.Checkpoint)})
 			result.Parts[len(result.Parts)-1].ResultEvidenceRef = resultEvidenceCoordinates(record.Input.InstallationID, record.Input.TaskPublicID, record.Input.CaptureAttemptNo, "capture", record.Job, hash(resultRaw)).PublicID
 			result.Parts[len(result.Parts)-1].Counts = part.counts
+			stage = fmt.Sprintf("part %d final authority recheck", index)
 			return part.check(ctx)
 		}()
 		if err != nil {
 			return zero, err
 		}
 	}
+	stage = "six requested parts coverage"
 	if len(requests) != 6 || len(result.Input.Backup.RequestedParts) != 6 {
 		return zero, c.ErrExecutionRecord
 	}
@@ -192,12 +207,14 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 	if len(requests) != 0 {
 		return zero, c.ErrExecutionRecord
 	}
+	stage = "finalized control evidence"
 	prepared, err := ce.VerifyFinalizedBytes(ctx, result.ControlSeed, sidecar, proofs)
 	if err != nil {
 		return zero, err
 	}
 	defer clear(prepared.SidecarJSON)
 	defer clear(prepared.ProofsJSON)
+	stage = "original control evidence basis"
 	basis, err := ce.OriginalOwnedBasis(ctx, result.ControlSeed, prepared)
 	if err != nil || len(basis.Parts) != len(result.Parts)-2 {
 		return zero, c.ErrExecutionRecord
@@ -207,25 +224,30 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 		byPart[part.Part] = part
 	}
 	for _, expected := range basis.Parts {
+		stage = "original control evidence part consistency"
 		actual, ok := byPart[expected.Part]
 		if !ok || actual.RequestedPart == "" || actual.Operation != expected.Operation || actual.InvocationSHA256 != expected.InvocationSHA256 || actual.CandidateSHA256 != expected.CandidateSHA256 || actual.ResultSHA256 != expected.ResultSHA256 || actual.ResultEvidenceRef != expected.ResultEvidenceRef || actual.CipherSHA256 != expected.CiphertextSHA256 || actual.EnvelopeSHA256 != expected.EnvelopeSHA256 || actual.CipherBytes != expected.CiphertextBytes {
 			return zero, c.ErrExecutionRecord
 		}
 	}
 	result.Control = prepared.Locator
+	stage = "frozen publication source facts"
 	result.SourceFacts, err = publicationSourceFacts(result.Input, result.Control)
 	if err != nil {
 		return zero, err
 	}
+	stage = "contiguous part indices"
 	sort.Slice(result.Parts, func(i, j int) bool { return result.Parts[i].Index < result.Parts[j].Index })
 	for index, part := range result.Parts {
 		if part.Index != uint32(index) {
 			return zero, c.ErrExecutionRecord
 		}
 	}
+	stage = "complete verified payload counts"
 	if !publicationPayloadCountsComplete(result.Parts) {
 		return zero, c.ErrExecutionRecord
 	}
+	stage = "private verified capture receipt"
 	digest := publicationVerifiedCaptureHash(result)
 	if digest == "" {
 		return zero, c.ErrExecutionRecord

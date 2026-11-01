@@ -1,0 +1,38 @@
+{
+  "schema": "a-original-linked-publication-diagnostic.v1",
+  "integrated_git_head": "3584f2e759ffd4ae177679f13bd169da2d209b56",
+  "linked_commit": "3584f2e759ffd4ae177679f13bd169da2d209b56",
+  "includes_backup": "380dcc1ece2f9cabf54e17f671722a61c70bdda1",
+  "includes_d_first_binding": "eff7b750c46a13315b7abf441cf17826f8df98ce",
+  "a_fixture_commit": "d9100d1c5e1befa6808b507fff653dd65b97f758",
+  "task": "sbk_16f11a8b-4276-4a19-8a66-99aab98e9ad6",
+  "workers": 10,
+  "requested_parts": 6,
+  "claim_ttl_seconds": 30,
+  "heartbeat_seconds": 5,
+  "sql_source_authorize_calls": 880,
+  "sql_source_authorize_milliseconds": 742.8417,
+  "sql_stream_seconds": 25.1216318,
+  "capture_runner": "ok",
+  "capture_record": "ok",
+  "publisher_complete_current_c_domain": "pass",
+  "complete_payload_counts": "pass",
+  "original_stage_and_signing_input_commit": "pass",
+  "external_sign_calls": 1,
+  "certificate_sha256": "13624dfb465f23ea49e2a5050bb83d5b7d2ae44931c9fabcbd152399e55c27ca",
+  "case_seconds": 132.74,
+  "package_seconds": 136.01,
+  "exit_code": 0,
+  "session": "35989 terminal0",
+  "log_sha256": "09d5b552523d6d7372f53b549703f6fa9c96aae06a2df3053a77a9b2e3f88efa",
+  "diagnostic_files": {
+    "publication_verified_capture.go": "2689cc6fd83a484caf4656bdefd9d787fa6331c1c5501c916d80f493a5c1dca8",
+    "publication_capture_files.go": "8f3d5cdf7718fe3b4a40fc2491d5fec41c55b84a902d7b85ba6bd73191e4f9b4"
+  },
+  "limitations": [
+    "local diagnostic; no remote final publication, acceptance, catalog or standalone DR",
+    "known-byte certificate persistence WIP was compiled but not called by this fixture",
+    "D prior failing run remains FAIL; it omitted ldflags and its first failing validation stage was not recorded",
+    "one original task does not establish arbitrary-size static 30-second capture support"
+  ]
+}
