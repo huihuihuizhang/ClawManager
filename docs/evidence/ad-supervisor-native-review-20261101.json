@@ -106,6 +106,12 @@
       "log_sha256": "3858da8358eb57d16f074eccf613cbf6f0cec957ee8bbc422d442b0acd158722",
       "package_seconds": 8.491,
       "log_relative_to_workspace_parent": ".tools/supervisor-d-held-owner-consumers.log"
+    },
+    "d_held_owner_complete_capture_independent": {
+      "outcome": "FAIL",
+      "package_seconds": 95.362,
+      "log_relative_to_workspace_parent": ".tools/supervisor-d-held-owner-full-sixpart.log",
+      "log_sha256": "d87863ee4e8f826c6044337430ab4d17ca055d389f89031f67aa094e9f978c47"
     }
   },
   "complete_capture_independent": {
@@ -133,9 +139,9 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T02:41:22.018999+00:00",
+  "updated_at_utc": "2026-11-01T02:45:11.860882+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
-  "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. Independent full174 repeatability after this optimization has not yet been tested.",
+  "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
     "backup_commit": "f4742ba20ced2d6e79ce46107c9932cab50f2f20",
     "exact_source_verification": "All 10 committed Go files matched independently frozen final source; CRLF normalization only.",
@@ -146,5 +152,20 @@
       "execution": 8.459
     },
     "merged_log_sha256": "8eac360e25cc93203db827d23d7cd39ccd3295139267cbea28a4e426cfba0dea"
+  },
+  "D_held_owner_latest_full_capture": {
+    "task_id": "sbk_4c8b86ad-12f2-47b3-88ca-fccdc98465d9",
+    "compiled_base": "4236b1830a35aa2d47f6458e06d40b4a0c7e052d",
+    "fixture_overlay": "Two exact previously reviewed 8c5 positive fixture files; original full174/native TLS sources, default lease/key windows, all data and row/EOF checks; no restore WIP or diagnostic instrumentation.",
+    "case_seconds": 92.08,
+    "observed_failure": "capture-database provider_permission_denied; original failed Store.Record returned ok.",
+    "sql_source_open_remaining_seconds": 24.9963365,
+    "source_local_authorize_calls": 833,
+    "source_local_authorize_seconds": 0.7261642,
+    "source_stream_seconds": 24.8808215,
+    "validating_proved": false,
+    "complete_artifact_proved": false,
+    "window": "Supervisor session34276 reached terminal exit1 and closed; exclusive D63507 window explicitly released.",
+    "fixture_schema_cleanup": "Owned fixture schema cleaned at test exit; no later independent SQL final-status observation is claimed."
   }
 }
