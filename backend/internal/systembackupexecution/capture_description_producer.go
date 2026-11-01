@@ -140,16 +140,24 @@ func (s *DeploymentService) captureDescriptionHandler() http.Handler {
 
 func (s *DeploymentService) serveCaptureDescription(out http.ResponseWriter, r *http.Request) {
 	out.Header().Set("Cache-Control", "no-store")
-	deny := func() { out.WriteHeader(http.StatusForbidden) }
+	stage := "description-pull-dependencies"
+	diagnosticCtx, diagnosticUntil := r.Context(), time.Time{}
+	var err error
+	deny := func() {
+		logOriginalDescriptionFailure(stage, diagnosticCtx, diagnosticUntil, 0, 0, err)
+		out.WriteHeader(http.StatusForbidden)
+	}
 	if r.Method != http.MethodPost || s == nil || !s.ForwardEnabled || s.Runtime == nil || s.Runtime.Owner == nil || s.checkProductionCaptureMaterials() != nil || r.TLS == nil || len(r.TLS.VerifiedChains) == 0 || len(r.TLS.PeerCertificates) == 0 {
 		deny()
 		return
 	}
+	stage = "description-pull-peer"
 	cert := r.TLS.PeerCertificates[0]
 	if len(cert.URIs) != 1 || cert.URIs[0].Scheme != "spiffe" || cert.URIs[0].Host == "" {
 		deny()
 		return
 	}
+	stage = "description-pull-request"
 	var request worker.ControlRequest
 	decoder := json.NewDecoder(io.LimitReader(r.Body, (1<<20)+1))
 	decoder.DisallowUnknownFields()
@@ -157,12 +165,14 @@ func (s *DeploymentService) serveCaptureDescription(out http.ResponseWriter, r *
 		deny()
 		return
 	}
+	stage = "description-pull-operation"
 	if _, exists := s.captureMaterials.Operations[cd.Operation]; !exists {
 		deny()
 		return
 	}
 	o := s.Runtime.Owner
 	peer := cert.URIs[0].String()
+	stage = "description-pull-first-control"
 	first, err := o.Authorize(r.Context(), peer, request)
 	defer first.Clear()
 	if err != nil || first.KeyUse == nil || first.KeyUse.State != "using" || first.KeyUse.Nonce != request.Point || first.InvocationSHA256 != request.InvocationSHA256 {
@@ -171,24 +181,29 @@ func (s *DeploymentService) serveCaptureDescription(out http.ResponseWriter, r *
 	}
 	ctx, cancel := context.WithDeadline(r.Context(), first.ExpiresAt)
 	defer cancel()
+	diagnosticCtx, diagnosticUntil = ctx, first.ExpiresAt
+	stage = "description-pull-memory"
 	release, err := cd.AdmitDecodeMemory(*request.Invocation.Request.CaptureDescription)
 	if err != nil {
 		deny()
 		return
 	}
 	defer release()
+	stage = "description-pull-first-original-read"
 	raw, err := s.readOriginalDescription(ctx, request, first)
 	if err != nil {
 		deny()
 		return
 	}
 	defer clear(raw)
+	stage = "description-pull-final-control"
 	last, err := o.Authorize(ctx, peer, request)
 	defer last.Clear()
 	if err != nil || last.KeyUse == nil || *last.KeyUse != *first.KeyUse || !last.ExpiresAt.Equal(first.ExpiresAt) || last.InvocationSHA256 != first.InvocationSHA256 {
 		deny()
 		return
 	}
+	stage = "description-pull-final-original-read"
 	final, err := s.readOriginalDescription(ctx, request, first)
 	defer clear(final)
 	if err != nil || !bytes.Equal(raw, final) || s.checkProductionCaptureMaterials() != nil || ctx.Err() != nil || !time.Now().Before(first.ExpiresAt) {
@@ -203,7 +218,7 @@ func (s *DeploymentService) serveCaptureDescription(out http.ResponseWriter, r *
 // The current original task/using key window is read and bound from SQL. This
 // is not the publisher's historical-authority parsing path and cannot revive a
 // completed capture. Network workload checks remain outside this short TX.
-func (s *DeploymentService) descriptionAuthority(ctx context.Context, request worker.ControlRequest, lease worker.Lease) (d.Authority, error) {
+func (s *DeploymentService) descriptionAuthority(ctx context.Context, request worker.ControlRequest, lease worker.Lease) (_ d.Authority, resultErr error) {
 	var zero d.Authority
 	if lease.KeyUse == nil || lease.KeyUse.State != "using" || request.Invocation.ProviderKey == nil || request.Invocation.FormalCapture == nil {
 		return zero, c.ErrExecutionAuthority
@@ -214,6 +229,16 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 		return zero, c.ErrExecutionAuthority
 	}
 	a := d.Authority{InstallationID: key.InstallationID, TaskPublicID: key.BackupPublicID, TaskType: "backup", Phase: "capture", AttemptNo: attempt, MaintenanceOwner: key.BackupPublicID}
+	stage := "description-authority-transaction"
+	defer func() {
+		if resultErr != nil {
+			cause := err
+			if cause == nil {
+				cause = resultErr
+			}
+			logOriginalDescriptionFailure(stage, ctx, lease.ExpiresAt, a.ClaimRowVersion, a.MaintenanceFencingToken, cause)
+		}
+	}()
 	gate := s.Runtime.Owner.Gate.Authority
 	tx, err := gate.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
@@ -222,21 +247,26 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 	defer tx.Rollback()
 	// Preliminary locator only; Bind below acquires Gate -> Task locks and
 	// independently revalidates this exact current authority in the same TX.
+	stage = "description-authority-current-locator"
 	if readOriginalCaptureAuthorityLookup(ctx, tx, &a) != nil || a.ConfigSHA256 != request.Invocation.FormalCapture.SourceConfigSHA256 {
 		return zero, c.ErrExecutionAuthority
 	}
+	stage = "description-authority-original-hash"
 	authorityRaw, _ := json.Marshal(a)
 	if hash(authorityRaw) != lease.KeyUse.AuthoritySHA256 {
 		return zero, c.ErrExecutionAuthority
 	}
-	guard, err := gate.Bind(ctx, tx, a)
+	stage = "description-authority-current-bind"
+	guard, err := gate.BindObserved(ctx, tx, a, logOriginalDescriptionBindDiagnostic)
 	if err != nil {
 		return zero, err
 	}
+	stage = "description-authority-original-key-row"
 	var raw []byte
 	if tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE target_type='backup' AND task_public_id=? AND attempt_no=? AND phase='capture' AND resource_kind='Job' AND observed_uid=? AND namespace_name=? AND revoked=FALSE AND lifecycle='ready' AND create_dispatched=TRUE AND stopped_at IS NULL FOR SHARE`, a.TaskPublicID, a.AttemptNo, lease.KeyUse.Identity.JobUID, lease.KeyUse.Identity.Namespace).Scan(&raw) != nil {
 		return zero, c.ErrExecutionAuthority
 	}
+	stage = "description-authority-original-key-binding"
 	var actual worker.KeyUseLease
 	if decodeProviderDeploymentJSON(raw, &actual) != nil || actual != *lease.KeyUse || actual.Identity.InvocationSHA256 != request.InvocationSHA256 || actual.Nonce != request.Point || !time.Now().Before(actual.Until) || !time.Now().Before(lease.ExpiresAt) || guard.Recheck(ctx, tx) != nil {
 		return zero, c.ErrExecutionAuthority
@@ -244,18 +274,30 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 	return a, nil
 }
 
-func (s *DeploymentService) readOriginalDescription(ctx context.Context, request worker.ControlRequest, lease worker.Lease) ([]byte, error) {
+func (s *DeploymentService) readOriginalDescription(ctx context.Context, request worker.ControlRequest, lease worker.Lease) (_ []byte, resultErr error) {
+	stage := "description-original-authority"
 	a, err := s.descriptionAuthority(ctx, request, lease)
+	defer func() {
+		if resultErr != nil {
+			cause := err
+			if cause == nil {
+				cause = resultErr
+			}
+			logOriginalDescriptionFailure(stage, ctx, lease.ExpiresAt, a.ClaimRowVersion, a.MaintenanceFencingToken, cause)
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
 	o := s.Runtime.Owner
+	stage = "description-original-input"
 	in, plan, discovery, err := o.input(ctx, a, false)
 	if err != nil {
 		return nil, err
 	}
 	defer clear(plan.CanonicalJSON)
 	seed := *request.Invocation.Request.CaptureDescription
+	stage = "description-original-plan"
 	admin, err := descriptionPlan(seed, discovery.Parts)
 	if err != nil || admin[0].SHA256 != request.InvocationSHA256 {
 		return nil, c.ErrExecutionRecord
@@ -271,6 +313,7 @@ func (s *DeploymentService) readOriginalDescription(ctx context.Context, request
 	for _, p := range discovery.Parts {
 		parts[p.Part] = p
 	}
+	stage = "description-original-members"
 	for _, selection := range seed.Members {
 		p := parts[selection.Part]
 		var jobRaw, useRaw []byte
@@ -283,31 +326,37 @@ func (s *DeploymentService) readOriginalDescription(ctx context.Context, request
 		if decodeProviderDeploymentJSON(jobRaw, &job) != nil || decodeProviderDeploymentJSON(useRaw, &use) != nil || use.State != "finished" || use.Identity.InvocationSHA256 != p.InvocationSHA256 || use.Identity.JobUID != job.UID {
 			return nil, c.ErrExecutionRecord
 		}
+		stage = "description-original-member-candidate"
 		_, candidateRaw, err := o.ReadFormalCandidateBytes(ctx, a, job, false)
 		if err != nil {
 			return nil, err
 		}
 		records[selection.Part] = originalDescriptionMember{candidate: candidateRaw}
 		ref := resultEvidenceRef(a, job, resultSHA)
+		stage = "description-original-member-evidence"
 		registered, err := o.Evidence(ctx, a, job)
 		if err != nil || registered == nil || *registered != ref || hash(candidateRaw) != candidateSHA {
 			return nil, c.ErrExecutionRecord
 		}
+		stage = "description-original-member-result"
 		resultRaw, err := o.ReadResult(ctx, a, job, ref)
 		records[selection.Part] = originalDescriptionMember{candidate: candidateRaw, result: resultRaw}
 		if err != nil || hash(resultRaw) != resultSHA {
 			return nil, c.ErrExecutionRecord
 		}
 	}
+	stage = "description-original-build"
 	description, err := buildOriginalDescription(in, plan, discovery, seed, records)
 	if err != nil {
 		return nil, err
 	}
 	defer description.Clear()
+	stage = "description-original-encode"
 	raw, err := cd.Encode(description)
 	if err != nil {
 		return nil, err
 	}
+	stage = "description-original-final-authority"
 	final, err := s.descriptionAuthority(ctx, request, lease)
 	if err != nil || final != a || s.checkProductionCaptureMaterials() != nil {
 		clear(raw)

@@ -381,9 +381,17 @@ func (c *ControlClient) send(ctx context.Context, request ControlRequest) (Lease
 	}
 	response, e := c.http.Do(r)
 	if e != nil {
+		if request.Invocation.Request.CaptureDescription != nil {
+			until, _ := ctx.Deadline()
+			logOriginalDescriptionWorkerFailure("worker-control-http", request.Action, ctx, until, 0, e)
+		}
 		return Lease{}, ErrNotReady
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK && request.Invocation.Request.CaptureDescription != nil {
+		until, _ := ctx.Deadline()
+		logOriginalDescriptionWorkerFailure("worker-control-http", request.Action, ctx, until, response.StatusCode, nil)
+	}
 	if response.StatusCode == http.StatusServiceUnavailable {
 		return Lease{}, ErrNotReady
 	}
