@@ -100,6 +100,26 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 ## 远侧可连接后的剩余验收
 
+### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
+
+恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。
+
+1. 原源身份沿用 `systembackuppartcontainer.Scope`：installation、backup、原 capture attempt、config version/hash、capture-context hash；附已读取并认证的 catalog/MF/index/capture certificate/commit/acceptance 对象身份与摘要。恢复 attempt 保存在另一绑定，不覆盖原 AAD。
+2. 精确成员集合沿用 container Header/Member：part、member index/path、原 StreamSpec、固定 key/version/size/hash、envelope、checkpoint 摘要。应提供认证后 checkpoint 中的 `worker.Invocation`、invocation hash、Job UID/generation、source inventory hash，且已与源证书及完整集合交叉核对；单个 `pc.Facts` 或 `StreamVerification` 不足够。
+3. SQL 消费需要原 `domain.BusinessCaptureSchema`、原 schema census pin、原 SQL 密文摘要，以及认证后完整 raw-cell snapshot（或受控只读输入）。Teams 构造 `NewTeamWorkspaceSpec` 必须使用这份最终 snapshot、原 `team.Inventory` 和同一 SQL 密文摘要。Skills 使用原对象 inventory/fixed versions 与 SQL blob/version/binding 关系；workspace 使用原 runtime policy/原实例或 Team 归属；Redis 使用原 `RedisCapturePolicy`/成员归属，不能从目标或 live 源查询补造。
+4. 输入读取需要可验证的 custody 和生命周期：完整 fullC、原 C 终帧/EOF、使用后授权均完成后，才向 B 释放可消费的只读内容或由 A 管理的已认证句柄；暴露只读身份、原始格式、容量及当前授权复核方法。大文件不能强制塞进无界内存，也不能在 `InspectWrappedStream` 回调内写业务 SQL/对象/文件。若需要落地，A/D 须定义私有暂存、完整认证后发布句柄的具体方式；B 不会自行把 fullC 当作旧 `staging.Receipt`。
+5. 当前恢复权限由 D 独立提供：`systembackupdispatch.Authority` 的 sdr task/attempt/phase/claim/fence/deadline、冻结计划与策略映射；以及 `CheckRestoreTarget` 的独立目标 proof。目标 SQL server/database/schema、namespace UID、workspace claim/PV、object bucket/root/version、Redis server/database 和独立只读凭据必须绑定到这个执行。源认证结果本身不发写权限。
+
+恢复侧将先核对整个必需成员集合，再写入；恢复结果保持隔离，写账户结束/撤销及独立读回完成后仍交由原 D 资格链判断，不生成最终 CAS。多个 Redis 成员须先得到独立目标数据库分配，或形成一次完整去重的预期集合后只调用一次 Restore/Verify；现有逐成员 DBSIZE 校验不能拼到同一个 DB。
+
+### 已追踪的历史 capture policy 兼容边界
+
+基线 `0e797e4e` 的 capture policy pin 为 `62ec7bc2c2a6f443e6c26adc8dfbc6b43c3123622c45a09cdb92589a0c95055d`，Skills history 改动后为 `dfc25ae4d1a6744d853b447a36f401b018281c0b53dacc0ac12668dbc39d8bc8`。已用只读 `git show` 的基线 dependencies + Go overlay 独立复算；变化来自 rules 中 materialize 的 RestoreAction，原捕获表集合相同。
+
+当前 `VerifyBusinessCapturedSnapshot` 会与当前 policy 比较，调用方包括 worker/formal_capture、execution/formal_observer、owned_payload_reader；production metadata/source exclusion 和 publication SQL counts 也显式比较当前 policy。它们属于当前捕获/发布链，未在本分支改成接受历史 pin。旧 functional `RunDatabase` 消费其自己的 staging 格式，并非正式历史 fullC 接口。
+
+新增 `MatchHistoricalBusinessCaptureSchema` **只做原描述与原 metadata 字节结构对照**：明确识别上述两个历史 pin、固定表集合，比较原 schema hash，不生成/补齐缺失 UniqueKeys；它不认证原描述、不发 receipt、不接通写入。只有 A/D 完整认证结果给出原描述后才可消费此结果，不能直接以 raw JSON 调用成功作为恢复授权。新当前 metadata 丢唯一索引、旧 metadata 后填看似合理的索引都会与原 schema 摘要不符；旧归档到新目标的精确 owner 适配仍需具名版本策略。
+
 1. 复核现场 Runtime 镜像 digest、节点 UID/GID/DAC、volume/PVC/PV/NFS 身份、只读源 mount、授权投影和 observer 的独立 TLS/SELECT-only 账号；重采当前事实，不能把本地保存材料当 live observation。
 2. 完成正式发布 v12 manifest/index/container → 认证解封 → 所有恢复消费者的公共 Runner 装配。当前 `profile.discoverTarget` 仍走其原 bundle/part 逻辑，`SixDomainOwner` 是 backup 侧合同；没有因为本次 SQL 映射修复而自动获得正式六部分恢复能力。
 3. 同一正式源/任务下，用非空实例、Teams、Skills 八表、历史对象版本、用户改写安装文件、共享产物和 Redis stream/PEL 运行完整恢复。不可用空域、伪造 manifest/签名、身份 adapter 或手拼资格绕过。
