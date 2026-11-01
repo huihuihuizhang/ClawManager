@@ -1,0 +1,117 @@
+{
+  "recorded_at": "2026-11-01T17:23:22.315474+00:00",
+  "classification": "Independent frozen component review; diagnostic DATA only, not a full backup acceptance",
+  "base": "94944acc1cd64f55fcd0fd6b6313a9e8be084dd3",
+  "owner_commit": "f46aeba49229607ec9c4c423ff052c1bfd37c7e1",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/worker/control.go",
+      "git_blob": "e262868c23b18cfa0b29dff791c35935f62972da",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/control_timing.go",
+      "git_blob": "705ec0c57045a267b55d255793553545b728bb98",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/control_timing_test.go",
+      "git_blob": "8c917ae62d3a98fc8064bd9877af9f986b339b3e",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/database_capture_diagnostics.go",
+      "git_blob": "50b0a91e466a6b7db60a10e4053f828f1409bb49",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_control_timing.go",
+      "git_blob": "39d81fb7c11c0b787d360d7091bc51d23f54cede",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_control_timing_test.go",
+      "git_blob": "7c0f3692c01fc94139f1ba67f2c724aa1108f6d4",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_mysql_test.go",
+      "git_blob": "0c8863957902880c2d412ac5aa51e5bd33ab0d88",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_workers_test.go",
+      "git_blob": "62d245cdacebaefa617107fa6459f8ffaac3b940",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_jobs.go",
+      "git_blob": "cc7d7ff0bc1c2d2a624704f9a813a6502ebeba69",
+      "owner_frozen_blob_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_key_use.go",
+      "git_blob": "a7dd7394d06238a522740739f295fe2efc13bf8b",
+      "owner_frozen_blob_equal": true
+    }
+  ],
+  "independent_validation": {
+    "session": 51971,
+    "exit_code": 0,
+    "closed": true,
+    "sql_environment": "removed; no native MySQL tests executed",
+    "worker_seconds": 35.82,
+    "execution_seconds": 14.051,
+    "commands": "go test -count=1 -p=1 ./internal/systembackup/worker ./internal/systembackupexecution",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-capture-timing-f46-94944-composed.log",
+      "sha256": "dafce101a8513c16c36d24e0f9e86309d80d44709001ce1ba05ea44e94dc2266"
+    }
+  },
+  "review_findings": [
+    "Worker counters record completed key calls, failures, elapsed/max/last and actual http.Do attempts. An attempt is not proof of server receipt; concurrent snapshots are not atomic receipts.",
+    "Server timers are installed only through an optional private native-fixture context registry; no raw request, credentials, SQL body or authority material is emitted.",
+    "Authorize includes SQLBind and KeyStateSQL; these overlapping durations must not be added as disjoint stages.",
+    "Actual mTLS denial and malformed local request remain denials. Missing real authority and unregistered timing contexts cannot manufacture a successful Bind.",
+    "Original order, validation, SQL/Kube/provider actions, deadlines and key-use transitions remain unchanged."
+  ],
+  "observed_owner_native_failure": {
+    "frozen_commit": "f46aeba49229607ec9c4c423ff052c1bfd37c7e1",
+    "test": "TestDOriginalUploadedManifestMarkerAndCandidateCleanupMySQL",
+    "session": 1845,
+    "exit_code": 1,
+    "closed": true,
+    "case_seconds": 173.18,
+    "package_seconds": 176.476,
+    "task": "sbk_08e9c675-6c5c-431c-b703-4829f707f4ce",
+    "retained_schema": "ad_d_six_ee4eabee55f16f75",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-v10.log",
+      "sha256": "7ae3ab37a9ae874d73f216654910d4ca089407d0120306d4ebc137fbc2c6973b"
+    },
+    "boundary": "All eleven capture members and known original certificate reached; first failure fresh preparation renewal before first upload delegation. No upload Job created.",
+    "readonly_sql": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-preparation-sql-boundary-v10.log",
+      "sha256": "8d278afebe51f420cf04b48320ad27bb2fe45a845ff3f2d82328e2946aa3a027"
+    },
+    "policy": "Original materialized config and immutable snapshot TTL/heartbeat/reconcile=30/10/10; native caller=30/5/1. Exact policy guard refused. Fix original caller derivation, never rewrite old task or weaken guard.",
+    "database_timing_data": {
+      "key_check_calls": 455,
+      "key_check_client_seconds": 27.6823576,
+      "authorize_seconds": 26.8759877,
+      "nested_bind_seconds": 1.8704,
+      "nested_key_state_seconds": 0.2253474,
+      "after_candidate_remaining_seconds": 0.8382723
+    },
+    "timing_limit": "This run passed database capture with little remaining window; no confirmed exclusive cause for prior timeout or permission to relax original window."
+  },
+  "not_proven": [
+    "Production installation safety material and online provider authorization",
+    "Full original upload/C/manifest/marker/resource cleanup in one completed task",
+    "Aggregate cleanup, catalog publication, successful terminal and isolated restore"
+  ],
+  "next": [
+    "Owner A fix original-config lease policy derivation and further measure actual Authorize sub-stages",
+    "Owner D actual native and local cipher cleanup, query-only crash recovery, aggregate evidence and terminal closure"
+  ]
+}
