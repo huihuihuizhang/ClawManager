@@ -758,5 +758,66 @@
         "sha256": "f3ae7eae1fa1fed78c8bae7ddb1afcceb42d2c74dd463a0f6af113c5f9149d64"
       }
     ]
+  },
+  "D_original_capacity_snapshot_independent": {
+    "outcome": "PASS",
+    "sources": [
+      "72ea8668573a7c027ecf105c3a9c63a85ba568ae",
+      "0a23d146d4c88e6bf6df52c5d70db792195d2b38"
+    ],
+    "integration": "cd961eea8aa8048901da3654eeeaea8f7a57007c",
+    "exact_owner_go_files": {
+      "backend/internal/systembackupexecution/a_publication_journal_mysql_test.go": "c36b870d2d935472ed8bc56068dc3696a629894989d761e12a7c4d4b2b9f071b",
+      "backend/internal/systembackupexecution/artifact_read_catalog.go": "c0ef448b325663b1593c6b2141f9eede5b2304574c35b8af9a86ef7531ba515c",
+      "backend/internal/systembackupexecution/artifact_read_catalog_test.go": "50479b7a82b13484beb9524a9692261d549860f23b86a7eaec5bf674a927ab08",
+      "backend/internal/systembackupexecution/artifact_read_scope_test.go": "27cf41d6713ff4750df3607d3f17a2d85b1abd90dc25f3aa52732a8f2020ea62",
+      "backend/internal/systembackupexecution/artifact_read_versions.go": "29293c994fca09d5fd147e9b7ba06776aebf595f588bdd9b36a56388f924a741",
+      "backend/internal/systembackupexecution/artifact_read_versions_test.go": "a7c27560038694284283abf2d6831b8153e9690103dfd40445c821e19d69571a",
+      "backend/internal/systembackupexecution/publication_capacity.go": "9cb711f39436fcce9dd77cb9def3516c6980d5a00be87cd3942220787f21fa1e",
+      "backend/internal/systembackupexecution/publication_capacity_initial_mysql_test.go": "5ba9f25e97068993490b053db4e5b6fd28bb02dc293155cb3e56569a7ae06d1e",
+      "backend/internal/systembackupexecution/publication_capacity_mysql_test.go": "adc6c7d1761f0e1dc194dee6a2d1460a31272ecb2cb0f533bf29a41d0b43a0dd",
+      "backend/internal/systembackupexecution/publication_capacity_test.go": "7fd1df0fc998c9c6036b446ed84569ae55c310e1232e0eb96235fe737b931855",
+      "backend/internal/systembackupexecution/publication_continuation.go": "1b57491fd0a7f94893fc4ead5915f67acce52d0fe8cb86bb9ac055f84e4f3537",
+      "backend/internal/systembackupexecution/publication_native_s3.go": "9c97faef753a9c9d90365879b842cbbd523b8b9d0b40b488ca79c3638acff398"
+    },
+    "scope": "Original 097/098 task/config/current publisher guard; snapshot exact bytes/size/SHA/JCS and both budget fields checked in the same transaction on initial binding and later rechecks. Immutable per-reader limits and tightening-only transport clones; configured v12 900GiB artifact and 8GiB index ceilings preserved.",
+    "native_package_seconds": 40.328,
+    "native_continuation_nine_case_seconds": 28.16,
+    "unchanged_root_original_counter_seconds": 2.85,
+    "default_execution_package_seconds": 9.071,
+    "sessions": {
+      "1522": {
+        "terminal_exit": 0,
+        "closed": true
+      },
+      "17616": {
+        "terminal_exit": 0,
+        "closed": true
+      }
+    },
+    "native_server": {
+      "port": 65298,
+      "uuid": "9679c9da-d595-11f1-b25e-745d22085e06"
+    },
+    "counter": {
+      "file": ".tools/supervisor_capacity_initial_snapshot_mysql_test.go",
+      "sha256": "d7f75a23f01479d84885edca2661f351d4f39b9b139c7554f976634a4793bf2b",
+      "old_result": "FAIL6.037: fresh current access accepted legal materialized16->17GiB drift with original task snapshot JSON/SHA unchanged",
+      "final_result": "PASS with the unchanged independent test-only overlay; healthy original16GiB accepted, same legal17GiB materialized drift rejected",
+      "setup_failure_retained": "Earlier32GiB injection failed staging CHECK; not vulnerability or fix proof. No CHECK/staging protection was disabled."
+    },
+    "fixture_integrity": "Full original ConfigValues frozen before capture/authority/key creation. No admitted snapshot/hash, current receipt, permit window or readiness was rewritten.",
+    "capacity_test_limits": "9/900GiB HEAD metadata and custom HTTP PUT boundary model only; actual9GiB advertised version with short body is refused by mandatory full EOF. No multi-GiB body transfer or restoration success claimed.",
+    "remaining": "Reader component still authenticates partial catalog/manifest/index content only. Actual typed full artifact verification, production upload/acceptance/catalog/final taskCAS and independent restore remain incomplete. No remote/Linux deployment or full backup success.",
+    "logs": [
+      {
+        "path": ".tools/supervisor-d-capacity-snapshot-final-native.log",
+        "sha256": "02cc7956d53d61600e62fcf9dbd4ff83bba6a29881e48dd3d21af3aec2351d47"
+      },
+      {
+        "path": ".tools/supervisor-d-capacity-snapshot-final-package.log",
+        "sha256": "3ab85e2373778dc13279690e8649c6e2813aa6524b70b5ced87e79996e691177"
+      }
+    ]
   }
 }
