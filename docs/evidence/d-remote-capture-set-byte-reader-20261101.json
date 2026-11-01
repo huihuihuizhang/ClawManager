@@ -1,0 +1,52 @@
+{
+  "schema_version": "d-remote-capture-set-byte-reader-observation.v1",
+  "date": "2026-11-01",
+  "base_head": "d901a16e",
+  "source_files": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_set.go",
+      "sha256": "5b0a0187488facc66681054cb652820b759099981005d0b581f44876636ef631"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_set_test.go",
+      "sha256": "0780ae75b6ab06ae622a9b9532652411c2cbbe7ee3285ee4964e43595865f25f"
+    }
+  ],
+  "scope": [
+    "Exact description-carrier transport shape: 15 immutable-version objects and 13 canonical sorted unique index entries.",
+    "All 15 actual loopback TLS object bodies read fully with independent artifact_read material; healthy path 15 HEAD plus 15 GET and zero PUT; write credential file deleted.",
+    "Selector copies caller map and index bytes; revalidation pins same original reader limits, installation and root before native I/O.",
+    "16 selector cases and 22 native TLS cases, including corruption of each of 15 objects, wrong version, truncated body, actual credential withdrawal, deadline during GET body, index mutation and wider-budget reader rebind."
+  ],
+  "validation": {
+    "root_independent_overlay": {
+      "base": "7799cb9b55d49767ddc109e883da0155f44dc8d4",
+      "result": "PASS",
+      "seconds": 4.095,
+      "session": 26150,
+      "exit_code": 0
+    },
+    "targeted": {
+      "exit_code": 0,
+      "result": "PASS",
+      "session": 5338,
+      "log_sha256": "856430b5151ce325e68efe1efd27b2acac6dc2fda43aa8b4999cb953fa813785",
+      "seconds": 4.134,
+      "log": "../.tools/d-new-remote-capture-set-native.log"
+    },
+    "full_execution_no_sql": {
+      "exit_code": 0,
+      "result": "PASS",
+      "session": 71014,
+      "log_sha256": "d4e2d189e55eb3a5e102012089dcec67b052366cfad1bbad6d98919120b6bd59",
+      "seconds": 11.375,
+      "log": "../.tools/d-new-remote-capture-set-full-execution.log"
+    }
+  },
+  "limits": [
+    "Opaque transport DATA only: no actual original 11-member capture, SQL, historical certificate/bootstrap semantics, Unwrap, plaintext or business-domain verification.",
+    "No private complete-capture or acceptance receipt, manifest, upload Job, marker, cleanup, signed catalog or terminal success authority.",
+    "New current-publication caller/metadata/description integration remains isolated in stash 4e5e5ec46b387a4fe2e94720708aad568ed2c356, not part of this source component.",
+    "No use of MySQL 63507; it remains assigned to A. No push from D."
+  ]
+}

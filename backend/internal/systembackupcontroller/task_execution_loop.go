@@ -18,6 +18,8 @@ const (
 	ExecutionPrepare ExecutionStep = "prepare"
 	ExecutionCapture ExecutionStep = "capture"
 	ExecutionRecover ExecutionStep = "recover"
+	ExecutionRestore ExecutionStep = "restore"
+	ExecutionVerify  ExecutionStep = "verify"
 )
 
 // ExecutionWork is loaded by D from the already-claimed public task, attempt
@@ -26,12 +28,14 @@ type ExecutionWork struct {
 	Step  ExecutionStep
 	Input dispatch.Input
 	Plan  dispatch.Plan
+	Drill *dispatch.DrillSpec
 }
 type ExecutionOutcome struct {
 	Plan     dispatch.Plan
 	Results  []dispatch.ModuleResult
 	Recovery dispatch.RecoveryResult
 	Err      error
+	Drill    dispatch.RestoreResult
 }
 
 // ExecutionWorkStore is D's durable scheduling boundary. Ready must reject
@@ -47,14 +51,37 @@ type ExecutionWorkStore interface {
 	Record(context.Context, ExecutionWork, ExecutionOutcome) error
 }
 
+// DrillExecutionWorkStore has a separate selection boundary. A capture store
+// cannot claim a backup before the restore loop discovers the wrong task kind.
+// ReadyDrill must check drill-specific custody/authority before NextDrill.
+// RecordDrill owns fresh SQL checks and never infers success from a runner error.
+// RecordDrillInterruption preserves partial/unknown observations after the
+// forward context ends. The D implementation must obtain a fresh, bounded
+// recording/recovery context and reauthorize inside SQL; a canceled context or
+// saved claim is never cleanup authority. It must not infer a terminal task.
+type DrillExecutionWorkStore interface {
+	ReadyDrill(context.Context) error
+	NextDrill(context.Context) (*ExecutionWork, error)
+	RecordDrill(context.Context, ExecutionWork, ExecutionOutcome) error
+	RecordDrillInterruption(context.Context, ExecutionWork, ExecutionOutcome, error) error
+}
+
 type TaskExecutionLoop struct {
-	Guard    ReadinessProbe
-	Store    ExecutionWorkStore
-	Dispatch dispatch.Dispatcher
-	Interval time.Duration
+	Guard      ReadinessProbe
+	Store      ExecutionWorkStore
+	Dispatch   dispatch.Dispatcher
+	Interval   time.Duration
+	Restore    *dispatch.RestoreDispatcher
+	DrillStore DrillExecutionWorkStore
 }
 
 func (l TaskExecutionLoop) Validate() error {
+	if l.Restore != nil {
+		if absentExecutionDependency(l.Guard) || absentExecutionDependency(l.DrillStore) || !absentExecutionDependency(l.Store) || l.Restore.Ready() != nil || !absentExecutionDependency(l.Dispatch.Runner) || !absentExecutionDependency(l.Dispatch.Ports) || l.Interval < MinReconcileInterval || l.Interval > MaxReconcileInterval {
+			return dispatch.ErrNotReady
+		}
+		return nil
+	}
 	if absentExecutionDependency(l.Guard) || absentExecutionDependency(l.Store) || absentExecutionDependency(l.Dispatch.Runner) || absentExecutionDependency(l.Dispatch.Ports) || l.Interval < MinReconcileInterval || l.Interval > MaxReconcileInterval {
 		return dispatch.ErrNotReady
 	}
@@ -87,14 +114,27 @@ func (l TaskExecutionLoop) RunOnce(ctx context.Context) error {
 	if err := l.Guard.Check(ctx); err != nil {
 		return err
 	}
-	if err := l.Store.Ready(ctx); err != nil {
-		return err
+	var w *ExecutionWork
+	var err error
+	if l.Restore != nil {
+		if err = l.DrillStore.ReadyDrill(ctx); err != nil {
+			return err
+		}
+		w, err = l.DrillStore.NextDrill(ctx)
+	} else {
+		if err = l.Store.Ready(ctx); err != nil {
+			return err
+		}
+		w, err = l.Store.Next(ctx)
 	}
-	w, err := l.Store.Next(ctx)
 	if err != nil || w == nil {
 		return err
 	}
-	if !validExecutionInput(w.Input.Authority, w.Input.Authority.InstallationID) {
+	if l.Restore != nil {
+		if w.Drill == nil || dispatch.ValidateRestoreInput(w.Input, *w.Drill) != nil || (w.Step != ExecutionRestore && w.Step != ExecutionVerify) {
+			return ErrExecutionAuthority
+		}
+	} else if !validExecutionInput(w.Input.Authority, w.Input.Authority.InstallationID) || w.Drill != nil {
 		return ErrExecutionAuthority
 	}
 	// Freeze mutable observations before B sees them. B may not modify the
@@ -103,6 +143,15 @@ func (l TaskExecutionLoop) RunOnce(ctx context.Context) error {
 	call := cloneExecutionWork(original)
 	var out ExecutionOutcome
 	switch call.Step {
+	case ExecutionRestore, ExecutionVerify:
+		if l.Restore == nil || call.Drill == nil || !executionPlanValid(call.Plan) {
+			return dispatch.ErrNotReady
+		}
+		if call.Step == ExecutionRestore {
+			out.Drill, out.Err = l.Restore.Restore(ctx, call.Input, *call.Drill, call.Plan)
+		} else {
+			out.Drill, out.Err = l.Restore.Verify(ctx, call.Input, *call.Drill, call.Plan)
+		}
 	case ExecutionPrepare:
 		if call.Input.Authority.TaskType != "backup" || len(call.Plan.CanonicalJSON) != 0 {
 			return dispatch.ErrNotReady
@@ -128,17 +177,36 @@ func (l TaskExecutionLoop) RunOnce(ctx context.Context) error {
 		return dispatch.ErrNotReady
 	}
 	if err := ctx.Err(); err != nil {
+		if l.Restore != nil {
+			out.Err = errors.Join(out.Err, err)
+			return errors.Join(out.Err, l.DrillStore.RecordDrillInterruption(ctx, original, out, err))
+		}
 		return err
 	}
 	// Even a B error must reach D's persistent outcome handler. Record owns
 	// classification, state transitions, takeover and final authorization.
-	if err := l.Store.Record(ctx, original, out); err != nil {
+	if l.Restore != nil {
+		err = l.DrillStore.RecordDrill(ctx, original, out)
+	} else {
+		err = l.Store.Record(ctx, original, out)
+	}
+	if err != nil {
+		if l.Restore != nil {
+			return errors.Join(err, out.Err, l.DrillStore.RecordDrillInterruption(ctx, original, out, err))
+		}
 		return err
 	}
+	if l.Restore != nil {
+		return nil
+	} // Persisted task failure is not a leader-loop failure.
 	return out.Err
 }
 
 func cloneExecutionWork(w ExecutionWork) ExecutionWork {
+	if w.Drill != nil {
+		spec := *w.Drill
+		w.Drill = &spec
+	}
 	w.Input.ConfigSnapshot = append(json.RawMessage(nil), w.Input.ConfigSnapshot...)
 	w.Input.Jobs = append([]dispatch.JobBinding(nil), w.Input.Jobs...)
 	w.Plan.CanonicalJSON = append(json.RawMessage(nil), w.Plan.CanonicalJSON...)

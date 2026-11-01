@@ -1,0 +1,39 @@
+{
+  "parent_commit": "33883e3526a81a050815c35c91f1cbe1256898e5",
+  "scope": "Independent Restore/Verify task-loop routing, phase-bound metadata custody envelope and real source-unavailable runner",
+  "migration_files": 174,
+  "production_sql_drill_custody_complete": false,
+  "production_source_authenticated": false,
+  "target_write_capabilities_exposed": false,
+  "capture_recover_semantics_changed": false,
+  "source_hashes": {
+    "backend/internal/systembackupdispatch/restore.go": {
+      "sha256": "c87b5f86a3b3eaa9a6b4d7f362f5f6418e4ddb465316ae2733ce04df7c31d2a5",
+      "git_blob": "0b4d4b44f2adbfd724d987d5a849cef2a76e0540"
+    },
+    "backend/internal/systembackupdispatch/restore_plan.go": {
+      "sha256": "67a9bbf9ab9a56bc3362efca32b73645149e1eb906e710db987c221b5d5c9c07",
+      "git_blob": "4500eeee5ad0a4d31f3e7a292f99da1c2553917f"
+    },
+    "backend/internal/systembackupdispatch/restore_plan_test.go": {
+      "sha256": "d211c802bf1ec941883e0397eb9ddc3617794e9e337a8d200df27fdc65144202",
+      "git_blob": "c1cefb000add52a7b8fce311bb0ba25c3ddc38c4"
+    },
+    "backend/internal/systembackup/publicadapter/restore_runner.go": {
+      "sha256": "2f0e84d192e5f5ff197f2f659443126a0dde3ab62ab898e47df10b4b1db385a0",
+      "git_blob": "0774b3acd8e55ab69e6c4d6411883d2e968929d3"
+    },
+    "backend/internal/systembackupcontroller/task_execution_loop.go": {
+      "sha256": "7c899d3fb5abbe0813f6fab6c4def5b78dfe032f14463210c647f6c3b3b193e1",
+      "git_blob": "5ec31c3bf2d1ed026839321b3c7ef6ace082e11b"
+    },
+    "backend/internal/systembackupexecution/public_restore.go": {
+      "sha256": "d97d89453163d41192efcba25ba84c4cb3e1001e300fc80dc181f8b454d14580",
+      "git_blob": "c7b1764fedfa72b60c81f323b64c9b3814767e68"
+    },
+    "backend/internal/systembackupexecution/public_restore_test.go": {
+      "sha256": "83972f1490483163d6bbd8bbf3c7cacd3c6d2980a97e38ba523cca3eb9d8f635",
+      "git_blob": "d4378a98fa807c21bcc928a21c0a85a3aa653f77"
+    }
+  }
+}

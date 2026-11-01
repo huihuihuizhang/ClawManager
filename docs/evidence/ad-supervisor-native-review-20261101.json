@@ -1342,5 +1342,45 @@
       "No rejection branch fired in the new native observation; no proven cause or fix for earlier 90282 CE failure or 38783 database failure.",
       "No eleven-member description-native proof, remote-C consumer proof, complete manifest/upload/acceptance/catalog, final success or onsite certification."
     ]
+  },
+  "D_fifteen_object_byte_reader_independent": {
+    "classification": "Accepted incremental native TLS byte transport component, not complete remote artifact verification",
+    "source_commit": "d69a226ed3635de9569de75aeebe71e1e3fbfffe",
+    "integrated_commit": "70e865fde6608ea08d8304f55fdee0888cfa8268",
+    "preserved_other_supervisor_delivery": "64610c09ea5cf79fa317b5e6c3f77f4b50c5c28a",
+    "source_comparison": "Both Go blobs match independent v2 frozen review source exactly after CRLF-to-LF normalization; no unreviewed owner caller WIP or prior5ca candidate included.",
+    "selector": "Exact15 fixed-version objects and13 canonical index entries; immutable copied selection, sorted unique entries, scope/key/role/framing/size/hash/cumulative budget checks.",
+    "native_TLS": "All15 HEAD+GET complete bodies, zero PUT after deleting writer credentials. Each of15 object corruptions, wrong version, truncation, real read-credential withdrawal and GET deadline refuse. Mutated selection and wider reader budget issue zero reads. Bodies explicitly opaque DATA, not valid certificate/bootstrap/C.",
+    "independent_before_commit": {
+      "targeted_session": 26150,
+      "targeted_exit": 0,
+      "targeted_closed": true,
+      "selector_cases": 16,
+      "TLS_cases": 22,
+      "seconds": 4.095,
+      "full_package_session": 38209,
+      "full_package_exit": 0,
+      "full_package_closed": true,
+      "full_package_seconds": 9.942,
+      "source_ledger": ".tools/review-d-remote-capture-set-v2/source.json",
+      "verification": ".tools/review-d-remote-capture-set-v2/verification.json"
+    },
+    "independent_combined_committed_packages": {
+      "head": "70e865fde6608ea08d8304f55fdee0888cfa8268",
+      "session": 95646,
+      "terminal_exit": 0,
+      "closed": true,
+      "sql_opt_in": false,
+      "dispatch_seconds": 0.703,
+      "controller_seconds": 9.45,
+      "publicadapter_seconds": 4.171,
+      "execution_seconds": 11.651,
+      "log": ".tools/supervisor-remote-bytes-restore-loop-merged-packages.log"
+    },
+    "remaining": [
+      "Wire actual current original-task caller and authenticate original index/certificate/bootstrap.",
+      "Current independent Unwrap, exact description/seed and E/P semantics, full six-container C/domain checks before any private receipt.",
+      "Complete MF/upload/acceptance/catalog/cleanup/final CAS and isolated restore. No historical-source authorization or production/site proof."
+    ]
   }
 }
