@@ -64,17 +64,8 @@ WHERE cfg.origin_installation_id=? AND cfg.version=? AND cfg.config_sha256=? AND
 
 func artifactLimitsFromConfigSnapshot(raw []byte, sha string) (ArtifactReadLimits, error) {
 	var zero ArtifactReadLimits
-	if len(raw) < 2 || len(raw) > 262144 || !formalCandidateDigest(sha) || hash(raw) != sha {
-		return zero, ErrPublicationConfigBudgetMismatch
-	}
-	canonical, err := jsoncanonicalizer.Transform(raw)
-	if err != nil || !bytes.Equal(canonical, raw) {
-		return zero, ErrPublicationConfigBudgetMismatch
-	}
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	decoder.UseNumber()
-	var values map[string]any
-	if decoder.Decode(&values) != nil || decoder.Decode(new(any)) != io.EOF {
+	values, err := publicationConfigValuesFromSnapshot(raw, sha)
+	if err != nil {
 		return zero, ErrPublicationConfigBudgetMismatch
 	}
 	capacity, ok := values["capacity"].(map[string]any)
@@ -102,6 +93,25 @@ func artifactLimitsFromConfigSnapshot(raw []byte, sha string) (ArtifactReadLimit
 		return zero, ErrPublicationConfigBudgetMismatch
 	}
 	return limits, nil
+}
+
+// Shared immutable original-body check for capacities and purpose references.
+// Complete ConfigValues business admission remains with the source API owner.
+func publicationConfigValuesFromSnapshot(raw []byte, sha string) (map[string]any, error) {
+	if len(raw) < 2 || len(raw) > 262144 || !formalCandidateDigest(sha) || hash(raw) != sha {
+		return nil, ErrPublicationConfigBudgetMismatch
+	}
+	canonical, err := jsoncanonicalizer.Transform(raw)
+	if err != nil || !bytes.Equal(canonical, raw) {
+		return nil, ErrPublicationConfigBudgetMismatch
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var values map[string]any
+	if decoder.Decode(&values) != nil || decoder.Decode(new(any)) != io.EOF {
+		return nil, ErrPublicationConfigBudgetMismatch
+	}
+	return values, nil
 }
 
 // Callers that read the ORIGINAL config may only tighten a transport. The
