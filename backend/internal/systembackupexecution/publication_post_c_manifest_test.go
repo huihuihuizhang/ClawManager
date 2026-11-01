@@ -114,7 +114,7 @@ func TestPostCManifestProductionGateRejectsMissingRealReceipt(t *testing.T) {
 	claim := c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: capture.Input.TaskPublicID}, Owner: "controller:inert-DATA", RowVersion: 1}
 	// Neither nil nor a zero-value receipt has a real final SQL authority.
 	for _, receipt := range []*publicationRemoteContainerReceipt{nil, {}} {
-		object, err := service.publishOriginalManifestAfterRemoteCapture(context.Background(), claim, 1, store, capture, objects, receipt, owned, hash([]byte("inert material DATA")))
+		object, err := service.publishOriginalManifestAfterRemoteCapture(context.Background(), claim, 1, store, capture, objects, receipt, owned, publicationPostCUploadSnapshot{})
 		if !errors.Is(err, c.ErrExecutionAuthority) || object.Key != "" {
 			t.Fatal("inert DATA minted a manifest or touched absent SQL", err)
 		}

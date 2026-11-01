@@ -1,0 +1,54 @@
+{
+  "schema_version": "d-post-c-original-ordered-snapshot.v1",
+  "date": "2026-11-01",
+  "base_commit": "62806eaab82f7ad4ca6168e606308919bba7d616",
+  "preceding_candidate": "2c1fd7cbd887d6d14a593349a842c4a25bf1ee0a",
+  "changes": [
+    "Before any C Renew, exact live original upload claim freezes material104 canonical-byte SHA and each of sixteen actual registered107 raw-body SHAs in a current guarded read transaction. Old private material is already closed.",
+    "Same transaction validates original activation/121/107/candidate provenance and full DATA coordinates. Snapshot contains inert provenance only, no C authority or old access object.",
+    "Post-C uses latest actual claim and separately minted current C receipt; original material.Claim must still equal frozen OLD claim exactly. It is never rewritten to latest claim.",
+    "Each107 original sequence must match its frozen raw SHA and typed canonical roundtrip. Reordered or recomputed changed result bodies fail, even with independently valid data values.",
+    "Candidate planned_locator must match exact authorized JSON bytes generated from original endpoint/bucket/key; extra fields/aliases/duplicates are not accepted through a permissive JSON projection."
+  ],
+  "tests": {
+    "targeted": {
+      "name": "TestPostCOriginalResultSnapshotRejectsChangedOrReorderedData",
+      "subcases": 11,
+      "seconds": 3.249,
+      "exit": 0,
+      "session": 39038,
+      "log": ".tools/d-post-c-ordered-snapshot-targeted.log",
+      "sha256": "ee408e1082c7989644473aa60f2cc8fca4c0e11f013eb2ad9195351e3b51f072"
+    },
+    "full_execution_no_sql": {
+      "seconds": 13.699,
+      "exit": 0,
+      "session": 41428,
+      "log": ".tools/d-post-c-ordered-snapshot-full-no-sql.log",
+      "sha256": "ac82709741c214db51ba0a6064373b86f992fa3b4b12a3d40393db0a1a4881f7"
+    }
+  },
+  "scope": [
+    "Production strengthening only; prior2c1 evidence remains unchanged at its exact source.",
+    "Parser/snapshot counterexamples are inert DATA, not fabricated C/SQL/live authority receipts.",
+    "No SQL run: A native74486 has closed but fixture relative-key fix/handoff is still pending.",
+    "No upload/manifest/marker/acceptance/catalog/terminal native success claimed. No D push."
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256_raw": "b26e7df1ca540151519d3d06b01a38e820a52d5161fc49775fe7254b7b3c3d73",
+      "sha256_lf": "b26e7df1ca540151519d3d06b01a38e820a52d5161fc49775fe7254b7b3c3d73"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_test.go",
+      "sha256_raw": "d9d7eb8fb82fba2f0d71268901e9950022ed0ce348a9b12e21c3200ef122e6ea",
+      "sha256_lf": "d9d7eb8fb82fba2f0d71268901e9950022ed0ce348a9b12e21c3200ef122e6ea"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_snapshot_test.go",
+      "sha256_raw": "62881be41bb156a508106dcbff02898796babab5e03b2b07be4f9cf74b99e780",
+      "sha256_lf": "62881be41bb156a508106dcbff02898796babab5e03b2b07be4f9cf74b99e780"
+    }
+  ]
+}

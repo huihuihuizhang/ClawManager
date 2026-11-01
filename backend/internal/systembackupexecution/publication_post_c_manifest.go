@@ -26,9 +26,76 @@ type publicationPostCManifest struct {
 	receipt        *publicationRemoteContainerReceipt
 	uploaded       *publicationUploadedCaptureData
 	materialSHA256 string
+	uploadSnapshot publicationPostCUploadSnapshot
 	intent         publicationJSONIntent
 	certificate    originalPublicationCaptureCertificate
 	clockFloor     time.Time
+}
+
+// Inert immutable upload provenance, frozen while its original claim is live.
+// It cannot authorize C, claim adoption, a send or reopening private material.
+type publicationPostCUploadSnapshot struct {
+	claim          c.ClaimToken
+	materialSHA256 string
+	resultsSHA256  [16]string
+}
+
+func decodeOriginalPostCUploadResult(raw []byte, sequence uint64, snapshot publicationPostCUploadSnapshot) (publicationResultMessage, error) {
+	var message publicationResultMessage
+	if sequence < 1 || sequence > 16 || !formalCandidateDigest(snapshot.resultsSHA256[sequence-1]) || hash(raw) != snapshot.resultsSHA256[sequence-1] || decodeProviderDeploymentJSON(raw, &message) != nil {
+		return message, c.ErrExecutionRecord
+	}
+	canonical, err := ce.Canonical(message)
+	if err != nil || !bytes.Equal(canonical, raw) || message.Sequence != sequence {
+		return publicationResultMessage{}, c.ErrExecutionRecord
+	}
+	return message, nil
+}
+
+func (s *DeploymentService) snapshotOriginalPostCUpload(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, original publicationMaterialIntent, data *publicationUploadedCaptureData) (publicationPostCUploadSnapshot, error) {
+	var zero publicationPostCUploadSnapshot
+	if original.Claim != claim || data == nil || original.RequestSHA256 != data.RequestSHA256 {
+		return zero, c.ErrClaimLost
+	}
+	raw, err := ce.Canonical(original)
+	if err != nil {
+		return zero, c.ErrExecutionRecord
+	}
+	snapshot := publicationPostCUploadSnapshot{claim: claim, materialSHA256: hash(raw)}
+	access, err := s.publicationAccess(ctx, claim, attempt)
+	if err != nil || access.Check(ctx) != nil {
+		return zero, c.ErrExecutionAuthority
+	}
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	if err != nil {
+		return zero, err
+	}
+	defer tx.Rollback()
+	guard, err := access.Bind(ctx, tx)
+	if err != nil {
+		return zero, err
+	}
+	if err = s.checkPublicationTargetTx(ctx, tx, guard.Facts(), target); err != nil {
+		return zero, err
+	}
+	for seq := uint64(1); seq <= 16; seq++ {
+		raw, err := loadPublicationMetadata(ctx, tx, claim.Target.PublicID, publicationResultID(original, seq))
+		if err != nil {
+			return zero, err
+		}
+		snapshot.resultsSHA256[seq-1] = hash(raw)
+	}
+	p := &publicationPostCManifest{service: s, claim: claim, attempt: attempt, target: target, uploaded: data, materialSHA256: snapshot.materialSHA256, uploadSnapshot: snapshot}
+	if err = p.recheckUploadedTx(ctx, tx); err != nil {
+		return zero, err
+	}
+	if err = guard.RecheckTx(ctx, tx); err != nil {
+		return zero, err
+	}
+	if err = tx.Rollback(); err != nil {
+		return zero, err
+	}
+	return snapshot, nil
 }
 
 // Content selection only, with independent copies. This does not authenticate
@@ -179,7 +246,7 @@ func (p *publicationPostCManifest) recheckClockTx(ctx context.Context, tx *sql.T
 func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sql.Tx) error {
 	raw, err := loadPublicationMetadata(ctx, tx, p.claim.Target.PublicID, publicationMaterialID(p.target.InstallationID, p.claim.Target.PublicID, p.attempt))
 	var material publicationMaterialIntent
-	if err != nil || hash(raw) != p.materialSHA256 || decodeProviderDeploymentJSON(raw, &material) != nil || material.Version != "system-backup-original-publication-materials.v1" || material.Installation != p.target.InstallationID || material.Backup != p.claim.Target.PublicID || material.Attempt != p.attempt || material.Namespace != p.service.Config.Namespace || material.RequestSHA256 != p.uploaded.RequestSHA256 || material.Claim.Target != p.claim.Target || material.Claim.Owner != p.claim.Owner || material.Claim.RowVersion == 0 || material.Claim.RowVersion > p.claim.RowVersion {
+	if err != nil || hash(raw) != p.materialSHA256 || p.materialSHA256 != p.uploadSnapshot.materialSHA256 || decodeProviderDeploymentJSON(raw, &material) != nil || material.Version != "system-backup-original-publication-materials.v1" || material.Installation != p.target.InstallationID || material.Backup != p.claim.Target.PublicID || material.Attempt != p.attempt || material.Namespace != p.service.Config.Namespace || material.RequestSHA256 != p.uploaded.RequestSHA256 || material.Claim != p.uploadSnapshot.claim || material.Claim.Target != p.claim.Target || material.Claim.Owner != p.claim.Owner || material.Claim.RowVersion == 0 || material.Claim.RowVersion > p.claim.RowVersion {
 		return c.ErrExecutionRecord
 	}
 	activation, err := p.service.loadPublicationActivationTx(ctx, tx, material)
@@ -193,12 +260,11 @@ func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sq
 	seen := map[string]bool{}
 	for sequence := uint64(1); sequence <= 16; sequence++ {
 		raw, err := loadPublicationMetadata(ctx, tx, material.Backup, publicationResultID(material, sequence))
-		var message publicationResultMessage
-		if err != nil || decodeProviderDeploymentJSON(raw, &message) != nil {
+		if err != nil {
 			return c.ErrExecutionRecord
 		}
-		canonical, err := ce.Canonical(message)
-		if err != nil || !bytes.Equal(canonical, raw) || message.Version != publicationResultVersion || message.Installation != material.Installation || message.Backup != material.Backup || message.Attempt != material.Attempt || message.Sequence != sequence || message.RequestSHA256 != p.uploaded.RequestSHA256 || seen[message.Object.Key] || sequence == 16 && !cursor.matchesLastBody(raw) {
+		message, err := decodeOriginalPostCUploadResult(raw, sequence, p.uploadSnapshot)
+		if err != nil || message.Version != publicationResultVersion || message.Installation != material.Installation || message.Backup != material.Backup || message.Attempt != material.Attempt || message.RequestSHA256 != p.uploaded.RequestSHA256 || seen[message.Object.Key] || sequence == 16 && !cursor.matchesLastBody(raw) {
 			return c.ErrExecutionRecord
 		}
 		actual := ArtifactReadObject{Key: message.Object.Key, Version: message.Object.Version, SHA256: message.Object.SHA256, Size: message.Object.Bytes}
@@ -219,8 +285,8 @@ func (p *publicationPostCManifest) recheckUploadedTx(ctx context.Context, tx *sq
 	var locator, checksum, mac, lifecycle string
 	var size int64
 	err = tx.QueryRowContext(ctx, `SELECT planned_locator,candidate_checksum_sha256,candidate_length_bytes,owner_marker_hmac,lifecycle FROM system_backup_v2_staging_resources WHERE origin_installation_id=? AND backup_public_id=? AND attempt_no=? AND phase='publish' AND resource_type='remote_manifest_candidate' AND public_id=? FOR SHARE`, material.Installation, material.Backup, material.Attempt, material.CandidateResource).Scan(&locator, &checksum, &size, &mac, &lifecycle)
-	var location struct{ Endpoint, Bucket, Key string }
-	if err != nil || json.Unmarshal([]byte(locator), &location) != nil || location.Endpoint != p.target.Endpoint || location.Bucket != p.target.Bucket || location.Key != p.uploaded.Candidate.Key || checksum != hash(p.uploaded.Manifest) || size != int64(len(p.uploaded.Manifest)) || mac != material.CandidateOwnerMAC || !formalCandidateDigest(mac) || lifecycle != "creating" {
+	location, locationErr := json.Marshal(struct{ Endpoint, Bucket, Key string }{p.target.Endpoint, p.target.Bucket, p.uploaded.Candidate.Key})
+	if err != nil || locationErr != nil || locator != string(location) || checksum != hash(p.uploaded.Manifest) || size != int64(len(p.uploaded.Manifest)) || mac != material.CandidateOwnerMAC || !formalCandidateDigest(mac) || lifecycle != "creating" {
 		return c.ErrExecutionRecord
 	}
 	return nil
@@ -246,9 +312,9 @@ func (p *publicationPostCManifest) recheckTx(ctx context.Context, tx *sql.Tx, s 
 // receipt. This production segment consumes it in 102's original one-send
 // transaction, with current authority and original registered input rechecks.
 // It stops at confirmed manifest; marker/cleanup/acceptance/catalog are later.
-func (s *DeploymentService) publishOriginalManifestAfterRemoteCapture(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, capture publicationVerifiedCapture, objects publicationRemoteContainerObjects, receipt *publicationRemoteContainerReceipt, data *publicationUploadedCaptureData, materialSHA256 string) (nativePublicationObject, error) {
+func (s *DeploymentService) publishOriginalManifestAfterRemoteCapture(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, capture publicationVerifiedCapture, objects publicationRemoteContainerObjects, receipt *publicationRemoteContainerReceipt, data *publicationUploadedCaptureData, snapshot publicationPostCUploadSnapshot) (nativePublicationObject, error) {
 	var zero nativePublicationObject
-	if s == nil || store == nil || ctx == nil || ctx.Err() != nil || receipt == nil || receipt.service != s || receipt.claim != claim || receipt.attempt != attempt || receipt.target != store.config || receipt.access == nil || !receipt.checked(capture, objects) || !formalCandidateDigest(materialSHA256) {
+	if s == nil || store == nil || ctx == nil || ctx.Err() != nil || receipt == nil || receipt.service != s || receipt.claim != claim || receipt.attempt != attempt || receipt.target != store.config || receipt.access == nil || !receipt.checked(capture, objects) || !formalCandidateDigest(snapshot.materialSHA256) {
 		return zero, c.ErrExecutionAuthority
 	}
 	owned, selected, err := originalPostCManifestData(capture, store.config, data)
@@ -268,7 +334,7 @@ func (s *DeploymentService) publishOriginalManifestAfterRemoteCapture(ctx contex
 	if err != nil {
 		return zero, err
 	}
-	p := &publicationPostCManifest{service: s, claim: claim, attempt: attempt, target: store.config, capture: capture, objects: selected, receipt: receipt, uploaded: owned, materialSHA256: materialSHA256, certificate: certificate, intent: publicationJSONIntent{Kind: "manifest_put", Key: store.config.Root + claim.Target.PublicID + "/" + strconv.FormatUint(attempt, 10) + "/manifest.json", Payload: bytes.Clone(owned.Manifest), Deadline: until}}
+	p := &publicationPostCManifest{service: s, claim: claim, attempt: attempt, target: store.config, capture: capture, objects: selected, receipt: receipt, uploaded: owned, materialSHA256: snapshot.materialSHA256, uploadSnapshot: snapshot, certificate: certificate, intent: publicationJSONIntent{Kind: "manifest_put", Key: store.config.Root + claim.Target.PublicID + "/" + strconv.FormatUint(attempt, 10) + "/manifest.json", Payload: bytes.Clone(owned.Manifest), Deadline: until}}
 	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, err
@@ -312,9 +378,9 @@ func (s *DeploymentService) completeOriginalPublicationUploadedManifest(ctx cont
 	if original.Claim != *claim || original.RequestSHA256 != data.RequestSHA256 {
 		return zero, c.ErrClaimLost
 	}
-	materialRaw, err := ce.Canonical(original)
+	snapshot, err := s.snapshotOriginalPostCUpload(ctx, *claim, attempt, store.config, original, data)
 	if err != nil {
-		return zero, c.ErrExecutionRecord
+		return zero, err
 	}
 	if !capture.checked() {
 		capture, err = s.verifyOriginalPublicationCapture(ctx, claim, attempt, policy)
@@ -330,5 +396,5 @@ func (s *DeploymentService) completeOriginalPublicationUploadedManifest(ctx cont
 	if err != nil {
 		return zero, err
 	}
-	return s.publishOriginalManifestAfterRemoteCapture(ctx, *claim, attempt, store, capture, objects, receipt, owned, hash(materialRaw))
+	return s.publishOriginalManifestAfterRemoteCapture(ctx, *claim, attempt, store, capture, objects, receipt, owned, snapshot)
 }
