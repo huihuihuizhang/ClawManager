@@ -1,0 +1,27 @@
+{
+  "owner": "a84ead346d2eebc82364476eb015843b511d63a8",
+  "baseline": "5334ad1cd17b9b1512e069ac1645ecc4696c4860",
+  "files": {
+    "backend/internal/systembackup/gate.go": {
+      "raw_sha256": "92e74ece63c70ca279bbc49419625badbc974e9fc344286e0e1baba32d7e44f6",
+      "git_blob": "08d67e6ab56f26a5ed60e5220588b098afb16239"
+    },
+    "backend/internal/systembackup/mutation_admission_test.go": {
+      "raw_sha256": "bac31f4c3bb4be264c77b1a7a22978cdb1edd6ba95386e3aa09c56706155fc8f",
+      "git_blob": "92220fe69955abdd8b0b30ca90b8829e6156c3ac"
+    }
+  },
+  "status": "actual baseline RED and fixed GREEN completed",
+  "tests": {
+    "red": {
+      "session": 42083,
+      "natural_exit": 1,
+      "package_seconds": 14.755
+    },
+    "green": {
+      "session": 82260,
+      "natural_exit": 0,
+      "package_seconds": 8.457
+    }
+  }
+}

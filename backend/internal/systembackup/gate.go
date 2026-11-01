@@ -65,14 +65,24 @@ func (g Gate) AcquireMutation(ctx context.Context, scope string, ttl time.Durati
 	if err != nil {
 		return MutationLease{}, err
 	}
-	tx, err := g.DB.BeginTx(ctx, nil)
+	tx, err := g.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return MutationLease{}, err
 	}
 	defer tx.Rollback()
+	// Match the complete-request admission -> gate lock order. A new lease
+	// must not extend the drain while the gate is still idle, or queue an
+	// exclusive gate lock ahead of an admitted request's nested SQL.
+	var closed bool
+	if err = tx.QueryRowContext(ctx, "SELECT owner IS NOT NULL AND close_until>UTC_TIMESTAMP(6) FROM system_backup_gate_admissions WHERE scope=? LOCK IN SHARE MODE", scope).Scan(&closed); err != nil {
+		return MutationLease{}, err
+	}
+	if closed {
+		return MutationLease{}, ErrMaintenance
+	}
 	var phase string
 	var generation uint64
-	if err = tx.QueryRowContext(ctx, "SELECT phase,generation FROM system_backup_gate WHERE scope=? FOR UPDATE", scope).Scan(&phase, &generation); err != nil {
+	if err = tx.QueryRowContext(ctx, "SELECT phase,generation FROM system_backup_gate WHERE scope=? LOCK IN SHARE MODE", scope).Scan(&phase, &generation); err != nil {
 		return MutationLease{}, err
 	}
 	if phase != "idle" {

@@ -1,0 +1,11 @@
+{
+  "base": "C:\\Users\\13542\\Desktop\\\u65b0\u5efa\u6587\u4ef6\u5939\\.tools\\mysql-dist\\mysql-8.4.13-winx64",
+  "port": 51412,
+  "nonce": "10eb0ecdd1e5487cb922c8e07dfe77ec",
+  "pid": 27888,
+  "state": "setup-failed-server-exited-before-any-test",
+  "data": "C:\\Users\\13542\\AppData\\Local\\ClawManagerTests\\supervisor-gate-10eb0ecdd1e5487cb922c8e07dfe77ec\\data",
+  "root": "C:\\Users\\13542\\AppData\\Local\\ClawManagerTests\\supervisor-gate-10eb0ecdd1e5487cb922c8e07dfe77ec",
+  "owner": "primary-supervisor-mutation-a84",
+  "reason": "Windows MySQL launcher invoked from Unicode base did not retain server arguments; real server log used invalid default datadir and exited. No business test ran."
+}

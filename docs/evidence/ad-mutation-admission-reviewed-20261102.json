@@ -1,0 +1,143 @@
+{
+  "schema_version": "ad-mutation-admission-reviewed.v1",
+  "recorded_at": "2026-11-01T18:57:17.135293+00:00",
+  "parent": "ac168a6a53fca3312086789c1b6ef06ecb037edf",
+  "owner_commit": "a84ead346d2eebc82364476eb015843b511d63a8",
+  "scope": "Two frozen Go files only. AcquireMutation uses admission shared read before gate shared read in real READ COMMITTED transaction. Closed idle admission rejects fresh mutations while original granted lease may drain. No TTL/hold/claim changes.",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/gate.go",
+      "blob": "08d67e6ab56f26a5ed60e5220588b098afb16239",
+      "exact_frozen_tested_delta": true
+    },
+    {
+      "path": "backend/internal/systembackup/mutation_admission_test.go",
+      "blob": "92220fe69955abdd8b0b30ca90b8829e6156c3ac",
+      "exact_frozen_tested_delta": true
+    }
+  ],
+  "primary_native_tests": {
+    "baseline": {
+      "session": 42083,
+      "closed": true,
+      "natural_exit": 1,
+      "package_seconds": 14.755,
+      "cases": 2,
+      "result": "Both actual original counterexamples failed: closed idle admission grant waited until real context deadline; nested admitted request held shared lock while original exclusive lease grant queued."
+    },
+    "fixed": {
+      "session": 82260,
+      "closed": true,
+      "natural_exit": 0,
+      "package_seconds": 8.457,
+      "cases": 5,
+      "skipped": 0,
+      "result": "Same two counterexamples passed, plus original independent acquire/hold budgets, expired-writer/participant fencing, and expired-lease business transaction rollback."
+    },
+    "transport": "Fresh exclusively owned localhost MySQL8.4.13, original fixture direct root account. TLS/provider authority is outside these gate lock tests.",
+    "source_composition": "Baseline primary5334 plus exact A83 diagnostic tests (later committed ac168); fixed overlay alters only exact frozen a84 gate.go and its same new mutation test file."
+  },
+  "cleanup": {
+    "server_pid": 2380,
+    "system_schemas_only": true,
+    "normal_shutdown": true,
+    "port": 56376,
+    "launcher_pid": 26648,
+    "private_root_removed": true,
+    "processes_absent": true,
+    "nonce": "240678a6dcae40629a15c3dc3ccc7fd8",
+    "root_and_locked_system_accounts_only": true,
+    "server_uuid": "321be3df-d625-11f1-949c-745d22085e06",
+    "other_sessions": 0,
+    "peer_access": false
+  },
+  "initial_setup_failure": {
+    "business_test": false,
+    "cause": "Windows Unicode executable launcher dropped server parameters and exited. Failure log shows invalid default datadir; no test ran. Corrected using already available ASCII mysqld executable with SHA equal to original distribution, separate fresh nonce/data.",
+    "failed_launcher_pid": 27888,
+    "failed_server_pid_from_log": 27944,
+    "failed_processes_verified_absent": true,
+    "failed_pristine_data_retained_for_diagnostics": "C:\\Users\\13542\\AppData\\Local\\ClawManagerTests\\supervisor-gate-10eb0ecdd1e5487cb922c8e07dfe77ec",
+    "initial_cleanup_pid_check": "Live fresh instance had Windows launcher26648 and actual child2380, not one process. A mismatch stopped cleanup until CIM parent-child identity and exact nonce were checked; shutdown then succeeded."
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/baseline-red.log",
+      "raw_bytes": 671,
+      "raw_sha256": "9593495e678cdfbc7cf60f698e8f147da7d7ae47459df3976d4f5794b57ec8c9",
+      "committed_bytes": 661,
+      "committed_sha256": "a9165cac3a9f2e67c2463dd1b3095c4566cfe06a1c08609eba778a41a31bae73",
+      "git_blob": "b9b38130a60b948c8aff83d5ff3eccc7bc0b7205"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/fixed-green.log",
+      "raw_bytes": 896,
+      "raw_sha256": "3c53483244943f6a8f3ea1ade115e92908d47296f4280013e34f01a85af8268a",
+      "committed_bytes": 883,
+      "committed_sha256": "68e7d412c6760fac1bc60e2562b75ad684800ee6d8827ace6d5d8d2342b3d643",
+      "git_blob": "9f0d5d4fb0a6273d1dde16c242ba3d0820540f5c"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/cleanup-census.log",
+      "raw_bytes": 278,
+      "raw_sha256": "0a00b9aab7e8dd2dfeb25bafbd426089340864be2df25b76f13f2891c1c23edf",
+      "committed_bytes": 264,
+      "committed_sha256": "fde25c876a55863cefdda56db5593da6428b8c3b912c235df19344c3cb9a3001",
+      "git_blob": "d02802a3da87a3517096ec11fdebd8cf0cfec580"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/server-normal-shutdown.log",
+      "raw_bytes": 2171,
+      "raw_sha256": "166e53ca9fcb5c7fb9b291b2046b522537488547e43fb98f91be1679fc15719b",
+      "committed_bytes": 2157,
+      "committed_sha256": "e1b2bb9396a6ed994fd7ed318354825912b29dc3cb79b81dc6a87433d4261853",
+      "git_blob": "9aac23a825685b021768fcd0f505fe88b419f487"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/cleanup.json",
+      "raw_bytes": 398,
+      "raw_sha256": "8bce3b28892d210b722f5b11e26afe9bc8ab26b30cb5460b47784998e20c9150",
+      "committed_bytes": 384,
+      "committed_sha256": "a1895aaac903fa1561dbe704f8a08d8493b83a0f9e6432ca5f26884b3e20dfc6",
+      "git_blob": "8da65a14e2058d392ca382b4bd068b12b57ea0f9"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/verified-source-pins.json",
+      "raw_bytes": 866,
+      "raw_sha256": "6a7d8f6cfd038723693b2ef9054b6acbd7e474b4fa15587526e43376578afd4c",
+      "committed_bytes": 839,
+      "committed_sha256": "eb4daa2e71c893b7f07c3a6222cc124dc0d9bed559f25106a76e279f951ed582",
+      "git_blob": "b4bdbb153edbe2d385c73d17dab9f61c7a192ee5"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/failed-setup-v1.json",
+      "raw_bytes": 719,
+      "raw_sha256": "bec5191199e63fed07c1c253732c090bc780a271c24a7b877174053c28160b2f",
+      "committed_bytes": 708,
+      "committed_sha256": "36813f5f5bc2cfb53c67b55f6ad5bfd1047d772c3245880517a5de5287da10a3",
+      "git_blob": "2862dc8e5cd3685d069dec344639bf023e9fa537"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/initial-setup-init.log",
+      "raw_bytes": 877,
+      "raw_sha256": "5b9d47dcbc04889bec90e1ec3181fdaae8d7ec92dda46c87cbfeaac585ef2b4a",
+      "committed_bytes": 870,
+      "committed_sha256": "fa107a653b11e7aa0703820456d5f5a8a740bb7a8191c6fdb9a371cef27861fc",
+      "git_blob": "59e945a67eb2b7100e76bbbd7ba0511c06fa6d58"
+    },
+    {
+      "path": "docs/evidence/ad-mutation-admission-20261102/initial-setup-server-failure.log",
+      "raw_bytes": 1283,
+      "raw_sha256": "80962552e25cc832f1c6edfd3d22bdd77d0687ae1e7055d3204381302d108644",
+      "committed_bytes": 1273,
+      "committed_sha256": "459e922b8ca2cdf4ddd5d5b09a32f5e2e3382774c3aa8757d75df3823e2ef637",
+      "git_blob": "4872e15af18c25c29884817238130c443e21cc24"
+    }
+  ],
+  "review_limits": [
+    "Current non-test complete-request path already uses backupgate.grantRequestLease with admission-before-gate shared locking; no direct non-test AcquireMutation/WriteWithLease call found. This API defect is directly exercised by the native fixture background.",
+    "Does not identify the historical v12 gate holder, prove the unified native failure fixed, or solve 455 authorization checks latency.",
+    "No full same-task publication/cleanup/acceptance/catalog/terminal or page backup acceptance established."
+  ],
+  "full_page_acceptance": false
+}

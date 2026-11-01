@@ -1,0 +1,13 @@
+=== RUN   TestGateAcceptsIndependentConfiguredAcquireAndHoldBudgets
+--- PASS: TestGateAcceptsIndependentConfiguredAcquireAndHoldBudgets (1.10s)
+=== RUN   TestGateRequiresExpiredWritersToStopAndAllParticipantsToAck
+--- PASS: TestGateRequiresExpiredWritersToStopAndAllParticipantsToAck (1.04s)
+=== RUN   TestGateBusinessWriteRollsBackWhenLeaseExpires
+--- PASS: TestGateBusinessWriteRollsBackWhenLeaseExpires (1.04s)
+=== RUN   TestMutationAdmissionClosesWhileIdleAndExistingLeaseCanFinish
+2026/11/02 02:52:52 [system-backup-gate] stage=begin-acquire-rejected reason=gate-row-nowait sql_number=3572 sql_state=HY000
+--- PASS: TestMutationAdmissionClosesWhileIdleAndExistingLeaseCanFinish (1.14s)
+=== RUN   TestMutationLeaseGrantDoesNotQueueBehindAnAdmittedRequest
+--- PASS: TestMutationLeaseGrantDoesNotQueueBehindAnAdmittedRequest (1.02s)
+PASS
+ok  	clawreef/internal/systembackup	8.457s

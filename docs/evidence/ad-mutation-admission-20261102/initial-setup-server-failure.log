@@ -1,0 +1,10 @@
+2026-11-01T18:49:51.980790Z 0 [System] [MY-015015] [Server] MySQL Server - start.
+2026-11-01T18:49:52.135248Z 0 [System] [MY-010116] [Server] C:\Users\13542\Desktop\ (mysqld 8.4.13) starting as process 27944
+2026-11-01T18:49:52.135256Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T18:49:52.135918Z 0 [ERROR] [MY-010338] [Server] Can't find error-message file 'C:\Users\13542\share\english\errmsg.sys'. Check error-message file location and 'lc-messages-dir' configuration directive.
+2026-11-01T18:49:52.137531Z 0 [Warning] [MY-010091] [Server] Can't create test file C:\Users\13542\data\mysqld_tmp_file_case_insensitive_test.lower-test
+2026-11-01T18:49:52.137830Z 0 [Warning] [MY-010091] [Server] Can't create test file C:\Users\13542\data\mysqld_tmp_file_case_insensitive_test.lower-test
+2026-11-01T18:49:52.138059Z 0 [ERROR] [MY-013276] [Server] Failed to set datadir to 'C:\Users\13542\data\' (OS errno: 2 - No such file or directory)
+2026-11-01T18:49:52.140079Z 0 [ERROR] [MY-010119] [Server] Aborting
+2026-11-01T18:49:52.140420Z 0 [System] [MY-010910] [Server] C:\Users\13542\Desktop\: Shutdown complete (mysqld 8.4.13)  MySQL Community Server - GPL.
+2026-11-01T18:49:52.140422Z 0 [System] [MY-015016] [Server] MySQL Server - end.

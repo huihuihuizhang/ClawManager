@@ -1,0 +1,14 @@
+@@server_uuid	@@port
+321be3df-d625-11f1-949c-745d22085e06	56376
+Database
+information_schema
+mysql
+performance_schema
+sys
+User	Host	account_locked
+mysql.infoschema	localhost	Y
+mysql.session	localhost	Y
+mysql.sys	localhost	Y
+root	localhost	N
+other_client_sessions
+0

@@ -1,0 +1,14 @@
+2026-11-01T18:51:09.994613Z 0 [System] [MY-015015] [Server] MySQL Server - start.
+2026-11-01T18:51:10.170785Z 0 [System] [MY-010116] [Server] C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\bin\mysqld.exe (mysqld 8.4.13) starting as process 2380
+2026-11-01T18:51:10.170792Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T18:51:10.171125Z 0 [ERROR] [MY-010338] [Server] Can't find error-message file 'C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\share\english\errmsg.sys'. Check error-message file location and 'lc-messages-dir' configuration directive.
+2026-11-01T18:51:10.187178Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-11-01T18:51:10.926802Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-11-01T18:51:11.181493Z 0 [Warning] [MY-013829] [Server] Missing data directory for ICU regular expressions: C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\lib\private\.
+2026-11-01T18:51:11.192518Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-11-01T18:51:11.192774Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-11-01T18:51:11.214708Z 0 [System] [MY-010931] [Server] C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\bin\mysqld.exe: ready for connections. Version: '8.4.13'  socket: ''  port: 56376  MySQL Community Server - GPL.
+2026-11-01T18:54:39.760716Z 33 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.4.13).
+2026-11-01T18:54:39.761104Z 0 [System] [MY-013105] [Server] C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\bin\mysqld.exe: Normal shutdown.
+2026-11-01T18:54:40.367691Z 0 [System] [MY-010910] [Server] C:\Users\13542\AppData\Local\Temp\codex-clawmanager-ad-mysql-20261031\server\bin\mysqld.exe: Shutdown complete (mysqld 8.4.13)  MySQL Community Server - GPL.
+2026-11-01T18:54:40.368200Z 0 [System] [MY-015016] [Server] MySQL Server - end.

@@ -1,0 +1,14 @@
+{
+  "server_pid": 2380,
+  "system_schemas_only": true,
+  "normal_shutdown": true,
+  "port": 56376,
+  "launcher_pid": 26648,
+  "private_root_removed": true,
+  "processes_absent": true,
+  "nonce": "240678a6dcae40629a15c3dc3ccc7fd8",
+  "root_and_locked_system_accounts_only": true,
+  "server_uuid": "321be3df-d625-11f1-949c-745d22085e06",
+  "other_sessions": 0,
+  "peer_access": false
+}

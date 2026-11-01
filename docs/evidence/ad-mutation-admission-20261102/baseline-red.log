@@ -1,0 +1,10 @@
+=== RUN   TestMutationAdmissionClosesWhileIdleAndExistingLeaseCanFinish
+2026/11/02 02:51:42 [system-backup-gate] stage=begin-acquire-rejected reason=gate-row-nowait sql_number=3572 sql_state=HY000
+    mutation_admission_test.go:46: context deadline exceeded
+--- FAIL: TestMutationAdmissionClosesWhileIdleAndExistingLeaseCanFinish (10.21s)
+=== RUN   TestMutationLeaseGrantDoesNotQueueBehindAnAdmittedRequest
+    mutation_admission_test.go:87: grant queued an exclusive gate lock behind an admitted request context deadline exceeded
+--- FAIL: TestMutationLeaseGrantDoesNotQueueBehindAnAdmittedRequest (1.43s)
+FAIL
+FAIL	clawreef/internal/systembackup	14.755s
+FAIL
