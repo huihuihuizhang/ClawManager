@@ -67,16 +67,45 @@ type publicationContainerReader struct {
 }
 
 func (r *publicationContainerReader) Read(dst []byte) (int, error) {
+	if r.ctx == nil || r.ctx.Err() != nil {
+		return 0, c.ErrExecutionAuthority
+	}
 	if err := r.check(r.ctx); err != nil {
 		return 0, err
 	}
 	n, err := r.src.Read(dst)
+	if r.ctx.Err() != nil {
+		return 0, r.ctx.Err()
+	}
 	if current := r.check(r.ctx); current != nil {
 		return 0, current
 	}
 	return n, err
 }
 func (r *publicationContainerReader) Close() error { return r.src.Close() }
+
+type publicationContainerReaderAt struct {
+	ctx   context.Context
+	src   io.ReaderAt
+	check func(context.Context) error
+}
+
+func (r *publicationContainerReaderAt) ReadAt(dst []byte, offset int64) (int, error) {
+	if r.ctx == nil || r.ctx.Err() != nil {
+		return 0, c.ErrExecutionAuthority
+	}
+	if err := r.check(r.ctx); err != nil {
+		return 0, err
+	}
+	n, err := r.src.ReadAt(dst, offset)
+	if r.ctx.Err() != nil {
+		return 0, r.ctx.Err()
+	}
+	if current := r.check(r.ctx); current != nil {
+		return 0, current
+	}
+	return n, err
+}
 
 // Write actual physical bytes from original private C copies. No source GET,
 // Unwrap, re-encryption, direct artifact PUT or fake capture authority occurs.
