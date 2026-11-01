@@ -58,3 +58,19 @@ func (g deploymentForwardGuard) RecheckExecution(ctx context.Context, tx *sql.Tx
 	}
 	return g.Grant.RecheckExecution(ctx, tx, a, now)
 }
+
+func (g deploymentForwardGuard) SupportsHeldExecutionRecheck() bool {
+	grant, ok := g.Grant.(c.HeldExecutionAuthorizationGuard)
+	return ok && grant.SupportsHeldExecutionRecheck()
+}
+
+func (g deploymentForwardGuard) PrepareHeldExecutionRecheck(ctx context.Context, tx *sql.Tx, a d.Authority, now time.Time, read *c.HeldExecutionRead) error {
+	if e := g.Policy.check(ctx, tx, a); e != nil {
+		return e
+	}
+	grant, ok := g.Grant.(c.HeldExecutionAuthorizationGuard)
+	if !ok {
+		return c.ErrExecutionAuthority
+	}
+	return grant.PrepareHeldExecutionRecheck(ctx, tx, a, now, read)
+}

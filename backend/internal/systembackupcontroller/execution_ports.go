@@ -358,15 +358,25 @@ func (g *ExecutionAuthorityGuard) recheckOriginal(ctx context.Context, tx *sql.T
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&beforeOwner) != nil || beforeOwner.Before(floor) || !beforeOwner.Before(s.until) {
 		return ErrExecutionAuthority
 	}
-	if s.owner.RecheckExecution(ctx, tx, s.authority, beforeOwner) != nil || !s.owner.ValidUntil().Equal(s.until) {
-		return ErrExecutionAuthority
-	}
 	var v executionSnapshot
 	var err error
-	if s.first.heldCapture {
-		v, err = s.store.recheckHeldCapture(ctx, tx, s.authority, s.first)
+	if owner, ok := s.owner.(HeldExecutionAuthorizationGuard); ok && s.first.heldCapture && owner.SupportsHeldExecutionRecheck() {
+		read := newHeldExecutionRead(s.ctx, s.tx, s.store, s.authority, s.first)
+		ownerErr := owner.PrepareHeldExecutionRecheck(ctx, tx, s.authority, beforeOwner, read)
+		if ownerErr != nil || !s.owner.ValidUntil().Equal(s.until) {
+			read.abort()
+			return ErrExecutionAuthority
+		}
+		v, err = read.finish()
 	} else {
-		v, err = s.store.snapshot(ctx, tx, s.authority)
+		if s.owner.RecheckExecution(ctx, tx, s.authority, beforeOwner) != nil || !s.owner.ValidUntil().Equal(s.until) {
+			return ErrExecutionAuthority
+		}
+		if s.first.heldCapture {
+			v, err = s.store.recheckHeldCapture(ctx, tx, s.authority, s.first)
+		} else {
+			v, err = s.store.snapshot(ctx, tx, s.authority)
+		}
 	}
 	f := s.first
 	if err != nil || v.now.Before(beforeOwner) || !v.now.Before(s.until) || v.status != f.status || v.attemptStatus != f.attemptStatus || v.attemptVersion != f.attemptVersion || v.installationVersion != f.installationVersion || v.gateVersion != f.gateVersion || v.gateState != f.gateState || v.gateOwner != f.gateOwner || !v.claimUntil.Equal(f.claimUntil) || !v.gateUntil.Equal(f.gateUntil) || !v.holdUntil.Equal(f.holdUntil) || !bytes.Equal(v.config, f.config) || ctx.Err() != nil {

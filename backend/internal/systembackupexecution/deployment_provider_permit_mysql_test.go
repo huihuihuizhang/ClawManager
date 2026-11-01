@@ -431,6 +431,7 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 				assertOriginalCaptureRequestMutations(t, owner, client, admin, controlClient, authority, invocation)
 				assertOriginalClaimWithdrawnBeforeReserve(t, client, admin, controlClient, invocation, &generates)
 				assertHeldCaptureCurrentFacts(t, owner, authority)
+				assertHeldOwnerCurrentPolicy(t, owner, admin, authority)
 			}
 			capture, err := worker.NewDeliveredCaptureKeyJob(ctx, controlClient, invocation, config, *invocation.FormalCapture.PermitDelivery)
 			if err != nil {
