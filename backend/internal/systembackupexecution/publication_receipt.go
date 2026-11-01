@@ -17,6 +17,9 @@ type publicationObjectReceipt struct {
 	action  publicationJournalAction
 	target  PublicationTargetMaterials
 	object  nativePublicationObject
+	// Present only after the actual C-gated manifest102 send and full readback.
+	// Ordinary JSON/object receipts cannot construct this typed predecessor.
+	postCManifest *publicationPostCManifest
 }
 
 func (d *DeploymentService) publicationReceipt(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, action publicationJournalAction, object nativePublicationObject) (nativePublicationObject, error) {

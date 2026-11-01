@@ -1,0 +1,98 @@
+{
+  "schema_version": "d-original-committed-marker-production-candidate.v1",
+  "date": "2026-11-02",
+  "base_commit": "f92d3fb2fe4298c1e1bb3556414467d747c03e3d",
+  "reviewed_backup": "7169e6738fbad45d19f1cac3483a66fb8943dcfc",
+  "prerequisites": [
+    "2c1fd7cbd887d6d14a593349a842c4a25bf1ee0a",
+    "0352136baec28b7452aca5ecc62178f601b0f8b0",
+    "23927494afd40e742918a9460681c4933a266a36"
+  ],
+  "implemented": [
+    "Actual forward production caller now consumes original upload->actual independent C->original102 manifest->typed marker in the same latest real claim. No production helper is left uncalled.",
+    "Only successful C-gated manifest102 plus independently complete native body readback attaches private typed postC completion to the existing manifest receipt. Plain DTO, PUT/HEAD and ordinary JSON/object receipts cannot construct it.",
+    "Exact existing committed-marker.schema.json four-field canonical DTO binds original backup, actual manifest checksum and exact index checksum; marker own checksum remains external.",
+    "Original102 marker transaction rechecks current original parent manifest receipt/claim/target/action/version/body and original C budget, exact original known certificate bytes, immutable104 and16 original A-validated107 body pins. No C receipt is rebound from validating into publishing.",
+    "Current publishing-manifest authority guards marker. The original C authority is retained solely as an upper time bound; no claim/permission adoption or C/provider/DEK window extension occurs.",
+    "Deadline is min of original C/manifest bound, current parent-manifest authority and original certificate expiry. Current pinned local public signing history/revocation and monotonic database UTC clock are checked before/after marker staging and immediately before commit.",
+    "Existing102 capacity/CAS/one-send/unknown-query-only and native conditional PUT/full fixed-version EOF receipt remain in use. Marker does not issue signing operations or change usable/terminal eligibility."
+  ],
+  "validation": {
+    "targeted": {
+      "seconds": 3.791,
+      "session": 46075,
+      "exit": 0,
+      "log": ".tools/d-post-manifest-marker-7169-final-targeted-no-sql.log",
+      "sha256": "6a76582369d8585e5500b5f1326a1326144e469e8825dd36518ade2624369e2c",
+      "counterexamples": "11 marker content bindings plus production rejection of absent/ordinary untyped predecessor; no remote C receipt/authority is manufactured."
+    },
+    "full_execution_sql_off": {
+      "seconds": 13.992,
+      "session": 18094,
+      "exit": 0,
+      "log": ".tools/d-post-manifest-marker-7169-final-full-no-sql.log",
+      "sha256": "25572021bd74c1db633a040635e44770a576520a697fb41d7ef905c5346320a6"
+    }
+  },
+  "native_pending": {
+    "test": "TestDOriginalUploadedManifestAndCommittedMarkerMySQL",
+    "status": "EXPLICIT SKIP; all SQL opt-ins cleared. D has not taken A63507 window.",
+    "prepared_assertions": [
+      "Same actual A original eleven-member capture, upload-only worker and original mTLS/TokenReview receiver, followed by actual independent remote C/16 Range reads.",
+      "Exactly15 objects+candidate+manifest+marker=18 PUTs, two original confirmed-present102 actions with one send each, current marker object receipt.",
+      "Foreign target rejected before marker; after healthy marker a real ClaimCoordinator.Renew creates next claim and old typed parent must reject without another PUT.",
+      "Task remains publishing and artifact_usable=false; no acceptance/catalog/cleanup/terminal claim."
+    ],
+    "prerequisite": "A v7 source reached upload but107 receiver old window expired. A is fixing redundant opaque15 readback before107; actual C keeps every fixed-version EOF/hash/domain/Range check. Do not bypass claim or extend any grant."
+  },
+  "still_closed": [
+    "cleanup",
+    "acceptance/_ACCEPTANCE",
+    "catalog registration",
+    "artifact usable",
+    "terminal task success"
+  ],
+  "recovery_limit": "Only same-flow private completion currently authorizes fresh marker. Query-only102 recovery still observes original unknown actions, but confirmed-present recovery alone intentionally cannot reconstruct next-stage C authority; strict typed post-crash continuation remains a separate gate.",
+  "limits": [
+    "Candidate implementation plus SQL-off tests only, not actual marker or end-to-end backup success.",
+    "Earlier e59 C-only native proof and2c/035/239 component tests remain scoped to their original exact source.",
+    "No remote environment touched, no old grant/nonce/DEK/claim rewritten,30/5 unchanged. No D push."
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256_raw": "0aec5412736b5b5c206406aa13863e05c32f3500459b0bf93bff4f8b52396d66",
+      "sha256_lf": "0aec5412736b5b5c206406aa13863e05c32f3500459b0bf93bff4f8b52396d66"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_journal.go",
+      "sha256_raw": "70790d7bb9a2599a7b600178e5d50691c6a2576ddf24f0ecddb5b53af8c9b1f7",
+      "sha256_lf": "70790d7bb9a2599a7b600178e5d50691c6a2576ddf24f0ecddb5b53af8c9b1f7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256_raw": "e4c94cf713b9d5ede331aa68229b8d081b90af3e6fe207d1d3fe3f1e197330ae",
+      "sha256_lf": "e4c94cf713b9d5ede331aa68229b8d081b90af3e6fe207d1d3fe3f1e197330ae"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "sha256_raw": "30cf60d52d4949083f61d7f1b535c20472671e45bc217afc4d88f320a83540c0",
+      "sha256_lf": "30cf60d52d4949083f61d7f1b535c20472671e45bc217afc4d88f320a83540c0"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_receipt.go",
+      "sha256_raw": "8690ef2c0a46ee262ca0a098d747082d2110e3a0a28f7ff354026fff4011cc21",
+      "sha256_lf": "8690ef2c0a46ee262ca0a098d747082d2110e3a0a28f7ff354026fff4011cc21"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_manifest_marker.go",
+      "sha256_raw": "f306fe8b7626f8505acec7d1e298695c457b98d558c2c49e070cf15c52dd43a3",
+      "sha256_lf": "f306fe8b7626f8505acec7d1e298695c457b98d558c2c49e070cf15c52dd43a3"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_manifest_marker_test.go",
+      "sha256_raw": "88c147387b76899fc68ab4c51ccb0d35fe5cd8ce181476fb3df1d9f374440361",
+      "sha256_lf": "88c147387b76899fc68ab4c51ccb0d35fe5cd8ce181476fb3df1d9f374440361"
+    }
+  ]
+}

@@ -98,6 +98,10 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 }
 
 func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest) (publicationJournalAction, bool, error) {
+	return d.beginPublicationActionWithStageProof(ctx, claim, attempt, target, intent, continuation, postC, nil)
+}
+
+func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker) (publicationJournalAction, bool, error) {
 	var zero publicationJournalAction
 	intent.Deadline = intent.Deadline.UTC().Truncate(time.Microsecond)
 	if intent.validate(target) != nil || target.InstallationID != d.Config.InstallationID {
@@ -131,6 +135,11 @@ func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context,
 	}
 	if postC != nil {
 		if err := postC.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
+	if marker != nil {
+		if err := marker.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
 			return zero, false, err
 		}
 	}
@@ -173,6 +182,11 @@ func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context,
 			return zero, false, err
 		}
 	}
+	if marker != nil {
+		if err := marker.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
 	if guard.RecheckTx(ctx, tx) != nil {
 		return zero, false, c.ErrClaimLost
 	}
@@ -183,6 +197,11 @@ func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context,
 	action := publicationJournalAction{ID: id, Kind: intent.Kind, ActionKey: actionKey, LogicalSHA: logical, Key: intent.Key, Payload: bytes.Clone(intent.Payload), PayloadSHA: hash(intent.Payload), Size: int64(len(intent.Payload)), Generation: 1, Version: 1, Deadline: intent.Deadline, State: "request_sent"}
 	if postC != nil {
 		if err := postC.recheckClockTx(ctx, tx); err != nil {
+			return zero, false, err
+		}
+	}
+	if marker != nil {
+		if err := marker.recheckClockTx(ctx, tx); err != nil {
 			return zero, false, err
 		}
 	}
@@ -342,10 +361,14 @@ func (d *DeploymentService) publishOriginalJSONWithContinuation(ctx context.Cont
 }
 
 func (d *DeploymentService) publishOriginalJSONWithProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest) (nativePublicationObject, error) {
+	return d.publishOriginalJSONWithStageProof(ctx, claim, attempt, store, intent, continuation, postC, nil)
+}
+
+func (d *DeploymentService) publishOriginalJSONWithStageProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker) (nativePublicationObject, error) {
 	if store == nil || intent.Kind == "catalog_registration_append" && store.catalog == nil || intent.Kind != "catalog_registration_append" && store.catalog != nil {
 		return nativePublicationObject{}, ErrPublicationCatalogUnavailable
 	}
-	action, send, err := d.beginPublicationActionWithProof(ctx, claim, attempt, store.config, intent, continuation, postC)
+	action, send, err := d.beginPublicationActionWithStageProof(ctx, claim, attempt, store.config, intent, continuation, postC, marker)
 	if err != nil {
 		return nativePublicationObject{}, err
 	}
