@@ -47,7 +47,24 @@ type ProviderPermitIssuerGrantMount struct {
 }
 
 func readPermitIssuerGrant(ctx context.Context, cfg ProviderPermitIssuerConfig) (ProviderPermitIssuerGrant, error) {
-	bad := func() (ProviderPermitIssuerGrant, error) { return ProviderPermitIssuerGrant{}, kms.ErrPermission }
+	proof, err := authenticatePermitIssuerGrant(ctx, cfg)
+	if err != nil {
+		return ProviderPermitIssuerGrant{}, err
+	}
+	return proof.grant, nil
+}
+
+// Only immutable, authenticated document data is retained for one prepared
+// request. Every recheck still reads the complete current file and validates
+// its original trust pin, configuration and time bounds.
+type authenticatedPermitIssuerGrant struct {
+	grant  ProviderPermitIssuerGrant
+	raw    []byte
+	issuer ed25519.PublicKey
+}
+
+func readPermitIssuerGrantFile(ctx context.Context, cfg ProviderPermitIssuerConfig) ([]byte, error) {
+	bad := func() ([]byte, error) { return nil, kms.ErrPermission }
 	m := cfg.GrantMount
 	if ctx == nil || ctx.Err() != nil || !filepath.IsAbs(m.File) || !authorityHash.MatchString(m.SHA256) || len(m.Issuer) != ed25519.PublicKeySize || cfg.Workload.GrantSHA256 != m.SHA256 || m.SHA256 == cfg.CaptureGrantSHA256 {
 		return bad()
@@ -66,9 +83,19 @@ func readPermitIssuerGrant(ctx context.Context, cfg ProviderPermitIssuerConfig) 
 		return bad()
 	}
 	h := sha256.Sum256(raw)
-	if hex.EncodeToString(h[:]) != m.SHA256 || strictPermitIssuerJSON(raw, new(any)) != nil {
+	if hex.EncodeToString(h[:]) != m.SHA256 {
 		return bad()
 	}
+	return raw, nil
+}
+
+func authenticatePermitIssuerGrant(ctx context.Context, cfg ProviderPermitIssuerConfig) (*authenticatedPermitIssuerGrant, error) {
+	bad := func() (*authenticatedPermitIssuerGrant, error) { return nil, kms.ErrPermission }
+	raw, err := readPermitIssuerGrantFile(ctx, cfg)
+	if err != nil || strictPermitIssuerJSON(raw, new(any)) != nil {
+		return bad()
+	}
+	m := cfg.GrantMount
 	var envelope SignedProviderPermitIssuerGrant
 	if strictPermitIssuerJSON(raw, &envelope) != nil || len(envelope.Record) > 32768 || !ed25519.Verify(m.Issuer, append([]byte(ProviderPermitIssuerGrantDomain), envelope.Record...), envelope.Signature) {
 		return bad()
@@ -77,21 +104,39 @@ func readPermitIssuerGrant(ctx context.Context, cfg ProviderPermitIssuerConfig) 
 	if strictPermitIssuerJSON(envelope.Record, &g) != nil {
 		return bad()
 	}
+	if validatePermitIssuerGrant(cfg, g, time.Now()) != nil {
+		return bad()
+	}
+	return &authenticatedPermitIssuerGrant{grant: g, raw: raw, issuer: bytes.Clone(m.Issuer)}, nil
+}
+
+func (p *authenticatedPermitIssuerGrant) recheck(ctx context.Context, cfg ProviderPermitIssuerConfig, now time.Time) error {
+	if p == nil || len(p.raw) == 0 || !bytes.Equal(p.issuer, cfg.GrantMount.Issuer) {
+		return kms.ErrPermission
+	}
+	raw, err := readPermitIssuerGrantFile(ctx, cfg)
+	if err != nil || !bytes.Equal(raw, p.raw) || validatePermitIssuerGrant(cfg, p.grant, time.Now()) != nil || now.IsZero() || now.Before(p.grant.NotBefore) || !now.Before(p.grant.Until) {
+		return kms.ErrPermission
+	}
+	return nil
+}
+
+func validatePermitIssuerGrant(cfg ProviderPermitIssuerConfig, g ProviderPermitIssuerGrant, now time.Time) error {
+	bad := func() error { return kms.ErrPermission }
 	w := cfg.Workload
 	w.GrantSHA256 = ""
-	now := time.Now()
 	p := g.GeneratePermission
 	narrowName := regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 	if p.Path != "transit/datakey/plaintext/"+cfg.Binding.Provider.KeyName || p.ProviderVersion != cfg.Binding.Key.ProviderVersion || !narrowName.MatchString(p.AuthMount) || !narrowName.MatchString(p.Role) || !narrowName.MatchString(p.Policy) || !authorityHash.MatchString(p.PolicySHA256) || !authorityHash.MatchString(p.RoleSHA256) || !authorityHash.MatchString(p.JWTTrustSHA256) || !reflect.DeepEqual(p.Reference, cfg.Binding.GenerateRef) {
 		return bad()
 	}
-	if g.Version != "system-backup-provider-permit-issuer-grant.v1" || !reflect.DeepEqual(g.Binding, cfg.Binding) || g.Database != cfg.Capabilities.database || g.DatabaseAccount == "" || g.Workload != w || len(g.SigningPublicKey) != ed25519.PublicKeySize || bytes.Equal(g.SigningPublicKey, m.Issuer) || g.WorkerNamespace == "" || g.WorkerServiceAccountName == "" || g.WorkerServiceAccountUID == "" || !filepath.IsAbs(g.WorkerJWTIdentityFile) || g.GeneratePermission.ControllerVerifier != nil || g.NotBefore.IsZero() || now.Before(g.NotBefore) || !now.Before(g.Until) || g.Until.Sub(g.NotBefore) > 24*time.Hour || g.Revoked {
+	if g.Version != "system-backup-provider-permit-issuer-grant.v1" || !reflect.DeepEqual(g.Binding, cfg.Binding) || g.Database != cfg.Capabilities.database || g.DatabaseAccount == "" || g.Workload != w || len(g.SigningPublicKey) != ed25519.PublicKeySize || bytes.Equal(g.SigningPublicKey, cfg.GrantMount.Issuer) || g.WorkerNamespace == "" || g.WorkerServiceAccountName == "" || g.WorkerServiceAccountUID == "" || !filepath.IsAbs(g.WorkerJWTIdentityFile) || g.GeneratePermission.ControllerVerifier != nil || g.NotBefore.IsZero() || now.Before(g.NotBefore) || !now.Before(g.Until) || g.Until.Sub(g.NotBefore) > 24*time.Hour || g.Revoked {
 		return bad()
 	}
 	if _, err := workerJWTIdentityPath(g.WorkerJWTIdentityFile, "validation-only"); err != nil {
 		return bad()
 	}
-	return g, nil
+	return nil
 }
 
 // A signed optional Pod directory is resolved only from the ORIGINAL admitted
