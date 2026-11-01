@@ -1,0 +1,92 @@
+{
+  "prepared_native_test": "TestDOriginalUploadedManifestMarkerAndCandidateCleanupMySQL",
+  "production_call": "runPublicationForwardPreparation -> real C/MF/marker -> original authenticated process exit -> cleanupOriginalPublicationCandidate",
+  "behavior": [
+    "Optional all-or-none independent delete identity/version/private credential pin; actual original artifact_delete config column and original snapshot reference rechecked in same transaction",
+    "Current publishing marker/manifest receipts; original certificate/history/budgets; original104 HMAC owner key; original121/activation and16 A-validated107 body pins plus authenticated process pin retained",
+    "Freeze actual SQL stop-proof body hashes and recheck exact original process/native Pod/Node before deletion",
+    "Full read of original candidate fixed version and original manifest bytes precedes deletion",
+    "Original104 creating -> sealed with original immutable version -> deleting/running committed before exactly one provider DELETE",
+    "DELETE is presigned with independent delete material for exact original candidate key and fixed version, never read/write/presigned PUT fallback",
+    "Independent read principal fixed-version GET must prove explicit NoSuchVersion; generic404, NoSuchKey,403,retained object,wrong version,duplicate/nested/truncated XML remain unknown",
+    "Only then original104 deleted/succeeded in current claim transaction; unknown commit never resends or mints a cleanup receipt",
+    "Prepared same original native capture/upload/C/MF/marker/process-exit test invokes actual candidate cleanup; native Range fixture self-deadlock corrected"
+  ],
+  "limits": [
+    "Prepared full native path not run: A retains63507 ownership",
+    "This is only remote manifest-candidate cleanup; Job/Secret, original owned task directory and flat seal custody cleanup remain required",
+    "No registered cleanup_result evidence, signed acceptance, catalog append, artifact usability or terminal success",
+    "Same-flow constructor only; existing/unknown deleting state is protected query-only and cannot be adopted for a second DELETE; strict cleanup recovery still required"
+  ],
+  "schema_version": "d-original-candidate-delete-production-candidate.v1",
+  "date": "2026-11-02",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_cleanup.go",
+      "sha256": "cbd0fe2ccb382633695b722cf1e088977caa8a9686794337a7764378a4c05a17"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_cleanup_test.go",
+      "sha256": "50fb45b47fe24e29512762df5303a39ed48d732d1abc22d12fe41f7b2cf836c3"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_delete_s3.go",
+      "sha256": "b078563d2320aea2c7a4b233ea32dcc63c5fb1ef397b185ee6506e174c54a15b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_delete_s3_test.go",
+      "sha256": "c804f243dcafd7e43f42a8f1c065918112fecb0b8f423c2ca17dda643d6489f3"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_s3.go",
+      "sha256": "52819cf6a945b59f3328f2a76fa81cf8ff521c2fb835c50ca65ea7d24b657bcf"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_s3_test.go",
+      "sha256": "510aba517adc6cf05e7dadee0a6744a70ac93655fd48c67483e18413c9ea3e84"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "sha256": "6a1b9c840e1c7db8eb2acef74645170c9031a7fff72ace90840b2249788d3f94"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256": "613bab0846b8c8c62620c0f769894f65a714ab884ef34b566bb54cba75afd8fb"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256": "c906393f9e1bf658ee333f1f83dc31b12913dd1f22c3ff6f3e9d9262f50453c6"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "sha256": "02044c198d33c461f5844c6f5eecf6b57dd3645f1e627be6d6d179ead92ed3da"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "sha256": "0dbeff2ca824d3168aacfde657f26a1c7f0363be026731ca1aa5a58b1d6d7450"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_config_references.go",
+      "sha256": "a71c71ed465482ccc3430ce8b6fe575e06c72cb82133b3ad0c5c54c50efe32e8"
+    }
+  ],
+  "validation": {
+    "targeted": {
+      "seconds": 3.381,
+      "result": "PASS",
+      "session": 83726
+    },
+    "final_sql_off_execution": {
+      "seconds": 13.91,
+      "result": "PASS",
+      "session": 31723
+    },
+    "dedicated_tls_transport": {
+      "seconds": 3.332,
+      "result": "PASS",
+      "session": 97926
+    },
+    "network_scope": "Local TLS memory provider and fake Kubernetes only; initial sandbox-denied attempts sent zero requests; loopback tests rerun with approved escalation"
+  },
+  "base_head": "4b8fdef45ec8d8adb0cd625b125917e03065e16b"
+}

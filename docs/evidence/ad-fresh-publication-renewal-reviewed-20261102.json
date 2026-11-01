@@ -1,0 +1,162 @@
+{
+  "schema_version": "supervisor-fresh-publication-renewal-review.v1",
+  "base": "4b8fdef45ec8d8adb0cd625b125917e03065e16b",
+  "candidate": "2880edd0aad4dd091122f563c728d016883ec838",
+  "decision": "accept component after frozen source and composed regression review",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/a_publisher_verifier_mysql_test.go",
+      "frozen_blob": "f35970e778480724325319f852a8380f8ece9392",
+      "composed_blob": "f35970e778480724325319f852a8380f8ece9392",
+      "sha256": "ded2072d4dc88384f58c4cd8fd3bbba8c01e252487c2ca43f4630dbbded0bad2",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/formal_consumer_mysql_test.go",
+      "frozen_blob": "3ab5da48adabdb640874624acbcd75f926e9b3c0",
+      "composed_blob": "3ab5da48adabdb640874624acbcd75f926e9b3c0",
+      "sha256": "61b4461461fa53ea80fe53b57a2f59d425935f0eb50c34c4345981937ce40765",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_capture_bootstrap.go",
+      "frozen_blob": "9ac2ef69e745a6026b586d453d100d12900a8b7a",
+      "composed_blob": "9ac2ef69e745a6026b586d453d100d12900a8b7a",
+      "sha256": "12bdf3d0c858801c4d1a58d87718eb4f68677615832ced3bdbdaa1d7e4acb69e",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container.go",
+      "frozen_blob": "d9c4da1078f4635816ac383a5a598e7cf9df28a2",
+      "composed_blob": "d9c4da1078f4635816ac383a5a598e7cf9df28a2",
+      "sha256": "55634d57db8c087202cde6797bc20356cd93a01ccc93b5c110c70f6916b9f674",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_files.go",
+      "frozen_blob": "d3eff6bf872b5b9f5dac6e5ae0195f52e30bd2d8",
+      "composed_blob": "d3eff6bf872b5b9f5dac6e5ae0195f52e30bd2d8",
+      "sha256": "ec009fcc0601ee479ea739efbf77b8fb95c9ccd5b29a2685048aab2734b60958",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_stage.go",
+      "frozen_blob": "6cdea64dbfae27caa237f8082ccb58752b8be326",
+      "composed_blob": "6cdea64dbfae27caa237f8082ccb58752b8be326",
+      "sha256": "f576dd35c092f42af2003d7ac83dfef7c57069a0112fbec990717783bf97f13b",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "frozen_blob": "c4ffef4f2c129ccf7304f0bb15c0cc383fc3ab9d",
+      "composed_blob": "69b3785bbbb1978bc5e04fb43c9e9b9a293b6d17",
+      "sha256": "7ee0803a90a886488bf494c28ca515330caa2089005ef9450a63d00d6af4f102",
+      "composition": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward_request.go",
+      "frozen_blob": "e0c4f66c80190c02a50c5db8d10c13f199a9645e",
+      "composed_blob": "e0c4f66c80190c02a50c5db8d10c13f199a9645e",
+      "sha256": "8aac741c0a57a6518a81600129e729b1615f91de8529a265ec691ad309b0d199",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_fresh_preparation.go",
+      "frozen_blob": "362197023c16afb7c1cee289477076901bb6acdc",
+      "composed_blob": "362197023c16afb7c1cee289477076901bb6acdc",
+      "sha256": "0d17a8065072d837487c879e1cae460cdc7b91ec620b8a0a095004ca71fafa02",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_fresh_preparation_mysql_test.go",
+      "frozen_blob": "5866839c5ff7b6a91ffbbc557258a40c683f2f14",
+      "composed_blob": "5866839c5ff7b6a91ffbbc557258a40c683f2f14",
+      "sha256": "85cb7f0002039543047a4296ba16e3c39b82e5b002eddec12b77b64a64fcae81",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_fresh_preparation_race_mysql_test.go",
+      "frozen_blob": "b6deda0a4e76d0ca82b42e6f211d5e85ed0cbe22",
+      "composed_blob": "b6deda0a4e76d0ca82b42e6f211d5e85ed0cbe22",
+      "sha256": "71b1ed0f8398cb872b25ac5f15ea7b430dd31a6599825db2c803ede452a05e20",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_fresh_preparation_test.go",
+      "frozen_blob": "4dd181a22904ddc0f57f80c5bc3b1eaa5dde4e3a",
+      "composed_blob": "4dd181a22904ddc0f57f80c5bc3b1eaa5dde4e3a",
+      "sha256": "0b6ca740c1b770eea676b33870a865f1265abc5b7c66111d91d0fa824314a765",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_materials_mysql_test.go",
+      "frozen_blob": "589e7328f1eec8f8f2e32f27d0005cbfd54e34ef",
+      "composed_blob": "589e7328f1eec8f8f2e32f27d0005cbfd54e34ef",
+      "sha256": "5321d1bc671148318ffa3485b46909c2bd14c9fc3eb6ddf30d15a1256ace99f6",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "frozen_blob": "ba1442d44afea8296e2ff3d873e3d141d2044b46",
+      "composed_blob": "053bd333a4657585979e38105f913c6dd8390900",
+      "sha256": "6afe78eff6318a53ab74852c42890c9f8bb0fb3e3f2c7220bcf82beabfacc3ce",
+      "composition": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_verified_capture.go",
+      "frozen_blob": "ba638d0e62294b775aad0b1427ddccca1b1bb287",
+      "composed_blob": "ba638d0e62294b775aad0b1427ddccca1b1bb287",
+      "sha256": "dafaa1efc205b1c265869c74528bc2710ec339ec0c0abca1849be94dfd4195e8",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publisher_capture_records_mysql_test.go",
+      "frozen_blob": "8c37a9a952ea1751a764ac0fcd668de65ab66257",
+      "composed_blob": "8c37a9a952ea1751a764ac0fcd668de65ab66257",
+      "sha256": "1844f7cd9cfda9f9d9a3f2eff91fb6417720d34115600defdcdcd9040012a8c5",
+      "composition": false
+    }
+  ],
+  "review": [
+    "Actual first-forward initial capture verification, MF/container/bootstrap packaging and final pre-upload boundary use explicit private fresh mode. Ordinary post-upload C guard remains unchanged.",
+    "Original ClaimCoordinator SQL-clock CAS owns the transaction; restrictive BeginTx wrapper holds current task row, current publisher scope/config/target/policy and checks absent104/material/activation/owner/upload/121/107/102 before original CAS.",
+    "Only exact sql.ErrNoRows can prove absence; joined driver failure never becomes absence. Existing uncertainty never refreshes old material/grant/certificate or sends a Job.",
+    "Request bytes, exact signed certificate and task deadline are retained; no production30/5 TTL or heartbeat trigger relaxed. Fresh token assigned only after original CAS acknowledged.",
+    "Native concurrent test observes actual InnoDB waiting session:104-first deniesrenewal; Renew-first rejects staleclaim104. Same transaction prevents delegation-to-renew TOCTOU.",
+    "Test-only goroutine correlation preserves no-Kube-in-own-TX assertion for actual concurrent calls; old single-session global-pool assertion retained, with pure own-vs-other/closed trace checks.",
+    "Reviewed two automatic merge compositions: retain D actual original-process identity/returned-exit fixture and ThroughUploadExit caller, plus A fresh renewal call."
+  ],
+  "frozen_owner_native": {
+    "session": 65912,
+    "exit_code": 0,
+    "closed": true,
+    "seconds": 91.991,
+    "sql": "actual pinned TLS local MySQL",
+    "cases": {
+      "preparation": 16,
+      "actual_task_lock_races": 2,
+      "guard_modes": 2,
+      "pure_tests": 2
+    },
+    "raw_log_sha256": "ae076d8ff8655d1b5e5f12f16b7027436fbaba186a07eefe29b32a71247733b6",
+    "scope": "Current real publisher/capture plan plus production104/121/107/102 DDL fixture; not six-domain originalcapture/upload/fullC/acceptance proof.",
+    "previous_v4": "Real lock waits passed sequence expectations but globaldbStats incorrectly flagged peer transaction; RED retained, test observation corrected for own calling execution."
+  },
+  "primary_composed_test": {
+    "session": 24276,
+    "exit_code": 0,
+    "closed": true,
+    "full_execution_seconds": 14.023,
+    "SQL": "off",
+    "downloads": "off",
+    "raw_log_sha256": "e1ee33bb5eb9b3a315feab4f814db3eecf410750ba377c0f44738f778631c58f"
+  },
+  "not_proven": [
+    "Capture original DEK window latency problem is separate and still unresolved",
+    "Full native same-task upload->C->manifest->marker->exit->cleanup",
+    "Acceptance/catalog/correct successful terminal",
+    "Full isolated restore and onsite deployment/permission materials"
+  ],
+  "migration175_or_D_candidate_delete_included": false,
+  "recorded_at": "2026-11-01T17:05:16.192802+00:00"
+}

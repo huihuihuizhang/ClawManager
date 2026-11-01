@@ -30,6 +30,9 @@ type aNativePublicationServer struct {
 	delay                 time.Duration
 	deadline              time.Time
 	read, write           nativePublicationCredential
+	remove                nativePublicationCredential
+	candidateDeleteKey    string
+	deletes               int
 	onGet                 func()
 	onRead                func(http.ResponseWriter, *http.Request) bool
 }
@@ -86,6 +89,17 @@ func aValidPublicationSignature(r *http.Request, key nativePublicationCredential
 func (s *aNativePublicationServer) serve(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if r.Method == http.MethodDelete {
+		if s.remove.AccessKey == "" || r.URL.Path != s.candidateDeleteKey || r.URL.Query().Get("versionId") != "original-v1" || !aValidPublicationSignature(r, s.remove, s.deadline) {
+			http.Error(w, "delete denied", 403)
+			return
+		}
+		s.deletes++
+		delete(s.objects, r.URL.Path)
+		w.Header().Set("x-amz-version-id", "original-v1")
+		w.WriteHeader(204)
+		return
+	}
 	if r.Method == "PUT" {
 		s.puts++
 		raw, err := io.ReadAll(io.LimitReader(r.Body, 4<<20))
@@ -118,6 +132,9 @@ func (s *aNativePublicationServer) serve(w http.ResponseWriter, r *http.Request)
 	raw, ok := s.objects[r.URL.Path]
 	if !ok {
 		w.WriteHeader(404)
+		if s.remove.AccessKey != "" && r.URL.Path == s.candidateDeleteKey && r.URL.Query().Get("versionId") == "original-v1" {
+			_, _ = w.Write([]byte(`<Error><Code>NoSuchVersion</Code><VersionId>original-v1</VersionId></Error>`))
+		}
 		return
 	}
 	if r.URL.Query().Get("versionId") != "" && r.URL.Query().Get("versionId") != "original-v1" {

@@ -47,6 +47,10 @@ type PublicationTargetMaterials struct {
 	ReadCredentialSHA256   string `json:"read_credential_sha256"`
 	WriteCredentialFile    string `json:"write_credential_file"`
 	WriteCredentialSHA256  string `json:"write_credential_sha256"`
+	DeleteIdentityHash     string `json:"delete_identity_hash,omitempty"`
+	DeleteRefVersion       string `json:"delete_ref_version,omitempty"`
+	DeleteCredentialFile   string `json:"delete_credential_file,omitempty"`
+	DeleteCredentialSHA256 string `json:"delete_credential_sha256,omitempty"`
 	CatalogMaterialsFile   string `json:"catalog_materials_file,omitempty"`
 	CatalogMaterialsSHA256 string `json:"catalog_materials_sha256,omitempty"`
 }
@@ -76,6 +80,11 @@ type nativePublicationS3 struct {
 }
 
 func (p PublicationTargetMaterials) validate() error {
+	if p.DeleteIdentityHash != "" || p.DeleteRefVersion != "" || p.DeleteCredentialFile != "" || p.DeleteCredentialSHA256 != "" {
+		if !formalCandidateDigest(p.DeleteIdentityHash) || p.DeleteIdentityHash == p.ReadIdentityHash || p.DeleteIdentityHash == p.WriteIdentityHash || p.DeleteRefVersion == "" || p.DeleteRefVersion == "current" || p.DeleteRefVersion == "latest" || len(p.DeleteRefVersion) > 128 || strings.ContainsAny(p.DeleteRefVersion, "\x00\r\n") || !filepath.IsAbs(p.DeleteCredentialFile) || filepath.Clean(p.DeleteCredentialFile) != p.DeleteCredentialFile || p.DeleteCredentialFile == p.ReadCredentialFile || p.DeleteCredentialFile == p.WriteCredentialFile || !formalCandidateDigest(p.DeleteCredentialSHA256) {
+			return errPublicationUnavailable
+		}
+	}
 	if p.CatalogMaterialsFile != "" || p.CatalogMaterialsSHA256 != "" {
 		if !filepath.IsAbs(p.CatalogMaterialsFile) || filepath.Clean(p.CatalogMaterialsFile) != p.CatalogMaterialsFile || !formalCandidateDigest(p.CatalogMaterialsSHA256) {
 			return errPublicationUnavailable
@@ -164,6 +173,10 @@ func (s *nativePublicationS3) credential(write bool) (nativePublicationCredentia
 	if write {
 		path, pin = s.config.WriteCredentialFile, s.config.WriteCredentialSHA256
 	}
+	return loadNativePublicationCredential(path, pin)
+}
+
+func loadNativePublicationCredential(path, pin string) (nativePublicationCredential, error) {
 	raw, err := pinnedDeploymentFile(path, pin, 16384)
 	if err != nil {
 		return nativePublicationCredential{}, errPublicationUnavailable

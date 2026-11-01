@@ -68,6 +68,10 @@ func (x *aOriginalForwardFixture) options(o *dOriginalSixPartFixtureOptions) {
 				r["identity_hash"], r["version"] = p.WriteIdentityHash, p.WriteRefVersion
 			case "artifact_ca":
 				r["identity_hash"], r["version"] = p.CAIdentityHash, p.CARefVersion
+			case "artifact_delete":
+				if p.DeleteIdentityHash != "" {
+					r["identity_hash"], r["version"] = p.DeleteIdentityHash, p.DeleteRefVersion
+				}
 			}
 		}
 		return nil
@@ -276,13 +280,16 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 
 // An optional continuation receives only this actually completed original
 // upload. Default A transport test retains its narrower original scope.
-func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(context.Context, *testing.T, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture, *nativePublicationS3, *aNativePublicationServer)) {
+func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(context.Context, *testing.T, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture, *nativePublicationS3, *aNativePublicationServer), configureTarget ...func(*nativePublicationS3, *aNativePublicationServer)) {
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires exclusively handed-over original SAN/TLS MySQL")
 	}
 	previous := debug.SetMemoryLimit(4 << 30)
 	defer debug.SetMemoryLimit(previous)
 	store, native := newANativePublicationStore(t, 20*time.Minute)
+	for _, configure := range configureTarget {
+		configure(store, native)
+	}
 	x := &aOriginalForwardFixture{store: store, native: native}
 	fixture := &aSameTaskCertificateMaterials{configureOptions: x.options, configurePublisher: x.publisher}
 	runAOriginalSixPartCertificatePublicationFixture(t, "capture-description", fixture, func(ctx context.Context, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture) {
