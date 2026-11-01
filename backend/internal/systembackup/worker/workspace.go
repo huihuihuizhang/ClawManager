@@ -18,6 +18,7 @@ import (
 	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/workspace"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	sh "clawreef/internal/systembackupskillhub"
 )
@@ -54,6 +55,7 @@ type Request struct {
 	Teams              *TeamCaptureSpec         `json:"teams,omitempty"`
 	SourceRedis        *c.RedisCapturePolicy    `json:"source_redis,omitempty"`
 	ControlEvidence    *ce.CaptureLocator       `json:"control_evidence,omitempty"`
+	CaptureDescription *cd.Seed                 `json:"capture_description,omitempty"`
 	Resources          *ResourceCaptureSpec     `json:"resources,omitempty"`
 	SkillObjects       *SkillObjectCaptureSpec  `json:"skill_objects,omitempty"`
 	SkillWorkspace     *sh.WorkspaceCaptureSpec `json:"skill_workspace,omitempty"`

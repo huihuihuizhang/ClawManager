@@ -118,6 +118,9 @@ func (aFixture *aSameTaskCertificateMaterials) install(ctx context.Context, t *t
 		t.Fatal("original publisher provider capability", err)
 	}
 	materials := PublisherVerifierMaterials{Version: PublisherVerifierMaterialsVersion, Database: formal.Database, Binding: formal.Binding, GenerateCapability: formal.GenerateCapability, UnwrapCapability: a.ProviderCapabilityPin{Source: capability.Source, Issuer: capIssuer}, InstallationIssuer: formal.InstallationIssuer, CAFile: formal.CAFile, JWTFile: formal.JWTFile, Workload: workload, KubernetesReads: reads, Grant: grantMount}
+	if f.captureDescription {
+		materials.DescriptionMaxPlaintextBytes = 16 << 20
+	}
 	raw, _ := json.Marshal(materials)
 	write(s.Config.PublisherVerifier.Path, raw)
 	if err = s.loadPublisherVerifierInput([]PublisherVerifierInput{{File: s.Config.PublisherVerifier.Path, SHA256: hash(raw)}}); err != nil {
@@ -242,7 +245,9 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after 
 		t.Log("original pre-capture linked build commit", buildinfo.Commit)
 	}
 	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
-	runDOriginalSixPartCaptureWithOptions(t, false, true, fixture.options(), func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
+	options := fixture.options()
+	options.CaptureDescription = mode == "capture-description"
+	runDOriginalSixPartCaptureWithOptions(t, false, true, options, func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
 		var version uint64
 		var delay int64
 		if err := f.control.QueryRowContext(ctx, `SELECT row_version,COALESCE(TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),next_reconcile_at),0) FROM system_backup_v2_backups WHERE public_id=? AND status='validating' AND controller_owner IS NULL`, f.publicID).Scan(&version, &delay); err != nil {
@@ -277,7 +282,7 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after 
 			}
 		}()
 		capture, err := f.service.verifyOriginalPublicationCapture(ctx, &claim, work.Input.Authority.AttemptNo, policy)
-		if err != nil || len(capture.Parts) != 10 {
+		if err != nil || len(capture.Parts) != f.capturePartCount() {
 			t.Fatal("same-task full current publisher C/domain verification", len(capture.Parts), err)
 		}
 		if sqlDomains, err := publicationSQLBusinessCounts(capture); err != nil || len(sqlDomains) != 6 {
@@ -396,7 +401,7 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after 
 			Payload   publicationCaptureCertificatePayload `json:"payload"`
 			Signature json.RawMessage                      `json:"signature"`
 		}
-		if decodeProviderDeploymentJSON(raw, &envelope) != nil || envelope.Payload.Installation != f.service.Config.InstallationID || envelope.Payload.Backup != f.publicID || envelope.Payload.Attempt != work.Input.Authority.AttemptNo || envelope.Payload.Context != capture.CaptureContextSHA256 || len(envelope.Payload.Jobs) != 10 || len(envelope.Payload.Checkpoints) != 10 || len(envelope.Payload.Stages) != 1 || envelope.Payload.Stages[0].UID != prepared.original.stage.owner.Resource || !envelope.Payload.CompletedAt.Equal(prepared.original.completed) || !envelope.Payload.ExpiresAt.Equal(envelope.Payload.IssuedAt.Add(time.Duration(prepared.original.ttl)*time.Second)) {
+		if decodeProviderDeploymentJSON(raw, &envelope) != nil || envelope.Payload.Installation != f.service.Config.InstallationID || envelope.Payload.Backup != f.publicID || envelope.Payload.Attempt != work.Input.Authority.AttemptNo || envelope.Payload.Context != capture.CaptureContextSHA256 || len(envelope.Payload.Jobs) != f.capturePartCount() || len(envelope.Payload.Checkpoints) != f.capturePartCount() || len(envelope.Payload.Stages) != 1 || envelope.Payload.Stages[0].UID != prepared.original.stage.owner.Resource || !envelope.Payload.CompletedAt.Equal(prepared.original.completed) || !envelope.Payload.ExpiresAt.Equal(envelope.Payload.IssuedAt.Add(time.Duration(prepared.original.ttl)*time.Second)) {
 			t.Fatal("signed certificate changed actual original task/completion/staging facts")
 		}
 		checkAOriginalCertificateKnownResume(t, ctx, f, claim, capture, prepared, signers, raw, sum, &fixture.signs)

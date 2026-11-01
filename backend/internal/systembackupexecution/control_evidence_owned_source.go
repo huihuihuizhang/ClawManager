@@ -11,6 +11,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	d "clawreef/internal/systembackupdispatch"
@@ -41,7 +42,7 @@ func (s *DeploymentService) deriveOriginalOwnedReports(ctx context.Context, in d
 	}
 	planned := map[string]b.JobPart{}
 	for _, part := range discovery.Parts {
-		if part.Part != ce.Part && part.Part != ce.ProofPart {
+		if part.Part != cd.Part && part.Part != ce.Part && part.Part != ce.ProofPart {
 			planned[part.Part] = part
 		}
 	}

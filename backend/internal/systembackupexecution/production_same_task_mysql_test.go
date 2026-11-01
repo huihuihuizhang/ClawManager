@@ -56,6 +56,7 @@ import (
 // is extended by the same-task source/worker tests; it never substitutes a
 // synthetic Prepare runner or a second task for an uncompleted capture.
 type dOriginalSixPartTask struct {
+	captureDescription                                     bool
 	db, control                                            *sql.DB
 	service                                                *DeploymentService
 	queue                                                  c.SQLExecutionQueue
@@ -131,7 +132,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { admin.Close() })
-	f := &dOriginalSixPartTask{database: "ad_d_six_" + run, directory: t.TempDir()}
+	f := &dOriginalSixPartTask{database: "ad_d_six_" + run, directory: t.TempDir(), captureDescription: options.CaptureDescription}
 	f.createOriginalPayloads(t)
 	ctx := context.Background()
 	if _, err = admin.ExecContext(ctx, "CREATE DATABASE `"+f.database+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"); err != nil {
@@ -856,8 +857,9 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 		}
 		t.Fatal("same-task original Pause/worker/Evidence/Stop/Resume Capture", err)
 	}
-	if len(results) != 10 {
-		t.Fatalf("original same-task captured %d parts, expected 10", len(results))
+	expectedParts := f.capturePartCount()
+	if len(results) != expectedParts {
+		t.Fatalf("original same-task captured %d parts, expected %d", len(results), expectedParts)
 	}
 	f.workers.active.Wait()
 	f.workers.mu.Lock()
@@ -868,10 +870,10 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 		}
 	}
 	f.workers.mu.Unlock()
-	if completed != 10 || dispatches != 10 || projections != 10 || checks != 2 || active != 0 {
+	if completed != expectedParts || dispatches != expectedParts || projections != expectedParts || checks != 2 || active != 0 {
 		t.Fatal("original ten-part worker/SQL permit/held/stop-before-resume facts", completed, dispatches, projections, checks, active)
 	}
-	f.checkOriginalPhysicalRecovery(ctx, t, 10)
+	f.checkOriginalPhysicalRecovery(ctx, t, expectedParts)
 	if err = f.service.Runtime.Loop.Store.Record(ctx, *capture, c.ExecutionOutcome{Results: results}); err != nil {
 		t.Fatal("same-task original encrypted capture-result/validating outcome", err)
 	}

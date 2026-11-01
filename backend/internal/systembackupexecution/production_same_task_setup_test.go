@@ -13,6 +13,8 @@ import (
 // materials on the SAME original task. They cannot change capture settings or
 // re-sign a core after capture. The original claim/TTL/data/ten workers remain.
 type dOriginalSixPartFixtureOptions struct {
+	// Explicit new pre-capture protocol variant. Legacy ten workers stay ten.
+	CaptureDescription       bool
 	BeforeCoreSeal           func(context.Context, *testing.T, *dOriginalSixPartTask, *DeploymentConfig) error
 	AfterOwnerReady          func(context.Context, *testing.T, *dOriginalSixPartTask) error
 	BeforeRuntimeComposition func(context.Context, *testing.T, *dOriginalSixPartTask) error

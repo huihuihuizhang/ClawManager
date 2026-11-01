@@ -7,14 +7,18 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"math"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	api "clawreef/internal/systembackupdeployment"
@@ -96,19 +100,33 @@ func TestProductionCaptureMaterialsBothStartupPaths(t *testing.T) {
 	}
 	pool := sql.OpenDB(providerAdmissionConnector{grant: grant, grants: grants})
 	defer pool.Close()
-	for _, mode := range []string{"valid", "control-valid", "control-base-role", "control-missing-source", "control-generate-issuer", "missing", "wrong-pin", "wrong-file", "extra", "replaced", "unknown-field", "wrong-grant", "missing-operation", "optional-worker-command", "recovery"} {
+	for _, mode := range []string{"valid", "control-valid", "control-base-role", "control-missing-source", "control-generate-issuer", "description-undeclared", "description-insufficient", "description-current", "legacy-unbounded", "missing", "wrong-pin", "wrong-file", "extra", "replaced", "unknown-field", "wrong-grant", "missing-operation", "optional-worker-command", "recovery"} {
 		t.Run(mode, func(t *testing.T) {
+			originalMemory := debug.SetMemoryLimit(4 << 30)
+			defer debug.SetMemoryLimit(originalMemory)
+			if mode == "description-undeclared" || mode == "legacy-unbounded" {
+				debug.SetMemoryLimit(math.MaxInt64)
+			}
+			if mode == "description-insufficient" {
+				debug.SetMemoryLimit(128 << 20)
+			}
 			defer write(cfg.CaptureModules.Path, materialRaw)
 			in := inputs
 			in.CaptureModules = append([]ProductionCaptureInput{}, inputs.CaptureModules...)
 			selectedPool := pool
-			if strings.HasPrefix(mode, "control-") {
+			if strings.HasPrefix(mode, "control-") || strings.HasPrefix(mode, "description-") {
 				var changed productionCaptureMaterials
 				json.Unmarshal(materialRaw, &changed)
 				sourcePub, _, _ := ed25519.GenerateKey(rand.Reader)
 				changed.ControlEvidence = &ce.CaptureInput{SchemaRegistryFile: filepath.Join(dir, "schema.json"), SchemaRegistrySHA256: strings.Repeat("a", 64), RedactionRegistryFile: filepath.Join(dir, "redaction.json"), RedactionRegistrySHA256: strings.Repeat("b", 64), CoverageWindowSeconds: 3600}
 				changed.ControlEvidenceSource = &worker.ControlEvidenceSourceMount{Endpoint: cfg.ControlURL, GrantFile: filepath.Join(dir, "worker-source-grant.json"), ControllerGrantFile: filepath.Join(dir, "controller-source-grant.json"), GrantSHA256: strings.Repeat("c", 64), Issuer: sourcePub}
 				changed.Operations[ce.Operation] = changed.Operations["capture-workspace"]
+				if strings.HasPrefix(mode, "description-") {
+					operation := changed.Operations["capture-workspace"]
+					operation.Request.MaxArchiveBytes, operation.Request.MaxCompressedBytes = 16<<20, 16<<20
+					operation.Formal.MaxFrames = 1024
+					changed.Operations[cd.Operation] = operation
+				}
 				if mode == "control-missing-source" {
 					changed.ControlEvidenceSource = nil
 				}
@@ -167,13 +185,18 @@ func TestProductionCaptureMaterialsBothStartupPaths(t *testing.T) {
 				os.Remove(cfg.FormalVerifier.Path)
 				defer write(cfg.FormalVerifier.Path, formalRaw)
 			}
-			want := mode == "valid" || mode == "control-valid" || mode == "recovery"
+			want := mode == "valid" || mode == "control-valid" || mode == "recovery" || mode == "description-current" || mode == "legacy-unbounded"
 			s := DeploymentService{ConfigPath: coreFile, ConfigDigest: hash(core), Forward: forward, Recovery: recovery, ForwardEnabled: mode != "recovery"}
-			if err := s.bindDeploymentStartupInputs(in); (err == nil) != (want || mode == "control-base-role") {
-				t.Fatal("actual file binding", err)
+			fileErr := s.bindDeploymentStartupInputs(in)
+			if (fileErr == nil) != (want || mode == "control-base-role") {
+				t.Fatal("actual file binding", fileErr)
 			}
-			if err := CheckDeploymentDatabaseWithInputs(context.Background(), selectedPool, coreFile, hash(core), forwardSHA, recoverySHA, mode != "recovery", in); (err == nil) != want {
-				t.Fatal("actual early database admission", err)
+			databaseErr := CheckDeploymentDatabaseWithInputs(context.Background(), selectedPool, coreFile, hash(core), forwardSHA, recoverySHA, mode != "recovery", in)
+			if (databaseErr == nil) != want {
+				t.Fatal("actual early database admission", databaseErr)
+			}
+			if (mode == "description-undeclared" || mode == "description-insufficient") && (!errors.Is(fileErr, cd.ErrMemoryDeclaration) || !errors.Is(databaseErr, cd.ErrMemoryDeclaration)) {
+				t.Fatal("memory denial did not originate at both real startup entries", fileErr, databaseErr)
 			}
 			if !want && mode != "control-base-role" && (s.captureMaterials != nil || s.captureInput != nil) {
 				t.Fatal("failed input retained usable capture material")

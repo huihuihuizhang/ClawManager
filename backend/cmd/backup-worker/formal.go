@@ -32,7 +32,11 @@ func runFormalInvocation(ctx context.Context, i worker.Invocation, control *work
 	}
 	defer job.Close()
 	env := worker.FormalCaptureEnvironment{Staging: store}
-	if i.Request.ControlEvidence != nil {
+	if i.Request.CaptureDescription != nil {
+		if err = worker.ConfigureCaptureDescription(ctx, i, job, &env); err != nil {
+			return err
+		}
+	} else if i.Request.ControlEvidence != nil {
 		env.ControlEvidence, err = worker.OpenControlEvidenceCaptureSources(ctx, i, job, materials.ControlEvidence)
 		if err != nil {
 			return err

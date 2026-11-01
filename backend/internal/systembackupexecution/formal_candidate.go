@@ -114,9 +114,17 @@ func formalCandidateDigest(value string) bool {
 // may inspect it after the forward window, but receives no new source/KEK grant.
 // Current worker files and stdout are never a fallback for a missing record.
 func (o *PublicJobOwner) ReadFormalCandidate(ctx context.Context, a d.Authority, j d.JobBinding, recovery bool) (FormalCandidateRecord, error) {
+	record, raw, err := o.ReadFormalCandidateBytes(ctx, a, j, recovery)
+	clear(raw)
+	return record, err
+}
+
+// ReadFormalCandidateBytes returns the authenticated ORIGINAL wrapper bytes.
+// Callers own and must clear raw; the historical Authority inside grants nothing.
+func (o *PublicJobOwner) ReadFormalCandidateBytes(ctx context.Context, a d.Authority, j d.JobBinding, recovery bool) (FormalCandidateRecord, []byte, error) {
 	var zero FormalCandidateRecord
 	if o == nil || !o.ready() {
-		return zero, d.ErrNotReady
+		return zero, nil, d.ErrNotReady
 	}
 	check := func() error {
 		if recovery {
@@ -125,53 +133,66 @@ func (o *PublicJobOwner) ReadFormalCandidate(ctx context.Context, a d.Authority,
 		return o.Gate.Check(ctx, a)
 	}
 	if err := check(); err != nil {
-		return zero, err
+		return zero, nil, err
 	}
 	var ref, digest string
 	var sealed []byte
 	if err := o.Gate.Authority.DB.QueryRowContext(ctx, `SELECT candidate_key_ref,candidate_sha256,candidate_cipher FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND attempt_no=? AND phase=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=?`, a.TaskPublicID, a.AttemptNo, a.Phase, j.Namespace, j.Name, j.UID).Scan(&ref, &digest, &sealed); err != nil {
-		return zero, err
+		return zero, nil, err
 	}
 	if !formalCandidateDigest(digest) || len(sealed) > 32768 {
-		return zero, c.ErrExecutionRecord
+		return zero, nil, c.ErrExecutionRecord
 	}
 	keys := deploymentRecordKeys{o}
 	actual, key, err := keys.Resolve(ctx, a, ref)
 	defer clear(key)
 	if err != nil || actual != ref || len(key) != 32 {
-		return zero, c.ErrExecutionAuthority
+		return zero, nil, c.ErrExecutionAuthority
 	}
-	record, err := openFormalCandidate(ctx, a, j, digest, sealed, key)
+	record, raw, err := openFormalCandidateBytes(ctx, a, j, digest, sealed, key)
+	keep := false
+	defer func() {
+		if !keep {
+			clear(raw)
+		}
+	}()
 	if err != nil {
-		return zero, err
+		return zero, nil, err
 	}
 	_, _, desc, err := o.input(ctx, a, recovery)
 	if err != nil {
-		return zero, err
+		return zero, nil, err
 	}
 	if validateFormalCandidatePlan(record, desc) != nil {
-		return zero, c.ErrExecutionRecord
+		return zero, nil, c.ErrExecutionRecord
 	}
 	if err = check(); err != nil {
-		return zero, err
+		return zero, nil, err
 	}
-	return record, nil
+	keep = true
+	return record, raw, nil
 }
 
 func openFormalCandidate(ctx context.Context, a d.Authority, j d.JobBinding, digest string, sealed, key []byte) (FormalCandidateRecord, error) {
+	record, raw, err := openFormalCandidateBytes(ctx, a, j, digest, sealed, key)
+	clear(raw)
+	return record, err
+}
+
+func openFormalCandidateBytes(ctx context.Context, a d.Authority, j d.JobBinding, digest string, sealed, key []byte) (FormalCandidateRecord, []byte, error) {
 	var zero FormalCandidateRecord
 	var plain bytes.Buffer
 	defer func() { clear(plain.Bytes()) }()
 	if staging.Open(ctx, bytes.NewReader(sealed), &plain, key, formalCandidateBinding(a, j, digest), 16384) != nil || hash(plain.Bytes()) != digest {
-		return zero, c.ErrExecutionRecord
+		return zero, nil, c.ErrExecutionRecord
 	}
 	var record FormalCandidateRecord
 	decoder := json.NewDecoder(bytes.NewReader(plain.Bytes()))
 	decoder.DisallowUnknownFields()
 	if decoder.Decode(&record) != nil || decoder.Decode(new(any)) != io.EOF || record.Version != "public-formal-candidate-record.v1" || record.Job != j || record.Authority.InstallationID != a.InstallationID || record.Authority.TaskPublicID != a.TaskPublicID || record.Authority.AttemptNo != a.AttemptNo || record.Authority.Phase != a.Phase || record.Authority.ConfigVersion != a.ConfigVersion || record.Authority.ConfigSHA256 != a.ConfigSHA256 || record.InvocationSHA256 != record.Candidate.InvocationSHA256 {
-		return zero, c.ErrExecutionRecord
+		return zero, nil, c.ErrExecutionRecord
 	}
-	return record, nil
+	return record, bytes.Clone(plain.Bytes()), nil
 }
 
 func validateFormalCandidatePlan(record FormalCandidateRecord, desc b.Discovery) error {

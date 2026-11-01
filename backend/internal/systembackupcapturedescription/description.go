@@ -160,6 +160,11 @@ func (d Description) Validate() error {
 			return ErrDescription
 		}
 	}
+	for i := 0; i < len(d.Members)+3; i++ {
+		if !indices[uint32(i)] {
+			return ErrDescription
+		}
+	}
 	return nil
 }
 

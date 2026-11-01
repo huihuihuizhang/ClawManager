@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	security "clawreef/internal/systembackupsecurity"
@@ -34,6 +35,7 @@ type publicationVerifiedCapture struct {
 	Control                                               ce.CaptureLocator
 	ControlSeed                                           ce.CaptureLocator
 	SourceFacts                                           productionPublicationSourceFacts
+	DescriptionSHA256                                     string
 	receipt                                               *publicationVerifiedCaptureReceipt
 }
 
@@ -118,6 +120,16 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 	var originalInput []byte
 	indices := map[uint32]bool{}
 	requests := map[string]bool{}
+	var description *cd.Description
+	var descriptionRelease func()
+	defer func() {
+		if description != nil {
+			description.Clear()
+		}
+		if descriptionRelease != nil {
+			descriptionRelease()
+		}
+	}()
 	for index, name := range names {
 		stage = fmt.Sprintf("part %d claim renewal", index)
 		if index != 0 {
@@ -158,7 +170,19 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 			}
 			stage = fmt.Sprintf("part %d control or business classification", index)
 			requested := publicationRequestedPart(invocation.Request.Operation)
-			if requested == "" {
+			if name == cd.Part {
+				if description != nil || invocation.Request.CaptureDescription == nil {
+					return c.ErrExecutionRecord
+				}
+				decoded, err := cd.Decode(part.controlPlain, *invocation.Request.CaptureDescription)
+				if err != nil {
+					return err
+				}
+				description = &decoded
+				descriptionRelease = part.descriptionRelease
+				part.descriptionRelease = nil
+				result.DescriptionSHA256 = hash(part.controlPlain)
+			} else if requested == "" {
 				seed := invocation.Request.ControlEvidence
 				if seed == nil || seed.Finalization == nil || seed.Validate() != nil || seed.Finalization.CaptureContextSHA256 != result.CaptureContextSHA256 || name != ce.Part && name != ce.ProofPart {
 					return c.ErrExecutionRecord
@@ -216,7 +240,11 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 	defer clear(prepared.ProofsJSON)
 	stage = "original control evidence basis"
 	basis, err := ce.OriginalOwnedBasis(ctx, result.ControlSeed, prepared)
-	if err != nil || len(basis.Parts) != len(result.Parts)-2 {
+	administrativeCount := 2
+	if description != nil {
+		administrativeCount++
+	}
+	if err != nil || len(basis.Parts) != len(result.Parts)-administrativeCount {
 		return zero, c.ErrExecutionRecord
 	}
 	byPart := map[string]publicationVerifiedPart{}
@@ -228,6 +256,23 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 		actual, ok := byPart[expected.Part]
 		if !ok || actual.RequestedPart == "" || actual.Operation != expected.Operation || actual.InvocationSHA256 != expected.InvocationSHA256 || actual.CandidateSHA256 != expected.CandidateSHA256 || actual.ResultSHA256 != expected.ResultSHA256 || actual.ResultEvidenceRef != expected.ResultEvidenceRef || actual.CipherSHA256 != expected.CiphertextSHA256 || actual.EnvelopeSHA256 != expected.EnvelopeSHA256 || actual.CipherBytes != expected.CiphertextBytes {
 			return zero, c.ErrExecutionRecord
+		}
+	}
+	if description != nil {
+		if !bytes.Equal(description.SourceInventoryJSON, result.Input.SourceSnapshot) || description.SourceInventorySHA256 != result.Input.SourceSHA256 || description.Scope.InstallationID != result.Input.InstallationID || description.Scope.TaskPublicID != result.Input.TaskPublicID || description.Scope.ConfigVersion != result.Input.ConfigVersion || description.Scope.ConfigSHA256 != result.Input.ConfigSHA256 || description.Scope.AttemptNo != attempt || description.Scope.CaptureContextSHA256 != result.CaptureContextSHA256 || len(description.Members) != len(basis.Parts) {
+			return zero, c.ErrExecutionRecord
+		}
+		for _, m := range description.Members {
+			actual, ok := byPart[m.Part]
+			if !ok || actual.RequestedPart == "" || actual.Operation != m.Operation || actual.Index != m.PartIndex || actual.InvocationSHA256 != m.SHA256 || actual.CandidateSHA256 != m.CandidateSHA256 || actual.ResultSHA256 != m.ResultSHA256 {
+				return zero, c.ErrExecutionRecord
+			}
+		}
+		for _, inv := range description.AdministrativeInvocations {
+			actual, ok := byPart[inv.Part]
+			if !ok || actual.Operation != inv.Operation || actual.Index != inv.PartIndex || actual.InvocationSHA256 != inv.SHA256 {
+				return zero, c.ErrExecutionRecord
+			}
 		}
 	}
 	result.Control = prepared.Locator
@@ -273,12 +318,12 @@ type publicationArtifactEntry struct {
 
 func (capture publicationVerifiedCapture) artifactIndex(maxBytes int64) ([]byte, error) {
 	index := publicationArtifactIndex{Version: "system-backup-artifact-index.v1", Backup: capture.Input.TaskPublicID, Attempt: capture.Input.CaptureAttemptNo, CaptureContext: capture.CaptureContextSHA256, Entries: []publicationArtifactEntry{}}
-	if !capture.checked() || maxBytes < 1<<20 || maxBytes > 8<<30 || len(capture.Parts) < 8 || capture.Control.Validate() != nil || capture.Control.Finalization != nil {
+	if !capture.checked() || maxBytes < MinPublicationBudgetBytes || maxBytes > MaxPublicationIndexBytes || len(capture.Parts) < 8 || capture.Control.Validate() != nil || capture.Control.Finalization != nil {
 		return nil, c.ErrExecutionRecord
 	}
 	for _, part := range capture.Parts {
 		role := "encrypted_payload"
-		if part.Part == ce.Part || part.Part == ce.ProofPart {
+		if part.Part == cd.Part || part.Part == ce.Part || part.Part == ce.ProofPart {
 			role = "control_evidence"
 		}
 		index.Entries = append(index.Entries, publicationArtifactEntry{part.CipherPath, role, part.CipherBytes, part.CipherSHA256, w.FramingVersion}, publicationArtifactEntry{part.EnvelopePath, "envelope", part.EnvelopeBytes, part.EnvelopeSHA256, w.EnvelopeVersion})

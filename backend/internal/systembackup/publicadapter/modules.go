@@ -2,11 +2,13 @@ package publicadapter
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -100,7 +102,7 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 			return nil, d.ErrNotReady
 		}
 		ids[descriptor.ID] = true
-		if !validControlEvidenceDescriptor(descriptor) {
+		if !validControlEvidenceDescriptor(descriptor) || !validCaptureDescriptionDescriptor(descriptor) {
 			return nil, d.ErrNotReady
 		}
 		descriptor.Parts = append([]CaptureModulePart(nil), descriptor.Parts...)
@@ -110,6 +112,10 @@ func NewCaptureModules(registrations []CaptureModuleRegistration, resolve Captur
 				return nil, d.ErrNotReady
 			}
 			switch part.Operation {
+			case cd.Operation:
+				if descriptor.ID != cd.Part || descriptor.Owner != "A" || !descriptor.Required || descriptor.DependencyOnly || len(descriptor.Parts) != 1 || len(descriptor.Requires) != 0 || part.Part != cd.Part || part.Category != cd.Part || part.RequestedPart != "mysql" {
+					return nil, d.ErrNotReady
+				}
 			case ce.Operation:
 				if descriptor.ID != ce.Part || descriptor.Owner != "D" || part.RequestedPart != "mysql" || part.Category != ce.Part || part.Part != ce.Part && part.Part != ce.ProofPart {
 					return nil, d.ErrNotReady
@@ -278,7 +284,7 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 		}
 		requests, err := registration.Build(CaptureModuleInput{cloneInput(in), cloneSourceInventory(source), point, append([]CaptureModuleSelection(nil), selections[i]...)})
 		if err != nil {
-			return nil, classify(err)
+			return nil, fmt.Errorf("original module %s: %w", registration.Descriptor.ID, classify(err))
 		}
 		if len(requests) != len(expected) {
 			return nil, d.ErrNotReady
@@ -322,13 +328,13 @@ func (m *CaptureModules) BuildParts(in d.Input, source SourceInventory, hold tim
 			delete(expected, request.Part)
 			part, err := BuildCapturePart(in, hold, request)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("original part %s: %w", request.Part, err)
 			}
 			out = append(out, part)
 		}
 	}
 	if validateControlEvidenceParts(in, out) != nil || validateSkillWorkspaceParts(source, out) != nil || validateDiscovery(in, Discovery{Source: raw, SourceSHA256: digest(raw), Writers: []FrozenWriter{}, Parts: out, HoldUntil: hold}) != nil {
-		return nil, d.ErrNotReady
+		return nil, fmt.Errorf("original assembled parts validation: %w", d.ErrNotReady)
 	}
 	return out, nil
 }

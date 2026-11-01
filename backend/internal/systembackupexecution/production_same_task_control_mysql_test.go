@@ -16,6 +16,7 @@ import (
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
@@ -219,6 +220,19 @@ func (f *dOriginalSixPartTask) installLocalOriginalControlApproval(ctx context.C
 	op.Workload.FormalMaterials.Inputs = []kube.FormalInputMount{caInput}
 	op.MountIdentities = []kube.MountIdentity{{Volume: "formal-mapping", Kind: "ConfigMap", Name: op.Workload.FormalMaterials.ConfigMap, UID: "control-mapping-uid", SHA256: hash([]byte(ce.Operation))}, caPin}
 	m.Operations[ce.Operation] = op
+	if f.captureDescription {
+		var description productionCaptureOperation
+		raw, _ := json.Marshal(op)
+		if json.Unmarshal(raw, &description) != nil {
+			t.Fatal("independent pre-capture description template")
+		}
+		description.Formal.MaxFrames = 1024
+		description.Workload.FormalMaterials.ConfigMap = "capture-description-materials"
+		description.MountIdentities[0].Name = "capture-description-materials"
+		description.MountIdentities[0].UID = "capture-description-mapping-uid"
+		description.MountIdentities[0].SHA256 = hash([]byte(cd.Operation))
+		m.Operations[cd.Operation] = description
+	}
 	f.repinOriginalMetadataSource(t)
 	for _, fact := range f.sourceInventory.TeamFacts.Teams {
 		if fact.PVC == "" {
@@ -266,7 +280,7 @@ func (f *dOriginalSixPartTask) repinOriginalMetadataSource(t *testing.T) {
 func (f *dOriginalSixPartTask) checkOriginalFrozenDiscovery(ctx context.Context, t *testing.T, discovery b.Discovery) {
 	t.Helper()
 	var source b.SourceInventory
-	if decodeMetadataCanonical(discovery.Source, &source) != nil || hash(discovery.Source) != discovery.SourceSHA256 || len(discovery.Parts) != 10 || len(discovery.Writers) != 4 || source.Teams == nil || len(source.Teams.Teams) != 1 {
+	if decodeMetadataCanonical(discovery.Source, &source) != nil || hash(discovery.Source) != discovery.SourceSHA256 || len(discovery.Parts) != f.capturePartCount() || len(discovery.Writers) != 4 || source.Teams == nil || len(source.Teams.Teams) != 1 {
 		t.Fatal("original Prepare did not return complete same-task frozen source")
 	}
 	var metadata productionCaptureMetadata

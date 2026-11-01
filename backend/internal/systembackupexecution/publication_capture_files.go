@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	a "clawreef/internal/systembackupkekadapter"
@@ -21,16 +23,17 @@ import (
 // stopped Job history and controller-private observed C copies. Its logical C
 // AAD paths remain the ORIGINAL worker names when objects are later relocated.
 type publicationCaptureFiles struct {
-	record         c.PublisherCaptureRecord
-	candidate      worker.FormalCaptureResult
-	files          staging.FormalFiles
-	envelope       []byte
-	stream         w.StreamVerification
-	verifier       *a.PublisherVerifier
-	until          time.Time
-	domainVerified bool
-	counts         ownedPayloadCounts
-	controlPlain   []byte
+	record             c.PublisherCaptureRecord
+	candidate          worker.FormalCaptureResult
+	files              staging.FormalFiles
+	envelope           []byte
+	stream             w.StreamVerification
+	verifier           *a.PublisherVerifier
+	until              time.Time
+	domainVerified     bool
+	counts             ownedPayloadCounts
+	controlPlain       []byte
+	descriptionRelease func()
 }
 
 func (p *publicationCaptureFiles) Close() {
@@ -42,6 +45,10 @@ func (p *publicationCaptureFiles) Close() {
 	p.envelope = nil
 	clear(p.controlPlain)
 	p.controlPlain = nil
+	if p.descriptionRelease != nil {
+		p.descriptionRelease()
+		p.descriptionRelease = nil
+	}
 	p.counts = ownedPayloadCounts{}
 	if p.verifier != nil {
 		p.verifier.Close()
@@ -121,9 +128,23 @@ func (s *DeploymentService) openPublicationCaptureFiles(ctx context.Context, cla
 		return nil, err
 	}
 	i := record.Invocation
+	if i.Request.CaptureDescription != nil && (s.publisherVerifier == nil || s.publisherVerifier.DescriptionMaxPlaintextBytes < i.Request.MaxArchiveBytes || s.publisherVerifier.validateDescriptionMemoryDeclaration() != nil) {
+		return nil, cd.ErrMemoryDeclaration
+	}
 	spec := w.StreamSpec{Request: i.ProviderKey.Request, Path: i.Request.ArtifactName, MaxPlaintextBytes: i.Request.MaxCompressedBytes, MaxFrames: i.FormalCapture.MaxFrames}
 	stage = "whole authenticated stream and payload"
 	verified, err := w.InspectWrappedStream(bounded, spec, envelope, files.Ciphertext, bound, func(plaintext io.Reader) error {
+		if i.Request.CaptureDescription != nil {
+			p.descriptionRelease, err = cd.AdmitDecodeMemory(*i.Request.CaptureDescription)
+			if err != nil {
+				return err
+			}
+			p.controlPlain, err = io.ReadAll(io.LimitReader(plaintext, i.Request.MaxArchiveBytes+1))
+			if err != nil || int64(len(p.controlPlain)) > i.Request.MaxArchiveBytes || part != cd.Part {
+				return c.ErrExecutionRecord
+			}
+			return inspectOriginalDescriptionPartAdmitted(bounded, bytes.NewReader(p.controlPlain), i, nil, cd.Scope{InstallationID: record.Input.InstallationID, TaskPublicID: record.Input.TaskPublicID, ConfigVersion: record.Input.ConfigVersion, ConfigSHA256: record.Input.ConfigSHA256, AttemptNo: record.Input.CaptureAttemptNo, CaptureContextSHA256: i.Request.Binding.CaptureContextHash})
+		}
 		if i.Request.ControlEvidence == nil {
 			if err := inspectOwnedBusinessPayloadCounts(bounded, i, original.Candidate, plaintext, &p.counts); err != nil {
 				return err

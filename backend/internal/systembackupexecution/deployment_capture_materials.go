@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/worker"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	k "clawreef/internal/systembackupkms"
@@ -97,8 +98,11 @@ func (s *DeploymentService) loadProductionCapture(inputs []ProductionCaptureInpu
 		return c.ErrExecutionAuthority
 	}
 	canonical, err := json.Marshal(materials)
-	if err != nil || !bytes.Equal(canonical, raw) || s.validateProductionCapture(materials) != nil {
+	if err != nil || !bytes.Equal(canonical, raw) {
 		return c.ErrExecutionAuthority
+	}
+	if err = s.validateProductionCapture(materials); err != nil {
+		return err
 	}
 	s.captureMaterials = &materials
 	copy := inputs[0]
@@ -107,6 +111,9 @@ func (s *DeploymentService) loadProductionCapture(inputs []ProductionCaptureInpu
 }
 
 func (s *DeploymentService) validateProductionCapture(m productionCaptureMaterials) error {
+	if err := s.validateDescriptionMemoryStartup(m); err != nil {
+		return err
+	}
 	if m.Discovery != nil {
 		if s == nil || m.Discovery.validate() != nil {
 			return c.ErrExecutionAuthority
@@ -135,7 +142,7 @@ func (s *DeploymentService) validateProductionCapture(m productionCaptureMateria
 	if m.Discovery != nil && m.Discovery.SecretPolicy != nil && m.Discovery.SecretPolicy.validate() != nil {
 		return c.ErrExecutionAuthority
 	}
-	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Config.CaptureScope != "six-part" || s.Config.RuntimeSources == nil || s.Config.FormalVerifier == nil || m.Version != productionCaptureMaterialsVersion || m.Revision == "" || len(m.Revision) > 128 || m.InstallationID != s.Config.InstallationID || m.ControllerOwner != s.Config.ControllerOwner || m.DeploymentConfigSHA256 != s.ConfigDigest || m.CaptureGrantSHA256 != s.Forward.GrantSHA256() || len(m.Operations) < 6 || len(m.Operations) > 8 || m.MaxObjects < 1 || m.MaxObjects > 10000 || m.MaxObjectBytes < 1 || m.MaxObjectTotalBytes < m.MaxObjectBytes || m.MaxObjectTotalBytes > 64<<20 || len(m.ResourceTypes) < 1 || len(m.ResourceTypes) > 32 {
+	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Config.CaptureScope != "six-part" || s.Config.RuntimeSources == nil || s.Config.FormalVerifier == nil || m.Version != productionCaptureMaterialsVersion || m.Revision == "" || len(m.Revision) > 128 || m.InstallationID != s.Config.InstallationID || m.ControllerOwner != s.Config.ControllerOwner || m.DeploymentConfigSHA256 != s.ConfigDigest || m.CaptureGrantSHA256 != s.Forward.GrantSHA256() || len(m.Operations) < 6 || len(m.Operations) > 9 || m.MaxObjects < 1 || m.MaxObjects > 10000 || m.MaxObjectBytes < 1 || m.MaxObjectTotalBytes < m.MaxObjectBytes || m.MaxObjectTotalBytes > 64<<20 || len(m.ResourceTypes) < 1 || len(m.ResourceTypes) > 32 {
 		return c.ErrExecutionAuthority
 	}
 	for _, operation := range []string{"capture-database", "capture-workspace", "capture-source-redis", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle"} {
@@ -146,9 +153,15 @@ func (s *DeploymentService) validateProductionCapture(m productionCaptureMateria
 	if _, exists := m.Operations[ce.Operation]; exists != (m.ControlEvidence != nil) {
 		return c.ErrExecutionAuthority
 	}
+	if _, exists := m.Operations[cd.Operation]; exists && m.ControlEvidence == nil {
+		return c.ErrExecutionAuthority
+	}
 	for name, x := range m.Operations {
+		if x.Request.CaptureDescription != nil {
+			return c.ErrExecutionAuthority
+		}
 		switch name {
-		case "capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle", ce.Operation:
+		case "capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle", ce.Operation, cd.Operation:
 		default:
 			return c.ErrExecutionAuthority
 		}
