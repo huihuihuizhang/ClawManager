@@ -321,6 +321,17 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 		return fmt.Errorf("worker mTLS constructor: %w", err)
 	}
 	defer control.Close()
+	invocationSHA, hashErr := inv.Hash()
+	if hashErr != nil {
+		return hashErr
+	}
+	controllerCosts := &originalControlTimingObserver{}
+	f.controlCosts.entries.Store(invocationSHA, controllerCosts)
+	defer func() {
+		f.controlCosts.entries.Delete(invocationSHA)
+		raw, _ := json.Marshal(controllerCosts.data())
+		t.Log("original controller nested Authorize/SQLBind/key-state cost DATA", inv.Request.Operation, string(raw))
+	}()
 	if err = control.WithWorkloadToken(tokenFile); err != nil {
 		return err
 	}
@@ -366,11 +377,19 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 	if err = os.WriteFile(providerFile, []byte(providerToken), 0600); err != nil {
 		return err
 	}
+	reservationStarted := time.Now()
 	keyJob, err := worker.NewDeliveredCaptureKeyJob(ctx, control, inv, materials.KMS, *materials.PermitDelivery)
+	t.Log("original key reservation elapsed DATA", inv.Request.Operation, time.Since(reservationStarted))
 	if err != nil {
 		return fmt.Errorf("worker original key reservation: %w", err)
 	}
 	defer keyJob.Close()
+	// Snapshot even on a failed stream/candidate. No permission, retry or
+	// original window depends on these completed-call diagnostics.
+	defer func() {
+		raw, _ := json.Marshal(control.CaptureControlTimingData())
+		t.Log("original control cumulative elapsed/count/failure DATA", inv.Request.Operation, string(raw))
+	}()
 	if err = f.checkOriginalIssuedProjection(ctx, job, pod, inv, *materials.PermitDelivery, providerFile); err != nil {
 		return err
 	}
@@ -388,6 +407,7 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 		return err
 	}
 	defer stage.Close()
+	sourceOpenStarted := time.Now()
 	env := worker.FormalCaptureEnvironment{Staging: stage}
 	switch {
 	case inv.Request.CaptureDescription != nil:
@@ -420,6 +440,7 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 			defer env.Workspace.Close()
 		}
 	}
+	t.Log("original source open elapsed/key remaining DATA", inv.Request.Operation, time.Since(sourceOpenStarted), time.Until(lease.Until))
 	if err != nil {
 		return fmt.Errorf("worker original source open %s: %w", inv.Request.Operation, err)
 	}
@@ -437,10 +458,14 @@ func (f *dOriginalSixPartTask) runOriginalWorker(ctx context.Context, t *testing
 	streamStarted := time.Now()
 	result, err := worker.RunFormalCapture(ctx, inv, keyJob, env)
 	t.Log("original stream local source Authorize calls/local elapsed/stream elapsed", inv.Request.Operation, sourceChecks.Load(), time.Duration(sourceCheckNanos.Load()), time.Since(streamStarted))
+	t.Log("original capture return key remaining DATA", inv.Request.Operation, time.Until(lease.Until))
 	if err != nil {
 		return fmt.Errorf("worker original encrypted capture %s: %w", inv.Request.Operation, err)
 	}
-	if err = keyJob.ReportCandidate(ctx, inv, result); err != nil {
+	candidateStarted := time.Now()
+	err = keyJob.ReportCandidate(ctx, inv, result)
+	t.Log("original candidate elapsed/key remaining/rejected DATA", inv.Request.Operation, time.Since(candidateStarted), time.Until(lease.Until), err != nil)
+	if err != nil {
 		return fmt.Errorf("worker original candidate: %w", err)
 	}
 	return nil

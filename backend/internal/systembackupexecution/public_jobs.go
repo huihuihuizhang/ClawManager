@@ -520,6 +520,8 @@ func (o *PublicJobOwner) Stopped(ctx context.Context, a d.Authority, binding d.J
 // Authorize is reached only behind WorkloadIdentity + worker.ControlHandler's
 // mTLS verification. The bound Pod and saved process/Job UID must agree.
 func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.ControlRequest) (_ worker.Lease, resultErr error) {
+	cost := startOriginalControlStage(ctx, req, originalControlAuthorize)
+	defer func() { cost.finish(resultErr != nil) }()
 	var lease worker.Lease
 	var a d.Authority
 	var e error
