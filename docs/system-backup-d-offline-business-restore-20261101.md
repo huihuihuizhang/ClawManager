@@ -147,6 +147,20 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 剩余 owner 表现为九张。模型授权的下一个具体缺口是：当前 llm_models 相比已接旧列还包含组/优先级/并发/上下文、能力与 override、reasoning mode、visibility/access version、图像能力/价格等 migration 049–071 扩展；A 的完整 batch 还要求非空 credential 的不可变 Secret 版本与真实 source proof。不能为了让 grants 成功而给模型临时 generic preserve 或编造版本。先补 owner 当前投影/版本合同和闭合模型/用户映射，再接 `llm_model_user_grants`；正式 dispatcher 的完整源句柄依赖和后续顺序仍如上一节。
 
+### Model 071 与 grants 062 公共 SQL 适配
+
+新增 `llm-model.071` 与 `llm-model-user-grant.062`，匹配实际 35 列模型、3 列授权、主键及源/目标相同 SchemaDigest；模型 display_name 唯一索引现在同时进入普通与聚合 catalog 指纹。要求逐列 preserve 后执行具名转换，不允许先 stub/null 覆盖原值。非空 grants 必须同时有这两个适配，模型与用户引用闭合；不推导新授权、不调用 SaveModel/repository.Save，不推进 access_policy_version 或时间。
+
+模型原行先投影到 A 的纯行 normalizer，再隔离：is_active=0、两类 credential 均 SQL NULL、base_url=https://disabled.invalid。api_key 与 api_key_secret_ref 按原始 SQL 字节分别区分 NULL/空/非空，不 trim；每个非空状态分别要求 immutable version 字符串，缺失、多余、latest/current/default 或给空状态附加版本均拒绝。`TableAdapter.LLMSecrets` 随公开 worker 请求冻结，callback 修改原映射及其参数副本无效。**版本 map 只是转换输入，未证明 SQL credential 与 Secret 绑定**；本地 staging 测试和 allowWorker 不是 A 完整历史源认证。正式入口必须核对 inline 的原行/列/材料、ref 的原 namespace/name/key/UID/version/content 和同一完整归档，材料不足必须拒绝，不能查询 live Secret 或采用目标默认 namespace。本次没有调用 A proof-gated batch 并伪造通过回调，也没有开放正式 restore dispatch。
+
+17 个当前扩展显式解码：decimal 仍保留 SQL 字符串，image_price 的 NULL/零/高精度不同；采用历史非负 DECIMAL(18,8) 存储范围，不套用当前保存接口的 1,000,000 价格上限。group 可重复，priority/concurrency/context 的零值不重算；能力来源与 tools/vision override 的 NULL/false/true 原值保留，不按自动能力重推；reasoning 空值与 none 区分，显式启用的推理/图像操作要求原协议符合已有 OpenAI 兼容合同，图像操作还要求 kind=image。不按 078 回填协议；缺少原显式协议且无法满足操作合同则拒绝。模型图像定义保留不代表可调用，目标整体 inactive、endpoint 和 credentials 已隔离。group/capability 按合法 UTF-8 字符数验证 VARCHAR(100)/(64)，不是字节数。来源缺失必要时间、未知扩展或旧 schema 仍失败关闭，未新增旧版升级适配。
+
+`VerifyModelGrantQuarantine` 同时用于 Normalize 和 VerifyDrill，先拒绝预期文件中的可用 provider、坏扩展与孤立授权，再沿原独立逐字段读回。provider_models_json 继续走显式 Config registry，批准结构保留，JSON 对象键顺序可规范化；其他定义、版本、价格与 NULL 精确保留，源快照不改。
+
+验证：`model071-regression.txt` 五包全 PASS（domain 3.572s、worker 35.676s、profile 3.130s、gatewaypolicy 0.327s、businessa 2.136s）；随后 UTF-8 修复的完整 domain/native 最终回归见 `model071-domain-native-final.txt`，18.238s（native 14.73s）。公开 worker 用非空模型/授权、关闭源/写库后独立 reader，并检查冻结映射。实际 MySQL 8.4.13 独占端口 **63467** 执行模型 045、049、053、054、两个 056、057、058、059、062、069、070、071 的完整迁移，和原 Skills/caller/operations/routing/Teams 组合走同一事务。100 个汉字的 group、64 个四字节字符的 capability、最大 decimal/access version、NULL/false、两条 grants 均精确读回；成功、证据失败、取消、final fence 撤销四模式，以及 writer 撤权认证失败和源不变均通过。初次建库因现有 synthetic model_invocations 同名冲突失败，随后明确将该旧夹具暂存，完整 056 在另一个空 prerequisite 表执行后移除并还原旧夹具；不据此宣称覆盖当前 invocation schema。仅清理本次随机库/账号，独占 server/datadir 正常关闭删除，见 `model071-mysql-cleanup.json`。
+
+剩余八张 owner 表：gateway_keys、gateway_key_budget_reservations、gateway_key_budget_ledger、gateway_image_artifacts、gateway_image_jobs、northbound_admin_settings、northbound_owner_records、northbound_settings_audit。模型 SQL 接线和 grants 已完成本地目标侧验证，完整源认证/共同 snapshot 与真实物理 receipt/公开 restore-verify dispatch/最终资格仍未完成。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。

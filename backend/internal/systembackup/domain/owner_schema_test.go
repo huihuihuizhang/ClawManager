@@ -8,7 +8,7 @@ import (
 )
 
 func TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter(t *testing.T) {
-	for _, name := range []string{"gateway_keys", "gateway_key_budget_reservations", "gateway_key_budget_ledger", "gateway_image_artifacts", "gateway_image_jobs", "llm_model_user_grants", "routing_classifier_settings", "northbound_admin_settings", "northbound_caller_policies", "northbound_owner_records", "northbound_settings_audit", "northbound_operations"} {
+	for _, name := range []string{"llm_models", "gateway_keys", "gateway_key_budget_reservations", "gateway_key_budget_ledger", "gateway_image_artifacts", "gateway_image_jobs", "llm_model_user_grants", "routing_classifier_settings", "northbound_admin_settings", "northbound_caller_policies", "northbound_owner_records", "northbound_settings_audit", "northbound_operations"} {
 		t.Run(name, func(t *testing.T) {
 			if !strings.Contains(sourceCatalogUnique, "'"+name+"'") {
 				t.Fatal("aggregate query omits owner table")

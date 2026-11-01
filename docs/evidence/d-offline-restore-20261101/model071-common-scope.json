@@ -1,0 +1,60 @@
+{
+  "parent_commit": "e2d4eda22f6822ec79fc550418500918e886309d",
+  "scope": "Current model 071 and grants 062 in common SQL restore and independent verification",
+  "native_mysql_port": 63467,
+  "native_mysql_version": "8.4.13",
+  "production_source_authenticated": false,
+  "production_schema_pin_added": false,
+  "public_restore_dispatch_complete": false,
+  "remaining_owner_tables": 8,
+  "source_hashes": {
+    "backend/internal/systembackup/domain/caller_restore.go": {
+      "sha256": "d418d84e861728e93f1d429e6f340db9421620a0e4a73cc43da043204e07500d",
+      "git_blob": "aa0595815498d85fa43e01a531a1d786a409a07b"
+    },
+    "backend/internal/systembackup/domain/dependencies.go": {
+      "sha256": "d9dcaf8e66a60fde5f5efaf5290b41aea5d4c7892143f47c220dec008db5e9ce",
+      "git_blob": "d7c37eea33bedd03e532a1cd2a99747326792304"
+    },
+    "backend/internal/systembackup/domain/export_test.go": {
+      "sha256": "043191ece56de4766163edf82c36bb19a6e37c625e71556bb66099739b31922b",
+      "git_blob": "37cd03a64853c8bd92d6761647a448f413b2fc99"
+    },
+    "backend/internal/systembackup/domain/normalize.go": {
+      "sha256": "be3ffd796c8488c0ae7bcbcccb23bfefed7e4f78e83c17935c7e259af5da8167",
+      "git_blob": "3ea4ce46f13c2bd3c7f62ca9b4585b7c610c8e0b"
+    },
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": {
+      "sha256": "11d6ce1aade08c8d972ee34a1cacb32d7ed30be413ce91cc541ce2d9ce56bc8c",
+      "git_blob": "2a32549c3692dfc9d8c14d6a90fcdae41ceda1ff"
+    },
+    "backend/internal/systembackup/domain/owner_schema.go": {
+      "sha256": "4c52dd345fbea3c32852486c731124bb0377869e36ad56b8ce660ac8beebaae5",
+      "git_blob": "1b284890bee8cda95a58d71b75453de6e607a86b"
+    },
+    "backend/internal/systembackup/domain/owner_schema_test.go": {
+      "sha256": "14227f6e0fe856eb1536087fb7e4b5415ecf23f429472fb8a2a52478e17af41b",
+      "git_blob": "e352a39d0f7b61af30582a36052f45fe9b70ebe8"
+    },
+    "backend/internal/systembackup/domain/restore.go": {
+      "sha256": "826847c8add81391761e8630d4e9ba602fc6c6d3083ccf5ac277ed80e84e1597",
+      "git_blob": "ae4318e7f052f72f898a1d28dd9ac3351ec6ab56"
+    },
+    "backend/internal/systembackup/domain/source_catalog.go": {
+      "sha256": "912972e4f58edb7183ac5e9ec8c0499cb8b0720dfa0128ba33280b7af2e094e3",
+      "git_blob": "c802f83268ea0795096a74aa9b64f80f8277667f"
+    },
+    "backend/internal/systembackup/domain/model_restore.go": {
+      "sha256": "00fde8159f33a94c69069ce568c43ade6adbc51b9e54324d7747b7679a19833b",
+      "git_blob": "ba151dfcc6b884a78a154cc26b7484069750ce21"
+    },
+    "backend/internal/systembackup/domain/model_restore_test.go": {
+      "sha256": "be187e3da3276f83b48a86caf4ba2ac9242072bf8e906fdcba3b810ca0410fd1",
+      "git_blob": "8873986bfa85eb84a87a13c2b391d1cdf15fd399"
+    },
+    "backend/internal/systembackup/domain/model_worker_integration_test.go": {
+      "sha256": "c5af429b6d7e4e3a6d67af560cfc98d4b17db2ad5bd4def062096fbe2441a734",
+      "git_blob": "ef4d310b95357de9a70ae730bd617cc58d6f4775"
+    }
+  }
+}

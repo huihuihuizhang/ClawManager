@@ -59,6 +59,13 @@ func NewTestRoutingSQLFixture() *TestSQLFixture {
 	return &TestSQLFixture{Source: database(source), Target: database(target), Policy: p, source: source, target: target}
 }
 
+func NewTestModelSQLFixture() *TestSQLFixture {
+	s, schema, p := modelRestoreFixture()
+	source := &memoryDB{tables: copyTables(s.Tables), name: "source", uuid: "fixture-server", grants: "GRANT SELECT ON `source`.* TO 'capture'@'localhost'"}
+	target := isolatedTarget(schema)
+	return &TestSQLFixture{Source: database(source), Target: database(target), Policy: p, source: source, target: target}
+}
+
 func (f *TestSQLFixture) TamperCallerKeys() {
 	for _, table := range f.target.tables {
 		if table.Name == "northbound_caller_policies" {
