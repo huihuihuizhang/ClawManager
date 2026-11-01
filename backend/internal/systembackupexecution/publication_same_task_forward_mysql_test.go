@@ -355,22 +355,27 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		if err != nil || len(result.Objects) != 15 {
 			t.Fatal("actual upload-only worker", err)
 		}
-		objects := aOriginalUploadReadObjectsData(material.request.Objects, result.Objects)
-		limits, err := artifactLimitsFromConfigSnapshot(capture.Input.ConfigSnapshot, capture.Input.ConfigSHA256)
-		if err != nil {
-			t.Fatal(err)
-		}
-		set, err := selectPublicationRemoteCaptureSet(capture.Input.InstallationID, capture.Input.TaskPublicID, capture.Input.CaptureAttemptNo, store.config.Root, capture.CaptureContextSHA256, material.request.IndexBytes, hash(material.request.IndexBytes), objects, limits)
-		if err != nil {
-			t.Fatal(err)
-		}
-		reader, err := NewArtifactReadOnlyS3(artifactReadMaterials(store.config), limits)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer reader.Close()
-		if err = reader.inspectPublicationRemoteCaptureSetBytes(ctx, set, material.intent.Deadline); err != nil {
-			t.Fatal("independent fifteen fixed native body reads", err)
+		// The unified caller performs full fixed-version C after the worker's
+		// result delivery. Do not spend the original upload window on duplicate
+		// pre-report I/O. Standalone A retains its explicit byte-read coverage.
+		if afterUploaded == nil {
+			objects := aOriginalUploadReadObjectsData(material.request.Objects, result.Objects)
+			limits, err := artifactLimitsFromConfigSnapshot(capture.Input.ConfigSnapshot, capture.Input.ConfigSHA256)
+			if err != nil {
+				t.Fatal(err)
+			}
+			set, err := selectPublicationRemoteCaptureSet(capture.Input.InstallationID, capture.Input.TaskPublicID, capture.Input.CaptureAttemptNo, store.config.Root, capture.CaptureContextSHA256, material.request.IndexBytes, hash(material.request.IndexBytes), objects, limits)
+			if err != nil {
+				t.Fatal(err)
+			}
+			reader, err := NewArtifactReadOnlyS3(artifactReadMaterials(store.config), limits)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer reader.Close()
+			if err = reader.inspectPublicationRemoteCaptureSetBytes(ctx, set, material.intent.Deadline); err != nil {
+				t.Fatal("independent fifteen fixed native body reads", err)
+			}
 		}
 		// Result hints still enter the original mTLS + Pod TokenReview receiver.
 		aSendOriginalForwardResults(ctx, t, f, job, material, result, directory)
@@ -388,8 +393,10 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		if err != nil || uploaded == nil || len(uploaded.Objects) != 15 || !bytes.Equal(uploaded.Manifest, request.ManifestInput) || uploaded.Candidate.Version != result.Candidate.Version || *creates != 1 || *patches != 1 {
 			t.Fatal("original public upload DATA for independent C", err, *creates, *patches)
 		}
-		t.Log("same original task complete MF / actual one-send upload Job / fifteen fixed native bytes", f.publicID, "job", string(job.UID), "objects", len(result.Objects), "candidate-version", result.Candidate.Version, "signs", fixture.signs.Load())
-		t.Log("No complete remote-C, marker, acceptance/catalog or terminal-success claim is made by byte readback alone")
+		t.Log("same original task complete MF / actual one-send upload Job / all sixteen registered results and native exit / public DATA", f.publicID, "job", string(job.UID), "objects", len(result.Objects), "candidate-version", result.Candidate.Version, "signs", fixture.signs.Load())
+		if afterUploaded == nil {
+			t.Log("standalone fifteen fixed native body reads; no complete remote-C or final acceptance claim")
+		}
 		if afterUploaded != nil {
 			material.Close()
 			afterUploaded(ctx, t, f, claim, capture, store, native)
