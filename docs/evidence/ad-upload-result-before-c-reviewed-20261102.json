@@ -1,0 +1,42 @@
+{
+  "schema": "supervisor-upload-result-before-independent-c.v1",
+  "at": "2026-11-01T16:04:31.427372+00:00",
+  "sources": [
+    "e83ce050b8dda5cbd4d5f1c67b33c6af4faaf333",
+    "d8fc1c2d8c5290daba56e35cbf695809b19f6752"
+  ],
+  "base_backup": "7169e6738fbad45d19f1cac3483a66fb8943dcfc",
+  "scope": "One local native fixture file only; no production authorization,request,claim,TTL,grant or provider code changes.",
+  "review": [
+    "Unified actual post-C native test reports original16 results and completes original wait/publicDATA before independent complete remoteC.",
+    "Duplicate pre-report opaque byte I/O is omitted only when the existing real unified C continuation is provided; standalone A retains original fifteen-object byte-read coverage.",
+    "Only two current call sites exist: standalone nil and TestDOriginalUploadedManifestThroughRemoteCAnd102MySQL, whose real production bridge mandates full fixed-version EOF/hash/domain and16 Range checks.",
+    "Two added logs contain remaining durations only, not credential/owner authority.",
+    "This does not extend the original13.276-second material window observed by read-only SQL in v7."
+  ],
+  "owner_full_execution": {
+    "seconds": 13.657,
+    "sql": "disabled",
+    "log": ".tools/a-upload-ordered-provenance-full-v1.log",
+    "sha256": "5e99e9c152ae5521d8d6623251ccfb6c51d750cec763a8a64d30a10699ec3f9f"
+  },
+  "root_independent_targeted": {
+    "session": 75054,
+    "closed": true,
+    "natural_exit": 0,
+    "seconds": 3.556,
+    "sql": "disabled",
+    "tests": [
+      "TestOriginalForwardUploadReadSetRequiresRelativePathMapData",
+      "TestOriginalUploadedCaptureDataRequiresCompleteTransport",
+      "TestPostCUploadSnapshotCannotRedefineValidatedResultPinsData"
+    ],
+    "log": ".tools/supervisor-a-e83-d8-unified-order-targeted.log",
+    "sha256": "e769638b5631e15c9d9d896298818dcc44347be38181ec39fa2132072241f7cd"
+  },
+  "limits": [
+    "New d8 native has not completed; no fullC/102/marker success claim.",
+    "Standalone byte-only tests never imply C verification or artifact acceptance.",
+    "Cleanup,acceptance,catalog and terminal success remain mandatory and incomplete."
+  ]
+}

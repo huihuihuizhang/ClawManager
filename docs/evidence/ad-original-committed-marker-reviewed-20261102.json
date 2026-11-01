@@ -1,0 +1,36 @@
+{
+  "schema": "supervisor-original-committed-marker-reviewed.v1",
+  "at": "2026-11-01T16:17:49.260677+00:00",
+  "source_commit": "2eaab9931a384124b772d483827015634b384a83",
+  "base_backup": "cc78ac8ed8716cdcfb12ec1d6099b65f9554e248",
+  "contract": "contracts/system-backup/v12/committed-marker.schema.json; exact4canonicalfields,marker checksum remains external",
+  "review": [
+    "Real forward caller now consumes actual remoteC→manifest102/fullversionedEOF readback,then typed _COMMITTED producer in same latest original claim.",
+    "Only real C-gated manifest producer attaches private postC completion tag; ordinary JSON/object/HEAD DTO or query-only observations cannot create this predecessor.",
+    "Marker102 same-TX rechecks current publishing parentmanifest receipt,exact parent payload/version/hash,original104/107 frozenbody pins,target,budgets,certificate and current signinghistory/DBUTC clock.",
+    "Old validating C authority supplies only original upper time bound; actual parent publishing receipt supplies current SQL authority. No silent crossclaim renew/adoption.",
+    "Marker deadline is min(parent authority,original certificate,original C manifest deadline). Tailchecks precede commit.",
+    "Original102 commit-before-send,one-send,immutablePUT and complete nativeJSON readback preserved; source resume/cleanup/acceptance/catalog/terminal are separate gates."
+  ],
+  "independent_merged_test": {
+    "session": 96863,
+    "closed": true,
+    "natural_exit": 0,
+    "package": "clawreef/internal/systembackupexecution",
+    "seconds": 13.942,
+    "sql": "disabled",
+    "log": ".tools/supervisor-d-2eaa-marker-merged-execution.log",
+    "sha256": "cb842bf3bbdd1eb6fb52c3eaffb89b8239ec0158801da0545d6857ce9e49b10f"
+  },
+  "coverage": [
+    "11 public marker input/foreign/key/version/hash/size/canonical counterexamples.",
+    "Nil/untyped predecessor rejects before SQL; public DTO does not manufacture privateC authority.",
+    "Native full same-task manifest+marker scenario prepared with17/18 PUT,16Range,current receiptSQL andactual renewedclaim stale-parent negative; not executed by SQLoff suite."
+  ],
+  "limits": [
+    "No native2eaa manifest/marker PASS yet. A d8 nativev8 failed earlier at original database candidate deadline.",
+    "No cleanup,_ACCEPTANCE,catalog,artifact_usable or terminalsuccess accepted.",
+    "Current-claim query-only recovery from expired/different uploadmaterials and process restart remains incomplete.",
+    "No remote production/provider/deployment action performed."
+  ]
+}
