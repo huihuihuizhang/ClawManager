@@ -1,0 +1,109 @@
+{
+  "recorded_at": "2026-11-01T18:17:15.530526+00:00",
+  "classification": "Independent real AEAD-reader count-bound counter and bounded decoder regression; not an OOM test or complete restore qualification",
+  "base": "cb36d46bf9fed7b060a60ec8e53ab9e9936efa20",
+  "owner_head_at_freeze": "c31c3df2095299d7082787367fd78fcf6a4e94f4",
+  "production_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material.go",
+      "raw_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "copied_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "read_before_after_stable": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects.go",
+      "raw_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "copied_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "read_before_after_stable": true
+    }
+  ],
+  "final_test": {
+    "path": "backend/internal/systembackup/domain/gateway_image_material_test.go",
+    "raw_sha256": "d9b8f865ae191eb497a2b90ddeb3c08f830696734229227eed3b13020de1fa0d",
+    "delta": "Only three fixture lines to root.Chmod owned sealed file0600 before deliberate corruption. Production sealing permissions unchanged."
+  },
+  "counter_original": {
+    "session": 76169,
+    "exit_code": 1,
+    "closed": true,
+    "package_seconds": 2.637,
+    "test_seconds": 0.03,
+    "captured64": "PASS",
+    "receipt64": "PASS",
+    "captured65": "actual openImageMaterial returned nil and65 populated objects; expected capacity refusal/zero retained values -> RED",
+    "receipt65": "actual openImageMaterial returned nil and65 populated objects; expected capacity refusal/zero retained values -> RED",
+    "scope": "65 one-byte objects through actual staging AEAD Seal/Open and both typed material forms; owner source/target authority and SQL/SDK not invoked"
+  },
+  "frozen_first_regression": {
+    "session": 20944,
+    "exit_code": 1,
+    "closed": true,
+    "package_seconds": 2.897,
+    "passed": [
+      "same independent captured64/65 andreceipt64/65 counter",
+      "preallocation exact tiny item/total boundaries, count64/65 and real maximum declared-size refusal",
+      "missing/duplicate/unknown/trailing/canonical and cancellation/retained-backing-buffer clear",
+      "ActualVersionedSDKReadbackAndEncryptedRestartReceipt",
+      "BadMaterialRejectsBeforeAnyTargetPUT",
+      "PublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses",
+      "PublicWorkerNonemptyAndEmptyObjectReceipts"
+    ],
+    "failure": "New encrypted-open test attempted O_RDWR on the intentionally read-only staging.SealFile fixture: Windows Access is denied before corruption/final-frame assertion. Retained as fixture failure, not whole-group PASS."
+  },
+  "fixture_only_final": {
+    "session": 8450,
+    "exit_code": 0,
+    "closed": true,
+    "package_seconds": 2.561,
+    "test_seconds": 0.02,
+    "test": "TestGatewayImageMaterialEncryptedOpenKeepsEnvelopeChecks",
+    "assertion": "Valid and65-object AEAD inputs plus truncate mandatory final frame/recompute outer size+hash; actual AEAD still refuses corrupt stream. No OS skip.",
+    "scope": "Only failed test rerun because production files and previously passed tests unchanged."
+  },
+  "source_review": [
+    "No JSON object/string/decodedbase64 allocation in preflight: direct originalbyte slices and fixed field inventory/order. Ref.Size checked before ciphertext text scan, cumulative ciphertext reserved before item decode; count checked before65th object parse. Same budget applies receipt Objects.",
+    "Preflight is before typed JSON decode. Strict fixed schema/order plus subsequent DisallowUnknownFields/EOF/canonical remarshal retains ambiguity rejection.",
+    "48MiB authenticated staging boundary and mandatory final frame remain before typed decode; failure/cancel clears decoded backing buffers and original plain buffer.",
+    "Private receipt capabilities, complete SQL binding/full digest, actual fixed-version SDK readback and public independent verification were preserved by actual related tests."
+  ],
+  "environment": {
+    "GOMAXPROCS": 2,
+    "parallel_packages": 1,
+    "downloads": "off",
+    "SQL": "all credential env removed; no MySQL launched",
+    "remote_business": "not accessed",
+    "object_IO": "only existing private TLS/SigV4 versioned protocol fixture; not deployed S3/MinIO"
+  },
+  "evidence": {
+    "original-counter.log": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\original-counter.log",
+      "raw_sha256": "a97d6f26be475abff5c31f37227db148515ad4687d91a71440b646c3324b2a49"
+    },
+    "frozen-counter-and-related.log": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\frozen-counter-and-related.log",
+      "raw_sha256": "0ec11c2d3930f5f9610a780373895244d3b2b666ddf6d8be01791d3d74758482"
+    },
+    "fixture-only-final.log": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\fixture-only-final.log",
+      "raw_sha256": "221f9e74bea066cf98ebc5da950e22341e878a8f9dd02312c5b359cbe44bff5d"
+    },
+    "fixture-only.diff": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\fixture-only.diff",
+      "raw_sha256": "d4b264dd935a07b83024ce53da9fa3fb45a5c0f335448308c8035d350938df6d"
+    },
+    "frozen-source-pins.json": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\frozen-source-pins.json",
+      "raw_sha256": "56ca4a209df49988e708562303e2c42c7228201dd1cce90beacc66858e4d15cb"
+    },
+    "supervisor_image_budget_counter_test.go": {
+      "path": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\supervisor_image_budget_counter_test.go",
+      "raw_sha256": "c4de37aa113a9d25a34ec6853436e4abe5021ea336fd6784d0398fd69c55b363"
+    }
+  },
+  "remaining": [
+    "Owner exact isolated commit/3Gitblob/delta proof and original primary latest-combination review/push still pending",
+    "NB3 shared implementation and native acceptance separate and unaccepted",
+    "FullC authenticated source/all-consumer physical isolation/formalB/complete release restore/onsite remain unproven"
+  ],
+  "resource": "All three root Go handles naturally terminal; root no active SQL/Go; no push window held."
+}

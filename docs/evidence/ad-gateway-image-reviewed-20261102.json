@@ -242,40 +242,92 @@
   "evidence": [
     {
       "path": "docs/evidence/ad-image-independent-20261102/composed-three-packages.log",
-      "sha256": "1a96c2f05a9c1861c2671e2bf6114f6ea21551ac2220778adbef52b7c4c4236e"
+      "sha256": "1a96c2f05a9c1861c2671e2bf6114f6ea21551ac2220778adbef52b7c4c4236e",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "1a96c2f05a9c1861c2671e2bf6114f6ea21551ac2220778adbef52b7c4c4236e",
+      "raw_bytes": 157,
+      "git_committed_sha256": "017e3621ecb1928dafe28886af69342bd11c91b7486308f89d668fb9ba38bbe7",
+      "git_committed_bytes": 154,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/composed-native-six-cases.log",
-      "sha256": "637aec5e89c4e0564f7a2ae9e27c687a15f29bc15e9b7154de8643f13e36fe60"
+      "sha256": "637aec5e89c4e0564f7a2ae9e27c687a15f29bc15e9b7154de8643f13e36fe60",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "637aec5e89c4e0564f7a2ae9e27c687a15f29bc15e9b7154de8643f13e36fe60",
+      "raw_bytes": 3112,
+      "git_committed_sha256": "d0303ef5b8545b5a2979298472f4d3c580d29795f3cd2a5a7dbe21b7b81c56ab",
+      "git_committed_bytes": 3094,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/mysql-cleanup.json",
-      "sha256": "cf2c83b8328b240a14ecb44bd30ef8ffecf0dc89ff109ccc9aa6eaeebc537a9a"
+      "sha256": "cf2c83b8328b240a14ecb44bd30ef8ffecf0dc89ff109ccc9aa6eaeebc537a9a",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "cf2c83b8328b240a14ecb44bd30ef8ffecf0dc89ff109ccc9aa6eaeebc537a9a",
+      "raw_bytes": 954,
+      "git_committed_sha256": "29961a14cbcb14d4e2b7bfe87a0f4161d2017acd7b9c7bcfcb27ecb879d2bdea",
+      "git_committed_bytes": 928,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/mysql-normal-shutdown.txt",
-      "sha256": "f3336db1a3c6fda76b989ba026bb4c7c540d748f5453fdaa9a9e07f816931a2c"
+      "sha256": "f3336db1a3c6fda76b989ba026bb4c7c540d748f5453fdaa9a9e07f816931a2c",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "f3336db1a3c6fda76b989ba026bb4c7c540d748f5453fdaa9a9e07f816931a2c",
+      "raw_bytes": 2050,
+      "git_committed_sha256": "a2878ddebc8b89e12a1ef48cf898656d70fad1408b63e14a822f5d05c09c5b0a",
+      "git_committed_bytes": 2037,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/cleanup-before-shutdown.txt",
-      "sha256": "0ac37045f13235c1d2976d2581e13f2f8d1b17bce1299ceee003948b6c824aab"
+      "sha256": "0ac37045f13235c1d2976d2581e13f2f8d1b17bce1299ceee003948b6c824aab",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "0ac37045f13235c1d2976d2581e13f2f8d1b17bce1299ceee003948b6c824aab",
+      "raw_bytes": 489,
+      "git_committed_sha256": "26a67fa1717dc17cd76a90538f666aadb477828bf77486b01a3954d6de67b68d",
+      "git_committed_bytes": 475,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/composed-source-comparison.json",
-      "sha256": "0c1050320d4008a76c2ee91d0a19aed0002437f5bef1d88d6b321fe738127d44"
+      "sha256": "0c1050320d4008a76c2ee91d0a19aed0002437f5bef1d88d6b321fe738127d44",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "0c1050320d4008a76c2ee91d0a19aed0002437f5bef1d88d6b321fe738127d44",
+      "raw_bytes": 439,
+      "git_committed_sha256": "94c991bb884465762c5d23671708e88da3f813c1f706fdde165ac043f6fd72df",
+      "git_committed_bytes": 426,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/supervisor-image-cb36-7fba-targeted.log",
-      "sha256": "dc3808f0c67c5ef1550e74d203cfac18b5adb7fed2f88a2ca890c2a204810dff"
+      "sha256": "dc3808f0c67c5ef1550e74d203cfac18b5adb7fed2f88a2ca890c2a204810dff",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "dc3808f0c67c5ef1550e74d203cfac18b5adb7fed2f88a2ca890c2a204810dff",
+      "raw_bytes": 51,
+      "git_committed_sha256": "58b1e43c32112ff91ecde54987ae2cd6acb6ef606859d93d4ebc265b1ac5bc7f",
+      "git_committed_bytes": 50,
+      "normalization": "CRLF-to-LF"
     },
     {
       "path": "docs/evidence/ad-image-independent-20261102/supervisor-image-cb36-7fba-composed-execution.log",
-      "sha256": "0703b3e742b6fff42b83e6fd7dcbdf3e31393aba8c4390b927ed792adcae9558"
+      "sha256": "0703b3e742b6fff42b83e6fd7dcbdf3e31393aba8c4390b927ed792adcae9558",
+      "sha256_basis": "original local raw bytes before Git text normalization",
+      "raw_sha256": "0703b3e742b6fff42b83e6fd7dcbdf3e31393aba8c4390b927ed792adcae9558",
+      "raw_bytes": 54,
+      "git_committed_sha256": "e3d48fc4d4114a787470196e1a8b21ad1368ba4bcd555cfff864a195e54e7e3d",
+      "git_committed_bytes": 53,
+      "normalization": "CRLF-to-LF"
     }
   ],
   "next": [
     "Other D implement northbound3tables using actual settingsCAS/audit non-atomic/history fields preparation",
     "A solve actual original control-loop latency and finish same-task native pipeline",
     "D complete local ciphertext cleanup and query-only recovery then aggregate evidence/acceptance/catalog/terminal"
-  ]
+  ],
+  "evidence_archive_followup": {
+    "reason": "Explicitly stage four previously ignored reviewed .log files and distinguish original local raw bytes from Git committed LF bytes. No test result/source change.",
+    "all_eight_archive_files_staged_and_content_verified": true
+  }
 }

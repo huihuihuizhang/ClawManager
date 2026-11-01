@@ -1,0 +1,12 @@
+--- frozen-first
++++ fixture-fixed
+@@ -166,6 +166,9 @@
+ 		}
+ 		clearImageMaterial(&out)
+ 		if tc.want {
++			if e = root.Chmod(receipt.Name, 0600); e != nil {
++				t.Fatal("make owned sealed fixture writable for explicit corruption", e)
++			}
+ 			file, e := root.OpenFile(receipt.Name, os.O_RDWR, 0)
+ 			if e != nil {
+ 				t.Fatal(e)

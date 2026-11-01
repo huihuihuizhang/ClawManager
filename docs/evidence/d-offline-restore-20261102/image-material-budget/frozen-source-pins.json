@@ -1,0 +1,25 @@
+{
+  "base": "cb36d46bf9fed7b060a60ec8e53ab9e9936efa20",
+  "owner_head": "c31c3df2095299d7082787367fd78fcf6a4e94f4",
+  "classification": "Frozen3file image material budget WIP only; no NB/core migration/auth WIP",
+  "files": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material.go",
+      "raw_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "copied_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "read_before_after_stable": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material_test.go",
+      "raw_sha256": "d34b02f6efe3a207f2be0aa7ec212d3a34783a1be6ce58832f216979c6014ada",
+      "copied_sha256": "d34b02f6efe3a207f2be0aa7ec212d3a34783a1be6ce58832f216979c6014ada",
+      "read_before_after_stable": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects.go",
+      "raw_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "copied_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "read_before_after_stable": true
+    }
+  ]
+}

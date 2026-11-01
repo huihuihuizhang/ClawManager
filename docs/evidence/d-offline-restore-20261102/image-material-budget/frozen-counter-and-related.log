@@ -1,0 +1,87 @@
+=== RUN   TestGatewayImageMaterialPreallocationLimits
+=== RUN   TestGatewayImageMaterialPreallocationLimits/single
+=== RUN   TestGatewayImageMaterialPreallocationLimits/total
+=== RUN   TestGatewayImageMaterialPreallocationLimits/count
+=== NAME  TestGatewayImageMaterialPreallocationLimits
+    gateway_image_material_test.go:74: pre-typed-decode count64, real item maximum, exact tiny item/total boundaries and independent receipt count checked without large allocations
+--- PASS: TestGatewayImageMaterialPreallocationLimits (0.00s)
+    --- PASS: TestGatewayImageMaterialPreallocationLimits/single (0.00s)
+    --- PASS: TestGatewayImageMaterialPreallocationLimits/total (0.00s)
+    --- PASS: TestGatewayImageMaterialPreallocationLimits/count (0.00s)
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/missing-ref
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/duplicate
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/unknown
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/trailing
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/partial-decode
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/canonical
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/cancel-before
+=== RUN   TestGatewayImageMaterialFailureAndCancellationClear/cancel-after
+--- PASS: TestGatewayImageMaterialFailureAndCancellationClear (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/missing-ref (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/duplicate (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/unknown (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/trailing (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/partial-decode (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/canonical (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/cancel-before (0.00s)
+    --- PASS: TestGatewayImageMaterialFailureAndCancellationClear/cancel-after (0.00s)
+=== RUN   TestGatewayImageMaterialEncryptedOpenKeepsEnvelopeChecks
+    gateway_image_material_test.go:171: openat valid.enc: Access is denied.
+--- FAIL: TestGatewayImageMaterialEncryptedOpenKeepsEnvelopeChecks (0.01s)
+=== RUN   TestGatewayImageActualVersionedSDKReadbackAndEncryptedRestartReceipt
+    gateway_image_objects_test.go:149: TLS/SigV4 protocol fixture: source immutable v1 despite newer v2; actual SDK PUT/version/readback; encrypted receipt restart and full SQL/binding/DB/UUID/TLS-location correspondence; read-only write denial and writer revocation; extra version refusal PASS (not native MinIO qualification)
+--- PASS: TestGatewayImageActualVersionedSDKReadbackAndEncryptedRestartReceipt (0.04s)
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/latest
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/null-version
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/etag-observation
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/missing-version
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-hash
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-key-path
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-AAD
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-DEK
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-size
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-SQL-snapshot
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-staging-binding
+--- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT (0.07s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/latest (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/null-version (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/etag-observation (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/missing-version (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-hash (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-key-path (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-AAD (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-DEK (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-size (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-SQL-snapshot (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-staging-binding (0.01s)
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/captured64
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/captured65
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/receipt64
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/receipt65
+--- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing (0.02s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/captured64 (0.00s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/captured65 (0.00s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/receipt64 (0.00s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/receipt65 (0.00s)
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-orphan-hold
+    gateway_image_worker_test.go:65: exact root counterexample: empty image rows + image_pending -> actual public capture/restore refusal; target snapshot unchanged, DML=0 COMMIT=0 PASS
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-no-hold
+    gateway_image_worker_test.go:87: legitimate empty images without image_pending: actual public capture/restore/independent SELECT-only verify PASS
+--- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses (0.08s)
+    --- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-orphan-hold (0.06s)
+    --- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-no-hold (0.02s)
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/nonempty
+    gateway_image_worker_test.go:234: actual public worker: nonserialized real object receipt, encrypted SQL+image evidence, fresh SDK reader Open, SELECT-only SQL readback, old-pointer/missing-receipt/wrong-descriptor/binding/non-image-cell refusal PASS; mode= nonempty
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/job-only-emptyobjects
+    gateway_image_worker_test.go:234: actual public worker: nonserialized real object receipt, encrypted SQL+image evidence, fresh SDK reader Open, SELECT-only SQL readback, old-pointer/missing-receipt/wrong-descriptor/binding/non-image-cell refusal PASS; mode= job-only-emptyobjects
+--- PASS: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts (0.15s)
+    --- PASS: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/nonempty (0.08s)
+    --- PASS: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/job-only-emptyobjects (0.07s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	2.897s
+FAIL

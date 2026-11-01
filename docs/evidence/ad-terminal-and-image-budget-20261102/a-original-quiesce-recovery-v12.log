@@ -1,0 +1,14 @@
+first-source-wait 2026-11-01 17:56:35.227197 finished 2026-11-01 17:57:35.580322
+original-duration controller_claim_ttl_seconds 30
+original-duration controller_claim_heartbeat_seconds 5
+original-duration gate_acquisition_timeout_seconds 60
+original-duration quiesce_max_hold_seconds 600
+original-journal-count system_backup_v2_runtime_captures 0
+original-journal-count system_backup_v2_runtime_writers 0
+original-journal-count system_backup_v2_runtime_resources 0
+original-journal-count system_backup_v2_runtime_stop_proofs 0
+writer-pause-resume-facts-known false false counts 0 0
+app-gate idle generation 0
+admission-owner-present false close-until 
+maintenance-gate idle owner-present false
+original-SQL-desired-status instance7 running instance9 stopped team20 running

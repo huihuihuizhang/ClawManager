@@ -1,0 +1,15 @@
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/captured64
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/captured65
+    supervisor_image_budget_counter_test.go:46: 65th object materialized before capacity refusal: kind=captured err=<nil> objects=65
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/receipt64
+=== RUN   TestSupervisorImageOpenRejects65BeforeMaterializing/receipt65
+    supervisor_image_budget_counter_test.go:46: 65th object materialized before capacity refusal: kind=receipt err=<nil> objects=65
+--- FAIL: TestSupervisorImageOpenRejects65BeforeMaterializing (0.03s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/captured64 (0.01s)
+    --- FAIL: TestSupervisorImageOpenRejects65BeforeMaterializing/captured65 (0.01s)
+    --- PASS: TestSupervisorImageOpenRejects65BeforeMaterializing/receipt64 (0.01s)
+    --- FAIL: TestSupervisorImageOpenRejects65BeforeMaterializing/receipt65 (0.01s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	2.637s
+FAIL

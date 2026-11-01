@@ -1,0 +1,477 @@
+=== RUN   TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL
+    publication_same_task_forward_mysql_test.go:330: original pre-capture linked build commit d380a04105a2a56f11ed87881bc46a968877fe5d
+2026/11/02 01:56:12 Applied database migration 001_init_schema.sql
+2026/11/02 01:56:12 Applied database migration 002_add_webtop_instance_type.sql
+2026/11/02 01:56:12 Applied database migration 003_add_system_image_settings.sql
+2026/11/02 01:56:12 Applied database migration 004_fix_seeded_admin_password.sql
+2026/11/02 01:56:12 Applied database migration 005_update_openclaw_default_image.sql
+2026/11/02 01:56:12 Applied database migration 006_add_openclaw_config_center.sql
+2026/11/02 01:56:13 Applied database migration 007_add_instance_agent_control_plane.sql
+2026/11/02 01:56:13 Applied database migration 008_add_skill_management.sql
+2026/11/02 01:56:13 Applied database migration 009_cpu_cores_decimal.sql
+2026/11/02 01:56:13 Applied database migration 010_add_instance_environment_overrides.sql
+2026/11/02 01:56:13 Applied database migration 011_add_hermes_instance_type.sql
+2026/11/02 01:56:13 Applied database migration 012_update_agents_runtime_default_images.sql
+2026/11/02 01:56:13 Applied database migration 013_normalize_agents_runtime_image_names.sql
+2026/11/02 01:56:13 Applied database migration 014_add_team_mvp.sql
+2026/11/02 01:56:13 Applied database migration 015_add_team_member_description.sql
+2026/11/02 01:56:13 Applied database migration 016_release_deleted_team_names.sql
+2026/11/02 01:56:13 Applied database migration 017_add_team_member_runtime_state.sql
+2026/11/02 01:56:13 Applied database migration 018_add_team_member_runtime_type.sql
+2026/11/02 01:56:13 Applied database migration 019_add_instance_runtime_type.sql
+2026/11/02 01:56:13 Applied database migration 020_add_system_image_runtime_type.sql
+2026/11/02 01:56:13 Applied database migration 021_add_openclaw_shell_runtime_image.sql
+2026/11/02 01:56:14 Applied database migration 022_add_openclaw_config_bundle_skills.sql
+2026/11/02 01:56:14 Applied database migration 023_add_runtime_pool_v2.sql
+2026/11/02 01:56:14 Applied database migration 023_add_skill_hub.sql
+2026/11/02 01:56:14 Applied database migration 023_normalize_runtime_config_mounts.sql
+2026/11/02 01:56:14 Applied database migration 024_add_gateway_runtime_type.sql
+2026/11/02 01:56:14 Applied database migration 025_add_instance_mode.sql
+2026/11/02 01:56:14 Applied database migration 027_add_instance_external_access.sql
+2026/11/02 01:56:14 Applied database migration 028_add_ai_gateway_runtime_attribution.sql
+2026/11/02 01:56:14 Applied database migration 029_add_short_external_access_links.sql
+2026/11/02 01:56:14 Applied database migration 030_add_external_access_password_value.sql
+2026/11/02 01:56:14 Applied database migration 031_add_hermes_lite_runtime_image.sql
+2026/11/02 01:56:14 Applied database migration 032_add_team_member_instance_mode.sql
+2026/11/02 01:56:14 Applied database migration 033_system_image_gateway_runtime_type.sql
+2026/11/02 01:56:14 Applied database migration 034_update_lite_default_images.sql
+2026/11/02 01:56:15 Applied database migration 035_harden_team_event_protocol.sql
+2026/11/02 01:56:15 Applied database migration 036_add_team_event_outbox.sql
+2026/11/02 01:56:15 Applied database migration 037_add_team_workflow_ledger.sql
+2026/11/02 01:56:15 Applied database migration 038_add_instance_gateway_token_aliases.sql
+2026/11/02 01:56:15 Applied database migration 039_add_skill_package_materialize.sql
+2026/11/02 01:56:15 Applied database migration 040_fix_injected_skill_provenance.sql
+2026/11/02 01:56:15 Applied database migration 041_add_session_usage_indexes.sql
+2026/11/02 01:56:15 Applied database migration 042_add_skill_summary_status.sql
+2026/11/02 01:56:15 Applied database migration 042_add_team_review_contract.sql
+2026/11/02 01:56:15 Applied database migration 043_add_external_access_workspace_scope.sql
+2026/11/02 01:56:15 Applied database migration 043_drop_skill_summary_status.sql
+2026/11/02 01:56:15 Applied database migration 044_add_egress_private_exceptions.sql
+2026/11/02 01:56:15 Applied database migration 044_add_workbuddy_instance_type.sql
+2026/11/02 01:56:15 Applied database migration 045_add_llm_model_reasoning_control.sql
+2026/11/02 01:56:16 Applied database migration 045_add_northbound_api.sql
+2026/11/02 01:56:16 Applied database migration 045_add_opencode_instance_type.sql
+2026/11/02 01:56:16 Applied database migration 046_add_custom_team_templates.sql
+2026/11/02 01:56:16 Applied database migration 046_add_enterprise_auth_identity.sql
+2026/11/02 01:56:16 Applied database migration 046_add_opencode_lite_runtime.sql
+2026/11/02 01:56:16 Applied database migration 047_add_deepseek_harness_runtime.sql
+2026/11/02 01:56:16 Applied database migration 047_add_instance_owner.sql
+2026/11/02 01:56:16 Applied database migration 048_add_workbuddy_instance_type.sql
+2026/11/02 01:56:17 Applied database migration 048_fix_instance_type_enum.sql
+2026/11/02 01:56:17 Applied database migration 049_add_ldap_login_alias.sql
+2026/11/02 01:56:17 Applied database migration 049_add_llm_model_groups.sql
+2026/11/02 01:56:17 Applied database migration 049_add_opencode_instance_type.sql
+2026/11/02 01:56:17 Applied database migration 050_add_enterprise_auth_settings.sql
+2026/11/02 01:56:17 Applied database migration 050_add_gateway_keys.sql
+2026/11/02 01:56:17 Applied database migration 050_update_workbuddy_windows_runtime.sql
+2026/11/02 01:56:17 Applied database migration 051_add_codex_and_claude_code_instance_types.sql
+2026/11/02 01:56:17 Applied database migration 051_add_gateway_key_rate_limits.sql
+2026/11/02 01:56:18 Applied database migration 052_add_gateway_key_budget_and_attribution.sql
+2026/11/02 01:56:18 Applied database migration 052_add_instance_pvc_name.sql
+2026/11/02 01:56:18 Applied database migration 053_add_instance_runtime_variant.sql
+2026/11/02 01:56:18 Applied database migration 053_add_llm_model_context_window.sql
+2026/11/02 01:56:18 Applied database migration 054_add_llm_model_quality_tier.sql
+2026/11/02 01:56:18 Applied database migration 054_add_system_image_runtime_variant.sql
+2026/11/02 01:56:18 Applied database migration 055_gateway_budget_currency_review.sql
+2026/11/02 01:56:18 Applied database migration 055_reconcile_instance_type_enum.sql
+2026/11/02 01:56:19 Applied database migration 056_add_gateway_deployment_routing.sql
+2026/11/02 01:56:19 Applied database migration 056_add_llm_provider_models.sql
+2026/11/02 01:56:19 Applied database migration 057_add_llm_model_capabilities.sql
+2026/11/02 01:56:19 Applied database migration 057_add_northbound_admin_settings.sql
+2026/11/02 01:56:19 Applied database migration 058_add_llm_model_tools_override.sql
+2026/11/02 01:56:19 Applied database migration 058_add_openclaw_runtime_upgrade_safety.sql
+2026/11/02 01:56:19 Applied database migration 058_enable_deepseek_harness_pro.sql
+2026/11/02 01:56:19 Applied database migration 059_add_llm_reasoning_control_mode.sql
+2026/11/02 01:56:19 Applied database migration 059_pin_openclaw_2026_8_1_images.sql
+2026/11/02 01:56:19 Applied database migration 060_add_routing_classifier_settings.sql
+2026/11/02 01:56:19 Applied database migration 060_allow_terminal_runtime_upgrade_instance_deletion.sql
+2026/11/02 01:56:19 Applied database migration 061_add_routing_classifier_mode.sql
+2026/11/02 01:56:19 Applied database migration 061_persist_runtime_upgrade_source_identity.sql
+2026/11/02 01:56:19 Applied database migration 062_add_model_user_access.sql
+2026/11/02 01:56:19 Applied database migration 062_follow_openclaw_latest_images.sql
+2026/11/02 01:56:19 Applied database migration 063_add_gateway_runtime_tasks.sql
+2026/11/02 01:56:19 Applied database migration 063_add_instance_alias.sql
+2026/11/02 01:56:20 Applied database migration 063_unique_usernames.sql
+2026/11/02 01:56:20 Applied database migration 064_add_instance_browser_workers.sql
+2026/11/02 01:56:20 Applied database migration 064_add_instance_lifecycle_batches.sql
+2026/11/02 01:56:20 Applied database migration 064_add_runtime_protocol.sql
+2026/11/02 01:56:20 Applied database migration 065_add_lifecycle_batch_retry_policy.sql
+2026/11/02 01:56:20 Applied database migration 065_add_runtime_maintenance.sql
+2026/11/02 01:56:20 Applied database migration 066_add_northbound_api_keys.sql
+2026/11/02 01:56:20 Applied database migration 066_add_runtime_upgrade_fence.sql
+2026/11/02 01:56:20 Applied database migration 067_add_northbound_owner_records.sql
+2026/11/02 01:56:20 Applied database migration 067_add_runtime_upgrade_stop.sql
+2026/11/02 01:56:20 Applied database migration 068_add_runtime_rollout_checkpoints.sql
+2026/11/02 01:56:20 Applied database migration 068_add_workspace_write_intents.sql
+2026/11/02 01:56:20 Applied database migration 069_add_instance_runtime_error_code.sql
+2026/11/02 01:56:20 Applied database migration 069_add_llm_model_vision_override.sql
+2026/11/02 01:56:20 Applied database migration 070_add_llm_model_image_operations.sql
+2026/11/02 01:56:20 Applied database migration 070_add_upgrade_restart_attempts.sql
+2026/11/02 01:56:20 Applied database migration 071_add_image_budget_price.sql
+2026/11/02 01:56:21 Applied database migration 071_add_team_member_icon.sql
+2026/11/02 01:56:21 Applied database migration 072_add_gateway_image_artifacts.sql
+2026/11/02 01:56:21 Applied database migration 072_add_team_workspace_file_audits.sql
+2026/11/02 01:56:21 Applied database migration 073_add_gateway_image_jobs.sql
+2026/11/02 01:56:21 Applied database migration 073_add_upgrade_operation_claims.sql
+2026/11/02 01:56:21 Applied database migration 074_add_image_analytics_outbox.sql
+2026/11/02 01:56:21 Applied database migration 074_add_upgrade_recovery_key.sql
+2026/11/02 01:56:21 Applied database migration 075_add_upgrade_retry_diagnostics.sql
+2026/11/02 01:56:21 Applied database migration 076_add_upgrade_item_isolation.sql
+2026/11/02 01:56:22 Applied database migration 077_add_northbound_owner_teams.sql
+2026/11/02 01:56:22 Applied database migration 078_move_repository_schema_to_migrations.sql
+2026/11/02 01:56:22 Applied database migration 079_add_system_backup_control.sql
+2026/11/02 01:56:22 Applied database migration 080_add_backup_dependency_health.sql
+2026/11/02 01:56:22 Applied database migration 081_add_backup_controller_coordination.sql
+2026/11/02 01:56:22 Applied database migration 082_add_backup_attempt_request.sql
+2026/11/02 01:56:22 Applied database migration 083_add_backup_strong_auth_nonce.sql
+2026/11/02 01:56:22 Applied database migration 084_add_backup_external_actions.sql
+2026/11/02 01:56:23 Applied database migration 085_add_backup_capture_coordination.sql
+2026/11/02 01:56:23 Applied database migration 086_add_backup_capture_abort.sql
+2026/11/02 01:56:23 Applied database migration 087_add_backup_stage_resources.sql
+2026/11/02 01:56:23 Applied database migration 088_add_backup_core_publication.sql
+2026/11/02 01:56:23 Applied database migration 089_add_backup_gate_admission.sql
+2026/11/02 01:56:23 Applied database migration 090_add_backup_restore_job_executions.sql
+2026/11/02 01:56:23 Applied database migration 091_add_backup_job_send_intents.sql
+2026/11/02 01:56:23 Applied database migration 092_allow_owned_backup_restore_workspaces.sql
+2026/11/02 01:56:23 Applied database migration 093_add_team_data_backup_jobs.sql
+2026/11/02 01:56:23 Applied database migration 094_add_team_data_backup_management_operations.sql
+2026/11/02 01:56:23 Applied database migration 095_add_team_data_provisioning_receipts.sql
+2026/11/02 01:56:23 Applied database migration 096_backup_v2_add_system_backup_control_metadata_core.sql
+2026/11/02 01:56:23 Applied database migration 097_backup_v2_add_system_backup_config_and_operations.sql
+2026/11/02 01:56:24 Applied database migration 098_backup_v2_add_system_backup_task_execution_core.sql
+2026/11/02 01:56:24 Applied database migration 099_backup_v2_add_system_backup_coordination_observability.sql
+2026/11/02 01:56:24 Applied database migration 100_backup_v2_add_system_backup_promotion_authority.sql
+2026/11/02 01:56:24 Applied database migration 101_backup_v2_add_system_backup_prune_authority.sql
+2026/11/02 01:56:24 Applied database migration 102_backup_v2_add_system_backup_external_action_authority.sql
+2026/11/02 01:56:25 Applied database migration 103_backup_v2_add_system_backup_check_authority.sql
+2026/11/02 01:56:25 Applied database migration 104_backup_v2_add_system_backup_staging_resources.sql
+2026/11/02 01:56:25 Applied database migration 105_backup_v2_add_system_maintenance_participants.sql
+2026/11/02 01:56:25 Applied database migration 106_backup_v2_add_system_backup_strong_auth_nonces.sql
+2026/11/02 01:56:25 Applied database migration 107_backup_v2_add_system_backup_job_observations.sql
+2026/11/02 01:56:25 Applied database migration 108_backup_v2_add_system_restore_drill_resources.sql
+2026/11/02 01:56:25 Applied database migration 109_backup_v2_add_system_backup_registration_runtime.sql
+2026/11/02 01:56:25 Applied database migration 110_backup_v2_fix_system_backup_prune_item_identity.sql
+2026/11/02 01:56:25 Applied database migration 111_backup_engine_selection.sql
+2026/11/02 01:56:25 Applied database migration 112_backup_v2_system-backup-d-config-canonical-081-proposal-20261014.sql
+2026/11/02 01:56:25 Applied database migration 113_backup_v2_system-backup-d-config-maintenance-082-proposal-20261015.sql
+2026/11/02 01:56:25 Applied database migration 114_backup_v2_system-backup-d-control-health-proposal-20261016.sql
+2026/11/02 01:56:25 Applied database migration 115_backup_v2_producer-recovery-authority-candidate.sql
+2026/11/02 01:56:26 Applied database migration 116_backup_v2_producer-recovery-revocation-candidate.sql
+2026/11/02 01:56:26 Applied database migration 117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql
+2026/11/02 01:56:26 Applied database migration 118_backup_v2_import_journal.sql
+2026/11/02 01:56:26 Applied database migration 119_backup_v2_execution_admission.sql
+2026/11/02 01:56:26 Applied database migration 120_backup_v2_execution_plans.sql
+2026/11/02 01:56:26 Applied database migration 121_backup_v2_job_send_intents.sql
+2026/11/02 01:56:26 Applied database migration 122_backup_v2_execution_records.sql
+2026/11/02 01:56:26 Applied database migration 123_backup_v2_runtime_execution_journal.sql
+2026/11/02 01:56:27 Applied database migration 124_backup_v2_runtime_control.sql
+2026/11/02 01:56:27 Applied database migration 125_backup_v2_job_key_use.sql
+2026/11/02 01:56:27 Applied database migration 126_backup_v2_gateway_proofs.sql
+2026/11/02 01:56:27 Applied database migration 127_backup_v2_kek_registry.sql
+2026/11/02 01:56:27 Applied database migration 128_backup_installation_kek_authority.sql
+2026/11/02 01:56:27 Applied database migration 129_backup_v2_source_gate_wait.sql
+2026/11/02 01:56:27 Applied database migration 130_backup_v2_capture_reconcile.sql
+2026/11/02 01:56:28 Applied database migration 131_backup_v2_formal_job_candidates.sql
+2026/11/02 01:56:28 Applied database migration 132_backup_v2_staging_backup_identity.sql
+2026/11/02 01:56:28 Applied database migration 133_backup_v2_publish_original_plan_parent.sql
+    publication_same_task_forward_mysql_test.go:330: new original task coordinates ad_d_six_5ec399b352a10492 sbk_c7588ab8-6f3f-4dc9-b971-a2d4bde8409a
+    publication_same_task_forward_mysql_test.go:330: actual local source partial_revokes=false; underscore schema grants use original quoting
+2026/11/02 01:56:34 [system-backup-public] task=sbk_c7588ab8-6f3f-4dc9-b971-a2d4bde8409a step=prepare runner=ok record=ok
+2026/11/02 01:56:34 [system-backup-public] execution=ok
+2026/11/02 01:56:35 [system-backup-gate] stage=begin-acquire-rejected reason=gate-row-nowait sql_number=3572 sql_state=HY000
+2026/11/02 01:56:35 [system-backup-public] next-work=unavailable
+2026/11/02 01:56:35 [system-backup-public] execution=unavailable
+2026/11/02 01:56:37 [system-backup-public] execution=ok
+2026/11/02 01:57:05 [system-backup-gate] stage=begin-acquire-rejected reason=gate-row-nowait sql_number=3572 sql_state=HY000
+2026/11/02 01:57:05 [system-backup-public] next-work=unavailable
+2026/11/02 01:57:05 [system-backup-public] execution=unavailable
+2026/11/02 01:57:07 [system-backup-public] execution=ok
+panic: test timed out after 10m0s
+	running tests:
+		TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL (10m0s)
+
+goroutine 103546 [running]:
+testing.(*M).startAlarm.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2802 +0x34b
+created by time.goFunc
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive, 10 minutes]:
+testing.(*T).Run(0x2b59daa3c600, {0x7ff7cd4afbfe?, 0x2b59dab7fb38?}, 0x7ff7cd67d210)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2109 +0x4c7
+testing.runTests.func1(0x2b59daa3c600)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2585 +0x37
+testing.tRunner(0x2b59daa3c600, 0x2b59dab7fc58)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2036 +0xc3
+testing.runTests({0x7ff7cd417aa0, 0x8}, {0x7ff7cd4722ae, 0x27}, 0x2b59dac76360, {0x7ff7cf756c60, 0x12c, 0x12c}, {0xc2b1fdc518e7bd74, 0x8bb4ec76ad, ...})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2583 +0x4f0
+testing.(*M).Run(0x2b59da6439a0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:644 +0x9b
+
+goroutine 38 [select]:
+clawreef/internal/systembackupexecution.runDeploymentPasses({0x7ff7cd6c76e0, 0x2b59da390c80}, 0x2b59da6d31f0, 0x3b9aca00, 0x2b59da6d31d8)
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/deployment_loop.go:38 +0x274
+clawreef/internal/systembackupexecution.nextDOriginalWorkUsingDeploymentScheduler({0x7ff7cd6c7718, 0x2b59dac38310}, 0x2b59da96f808)
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go:139 +0xc5
+clawreef/internal/systembackupexecution.runDOriginalSixPartCaptureWithOptions(0x2b59daa3c800, 0x0, 0x1, {0x0, 0x1, 0x1, 0x2b59daaff320, 0x2b59dac767e0, 0x0, 0x2b59daaff310, ...}, ...)
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_mysql_test.go:826 +0x158d
+clawreef/internal/systembackupexecution.runAOriginalSixPartCertificatePublicationFixture(0x2b59daa3c800, {0x7ff7cd432b3f, 0x13}, 0x2b59da801c00, {0x2b59dae9fe80, 0x1, 0x1})
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/publication_same_task_mysql_test.go:268 +0x3d3
+clawreef/internal/systembackupexecution.runAOriginalSixPartManifestUploadJob(0x2b59daa3c800, 0x2b59dae9fed8, {0x2b59dae9ff00, 0x1, 0x7ff7ca642f9f?})
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go:330 +0x29c
+clawreef/internal/systembackupexecution.runDOriginalUploadedManifestThroughRemoteCAnd102(0x2b59daa3c800?, 0x1?, {0x2b59dadd3f5d?, 0x3?, 0x3?})
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go:61 +0x134
+clawreef/internal/systembackupexecution.TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL(0x2b59daa3c800?)
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go:41 +0x31
+testing.tRunner(0x2b59daa3c800, 0x7ff7cd67d210)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 1
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/testing/testing.go:2101 +0x4a9
+
+goroutine 39 [IO wait, 10 minutes]:
+internal/poll.runtime_pollWait(0x22756a3ae00, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59dae08000?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59dae08000?, 0x2b59dadd3b18?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59dac801c0, 0x72, 0x2b59dadd3b88)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59dac801c0, 0x244, {0x2b59dae06000?, 0xf80008?, 0x4dadd3c00?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59dac801c0, 0x2b59dadd3d70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59dac801c0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59da665c00)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59da665c00)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59dac76618)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+net/http.(*Server).Serve(0x2b59da284a00, {0x7ff7cd6b2f70, 0x2b59dac76618})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 40 [select, 10 minutes]:
+database/sql.(*DB).connectionOpener(0x2b59da91f450, {0x7ff7cd6c76e0, 0x2b59da3911d0})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 16 [select, 9 minutes]:
+github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:658 +0x9a
+created by github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:655 +0xfa
+
+goroutine 50 [select, 9 minutes]:
+database/sql.(*DB).connectionOpener(0x2b59da91f5f0, {0x7ff7cd6c76e0, 0x2b59da60e320})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 51 [select]:
+github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:658 +0x9a
+created by github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:655 +0xfa
+
+goroutine 1205 [select]:
+github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:658 +0x9a
+created by github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:655 +0xfa
+
+goroutine 1204 [select, 9 minutes]:
+database/sql.(*DB).connectionOpener(0x2b59dae05a00, {0x7ff7cd6c76e0, 0x2b59da353d10})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 3730 [select]:
+github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:658 +0x9a
+created by github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher in goroutine 1466
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:655 +0xfa
+
+goroutine 1200 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x22756a3a400, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59daea8000?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59daea8000?, 0x2b59db31fb18?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59dac80d20, 0x72, 0x2b59db31fb88)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59dac80d20, 0x338, {0x2b59dae060f0?, 0xf80008?, 0x7db31fc00?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59dac80d20, 0x2b59db31fd70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59dac80d20)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59da7c5a40)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59da7c5a40)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59daa58e70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+net/http.(*Server).Serve(0x2b59da7dcb00, {0x7ff7cd6b2f70, 0x2b59daa58e70})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 1143 [select, 9 minutes]:
+database/sql.(*DB).connectionOpener(0x2b59dab7e410, {0x7ff7cd6c76e0, 0x2b59db1af400})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 4322 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x22756a9b000, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59db301d70?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59db301d70?, 0x2b59daddbb18?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59dab630a0, 0x72, 0x2b59daddbb88)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59dab630a0, 0x3e4, {0x2b59dab7a1e0?, 0x2?, 0x1400000000?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59dab630a0, 0x2b59daddbd70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59dab630a0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59daf9e000)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59daf9e000)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59da3627f8)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+net/http.(*Server).Serve(0x2b59da19e100, {0x7ff7cd6b2f70, 0x2b59da3627f8})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 1490 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x22756a3a200, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59dae08060?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59dae08060?, 0x2b59dae59b18?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59dab62000, 0x72, 0x2b59dae59b88)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59dab62000, 0x3c0, {0x2b59dabfc870?, 0x2b59dae59c24?, 0x2b59dae59c50?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59dab62000, 0x2b59dae59d70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59dab62000)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59dab45ac0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59dab45ac0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59dab4a648)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+net/http.(*Server).Serve(0x2b59da70b400, {0x7ff7cd6b2f70, 0x2b59dab4a648})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 1465 [select]:
+clawreef/internal/systembackupexecution.(*dOriginalSixPartTask).startLocalCapacityInput.func2()
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_capacity_test.go:38 +0xd9
+created by clawreef/internal/systembackupexecution.(*dOriginalSixPartTask).startLocalCapacityInput in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_capacity_test.go:34 +0x373
+
+goroutine 1466 [select]:
+clawreef/internal/systembackupexecution.(*dOriginalBackground).start.func1()
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:105 +0x145
+created by clawreef/internal/systembackupexecution.(*dOriginalBackground).start in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:100 +0x2a5
+
+goroutine 1467 [select]:
+clawreef/internal/systembackupexecution.(*dOriginalBackground).start.func1()
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:105 +0x145
+created by clawreef/internal/systembackupexecution.(*dOriginalBackground).start in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:100 +0x2a5
+
+goroutine 1468 [select]:
+clawreef/internal/systembackupexecution.(*dOriginalBackground).start.func1()
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:105 +0x145
+created by clawreef/internal/systembackupexecution.(*dOriginalBackground).start in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackupexecution/production_same_task_background_test.go:100 +0x2a5
+
+goroutine 1507 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x22756a3a000, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59db01a030?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59db01a030?, 0x2b59db43fbf8?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59da252540, 0x72, 0x2b59db43fc68)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59da252540, 0x4ac, {0x2b59daf46000?, 0x2b59db43fd04?, 0x2b59db43fd30?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59da252540, 0x2b59db43fe50)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59da252540)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59dae38240)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59dae38240)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59daeecac8)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+clawreef/internal/systembackup/testfixture.NewRedisProtocol.func2()
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackup/testfixture/redis_protocol.go:92 +0x127
+created by clawreef/internal/systembackup/testfixture.NewRedisProtocol in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/ClawManager-A/backend/internal/systembackup/testfixture/redis_protocol.go:89 +0xa4b
+
+goroutine 4192 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x22756b19200, 0x72)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x2b59daea80c0?, 0x7ff7ca5c8446?, 0x0)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*FD).waitIO(0x2b59daea80c0?, 0x2b59db87db18?)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:214 +0x4c
+internal/poll.(*FD).execIO(0x2b59dac81340, 0x72, 0x2b59db87db88)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:297 +0x365
+internal/poll.(*FD).acceptOne(0x2b59dac81340, 0x408, {0x2b59dae061e0?, 0xf80008?, 0x14db87dc00?})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1118 +0x79
+internal/poll.(*FD).Accept(0x2b59dac81340, 0x2b59db87dd70)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/internal/poll/fd_windows.go:1153 +0x190
+net.(*netFD).accept(0x2b59dac81340)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/fd_windows.go:202 +0x4b
+net.(*TCPListener).accept(0x2b59daba7440)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x2b59daba7440)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/tcpsock.go:387 +0x30
+crypto/tls.(*listener).Accept(0x2b59daa59050)
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/crypto/tls/tls.go:78 +0x24
+net/http.(*Server).Serve(0x2b59da7dca00, {0x7ff7cd6b2f70, 0x2b59daa59050})
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/go1.26.1/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 12983 [select, 9 minutes]:
+github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher.func1()
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:658 +0x9a
+created by github.com/go-sql-driver/mysql.(*mysqlConn).startWatcher in goroutine 38
+	C:/Users/13542/Desktop/新建文件夹/.tools/gomodcache/github.com/go-sql-driver/mysql@v1.9.0/connection.go:655 +0xfa
+FAIL	clawreef/internal/systembackupexecution	603.254s
+FAIL

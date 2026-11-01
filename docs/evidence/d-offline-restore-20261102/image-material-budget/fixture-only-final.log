@@ -1,0 +1,4 @@
+=== RUN   TestGatewayImageMaterialEncryptedOpenKeepsEnvelopeChecks
+--- PASS: TestGatewayImageMaterialEncryptedOpenKeepsEnvelopeChecks (0.02s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.561s

@@ -1,0 +1,134 @@
+{
+  "parent": "c31c3df2095299d7082787367fd78fcf6a4e94f4",
+  "classification": "Independent image material allocation-budget fix only; no Northbound WIP or SQL migration changes",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material.go",
+      "bytes": 8309,
+      "raw_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "git_blob": "df173171d4299b24f7c089cb28d00054f249e6f0",
+      "committed_bytes": 8309,
+      "committed_sha256": "dc3cbc64f9e34acc813fe39e985064e530634137a0d211169119618fc2de76b1",
+      "normalization": "none"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material_test.go",
+      "bytes": 7087,
+      "raw_sha256": "d9b8f865ae191eb497a2b90ddeb3c08f830696734229227eed3b13020de1fa0d",
+      "git_blob": "fee9fa4f92233a7615a54e9b14058cfadd557934",
+      "committed_bytes": 7087,
+      "committed_sha256": "d9b8f865ae191eb497a2b90ddeb3c08f830696734229227eed3b13020de1fa0d",
+      "normalization": "none"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects.go",
+      "bytes": 15923,
+      "raw_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "git_blob": "6b2335d991d07a09019b2a63b91a831fec72446f",
+      "committed_bytes": 15923,
+      "committed_sha256": "099f19c5848296b2996e79441eede119a633054a5c055bc9d67b89d45deb5393",
+      "normalization": "none"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/fixture-only-final.log",
+      "bytes": 201,
+      "raw_sha256": "221f9e74bea066cf98ebc5da950e22341e878a8f9dd02312c5b359cbe44bff5d",
+      "git_blob": "7002a57f4e6b907e859176f6b3242f93dd668535",
+      "committed_bytes": 197,
+      "committed_sha256": "35f3ac0d2c1fa220600e9bde0eea45e6b91c2b1dc84bef028abd4b0ac043eec8",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\fixture-only-final.log"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/fixture-only.diff",
+      "bytes": 345,
+      "raw_sha256": "d4b264dd935a07b83024ce53da9fa3fb45a5c0f335448308c8035d350938df6d",
+      "git_blob": "092b47f88023df3505dd251529363a8bd74d9ca1",
+      "committed_bytes": 333,
+      "committed_sha256": "66da65f2f809ac65cbb6b2d9f307d4b5a51daf304410a86024b629a296d44d7e",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\fixture-only.diff"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/frozen-counter-and-related.log",
+      "bytes": 7747,
+      "raw_sha256": "0ec11c2d3930f5f9610a780373895244d3b2b666ddf6d8be01791d3d74758482",
+      "git_blob": "e384287e3b1efaa2931b9a9e54ef2ab520ce95db",
+      "committed_bytes": 7660,
+      "committed_sha256": "dd48d344c138d4a37b2e3a1c83c1d9b9905581bd901249dc63b896f396b973b1",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\frozen-counter-and-related.log"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/frozen-source-pins.json",
+      "bytes": 1193,
+      "raw_sha256": "56ca4a209df49988e708562303e2c42c7228201dd1cce90beacc66858e4d15cb",
+      "git_blob": "e99b9b6dad8f22a2fe54ba241674bd0ea80b6fdb",
+      "committed_bytes": 1168,
+      "committed_sha256": "d2e43a5d99652a90246354c6ce667ae981bb5b69e324273ab53bc748c9e02b42",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\frozen-source-pins.json"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/independent-review.json",
+      "bytes": 6686,
+      "raw_sha256": "b8a4b71f119b8908e6b109b370f96d64c0c265898ee51ba83abd07985b17019a",
+      "git_blob": "677cbf7fb61a78e32b8bea66bbfe6b6485682ee6",
+      "committed_bytes": 6577,
+      "committed_sha256": "278cdae7db9e2b0f267c7f134e08be304a8bb5044566bcce28b303dd4b7b4f0a",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\independent-review.json"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/original-counter.log",
+      "bytes": 1100,
+      "raw_sha256": "a97d6f26be475abff5c31f37227db148515ad4687d91a71440b646c3324b2a49",
+      "git_blob": "e94ea1ad8aa25918aa0246b9d6f0c616f0187f9d",
+      "committed_bytes": 1085,
+      "committed_sha256": "b5c54b1efd1cd342ddea138d07beae35d55cdedfe093dd96559de5b49fa48079",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\original-counter.log"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/README.md",
+      "bytes": 2513,
+      "raw_sha256": "f46688d02db56700bf6691b6b9127a4dd6cf8632646726017a85f3c049c2d791",
+      "git_blob": "30f82994ab801032ddff107904c5b26108de40ae",
+      "committed_bytes": 3540,
+      "committed_sha256": "2ee4fa0deac2befa32a1c6855af9696142bae8cddcf6a13b6b495ff97defa6b4",
+      "normalization": "none",
+      "raw_artifact_origin": "Owner report before documentation clarification: 769d0f528da21e71084e59283d6ddccbd5d14e0e:docs/evidence/d-offline-restore-20261102/image-material-budget/README.md",
+      "raw_artifact_relation": "Original owner report retained in parent; committed fields identify revised documentation"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/image-material-budget/supervisor-counter.go.txt",
+      "bytes": 2608,
+      "raw_sha256": "c4de37aa113a9d25a34ec6853436e4abe5021ea336fd6784d0398fd69c55b363",
+      "git_blob": "92522009fe241702673cdb880d60dd83a4346aad",
+      "committed_bytes": 2559,
+      "committed_sha256": "6eaca011f02196e1a6e347dc0f2c5912c945ad2a601348dafd8ae21a8b94ab75",
+      "normalization": "CRLF to LF by Git",
+      "raw_artifact_origin": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-image-budget\\supervisor_image_budget_counter_test.go"
+    }
+  ],
+  "validation": {
+    "original_counter": "76169 exit1 / 2.637s RED: 64 accepted and 65 wrongly materialized for both captured material and receipt",
+    "frozen_related": "20944 exit1 / 2.897s OVERALL FAIL retained: count counter, capacity, cleanup/cancel and four SDK/public-worker groups passed; encrypted-open fixture failed at read-only Windows file open",
+    "fixture_repair": "8450 exit0 / 2.561s PASS only failed encrypted-open test rerun after test-only Chmod0600; unchanged production/passed groups not repeated"
+  },
+  "limits": {
+    "objects_before_typed_decode": 64,
+    "ciphertext_item_bytes": 16777244,
+    "ciphertext_total_bytes": 33554432,
+    "authenticated_plaintext_existing_bytes": 50331648
+  },
+  "not_claimed": [
+    "memory-pressure or OOM reproduction",
+    "native SQL or deployed S3/MinIO retest",
+    "Northbound completion",
+    "formal fullC source authority or all-consumer physical isolation"
+  ],
+  "evidence_encoding": "raw fields retain original artifacts; committed fields identify Git LF copies; see README"
+}

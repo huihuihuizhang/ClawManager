@@ -1,0 +1,179 @@
+{
+  "recorded_at": "2026-11-01T18:30:15.150985+00:00",
+  "classification": "Frozen test fixture terminal-wait fix plus bounded image typed-material parsing; no full original backup success or quiesce/performance fix",
+  "base": "e6276d294dc78b06600a1c401aa2fb05d75dae44",
+  "components": [
+    "d5e77a16d62d04d1922cff4d0009bef5ccae5591",
+    "769d0f528da21e71084e59283d6ddccbd5d14e0e",
+    "87ff105458aae4cabee143624c638f9556d8d7fb"
+  ],
+  "integration": "Only exact single-commit deltas applied. Full owner-branch merge would introduce held175 ancestry; scope guard blocked it before any test/commit/push and abort restored clean base. No ancestry upgrade, migrationcatalog or production task loop change.",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material.go",
+      "git_blob": "df173171d4299b24f7c089cb28d00054f249e6f0",
+      "frozen_owner": "769d0f528da21e71084e59283d6ddccbd5d14e0e"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_material_test.go",
+      "git_blob": "fee9fa4f92233a7615a54e9b14058cfadd557934",
+      "frozen_owner": "769d0f528da21e71084e59283d6ddccbd5d14e0e"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects.go",
+      "git_blob": "6b2335d991d07a09019b2a63b91a831fec72446f",
+      "frozen_owner": "769d0f528da21e71084e59283d6ddccbd5d14e0e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_gate_schedule_mysql_test.go",
+      "git_blob": "0212e9a34448c394b5360b114164c818be839f3d",
+      "frozen_owner": "d5e77a16d62d04d1922cff4d0009bef5ccae5591"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_terminal_test.go",
+      "git_blob": "a15c9edd1a5a9ddf3b33ff9e8d8ba130a7ea78ec",
+      "frozen_owner": "d5e77a16d62d04d1922cff4d0009bef5ccae5591"
+    }
+  ],
+  "primary_final_combination_test": {
+    "session": 22505,
+    "closed": true,
+    "exit_code": 0,
+    "new_material_and_same_counter_seconds": 2.533,
+    "full_execution_seconds": 14.165,
+    "SQL": "all SQL/native credentials environment removed; no native database test in this root run",
+    "commands": [
+      "go test -count=1 -p=1 -overlay ... ./internal/systembackup/domain -run ^(TestGatewayImageMaterial.*|TestSupervisorImageOpenRejects65BeforeMaterializing)$",
+      "go test -count=1 -p=1 ./internal/systembackupexecution"
+    ]
+  },
+  "A_frozen_validation": {
+    "sql_off_session": 24143,
+    "sql_off_closed": true,
+    "sql_off_exit": 0,
+    "execution_seconds": 14.412,
+    "real_SQL_session": 32707,
+    "real_SQL_closed": true,
+    "real_SQL_exit": 0,
+    "case_seconds": 140.53,
+    "package_seconds": 143.893,
+    "positive": "Actual in-flight share-lock holder causes NOWAIT3572; release permits same original scheduler to return genuine capture work.",
+    "negative": "Hold until ORIGINAL60s gate acquisition budget really fails task; reselection returns original terminal/category in1.867ms with no new row/version/plan/config/jobs/epochs. No test UPDATE fabricates failure.",
+    "scope": "Two test files only. Production Store.Next/outer scheduler/claims/budgets/authority calls unchanged."
+  },
+  "image_frozen_validation": {
+    "original_counter": {
+      "session": 76169,
+      "closed": true,
+      "exit": 1,
+      "seconds": 2.637,
+      "result": "Actual valid AEAD captured/receipt64 pass; captured/receipt65 wrongly accepted with65typedobjects."
+    },
+    "frozen_groups": {
+      "session": 20944,
+      "closed": true,
+      "exit": 1,
+      "seconds": 2.897,
+      "result": "Samecounter and material/cancellation-clear plus4existing SDK/public-worker groups passed. OverallFAIL retained because new corruption fixture could not truncate readonlySealFile onWindows, soAEAD terminal assertion not reached."
+    },
+    "fixture_only_fix": {
+      "session": 8450,
+      "closed": true,
+      "exit": 0,
+      "seconds": 2.561,
+      "delta": "Test only3lines Chmod0600 before deliberate truncation; original2production files unchanged. Outerreceipt recomputed, final-frame AEAD refusal actually exercised.",
+      "result": "Only previous failed test rerun; stable groups not repeated."
+    },
+    "scope": "Capacity before typed Decode, not formal source/target authorization, nativeS3 or complete restore qualification."
+  },
+  "source_review": [
+    "Fixture reads actual status/category only when original Store.Next supplied no work. Terminal failed/canceled/succeeded cancels test selection and returns original category; unknown/SQL failure rejects. A nil observation never becomes work or permission.",
+    "Image scanner checks maximum64objects, actual singleGCM ciphertext16MiB+28, cumulative32MiB and fixed field/shape syntax before typed JSON/base64/object slice allocation. Existing outer fullAEAD open48MiB finishes first.",
+    "Receipt object arrays have the same independent limits. No unbounded nested value/unknown/duplicate/missing field enters typedDecode. Actual canonicalJSON is still compared after decode.",
+    "Decode errors and cancellation clear partially decoded ciphertext; original plaintext/canonical buffers are cleared. Full envelope/terminalAEAD, fixed-version, SQL digest/binding and writer/reader checks remain.",
+    "No production Request/formal capture/control/provider/privilege fields changed; NB3 and175 remain separate."
+  ],
+  "corrected_v12_evidence": {
+    "session": 22038,
+    "closed": true,
+    "exit": 1,
+    "package_seconds": 603.254,
+    "task": "sbk_c7588ab8-6f3f-4dc9-b971-a2d4bde8409a",
+    "retained_schema": "ad_d_six_5ec399b352a10492",
+    "first_failure": "quiesce_timeout beforeworker, then missingfixtureterminalhandling causes default10m timeout. No key-check profiling data.",
+    "actual_budgets": "Read-only originalSQL: gate_acquisition_timeout_seconds60, quiesce_max_hold_seconds600, controllerTTL30/heartbeat5. Prior assumption that quiesce budget was30 confused it with claimTTL; actual60 supersedes it.",
+    "actual_timestamps": "first-source-wait17:56:35.227197UTC finished17:57:35.580322UTC",
+    "failure_custody": "Runtime capture/writer/resources/stopproof rows0, gateidle generation0/noowner, maintenanceidle; desiredSQL instance7running/instance9stopped/team20running retained. Process-local fake writer pause/resume observation was lost onGo timeout, so actual complete stop/resume is NOT proven.",
+    "accounts": "Only two exactrun controller/source accounts were confirmed exclusive scoped/noactiveSessions thenlocked; censusdefiner alreadylocked. Schemas andfailedmaterials retained, sharedroot/peers untouched."
+  },
+  "evidence_encoding": "Local raw byte hashes and Git committed LF byte hashes are both explicit. Raw failures retained; four previous reviewed image archive logs excluded by ignore rules are explicitly staged and prior report clarified. No log content/result rewritten.",
+  "archived_evidence": [
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/a-original-terminal-selection-real-sql-v1.log",
+      "raw_sha256": "d3c1ff1ec10b829d81f8e17cb3980349549e05c34af23b1393ad7b84b652ddcf",
+      "raw_bytes": 34026,
+      "git_committed_sha256": "7950c0fd12e209c24385a957390e89e2d87713af1a1376ceec8ee436496f29d8",
+      "git_committed_bytes": 33644,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/a-original-terminal-selection-sql-off-v1.log",
+      "raw_sha256": "710d529b4a4804c7980a016f287ab692c43386578374441b774b2d720548b4da",
+      "raw_bytes": 54,
+      "git_committed_sha256": "4a37f585ca681aaa66e6821a635b5beca96b577692febbc62b93ef92d4c03d11",
+      "git_committed_bytes": 53,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/a-original-quiesce-recovery-v12.log",
+      "raw_sha256": "72639a2f73ba59f1f6f9df8edd20cfc93b74b271b390546a8d4ea13d07240de7",
+      "raw_bytes": 786,
+      "git_committed_sha256": "115ac56ef89dd1ce8ee08adaecd5d48e01b9751a6659479117250d99bcbb0bed",
+      "git_committed_bytes": 772,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/a-original-owned-accounts-lock-v12.log",
+      "raw_sha256": "e873fdd0d3d2b8494c13dbad98701d4d1339fd735fc805ade4ec12cf371bc0c1",
+      "raw_bytes": 593,
+      "git_committed_sha256": "e0983a4a671de3dec2dd5ec306ddac77ee6b4275548e064a9345b75605459be0",
+      "git_committed_bytes": 588,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/a-original-manifest-upload-native-v12.log",
+      "raw_sha256": "d14b93b8a3bb3a82c147cff865b4d70a6ecde58b3cfd8ee076d8f3c84c678fa7",
+      "raw_bytes": 38180,
+      "git_committed_sha256": "218c6e905a2996b46cf547b7503d01f6ad302445050a65e02f45af8b4af83983",
+      "git_committed_bytes": 37703,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/supervisor-image-budget-769-e627-final.log",
+      "raw_sha256": "22a7fd37bb94671c36076af653cc942497c9ba897d163795915dc3dab1535db5",
+      "raw_bytes": 51,
+      "git_committed_sha256": "13a3389e55385b3044fd6599bae3230fcf93e84af051ce5d3a356a872af89241",
+      "git_committed_bytes": 50,
+      "normalization": "CRLF-to-LF"
+    },
+    {
+      "path": "docs/evidence/ad-terminal-and-image-budget-20261102/supervisor-terminal-d5e-image769-e627-composed-execution.log",
+      "raw_sha256": "6a568b0b7960795ce82b4566077607831d0ab83f8661b9044f0c49ff3290466b",
+      "raw_bytes": 54,
+      "git_committed_sha256": "b534adf7d127eb36b6633fc7e705b90b6d3df565e5c618502b4f6cb47fb7044d",
+      "git_committed_bytes": 53,
+      "normalization": "CRLF-to-LF"
+    }
+  ],
+  "limits": [
+    "Actual quiesce acquisition failure and original per-key control latency remain unsolved.",
+    "D real production reentry after crash, ownedlocaltask/flatcipher cleanup and aggregate acceptance/catalog/correctterminal remain incomplete.",
+    "NB3 development is not yet accepted; imagefullCsource/allconsumerphysicalisolation/complete8table restore remain unproven.",
+    "No remote environment or online provider/deployment accessed."
+  ],
+  "next": [
+    "A resolve actual source gate/quiesce root cause and prove failure-original-state restoration, then frozen same-task native profiling/closure",
+    "D real forward recovery and localpayload cleanup then aggregate/acceptance/catalog/terminal",
+    "Other D finish separately scoped NB3 implementation and exact currentSQL CAS/rollback/rawcell verification"
+  ]
+}

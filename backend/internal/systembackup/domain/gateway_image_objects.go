@@ -210,6 +210,7 @@ func CaptureGatewayImageObjects(ctx context.Context, c *GatewayImageObjectClient
 }
 
 func openImageMaterial(ctx context.Context, root *os.Root, receipt staging.Receipt, key []byte, binding staging.Binding, out any) error {
+	clearImageMaterial(out)
 	file, e := staging.OpenFile(ctx, root, receipt)
 	if e != nil {
 		return ErrData
@@ -221,25 +222,7 @@ func openImageMaterial(ctx context.Context, root *os.Root, receipt staging.Recei
 		return ErrData
 	}
 	defer clear(plain.Bytes())
-	if strictJSON(plain.Bytes()) != nil {
-		return ErrData
-	}
-	decoder := json.NewDecoder(bytes.NewReader(plain.Bytes()))
-	decoder.DisallowUnknownFields()
-	if decoder.Decode(out) != nil {
-		return ErrData
-	}
-	var extra any
-	if decoder.Decode(&extra) != io.EOF {
-		return ErrData
-	}
-	canonical, e := json.Marshal(out)
-	if e != nil || !bytes.Equal(bytes.TrimSpace(plain.Bytes()), canonical) {
-		clear(canonical)
-		return ErrData
-	}
-	clear(canonical)
-	return nil
+	return decodeImageMaterial(ctx, plain.Bytes(), out)
 }
 
 // RestoreGatewayImageObjects authenticates the complete local artifact and all

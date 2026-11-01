@@ -136,19 +136,53 @@ func nextDOriginalWorkUsingDeploymentScheduler(ctx context.Context, f *dOriginal
 	selection, stop := context.WithCancel(ctx)
 	defer stop()
 	var work *c.ExecutionWork
+	var observationErr error
 	err := runDeploymentPasses(selection, func(active context.Context) error {
 		var nextErr error
 		work, nextErr = f.service.Runtime.Loop.Store.Next(active)
+		if work == nil && active.Err() == nil {
+			// Observation only: a terminal task cannot produce more capture
+			// work. Do not wait until its parent/test timeout or reset it.
+			observationErr = readDOriginalSelectionTerminal(active, f.db, f.publicID)
+			if observationErr != nil {
+				stop()
+			}
+		}
 		return nextErr
 	}, f.queue.Policy.ReconcileInterval, func(error) {
 		if work != nil {
 			stop()
 		}
 	})
+	if observationErr != nil {
+		return nil, observationErr
+	}
 	if work != nil && errors.Is(err, context.Canceled) && ctx.Err() == nil {
 		return work, nil
 	}
 	return nil, err
+}
+
+var errDOriginalSelectionTerminal = errors.New("original task terminal before collector work")
+
+// Original SQL state DATA only. A nil result never authorizes work: the
+// actual Store.Next must still supply its original fully bound work object.
+func readDOriginalSelectionTerminal(ctx context.Context, db *sql.DB, task string) error {
+	if ctx == nil || db == nil || task == "" {
+		return errors.New("original selection observation unavailable")
+	}
+	var status, category string
+	if err := db.QueryRowContext(ctx, "SELECT status,failure_category FROM system_backup_v2_backups WHERE public_id=?", task).Scan(&status, &category); err != nil {
+		return fmt.Errorf("original selection state unavailable: %w", err)
+	}
+	switch status {
+	case "failed", "canceled", "succeeded":
+		return fmt.Errorf("%w: status=%s category=%s", errDOriginalSelectionTerminal, status, category)
+	case "pending", "preparing", "ready_for_capture", "acquiring_gate", "capturing", "validating", "publishing", "finalization_unknown", "canceling":
+		return nil
+	default:
+		return errors.New("original selection task state unrecognized")
+	}
 }
 
 func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.T) {
@@ -270,6 +304,30 @@ func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.
 				}
 				if !errors.Is(loopErr, context.Canceled) || busy == 0 || release && work == nil || !release && work != nil {
 					return fmt.Errorf("existing bounded deployment scheduling counter did not finish: busy=%d", busy)
+				}
+				if !release {
+					// This task REALLY failed through the original source budget
+					// above, never through a test UPDATE. Reenter only selection:
+					// it must surface that terminal instead of waiting for work.
+					before, err := readDOriginalGateScheduleSnapshot(parent, f)
+					if err != nil {
+						return err
+					}
+					observe, finish := context.WithTimeout(parent, 3*time.Second)
+					started := time.Now()
+					again, terminalErr := nextDOriginalWorkUsingDeploymentScheduler(observe, f)
+					finish()
+					if again != nil || !errors.Is(terminalErr, errDOriginalSelectionTerminal) || time.Since(started) >= 3*time.Second {
+						return fmt.Errorf("actual failed original task did not end fixture selection: %w", terminalErr)
+					}
+					after, err := readDOriginalGateScheduleSnapshot(parent, f)
+					if err != nil {
+						return err
+					}
+					if after.row != before.row || after.status != before.status || after.category != before.category || after.jobs != before.jobs || after.epochs != before.epochs || after.planSHA != before.planSHA || after.configSHA != before.configSHA {
+						return errors.New("terminal observation changed original task or dispatched work")
+					}
+					t.Log("actual quiesce-timeout terminal surfaced without new work/token/epoch; fixture selection elapsed", time.Since(started))
 				}
 				f.provider.mu.Lock()
 				generated := f.provider.generateCalls

@@ -1,0 +1,49 @@
+package domain
+
+import (
+ "bytes"
+ "context"
+ "encoding/json"
+ "errors"
+ "io"
+ "os"
+ "strings"
+ "testing"
+ "clawreef/internal/systembackup/staging"
+)
+
+// Exercise the real encrypted reader before any owner, SQL or SDK side effect.
+// Only 65 tiny objects are used; this is not a memory-pressure experiment.
+func TestSupervisorImageOpenRejects65BeforeMaterializing(t *testing.T) {
+ ctx:=context.Background()
+ root,e:=os.OpenRoot(t.TempDir());if e!=nil {t.Fatal(e)};defer root.Close()
+ key:=bytes.Repeat([]byte{94},32)
+ binding:=staging.Binding{BackupID:"supervisor-image-budget",Attempt:"1",Path:"images/source",CaptureContextHash:strings.Repeat("a",64),EnvelopeID:"supervisor-budget-dek"}
+ for _,kind:=range []string{"captured","receipt"} {for _,count:=range []int{64,65} {
+  name:=kind;if count==64{name+="64"}else{name+="65"}
+  t.Run(name,func(t *testing.T){
+   ref:=GatewayImageObjectRef{ArtifactID:"img_"+strings.Repeat("a",32),Bucket:"source",Key:"gateway-images/img_"+strings.Repeat("a",32),Version:"source-v1",SHA256:strings.Repeat("a",64),Size:1}
+   var source any
+   var captured capturedImageObjects
+   var receiptData imageReceiptData
+   if kind=="captured" {
+    captured.Version="gateway-image-objects.074.v1";captured.SourceSQLSHA256=strings.Repeat("b",64)
+    for i:=0;i<count;i++{captured.Objects=append(captured.Objects,capturedImageObject{Ref:ref,Ciphertext:[]byte{7}})}
+    source=captured
+   } else {
+    receiptData.Version="gateway-image-readback.074.v1";receiptData.SourceSQLSHA256=strings.Repeat("b",64)
+    for i:=0;i<count;i++{receiptData.Objects=append(receiptData.Objects,restoredImageObject{Source:ref,TargetVersion:"target-v1",PlaintextSHA256:strings.Repeat("c",64)})}
+    source=receiptData
+   }
+   raw,e:=json.Marshal(source);if e!=nil{t.Fatal(e)};defer clear(raw)
+   seal,e:=staging.SealFile(ctx,root,name+".enc",key,binding,func(w io.Writer)error{_,e:=w.Write(raw);return e});if e!=nil{t.Fatal(e)}
+   var got capturedImageObjects;var gotReceipt imageReceiptData
+   var dest any=&got;if kind=="receipt"{dest=&gotReceipt}
+   e=openImageMaterial(ctx,root,seal,key,binding,dest)
+   length:=len(got.Objects);if kind=="receipt"{length=len(gotReceipt.Objects)}
+   defer func(){for _,object:=range got.Objects{clear(object.Ciphertext)}}()
+   if count==64 {if e!=nil||length!=64{t.Fatalf("bounded legitimate material refused: kind=%s err=%v objects=%d",kind,e,length)};return}
+   if !errors.Is(e,ErrCapacity)||length!=0{t.Fatalf("65th object materialized before capacity refusal: kind=%s err=%v objects=%d",kind,e,length)}
+  })
+ }}
+}
