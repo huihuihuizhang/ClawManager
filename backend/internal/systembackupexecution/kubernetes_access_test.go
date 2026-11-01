@@ -117,6 +117,63 @@ func TestCaptureKubernetesGrantsDoNotGrantSourceSecretsOrAdministration(t *testi
 	}
 }
 
+func TestPublicationMaterialOwnerUpdateInventoryAndDeniedReadiness(t *testing.T) {
+	cfg := captureAccessFixture(t)
+	cfg.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publication-upload", ServiceAccountUID: "publication-upload-uid"}
+	objects, err := CaptureKubernetesGrants(cfg, "controller")
+	if err != nil {
+		t.Fatal(err)
+	}
+	updates := 0
+	for _, object := range objects {
+		role, ok := object.(*rbacv1.Role)
+		if !ok {
+			continue
+		}
+		for _, rule := range role.Rules {
+			if slices.Contains(rule.Resources, "secrets") && slices.Contains(rule.Verbs, "update") {
+				if role.Namespace != cfg.Namespace || !slices.Equal(rule.Verbs, []string{"update"}) || !slices.Equal(rule.Resources, []string{"secrets"}) {
+					t.Fatal("material update permission escaped dedicated namespace/resource")
+				}
+				updates++
+			}
+		}
+	}
+	if updates != 1 {
+		t.Fatal("actual owner update omitted from generated role", updates)
+	}
+	for _, allow := range []bool{true, false} {
+		client := fake.NewSimpleClientset()
+		checks := 0
+		client.PrependReactor("create", "selfsubjectaccessreviews", func(action kt.Action) (bool, runtime.Object, error) {
+			review := action.(kt.CreateAction).GetObject().(*authv1.SelfSubjectAccessReview)
+			review.Status.Allowed = true
+			attributes := review.Spec.ResourceAttributes
+			if attributes.Resource == "secrets" && attributes.Verb == "update" {
+				checks++
+				if attributes.Namespace != cfg.Namespace || attributes.Group != "" {
+					t.Fatal("wrong material update readiness scope")
+				}
+				review.Status.Allowed, review.Status.Denied = allow, !allow
+			}
+			return true, review, nil
+		})
+		if err := CheckCaptureKubernetesAccess(context.Background(), client, cfg, "controller"); (err == nil) != allow || checks != 1 {
+			t.Fatal("material update denial absent from actual readiness inventory", allow, checks, err)
+		}
+	}
+	cfg.PublicationWorker = nil
+	access, err := RequiredCaptureAccess(cfg, "controller")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range access {
+		if slices.Contains(entry.Rule.Resources, "secrets") && slices.Contains(entry.Rule.Verbs, "update") {
+			t.Fatal("disabled publication gained Secret update")
+		}
+	}
+}
+
 func TestCaptureKubernetesProbeRejectsDeniedUnavailableAndInconclusive(t *testing.T) {
 	for _, mode := range []string{"allowed", "denied", "evaluation-error", "transport"} {
 		t.Run(mode, func(t *testing.T) {

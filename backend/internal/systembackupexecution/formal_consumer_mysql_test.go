@@ -357,6 +357,7 @@ type consumerFixtureOptions struct {
 	ConfigureGrant                        func(*c.ExecutionGrant)
 	FinalizeGrant                         func(*c.ExecutionGrant)
 	AttemptNo                             uint64
+	ObserveControlDSN                     func(string)
 	PrepareSource                         func(*os.Root, *worker.Invocation)
 	RewriteCandidate                      func(*os.Root, worker.Invocation, worker.FormalCaptureResult, *candidateContentUnwrapper) (*os.Root, worker.FormalCaptureResult)
 
@@ -514,6 +515,9 @@ func newConsumerMySQLFixtureOptions(t *testing.T, options *consumerFixtureOption
 	}
 	cfg.User, cfg.Passwd = user, password
 	password = ""
+	if options.ObserveControlDSN != nil {
+		options.ObserveControlDSN(cfg.FormatDSN())
+	}
 	connector, err := mysql.NewConnector(cfg)
 	if err != nil {
 		t.Fatal("local consumer connector failed")

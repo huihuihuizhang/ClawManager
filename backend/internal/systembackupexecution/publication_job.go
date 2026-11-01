@@ -125,6 +125,43 @@ func (s *DeploymentService) checkPublicationJobResources(ctx context.Context) er
 	return c.ErrExecutionAuthority
 }
 
+// No native creation, task mutation or new delegation occurs in this exact
+// definition. It is also used to authenticate the original Job on reopen.
+func (s *DeploymentService) publicationJobDefinition(ctx context.Context, claim c.ClaimToken, attempt uint64, request PublicationUploadRequest) (*batchv1.Job, string, error) {
+	inputs, err := s.publicationJobInputs(ctx, claim, attempt, request)
+	if err != nil {
+		return nil, "", err
+	}
+	raw, err := json.Marshal(request)
+	if err != nil {
+		return nil, "", err
+	}
+	requestSHA := hash(raw)
+	name := "sbp-" + requestSHA[:32]
+	// The signed deployment interval supplies a stable native upper bound. The
+	// upload worker independently enforces the earlier absolute request deadline;
+	// retries never derive a new request/grant window from the native Job clock.
+	seconds := int64(request.Deadline.Sub(s.Forward.DeploymentBinding().NotBefore) / time.Second)
+	if seconds < 1 || seconds > 86400 || !time.Now().Before(request.Deadline) {
+		return nil, "", c.ErrExecutionAuthority
+	}
+	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs})
+	if err != nil {
+		return nil, "", err
+	}
+	yes := true
+	want.Spec.Suspend = &yes
+	jobBytes, _ := json.Marshal(want)
+	specSHA := hash(jobBytes)
+	if want.Annotations == nil {
+		want.Annotations = map[string]string{}
+	}
+	want.Annotations["backup.clawmanager.io/v2-spec-sha256"] = specSHA
+	want.Labels["backup.clawmanager.io/v2-task"] = claim.Target.PublicID
+	want.Spec.Template.Labels["backup.clawmanager.io/v2-task"] = claim.Target.PublicID
+	return want, specSHA, nil
+}
+
 // Actual original 121 one-send boundary. The Job remains suspended until its
 // actual UID-owned resources and original 107 receiving identity are bound.
 // A lost SQL or native ACK never grants a resend, even when GET returns absent.
@@ -139,37 +176,11 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 	if err != nil || candidate.MAC != request.CandidateOwnerHMAC {
 		return nil, c.ErrExecutionAuthority
 	}
-	inputs, err := s.publicationJobInputs(ctx, claim, attempt, request)
+	want, specSHA, err := s.publicationJobDefinition(ctx, claim, attempt, request)
 	if err != nil {
 		return nil, err
 	}
-	raw, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-	requestSHA := hash(raw)
-	name := "sbp-" + requestSHA[:32]
-	// The signed deployment interval supplies a stable native upper bound. The
-	// upload worker independently enforces the earlier absolute request deadline;
-	// retries never derive a new request/grant window from the native Job clock.
-	seconds := int64(request.Deadline.Sub(s.Forward.DeploymentBinding().NotBefore) / time.Second)
-	if seconds < 1 || seconds > 86400 || !time.Now().Before(request.Deadline) {
-		return nil, c.ErrExecutionAuthority
-	}
-	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs})
-	if err != nil {
-		return nil, err
-	}
-	yes := true
-	want.Spec.Suspend = &yes
-	jobBytes, _ := json.Marshal(want)
-	specSHA := hash(jobBytes)
-	if want.Annotations == nil {
-		want.Annotations = map[string]string{}
-	}
-	want.Annotations["backup.clawmanager.io/v2-spec-sha256"] = specSHA
-	want.Labels["backup.clawmanager.io/v2-task"] = claim.Target.PublicID
-	want.Spec.Template.Labels["backup.clawmanager.io/v2-task"] = claim.Target.PublicID
+	name := want.Name
 	access, err := s.publicationAccess(ctx, claim, attempt)
 	if err != nil || access.Check(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
@@ -189,8 +200,13 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 	}
 	var state, digest, namespace, namespaceUID, jobName string
 	var uid sql.NullString
+	preparationChecked := false
 	err = tx.QueryRowContext(ctx, `SELECT send_state,spec_sha256,namespace_name,namespace_uid,job_name,job_uid FROM system_backup_v2_job_send_intents WHERE origin_installation_id=? AND task_public_id=? AND phase='publish' AND job_unit_key='artifact-upload' FOR UPDATE`, facts.InstallationID, facts.BackupPublicID).Scan(&state, &digest, &namespace, &namespaceUID, &jobName, &uid)
 	if errors.Is(err, sql.ErrNoRows) {
+		if err = publicationPreparationOpenTx(ctx, tx, facts.InstallationID, facts.BackupPublicID); err != nil {
+			return nil, err
+		}
+		preparationChecked = true
 		var capacity int64
 		if err = tx.QueryRowContext(ctx, `SELECT control_metadata_capacity_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? AND config_sha256=? FOR SHARE`, facts.InstallationID, facts.ConfigVersion, facts.ConfigSHA256).Scan(&capacity); err != nil {
 			return nil, err
@@ -213,6 +229,11 @@ func (s *DeploymentService) ensureSuspendedPublicationJob(ctx context.Context, c
 	}
 	send := state == "planned"
 	if send {
+		if !preparationChecked {
+			if err = publicationPreparationOpenTx(ctx, tx, facts.InstallationID, facts.BackupPublicID); err != nil {
+				return nil, err
+			}
+		}
 		if _, err = tx.ExecContext(ctx, `UPDATE system_backup_v2_job_send_intents SET send_state='sending',send_started_at=UTC_TIMESTAMP(6) WHERE origin_installation_id=? AND task_public_id=? AND phase='publish' AND job_unit_key='artifact-upload' AND send_state='planned'`, facts.InstallationID, facts.BackupPublicID); err != nil {
 			return nil, err
 		}
