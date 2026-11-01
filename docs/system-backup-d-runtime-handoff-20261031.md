@@ -640,3 +640,8 @@
 
 - 仅测试扩展现有透明dHeldClockConnector：当且仅当实际first-binding UPDATE执行成功/affected1时arm，随后原fresh Bind的实际initial facts行交付延迟2.5秒。保持真实defaultPolicy30/5，把本case进入协调前的原SQL claim设为实际UTC+2秒；不是改TTL/heartbeat，也没有伪造SQL UTC。确认delay.fired和arm已消费，独立实际SQL时钟已越过原cutoff；尽管事务内已写入新30秒claim，Prepare仍拒绝且旧guard保持失效，实际rollback后committed lease仍精确等于原cutoff。
 - 监督重新明确分配65298后，原13case+真实ACK丢失+上述实际延迟组合PASS3.69s/package6.912s，延迟case2.52s（`.tools/d-first-binding-native-cutoff.log`）；session70224已terminal0，无活跃D SQL handle。生产源码仍eff7，旧case默认不arm，不改语义；已有binding实际PublicJobOwner.Bind查询、committed cancel和定向并发仍未以本项替代。后续正式publication测试还必须在捕获前以ldflags链接真实Git HEAD，D5.62未带该链接的失败只保留其真实采集阶段证据，A正独立核验unknown build的消费门原因，尚不称唯一根因。
+
+## D5.65 真实committed pending/running cancel在首次绑定前拒绝
+
+- 仅测试：管理员连接实际INSERT原operations的cancel/pending和cancel/running，各affected1，独立SELECT精确installation/task/type/status确认已提交。随后新的活跃controller scope仍使用原受限角色，完整Authority.Bind两者均拒绝，不能取得后续首次协调权；独立committed lease前后精确不变。清理仅删除该私有fixture精确operation，affected1；没有扩大角色权限。它和原cooperative canceled-context case分开，不以取消context替代SQL取消。
+- 65298原17case组合PASS3.89s/package7.191s（`.tools/d-first-binding-native-cancel.log`），session81527已terminal0。原cutoff延迟和真实commit后ACK丢失均继续通过，原key-use完整字节保持。生产eff7未改；实际PublicJobOwner.Bind重复/unknown恢复、定向heartbeat/多Job并发仍须另证。当前继续使用监督分配的65298窄窗口，不占A63507。
