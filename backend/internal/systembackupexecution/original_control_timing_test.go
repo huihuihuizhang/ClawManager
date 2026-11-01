@@ -28,7 +28,7 @@ func TestOriginalControlTimingCannotChangeAuthorityRejection(t *testing.T) {
 		t.Fatal("observer changed real Bind rejection", err)
 	}
 	data := observer.data()
-	if data.KeyCheck.Authorize.Calls != 1 || data.KeyCheck.Authorize.Failures != 1 || data.KeyCheck.SQLBind.Calls != 1 || data.KeyCheck.SQLBind.Failures != 1 || data.KeyCheck.KeyStateSQL.Calls != 0 {
+	if data.KeyCheck.Authorize.Calls != 1 || data.KeyCheck.Authorize.Failures != 1 || data.KeyCheck.Dependencies.Calls != 1 || data.KeyCheck.Dependencies.Failures != 1 || data.KeyCheck.SQLBind.Calls != 1 || data.KeyCheck.SQLBind.Failures != 1 || data.KeyCheck.KeyStateSQL.Calls != 0 {
 		t.Fatal("wrong actual rejected-stage accounting", data)
 	}
 	unknown := request

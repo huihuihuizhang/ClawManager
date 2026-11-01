@@ -536,13 +536,18 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			logOriginalDescriptionFailure(descriptionStage, ctx, descriptionUntil, a.ClaimRowVersion, a.MaintenanceFencingToken, cause)
 		}
 	}()
+	dependenciesCost := startOriginalControlStage(ctx, req, originalControlDependencies)
 	pod, ok := boundPod(ctx)
 	if !ok || !o.ready() || !worker.ValidateControl(req) || pod.Namespace != o.Namespace || pod.ServiceAccountUID != o.Security.ServiceAccountUID {
+		dependenciesCost.finish(true)
 		return lease, worker.ErrExecution
 	}
+	dependenciesCost.finish(false)
 	task := req.Invocation.Request.Binding.BackupID
 	descriptionStage = "controller-control-original-worker"
+	workerCost := startOriginalControlStage(ctx, req, originalControlOriginalWorker)
 	attempt, e := o.originalWorkerAttempt(ctx, task, pod)
+	workerCost.finish(e != nil)
 	pendingObservation := attempt != 0 && errors.Is(e, worker.ErrNotReady)
 	if e != nil && !pendingObservation {
 		return lease, worker.ErrExecution
@@ -552,7 +557,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	var deadline time.Time
 	db := o.Gate.Authority.DB
 	descriptionStage = "controller-control-task-locator"
+	locatorCost := startOriginalControlStage(ctx, req, originalControlTaskLocator)
 	e = db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence)
+	locatorCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrNotReady
 	}
@@ -750,14 +757,22 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			lease.CandidateSHA256 = worker.FormalCandidateSHA256(req.Invocation, req.Candidate)
 		}
 	}
+	observationCost := startOriginalControlStage(ctx, req, originalControlRecordObservation)
 	observationRaw, _ := json.Marshal(req)
 	observationHash := hash(observationRaw)
 	clear(observationRaw)
-	if e = recordPublicObservation(ctx, tx, a, binding, "running", observationHash); e != nil {
+	e = recordPublicObservation(ctx, tx, a, binding, "running", observationHash)
+	observationCost.finish(e != nil)
+	if e != nil {
 		return lease, worker.ErrNotReady
 	}
-	if req.Invocation.ProviderKey != nil && guard.Recheck(ctx, tx) != nil {
-		return worker.Lease{}, worker.ErrExecution
+	if req.Invocation.ProviderKey != nil {
+		observationGuardCost := startOriginalControlStage(ctx, req, originalControlObservationGuard)
+		observationGuardErr := guard.Recheck(ctx, tx)
+		observationGuardCost.finish(observationGuardErr != nil)
+		if observationGuardErr != nil {
+			return worker.Lease{}, worker.ErrExecution
+		}
 	}
 	// Functional staging key admission must occur while the original Job row
 	// remains locked. Revoke takes that same row lock; the transaction commit is
@@ -778,20 +793,38 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	}
 	descriptionStage = "controller-control-original-permit-stage"
 	if preparedPermit != nil {
+		stageCost := startOriginalControlStage(ctx, req, originalControlPermitStage)
 		if lease.KeyUse == nil || preparedPermit.StageOriginal(ctx, tx, *lease.KeyUse, req.Action, guard) != nil {
+			stageCost.finish(true)
 			return worker.Lease{}, worker.ErrExecution
 		}
+		stageCost.finish(false)
 	}
 	descriptionStage = "controller-control-plan-tail"
-	if originalPlan.RecheckTx(ctx, tx, o.Gate.Records, in) != nil || guard.Recheck(ctx, tx) != nil {
+	planTailCost := startOriginalControlStage(ctx, req, originalControlPlanTail)
+	planTailErr := originalPlan.RecheckTx(ctx, tx, o.Gate.Records, in)
+	planTailCost.finish(planTailErr != nil)
+	if planTailErr != nil {
+		return worker.Lease{}, worker.ErrExecution
+	}
+	finalGuardCost := startOriginalControlStage(ctx, req, originalControlFinalGuard)
+	finalGuardErr := guard.Recheck(ctx, tx)
+	finalGuardCost.finish(finalGuardErr != nil)
+	if finalGuardErr != nil {
 		return worker.Lease{}, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-commit"
-	if e = tx.Commit(); e != nil {
+	commitCost := startOriginalControlStage(ctx, req, originalControlCommit)
+	e = tx.Commit()
+	commitCost.finish(e != nil)
+	if e != nil {
 		return lease, worker.ErrNotReady
 	}
 	descriptionStage = "controller-control-collector-tail"
-	if e = o.Gate.ValidateCollectors(ctx, a); e != nil {
+	collectorsCost := startOriginalControlStage(ctx, req, originalControlCollectors)
+	e = o.Gate.ValidateCollectors(ctx, a)
+	collectorsCost.finish(e != nil)
+	if e != nil {
 		return lease, worker.ErrExecution
 	}
 	if preparedPermit != nil && req.Action == "key-reserve" {

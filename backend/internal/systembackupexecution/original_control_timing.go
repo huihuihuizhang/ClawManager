@@ -17,8 +17,9 @@ type originalControlStageTimingData struct {
 	ElapsedNanos, MaxNanos, LastNanos int64
 }
 type originalControlActionTimingData struct {
-	Authorize, SQLBind, KeyStateSQL                                                                                           originalControlStageTimingData
-	ExecutionInput, OriginalPlan, OriginalPart, WorkerMounts, WorkerSecurity, WorkerProcess, ProviderQualification, GuardTail originalControlStageTimingData
+	Authorize, SQLBind, KeyStateSQL                                                                                                       originalControlStageTimingData
+	ExecutionInput, OriginalPlan, OriginalPart, WorkerMounts, WorkerSecurity, WorkerProcess, ProviderQualification, GuardTail             originalControlStageTimingData
+	Dependencies, OriginalWorker, TaskLocator, RecordObservation, ObservationGuard, PermitStage, PlanTail, FinalGuard, Commit, Collectors originalControlStageTimingData
 }
 type originalControlTimingData struct {
 	KeyReserve, KeyBegin, KeyCheck, KeyEnd, Candidate originalControlActionTimingData
@@ -43,6 +44,16 @@ const (
 	originalControlWorkerProcess
 	originalControlProviderQualification
 	originalControlGuardTail
+	originalControlDependencies
+	originalControlOriginalWorker
+	originalControlTaskLocator
+	originalControlRecordObservation
+	originalControlObservationGuard
+	originalControlPermitStage
+	originalControlPlanTail
+	originalControlFinalGuard
+	originalControlCommit
+	originalControlCollectors
 )
 
 type originalControlStageTimer struct {
@@ -122,6 +133,26 @@ func (t *originalControlStageTimer) finish(failed bool) {
 		bucket = &action.ProviderQualification
 	case originalControlGuardTail:
 		bucket = &action.GuardTail
+	case originalControlDependencies:
+		bucket = &action.Dependencies
+	case originalControlOriginalWorker:
+		bucket = &action.OriginalWorker
+	case originalControlTaskLocator:
+		bucket = &action.TaskLocator
+	case originalControlRecordObservation:
+		bucket = &action.RecordObservation
+	case originalControlObservationGuard:
+		bucket = &action.ObservationGuard
+	case originalControlPermitStage:
+		bucket = &action.PermitStage
+	case originalControlPlanTail:
+		bucket = &action.PlanTail
+	case originalControlFinalGuard:
+		bucket = &action.FinalGuard
+	case originalControlCommit:
+		bucket = &action.Commit
+	case originalControlCollectors:
+		bucket = &action.Collectors
 	default:
 		return
 	}
