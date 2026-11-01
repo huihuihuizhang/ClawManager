@@ -1,0 +1,38 @@
+{
+  "schema": "supervisor-post-c-original-manifest-reviewed.v1",
+  "at": "2026-11-01T15:32:48.420681+00:00",
+  "source_commit": "2c1fd7cbd887d6d14a593349a842c4a25bf1ee0a",
+  "base_backup": "41ba46a73b7e37dc4bd725d0c253ce16cb56b3c8",
+  "review": [
+    "Real production forward caller consumes A original completed upload DATA, closes old private material and freezes104 before explicit C-stage claim renewals.",
+    "Actual complete independent remote C runs before102; final private receipt binds exact current service,claim,attempt,target,objects and configured limits.",
+    "Original same-TX102 checks currentclaim/target/epoch/config/budget,original known cert facts and signature,104/121activation,107all16results and candidate ownership/lifecycle.",
+    "Immutable manifest dispatch deadline is the minimum of current authority and original signed certificate expiry; DB UTC monotonic floor and independently pinned current public signature history are checked after publishing CAS before commit.",
+    "Existing one-send commit-before-send and independent complete versioned JSON readback retained; existing unknown actions remain query-only.",
+    "No marker,acceptance,catalog,cleanup or terminal success gate removed."
+  ],
+  "independent_merged_regression": {
+    "session": 99398,
+    "natural_exit": 0,
+    "closed": true,
+    "package": "clawreef/internal/systembackupexecution",
+    "seconds": 13.935,
+    "sql": "disabled",
+    "log": ".tools/supervisor-d-post-c-2c1f-merged-execution.log",
+    "sha256": "4e49cc4d6744c5075c4d0e633854dfa66705d92cf563d74fd03bf0657497fbbd"
+  },
+  "native_scope": {
+    "new_post_C_test": "prepared only, skipped with SQL disabled; no actual positive102/native proof yet",
+    "A_v6": "c98f7324,74486closed1,183.40case/186.653package; all11capture+MF+1Create1Patch+actualupload15objects completed; fixture relative-path selector rejected before readback/receiver/wait",
+    "A_v6_log_sha256": "89b7a12688099dd4eb2e852d5f7a231f4d2cc0929d341a4b1fff0dae277c8201"
+  },
+  "pending_review_before_batch_push": [
+    "D follow-up freezes16original registered result bodies and exact candidate locator provenance.",
+    "A relative-path mapping fix required before meaningful fresh native post-C run."
+  ],
+  "known_incomplete": [
+    "Strict expired/different-upload-claim query-only reconciliation remains unavailable.",
+    "_COMMITTED,_ACCEPTANCE,catalog,cleanup and terminal task success not accepted.",
+    "Historical isolated restore and onsite verification remain."
+  ]
+}

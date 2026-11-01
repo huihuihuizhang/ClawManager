@@ -1,0 +1,110 @@
+{
+  "schema_version": "d-post-c-original-manifest-production-candidate.v1",
+  "date": "2026-11-01",
+  "base_commit": "e067379597a4a2b93ad4f41e6dc70692ffe59b83",
+  "reviewed_prerequisites": [
+    "backupffc54196a476a0c8720f8d23cc80976e14cde30b",
+    "A eb179f5f9531bae6307cc1be3e12af7a221e8751 uploaded inert DATA",
+    "D e59fce75 eleven-member complete remote C native proof (earlier exact source only)"
+  ],
+  "implemented": [
+    "Real forward production caller after original startAndAwait upload completion in the same acquired claim flow, both fresh and existing-material branches. Existing strict old-material claim mismatch remains denied; no new query-only recovery privilege is invented.",
+    "Read A original uploaded DATA and immutable104 material digest while exact upload claim still holds, close old private material, then run actual complete remote C with explicit legitimate claim transitions. Latest actual claim pointer remains owned by original forward defer Release.",
+    "New private C receipt retains final service/authority/claim/attempt/target/budget binding. Renew or takeover cannot adopt it; actual full C is required again.",
+    "Strict bounded and copied15-object/13-index/v12 manifest DATA projection, same original config/context/certificate/bootstrap/candidate; public DATA never mints C authority.",
+    "Original102 one-send transaction rechecks private C receipt, current target/claim/epoch/config/budget, exact original known certificate facts/signature, frozen104 material digest, activation/121 UID/generation, all16 registered107 result bodies/last cursor SHA, original candidate location/checksum/length/owner/lifecycle. It rechecks again after staged102 insert and before original publishing CAS.",
+    "Immutable102 dispatch deadline takes minimum of final C authority and original signed certificate ExpiresAt, without changing certificate issued/expiry. Database UTC clock, monotonic floor and current independently pinned local signing history/revocation are rechecked after publishing transition immediately before commit; failure rolls entire102/task transaction back.",
+    "After durable acknowledged102 commit, existing native JSON sender and independent complete fixed-version EOF readback create the existing manifest object receipt. Unknown send/commit retain existing query-only journal behavior; no resend loop introduced."
+  ],
+  "validation": {
+    "targeted": {
+      "log": ".tools/d-post-c-manifest-final-targeted-no-sql.log",
+      "sha256": "0dcb411909b36db972b3543e4b6a3ed35428a8cb6f6ccb09b5a7b430bd54939b",
+      "seconds": 3.414,
+      "session": 37941,
+      "exit": 0
+    },
+    "full_execution": {
+      "log": ".tools/d-post-c-manifest-final-full-no-sql.log",
+      "sha256": "1c6e959a1c2aaa4c23bac328f737088529f193964a4f4a165f5c14d1e8c2c6f1",
+      "seconds": 14.105,
+      "session": 97280,
+      "exit": 0
+    }
+  },
+  "counterexamples": {
+    "parser_subcases": 17,
+    "certificate_deadline_sql_clock_data_subcases": 12,
+    "current_public_signing_history_data_subcases": 6,
+    "missing_real_receipt": "nil/zero C receipt and canceled bridge reject before absent SQL; tests manufacture no remote C receipt or live authority"
+  },
+  "native_pending": {
+    "test": "TestDOriginalUploadedManifestThroughRemoteCAnd102MySQL",
+    "status": "EXPLICIT SKIP: SQL opt-in cleared. A currently owns63507 native window; D has not run SQL.",
+    "fixture": "Reuse A actual original eleven-member capture, real local upload-only worker, mTLS/TokenReview result receiver and native API model. Optional continuation closes private material, calls same production bridge, expects16 actual Range reads, one original102 manifest action/send and17 PUTs (15 objects+candidate+manifest), current receipt TX check and publishing/artifact_usable=false.",
+    "limits": "Prepared test is not native evidence. Earlier C-only native pass does not prove this changed source or manifest commit."
+  },
+  "preserved": [
+    "No old material/claim/nonce/DEK/provider/source deadline refreshed or rewritten;30/5 policy unchanged.",
+    "Original102 SQL statements/one-send/CAS/capacity guards retained; added closed private proof checks and bounded current SQL-clock reads.",
+    "No Kube/provider/network inside102 proof TX; signing history rereads bounded local independently pinned public files.",
+    "A policy,budget,ResultJSON and originalsame-task fixture controls preserved by hunk; no whole-file overwrite.",
+    "No upload completion candidate or typed DATA can substitute for genuine independent C."
+  ],
+  "still_closed": [
+    "marker/_COMMITTED",
+    "cleanup",
+    "acceptance/_ACCEPTANCE",
+    "catalog registration",
+    "artifact usable",
+    "terminal task success"
+  ],
+  "limitations": [
+    "C plus original manifest segment candidate only; no full backup terminal claim.",
+    "This does not solve A current descriptor first rejection or create a substitute success.",
+    "Existing expired/different-upload-claim material requires separate strict query-only reconciliation; no old grant is regenerated here.",
+    "No remote production environment accessed, no D push."
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256_raw": "4645cf2c96770dc9783d80bf685f868c71189c331b2fce2556f9a35e881205eb",
+      "sha256_lf": "4645cf2c96770dc9783d80bf685f868c71189c331b2fce2556f9a35e881205eb"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_journal.go",
+      "sha256_raw": "b14730d8b8abf2c4bdd0a8de4fe7b856803249689fb56cdccf8487c54406af15",
+      "sha256_lf": "b14730d8b8abf2c4bdd0a8de4fe7b856803249689fb56cdccf8487c54406af15"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "sha256_raw": "335adb63585d7fa8ab56c8959643ad1940aae6b98e19b45d1ff455500e9ea49a",
+      "sha256_lf": "335adb63585d7fa8ab56c8959643ad1940aae6b98e19b45d1ff455500e9ea49a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "sha256_raw": "cba8399ac5635126b4e49ea8b3574aa0b95917ff3a5f3f6eb06ccd2923202938",
+      "sha256_lf": "cba8399ac5635126b4e49ea8b3574aa0b95917ff3a5f3f6eb06ccd2923202938"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256_raw": "1fc87b08e00d2eb253babdeea4046d45f3cfec8f096489f83a6906b1abc818ee",
+      "sha256_lf": "1fc87b08e00d2eb253babdeea4046d45f3cfec8f096489f83a6906b1abc818ee"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_test.go",
+      "sha256_raw": "dd6e3bfc526e860fd2f2f7a25cf9b7ef833ae41c7598a3ef323a1a2bf1aa5755",
+      "sha256_lf": "dd6e3bfc526e860fd2f2f7a25cf9b7ef833ae41c7598a3ef323a1a2bf1aa5755"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_clock_test.go",
+      "sha256_raw": "36329d62c495d8203accffe4b576e696d8328c92845d943f2c3190e9e880dc9d",
+      "sha256_lf": "36329d62c495d8203accffe4b576e696d8328c92845d943f2c3190e9e880dc9d"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "sha256_raw": "180a82ff07bf10ec983010ce6a7103494a5b4382b9212df8d5eb129c92fb511d",
+      "sha256_lf": "180a82ff07bf10ec983010ce6a7103494a5b4382b9212df8d5eb129c92fb511d"
+    }
+  ]
+}
