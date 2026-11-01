@@ -129,6 +129,10 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := validateWorkBuddy(source, policy.WorkBuddy); err != nil {
 		return RestorePlan{}, err
 	}
+	callerUsers, err := prepareCallerUsers(ctx, source, policy.Dependencies)
+	if err != nil {
+		return RestorePlan{}, err
+	}
 	targets := map[string]Table{}
 	for _, t := range target {
 		if _, ok := targets[t.Name]; ok {
@@ -237,6 +241,16 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 				if err := applyAdapter(ctx, n, adapter); err != nil {
 					return RestorePlan{}, err
 				}
+				if adapter.Normalizer == CallerPolicy066Normalizer {
+					if err := normalizeCaller066(n, callerUsers); err != nil {
+						return RestorePlan{}, err
+					}
+				}
+				if adapter.Normalizer == NorthboundOperation077Normalizer {
+					if err := normalizeOperation077(n, adapter.InterruptedAt); err != nil {
+						return RestorePlan{}, err
+					}
+				}
 			}
 			if t.Name == "users" && hasColumn(out, "auth_provider") && !hasColumn(t, "auth_provider") {
 				n["auth_provider"] = Text("local")
@@ -267,6 +281,12 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	plan.Data.Tables = ordered
+	if err := VerifyOperationQuarantine(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
+	if err := VerifyCallerQuarantine(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
 	if err := VerifyTeamQuarantine(plan.Data); err != nil {
 		return RestorePlan{}, err
 	}

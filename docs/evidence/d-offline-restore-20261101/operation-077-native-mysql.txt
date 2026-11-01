@@ -1,0 +1,14 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:342: local MySQL only; actual Skills, caller 057/066 and operations 045/066/077 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- PASS: TestOfflineBusinessRestoreMySQL (34.16s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/success (6.15s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (5.34s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (6.11s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (5.72s)
+PASS
+ok  	clawreef/internal/systembackup/domain	37.065s

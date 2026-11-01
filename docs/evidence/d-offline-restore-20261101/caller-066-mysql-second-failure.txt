@@ -1,0 +1,62 @@
+=== RUN   TestCaller066CommonSQLNormalization
+--- PASS: TestCaller066CommonSQLNormalization (0.00s)
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/wrong-table
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/source-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/target-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-actor
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-scope
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-keys
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/null-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/negative-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/old-schema
+--- PASS: TestCaller066CommonSQLRejectsUnsafeInput (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/wrong-table (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/source-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/target-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-actor (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-scope (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-keys (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/null-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/negative-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/old-schema (0.00s)
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor
+--- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor (0.00s)
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+    offline_business_mysql_test.go:256: independent SELECT-only verification failed
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:289: local MySQL only; actual Skills and caller 057/066 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- FAIL: TestOfflineBusinessRestoreMySQL (22.34s)
+    --- FAIL: TestOfflineBusinessRestoreMySQL/success (3.09s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (3.82s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (3.65s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (3.44s)
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back
+--- PASS: TestCaller066DatabaseWorkerTransactionAndReadback (0.11s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify (0.08s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back (0.03s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	25.478s
+FAIL

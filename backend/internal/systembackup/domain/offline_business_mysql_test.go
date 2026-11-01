@@ -54,6 +54,7 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		return db
 	}
 	admin := open(*cfg)
+	t.Run("native-json-boundaries", func(t *testing.T) { testNativeJSONCanonicalization(t, ctx, admin) })
 	exec := func(db *sql.DB, q string, args ...any) {
 		t.Helper()
 		if _, err := db.ExecContext(ctx, q, args...); err != nil {
@@ -79,6 +80,20 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	}
 	suffix := hex.EncodeToString(nonce[:])
 	seed, _, policy := businessRestoreFixture()
+	callerSeed, _, callerPolicy := callerRestoreFixture()
+	// Reuse nonempty caller history, but build its schema from actual 057/066.
+	seed.Tables[0] = find(callerSeed, "users")
+	callerTable := find(callerSeed, "northbound_caller_policies")
+	nullCaller := cloneRow(callerTable.Rows[0])
+	nullCaller["user_id"], nullCaller["enabled"], nullCaller["scopes_json"] = Text("1"), Text("0"), Text("[]")
+	nullCaller["api_keys_json"], nullCaller["updated_by"], nullCaller["api_keys_version"] = Cell{Null: true}, Cell{Null: true}, Text("0")
+	callerTable.Rows = append(callerTable.Rows, nullCaller)
+	seed.Tables = append(seed.Tables, callerTable)
+	policy.Dependencies = callerPolicy.Dependencies
+	operationSeed, _, operationPolicy := operationRestoreFixture()
+	seed.Tables = append(seed.Tables, find(operationSeed, "northbound_operations"))
+	policy.Dependencies["northbound_operations"] = operationPolicy.Dependencies["northbound_operations"]
+	policy.Configs.(JSONRegistry)["northbound_operations.request_payload"] = operationPolicy.Configs.(JSONRegistry)["northbound_operations.request_payload"]
 	create := func(name string) *sql.DB {
 		exec(admin, "CREATE DATABASE `"+name+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
 		cleanup("DROP DATABASE `" + name + "`")
@@ -87,6 +102,9 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		c.MultiStatements = true
 		db := open(c)
 		for _, table := range seed.Tables {
+			if table.Name == "northbound_caller_policies" || table.Name == "northbound_operations" {
+				continue
+			}
 			if _, skill := skillCaptureColumns[table.Name]; skill {
 				continue
 			}
@@ -102,7 +120,12 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		}
 		// Migration 039's historical update needs these columns even when empty.
 		exec(db, "CREATE TABLE instance_commands (id INT PRIMARY KEY, instance_id INT, status VARCHAR(30), error_message TEXT, command_type VARCHAR(60)) ENGINE=InnoDB")
-		for _, file := range []string{"008_add_skill_management.sql", "023_add_skill_hub.sql", "039_add_skill_package_materialize.sql"} {
+		if !hasColumn(find(seed, "instances"), "runtime_error_message") {
+			exec(db, "ALTER TABLE instances ADD COLUMN runtime_error_message TEXT NULL")
+		}
+		// Empty template prerequisite for actual owner-Team migration 077.
+		exec(db, "CREATE TABLE custom_team_templates (id INT PRIMARY KEY,user_id INT NOT NULL) ENGINE=InnoDB")
+		for _, file := range []string{"008_add_skill_management.sql", "023_add_skill_hub.sql", "039_add_skill_package_materialize.sql", "045_add_northbound_api.sql", "057_add_northbound_admin_settings.sql", "066_add_northbound_api_keys.sql", "077_add_northbound_owner_teams.sql"} {
 			raw, err := os.ReadFile(filepath.Join("..", "..", "db", "migrations", file))
 			if err != nil {
 				t.Fatal("migration unavailable")
@@ -112,13 +135,23 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		// Provision an empty disposable target, not an initialized application.
 		// The production restore correctly refuses seeded/nonempty business data.
 		exec(db, "DELETE FROM skill_hub_tags")
+		exec(db, "DELETE FROM northbound_admin_settings")
 		return db
 	}
 	principal := func(name, database, grants string) *sql.DB {
 		password := suffix + suffix
 		exec(admin, "CREATE USER '"+name+"'@'127.0.0.1' IDENTIFIED BY '"+password+"'")
 		cleanup("DROP USER '" + name + "'@'127.0.0.1'")
-		exec(admin, "GRANT "+grants+" ON `"+database+"`.* TO '"+name+"'@'127.0.0.1'")
+		conn, err := admin.Conn(ctx)
+		if err != nil {
+			t.Fatal("grant connection", err)
+		}
+		grantDB, err := QuotedGrantDatabase(ctx, conn, database)
+		conn.Close()
+		if err != nil {
+			t.Fatal("literal database grant", err)
+		}
+		exec(admin, "GRANT "+grants+" ON "+grantDB+".* TO '"+name+"'@'127.0.0.1'")
 		c := *cfg
 		c.DBName, c.User, c.Passwd = database, name, password
 		return open(c)
@@ -154,6 +187,14 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		t.Fatal("source capture", err)
 	}
 	before, _ := Digest(snapshot)
+	// Test-only reviewed pin from the just-created migration schema. Production
+	// pins must instead come from the authenticated plan and target observation.
+	callerAdapter := policy.Dependencies["northbound_caller_policies"]
+	callerAdapter.SchemaSHA256 = SchemaDigest(find(snapshot, "northbound_caller_policies"))
+	policy.Dependencies["northbound_caller_policies"] = callerAdapter
+	operationAdapter := policy.Dependencies["northbound_operations"]
+	operationAdapter.SchemaSHA256 = SchemaDigest(find(snapshot, "northbound_operations"))
+	policy.Dependencies["northbound_operations"] = operationAdapter
 	key := bytes.Repeat([]byte{73}, 32)
 	binding := staging.Binding{BackupID: "offline-business", Attempt: "1", Path: "mysql/domain", CaptureContextHash: strings.Repeat("a", 64), EnvelopeID: "local-fixture"}
 	var cipher bytes.Buffer
@@ -226,8 +267,8 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 				if err == nil {
 					t.Fatal("failure committed")
 				}
-				var users, skills int
-				if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE id=999").Scan(&users) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM skills").Scan(&skills) != nil || users != 1 || skills != 0 {
+				var users, skills, callers, operations int
+				if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE id=999").Scan(&users) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM skills").Scan(&skills) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM northbound_caller_policies").Scan(&callers) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM northbound_operations").Scan(&operations) != nil || users != 1 || skills != 0 || callers != 0 || operations != 0 {
 					t.Fatal("rollback failed")
 				}
 				return
@@ -235,8 +276,26 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 			if err != nil {
 				t.Fatal("restore", err)
 			}
-			if VerifyDrill(ctx, reader, proof, plan) != nil {
-				t.Fatal("independent SELECT-only verification failed")
+			if verifyErr := VerifyDrill(ctx, reader, proof, plan); verifyErr != nil {
+				actual, captureErr := Capture(ctx, reader, Limits{1000, 8 << 20})
+				if captureErr == nil {
+					for _, expected := range plan.Data.Tables {
+						got := find(actual, expected.Name)
+						if len(got.Rows) != len(expected.Rows) {
+							t.Log("row count differs:", expected.Name)
+							continue
+						}
+						for i, row := range expected.Rows {
+							for name, value := range row {
+								cell := got.Rows[i][name]
+								if cell.Null != value.Null || !bytes.Equal(cell.Bytes, value.Bytes) {
+									t.Log("cell differs:", expected.Name, name)
+								}
+							}
+						}
+					}
+				}
+				t.Fatal("independent SELECT-only verification failed", verifyErr, captureErr)
 			}
 			var empty, null, timestamp int
 			if reader.QueryRowContext(ctx, "SELECT file_name = '', last_scanned_at IS NULL, created_at IS NOT NULL FROM skill_blobs WHERE id=12").Scan(&empty, &null, &timestamp) != nil || empty != 1 || null != 1 || timestamp != 1 {
@@ -245,6 +304,27 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 			var status, install, findings, job string
 			if reader.QueryRowContext(ctx, "SELECT i.status,s.install_path,r.findings_json,j.status FROM instances i JOIN instance_skills s ON s.instance_id=i.id JOIN skill_scan_results r ON r.id=15 JOIN skill_package_materialize_jobs j ON j.instance_id=i.id WHERE i.id=7").Scan(&status, &install, &findings, &job) != nil || status != "stopped" || install != "skills/demo" || job != "cancelled" || findings != `{"finding":"保留"}` {
 				t.Fatal("nonempty relation/content mismatch")
+			}
+			var enabled, actor int
+			var keys, version, created string
+			if reader.QueryRowContext(ctx, "SELECT enabled,api_keys_json,api_keys_version,updated_by,created_at FROM northbound_caller_policies WHERE user_id=4").Scan(&enabled, &keys, &version, &actor, &created) != nil || enabled != 0 || keys != "[]" || version != "9223372036854775807" || actor != 1 || created != "2026-10-01 01:02:03.123456" {
+				t.Fatal("current caller migration fields lost or credentials retained")
+			}
+			var nullableActor int
+			if reader.QueryRowContext(ctx, "SELECT updated_by IS NULL,api_keys_json,api_keys_version FROM northbound_caller_policies WHERE user_id=1").Scan(&nullableActor, &keys, &version) != nil || nullableActor != 1 || keys != "[]" || version != "0" {
+				t.Fatal("nullable actor/current version zero lost")
+			}
+			var operationCount, unfinished, leased int
+			if reader.QueryRowContext(ctx, "SELECT COUNT(*),SUM(status NOT IN ('succeeded','failed','canceled')),SUM(lease_owner IS NOT NULL OR lease_expires_at IS NOT NULL) FROM northbound_operations").Scan(&operationCount, &unfinished, &leased) != nil || operationCount != 6 || unfinished != 0 || leased != 0 {
+				t.Fatal("operation history omitted or executable")
+			}
+			var operationID, finished string
+			if reader.QueryRowContext(ctx, "SELECT id,finished_at FROM northbound_operations WHERE operation_id='source-operation-0'").Scan(&operationID, &finished) != nil || operationID != "9007199254740993" || finished != "2026-11-01 08:00:00.123456" {
+				t.Fatal("operation precision or frozen time lost")
+			}
+			var requestPayload string
+			if reader.QueryRowContext(ctx, "SELECT request_payload,finished_at FROM northbound_operations WHERE operation_id='source-operation-1'").Scan(&requestPayload, &finished) != nil || finished != "2026-10-01 01:02:04.654321" || strings.Contains(requestPayload, "named-source-secret") || !strings.Contains(requestPayload, `": "`) || !strings.Contains(requestPayload, "保留原始参数") {
+				t.Fatal("operation existing completion or MySQL JSON redaction/readback fidelity lost")
 			}
 			exec(targetAdmin, "UPDATE skill_scan_results SET findings_json='changed' WHERE id=15")
 			if VerifyDrill(ctx, reader, proof, plan) == nil {
@@ -264,5 +344,5 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	if digest, _ := Digest(after); digest != before {
 		t.Fatal("source changed")
 	}
-	t.Log("local MySQL only; actual Skills migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim")
+	t.Log("local MySQL only; actual Skills, caller 057/066 and operations 045/066/077 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim")
 }
