@@ -188,6 +188,13 @@ func (s *nativePublicationS3) credential(write bool) (nativePublicationCredentia
 }
 
 func (s *nativePublicationS3) request(ctx context.Context, method, key, version string, body io.Reader, size int64, checksum string, deadline time.Time, write bool, contentType string) (*http.Response, error) {
+	return s.requestWithRange(ctx, method, key, version, body, size, checksum, deadline, write, contentType, "")
+}
+
+func (s *nativePublicationS3) requestWithRange(ctx context.Context, method, key, version string, body io.Reader, size int64, checksum string, deadline time.Time, write bool, contentType, byteRange string) (*http.Response, error) {
+	if byteRange != "" && (write || method != "GET" || version == "" || version == "null" || version == "latest" || version == "current" || !regexp.MustCompile(`^bytes=[0-9]+-[0-9]+$`).MatchString(byteRange)) {
+		return nil, errPublicationUnavailable
+	}
 	if s == nil || s.client == nil || s.maxObjectBytes < 1 || s.maxObjectBytes > MaxPublicationArtifactBytes || ctx == nil || ctx.Err() != nil || !safePublicationKey(key) || !strings.HasPrefix(key, s.config.Root) || len(version) > 256 || version == "null" || version == "latest" || write && (method != "PUT" || version != "" || size < 1 || size > s.maxObjectBytes || !formalCandidateDigest(checksum) || body == nil) || !write && method != "GET" && method != "HEAD" {
 		return nil, errPublicationUnavailable
 	}
@@ -254,6 +261,9 @@ func (s *nativePublicationS3) request(ctx context.Context, method, key, version 
 			}
 		}
 	} else {
+		if byteRange != "" {
+			request.Header.Set("Range", byteRange)
+		}
 		request.Header.Set("X-Amz-Content-Sha256", hash(nil))
 		request = signer.SignV4(*request, credential.AccessKey, credential.SecretKey, credential.SessionToken, s.config.Region)
 	}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "d-artifact-container-read-review.v1",
+  "updated_at_utc": "2026-11-01T07:54:00.507648+00:00",
+  "source_base": "2d121933dfb1412f6db86fb901063781d28b1162",
+  "scope": "independent read-only fixed-version container CONTENT validation; no new SQL, original claim, KMS, write credential, plaintext business proof or finalization authority",
+  "production": {
+    "constructor": "existing NewArtifactReadOnlyS3 with explicit original ArtifactReadLimits",
+    "method": "InspectPartContainer",
+    "native_reads": "exact expected installation/backup/attempt/part container key; HEAD and one fixed-version full GET; no latest or range request",
+    "checks": [
+      "actual whole-object SHA/size and actual HTTP EOF",
+      "same sequential bytes parsed and hashed; backward requests fail closed",
+      "each original ciphertext hash, stream envelope, checkpoint and scope via existing part-container Inspect",
+      "limits, context, absolute deadline and current pinned read credential rechecked before returning facts"
+    ]
+  },
+  "test_scope": {
+    "fixture": "actual local AES-GCM C under cleared named local DATA key and actual part-container bytes; not a captured task or provider/SQL/business proof",
+    "cases": 13,
+    "read_only": "artifact write credential file removed before reader construction",
+    "healthy_requests": {
+      "heads": 1,
+      "gets": 1,
+      "puts": 0
+    },
+    "reject_cases": [
+      "whole hash",
+      "cipher member corruption with updated whole hash",
+      "checkpoint substitution",
+      "foreign config scope",
+      "native version substitution",
+      "size mismatch",
+      "foreign key",
+      "over budget before I/O",
+      "short HTTP body",
+      "read credential withdrawal during GET",
+      "actual entered GET body deadline expiry",
+      "canceled context before I/O"
+    ],
+    "adapter_model": "known size does not synthesize EOF; backward read fails; separate real EOF probe required"
+  },
+  "results": {
+    "initial_tls_protocol_package_seconds": 3.463,
+    "final_tls_protocol_package_seconds": 3.659,
+    "final_tls_case_seconds": 0.35,
+    "full_execution_package_seconds": 10.543,
+    "full_part_container_package_seconds": 5.166,
+    "post_a9fb_merge_execution_seconds": 14.871
+  },
+  "sessions": {
+    "10767": "terminal0",
+    "38285": "terminal0",
+    "26625": "terminal0",
+    "51237": "terminal0"
+  },
+  "limitations": [
+    "No multi-GiB body was sent or read by these small-body tests.",
+    "No complete manifest/catalog/certificate trust chain is inferred from caller-supplied hashes.",
+    "No C plaintext authentication, six-domain business verification, staging cleanup, signed acceptance/catalog, final task CAS or restore proof is supplied.",
+    "Returned pc.Facts are inert values, not a private finalization receipt."
+  ],
+  "logs": {
+    "d-artifact-container-read-native-tls.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-read-native-tls.log",
+      "sha256": "0c28d65dd0854f8909015a1365540619ee1e6a761a8a4f1d478f35a9106c554f"
+    },
+    "d-artifact-container-read-final-native-tls.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-read-final-native-tls.log",
+      "sha256": "4df4967a09c283707ce475690cace376a60775c9cf4574c85201327bf3205b54"
+    },
+    "d-artifact-container-read-final-packages.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-artifact-container-read-final-packages.log",
+      "sha256": "37ae6e966f06c269819f623bb163db939bc53516506c4bb2e1824466e39c2e01"
+    },
+    "d-catalog-post-backup-a9fb-package.log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-catalog-post-backup-a9fb-package.log",
+      "sha256": "47b156f30f243f95d6ad3dac86431434d9388702e4e2e9a0de8261c9374b9d3f"
+    }
+  },
+  "source_sha256": {
+    "artifact_read_container.go": "32bab2320b0e25e59efb1a662907d99bf88ac79c49d8dc368520d37ef22b70cf",
+    "artifact_read_container_test.go": "0de3446722b219d5b7fbac41eb0bb9a4584d20e2ac3dab4e43cfddd51ff8f33b"
+  }
+}
