@@ -1,0 +1,51 @@
+=== RUN   TestGatewayBudgetWholeGroupPreservesUnsettledPrecisionAndDeletedHistory
+--- PASS: TestGatewayBudgetWholeGroupPreservesUnsettledPrecisionAndDeletedHistory (0.00s)
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-adapter
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/plain-preserve
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-time
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/unknown-column
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-fk
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/wrong-unique-order
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/changed-key-type
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/overflow-id
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/overprecise-money
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/pending-null
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/reserved-actual
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-ledger-key
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-ledger-cost
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/unknown-state
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/image-pending-without-owner-proof
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-key
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/duplicate-hmac
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/group-json-null
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/historical-actor-zero
+--- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite (0.01s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-adapter (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/plain-preserve (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-time (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/unknown-column (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-fk (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/wrong-unique-order (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/changed-key-type (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/overflow-id (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/overprecise-money (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/pending-null (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/reserved-actual (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-ledger-key (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/different-ledger-cost (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/unknown-state (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/image-pending-without-owner-proof (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-key (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/duplicate-hmac (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/group-json-null (0.00s)
+    --- PASS: TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/historical-actor-zero (0.00s)
+=== RUN   TestGatewayBudgetEmptyRequiredTableAndCanceledContext
+--- PASS: TestGatewayBudgetEmptyRequiredTableAndCanceledContext (0.00s)
+=== RUN   TestGatewayAttributionPreservesDeletedKeyAndNullWithoutInventingLinks
+--- PASS: TestGatewayAttributionPreservesDeletedKeyAndNullWithoutInventingLinks (0.00s)
+=== RUN   TestGatewayBudgetPublicWorkerActualTLSMySQL
+    gateway_budget_native_test.go:32: requires D owned UUID/marker/CA-pinned disposable TLS MySQL
+--- SKIP: TestGatewayBudgetPublicWorkerActualTLSMySQL (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.872s

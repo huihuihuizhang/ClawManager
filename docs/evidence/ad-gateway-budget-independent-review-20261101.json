@@ -1,0 +1,183 @@
+{
+  "base": "41ba46a73b7e37dc4bd725d0c253ce16cb56b3c8",
+  "candidate_source": "4e325b62ebf8c4d2dada7f03de00bdfd3ef6773c",
+  "owner_source": "d3a6a67160bb223789712106957f29094a9da2bc",
+  "source_comparison": {
+    "base": "41ba46a73b7e37dc4bd725d0c253ce16cb56b3c8",
+    "owner": "d3a6a67160bb223789712106957f29094a9da2bc",
+    "candidate": "4e325b62ebf8c4d2dada7f03de00bdfd3ef6773c",
+    "sources": [
+      {
+        "path": "backend/internal/systembackup/domain/caller_restore.go",
+        "blob": "47bb8772847831679c4be8b78549018f78f0dd62",
+        "sha256": "0100da765fe32b1e347025de281db5ffdb49d9cf6d63ae63a80e7eeeb513ba02"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/crossdomain.go",
+        "blob": "104360d8bb7837f202c66dce76dddf178e3d0a61",
+        "sha256": "87b4736fed900e5ba515b55682a7d0fab7638fc3ba339a160592184e78492e4d"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/export_test.go",
+        "blob": "aee8164b908dc18c27b993c864d105a1664b4e55",
+        "sha256": "88a69efe061e6d3ead6d914ab243e1b2e1388c13f0a348960505ab4f653c98af"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+        "blob": "87661a43143b22a91cbbdf46c1cedeb8bc05032d",
+        "sha256": "48b3c60639020952272e479dc4547fe14eddb55d3912f09e21059bae1e38745c"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/gateway_budget_native_readback_test.go",
+        "blob": "38f9047564c7e5477bc1bad9222a22fb2405d362",
+        "sha256": "f8533b4c24dee74f65766d814e7de91b979732c74efa593c6885a9914abbb085"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/gateway_budget_native_test.go",
+        "blob": "28ed60bce359c5f57532fcdd12b5380571a118b6",
+        "sha256": "3acec8a26c1d3ed041f1ae83eb897363c08f55b3ef702d6d9c93b25b5393542e"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/gateway_budget_restore.go",
+        "blob": "aac0dbd050a4fe40063f8a9f18da99904f50d006",
+        "sha256": "0a7efb2136b5235044f8cba4bf8207a0e5b3076ad0a872fe08b48815bfed4ce4"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/gateway_budget_restore_test.go",
+        "blob": "0a35f9a94b8025ff158011659657c38ac0e74a11",
+        "sha256": "56cef0655d9d19ceab543236383993e5ecdfdd8cbfa98e779b43132dab3e279c"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/normalize.go",
+        "blob": "b4bf8b623da8b7800cad5ec5063c01ec122b4d77",
+        "sha256": "118b8d879262e83a8417aca138ef6acd2871b064910a1036aee7e9cc7e355e92"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/restore.go",
+        "blob": "843e702c239ab7a98670708578074637673fd210",
+        "sha256": "dcfdb9b37395fcc8915d02678426507c25c0e852cb07b21bc8de0b85c50aeb3a"
+      }
+    ],
+    "changedFiles": [
+      "backend/internal/systembackup/domain/caller_restore.go",
+      "backend/internal/systembackup/domain/crossdomain.go",
+      "backend/internal/systembackup/domain/export_test.go",
+      "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+      "backend/internal/systembackup/domain/gateway_budget_native_readback_test.go",
+      "backend/internal/systembackup/domain/gateway_budget_native_test.go",
+      "backend/internal/systembackup/domain/gateway_budget_restore.go",
+      "backend/internal/systembackup/domain/gateway_budget_restore_test.go",
+      "backend/internal/systembackup/domain/normalize.go",
+      "backend/internal/systembackup/domain/restore.go",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-first-native-red.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-first-unit-red.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-mysql-cleanup.json",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-mysql-shutdown.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-native-build-red.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-native-frozen.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-scope.json",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-second-unit-red.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-twelve-packages-frozen.txt",
+      "docs/evidence/d-offline-restore-20261101/gateway-budget-unit-frozen.txt",
+      "docs/system-backup-d-offline-business-restore-20261101.md"
+    ],
+    "source31SQLcustodyAnd175Included": false,
+    "handoffResolution": "exact41ba base plus exact22Daddedlines only",
+    "status": "frozen independent review candidate, NOT PUSHED"
+  },
+  "native": {
+    "test": "TestGatewayBudgetPublicWorkerActualTLSMySQL",
+    "session": 93301,
+    "exit_code": 0,
+    "closed": true,
+    "seconds": 9.224,
+    "test_seconds": 6.34,
+    "actual_cases": [
+      "success",
+      "evidence-failure",
+      "cancel-before-commit",
+      "credential-revoked"
+    ],
+    "real_assertions": [
+      "privateCA+DNS TLS;plaintext login rejected3159",
+      "oldgatewaykey/instanceToken/alias authenticate atsource, rejectedattarget",
+      "realHMAClookupstillmatchesoriginalrevokedkey",
+      "rawDECIMAL/NULL/signedID/actor/window/historycellreadback",
+      "SELECT-onlyreader actual1142zero-rowUPDATE/DELETE/INSERT; getter denied; digestunchanged",
+      "writerphysicalsessionzero andfreshlogin3118",
+      "three failures rollback originalbootstrap=1 keys/reservations/ledger=0",
+      "realwritecapableGetBudgetUsageafterverificationmutatesrevokedkeyreservation3to0/ledger2to3; samepublicverifier rejects"
+    ],
+    "scope": "real038/050/051/052/055 gateway DDL with explicitprivate small core fixtures; no fullcurrentcore/fullC/authenticatedsourcehandle/physicalclusterisolation/targetqualification"
+  },
+  "packages": {
+    "session": 19053,
+    "exit_code": 0,
+    "closed": true,
+    "SQL_env": "allnativecredentialenvdisabled forofflinepackages",
+    "seconds": {
+      "domain": 4.128,
+      "worker": 36.407,
+      "publicadapter": 3.739,
+      "execution": 13.874,
+      "profile": 3.117,
+      "businessa": 2.049
+    }
+  },
+  "cleanup": {
+    "server_uuid": "43ac08ef-d60b-11f1-add4-745d22085e06",
+    "old175_failed_data_untouched": true,
+    "pid": 32372,
+    "port": 50284,
+    "package_exit": 0,
+    "runtime": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\gr3\\cm-gateway-restore-3e2220b3a236",
+    "sessions_before_shutdown": "cleanup CLI only",
+    "package_session": 19053,
+    "mysql_session": 38457,
+    "native_seconds": 9.224,
+    "users_before_shutdown": "root plus three locked builtins",
+    "reused_binary_basedir_removed": false,
+    "owner": "root",
+    "mysql_exit": 0,
+    "nonce": "3e2220b3a2364e5e9ae28de3bdba2bca",
+    "normal_shutdown": true,
+    "native_session": 93301,
+    "peerSQL_touched": false,
+    "resolved_path_marker_pid_checks": true,
+    "exact_owned_runtime_removed": true,
+    "schemas_before_shutdown": "four system schemas only",
+    "native_exit": 0
+  },
+  "finite_newA_readonly_review": {
+    "source": "d3a6a67160bb223789712106957f29094a9da2bc",
+    "no_confirmed_new_implementation_defect": true,
+    "all10scopehashes_matched": true,
+    "not_final_originalA_approval": true,
+    "exact_coverage_gaps": [
+      "native3historicalattributiontablesempty; deletedkey/NULL/maxsignedBIGINTonlysyntheticSnapshot",
+      "nativeobserverUUID/nonce/specifiedaccountstateonly, doesnotproveallotherconsumeraccounts/establishedwritersabsent; targetphysicalproofunimplemented"
+    ],
+    "followup": "D asked separateactualnonemptypublicworker history coverage; originalA finalsecurityreview coordinated via primary; noauth/TTL/productionguardrelaxation"
+  },
+  "limits": [
+    "onlythreegatewaybudgettables, notall8owneradapters",
+    "image_pendingstillfailsbeforewrites without realimagejob/objectownerproof",
+    "runtime_authorization=false; formal_fullC_source_authenticated=false; originaltaskartifactUnavailable remains",
+    "no175SQLcustodyormigrationdelta inthiscandidate",
+    "do notrunbusinessconsumersorwritinggettersagainstrestoreddata; ordinarycm_drill businessconnectionguardretainedfrom41ba"
+  ],
+  "push": "NOTPUSHED, noexclusivewindowrequesteduntilreviewableevidencecomplete/finalsecurityreview",
+  "recordedUTC": "2026-11-01T15:50:25.650527+00:00",
+  "logs": {
+    "integrated-native-four-cases.log": {
+      "raw_sha256": "f7ed3ca7a11194814229588cc8371df53100d148859156f7ddca7b4c11ebd8bc",
+      "export_lf_sha256": "0e8295ce37c10e3d1eb0d6117c3b4f5cf43c0aacb35ca8a5b555029363ff776d",
+      "export": "docs/evidence/ad-gateway-budget-independent-native-20261101.txt"
+    },
+    "integrated-six-packages.log": {
+      "raw_sha256": "63f99792a030ec3d1e8510940449fbfadaf3157db89c39aae08e2ce06a6796c9",
+      "export_lf_sha256": "c5fceaf762f86cc9ab0c582c926ebc5191188e8b07d0bee035fe2dc373b3e25d",
+      "export": "docs/evidence/ad-gateway-budget-independent-packages-20261101.txt"
+    }
+  }
+}

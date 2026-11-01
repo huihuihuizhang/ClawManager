@@ -13,6 +13,14 @@ type TestSQLFixture struct {
 	source, target *memoryDB
 }
 
+// GatewayBudgetNativeSeedForTest is fixture data only. The native test inserts
+// it into actual050/051/052/055 schemas then discards these synthetic metadata
+// projections and captures the actual SQL catalog/rows through the worker.
+func GatewayBudgetNativeSeedForTest() (Snapshot, Policy) {
+	s, _, p := gatewayRestoreFixture()
+	return s, p
+}
+
 func NewTestSQLFixture() *TestSQLFixture {
 	s, schema, p := fixture()
 	source := &memoryDB{tables: copyTables(s.Tables), name: "source", uuid: "fixture-server", grants: "GRANT SELECT ON `source`.* TO 'capture'@'localhost'"}

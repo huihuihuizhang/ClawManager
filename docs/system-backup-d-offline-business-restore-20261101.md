@@ -243,3 +243,35 @@ provider 认证应复用 `systembackupsecurity/providerproof_registration.go` �
 5. 恢复 Job 正常退出后先撤销 SQL/Redis/对象写凭据并证明认证/写失败，再用独立只读 SQL、确切对象版本和只读文件挂载验证关系/内容/多余行。原 stopped 实例保持 stopped，禁止自动启动 agent、队列或 outbound。
 6. 测试任务取消、节点/挂载变化、写失败、证据失败、未知提交、凭据撤销失败，按现有 journal 接管；保留所属不确定目标，不重放、不清理他人资源，并确认源 writer 恢复行为。
 7. 上述 owner 适配、共同证据和独立 verifier 都完成后，由现有 D 发布/验收链路完成最终资格判断。本分支不写最终 CAS。
+
+### Gateway key 与预算三表候选（独立第三批，待原 A 只读交叉审查）
+
+本批仅为 `gateway_keys`、`gateway_key_budget_reservations`、`gateway_key_budget_ledger` 增加具名 `gateway-key-budget.055` 适配，基于既有 common SQL transaction writer 和独立 SELECT-only verifier；不是八表完成，也不是正式源认证或生产恢复资格通过。原 `7a415209` 与独立业务启动保护 `30ac4f1c` 均不改写。正式 B 仍因缺少完整认证源句柄而拒绝，不以本批测试 callback 或 staging receipt 代替 fullC/manifest/目标物理隔离证明。安全字段最终规则仍须原 A 审查，此处列出可复核的具体候选行为。
+
+三表必须一起选择、使用同一个冻结时点、源/目标各自精确 schema SHA 与完整具名列策略。形状核对 28/7/4 列、类型/NULL、PK/FK 和三项有序唯一约束；不以宽泛 preserve 放行。所有关系与值在第一次 SQL 写入前检查，缺表、缺策略、未来字段/类型、重复 HMAC、金额精度/ID 溢出、非法状态或跨 key 账目冲突都拒绝。保留被选中空表 metadata，防止恢复/读回闭包丢失。19 项负例同时经过纯 Normalize 和实际内存 SQL writer，并断言无 DML/commit；缺 ledger adapter 也经真实 MySQL common preflight，目标无写入。
+
+`key_id`、prefix、pepper HMAC 原字节保留，不替换成统一空值或伪 token。active/disabled 仅转为 revoked：改 status、revoked_at、updated_at、revoked_by_user_id=NULL、固定 revocation_reason；原已 revoked 行的全部历史撤销字段保留。owner/instance 的真实 FK 必须闭合；owner 历史 NULL 保留，created/revoked actor 无 FK，允许其用户已删除，不强行归 bootstrap。过期 key、旧 reset/period/review 标记、limit=0、DECIMAL(18,8) 原字节与 SQL NULL 全保留，不用 float，不按 ledger 总额重算 spent，不重置预算窗口。allowed_model_groups 当前仅接 SQL NULL 或有界字符串数组，JSON literal null 拒绝，属于待原 A 确认的封闭输入规则。
+
+reserved 与 pending 各自保留 actual_cost 的 NULL/非 NULL；过期 reservation 不清除，ledger-only 历史合法且不补造 reservation；同 reservation 的 pending+ledger 只在 key 和精确金额一致时保留。`image_pending` 虽为已知状态，缺少同源 image job/object owner 证据时明确在写入前拒绝，不能通过改状态、删行或结算来绕过。migration 052 在 model_invocations/audit_events/cost_records 的 nullable gateway_key_id 归因原值保留，允许 key 已删除，不增加原本不存在的 FK；非 NULL 仍核对 BIGINT 范围。
+
+实际 MySQL 8.4.13 native fixture 使用未经修改的 038/050/051/052/055 gateway migration SQL、私有 CA 与 DNS 校验 TLS，服务器明文连接实际返回 3159。核心 users/instances 等为明确的小型私有夹具，trace 表为空占位，**不代表完整生产 core/fullC**。public worker 实际 capture -> 加密 staging -> 关闭源 reader 并锁账号 -> restore；四场景 success、写后 evidence 失败、commit 前取消、真实 writer 账号撤销，均抵达对应边界。后三者完整回滚：原 bootstrap=1，keys/reservations/ledger=0；每个 writer 的物理 session 归零，fresh login 实际 3118。成功路径另用独立 TLS SELECT-only 账号解封预期证据、读回 raw cell 和多余行。
+
+真实 repository/service 正负认证控制：源端 old key、instance token、alias 均能认证；恢复后 HMAC lookup 仍匹配原 key，但真实 GatewayKeyService.Resolve 拒绝 revoked key，InstanceRepository 拒绝原 instance token 与 alias，目标 alias 行为空。独立 reader 对合法零行 UPDATE keys、DELETE reservations、INSERT ledger 均实际收到 MySQL 1142；真实 GetBudgetUsage 在 reader 下也失败，前后独立 snapshot digest 不变。
+
+**保留的真实反例：** revoked 本身不能阻止 write-capable `GetBudgetUsage` 执行结算。只在成功独立读回之后，由私有 fixture operator 调用真实 getter，reservation 实际 3->0、ledger 2->3；随后同一个公共 verifier 必须拒绝。该反例用于证明恢复库必须保持消费者隔离，不能以 GetBudgetUsage/Release/UpdatePolicy/ImageSettlement 作读回；没有修改原 repository 来隐藏结果。三表在隔离库中保存数据，不能因此启动业务或声称所有预算流程已安全恢复。
+
+冻结测试：`gateway-budget-twelve-packages-frozen.txt` 的 12 个适当包全部 PASS（含原九包、worker/profile/businessa）；`gateway-budget-unit-frozen.txt` 为具名 19 个负例及精度/NULL/删除历史/取消/空表/归因正例；`gateway-budget-native-frozen.txt` 原生四场景全部 PASS，domain 11.555s，其中实际测试 7.91s。后者逐项列出上述认证、1142、3118、bootstrap rollback 和 getter 反例；完整原始文件 SHA256 与 Git blob 见独立 `gateway-budget-scope.json`，不是运行期授权。
+
+早期失败同样保留：memory observer 误复用 max-open=1 池导致等待（仅核对本任务父进程/命令后终止自有测试子进程）；空 bytes 与 nil clone 的 reflect 比较误判（改为 bytes.Equal 且分别核对 SQL NULL）；测试接口未暴露已有 alias writer（改为实际 concrete method 的接口断言）；过早关闭 evidence root 只触发 startup 拒绝、未进入写后窗口（移到真实 before-evidence，并强制断言 evidence/commit 到达）。后续日志分别证明修复，没有把提前失败当 rollback 成功。
+
+自有 MySQL 56251 / UUID `81275efe-d604-11f1-b2ac-745d22085e06` 已正常关闭清理。退出前核对 local nonce、CA SHA、实际 PID 14420/exe/command line、SQL UUID，且仅四个系统库、root 与三个 locked 内置账号、cleanup CLI 一条 session；所有 fixture DB/user/owner marker 已由 native cleanup 删除。mysqladmin 在 VERIFY_IDENTITY TLS 下正常 shutdown，进程自然退出后再次核对精确 Temp 根及 marker，再删除私有 bin/share/data/cert 根。`gateway-budget-mysql-cleanup.json` 与保留的 server shutdown log 给出清单；没有访问共享 63507/65298/59355 或监督者实例。
+
+### 三表候选之后的非空历史归因覆盖（纯测试独立小批）
+
+保持 `d3a6a67160bb223789712106957f29094a9da2bc` 不变，本批仅改四个 `_test.go` 与本交接/独立证据。现有小型 history 夹具经真实 migration 052 添加 BIGINT NULL 列及 index；每张 model_invocations/audit_events/cost_records 各四条原生 SQL 行：gateway_key_id 为 `9223372036854775807`、NULL、已删除 key `777`、现存 key `9223372036854775806`。确认前两种非 NULL orphan 在 source/target keys 中都不存在。真实 public worker capture、关闭源账号、restore、writer 退出/3118、独立 SELECT-only verify 后，再独立 CaptureSource 比对每个原始 cell、四行集合、schema digest、BIGINT NULL 形状及无 FK；没有因 orphan 补造 key 或添加约束。原金额/NULL/认证/1142/getter 反例继续全部通过。写后证据失败、commit 前取消、真实账号撤销三场景也分别验证三张 history 表全部回滚为零，原 bootstrap 保留。
+
+首轮 `gateway-history-native-first-red.txt` 保留真实失败：最小夹具的部分 invocation.status 为 NULL，既有 normalizeCrossDomain 会终止为 failed，严格 raw-cell 比对正确拒绝。修正夹具为合法 completed 历史终态，未改生产规则、未跳过任何 cell、未放宽独立 verifier。最终 `gateway-history-native-frozen.txt` 四场景 PASS（实际测试 7.95s，domain 11.180s）；四个适当包最终回归全 PASS，见 `gateway-history-four-packages-frozen.txt`。trace 核心结构仍是具名小夹具，不能据此声称完整生产 history schema 或 fullC 源认证。逐文件 raw/LF SHA 与 Git blob 独立列于 `gateway-history-scope.json`。
+
+**目标观察边界：**本 fixture 的 observe 只核对 UUID、nonce、指定账号 locked 状态，尚未枚举其他 service account 或已认证写 session，因此不构成真实物理 target isolation proof，更没有覆盖“存在其他消费者时拒绝”的生产性质。关闭/锁定本次 writer 仅证明它自身退出与 fresh login 拒绝，不能推断所有消费者已隔离。后续真实 targetproof 装配必须基于实际完整 consumer inventory、账号/进程/已有 session 等独立当前事实逐项拒绝；不能把这份 callback 当作生产授权。测试源码注释和最终日志均明确此边界，正式 B 拒绝路径不变。
+
+该小批新自有 TLS 56776 / UUID `f505b9cf-d60b-11f1-afc4-745d22085e06` / PID 23464 已正常 shutdown。关闭前按实际 exe/命令行、CA、UUID/nonce 核对，仅四个系统 schema、root 与三个锁定内置账号、cleanup CLI 会话；测试账号和 DB 全部清空。VERIFY_IDENTITY mysqladmin 正常关闭、进程自然退出后，仅删除再次核对 marker 的精确私有 Temp 根。证明 `gateway-history-mysql-cleanup.json`，正常关闭日志另存；未访问监督者或共享实例。image 两表、北向三表与原 A 最终安全审查仍未完成，不因此改变三表候选状态。

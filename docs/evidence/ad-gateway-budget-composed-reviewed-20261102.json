@@ -1,0 +1,97 @@
+{
+  "schema_version": "supervisor-gateway-budget-composed-review.v1",
+  "base": "36e45940ee279cff32e9e924649ed8b2ab2f5ba1",
+  "candidate": "81f06bb6b6d1cf7d4817e9290e4b2e1bb1e7b663",
+  "owner_sources": [
+    "d3a6a67160bb223789712106957f29094a9da2bc",
+    "9cb54c598972d234dd4561e7a61ab4804ad4363c"
+  ],
+  "source_files_verified": [
+    {
+      "path": "backend/internal/systembackup/domain/caller_restore.go",
+      "blob": "47bb8772847831679c4be8b78549018f78f0dd62",
+      "sha256": "0100da765fe32b1e347025de281db5ffdb49d9cf6d63ae63a80e7eeeb513ba02"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/crossdomain.go",
+      "blob": "104360d8bb7837f202c66dce76dddf178e3d0a61",
+      "sha256": "87b4736fed900e5ba515b55682a7d0fab7638fc3ba339a160592184e78492e4d"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/export_test.go",
+      "blob": "aee8164b908dc18c27b993c864d105a1664b4e55",
+      "sha256": "88a69efe061e6d3ead6d914ab243e1b2e1388c13f0a348960505ab4f653c98af"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+      "blob": "3a22d91d4b83c20bf5026e6be837b2917f6d67a6",
+      "sha256": "386eac5e800914b9d00681e3088dee62ad156728ce758e4634f53a1c6c9bb56a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_readback_test.go",
+      "blob": "55ba23018d67edd4d61562f10ccc7c3f4e2b3bb1",
+      "sha256": "a5b3b0090025ef46dc9c2edf0a68c399f5789e02465b5b39f9c6a84ee4662669"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_test.go",
+      "blob": "3c4d0652db374327c04fb042b5b5a9940634459f",
+      "sha256": "8a6ce3401bae877f73b4ff92ba38552cd3aa126c0ae4c1f6f11bfc0b5a54118b"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_restore.go",
+      "blob": "aac0dbd050a4fe40063f8a9f18da99904f50d006",
+      "sha256": "0a7efb2136b5235044f8cba4bf8207a0e5b3076ad0a872fe08b48815bfed4ce4"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_restore_test.go",
+      "blob": "0a35f9a94b8025ff158011659657c38ac0e74a11",
+      "sha256": "56cef0655d9d19ceab543236383993e5ecdfdd8cbfa98e779b43132dab3e279c"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "blob": "b4bf8b623da8b7800cad5ec5063c01ec122b4d77",
+      "sha256": "118b8d879262e83a8417aca138ef6acd2871b064910a1036aee7e9cc7e355e92"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "blob": "843e702c239ab7a98670708578074637673fd210",
+      "sha256": "dcfdb9b37395fcc8915d02678426507c25c0e852cb07b21bc8de0b85c50aeb3a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_history_test.go",
+      "blob": "93cebc9b949842ccf33bd386993a3b4efc2a3173",
+      "sha256": "f32ded46608cb6fe305affc80943d1fd93acaa60c3a16a69f896dd05d736e69e"
+    }
+  ],
+  "review": [
+    "Read entire production normalization/closed schema/adapter/quarantine increment, common preflight and VerifyDrill call sites.",
+    "Read original A frozen f31 same production security review; no confirmed new implementation finding.",
+    "Independently reviewed nonempty history seed and public capture/restore/SELECT-only verify tests, per-cell comparison and rollback cases.",
+    "Read independently executed owned TLS native log and report: 13.895s PASS; three private history tables each four nonempty rows, max signed BIGINT/NULL/deleted key777/retained key, no fabricated FK.",
+    "Observed real write-capable GetBudgetUsage remains a mutator; SELECT-only denial and subsequent verifier rejection retained."
+  ],
+  "root_composed_regression": {
+    "session": 49662,
+    "exit_code": 0,
+    "closed": true,
+    "sql_credentials": "disabled",
+    "downloads": "disabled",
+    "packages": {
+      "domain": 3.263,
+      "execution": 14.286
+    },
+    "raw_log_sha256": "206935efd46056e57300a082a91fbd900e5529a5d91de833fd0254c1dc8f61c0"
+  },
+  "native_scope": "Accepted inspected other-supervisor actual native execution96259 and frozen source match, not rerun by primary in this turn. Core/history SQL schemas remain explicit small private fixtures.",
+  "acceptance": "Component accepted for composition; does not grant formal restore source authority or physical target qualification.",
+  "remaining": [
+    "Authenticated fullC original source handle",
+    "Complete physical target and every consumer/writer isolation",
+    "Image/job immutable receipt integration",
+    "Remaining northbound data semantics",
+    "Same-task page backup successful terminal and full isolated restore",
+    "Onsite deployment/permissions validation"
+  ],
+  "migration175_included": false,
+  "recorded_at": "2026-11-01T16:27:00.053137+00:00"
+}
