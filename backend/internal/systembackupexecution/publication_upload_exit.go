@@ -29,6 +29,31 @@ type publicationUploadExit struct {
 	jobResourceVersion string
 	pods               map[string]quiesce.PodIdentity
 	process            publicationUploadProcess
+	proofSHA256        map[string]string
+}
+
+func (p *publicationUploadExit) readStopProofsTx(ctx context.Context, tx *sql.Tx, freeze bool) error {
+	if p == nil || p.service == nil || len(p.pods) != 1 || tx == nil || freeze && len(p.proofSHA256) != 0 || !freeze && len(p.proofSHA256) != len(p.pods) {
+		return c.ErrExecutionRecord
+	}
+	var now time.Time
+	if tx.QueryRowContext(ctx, `SELECT UTC_TIMESTAMP(6)`).Scan(&now) != nil {
+		return c.ErrExecutionAuthority
+	}
+	pins := map[string]string{}
+	for uid := range p.pods {
+		var raw []byte
+		var digest string
+		var witness quiesce.ExitWitness
+		if tx.QueryRowContext(ctx, `SELECT proof_json,proof_sha256 FROM system_backup_v2_runtime_stop_proofs WHERE task_public_id=? AND pod_uid=? FOR SHARE`, p.claim.Target.PublicID, uid).Scan(&raw, &digest) != nil || len(raw) > 65536 || hash(raw) != digest || json.Unmarshal(raw, &witness) != nil || !(publicationUploadExitStore{exit: p}).validWitness(witness) || !publicationUploadExitTimes(witness, p.activation.BoundAt, now) || !freeze && p.proofSHA256[uid] != digest {
+			return c.ErrExecutionRecord
+		}
+		pins[uid] = digest
+	}
+	if freeze {
+		p.proofSHA256 = pins
+	}
+	return nil
 }
 
 func (p *publicationUploadExit) recheckTx(ctx context.Context, tx *sql.Tx) error {
@@ -336,6 +361,9 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 	if err = p.recheckTx(ctx, final); err != nil {
 		return nil, err
 	}
+	if err = p.readStopProofsTx(ctx, final, true); err != nil {
+		return nil, err
+	}
 	if final.Rollback() != nil {
 		return nil, errPublicationUnavailable
 	}
@@ -348,4 +376,39 @@ func (s *DeploymentService) completeOriginalPublicationThroughUploadExit(ctx con
 		return nil, err
 	}
 	return s.observeOriginalPublicationUploadExit(ctx, *claim, attempt, marker)
+}
+
+func (p *publicationUploadExit) checkNativeStopped(ctx context.Context) error {
+	if p == nil || p.service == nil || p.service.Runtime == nil || p.service.Runtime.Owner == nil || p.service.Runtime.Owner.Client == nil || p.service.Config.PublicationWorker == nil || !formalCandidateDigest(p.material.RequestSHA256) || len(p.pods) != 1 {
+		return c.ErrExecutionAuthority
+	}
+	client := p.service.Runtime.Owner.Client
+	if err := p.service.checkPublicationJobResources(ctx); err != nil {
+		return err
+	}
+	job, err := client.BatchV1().Jobs(p.material.Namespace).Get(ctx, "sbp-"+p.material.RequestSHA256[:32], metav1.GetOptions{})
+	if err != nil || !publicationCompletedUploadJob(job, p.material, p.activation, p.service.Config.PublicationWorker.ServiceAccountName) || job.ResourceVersion != p.jobResourceVersion {
+		return ErrJobUncertain
+	}
+	list, err := client.CoreV1().Pods(p.material.Namespace).List(ctx, metav1.ListOptions{Limit: 1001})
+	if err != nil || list.Continue != "" || len(list.Items) > 1000 {
+		return ErrJobUncertain
+	}
+	pods, err := publicationOriginalUploadExitPods(job, list.Items, p.process)
+	if err != nil || len(pods) != len(p.pods) {
+		return ErrJobUncertain
+	}
+	for _, pod := range pods {
+		original, ok := p.pods[pod.UID]
+		want, _ := json.Marshal(original)
+		actual, _ := json.Marshal(pod)
+		if !ok || !bytes.Equal(want, actual) {
+			return ErrJobUncertain
+		}
+		node, err := client.CoreV1().Nodes().Get(ctx, pod.Node, metav1.GetOptions{})
+		if err != nil || p.service.Config.Security.NodeUIDs[pod.Node] == "" || string(node.UID) != p.service.Config.Security.NodeUIDs[pod.Node] || node.DeletionTimestamp != nil {
+			return c.ErrExecutionAuthority
+		}
+	}
+	return nil
 }
