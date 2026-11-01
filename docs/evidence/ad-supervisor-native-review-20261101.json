@@ -819,5 +819,81 @@
         "sha256": "3ab85e2373778dc13279690e8649c6e2813aa6524b70b5ced87e79996e691177"
       }
     ]
+  },
+  "A_original_registry_secret_policy_independent": {
+    "outcome": "PASS",
+    "source": "d5085677ed50fdbec87c73af4861d3741a0f4f04",
+    "integration_and_pre_capture_linked_commit": "04cafc79d6df8112e9ebf4188016fc149ebc83db",
+    "exact_owner_go_files": {
+      "backend/internal/systembackup/kubernetes.go": "c33fb053c8fcfb2431e326e814e91aa0b92e808467f9eff0755aac45837558aa",
+      "backend/internal/systembackup/secret_capture_policy.go": "72e2eefa460962da3a1c74b10261fa739f174fed03b49f4fd7acdb7b446373fa",
+      "backend/internal/systembackup/secret_capture_policy_test.go": "390b2c71b2791257ec27906008d0f59cbec37e5d27717d10aba0492820f0275d",
+      "backend/internal/systembackup/worker/resources.go": "330a1f8e13a0db3a27c06e1ef908027e09f0012aaccfbfd7941c4bd285cc1ec2",
+      "backend/internal/systembackup/worker/resources_secret_policy_test.go": "a93b896f17a35c17de11cd393b771d602893395a82b80b137db4611738fc0266",
+      "backend/internal/systembackupbusinessa/capture.go": "e6f85f987ff7245dbbdcdd090cf07ea974217b5e43e0e491ebfeb36257265094",
+      "backend/internal/systembackupbusinessa/metadata_registry_test.go": "b646d34841d39dd460f70d072d419a593d738c953126907e30169fdb4b00ca1d",
+      "backend/internal/systembackupcontrolevidence/policy.go": "2b8f387ac6aa594e19d1cd11d58beee88260fc0db6af44c34399532772492ac0",
+      "backend/internal/systembackupexecution/deployment_capture_materials.go": "69992115f1165f4b547668dfe40350eec8c6bd3eb573e00c057c3a820ae7f3b9",
+      "backend/internal/systembackupexecution/owned_payload_counts.go": "2f3f2f5f35fd56d8f576326d21b31a9273113798f5ce9ae2c1e531a85c68042a",
+      "backend/internal/systembackupexecution/owned_payload_reader.go": "f34c003e47629de8d5dd1318071d14d295489562844525bbe220dbbca885ed2a",
+      "backend/internal/systembackupexecution/production_publication_facts.go": "3d2e9dd2c6dd4c6cb46d0868d3355938bfa3b2fe4769afbf813eaae5fe41acab",
+      "backend/internal/systembackupexecution/production_publication_facts_test.go": "b83e17f4dc402d620d0de2caabdc50d38c73f8690ded3991209d7a7a55e180c7",
+      "backend/internal/systembackupexecution/production_same_task_control_mysql_test.go": "77077e81bfdfa03df332f1bb5939a2e6900e180dab5985a34b23e89b51d8ddec",
+      "backend/internal/systembackupexecution/production_same_task_mysql_test.go": "1516d59d66fce2e54fc11c53f59d6a209bed43e1855cb08f35d146f94b165c8b",
+      "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go": "c074edadc7a97ee9fbc2d6384172e69202b1448f8a2d39c6e4b53d93293b1d67",
+      "backend/internal/systembackupexecution/production_secret_policy.go": "85dfb03fd2b4e960df6e2047d47b95849a99eafd5890967dedd502f842949f09",
+      "backend/internal/systembackupexecution/production_source_authority.go": "e57357cc6a65f5b041c501af792bf508dbd86e44df27d44dd020a235a2196501",
+      "backend/internal/systembackupexecution/production_source_freeze.go": "dd7f2455bfbff5e7e2f235bf08dcb140b9af0a11bf6c68a787969843717c73d2",
+      "backend/internal/systembackupexecution/publication_business_sql.go": "ebed8884dd9f03ab12e8d047d1d3fe6198ba03da028dc54344feda13aff41005",
+      "backend/internal/systembackupexecution/publication_business_sql_test.go": "956fb19a9a520bada13a74295ef69bdc0c845c711f318d4505d7a53f9d347935",
+      "backend/internal/systembackupexecution/publication_same_task_mysql_test.go": "520ceaaa609a8a0a3255bc9b1e33431271c8ba9a23e831cbf688d3f6328c62bc",
+      "backend/internal/systembackupexecution/publication_secret_policy.go": "c914857f51f817cae9824d84786ca80497ef180f2da8fa2f08704e69de9491f0",
+      "backend/internal/systembackupexecution/publication_secret_policy_test.go": "59a976de163f6b497def71584689b1137cde3ceb2bc5a49725ce1dde6a2168d1"
+    },
+    "native_server": {
+      "port": 63507,
+      "uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+      "scope": "local isolated native MySQL SAN/TLS fixture"
+    },
+    "task": "sbk_531c59e2-797a-4f4a-84d6-13b5ee357fcf",
+    "certificate_sha256": "48614d4f12493f23046b4e2278c60219237c843e76970a59edccc815816c7d60",
+    "native_case_seconds": 150.03,
+    "native_package_seconds": 153.538,
+    "sessions": {
+      "66750": {
+        "terminal_exit": 0,
+        "closed": true
+      },
+      "55838": {
+        "terminal_exit": 0,
+        "closed": true
+      }
+    },
+    "scope": "Exact final integrated code with actual linked HEAD and no production overlay: original formal HTTP task, all six requested parts/ten native capture workers, stop/original-state resume, original Store.Record validating, current publisher independent fullC/AEAD/EOF, six-domain SQL accounting from pinned original registry, independent SecretPolicy version/SHA/required1/captured1 coverage, actual committed Stage, exactly one external local provider Sign, independent public signature verification and known-byte replay with six rollback SQL codec faults.",
+    "policy_binding": "Independent owner-mounted exact UTF8/JCS policy is declared before config admission/UID discovery; loader matches original config snapshot and actual097 version/SHA pins. Required names checked before source GET; actual captured namespace/name/UID/type checked by both archive writer and full reader. No policy generated from current selected UIDs, no supplied count accepted as coverage.",
+    "registry_scope": "Original frozen registry bytes are retained with original source facts; selected SQL table rows/raw-cell byte counts are mapped by original registry category instead of current coarse runtime category. Metadata-only schema acceptance returns no CaptureScope and cannot expand legacy fifteen-table SQL authority.",
+    "affected_default_package_seconds": {
+      "systembackup": 5.545,
+      "worker": 36.341,
+      "businessa": 3.462,
+      "controlevidence": 3.742,
+      "execution": 8.773
+    },
+    "bounds": "Default original30s key window preserved; database worker880 current checks cost795.3128ms, stream28.5723808s, original window29.7026497s. No key/nonce/permit extension or source-row omission.",
+    "limitations": [
+      "All owner policy/provider/source approvals here are explicitly local fixture input, not installed production approvals.",
+      "Only the current full native mode ran for this delivery; the three post-Prepare business-fault modes and native commit-ACK modes were not rerun. Existing affected package negative cases passed.",
+      "No complete formal manifest/container upload Job/fixed-version artifact publication/acceptance/catalog/final success or independent restore proof. No remote/Linux deployment."
+    ],
+    "logs": [
+      {
+        "path": ".tools/supervisor-a-original-policy-final-native.log",
+        "sha256": "0df41c7f6992b12a609936ed4ad49d43218371a33224a05191c6c2125f08f951"
+      },
+      {
+        "path": ".tools/supervisor-a-original-policy-final-packages.log",
+        "sha256": "01c569b24ca547974a9934d883160d70d7610fa8e746efdb84859c8af51a5af8"
+      }
+    ]
   }
 }
