@@ -729,3 +729,9 @@
 - 在A57087自然退出、root明确交接63507后，先冻结真实commit和六文件SHA ledger，再以真实HEAD ldflags链接，工作区干净。第一次启动被自动审批在CreateProcess前拒绝（解释为缺乏敏感live数据导出授权），没有进程/SQL/上传。只读源码核验明确literal127.0.0.1、新建随机ad_d_six库/代码合成行、t.TempDir合成workspace/Skills、httptest.NewTLSServer临时内存对象存储。以相同冻结命令及这些代码事实重新申请后获批，未换路径/弱化授权/修改数据来绕过审批。原拒绝及澄清事实另保存在workspace .tools/d-current-remote-container-approval-locality-review.json，结构化结果记录SHA。
 - 实际38783自然exit1，case131.93s/package135.286s；原任务sbk_a5ecf7dd-3ba0-4105-93d0-042356b9a4a7在capture-database报provider_permission_denied，原public capture runner_failed。DB源打开前29.6250014秒窗口，实际807次source Authorize、local elapsed0.7680524秒，stream29.5082909秒。时间接近原界限，但没有精确最终拒绝点观测，不能当成唯一根因或新远端模块缺陷证明。默认30/5及全原数据保持；证书与新远端容器/C消费尚未进入，本候选**不计native通过**，不推送或把已审reader叶子测试冒充其验收。原schema174/全部生成数据与原任务选择未被缩减。
 - 失败完整保留docs/evidence/d-current-remote-container-native-red-20261101.json及SHA日志；无cleanup错误日志，但不声称独立post-run schema消失检查。D全部句柄自然闭合，已明确交还63507给监督A0b11独立测试，不触碰其窗口。未来A新增预声明加密descriptor carrier后，实际集合变更需单独覆盖，不能用本轮原10集合前瞻冒充支持。完整publication、signed acceptance/catalog、cleanup与final CAS仍未完成。
+
+### D5.76 失败边界的只读补充
+
+- 原key window日志在OpenFormalCaptureSources前（workers:385），stream计时在其后（435）；打开源与准备时间未计入stream。29.6250014−29.5082909不能当作失败时还剩的0.1167秒。source Authorize计时只包本地invocation/grant/credential检查（source_credentials:249），0.7680524s约占stream2.6028%；不含inUseCheck内当前原key-check的HTTP/SQL路径，也不能把剩余28.7402385s全部归给控制器或数据库。
+- transit.go:382–393把DEK callback任意错误先变ErrUnavailable，再在WithUse结果门统一变ErrPermission（ErrUnknown另保留）；因此最终provider_permission_denied不是实际外部KMS403证明，也不能区分原回调domain/SQL/授权/截止错误。原keyUse的绝对Until/nonce检查仍在，heartbeat不延长旧key scope。已审InterpolateParams优化在本冻结源码仍存在。
+- 只静态审现有日志/代码，无新SQL或源码变化；若需下一轮诊断，应只增加安全first-failure类别及打开源前后/流开始结束的原Until时钟括号，聚合原key-check耗时/响应类别，不记录私密request/grants，且必须不改策略/原数据/原检查。精确原因仍未证实，不能为求绿盲重跑。
