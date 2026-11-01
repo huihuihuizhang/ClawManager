@@ -1,0 +1,60 @@
+{
+  "version": "a-durable-container-inputs-evidence.v1",
+  "source_head": "1c4331f5de8296c2fd4855e285fe5df5b7e78de4",
+  "native_test": "TestAOriginalSixPartDurableContainerInputsMySQL",
+  "task": "sbk_8a394129-214b-4819-87e3-c33365c21fb5",
+  "native_case_seconds": 201.02,
+  "native_package_seconds": 204.507,
+  "native_handle": 57087,
+  "native_exit_code": 0,
+  "handle_state": "completed naturally",
+  "server_uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+  "containers": 6,
+  "physical_bytes": 53994,
+  "publication_jobs": 0,
+  "external_actions": 0,
+  "immutable_plan_file_records": 2,
+  "actual_exact_reopen": true,
+  "source_files": [
+    {
+      "path": "backend/internal/systembackup/kube/publication_container_job_test.go",
+      "sha256": "71239e8e52c54d0318f4342a1aae45550b8c8e62af2181e5dc25e152088f741b"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/publication_job.go",
+      "sha256": "60bb3eccbd75467b05e987f427f42f76ae3d05e2e56774a31ed41955e11c2f86"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container.go",
+      "sha256": "c0341baf0a55abed42373ecc4f052eeb57fe2d77fd495fdf5a3e1ce75687a0a6"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_files.go",
+      "sha256": "b7b8486d496e58345c2f8a32d20dc7bba61ba3d6102c6bf73439146fed22c282"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_files_mysql_test.go",
+      "sha256": "0e3ce49a54bf13fcfb9501530dc8b7f72d0234be0845a81897ccd00d8fc35834"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_job_inputs.go",
+      "sha256": "4ee8cc9029dddf9c89860ade0fa7af253f5fd0516e0df645758520806b9891c2"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_stage.go",
+      "sha256": "26df8f2b18f1caef5a3a200de610c6d37ac38897317ac80a99a780636e764f34"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_stage_test.go",
+      "sha256": "e9f5e9cf7776c49238bdf0e241858976e64cc6eeecfd454ecb577fcc32cb02e3"
+    }
+  ],
+  "native_log_sha256": "c848f62774a67d2c8ffcce2d9065d41e6846f6dc15990bd638d180043c39feea",
+  "native_source_ledger_sha256": "1526a8afc6def6c8a5dcb2d85e640f14b94f302432ed28963c7587b293312896",
+  "isolated_eight_go_full_package_log_sha256": "e514f2bd944fffd29fcaa6cf0bc810dbbe92740fdfa4a8b5da0898a3415bdd3e",
+  "limits": [
+    "Native startup also included uncommitted negative-policy and MF/transport WIP; these are not certified by this component",
+    "No complete MF, actual publish Job, remote upload/readback, cleanup or terminal proof",
+    "No old capture Authority, provider grant or DEK created for private preparation"
+  ]
+}
