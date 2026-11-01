@@ -623,3 +623,32 @@
 - 私有上下文/原heartbeat协作测试PASS8.085s：健康与caller raw alias、外国Authority/不同owner对象/DB、关闭/取消、unknown标记后的readOnly、WithoutCancel异步取消并等待操作退出，模型明确不执行授权SQL。监督冻结前版两受影响包无MySQL opt-in全量PASS9.308/7.937s，当前新增SQL夹具不以此替代原生验证。
 - 实际D63507窄当前列fixture十三case最终PASS1.22s/package4.483s，`.tools/d-first-binding-native-v5.log`，session41067已terminal0：健康实际读回新lease且原guard失效/新guard独立，随后真实rollback后committed lease不变；实际key-use/binding/revoked/stopped/合法空UID+空resource_version的unknown shape、偷owner、SQL claim/task/hold过期均affected1+独立读回后拒绝；另取消context、rollback后readOnly、模拟domain ErrCommitUnknown后readOnly。原evidence/runtime-resource/job-observation/execution-record计数不变，原另一个Job的key_use_json完整字节不变。新增Job为明确命名SQL DATA，非新Kube观察/正式采集准入；该fixture没有KEK registry表，不声称测到其epoch/引用。unknown-readOnly是rollback后返回domain错误的wrapper标记测试，尚非真实Commit ACK丢失或实际PublicJobOwner.Bind恢复。取消case是cooperative context，尚非committed cancel行。
 - 前面失败均不算通过：首版复制Job保留旧request-hash annotation导致Intent拒绝；admin/db返回顺序及最后refresh误作cleanup已纠正（refresh只写容量采样，不续许可）；本scope不存在providerStageRows要求的KEK表，改为实际存在表的census；窄backups缺heartbeat_at，按真实098列定义仅在私有fixture加DATETIME(6) NULL；unknown造数使用NULL触发原NOT NULL/CHECK，已改合法双空字段，未改DDL约束或扩大角色权限。生产协调尚待完整原174/六项任务及真实ACK未知/重复Bind恢复、原cutoff交付延迟、committed cancel、多Job并发heartbeat等验证；本候选不称已解决完整任务或A发布。
+
+## D5.62 首次Bind候选原完整捕获到validating，A当前C/domain验证失败
+
+- 生产源码精确eff7b750，唯一overlay是监督冻结A d9100d1c的五个测试文件（原core前声明/材料安装/同任务回调）；没有生产日志探针、SQL/数据/row/EOF/顺序替换。原174、默认30/5、新原HTTP task `sbk_ccad2719-cfd6-4fda-8dad-ef93fdac55d5`完成10个原native workers、实际C/独立Evidence、背景held/物理stop/原态resume及原Record，runner=ok/record=ok、原独立validating断言通过。
+- 十个源打开前原观测窗口依次29.6410837、29.673631、29.665803、29.6756631、29.6582491、29.6722328、29.6651952、29.6640764、29.4478253、29.4238142秒。SQL完整880次本地SourceAuthorize/756.921ms，RunFormalCapture25.1295495s，SQL ReportCandidate成功；这些是本轮实际观测，不把880除437作完成比例，也不据一次任务断言任意数据量都适用静态30秒许可。
+- afterValidated确已进入A原回调。A在原validating/释放capture claim之后，以原默认policy取得同任务publisher claim receipt；随后`verifyOriginalPublicationCapture`返回0 parts/`execution record unavailable or conflicting`，在d910测试publication_same_task_mysql_test.go255失败。尚未进入prepareOriginalCaptureCertificate，也未签出证书；完整test FAIL130.97s/package134.209s、exit1。失败不可改记为A healthy通过；后续firstForward/v12不可变最终发布/目录/独立native readback仍未完成。
+- `.tools/d-first-binding-a-d910-full.log` SHA256=`e1f51d81db81d5cb35af12ac9d4f7bef7d8e23a9d6f1436692f50148a68e610b`，结构化终态在`docs/evidence/d-first-binding-full-task-20261101.json`。session57967已terminal1，63507已释放给监督/A定位；fixture清理后不能复用旧task/C/DEK补做发布。真实ACK未知/重复实际Bind只读、原cutoff行交付延迟、committed cancel与定向并发尚待后续独立测试；当前不再为同候选盲重跑完整任务。
+
+## D5.63 实际commit后丢ACK及同run只读查询的窄SQL补充
+
+- 只增加测试，生产eff7不变。原consumer fixture的受限连接使用既有透明aPublicationACKConnector；仅在新case的实际first-binding UPDATE、完整tail检查之后把lose flag置true。底层原生Commit成功后返回专用ACK错误，包装为原ErrExecutionCommitUnknown；独立admin SELECT确认binding_json确已提交且与原字节相同、续后claim确已提交。随后同run创建只读frame，按当前完整authority锁和实际原binding读取/解码/commit，所得JobBinding相同，committed lease不再改变。原其他Job的key_use_json完整字节仍不变。
+- 65298当时已明确释放后运行，原13case加此实际ACK case PASS1.19s/package4.469s（`.tools/d-first-binding-native-actual-ack.log`），session45102已terminal0并释放；此后按监督最新安排等待65298新窗口，不再起SQL。明确这是原生helper事务/同run SQL读回，**没有**把命名SQL DATA当真实Kube观察、原PublicJobOwner.Bind证书/冻结plan准入或跨进程恢复验收；先前rollback后模拟domain unknown的case仍独立保留，不与真实Commit ACK丢失混为一谈。原cutoff交付延迟、committed cancel、实际Bind重复/unknown恢复与定向并发仍待覆盖。
+
+## D5.64 原cutoff在真实续租后行交付延迟中到期仍拒绝
+
+- 仅测试扩展现有透明dHeldClockConnector：当且仅当实际first-binding UPDATE执行成功/affected1时arm，随后原fresh Bind的实际initial facts行交付延迟2.5秒。保持真实defaultPolicy30/5，把本case进入协调前的原SQL claim设为实际UTC+2秒；不是改TTL/heartbeat，也没有伪造SQL UTC。确认delay.fired和arm已消费，独立实际SQL时钟已越过原cutoff；尽管事务内已写入新30秒claim，Prepare仍拒绝且旧guard保持失效，实际rollback后committed lease仍精确等于原cutoff。
+- 监督重新明确分配65298后，原13case+真实ACK丢失+上述实际延迟组合PASS3.69s/package6.912s，延迟case2.52s（`.tools/d-first-binding-native-cutoff.log`）；session70224已terminal0，无活跃D SQL handle。生产源码仍eff7，旧case默认不arm，不改语义；已有binding实际PublicJobOwner.Bind查询、committed cancel和定向并发仍未以本项替代。后续正式publication测试还必须在捕获前以ldflags链接真实Git HEAD，D5.62未带该链接的失败只保留其真实采集阶段证据，A正独立核验unknown build的消费门原因，尚不称唯一根因。
+
+## D5.65 真实committed pending/running cancel在首次绑定前拒绝
+
+- 仅测试：管理员连接实际INSERT原operations的cancel/pending和cancel/running，各affected1，独立SELECT精确installation/task/type/status确认已提交。随后新的活跃controller scope仍使用原受限角色，完整Authority.Bind两者均拒绝，不能取得后续首次协调权；独立committed lease前后精确不变。清理仅删除该私有fixture精确operation，affected1；没有扩大角色权限。它和原cooperative canceled-context case分开，不以取消context替代SQL取消。
+- 65298原17case组合PASS3.89s/package7.191s（`.tools/d-first-binding-native-cancel.log`），session81527已terminal0。原cutoff延迟和真实commit后ACK丢失均继续通过，原key-use完整字节保持。生产eff7未改；实际PublicJobOwner.Bind重复/unknown恢复、定向heartbeat/多Job并发仍须另证。当前继续使用监督分配的65298窄窗口，不占A63507。
+
+## D5.66 heartbeat拿锁后独立SQL钟拒绝过期复活，保留新鲜claim
+
+- 新实际并发反例在默认heartbeat5/TTL30下持原backup行锁，独立performance_schema.data_lock_waits只过滤本私有schema/table，确认原heartbeat已在MySQL等待；随后完成首次绑定，旧statement-start UPDATE把刚续出的claim从04:47:42.467043写短到04:47:42.436513（30.530ms），FAIL9.361s，日志`.tools/d-first-binding-heartbeat-overlap.log`。一行GREATEST候选虽通过未过期写短反例，监督要求追加过期等待：旧claim实际设为SQL UTC+2秒（不改policy），实际wait已存在且独立SQL钟确认越期后才rollback释放锁；GREATEST候选仍返回成功并改写lease/heartbeat，FAIL6.618s，`.tools/d-heartbeat-expired-wait-baseline.log`。两项失败均保留，不计通过。
+- 生产renewExecutionLease改为短事务：按原installation/task/owner/RV/允许status拿FOR UPDATE行锁，不用等待前UTC作准入；行交付后独立采SQL UTC并确认原lease仍有效、时钟不倒退。随后仍用原Policy.TTL更新同epoch，不降已有更新鲜lease；独立读取真实更新heartbeat/lease及其SQL钟，再次独立采交付后SQL钟，要求严格早于原expiry、新lease有效、heartbeat不倒退且新lease精确等于max(旧lease,真实heartbeat+原TTL)，才commit。任一失败rollback；不依赖SYSDATE/sysdate_is_now，默认30/5、owner/RV和旧key-use Until不改。Queue-only源准备不需要完整Authority；ctx取消导致SQL中断与真实零行/DB错误/过期拒绝仍按原分类处理。
+- 最终65298二十case组合PASS10.80s/package14.026s（`.tools/d-heartbeat-locked-clock-multijob.log`，session9589已terminal0）：真实过期wait拒绝且lease/owner/RV/heartbeat原值完全不变，Queue-only Renew同样拒绝，之后当前authority不能再新绑定；真实未过期wait完成后claim和heartbeat均不倒退；两个同时启动的命名SQL DATA Job以同一活跃run分别完成完整guard/first binding/commit，独立读回各自UID和name，不串身份。旧另一个Job key-use完整字节不变，原ACK丢失/rollback/取消/旧nonce/截止交付均继续通过。这仍是窄SQL/闭合上下文证据，不替代实际PublicJobOwner.Bind恢复、跨进程或新的全量发布验收。
+- 两受影响包全量无MySQL opt-in PASS controller9.321s/execution8.573s（`.tools/d-heartbeat-locked-clock-packages.log`，session44104已terminal0），原shutdown具名driver仅扩展事务和拿锁/时钟读协议，所有原zero-row/database-error/callback/parent-stop分类断言保留。此前单独GREATEST版两包9.363/8.469和native12.461均只是被后续真实到期反例否定的中间候选，不作为最终修复。当前原first binding主体eff7不变，本项单独三个Go文件和文档交付；65298所有D handle终态，窗口可交监督独立复测。
