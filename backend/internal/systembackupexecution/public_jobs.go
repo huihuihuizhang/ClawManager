@@ -558,12 +558,16 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
 	descriptionStage = "controller-control-execution-input"
+	inputCost := startOriginalControlStage(ctx, req, originalControlExecutionInput)
 	in, e := o.readExecutionInput(ctx, a)
+	inputCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-original-plan"
+	planCost := startOriginalControlStage(ctx, req, originalControlOriginalPlan)
 	plan, desc, originalPlan, e := o.Gate.Records.OpenOriginalCapturePlan(ctx, in)
+	planCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
@@ -623,22 +627,30 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-original-part"
+	partCost := startOriginalControlStage(ctx, req, originalControlOriginalPart)
 	_, record, e := o.readOriginalPart(ctx, a, binding, false, *part)
+	partCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-original-mounts"
+	mountCost := startOriginalControlStage(ctx, req, originalControlWorkerMounts)
 	mounts, production, e := o.productionMountsFromOriginal(in, desc, *part)
+	mountCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-worker-security"
+	securityCost := startOriginalControlStage(ctx, req, originalControlWorkerSecurity)
 	security, e := o.workerSecurityWithMounts(ctx, a, *part, mounts, production)
+	securityCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.PendingControl("worker_mount_identity_pending")
 	}
 	descriptionStage = "controller-control-worker-process"
+	processCost := startOriginalControlStage(ctx, req, originalControlWorkerProcess)
 	process, e := (kube.WorkerObserver{Client: o.Client}).Observe(ctx, record, security)
+	processCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.PendingControl("worker_" + kube.ObservationStage(e) + "_pending")
 	}
@@ -646,7 +658,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrExecution
 	}
 	descriptionStage = "controller-control-provider-qualification"
+	qualificationCost := startOriginalControlStage(ctx, req, originalControlProviderQualification)
 	preparedPermit, e := o.prepareProviderPermitOriginal(ctx, in, binding, pod, req, originalPlan)
+	qualificationCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
@@ -688,7 +702,10 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	descriptionStage = "controller-control-guard-tail"
 	databaseExecutionUntil := guard.ValidUntil()
 	descriptionUntil = databaseExecutionUntil
-	if e = guard.Recheck(ctx, tx); e != nil {
+	tailCost := startOriginalControlStage(ctx, req, originalControlGuardTail)
+	e = guard.Recheck(ctx, tx)
+	tailCost.finish(e != nil)
+	if e != nil {
 		if req.Action == "key-check" && req.Invocation.Request.Database != nil {
 			logOriginalDatabaseControlRejection("controller-key-check-tail", ctx, databaseExecutionUntil)
 		}
