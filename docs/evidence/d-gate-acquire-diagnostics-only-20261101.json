@@ -1,0 +1,56 @@
+{
+  "prior_native": {
+    "session": 84837,
+    "sha256": "c249ac41361b61c248ea559530f6d4a6a8d62b53ddff45854690b418e129e907",
+    "head": "14b3955e89056ceb96ea092f90d6509b5f6e54ef",
+    "test_seconds": 53.8,
+    "exit_code": 1,
+    "task": "sbk_d9734c1a-2fd0-44d2-a163-3a0050c09e4e",
+    "reached_count_fix": false,
+    "log": "../.tools/d-original-eleven-remote-capture-14b-native.log",
+    "package_seconds": 57.18,
+    "cause": "Unresolved: existing ErrMaintenance aliases multiple acquisition rejections. Do not assume it is a NOWAIT busy or extend/skip the gate.",
+    "workers_started": 0,
+    "reached_remote_entry": false,
+    "first_failure": "Original same-task retake/acquiring epoch/frozen plan: backup maintenance in progress after prepare runner=ok record=ok"
+  },
+  "change": "Seven error-only diagnostic calls at existing maintenance rejection boundaries, with fixed code-literal reason and structured MySQL number/validated SQLSTATE only. No SQL, lock, return value, owner/version/auth/deadline or retry behavior changes.",
+  "limits": [
+    "No original capture or complete remote C receipt verified by this increment. No source permission/window change, no automatic retry or fallback.",
+    "The successful original 11 workers in prior f7 run ended at count admission; latest14b pre-capture failure did not exercise the count fix. Both REDs remain independent.",
+    "63507 remains exclusively D-owned; all84837 SQL sessions naturally closed. No D push."
+  ],
+  "validation": {
+    "initial_private_formatter_assertion": "Test initially treated a legitimate empty SQLSTATE followed by ordinary log line ending as an unsafe SQLSTATE. Failed test log preserved at ../.tools/d-gate-acquire-diagnostics-full-no-sql.log; production formatter logic was not changed to obtain green.",
+    "final": {
+      "exit_code": 0,
+      "result": "PASS",
+      "session": 33807,
+      "execution_seconds": 13.296,
+      "sha256": "1630bd986ed35d48a85072147b9164de85b845bea5623a3b229ab442431f2f30",
+      "systembackup_seconds": 4.313,
+      "log": "../.tools/d-gate-acquire-diagnostics-final-no-sql.log"
+    }
+  },
+  "base_head": "14b3955e89056ceb96ea092f90d6509b5f6e54ef",
+  "schema_version": "d-gate-acquisition-error-diagnostics-only.v1",
+  "sources": [
+    {
+      "sha256": "aa262474e0b0438e4f5e5bd628e902711f20fc4c396ba488b51c8280eec52eb9",
+      "path": "backend/internal/systembackup/gate.go"
+    },
+    {
+      "sha256": "d24b37178d1a81c0e78d612db448ac433c00113366309582f3c6006f14520d19",
+      "path": "backend/internal/systembackup/gate_admission.go"
+    },
+    {
+      "sha256": "3ad0321e7d9c1618d4beb9622ba3744a59c3c68f8fbec5f362b742e2cab5a48e",
+      "path": "backend/internal/systembackup/gate_acquire_diagnostics.go"
+    },
+    {
+      "sha256": "712f5bec5ef20a9813acf37b5d8e081c4efe1f8a6da611acb47129b07f0a6d51",
+      "path": "backend/internal/systembackup/gate_acquire_diagnostics_test.go"
+    }
+  ],
+  "date": "2026-11-01"
+}
