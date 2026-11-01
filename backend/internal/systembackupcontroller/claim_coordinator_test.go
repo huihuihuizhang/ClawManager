@@ -14,7 +14,7 @@ func validBackupTarget() Target {
 
 func TestClaimCoordinatorAcquireRenewReleaseUseExactDatabaseTimeCAS(t *testing.T) {
 	executor := &recordedExec{rows: 1}
-	coordinator := ClaimCoordinator{Executor: executor, InstallationID: "installation_test"}
+	coordinator := ClaimCoordinator{Executor: claimModelDB(t, executor), InstallationID: "installation_test"}
 	token, err := coordinator.Acquire(context.Background(), validBackupTarget(), "controller:pod-1", 7, validPolicy())
 	if err != nil {
 		t.Fatalf("Acquire: %v", err)

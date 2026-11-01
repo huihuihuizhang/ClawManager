@@ -565,8 +565,10 @@ func TestAPublicationActualRenewLostACKLeavesOriginalStateMySQL(t *testing.T) {
 	}
 	frozen, end := f.frozen(t)
 	f.policy.TTL = 45 * time.Second
-	unknown := &aPublicationExecACK{db: f.db, lose: true}
-	returned, err := c.RenewClaimInInstallation(f.ctx, unknown, f.installation, token, f.policy)
+	// Renewal now owns the lock/clock/update transaction. Lose its real Commit
+	// ACK rather than using an unsafe Exec-only autocommit adapter.
+	f.loseCommit.Store(true)
+	returned, err := c.RenewClaimInInstallation(f.ctx, f.ackDB, f.installation, token, f.policy)
 	if !errors.Is(err, errAPublicationACKLost) || returned != (c.ClaimToken{}) {
 		t.Fatal("ambiguous actual Renew returned a token", err)
 	}

@@ -162,7 +162,7 @@ func TestRenewAndReleaseRequireTheSameLiveOwnerAndRowVersion(t *testing.T) {
 		RowVersion: 9,
 	}
 	exec := &recordedExec{rows: 1}
-	renewed, err := RenewClaimInInstallation(context.Background(), exec, "installation_test", token, validPolicy())
+	renewed, err := RenewClaimInInstallation(context.Background(), claimModelDB(t, exec), "installation_test", token, validPolicy())
 	if err != nil {
 		t.Fatalf("RenewClaim returned error: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestRenewAndReleaseRequireTheSameLiveOwnerAndRowVersion(t *testing.T) {
 		t.Fatalf("renewed row version = %d, want 10", renewed.RowVersion)
 	}
 	for _, required := range []string{
-		"claim_expires_at = DATE_ADD(UTC_TIMESTAMP(6), INTERVAL ? MICROSECOND)",
+		"claim_expires_at = GREATEST(claim_expires_at,DATE_ADD(UTC_TIMESTAMP(6), INTERVAL ? MICROSECOND))",
 		"origin_installation_id = ? AND public_id = ? AND row_version = ? AND claim_owner = ?",
 		"claim_expires_at > UTC_TIMESTAMP(6)",
 	} {
