@@ -56,6 +56,7 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 			var invocation worker.Invocation
 			var revoke func() error
 			var initializeOriginal func() error
+			var signedOwnerMapping func(func(*a.OriginalRecord)) ([]byte, []byte)
 			var generates, logins atomic.Int32
 			provider := httptest.NewTLSServer(http.HandlerFunc(func(out http.ResponseWriter, r *http.Request) {
 				out.Header().Set("Content-Type", "application/json")
@@ -151,6 +152,12 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 				t.Cleanup(func() { clear(installationKey) })
 				rawBinding, _ := json.Marshal(binding)
 				original := a.OriginalRecord{Binding: binding, Source: reg.SourceRecord{SourceID: "original-installation-owner", RecordID: "original-key", RecordVersion: "v1", ContentSHA256: hash(rawBinding)}, Revision: "owner-r1", NotBefore: now.Add(-time.Minute), Until: authority.DeadlineAt}
+				signedOwnerMapping = func(edit func(*a.OriginalRecord)) ([]byte, []byte) {
+					current := original
+					edit(&current)
+					raw, _ := json.Marshal(current)
+					return raw, ed25519.Sign(installationKey, append([]byte("system-backup-original-kek.v1\x00"), raw...))
+				}
 				databaseID := reg.DatabaseIdentity{ServerUUID: uuid, Database: database}
 				writer, err := a.NewInstallationAuthorityWriter(admin, authority.InstallationID, databaseID, installationPub)
 				if err != nil {
@@ -451,6 +458,10 @@ func TestDeploymentProviderPermitActualHandlerMySQLAndTLS(t *testing.T) {
 			}
 			if mode == "valid" {
 				assertProviderStageOriginalCurrentSQL(t, owner, admin, authority, job, invocation, lease)
+				assertPreparedPermitCurrentOwnerMappingSQL(t, owner, admin, authority, job, invocation, lease, signedOwnerMapping)
+				if generates.Load() != 0 || logins.Load() != 0 {
+					t.Fatal("owner mapping Stage comparison reached provider")
+				}
 			}
 			if mode == "issuer-expiry" {
 				assertProviderStageOriginalIssuerExpiry(t, owner, authority, job, invocation, lease)
