@@ -142,6 +142,9 @@ func (s *DeploymentService) validateProductionCapture(m productionCaptureMateria
 	if m.Discovery != nil && m.Discovery.SecretPolicy != nil && m.Discovery.SecretPolicy.validate() != nil {
 		return c.ErrExecutionAuthority
 	}
+	if m.Discovery != nil && m.Discovery.PublicationPolicy != nil && m.Discovery.PublicationPolicy.validate() != nil {
+		return c.ErrExecutionAuthority
+	}
 	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Config.CaptureScope != "six-part" || s.Config.RuntimeSources == nil || s.Config.FormalVerifier == nil || m.Version != productionCaptureMaterialsVersion || m.Revision == "" || len(m.Revision) > 128 || m.InstallationID != s.Config.InstallationID || m.ControllerOwner != s.Config.ControllerOwner || m.DeploymentConfigSHA256 != s.ConfigDigest || m.CaptureGrantSHA256 != s.Forward.GrantSHA256() || len(m.Operations) < 6 || len(m.Operations) > 9 || m.MaxObjects < 1 || m.MaxObjects > 10000 || m.MaxObjectBytes < 1 || m.MaxObjectTotalBytes < m.MaxObjectBytes || m.MaxObjectTotalBytes > 64<<20 || len(m.ResourceTypes) < 1 || len(m.ResourceTypes) > 32 {
 		return c.ErrExecutionAuthority
 	}

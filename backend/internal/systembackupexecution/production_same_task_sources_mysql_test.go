@@ -26,6 +26,7 @@ import (
 	"clawreef/internal/systembackup/scope"
 	"clawreef/internal/systembackup/testfixture"
 	"clawreef/internal/systembackup/worker"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	sh "clawreef/internal/systembackupskillhub"
 	appsv1 "k8s.io/api/apps/v1"
 	authnv1 "k8s.io/api/authentication/v1"
@@ -204,6 +205,17 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		discovery.RuntimePolicies = append(discovery.RuntimePolicies, worker.RuntimePolicy{Version: "named-original-pro-r1", Image: image, Runtime: scope.Runtime{Type: instance.Type, Mode: instance.Mode, Backend: instance.Backend, Variant: instance.Variant, OS: instance.OS}, Files: metadata.Mounts[0].Policy.Files})
 	}
 	discovery.SecretPolicy = &originalSecretPolicyReference{Protocol: root.SecretCapturePolicyVersion, Path: f.secretPolicyFile, SHA256: f.secretPolicySHA}
+	// Independent LOCAL owner declaration, not source UID observations or a
+	// positive attestation/recovery/eligibility/verifier claim.
+	domainPin, err := originalFailureDomainsPin(f.input.ConfigSnapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policyRaw, err := ce.Canonical(originalPublicationPolicy{Version: originalPublicationPolicyVersion, Installation: f.service.Config.InstallationID, ConfigSHA256: f.input.Authority.ConfigSHA256, FailureDomains: domainPin, Target: publicationManifestTarget{Class: f.profile.TargetClass, Domain: f.profile.FailureDomain, Risks: append([]string{}, f.profile.TargetRisks...)}, RecoveryEvidenceStatus: "not_provided"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	discovery.PublicationPolicy = &originalPublicationPolicyReference{Protocol: originalPublicationPolicyVersion, Path: write("original-publication-policy.json", policyRaw), SHA256: hash(policyRaw)}
 	m.Discovery = discovery
 	controller := true
 	for _, object := range []runtime.Object{

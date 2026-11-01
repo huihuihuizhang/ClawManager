@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"clawreef/internal/systembackup/staging"
+	cd "clawreef/internal/systembackupcapturedescription"
 	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7/pkg/signer"
@@ -37,6 +38,8 @@ type PublicationUploadRequest struct {
 	Objects                                                   []PublicationUploadInput
 	ManifestInput                                             json.RawMessage
 	IndexBytes                                                []byte
+	CaptureCertificate                                        []byte `json:"capture_certificate,omitempty"`
+	CaptureBootstrap                                          []byte `json:"capture_bootstrap,omitempty"`
 }
 type PublicationUploadInput struct {
 	Path, SHA256 string
@@ -83,8 +86,10 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	index := false
 	indexSHA := ""
 	var indexSize int64
+	certificateObject := false
+	bootstrapObject := false
 	for _, object := range p.Objects {
-		if !safePublicationKey(object.Path) || path.Clean(object.Path) != object.Path || seen[object.Path] || !formalCandidateDigest(object.SHA256) || object.Bytes < 1 || object.Bytes > 8<<30 {
+		if !safePublicationKey(object.Path) || path.Clean(object.Path) != object.Path || seen[object.Path] || !formalCandidateDigest(object.SHA256) || object.Bytes < 1 || object.Bytes > MaxPublicationArtifactBytes {
 			return nil, "", errPublicationUnavailable
 		}
 		base := path.Base(object.Path)
@@ -92,6 +97,16 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 			index = true
 			indexSHA = object.SHA256
 			indexSize = object.Bytes
+		} else if object.Path == publicationCaptureCertificatePath {
+			certificateObject = true
+			if p.Version != publicationPresignedUploadVersion || len(p.CaptureCertificate) == 0 || len(p.CaptureCertificate) > 16<<10 || int64(len(p.CaptureCertificate)) != object.Bytes || hash(p.CaptureCertificate) != object.SHA256 {
+				return nil, "", errPublicationUnavailable
+			}
+		} else if object.Path == cd.BootstrapPath {
+			bootstrapObject = true
+			if p.Version != publicationPresignedUploadVersion || len(p.CaptureBootstrap) == 0 || len(p.CaptureBootstrap) > cd.MaxBootstrapBytes || int64(len(p.CaptureBootstrap)) != object.Bytes || hash(p.CaptureBootstrap) != object.SHA256 {
+				return nil, "", errPublicationUnavailable
+			}
 		} else if !strings.HasPrefix(object.Path, "parts/") && !strings.HasPrefix(object.Path, "control/") {
 			return nil, "", errPublicationUnavailable
 		} else if !strings.HasSuffix(base, ".enc") && !strings.HasSuffix(base, ".envelope.json") {
@@ -105,11 +120,20 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	if !index || len(p.ManifestInput) < 2 || len(p.ManifestInput) > 262144 {
 		return nil, "", errPublicationUnavailable
 	}
+	if certificateObject != (len(p.CaptureCertificate) > 0) {
+		return nil, "", errPublicationUnavailable
+	}
+	if bootstrapObject != (len(p.CaptureBootstrap) > 0) {
+		return nil, "", errPublicationUnavailable
+	}
 	if len(p.IndexBytes) > 0 && (p.Version != publicationPresignedUploadVersion || int64(len(p.IndexBytes)) != indexSize || hash(p.IndexBytes) != indexSHA) {
 		return nil, "", errPublicationUnavailable
 	}
 	manifest, e := jsoncanonicalizer.Transform(p.ManifestInput)
 	if e != nil || len(manifest) > 262144 {
+		return nil, "", errPublicationUnavailable
+	}
+	if publicationUploadBytesWithinLimits(p, int64(len(manifest)), ArtifactReadLimits{MaxArtifactBytes: MaxPublicationArtifactBytes, MaxIndexBytes: MaxPublicationIndexBytes}) != nil {
 		return nil, "", errPublicationUnavailable
 	}
 	var binding struct {
@@ -121,6 +145,9 @@ func (p PublicationUploadRequest) validate() ([]byte, string, error) {
 	}
 	if json.Unmarshal(manifest, &binding) != nil || binding.Schema != "system-backup.v1" || binding.Installation != p.Installation || binding.Backup != p.Backup || binding.Attempt != p.Attempt || binding.Index.Path != "artifact-index.json" || binding.Index.Checksum != indexSHA {
 		return nil, "", errPublicationUnavailable
+	}
+	if err := validatePublicationContainerManifestInput(p, manifest); err != nil {
+		return nil, "", err
 	}
 	// Full v12 schema/business/certificate verification belongs to the current
 	// controller before finalization. Candidate bytes alone convey no permission.
@@ -240,11 +267,19 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 		return nil
 	}
 	for _, object := range p.Objects {
-		if object.Path == "artifact-index.json" && len(p.IndexBytes) > 0 {
+		var inline []byte
+		if object.Path == "artifact-index.json" {
+			inline = p.IndexBytes
+		} else if object.Path == publicationCaptureCertificatePath {
+			inline = p.CaptureCertificate
+		} else if object.Path == cd.BootstrapPath {
+			inline = p.CaptureBootstrap
+		}
+		if len(inline) > 0 {
 			if err = currentCredential(); err != nil {
 				return zero, err
 			}
-			observation, e := sendPut(prefix+object.Path, object.SHA256, object.Bytes, bytes.NewReader(p.IndexBytes))
+			observation, e := sendPut(prefix+object.Path, object.SHA256, object.Bytes, bytes.NewReader(inline))
 			if e != nil {
 				return zero, e
 			}
@@ -307,7 +342,7 @@ func RunPublicationUploadOnly(ctx context.Context, request []byte, caFile, crede
 
 func newPublicationUploadSignedPut(ctx context.Context, p PublicationUploadRequest, credential nativePublicationCredential, key, digest string, size int64, body io.Reader) (*http.Request, error) {
 	var zero *http.Request
-	if ctx.Err() != nil || !safePublicationKey(key) || !formalCandidateDigest(digest) || size < 1 || size > 8<<30 {
+	if ctx.Err() != nil || !safePublicationKey(key) || !formalCandidateDigest(digest) || size < 1 || size > MaxPublicationArtifactBytes {
 		return zero, errPublicationUnavailable
 	}
 	u, _ := url.Parse(p.Endpoint)

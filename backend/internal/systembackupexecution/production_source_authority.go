@@ -24,6 +24,7 @@ const sourceMetadataGrantDomain = "system-backup-controller-source-metadata.v1\x
 // An independently source-owner-signed controller delegation. It has no
 // Invocation, future Job, key-use nonce or permission to Generate/Unwrap.
 type productionSourceDiscovery struct {
+	PublicationPolicy                                     *originalPublicationPolicyReference `json:",omitempty"`
 	GrantFile, GrantSHA256                                string
 	Issuer                                                ed25519.PublicKey
 	ControllerDeployment, ControllerDeploymentUID         string

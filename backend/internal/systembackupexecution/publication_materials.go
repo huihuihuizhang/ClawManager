@@ -58,6 +58,8 @@ func (m *publicationJobMaterials) Close() {
 	}
 	clear(m.request.ManifestInput)
 	clear(m.request.IndexBytes)
+	clear(m.request.CaptureCertificate)
+	clear(m.request.CaptureBootstrap)
 	m.request = PublicationUploadRequest{}
 }
 func publicationMaterialID(installation, backup string, attempt uint64) string {

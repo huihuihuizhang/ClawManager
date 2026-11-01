@@ -38,6 +38,10 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, err
 	}
+	publicationPolicy, err := authority.loadOriginalPublicationPolicy(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
 	skills, err := authority.skillObjectMetadata(ctx, clients, source.Skills)
 	if err != nil {
 		return nil, nil, err
@@ -146,6 +150,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, err
 	}
+	metadata.PublicationFacts.PublicationPolicy = &publicationPolicy
 	if s.captureMaterials.ControlEvidence == nil || s.captureMaterials.ControlEvidence.SchemaRegistrySHA256 != metadata.PublicationFacts.SchemaRegistry.SHA256 {
 		return nil, nil, d.ErrNotReady
 	}

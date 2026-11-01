@@ -150,7 +150,7 @@ func registerPublicationMetadata(ctx context.Context, tx *sql.Tx, installation, 
 
 func (s *DeploymentService) beginPublicationPayload(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, proposed publicationPayloadIntent) (publicationPayloadIntent, bool, error) {
 	var zero publicationPayloadIntent
-	if proposed.Version != "system-backup-original-binary-upload.v1" || proposed.Installation != s.Config.InstallationID || proposed.Backup != claim.Target.PublicID || proposed.Attempt != attempt || proposed.Size < 1 || proposed.Size > 8<<30 || !formalCandidateDigest(proposed.SHA256) || !formalCandidateDigest(proposed.InvocationSHA256) || !safePublicationKey(proposed.Path) || proposed.Key != target.Root+proposed.Backup+"/"+strconv.FormatUint(attempt, 10)+"/"+proposed.Path {
+	if proposed.Version != "system-backup-original-binary-upload.v1" || proposed.Installation != s.Config.InstallationID || proposed.Backup != claim.Target.PublicID || proposed.Attempt != attempt || proposed.Size < 1 || proposed.Size > MaxPublicationArtifactBytes || !formalCandidateDigest(proposed.SHA256) || !formalCandidateDigest(proposed.InvocationSHA256) || !safePublicationKey(proposed.Path) || proposed.Key != target.Root+proposed.Backup+"/"+strconv.FormatUint(attempt, 10)+"/"+proposed.Path {
 		return zero, false, c.ErrExecutionRecord
 	}
 	access, err := s.publicationAccess(ctx, claim, attempt)
@@ -172,6 +172,13 @@ func (s *DeploymentService) beginPublicationPayload(ctx context.Context, claim c
 	guard, err := access.Bind(ctx, tx)
 	if err != nil || s.checkPublicationTargetTx(ctx, tx, guard.Facts(), target) != nil {
 		return zero, false, c.ErrExecutionAuthority
+	}
+	limits, err := readPublicationLimitsTx(ctx, tx, guard)
+	if err != nil {
+		return zero, false, err
+	}
+	if proposed.Size > limits.MaxArtifactBytes || proposed.Path == "artifact-index.json" && proposed.Size > limits.MaxIndexBytes {
+		return zero, false, c.ErrExecutionRecord
 	}
 	old, err := loadPublicationMetadata(ctx, tx, proposed.Backup, proposed.id())
 	if err == nil {

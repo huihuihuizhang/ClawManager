@@ -26,7 +26,8 @@ type productionPublicationSourceFacts struct {
 	// Exact independently pinned policy bytes, frozen before capture. This
 	// permits later business-domain accounting without consulting live source
 	// SQL or substituting a different in-process table registry.
-	SchemaRegistryBytes []byte `json:",omitempty"`
+	SchemaRegistryBytes []byte                   `json:",omitempty"`
+	PublicationPolicy   *frozenPublicationPolicy `json:",omitempty"`
 }
 
 func observePublicationSourceFacts(schema domain.BusinessCaptureSchema, census domain.BusinessSchemaCensusObjects, registry ce.RegistryPin) (*productionPublicationSourceFacts, error) {
@@ -48,6 +49,9 @@ func observePublicationSourceFacts(schema domain.BusinessCaptureSchema, census d
 }
 
 func (facts productionPublicationSourceFacts) validate() error {
+	if facts.PublicationPolicy != nil && facts.PublicationPolicy.validate() != nil {
+		return c.ErrExecutionRecord
+	}
 	if facts.Version != "system-backup-original-publication-source-facts.v1" || facts.AppVersion == "" || len(facts.AppVersion) > 128 || !utf8.ValidString(facts.AppVersion) || strings.ContainsAny(facts.AppVersion, "\x00\r\n") || !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(facts.GitCommit) || !formalCandidateDigest(facts.MigrationCatalogSHA256) || !formalCandidateDigest(facts.SchemaSHA256) || facts.SchemaRegistry.Version == "" || !formalCandidateDigest(facts.SchemaRegistry.SHA256) || facts.CoveredObjects < 1 || facts.CoveredObjects > 1000 || facts.ExcludedObjects < 1 || facts.ExcludedObjects > 10000 {
 		return c.ErrExecutionRecord
 	}
@@ -63,6 +67,12 @@ func publicationSourceFacts(input c.HistoricalCaptureInput, control ce.CaptureLo
 	var metadata productionCaptureMetadata
 	if len(input.SourceSnapshot) == 0 || hash(input.SourceSnapshot) != input.SourceSHA256 || decodeMetadataCanonical(input.SourceSnapshot, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Version != productionCaptureMetadataVersion || metadata.PublicationFacts == nil || metadata.PublicationFacts.validate() != nil || metadata.SQLSchema.Validate() != nil || metadata.PublicationFacts.SchemaSHA256 != metadata.SQLSchema.SchemaSHA256 || metadata.PublicationFacts.CoveredObjects != len(metadata.SQLSchema.Tables) || metadata.PublicationFacts.SchemaRegistry != control.Expected.SchemaRegistry || metadata.ControlEvidence.Expected != control.Expected {
 		return zero, c.ErrExecutionRecord
+	}
+	if policy := metadata.PublicationFacts.PublicationPolicy; policy != nil {
+		pin, err := originalFailureDomainsPin(input.ConfigSnapshot)
+		if err != nil || policy.Policy.Installation != input.InstallationID || policy.Policy.ConfigSHA256 != input.ConfigSHA256 || policy.Policy.FailureDomains != pin {
+			return zero, c.ErrExecutionRecord
+		}
 	}
 	return *metadata.PublicationFacts, nil
 }

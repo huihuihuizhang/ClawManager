@@ -73,6 +73,13 @@ func (s *DeploymentService) beginPublicationCandidate(ctx context.Context, claim
 		return zero, err
 	}
 	facts := guard.Facts()
+	limits, err := readPublicationLimitsTx(ctx, tx, guard)
+	if err != nil {
+		return zero, err
+	}
+	if publicationUploadBytesWithinLimits(request, int64(len(manifest)), limits) != nil {
+		return zero, c.ErrExecutionRecord
+	}
 	if facts.Status != "validating" && facts.Status != "publishing" {
 		return zero, c.ErrExecutionAuthority
 	}

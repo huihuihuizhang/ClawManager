@@ -12,6 +12,8 @@ import (
 
 	"clawreef/internal/systembackup/kube"
 	"clawreef/internal/systembackup/staging"
+	cd "clawreef/internal/systembackupcapturedescription"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	security "clawreef/internal/systembackupsecurity"
 	"github.com/google/uuid"
@@ -43,14 +45,51 @@ func (r PublicationWorkerReference) validate(captureName, captureUID string) err
 func (s *DeploymentService) publicationJobInputs(ctx context.Context, claim c.ClaimToken, attempt uint64, request PublicationUploadRequest) ([]kube.PublishInputFile, error) {
 	scope := security.PublisherCaptureScope{BackupPublicID: claim.Target.PublicID, Claim: security.SQLSigningClaim{ControllerOwner: claim.Owner, RowVersion: claim.RowVersion}, CaptureAttemptNo: attempt}
 	names, err := s.publisherVerifierFactory.CaptureParts(ctx, scope)
-	if err != nil || len(names) == 0 || len(names) > 10000 || len(request.Objects) != 2*len(names)+1 {
+	if err != nil || len(names) == 0 || len(names) > 10000 {
 		return nil, c.ErrExecutionRecord
 	}
 	expected := make(map[string]PublicationUploadInput, len(request.Objects))
 	for _, object := range request.Objects {
+		if _, exists := expected[object.Path]; exists {
+			return nil, c.ErrExecutionRecord
+		}
 		expected[object.Path] = object
 	}
 	var inputs []kube.PublishInputFile
+	containers := false
+	for _, object := range request.Objects {
+		if isPublicationContainerObject(object.Path) {
+			containers = true
+		}
+	}
+	if containers {
+		certificate, ok := expected[publicationCaptureCertificatePath]
+		if !ok || len(request.CaptureCertificate) == 0 || int64(len(request.CaptureCertificate)) != certificate.Bytes || hash(request.CaptureCertificate) != certificate.SHA256 {
+			return nil, c.ErrExecutionRecord
+		}
+		delete(expected, publicationCaptureCertificatePath)
+		bootstrap, ok := expected[cd.BootstrapPath]
+		if !ok || len(request.CaptureBootstrap) == 0 || int64(len(request.CaptureBootstrap)) != bootstrap.Bytes || hash(request.CaptureBootstrap) != bootstrap.SHA256 {
+			return nil, c.ErrExecutionRecord
+		}
+		delete(expected, cd.BootstrapPath)
+		inputs, err = s.loadPublicationContainerJobInputs(ctx, claim, attempt, expected)
+		if err != nil {
+			return nil, err
+		}
+		controls := []string{}
+		for _, name := range names {
+			if name == cd.Part || name == ce.Part || name == ce.ProofPart {
+				controls = append(controls, name)
+			}
+		}
+		if len(names) < 9 || len(controls) != 3 || len(request.Objects) != len(publicationRequestedParts)+2*len(controls)+3 {
+			return nil, c.ErrExecutionRecord
+		}
+		names = controls
+	} else if len(request.Objects) != 2*len(names)+1 {
+		return nil, c.ErrExecutionRecord
+	}
 	for _, name := range names {
 		verifier, err := s.PublisherVerifierForPart(ctx, claim, attempt, name)
 		if err != nil {
@@ -87,7 +126,14 @@ func (s *DeploymentService) publicationJobInputs(ctx context.Context, claim c.Cl
 				return nil, err
 			}
 			inputs = append(inputs, kube.PublishInputFile{Path: item.name, SubPath: ".controller-seals/" + path.Base(reference)})
+			delete(expected, item.name)
 		}
+	}
+	if len(expected) != 1 {
+		return nil, c.ErrExecutionRecord
+	}
+	if _, ok := expected["artifact-index.json"]; !ok {
+		return nil, c.ErrExecutionRecord
 	}
 	sort.Slice(inputs, func(i, j int) bool { return inputs[i].Path < inputs[j].Path })
 	return inputs, nil

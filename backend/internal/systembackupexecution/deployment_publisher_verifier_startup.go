@@ -32,6 +32,7 @@ func PublisherVerifierInputsFromEnvironment() []PublisherVerifierInput {
 }
 
 type PublisherVerifierMaterials struct {
+	RecoveryTrust                *PublicationRecoveryTrust    `json:"publication_recovery_trust,omitempty"`
 	DescriptionMaxPlaintextBytes int64                        `json:"description_max_plaintext_bytes,omitempty"`
 	Version                      string                       `json:"schema_version"`
 	Database                     reg.DatabaseIdentity         `json:"database"`
@@ -53,6 +54,9 @@ func (r PublisherVerifierReference) validate() error {
 	return nil
 }
 func (p PublisherVerifierMaterials) validate(cfg DeploymentConfig) error {
+	if p.RecoveryTrust != nil && p.RecoveryTrust.validate() != nil {
+		return c.ErrExecutionAuthority
+	}
 	if err := p.validateDescriptionMemoryShape(); err != nil {
 		return err
 	}
