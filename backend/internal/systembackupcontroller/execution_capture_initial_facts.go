@@ -33,7 +33,7 @@ WHERE original.origin_installation_id=? AND original.version=? AND original.conf
 	// Statement start time cannot cover delayed delivery or a lock wait.
 	err = tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&v.now)
 	if err != nil || v.now.IsZero() || !v.now.Before(v.claimUntil) || !v.now.Before(a.DeadlineAt) || !v.now.Before(v.gateUntil) || !v.now.Before(v.holdUntil) {
-		reportExecutionBindDiagnostic(report, "bind-snapshot-held-delivered-clock", err)
+		reportExecutionBindClockDiagnostic(report, v, a.DeadlineAt, err)
 		return executionSnapshot{}, ErrExecutionAuthority
 	}
 	return v, nil

@@ -1,0 +1,53 @@
+{
+  "schema_version": "ad-held-clock-reasons-independent-review.v1",
+  "date": "2026-11-01",
+  "base": "4773a761b6681d04fccf60225a329ec9b7965e5c",
+  "owner_source": "ef154a592da0c158a37185dad864dcf885809442",
+  "scope": "Exactly four Go files plus this independent evidence. Clock rejection diagnostics only. No runtime/provider/publish behavior or deadline changes.",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics.go",
+      "sha256": "9dd28dbf8c416c7dca54026baa66c97cd28b9135eaa8528fb8aa47eb3490a441"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics_test.go",
+      "sha256": "773308cdc29c5bb3375e9b022598e16bf4e8e2c2ed4f4fcc41dc5ce6340a58cb"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_capture_initial_facts.go",
+      "sha256": "7b1fe42a9384f5087b1679a468c1276f273191dd830dbf117f79e44f40a398bf"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_diagnostics.go",
+      "sha256": "d16b891f8aa768145f9f2012116b69b11d12643be31e16c7d2bde4f9d9a77be8"
+    }
+  ],
+  "review": {
+    "initial_facts": "Byte comparison after replacing exactly one report call proves all SQL, original ordered rejection predicates and returned errors unchanged.",
+    "reason_values": [
+      "sql_error",
+      "clock_missing",
+      "claim_expired",
+      "task_deadline",
+      "gate_lease_expired",
+      "hold_deadline_expired"
+    ],
+    "order": "First failing clock predicate retains original short-circuit order; all-expired case reports claim_expired.",
+    "privacy": "Reason/stage/class are fixed code literals; no raw error/SQL/authority/grant/body/token added."
+  },
+  "independent_tests": {
+    "session": 24923,
+    "exit_code": 0,
+    "closed": true,
+    "scope": "Full systembackupcontroller and systembackupexecution packages; all SQL environment credential/DSN entries disabled.",
+    "controller_seconds": 24.313,
+    "execution_seconds": 11.217,
+    "new_reason_cases": 7,
+    "log": ".tools\\supervisor-held-clock-reasons-ef154a59-packages.log",
+    "log_sha256": "de4132b384126bce79669b2d5927eb2d13aa3018e160dceb556d629f9c989958"
+  },
+  "limits": [
+    "No native full capture/upload proof by this increment.",
+    "Earlier database/CE rejections have no retrospective uniquely established cause; original RED logs remain."
+  ]
+}
