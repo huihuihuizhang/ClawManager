@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -167,6 +168,48 @@ func aInstallOriginalUploadNativeAPI(t *testing.T, f *dOriginalSixPartTask) (*in
 	t.Helper()
 	client := f.owner.Client.(*kubefake.Clientset)
 	creates, patches := new(int), new(int)
+	// client-go's tracker does not assign API-server metadata. Model those
+	// native facts explicitly; never weaken production UID/RV/body checks.
+	client.PrependReactor("create", "secrets", func(action kt.Action) (bool, runtime.Object, error) {
+		secret := action.(kt.CreateAction).GetObject().(*corev1.Secret).DeepCopy()
+		if !strings.HasPrefix(secret.Name, "sbp-") {
+			return false, nil, nil
+		}
+		body, err := publicationMaterialBody(secret)
+		clear(body)
+		if err != nil || secret.UID != "" || secret.ResourceVersion != "" {
+			return true, nil, fmt.Errorf("original native Secret creation shape")
+		}
+		secret.UID, secret.ResourceVersion = types.UID(uuid.NewString()), "1"
+		if err = client.Tracker().Create(corev1.SchemeGroupVersion.WithResource("secrets"), secret, secret.Namespace); err != nil {
+			return true, nil, err
+		}
+		return true, secret, nil
+	})
+	client.PrependReactor("update", "secrets", func(action kt.Action) (bool, runtime.Object, error) {
+		secret := action.(kt.UpdateAction).GetObject().(*corev1.Secret).DeepCopy()
+		if !strings.HasPrefix(secret.Name, "sbp-") {
+			return false, nil, nil
+		}
+		current, err := client.Tracker().Get(corev1.SchemeGroupVersion.WithResource("secrets"), secret.Namespace, secret.Name)
+		if err != nil {
+			return true, nil, err
+		}
+		old := current.(*corev1.Secret)
+		before, beforeErr := publicationMaterialBody(old)
+		after, afterErr := publicationMaterialBody(secret)
+		defer clear(before)
+		defer clear(after)
+		version, versionErr := strconv.ParseUint(old.ResourceVersion, 10, 64)
+		if beforeErr != nil || afterErr != nil || versionErr != nil || version == ^uint64(0) || old.UID != secret.UID || old.ResourceVersion != secret.ResourceVersion || !bytes.Equal(before, after) {
+			return true, nil, fmt.Errorf("original native immutable Secret UID/RV/body changed")
+		}
+		secret.ResourceVersion = strconv.FormatUint(version+1, 10)
+		if err = client.Tracker().Update(corev1.SchemeGroupVersion.WithResource("secrets"), secret, secret.Namespace); err != nil {
+			return true, nil, err
+		}
+		return true, secret, nil
+	})
 	client.PrependReactor("create", "jobs", func(action kt.Action) (bool, runtime.Object, error) {
 		job := action.(kt.CreateAction).GetObject().(*batchv1.Job).DeepCopy()
 		if !strings.HasPrefix(job.Name, "sbp-") {
@@ -362,5 +405,33 @@ func aSendOriginalForwardResults(ctx context.Context, t *testing.T, f *dOriginal
 	endpoint.Path = PublicationResultPath
 	if err = SendPublicationUploadResult(ctx, endpoint.String(), identity, tokenFile, m.secret.Data["request.json"], result); err != nil {
 		t.Fatal("original upload mTLS/TokenReview result receiver", err)
+	}
+}
+
+func TestOriginalForwardNativeAPISecretIdentityData(t *testing.T) {
+	client := kubefake.NewSimpleClientset()
+	f := &dOriginalSixPartTask{owner: &PublicJobOwner{Client: client}}
+	creates, patches := aInstallOriginalUploadNativeAPI(t, f)
+	yes := true
+	secret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: "local-data", Name: "sbp-data-upload"}, Immutable: &yes, Type: corev1.SecretTypeOpaque, Data: map[string][]byte{}}
+	for _, key := range []string{"request.json", "credential.json", "artifact-ca.crt", "ca.crt", "tls.crt", "tls.key"} {
+		secret.Data[key] = []byte("inert-local-model-data-" + key)
+	}
+	before, err := publicationMaterialBody(secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	created, err := client.CoreV1().Secrets(secret.Namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	if err != nil || created.UID == "" || created.ResourceVersion == "" {
+		t.Fatal("native model omitted Secret UID/resourceVersion", err)
+	}
+	created.OwnerReferences = []metav1.OwnerReference{{APIVersion: "batch/v1", Kind: "Job", Name: "sbp-data-job", UID: "local-data-job", Controller: &yes}}
+	updated, err := client.CoreV1().Secrets(secret.Namespace).Update(context.Background(), created, metav1.UpdateOptions{})
+	if err != nil || updated.UID != created.UID || updated.ResourceVersion == created.ResourceVersion {
+		t.Fatal("native model failed original UID/resourceVersion update", err)
+	}
+	after, err := publicationMaterialBody(updated)
+	if err != nil || !bytes.Equal(before, after) || *creates != 0 || *patches != 0 {
+		t.Fatal("native Secret metadata update changed immutable bytes or sent a Job", err)
 	}
 }
