@@ -94,6 +94,10 @@ func (d *DeploymentService) beginPublicationAction(ctx context.Context, claim c.
 }
 
 func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation) (publicationJournalAction, bool, error) {
+	return d.beginPublicationActionWithProof(ctx, claim, attempt, target, intent, continuation, nil)
+}
+
+func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest) (publicationJournalAction, bool, error) {
 	var zero publicationJournalAction
 	intent.Deadline = intent.Deadline.UTC().Truncate(time.Microsecond)
 	if intent.validate(target) != nil || target.InstallationID != d.Config.InstallationID {
@@ -123,6 +127,11 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 	if continuation != nil {
 		if continuation.service != d || continuation.claim != claim || continuation.attempt != attempt || continuation.next != intent.Kind || continuation.recheckTx(ctx, tx) != nil {
 			return zero, false, c.ErrExecutionAuthority
+		}
+	}
+	if postC != nil {
+		if err := postC.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
 		}
 	}
 	actionKey := publicationActionKey(claim.Target.PublicID, attempt, intent.Kind)
@@ -159,6 +168,11 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 	if _, err = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_external_actions(public_id,origin_installation_id,target_type,target_public_id,action_type,logical_action_hash,action_key,canonical_payload_bytes,payload_sha256,content_length,final_key,dispatch_generation,dispatch_deadline,state,send_attempt_count) VALUES(?,?,'backup',?,?,?,?,?,?,?,?,1,?,'request_sent',1)`, id, d.Config.InstallationID, claim.Target.PublicID, intent.Kind, logical, actionKey, intent.Payload, hash(intent.Payload), len(intent.Payload), intent.Key, intent.Deadline); err != nil {
 		return zero, false, errPublicationUnavailable
 	}
+	if postC != nil {
+		if err := postC.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
 	if guard.RecheckTx(ctx, tx) != nil {
 		return zero, false, c.ErrClaimLost
 	}
@@ -167,6 +181,11 @@ func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.C
 		return zero, false, c.ErrClaimLost
 	}
 	action := publicationJournalAction{ID: id, Kind: intent.Kind, ActionKey: actionKey, LogicalSHA: logical, Key: intent.Key, Payload: bytes.Clone(intent.Payload), PayloadSHA: hash(intent.Payload), Size: int64(len(intent.Payload)), Generation: 1, Version: 1, Deadline: intent.Deadline, State: "request_sent"}
+	if postC != nil {
+		if err := postC.recheckClockTx(ctx, tx); err != nil {
+			return zero, false, err
+		}
+	}
 	if tx.Commit() != nil || ctx.Err() != nil {
 		return zero, false, c.ErrExecutionCommitUnknown
 	}
@@ -319,10 +338,14 @@ func (d *DeploymentService) publishOriginalJSON(ctx context.Context, claim c.Cla
 }
 
 func (d *DeploymentService) publishOriginalJSONWithContinuation(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation) (nativePublicationObject, error) {
+	return d.publishOriginalJSONWithProof(ctx, claim, attempt, store, intent, continuation, nil)
+}
+
+func (d *DeploymentService) publishOriginalJSONWithProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest) (nativePublicationObject, error) {
 	if store == nil || intent.Kind == "catalog_registration_append" && store.catalog == nil || intent.Kind != "catalog_registration_append" && store.catalog != nil {
 		return nativePublicationObject{}, ErrPublicationCatalogUnavailable
 	}
-	action, send, err := d.beginPublicationActionWithContinuation(ctx, claim, attempt, store.config, intent, continuation)
+	action, send, err := d.beginPublicationActionWithProof(ctx, claim, attempt, store.config, intent, continuation, postC)
 	if err != nil {
 		return nativePublicationObject{}, err
 	}

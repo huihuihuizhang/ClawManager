@@ -25,6 +25,12 @@ type publicationRemoteContainerObjects struct {
 
 type publicationRemoteContainerReceipt struct {
 	captureSHA256, objectsSHA256 string
+	service                      *DeploymentService
+	access                       *security.SQLPublisherCaptureAuthority
+	claim                        c.ClaimToken
+	attempt                      uint64
+	target                       PublicationTargetMaterials
+	limits                       ArtifactReadLimits
 }
 
 func (p *publicationRemoteContainerReceipt) checked(capture publicationVerifiedCapture, objects publicationRemoteContainerObjects) bool {
@@ -340,5 +346,10 @@ func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Con
 			return nil, err
 		}
 	}
-	return &publicationRemoteContainerReceipt{captureSHA256: publicationVerifiedCaptureHash(capture), objectsSHA256: hash(encodedObjects)}, nil
+	// Keep the exact final authority; a later Renew cannot adopt this receipt.
+	access, err := s.remoteContainerReadScope(ctx, *claim, attempt, target, limits)
+	if err != nil {
+		return nil, err
+	}
+	return &publicationRemoteContainerReceipt{captureSHA256: publicationVerifiedCaptureHash(capture), objectsSHA256: hash(encodedObjects), service: s, access: access, claim: *claim, attempt: attempt, target: target, limits: limits}, nil
 }
