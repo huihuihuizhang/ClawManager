@@ -146,6 +146,10 @@ func databaseConfig(d *DatabaseSpec, c *DatabaseCredential) (*mysql.Config, erro
 		return nil, ErrRequest
 	}
 	cfg := mysql.NewConfig()
+	// Use the driver's default UTF-8 parameter escaping to keep each source
+	// query to one exchange instead of prepare/execute/close. SQL arguments,
+	// TLS identity, raw values and all source/restore authorization stay intact.
+	cfg.InterpolateParams = true
 	cfg.Net = "tcp"
 	cfg.Addr = d.Address
 	cfg.DBName = d.Name
