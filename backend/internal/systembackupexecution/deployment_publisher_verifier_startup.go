@@ -172,6 +172,24 @@ func (d *DeploymentService) PublisherVerifierForPart(ctx context.Context, claim 
 // Shared current no-task/no-provider probe for real readiness and admission.
 // It is not task authorization; ForPart independently authenticates its claim.
 func (d *DeploymentService) CheckPublisherVerifierReadiness(ctx context.Context) error {
+	if err := d.checkPublisherVerifierRuntimeReadiness(ctx); err != nil {
+		return err
+	}
+	if d.requiresOriginalPublicationPolicy() {
+		if d.captureMaterials == nil {
+			return ErrOriginalPublicationPolicy
+		}
+		if err := d.checkOriginalPublicationPolicyStartup(*d.captureMaterials); err != nil {
+			return err
+		}
+	}
+	return d.checkOriginalPublicationPolicyCurrent(ctx, d.publisherVerifierDB)
+}
+
+// Existing journal observation can require current publisher authority without
+// admitting new work from a subsequently withdrawn/expired publication policy.
+// It cannot create an upload or bypass that policy's first-forward admission.
+func (d *DeploymentService) checkPublisherVerifierRuntimeReadiness(ctx context.Context) error {
 	if d == nil || ctx == nil || ctx.Err() != nil || !d.ForwardEnabled {
 		return c.ErrExecutionAuthority
 	}

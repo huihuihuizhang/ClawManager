@@ -39,6 +39,9 @@ func CheckDeploymentDatabaseWithInputs(ctx context.Context, db *sql.DB, path, di
 		if err = s.loadPublicationTargetInput(inputs.PublicationTarget); err != nil {
 			return err
 		}
+		if err = s.checkOriginalPublicationPolicyCurrent(ctx, db); err != nil {
+			return err
+		}
 	}
 	return s.checkControlGrants(ctx, db)
 }

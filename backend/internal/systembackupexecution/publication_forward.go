@@ -14,6 +14,9 @@ import (
 // path prepares complete MF and activates the original upload-only Job.
 // Native fixed-version C readback and finalization remain independent steps.
 func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context, store *nativePublicationS3) (resultErr error) {
+	if err := s.CheckPublisherVerifierReadiness(ctx); err != nil {
+		return err
+	}
 	var backup string
 	var version, attempt uint64
 	var ttl, heartbeat, reconcile int64

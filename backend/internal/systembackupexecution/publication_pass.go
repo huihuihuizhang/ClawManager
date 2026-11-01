@@ -22,7 +22,7 @@ func (d *DeploymentService) RunPublicationPass(ctx context.Context) (resultErr e
 	if !d.ForwardEnabled || d.Config.PublicationTarget == nil {
 		return nil
 	}
-	if d.CheckPublisherVerifierReadiness(ctx) != nil {
+	if d.checkPublisherVerifierRuntimeReadiness(ctx) != nil {
 		return c.ErrExecutionAuthority
 	}
 	store, err := d.publicationStore(ctx)

@@ -101,6 +101,9 @@ func (s *DeploymentService) loadProductionCapture(inputs []ProductionCaptureInpu
 	if err != nil || !bytes.Equal(canonical, raw) {
 		return c.ErrExecutionAuthority
 	}
+	if err = s.checkOriginalPublicationPolicyStartup(materials); err != nil {
+		return err
+	}
 	if err = s.validateProductionCapture(materials); err != nil {
 		return err
 	}
