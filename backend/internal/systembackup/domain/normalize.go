@@ -28,10 +28,12 @@ type Policy struct {
 	Dependencies   map[string]TableAdapter
 	TeamPlacements map[string]Placement // separately restored/verified Team shared volumes
 	Skills         *sh.RestoreMapping   // authenticated target object/workspace mapping; IDs must remain stable
+	GatewayImages  *GatewayImageReceipt `json:"-"` // concrete actual object readback; never decoded from request JSON
 }
 type RestorePlan struct {
 	Data             Snapshot
 	Users, Instances int
+	GatewayImages    *GatewayImageReceipt `json:"-"`
 }
 
 // Explicit versioned column inventory. New model fields do not automatically
@@ -132,7 +134,11 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := validateModelRestoreInputs(ctx, source, policy.Dependencies); err != nil {
 		return RestorePlan{}, err
 	}
-	gatewayBudget, err := validateGatewayBudgetRestore(ctx, source, target, policy.Dependencies)
+	gatewayImages, err := validateGatewayImageRestore(ctx, source, target, policy.Dependencies, policy.GatewayImages)
+	if err != nil {
+		return RestorePlan{}, err
+	}
+	gatewayBudget, err := validateGatewayBudgetRestore(ctx, source, target, policy.Dependencies, policy.GatewayImages)
 	if err != nil {
 		return RestorePlan{}, err
 	}
@@ -152,7 +158,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 			return RestorePlan{}, err
 		}
 	}
-	plan := RestorePlan{Data: Snapshot{Version: Version}}
+	plan := RestorePlan{Data: Snapshot{Version: Version}, GatewayImages: policy.GatewayImages}
 	registry := rules()
 	for _, t := range source.Tables {
 		if err := ctx.Err(); err != nil {
@@ -165,7 +171,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		// Empty tables absent on the target need no writes. Nonempty unknown
 		// identity schemas require a deliberate version adapter, not field loss.
-		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) && !(gatewayBudget && isGatewayBudgetTable(t.Name)) {
+		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) && !(gatewayBudget && isGatewayBudgetTable(t.Name)) && !(gatewayImages && isGatewayImageTable(t.Name)) {
 			continue
 		}
 		dest, ok := targets[t.Name]
@@ -187,7 +193,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		adapter, adapted := policy.Dependencies[t.Name]
 		if adapted {
-			if rule.Domain == scope.Users || rule.Domain == scope.Instances || adapter.validate(t) != nil || adapter.validate(dest) != nil {
+			if rule.Domain == scope.Users || rule.Domain == scope.Instances || validateRestoreTableAdapter(adapter, t) != nil || validateRestoreTableAdapter(adapter, dest) != nil {
 				return RestorePlan{}, ErrSchema
 			}
 			for c := range adapter.Columns {
@@ -253,6 +259,11 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 						return RestorePlan{}, err
 					}
 				}
+				if adapter.Normalizer == GatewayImage074Normalizer {
+					if err := normalizeGatewayImageRow(t.Name, n, adapter.InterruptedAt); err != nil {
+						return RestorePlan{}, err
+					}
+				}
 				if adapter.Normalizer == CallerPolicy066Normalizer {
 					if err := normalizeCaller066(n, callerUsers); err != nil {
 						return RestorePlan{}, err
@@ -303,7 +314,10 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	plan.Data.Tables = ordered
-	if err := VerifyGatewayBudgetQuarantine(ctx, plan.Data); err != nil {
+	if err := verifyGatewayBudgetWithImages(ctx, plan.Data, policy.GatewayImages); err != nil {
+		return RestorePlan{}, err
+	}
+	if err := policy.GatewayImages.quarantineMatches(ctx, plan.Data); err != nil {
 		return RestorePlan{}, err
 	}
 	if err := VerifyModelGrantQuarantine(ctx, plan.Data); err != nil {
@@ -528,6 +542,16 @@ func validateRelationshipsWithHistory(s Snapshot, validatedUIDHistory bool) erro
 	}
 	for _, t := range s.Tables {
 		for _, r := range t.Rows {
+			// Current image tables deliberately have no user/instance FKs.
+			// Their tombstones outlive physical instance/key deletion. Exact
+			// image shape and the owner row/hold/object validator below retain
+			// those historical IDs; never invent a relational constraint here.
+			if isGatewayImageTable(t.Name) {
+				if gatewayImageShape(t) != nil {
+					return ErrSchema
+				}
+				continue
+			}
 			if validatedUIDHistory && t.Name == workBuddyIdentities {
 				continue
 			}

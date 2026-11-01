@@ -85,6 +85,11 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 	if err = target.check(ctx, conn); err != nil {
 		return RestorePlan{}, err
 	}
+	if HasGatewayImageData(source) {
+		if err = policy.GatewayImages.verify(ctx, source, false, target.Database, target.ServerUUID); err != nil {
+			return RestorePlan{}, err
+		}
+	}
 	statements := []string{"DELETE FROM `user_quotas`", "DELETE FROM `users`"}
 	if policy.WorkBuddy.uidLayout() {
 		statements = append(statements, "DELETE FROM `workbuddy_linux_identity_allocator`")
@@ -134,6 +139,11 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 			return RestorePlan{}, err
 		}
 		if err = target.check(ctx, conn); err != nil {
+			return RestorePlan{}, err
+		}
+	}
+	if HasGatewayImageData(source) {
+		if err = policy.GatewayImages.verify(ctx, source, false, target.Database, target.ServerUUID); err != nil {
 			return RestorePlan{}, err
 		}
 	}
@@ -246,7 +256,7 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 // The grant check rejects roles, wildcard grants and write privileges rather
 // than accepting a read-only transaction as proof of independent permissions.
 func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan RestorePlan) error {
-	if err := VerifyGatewayBudgetQuarantine(ctx, plan.Data); err != nil {
+	if err := verifyGatewayBudgetWithImages(ctx, plan.Data, plan.GatewayImages); err != nil {
 		return err
 	}
 	if err := VerifyModelGrantQuarantine(ctx, plan.Data); err != nil {
@@ -279,6 +289,9 @@ func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan Resto
 		return err
 	}
 	if err = checkSelectOnly(ctx, conn, target.Database); err != nil {
+		return err
+	}
+	if err = verifyGatewayImageExpected(ctx, plan.Data, plan.GatewayImages, target.Database, target.ServerUUID); err != nil {
 		return err
 	}
 	return verifyRows(ctx, conn, plan)
