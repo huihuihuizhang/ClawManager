@@ -165,6 +165,12 @@
       "execution_package_seconds": 9.29,
       "log_relative_to_workspace_parent": ".tools/supervisor-d-mapping-b583c65d-merged-packages.log",
       "log_sha256": "280329f1cf5981553f9a615c539452608db0ab4ef96197ead32a04da495fd462"
+    },
+    "a_same_task_d910_independent_healthy": {
+      "outcome": "FAIL",
+      "package_seconds": 95.662,
+      "log_relative_to_workspace_parent": ".tools/supervisor-a-d9100d1c-certificate-healthy.log",
+      "log_sha256": "4e1b57dc669119d59c6d1a3fe6451452fdc9d785e3c33a81edf99ddd66dc0ae5"
     }
   },
   "complete_capture_independent": {
@@ -192,7 +198,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T03:39:11.907148+00:00",
+  "updated_at_utc": "2026-11-01T03:47:30.165703+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -289,5 +295,20 @@
     "outcome": "Interrupted during original capture, before Stage fault assertion; no fault case PASS",
     "audit_sha256": "ac8960f0a6280fd4089380e01169017861c0144d4982e34c456d24c3ae493d72",
     "coordination": "Supervisor requested scheduling before confirming a fault run was already active; cancellation occurred before correction. It is not a product PASS/FAIL assertion. Future handoffs await live work and actual terminal/ownership checks."
-  }
+  },
+  "A_same_task_d910_independent_healthy": {
+    "candidate": "d9100d1c5e1befa6808b507fff653dd65b97f758",
+    "compiled_base": "9b67b00ca17bb38d6130c9b6b917b0d5c862fb19",
+    "fixture_overlay": "Five exact committed Go test files, including actual publisher material installation before runtime composition and complete named access inventory. No other A WIP, instrumentation, time-bound or input changes.",
+    "task_id": "sbk_2da136b0-2214-4f05-bbfb-0996f5382005",
+    "case_seconds": 92.4,
+    "sql_source_open_remaining_seconds": 24.978734,
+    "source_local_authorize_calls": 877,
+    "source_local_authorize_seconds": 0.7430585,
+    "source_stream_seconds": 24.865163,
+    "observed_failure": "Original encrypted database capture provider_permission_denied; original failed Record returned ok. Initialization passed, but validating/publisher continuation/certificate signing were not reached.",
+    "limitations": "Owned fixture schema cleaned after failure; no later independent SQL final-status observation. The A owner successful29s-window certificate run is not replaced by this25s-window failure, and does not prove repeatability.",
+    "window": "Supervisor session26835 terminal exit1 and closed; D63507 explicitly released to D for first-dispatch boundary work. Interrupted old schema542c/task78b3 remains retained unchanged."
+  },
+  "next_capture_boundary": "Controller-only initial dispatch/Job-ready issuance coordination under a genuinely live original owner/epoch/claim and empty original nonce/intent is under design. Existing nonce/key/permit Until and default TTL30/heartbeat5 must remain unchanged; worker RPCs must not renew the controller. No such fix is claimed by this report."
 }
