@@ -1,0 +1,41 @@
+=== RUN   TestGatewayBudgetWholeGroupPreservesUnsettledPrecisionAndDeletedHistory
+    gateway_budget_restore_test.go:90: key definition/actor/HMAC/precision/NULL/window changed description
+--- FAIL: TestGatewayBudgetWholeGroupPreservesUnsettledPrecisionAndDeletedHistory (0.00s)
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite
+=== RUN   TestGatewayBudgetClosedGroupRejectsBeforeAnySQLWrite/missing-adapter
+FAIL	clawreef/internal/systembackup/domain	399.847s
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/initialize
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/connect
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/read
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/initialize
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/connect
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/read
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/initialize
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/connect
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/read
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/initialize
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/connect
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/read
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/initialize
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/connect
+=== RUN   TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/read
+--- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/initialize (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/connect (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_worker/read (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/initialize (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/connect (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_drill_0123456789abcdef/read (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/initialize (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/connect (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_DRILL_WORKER/read (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/initialize (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/connect (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/CM_RESTORE_0123456789ABCDEF0123456789ABCDEF/read (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/initialize (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/connect (0.00s)
+    --- PASS: TestEveryBusinessConnectionRejectsIsolatedDrillBeforeIO/cm_import_0123456789abcdef0123456789abcdef/read (0.00s)
+PASS
+ok  	clawreef/internal/db	0.376s
+FAIL

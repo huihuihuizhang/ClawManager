@@ -1,0 +1,84 @@
+{
+  "version": "gateway-history-test-scope.v1",
+  "parent_commit": "d3a6a67160bb223789712106957f29094a9da2bc",
+  "production_code_changed": false,
+  "fullC_authenticated": false,
+  "physical_target_isolation_proven": false,
+  "eight_table_completion": false,
+  "source_set_sha256": "a4dc58e3d85f7b1cb2fa845619a4ee2d52e4fdc8150c1f2e562e3ca86d326127",
+  "evidence_set_sha256": "54a00523f3990602474bed08513f6e3f211841b4c636bdb6c0ae17b675cb0a79",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+      "bytes": 9899,
+      "raw_sha256": "386eac5e800914b9d00681e3088dee62ad156728ce758e4634f53a1c6c9bb56a",
+      "lf_sha256": "386eac5e800914b9d00681e3088dee62ad156728ce758e4634f53a1c6c9bb56a",
+      "git_blob": "3a22d91d4b83c20bf5026e6be837b2917f6d67a6"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_history_test.go",
+      "bytes": 3884,
+      "raw_sha256": "f32ded46608cb6fe305affc80943d1fd93acaa60c3a16a69f896dd05d736e69e",
+      "lf_sha256": "f32ded46608cb6fe305affc80943d1fd93acaa60c3a16a69f896dd05d736e69e",
+      "git_blob": "93cebc9b949842ccf33bd386993a3b4efc2a3173"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_readback_test.go",
+      "bytes": 4229,
+      "raw_sha256": "a5b3b0090025ef46dc9c2edf0a68c399f5789e02465b5b39f9c6a84ee4662669",
+      "lf_sha256": "a5b3b0090025ef46dc9c2edf0a68c399f5789e02465b5b39f9c6a84ee4662669",
+      "git_blob": "55ba23018d67edd4d61562f10ccc7c3f4e2b3bb1"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_test.go",
+      "bytes": 13438,
+      "raw_sha256": "8a6ce3401bae877f73b4ff92ba38552cd3aa126c0ae4c1f6f11bfc0b5a54118b",
+      "lf_sha256": "8a6ce3401bae877f73b4ff92ba38552cd3aa126c0ae4c1f6f11bfc0b5a54118b",
+      "git_blob": "3c4d0652db374327c04fb042b5b5a9940634459f"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-history-four-packages-frozen.txt",
+      "bytes": 208,
+      "raw_sha256": "233f006d6446d5118785a0fd91f4359d7aa65a1f0bdf14cb6ec0c09694d09b66",
+      "lf_sha256": "7f11ac31c1ca08836853ad5aa2c4ceff978011c2b41415ee92ded4d419439291",
+      "git_blob": "f695a2f2084eed074ff8100130ae395734dd9d10"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-history-mysql-cleanup.json",
+      "bytes": 1101,
+      "raw_sha256": "86fe85ca87a172b3225a1f42bb4dcc55c4d1a9aa2f4977742d5b0be3d92662ef",
+      "lf_sha256": "d2f5ca1effb7c9f2a61375d954d875fabb4f2041ea78707c928aaae634f6afb0",
+      "git_blob": "6a096aefe375920d2cd7dd924da31877e84fb40b"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-history-mysql-shutdown.txt",
+      "bytes": 2028,
+      "raw_sha256": "2c18ab646d5a6db3307f62c14397adb3b6bfd5454416ed5380323eda2a1ec348",
+      "lf_sha256": "66578a86a8c5a553ae913409fc89b84d496bc7ee2583a15dfe324c9e5386a267",
+      "git_blob": "20e897e72eb841856d9a2e02addb026c18262d7d"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-history-native-first-red.txt",
+      "bytes": 759,
+      "raw_sha256": "26297156eb23052d5f026d394d1b613b8f3f780c9ba09b9047d26f7e7112c218",
+      "lf_sha256": "da0c33c9b56f3baeb4eced206d3b15b3954e3fff81cc0c9e1d84ed254ba97dba",
+      "git_blob": "0e1220856bea2c53cbf379a75fb8339c3a7167f1"
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261101/gateway-history-native-frozen.txt",
+      "bytes": 4268,
+      "raw_sha256": "aeb896904e8d78ddf086005a471549114353420543bc2355b4f5fb0739617165",
+      "lf_sha256": "372509a72e696bfeb7e564e498ff3e5ce297e23911fff3acbfd7bb81742e761c",
+      "git_blob": "9927f0ffffb2222770c251797ce1e3d7e8a1249d"
+    }
+  ],
+  "handoff": {
+    "path": "docs/system-backup-d-offline-business-restore-20261101.md",
+    "bytes": 71510,
+    "raw_sha256": "b3d67008c90adb166ad96d576b60d2659360ee3b92c811ea46f68310e9226b60",
+    "lf_sha256": "b3d67008c90adb166ad96d576b60d2659360ee3b92c811ea46f68310e9226b60",
+    "git_blob": "59b50ceae1e8794111f75fa5880f0bbcfa9117c9"
+  }
+}

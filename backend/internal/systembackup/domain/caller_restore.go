@@ -16,6 +16,9 @@ const CallerPolicy066Normalizer = "northbound-caller-policy.066"
 const caller066Columns = "user_id enabled scopes_json created_at updated_at updated_by api_keys_json api_keys_version"
 
 func validateOwnerNormalizer(a TableAdapter, t Table) error {
+	if a.Normalizer == GatewayBudget055Normalizer {
+		return validateGatewayBudgetAdapter(a, t)
+	}
 	if a.Normalizer == LLMModel071Normalizer || a.Normalizer == LLMModelGrant062Normalizer {
 		return validateModelAdapter(a, t)
 	}

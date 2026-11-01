@@ -1,0 +1,26 @@
+=== RUN   TestGatewayBudgetPublicWorkerActualTLSMySQL
+    gateway_budget_native_test.go:32: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    gateway_budget_native_test.go:77: actual source history seeded: each of model_invocations/audit_events/cost_records has max signed BIGINT, SQL NULL, deleted key 777 and retained key attribution; real migration052 adds no FK
+    gateway_budget_native_test.go:101: real source authentication positive controls: gateway key, instance token, gateway token alias PASS
+    gateway_budget_native_test.go:278: actual independent SELECT-only history readback model_invocations: 4 nonempty rows; max signed BIGINT/NULL/deleted key/retained key and every raw cell preserved; no FK added PASS
+    gateway_budget_native_test.go:278: actual independent SELECT-only history readback audit_events: 4 nonempty rows; max signed BIGINT/NULL/deleted key/retained key and every raw cell preserved; no FK added PASS
+    gateway_budget_native_test.go:278: actual independent SELECT-only history readback cost_records: 4 nonempty rows; max signed BIGINT/NULL/deleted key/retained key and every raw cell preserved; no FK added PASS
+    gateway_budget_native_test.go:278: real target authentication: retained HMAC lookup matches revoked key; old gateway key, instance token and alias all refused PASS
+    gateway_budget_native_test.go:278: actual SELECT-only repository GetBudgetUsage write attempt refused PASS
+    gateway_budget_native_test.go:278: actual independent reader MySQL 1142 denial PASS: UPDATE gateway_keys SET budget_spent=budget_spent WHERE 1=0
+    gateway_budget_native_test.go:278: actual independent reader MySQL 1142 denial PASS: DELETE FROM gateway_key_budget_reservations WHERE 1=0
+    gateway_budget_native_test.go:278: actual independent reader MySQL 1142 denial PASS: INSERT INTO gateway_key_budget_ledger(reservation_id,gateway_key_id,actual_cost,recorded_at) SELECT 'unused',0,0,CURRENT_TIMESTAMP() WHERE FALSE
+    gateway_budget_native_test.go:278: independent raw-cell readback: DECIMAL/NULL/IDs/HMAC/actors/old reset/review/history preserved; SELECT-only auth and denial probes leave digest unchanged PASS
+    gateway_budget_native_test.go:293: actual public native case=success: capture -> restore -> writer physical sessions=0/fresh login=3118 -> independent SELECT-only verify PASS
+    gateway_budget_native_test.go:294: preserved counterexample: real GetBudgetUsage with trusted write-capable fixture operator still changes revoked-key history: reservations 3->0, ledger 2->3; subsequent public verifier rejects PASS
+    gateway_budget_native_test.go:251: actual public native case=evidence-failure: all three history tables rolled back to zero rows PASS
+    gateway_budget_native_test.go:252: actual public native case=evidence-failure: reached evidence=true commit=false; rollback bootstrap=1 keys=0 reservations=0 ledger=0; writer physical sessions=0 and fresh login=3118 PASS
+    gateway_budget_native_test.go:251: actual public native case=cancel-before-commit: all three history tables rolled back to zero rows PASS
+    gateway_budget_native_test.go:252: actual public native case=cancel-before-commit: reached evidence=true commit=true; rollback bootstrap=1 keys=0 reservations=0 ledger=0; writer physical sessions=0 and fresh login=3118 PASS
+    gateway_budget_native_test.go:251: actual public native case=credential-revoked: all three history tables rolled back to zero rows PASS
+    gateway_budget_native_test.go:252: actual public native case=credential-revoked: reached evidence=true commit=true; rollback bootstrap=1 keys=0 reservations=0 ledger=0; writer physical sessions=0 and fresh login=3118 PASS
+    gateway_budget_native_test.go:296: native scope: real TLS/current gateway DDL and private core fixtures; not fullC source authentication, cluster isolation, image object proof or final qualification
+    gateway_budget_native_test.go:297: fixture observation boundary: UUID/nonce/specified account lock only; it does not inventory other consumer accounts or existing writer sessions and is not a physical target isolation proof
+--- PASS: TestGatewayBudgetPublicWorkerActualTLSMySQL (11.03s)
+PASS
+ok  	clawreef/internal/systembackup/domain	13.895s

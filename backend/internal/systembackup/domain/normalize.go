@@ -132,6 +132,10 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := validateModelRestoreInputs(ctx, source, policy.Dependencies); err != nil {
 		return RestorePlan{}, err
 	}
+	gatewayBudget, err := validateGatewayBudgetRestore(ctx, source, target, policy.Dependencies)
+	if err != nil {
+		return RestorePlan{}, err
+	}
 	callerUsers, err := prepareCallerUsers(ctx, source, policy.Dependencies)
 	if err != nil {
 		return RestorePlan{}, err
@@ -161,7 +165,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		// Empty tables absent on the target need no writes. Nonempty unknown
 		// identity schemas require a deliberate version adapter, not field loss.
-		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) {
+		if len(t.Rows) == 0 && !(policy.WorkBuddy.uidLayout() && t.Name == workBuddyIdentities) && !(gatewayBudget && isGatewayBudgetTable(t.Name)) {
 			continue
 		}
 		dest, ok := targets[t.Name]
@@ -244,6 +248,11 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 				if err := applyAdapter(ctx, n, adapter); err != nil {
 					return RestorePlan{}, err
 				}
+				if adapter.Normalizer == GatewayBudget055Normalizer && t.Name == "gateway_keys" {
+					if err := normalizeGatewayBudgetKey(n, adapter.InterruptedAt); err != nil {
+						return RestorePlan{}, err
+					}
+				}
 				if adapter.Normalizer == CallerPolicy066Normalizer {
 					if err := normalizeCaller066(n, callerUsers); err != nil {
 						return RestorePlan{}, err
@@ -294,6 +303,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	plan.Data.Tables = ordered
+	if err := VerifyGatewayBudgetQuarantine(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
 	if err := VerifyModelGrantQuarantine(ctx, plan.Data); err != nil {
 		return RestorePlan{}, err
 	}
