@@ -637,7 +637,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrNotReady
 	}
 	defer tx.Rollback()
-	guard, e := o.Gate.Authority.Bind(ctx, tx, a)
+	guard, e := bindOriginalControlWorker(ctx, tx, o.Gate.Authority, a, req)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
@@ -656,7 +656,11 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return lease, worker.ErrNotReady
 		}
 	}
+	databaseExecutionUntil := guard.ValidUntil()
 	if e = guard.Recheck(ctx, tx); e != nil {
+		if req.Action == "key-check" && req.Invocation.Request.Database != nil {
+			logOriginalDatabaseControlRejection("controller-key-check-tail", ctx, databaseExecutionUntil)
+		}
 		return lease, worker.ErrExecution
 	}
 	// A detached worker may never use a longer relay certificate lifetime to

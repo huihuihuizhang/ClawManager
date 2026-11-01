@@ -42,6 +42,9 @@ func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority
 	}
 	next, changed, e := advance(old, current, req.Action, now)
 	if e != nil {
+		if req.Action == "key-check" && req.Invocation.Request.Database != nil {
+			logOriginalDatabaseKeyUseRejection(now, current, old)
+		}
 		return nil, e
 	}
 	if changed {
