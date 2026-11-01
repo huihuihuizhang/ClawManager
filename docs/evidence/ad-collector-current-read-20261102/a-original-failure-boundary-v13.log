@@ -1,0 +1,8 @@
+task-failure-category runner_failed
+task sbk_6224c357-1e28-4b8e-ac30-ae84026fdcda status failed can-cancel false version 8 owner false lease  deadline 2026-11-02 01:14:05.834398 clock 2026-11-01 19:16:11.050660
+materialized-policy 30 5 1 original-snapshot-policy 30 5 1 caller-native-frozen-policy 30 5 1
+candidate104 0
+material 0
+send121 0
+observation107 0
+external102 0

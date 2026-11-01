@@ -1,0 +1,53 @@
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/held
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/lost-held-ack
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/unadvanced-token
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/foreign-scope
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/missing-capture
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/missing-gate
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/foreign-owner
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/null-owner
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/capture-generation
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/actual-generation
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/token-advanced-twice
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/held-token-mismatch
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/acquiring
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/releasing
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/idle
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/expired
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/null-deadline
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/participant-generation
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/participant-running
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/participant-resumed
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/additional-running-participant
+=== RUN   TestCollectorCurrentReadMatchesOriginalSQL/foreign-participant
+=== NAME  TestCollectorCurrentReadMatchesOriginalSQL
+    collector_current_read_mysql_test.go:156: collector read-only transport DATA three-original-reads round 0 calls 409 elapsed 221.7647ms
+    collector_current_read_mysql_test.go:156: collector read-only transport DATA one-current-read round 0 calls 409 elapsed 110.2701ms
+    collector_current_read_mysql_test.go:156: collector read-only transport DATA one-current-read round 1 calls 409 elapsed 103.1355ms
+    collector_current_read_mysql_test.go:156: collector read-only transport DATA three-original-reads round 1 calls 409 elapsed 243.9656ms
+--- PASS: TestCollectorCurrentReadMatchesOriginalSQL (0.74s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/held (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/lost-held-ack (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/unadvanced-token (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/foreign-scope (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/missing-capture (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/missing-gate (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/foreign-owner (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/null-owner (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/capture-generation (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/actual-generation (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/token-advanced-twice (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/held-token-mismatch (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/acquiring (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/releasing (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/idle (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/expired (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/null-deadline (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/participant-generation (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/participant-running (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/participant-resumed (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/additional-running-participant (0.00s)
+    --- PASS: TestCollectorCurrentReadMatchesOriginalSQL/foreign-participant (0.00s)
+PASS
+ok  	clawreef/internal/systembackupcontroller	3.817s

@@ -1,0 +1,55 @@
+{
+  "Version": 1,
+  "Commit": "603c19d2773176661a81085697694b3c45dae7c7",
+  "Parent": "514d1c1ba44740064a29035c5815a44b40b06568",
+  "ReviewedBaseline": "b1ffafe22150001e87ec5601916d0cc1085a502b",
+  "Trigger": "v13 actual409 KeyCheck Collectors cumulative3.4676044s within Authorize28.0047212s",
+  "Change": "The complete Authority.Check remains first. Only its following three current epoch/gate/participant reads become one current statement; all original scope/owner/generation/fence/held-token/held-phase/deadline/participant comparisons remain. Recovery ownership unchanged. No authority cache, deadline change, SQL policy change or source reduction.",
+  "ActualSQL": {
+    "Session": 16895,
+    "ExitCode": 0,
+    "Closed": true,
+    "CaseSeconds": 0.74,
+    "PackageSeconds": 3.817,
+    "Cases": 22,
+    "Skips": 0,
+    "Fixture": "DATA-only private temporary tables on pinned original A TLS63507; no persistent schema/account/task changes and no collector authority",
+    "Original409Nanos": [
+      221764700,
+      243965600
+    ],
+    "Current409Nanos": [
+      110270100,
+      103135500
+    ],
+    "Orders": [
+      "old/new",
+      "new/old"
+    ],
+    "Excluded": "Authority.Check, HTTP, complete capture and end-to-end costs",
+    "Log": "a-collector-current-read-sql-v1.log",
+    "SHA256": "2d48b9a631bb2013bf48c6af88cb20aaba3d613955ec3282ee3af44e4dbe7a9a"
+  },
+  "SQLoff": {
+    "Session": 28470,
+    "ExitCode": 0,
+    "Closed": true,
+    "ControllerSeconds": 24.269,
+    "ExecutionSeconds": 14.517,
+    "Log": "a-collector-current-read-sql-off-v1.log",
+    "SHA256": "156f8c1368ba8c5002d85d0c0662e8e019beef6ca0ae04026caa5aa1917f1a29"
+  },
+  "Limits": "Measured partial read-path saving only ~0.11-0.14s per409 calls. Not a claim of solving the30s key window or permission to rerun unified native. 603 is an independent minimal review candidate; no v14 executed.",
+  "Sources": [
+    {
+      "File": "backend/internal/systembackupcontroller/execution_capture_gate.go",
+      "Blob": "055e85ccba60c43315d88ddf93307469a6a0b28f",
+      "SHA256": "1bf32f50f679c316e4a5f1e9c4d7a4d1137abda7c63769ae26871815791ad43e"
+    },
+    {
+      "File": "backend/internal/systembackupcontroller/collector_current_read_mysql_test.go",
+      "Blob": "d53b6728829f2dfca213c0ef273a4e697f3c2058",
+      "SHA256": "92bb23563f9359372b0bedbd71b393d678dbcd6f59546e8e5f966b6eda559eaa"
+    }
+  ]
+}

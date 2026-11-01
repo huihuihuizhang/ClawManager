@@ -1,0 +1,48 @@
+package main
+
+import (
+ "context"
+ "crypto/tls"
+ "crypto/x509"
+ "database/sql"
+ "encoding/json"
+ "fmt"
+ "os"
+ "time"
+ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+ var c struct {Host,User,Password,CAFile,TLSServerName,ServerUUID string; Port int}
+ raw,err:=os.ReadFile(os.Args[1]); must(err); must(json.Unmarshal(raw,&c)); clear(raw)
+ if c.Host!="127.0.0.1" || c.Port!=63507 || c.ServerUUID!="f3756194-d52b-11f1-b8cc-745d22085e06" { panic("wrong isolated SQL identity") }
+ pem,err:=os.ReadFile(c.CAFile); must(err); roots:=x509.NewCertPool(); if !roots.AppendCertsFromPEM(pem) {panic("CA")}
+ must(mysql.RegisterTLSConfig("a-upload-readonly",&tls.Config{RootCAs:roots,ServerName:c.TLSServerName,MinVersion:tls.VersionTLS13}))
+ cfg:=mysql.NewConfig(); cfg.User=c.User; cfg.Passwd=c.Password; cfg.Net="tcp"; cfg.Addr="127.0.0.1:63507"; cfg.DBName="ad_d_six_9588d42e1c27ddb9"; cfg.TLSConfig="a-upload-readonly"; cfg.Timeout=5*time.Second
+ db,err:=sql.Open("mysql",cfg.FormatDSN()); must(err); defer db.Close()
+ ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second); defer cancel()
+ tx,err:=db.BeginTx(ctx,&sql.TxOptions{ReadOnly:true}); must(err); defer tx.Rollback()
+ var uuid string; must(tx.QueryRowContext(ctx,"SELECT @@server_uuid").Scan(&uuid)); if uuid!=c.ServerUUID {panic("SQL UUID mismatch")}
+ task:="sbk_6224c357-1e28-4b8e-ac30-ae84026fdcda"
+ var started,finished sql.NullString;var durations []byte
+ must(tx.QueryRowContext(ctx,"SELECT source_gate_wait_started_at,finished_at,JSON_EXTRACT(CONVERT(config_snapshot_json USING utf8mb4),'$.durations') FROM system_backup_v2_backups WHERE public_id=?",task).Scan(&started,&finished,&durations));fmt.Println("first-source-wait",started.String,"finished",finished.String)
+ var policy map[string]json.Number;must(json.Unmarshal(durations,&policy));for k,v:=range policy{if k=="gate_acquisition_timeout_seconds"||k=="quiesce_max_hold_seconds"||k=="controller_claim_ttl_seconds"||k=="controller_claim_heartbeat_seconds"{fmt.Println("original-duration",k,v)}}
+ for _,table:=range []string{"system_backup_v2_runtime_captures","system_backup_v2_runtime_writers","system_backup_v2_runtime_resources","system_backup_v2_runtime_stop_proofs"}{var n int;must(tx.QueryRowContext(ctx,"SELECT COUNT(*) FROM "+table+" WHERE task_public_id=?",task).Scan(&n));fmt.Println("original-journal-count",table,n)}
+ var paused,resumed sql.NullInt64;must(tx.QueryRowContext(ctx,"SELECT SUM(paused),SUM(resumed) FROM system_backup_v2_runtime_writers WHERE task_public_id=?",task).Scan(&paused,&resumed));fmt.Println("writer-pause-resume-facts-known",paused.Valid,resumed.Valid,"counts",paused.Int64,resumed.Int64)
+ rows,err:=tx.QueryContext(ctx,"SELECT phase,generation FROM system_backup_gate");must(err);for rows.Next(){var phase string;var generation uint64;must(rows.Scan(&phase,&generation));fmt.Println("app-gate",phase,"generation",generation)};must(rows.Err());rows.Close()
+ rows,err=tx.QueryContext(ctx,"SELECT COALESCE(owner,''),close_until FROM system_backup_gate_admissions");must(err);for rows.Next(){var owner string;var until sql.NullString;must(rows.Scan(&owner,&until));fmt.Println("admission-owner-present",owner!="","close-until",until.String)};must(rows.Err());rows.Close()
+ rows,err=tx.QueryContext(ctx,"SELECT gate_state,lock_owner IS NOT NULL FROM system_backup_v2_maintenance_locks");must(err);for rows.Next(){var state string;var owner bool;must(rows.Scan(&state,&owner));fmt.Println("maintenance-gate",state,"owner-present",owner)};must(rows.Err());rows.Close()
+ var running,stopped,team string;must(tx.QueryRowContext(ctx,"SELECT (SELECT status FROM instances WHERE id=7),(SELECT status FROM instances WHERE id=9),(SELECT status FROM teams WHERE id=20)").Scan(&running,&stopped,&team));fmt.Println("original-SQL-desired-status","instance7",running,"instance9",stopped,"team20",team)
+ var users,sessions int
+ names:=[]string{"ad_d_six_ctl_9588d42e1c27ddb9","ad_d_six_src_9588d42e1c27ddb9","ad_d_cen_9588d42e1c27ddb9"}
+ must(tx.QueryRowContext(ctx,"SELECT COUNT(*) FROM mysql.user WHERE User IN (?,?,?) AND Host='127.0.0.1'",names[0],names[1],names[2]).Scan(&users))
+ must(tx.QueryRowContext(ctx,"SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE USER IN (?,?,?)",names[0],names[1],names[2]).Scan(&sessions))
+ fmt.Println("v13-natural-cleanup-owned-account-count",users,"owned-session-count",sessions)
+ if users!=0||sessions!=0 {panic("v13 account or session residue")}
+}
+func must(err error) { if err!=nil {panic(err)} }
+
+
+
+
+

@@ -1,0 +1,275 @@
+{
+  "schema_version": "ad-collector-current-read-reviewed.v1",
+  "recorded_at": "2026-11-01T19:42:09.714207+00:00",
+  "parent": "a43949c1e24c24ca8fff6180068f70b80b645465",
+  "owner_commit": "603c19d2773176661a81085697694b3c45dae7c7",
+  "scope": "Only two Go files. ValidateCollectors still runs complete current Authority.Check first. Its following original runtime epoch, actual gate and complete participants three reads are one current statement with the same positive/negative facts. Recovery ownership reconciliation remains unchanged. No authorization caching, TTL/durability/config/readiness/source scope changes.",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupcontroller/collector_current_read_mysql_test.go",
+      "git_blob": "d53b6728829f2dfca213c0ef273a4e697f3c2058",
+      "exact_frozen_owner": true
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_capture_gate.go",
+      "git_blob": "055e85ccba60c43315d88ddf93307469a6a0b28f",
+      "exact_frozen_owner": true
+    }
+  ],
+  "primary_composed_packages": {
+    "session": 33462,
+    "closed": true,
+    "natural_exit": 0,
+    "controller_seconds": 24.393,
+    "execution_seconds": 14.913,
+    "SQL": "disabled; native case skipped. New a439+603 composition independently checked once."
+  },
+  "owner_actual_SQL": {
+    "session": 16895,
+    "closed": true,
+    "natural_exit": 0,
+    "case_seconds": 0.74,
+    "package_seconds": 3.817,
+    "cases": 22,
+    "skipped": 0,
+    "fixture": "Private actual TLS63507 TEMP tables only; comparison DATA, no persistent task/schema/account edits or collector authority. Primary did not query this owner SQL.",
+    "original409_seconds": [
+      0.2217647,
+      0.2439656
+    ],
+    "current409_seconds": [
+      0.1102701,
+      0.1031355
+    ],
+    "orders": [
+      "old/new",
+      "new/old"
+    ],
+    "limits": "Isolated read path savings0.11-0.14s per409 excludes unchanged fullAuthority.Check, HTTP and capture; does not solve original30s key window."
+  },
+  "owner_SQLoff_packages": {
+    "session": 28470,
+    "closed": true,
+    "natural_exit": 0,
+    "controller_seconds": 24.269,
+    "execution_seconds": 14.517
+  },
+  "review": {
+    "retained": "Scope, owner, original epoch, acquire/actual/held tokens, held phase, actual UTC hold deadline and all participant predicates, after full current authority. Nullable/driver/missing rows fail closed. Only read correspondence consolidated, not current permission checks.",
+    "source_identity": "Two exact single-commit deltas only. Owner benchmark ancestry was not merged.",
+    "timing": "All observations are diagnostic DATA. Parent Authorize includes its21children; totals not double-counted."
+  },
+  "v13_reference": {
+    "source_and_linked_SHA": "020471a669080e535f7c485287fd14924e15f346",
+    "session": 3798,
+    "closed": true,
+    "natural_exit": 1,
+    "case_seconds": 104.59,
+    "package_seconds": 107.882,
+    "task": "sbk_6224c357-1e28-4b8e-ac30-ae84026fdcda",
+    "schema": "ad_d_six_9588d42e1c27ddb9",
+    "first_failure": "Database using key-check rejected on the original 30s key/context/source deadline, after 409 calls; wrapper formal capture provider_permission_denied; task runner_failed",
+    "original_budgets": {
+      "gate_seconds": 60,
+      "hold_seconds": 600,
+      "controller_policy": "30/5/1"
+    },
+    "actual_read_only": {
+      "Status": "failed",
+      "FailureCategory": "runner_failed",
+      "RowVersion": 8,
+      "ClaimOwnerPresent": false,
+      "Candidate104": 0,
+      "Material": 0,
+      "Send121": 0,
+      "Observation107": 0,
+      "External102": 0,
+      "RuntimeCaptures": 1,
+      "RuntimeWriters": 4,
+      "RuntimeResources": 24,
+      "StopProofs": 10,
+      "WritersPaused": 4,
+      "WritersResumed": 4,
+      "AppGate": "idle",
+      "GateGeneration": 1,
+      "AdmissionOwnerPresent": false,
+      "MaintenanceGate": "idle",
+      "MaintenanceOwnerPresent": false,
+      "OwnedAccounts": 0,
+      "OwnedSessions": 0,
+      "OriginalDesiredSQLStatus": "instance7 running / instance9 stopped / team20 running"
+    },
+    "database_cost": {
+      "SourceOpenNanos": 124062900,
+      "KeyRemainingAfterOpenNanos": 29491673200,
+      "SourceAuthorizeCalls": 801,
+      "SourceAuthorizeNanos": 717325200,
+      "StreamNanos": 29493301800,
+      "KeyCheckCalls": 409,
+      "KeyCheckFailures": 1,
+      "KeyCheckClientNanos": 28759728100,
+      "KeyCheckAuthorizeNanos": 28004721200,
+      "PermitStageNanos": 6927865500,
+      "CommitNanos": 3673901400,
+      "CollectorsNanos": 3467604400,
+      "OriginalPlanNanos": 3286597900,
+      "KeyEndCalls": 0,
+      "CandidateCalls": 0
+    },
+    "recovery_limits": "Observed durable pause/resume and stop-proof counts, idle gates, unchanged desired SQL statuses, natural account/session cleanup. This does not independently certify every physical source restoration.",
+    "no_publication": "No all11/fullMF/upload worker/results/fullC/MF/marker/native publication cleanup or final success in this run"
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-manifest-upload-native-source-v13.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-source-v13.json",
+      "raw_bytes": 2218,
+      "raw_sha256": "6cfa911cb01fe7f8bda336a410644e0ff1b4cbc82e67af81d1e5a0ac2f2d1440",
+      "committed_bytes": 2173,
+      "committed_sha256": "c132a8d543510ce1a8e92f443ea25bd6c510d7955e0badadcbc64022d25bb872",
+      "git_blob": "c4eea63c96e08255fba14f2a5869361ceed34c93"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-manifest-upload-native-launch-v13.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-launch-v13.json",
+      "raw_bytes": 394,
+      "raw_sha256": "211aa05154cc2955d1626fed16b89e7e11ce9193fa4d9d70ab5e556120e508d4",
+      "committed_bytes": 386,
+      "committed_sha256": "a3473cd30787fd635e020fb1f863bc34d91106986f865715b9dcaa7e75e17944",
+      "git_blob": "1f4fbd467000d78a56ea05bb0dea93832da88f43"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-upload-sql-exclusive-v13.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-upload-sql-exclusive-v13.log",
+      "raw_bytes": 28,
+      "raw_sha256": "72498cc0b1f28736f6bd4e3e90f72f189745c0ae7ed788abb5b84605af62801d",
+      "committed_bytes": 27,
+      "committed_sha256": "816fb03f74b1fbea100e74dcd62463bc42cea15d3612f9181a66c23b5a5b658d",
+      "git_blob": "dafe0de657d9cdf0a45049ff074c0b1ca01bb854"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-manifest-upload-native-v13.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-v13.log",
+      "raw_bytes": 119124,
+      "raw_sha256": "6624de79851cd5e3bbdbb5685080b85fd6c50d160a834f855136a8676c9570ad",
+      "committed_bytes": 118827,
+      "committed_sha256": "823c60a9593d624d8416a6ed2b1b20aa8b615645b104815499ba94a7f4bd80dd",
+      "git_blob": "2c2f3674438f7f253eceb752e69a6e67282db852"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-manifest-upload-native-process-v13.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-process-v13.json",
+      "raw_bytes": 194,
+      "raw_sha256": "1208bb59594c9c000c9fadb147193e0b52c3b4884a2dd71062eee764edbb104d",
+      "committed_bytes": 187,
+      "committed_sha256": "1803d037ca86312a66edd5947d267b6422fd151d31c3aaa29e52781e27d3a078",
+      "git_blob": "1327a5b953883ed0cdff8ce347399c845b54d2ce"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-control-log-summary-v13.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-control-log-summary-v13.json",
+      "raw_bytes": 214660,
+      "raw_sha256": "70aeccf7ea7d179e1d3708ca1420c40d1690dcd4fdd92fd3a98eabc2a8f45b40",
+      "committed_bytes": 206976,
+      "committed_sha256": "cfc34b7f43c60a0cb4501b9db38d019c6c1e6684de5ac0bda9ede651af8ce42d",
+      "git_blob": "00179ca0375d67733df781162cee16f1940a72a6"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-failure-boundary-v13.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-failure-boundary-v13.log",
+      "raw_bytes": 380,
+      "raw_sha256": "7c85ace9f349df63aa311213a61bccda728cb9e6597b04a8d6053cfb284d2cc4",
+      "committed_bytes": 372,
+      "committed_sha256": "383b825246f3b9d3a446a09c5dd4bfea4618ed981b9fd6f57e14da9b6ea8624a",
+      "git_blob": "7a1e2f023806e18c2a42a7fcd5169e86dfb5e63d"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-quiesce-recovery-v13.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-quiesce-recovery-v13.log",
+      "raw_bytes": 851,
+      "raw_sha256": "1b95705b9d5079b3d79a26bde7df390507c70de5fe1350cd5251b0f7c8ec2905",
+      "committed_bytes": 836,
+      "committed_sha256": "7337c5ccaecd5793c42346aa260dd0d4c8ca02d64349dadd7d48f40d90bdd707",
+      "git_blob": "ad94f9ca6ef519452b066d2a18ff0a36de69b970"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-read-failure-boundary-v13.go.txt",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-read-failure-boundary-v13.go",
+      "raw_bytes": 3990,
+      "raw_sha256": "932d956dea26a1600bd248b1e8fc0b61a10764df0c4b5529a30acfdd87b7ed72",
+      "committed_bytes": 3958,
+      "committed_sha256": "4c2a68e8bf8dc657cd7d24a2738f334fab728d4fcc935970878536a8d9a6f21e",
+      "git_blob": "ad1f5347fa80bfda51330b58bd18c0a751421cd0"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-read-quiesce-recovery-v13.go.txt",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-read-quiesce-recovery-v13.go",
+      "raw_bytes": 4537,
+      "raw_sha256": "d1c9aad5242f85b517e62c6b2ef8feaa86145ab04ebccf080fe295abcaccdf77",
+      "committed_bytes": 4504,
+      "committed_sha256": "2f5cc8adecc51c3697d0aac001236959be66d03a6a1afe70bec863095f3608a6",
+      "git_blob": "06009edcc154efa9d946c20137bc4d54c00c6538"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-summarize-original-control-log-v1.py.txt",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-summarize-original-control-log-v1.py",
+      "raw_bytes": 2412,
+      "raw_sha256": "df1f314c6e1e20786008d0e8d920ac58d60a43a592615e6fc3b5e274bf10850b",
+      "committed_bytes": 2411,
+      "committed_sha256": "223d8055356d39b254572e4cbb506e2c586573cf3eff40917c2a43fe9a7f9223",
+      "git_blob": "d5bd887e0bb6313b28bd122bbd7cfed94a01edbb"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-original-manifest-upload-native-result-v13.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-result-v13.json",
+      "raw_bytes": 4518,
+      "raw_sha256": "16cf1b188143bc2afd0ae1a4876012e303c71436dea90c4fff5f025a5a460372",
+      "committed_bytes": 4407,
+      "committed_sha256": "a93e4f7c6117cfe84a2868accb86f2109a22077f6be01135509f0bfbb063f9d6",
+      "git_blob": "38f5e423266f5cf7d3f8d1d635a1307e7f03d191"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-collector-current-read-evidence-v1.json",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-collector-current-read-evidence-v1.json",
+      "raw_bytes": 2443,
+      "raw_sha256": "52c85457637fac38a6c390278b5734a9c194ca974c58858405542805106bbcf2",
+      "committed_bytes": 2388,
+      "committed_sha256": "d0b4a3e269ea5eff718ce301218f76d65a6297a5928718f74d0359e40e8e9327",
+      "git_blob": "d60bddda2b41cf9526f7aa281876e5bf0fd0e5e4"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-collector-current-read-sql-v1.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-collector-current-read-sql-v1.log",
+      "raw_bytes": 4108,
+      "raw_sha256": "2d48b9a631bb2013bf48c6af88cb20aaba3d613955ec3282ee3af44e4dbe7a9a",
+      "committed_bytes": 4055,
+      "committed_sha256": "0d55cbbfad7f39d9af9610528ef30d7375979b1c76e086b24e879539a2e0862e",
+      "git_blob": "9c1dba79b35ad6dde2426abb431080749defbeda"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/a-collector-current-read-sql-off-v1.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-collector-current-read-sql-off-v1.log",
+      "raw_bytes": 109,
+      "raw_sha256": "156f8c1368ba8c5002d85d0c0662e8e019beef6ca0ae04026caa5aa1917f1a29",
+      "committed_bytes": 107,
+      "committed_sha256": "612d154a2c9c8d91060ec205ee8ea5a323521f1fabb15a912a934081dff66f5d",
+      "git_blob": "d304f7b43399a2575436731e5a0dc6ac5e6fe0a2"
+    },
+    {
+      "path": "docs/evidence/ad-collector-current-read-20261102/supervisor-collector603-a439-composed-packages.log",
+      "raw_origin": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-collector603-a439-composed-packages.log",
+      "raw_bytes": 109,
+      "raw_sha256": "1ff782086aa6df330cdb4983672b4e58db0b68c360663d263c5898240ca48796",
+      "committed_bytes": 107,
+      "committed_sha256": "f44ffea7177778c9daef20232fe608502e5590768d19a61b2cc596199e63f7b4",
+      "git_blob": "f96814bda898c81400188e052eed433a12a9e4d1"
+    }
+  ],
+  "limits": [
+    "No v14 unified native executed by this delivery.",
+    "Current short lease still immutable: renewed claim or longer bounds do not extend original key use; no workaround added.",
+    "Source acquisition deadline/large legal data capacity and PermitStage/Commit/OriginalPlan costs still require concrete work.",
+    "No full six-part publication/native cleanup/acceptance/catalog/terminal or page success."
+  ],
+  "full_page_acceptance": false
+}

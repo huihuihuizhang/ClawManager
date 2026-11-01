@@ -528,11 +528,35 @@ func (g SQLCaptureGate) ValidateCollectors(ctx context.Context, a d.Authority) e
 	if e := g.Authority.Check(ctx, a); e != nil {
 		return e
 	}
-	o, e := g.ownership(ctx, a)
-	if e != nil {
-		return e
+	return g.validateCurrentCollectors(ctx, a)
+}
+
+// Read the original epoch, actual gate and complete participant predicate in
+// one CURRENT statement after the full authority check above. No fact, clock
+// or successful result survives this call. Recovery's ownership reconciliation
+// remains separate: only an actually held gate can admit forward source IO.
+func (g SQLCaptureGate) validateCurrentCollectors(ctx context.Context, a d.Authority) error {
+	var scope, owner, phase string
+	var acquire, generation, actual uint64
+	var held sql.NullInt64
+	var pausedBeforeDeadline bool
+	err := g.Authority.DB.QueryRowContext(ctx, `SELECT r.application_scope,r.acquire_token,r.held_token,COALESCE(g.owner,''),g.phase,g.generation,g.fencing_token,
+COALESCE(UTC_TIMESTAMP(6)<g.hold_deadline AND NOT EXISTS (SELECT 1 FROM system_backup_participants p WHERE p.scope=g.scope AND (p.generation<>g.generation OR p.state<>'paused' OR p.resume_result<>'none')),FALSE)
+FROM system_backup_v2_runtime_captures r JOIN system_backup_gate g ON g.scope=r.application_scope
+WHERE r.task_public_id=? AND r.gate_generation=?`, a.TaskPublicID, a.MaintenanceFencingToken).Scan(&scope, &acquire, &held, &owner, &phase, &generation, &actual, &pausedBeforeDeadline)
+	if err != nil || scope != g.Authority.ApplicationScope {
+		return ErrExecutionAuthority
 	}
-	return (app.Gate{DB: g.Authority.DB}).ValidateCapture(ctx, o)
+	if generation != a.MaintenanceFencingToken || owner != a.TaskPublicID || (phase != "acquiring" && phase != "held" && phase != "releasing") {
+		return ErrExecutionRecoveryRequired
+	}
+	if (actual != acquire && actual != acquire+1) || (held.Valid && uint64(held.Int64) != actual) {
+		return ErrExecutionAuthority
+	}
+	if phase != "held" || !pausedBeforeDeadline {
+		return app.ErrFence
+	}
+	return nil
 }
 
 // CollectorsStopped is called ONLY by the Job owner after revocation and actual

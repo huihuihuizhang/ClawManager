@@ -1,0 +1,111 @@
+{
+  "Version": 13,
+  "HEAD": "020471a669080e535f7c485287fd14924e15f346",
+  "ReviewedMainline": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+  "LinkedBuildCommit": "020471a669080e535f7c485287fd14924e15f346",
+  "Test": "TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL",
+  "Session": 3798,
+  "ExitCode": 1,
+  "Closed": true,
+  "CaseSeconds": 104.59,
+  "PackageSeconds": 107.882,
+  "Task": "sbk_6224c357-1e28-4b8e-ac30-ae84026fdcda",
+  "Schema": "ad_d_six_9588d42e1c27ddb9",
+  "FirstFailure": "Database using key-check rejected on the original 30s key/context/source deadline, after 409 calls; wrapper formal capture provider_permission_denied; task runner_failed",
+  "OriginalGateAcquireSeconds": 60,
+  "OriginalGateHoldSeconds": 600,
+  "OriginalPolicy": "30/5/1",
+  "SourceUnchangedDuringRun": true,
+  "NoRepeat": true,
+  "ActualReadOnly": {
+    "Status": "failed",
+    "FailureCategory": "runner_failed",
+    "RowVersion": 8,
+    "ClaimOwnerPresent": false,
+    "Candidate104": 0,
+    "Material": 0,
+    "Send121": 0,
+    "Observation107": 0,
+    "External102": 0,
+    "RuntimeCaptures": 1,
+    "RuntimeWriters": 4,
+    "RuntimeResources": 24,
+    "StopProofs": 10,
+    "WritersPaused": 4,
+    "WritersResumed": 4,
+    "AppGate": "idle",
+    "GateGeneration": 1,
+    "AdmissionOwnerPresent": false,
+    "MaintenanceGate": "idle",
+    "MaintenanceOwnerPresent": false,
+    "OwnedAccounts": 0,
+    "OwnedSessions": 0,
+    "OriginalDesiredSQLStatus": "instance7 running / instance9 stopped / team20 running"
+  },
+  "DatabaseCost": {
+    "SourceOpenNanos": 124062900,
+    "KeyRemainingAfterOpenNanos": 29491673200,
+    "SourceAuthorizeCalls": 801,
+    "SourceAuthorizeNanos": 717325200,
+    "StreamNanos": 29493301800,
+    "KeyCheckCalls": 409,
+    "KeyCheckFailures": 1,
+    "KeyCheckClientNanos": 28759728100,
+    "KeyCheckAuthorizeNanos": 28004721200,
+    "PermitStageNanos": 6927865500,
+    "CommitNanos": 3673901400,
+    "CollectorsNanos": 3467604400,
+    "OriginalPlanNanos": 3286597900,
+    "KeyEndCalls": 0,
+    "CandidateCalls": 0
+  },
+  "NoClaim": "No all11/fullMF/upload worker/results/fullC/MF/marker/native publication cleanup or final success in this run",
+  "TimingCaution": "Authorize overlaps child stages. Ranked individual totals are diagnostic DATA, never permission or a parent-plus-child sum. The last rejection is measured in Collectors after original transaction commit. No PFS3572 sample in this run is not retrospective proof of no blocker.",
+  "RecoveryCaution": "Observed durable pause/resume and stop-proof counts, idle gates, unchanged desired SQL statuses, natural account/session cleanup. This does not independently certify every physical source restoration.",
+  "Evidence": [
+    {
+      "File": "a-original-manifest-upload-native-source-v13.json",
+      "SHA256": "6cfa911cb01fe7f8bda336a410644e0ff1b4cbc82e67af81d1e5a0ac2f2d1440"
+    },
+    {
+      "File": "a-original-manifest-upload-native-launch-v13.json",
+      "SHA256": "211aa05154cc2955d1626fed16b89e7e11ce9193fa4d9d70ab5e556120e508d4"
+    },
+    {
+      "File": "a-original-upload-sql-exclusive-v13.log",
+      "SHA256": "72498cc0b1f28736f6bd4e3e90f72f189745c0ae7ed788abb5b84605af62801d"
+    },
+    {
+      "File": "a-original-manifest-upload-native-v13.log",
+      "SHA256": "6624de79851cd5e3bbdbb5685080b85fd6c50d160a834f855136a8676c9570ad"
+    },
+    {
+      "File": "a-original-manifest-upload-native-process-v13.json",
+      "SHA256": "1208bb59594c9c000c9fadb147193e0b52c3b4884a2dd71062eee764edbb104d"
+    },
+    {
+      "File": "a-original-control-log-summary-v13.json",
+      "SHA256": "70aeccf7ea7d179e1d3708ca1420c40d1690dcd4fdd92fd3a98eabc2a8f45b40"
+    },
+    {
+      "File": "a-original-failure-boundary-v13.log",
+      "SHA256": "7c85ace9f349df63aa311213a61bccda728cb9e6597b04a8d6053cfb284d2cc4"
+    },
+    {
+      "File": "a-original-quiesce-recovery-v13.log",
+      "SHA256": "1b95705b9d5079b3d79a26bde7df390507c70de5fe1350cd5251b0f7c8ec2905"
+    },
+    {
+      "File": "a-read-failure-boundary-v13.go",
+      "SHA256": "932d956dea26a1600bd248b1e8fc0b61a10764df0c4b5529a30acfdd87b7ed72"
+    },
+    {
+      "File": "a-read-quiesce-recovery-v13.go",
+      "SHA256": "d1c9aad5242f85b517e62c6b2ef8feaa86145ab04ebccf080fe295abcaccdf77"
+    },
+    {
+      "File": "a-summarize-original-control-log-v1.py",
+      "SHA256": "df1f314c6e1e20786008d0e8d920ac58d60a43a592615e6fc3b5e274bf10850b"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "Version": 13,
+  "HEAD": "020471a669080e535f7c485287fd14924e15f346",
+  "LinkedBuildCommit": "020471a669080e535f7c485287fd14924e15f346",
+  "StartedAt": "2026-11-01T19:13:36.3778781Z",
+  "Window": "Explicit coordinator release after NB54913/SQL93244 natural close and root66099 natural close",
+  "PreflightSHA256": "72498cc0b1f28736f6bd4e3e90f72f189745c0ae7ed788abb5b84605af62801d"
+}

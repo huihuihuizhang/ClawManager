@@ -1,0 +1,48 @@
+package main
+
+import (
+ "context"
+ "crypto/tls"
+ "crypto/x509"
+ "database/sql"
+ "encoding/json"
+ "fmt"
+ "os"
+ "time"
+ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+ var c struct {Host,User,Password,CAFile,TLSServerName,ServerUUID string; Port int}
+ raw,err:=os.ReadFile(os.Args[1]); must(err); must(json.Unmarshal(raw,&c)); clear(raw)
+ if c.Host!="127.0.0.1" || c.Port!=63507 || c.ServerUUID!="f3756194-d52b-11f1-b8cc-745d22085e06" { panic("wrong isolated SQL identity") }
+ pem,err:=os.ReadFile(c.CAFile); must(err); roots:=x509.NewCertPool(); if !roots.AppendCertsFromPEM(pem) {panic("CA")}
+ must(mysql.RegisterTLSConfig("a-upload-readonly",&tls.Config{RootCAs:roots,ServerName:c.TLSServerName,MinVersion:tls.VersionTLS13}))
+ cfg:=mysql.NewConfig(); cfg.User=c.User; cfg.Passwd=c.Password; cfg.Net="tcp"; cfg.Addr="127.0.0.1:63507"; cfg.DBName="ad_d_six_9588d42e1c27ddb9"; cfg.TLSConfig="a-upload-readonly"; cfg.Timeout=5*time.Second
+ db,err:=sql.Open("mysql",cfg.FormatDSN()); must(err); defer db.Close()
+ ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second); defer cancel()
+ tx,err:=db.BeginTx(ctx,&sql.TxOptions{ReadOnly:true}); must(err); defer tx.Rollback()
+ var uuid string; must(tx.QueryRowContext(ctx,"SELECT @@server_uuid").Scan(&uuid)); if uuid!=c.ServerUUID {panic("SQL UUID mismatch")}
+ task:="sbk_6224c357-1e28-4b8e-ac30-ae84026fdcda"
+ var category string; must(tx.QueryRowContext(ctx,"SELECT failure_category FROM system_backup_v2_backups WHERE public_id=?",task).Scan(&category)); fmt.Println("task-failure-category",category); var status string; var cancellable, owner bool; var version uint64
+ var lease, deadline, clock sql.NullString
+ must(tx.QueryRowContext(ctx,"SELECT status,can_cancel,row_version,controller_owner IS NOT NULL,controller_lease_expires_at,deadline_at,UTC_TIMESTAMP(6) FROM system_backup_v2_backups WHERE public_id=?",task).Scan(&status,&cancellable,&version,&owner,&lease,&deadline,&clock))
+ fmt.Println("task",task,"status",status,"can-cancel",cancellable,"version",version,"owner",owner,"lease",lease.String,"deadline",deadline.String,"clock",clock.String)
+ var ttl, hb, rec int64
+ var jsonTTL,jsonHB,jsonRec string
+ must(tx.QueryRowContext(ctx,"SELECT cfg.controller_claim_ttl_seconds,cfg.controller_claim_heartbeat_seconds,cfg.controller_reconcile_interval_seconds,JSON_UNQUOTE(JSON_EXTRACT(CONVERT(b.config_snapshot_json USING utf8mb4),'$.durations.controller_claim_ttl_seconds')),JSON_UNQUOTE(JSON_EXTRACT(CONVERT(b.config_snapshot_json USING utf8mb4),'$.durations.controller_claim_heartbeat_seconds')),JSON_UNQUOTE(JSON_EXTRACT(CONVERT(b.config_snapshot_json USING utf8mb4),'$.durations.controller_reconcile_interval_seconds')) FROM system_backup_v2_backups b JOIN system_backup_v2_configs cfg ON cfg.origin_installation_id=b.origin_installation_id AND cfg.version=b.config_version AND cfg.config_sha256=b.config_snapshot_sha256 WHERE b.public_id=?",task).Scan(&ttl,&hb,&rec,&jsonTTL,&jsonHB,&jsonRec))
+ fmt.Println("materialized-policy",ttl,hb,rec,"original-snapshot-policy",jsonTTL,jsonHB,jsonRec,"caller-native-frozen-policy",30,5,1)
+ queries:=[]struct{Name,SQL string}{
+  {"candidate104","SELECT COUNT(*) FROM system_backup_v2_staging_resources WHERE backup_public_id=? AND resource_type='remote_manifest_candidate'"},
+  {"material","SELECT COUNT(*) FROM system_backup_v2_evidence WHERE owner_target_public_id=? AND public_id LIKE 'sev!_pub!_material!_%' ESCAPE '!'"},
+  {"send121","SELECT COUNT(*) FROM system_backup_v2_job_send_intents WHERE task_public_id=? AND phase='publish'"},
+  {"observation107","SELECT COUNT(*) FROM system_backup_v2_job_observations WHERE target_public_id=? AND phase='publish'"},
+  {"external102","SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_public_id=?"},
+ }
+ for _,q:=range queries {var count int;must(tx.QueryRowContext(ctx,q.SQL,task).Scan(&count));fmt.Println(q.Name,count)}
+}
+func must(err error) { if err!=nil {panic(err)} }
+
+
+
+
