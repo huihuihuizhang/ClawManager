@@ -355,6 +355,7 @@ func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
 	}
 	connection.User, connection.Passwd = user, pass
 	// Match the dedicated public metadata constructor's driver transport.
+	// All TLS/UTC/account pins, SQL locks and parameter values stay original.
 	connection.InterpolateParams = true
 	f.control, err = sql.Open("mysql", connection.FormatDSN())
 	connection.Passwd = ""
@@ -668,7 +669,17 @@ func TestProductionSameTaskOriginalProviderDeniedStopsBeforeResumeMySQL(t *testi
 }
 
 func runDOriginalSixPartCapture(t *testing.T, denyGenerate, completeCapture bool) {
+	runDOriginalSixPartCaptureValidated(t, denyGenerate, completeCapture, nil)
+}
+
+// A's continuation can consume the SAME actual task while its original SQL,
+// native candidate files and local services remain live. The callback runs only
+// after successful original Store.Record has really entered validating.
+func runDOriginalSixPartCaptureValidated(t *testing.T, denyGenerate, completeCapture bool, afterValidated func(context.Context, *dOriginalSixPartTask, c.ExecutionWork, []d.ModuleResult)) {
 	t.Helper()
+	if afterValidated != nil && (denyGenerate || !completeCapture) {
+		t.Fatal("validated continuation requires the complete successful original capture")
+	}
 	f := newDOriginalSixPartTask(t)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
@@ -784,12 +795,35 @@ func runDOriginalSixPartCapture(t *testing.T, denyGenerate, completeCapture bool
 			}
 		}
 		f.workers.mu.Unlock()
+		if recordErr := f.service.Runtime.Loop.Store.Record(ctx, *capture, c.ExecutionOutcome{Err: err}); recordErr != nil {
+			t.Log("original failed capture outcome remains unreconciled", recordErr)
+		}
 		t.Fatal("same-task original Pause/worker/Evidence/Stop/Resume Capture", err)
 	}
 	if len(results) != 10 {
 		t.Fatalf("original same-task captured %d parts, expected 10", len(results))
 	}
+	f.workers.active.Wait()
+	f.workers.mu.Lock()
+	completed, dispatches, projections, checks, active := f.workers.completed, f.workers.heldDispatches, len(f.workers.projections), f.workers.resumeChecks, f.workers.running
+	for name, workerErr := range f.workers.errors {
+		if workerErr != nil {
+			t.Errorf("original positive worker %s: %v", name, workerErr)
+		}
+	}
+	f.workers.mu.Unlock()
+	if completed != 10 || dispatches != 10 || projections != 10 || checks != 2 || active != 0 {
+		t.Fatal("original ten-part worker/SQL permit/held/stop-before-resume facts", completed, dispatches, projections, checks, active)
+	}
+	f.checkOriginalPhysicalRecovery(ctx, t, 10)
 	if err = f.service.Runtime.Loop.Store.Record(ctx, *capture, c.ExecutionOutcome{Results: results}); err != nil {
 		t.Fatal("same-task original encrypted capture-result/validating outcome", err)
+	}
+	var finalStatus string
+	if f.control.QueryRowContext(ctx, "SELECT status FROM system_backup_v2_backups WHERE public_id=?", f.publicID).Scan(&finalStatus) != nil || finalStatus != "validating" {
+		t.Fatal("original positive Record did not enter validating", finalStatus)
+	}
+	if afterValidated != nil {
+		afterValidated(ctx, f, *capture, results)
 	}
 }

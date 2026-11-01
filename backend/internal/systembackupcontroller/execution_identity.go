@@ -176,7 +176,7 @@ func (p *PinnedExecutionIdentity) current(a d.Authority, now time.Time) error {
 	}
 	// The private constructor authenticated this exact bounded document and
 	// owns its decoded grant. Re-open/read/hash/compare the CURRENT file every
-	// time; removal or any replacement still revokes it. Re-parsing/verifying
+	// time; removal or any byte change still revokes it. Re-parsing/verifying
 	// identical immutable bytes adds no current fact. All caller SQL, purpose,
 	// profile, key-file, owner and original time checks remain unchanged.
 	if recordHash(raw) != p.digest || !bytes.Equal(raw, p.authenticated) {
