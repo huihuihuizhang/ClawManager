@@ -1,0 +1,15 @@
+✔ default offline execution reports missing materials and cannot claim readiness (336.6795ms)
+✔ reuses capacity contract and rejects unsafe target without reflecting secrets (171.9273ms)
+✔ entry point has no subprocess/network execution and no live opt-in (150.7263ms)
+✔ remote/device/ADS/escape paths fail before any filesystem probe for read and write (11.8095ms)
+✔ existing ancestor junction/symlink blocks reads and output without following it (1.1377ms)
+✔ local JSON larger than sixteen bytes is accepted and output never overwrites (455.7857ms)
+✔ material file size enforces sixteen MiB including exact boundary (0.9294ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1374.5401

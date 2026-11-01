@@ -895,5 +895,172 @@
         "sha256": "01c569b24ca547974a9934d883160d70d7610fa8e746efdb84859c8af51a5af8"
       }
     ]
+  },
+  "A_actual_original_container_writer_independent": {
+    "outcome": "PASS",
+    "source": "62ba63d424439480ae2902800f46651e26eb05f4",
+    "initial_local_integration": "fba896486f803cbb7b1b76f724012b3b86594c3b",
+    "tested_and_precapture_linked_commit": "0e8fe70db2a5884e9da675109c25ddc4ad45bf00",
+    "exact_owner_go_files": {
+      "backend/internal/systembackup/staging/file.go": "a2c29c877a063ae810b36e54958dbfbdf53f53a5bbc3656662513d77a6b5669a",
+      "backend/internal/systembackup/staging/file_guarded_cancel_test.go": "2c7135ece946f09562078b39577529e4088ef65b3d74d6301270fe4039438674",
+      "backend/internal/systembackup/staging/file_guarded_test.go": "09fe25ec46177d4e1c0759c07a77374963512f7cf0a68a2a51e1c3f80a702bdb",
+      "backend/internal/systembackup/staging/formal.go": "ab6d185c6e43a74c4ebb67e4bb4db3e1124c9dc65305b815af5536205fa9fee7",
+      "backend/internal/systembackup/staging/observe.go": "784c2b0eb15d168ee8a95364b7df40da215fdb3c34efd3f93d8450f4767b0d31",
+      "backend/internal/systembackupexecution/publication_container.go": "efa4f0b1d20ac8379bea8e00576110e3e8b2cf557e81a3f892bf520302f77840",
+      "backend/internal/systembackupexecution/publication_container_mysql_test.go": "9afce6900c6e900c5b34103b598df2907d86d392ffd6f5beefb81ac46db8b610",
+      "backend/internal/systembackupexecution/publication_same_task_mysql_test.go": "58e08925db8f8007564c0840d3a2078d7f1ac383df8cb041c26ddfe0678dbaa4",
+      "backend/internal/systembackuppartcontainer/writer.go": "6245a9e2efccafe90adb201ed2cb1f0c45b07bee9a468d9efb649c2fe7e277f0",
+      "backend/internal/systembackuppartcontainer/writer_lazy_test.go": "74ae89f4a5f8e7a7d4bdc574325d8acc8968303d572b9d4c581c78ecd5f91e4c"
+    },
+    "task": "sbk_6c4d3c03-bcb3-439c-8281-9fe41e4a5129",
+    "certificate_sha256": "d105de3ea1675bf13fa8600ac8be33f70c8dbcd45cde21c800b4d976607671cb",
+    "native_case_seconds": 181.68,
+    "native_package_seconds": 185.025,
+    "session": {
+      "87013": {
+        "terminal_exit": 0,
+        "closed": true
+      }
+    },
+    "scope": "Original formal HTTP task and actual worker flows with local native TLS SQL/provider/control code and explicit Kubernetes/kubelet fixture models. All six requested parts/ten worker results, original stop/resume and Store.Record validating, independent fullC/AEAD/EOF/domain/SecretPolicy, real committed Stage/single local provider Sign/public signature verification/knownbytes and six rolledback codec faults, then actual original private C copies into six physical container files. No source recapture, re-encryption or new DEK for container assembly.",
+    "containers": {
+      "business_original_C_members": 8,
+      "actual_files": 6,
+      "actual_total_physical_bytes": 53979,
+      "readback": "Actual complete local files rehashed and independently parsed with exact member bytes/envelopes/checkpoints/offsets/whole physical SHA and EOF. FixedObject version in this test is explicitly named LOCAL structural DATA, not a native remote object version."
+    },
+    "resource_safety": "Lazy open holds one C/envelope at a time; closes acquired files on every success/error path. Guarded hashing retains independent context cancellation and original current task checks; no source permission or original DEK/nonce/permit lifetime is extended.",
+    "original_cancel_counter": {
+      "old_frozen_wip_fail_seconds": 0.733,
+      "setup_failure_seconds": 0.764,
+      "fixed_frozen_wip_pass_seconds": 0.692,
+      "note": "Original root counter is now permanently included in file_guarded_cancel_test.go; full staging package passed. Old setup failure was not a vulnerability proof."
+    },
+    "initial_affected_package_seconds": {
+      "staging": 14.415,
+      "partcontainer": 6.982,
+      "execution": 33.905
+    },
+    "limitations": "No actual upload-only Job, native artifact fixed-version publication/readback, complete MF/acceptance/catalog/final task success or independent restore proven. No multi-GiB IO or long-running claim renewal proof. No installed original material or remote/Linux deployment approval."
+  },
+  "root_capture_transport_performance": {
+    "outcome": "Security/parameter semantics and complete local capture/container regression PASS; broad performance guarantee not claimed",
+    "same_transaction_reference_optimization_commit": "ec24a7bc414285f47126fa0cba4a5bd73d4a9be4",
+    "source_transport_commit": "0e8fe70db2a5884e9da675109c25ddc4ad45bf00",
+    "changes": [
+      "Each request still performs its real original SQLStore.Bind and all registry mutation, current grant/capability/mapping/revocation/clock checks. Only an exactly identical already-locked reference permits retaining that same transaction snapshot after the original no-op mutation, instead of a redundant second full Bind. Changed references still rebind. No cross-request authority cache.",
+      "Source/restore MySQL transport uses the pinned driver UTF-8 parameter interpolation, matching existing control transport. SQL parameter values, TLS verification, raw value/NULL/UTC semantics, queries, locks and source authorization remain. No multi-statements/plaintext fallback enabled."
+    ],
+    "security_regression": {
+      "native_package_seconds": 50.275,
+      "session": 71974,
+      "terminal_exit": 0,
+      "closed": true,
+      "scope": "Actual SQL/mTLS handler valid/unknown reserve ACK/revoked-after-login/issuer expiry; original SQL guard mutations/latest attempt/cancel/owner mapping boundaries; actual issuer/current login revocation/nanosecond deadlines."
+    },
+    "source_parameters": {
+      "baseline": "Native SELECT/session-only test passed byte semantics but FAILED because implicit server prepares rose0->14; original failure retained.",
+      "final_native_package_seconds": 3.228,
+      "scope": "Pinned localhost TLS/UUID/UTC production connection; exact quote, binary including NUL, NULL, empty, Unicode and integer parameters under ordinary and NO_BACKSLASH_ESCAPES modes; zero implicit prepare operations. Separate original source revocation test still stops before next table. Later mode setup was strengthened to force both distinct modes."
+    },
+    "default_package_seconds": {
+      "permit_adapter": 7.578,
+      "kek_registry": 0.33,
+      "execution_before_transport": 10.679,
+      "worker_after_transport": 36.501,
+      "execution_after_transport": 9.847
+    },
+    "final_database_capture": {
+      "source_authorize_calls": 880,
+      "source_authorize_ms": 785.1171,
+      "stream_seconds": 27.4280912,
+      "original_window_seconds": 29.6239437,
+      "original_default_lease": "30s/5s; unchanged"
+    },
+    "prior_native_reds_retained": [
+      {
+        "session": 81915,
+        "terminal_exit": 1,
+        "closed": true,
+        "package_seconds": 185.592,
+        "case_seconds": 181.66,
+        "source_checks": 599,
+        "stream_seconds": 29.4647088,
+        "scope": "Original fba code; database provider_permission_denied before certificate/container.",
+        "log": ".tools/supervisor-a-original-container-final-native.log"
+      },
+      {
+        "session": 19716,
+        "terminal_exit": 1,
+        "closed": true,
+        "package_seconds": 161.616,
+        "case_seconds": 157.59,
+        "source_checks": 865,
+        "stream_seconds": 29.4664762,
+        "scope": "Same fba plus CPU/runtime tracing only, still before certificate/container.",
+        "log": ".tools/supervisor-a-original-container-diagnostic-native.log"
+      },
+      {
+        "session": 56141,
+        "terminal_exit": 1,
+        "closed": true,
+        "package_seconds": 145.058,
+        "case_seconds": 141.71,
+        "source_checks": 845,
+        "stream_seconds": 29.4784557,
+        "scope": "No-op Bind optimization alone; insufficient to complete full source. Not relabeled as performance success.",
+        "log": ".tools/supervisor-a-original-container-unchanged-permit-native.log"
+      }
+    ],
+    "profiling_limitations": "CPU sample totals are not walltime; no claim of uniquely proven root cause, isolated speedup for each change, production load robustness or large-body performance. Local original complete capture succeeds with both equivalent IO changes; old failures preserved. No deadline, nonce, original key-use Until, source rows or readiness altered.",
+    "logs": [
+      {
+        "path": ".tools/supervisor-a-original-container-source-transport-native.log",
+        "sha256": "92a5adeb0e44566f3e6df375d0f4478ea1baca3dc8a2fabfa7347d5b0d2135b7"
+      },
+      {
+        "path": ".tools/supervisor-a-original-container-final-packages.log",
+        "sha256": "73a3b7228fa337864b3548915a1e07e80b935beddd7b6a5f6d3596f18badfa3e"
+      },
+      {
+        "path": ".tools/supervisor-unchanged-permit-reference-packages.log",
+        "sha256": "9c7bf4801f8dea8488f0dc889ff2166dd8da93201ea1e68461e7c676d99e6dd1"
+      },
+      {
+        "path": ".tools/supervisor-unchanged-permit-reference-native.log",
+        "sha256": "c88ca17f7a2954c544fc10601ebdd7b2b7e7c865a9e3962d1136b3587cffdb3c"
+      },
+      {
+        "path": ".tools/supervisor-source-transport-prepare-baseline.log",
+        "sha256": "8f1bf8b627c49ec25e02db2196ce7a312a6b15de524ec83663820c51cf940775"
+      },
+      {
+        "path": ".tools/supervisor-source-transport-prepare-final-native.log",
+        "sha256": "b733168157e113f889a51cc1d734e16b7bd62df4445b71b3bdeff8bf0cbc0e4c"
+      },
+      {
+        "path": ".tools/supervisor-source-transport-final-packages.log",
+        "sha256": "08ab775bafc99857e7873ba104c764a7c3e690821898864a6074defea1e94d18"
+      }
+    ],
+    "preserved_external_restoration_integration": {
+      "remote_backup": "55b62cf02a1a60b1e87894146d7aaa3a148ad3e3",
+      "local_merge": "e7366691d46ff4a1d29370da9e5907b06d731c02",
+      "scope": "Preserved other authorized supervisor reviewed28-file restore delivery and both different worker/database.go hunks. No conflicts, no force/reset. Source transport InterpolateParams retained; newSkillsRestore/frozenrestore request retained.",
+      "post_merge_default_package_seconds": {
+        "domain": 3.615,
+        "worker": 36.566,
+        "profile": 3.173,
+        "systembackupskillhub": 1.71,
+        "execution": 9.726
+      },
+      "session": 57410,
+      "terminal_exit": 0,
+      "closed": true,
+      "log": ".tools/supervisor-container-transport-merged-restoration-packages.log",
+      "log_sha256": "d161a61ffbda4d9780e31edcc0689bacc571b51025a2c0c7ca549737b837fc9c",
+      "native_scope": "Actual full originalC/cert/container proof remains exactpre-merge0e8 commit as recorded, not silently relabeled as another linkedHEAD. Restore-only integration separately covered by these five packages; no formal complete artifact/restore claimed."
+    }
   }
 }

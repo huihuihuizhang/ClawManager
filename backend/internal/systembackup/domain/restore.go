@@ -109,6 +109,12 @@ func restoreDrill(ctx context.Context, db *sql.DB, target DrillTarget, source Sn
 				v := r[c.Name]
 				if !v.Null {
 					args[i] = v.Bytes
+					// database/sql's MySQL driver encodes []byte(nil) as SQL
+					// NULL. Cloning/decoding a non-NULL empty cell may produce
+					// nil bytes, but its explicit Null bit remains authoritative.
+					if v.Bytes == nil {
+						args[i] = []byte{}
+					}
 				}
 			}
 			if _, err = stmt.ExecContext(ctx, args...); err != nil {
@@ -211,6 +217,9 @@ func checkBlankPolicy(ctx context.Context, tx *sql.Tx, tables []Table, policy Po
 // The grant check rejects roles, wildcard grants and write privileges rather
 // than accepting a read-only transaction as proof of independent permissions.
 func VerifyDrill(ctx context.Context, db *sql.DB, target DrillTarget, plan RestorePlan) error {
+	if err := VerifySkillQuarantineContext(ctx, plan.Data); err != nil {
+		return err
+	}
 	if err := VerifyTeamQuarantine(plan.Data); err != nil {
 		return err
 	}
