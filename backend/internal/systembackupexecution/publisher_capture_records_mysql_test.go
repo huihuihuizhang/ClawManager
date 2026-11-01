@@ -189,7 +189,13 @@ func newPublisherHistoryFixture(t *testing.T, configure ...func(*consumerFixture
 	fixture.scope = s.PublisherCaptureScope{BackupPublicID: a.TaskPublicID, Claim: s.SQLSigningClaim{ControllerOwner: token.Owner, RowVersion: token.RowVersion}, CaptureAttemptNo: a.AttemptNo, Part: partName}
 	// Kube calls must happen with NO original SQL read transaction held.
 	owner.Client.(*kubefake.Clientset).PrependReactor("*", "*", func(ktesting.Action) (bool, kruntime.Object, error) {
-		if db.Stats().InUse != 0 {
+		active := db.Stats().InUse != 0
+		if options.ConcurrentPublisherSQLTrace != nil {
+			// A second real session may hold its own transaction. The
+			// concurrency fixture traces this calling goroutine's actual TX.
+			active = options.ConcurrentPublisherSQLTrace.active()
+		}
+		if active {
 			t.Error("Kubernetes I/O while original metadata SQL transaction held")
 		}
 		return false, nil, nil

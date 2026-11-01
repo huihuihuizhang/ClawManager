@@ -14,10 +14,14 @@ import (
 // C records and the known original signed certificate. It creates no new
 // capture, signature, key use, native version, artifact send or acceptance.
 func (s *DeploymentService) prepareOriginalPublicationBootstrap(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture) ([]byte, error) {
+	return s.prepareOriginalPublicationBootstrapMode(ctx, claim, attempt, policy, capture, false)
+}
+
+func (s *DeploymentService) prepareOriginalPublicationBootstrapMode(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture, freshPreparation bool) ([]byte, error) {
 	if s == nil || claim == nil || !capture.checked() || !formalCandidateDigest(capture.DescriptionSHA256) {
 		return nil, c.ErrExecutionRecord
 	}
-	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy}
+	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy, freshPreparation: freshPreparation}
 	if err := guard.current(ctx, true); err != nil {
 		return nil, err
 	}

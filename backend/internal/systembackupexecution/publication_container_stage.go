@@ -114,10 +114,14 @@ func samePublicationContainerStage(a, b publicationCertificateSQLFacts) bool {
 }
 
 func (s *DeploymentService) ensurePublicationContainerDirectory(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture) (*publicationContainerDirectory, error) {
+	return s.ensurePublicationContainerDirectoryMode(ctx, claim, attempt, policy, capture, false)
+}
+
+func (s *DeploymentService) ensurePublicationContainerDirectoryMode(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture, freshPreparation bool) (*publicationContainerDirectory, error) {
 	if s == nil || claim == nil || !capture.checked() || attempt != capture.Input.CaptureAttemptNo || claim.Target.PublicID != capture.Input.TaskPublicID {
 		return nil, c.ErrExecutionAuthority
 	}
-	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy}
+	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy, freshPreparation: freshPreparation}
 	if err := guard.current(ctx, true); err != nil {
 		return nil, err
 	}
