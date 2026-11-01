@@ -31,7 +31,7 @@ func TestArtifactReadOnlyVersionDiscoverySurvivesReplacedLatest(t *testing.T) {
 			if err := os.Remove(store.config.WriteCredentialFile); err != nil {
 				t.Fatal("remove named write fixture", err)
 			}
-			reader, err := NewArtifactReadOnlyS3(material)
+			reader, err := NewArtifactReadOnlyS3(material, ArtifactReadLimits{MaxArtifactBytes: 16 << 30, MaxIndexBytes: 512 << 20})
 			if err != nil {
 				t.Fatal("independent read-only material", err)
 			}

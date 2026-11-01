@@ -18,7 +18,7 @@ func TestArtifactReadMaterialRetainsOriginalSafeRootsAndScope(t *testing.T) {
 		if original.validate() != nil {
 			t.Fatal("original target rejected safe fixture root")
 		}
-		reader, err := NewArtifactReadOnlyS3(current)
+		reader, err := NewArtifactReadOnlyS3(current, ArtifactReadLimits{MaxArtifactBytes: 16 << 30, MaxIndexBytes: 512 << 20})
 		if err != nil {
 			t.Fatal("original safe root became unreadable", root, err)
 		}
@@ -37,7 +37,7 @@ func TestArtifactReadMaterialRetainsOriginalSafeRootsAndScope(t *testing.T) {
 	for _, root := range []string{"archive/no-trailing-slash", "/absolute/", "../escape/", "safe/../escape/", "safe//empty/", "safe/./dot/"} {
 		current := material
 		current.Root = root
-		if reader, err := NewArtifactReadOnlyS3(current); err == nil {
+		if reader, err := NewArtifactReadOnlyS3(current, ArtifactReadLimits{MaxArtifactBytes: 16 << 30, MaxIndexBytes: 512 << 20}); err == nil {
 			reader.Close()
 			t.Fatal("unsafe root accepted", root)
 		}
