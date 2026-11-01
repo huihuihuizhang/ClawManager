@@ -101,9 +101,13 @@ func validateRestoreTarget(a d.Authority, t RestoreTarget, source SourceDatabase
 	default:
 		return &Failure{"isolation_invalid"}
 	}
-	seen, claims := map[string]bool{}, map[string]bool{}
+	seen, claims, claimNames, volumes := map[string]bool{}, map[string]bool{}, map[string]bool{}, map[string]bool{}
 	for _, s := range t.Storage {
-		if !hexHash.MatchString(s.SourceMountSHA256) || seen[s.SourceMountSHA256] || len(validation.IsDNS1123Subdomain(s.ClaimName)) != 0 || !uuid.MatchString(s.ClaimUID) || !uuid.MatchString(s.PVUID) || claims[s.ClaimUID] || !evidenceID.MatchString(s.WriterProof.PublicID) || !hexHash.MatchString(s.WriterProof.SHA256) {
+		// All claims belong to the single target namespace. Reusing a name with
+		// a different UID is a stale/recreated claim, while reusing a PV under
+		// different claims aliases the physical destination. Neither is a set
+		// of independent restore targets, even with distinct source hashes.
+		if !hexHash.MatchString(s.SourceMountSHA256) || seen[s.SourceMountSHA256] || len(validation.IsDNS1123Subdomain(s.ClaimName)) != 0 || !uuid.MatchString(s.ClaimUID) || !uuid.MatchString(s.PVUID) || claims[s.ClaimUID] || claimNames[s.ClaimName] || volumes[s.PVUID] || !evidenceID.MatchString(s.WriterProof.PublicID) || !hexHash.MatchString(s.WriterProof.SHA256) {
 			return &Failure{"isolation_invalid"}
 		}
 		switch s.Kind {
@@ -119,6 +123,7 @@ func validateRestoreTarget(a d.Authority, t RestoreTarget, source SourceDatabase
 			return &Failure{"isolation_invalid"}
 		}
 		seen[s.SourceMountSHA256], claims[s.ClaimUID] = true, true
+		claimNames[s.ClaimName], volumes[s.PVUID] = true, true
 	}
 	return nil
 }
