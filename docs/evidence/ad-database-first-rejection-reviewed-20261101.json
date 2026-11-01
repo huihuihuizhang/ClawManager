@@ -1,0 +1,97 @@
+{
+  "schema_version": "ad-database-first-rejection-independent-review.v1",
+  "date": "2026-11-01",
+  "base": "7c0a259129631547886b7d13a7e9704bf398b9fd",
+  "owner_source": "4d77beca60873c8d0d20640e17f78f1344902bcc",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/worker/formal_capture.go",
+      "sha256": "1f5fe283aa47041824f69d6d456d004206c36c14b0ada18ebd9f7925a23ad68d",
+      "mode": "owner diagnostic hunks composed on existing root source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_jobs.go",
+      "sha256": "acf611d0b780e70790b9cf80382a48beaf2d0bdc337e7cd60ac2ad30b628b6a4",
+      "mode": "owner diagnostic hunks composed on existing root source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_key_use.go",
+      "sha256": "910ff7abf9359006010c3fcca012fc7736c2cc0debb85fc7d38d4e1e56e7faf9",
+      "mode": "owner diagnostic hunks composed on existing root source"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database_capture_diagnostics.go",
+      "sha256": "ac1b413c06d4aa80fe8b6aa9764debde64b11f1f01acdbab4b30c2d36097edf7",
+      "mode": "exact owner new file"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database_capture_diagnostics_test.go",
+      "sha256": "3c430a756b90b182d1ae9718d66c7c8a3f1d5cea9da3c72cdc227975264f2261",
+      "mode": "exact owner new file"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/database_capture_diagnostics.go",
+      "sha256": "9b600873d3232e109b6d820d542fe9a7f9c9674a42288c34a539940e87bdae02",
+      "mode": "exact owner new file"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/database_capture_diagnostics_test.go",
+      "sha256": "206576443d8e396ec14f7da3cff5044b1272af8f9d968047510747f5c20ec1f1",
+      "mode": "exact owner new file"
+    }
+  ],
+  "composition": {
+    "hunks": {
+      "backend/internal/systembackup/worker/formal_capture.go": 7,
+      "backend/internal/systembackupexecution/public_jobs.go": 2,
+      "backend/internal/systembackupexecution/public_key_use.go": 1
+    },
+    "adaptations": [
+      {
+        "path": "backend/internal/systembackup/worker/formal_capture.go",
+        "hunk": 3
+      },
+      {
+        "path": "backend/internal/systembackup/worker/formal_capture.go",
+        "hunk": 4
+      }
+    ],
+    "explanation": "Two context-only worker adaptations retain the existing root pre-descriptor source shape. All diagnostic changes retained. No A descriptor implementation copied. Four new Go files exactly match owner commit."
+  },
+  "behavior": "Failure-only diagnostics preserve all original source/using-key/sink/callback checks and returned errors. No extra SQL/provider call, new permission, retry, payload reduction or window extension.",
+  "diagnostics": [
+    "First live callback failure context/time is preserved before deferred WithDEK cancellation.",
+    "Original key deadline, callback context deadline and original source deadline are separate fields.",
+    "Database key-check opts into existing BindObserved with fixed stage/class/clock reason and safe structured driver fields.",
+    "Rejected original key transition parses already-read bounded original key row only for fixed SQL-clock classification."
+  ],
+  "privacy": "No SQL text/arguments, raw errors, authority/grants/nonces/tokens/body/identities emitted.",
+  "independent_tests": {
+    "session": 47310,
+    "exit_code": 0,
+    "closed": true,
+    "scope": "Full worker and execution packages after actual minimal root integration; SQL environment credentials/DSN entries disabled. Controller unchanged from separately tested 7c0.",
+    "worker_seconds": 35.703,
+    "execution_seconds": 11.564,
+    "cases": "Actual Formal callback source refusal before DB I/O; hard-failing backend connector; original sink context/key-before/key-tail/write errors and check counts; first-failure snapshot preservation; separate deadlines; private-row/authority non-disclosure.",
+    "log": ".tools\\supervisor-d-database-first-4d77-packages.log",
+    "log_sha256": "49464cba22caf8e8dee50c3d5992ffaacc0703855b5f3dbc2d6b6ef74113f0e0"
+  },
+  "owner_native_observation": {
+    "source": "4d77beca60873c8d0d20640e17f78f1344902bcc",
+    "session": 44103,
+    "closed": true,
+    "exit": 1,
+    "package_seconds": 30.229,
+    "task": "sbk_e9d00fef-33b0-4411-bbf0-e7306eb70c02",
+    "first_boundary": "begin-acquire-rejected gate-row-nowait",
+    "mysql_number": 3572,
+    "sqlstate": "HY000",
+    "log_sha256": "0900c02f4313ab1dc5a98c4dd387fd479108708c359a72b14dd47bd2387f72cb"
+  },
+  "limits": [
+    "Owner native failed before any database worker. New database first-failure diagnostics have no actual native refusal proof yet.",
+    "Earlier database stream provider_permission_denied remains separately undiagnosed.",
+    "No full eleven-member receipt, manifest/upload, immutable final publication, acceptance or terminal success proven by this increment."
+  ]
+}
