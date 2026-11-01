@@ -54,14 +54,18 @@ func signArtifactCatalogContentFixture(t *testing.T, p artifactRegistrationPaylo
 }
 
 func TestArtifactCatalogContentUsesSignedLocatorAndRetainedIndexVersions(t *testing.T) {
-	for _, mode := range []string{"unchanged", "catalog-signature", "manifest-corruption", "index-corruption", "entry-corruption", "wrong-index-context", "foreign-identity", "list-permission-missing"} {
+	for _, mode := range []string{"unchanged", "catalog-signature", "manifest-corruption", "index-corruption", "entry-corruption", "wrong-index-context", "foreign-identity", "list-permission-missing", "large-entry-allowed", "large-entry-over-config", "aggregate-over-config", "reader-budget-rebind"} {
 		t.Run(mode, func(t *testing.T) {
 			store, state := newANativePublicationStore(t, time.Minute)
 			material := artifactReadMaterials(store.config)
 			if err := os.Remove(store.config.WriteCredentialFile); err != nil {
 				t.Fatal(err)
 			}
-			reader, err := NewArtifactReadOnlyS3(material)
+			limits := ArtifactReadLimits{MaxArtifactBytes: 16 << 30, MaxIndexBytes: 512 << 20}
+			if mode == "large-entry-over-config" {
+				limits.MaxArtifactBytes = 8 << 30
+			}
+			reader, err := NewArtifactReadOnlyS3(material, limits)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -74,7 +78,16 @@ func TestArtifactCatalogContentUsesSignedLocatorAndRetainedIndexVersions(t *test
 			if mode == "wrong-index-context" {
 				indexContext = hash([]byte("foreign context DATA"))
 			}
-			index, _ := ce.Canonical(publicationArtifactIndex{Version: "system-backup-artifact-index.v1", Backup: backup, Attempt: 1, CaptureContext: indexContext, Entries: []publicationArtifactEntry{{Path: "parts/original.enc", Role: "encrypted_payload", Size: int64(len(cipher)), SHA256: hash(cipher), Framing: "content-fixture-only"}}})
+			entries := []publicationArtifactEntry{{Path: "parts/original.enc", Role: "encrypted_payload", Size: int64(len(cipher)), SHA256: hash(cipher), Framing: "content-fixture-only"}}
+			if mode == "large-entry-allowed" || mode == "large-entry-over-config" || mode == "aggregate-over-config" {
+				entries[0].Size = 9 << 30
+			}
+			if mode == "aggregate-over-config" {
+				second := entries[0]
+				second.Path = "parts/second.enc"
+				entries = append(entries, second)
+			}
+			index, _ := ce.Canonical(publicationArtifactIndex{Version: "system-backup-artifact-index.v1", Backup: backup, Attempt: 1, CaptureContext: indexContext, Entries: entries})
 			captureHash := hash([]byte("explicit capture record content DATA"))
 			// Minimal parent binding DATA on purpose: ReadCatalogIndex is only a
 			// content locator consumer, never full manifest/acceptance validation.
@@ -154,9 +167,26 @@ func TestArtifactCatalogContentUsesSignedLocatorAndRetainedIndexVersions(t *test
 			}
 			budget := ArtifactVersionSearchBudget{MaxVersions: 10, MaxPages: 3, MaxReadBytes: 4 << 20}
 			content, err := reader.ReadCatalogIndex(context.Background(), catalog, history, 1<<20, 32, budget, time.Now().Add(20*time.Second))
-			if mode == "unchanged" || mode == "entry-corruption" {
+			if mode == "large-entry-allowed" {
+				// Signed catalog/index capacity metadata only. No 9 GiB C body is
+				// present, read or claimed verified by this boundary test.
+				if err != nil || content == nil || content.entries["parts/original.enc"].Size != 9<<30 {
+					t.Fatal("legal >8GiB metadata rejected by old cap", err)
+				}
+			} else if mode == "unchanged" || mode == "entry-corruption" || mode == "reader-budget-rebind" {
 				if err != nil || content == nil {
 					t.Fatal("authenticated parent locator chain unavailable", err)
+				}
+				if mode == "reader-budget-rebind" {
+					wider, err := NewArtifactReadOnlyS3(material, ArtifactReadLimits{MaxArtifactBytes: 32 << 30, MaxIndexBytes: 512 << 20})
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer wider.Close()
+					before := requests
+					if _, err := content.ResolveEntry(context.Background(), wider, "parts/original.enc", budget, time.Now().Add(20*time.Second)); err == nil || requests != before {
+						t.Fatal("authenticated content silently adopted wider budget", err, requests, before)
+					}
 				}
 				object, readErr := content.ResolveEntry(context.Background(), reader, "parts/original.enc", budget, time.Now().Add(20*time.Second))
 				if mode == "entry-corruption" {
