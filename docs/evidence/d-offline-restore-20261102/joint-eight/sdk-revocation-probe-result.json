@@ -1,0 +1,24 @@
+{
+  "session_id": 60884,
+  "natural_exit": 0,
+  "command": "go test -p=1 -count=1 -timeout=45s -run ^TestJointEightSDKRevocationProbe$ -v ./internal/systembackup/domain",
+  "package_seconds": 2.537,
+  "test_seconds": 0.01,
+  "actual_get": {
+    "status": 403,
+    "code": "SignatureDoesNotMatch"
+  },
+  "actual_put": {
+    "status": 403,
+    "code": "SignatureDoesNotMatch"
+  },
+  "original_head": {
+    "status": 403,
+    "code": "AccessDenied"
+  },
+  "sql_server_started": false,
+  "log": "C:\\Users\\13542\\Desktop\\\u65b0\u5efa\u6587\u4ef6\u5939\\ClawManager-D-offline-restore\\.local\\joint-eight-sdk-revocation-probe.log",
+  "log_bytes": 496,
+  "log_raw_sha256": "51ff04ad42e93a264e9d05ba855a727afce7bfd82a0630ca9f51e170a90f4672",
+  "export_raw_sha256": "2917bef875e18ce08a4c8cd788ca426fb0195e23c33a35b089ef68a64fd879b5"
+}

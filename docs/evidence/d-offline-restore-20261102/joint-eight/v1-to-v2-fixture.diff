@@ -1,0 +1,41 @@
+--- v1/joint_eight_export_test.go
++++ v2/joint_eight_export_test.go
+@@ -7,0 +8,2 @@
++	"io"
++	"strings"
+@@ -30,0 +33,18 @@
++}
++
++func TestJointEightSDKRevocationProbe(t *testing.T) {
++	ctx := context.Background()
++	fixture := JointEightObjectsForTest(t, "cm-restore-"+strings.Repeat("a", 32), "img_"+strings.Repeat("b", 32), []byte("owned revocation probe"))
++	if e := fixture.RevokeSource(ctx); e != nil {
++		t.Fatal("actual fixed-version GET/operator PUT revocation", e)
++	}
++	object, e := fixture.Source.client.GetObject(ctx, fixture.Ref.Bucket, fixture.Ref.Key, minio.GetObjectOptions{VersionID: fixture.Ref.Version})
++	if e == nil {
++		_, e = object.Stat()
++		object.Close()
++	}
++	denied := minio.ToErrorResponse(e)
++	t.Logf("original revoked source Stat HEAD: status=%d code=%q", denied.StatusCode, denied.Code)
++	if denied.StatusCode != 403 {
++		t.Fatal("old HEAD probe did not observe actual HTTP403", e)
++	}
+@@ -67 +87 @@
+-				_, e = object.Stat()
++				_, e = io.Copy(io.Discard, object)
+@@ -70,2 +90,4 @@
+-			if minio.ToErrorResponse(e).Code != "SignatureDoesNotMatch" {
+-				return ErrIsolation
++			denied := minio.ToErrorResponse(e)
++			t.Logf("joint revoked source fixed-version actual GET: status=%d code=%q", denied.StatusCode, denied.Code)
++			if denied.StatusCode != 403 || denied.Code != "SignatureDoesNotMatch" {
++				return fmt.Errorf("joint revoked source fixed-version GET: status=%d code=%q: %w", denied.StatusCode, denied.Code, ErrIsolation)
+@@ -74,2 +96,4 @@
+-			if minio.ToErrorResponse(e).Code != "SignatureDoesNotMatch" {
+-				return ErrIsolation
++			denied = minio.ToErrorResponse(e)
++			t.Logf("joint revoked source operator actual PUT: status=%d code=%q", denied.StatusCode, denied.Code)
++			if denied.StatusCode != 403 || denied.Code != "SignatureDoesNotMatch" {
++				return fmt.Errorf("joint revoked source operator PUT: status=%d code=%q: %w", denied.StatusCode, denied.Code, ErrIsolation)

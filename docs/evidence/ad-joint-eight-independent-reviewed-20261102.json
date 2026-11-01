@@ -1,0 +1,205 @@
+{
+  "classification": "ACCEPTED ordinary local same-cohort eight-owner component/test delta after independent latest-backup validation; full end-to-end qualification remains incomplete",
+  "base": "b3c59f0ae544e707dcac4046d24ea5480ea903ad",
+  "owner_source_single_delta": "d68f58a3129b6ed0bb6d2803eb1ba6396d3db26c",
+  "owner_parent_not_merged": "8197c591b0b6c7fa205836d6c8f69d1caec59381 contains excluded history",
+  "owner_delta": {
+    "files": 31,
+    "Go": 4,
+    "evidence": 27,
+    "production_existing_test_module_migration_changes": 0,
+    "all_additions": true,
+    "raw_and_committed_identity_entries_verified": 30,
+    "actual_raw_provenance_files_verified": 6,
+    "author_and_committer": "huihuihuizhang <1825973571@qq.com>"
+  },
+  "review": {
+    "A_initial_four_file_static_review": "completed01a198a8 no confirmed defect; original v1 freeze",
+    "root_v2_exact_fixture_diff": "only new export test HEAD->fixed-version GET with strict403/Signature plus necessary pureSDK probe; other3 unchanged",
+    "actual_protocol_probe": "60884 natural0/package2.537; GET+PUT403 SignatureDoesNotMatch, oldHEAD403 AccessDenied",
+    "preserved_first_failure": "v1 natural1/2.37 before4targets; original raw log/source/binary/cleanup retained",
+    "owner_v2": "65591 natural0/13.03 all4target+twochildrenPASS; normalTLSshutdown/exactrootremoved",
+    "independent_root": {
+      "base": "b3c59f0ae544e707dcac4046d24ea5480ea903ad",
+      "source": "d68f58a3129b6ed0bb6d2803eb1ba6396d3db26c",
+      "build_session": 45970,
+      "build_exit": 0,
+      "startup_session": 89573,
+      "startup_exit": 0,
+      "native_session": 71888,
+      "native_exit": 0,
+      "entry_seconds": 32.18,
+      "scenario_seconds": {
+        "success": 6.61,
+        "evidence-custody-failure": 5.77,
+        "cancel-before-commit": 6.75,
+        "changed-Northbound-source": 5.13
+      },
+      "success_nested_counter_seconds": 0.25,
+      "fresh_children_seconds": [
+        0.23,
+        0.08
+      ],
+      "skips": 0,
+      "cleanup_command_chunk": "58f30e",
+      "cleanup_exit": 0,
+      "cleanup_wall_seconds": 3.450928,
+      "SQL_identity_and_final_state": {
+        "attempt": "713a868d38e14fc499b63c2b12eda0ad",
+        "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-713a868d38e14fc499b63c2b12eda0ad",
+        "port": 50497,
+        "owner_nonce": "0865790ccda842f695ea6d13171f082f",
+        "phase": "normal-tls-shutdown-and-root-removed",
+        "pid": 16828,
+        "front_session": null,
+        "server_uuid": "1f3495c1-d632-11f1-b677-745d22085e06",
+        "ca_sha256": "9e9bddba5dce852033d2b23c7b769ab8618c91d72de82012fc2d315f061990b6",
+        "binary_pins": {
+          "mysqld.exe": "7a976874ef3974d612081960b1c193c663b4434692b6257382352c587e367ad6",
+          "mysql.exe": "4617a66bf7509891d3a7be522d78a141b1d4dc16936c5077ddf119f7dd264b88",
+          "mysqladmin.exe": "44bda80b8adacb890c99e9f3c9a876ca33b6eda2e02f896cd747a95ad1bb15ae"
+        },
+        "native_binary": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-joint-eight\\joint-eight-713a868d38e14fc499b63c2b12eda0ad.test.exe",
+        "native_binary_sha256": "60d1deb65c8b631d4ad7113909bb83ac50f675871fff4c982a2a6eb76a2e020f",
+        "build_exit": 0,
+        "native_exit": 0,
+        "source_scope_sha256": "7e1c150c2d41c28f912b79cfcdd933314628ce3e99d0fa7b081e6e7a3cdaea80",
+        "created_utc": "2026-11-01T20:19:31.6637206Z"
+      },
+      "final_census": "only4systemschemas/root+3lockedbuiltins/other0",
+      "exact_root_removed": true,
+      "source4_equals_frozen_and_d68_and_staged": true,
+      "performance_claim": false,
+      "remote_business_connections": false,
+      "private_keys_committed": false
+    }
+  },
+  "evidence_scope": [
+    "one public encrypted SQL source, all8 named owner tables nonempty, full source digest and fixed-version image binding",
+    "success one observed common TX, COMMITdelta1, all8 raw cells and real expectedSQL/image custody, fresh SELECT-only child",
+    "custody actual closed-root I/O failure and beforecommit cancellation COMMITdelta0, complete SQL rollback, same immutable object residue inventory",
+    "cross-domain source/expected digest counterexamples preserve image-only projection; expected same physical reader Com_select delta0 before targetSELECT",
+    "actual TLS3159/account3118/UPDATE1142 and strictSDK403 revocation; final4sys/root3locked/other0"
+  ],
+  "root_archive": [
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/execution-script.ps1.txt",
+      "raw_bytes": 13323,
+      "raw_sha256": "6d86697234c6effd56d64a64f9776dd5ade60ebae2e8ee9a18065e2bea96e928",
+      "expected_committed_bytes": 13323,
+      "expected_committed_sha256": "6d86697234c6effd56d64a64f9776dd5ade60ebae2e8ee9a18065e2bea96e928",
+      "expected_git_blob": "2343a108c8f0c102af28fa72ea9843de236b15bd",
+      "normalization": "none"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/final-census.json",
+      "raw_bytes": 201,
+      "raw_sha256": "fa632ace2746d7e93e803333ebb2f3235baffb6e3cddb28422ce3d2c8029d6c5",
+      "expected_committed_bytes": 191,
+      "expected_committed_sha256": "d24d1216f7a05cb94bb9eb3f74e58a05aef9dceecaa679806652dbc42bb3ac10",
+      "expected_git_blob": "869dc8129c1fd7864689295866fcbd2fbd671eaf",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/final-state.json",
+      "raw_bytes": 1214,
+      "raw_sha256": "859bbb744fab28d60659dc7c7742c09714cd50973c724fe69cbb08ed0c2e0834",
+      "expected_committed_bytes": 1193,
+      "expected_committed_sha256": "c13cf8517f6fe50f0bdf699ba876809ff5716acfe5481f2f216f0673f4c43494",
+      "expected_git_blob": "fc69590a6ac48513f4c02857ee0163f3777b1355",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/initialize.log",
+      "raw_bytes": 1105,
+      "raw_sha256": "3398f7b17d884bd0ba3f7e7103dd10884be6d251f44a6af61fae532d110986cb",
+      "expected_committed_bytes": 1097,
+      "expected_committed_sha256": "6cc7cecd4eb674154f85ee0294d411b7545b73681aefc515ff759930d53c6267",
+      "expected_git_blob": "8254ec1882851ebd958f4bbdd8dc2c0a06c512a8",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/native.log",
+      "raw_bytes": 3223,
+      "raw_sha256": "26ce9a440feaf6efa8d1800d48ef50e98816cd7daad6d4714a7eb53935d12532",
+      "expected_committed_bytes": 3194,
+      "expected_committed_sha256": "598b91453fdfc359dbf682ef300cb54c0bc405d7623086713d10db8f41b320b3",
+      "expected_git_blob": "effcfb5a5225c30b987088e696c9671e4732e0fd",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/owner-commit-verification.json",
+      "raw_bytes": 11169,
+      "raw_sha256": "36b655c44edd43fddeba2566ad8f36cb53c598bc2698e643673d29478a163025",
+      "expected_committed_bytes": 10973,
+      "expected_committed_sha256": "3a05ddb8ba03470a65f2a61cbbeec897390f6adb8b2979b88b9b80bd3316e5f9",
+      "expected_git_blob": "bd5b043a37f7988128105ec49169d1f6ce522450",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/public-ca.pem",
+      "raw_bytes": 1127,
+      "raw_sha256": "9e9bddba5dce852033d2b23c7b769ab8618c91d72de82012fc2d315f061990b6",
+      "expected_committed_bytes": 1127,
+      "expected_committed_sha256": "9e9bddba5dce852033d2b23c7b769ab8618c91d72de82012fc2d315f061990b6",
+      "expected_git_blob": "bf10fd5e752131e50876785ef39b79e8306eda8f",
+      "normalization": "none"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/run-metadata.json",
+      "raw_bytes": 2224,
+      "raw_sha256": "e492f59f232bd2413ae43ad4204af0892edb72e6d5d4b64b491044febe506b04",
+      "expected_committed_bytes": 2170,
+      "expected_committed_sha256": "c5e7f56c6a8e7e9b68ebd2ca6141a43e36e4b47acd10ee60dbc859380e226a67",
+      "expected_git_blob": "cd13117e637237abd7777ea913d6a2c79d1130ed",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/shutdown.log",
+      "raw_bytes": 2028,
+      "raw_sha256": "f997487415b78f1a7c4078c06801137c5591deafcb378d27a55d623c1c45a539",
+      "expected_committed_bytes": 2015,
+      "expected_committed_sha256": "0a90752179407b485bb56b19113a8a38993ea348869a40ed997fd3a2b3bc6521",
+      "expected_git_blob": "b339fdd9d4e1437496b95031944d754df7413c63",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/source-freeze.json",
+      "raw_bytes": 8372,
+      "raw_sha256": "7e1c150c2d41c28f912b79cfcdd933314628ce3e99d0fa7b081e6e7a3cdaea80",
+      "expected_committed_bytes": 8228,
+      "expected_committed_sha256": "b3d4398bf6b520f9b30734bf032d039ceb3a6561337693872def32dd9e8d44fe",
+      "expected_git_blob": "f0f64c771474019c2387ddd6bf068e63ec31b3e2",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/source-map.json",
+      "raw_bytes": 5061,
+      "raw_sha256": "9d0dc8bcabdee1cb08799bb4c2026f70c956aca801e7f0b5aa34e9f177cb22a0",
+      "expected_committed_bytes": 4955,
+      "expected_committed_sha256": "37d06e3dca73a211d1e46a03b62882cac44c564a65dd39a370d15b14318517ad",
+      "expected_git_blob": "50458fd081542adfa0c3889ef81158df4dd4b2b6",
+      "normalization": "CRLF to LF"
+    },
+    {
+      "path": "docs/evidence/ad-joint-eight-independent-20261102/tls-helper.go.txt",
+      "raw_bytes": 1493,
+      "raw_sha256": "0166757c31fabb3ffb404ed7b5e6cffb996170adf7aaf6181f600dab0e72751d",
+      "expected_committed_bytes": 1493,
+      "expected_committed_sha256": "0166757c31fabb3ffb404ed7b5e6cffb996170adf7aaf6181f600dab0e72751d",
+      "expected_git_blob": "5fde69099263dbd0cbccc069b9f99ceeb1c74794",
+      "normalization": "none"
+    }
+  ],
+  "limits": [
+    "ordinary local RunDatabase data-plane only",
+    "not formal fullC/SourceVerified source authorization",
+    "TLS/SigV4 protocol fixture, not deployed S3/MinIO/IAM",
+    "not all-consumer physical isolation/full175 production schema/original9-table resources writer",
+    "not activation/page fullbackup success/onsite acceptance",
+    "root32.18 andowner13.03 are actual observations, not comparable performance measurements"
+  ],
+  "integration": "only exact31file owner delta plus12root evidence andthisreport; preserve four-line baseline block (3comments+1InterpolateParams assignment), no owner ancestry/unreviewedWIP/forcepush",
+  "identity": "huihuihuizhang <1825973571@qq.com> both",
+  "review_protocol": "primary independently reads candidate then freshfetch/ordinaryFFpush under serialwindow"
+}

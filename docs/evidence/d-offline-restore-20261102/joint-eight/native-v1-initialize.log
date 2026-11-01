@@ -1,0 +1,8 @@
+2026-11-01T20:05:38.080363Z 0 [System] [MY-015017] [Server] MySQL Server Initialization - start.
+2026-11-01T20:05:38.093635Z 0 [System] [MY-013169] [Server] C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\bin\mysqld.exe (mysqld 8.4.13) initializing of server in progress as process 3416
+2026-11-01T20:05:38.093642Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T20:05:38.143182Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-11-01T20:05:38.479356Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-11-01T20:05:39.103174Z 0 [Warning] [MY-013829] [Server] Missing data directory for ICU regular expressions: C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\lib\private\.
+2026-11-01T20:05:39.256683Z 5 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-11-01T20:05:40.860558Z 0 [System] [MY-015018] [Server] MySQL Server Initialization - end.

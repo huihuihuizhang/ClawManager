@@ -1,0 +1,15 @@
+{
+  "attempt": "335a12cadd5f41d3b34c531a81d98bab",
+  "ca_sha256": "56c325415ecaefc535ba39e0be707e72f2965b2388877afba11003ef54f576a9",
+  "CA_signature_verified": true,
+  "IP_SAN": [
+    "127.0.0.1"
+  ],
+  "DNS_SAN": [
+    "gateway-restore-native.local"
+  ],
+  "not_before_utc": "2026-11-01 19:10:09+00:00",
+  "not_after_utc": "2026-11-02 20:10:09+00:00",
+  "sql_started": false,
+  "prior_static_check_failure": "Python default non-UTF8 decoding of pointer path failed before certificate read; rerun uses explicit UTF8. No Go/SQL process or fixture data changed."
+}

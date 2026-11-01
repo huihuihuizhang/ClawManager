@@ -1,0 +1,13 @@
+2026-11-01T20:05:41.261421Z 0 [System] [MY-015015] [Server] MySQL Server - start.
+2026-11-01T20:05:41.402670Z 0 [System] [MY-010116] [Server] C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\bin\mysqld.exe (mysqld 8.4.13) starting as process 27344
+2026-11-01T20:05:41.402677Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T20:05:41.420959Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-11-01T20:05:41.898172Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-11-01T20:05:42.198327Z 0 [Warning] [MY-013829] [Server] Missing data directory for ICU regular expressions: C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\lib\private\.
+2026-11-01T20:05:42.210479Z 0 [Warning] [MY-010068] [Server] CA certificate C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\ca.pem is self signed.
+2026-11-01T20:05:42.211812Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-11-01T20:05:42.240912Z 0 [System] [MY-010931] [Server] C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\bin\mysqld.exe: ready for connections. Version: '8.4.13'  socket: ''  port: 50441  MySQL Community Server - GPL.
+2026-11-01T20:06:30.456678Z 39 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.4.13).
+2026-11-01T20:06:30.457780Z 0 [System] [MY-013105] [Server] C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\bin\mysqld.exe: Normal shutdown.
+2026-11-01T20:06:31.666927Z 0 [System] [MY-010910] [Server] C:\Users\13542\AppData\Local\Temp\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef\bin\mysqld.exe: Shutdown complete (mysqld 8.4.13)  MySQL Community Server - GPL.
+2026-11-01T20:06:31.668550Z 0 [System] [MY-015016] [Server] MySQL Server - end.

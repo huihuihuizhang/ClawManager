@@ -1,0 +1,40 @@
+{
+  "session": 19544,
+  "exit_code": 0,
+  "naturally_closed": true,
+  "command": "go test -p=1 -count=1 -run '^TestJointEight' -v ./internal/systembackup/domain",
+  "package_seconds": 2.542,
+  "entries": {
+    "TestJointEightNativeVerifyChild": "SKIP: no private parent control",
+    "TestJointEightPublicWorkerActualTLSMySQL": "SKIP: no owned SQL metadata"
+  },
+  "classification": "Single-package compilation/type-check and SQLoff guard success only; no native or SDK execution; no scenario PASS claimed",
+  "source_before_after_equal": true,
+  "source_after": [
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_export_test.go",
+      "raw_sha256": "88386cf84aeba9ced7bcadfcd6b65766c21a6a611c535f5bb492aa283323b1c7"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_child_test.go",
+      "raw_sha256": "0c58ed399db4e5e7ee11df443f75189321d3ec5a5c5b0a0c09e8ad608ce4150c"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_fixture_test.go",
+      "raw_sha256": "e4bb953b2ec355b95144fceedf688ee31fbd58cad92ba7b040b343a38d597341"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_test.go",
+      "raw_sha256": "ea8cf4978c0fe5ab97c02e0da63693e1b81ad986e0413973ca43aef24c6003a5"
+    }
+  ],
+  "log": {
+    "path": ".local/joint-eight-sqloff-first.log",
+    "bytes": 447,
+    "raw_sha256": "9b98709c3899ef8e10063eb73f28f684dac4854645786d9aebcb6302710bf1cd"
+  },
+  "environment_filter_actual": "MYSQL|MARIADB|MINIO|REDIS|NATIVE|VERIFY_CHILD",
+  "GOMAXPROCS": 2,
+  "downloads": "off",
+  "resource_state": "No Go or SQL process running from this chat; compile window released"
+}

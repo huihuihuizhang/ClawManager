@@ -1,0 +1,8 @@
+=== RUN   TestJointEightNativeVerifyChild
+    joint_eight_native_child_test.go:97: joint owned native parent helper only
+--- SKIP: TestJointEightNativeVerifyChild (0.00s)
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL
+    joint_eight_native_fixture_test.go:54: requires D owned UUID/marker/CA-pinned disposable TLS MySQL
+--- SKIP: TestJointEightPublicWorkerActualTLSMySQL (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.542s

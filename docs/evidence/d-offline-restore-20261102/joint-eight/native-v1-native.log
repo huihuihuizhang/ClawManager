@@ -1,0 +1,5 @@
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL
+    joint_eight_native_fixture_test.go:54: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    joint_eight_native_test.go:389: joint source object principals not actually revoked
+--- FAIL: TestJointEightPublicWorkerActualTLSMySQL (2.37s)
+FAIL

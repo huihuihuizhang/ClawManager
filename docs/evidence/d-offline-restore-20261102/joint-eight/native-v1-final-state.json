@@ -1,0 +1,22 @@
+{
+  "attempt": "eed55aa7e61b4c7e89d74c1029c4dfef",
+  "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-eed55aa7e61b4c7e89d74c1029c4dfef",
+  "port": 50441,
+  "owner_nonce": "8cd72a04a92c45c496e4b16b6b118933",
+  "phase": "normal-tls-shutdown-and-root-removed",
+  "pid": 24732,
+  "front_session": null,
+  "server_uuid": "9b3b9641-d62f-11f1-b8cb-745d22085e06",
+  "ca_sha256": "45c160fc196143a7a21820a7eb903c166b9fe50d3c633d663b8a79af2a036c6e",
+  "binary_pins": {
+    "mysqld.exe": "7a976874ef3974d612081960b1c193c663b4434692b6257382352c587e367ad6",
+    "mysql.exe": "4617a66bf7509891d3a7be522d78a141b1d4dc16936c5077ddf119f7dd264b88",
+    "mysqladmin.exe": "44bda80b8adacb890c99e9f3c9a876ca33b6eda2e02f896cd747a95ad1bb15ae"
+  },
+  "native_binary": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D-offline-restore\\.local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef.test.exe",
+  "native_binary_sha256": "6900b4fa0f00c127d46ab472cef2dfd008312d45e244b00abd78d68b6424f388",
+  "build_exit": 0,
+  "native_exit": 1,
+  "source_scope_sha256": "5df4f81bd7e159f160e1f0a2a576bacac188c84683f77b5bf6bfe7349553b5c2",
+  "created_utc": "2026-11-01T20:03:26.9218785Z"
+}

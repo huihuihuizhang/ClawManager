@@ -1,0 +1,42 @@
+{
+  "attempt": "eed55aa7e61b4c7e89d74c1029c4dfef",
+  "build_session": 82779,
+  "build_natural_exit": 0,
+  "native_session": null,
+  "native_natural_exit": 1,
+  "native_test_seconds": 2.37,
+  "classification": "FAIL before target scenes; actual3159 PASS; revoked-source SDK fixture assertion failed; no target/freshchild PASS claim",
+  "diagnosis": "HEAD Stat error body unavailable; static diagnosis only until actual GET rerun observes403/code",
+  "original_source_scope": ".local/joint-eight-implementation-scope-v1-before-native.json",
+  "binary_sha256": "6900b4fa0f00c127d46ab472cef2dfd008312d45e244b00abd78d68b6424f388",
+  "final_state": ".local/joint-eight-attempt-eed55aa7e61b4c7e89d74c1029c4dfef.json",
+  "cleanup": "normal TLS shutdown acknowledged; actualPID24732 natural exit; root removed after exact identity/boundary checks",
+  "raw_evidence": [
+    {
+      "path": ".local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef-native.log",
+      "bytes": 324,
+      "raw_sha256": "cfd7c6d88b41d6d683b9c2132805c9aa2da94cc18de46960303d15ec24d4cdab"
+    },
+    {
+      "path": ".local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef-final-census.json",
+      "bytes": 201,
+      "raw_sha256": "fa632ace2746d7e93e803333ebb2f3235baffb6e3cddb28422ce3d2c8029d6c5"
+    },
+    {
+      "path": ".local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef-initialize.log",
+      "bytes": 1104,
+      "raw_sha256": "90f874e2a4a36d3acb1d9f5ffc2fc8ce1d56cc2393e9f7d98725b39bc4971f02"
+    },
+    {
+      "path": ".local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef-shutdown.log",
+      "bytes": 2027,
+      "raw_sha256": "b1c734dac0f265026231a91c092bb25fb492bac175ad218bfa539f6629c01ec5"
+    },
+    {
+      "path": ".local\\joint-eight-eed55aa7e61b4c7e89d74c1029c4dfef-public-ca.pem",
+      "bytes": 1127,
+      "raw_sha256": "45c160fc196143a7a21820a7eb903c166b9fe50d3c633d663b8a79af2a036c6e"
+    }
+  ],
+  "empty_build_log_policy": "Successful commands produced no output; missing raw log is not fabricated; build natural exit and binary hash retained"
+}

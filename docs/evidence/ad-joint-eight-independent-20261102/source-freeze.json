@@ -1,0 +1,145 @@
+{
+  "base": "8197c591b0b6c7fa205836d6c8f69d1caec59381",
+  "status": "V2 frozen, only export_test changed from originalV1: actualGET strict403/SignatureDoesNotMatch and error diagnostics; added root-requested tiny SQLoff SDK HEAD-vs-GET revocation probe. All3other tests+13deps unchanged; probe not run yet.",
+  "files": [
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_export_test.go",
+      "bytes": 7140,
+      "raw_sha256": "2917bef875e18ce08a4c8cd788ca426fb0195e23c33a35b089ef68a64fd879b5",
+      "git_blob": "53e9f3fa964f46f4599654e80c35fca41b490968"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_child_test.go",
+      "bytes": 9991,
+      "raw_sha256": "0c58ed399db4e5e7ee11df443f75189321d3ec5a5c5b0a0c09e8ad608ce4150c",
+      "git_blob": "b66f84696333a3813956e07d7ec3060ff021f73c"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_fixture_test.go",
+      "bytes": 10584,
+      "raw_sha256": "e4bb953b2ec355b95144fceedf688ee31fbd58cad92ba7b040b343a38d597341",
+      "git_blob": "51ef541818caa2a46001ac9f7956100d413eba28"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/joint_eight_native_test.go",
+      "bytes": 23387,
+      "raw_sha256": "ea8cf4978c0fe5ab97c02e0da63693e1b81ad986e0413973ca43aef24c6003a5",
+      "git_blob": "86f7fbfa5ae7a0f1edf5e14711e7a3a739c9564a"
+    }
+  ],
+  "existing_files_changed": [],
+  "production_changes": [],
+  "entry": "TestJointEightPublicWorkerActualTLSMySQL",
+  "child": "TestJointEightNativeVerifyChild",
+  "sql_targets": [
+    "success",
+    "evidence-custody-failure",
+    "cancel-before-commit",
+    "changed-Northbound-source"
+  ],
+  "nested_counter": "changed-Northbound-expected-with-matching-descriptor",
+  "source_provenance": "One real source schema and one exact public captured+AEAD decoded SQL8-nonempty snapshot; image material binds complete source; historical instance8 created once for both owner and image chain then one actual repo deletion",
+  "transactions": "One real active writer InnoDB TX observed before evidence, modified rows>=8, isolated-server explicit COMMIT delta1 success/0 failure or cancellation; complete pre/post raw state rollback",
+  "objects": "One actual TLS/SigV4 fixture source realm, immutable version capture, independently revocable per-target SDK clients, real List/GET/hash/GCM residue inventory retained until teardown",
+  "fresh_verify": "Fresh process, complete expected SQL+image AEAD files, no old receipt/observation/CAS; positive every-cell8-table public verify and actual1142; negative full digest before any reader SELECT while image-only projection equal",
+  "test_helpers": [
+    "newGatewayNative",
+    "nativeImageMigrations",
+    "northboundNativeMigrations",
+    "seedNativeImageRows",
+    "northboundNativeAddAudits",
+    "northboundNativeObserve",
+    "northboundNativeAdapters",
+    "nativeImageChildConfig",
+    "nativeImageMySQLNumber",
+    "newImageS3Fixture (same-package test only)",
+    "ForgeGatewayImageSQLReferenceForTest"
+  ],
+  "not_claimed": [
+    "compiled/tested correctness yet",
+    "deployed S3/MinIO",
+    "formal fullC source authority",
+    "all-consumer physical target isolation",
+    "full175 schema qualification",
+    "original9-table resources writer authority"
+  ],
+  "custody": "Actual WriteUnpublishedFile journal before SQLCOMMIT, actual closed-root I/O failure, positive/final-cancel descriptor readback from file; not always-error fake proof callback",
+  "physical_session": "Distinct child-only SELECT account, bootstrap connection exits before child; independent admin observes unique PROCESSLIST.ID around both SHOW SESSION Com_select observations and RunDatabase; all IDs identical, reader uses no SELECT CONNECTION_ID",
+  "next_minimal_command": "GOMAXPROCS=2 GOPROXY=off GOSUMDB=off go test -c -p=1 -o ../.local/joint-eight-native.test.exe ./internal/systembackup/domain (compile only, no tests/native/oldNB9)",
+  "schedule": "Wait for explicit resource-window release after primary A603 controller/execution; no new Go or SQL started",
+  "read_before_after_stable": true,
+  "base_tree_scope": "All tracked source/dependencies are committed8197; no tracked changes. This parent includes held historical ancestors, which MUST NOT be merged. Latest supervisor execution composition must retain baseline Interpolate4 lines.",
+  "direct_dependency_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_native_fixture_test.go",
+      "raw_sha256": "386eac5e800914b9d00681e3088dee62ad156728ce758e4634f53a1c6c9bb56a",
+      "git_blob": "3a22d91d4b83c20bf5026e6be837b2917f6d67a6"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_test.go",
+      "raw_sha256": "9528cc337597ee1a8f2b45fb2006d273b3c42155ecc7036194b1c8566973eedc",
+      "git_blob": "e101ad6368859eae5866ab85e0e040c8812d9e9d"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_export_test.go",
+      "raw_sha256": "4ef1f47562e25a2e55bd8c02e66fbf0466753ef886345f64064ef611ead7fcd9",
+      "git_blob": "accf3e761cee6d12e4b03b401bad5011feec2509"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_s3_fixture_test.go",
+      "raw_sha256": "49bba529b891ec598c85cc99930379d92dc2ec5db283e802d3ee5473525852e9",
+      "git_blob": "4d17a2aa5d05c6c385dd3f907b71ab9226aca0ed"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_child_test.go",
+      "raw_sha256": "3b9698b2db97cdf4a3d62978cb62bb26c3941c91c1921f37671738c89dea6cc3",
+      "git_blob": "3297446c3b95a31abb9261a0ae19825bf93315fe"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_native_fixture_test.go",
+      "raw_sha256": "f190dc4c0b11101173ee729375bf17899d13c3bdcd046031455e677dd5984a33",
+      "git_blob": "f82879a3566b8460cd007d5a892f704958fcb57e"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/northbound_restore_test.go",
+      "raw_sha256": "e4bf125c7f060389d37c84d3d5e689b7141e1a43e0d09126284a5d31397cb47f",
+      "git_blob": "c2343edfacf9c32d4730ca877f621683b1e3d3a8"
+    },
+    {
+      "path": "backend/internal/ownerrecords/store.go",
+      "raw_sha256": "3f99a80b4728532761118f701b319e8a13abd69e352c9fc9ca1e48b998f8b3a2",
+      "git_blob": "ae776598e0e3d92edb40855fc9b2e99a7186ad00"
+    },
+    {
+      "path": "backend/internal/ownerrecords/reports.go",
+      "raw_sha256": "114273a8a44aeba1358feec2c1f5fb2c6a07387bae1383e7f4e7318394c9be2c",
+      "git_blob": "cd5ae0e5c6857401040ac528ed5b7c9d9647d149"
+    },
+    {
+      "path": "backend/internal/repository/northbound_repository.go",
+      "raw_sha256": "a56eeaec9320023f81dea2677dac532304e22a601697a95a193a251b58dff2e0",
+      "git_blob": "107a151a596ba443d5da045a25c9c9e94de1e5f1"
+    },
+    {
+      "path": "backend/internal/repository/instance_repository.go",
+      "raw_sha256": "c403eb8e93c45d87f8aa8b534a3aaff263d27ac852474170f7a20c8aab4d6af0",
+      "git_blob": "a2d2328d6103ee94b0a578478d8255759b01beee"
+    },
+    {
+      "path": "backend/internal/services/gateway_image_job_service.go",
+      "raw_sha256": "ab0e595ccfd2c01c47e88915ef2b77733e966e4b9c965d4cff646fb47d0369f9",
+      "git_blob": "be5b7e5f95397342db9768721e13f1a71e9469f9"
+    },
+    {
+      "path": "backend/internal/services/gateway_image_artifact_service.go",
+      "raw_sha256": "ed93441164a3e6e2b6f7e49b399bc1e76f8098bdd80468be377d69f6c4a7e9e7",
+      "git_blob": "495217cd7b0f6315f0c729d05f6f9ba1bd9a4d89"
+    }
+  ],
+  "transitive_dependencies": "Existing full tracked8197 tree and unchanged go.mod/go.sum/offline cache; no new modules. No application initializer, provider/k8s/SSH/shared DB, formal capture/control/fullC or9-table writer is added/invoked.",
+  "commands": {
+    "compile_from_backend": "go test -c -p=1 -o ../.local/joint-eight-native.test.exe ./internal/systembackup/domain",
+    "future_native_from_package_cwd": "joint-eight-native.test.exe -test.run=^TestJointEightPublicWorkerActualTLSMySQL$ -test.v -test.timeout=4m",
+    "scope": "Only4 new tests/fixture files; native/SDK execution requires separately coordinated exclusive window; default SQLoff invocation would SKIP native, not prove it"
+  }
+}

@@ -1,0 +1,29 @@
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL
+    joint_eight_native_fixture_test.go:54: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    joint_eight_export_test.go:91: joint revoked source fixed-version actual GET: status=403 code="SignatureDoesNotMatch"
+    joint_eight_export_test.go:97: joint revoked source operator actual PUT: status=403 code="SignatureDoesNotMatch"
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL/success
+    joint_eight_native_test.go:577: === RUN   TestJointEightNativeVerifyChild
+            joint_eight_native_child_test.go:234: fresh child: ONE complete8-nonempty expected SQL/image cohort, actual fixed-version SDK readback + every raw SQL cell + restrictive SELECT-only grants; no old source/writer/receipt/observation/CAS pointer; actual1142
+        --- PASS: TestJointEightNativeVerifyChild (0.23s)
+        PASS
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL/success/changed-Northbound-expected-with-matching-descriptor
+    joint_eight_native_test.go:596: === RUN   TestJointEightNativeVerifyChild
+            joint_eight_native_child_test.go:232: fresh child: complete8-table changed Northbound expected SQL + matching descriptor + valid image metadata AEAD rejected before any SQL target SELECT by full digest; no old pointer; actual1142
+        --- PASS: TestJointEightNativeVerifyChild (0.08s)
+        PASS
+=== NAME  TestJointEightPublicWorkerActualTLSMySQL/success
+    joint_eight_native_test.go:601: all8 nonempty in ONE public SQL capture/source digest, ONE observed common restore TX, actual immutable image versions, encrypted full expected SQL/image evidence and fresh process all-cell verify; actual3159/3118/1142; source/cross-domain digest counterexamples included
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL/evidence-custody-failure
+    joint_eight_native_test.go:527: complete SQL state/bootstrap/settings and all8 owner tables rolled back; actual object version/GET/GCM inventory retained for custody until fixture teardown; no runner object deletion/activation
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL/cancel-before-commit
+    joint_eight_native_test.go:527: complete SQL state/bootstrap/settings and all8 owner tables rolled back; actual object version/GET/GCM inventory retained for custody until fixture teardown; no runner object deletion/activation
+=== RUN   TestJointEightPublicWorkerActualTLSMySQL/changed-Northbound-source
+    joint_eight_native_test.go:527: complete SQL state/bootstrap/settings and all8 owner tables rolled back; actual object version/GET/GCM inventory retained for custody until fixture teardown; no runner object deletion/activation
+--- PASS: TestJointEightPublicWorkerActualTLSMySQL (32.18s)
+    --- PASS: TestJointEightPublicWorkerActualTLSMySQL/success (6.61s)
+        --- PASS: TestJointEightPublicWorkerActualTLSMySQL/success/changed-Northbound-expected-with-matching-descriptor (0.25s)
+    --- PASS: TestJointEightPublicWorkerActualTLSMySQL/evidence-custody-failure (5.77s)
+    --- PASS: TestJointEightPublicWorkerActualTLSMySQL/cancel-before-commit (6.75s)
+    --- PASS: TestJointEightPublicWorkerActualTLSMySQL/changed-Northbound-source (5.13s)
+PASS

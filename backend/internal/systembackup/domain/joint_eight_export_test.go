@@ -1,0 +1,162 @@
+package domain
+
+import (
+	"bytes"
+	"context"
+	"encoding/pem"
+	"fmt"
+	"io"
+	"strings"
+	"testing"
+
+	"github.com/minio/minio-go/v7"
+)
+
+// Test-only SDK fixture extensions. These return actual IO observations and
+// clients, never a constructed GatewayImageReceipt or source/target authority.
+type JointEightTargetObjects struct {
+	Writer, Reader *GatewayImageObjectClient
+	ReaderSettings GatewayImageReaderTestSettings
+	RevokeWriter   func(context.Context) error
+}
+type JointEightObjectFixture struct {
+	Source                               *GatewayImageObjectClient
+	SourceStorage, SourceOperatorStorage *imageTestObjectStorage
+	Ref                                  GatewayImageObjectRef
+	NewTarget                            func(string) JointEightTargetObjects
+	RevokeSource                         func(context.Context) error
+	SourceDeletes                        func() int
+}
+type JointEightObjectVersion struct {
+	Key, Version, SHA256 string
+	Size                 int64
+}
+
+func TestJointEightSDKRevocationProbe(t *testing.T) {
+	ctx := context.Background()
+	fixture := JointEightObjectsForTest(t, "cm-restore-"+strings.Repeat("a", 32), "img_"+strings.Repeat("b", 32), []byte("owned revocation probe"))
+	if e := fixture.RevokeSource(ctx); e != nil {
+		t.Fatal("actual fixed-version GET/operator PUT revocation", e)
+	}
+	object, e := fixture.Source.client.GetObject(ctx, fixture.Ref.Bucket, fixture.Ref.Key, minio.GetObjectOptions{VersionID: fixture.Ref.Version})
+	if e == nil {
+		_, e = object.Stat()
+		object.Close()
+	}
+	denied := minio.ToErrorResponse(e)
+	t.Logf("original revoked source Stat HEAD: status=%d code=%q", denied.StatusCode, denied.Code)
+	if denied.StatusCode != 403 {
+		t.Fatal("old HEAD probe did not observe actual HTTP403", e)
+	}
+}
+
+func JointEightObjectsForTest(t *testing.T, bucket, id string, raw []byte) JointEightObjectFixture {
+	t.Helper()
+	s, source, initialWriter, initialReader := newImageS3Fixture(t, bucket, id, raw)
+	// The initial target clients are not handed out. Each real target gets a
+	// distinct revocable writer and reader on this SAME source object realm.
+	initialWriter.Close()
+	initialReader.Close()
+	s.mu.Lock()
+	s.roles["writer-access"] = ""
+	s.roles["reader-access"] = ""
+	s.mu.Unlock()
+	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: s.server.Certificate().Raw})
+	client := func(access string) *GatewayImageObjectClient {
+		c, e := NewGatewayImageObjectClient(source.realm.Endpoint, source.realm.TLSServerName, source.realm.Region, ca, access, s.secret, "")
+		if e != nil {
+			t.Fatal("joint pinned SDK client", e)
+		}
+		t.Cleanup(c.Close)
+		return c
+	}
+	next := 0
+	return JointEightObjectFixture{
+		Source:                source,
+		SourceStorage:         &imageTestObjectStorage{client: source, bucket: "owned-image-source", versions: map[string]string{"gateway-images/" + id: "source-version-1"}},
+		SourceOperatorStorage: &imageTestObjectStorage{client: s.sourceOperator, bucket: "owned-image-source", versions: map[string]string{}},
+		Ref:                   GatewayImageObjectRef{ArtifactID: id, Bucket: "owned-image-source", Key: "gateway-images/" + id, Version: "source-version-1", SHA256: imageHash(raw), Size: int64(len(raw))},
+		SourceDeletes:         func() int { s.mu.Lock(); defer s.mu.Unlock(); return s.sourceDeletes },
+		RevokeSource: func(ctx context.Context) error {
+			s.mu.Lock()
+			s.roles["source-access"] = ""
+			s.roles["source-operator-access"] = ""
+			s.mu.Unlock()
+			object, e := source.client.GetObject(ctx, "owned-image-source", "gateway-images/"+id, minio.GetObjectOptions{VersionID: "source-version-1"})
+			if e == nil {
+				_, e = io.Copy(io.Discard, object)
+				object.Close()
+			}
+			denied := minio.ToErrorResponse(e)
+			t.Logf("joint revoked source fixed-version actual GET: status=%d code=%q", denied.StatusCode, denied.Code)
+			if denied.StatusCode != 403 || denied.Code != "SignatureDoesNotMatch" {
+				return fmt.Errorf("joint revoked source fixed-version GET: status=%d code=%q: %w", denied.StatusCode, denied.Code, ErrIsolation)
+			}
+			_, e = s.sourceOperator.client.PutObject(ctx, "owned-image-source", "revoked-source-probe", bytes.NewReader([]byte("x")), 1, minio.PutObjectOptions{DisableMultipart: true, SendContentMd5: true})
+			denied = minio.ToErrorResponse(e)
+			t.Logf("joint revoked source operator actual PUT: status=%d code=%q", denied.StatusCode, denied.Code)
+			if denied.StatusCode != 403 || denied.Code != "SignatureDoesNotMatch" {
+				return fmt.Errorf("joint revoked source operator PUT: status=%d code=%q: %w", denied.StatusCode, denied.Code, ErrIsolation)
+			}
+			return ctx.Err()
+		},
+		NewTarget: func(target string) JointEightTargetObjects {
+			if !imageTargetBucket.MatchString(target) {
+				t.Fatal("joint target bucket is not scoped")
+			}
+			s.mu.Lock()
+			if _, exists := s.versions[target]; exists {
+				s.mu.Unlock()
+				t.Fatal("joint target bucket reused")
+			}
+			next++
+			writerID := fmt.Sprintf("joint-writer-%d", next)
+			readerID := fmt.Sprintf("joint-reader-%d", next)
+			s.versions[target] = map[string]map[string][]byte{}
+			s.roles[writerID] = "writer"
+			s.roles[readerID] = "reader"
+			s.mu.Unlock()
+			writer, reader := client(writerID), client(readerID)
+			return JointEightTargetObjects{Writer: writer, Reader: reader, ReaderSettings: GatewayImageReaderTestSettings{Endpoint: source.realm.Endpoint, TLSServerName: source.realm.TLSServerName, Region: source.realm.Region, CA: append([]byte(nil), ca...), Access: readerID, Secret: s.secret}, RevokeWriter: func(ctx context.Context) error {
+				s.mu.Lock()
+				s.roles[writerID] = ""
+				s.mu.Unlock()
+				_, e := writer.client.PutObject(ctx, target, "revoked-target-probe", bytes.NewReader([]byte("x")), 1, minio.PutObjectOptions{DisableMultipart: true, SendContentMd5: true})
+				if minio.ToErrorResponse(e).Code != "SignatureDoesNotMatch" {
+					return ErrIsolation
+				}
+				return ctx.Err()
+			}}
+		},
+	}
+}
+
+// Inventory is obtained by actual version-list/GET/hash/GCM/length reads after
+// restore or rollback. It does not trust a PUT counter or the old opaque receipt.
+func JointEightInventoryForTest(ctx context.Context, reader *GatewayImageObjectClient, bucket string, source Snapshot, ref GatewayImageObjectRef) ([]JointEightObjectVersion, error) {
+	if !imageTLSClient(reader) || !imageTargetBucket.MatchString(bucket) {
+		return nil, ErrIsolation
+	}
+	row := imageArtifactRows(source)[ref.ArtifactID]
+	if row == nil {
+		return nil, ErrData
+	}
+	var out []JointEightObjectVersion
+	for item := range reader.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Recursive: true, WithVersions: true}) {
+		if item.Err != nil || item.IsDeleteMarker || item.Key != ref.Key || item.Size != ref.Size || len(out) >= 64 {
+			return nil, ErrData
+		}
+		raw, e := readImageVersion(ctx, reader, bucket, item.Key, item.VersionID, ref.SHA256, ref.Size)
+		if e != nil {
+			return nil, e
+		}
+		plain, e := imagePlaintext(row, raw)
+		clear(raw)
+		clear(plain)
+		if e != nil {
+			return nil, e
+		}
+		out = append(out, JointEightObjectVersion{Key: item.Key, Version: item.VersionID, SHA256: ref.SHA256, Size: item.Size})
+	}
+	return out, ctx.Err()
+}

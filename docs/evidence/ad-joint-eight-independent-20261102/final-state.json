@@ -1,0 +1,22 @@
+{
+  "attempt": "713a868d38e14fc499b63c2b12eda0ad",
+  "root": "C:\\Users\\13542\\AppData\\Local\\Temp\\cm-gateway-restore-713a868d38e14fc499b63c2b12eda0ad",
+  "port": 50497,
+  "owner_nonce": "0865790ccda842f695ea6d13171f082f",
+  "phase": "normal-tls-shutdown-and-root-removed",
+  "pid": 16828,
+  "front_session": null,
+  "server_uuid": "1f3495c1-d632-11f1-b677-745d22085e06",
+  "ca_sha256": "9e9bddba5dce852033d2b23c7b769ab8618c91d72de82012fc2d315f061990b6",
+  "binary_pins": {
+    "mysqld.exe": "7a976874ef3974d612081960b1c193c663b4434692b6257382352c587e367ad6",
+    "mysql.exe": "4617a66bf7509891d3a7be522d78a141b1d4dc16936c5077ddf119f7dd264b88",
+    "mysqladmin.exe": "44bda80b8adacb890c99e9f3c9a876ca33b6eda2e02f896cd747a95ad1bb15ae"
+  },
+  "native_binary": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\review-joint-eight\\joint-eight-713a868d38e14fc499b63c2b12eda0ad.test.exe",
+  "native_binary_sha256": "60d1deb65c8b631d4ad7113909bb83ac50f675871fff4c982a2a6eb76a2e020f",
+  "build_exit": 0,
+  "native_exit": 0,
+  "source_scope_sha256": "7e1c150c2d41c28f912b79cfcdd933314628ce3e99d0fa7b081e6e7a3cdaea80",
+  "created_utc": "2026-11-01T20:19:31.6637206Z"
+}

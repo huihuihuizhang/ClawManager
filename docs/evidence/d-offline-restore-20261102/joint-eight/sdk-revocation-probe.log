@@ -1,0 +1,7 @@
+=== RUN   TestJointEightSDKRevocationProbe
+    joint_eight_export_test.go:91: joint revoked source fixed-version actual GET: status=403 code="SignatureDoesNotMatch"
+    joint_eight_export_test.go:97: joint revoked source operator actual PUT: status=403 code="SignatureDoesNotMatch"
+    joint_eight_export_test.go:47: original revoked source Stat HEAD: status=403 code="AccessDenied"
+--- PASS: TestJointEightSDKRevocationProbe (0.01s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.537s

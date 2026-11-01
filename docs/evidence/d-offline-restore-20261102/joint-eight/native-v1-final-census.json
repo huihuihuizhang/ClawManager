@@ -1,0 +1,11 @@
+[
+  "information_schema",
+  "mysql",
+  "performance_schema",
+  "sys",
+  "mysql.infoschema@localhost:Y",
+  "mysql.session@localhost:Y",
+  "mysql.sys@localhost:Y",
+  "root@localhost:N",
+  "0"
+]

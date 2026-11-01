@@ -1,0 +1,13 @@
+package main
+
+import("crypto/rand";"crypto/rsa";"crypto/x509";"crypto/x509/pkix";"encoding/pem";"math/big";"net";"os";"path/filepath";"time")
+func main(){
+	dir:=os.Args[1];now:=time.Now();caKey,e:=rsa.GenerateKey(rand.Reader,2048);if e!=nil{panic(e)}
+	ca:=&x509.Certificate{SerialNumber:big.NewInt(1),Subject:pkix.Name{CommonName:"owned gateway restore fixture CA"},NotBefore:now.Add(-time.Hour),NotAfter:now.Add(24*time.Hour),IsCA:true,BasicConstraintsValid:true,KeyUsage:x509.KeyUsageCertSign|x509.KeyUsageDigitalSignature}
+	caDER,e:=x509.CreateCertificate(rand.Reader,ca,ca,&caKey.PublicKey,caKey);if e!=nil{panic(e)}
+	serverKey,e:=rsa.GenerateKey(rand.Reader,2048);if e!=nil{panic(e)}
+	server:=&x509.Certificate{SerialNumber:big.NewInt(2),Subject:pkix.Name{CommonName:"gateway-restore-native.local"},NotBefore:ca.NotBefore,NotAfter:ca.NotAfter,IPAddresses:[]net.IP{net.ParseIP("127.0.0.1")},DNSNames:[]string{"gateway-restore-native.local"},ExtKeyUsage:[]x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},KeyUsage:x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment}
+	der,e:=x509.CreateCertificate(rand.Reader,server,ca,&serverKey.PublicKey,caKey);if e!=nil{panic(e)}
+	write:=func(name,kind string,raw []byte){if e:=os.WriteFile(filepath.Join(dir,name),pem.EncodeToMemory(&pem.Block{Type:kind,Bytes:raw}),0600);e!=nil{panic(e)}}
+	write("ca.pem","CERTIFICATE",caDER);write("server.pem","CERTIFICATE",der);write("server-key.pem","RSA PRIVATE KEY",x509.MarshalPKCS1PrivateKey(serverKey))
+}

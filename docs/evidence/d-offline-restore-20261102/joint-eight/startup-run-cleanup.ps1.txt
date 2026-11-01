@@ -1,0 +1,173 @@
+param([Parameter(Mandatory=$true)][ValidateSet('Prepare','Build','Start','Run','Cleanup')][string]$Action)
+$ErrorActionPreference='Stop'
+$repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$tools=Join-Path (Split-Path -Parent $repo) '.tools'
+$go=Join-Path $tools 'go1.26.1\go\bin\go.exe'
+$dist=Join-Path $tools 'mysql-dist\mysql-8.4.13-winx64'
+$scopePath=Join-Path $PSScriptRoot 'joint-eight-implementation-scope.json'
+$pointer=Join-Path $PSScriptRoot 'joint-eight-active-attempt.txt'
+$utf8=[Text.UTF8Encoding]::new($false)
+function WriteJson($path,$value) { [IO.File]::WriteAllText($path,($value | ConvertTo-Json -Depth 15),$utf8) }
+function Sha($path) { (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() }
+function CheckSources {
+    $scope=Get-Content -LiteralPath $scopePath -Raw | ConvertFrom-Json
+    foreach ($entry in $scope.files) {
+        $path=Join-Path $repo $entry.path
+        if ((Sha $path) -cne $entry.raw_sha256 -or (Get-Item -LiteralPath $path).Length -ne $entry.bytes) { throw ('Frozen source changed: '+$entry.path) }
+    }
+    foreach ($entry in $scope.direct_dependency_pins) {
+        if ((Sha (Join-Path $repo $entry.path)) -cne $entry.raw_sha256) { throw ('Frozen direct dependency changed: '+$entry.path) }
+    }
+}
+function OfflineGo {
+    $env:GOMAXPROCS='2'; $env:GOTOOLCHAIN='local'; $env:GOPROXY='off'; $env:GOSUMDB='off'
+    $env:GOMODCACHE=Join-Path $tools 'gomodcache'; $env:GOCACHE=Join-Path $PSScriptRoot 'gocache'
+    Get-ChildItem Env: | Where-Object { $_.Name -match 'MYSQL|MARIADB|MINIO|REDIS|NATIVE|VERIFY_CHILD' } | ForEach-Object { Remove-Item -LiteralPath ('Env:'+ $_.Name) }
+}
+function CheckRoot($state) {
+    $temp=[IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\')+'\'
+    $root=[IO.Path]::GetFullPath([string]$state.root)
+    if (!$root.StartsWith($temp,[StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $root) -cnotmatch '^cm-gateway-restore-[a-f0-9]{32}$' -or $root -match '[^\x00-\x7F]') { throw 'Owned ASCII root boundary invalid' }
+    if ((Resolve-Path -LiteralPath $root).Path -cne $root -or (Get-Content -LiteralPath (Join-Path $root 'owner-nonce.txt') -Raw) -cne $state.owner_nonce) { throw 'Exact root/nonce mismatch' }
+    if ((Get-Item -LiteralPath $root).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Owned root is a reparse point' }
+    foreach ($file in @('mysqld.exe','mysql.exe','mysqladmin.exe')) {
+        $copy=Join-Path $root ('bin\'+$file)
+        if ((Sha $copy) -cne $state.binary_pins.$file -or !((Get-Item -LiteralPath $copy).Attributes -band [IO.FileAttributes]::ReadOnly)) { throw ('Copied read-only binary changed: '+$file) }
+    }
+    $root
+}
+function Save { WriteJson $statePath $state }
+function CheckServer {
+    $root=CheckRoot $state
+    if ((Sha (Join-Path $root 'ca.pem')) -cne $state.ca_sha256) { throw 'CA pin differs' }
+    $process=Get-CimInstance Win32_Process -Filter ('ProcessId = '+$state.pid)
+    if ($null -eq $process -or $process.ExecutablePath -ine (Join-Path $root 'bin\mysqld.exe') -or !$process.CommandLine.Contains($root)) { throw 'Own PID/executable/command line differs' }
+    $facts=@(& (Join-Path $root 'bin\mysql.exe') @script:common '--execute=SELECT @@server_uuid; SELECT @@port; SELECT @@require_secure_transport; SELECT @@event_scheduler;')
+    if ($LASTEXITCODE -ne 0 -or ($facts -join "`n") -cne (@($state.server_uuid,[string]$state.port,'1','OFF') -join "`n")) { throw 'Actual TLS SQL identity/security differs' }
+}
+CheckSources
+foreach ($required in @($go,(Join-Path $dist 'bin\mysqld.exe'),(Join-Path $dist 'bin\mysql.exe'),(Join-Path $dist 'bin\mysqladmin.exe'),(Join-Path $dist 'share'),(Join-Path $PSScriptRoot 'gateway_native_tls.go'))) { if (!(Test-Path -LiteralPath $required)) { throw ('Missing prerequisite: '+$required) } }
+if ($Action -eq 'Prepare') {
+    if (Test-Path -LiteralPath $pointer) { throw 'Existing active attempt pointer: inspect instead of overwriting' }
+    $attempt=[Guid]::NewGuid().ToString('N')
+    $root=Join-Path ([IO.Path]::GetTempPath()) ('cm-gateway-restore-'+$attempt)
+    if ($root -match '[^\x00-\x7F]' -or (Test-Path -LiteralPath $root)) { throw 'Fresh ASCII root unavailable' }
+    $port=0
+    $priorPorts=@(Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'joint-eight-attempt-*.json' -File | ForEach-Object { (Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json).port })
+    do {
+        $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
+        try { $listener.Start(); $port=$listener.LocalEndpoint.Port } finally { $listener.Stop() }
+    } while ($port -in (@(63507,65298,59355,65299,61189,62877,56376,56251,50284)+$priorPorts))
+    $nonce=[Guid]::NewGuid().ToString('N')
+    $statePath=Join-Path $PSScriptRoot ('joint-eight-attempt-'+$attempt+'.json')
+    $state=[ordered]@{attempt=$attempt;root=$root;port=$port;owner_nonce=$nonce;phase='allocated-before-copy';pid=$null;front_session=$null;server_uuid=$null;ca_sha256=$null;binary_pins=[ordered]@{};native_binary=$null;native_binary_sha256=$null;build_exit=$null;native_exit=$null;source_scope_sha256=(Sha $scopePath);created_utc=(Get-Date).ToUniversalTime().ToString('o')}
+    New-Item -ItemType Directory -Path $root | Out-Null
+    [IO.File]::WriteAllText((Join-Path $root 'owner-nonce.txt'),$nonce,[Text.Encoding]::ASCII)
+    Save
+    [IO.File]::WriteAllText($pointer,$statePath,$utf8)
+    foreach ($part in @('bin','share')) { Copy-Item -LiteralPath (Join-Path $dist $part) -Destination (Join-Path $root $part) -Recurse }
+    foreach ($part in @('bin','share')) { Get-ChildItem -LiteralPath (Join-Path $root $part) -File -Recurse | ForEach-Object { $_.IsReadOnly=$true } }
+    foreach ($file in @('mysqld.exe','mysql.exe','mysqladmin.exe')) {
+        $source=Join-Path $dist ('bin\'+$file); $copy=Join-Path $root ('bin\'+$file)
+        $state.binary_pins[$file]=Sha $source
+        if ((Sha $copy) -cne $state.binary_pins[$file]) { throw 'Copied binary differs from local distribution' }
+    }
+    $state.phase='prepared-no-go-no-sql'; Save
+    $state | ConvertTo-Json -Depth 10
+    exit 0
+}
+$statePath=Get-Content -LiteralPath $pointer -Raw
+$state=Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+if ((Sha $scopePath) -cne $state.source_scope_sha256) { throw 'Source scope manifest changed' }
+$root=CheckRoot $state
+$stem=Join-Path $PSScriptRoot ('joint-eight-'+$state.attempt)
+$script:transportCommon=@('--no-defaults','--host=127.0.0.1',('--port='+$state.port),'--user=root','--protocol=TCP','--ssl-mode=VERIFY_IDENTITY',('--ssl-ca='+$root+'\ca.pem'))
+$script:common=$transportCommon+@('--batch','--skip-column-names')
+if ($Action -eq 'Build') {
+    if ($state.phase -ne 'prepared-no-go-no-sql') { throw 'Build phase cannot be repeated implicitly' }
+    OfflineGo
+    Push-Location (Join-Path $repo 'backend')
+    try {
+        $ErrorActionPreference='Continue'
+        & $go run (Join-Path $PSScriptRoot 'gateway_native_tls.go') $root 2>&1 | Tee-Object -FilePath ($stem+'-tls-build.log')
+        $tlsExit=$LASTEXITCODE
+        $ErrorActionPreference='Stop'
+        if ($tlsExit -ne 0) { throw ('Certificate helper natural exit '+$tlsExit) }
+        $state.ca_sha256=Sha (Join-Path $root 'ca.pem'); Save
+        $binary=Join-Path $PSScriptRoot ('joint-eight-'+$state.attempt+'.test.exe')
+        $ErrorActionPreference='Continue'
+        & $go test -c -p=1 -o $binary ./internal/systembackup/domain 2>&1 | Tee-Object -FilePath ($stem+'-build.log')
+        $state.build_exit=$LASTEXITCODE
+        $ErrorActionPreference='Stop'
+        if ($state.build_exit -ne 0) { $state.phase='build-failed'; Save; throw ('Native test build natural exit '+$state.build_exit) }
+        CheckSources
+        $state.native_binary=$binary; $state.native_binary_sha256=Sha $binary
+        $state.phase='built-no-sql'; Save
+    } finally { Pop-Location }
+    $state | ConvertTo-Json -Depth 10
+    exit 0
+}
+if ($Action -eq 'Start') {
+    if ($state.phase -ne 'built-no-sql' -or (Sha $state.native_binary) -cne $state.native_binary_sha256) { throw 'Start requires exact successful frozen build' }
+    if (Test-Path -LiteralPath (Join-Path $root 'data')) { throw 'Datadir already exists: no reuse' }
+    & (Join-Path $root 'bin\mysqld.exe') --no-defaults --initialize-insecure "--basedir=$root" "--datadir=$root\data" "--log-error=$root\initialize.err"
+    if ($LASTEXITCODE -ne 0) { $state.phase='initialize-failed'; Save; throw 'Initialize natural failure preserved' }
+    $arguments=@('--no-defaults',"--basedir=$root","--datadir=$root\data",'--bind-address=127.0.0.1',('--port='+$state.port),'--mysqlx=OFF','--event-scheduler=OFF','--performance-schema=OFF','--innodb-buffer-pool-size=32M','--innodb-log-buffer-size=4M','--table-open-cache=128','--table-definition-cache=400','--tmp-table-size=16M','--max-heap-table-size=16M','--max-connections=24','--require-secure-transport=ON',"--ssl-ca=$root\ca.pem","--ssl-cert=$root\server.pem","--ssl-key=$root\server-key.pem","--log-error=$root\server.err")
+    $server=Start-Process -FilePath (Join-Path $root 'bin\mysqld.exe') -ArgumentList $arguments -WindowStyle Hidden -PassThru
+    $state.pid=$server.Id; $state.phase='starting-hidden'; Save
+    $deadline=(Get-Date).AddSeconds(25)
+    do {
+        $ErrorActionPreference='Continue'
+        $uuid=@(& (Join-Path $root 'bin\mysql.exe') @common '--execute=SELECT @@server_uuid' 2>$null)
+        $connectExit=$LASTEXITCODE
+        $ErrorActionPreference='Stop'
+        if ($connectExit -eq 0 -and $uuid.Count -eq 1 -and $uuid[0] -match '^[a-f0-9-]{36}$') { break }
+        if ($server.HasExited -or (Get-Date) -gt $deadline) { throw 'Startup failed: preserve state and root' }
+        Start-Sleep -Milliseconds 200
+    } while ($true)
+    $state.server_uuid=[string]$uuid[0]; CheckServer
+    $state.phase='tls-ready'; Save
+    WriteJson ($stem+'-mysql-meta.json') $state
+    $state | ConvertTo-Json -Depth 10
+    exit 0
+}
+if ($Action -eq 'Run') {
+    if ($state.phase -ne 'tls-ready' -or (Sha $state.native_binary) -cne $state.native_binary_sha256) { throw 'Run requires exact ready binary and server; no implicit rerun' }
+    CheckServer; OfflineGo
+    $env:CLAWMANAGER_GATEWAY_RESTORE_MYSQL_META=$stem+'-mysql-meta.json'
+    $nativeArgs=@('-test.run=^TestJointEightPublicWorkerActualTLSMySQL$','-test.v','-test.timeout=4m')
+    $state.phase='native-running'; Save
+    Push-Location (Join-Path $repo 'backend\internal\systembackup\domain')
+    try {
+        $ErrorActionPreference='Continue'
+        & $state.native_binary @nativeArgs 2>&1 | Tee-Object -FilePath ($stem+'-native.log')
+        $state.native_exit=$LASTEXITCODE
+        $ErrorActionPreference='Stop'
+        $state.phase='native-natural-exit'; CheckSources; Save
+    } finally { Pop-Location; Remove-Item -LiteralPath Env:CLAWMANAGER_GATEWAY_RESTORE_MYSQL_META -ErrorAction SilentlyContinue }
+    $state | ConvertTo-Json -Depth 10
+    exit $state.native_exit
+}
+if ($Action -eq 'Cleanup') {
+    if ($state.phase -ne 'native-natural-exit') { throw 'Cleanup requires natural native completion; inspect failures first' }
+    CheckServer
+    $facts=@(& (Join-Path $root 'bin\mysql.exe') @common '--execute=SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME; SELECT CONCAT(User,''@'',Host,'':'',account_locked) FROM mysql.user ORDER BY User,Host; SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID<>CONNECTION_ID();')
+    if ($LASTEXITCODE -ne 0) { throw 'Final census failed' }
+    $expected=@('information_schema','mysql','performance_schema','sys','mysql.infoschema@localhost:Y','mysql.session@localhost:Y','mysql.sys@localhost:Y','root@localhost:N','0')
+    WriteJson ($stem+'-final-census.json') $facts
+    if (($facts -join "`n") -cne ($expected -join "`n")) { throw 'Owned residue differs: preserve root for diagnosis' }
+    Copy-Item -LiteralPath (Join-Path $root 'ca.pem') -Destination ($stem+'-public-ca.pem')
+    Copy-Item -LiteralPath (Join-Path $root 'initialize.err') -Destination ($stem+'-initialize.log')
+    & (Join-Path $root 'bin\mysqladmin.exe') @transportCommon shutdown
+    if ($LASTEXITCODE -ne 0) { throw 'Normal TLS shutdown not acknowledged' }
+    $deadline=(Get-Date).AddSeconds(20)
+    while (Get-Process -Id $state.pid -ErrorAction SilentlyContinue) { if ((Get-Date) -gt $deadline) { throw 'Own PID did not naturally exit' }; Start-Sleep -Milliseconds 100 }
+    Copy-Item -LiteralPath (Join-Path $root 'server.err') -Destination ($stem+'-shutdown.log')
+    $resolved=CheckRoot $state
+    if (Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq (Join-Path $resolved 'bin\mysqld.exe') -or ($_.CommandLine -and $_.CommandLine.Contains($resolved)) }) { throw 'Owned root still referenced by live process' }
+    Remove-Item -LiteralPath $resolved -Recurse -Force
+    if (Test-Path -LiteralPath $resolved) { throw 'Owned root remains' }
+    $state.phase='normal-tls-shutdown-and-root-removed'; Save
+    Remove-Item -LiteralPath $pointer
+    $state | ConvertTo-Json -Depth 10
+}
