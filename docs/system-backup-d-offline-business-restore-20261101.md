@@ -194,6 +194,18 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 不同 PVUID 仍可能对应相同 NFS server/export 或 CSI volume handle；本次只防描述层别名，不证明物理隔离。这些存储后端事实必须由当前独立 observer/proof 闭合。controller 的 drill/sdr task claim 与 provider 的 restore_resource/srr ownership 是不同身份，也不能互换。共享路径已交由主监督协调，目前尚无边界确认，继续保持未修改。
 
+### A 只读目标授权审查落实清单（仅合同与路径，尚未启用）
+
+主监督转交了基于 1626bb25 的 A 只读审查。本分支再次只读核对相关已有实现，新增共享协调路径 **`backend/internal/systembackupcontroller/execution_identity.go`**：`PinnedExecutionIdentity.decode` 只接受 prepare/capture/preflight/recover/issue_worker；`checkSQLAction` 只读取 backups/preflights；`allowSQLAction` 默认 capture。仅扩展 `execution_ports.go` 不足以授权 drill。后续应建立明确 restore/normalize/verify actions 与事务内复查，不能靠替换 TaskType、默认 capture action 或一个 claim 成功结果放行。该文件尚未修改。
+
+冻结计划与授权中必须分别保存下列身份，不允许字符串别名转换：controller/attempt 为 drill + sdr；phase 为 restore/normalize/verify，对应任务状态 restoring/normalizing/verifying；provider proof target 为 restore_resource + srr；108 资源行通过 installation + drill_public_id 关联原 sdr。`restore_drill` 不是该任务 kind。108 restore_drill_resources 的 creating/created/ownership_unknown 等生命周期与123 runtime_resources 的 creating/ready 等不同，不能直接换表名复用 MappedResourceRows。既有 `kube.NewAttemptMappedResourceRows` 的 task/type/attempt/phase 冲突拒绝必须保留，旧 attempt 同物理键不能当资源不存在。
+
+provider 认证应复用 `systembackupsecurity/providerproof_registration.go` 的 `PrepareProviderProofEvidence`，并通过 `providerproof_transaction.go` 的 `ProviderRegistrationService.Register` 或 `providerproof_sql.go` 的 `StageProviderProofEvidence` 原事务边界登记。可信 issuer、DB 时钟、已锁定资源及 row_version、location/owner token、UID/immutable version 均需逐项核对。restore_resource 仅接受 ownership，不能接受 present_sealed。签名通过或证据登记完成既不自动更新资源生命周期，也不产生 restore 写权限；此链不改成本分支自行签名或布尔 proof。
+
+实际 `RestoreTargetProof.VerifyRestoreTarget` 的生产实现仍缺失。CheckRestoreTarget 中的 UID、server UUID、evidence SHA、策略字符串只构成待核对描述。后续实现必须独立观察当前目标、网络隔离、空白库（写前）、写者退出、存储身份与 grants，并在前向操作边界持续复核；verify 阶段应读取已恢复目标，不能继续要求空白库，也不能从冻结 plan 推导当前事实。
+
+独立 verifier 必须核对 SELECT-only/无角色、同 server/database、与 restore writer 不同账户，并等待实际撤权。旧 `control/credentials.go` 的 `DatabaseCredentials.Revoke` 展示了必要动作：锁账户、清除现存连接、删除账户并确认零连接；该实现依赖 legacy vault/fence，不能原样装配 v2。Job Complete、资源 revoked 标志、取消请求或旧 profile 检查成功均不足以证明这一事实。正式失败/取消终态必须保留不确定写入与残留资源，直到有同任务/attempt 的退出与撤权观察，不能以 capture 的 source-resumed 条件结案。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。
