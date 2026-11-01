@@ -311,7 +311,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T06:18:33.764220+00:00",
+  "updated_at_utc": "2026-11-01T06:31:43.603227+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -519,7 +519,8 @@
     "D_generic_publisher_renew": "18471ef3d4ae04080443dfda2931a1d862356d38",
     "D_actual_existing_bind_readback": "6510f4e8a18464d661b77541f0e6f2a1cad8da2e",
     "D_confirmed_publication_continuation": "0ccc46cfd3fb6603655f6fcf5a380095fd0c00f8",
-    "D_all_closers_join": "eadb136fb6d69a7aea1aaa525b45fd8fd2079737"
+    "D_all_closers_join": "eadb136fb6d69a7aea1aaa525b45fd8fd2079737",
+    "A_original_part_container": "4220d02a5d06b4a7725ed024e9a0f43721cd1ff5"
   },
   "A_original_certificate_known_bytes_independent": {
     "outcome": "PASS",
@@ -704,5 +705,119 @@
       }
     ],
     "remaining": "RunPublicationContinuation still returns NextIntentRequired or FinalizationRequired until actual typed producer is connected. Current interface allows marker only; acceptance/catalog and final taskCAS are incomplete. Not formal signed manifest/marker, full immutable artifact, acceptance/registration/restore or terminal success. No first-forward complete proof or remote/Linux deployment."
+  },
+  "A_original_part_container_independent": {
+    "outcome": "PASS",
+    "source": "4220d02a5d06b4a7725ed024e9a0f43721cd1ff5",
+    "integration": "11e0961c24545043541429ba54f770f96ba6cb14",
+    "exact_owner_go_files": {
+      "backend/internal/systembackuppartcontainer/capacity_test.go": "fd1e4ce17c6f61c70141743b010dbb02b2d653b9db609bc599e70a58239cbd98",
+      "backend/internal/systembackuppartcontainer/container_test.go": "5cdc8b52aa35dab2ea3684ba3a1fba1df378ef4dfaf972e9f91c43bf2f588edb",
+      "backend/internal/systembackuppartcontainer/header.go": "c89e897bd51e2ea95324b9fc7d4f338a648238267529673bf3e7ced4615c3232",
+      "backend/internal/systembackuppartcontainer/reader.go": "e74daca8b46e467c5d0e70010342795d9db1cd7afe36cced56f4e6f3ff347a29",
+      "backend/internal/systembackuppartcontainer/reader_header_test.go": "62641d45461f4ec786ca8a97eeccc2ab601df704b499c48f9e9f3599e75da1d5",
+      "backend/internal/systembackuppartcontainer/types.go": "10d64877b2479f523a02313f09eaa0211feded61777d22fb7cbe3dda77d9b962",
+      "backend/internal/systembackuppartcontainer/writer.go": "8c6c2c34cb0526c667200ca1a79b05b05464b0ebc419ad023fa1b5a02fc21413"
+    },
+    "independent_codec_plus_counter_seconds": 5.247,
+    "permanent_canonical_regression_package_seconds": 5.251,
+    "sessions": {
+      "64705": {
+        "terminal_exit": 0,
+        "closed": true
+      }
+    },
+    "scope": "Versioned deterministic physical container: original PartIndex order, exact original C/envelope bytes, unchanged StreamSpec/AAD and original checkpoints. Independent Reader uses exact parsed prefix/header and same sequential payload for whole/member hashes, offsets/lengths, concrete fixed object version and mandatory EOF. Named actual AES-GCM DATA only, no capture/signing/KEK/source/DR authority.",
+    "old_root_counter": {
+      "outcome": "FAIL2.888 on frozen original uncommitted WIP; retained",
+      "scope": "First prefix/header delivered different CipherPath than later whole-object bytes; old Inspect returned nil and forged path under original SHA. No SQL or production acceptance.",
+      "log": ".tools/supervisor-container-header-baseline.log",
+      "log_sha256": "baa4f4c23d853f8bf7a9399597b6137f2e8b86170b04d07c79cd650549a7ddea",
+      "snapshot_inventory": {
+        "container_test.go": "c88d9a29637b90f07cbf8a5708d575fd0c1ec99624cbdaeaa6b2283e0933e801",
+        "reader.go": "3513705655a5c49c20c9381741fe9a07851b2a1ec68ad4450f7478ad97a7846d",
+        "types.go": "8e720fbfd9787ff15e06aa5d65decce12a7e1b12d43e60737f53f11329e55d43",
+        "writer.go": "7b5f24a9877590e3206b94e4e4d4874c81dbd2fda1379c93ffacc79a81211d86"
+      }
+    },
+    "fixed_root_counter": "Original attack adapted to explicit indexLimit and generalized bounded header ranges; assertion proves altered header and original payload were delivered before Inspect rejected. No vacuous non-injection PASS. Independent standard JSON/JCS implementation verifies actual physical header.",
+    "root_permanent_regression": {
+      "file": "backend/internal/systembackuppartcontainer/header_canonical_test.go",
+      "sha256": "b4ef1a3dde8d721d29871de2d4cac7529907dffea40b325c38c81ae2084d6ab6",
+      "reason": "Custom encoder/parser agreeing does not itself establish declared canonical JSON; independently check actual framed bytes with json.Valid and JCS."
+    },
+    "capacity_scope": "Config-bound900GiB artifact/8GiB index ceilings, int64 physical offsets and overhead;16/900GiB declared layouts and early sink errors are arithmetic/boundary DATA, not large-body transfers. Actual10000-member >8MiB header serialized and streamed under explicit original index limit; overbudget/truncation refused.",
+    "remaining": "Not connected to actual same-task upload-only Job/manifest/index/fixed-version remote readback/acceptance/catalog/final task state or independent restore. Existing transport/producer8GiB caps are separate A/D work. No full9/16/900GiB C bodies generated or verified. Linux guard/readiness unchanged; no remote activity.",
+    "logs": [
+      {
+        "path": ".tools/supervisor-a-container-codec-final.log",
+        "sha256": "67af08dd1f1cd3443e60b370eec85c89511f7f3f929e37bccdf8ac04defc8f0c"
+      },
+      {
+        "path": ".tools/supervisor-a-container-canonical-permanent.log",
+        "sha256": "f3ae7eae1fa1fed78c8bae7ddb1afcceb42d2c74dd463a0f6af113c5f9149d64"
+      }
+    ]
+  },
+  "D_original_capacity_snapshot_independent": {
+    "outcome": "PASS",
+    "sources": [
+      "72ea8668573a7c027ecf105c3a9c63a85ba568ae",
+      "0a23d146d4c88e6bf6df52c5d70db792195d2b38"
+    ],
+    "integration": "cd961eea8aa8048901da3654eeeaea8f7a57007c",
+    "exact_owner_go_files": {
+      "backend/internal/systembackupexecution/a_publication_journal_mysql_test.go": "c36b870d2d935472ed8bc56068dc3696a629894989d761e12a7c4d4b2b9f071b",
+      "backend/internal/systembackupexecution/artifact_read_catalog.go": "c0ef448b325663b1593c6b2141f9eede5b2304574c35b8af9a86ef7531ba515c",
+      "backend/internal/systembackupexecution/artifact_read_catalog_test.go": "50479b7a82b13484beb9524a9692261d549860f23b86a7eaec5bf674a927ab08",
+      "backend/internal/systembackupexecution/artifact_read_scope_test.go": "27cf41d6713ff4750df3607d3f17a2d85b1abd90dc25f3aa52732a8f2020ea62",
+      "backend/internal/systembackupexecution/artifact_read_versions.go": "29293c994fca09d5fd147e9b7ba06776aebf595f588bdd9b36a56388f924a741",
+      "backend/internal/systembackupexecution/artifact_read_versions_test.go": "a7c27560038694284283abf2d6831b8153e9690103dfd40445c821e19d69571a",
+      "backend/internal/systembackupexecution/publication_capacity.go": "9cb711f39436fcce9dd77cb9def3516c6980d5a00be87cd3942220787f21fa1e",
+      "backend/internal/systembackupexecution/publication_capacity_initial_mysql_test.go": "5ba9f25e97068993490b053db4e5b6fd28bb02dc293155cb3e56569a7ae06d1e",
+      "backend/internal/systembackupexecution/publication_capacity_mysql_test.go": "adc6c7d1761f0e1dc194dee6a2d1460a31272ecb2cb0f533bf29a41d0b43a0dd",
+      "backend/internal/systembackupexecution/publication_capacity_test.go": "7fd1df0fc998c9c6036b446ed84569ae55c310e1232e0eb96235fe737b931855",
+      "backend/internal/systembackupexecution/publication_continuation.go": "1b57491fd0a7f94893fc4ead5915f67acce52d0fe8cb86bb9ac055f84e4f3537",
+      "backend/internal/systembackupexecution/publication_native_s3.go": "9c97faef753a9c9d90365879b842cbbd523b8b9d0b40b488ca79c3638acff398"
+    },
+    "scope": "Original 097/098 task/config/current publisher guard; snapshot exact bytes/size/SHA/JCS and both budget fields checked in the same transaction on initial binding and later rechecks. Immutable per-reader limits and tightening-only transport clones; configured v12 900GiB artifact and 8GiB index ceilings preserved.",
+    "native_package_seconds": 40.328,
+    "native_continuation_nine_case_seconds": 28.16,
+    "unchanged_root_original_counter_seconds": 2.85,
+    "default_execution_package_seconds": 9.071,
+    "sessions": {
+      "1522": {
+        "terminal_exit": 0,
+        "closed": true
+      },
+      "17616": {
+        "terminal_exit": 0,
+        "closed": true
+      }
+    },
+    "native_server": {
+      "port": 65298,
+      "uuid": "9679c9da-d595-11f1-b25e-745d22085e06"
+    },
+    "counter": {
+      "file": ".tools/supervisor_capacity_initial_snapshot_mysql_test.go",
+      "sha256": "d7f75a23f01479d84885edca2661f351d4f39b9b139c7554f976634a4793bf2b",
+      "old_result": "FAIL6.037: fresh current access accepted legal materialized16->17GiB drift with original task snapshot JSON/SHA unchanged",
+      "final_result": "PASS with the unchanged independent test-only overlay; healthy original16GiB accepted, same legal17GiB materialized drift rejected",
+      "setup_failure_retained": "Earlier32GiB injection failed staging CHECK; not vulnerability or fix proof. No CHECK/staging protection was disabled."
+    },
+    "fixture_integrity": "Full original ConfigValues frozen before capture/authority/key creation. No admitted snapshot/hash, current receipt, permit window or readiness was rewritten.",
+    "capacity_test_limits": "9/900GiB HEAD metadata and custom HTTP PUT boundary model only; actual9GiB advertised version with short body is refused by mandatory full EOF. No multi-GiB body transfer or restoration success claimed.",
+    "remaining": "Reader component still authenticates partial catalog/manifest/index content only. Actual typed full artifact verification, production upload/acceptance/catalog/final taskCAS and independent restore remain incomplete. No remote/Linux deployment or full backup success.",
+    "logs": [
+      {
+        "path": ".tools/supervisor-d-capacity-snapshot-final-native.log",
+        "sha256": "02cc7956d53d61600e62fcf9dbd4ff83bba6a29881e48dd3d21af3aec2351d47"
+      },
+      {
+        "path": ".tools/supervisor-d-capacity-snapshot-final-package.log",
+        "sha256": "3ab85e2373778dc13279690e8649c6e2813aa6524b70b5ced87e79996e691177"
+      }
+    ]
   }
 }
