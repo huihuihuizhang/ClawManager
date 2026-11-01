@@ -94,6 +94,9 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	seed.Tables = append(seed.Tables, find(operationSeed, "northbound_operations"))
 	policy.Dependencies["northbound_operations"] = operationPolicy.Dependencies["northbound_operations"]
 	policy.Configs.(JSONRegistry)["northbound_operations.request_payload"] = operationPolicy.Configs.(JSONRegistry)["northbound_operations.request_payload"]
+	routingSeed, _, routingPolicy := routingRestoreFixture()
+	seed.Tables = append(seed.Tables, find(routingSeed, "routing_classifier_settings"))
+	policy.Dependencies["routing_classifier_settings"] = routingPolicy.Dependencies["routing_classifier_settings"]
 	create := func(name string) *sql.DB {
 		exec(admin, "CREATE DATABASE `"+name+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
 		cleanup("DROP DATABASE `" + name + "`")
@@ -102,7 +105,7 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		c.MultiStatements = true
 		db := open(c)
 		for _, table := range seed.Tables {
-			if table.Name == "northbound_caller_policies" || table.Name == "northbound_operations" {
+			if table.Name == "northbound_caller_policies" || table.Name == "northbound_operations" || table.Name == "routing_classifier_settings" {
 				continue
 			}
 			if _, skill := skillCaptureColumns[table.Name]; skill {
@@ -125,7 +128,7 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		}
 		// Empty template prerequisite for actual owner-Team migration 077.
 		exec(db, "CREATE TABLE custom_team_templates (id INT PRIMARY KEY,user_id INT NOT NULL) ENGINE=InnoDB")
-		for _, file := range []string{"008_add_skill_management.sql", "023_add_skill_hub.sql", "039_add_skill_package_materialize.sql", "045_add_northbound_api.sql", "057_add_northbound_admin_settings.sql", "066_add_northbound_api_keys.sql", "077_add_northbound_owner_teams.sql"} {
+		for _, file := range []string{"008_add_skill_management.sql", "023_add_skill_hub.sql", "039_add_skill_package_materialize.sql", "045_add_northbound_api.sql", "057_add_northbound_admin_settings.sql", "060_add_routing_classifier_settings.sql", "061_add_routing_classifier_mode.sql", "066_add_northbound_api_keys.sql", "077_add_northbound_owner_teams.sql"} {
 			raw, err := os.ReadFile(filepath.Join("..", "..", "db", "migrations", file))
 			if err != nil {
 				t.Fatal("migration unavailable")
@@ -195,6 +198,9 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	operationAdapter := policy.Dependencies["northbound_operations"]
 	operationAdapter.SchemaSHA256 = SchemaDigest(find(snapshot, "northbound_operations"))
 	policy.Dependencies["northbound_operations"] = operationAdapter
+	routingAdapter := policy.Dependencies["routing_classifier_settings"]
+	routingAdapter.SchemaSHA256 = SchemaDigest(find(snapshot, "routing_classifier_settings"))
+	policy.Dependencies["routing_classifier_settings"] = routingAdapter
 	key := bytes.Repeat([]byte{73}, 32)
 	binding := staging.Binding{BackupID: "offline-business", Attempt: "1", Path: "mysql/domain", CaptureContextHash: strings.Repeat("a", 64), EnvelopeID: "local-fixture"}
 	var cipher bytes.Buffer
@@ -271,6 +277,10 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 				if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE id=999").Scan(&users) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM skills").Scan(&skills) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM northbound_caller_policies").Scan(&callers) != nil || reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM northbound_operations").Scan(&operations) != nil || users != 1 || skills != 0 || callers != 0 || operations != 0 {
 					t.Fatal("rollback failed")
 				}
+				var classifiers int
+				if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM routing_classifier_settings").Scan(&classifiers) != nil || classifiers != 0 {
+					t.Fatal("classifier rollback failed")
+				}
 				return
 			}
 			if err != nil {
@@ -326,6 +336,11 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 			if reader.QueryRowContext(ctx, "SELECT request_payload,finished_at FROM northbound_operations WHERE operation_id='source-operation-1'").Scan(&requestPayload, &finished) != nil || finished != "2026-10-01 01:02:04.654321" || strings.Contains(requestPayload, "named-source-secret") || !strings.Contains(requestPayload, `": "`) || !strings.Contains(requestPayload, "保留原始参数") {
 				t.Fatal("operation existing completion or MySQL JSON redaction/readback fidelity lost")
 			}
+			var mode, endpoint, key, updated string
+			var timeout int
+			if reader.QueryRowContext(ctx, "SELECT routing_mode,base_url,encrypted_api_key,timeout_ms,updated_at FROM routing_classifier_settings WHERE id=1").Scan(&mode, &endpoint, &key, &timeout, &updated) != nil || mode != "rules" || endpoint != "" || key != "" || timeout != 5000 || updated != "2026-10-01 01:02:03" {
+				t.Fatal("classifier retains outbound execution or lost source history")
+			}
 			exec(targetAdmin, "UPDATE skill_scan_results SET findings_json='changed' WHERE id=15")
 			if VerifyDrill(ctx, reader, proof, plan) == nil {
 				t.Fatal("tampering passed")
@@ -344,5 +359,5 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	if digest, _ := Digest(after); digest != before {
 		t.Fatal("source changed")
 	}
-	t.Log("local MySQL only; actual Skills, caller 057/066 and operations 045/066/077 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim")
+	t.Log("local MySQL only; actual Skills, caller 057/066, operations 045/066/077 and routing 060/061 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim")
 }

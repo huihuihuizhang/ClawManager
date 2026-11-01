@@ -137,6 +137,16 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 其余十张 owner 表的接线顺序：先 A 的当前 llm_models/062 扩展、`llm_model_user_grants` 与 `routing_classifier_settings` 的闭合模型/用户与 Secret 策略；再 `gateway_keys`、budget reservations/ledger 的同组映射与原账务状态；然后绑定真实对象版本的 image artifacts/jobs；最后 resources 的 northbound_admin_settings（35 列）、owner_records、settings_audit，保持目标观测 version/absence 与 CAS 的区别。不会用十张表统一 preserve 或静态固定值代替 owner 合同。
 
+### Routing 061 公共 SQL 适配已完成
+
+新增 `routing-classifier.061`：明确匹配 060/061 六列、全 NOT NULL、id 主键及源/目标精确 SchemaDigest，源列只能 preserve 后再执行 owner 规则。singleton 必须 id=1、timeout 遵循现有服务 100–30000 范围，源 mode 只接受空默认/rules/hybrid/laya；未知模式、缺字段、nullable/schema 漂移、固定值掩盖原 credential 均拒绝。
+
+旧 `NormalizeDataRow` 和新公共 Normalize 都调用新提取的 `gatewaypolicy.DisableRoutingClassifier`，避免两套去活逻辑：目标 mode=rules，base_url/encrypted_api_key 清空，id/timeout/updated_at 精确保留。新路径不解密旧 ciphertext、不调用原 endpoint，也不把旧 credential 作为目标凭据。公共 VerifyDrill 先检查预期隔离语义，再独立读回。旧路径仍尊重原列 nullability：YES→SQL NULL、NO→非 NULL empty；Reason=restore_disabled、Quarantined、Before 与 After/source 的独立字节副本全部已有专门回归。
+
+`routing-final-four-packages-native-mysql.txt`：domain 13.671s（native 10.04s）、worker 35.977s、profile 3.206s、gatewaypolicy 0.349s，全 PASS；具名 driver 的 worker 测试关闭源后恢复、关闭 writer 后独立读回，authority callback 仍明确仅 fixture。真实 MySQL 8.4.13 专用端口 **53611** 加载实际 060/061，非空 endpoint/ciphertext/mode 与 caller/operations/Skills/Teams 共用原事务，验证目标 non-NULL empty、规则模式、原 timeout/更新时间、三种失败全回滚、撤权后认证失败和源快照未变。`routing-legacy-owner-pass.txt` 是根 systembackup 包相关 owner 回归 3.181s（非该包全部测试）；未修改其他旧 switch 分支。专用 server/datadir 已关闭删除，见 `routing-mysql-cleanup.json`，精确源指纹见 `routing-common-scope.json`。
+
+剩余 owner 表现为九张。模型授权的下一个具体缺口是：当前 llm_models 相比已接旧列还包含组/优先级/并发/上下文、能力与 override、reasoning mode、visibility/access version、图像能力/价格等 migration 049–071 扩展；A 的完整 batch 还要求非空 credential 的不可变 Secret 版本与真实 source proof。不能为了让 grants 成功而给模型临时 generic preserve 或编造版本。先补 owner 当前投影/版本合同和闭合模型/用户映射，再接 `llm_model_user_grants`；正式 dispatcher 的完整源句柄依赖和后续顺序仍如上一节。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。

@@ -1,0 +1,14 @@
+=== RUN   TestRoutingSharedOwnerPolicyPreservesLegacyContract
+--- PASS: TestRoutingSharedOwnerPolicyPreservesLegacyContract (0.00s)
+=== RUN   TestRestoredGatewayStateCannotAuthenticateOrReplay
+=== RUN   TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_keys
+=== RUN   TestRestoredGatewayStateCannotAuthenticateOrReplay/routing_classifier_settings
+=== RUN   TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_image_artifacts
+=== RUN   TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_image_jobs
+--- PASS: TestRestoredGatewayStateCannotAuthenticateOrReplay (0.00s)
+    --- PASS: TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_keys (0.00s)
+    --- PASS: TestRestoredGatewayStateCannotAuthenticateOrReplay/routing_classifier_settings (0.00s)
+    --- PASS: TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_image_artifacts (0.00s)
+    --- PASS: TestRestoredGatewayStateCannotAuthenticateOrReplay/gateway_image_jobs (0.00s)
+PASS
+ok  	clawreef/internal/systembackup	3.181s

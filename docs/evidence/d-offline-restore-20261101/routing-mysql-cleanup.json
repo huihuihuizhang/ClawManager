@@ -1,0 +1,7 @@
+{
+  "shutdown_confirmed": true,
+  "owned_host_temporary_directory_removed": true,
+  "process_identity_checked": true,
+  "other_instances_touched": false,
+  "owned_mysql_port": 53611
+}
