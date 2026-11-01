@@ -89,5 +89,18 @@ display override or late source-fact repair.
 
 This is A's self-test of a local protocol fixture, with original grants and
 deadlines retained. It establishes neither worst-case source-window margin nor
-production readiness. The three fresh-task post-Prepare mutation cases are
-running separately and are not counted as passed in this health result.
+production readiness. No fresh-task post-Prepare mutation case has passed.
+
+The separately started three-case run (handle 24643) was interrupted during its
+first case's original capture following a scheduling handoff request. It exited
+1 before any Stage fault assertion. Task
+`sbk_78b3f903-85bb-44be-b1eb-373ff50d9ac8` remains `capturing`, row version 7, in
+its uniquely matched schema `ad_d_six_542cb2b2fbac3b44`. The schema, its exact
+three controller/source/census accounts, task and temporary fixture were
+retained for supervision audit. Native process enumeration found no remaining
+matching Go/test process, and an independent TLS SQL read found zero connections
+to that schema. The retained fixture contains 152 files, including 16 staging
+files. This interrupted run did not complete normal stop/resume/cleanup and is
+not a capture, mutation, certificate or cleanup PASS. Audit metadata and exact
+candidate file hashes are in `.tools/a-interrupted-certificate-24643-audit.json`;
+the failed run log is `.tools/a-same-task-certificate-three-stage-faults-v1.log`.
