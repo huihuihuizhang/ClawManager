@@ -1,0 +1,9 @@
+{
+  "parent_commit": "9ca801773d9030255cc40c199393bd0599881fb4",
+  "scope": "historical capture metadata matching only; no authentication receipt or restore write authorization",
+  "production_callers_changed": false,
+  "source_sha256": {
+    "backend/internal/systembackup/domain/historical_capture_schema.go": "24d736581b37f50fe0372183ebd3ed2cfea47790fc1fd131faedc7cb958cb89b",
+    "backend/internal/systembackup/domain/capture_policy_compatibility_test.go": "f4fde1e4a1fcbf770123f48463acec81360cc64024e1f81573827a0914d37c6c"
+  }
+}

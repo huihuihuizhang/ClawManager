@@ -1,0 +1,14 @@
+=== RUN   TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions
+--- PASS: TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions (0.01s)
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table
+--- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/domain	2.966s
