@@ -1,0 +1,50 @@
+[
+  {
+    "path": "backend/cmd/system-backup-offline-security/main_test.go",
+    "sha256": "a03fd8374257b7b1932b6de662a9c8515e3cd29a5bdde7c1d7fe8de3829a4258"
+  },
+  {
+    "path": "backend/cmd/system-backup-offline-security/main.go",
+    "sha256": "9c483048ede836252d34ca38372cea2205126bd513038875d2f700b477c73c91"
+  },
+  {
+    "path": "backend/internal/systembackupkekadapter/offline_material_test.go",
+    "sha256": "adcdc25a1d666a9f382a380f1dc932402bd4f96bfd27c2f369a4f3a9d387b49d"
+  },
+  {
+    "path": "backend/internal/systembackupkekadapter/offline_material.go",
+    "sha256": "43eb826408950a80afdadee8b4ff03de243c921fe583ded1104dd2fb132cf86a"
+  },
+  {
+    "path": "backend/internal/systembackupoffline/coverage.go",
+    "sha256": "f1b44b239738e59bbc4c9ec9d185433c70fec4044898b8805a28a568d3cec011"
+  },
+  {
+    "path": "backend/internal/systembackupoffline/materials_test.go",
+    "sha256": "9dd31772d04745822db1e6e7c778adef96ae6fb2ff19b0753869a62f06de8767"
+  },
+  {
+    "path": "backend/internal/systembackupoffline/materials.go",
+    "sha256": "c26d4264287455f01987e0bde4d8c03c412fef7287ec2aee719ee66e12a07400"
+  },
+  {
+    "path": "backend/internal/systembackupoffline/templates.go",
+    "sha256": "cc41395a9af526cbc8ce24dbd0bf5f2d2d5d1c3a09de6a3475b52c0b1d1d90b6"
+  },
+  {
+    "path": "backend/internal/systembackupsecurity/offline_signing_material_test.go",
+    "sha256": "24df83e771e8e89f9904901c64d2ffd4ccc4860b6fcf1a6ab964522f986cf20b"
+  },
+  {
+    "path": "backend/internal/systembackupsecurity/offline_signing_material.go",
+    "sha256": "97e24c1ed857ee878739227a1fafc704a4c1a216620fcb140bc686d3bf5cac11"
+  },
+  {
+    "path": "scripts/system-backup-offline-provider-materials.py",
+    "sha256": "1518e543a9663ede424d76dca56de8a0d2bdddb721061d9e15af192be07d495a"
+  },
+  {
+    "path": "scripts/system-backup-offline-provider-materials.test.py",
+    "sha256": "56a056e5fc996d57df24918aa410fd9463d2465f586212b0a879ea0276389dcf"
+  }
+]
