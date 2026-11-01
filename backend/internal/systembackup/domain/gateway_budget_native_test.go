@@ -74,6 +74,7 @@ func TestGatewayBudgetPublicWorkerActualTLSMySQL(t *testing.T) {
 			f.exec(sourceAdmin, "INSERT INTO `"+table.Name+"`("+strings.Join(names, ",")+") VALUES("+strings.Join(marks, ",")+")", args...)
 		}
 	}
+	seedNativeGatewayAttributionHistory(t, f, sourceAdmin)
 	// Real repository/service authentication, not DTO IsUsable assertions.
 	sourceSession := f.upper(f.source, "root", "")
 	sourceKeys := repository.NewGatewayKeyRepository(sourceSession)
@@ -247,6 +248,7 @@ func TestGatewayBudgetPublicWorkerActualTLSMySQL(t *testing.T) {
 			if reader.QueryRowContext(f.ctx, "SELECT (SELECT COUNT(*) FROM users WHERE id=999),(SELECT COUNT(*) FROM gateway_keys),(SELECT COUNT(*) FROM gateway_key_budget_reservations),(SELECT COUNT(*) FROM gateway_key_budget_ledger)").Scan(&users, &keys, &reservations, &ledger) != nil || users != 1 || keys != 0 || reservations != 0 || ledger != 0 {
 				t.Fatal("whole native rollback failed", mode)
 			}
+			validateNativeGatewayHistoryRollback(t, f, reader, mode)
 			t.Logf("actual public native case=%s: reached evidence=%t commit=%t; rollback bootstrap=1 keys=0 reservations=0 ledger=0; writer physical sessions=0 and fresh login=3118 PASS", mode, evidenceReached, commitReached)
 			continue
 		}
@@ -292,4 +294,5 @@ func TestGatewayBudgetPublicWorkerActualTLSMySQL(t *testing.T) {
 		t.Log("preserved counterexample: real GetBudgetUsage with trusted write-capable fixture operator still changes revoked-key history: reservations 3->0, ledger 2->3; subsequent public verifier rejects PASS")
 	}
 	t.Log("native scope: real TLS/current gateway DDL and private core fixtures; not fullC source authentication, cluster isolation, image object proof or final qualification")
+	t.Log("fixture observation boundary: UUID/nonce/specified account lock only; it does not inventory other consumer accounts or existing writer sessions and is not a physical target isolation proof")
 }

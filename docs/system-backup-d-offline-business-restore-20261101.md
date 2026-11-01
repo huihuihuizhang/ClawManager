@@ -265,3 +265,13 @@ reserved 与 pending 各自保留 actual_cost 的 NULL/非 NULL；过期 reserva
 早期失败同样保留：memory observer 误复用 max-open=1 池导致等待（仅核对本任务父进程/命令后终止自有测试子进程）；空 bytes 与 nil clone 的 reflect 比较误判（改为 bytes.Equal 且分别核对 SQL NULL）；测试接口未暴露已有 alias writer（改为实际 concrete method 的接口断言）；过早关闭 evidence root 只触发 startup 拒绝、未进入写后窗口（移到真实 before-evidence，并强制断言 evidence/commit 到达）。后续日志分别证明修复，没有把提前失败当 rollback 成功。
 
 自有 MySQL 56251 / UUID `81275efe-d604-11f1-b2ac-745d22085e06` 已正常关闭清理。退出前核对 local nonce、CA SHA、实际 PID 14420/exe/command line、SQL UUID，且仅四个系统库、root 与三个 locked 内置账号、cleanup CLI 一条 session；所有 fixture DB/user/owner marker 已由 native cleanup 删除。mysqladmin 在 VERIFY_IDENTITY TLS 下正常 shutdown，进程自然退出后再次核对精确 Temp 根及 marker，再删除私有 bin/share/data/cert 根。`gateway-budget-mysql-cleanup.json` 与保留的 server shutdown log 给出清单；没有访问共享 63507/65298/59355 或监督者实例。
+
+### 三表候选之后的非空历史归因覆盖（纯测试独立小批）
+
+保持 `d3a6a67160bb223789712106957f29094a9da2bc` 不变，本批仅改四个 `_test.go` 与本交接/独立证据。现有小型 history 夹具经真实 migration 052 添加 BIGINT NULL 列及 index；每张 model_invocations/audit_events/cost_records 各四条原生 SQL 行：gateway_key_id 为 `9223372036854775807`、NULL、已删除 key `777`、现存 key `9223372036854775806`。确认前两种非 NULL orphan 在 source/target keys 中都不存在。真实 public worker capture、关闭源账号、restore、writer 退出/3118、独立 SELECT-only verify 后，再独立 CaptureSource 比对每个原始 cell、四行集合、schema digest、BIGINT NULL 形状及无 FK；没有因 orphan 补造 key 或添加约束。原金额/NULL/认证/1142/getter 反例继续全部通过。写后证据失败、commit 前取消、真实账号撤销三场景也分别验证三张 history 表全部回滚为零，原 bootstrap 保留。
+
+首轮 `gateway-history-native-first-red.txt` 保留真实失败：最小夹具的部分 invocation.status 为 NULL，既有 normalizeCrossDomain 会终止为 failed，严格 raw-cell 比对正确拒绝。修正夹具为合法 completed 历史终态，未改生产规则、未跳过任何 cell、未放宽独立 verifier。最终 `gateway-history-native-frozen.txt` 四场景 PASS（实际测试 7.95s，domain 11.180s）；四个适当包最终回归全 PASS，见 `gateway-history-four-packages-frozen.txt`。trace 核心结构仍是具名小夹具，不能据此声称完整生产 history schema 或 fullC 源认证。逐文件 raw/LF SHA 与 Git blob 独立列于 `gateway-history-scope.json`。
+
+**目标观察边界：**本 fixture 的 observe 只核对 UUID、nonce、指定账号 locked 状态，尚未枚举其他 service account 或已认证写 session，因此不构成真实物理 target isolation proof，更没有覆盖“存在其他消费者时拒绝”的生产性质。关闭/锁定本次 writer 仅证明它自身退出与 fresh login 拒绝，不能推断所有消费者已隔离。后续真实 targetproof 装配必须基于实际完整 consumer inventory、账号/进程/已有 session 等独立当前事实逐项拒绝；不能把这份 callback 当作生产授权。测试源码注释和最终日志均明确此边界，正式 B 拒绝路径不变。
+
+该小批新自有 TLS 56776 / UUID `f505b9cf-d60b-11f1-afc4-745d22085e06` / PID 23464 已正常 shutdown。关闭前按实际 exe/命令行、CA、UUID/nonce 核对，仅四个系统 schema、root 与三个锁定内置账号、cleanup CLI 会话；测试账号和 DB 全部清空。VERIFY_IDENTITY mysqladmin 正常关闭、进程自然退出后，仅删除再次核对 marker 的精确私有 Temp 根。证明 `gateway-history-mysql-cleanup.json`，正常关闭日志另存；未访问监督者或共享实例。image 两表、北向三表与原 A 最终安全审查仍未完成，不因此改变三表候选状态。

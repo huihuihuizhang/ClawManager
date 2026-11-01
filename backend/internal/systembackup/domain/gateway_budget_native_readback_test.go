@@ -18,6 +18,7 @@ func validateNativeGatewayHistory(t *testing.T, f *gatewayNative, reader *sql.DB
 	if err != nil {
 		t.Fatal("independent actual gateway snapshot")
 	}
+	validateNativeGatewayAttributionHistory(t, original, actual)
 	for _, table := range []string{"gateway_key_budget_reservations", "gateway_key_budget_ledger"} {
 		expected, got := nativeGatewayTable(original, table), nativeGatewayTable(actual, table)
 		if len(got.Rows) != len(expected.Rows) {

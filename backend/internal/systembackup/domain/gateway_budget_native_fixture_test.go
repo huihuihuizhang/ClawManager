@@ -225,6 +225,9 @@ func (f *gatewayNative) upper(name, user, password string) upper.Session {
 	return s
 }
 
+// observe checks only fixture identity and this one account. It intentionally
+// makes no claim about all consumer accounts or already authenticated writers;
+// production target proof must independently inventory and reject those.
 func (f *gatewayNative) observe(ctx context.Context, name, user string) error {
 	var uuid, nonce, locked string
 	err := f.admin.QueryRowContext(ctx, "SELECT @@server_uuid,(SELECT nonce FROM `"+f.owners+"`.owned WHERE database_name=?),(SELECT account_locked FROM mysql.user WHERE User=? AND Host='127.0.0.1')", name, user).Scan(&uuid, &nonce, &locked)

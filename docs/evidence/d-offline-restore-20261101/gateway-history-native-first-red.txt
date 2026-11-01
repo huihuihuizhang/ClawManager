@@ -1,0 +1,9 @@
+=== RUN   TestGatewayBudgetPublicWorkerActualTLSMySQL
+    gateway_budget_native_test.go:32: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    gateway_budget_native_test.go:77: actual source history seeded: each of model_invocations/audit_events/cost_records has max signed BIGINT, SQL NULL, deleted key 777 and retained key attribution; real migration052 adds no FK
+    gateway_budget_native_test.go:101: real source authentication positive controls: gateway key, instance token, gateway token alias PASS
+    gateway_budget_native_test.go:277: native history raw cell changed model_invocations status
+--- FAIL: TestGatewayBudgetPublicWorkerActualTLSMySQL (2.32s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	5.178s
+FAIL
