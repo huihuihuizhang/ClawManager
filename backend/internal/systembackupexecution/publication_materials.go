@@ -355,6 +355,8 @@ func (s *DeploymentService) readPublicationJobMaterials(ctx context.Context, cla
 
 // Durable production ordering: original private bytes/UID observation precede
 // original 121. The material's OLD deadline further bounds every native send.
+// Fresh creation remains suspended. Existing original activation/107 evidence
+// may authenticate a started Job without rewriting its owner or request bytes.
 func (s *DeploymentService) ensureDurableSuspendedPublicationJob(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, proposed PublicationUploadRequest) (*batchv1.Job, *publicationJobMaterials, error) {
 	m, err := s.preparePublicationJobMaterials(ctx, claim, attempt, target, proposed)
 	if err != nil {

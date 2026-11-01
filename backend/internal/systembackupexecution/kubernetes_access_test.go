@@ -174,6 +174,56 @@ func TestPublicationMaterialOwnerUpdateInventoryAndDeniedReadiness(t *testing.T)
 	}
 }
 
+func TestPublicationActivationPatchInventoryAndDeniedReadiness(t *testing.T) {
+	cfg := captureAccessFixture(t)
+	cfg.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publication-upload", ServiceAccountUID: "publication-upload-uid"}
+	for _, allow := range []bool{true, false} {
+		client := fake.NewSimpleClientset()
+		checks := 0
+		client.PrependReactor("create", "selfsubjectaccessreviews", func(action kt.Action) (bool, runtime.Object, error) {
+			review := action.(kt.CreateAction).GetObject().(*authv1.SelfSubjectAccessReview)
+			review.Status.Allowed = true
+			attributes := review.Spec.ResourceAttributes
+			if attributes.Resource == "jobs" && attributes.Verb == "patch" {
+				checks++
+				if attributes.Namespace != cfg.Namespace || attributes.Group != "batch" {
+					t.Fatal("activation patch escaped dedicated backup namespace")
+				}
+				review.Status.Allowed, review.Status.Denied = allow, !allow
+			}
+			return true, review, nil
+		})
+		if err := CheckCaptureKubernetesAccess(context.Background(), client, cfg, "controller"); (err == nil) != allow || checks != 1 {
+			t.Fatal("actual activation permission absent from readiness", allow, checks, err)
+		}
+	}
+	for _, enabled := range []bool{true, false} {
+		if !enabled {
+			cfg.PublicationWorker = nil
+		}
+		objects, err := CaptureKubernetesGrants(cfg, "controller")
+		if err != nil {
+			t.Fatal(err)
+		}
+		patches := 0
+		for _, object := range objects {
+			if role, ok := object.(*rbacv1.Role); ok {
+				for _, rule := range role.Rules {
+					if slices.Contains(rule.Resources, "jobs") && slices.Contains(rule.Verbs, "patch") {
+						if role.Namespace != cfg.Namespace || !slices.Equal(rule.APIGroups, []string{"batch"}) || !slices.Equal(rule.Verbs, []string{"patch"}) {
+							t.Fatal("broad activation role")
+						}
+						patches++
+					}
+				}
+			}
+		}
+		if (patches == 1) != enabled {
+			t.Fatal("activation role did not match explicit publication feature", enabled, patches)
+		}
+	}
+}
+
 func TestCaptureKubernetesProbeRejectsDeniedUnavailableAndInconclusive(t *testing.T) {
 	for _, mode := range []string{"allowed", "denied", "evaluation-error", "transport"} {
 		t.Run(mode, func(t *testing.T) {

@@ -23,7 +23,10 @@ func runPublicationUpload(ctx context.Context, args []string, stdout io.Writer) 
 	credential := flags.String("credential", "", "separate upload-only credential")
 	input := flags.String("input", "", "read-only encrypted input root")
 	result := flags.String("result", "", "original Job result root")
-	if flags.Parse(args) != nil || flags.NArg() != 0 || *request == "" || len(*requestSHA) != 64 || *ca == "" || *credential == "" || *input == "" || *result == "" {
+	relay := flags.String("result-relay", "", "original publication result receiver")
+	identity := flags.String("identity-dir", "", "separate publication mTLS identity")
+	token := flags.String("pod-token", "", "publication bound Pod token")
+	if flags.Parse(args) != nil || flags.NArg() != 0 || *request == "" || len(*requestSHA) != 64 || *ca == "" || *credential == "" || *input == "" || *result == "" || ((*relay == "") != (*identity == "")) || ((*relay == "") != (*token == "")) {
 		return worker.ErrRequest
 	}
 	if runtime.GOOS != "linux" {
@@ -46,6 +49,11 @@ func runPublicationUpload(ctx context.Context, args []string, stdout io.Writer) 
 	observed, err := systembackupexecution.RunPublicationUploadOnly(ctx, raw, *ca, *credential, source, destination)
 	if err != nil {
 		return err
+	}
+	if *relay != "" {
+		if err = systembackupexecution.SendPublicationUploadResult(ctx, *relay, *identity, *token, raw, observed); err != nil {
+			return err
+		}
 	}
 	return json.NewEncoder(stdout).Encode(observed)
 }
