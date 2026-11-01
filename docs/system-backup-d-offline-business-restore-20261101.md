@@ -161,6 +161,39 @@ Caller policy migration 066：A 的 source DTO 增加 `APIKeysJSON` 与指针 `A
 
 剩余八张 owner 表：gateway_keys、gateway_key_budget_reservations、gateway_key_budget_ledger、gateway_image_artifacts、gateway_image_jobs、northbound_admin_settings、northbound_owner_records、northbound_settings_audit。模型 SQL 接线和 grants 已完成本地目标侧验证，完整源认证/共同 snapshot 与真实物理 receipt/公开 restore-verify dispatch/最终资格仍未完成。
 
+### Public Restore/Verify dispatch 依赖核对与共享范围（a50c07be 后）
+
+本节来自当前提交代码的只读核对，不把旧 functional profile 当正式 v12 恢复链。完整源句柄缺失是一项阻塞，但不是唯一阻塞：
+
+| 实际消费层 | 已有行为 | 真正接线前缺口 |
+| --- | --- | --- |
+| `systembackupdispatch/contract.go`、`task_binding.go` | Runner 只有 Prepare/Capture/Recover；任务绑定只接受 sbk/capture 与 spf/preflight | 独立 Restore/Verify 操作和 sdr 计划绑定；不能把 Recover 改义或扩大旧 capture 计划正则后直接放行 |
+| `systembackupcontroller/task_execution_loop.go` | Step 只有 prepare/capture/recover，Record 交给 WorkStore | 实际 restore/verify 分支必须先装配就绪检查，再选择任务；结果须有独立类型，不套用捕获 Parts/RecoveryResult |
+| `execution_queue.go`、`sql_execution_work_store.go` | TakeBackup 从 backups 读取，冻结 admitted config/profile，原计划及副作用决定接管 | drill 原任务/source/target 配置投影、claim/attempt、目标配置冻结及接管分支；不能新建 control.Task 影子账本 |
+| `execution_ports.go`、`execution_heartbeat.go` | SQLExecutionAuthority 仅接受 backup/capture、preflight/preflight；读当前 DB 时钟、claim/lease/权限 | drill 三阶段独立权限、原 target 配置摘要、目标资源写意图与续租；源 maintenance gate 不是灾备目标写权限 |
+| `sql_execution_records.go` | write 明确 task_type=backup；加密原 plan/capture_result、按任务/attempt/phase 绑定 | drill plan/result 的加密持久化、容量、幂等原字节、unknown commit 读回；不能把 source attempt/AAD 改成 restore attempt |
+| `systembackupexecution/plan_store.go` | lock 只接 TargetBackup，读 backups/execution_inputs | 不直接将这个旧 PlanStore 当 drill store；当前正式记录链应由 D 选择统一扩展方案，避免再建一套竞争计划存储 |
+| `public_jobs.go`、`job_plan.go`、`public_runtime.go` | 实际 profile/config JOIN backups，relay 身份与取 authority 默认 backup/capture | 恢复 Job 及独立 verifier Job 的 target-only grants、invocation 绑定、发送意图、退出、撤权/认证失败，之后才装配服务运行循环 |
+| `result_evidence.go` | registerResult 只接 backup，inline 成功报告含固定五个统计字段；证据 owner=backup | drill 结果与失败观察的受保护证据合同；正文不得含源 credential、SQL row、原始 provider error；不能将临时 staging receipt 冒充正式 evidence |
+| `execution_capture_outcome.go`、`execution_cancel.go` | FinishCapture 用 collectors_stopped/source_resumed 事实结束 backup；取消操作也限定 backup | drill 必须用目标写入已知/未知状态、全部 Job 退出和写权限撤销事实决定 failed/canceled；不能复用 source-resume 成功条件，不直接写 D 最终资格/CAS |
+| `systembackupapi/tasks.go`、`task_requests.go`、`sql_writer.go` | 当前 Create route/decoder/writer 仅 backup/preflight | 若要从公开 HTTP 创建新 sdr，还需 D 交付 drill 请求/幂等/admission 合同；不能在 B 自造浏览器 DTO 来补这个入口 |
+
+数据库结构也需 D/A 协调，不能只改 Go switch：122 execution_records 的 phase 仅 capture、record_kind 仅 plan/capture_result；123 runtime_resources 的 target_type/phase 仅 backup/capture，而且 task 外键指向 backups；121 job_send_intents 的 target_type 仅 backup、phase 只 capture/secret_capture/publish，并依赖旧 execution_plans；104 staging_resources phase 同样不含恢复。098 attempts、107 job_observations 已列 restore/normalize/verify，但这不代表上述持久链都支持。若需要扩展，应新增 owner 审核迁移，不能重写已应用的历史 migration，也不能改 publication 外键来规避原 plan 认证。
+
+建议协调的最小第一段是：dispatch `contract.go/task_binding.go`，controller `task_execution_loop.go/execution_queue.go/execution_ports.go/sql_execution_work_store.go/sql_execution_records.go/execution_heartbeat.go`，以及 execution `public_runtime.go` 的装配点。只接目标计划冻结、权限与“全源材料不可用”的真实拒绝/持久观察，尚无完整源 concrete handle 时不发任何目标 Job 或写凭据。第二段才接 `public_jobs.go/job_plan.go/result_evidence.go` 和独立 drill outcome/cancel 文件；producer/MF/bootstrap、publication_*、artifact_read_* 与最终资格仍归原 A/D。本分支尚未修改这些共享文件，需原监督协调范围后才能改；这是共享编辑约束，不是这些本地实现必须等现场。
+
+剩余八表与调度的关系如下：
+
+- `gateway_keys` / `gateway_key_budget_reservations` / `gateway_key_budget_ledger` 必须统一核对 key 引用、原 decimal、settlement 状态及账务去重。特别是 `repository/gateway_key_repository.go` 的 `GetBudgetUsage` 会调用 `loadGatewayKeyBudgetForUpdate`，进而 reconcile pending、插 ledger、删 reservation、更新 spent；**仅把 key 标成 revoked 并不能证明账务读取无副作用**。正式目标隔离及禁止启动消费者、image_pending 与图像 Job 关系必须纳入合同，不能编造 settled/ledger 或抹掉 pending 历史。可独立实现原状态/关联校验，非空正式 SQL 全量恢复仍被该合同阻塞。
+- `gateway_image_artifacts` / `gateway_image_jobs` 除 SQL 原终态/unknown/金额/去重标记外，必须有同源 inventory 的确切对象版本、目标 version 与 readback receipt。对象映射 DTO 或目标 SQL object_key 不能作为上传完成证明；这两表阻塞对象→SQL 的最终映射放行，不阻塞失败拒绝链。
+- `northbound_admin_settings` 的当前 35 列私有候选包含目标 port、严格 limits、类型列表与 observed target version/absence 输入。公共写事务需独立证明这些目标事实；source version 是历史，不是目标 CAS。`northbound_settings_audit` 还需原 JSON/actor/时间的脱敏及保护历史关联，不能传一个空 audit_logs 假称完成所有 resources proof。`northbound_owner_records` 的 067 schema 有 unsigned bigint、nullable metrics、DECIMAL(24,6) 及无 FK 的删除后历史；应保留未知量 NULL，不用浮点或强制现存实例伪造闭合。
+
+上述八表不阻塞编写目标计划/权限/失败记录接线，但任何一个必需非空表未适配，都必须在首次对象、workspace、Redis 或 SQL 写入之前的全域预检拒绝。不能先写其他域，再把 SQL ErrNormalization 当已安全回滚了全部目标。
+
+本批独立修复只触及 B 的 `publicadapter/restore_target.go`：原检查按 source hash 与 ClaimUID 去重，却允许同 namespace 的相同 ClaimName 配不同 UID，或不同 claims 指向同一 PVUID。现均在调用 proof owner 前拒绝；唯一描述仍必须调用原独立当前 proof，不能由结构合法代替授权。新增真实公共 B runner 与 D→B wrapper 的 18 个 sdr restore/normalize/verify × Prepare/Capture/Recover 反例，确认源发现、writer bind/pause/resume、Job ensure、结果读取均未增加，且不返回恢复事实。这证明旧 capture 接口保持拒绝，不宣称有新的正式恢复入口。另验证三阶段 target proof 的完整 authority、callback 副本隔离、typed nil、取消及四类存储冲突。`restore-dispatch-boundary-packages.txt`：publicadapter 3.662s、dispatch 0.308s 全 PASS；无新数据库/服务，无远侧连接。
+
+不同 PVUID 仍可能对应相同 NFS server/export 或 CSI volume handle；本次只防描述层别名，不证明物理隔离。这些存储后端事实必须由当前独立 observer/proof 闭合。controller 的 drill/sdr task claim 与 provider 的 restore_resource/srr ownership 是不同身份，也不能互换。共享路径已交由主监督协调，目前尚无边界确认，继续保持未修改。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。
