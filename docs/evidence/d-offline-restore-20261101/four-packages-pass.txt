@@ -1,0 +1,4 @@
+ok  	clawreef/internal/systembackup/domain	23.222s
+ok  	clawreef/internal/systembackup/worker	36.656s
+ok  	clawreef/internal/systembackup/profile	3.630s
+ok  	clawreef/internal/systembackupskillhub	4.059s

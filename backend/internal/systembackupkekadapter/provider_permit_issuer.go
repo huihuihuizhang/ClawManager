@@ -349,6 +349,19 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		state = reg.ReferenceUnknown
 	}
 	r := reg.Reference{Partition: reg.InflightAndUnknownWrites, State: state, SourceRecordID: id, SourceRecordVersion: "v1", BackupPublicID: a.TaskPublicID, AttemptNo: strconv.FormatUint(a.AttemptNo, 10), EnvelopeID: lease.Access.Request.Context.EnvelopeID, Key: cfg.Binding.Key, BindingSHA256: fingerprint, MappingSource: p.mapping.Source, ExpectedRequestSource: reg.SourceRecord{SourceID: "original-frozen-execution-plan.v1", RecordID: "plan:" + a.TaskPublicID + ":" + strconv.FormatUint(a.AttemptNo, 10), RecordVersion: p.planHash, ContentSHA256: p.planHash}, LifecycleSource: lifecycle}
+	// The first Bind read and locked every reference plus the installation
+	// fence in THIS transaction. An exactly identical reference makes the
+	// original registry mutation below a no-op; it cannot advance that fence.
+	// Keep every mutation/recheck call, but avoid rereading the same locked
+	// snapshot on every key-check when no facts changed. No authority or data
+	// snapshot is reused across requests or transactions.
+	unchanged := false
+	for _, existing := range locked.Facts().References {
+		if reflect.DeepEqual(existing, r) {
+			unchanged = true
+			break
+		}
+	}
 	change := &issuedPermitReferenceChange{issue: p, tx: tx, guard: guard, bound: bound, locked: locked, reference: r, until: lease.Until}
 	if state == reg.ReferencePlanned {
 		err = bound.RetainPlanned(ctx, change)
@@ -358,11 +371,13 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 	if err != nil {
 		return kms.ErrPermission
 	}
-	// Retaining our own source advances this SAME locked fence. Refresh only
-	// its own derived snapshot, retaining all original business/source locks.
-	bound, locked, err = (reg.SQLStore{}).Bind(ctx, tx, a.InstallationID)
-	if err != nil {
-		return kms.ErrPermission
+	// A changed source advances this SAME locked fence. Refresh its derived
+	// snapshot in that case, retaining all original business/source locks.
+	if !unchanged {
+		bound, locked, err = (reg.SQLStore{}).Bind(ctx, tx, a.InstallationID)
+		if err != nil {
+			return kms.ErrPermission
+		}
 	}
 	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheck(ctx, tx, guard, bound, locked, now) != nil {
 		return kms.ErrPermission

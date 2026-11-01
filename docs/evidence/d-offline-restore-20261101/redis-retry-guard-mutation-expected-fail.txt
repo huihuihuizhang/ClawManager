@@ -1,0 +1,8 @@
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/partial-failure
+    offline_redis_restore_test.go:68: retry did not stop at nonempty guard before writes Redis history restore refused existing or invalid key
+--- FAIL: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget (0.01s)
+    --- FAIL: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/partial-failure (0.01s)
+FAIL
+FAIL	clawreef/internal/systembackup	3.165s
+FAIL

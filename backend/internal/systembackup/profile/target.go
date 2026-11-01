@@ -99,6 +99,7 @@ func (d *Driver) discoverTarget(ctx context.Context, t control.Task, p plan) (js
 			spec.Configs = d.Config.Configs
 			spec.WorkBuddy = d.Config.WorkBuddy
 			spec.Dependencies = d.Config.Dependencies
+			spec.SkillsRestore = d.Config.Target.SkillsRestore
 			spec.Placements = placements
 			spec.TeamPlacements = teamPlacements
 			spec.EvidenceName = "database-evidence.enc"
@@ -114,6 +115,7 @@ func (d *Driver) discoverTarget(ctx context.Context, t control.Task, p plan) (js
 			verify := work{ID: "verify-database", PartID: "database", Namespace: d.Config.TargetNamespace, Invocation: worker.Invocation{StagingPath: "/staging", Request: w.Invocation.Request}}
 			target := d.Config.Target
 			target.Configs = nil
+			target.SkillsRestore = nil
 			target.Placements = nil
 			target.EvidenceName = ""
 			verify.Invocation.Request.Database = &target
@@ -187,7 +189,7 @@ func (d *Driver) blankTarget(ctx context.Context, t control.Task, p plan) error 
 	if e != nil {
 		return e
 	}
-	return domain.PreflightRestoreDrill(ctx, d.TargetAdmin, domain.DrillTarget{Database: d.Config.Target.Name, ServerUUID: d.Config.Target.ServerUUID, CheckIsolation: func(ctx context.Context) error { return d.checkTarget(ctx, t, p) }}, source, domain.Policy{WorkBuddy: spec.WorkBuddy, Placements: spec.Placements, Configs: spec.Configs, Dependencies: spec.Dependencies, TeamPlacements: spec.TeamPlacements})
+	return domain.PreflightRestoreDrill(ctx, d.TargetAdmin, domain.DrillTarget{Database: d.Config.Target.Name, ServerUUID: d.Config.Target.ServerUUID, CheckIsolation: func(ctx context.Context) error { return d.checkTarget(ctx, t, p) }}, source, domain.Policy{WorkBuddy: spec.WorkBuddy, Placements: spec.Placements, Configs: spec.Configs, Dependencies: spec.Dependencies, TeamPlacements: spec.TeamPlacements, Skills: spec.SkillsRestore})
 }
 
 func preflightSpec(p plan, s domain.Snapshot) (*worker.DatabaseSpec, error) {

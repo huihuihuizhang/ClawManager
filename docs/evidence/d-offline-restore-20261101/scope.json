@@ -1,0 +1,62 @@
+{
+  "baseline_commit": "0e797e4e0db1305cb4b4ea55456764b207e4d548",
+  "branch": "d/offline-business-restore",
+  "evidence_date": "2026-11-01",
+  "mode": "offline_local_components_only",
+  "production_readiness": false,
+  "acceptance_eligible": false,
+  "official_publication_restore": false,
+  "same_capture_certificate_proven": false,
+  "network_scope": "owned loopback MySQL and RESP fixtures only",
+  "mysql_version": "8.4.13",
+  "mysql_port": 50809,
+  "mysql_schemas": "random per test; cleanup registered only after successful creation",
+  "schema_scope": "Skills migrations 008/023/039 plus nonempty instance/Teams fixture schema",
+  "authentication_scope": "original encrypted staging and worker callbacks; fixture authority and named object/RESP providers; separate SELECT-only MySQL user after writer lock and rejected reauthentication",
+  "unverified": [
+    "production complete schema and eleven owner-table adapters",
+    "shared SQL/object/workspace/Redis capture certificate and receipt composition",
+    "formal published v12 restore Runner dispatch",
+    "real object storage PUT/version ownership and real Redis engine semantics",
+    "cluster Job exit/node/mount/TLS/account revocation and observer permissions"
+  ],
+  "toolchain": {
+    "GOTOOLCHAIN": "local",
+    "GOSUMDB": "off",
+    "GOPROXY": "off",
+    "go": "1.26.1"
+  },
+  "source_sha256": {
+    "backend/internal/systembackup/domain/dependencies.go": "b39b7bb57bf6e43f224668d5e29538e6c01858762e7e6b9a7a141b81052af9b8",
+    "backend/internal/systembackup/domain/export_test.go": "621a636d705f5d36ac55c1ba346a38fbe91c5a03b87fb0f982e45909d5b0dbd7",
+    "backend/internal/systembackup/domain/normalize.go": "cadb117adc39ccd61be5137d348fbe8ab8bbf5f240d5acc4e3ffc82e699d26f2",
+    "backend/internal/systembackup/domain/restore.go": "16a24e16af70400bc533d306bec982ddf37199bf1b218eb84d02351a23dbd6be",
+    "backend/internal/systembackup/domain/skills_restore.go": "7e078b8c72b49f34a62edcb6d8fb0d061321b2e7742fbb9025bb7c1f17d2be75",
+    "backend/internal/systembackup/domain/skills_restore_test.go": "45e78fe92b1e7c0f14070fca736b5db32be3fd79bbdbbcd0a858d4218e4158e2",
+    "backend/internal/systembackup/domain/business_worker_integration_test.go": "b7959c35ecc448e68f3e4662f766bd58e8fcdcf9b0f39fbfed900b874e2aeb96",
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": "82b9902d68600a58a78b64d50db42b969fec094306f5958958f00699e09d17eb",
+    "backend/internal/systembackup/profile/target.go": "2610a95630f73f5ef88f2289a091c321335593fad7d93e414572378db5a1c9cf",
+    "backend/internal/systembackup/worker/database.go": "fc7d341763018ec299f73bd8083390c9c51d65ad38261a85a92862beb9ab9940",
+    "backend/internal/systembackup/offline_redis_restore_test.go": "5fc1a13350e9291222fd52bd9f5cfb320fc4ba37c5777836fa5b1043d47256f1",
+    "backend/internal/systembackup/testfixture/redis_history_target.go": "423e7f9fa45755d37d40a02951b496439b352bd8f440fbd613142ec35d08c81a",
+    "scripts/system-backup-d-offline-restore-preflight.mjs": "0314ff4f3c9831b2734c519ef4ee27c9ecfbe7e82edba7f2c613774a833e42d8",
+    "scripts/system-backup-d-offline-restore-preflight.test.mjs": "1468e00eec1b1d4fa6046a3fbfa6a5ff5a2b907dac9eb9be2a1fd48b4bee6434"
+  },
+  "git_blob_sha1": {
+    "backend/internal/systembackup/domain/dependencies.go": "54a95a0f613ffb3788afbfd3a35f346c116235b8",
+    "backend/internal/systembackup/domain/export_test.go": "a6df46ae3206e07b30ab786334aa2c490e113758",
+    "backend/internal/systembackup/domain/normalize.go": "4339ee220bb18cb2da817b5369a50f3890c2c706",
+    "backend/internal/systembackup/domain/restore.go": "a0a4dffd13ea0101b667c4f5199588410221f29e",
+    "backend/internal/systembackup/domain/skills_restore.go": "9b5c969836328e123cfbd9e3f93197d2206e78ba",
+    "backend/internal/systembackup/domain/skills_restore_test.go": "6f816b253f512f543bf51ab539a5cfaf42eb9395",
+    "backend/internal/systembackup/domain/business_worker_integration_test.go": "54c35fe7eecb22a662b927216cbf1bdcf36eeb6a",
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": "fed2d548bce2725ba0bf19e41f382ae2d56c09ec",
+    "backend/internal/systembackup/profile/target.go": "0dca81f9046df49355871ed394cab04a47fbb5e2",
+    "backend/internal/systembackup/worker/database.go": "d5cf4d80ac2bff88a59472d04a6b66fef19faff8",
+    "backend/internal/systembackup/offline_redis_restore_test.go": "8f1bf8a3153a10dd750707cad02c4b13c943fd23",
+    "backend/internal/systembackup/testfixture/redis_history_target.go": "0f61c6951701c2a8ee4626675a84d29fdcfad5ee",
+    "scripts/system-backup-d-offline-restore-preflight.mjs": "b073890be8c9388aa0264dfc767173c231d7f7ab",
+    "scripts/system-backup-d-offline-restore-preflight.test.mjs": "02620d4ad26b1687dac16e456734769052ecb462"
+  },
+  "source_hash_basis": "source_sha256 hashes tested working-tree bytes; git_blob_sha1 hashes repository-normalized contents using Git path filters (core.autocrlf=true)"
+}

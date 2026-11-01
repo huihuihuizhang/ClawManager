@@ -31,6 +31,13 @@ func (f *TestSQLFixture) SetSourceGrant(s string) { f.source.grants = s }
 func (f *TestSQLFixture) SetTargetGrant(s string) { f.target.grants = s }
 func (f *TestSQLFixture) Tamper()                 { f.target.tables[0].Rows[0]["password_hash"] = Text("tampered") }
 
+func NewTestBusinessSQLFixture() *TestSQLFixture {
+	s, schema, p := businessRestoreFixture()
+	source := &memoryDB{tables: copyTables(s.Tables), name: "source", uuid: "fixture-server", grants: "GRANT SELECT ON `source`.* TO 'capture'@'localhost'"}
+	target := isolatedTarget(schema)
+	return &TestSQLFixture{Source: database(source), Target: database(target), Policy: p, source: source, target: target}
+}
+
 // NewTestTeamsSQLFixture exercises the public SQL worker protocol with nonempty
 // C data. Its in-memory SQL driver is NOT a production import profile/schema.
 func NewTestTeamsSQLFixture() *TestSQLFixture {
