@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/systembackup/gatewaypolicy"
 	"clawreef/internal/systembackup/team"
 )
 
@@ -149,8 +150,11 @@ func NormalizeDataRow(table SQLTable, row team.Row, now time.Time) (team.Change,
 		set("status", "revoked")
 		set("expires_at", "2000-01-01 00:00:00")
 	case "routing_classifier_settings":
-		set("routing_mode", "rules")
-		erase("base_url", "encrypted_api_key")
+		nullable := make(map[string]bool, len(table.Columns))
+		for _, column := range table.Columns {
+			nullable[column.Name] = column.Nullable == "YES"
+		}
+		change = gatewaypolicy.DisableRoutingClassifier(row, nullable)
 	case "gateway_image_artifacts":
 		set("ready", "0")
 		set("expires_at", "2000-01-01 00:00:00")
