@@ -141,3 +141,40 @@ func TestExecutionBindDiagnosticsPreferJoinedDriverCauseAndContext(t *testing.T)
 		}
 	}
 }
+
+func TestExecutionBindClockDiagnosticKeepsOriginalFirstExpiredBound(t *testing.T) {
+	now := time.Date(2026, 11, 1, 1, 2, 3, 0, time.UTC)
+	for _, reason := range []string{"clock_missing", "claim_expired", "task_deadline", "gate_lease_expired", "hold_deadline_expired", "sql_error", "first_claim_before_other_expiries"} {
+		t.Run(reason, func(t *testing.T) {
+			v := executionSnapshot{now: now, claimUntil: now.Add(time.Minute), gateUntil: now.Add(time.Minute), holdUntil: now.Add(time.Minute)}
+			deadline := now.Add(time.Minute)
+			var err error
+			want := reason
+			switch reason {
+			case "clock_missing":
+				v.now = time.Time{}
+			case "claim_expired":
+				v.claimUntil = now
+			case "task_deadline":
+				deadline = now
+			case "gate_lease_expired":
+				v.gateUntil = now
+			case "hold_deadline_expired":
+				v.holdUntil = now
+			case "sql_error":
+				err = sql.ErrTxDone
+			case "first_claim_before_other_expiries":
+				v.claimUntil = now
+				deadline = now
+				v.gateUntil = now
+				v.holdUntil = now
+				want = "claim_expired"
+			}
+			var observed []ExecutionBindDiagnostic
+			reportExecutionBindClockDiagnostic(func(d ExecutionBindDiagnostic) { observed = append(observed, d) }, v, deadline, err)
+			if len(observed) != 1 || observed[0].Reason() != want || observed[0].Stage() != "bind-snapshot-held-delivered-clock" {
+				t.Fatal("original ordered deadline reason lost", observed)
+			}
+		})
+	}
+}
