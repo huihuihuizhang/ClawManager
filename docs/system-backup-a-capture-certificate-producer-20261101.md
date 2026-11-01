@@ -28,8 +28,9 @@ The private `preparedPublicationCaptureCertificate` retains the original
 publisher facts, complete-capture receipt, stage identity/MAC/key/lifecycle/row
 version, capture completion time, TTL and task row version. Its `Stage` binds the
 current publisher and compares these facts before and after the inner signing
-input Stage in the caller's same real transaction. It performs no external I/O
-while that transaction is held. The caller owns rollback/commit and can invoke
+input Stage in the caller's same real transaction. It performs no Kubernetes or
+provider network I/O while SQL is held; bounded local material checks remain
+mandatory. The caller owns rollback/commit and can invoke
 `SignCommitted` only against committed original signing input.
 
 ## Verification and limits
