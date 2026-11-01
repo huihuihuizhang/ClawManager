@@ -16,6 +16,10 @@ type Input struct {
 	Member     Member
 	Ciphertext io.Reader
 	Envelope   []byte
+	// Open lazily supplies one original C/envelope pair at emission time. The
+	// writer closes that C before opening the next member, including on error.
+	// It cannot be combined with the eager fields. No authority is created.
+	Open func(context.Context) (io.ReadCloser, []byte, error)
 }
 
 func checksum(raw []byte) string { sum := sha256.Sum256(raw); return hex.EncodeToString(sum[:]) }
@@ -70,11 +74,17 @@ func Write(ctx context.Context, dst io.Writer, scope Scope, sourceInventorySHA s
 			return zero, ErrContainer
 		}
 		member.Checkpoint = bytes.Clone(member.Checkpoint)
-		if input.Ciphertext == nil || int64(len(input.Envelope)) != member.EnvelopeBytes || checksum(input.Envelope) != member.EnvelopeSHA256 {
-			return zero, ErrContainer
-		}
-		if _, err := w.ParseStreamEnvelope(member.Stream, input.Envelope); err != nil {
-			return zero, ErrContainer
+		if input.Open != nil {
+			if input.Ciphertext != nil || input.Envelope != nil {
+				return zero, ErrContainer
+			}
+		} else {
+			if input.Ciphertext == nil || int64(len(input.Envelope)) != member.EnvelopeBytes || checksum(input.Envelope) != member.EnvelopeSHA256 {
+				return zero, ErrContainer
+			}
+			if _, err := w.ParseStreamEnvelope(member.Stream, input.Envelope); err != nil {
+				return zero, ErrContainer
+			}
 		}
 		if member.CipherBytes < 1 || member.CipherBytes > limit-offset {
 			return zero, ErrContainer
@@ -109,24 +119,7 @@ func Write(ctx context.Context, dst io.Writer, scope Scope, sourceInventorySHA s
 	}
 	for index, input := range ordered {
 		member := header.Members[index]
-		memberHash := sha256.New()
-		reader := contextReader{ctx: ctx, src: input.Ciphertext}
-		n, err := io.CopyN(io.MultiWriter(output, memberHash), reader, member.CipherBytes)
-		if err != nil || n != member.CipherBytes || hex.EncodeToString(memberHash.Sum(nil)) != member.CipherSHA256 {
-			return zero, ErrContainer
-		}
-		var tail [1]byte
-		if n, err := reader.Read(tail[:]); n != 0 || err != io.EOF {
-			return zero, ErrContainer
-		}
-		envelope := bytes.Clone(input.Envelope)
-		if int64(len(envelope)) != member.EnvelopeBytes || checksum(envelope) != member.EnvelopeSHA256 {
-			return zero, ErrContainer
-		}
-		if _, err = w.ParseStreamEnvelope(member.Stream, envelope); err != nil {
-			return zero, ErrContainer
-		}
-		if _, err = io.Copy(output, contextReader{ctx: ctx, src: bytes.NewReader(envelope)}); err != nil {
+		if err = writeInputMember(ctx, output, member, input); err != nil {
 			return zero, ErrContainer
 		}
 	}
@@ -141,4 +134,41 @@ func Write(ctx context.Context, dst io.Writer, scope Scope, sourceInventorySHA s
 		facts.Locations[index].EnvelopeOffset += int64(prefixBytes) + plan.Size
 	}
 	return facts, nil
+}
+
+func writeInputMember(ctx context.Context, dst io.Writer, member Member, input Input) (resultErr error) {
+	cipher, envelope := input.Ciphertext, input.Envelope
+	if input.Open != nil {
+		opened, raw, err := input.Open(ctx)
+		if opened != nil {
+			defer func() {
+				if err := opened.Close(); resultErr == nil && err != nil {
+					resultErr = ErrContainer
+				}
+			}()
+		}
+		if err != nil || opened == nil {
+			return ErrContainer
+		}
+		cipher, envelope = opened, raw
+	}
+	envelope = bytes.Clone(envelope)
+	if int64(len(envelope)) != member.EnvelopeBytes || checksum(envelope) != member.EnvelopeSHA256 {
+		return ErrContainer
+	}
+	if _, err := w.ParseStreamEnvelope(member.Stream, envelope); err != nil {
+		return ErrContainer
+	}
+	memberHash := sha256.New()
+	reader := contextReader{ctx: ctx, src: cipher}
+	n, err := io.CopyN(io.MultiWriter(dst, memberHash), reader, member.CipherBytes)
+	if err != nil || n != member.CipherBytes || hex.EncodeToString(memberHash.Sum(nil)) != member.CipherSHA256 {
+		return ErrContainer
+	}
+	var tail [1]byte
+	if n, err := reader.Read(tail[:]); n != 0 || err != io.EOF {
+		return ErrContainer
+	}
+	_, err = io.Copy(dst, contextReader{ctx: ctx, src: bytes.NewReader(envelope)})
+	return err
 }

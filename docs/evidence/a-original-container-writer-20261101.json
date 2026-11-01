@@ -1,0 +1,65 @@
+{
+  "version": "a-original-container-writer-evidence.v1",
+  "source_head": "5302a9e845e3d3f921faf4ba001fb65d3ccfe483",
+  "native_source_exact_for_committed_go": true,
+  "files": [
+    {
+      "path": "backend/internal/systembackup/staging/file.go",
+      "sha256": "a2c29c877a063ae810b36e54958dbfbdf53f53a5bbc3656662513d77a6b5669a"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/formal.go",
+      "sha256": "ab6d185c6e43a74c4ebb67e4bb4db3e1124c9dc65305b815af5536205fa9fee7"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/observe.go",
+      "sha256": "784c2b0eb15d168ee8a95364b7df40da215fdb3c34efd3f93d8450f4767b0d31"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/file_guarded_test.go",
+      "sha256": "09fe25ec46177d4e1c0759c07a77374963512f7cf0a68a2a51e1c3f80a702bdb"
+    },
+    {
+      "path": "backend/internal/systembackup/staging/file_guarded_cancel_test.go",
+      "sha256": "2c7135ece946f09562078b39577529e4088ef65b3d74d6301270fe4039438674"
+    },
+    {
+      "path": "backend/internal/systembackuppartcontainer/writer.go",
+      "sha256": "6245a9e2efccafe90adb201ed2cb1f0c45b07bee9a468d9efb649c2fe7e277f0"
+    },
+    {
+      "path": "backend/internal/systembackuppartcontainer/writer_lazy_test.go",
+      "sha256": "74ae89f4a5f8e7a7d4bdc574325d8acc8968303d572b9d4c581c78ecd5f91e4c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container.go",
+      "sha256": "efa4f0b1d20ac8379bea8e00576110e3e8b2cf557e81a3f892bf520302f77840"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_container_mysql_test.go",
+      "sha256": "9afce6900c6e900c5b34103b598df2907d86d392ffd6f5beefb81ac46db8b610"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_mysql_test.go",
+      "sha256": "58e08925db8f8007564c0840d3a2078d7f1ac383df8cb041c26ddfe0678dbaa4"
+    }
+  ],
+  "native_task": "sbk_ff0348ab-69cc-4c28-ab46-b29b2f041eee",
+  "native_test": "TestAOriginalSixPartContainerAssemblyMySQL",
+  "native_seconds": 149.76,
+  "package_seconds": 153.06,
+  "handle": 48671,
+  "exit_code": 0,
+  "container_count": 6,
+  "original_business_c_members": 8,
+  "actual_total_physical_bytes": 53952,
+  "server_uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+  "native_log_sha256": "47e23ff2b08bbb78a004442f90074b6fbccc6abaf76f3be478a293a9581920a1",
+  "native_source_ledger_sha256": "e67f566d94c093161d8948a0af38d6824cfd88a9a220a779557617fc2f7f6f9b",
+  "full_local_log_sha256": "74043625f3a03814ceb5132a93941af7675ee8ac17509f2db4386171b3b407be",
+  "limits": [
+    "Actual local container writes and structural readback only; no actual upload-only Job or native artifact fixed-version proof",
+    "No 900 GiB physical IO or large-file claim-renewal proof",
+    "WIP upload capacity and first-forward files are separate and not in this component"
+  ]
+}

@@ -93,11 +93,15 @@ func SealReferenceForIntent(intent SealIntent) (string, error) {
 // OpenObserved rehashes the exact original version on every read/restart.
 // No fallback to the worker's mutable source is allowed.
 func OpenObserved(ctx context.Context, custody *os.Root, scope SealScope, original Receipt) (*os.File, Observation, error) {
+	return OpenObservedGuarded(ctx, custody, scope, original, func(ctx context.Context) error { return ctx.Err() })
+}
+
+func OpenObservedGuarded(ctx context.Context, custody *os.Root, scope SealScope, original Receipt, check func(context.Context) error) (*os.File, Observation, error) {
 	receipt, err := observedReceipt(scope, original)
 	if err != nil {
 		return nil, Observation{}, err
 	}
-	f, err := OpenFile(ctx, custody, receipt)
+	f, err := OpenFileGuarded(ctx, custody, receipt, check)
 	if err != nil {
 		return nil, Observation{}, err
 	}
