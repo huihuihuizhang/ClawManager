@@ -1,0 +1,22 @@
+{
+  "schema": "supervisor-drill-business-connection-guard.v1",
+  "date": "2026-11-01T15:24:19.937000+00:00",
+  "source_commit": "30ac4f1c801543306fc52e3c095dc40b9e129edd",
+  "original_db_blob": "7f55cdd10f9851eefabeb4d8ba0ad43aa6c56905",
+  "integrated_commit": "9e462ce8",
+  "scope": "Ordinary Initialize,Connect,OpenSystemBackupRead reject isolated drill/restore/import database names before SQL I/O; Session remains unchanged. Dedicated restore authority/target adapters are separate.",
+  "changes": "Lowercase name normalization preserves old restore/import pattern protection and adds cm_drill_ prefix rejection.",
+  "independent_test": {
+    "command": "go -C backend test -mod=readonly -p=1 ./internal/db -count=1 -timeout=120s",
+    "natural_exit": 0,
+    "package_seconds": 1.515,
+    "sql": "all MYSQL/DATABASE_URL/DB_DSN/SQLSERVER variables disabled; no database instance used",
+    "cases": "5 isolated name/case variants x3 actual connection entry points; invalid loopback port ensures no actual connection can substitute for the exact rejection",
+    "log": ".tools/supervisor-drill-business-guard-30ac-db-package.log",
+    "sha256": "9b98d9027b05b510714e691f466bfbd4c34b562866ae2a39d8dc408f4f77c02b"
+  },
+  "limits": [
+    "Not SQL175 migration, schema/credential cutover or full restore acceptance.",
+    "No budget-table WIP or target source-handle authority included."
+  ]
+}
