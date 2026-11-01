@@ -206,6 +206,16 @@ provider 认证应复用 `systembackupsecurity/providerproof_registration.go` �
 
 独立 verifier 必须核对 SELECT-only/无角色、同 server/database、与 restore writer 不同账户，并等待实际撤权。旧 `control/credentials.go` 的 `DatabaseCredentials.Revoke` 展示了必要动作：锁账户、清除现存连接、删除账户并确认零连接；该实现依赖 legacy vault/fence，不能原样装配 v2。Job Complete、资源 revoked 标志、取消请求或旧 profile 检查成功均不足以证明这一事实。正式失败/取消终态必须保留不确定写入与残留资源，直到有同任务/attempt 的退出与撤权观察，不能以 capture 的 source-resumed 条件结案。
 
+### 独立 Restore/Verify 调用已接入实际任务循环（SQL custody 仍在下一批）
+
+共享范围确认后新增 `systembackupdispatch/restore.go/restore_plan.go`、`publicadapter/restore_runner.go`、`systembackupexecution/public_restore.go`，并在现有 `TaskExecutionLoop` 增加专属 restore/verify 分支。`NewPublicRestore` 固定装配真实 B 拒绝执行器，不接 caller 的 source-proof callback，不接 capture Runner/恢复源 writer 的 Ports。目前完整源句柄尚缺，B 恒返回明确的 `ErrRestoreSourceUnavailable`，没有目标 IO 能力；这不是一次恢复成功，也不证明 SQL custody 或生产启动已接通。
+
+新 `DrillExecutionWorkStore` 的 ReadyDrill/NextDrill/RecordDrill/RecordDrillInterruption 分离选择边界，旧 capture SQL store 不满足此类型；手工混装 loop 也在首次队列选择前拒绝。循环冻结原 Input、DrillSpec 和 plan，权限回调与 Runner 修改副本不能改变 Record 的原观察。结果伴随错误仍交 D 记录。取消或普通 Record 失权/commit unknown 时，原 outcome 和中断原因转交专属 interruption 方法，必须由 D 获得新的有界记录上下文、在 SQL 内重新授权；既不据此续租原 claim，也不推断目标退出/撤权/清理。记录成功的 drill 任务失败返回调度成功，避免整组 leader 因普通 source-unavailable 重启；旧 backup 的返回与取消语义保留。
+
+`system-backup-restore-task-plan.v1` 只绑定元数据和保留原 inner-plan 字节，不代替实际目标计划闭合解析。绑定 original sdr、request/config/profile、attempt/phase/deadline、source identity/checksums、目标配置摘要、purpose/cleanup。renewable claim 不写入不可变 binding，执行时仍由 D 查询当前权限。inner version 由独立调用方参数核对；实际公共 composition 固定 `publicadapter.RestorePlanVersion`，不接受 envelope 自报未知版本。verify 必须另建 phase-bound plan，并绑定先前 restore plan/result 及撤权 evidence 摘要；这些只是待核对引用，不是证明。normalize 目前仅元数据可识别，尚无可执行 step。
+
+反例覆盖真实 NewPublicRestore → TaskExecutionLoop → RestoreDispatcher → B 拒绝执行器 → 命名 D 记录夹具；不使用 fixture 让 B 目标写成功。另覆盖未知 inner version、跨任务/phase/config/源/目标/策略变更、callback 后取消和超时、原 plan 字节副本、结果+错误、Record unknown 原观察保留、普通任务失败继续调度、旧 capture store 无法选任务。最初一次完整四包日志 `restore-loop-four-packages.txt` 保留 RED（当时 verify 缺前序引用的反例断言仍期待走到 Record）；修正断言后最终证据另存 `restore-loop-four-packages-final.txt`。SQL drill store、新迁移、精确 grants、控制表排除新 pin 与实际174→新版/失败重入测试尚属下一批；没有将未完成的 SQL WIP 混入本提交。
+
 ### 正式源认证模块应交给恢复侧的最小合同（待 A/D 确认，未制造授权类型）
 
 恢复侧需要 A 的**不可序列化、字段私有、只能由完整认证入口构造的具体结果类型**；接口名字可由 A 定义。不能把以下 DTO 列表当作已认证 receipt，也不能用 caller 的布尔值、raw JSON、hash 字符串或恒真回调创建该结果。

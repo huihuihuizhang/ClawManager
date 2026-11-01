@@ -1,0 +1,8 @@
+ok  	clawreef/internal/systembackupdispatch	0.971s
+--- FAIL: TestRepositoryMigrationCatalogMatchesControllerAdmission (0.06s)
+    bootstrap_test.go:84: controller catalog guard is stale: files=175 hash=4bdb906ebb240e8d5e8a8c4990b1ee3ea5bbac71a0eff98de0b740a3712a2c92, want files=174 hash=d4fe00a440acf094e1def2d99586e333bed7803ba82b504ab25829b133680a21
+FAIL
+FAIL	clawreef/internal/systembackupcontroller	9.444s
+ok  	clawreef/internal/systembackup/publicadapter	4.102s
+ok  	clawreef/internal/systembackupexecution	10.469s
+FAIL

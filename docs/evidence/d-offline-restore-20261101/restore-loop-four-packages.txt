@@ -1,0 +1,10 @@
+ok  	clawreef/internal/systembackupdispatch	0.684s
+ok  	clawreef/internal/systembackupcontroller	9.402s
+ok  	clawreef/internal/systembackup/publicadapter	4.283s
+2026/11/01 17:34:35 [system-backup-public] execution=unavailable
+2026/11/01 17:34:35 [system-backup-public] execution=ok
+--- FAIL: TestPublicRestoreLoopRejectsDriftAndCaptureCrossRouting (0.00s)
+    public_restore_test.go:178: dispatched rejection not recorded
+FAIL
+FAIL	clawreef/internal/systembackupexecution	9.850s
+FAIL

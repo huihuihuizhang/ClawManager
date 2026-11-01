@@ -1,0 +1,4 @@
+ok  	clawreef/internal/systembackupdispatch	0.665s
+ok  	clawreef/internal/systembackupcontroller	9.368s
+ok  	clawreef/internal/systembackup/publicadapter	4.241s
+ok  	clawreef/internal/systembackupexecution	9.629s
