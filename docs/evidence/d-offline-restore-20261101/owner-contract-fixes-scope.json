@@ -1,0 +1,14 @@
+{
+  "parent_commit": "4b14dcd011cdd54b8c31cae97e16b68da64930da",
+  "scope": "existing image unknown terminal-state support and current 35-column northbound private normalizer",
+  "production_restore_wired": false,
+  "external_mysql_tests_run": false,
+  "source_sha256": {
+    "backend/internal/systembackup/sql_normalize.go": "52f63f9bfa6a6f30922618d5adae755698271ad81a399dfbdcba7a41f70db241",
+    "backend/internal/systembackup/image_restore_history_test.go": "9cd889ca31e82f3fbfe6a4607371b8e1b1d38a936d86d24d3822506be0f891ac",
+    "backend/internal/systembackupresources/restore_fields.go": "7738c2126b4581c4c417e294969b72fec21a2ddafeea24272900cf8a59bab508",
+    "backend/internal/systembackupresources/restore_northbound.go": "cc001f1f95e65ce6f3b806915633a99663564f468514b21c95a23a9d8ec8e811",
+    "backend/internal/systembackupresources/restore_northbound_test.go": "6090b20256a0453d1f5d0e9198be6ac8f7c7d77c7bdead0014a8c770cd04d194",
+    "backend/internal/systembackupresources/restore_owner_teams_test.go": "6cde42c139f15c0f08dac96edbf839df39e6405875201a9dab78455995c594d7"
+  }
+}
