@@ -55,12 +55,15 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
-	capture, err := s.verifyOriginalPublicationCapture(ctx, &claim, attempt, policy)
+	capture, err := s.verifyOriginalPublicationCaptureMode(ctx, &claim, attempt, policy, true)
 	if err != nil {
 		return err
 	}
 	request, err := s.prepareOriginalForwardRequest(ctx, &claim, attempt, policy, capture, store.config)
 	if err != nil {
+		return err
+	}
+	if err = s.renewFreshOriginalPublicationPreparation(ctx, &claim, attempt, policy, store.config, request); err != nil {
 		return err
 	}
 	// Actual native CreatePublishJob stays behind the original durable private

@@ -89,6 +89,10 @@ func publicationRequestedPart(operation string) string {
 // complete inert reader. Explicit claim renewal happens only after closing the
 // previous verifier/files; no old object or DEK adopts the renewed claim.
 func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy) (out publicationVerifiedCapture, resultErr error) {
+	return s.verifyOriginalPublicationCaptureMode(ctx, claim, attempt, policy, false)
+}
+
+func (s *DeploymentService) verifyOriginalPublicationCaptureMode(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, freshPreparation bool) (out publicationVerifiedCapture, resultErr error) {
 	stage := "publisher binding"
 	defer func() {
 		if resultErr != nil {
@@ -134,11 +138,17 @@ func (s *DeploymentService) verifyOriginalPublicationCapture(ctx context.Context
 	for index, name := range names {
 		stage = fmt.Sprintf("part %d claim renewal", index)
 		if index != 0 {
-			fresh, err := (c.ClaimCoordinator{Executor: s.publisherVerifierDB, InstallationID: s.Config.InstallationID}).Renew(ctx, *claim, policy)
-			if err != nil {
-				return zero, err
+			if freshPreparation {
+				if err := s.renewOriginalPublicationAssemblyClaim(ctx, claim, attempt, policy); err != nil {
+					return zero, err
+				}
+			} else {
+				fresh, err := (c.ClaimCoordinator{Executor: s.publisherVerifierDB, InstallationID: s.Config.InstallationID}).Renew(ctx, *claim, policy)
+				if err != nil {
+					return zero, err
+				}
+				*claim = fresh
 			}
-			*claim = fresh
 		}
 		stage = fmt.Sprintf("part %d current files and payload", index)
 		part, err := s.openPublicationCaptureFiles(ctx, *claim, attempt, name)

@@ -21,12 +21,13 @@ import (
 // ciphertext. It owns no DEK, source permission, provider session or Job intent.
 // It must never surround Unwrap, Sign or an already issued upload delegation.
 type publicationContainerGuard struct {
-	service *DeploymentService
-	claim   *c.ClaimToken
-	attempt uint64
-	policy  c.LeasePolicy
-	access  *security.SQLPublisherCaptureAuthority
-	last    time.Time
+	service          *DeploymentService
+	claim            *c.ClaimToken
+	attempt          uint64
+	policy           c.LeasePolicy
+	access           *security.SQLPublisherCaptureAuthority
+	last             time.Time
+	freshPreparation bool
 }
 
 func (g *publicationContainerGuard) check(ctx context.Context) error { return g.current(ctx, false) }
@@ -39,11 +40,17 @@ func (g *publicationContainerGuard) current(ctx context.Context, force bool) err
 		return nil
 	}
 	if g.access != nil && time.Until(g.access.ValidUntil()) < 2*g.policy.HeartbeatInterval {
-		fresh, err := (c.ClaimCoordinator{Executor: g.service.publisherVerifierDB, InstallationID: g.service.Config.InstallationID}).Renew(ctx, *g.claim, g.policy)
-		if err != nil {
-			return err
+		if g.freshPreparation {
+			if err := g.service.renewOriginalPublicationAssemblyClaim(ctx, g.claim, g.attempt, g.policy); err != nil {
+				return err
+			}
+		} else {
+			fresh, err := (c.ClaimCoordinator{Executor: g.service.publisherVerifierDB, InstallationID: g.service.Config.InstallationID}).Renew(ctx, *g.claim, g.policy)
+			if err != nil {
+				return err
+			}
+			*g.claim = fresh
 		}
-		*g.claim = fresh
 		g.access = nil
 	}
 	if g.access == nil {
@@ -112,11 +119,15 @@ func (r *publicationContainerReaderAt) ReadAt(dst []byte, offset int64) (int, er
 // The caller owns an unpublished destination and must persist its byte receipt
 // before making it an input to the actual upload-only Job.
 func (s *DeploymentService) writeOriginalPublicationContainer(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture, requested string, dst io.Writer) (pc.Facts, error) {
+	return s.writeOriginalPublicationContainerMode(ctx, claim, attempt, policy, capture, requested, dst, false)
+}
+
+func (s *DeploymentService) writeOriginalPublicationContainerMode(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, capture publicationVerifiedCapture, requested string, dst io.Writer, freshPreparation bool) (pc.Facts, error) {
 	var zero pc.Facts
 	if s == nil || s.staging == nil || claim == nil || dst == nil || !capture.checked() || claim.Target.PublicID != capture.Input.TaskPublicID || attempt != capture.Input.CaptureAttemptNo || policy.Validate() != nil {
 		return zero, c.ErrExecutionAuthority
 	}
-	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy}
+	guard := &publicationContainerGuard{service: s, claim: claim, attempt: attempt, policy: policy, freshPreparation: freshPreparation}
 	if err := guard.current(ctx, true); err != nil {
 		return zero, err
 	}
