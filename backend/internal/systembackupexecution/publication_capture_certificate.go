@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -106,6 +107,8 @@ type preparedPublicationCaptureCertificate struct {
 	capture  publicationVerifiedCapture
 	original publicationCertificateSQLFacts
 	record   *security.SQLPreparedPublicationRecord
+	claim    c.ClaimToken
+	payload  []byte
 }
 
 // Stage checks the SAME original facts in the caller's real signing-input
@@ -116,11 +119,21 @@ func (p *preparedPublicationCaptureCertificate) Stage(ctx context.Context, tx *s
 	if p == nil || p.service == nil || p.access == nil || p.record == nil || tx == nil || !p.capture.checked() {
 		return c.ErrExecutionAuthority
 	}
+	if err := lockOriginalCertificateTask(ctx, tx, p); err != nil {
+		return err
+	}
 	guard, err := p.access.Bind(ctx, tx)
 	if err != nil || guard.Facts() != p.facts {
 		return c.ErrExecutionAuthority
 	}
 	if _, err = p.service.readPublicationCertificateFactsTx(ctx, tx, guard.Facts(), p.capture, &p.original); err != nil {
+		return err
+	}
+	capacity, retention, now, err := p.service.originalCertificateCapacityTx(ctx, tx, p)
+	if err != nil {
+		return err
+	}
+	if err = p.service.stageOriginalCertificateEvidenceBytes(ctx, tx, p, originalCaptureCertificatePreparedID(p.capture), originalCaptureCertificatePreparedVersion, p.payload, capacity, retention, now); err != nil {
 		return err
 	}
 	if err = p.record.Stage(ctx, tx); err != nil {
@@ -138,7 +151,31 @@ func (p *preparedPublicationCaptureCertificate) SignCommitted(ctx context.Contex
 	if p == nil || p.record == nil || p.access == nil || !p.capture.checked() || p.access.Check(ctx) != nil {
 		return nil, "", c.ErrExecutionAuthority
 	}
-	return p.record.SignCommitted(ctx)
+	known, found, err := p.service.loadOriginalPublicationCaptureCertificate(ctx, p.claim, p.capture.Input.CaptureAttemptNo, p.capture)
+	if err != nil {
+		return nil, "", err
+	}
+	if found {
+		if !originalCertificateMatchesPreparedPayload(known.bytes, p.payload) {
+			return nil, "", c.ErrExecutionRecord
+		}
+		return bytes.Clone(known.bytes), known.sha256, nil
+	}
+	if err = p.beginOriginalCertificateSign(ctx); err != nil {
+		return nil, "", err
+	}
+	raw, sum, err := p.record.SignCommitted(ctx)
+	if err != nil {
+		return nil, "", errors.Join(c.ErrExecutionCommitUnknown, err)
+	}
+	if hash(raw) != sum {
+		return nil, "", c.ErrExecutionCommitUnknown
+	}
+	stored, err := p.service.storeOriginalPublicationCaptureCertificate(ctx, p, raw)
+	if err != nil {
+		return nil, "", errors.Join(c.ErrExecutionCommitUnknown, err)
+	}
+	return bytes.Clone(stored.bytes), stored.sha256, nil
 }
 
 // Current original SQL, not a replacement staging ledger. The public path
@@ -213,8 +250,15 @@ func (s *DeploymentService) prepareOriginalCaptureCertificate(ctx context.Contex
 	}
 	facts := guard.Facts()
 	original, err := s.readPublicationCertificateFactsTx(ctx, tx, facts, capture, nil)
+	if err == nil {
+		err = originalCertificatePreparationAbsentTx(ctx, tx, capture)
+	}
 	var issued time.Time
-	if err != nil || tx.QueryRowContext(ctx, `SELECT UTC_TIMESTAMP(6)`).Scan(&issued) != nil || guard.RecheckTx(ctx, tx) != nil {
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if tx.QueryRowContext(ctx, `SELECT UTC_TIMESTAMP(6)`).Scan(&issued) != nil || guard.RecheckTx(ctx, tx) != nil {
 		tx.Rollback()
 		return nil, c.ErrExecutionRecord
 	}
@@ -252,5 +296,5 @@ func (s *DeploymentService) prepareOriginalCaptureCertificate(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	return &preparedPublicationCaptureCertificate{service: s, access: access, facts: facts, capture: capture, original: original, record: record}, nil
+	return &preparedPublicationCaptureCertificate{service: s, access: access, facts: facts, capture: capture, original: original, record: record, claim: claim, payload: bytes.Clone(raw)}, nil
 }

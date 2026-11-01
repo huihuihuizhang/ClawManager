@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync/atomic"
 	"testing"
 )
 
@@ -16,6 +17,9 @@ type dOriginalSixPartFixtureOptions struct {
 	AfterOwnerReady          func(context.Context, *testing.T, *dOriginalSixPartTask) error
 	BeforeRuntimeComposition func(context.Context, *testing.T, *dOriginalSixPartTask) error
 	BeforePrepare            func(context.Context, *testing.T, *dOriginalSixPartTask) error
+	// Transparent native-driver fault, armed only at a publication boundary.
+	// Nil keeps the original production-fixture connection path unchanged.
+	ControlCommitACKLoss *atomic.Bool
 }
 
 var errDOriginalCoreChanged = errors.New("original fixture capture core changed outside its pre-seal publication declarations")
