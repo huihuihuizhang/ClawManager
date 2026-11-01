@@ -371,7 +371,15 @@ func (s *DeploymentService) publishOriginalManifestAfterRemoteCapture(ctx contex
 	if err = tx.Rollback(); err != nil {
 		return zero, err
 	}
-	return s.publishOriginalJSONWithProof(ctx, claim, attempt, store, p.intent, nil, p)
+	object, err := s.publishOriginalJSONWithProof(ctx, claim, attempt, store, p.intent, nil, p)
+	if err != nil {
+		return zero, err
+	}
+	if object.receipt == nil {
+		return zero, c.ErrExecutionRecord
+	}
+	object.receipt.postCManifest = p
+	return object, nil
 }
 
 // Production bridge immediately after the original upload has completed. Read

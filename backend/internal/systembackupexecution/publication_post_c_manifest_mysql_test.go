@@ -18,6 +18,14 @@ import (
 // receiver from A, then D's actual production post-upload bridge. No C receipt,
 // signing authority, task status or observed object version is manufactured.
 func TestDOriginalUploadedManifestThroughRemoteCAnd102MySQL(t *testing.T) {
+	runDOriginalUploadedManifestThroughRemoteCAnd102(t, false)
+}
+
+func TestDOriginalUploadedManifestAndCommittedMarkerMySQL(t *testing.T) {
+	runDOriginalUploadedManifestThroughRemoteCAnd102(t, true)
+}
+
+func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker bool) {
 	runAOriginalSixPartManifestUploadJob(t, func(ctx context.Context, t *testing.T, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture, store *nativePublicationS3, native *aNativePublicationServer) {
 		var ranges atomic.Int32
 		native.onRead = func(dst http.ResponseWriter, request *http.Request) bool {
@@ -78,5 +86,40 @@ func TestDOriginalUploadedManifestThroughRemoteCAnd102MySQL(t *testing.T) {
 			t.Fatal("expected fifteen objects,candidate and exactly one manifest PUT", puts)
 		}
 		t.Log("same original upload claim DATA closed before C Renew; latest actual claim consumed in102; full C16 ranges; one immutable manifest with full readback; no marker/acceptance/catalog/cleanup/terminal success", f.publicID)
+		if withMarker {
+			foreign := &nativePublicationS3{config: store.config}
+			foreign.config.Root += "foreign/"
+			if denied, err := f.service.publishOriginalCommittedMarkerAfterManifest(ctx, *claim, capture.Input.CaptureAttemptNo, foreign, object); err == nil || denied.Key != "" {
+				t.Fatal("foreign marker target adopted real manifest receipt", err)
+			}
+			marker, err := f.service.publishOriginalCommittedMarkerAfterManifest(ctx, *claim, capture.Input.CaptureAttemptNo, store, object)
+			if err != nil || marker.receipt == nil || marker.Key != store.config.Root+f.publicID+"/1/_COMMITTED" {
+				t.Fatal("actual typed MF to marker102", err)
+			}
+			native.mu.Lock()
+			puts = native.puts
+			native.mu.Unlock()
+			if puts != 18 || f.control.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_external_actions WHERE target_type='backup' AND target_public_id=? AND action_type IN ('manifest_put','marker_put') AND state='confirmed_present' AND send_attempt_count=1`, f.publicID).Scan(&actions) != nil || actions != 2 {
+				t.Fatal("original manifest/marker one-send actions", puts, actions)
+			}
+			if f.control.QueryRowContext(ctx, `SELECT status,artifact_usable FROM system_backup_v2_backups WHERE public_id=?`, f.publicID).Scan(&status, &usable) != nil || status != "publishing" || usable {
+				t.Fatal("marker changed terminal/eligibility contract", status, usable)
+			}
+			t.Log("same real original C-gated manifest receipt consumed for exact v12 _COMMITTED; parent/current SQL rechecked; no acceptance/catalog/cleanup/terminal success", f.publicID)
+			fresh, err := (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Renew(ctx, *claim, policy)
+			if err != nil {
+				t.Fatal("actual next claim transition for stale-parent negative", err)
+			}
+			*claim = fresh
+			if denied, err := f.service.publishOriginalCommittedMarkerAfterManifest(ctx, *claim, capture.Input.CaptureAttemptNo, store, object); err == nil || denied.Key != "" {
+				t.Fatal("old manifest/C completion adopted renewed claim", err)
+			}
+			native.mu.Lock()
+			puts = native.puts
+			native.mu.Unlock()
+			if puts != 18 {
+				t.Fatal("denied stale-parent marker repeated a send", puts)
+			}
+		}
 	})
 }
