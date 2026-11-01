@@ -1,0 +1,55 @@
+{
+  "schema_version": "d-artifact-capacity-local-evidence.v1",
+  "source_base": "5eb3bbf345cbd625bcc0845812220c649e56437d",
+  "contract_limits": {
+    "max_index_bytes": 8589934592,
+    "min_budget_bytes": 1048576,
+    "max_artifact_bytes": 966367641600
+  },
+  "reader_constructor": "explicit ArtifactReadLimits required; no guessed fallback",
+  "native_tls_matrix": {
+    "session": 57438,
+    "exit_code": 0,
+    "seconds": 3.754,
+    "scope": [
+      "9GiB and 900GiB HEAD metadata",
+      "over-contract and lower actual budgets",
+      "PUT metadata boundary model only",
+      "9GiB advertised retained version with short actual stream must fail EOF",
+      "signed catalog/index capacity metadata",
+      "cumulative member budget and reader budget pin"
+    ]
+  },
+  "actual_config_sql": {
+    "endpoint": "127.0.0.1:65298",
+    "uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+    "package_seconds": 11.307,
+    "exit_code": 0,
+    "session": 19768,
+    "case_seconds": 7.74
+  },
+  "execution_package": {
+    "session": 80846,
+    "exit_code": 0,
+    "seconds": 10.319
+  },
+  "not_claimed": [
+    "full multi-GiB body transfer or hash verification",
+    "A payload/upload/verified_capture capacity completion",
+    "complete artifact verification or succeeded"
+  ],
+  "logs": [
+    {
+      "sha256": "06edeaaa57a45483caac98350a4b2fb3c6f4f28407713cc00c94086f9ae49f91",
+      "path": ".tools/d-artifact-capacity-native-tls.log"
+    },
+    {
+      "sha256": "1a98bdf622deb9498e6285b9cc83d9adbab127865a3e769c53602581e5f6e47f",
+      "path": ".tools/d-artifact-capacity-config-native.log"
+    },
+    {
+      "sha256": "f23f3da97fd3232e361509622792ef9249e4feae797c89adb459c902ad10bf88",
+      "path": ".tools/d-artifact-capacity-package.log"
+    }
+  ]
+}
