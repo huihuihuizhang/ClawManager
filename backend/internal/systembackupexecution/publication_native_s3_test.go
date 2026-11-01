@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -102,6 +103,8 @@ func (s *aNativePublicationServer) serve(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		w.Header().Set("x-amz-version-id", "original-v1")
+		checksum := sha256.Sum256(raw)
+		w.Header().Set("x-amz-checksum-sha256", base64.StdEncoding.EncodeToString(checksum[:]))
 		w.WriteHeader(200)
 		return
 	}

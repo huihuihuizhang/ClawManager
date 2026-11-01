@@ -15,6 +15,8 @@ import (
 type dOriginalSixPartFixtureOptions struct {
 	// Explicit new pre-capture protocol variant. Legacy ten workers stay ten.
 	CaptureDescription       bool
+	PublicationForward       bool
+	BeforeOriginalConfig     func(context.Context, *testing.T, *dOriginalSixPartTask, map[string]any) error
 	BeforeCoreSeal           func(context.Context, *testing.T, *dOriginalSixPartTask, *DeploymentConfig) error
 	AfterOwnerReady          func(context.Context, *testing.T, *dOriginalSixPartTask) error
 	BeforeRuntimeComposition func(context.Context, *testing.T, *dOriginalSixPartTask) error

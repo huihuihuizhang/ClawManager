@@ -209,6 +209,11 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 			registry["version"], registry["sha256"] = f.secretPolicyVersion, f.secretPolicySHA
 		}
 	}
+	if options.BeforeOriginalConfig != nil {
+		if err = options.BeforeOriginalConfig(ctx, t, f, values); err != nil {
+			t.Fatal("explicit new original config before admission", err)
+		}
+	}
 	f.config, _ = json.Marshal(values)
 	flat := map[string]any{"origin_installation_id": installation, "version": 1, "config_sha256": hash(f.config), "config_size_bytes": len(f.config), "canonical_config_json": f.config, "created_by": "1", "change_reason": "named local original six-part task fixture"}
 	for _, name := range []string{"enabled", "alert_profile", "minimum_recovery_points"} {
@@ -366,7 +371,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 			t.Error(err)
 		}
 	})
-	grants, err := c.ControlEvidenceGrantSQL(f.database, user, "127.0.0.1", false, true, true, false)
+	grants, err := c.ControlEvidenceGrantSQL(f.database, user, "127.0.0.1", false, true, true, options.PublicationForward)
 	if err != nil {
 		t.Fatal(err)
 	}

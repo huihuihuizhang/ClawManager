@@ -31,11 +31,13 @@ import (
 // material loaders. They do not replace the original task, capture Authority,
 // encrypted plan, ten worker results or current publication claim.
 type aSameTaskCertificateMaterials struct {
-	signs          atomic.Int64
-	loseSignResult bool
-	commitACKFault bool
-	loseStoreACK   bool
-	loseCommit     atomic.Bool
+	signs              atomic.Int64
+	loseSignResult     bool
+	commitACKFault     bool
+	loseStoreACK       bool
+	loseCommit         atomic.Bool
+	configureOptions   func(*dOriginalSixPartFixtureOptions)
+	configurePublisher func(context.Context, *testing.T, *dOriginalSixPartTask, *PublisherVerifierMaterials) error
 }
 
 func (aFixture *aSameTaskCertificateMaterials) options() dOriginalSixPartFixtureOptions {
@@ -120,6 +122,11 @@ func (aFixture *aSameTaskCertificateMaterials) install(ctx context.Context, t *t
 	materials := PublisherVerifierMaterials{Version: PublisherVerifierMaterialsVersion, Database: formal.Database, Binding: formal.Binding, GenerateCapability: formal.GenerateCapability, UnwrapCapability: a.ProviderCapabilityPin{Source: capability.Source, Issuer: capIssuer}, InstallationIssuer: formal.InstallationIssuer, CAFile: formal.CAFile, JWTFile: formal.JWTFile, Workload: workload, KubernetesReads: reads, Grant: grantMount}
 	if f.captureDescription {
 		materials.DescriptionMaxPlaintextBytes = 16 << 20
+	}
+	if aFixture.configurePublisher != nil {
+		if err = aFixture.configurePublisher(ctx, t, f, &materials); err != nil {
+			t.Fatal("new original publisher evidence declarations before capture", err)
+		}
 	}
 	raw, _ := json.Marshal(materials)
 	write(s.Config.PublisherVerifier.Path, raw)
@@ -237,6 +244,11 @@ func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
 }
 
 func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
+	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
+	runAOriginalSixPartCertificatePublicationFixture(t, mode, fixture, after...)
+}
+
+func runAOriginalSixPartCertificatePublicationFixture(t *testing.T, mode string, fixture *aSameTaskCertificateMaterials, after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
 	t.Helper()
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") != "" {
 		if !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(buildinfo.Commit) {
@@ -244,9 +256,11 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after 
 		}
 		t.Log("original pre-capture linked build commit", buildinfo.Commit)
 	}
-	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
 	options := fixture.options()
 	options.CaptureDescription = mode == "capture-description"
+	if fixture.configureOptions != nil {
+		fixture.configureOptions(&options)
+	}
 	runDOriginalSixPartCaptureWithOptions(t, false, true, options, func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
 		var version uint64
 		var delay int64
