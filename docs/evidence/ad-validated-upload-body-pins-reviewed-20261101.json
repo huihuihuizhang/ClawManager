@@ -1,0 +1,45 @@
+{
+  "schema": "supervisor-original-validated-upload-body-pins.v1",
+  "at": "2026-11-01T15:54:18.763946+00:00",
+  "sources": [
+    "0352136baec28b7452aca5ecc62178f601b0f8b0",
+    "23927494afd40e742918a9460681c4933a266a36"
+  ],
+  "base": "2835a856fc6fb1b3f0b2fb6d6344c6ffc69503a2",
+  "problem": "The first upload completion TX validates original request order, but a later snapshot TX must not silently define a baseline from subsequently changed107 bodies.",
+  "review": [
+    "Public uploaded DATA carries16 sequence-validated canonical message digests produced only after original request/native-completion validation.",
+    "The second original-claim snapshot TX compares current original registered raw bytes to those prior validated digests before freezing; current content checksums cannot redefine original pins.",
+    "The exact original upload claim and104 digest are preserved as historical provenance; legitimate C-stage renewal updates only the actual current claim.",
+    "The102 gate rechecks fixed original16body hashes, last cursor SHA,activation/job UID/generation and exact candidate locator bytes under actual current C authority.",
+    "No additional Kube/provider call, private-material reopen, SQL query, grant renewal or C authorization was introduced by the239 correction.",
+    "Swapped objects with retained sequence and recomputed current checksum, changed fixed version,missing pins and altered canonical forms are rejected; detached copies preserve pins."
+  ],
+  "independent_merged_test": {
+    "session": 35932,
+    "closed": true,
+    "natural_exit": 0,
+    "package": "clawreef/internal/systembackupexecution",
+    "seconds": 17.437,
+    "sql": "disabled",
+    "log": ".tools/supervisor-d-035-239-validated-pins-merged-execution.log",
+    "sha256": "be4757ad6d0eb1077dcaaacd68c12855543162f69530cead441b57148bb554fe"
+  },
+  "preserved": [
+    "D2c original full remote C and real forward→102 caller",
+    "A c98/477 fixed diagnostics; completeworker35.933/execution14.721 prior regression",
+    "A ac15 strict relative-path fixture correction; selector targeted3.300 prior regression",
+    "Original policy,budgets,ResultJSON,claim/capability/30-5 windows and immutable102 one-send behavior"
+  ],
+  "native_limits": [
+    "Unified9e62 native v7 ended96409 exit1,case192.26/pkg195.516: all11capture+MF+15upload+fixedbyte15readback; only3results accepted before originalmaterialdeadline; fullC/102notreached.",
+    "Read-only originalA owner SQL reports claim19 unchanged;activation15:43:21.723949 UTC to15:43:35 UTC materialexpiry13.276051s,lastaccepted15:43:33.122950. No specific firstHTTPstatus inferred.",
+    "New239 typedbody counterexamples and merged SQLoff regression do not substitute for a fresh native manifest/marker/final task proof."
+  ],
+  "still_incomplete": [
+    "A unifying fixture receiver/readback order repair and fresh native",
+    "Postmanifest _COMMITTED,_ACCEPTANCE,catalog,cleanup,terminal success",
+    "Strict expired/different-upload-claim query-only reconciliation",
+    "Full isolated restore and onsite verification"
+  ]
+}

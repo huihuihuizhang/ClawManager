@@ -1,0 +1,65 @@
+{
+  "schema_version": "d-post-c-validated-dto-body-pins.v1",
+  "date": "2026-11-01",
+  "base_commit": "0352136baec28b7452aca5ecc62178f601b0f8b0",
+  "problem": "A validates107 body order against original request in one transaction. D must not establish a new baseline from changed/re-sequenced bodies seen by a later transaction. A map/set projection alone loses this original order.",
+  "fix": [
+    "A inert uploaded DATA now carries fixed16 canonical body hashes computed only after original publicationUploadCompletion validates every original request sequence. The SQL loader already requires canonical equality to original raw bodies.",
+    "D snapshot reads its existing16 current metadata rows but compares each to the earlier A-validated pin before freezing; it never defines the earlier pin from current SQL. No extra query, private-material reopen, Kube call or grant renewal added.",
+    "Copied DTO keeps detached array values; downstream current-claim102 still requires genuine independent C and exact original104/107 scope. Body hashes confer no C or SQL authority."
+  ],
+  "tests": {
+    "targeted": {
+      "seconds": 3.564,
+      "session": 99887,
+      "exit": 0,
+      "log": ".tools/d-post-c-validated-dto-pins-targeted.log",
+      "sha256": "03c12e2b911b26c7f342888909bab4a50ba236e30a27d0d35cdebd693fb3e189"
+    },
+    "full_execution": {
+      "seconds": 13.922,
+      "session": 41913,
+      "exit": 0,
+      "log": ".tools/d-post-c-validated-dto-pins-full-no-sql.log",
+      "sha256": "d3cddbf7ffdbb07f6b84c44d7406e247479ee090cb12aece569fc052d7bcab51"
+    }
+  },
+  "specific_counterexamples": [
+    "A rejects swapped object results with original sequence numbers against original upload request.",
+    "D rejects later swapped objects that keep original sequence fields and have recomputed current checksums; earlier validated body pins remain fixed.",
+    "Changed fixed version/current CRC, missing pin and out-of-range sequences fail. Copies remain independent after caller message/pin mutation."
+  ],
+  "limits": [
+    "No SQL run or remote C receipt manufactured; public body/DTO tests only.",
+    "Marker WIP was recoverably stashed before this isolated correction and is not part of this commit or regression source.",
+    "No new native manifest/marker success claimed. A v7 reached upload but stopped at result receiver before C; original30/5 and all grant clocks retained.",
+    "Original2c1 and035 proof records remain unchanged, scoped to their exact earlier source. No D push."
+  ],
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data.go",
+      "sha256_raw": "e55b6059d3d448712440fc8c6c5277b940f186f5da581536fbdd213bf4dafb17",
+      "sha256_lf": "e55b6059d3d448712440fc8c6c5277b940f186f5da581536fbdd213bf4dafb17"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_uploaded_data_test.go",
+      "sha256_raw": "139defb1812ab1dc10e8af0c5506198237ef1b1b3e870d5db1c6cd9e9aa4644a",
+      "sha256_lf": "139defb1812ab1dc10e8af0c5506198237ef1b1b3e870d5db1c6cd9e9aa4644a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "sha256_raw": "a1d774d6db106719dfadfa8e3f93328da2483b3522dac5fe6494fa468b7e1d7e",
+      "sha256_lf": "a1d774d6db106719dfadfa8e3f93328da2483b3522dac5fe6494fa468b7e1d7e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_test.go",
+      "sha256_raw": "8026e66b9405266d69eeb281213a782192564cf14d8bf9ca97afd66a36929c90",
+      "sha256_lf": "8026e66b9405266d69eeb281213a782192564cf14d8bf9ca97afd66a36929c90"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_snapshot_test.go",
+      "sha256_raw": "f99c8270f375c62de62f6754251396739d5b79e45900d926958a88ab38c3bbe4",
+      "sha256_lf": "f99c8270f375c62de62f6754251396739d5b79e45900d926958a88ab38c3bbe4"
+    }
+  ]
+}
