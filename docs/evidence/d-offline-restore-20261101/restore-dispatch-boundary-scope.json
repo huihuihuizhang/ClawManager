@@ -1,0 +1,19 @@
+{
+  "parent_commit": "a50c07bef2f3adb86399d0c92875834d83771185",
+  "scope": "Restore target structural alias rejection and real public capture dispatch denial regression",
+  "production_source_authenticated": false,
+  "public_restore_dispatch_complete": false,
+  "shared_execution_files_modified": false,
+  "physical_storage_isolation_proven": false,
+  "external_services_used": false,
+  "source_hashes": {
+    "backend/internal/systembackup/publicadapter/restore_target.go": {
+      "git_blob": "d9f026e5aff3da0a4673828c5795fcd1f69660e3",
+      "sha256": "8f4b083ff90f2bcf67e3e1f54940d715aa53be6795ee1d9a377c1c9f661c0d16"
+    },
+    "backend/internal/systembackup/publicadapter/restore_boundary_test.go": {
+      "git_blob": "04841d93d43145f48f95316a0daa634f2576fe8c",
+      "sha256": "7386e760e553b27144aeeb7f9661d4c1b7a6185d0ca8d27e69b55c4d99bc8281"
+    }
+  }
+}
