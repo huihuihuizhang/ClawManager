@@ -1,0 +1,88 @@
+{
+  "schema_version": "d-original-description-remote-capture-candidate.v1",
+  "date": "2026-11-01",
+  "base_head": "0e283afe73259513645c84754e3423c88c697c1a",
+  "dependencies": {
+    "byte_reader": "d69a226ed3635de9569de75aeebe71e1e3fbfffe",
+    "original_description_component": "ef42878d742ef5701fab0031485aa97e294421a3",
+    "reviewed_backup": "89e8d1eb4a08a10cddd1a0360466f84d95fbcd93"
+  },
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "sha256": "9e246b59021d953f67b598a12a54879908f4235ce45cd0b71508598d65f91e12"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container_mysql_test.go",
+      "sha256": "524e4bffdf48f34dad95e062da6c691e2604a596430843e13f9cc831bee1e9c9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata.go",
+      "sha256": "af3ed5f6c1c110e43478e915b42987186db6e012bd9487b681a36b653494187c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_metadata_test.go",
+      "sha256": "36a4427830cb4da9c1e0a97966e964b4c22850bd2ff707be719f8d7ef95dc0e7"
+    }
+  ],
+  "implemented": [
+    "Authenticated original private capture and DescriptionSHA256 decide legacy/new layout; object counts never select protocol.",
+    "New layout requires exactly six containers, three administrative C/envelope pairs, bootstrap, known original signed certificate and index: 15 objects and 13 container-index entries.",
+    "Current original SQL and checked capture derive expected bootstrap, certificate and index bytes; exact fixed-version native readback occurs before and after complete C/domain verification.",
+    "Independent current publisher Unwrap of remote description; process memory admission spans bounded raw bytes, shared strict Decode, all original scope/source/seed/business candidate/result/admin invocation checks and Clear. No local staging plaintext supplies remote description semantics.",
+    "All six complete container streams, their original member hashes/checkpoints and complete independently unwrapped business C/domain consumers remain required; remote E/P are paired using VerifyFinalizedBytes.",
+    "Private C receipt remains after final current target/config/claim and known-certificate history rechecks. No acceptance, marker, cleanup, catalog or terminal transition is authorized."
+  ],
+  "validation": {
+    "final_execution_no_sql": {
+      "sha256": "cf60a29e490311cda395588e2f7aacf3a72c40bcc3528775151d6f5fc3096579",
+      "log": "../.tools/d-new-remote-capture-caller-final-execution-no-sql.log",
+      "exit_code": 0,
+      "seconds": 12.566,
+      "result": "PASS",
+      "session": 99482
+    },
+    "eight_packages_no_sql": {
+      "exit_code": 0,
+      "packages": {
+        "kube": 3.151,
+        "description": 0.67,
+        "worker": 36.362,
+        "worker_cli": 4.365,
+        "publicadapter": 3.62,
+        "wire": 0.809,
+        "controller": 9.305,
+        "execution": 12.528
+      },
+      "session": 68749,
+      "log": "../.tools/d-new-remote-capture-caller-full-no-sql.log",
+      "result": "PASS"
+    },
+    "targeted_no_sql": {
+      "log": "../.tools/d-new-remote-capture-caller-with-descriptor-no-sql.log",
+      "exit_code": 0,
+      "seconds": 5.758,
+      "sql_native": "explicit SKIP: no SQL opt-in",
+      "result": "PASS",
+      "session": 72168
+    }
+  },
+  "native_pending": {
+    "requirements": [
+      "Clean committed source, actual HEAD linked with -ldflags=-X clawreef/internal/buildinfo.Commit=<HEAD> BEFORE original capture.",
+      "Loopback MySQL expected UUID; fresh code-generated random schema and business fixture; loopback httptest TLS S3 in-memory store only. No production data or external object store.",
+      "Preserve original fixture business data and 30/5 key-use timings. No old nonce/key/DEK/provider window extended.",
+      "Healthy original 11 capture members and 15 actual transported objects; original one certificate signature; exactly 16 business-member Range requests at initial healthy receipt.",
+      "Same task negative probes: six actual body corruptions (including business C, D and proof), four actual foreign fixed versions, Range 403, and actual coordinator release plus legitimate reacquisition so the old token is truly stale.",
+      "Status remains validating and artifact_usable=false; this leaf test makes no upload-Job/MF/acceptance/catalog/terminal-success claim."
+    ],
+    "test": "TestDOriginalDescriptionRemoteContainerCaptureNativeMySQL",
+    "status": "NOT RUN: 63507 remains A-owned; original descriptor fixture startup-order fix and explicit handoff required"
+  },
+  "limitations": [
+    "Current publication uses original current SQL and checked capture; this is not historical disaster-recovery source authentication.",
+    "Pure parser tests explicitly create inert capture DATA snapshots and return only parser errors; they are not native SQL/AEAD/signature/current-authority evidence.",
+    "This candidate is not native verified and must not be described as full end-to-end backup or an intermittent CE failure fix.",
+    "No D push; supervisor reviews and integrates exact source as appropriate."
+  ]
+}

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"io"
 
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	pc "clawreef/internal/systembackuppartcontainer"
@@ -19,6 +20,7 @@ import (
 type publicationRemoteContainerObjects struct {
 	Containers map[string]ArtifactReadObject
 	Control    map[string]ArtifactReadObject
+	Metadata   map[string]ArtifactReadObject
 }
 
 type publicationRemoteContainerReceipt struct {
@@ -123,13 +125,23 @@ func (s *DeploymentService) readOriginalRemoteContainerControl(ctx context.Conte
 		return nil, err
 	}
 	member, _, err := publicationContainerMember(capture, part, record)
-	if err != nil || record.Invocation.Request.ControlEvidence == nil {
+	if err != nil || part.Part != remoteCaptureDescriptionPart && record.Invocation.Request.ControlEvidence == nil || part.Part == remoteCaptureDescriptionPart && record.Invocation.Request.Operation != remoteCaptureDescriptionOperation {
 		return nil, c.ErrExecutionRecord
+	}
+	if part.Part == remoteCaptureDescriptionPart {
+		if record.Invocation.Request.CaptureDescription == nil || s.publisherVerifier == nil || s.publisherVerifier.DescriptionMaxPlaintextBytes < record.Invocation.Request.MaxArchiveBytes || s.publisherVerifier.validateDescriptionMemoryDeclaration() != nil {
+			return nil, cd.ErrMemoryDeclaration
+		}
+		release, err := cd.AdmitDecodeMemory(*record.Invocation.Request.CaptureDescription)
+		if err != nil {
+			return nil, err
+		}
+		defer release()
 	}
 	cipherObject, cipherOK := objects[part.CipherPath]
 	envelopeObject, envelopeOK := objects[part.EnvelopePath]
 	base := reader.store.config.Root + capture.Input.TaskPublicID + "/" + record.Invocation.ProviderKey.Request.Context.AttemptNo + "/"
-	if !cipherOK || !envelopeOK || cipherObject.Key != base+part.CipherPath || envelopeObject.Key != base+part.EnvelopePath || cipherObject.Size != part.CipherBytes || cipherObject.SHA256 != part.CipherSHA256 || envelopeObject.Size != part.EnvelopeBytes || envelopeObject.SHA256 != part.EnvelopeSHA256 || envelopeObject.Size > 32<<20 {
+	if !cipherOK || !envelopeOK || !fixedPublicationReadVersion(cipherObject.Version) || !fixedPublicationReadVersion(envelopeObject.Version) || cipherObject.Key != base+part.CipherPath || envelopeObject.Key != base+part.EnvelopePath || cipherObject.Size != part.CipherBytes || cipherObject.SHA256 != part.CipherSHA256 || envelopeObject.Size != part.EnvelopeBytes || envelopeObject.SHA256 != part.EnvelopeSHA256 || envelopeObject.Size > 32<<20 {
 		return nil, c.ErrExecutionRecord
 	}
 	envelopeMetadata, err := reader.store.stat(bounded, envelopeObject.Key, envelopeObject.Version, verifier.ValidUntil())
@@ -168,6 +180,9 @@ func (s *DeploymentService) readOriginalRemoteContainerControl(ctx context.Conte
 		}
 	}()
 	verified, err := w.InspectWrappedStream(bounded, member.Stream, envelope, body, bound, func(src io.Reader) error {
+		if part.Part == remoteCaptureDescriptionPart {
+			return inspectOriginalRemoteDescription(bounded, src, capture, record.Invocation)
+		}
 		limit := int64(ce.MaxBytes)
 		if part.Part == ce.ProofPart {
 			limit = ce.MaxProofBytes
@@ -194,8 +209,12 @@ func (s *DeploymentService) readOriginalRemoteContainerControl(ctx context.Conte
 // semantics, independent cleanup and acceptance/catalog signing are additional
 // mandatory inputs to the future finalization gate; this receipt grants none.
 func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, target PublicationTargetMaterials, capture publicationVerifiedCapture, objects publicationRemoteContainerObjects) (*publicationRemoteContainerReceipt, error) {
-	if s == nil || ctx == nil || ctx.Err() != nil || claim == nil || !capture.checked() || claim.Target.Kind != c.TargetBackup || claim.Target.PublicID != capture.Input.TaskPublicID || attempt != capture.Input.CaptureAttemptNo || policy.Validate() != nil || len(objects.Containers) != 6 || len(objects.Control) != 4 {
+	if s == nil || ctx == nil || ctx.Err() != nil || claim == nil || !capture.checked() || claim.Target.Kind != c.TargetBackup || claim.Target.PublicID != capture.Input.TaskPublicID || attempt != capture.Input.CaptureAttemptNo || policy.Validate() != nil || len(objects.Containers) != 6 {
 		return nil, c.ErrExecutionAuthority
+	}
+	description, err := originalRemoteCaptureHasDescription(capture)
+	if err != nil || !description && (len(objects.Control) != 4 || len(objects.Metadata) != 0) || description && (len(objects.Control) != 6 || len(objects.Metadata) != 3) {
+		return nil, c.ErrExecutionRecord
 	}
 	encodedObjects, err := ce.Canonical(objects)
 	if err != nil {
@@ -217,6 +236,11 @@ func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Con
 		}
 		*claim = fresh
 		return s.remoteContainerReadScope(ctx, *claim, attempt, target, limits)
+	}
+	if description {
+		if err := s.verifyOriginalRemoteCaptureMetadata(ctx, claim, attempt, policy, capture, objects, reader, renew); err != nil {
+			return nil, err
+		}
 	}
 	seen := map[string]bool{}
 	var total int64
@@ -269,7 +293,7 @@ func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Con
 	var sidecar, proofs []byte
 	defer func() { clear(sidecar); clear(proofs) }()
 	for _, part := range capture.Parts {
-		if part.Part != ce.Part && part.Part != ce.ProofPart {
+		if part.Part != ce.Part && part.Part != ce.ProofPart && part.Part != remoteCaptureDescriptionPart {
 			continue
 		}
 		if seen[part.Part] {
@@ -282,7 +306,9 @@ func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Con
 		if err != nil {
 			return nil, err
 		}
-		if part.Part == ce.Part {
+		if part.Part == remoteCaptureDescriptionPart {
+			clear(plain)
+		} else if part.Part == ce.Part {
 			sidecar = plain
 		} else {
 			proofs = plain
@@ -306,6 +332,13 @@ func (s *DeploymentService) verifyOriginalRemoteContainerCapture(ctx context.Con
 	}
 	if _, err := s.remoteContainerReadScope(ctx, *claim, attempt, target, limits); err != nil {
 		return nil, err
+	}
+	if description {
+		// Re-read the same certificate/bootstrap/index after all C semantics,
+		// under the final current claim/config before minting the private receipt.
+		if err := s.verifyOriginalRemoteCaptureMetadata(ctx, claim, attempt, policy, capture, objects, reader, renew); err != nil {
+			return nil, err
+		}
 	}
 	return &publicationRemoteContainerReceipt{captureSHA256: publicationVerifiedCaptureHash(capture), objectsSHA256: hash(encodedObjects)}, nil
 }
