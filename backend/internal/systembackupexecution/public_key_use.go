@@ -18,7 +18,9 @@ import (
 // and SQLExecutionAuthority.Bind, while the SAME original Job row is locked.
 // Revoke serializes on that row. A completed revoke still requires Stopped;
 // this record must never be treated as proof that a process was terminated.
-func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority, binding d.JobBinding, pod BoundPod, req worker.ControlRequest, until time.Time) (*worker.KeyUseLease, error) {
+func (o *PublicJobOwner) keyUseTx(ctx context.Context, tx *sql.Tx, a d.Authority, binding d.JobBinding, pod BoundPod, req worker.ControlRequest, until time.Time) (_ *worker.KeyUseLease, resultErr error) {
+	cost := startOriginalControlStage(ctx, req, originalControlKeyStateSQL)
+	defer func() { cost.finish(resultErr != nil) }()
 	// All owner/permit/capability/relay minima are fixed BEFORE the original
 	// lease is persisted or signed. DATETIME(6) cannot retain nanoseconds; floor
 	// in UTC once here, never round up or repair a signed lease on readback.

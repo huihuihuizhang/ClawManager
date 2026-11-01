@@ -14,7 +14,9 @@ import (
 	d "clawreef/internal/systembackupdispatch"
 )
 
-func bindOriginalControlWorker(ctx context.Context, tx *sql.Tx, store c.SQLExecutionAuthority, authority d.Authority, request worker.ControlRequest) (*c.ExecutionAuthorityGuard, error) {
+func bindOriginalControlWorker(ctx context.Context, tx *sql.Tx, store c.SQLExecutionAuthority, authority d.Authority, request worker.ControlRequest) (_ *c.ExecutionAuthorityGuard, resultErr error) {
+	cost := startOriginalControlStage(ctx, request, originalControlSQLBind)
+	defer func() { cost.finish(resultErr != nil) }()
 	if request.Action == "key-check" && originalDescriptionControlRequest(request) {
 		return store.BindObserved(ctx, tx, authority, logOriginalDescriptionBindDiagnostic)
 	}
