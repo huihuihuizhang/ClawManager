@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 )
 
@@ -16,6 +17,9 @@ type publicationUploadedCaptureData struct {
 	Manifest, Index, Certificate, Bootstrap []byte
 	Objects                                 map[string]ArtifactReadObject
 	Candidate                               ArtifactReadObject
+	// Original sequence-validated canonical bodies, not current-SQL or C
+	// authority. A later transaction must compare rather than redefine them.
+	ResultBodySHA256 [16]string
 }
 
 func originalPublicationUploadedData(observed publicationUploadPollData) (*publicationUploadedCaptureData, error) {
@@ -41,6 +45,13 @@ func originalPublicationUploadedData(observed publicationUploadPollData) (*publi
 	}
 	object := observed.Messages[len(request.Objects)].Object
 	result.Candidate = ArtifactReadObject{Key: object.Key, Version: object.Version, SHA256: object.SHA256, Size: object.Bytes}
+	for i, message := range observed.Messages {
+		raw, err := ce.Canonical(message)
+		if err != nil {
+			return nil, c.ErrExecutionRecord
+		}
+		result.ResultBodySHA256[i] = hash(raw)
+	}
 	return result, nil
 }
 

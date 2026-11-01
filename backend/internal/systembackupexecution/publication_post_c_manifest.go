@@ -40,6 +40,13 @@ type publicationPostCUploadSnapshot struct {
 	resultsSHA256  [16]string
 }
 
+func originalPostCUploadResultPin(raw []byte, sequence uint64, data *publicationUploadedCaptureData) (string, error) {
+	if data == nil || sequence < 1 || sequence > 16 || !formalCandidateDigest(data.ResultBodySHA256[sequence-1]) || hash(raw) != data.ResultBodySHA256[sequence-1] {
+		return "", c.ErrExecutionRecord
+	}
+	return data.ResultBodySHA256[sequence-1], nil
+}
+
 func decodeOriginalPostCUploadResult(raw []byte, sequence uint64, snapshot publicationPostCUploadSnapshot) (publicationResultMessage, error) {
 	var message publicationResultMessage
 	if sequence < 1 || sequence > 16 || !formalCandidateDigest(snapshot.resultsSHA256[sequence-1]) || hash(raw) != snapshot.resultsSHA256[sequence-1] || decodeProviderDeploymentJSON(raw, &message) != nil {
@@ -83,7 +90,11 @@ func (s *DeploymentService) snapshotOriginalPostCUpload(ctx context.Context, cla
 		if err != nil {
 			return zero, err
 		}
-		snapshot.resultsSHA256[seq-1] = hash(raw)
+		pin, err := originalPostCUploadResultPin(raw, seq, data)
+		if err != nil {
+			return zero, err
+		}
+		snapshot.resultsSHA256[seq-1] = pin
 	}
 	p := &publicationPostCManifest{service: s, claim: claim, attempt: attempt, target: target, uploaded: data, materialSHA256: snapshot.materialSHA256, uploadSnapshot: snapshot}
 	if err = p.recheckUploadedTx(ctx, tx); err != nil {
@@ -105,7 +116,12 @@ func originalPostCManifestData(capture publicationVerifiedCapture, target Public
 	if data == nil || !capture.checked() || capture.DescriptionSHA256 == "" || len(data.Objects) != 15 || !formalCandidateDigest(data.RequestSHA256) || data.JobUID == "" || data.JobGeneration < 1 || len(data.Manifest) < 2 || len(data.Manifest) > 262144 || len(data.Index) < 2 || int64(len(data.Index)) > MaxPublicationIndexBytes || len(data.Certificate) < 2 || len(data.Certificate) > 16<<10 || len(data.Bootstrap) < 2 || len(data.Bootstrap) > 3*(64<<10)+4096 || target.InstallationID != capture.Input.InstallationID {
 		return nil, zero, c.ErrExecutionRecord
 	}
-	owned := &publicationUploadedCaptureData{RequestSHA256: data.RequestSHA256, JobUID: data.JobUID, JobGeneration: data.JobGeneration, Manifest: bytes.Clone(data.Manifest), Index: bytes.Clone(data.Index), Certificate: bytes.Clone(data.Certificate), Bootstrap: bytes.Clone(data.Bootstrap), Objects: make(map[string]ArtifactReadObject, 15), Candidate: data.Candidate}
+	for _, pin := range data.ResultBodySHA256 {
+		if !formalCandidateDigest(pin) {
+			return nil, zero, c.ErrExecutionRecord
+		}
+	}
+	owned := &publicationUploadedCaptureData{RequestSHA256: data.RequestSHA256, JobUID: data.JobUID, JobGeneration: data.JobGeneration, Manifest: bytes.Clone(data.Manifest), Index: bytes.Clone(data.Index), Certificate: bytes.Clone(data.Certificate), Bootstrap: bytes.Clone(data.Bootstrap), Objects: make(map[string]ArtifactReadObject, 15), Candidate: data.Candidate, ResultBodySHA256: data.ResultBodySHA256}
 	m, err := decodePublicationManifestV12(owned.Manifest)
 	if err != nil || m.Installation != capture.Input.InstallationID || m.Backup != capture.Input.TaskPublicID || m.Attempt != capture.Input.CaptureAttemptNo || m.Config.Version != capture.Input.ConfigVersion || m.Config.SHA256 != capture.Input.ConfigSHA256 || m.CaptureContext != capture.CaptureContextSHA256 {
 		return nil, zero, c.ErrExecutionRecord

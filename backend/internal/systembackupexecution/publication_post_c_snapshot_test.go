@@ -66,3 +66,49 @@ func TestPostCOriginalResultSnapshotRejectsChangedOrReorderedData(t *testing.T) 
 		})
 	}
 }
+
+// Model the exact transaction gap: A has validated the ORIGINAL request order,
+// then the next SQL snapshot observes self-consistent but re-sequenced bodies.
+// Its current CRC/hash is irrelevant; the earlier verified DATA pins must match.
+func TestPostCUploadSnapshotCannotRedefineValidatedResultPinsData(t *testing.T) {
+	for _, mode := range []string{"exact-first", "exact-last", "swap-objects-keep-sequences", "changed-version-recomputed-current-crc", "missing-original-pin", "zero-sequence", "overflow-sequence"} {
+		t.Run(mode, func(t *testing.T) {
+			observed := originalUploadPollFixtureData(t)
+			data, err := originalPublicationUploadedData(observed)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sequence := uint64(1)
+			message := observed.Messages[0]
+			switch mode {
+			case "exact-last":
+				sequence = 16
+				message = observed.Messages[15]
+			case "swap-objects-keep-sequences":
+				message.Object = observed.Messages[1].Object
+			case "changed-version-recomputed-current-crc":
+				message.Object.Version = "new-current-fixed-version"
+			case "missing-original-pin":
+				data.ResultBodySHA256[0] = ""
+			case "zero-sequence":
+				sequence = 0
+			case "overflow-sequence":
+				sequence = 17
+			}
+			raw, err := ce.Canonical(message)
+			if err != nil {
+				t.Fatal(err)
+			}
+			pin, err := originalPostCUploadResultPin(raw, sequence, data)
+			if mode == "exact-first" || mode == "exact-last" {
+				if err != nil || pin != data.ResultBodySHA256[sequence-1] {
+					t.Fatal("original verified sequence lost", err)
+				}
+				return
+			}
+			if err == nil || pin != "" {
+				t.Fatal("later snapshot adopted changed/re-sequenced current SQL bytes", mode)
+			}
+		})
+	}
+}
