@@ -1,0 +1,63 @@
+✖ capacity source covers every registered backup/restore control table including base backup tasks (170.4058ms)
+✖ capacity template remains blank and validates no fabricated identities (537.4073ms)
+✔ collector pins database config, least privilege table list, node and distinct read-only data mount (189.5129ms)
+✔ unsafe source, root UID, storage reuse and unknown inputs reject (1166.9059ms)
+✔ complete mocked read-only probe passes D scope without mutation or credential output (271.1677ms)
+✔ runtime capacity rejects submillisecond stale and future reports at the original SQL boundary (441.2747ms)
+✔ runtime capacity preserves valid int64 wire bytes above JS safe integer (237.2701ms)
+✔ namespace, Pod and database identity mismatches stop dependent probing (636.2894ms)
+✔ RWOP, nonshared reports, storage alias, unsafe mount and container drift block (2335.4011ms)
+✔ stale report, future clock, inaccessible report, source denial, restart and schema drift cannot pass (1398.276ms)
+✔ missing fresh baseline and missing collector remain explicitly blocked; mismatched baseline rejects before calls (260.9194ms)
+✔ default offline execution reports missing materials and cannot claim readiness (1055.0306ms)
+✔ reuses capacity contract and rejects unsafe target without reflecting secrets (207.782ms)
+✔ entry point has no subprocess/network execution and no live opt-in (396.7795ms)
+✔ remote/device/ADS/escape paths fail before any filesystem probe for read and write (11.779ms)
+✔ existing ancestor junction/symlink blocks reads and output without following it (0.8277ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 14
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8194.103
+
+✖ failing tests:
+
+test at scripts\system-backup-d-capacity-deployment.test.mjs:13:1
+✖ capacity source covers every registered backup/restore control table including base backup tasks (170.4058ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(expected.includes('system_backups'))
+
+      at TestContext.<anonymous> (file:///C:/Users/13542/Desktop/%E6%96%B0%E5%BB%BA%E6%96%87%E4%BB%B6%E5%A4%B9/ClawManager-D-offline-restore/scripts/system-backup-d-capacity-deployment.test.mjs:16:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\system-backup-d-capacity-deployment.test.mjs:65:1
+✖ capacity template remains blank and validates no fabricated identities (537.4073ms)
+  Error: ENOENT: no such file or directory, open 'C:\Users\13542\Desktop\新建文件夹\ClawManager-D-offline-restore\deployments\k8s\system-backup-capacity.template.json'
+      at Object.openSync (node:fs:621:18)
+      at readFileSync (node:fs:487:35)
+      at TestContext.<anonymous> (file:///C:/Users/13542/Desktop/%E6%96%B0%E5%BB%BA%E6%96%87%E4%BB%B6%E5%A4%B9/ClawManager-D-offline-restore/scripts/system-backup-d-capacity-deployment.test.mjs:67:31)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D-offline-restore\\deployments\\k8s\\system-backup-capacity.template.json'
+  }

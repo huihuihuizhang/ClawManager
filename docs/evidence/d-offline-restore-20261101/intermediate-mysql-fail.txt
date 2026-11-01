@@ -1,0 +1,16 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+    offline_business_mysql_test.go:220: restore unsupported users/instances schema
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:119: fixture SQL failed: MySQL error 1470
+=== NAME  TestOfflineBusinessRestoreMySQL/evidence-failure
+    testing.go:1913: test executed panic(nil) or runtime.Goexit: subtest may have called FailNow on a parent test
+--- FAIL: TestOfflineBusinessRestoreMySQL (14.00s)
+    --- FAIL: TestOfflineBusinessRestoreMySQL/success (3.12s)
+    --- FAIL: TestOfflineBusinessRestoreMySQL/evidence-failure (4.10s)
+=== RUN   TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping
+--- PASS: TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping (0.12s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	17.050s
+FAIL

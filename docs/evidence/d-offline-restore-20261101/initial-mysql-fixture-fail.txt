@@ -1,0 +1,6 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:141: fixture SQL failed: *mysql.MySQLError
+--- FAIL: TestOfflineBusinessRestoreMySQL (8.06s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	11.506s
+FAIL

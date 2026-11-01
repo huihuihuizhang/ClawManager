@@ -1,0 +1,52 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:267: local MySQL only; actual Skills migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- PASS: TestOfflineBusinessRestoreMySQL (24.52s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/success (3.89s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (5.03s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (3.78s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (3.07s)
+=== RUN   TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations
+--- PASS: TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations (0.00s)
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object
+--- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object (0.00s)
+=== RUN   TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns
+--- PASS: TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns (0.00s)
+=== RUN   TestSkillRestoreValidationInheritsTaskCancellation
+--- PASS: TestSkillRestoreValidationInheritsTaskCancellation (0.00s)
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation
+--- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation (0.01s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation (0.00s)
+=== RUN   TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping
+--- PASS: TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping (0.15s)
+PASS
+ok  	clawreef/internal/systembackup/domain	27.594s

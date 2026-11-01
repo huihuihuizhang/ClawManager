@@ -1,0 +1,18 @@
+{
+  "parent_commit": "e75a0ba55de3cac1b7e8cdf7532906ff727de2b9",
+  "scope": "Redis protocol retry test strengthening only",
+  "production_guard_changed": false,
+  "loopback_only": true,
+  "positive_cases": 3,
+  "mutation_expected_failure": "n != 0 replaced with n < 0 only using Go overlay; assertion failed at retry boundary",
+  "files": {
+    "backend/internal/systembackup/offline_redis_restore_test.go": {
+      "git_blob_sha1": "ab0fad0a50ac7d75d5493975249ac60d2260f92d",
+      "sha256": "4568e8c61314d5f6659f0c3e994c882cb8c0e386ad7414f348e991218db52f5d"
+    },
+    "backend/internal/systembackup/testfixture/redis_history_target.go": {
+      "git_blob_sha1": "b4d80dab69fd265adbdcf09182a0f23a1977db2d",
+      "sha256": "70f40fce2378d8f8b623dd4a69994c2ea3ae18193087d35a2e6787e25f5a83eb"
+    }
+  }
+}

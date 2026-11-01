@@ -1,0 +1,10 @@
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/success
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/cancel
+=== RUN   TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/partial-failure
+--- PASS: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget (0.02s)
+    --- PASS: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/success (0.01s)
+    --- PASS: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/cancel (0.00s)
+    --- PASS: TestOfflineNonemptyRedisCaptureToIsolatedHistoryTarget/partial-failure (0.01s)
+PASS
+ok  	clawreef/internal/systembackup	3.124s

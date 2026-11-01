@@ -1,0 +1,7 @@
+{
+  "owned_mysql_port": 50809,
+  "process_identity_checked": true,
+  "shutdown_confirmed": true,
+  "owned_host_temporary_directory_removed": true,
+  "other_instances_touched": false
+}

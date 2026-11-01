@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"clawreef/internal/systembackup/scope"
+	sh "clawreef/internal/systembackupskillhub"
 )
 
 // ConfigNormalizer is supplied by the shared versioned Secret/config registry.
@@ -26,6 +27,7 @@ type Policy struct {
 	WorkBuddy      *WorkBuddySchema
 	Dependencies   map[string]TableAdapter
 	TeamPlacements map[string]Placement // separately restored/verified Team shared volumes
+	Skills         *sh.RestoreMapping   // authenticated target object/workspace mapping; IDs must remain stable
 }
 type RestorePlan struct {
 	Data             Snapshot
@@ -113,6 +115,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := validateSnapshot(source); err != nil {
 		return RestorePlan{}, err
 	}
+	if err := validateSkillRestore(ctx, source, policy.Skills); err != nil {
+		return RestorePlan{}, err
+	}
 	if policy.WorkBuddy.uidLayout() {
 		if err := validateWorkBuddyUID(source, policy.WorkBuddy); err != nil {
 			return RestorePlan{}, err
@@ -197,7 +202,7 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		}
 		for _, c := range t.Columns {
 			d, ok := targetCols[c.Name]
-			if !allowed[c.Name] || !ok || c.Type != d.Type || strings.Contains(strings.ToUpper(d.Extra), "GENERATED") {
+			if !allowed[c.Name] || !ok || c.Type != d.Type || generatedColumn(d.Extra) {
 				return RestorePlan{}, ErrSchema
 			}
 		}
@@ -265,11 +270,26 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := VerifyTeamQuarantine(plan.Data); err != nil {
 		return RestorePlan{}, err
 	}
+	if err := VerifySkillQuarantineContext(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
 	return plan, nil
 }
 func hasColumn(t Table, name string) bool {
 	for _, c := range t.Columns {
 		if c.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func generatedColumn(extra string) bool {
+	// MySQL marks ordinary TIMESTAMP defaults as DEFAULT_GENERATED. Those
+	// columns accept explicit archived values. Only generated columns (STORED
+	// GENERATED / VIRTUAL GENERATED) prohibit these inserts.
+	for _, field := range strings.Fields(strings.ToUpper(extra)) {
+		if field == "GENERATED" {
 			return true
 		}
 	}
@@ -287,6 +307,9 @@ func clearFields(r Row, names string) {
 }
 
 func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
+	if err := normalizeSkill(table, r, p.Skills); err != nil {
+		return err
+	}
 	normalizeCrossDomain(table, r)
 	if err := normalizeTeam(table, r, p); err != nil {
 		return err
@@ -299,11 +322,6 @@ func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
 		set(r, "base_url", Text("https://disabled.invalid"))
 	case "chat_messages":
 		clearFields(r, "invocation_id")
-	case "skills", "skill_blobs":
-		clearFields(r, "last_scan_result_id last_scanned_at")
-	case "instance_skills":
-		clearFields(r, "install_path last_seen_at")
-		set(r, "status", Text("removed"))
 	case "users":
 		set(r, "last_login", Cell{Null: true})
 	case "instances":
