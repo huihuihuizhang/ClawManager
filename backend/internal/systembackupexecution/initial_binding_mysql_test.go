@@ -289,6 +289,302 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 			}
 		})
 	}
+	t.Run("actual-heartbeat-cannot-revive-expired-lock-wait", func(t *testing.T) {
+		if _, err := admin.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,2,UTC_TIMESTAMP(6)) WHERE public_id=?`, authority.TaskPublicID); err != nil {
+			t.Fatal(err)
+		}
+		originalUntil := readLease(admin)
+		var originalOwner string
+		var originalVersion uint64
+		var originalHeartbeat sql.NullTime
+		if err := admin.QueryRowContext(ctx, `SELECT controller_owner,row_version,heartbeat_at FROM system_backup_v2_backups WHERE public_id=?`, authority.TaskPublicID).Scan(&originalOwner, &originalVersion, &originalHeartbeat); err != nil {
+			t.Fatal(err)
+		}
+		bounded, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		locker, err := db.BeginTx(bounded, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer locker.Rollback()
+		var lockedUntil time.Time
+		if err := locker.QueryRowContext(bounded, `SELECT controller_lease_expires_at FROM system_backup_v2_backups WHERE public_id=? FOR UPDATE`, authority.TaskPublicID).Scan(&lockedUntil); err != nil || !lockedUntil.Equal(originalUntil) {
+			t.Fatal("original lease row not locked", err)
+		}
+		var database string
+		if err := admin.QueryRowContext(bounded, "SELECT DATABASE()").Scan(&database); err != nil {
+			t.Fatal(err)
+		}
+		finished := make(chan error, 1)
+		queueOnly := c.SQLExecutionWorkStore{Queue: store.Queue}
+		go func() { finished <- queueOnly.RenewExecutionLease(bounded, authority) }()
+		waiting := false
+		for !waiting {
+			var count uint64
+			if err := admin.QueryRowContext(bounded, `SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l ON l.ENGINE=w.ENGINE AND l.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA=? AND l.OBJECT_NAME='system_backup_v2_backups'`, database).Scan(&count); err != nil {
+				t.Fatal(err)
+			}
+			if count > 0 {
+				waiting = true
+				break
+			}
+			select {
+			case err := <-finished:
+				t.Fatal("renewal did not actually wait", err)
+			case <-bounded.Done():
+				t.Fatal(bounded.Err())
+			case <-time.After(20 * time.Millisecond):
+			}
+		}
+		for {
+			var now time.Time
+			if err := admin.QueryRowContext(bounded, "SELECT UTC_TIMESTAMP(6)").Scan(&now); err != nil {
+				t.Fatal(err)
+			}
+			if !now.Before(originalUntil.Add(20 * time.Millisecond)) {
+				break
+			}
+			select {
+			case <-bounded.Done():
+				t.Fatal(bounded.Err())
+			case <-time.After(20 * time.Millisecond):
+			}
+		}
+		if err := locker.Rollback(); err != nil {
+			t.Fatal(err)
+		}
+		select {
+		case err := <-finished:
+			if !errors.Is(err, c.ErrClaimLost) {
+				t.Errorf("expired original claim renewed after a real lock wait: %v", err)
+			}
+		case <-bounded.Done():
+			t.Fatal(bounded.Err())
+		}
+		var ownerAfter string
+		var versionAfter uint64
+		var heartbeatAfter sql.NullTime
+		if err := admin.QueryRowContext(ctx, `SELECT controller_owner,row_version,heartbeat_at FROM system_backup_v2_backups WHERE public_id=?`, authority.TaskPublicID).Scan(&ownerAfter, &versionAfter, &heartbeatAfter); err != nil {
+			t.Fatal(err)
+		}
+		if !readLease(admin).Equal(originalUntil) || ownerAfter != originalOwner || versionAfter != originalVersion || heartbeatAfter.Valid != originalHeartbeat.Valid || !heartbeatAfter.Time.Equal(originalHeartbeat.Time) {
+			t.Error("expired lock waiter changed committed lease/owner/version/heartbeat")
+		}
+		err = store.RunWithExecutionHeartbeat(ctx, authority, func(active context.Context) error {
+			_, err := c.WithOriginalControllerBinding(active, authority, record, func(scoped context.Context) (d.JobBinding, error) {
+				tx, err := db.BeginTx(scoped, nil)
+				if err != nil {
+					return d.JobBinding{}, err
+				}
+				defer tx.Rollback()
+				guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+				if err == nil {
+					guard.Invalidate()
+					t.Error("expired original scope acquired a new binding after lock wait")
+				}
+				return d.JobBinding{}, nil
+			})
+			return err
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("actual-heartbeat-waits-for-first-binding", func(t *testing.T) {
+		setLease()
+		job.Name = "initial-binding-heartbeat-data"
+		currentIntent, err := kube.Intent("Job", &job)
+		if err != nil {
+			t.Fatal(err)
+		}
+		currentRecord := kube.ResourceRecord{Intent: currentIntent, Revision: 1, CreateDispatched: true, UID: "initial-binding-heartbeat-uid", ResourceVersion: "1"}
+		if _, err := admin.ExecContext(ctx, `INSERT INTO system_backup_v2_runtime_resources(task_public_id,resource_kind,namespace_name,resource_name,resource_owner,request_sha256,request_json,row_version,create_dispatched,observed_uid,resource_version,lifecycle,attempt_no,phase) VALUES(?,'Job',?,?,?,?,?,1,TRUE,?,'1','ready',?,'capture')`, authority.TaskPublicID, currentIntent.Identity.Namespace, currentIntent.Identity.Name, authority.TaskPublicID, currentIntent.RequestSHA256, currentIntent.RequestJSON, currentRecord.UID, authority.AttemptNo); err != nil {
+			t.Fatal(err)
+		}
+		var database string
+		if err := admin.QueryRowContext(ctx, "SELECT DATABASE()").Scan(&database); err != nil {
+			t.Fatal(err)
+		}
+		bounded, cancel := context.WithTimeout(ctx, 12*time.Second)
+		defer cancel()
+		locked, release := make(chan struct{}), make(chan struct{})
+		finished := make(chan error, 1)
+		var firstUntil time.Time
+		var firstHeartbeat time.Time
+		err = store.RunWithExecutionHeartbeat(bounded, authority, func(active context.Context) error {
+			go func() {
+				_, err := c.WithOriginalControllerBinding(active, authority, currentRecord, func(scoped context.Context) (d.JobBinding, error) {
+					tx, err := db.BeginTx(scoped, nil)
+					if err != nil {
+						return d.JobBinding{}, err
+					}
+					defer tx.Rollback()
+					guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+					if err != nil {
+						return d.JobBinding{}, err
+					}
+					close(locked)
+					select {
+					case <-release:
+					case <-scoped.Done():
+						return d.JobBinding{}, scoped.Err()
+					}
+					fresh, err := c.PrepareOriginalFirstBinding(scoped, tx, authority, guard)
+					if err != nil {
+						return d.JobBinding{}, err
+					}
+					firstUntil = readLease(tx)
+					if err := tx.QueryRowContext(scoped, `SELECT heartbeat_at FROM system_backup_v2_backups WHERE public_id=?`, authority.TaskPublicID).Scan(&firstHeartbeat); err != nil {
+						return d.JobBinding{}, err
+					}
+					binding := []byte(`{"fixture":"heartbeat-first-binding-data"}`)
+					if _, err := tx.ExecContext(scoped, `UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE observed_uid=?`, binding, currentRecord.UID); err != nil {
+						return d.JobBinding{}, err
+					}
+					if err := c.RecheckOriginalFirstBindingCommit(scoped, tx, authority, fresh, binding); err != nil {
+						return d.JobBinding{}, err
+					}
+					return d.JobBinding{}, tx.Commit()
+				})
+				finished <- err
+			}()
+			select {
+			case <-locked:
+			case err := <-finished:
+				return err
+			case <-active.Done():
+				return active.Err()
+			}
+			// Only this owned schema is observed. The default five-second
+			// heartbeat must actually reach MySQL and wait on the original lock.
+			waited := false
+			for !waited {
+				var count uint64
+				if err := admin.QueryRowContext(active, `SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.data_locks l ON l.ENGINE=w.ENGINE AND l.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID WHERE l.OBJECT_SCHEMA=? AND l.OBJECT_NAME='system_backup_v2_backups'`, database).Scan(&count); err != nil {
+					close(release)
+					return err
+				}
+				if count > 0 {
+					waited = true
+					break
+				}
+				select {
+				case <-active.Done():
+					close(release)
+					return active.Err()
+				case <-time.After(30 * time.Millisecond):
+				}
+			}
+			close(release)
+			select {
+			case err := <-finished:
+				if err != nil {
+					return err
+				}
+			case <-active.Done():
+				return active.Err()
+			}
+			for db.Stats().InUse != 0 {
+				select {
+				case <-active.Done():
+					return active.Err()
+				case <-time.After(10 * time.Millisecond):
+				}
+			}
+			if got := readLease(admin); got.Before(firstUntil) {
+				t.Errorf("delayed real heartbeat shortened the first-binding claim: first=%s current=%s", firstUntil, got)
+			}
+			var heartbeatAfter time.Time
+			if err := admin.QueryRowContext(ctx, `SELECT heartbeat_at FROM system_backup_v2_backups WHERE public_id=?`, authority.TaskPublicID).Scan(&heartbeatAfter); err != nil {
+				return err
+			}
+			if heartbeatAfter.Before(firstHeartbeat) {
+				t.Error("delayed real heartbeat moved heartbeat_at backwards")
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal("real first binding/heartbeat overlap", err)
+		}
+	})
+	t.Run("concurrent-original-two-binding-transactions", func(t *testing.T) {
+		setLease()
+		records := make([]kube.ResourceRecord, 2)
+		for i, name := range []string{"initial-binding-parallel-one", "initial-binding-parallel-two"} {
+			copy := job.DeepCopy()
+			copy.Name = name
+			current, err := kube.Intent("Job", copy)
+			if err != nil {
+				t.Fatal(err)
+			}
+			records[i] = kube.ResourceRecord{Intent: current, Revision: 1, CreateDispatched: true, UID: name + "-uid", ResourceVersion: "1"}
+			result, err := admin.ExecContext(ctx, `INSERT INTO system_backup_v2_runtime_resources(task_public_id,resource_kind,namespace_name,resource_name,resource_owner,request_sha256,request_json,row_version,create_dispatched,observed_uid,resource_version,lifecycle,attempt_no,phase) VALUES(?,'Job',?,?,?,?,?,1,TRUE,?,'1','ready',?,'capture')`, authority.TaskPublicID, current.Identity.Namespace, current.Identity.Name, authority.TaskPublicID, current.RequestSHA256, current.RequestJSON, records[i].UID, authority.AttemptNo)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n, e := result.RowsAffected(); e != nil || n != 1 {
+				t.Fatal("parallel binding test row", n, e)
+			}
+		}
+		err := store.RunWithExecutionHeartbeat(ctx, authority, func(active context.Context) error {
+			start := make(chan struct{})
+			finished := make(chan error, 2)
+			for _, r := range records {
+				go func(r kube.ResourceRecord) {
+					<-start
+					_, err := c.WithOriginalControllerBinding(active, authority, r, func(scoped context.Context) (d.JobBinding, error) {
+						tx, err := db.BeginTx(scoped, nil)
+						if err != nil {
+							return d.JobBinding{}, err
+						}
+						defer tx.Rollback()
+						guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+						if err != nil {
+							return d.JobBinding{}, err
+						}
+						fresh, err := c.PrepareOriginalFirstBinding(scoped, tx, authority, guard)
+						if err != nil {
+							return d.JobBinding{}, err
+						}
+						value := d.JobBinding{Namespace: r.Intent.Identity.Namespace, Name: r.Intent.Identity.Name, UID: r.UID, Generation: 1}
+						raw, err := json.Marshal(value)
+						if err != nil {
+							return d.JobBinding{}, err
+						}
+						result, err := tx.ExecContext(scoped, `UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE observed_uid=? AND binding_json IS NULL`, raw, r.UID)
+						if err != nil {
+							return d.JobBinding{}, err
+						}
+						if n, e := result.RowsAffected(); e != nil || n != 1 {
+							return d.JobBinding{}, errors.New("parallel original binding did not affect exactly one row")
+						}
+						if err := c.RecheckOriginalFirstBindingCommit(scoped, tx, authority, fresh, raw); err != nil {
+							return d.JobBinding{}, err
+						}
+						return value, tx.Commit()
+					})
+					finished <- err
+				}(r)
+			}
+			close(start)
+			for range records {
+				if err := <-finished; err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal("concurrent original binding transactions", err)
+		}
+		for _, r := range records {
+			var raw []byte
+			var value d.JobBinding
+			if err := admin.QueryRowContext(ctx, `SELECT binding_json FROM system_backup_v2_runtime_resources WHERE observed_uid=?`, r.UID).Scan(&raw); err != nil || json.Unmarshal(raw, &value) != nil || value.UID != r.UID || value.Name != r.Intent.Identity.Name {
+				t.Fatal("parallel bindings crossed original Job identities", err)
+			}
+		}
+	})
 	t.Run("actual-original-cutoff-after-renewal-row-delivery", func(t *testing.T) {
 		result, err := admin.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,2,UTC_TIMESTAMP(6)) WHERE public_id=?`, authority.TaskPublicID)
 		if err != nil {

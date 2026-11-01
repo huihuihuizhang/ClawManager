@@ -40,6 +40,21 @@ func (shutdownRenewConn) Prepare(string) (driver.Stmt, error) {
 }
 func (shutdownRenewConn) Close() error              { return nil }
 func (shutdownRenewConn) Begin() (driver.Tx, error) { return nil, errors.New("unexpected Begin") }
+func (shutdownRenewConn) BeginTx(context.Context, driver.TxOptions) (driver.Tx, error) {
+	return shutdownRenewTx{}, nil
+}
+
+type shutdownRenewTx struct{}
+
+func (shutdownRenewTx) Commit() error   { return nil }
+func (shutdownRenewTx) Rollback() error { return nil }
+func (shutdownRenewConn) QueryContext(_ context.Context, q string, _ []driver.NamedValue) (driver.Rows, error) {
+	now := time.Now().UTC()
+	if q == "SELECT UTC_TIMESTAMP(6)" {
+		return &claimReceiptRows{values: []driver.Value{now}}, nil
+	}
+	return &claimReceiptRows{values: []driver.Value{now.Add(time.Minute), now, nil}}, nil
+}
 func (x shutdownRenewConn) ExecContext(ctx context.Context, _ string, _ []driver.NamedValue) (driver.Result, error) {
 	x.state.once.Do(func() { close(x.state.started) })
 	switch x.state.mode {
