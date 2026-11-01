@@ -34,14 +34,15 @@ type RedactionPolicy struct {
 	Projections     map[string][]string `json:"projections"`
 }
 
-// Schema acceptance reuses A's original independently pinned FROZEN registry
-// reader, including real observed schema evidence and reviewed object policy.
+// Schema acceptance uses independently pinned FROZEN metadata, including real
+// observed schema evidence and reviewed object policy. It constructs no A
+// CaptureScope: this control reader cannot grant a wider business SQL export.
 // A draft or pending_live_evidence document can never become a production pin.
 func ReadPolicies(schemaRaw, redactionRaw []byte, input CaptureInput) (RegistryPin, RegistryPin, []string, error) {
 	if input.Validate() != nil || SHA256(schemaRaw) != input.SchemaRegistrySHA256 || SHA256(redactionRaw) != input.RedactionRegistrySHA256 {
 		return RegistryPin{}, RegistryPin{}, nil, ErrInvalid
 	}
-	if _, err := business.NewPinnedCaptureScope(schemaRaw, input.SchemaRegistrySHA256); err != nil {
+	if err := business.ValidatePinnedMetadataRegistry(schemaRaw, input.SchemaRegistrySHA256); err != nil {
 		return RegistryPin{}, RegistryPin{}, nil, ErrInvalid
 	}
 	var registry struct {

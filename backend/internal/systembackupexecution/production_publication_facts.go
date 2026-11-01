@@ -23,6 +23,10 @@ type productionPublicationSourceFacts struct {
 	SchemaSHA256                                  string
 	SchemaRegistry                                ce.RegistryPin
 	CoveredObjects, ExcludedObjects               int
+	// Exact independently pinned policy bytes, frozen before capture. This
+	// permits later business-domain accounting without consulting live source
+	// SQL or substituting a different in-process table registry.
+	SchemaRegistryBytes []byte `json:",omitempty"`
 }
 
 func observePublicationSourceFacts(schema domain.BusinessCaptureSchema, census domain.BusinessSchemaCensusObjects, registry ce.RegistryPin) (*productionPublicationSourceFacts, error) {
@@ -45,6 +49,9 @@ func observePublicationSourceFacts(schema domain.BusinessCaptureSchema, census d
 
 func (facts productionPublicationSourceFacts) validate() error {
 	if facts.Version != "system-backup-original-publication-source-facts.v1" || facts.AppVersion == "" || len(facts.AppVersion) > 128 || !utf8.ValidString(facts.AppVersion) || strings.ContainsAny(facts.AppVersion, "\x00\r\n") || !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(facts.GitCommit) || !formalCandidateDigest(facts.MigrationCatalogSHA256) || !formalCandidateDigest(facts.SchemaSHA256) || facts.SchemaRegistry.Version == "" || !formalCandidateDigest(facts.SchemaRegistry.SHA256) || facts.CoveredObjects < 1 || facts.CoveredObjects > 1000 || facts.ExcludedObjects < 1 || facts.ExcludedObjects > 10000 {
+		return c.ErrExecutionRecord
+	}
+	if len(facts.SchemaRegistryBytes) > 8<<20 || len(facts.SchemaRegistryBytes) != 0 && hash(facts.SchemaRegistryBytes) != facts.SchemaRegistry.SHA256 {
 		return c.ErrExecutionRecord
 	}
 	return nil

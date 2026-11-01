@@ -1,0 +1,22 @@
+{
+  "version": "a-original-policy-facts-evidence.v1",
+  "source_head": "979f83436a03f6295572baeb67589fc7d572922f",
+  "native_test": "TestAOriginalSixPartCertificatePublicationMySQL/current",
+  "task": "sbk_25c88962-226f-487b-a3f0-705f814513c3",
+  "server_port": 63507,
+  "server_uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+  "native_subtest_seconds": 149.11,
+  "native_package_seconds": 152.394,
+  "native_exit_code": 0,
+  "native_handle": 68452,
+  "native_handle_state": "completed naturally",
+  "certificate_sha256": "b36dcf242e70327760d126c6f2c8b005c9f75b1816fc6478e934530a43f2cff8",
+  "native_log_sha256": "f61a2cab14723a99c906e9bc2b9ec105620da53666fc45864d504635fd7c9bb1",
+  "source_ledger_sha256": "c63a4ccdaf8272e7f040424bb9f07011f87d87a63ac84bffa75f39aea4b35363",
+  "final_sql_disabled_full_package_log_sha256": "8f1a6918705df5392d07c1a24ab676afe26e4174abccd6ad8f67fa8f591150ad",
+  "limits": [
+    "Native compile source is startup ledger; pure helper refactor and stricter inert-count checks followed native startup and have full package tests",
+    "No complete MF, remote publication, upload-only Job, marker, cleanup or terminal eligibility proof",
+    "Local owner policy/approval inputs are fixtures, not installed production approval"
+  ]
+}

@@ -17,14 +17,15 @@ import (
 // All fields are frozen public scope, never API credentials or source content.
 // A separate source credential/identity is required for each of the two parts.
 type ResourceCaptureSpec struct {
-	Part               string                   `json:"part"`
-	Namespace          string                   `json:"namespace"`
-	NamespaceUID       string                   `json:"namespace_uid"`
-	ServiceAccountName string                   `json:"service_account_name"`
-	ServiceAccountUID  string                   `json:"service_account_uid"`
-	Selections         []c.KubernetesSelection  `json:"selections"`
-	MaxItems           int                      `json:"max_items"`
-	OriginalWriters    []ResourceWriterOriginal `json:"original_writers"`
+	Part               string                       `json:"part"`
+	Namespace          string                       `json:"namespace"`
+	NamespaceUID       string                       `json:"namespace_uid"`
+	ServiceAccountName string                       `json:"service_account_name"`
+	ServiceAccountUID  string                       `json:"service_account_uid"`
+	Selections         []c.KubernetesSelection      `json:"selections"`
+	MaxItems           int                          `json:"max_items"`
+	OriginalWriters    []ResourceWriterOriginal     `json:"original_writers"`
+	SecretPolicy       *c.FrozenSecretCapturePolicy `json:"secret_policy,omitempty"`
 }
 
 type ResourceWriterOriginal struct {
@@ -57,6 +58,9 @@ func validResourceCapture(r Request) bool {
 		return false
 	}
 	if (s.Part == "deployment_resources" && r.Operation != "capture-deployment-resources") || (s.Part == "secret_bundle" && r.Operation != "capture-secret-bundle") || (s.Part != "deployment_resources" && s.Part != "secret_bundle") {
+		return false
+	}
+	if s.SecretPolicy != nil && (s.Part != "secret_bundle" || s.SecretPolicy.ValidateSelections(s.Namespace, s.Selections) != nil) {
 		return false
 	}
 	seen := map[string]bool{}
@@ -127,7 +131,14 @@ func captureResourceSource(ctx context.Context, env *ResourceCaptureSources, i I
 	if _, err = dst.Write(append(header, '\n')); err != nil {
 		return err
 	}
-	return c.CaptureKubernetesResourcesGuarded(ctx, env.Client, dst, s.Namespace, s.NamespaceUID, s.Part, s.Selections, c.ObjectBudget{MaxItems: s.MaxItems, MaxBytes: i.Request.MaxArchiveBytes}, guard)
+	inspect := func(ref c.KubernetesSelection, raw json.RawMessage) error {
+		if s.SecretPolicy == nil {
+			return nil
+		}
+		_, err := s.SecretPolicy.CheckCaptured(s.Namespace, ref, raw)
+		return err
+	}
+	return c.CaptureKubernetesResourcesGuarded(ctx, env.Client, dst, s.Namespace, s.NamespaceUID, s.Part, s.Selections, c.ObjectBudget{MaxItems: s.MaxItems, MaxBytes: i.Request.MaxArchiveBytes}, guard, inspect)
 }
 
 // Independent data-only readback exposes the exact pre-pause checkpoints and
@@ -135,6 +146,9 @@ func captureResourceSource(ctx context.Context, env *ResourceCaptureSources, i I
 func ReadResourceCaptureArchive(ctx context.Context, src io.Reader, expected ResourceCaptureSpec, maxBytes int64, onResource func(c.KubernetesSelection, json.RawMessage) error) error {
 	if ctx == nil || ctx.Err() != nil || src == nil || maxBytes < 1 || maxBytes > 32<<20 {
 		return ErrRequest
+	}
+	if expected.SecretPolicy != nil && (expected.Part != "secret_bundle" || expected.SecretPolicy.ValidateSelections(expected.Namespace, expected.Selections) != nil) {
+		return ErrExecution
 	}
 	r := bufio.NewReaderSize(io.LimitReader(src, maxBytes+1), 512<<10+1)
 	header, err := r.ReadSlice('\n')
@@ -163,6 +177,11 @@ func ReadResourceCaptureArchive(ctx context.Context, src io.Reader, expected Res
 			return ErrExecution
 		}
 		delete(pinned, ref)
+		if expected.SecretPolicy != nil {
+			if _, err := expected.SecretPolicy.CheckCaptured(expected.Namespace, ref, raw); err != nil {
+				return ErrExecution
+			}
+		}
 		if onResource != nil {
 			return onResource(ref, raw)
 		}
