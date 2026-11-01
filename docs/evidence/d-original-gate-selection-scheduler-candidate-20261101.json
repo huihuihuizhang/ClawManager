@@ -1,0 +1,8 @@
+{
+  "scope": "Test fixture selection correction only, pending fresh eleven-member native run",
+  "basis": "3b608bd2 controlled actual3572/PFS counter, natural native session54415 exit0; release and unchanged original-budget paths proven separately in bf69149d evidence",
+  "change": "Replace fixed1.1-second sleep and fatal single Next with existing runDeploymentPasses using original queue policy interval/backoff and actual Store.Next. Stop only selection child context after real work; original task context remains capture context.",
+  "preserved": "Same original task/plan/attempt checks after selection; no new retry loop, SQL/authority changes, manual time/claim refresh, provider/source/DEK deadline changes or skipped checks.",
+  "validation": "Final execution package no-SQL suite passed13.187s; git diff --check clean.",
+  "limits": "Native counter stops before collector; no current remote C receipt, certificate acceptance, publication or terminal success is implied. Fresh eleven-member native result is pending."
+}

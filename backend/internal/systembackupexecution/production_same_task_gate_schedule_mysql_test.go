@@ -128,6 +128,29 @@ FROM system_backup_v2_backups b JOIN system_backup_gate g ON g.scope=? JOIN syst
 	return v, err
 }
 
+// Fixture work selection follows the actual production outer scheduler. It
+// neither renews a claim nor changes retry policy, SQL clocks or source budget.
+// Cancel only this selection loop when real Store.Next returns work; the
+// original task context remains the capture context.
+func nextDOriginalWorkUsingDeploymentScheduler(ctx context.Context, f *dOriginalSixPartTask) (*c.ExecutionWork, error) {
+	selection, stop := context.WithCancel(ctx)
+	defer stop()
+	var work *c.ExecutionWork
+	err := runDeploymentPasses(selection, func(active context.Context) error {
+		var nextErr error
+		work, nextErr = f.service.Runtime.Loop.Store.Next(active)
+		return nextErr
+	}, f.queue.Policy.ReconcileInterval, func(error) {
+		if work != nil {
+			stop()
+		}
+	})
+	if work != nil && errors.Is(err, context.Canceled) && ctx.Err() == nil {
+		return work, nil
+	}
+	return nil, err
+}
+
 func TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL(t *testing.T) {
 	for _, release := range []bool{true, false} {
 		name := "hold-to-original-budget"

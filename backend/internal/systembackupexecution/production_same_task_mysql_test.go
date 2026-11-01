@@ -813,16 +813,10 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 		}
 		return
 	}
-	// The real scheduler's original ready_for_capture reconciliation is one
-	// second later. Re-take the SAME task; never substitute another acceptance.
-	timer := time.NewTimer(time.Second + 100*time.Millisecond)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		t.Fatal(ctx.Err())
-	case <-timer.C:
-	}
-	capture, err := f.service.Runtime.Loop.Store.Next(ctx)
+	// Match the existing deployment scheduler, including its original claim
+	// availability and transient gate refusal handling, on this same task.
+	// The controlled real-SQL counter proves release and original-budget paths.
+	capture, err := nextDOriginalWorkUsingDeploymentScheduler(ctx, f)
 	if err != nil || capture == nil || capture.Step != c.ExecutionCapture || capture.Input.Authority.TaskPublicID != f.publicID || capture.Input.Authority.AttemptNo != 1 || capture.Plan.SHA256 != plan.SHA256 || !bytes.Equal(capture.Plan.CanonicalJSON, plan.CanonicalJSON) || capture.Input.Authority.ClaimRowVersion <= f.input.Authority.ClaimRowVersion || capture.Input.Authority.MaintenanceOwner != f.publicID || capture.Input.Authority.MaintenanceFencingToken == 0 {
 		t.Fatal("original same-task reTake/acquiring epoch/frozen plan", err)
 	}
