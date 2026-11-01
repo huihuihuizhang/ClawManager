@@ -21,6 +21,82 @@ func captureAccessFixture(t *testing.T) DeploymentConfig {
 	return cfg
 }
 
+func TestPublicationCleanupExactPermissionsInRealProbeAndGeneratedDeploymentRoles(t *testing.T) {
+	required := []struct{ resource, verb, group string }{{"secrets", "watch", ""}, {"secrets", "delete", ""}, {"pods", "delete", ""}, {"jobs", "watch", "batch"}}
+	for _, enabled := range []bool{false, true} {
+		cfg := captureAccessFixture(t)
+		if enabled {
+			cfg.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publication-upload", ServiceAccountUID: "publication-upload-uid"}
+		}
+		objects, err := CaptureKubernetesGrants(cfg, "controller")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, permission := range required {
+			matches := 0
+			for _, object := range objects {
+				if role, ok := object.(*rbacv1.Role); ok {
+					for _, rule := range role.Rules {
+						if slices.Contains(rule.Resources, permission.resource) && slices.Contains(rule.Verbs, permission.verb) {
+							if role.Namespace != cfg.Namespace || len(rule.APIGroups) != 1 || rule.APIGroups[0] != permission.group || len(rule.Resources) != 1 || len(rule.ResourceNames) != 0 {
+								t.Fatal("cleanup grant escaped exact resource/namespace")
+							}
+							matches++
+						}
+					}
+				}
+				if role, ok := object.(*rbacv1.ClusterRole); ok {
+					for _, rule := range role.Rules {
+						if slices.Contains(rule.Resources, permission.resource) && slices.Contains(rule.Verbs, permission.verb) {
+							t.Fatal("namespaced cleanup became a cluster grant")
+						}
+					}
+				}
+			}
+			want := 0
+			if enabled {
+				want = 1
+			}
+			if matches != want {
+				t.Fatal("actual deployment Role omitted/overgranted cleanup", permission, matches, want)
+			}
+		}
+		if !enabled {
+			continue
+		}
+		for _, denied := range []int{-1, 0, 1, 2, 3} {
+			client := fake.NewSimpleClientset()
+			seen := [4]int{}
+			client.PrependReactor("create", "selfsubjectaccessreviews", func(action kt.Action) (bool, runtime.Object, error) {
+				review := action.(kt.CreateAction).GetObject().(*authv1.SelfSubjectAccessReview)
+				review.Status.Allowed = true
+				attributes := review.Spec.ResourceAttributes
+				for index, permission := range required {
+					if attributes.Resource == permission.resource && attributes.Verb == permission.verb {
+						if attributes.Namespace != cfg.Namespace || attributes.Group != permission.group || attributes.Name != "" {
+							t.Fatal("wrong cleanup permission probe")
+						}
+						seen[index]++
+						if index == denied {
+							review.Status.Allowed = false
+							review.Status.Denied = true
+						}
+					}
+				}
+				return true, review, nil
+			})
+			err := CheckCaptureKubernetesAccess(context.Background(), client, cfg, "controller")
+			if denied < 0 {
+				if err != nil || seen != [4]int{1, 1, 1, 1} {
+					t.Fatal("allowed cleanup permissions failed live probe", err, seen)
+				}
+			} else if err == nil || seen[denied] != 1 {
+				t.Fatal("cleanup denial absent from real readiness", denied, err, seen)
+			}
+		}
+	}
+}
+
 func TestPublicationWorkerNamedReadInGeneratedRBACAndReadiness(t *testing.T) {
 	cfg := captureAccessFixture(t)
 	cfg.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publication-upload", ServiceAccountUID: "publication-upload-uid"}

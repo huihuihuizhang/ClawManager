@@ -1,0 +1,54 @@
+{
+  "base_head": "d3457585f59e5ce49a2f396fd02c56dfd52c3141",
+  "component": "561915f5a9302594f3d0ff73bec781c889768085",
+  "real_deployment_template": "cmd/system-backup-controller-grants -> CaptureKubernetesGrantsWithInputs -> RequiredDeploymentCaptureAccess -> RequiredCaptureAccess; same inventory drives actual SelfSubjectAccessReview",
+  "validation": {
+    "grants_command": "PASS compile (no test files), same final session",
+    "supervisor_original_red": {
+      "session": 7882,
+      "result": "FAIL",
+      "seconds": 3.39,
+      "reason": "All four cleanup permissions omitted from real readiness"
+    },
+    "final_sql_off_execution": {
+      "session": 67402,
+      "result": "PASS",
+      "seconds": 13.994
+    },
+    "intermediate_full_red": {
+      "session": 11541,
+      "result": "FAIL",
+      "seconds": 14.042,
+      "reason": "Combined verbs violated original exact update/patch rules; fixed without weakening those tests"
+    },
+    "scope": "Fake Kubernetes SSAR and actual generated Role objects; full execution uses local TLS; no MySQL or live cluster",
+    "final_supervisor_counter": {
+      "session": 96083,
+      "result": "PASS"
+    }
+  },
+  "schema_version": "d-native-cleanup-rbac-readiness-fix.v1",
+  "source_pins": [
+    {
+      "sha256": "46bcbe799daf37b77c588407580af61415d6dc7d3204338071e3414aba5da909",
+      "path": "backend/internal/systembackupexecution/kubernetes_access.go"
+    },
+    {
+      "sha256": "ef42341f0d8fed290628b61bf9519eb5b3a71f15d8e2bd5cf6cd5d7913706b20",
+      "path": "backend/internal/systembackupexecution/kubernetes_access_test.go"
+    },
+    {
+      "sha256": "7761b2d9ad3005d0e5db331bc25a65a2e4a2dad4307d519889ddd968b6c50e80",
+      "path": "docs/system-backup-d-runtime-deployment-20261029.md"
+    }
+  ],
+  "boundaries": [
+    "Enabled positive grants exactly four operations in configured namespace; disabling PublicationWorker adds none",
+    "Each individual permission403 rejects actual readiness",
+    "Generated Role carries exact resource/API group and namespace; no cleanup ClusterRole wildcard or unrelated resource added",
+    "Legacy examples/backup-controller controller ClusterRole is a separate path and was not broadened",
+    "No actual deployment applied; cleanup recovery, local payload cleanup and acceptance/catalog/terminal remain incomplete"
+  ],
+  "fix": "PublicationWorker condition adds only namespace-scoped secrets/delete+watch,pods/delete,batch.jobs/watch; original secrets/update and jobs/patch remain independent exact rules",
+  "date": "2026-11-02"
+}
