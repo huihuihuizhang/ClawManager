@@ -311,7 +311,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T06:31:43.603227+00:00",
+  "updated_at_utc": "2026-11-01T08:07:05.282712+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -1062,5 +1062,71 @@
       "log_sha256": "d161a61ffbda4d9780e31edcc0689bacc571b51025a2c0c7ca549737b837fc9c",
       "native_scope": "Actual full originalC/cert/container proof remains exactpre-merge0e8 commit as recorded, not silently relabeled as another linkedHEAD. Restore-only integration separately covered by these five packages; no formal complete artifact/restore claimed."
     }
+  },
+  "D_original_reference_catalog_independent": {
+    "source_commit": "b3630f8b1b35152129dd22555722461ea4da69ab",
+    "independently_tested_commit": "40cf789608fc23487256fdb6f4a4ad66f9708962",
+    "preserved_remote_backup": "22bce8a77cfa998fab22e596658ab0c83741ee07",
+    "merged_commit": "61309013604efb1e7aa75b948a94b379a6ce6d09",
+    "native_sql": {
+      "port": 65298,
+      "server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06"
+    },
+    "production_overlay": false,
+    "test_only_overlay": {
+      "path": ".tools/supervisor-publication-ref-snapshot-overlay.json",
+      "sha256": "aec595da92ef973189c8e6503d81b1a4b897d9e7dd92087ca5cc30fbcf9cb50b"
+    },
+    "unchanged_independent_counter": {
+      "path": ".tools/supervisor_publication_ref_snapshot_mysql_test.go",
+      "sha256": "569f6e51902fb18e989f00a78fbc25bbecd9e1b0744427ab6d97ee2f19c25ad8"
+    },
+    "retained_original_red": {
+      "path": ".tools/supervisor-publication-ref-snapshot-native-baseline.log",
+      "sha256": "370546b2303329138a04b758e9cb7b43424ec03bb8d11e95932e034a2409427d",
+      "package_seconds": 12.841,
+      "scope": "Target-binding helper accepted a matching changed current reference while original admitted snapshot bytes/SHA remained unchanged; not a full S3-dispatch exploit proof."
+    },
+    "review_findings": [
+      "In the original bound SQL transaction, exact original task/config snapshot byte length, SHA/JCS and unique purpose references must agree with current materialized columns and pinned target.",
+      "Catalog read/append mapping is parent-file pinned and separate from artifact read/write identities and credential paths; artifact_ca remains the original shared trust purpose.",
+      "Existing unknown catalog action uses dedicated read-only recovery and cannot become new dispatch or final success merely from object presence.",
+      "Stale capacity observation is rejected before dispatch or action/task mutation; modeled fresh observation does not extend original authorization deadlines.",
+      "Original continuation and confirmed-read original-identity/revocation/journal/version rechecks remain covered."
+    ],
+    "independent_native_run": {
+      "path": ".tools/supervisor-d-original-reference-catalog-final-native.log",
+      "sha256": "5330e6255f7e88396e72fe81036528cfe7d0f32441a9a4be8bdc29207105a7bd",
+      "package_seconds": 174.501,
+      "terminal_evidence": "Complete Go PASS and ok package terminal lines observed; earlier orchestrator output truncation hid shell-session identifiers, so no invented session ID or separately observed shell exit code is recorded.",
+      "tests": [
+        "TestAPublicationActualServiceTargetAndConfirmedReadRechecks",
+        "TestAPublicationUnknownOriginalExpiredDispatchRemainsQueryOnly",
+        "TestPublicationArtifactPurposeSnapshotAndCurrentSQLMySQL",
+        "TestPublicationCatalogPurposeSnapshotAndCurrentSQLMySQL",
+        "TestPublicationCatalogUnknownUsesDedicatedReadOnlyRecoveryMySQL",
+        "TestOriginalPublicationContinuationMySQL",
+        "TestPublicationJournalRejectsStaleCapacityBeforeDispatchMySQL",
+        "TestSupervisorPublicationTargetCannotAdoptOriginalRefDriftMySQL"
+      ]
+    },
+    "independent_default_execution_run": {
+      "path": ".tools/supervisor-d-original-reference-catalog-final-package.log",
+      "sha256": "3f1e896415c0f27189aaf4d9a6c2f8cd38cd5324f459cf50aa976f8cea3964c3",
+      "package_seconds": 14.87
+    },
+    "post_merge_packages": {
+      "path": ".tools/supervisor-d-original-reference-catalog-merged-packages.log",
+      "sha256": "27d181c24ce3eb41285debf14067f7a53ba0019cf173fc1ae82fc3a5751a96cb",
+      "output": "ok  \tclawreef/internal/systembackup/domain\t3.670s\nok  \tclawreef/internal/systembackup/worker\t36.375s\nok  \tclawreef/internal/systembackupresources\t3.551s\nok  \tclawreef/internal/systembackupbusinessa\t4.871s\nok  \tclawreef/internal/systembackupexecution\t10.057s"
+    },
+    "limitations": [
+      "Native proof is pinned to exact 40cf commit; after preserving remote restoration updates, five affected packages are checked separately without relabeling native proof as another commit.",
+      "Catalog test bodies and capacity samples are explicitly local protocol/model DATA, not real signed catalog registrations or site capacity observation.",
+      "New catalog creation remains blocked until typed independent full-artifact verification and original catalog signing exist; no false receipt or final success was added.",
+      "No complete MF/upload Job, acceptance/catalog publication, historical disaster recovery or page-click-to-success proof is claimed.",
+      "Owner earlier combined native RED remains retained with unproven unique cause; passing retries do not erase it.",
+      "No SSH, remote provider, production Kubernetes/deployment, source reduction, original deadline extension or readiness modification."
+    ]
   }
 }
