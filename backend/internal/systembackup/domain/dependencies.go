@@ -39,6 +39,9 @@ type TableAdapter struct {
 	// InterruptedAt is the frozen plan's UTC restore time, used only by owner
 	// normalizers that mark interrupted work. It is never taken from wall time.
 	InterruptedAt string `json:",omitempty"`
+	// LLMSecrets names original immutable credential versions by source model
+	// ID. These are required inputs, never source-authentication evidence.
+	LLMSecrets map[string]LLMSecretVersions `json:",omitempty"`
 	// Every column must occur exactly once. Actions: preserve, null, stub, or
 	// fixed:<terminal value>. Definitions/JSON still use the config registry.
 	Columns map[string]string

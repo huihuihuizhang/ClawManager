@@ -1,0 +1,16 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/native-json-boundaries
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:400: local MySQL only; actual Skills, caller 057/066, operations 045/066/077, routing 060/061, model 045..071 and grants 062 migrations; nonempty Teams/instance fixture; authenticated local capture; separate target and SELECT verifier; no full-source proof/publication/readiness claim
+--- PASS: TestOfflineBusinessRestoreMySQL (16.92s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/native-json-boundaries (0.00s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/success (3.50s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (2.95s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (2.98s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (3.13s)
+PASS
+ok  	clawreef/internal/systembackup/domain	19.819s

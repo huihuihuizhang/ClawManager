@@ -129,6 +129,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 	if err := validateWorkBuddy(source, policy.WorkBuddy); err != nil {
 		return RestorePlan{}, err
 	}
+	if err := validateModelRestoreInputs(ctx, source, policy.Dependencies); err != nil {
+		return RestorePlan{}, err
+	}
 	callerUsers, err := prepareCallerUsers(ctx, source, policy.Dependencies)
 	if err != nil {
 		return RestorePlan{}, err
@@ -256,6 +259,11 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 						return RestorePlan{}, err
 					}
 				}
+				if adapter.Normalizer == LLMModel071Normalizer {
+					if err := normalizeModel071(n, adapter.LLMSecrets); err != nil {
+						return RestorePlan{}, err
+					}
+				}
 			}
 			if t.Name == "users" && hasColumn(out, "auth_provider") && !hasColumn(t, "auth_provider") {
 				n["auth_provider"] = Text("local")
@@ -286,6 +294,9 @@ func Normalize(ctx context.Context, source Snapshot, target []Table, policy Poli
 		return RestorePlan{}, err
 	}
 	plan.Data.Tables = ordered
+	if err := VerifyModelGrantQuarantine(ctx, plan.Data); err != nil {
+		return RestorePlan{}, err
+	}
 	if err := VerifyRoutingQuarantine(ctx, plan.Data); err != nil {
 		return RestorePlan{}, err
 	}
@@ -345,7 +356,11 @@ func normalizeRow(ctx context.Context, table string, r Row, p Policy) error {
 	switch table {
 	case "llm_models":
 		set(r, "is_active", Text("0"))
-		set(r, "api_key", Text("drill-disabled"))
+		if p.Dependencies[table].Normalizer == LLMModel071Normalizer {
+			clearFields(r, "api_key")
+		} else {
+			set(r, "api_key", Text("drill-disabled"))
+		}
 		clearFields(r, "api_key_secret_ref")
 		set(r, "base_url", Text("https://disabled.invalid"))
 	case "chat_messages":
