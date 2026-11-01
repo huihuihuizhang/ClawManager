@@ -59,6 +59,7 @@ type PinnedExecutionIdentity struct {
 	path, digest, keyDirectory string
 	public                     ed25519.PublicKey
 	grant                      ExecutionGrant
+	authenticated              []byte
 }
 
 func readExecutionFile(path string, max int64) ([]byte, error) {
@@ -100,6 +101,7 @@ func NewPinnedExecutionIdentity(path, digest, keyDirectory string, public ed2551
 		return nil, err
 	}
 	p.grant = g
+	p.authenticated = bytes.Clone(raw)
 	return p, nil
 }
 
@@ -165,15 +167,22 @@ func (p *PinnedExecutionIdentity) decode(raw []byte) (ExecutionGrant, error) {
 	return g, nil
 }
 func (p *PinnedExecutionIdentity) current(a d.Authority, now time.Time) error {
-	if p == nil || a.InstallationID != p.grant.InstallationID || a.ClaimOwner != p.grant.ControllerOwner || a.ConfigVersion != p.grant.ConfigVersion || a.ConfigSHA256 != p.grant.ConfigSHA256 || now.Before(p.grant.NotBefore) || !now.Before(p.grant.ExpiresAt) {
+	if p == nil || len(p.authenticated) == 0 || a.InstallationID != p.grant.InstallationID || a.ClaimOwner != p.grant.ControllerOwner || a.ConfigVersion != p.grant.ConfigVersion || a.ConfigSHA256 != p.grant.ConfigSHA256 || now.Before(p.grant.NotBefore) || !now.Before(p.grant.ExpiresAt) {
 		return ErrExecutionAuthority
 	}
 	raw, err := readExecutionFile(p.path, 65536)
 	if err != nil {
 		return err
 	}
-	_, err = p.decode(raw)
-	return err
+	// The private constructor authenticated this exact bounded document and
+	// owns its decoded grant. Re-open/read/hash/compare the CURRENT file every
+	// time; removal or any replacement still revokes it. Re-parsing/verifying
+	// identical immutable bytes adds no current fact. All caller SQL, purpose,
+	// profile, key-file, owner and original time checks remain unchanged.
+	if recordHash(raw) != p.digest || !bytes.Equal(raw, p.authenticated) {
+		return ErrExecutionAuthority
+	}
+	return nil
 }
 
 type pinnedExecutionGuard struct {
