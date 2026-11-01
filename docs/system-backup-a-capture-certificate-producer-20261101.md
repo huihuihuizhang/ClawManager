@@ -2,9 +2,10 @@
 
 This component prepares the existing `public-c-crypto.v1` capture-certificate
 payload from a complete, independently verified original capture. It is not yet
-called by first-forward publication. No complete six-domain publication,
-certificate signing, acceptance, catalog registration or standalone DR success
-is asserted by this change.
+called by first-forward publication. The original component verification below
+covers mapping/SQL facts. The later same-task health test separately covers an
+actual capture certificate; remote publication, acceptance, catalog registration
+and standalone DR remain incomplete.
 
 ## Original facts and transaction boundary
 
@@ -55,10 +56,51 @@ fault has affected-row and independent administrative SQL readback assertions.
 The immutable reviewed migration catalog is
 `d4fe00a440acf094e1def2d99586e333bed7803ba82b504ab25829b133680a21`.
 
-These tests establish reader/snapshot behavior, not actual wrapper authorization
-or a completed six-domain capture. Same-task producer/Stage integration must
-still exercise changes after Prepare and before Stage with zero signing calls.
-Recovery of the exact original prepared/signed bytes, external-signing unknown
+These component tests establish reader/snapshot behavior. Recovery of the exact
+original prepared/signed bytes, external-signing unknown
 outcomes and certificate artifact transport also remain to be wired before this
 producer can be used by first-forward publication. Recreating timestamps or
 re-signing after an unknown outcome is not authorized.
+
+## Same original task health continuation
+
+After backup `c3a0a45273b41efe173fee35fe30a4ba5c7d5078`, A ran the new explicit
+pre-composition fixture hook on the exclusively handed-over SAN/TLS MySQL
+`127.0.0.1:63507`, UUID `f3756194-d52b-11f1-b8cc-745d22085e06`.
+The first attempt failed during initialization because `BeforePrepare` came
+after the original runtime access inventory. The corrected fixture installs
+declared publisher materials after original formal materials and before runtime
+composition, passes the actual publisher to that inventory, and rechecks the
+unchanged sealed core. It does not skip any production access/readiness check.
+
+The targeted current-health case completed `PASS 155.769s` (test body `152.50s`),
+log `.tools/a-same-task-certificate-current-v2-precompose.log`. Same task:
+`sbk_18008602-3282-43e5-8534-1388f55f7a5e`. All ten original native workers
+completed, original Store.Record actually entered validating, and the current
+publisher independently verified all C streams/domains. The business prepared
+wrapper then staged the signing input in its original SQL transaction and
+committed before exactly one external capture-certificate Sign call. Independent
+public history verification and original task/completion/stage/TTL assertions
+passed. Signed certificate SHA-256:
+`31c33abdd103695c85541a0f500b7a2a3fd2d1b098b18e3620b9e224f6eabaa2`.
+The capture source linked the real committed build SHA
+`4aa30db42508ac9c32e0a487f7b74541f67209f2` before capture; there was no environment
+display override or late source-fact repair.
+
+This is A's self-test of a local protocol fixture, with original grants and
+deadlines retained. It establishes neither worst-case source-window margin nor
+production readiness. No fresh-task post-Prepare mutation case has passed.
+
+The separately started three-case run (handle 24643) was interrupted during its
+first case's original capture following a scheduling handoff request. It exited
+1 before any Stage fault assertion. Task
+`sbk_78b3f903-85bb-44be-b1eb-373ff50d9ac8` remains `capturing`, row version 7, in
+its uniquely matched schema `ad_d_six_542cb2b2fbac3b44`. The schema, its exact
+three controller/source/census accounts, task and temporary fixture were
+retained for supervision audit. Native process enumeration found no remaining
+matching Go/test process, and an independent TLS SQL read found zero connections
+to that schema. The retained fixture contains 152 files, including 16 staging
+files. This interrupted run did not complete normal stop/resume/cleanup and is
+not a capture, mutation, certificate or cleanup PASS. Audit metadata and exact
+candidate file hashes are in `.tools/a-interrupted-certificate-24643-audit.json`;
+the failed run log is `.tools/a-same-task-certificate-three-stage-faults-v1.log`.

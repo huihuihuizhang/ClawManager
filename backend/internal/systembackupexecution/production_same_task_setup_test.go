@@ -12,9 +12,10 @@ import (
 // materials on the SAME original task. They cannot change capture settings or
 // re-sign a core after capture. The original claim/TTL/data/ten workers remain.
 type dOriginalSixPartFixtureOptions struct {
-	BeforeCoreSeal  func(context.Context, *testing.T, *dOriginalSixPartTask, *DeploymentConfig) error
-	AfterOwnerReady func(context.Context, *testing.T, *dOriginalSixPartTask) error
-	BeforePrepare   func(context.Context, *testing.T, *dOriginalSixPartTask) error
+	BeforeCoreSeal           func(context.Context, *testing.T, *dOriginalSixPartTask, *DeploymentConfig) error
+	AfterOwnerReady          func(context.Context, *testing.T, *dOriginalSixPartTask) error
+	BeforeRuntimeComposition func(context.Context, *testing.T, *dOriginalSixPartTask) error
+	BeforePrepare            func(context.Context, *testing.T, *dOriginalSixPartTask) error
 }
 
 var errDOriginalCoreChanged = errors.New("original fixture capture core changed outside its pre-seal publication declarations")
