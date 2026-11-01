@@ -27,8 +27,9 @@ const (
 var controllerOwnerPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,128}$`)
 
 var (
-	ErrClaimNotAcquired = errors.New("system backup claim not acquired")
-	ErrClaimLost        = errors.New("system backup claim lost")
+	ErrClaimNotAcquired         = errors.New("system backup claim not acquired")
+	ErrClaimLost                = errors.New("system backup claim lost")
+	ErrClaimTransactionRequired = errors.New("system backup claim renewal requires an owned SQL transaction")
 )
 
 // LeasePolicy mirrors the closed v12 controller claim ranges. The heartbeat
@@ -136,9 +137,10 @@ func (t Target) descriptor() (targetDescriptor, error) {
 	return descriptor, nil
 }
 
-// Executor is satisfied by *sql.DB, *sql.Conn, and *sql.Tx. A caller that
-// already pinned a database connection can therefore keep claim coordination
-// on that connection without this package owning connection lifecycle.
+// Executor is satisfied by *sql.DB, *sql.Conn, and *sql.Tx. Renew additionally
+// requires BeginTx so it can lock, check delivered SQL time, and commit within
+// the original lease. An externally owned *sql.Tx or Exec-only adapter cannot
+// provide that guarantee and is rejected before any renewal effect.
 type Executor interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 }
@@ -228,7 +230,8 @@ func AcquireClaimInInstallation(ctx context.Context, executor Executor, installa
 }
 
 // RenewClaimInInstallation refuses an expired, stolen or cross-installation
-// lease. A zero-row CAS is surfaced as ErrClaimLost.
+// lease. It owns a short transaction, checks SQL time after lock delivery, and
+// commits strictly before the original expiry. A zero-row CAS is ErrClaimLost.
 func RenewClaimInInstallation(ctx context.Context, executor Executor, installationID string, token ClaimToken, policy LeasePolicy) (ClaimToken, error) {
 	if !installationIDPattern.MatchString(installationID) {
 		return ClaimToken{}, errors.New("invalid system backup claim installation ID")
@@ -244,28 +247,7 @@ func RenewClaimInInstallation(ctx context.Context, executor Executor, installati
 	if err != nil {
 		return ClaimToken{}, err
 	}
-	query := fmt.Sprintf(
-		"UPDATE %s SET %s = DATE_ADD(UTC_TIMESTAMP(6), INTERVAL ? MICROSECOND)%s, row_version = row_version + 1 WHERE origin_installation_id = ? AND public_id = ? AND row_version = ? AND %s = ? AND %s > UTC_TIMESTAMP(6) AND %s",
-		descriptor.table,
-		descriptor.leaseColumn,
-		heartbeatAssignment(descriptor),
-		descriptor.ownerColumn,
-		descriptor.leaseColumn,
-		descriptor.activeSQL,
-	)
-	result, err := executor.ExecContext(ctx, query, ttlMicros, installationID, token.Target.PublicID, token.RowVersion, token.Owner)
-	if err != nil {
-		return ClaimToken{}, fmt.Errorf("renew %s claim: %w", token.Target.Kind, err)
-	}
-	matched, err := exactlyOneRow(result)
-	if err != nil {
-		return ClaimToken{}, err
-	}
-	if !matched {
-		return ClaimToken{}, ErrClaimLost
-	}
-	token.RowVersion++
-	return token, nil
+	return renewClaimLocked(ctx, executor, installationID, token, descriptor, ttlMicros)
 }
 
 // ReleaseClaimInInstallation clears only the caller's live lease within the

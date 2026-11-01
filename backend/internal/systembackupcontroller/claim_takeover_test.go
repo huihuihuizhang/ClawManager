@@ -28,8 +28,11 @@ func (s *takeoverStore) ExecContext(ctx context.Context, query string, args ...a
 	if !strings.Contains(query, "UTC_TIMESTAMP(6)") || !strings.Contains(query, "row_version = row_version + 1") {
 		return nil, errors.New("claim mutation did not use database time and row-version CAS")
 	}
-	for _, arg := range args {
-		if _, ok := arg.(time.Time); ok {
+	for i, arg := range args {
+		// Renewal pins the old lease read from SQL; it still never supplies a
+		// process timestamp for its new heartbeat/lease calculation.
+		oldLeasePin := i == 5 && strings.Contains(query, "GREATEST(") && arg == s.leaseUntil
+		if _, ok := arg.(time.Time); ok && !oldLeasePin {
 			return nil, errors.New("claim mutation passed a process-clock timestamp")
 		}
 	}
@@ -55,8 +58,8 @@ func (s *takeoverStore) ExecContext(ctx context.Context, query string, args ...a
 		s.rowVersion++
 		return fixedResult(1), nil
 	}
-	if strings.Contains(query, "SET controller_lease_expires_at = DATE_ADD") {
-		if len(args) != 5 || args[1] != "installation_test" || args[2] != validBackupTarget().PublicID {
+	if strings.Contains(query, "SET controller_lease_expires_at = GREATEST") {
+		if len(args) != 6 || args[1] != "installation_test" || args[2] != validBackupTarget().PublicID || args[5] != s.leaseUntil {
 			return nil, errors.New("unexpected claim renewal arguments")
 		}
 		ttlMicros, ttlOK := args[0].(int64)
@@ -68,7 +71,10 @@ func (s *takeoverStore) ExecContext(ctx context.Context, query string, args ...a
 		if version != s.rowVersion || owner != s.owner || !s.leaseUntil.After(s.now) {
 			return fixedResult(0), nil
 		}
-		s.leaseUntil = s.now.Add(time.Duration(ttlMicros) * time.Microsecond)
+		until := s.now.Add(time.Duration(ttlMicros) * time.Microsecond)
+		if until.After(s.leaseUntil) {
+			s.leaseUntil = until
+		}
 		s.rowVersion++
 		return fixedResult(1), nil
 	}
@@ -96,7 +102,7 @@ func (s *takeoverStore) ExecContext(ctx context.Context, query string, args ...a
 
 func TestClaimTakeoverWaitsForDatabaseLeaseExpiryAndFencesOldLeader(t *testing.T) {
 	store := &takeoverStore{now: time.Date(2026, 9, 16, 0, 0, 0, 0, time.UTC), rowVersion: 1}
-	claims := ClaimCoordinator{Executor: store, InstallationID: "installation_test"}
+	claims := ClaimCoordinator{Executor: claimModelDB(t, store), InstallationID: "installation_test"}
 	target := validBackupTarget()
 	policy := validPolicy()
 	old, err := claims.Acquire(context.Background(), target, "controller:old", 1, policy)

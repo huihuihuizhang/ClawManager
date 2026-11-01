@@ -89,6 +89,10 @@ const publicationActionColumns = "public_id,action_type,action_key,logical_actio
 // request in the SAME task transaction. A commit error authorizes no send.
 // Existing rows ALWAYS return send=false, including request_sent with count 0.
 func (d *DeploymentService) beginPublicationAction(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent) (publicationJournalAction, bool, error) {
+	return d.beginPublicationActionWithContinuation(ctx, claim, attempt, target, intent, nil)
+}
+
+func (d *DeploymentService) beginPublicationActionWithContinuation(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation) (publicationJournalAction, bool, error) {
 	var zero publicationJournalAction
 	intent.Deadline = intent.Deadline.UTC().Truncate(time.Microsecond)
 	if intent.validate(target) != nil || target.InstallationID != d.Config.InstallationID {
@@ -114,6 +118,11 @@ func (d *DeploymentService) beginPublicationAction(ctx context.Context, claim c.
 	}
 	if err = d.checkPublicationTargetTx(ctx, tx, guard.Facts(), target); err != nil {
 		return zero, false, err
+	}
+	if continuation != nil {
+		if continuation.service != d || continuation.claim != claim || continuation.attempt != attempt || continuation.next != intent.Kind || continuation.recheckTx(ctx, tx) != nil {
+			return zero, false, c.ErrExecutionAuthority
+		}
 	}
 	actionKey := publicationActionKey(claim.Target.PublicID, attempt, intent.Kind)
 	previous, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND action_type=? AND action_key=? FOR UPDATE", d.Config.InstallationID, claim.Target.PublicID, intent.Kind, actionKey))
@@ -295,7 +304,11 @@ func (d *DeploymentService) recordPublicationObservation(ctx context.Context, cl
 }
 
 func (d *DeploymentService) publishOriginalJSON(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent) (nativePublicationObject, error) {
-	action, send, err := d.beginPublicationAction(ctx, claim, attempt, store.config, intent)
+	return d.publishOriginalJSONWithContinuation(ctx, claim, attempt, store, intent, nil)
+}
+
+func (d *DeploymentService) publishOriginalJSONWithContinuation(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation) (nativePublicationObject, error) {
+	action, send, err := d.beginPublicationActionWithContinuation(ctx, claim, attempt, store.config, intent, continuation)
 	if err != nil {
 		return nativePublicationObject{}, err
 	}
