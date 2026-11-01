@@ -33,12 +33,18 @@ func dependencyRules() []scope.TableRule {
 
 type TableAdapter struct {
 	SchemaSHA256 string
+	// Normalizer selects a reviewed owner transform after exact schema checks.
+	// Empty retains the existing explicit per-column adapter contract.
+	Normalizer string `json:",omitempty"`
 	// Every column must occur exactly once. Actions: preserve, null, stub, or
 	// fixed:<terminal value>. Definitions/JSON still use the config registry.
 	Columns map[string]string
 }
 
 func (a TableAdapter) validate(t Table) error {
+	if a.Normalizer != "" && validateOwnerNormalizer(a, t) != nil {
+		return ErrSchema
+	}
 	if SchemaDigest(t) != a.SchemaSHA256 || len(a.Columns) != len(t.Columns) {
 		return ErrSchema
 	}

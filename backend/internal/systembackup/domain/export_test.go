@@ -38,6 +38,21 @@ func NewTestBusinessSQLFixture() *TestSQLFixture {
 	return &TestSQLFixture{Source: database(source), Target: database(target), Policy: p, source: source, target: target}
 }
 
+func NewTestCallerSQLFixture() *TestSQLFixture {
+	s, schema, p := callerRestoreFixture()
+	source := &memoryDB{tables: copyTables(s.Tables), name: "source", uuid: "fixture-server", grants: "GRANT SELECT ON `source`.* TO 'capture'@'localhost'"}
+	target := isolatedTarget(schema)
+	return &TestSQLFixture{Source: database(source), Target: database(target), Policy: p, source: source, target: target}
+}
+
+func (f *TestSQLFixture) TamperCallerKeys() {
+	for _, table := range f.target.tables {
+		if table.Name == "northbound_caller_policies" {
+			table.Rows[0]["api_keys_json"] = Text(`[{"id":"unexpected-target-key"}]`)
+		}
+	}
+}
+
 // NewTestTeamsSQLFixture exercises the public SQL worker protocol with nonempty
 // C data. Its in-memory SQL driver is NOT a production import profile/schema.
 func NewTestTeamsSQLFixture() *TestSQLFixture {

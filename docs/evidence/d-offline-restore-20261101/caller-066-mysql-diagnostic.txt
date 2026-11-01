@@ -1,0 +1,10 @@
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+    offline_business_mysql_test.go:274: independent SELECT-only verification failed restore target isolation not verified <nil>
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:307: local MySQL only; actual Skills and caller 057/066 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- FAIL: TestOfflineBusinessRestoreMySQL (8.24s)
+    --- FAIL: TestOfflineBusinessRestoreMySQL/success (3.11s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	11.133s
+FAIL

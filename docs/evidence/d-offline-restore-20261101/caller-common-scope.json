@@ -1,0 +1,48 @@
+{
+  "parent_commit": "677eb29e1cedb2d871467dc896e5b79cf1a0241a",
+  "scope": "caller 066 owner normalization consumed by common SQL Normalize, RunDatabase and VerifyDrill",
+  "native_mysql_port": 61674,
+  "native_mysql_version": "8.4.13",
+  "native_migrations": [
+    "057_add_northbound_admin_settings.sql",
+    "066_add_northbound_api_keys.sql"
+  ],
+  "production_source_authenticated": false,
+  "production_schema_pin_added": false,
+  "publication_eligible": false,
+  "other_owner_adapters_complete": false,
+  "source_hashes": {
+    "backend/internal/systembackup/domain/caller_restore.go": {
+      "git_blob": "9adbd50c171bb9daaeba869d27524b5a4bc654ac",
+      "sha256": "2e421e485bdabb61b5bfd4eeca892190cc2d74a0bdfd36755c8c2235040a56eb"
+    },
+    "backend/internal/systembackup/domain/caller_restore_test.go": {
+      "git_blob": "0ac38c91dbcbb507319b4f4dd40e4c370c02992a",
+      "sha256": "af83416567f63fd1e523de9826b5d78ec685073fb68bb72441827d6582f1e2a1"
+    },
+    "backend/internal/systembackup/domain/caller_worker_integration_test.go": {
+      "git_blob": "d874759e0c255f604b336eacb2fbe27154fb0a25",
+      "sha256": "9286c4cc01a7f28732ebd4adcfe0110acdb36b551a34432c226048de4468ec3d"
+    },
+    "backend/internal/systembackup/domain/dependencies.go": {
+      "git_blob": "3aa566c88a9c13ae51b05ad1c261f3b58d172f8b",
+      "sha256": "bb06af95d233572c9da04b011949b79be72061764a42849bb5d6ddddab2fc4de"
+    },
+    "backend/internal/systembackup/domain/normalize.go": {
+      "git_blob": "c1b0ce5091c560418bbef8b48950a182d4390a48",
+      "sha256": "5dbc59955d99c25d8c27d33a4ef11de0c797d029583a6cbfe49746977bd6644b"
+    },
+    "backend/internal/systembackup/domain/restore.go": {
+      "git_blob": "8566d898667f60b7b39d29f7fdce8e34f3a811b1",
+      "sha256": "9224b410fb3ef199dafc6012d607308839b1237b56293b41a2474156a40e9330"
+    },
+    "backend/internal/systembackup/domain/export_test.go": {
+      "git_blob": "b120f88324e92b5e32adb18a306c9601bfcb8d3c",
+      "sha256": "d9beb16201370c885aac866947458f470e94246288ab2c2e41ca5a87fb77062a"
+    },
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": {
+      "git_blob": "74e616eee1ada6305a3214e59b5880a6225d0ca2",
+      "sha256": "78294789ae1591ebd50c6d1dd3fbf40213760737ad7e81c1f9fb8ed06dfa9996"
+    }
+  }
+}

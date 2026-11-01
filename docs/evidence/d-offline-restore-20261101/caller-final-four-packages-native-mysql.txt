@@ -1,0 +1,1758 @@
+=== RUN   TestBrowserWorkerRestoreKeepsSettingsAndDisablesRuntime
+--- PASS: TestBrowserWorkerRestoreKeepsSettingsAndDisablesRuntime (0.00s)
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/orphan
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-source
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-target
+=== RUN   TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/missing-target
+--- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/orphan (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-source (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/unknown-target (0.00s)
+    --- PASS: TestBrowserWorkerRestoreRejectsOrphanAndUnknownColumns/missing-target (0.00s)
+=== RUN   TestCaller066CommonSQLNormalization
+--- PASS: TestCaller066CommonSQLNormalization (0.00s)
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/wrong-table
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/source-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/target-schema
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-actor
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-scope
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-keys
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/null-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/negative-version
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled
+=== RUN   TestCaller066CommonSQLRejectsUnsafeInput/old-schema
+--- PASS: TestCaller066CommonSQLRejectsUnsafeInput (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/unknown-normalizer (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/wrong-table (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/source-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/target-schema (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/fixed-before-validation (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/missing-user-field (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-actor (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-scope (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-keys (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/null-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/negative-version (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/bad-enabled (0.00s)
+    --- PASS: TestCaller066CommonSQLRejectsUnsafeInput/old-schema (0.00s)
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys
+=== RUN   TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor
+--- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/enabled (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/null-keys (0.00s)
+    --- PASS: TestCaller066IndependentExpectedProjectionRejectsCredentials/bad-actor (0.00s)
+=== RUN   TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions
+--- PASS: TestHistoricalCapturePinsDoNotSubstituteCurrentRestoreActions (0.00s)
+=== RUN   TestConfigRegistryStubsSecretsDisablesTasksAndPreservesDefinitions
+--- PASS: TestConfigRegistryStubsSecretsDisablesTasksAndPreservesDefinitions (0.00s)
+=== RUN   TestCrossDomainRestoreKeepsDefinitionsAndDisablesExecution
+--- PASS: TestCrossDomainRestoreKeepsDefinitionsAndDisablesExecution (0.00s)
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-volume
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/source-namespace
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/orphan-task
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-status
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-column
+=== RUN   TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-json-policy
+--- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-volume (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/source-namespace (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/orphan-task (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-status (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/unknown-column (0.00s)
+    --- PASS: TestTeamRestoreRequiresKnownStatesLinksVolumesAndJSONPolicy/missing-json-policy (0.00s)
+=== RUN   TestCurrentAuthenticationHistoryNeverRestoresSourceSessions
+--- PASS: TestCurrentAuthenticationHistoryNeverRestoresSourceSessions (0.00s)
+=== RUN   TestCurrentBusinessSecretsAndConfigRequireExactOwnerRestoreAdapters
+--- PASS: TestCurrentBusinessSecretsAndConfigRequireExactOwnerRestoreAdapters (0.00s)
+=== RUN   TestDependencyRowsSurviveNormalizationAndDanglingLinksFail
+--- PASS: TestDependencyRowsSurviveNormalizationAndDanglingLinksFail (0.00s)
+=== RUN   TestWorkBuddyIdentityRequiresExactSchemaAndStableOwnership
+--- PASS: TestWorkBuddyIdentityRequiresExactSchemaAndStableOwnership (0.00s)
+=== RUN   TestWorkBuddyWithoutIdentityLayoutDoesNotPretendToBeLegacy
+--- PASS: TestWorkBuddyWithoutIdentityLayoutDoesNotPretendToBeLegacy (0.00s)
+=== RUN   TestDependencyAdapterRejectsSchemaDrift
+--- PASS: TestDependencyAdapterRejectsSchemaDrift (0.00s)
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/yaml
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/toml
+=== RUN   TestConfigFormatsPreserveDefinitionsAndStubCredentials/json
+--- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/yaml (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/toml (0.00s)
+    --- PASS: TestConfigFormatsPreserveDefinitionsAndStubCredentials/json (0.00s)
+=== RUN   TestDotenvExplicitDisableRules
+--- PASS: TestDotenvExplicitDisableRules (0.00s)
+=== RUN   TestFormatsRejectAmbiguousAndUnregisteredContent
+--- PASS: TestFormatsRejectAmbiguousAndUnregisteredContent (0.00s)
+=== RUN   TestVerifierRejectsWildcardSchemaGrants
+--- PASS: TestVerifierRejectsWildcardSchemaGrants (0.00s)
+=== RUN   TestMySQLCaptureIsReadOnlyAndLossless
+--- PASS: TestMySQLCaptureIsReadOnlyAndLossless (0.00s)
+=== RUN   TestMySQLRestoreAdminTransactionAndReadOnlyVerify
+--- PASS: TestMySQLRestoreAdminTransactionAndReadOnlyVerify (0.00s)
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/insert-failure
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/nonempty
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/source-target
+=== RUN   TestMySQLRestoreRollbackAndNonemptyTarget/bad-isolation
+--- PASS: TestMySQLRestoreRollbackAndNonemptyTarget (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/insert-failure (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/nonempty (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/source-target (0.00s)
+    --- PASS: TestMySQLRestoreRollbackAndNonemptyTarget/bad-isolation (0.00s)
+=== RUN   TestNormalizeKeepsLoginQuotaOwnershipAndStopsWork
+--- PASS: TestNormalizeKeepsLoginQuotaOwnershipAndStopsWork (0.00s)
+=== RUN   TestNormalizeDoesNotReplayRolloutCheckpointsOrWorkspaceWrites
+--- PASS: TestNormalizeDoesNotReplayRolloutCheckpointsOrWorkspaceWrites (0.00s)
+=== RUN   TestNormalizeFailsClosed
+=== RUN   TestNormalizeFailsClosed/orphan
+=== RUN   TestNormalizeFailsClosed/no-admin
+=== RUN   TestNormalizeFailsClosed/unknown-field
+=== RUN   TestNormalizeFailsClosed/missing-target-field
+=== RUN   TestNormalizeFailsClosed/missing-placement
+=== RUN   TestNormalizeFailsClosed/windows
+=== RUN   TestNormalizeFailsClosed/missing-secret-adapter
+=== RUN   TestNormalizeFailsClosed/new-target-executor
+--- PASS: TestNormalizeFailsClosed (0.00s)
+    --- PASS: TestNormalizeFailsClosed/orphan (0.00s)
+    --- PASS: TestNormalizeFailsClosed/no-admin (0.00s)
+    --- PASS: TestNormalizeFailsClosed/unknown-field (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-target-field (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-placement (0.00s)
+    --- PASS: TestNormalizeFailsClosed/windows (0.00s)
+    --- PASS: TestNormalizeFailsClosed/missing-secret-adapter (0.00s)
+    --- PASS: TestNormalizeFailsClosed/new-target-executor (0.00s)
+=== RUN   TestCaptureDataRoundTripTypesAndCapacity
+--- PASS: TestCaptureDataRoundTripTypesAndCapacity (0.00s)
+=== RUN   TestNormalizeTwentyTwoLinuxLiteInstances
+--- PASS: TestNormalizeTwentyTwoLinuxLiteInstances (0.00s)
+=== RUN   TestCommandHistoryCannotReplayAndConfigurationChecksumMatches
+--- PASS: TestCommandHistoryCannotReplayAndConfigurationChecksumMatches (0.00s)
+=== RUN   TestOfflineBusinessRestoreMySQL
+=== RUN   TestOfflineBusinessRestoreMySQL/success
+=== RUN   TestOfflineBusinessRestoreMySQL/evidence-failure
+=== RUN   TestOfflineBusinessRestoreMySQL/cancel
+=== RUN   TestOfflineBusinessRestoreMySQL/revoked
+=== NAME  TestOfflineBusinessRestoreMySQL
+    offline_business_mysql_test.go:325: local MySQL only; actual Skills and caller 057/066 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim
+--- PASS: TestOfflineBusinessRestoreMySQL (22.02s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/success (3.07s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/evidence-failure (3.28s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/cancel (3.52s)
+    --- PASS: TestOfflineBusinessRestoreMySQL/revoked (3.69s)
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_keys
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_reservations
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_ledger
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_artifacts
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_jobs
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/llm_model_user_grants
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/routing_classifier_settings
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_admin_settings
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_caller_policies
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_owner_records
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_settings_audit
+=== RUN   TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_operations
+--- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_keys (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_reservations (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_key_budget_ledger (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_artifacts (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/gateway_image_jobs (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/llm_model_user_grants (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/routing_classifier_settings (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_admin_settings (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_caller_policies (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_owner_records (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_settings_audit (0.00s)
+    --- PASS: TestOwnerUniqueIndexesSurviveBothCatalogPathsAndBindAdapter/northbound_operations (0.00s)
+=== RUN   TestCurrentOwnerTeamDefinitionsSurviveIsolatedRestore
+--- PASS: TestCurrentOwnerTeamDefinitionsSurviveIsolatedRestore (0.00s)
+=== RUN   TestLegacyTeamReceivesOnlyExplicitCMResourceScope
+--- PASS: TestLegacyTeamReceivesOnlyExplicitCMResourceScope (0.00s)
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/valid
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-table
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/changed-column
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-placement
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/wrong-owner
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/workbuddy-without-adapter
+=== RUN   TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/nonempty-target
+--- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/valid (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-table (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/changed-column (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/missing-placement (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/wrong-owner (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/workbuddy-without-adapter (0.00s)
+    --- PASS: TestSourceAwarePreflightRejectsIncompatibleRestoreWithoutWrites/nonempty-target (0.00s)
+=== RUN   TestIsolatedDomainBackupRestoreRoundTrip
+--- PASS: TestIsolatedDomainBackupRestoreRoundTrip (0.02s)
+=== RUN   TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations
+--- PASS: TestNonemptyBusinessRestoreKeepsEightSkillTablesAndRelations (0.00s)
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag
+=== RUN   TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object
+--- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-map (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/source-path (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/changed-id (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/missing-table (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-current-version (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/wrong-scan (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/unknown-column (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/dangling-tag (0.00s)
+    --- PASS: TestBusinessRestoreRejectsMissingMappingAndSemanticDrift/extra-object (0.00s)
+=== RUN   TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns
+--- PASS: TestRestoreDistinguishesDefaultExpressionsFromGeneratedColumns (0.00s)
+=== RUN   TestSkillRestoreValidationInheritsTaskCancellation
+--- PASS: TestSkillRestoreValidationInheritsTaskCancellation (0.00s)
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel
+=== RUN   TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation
+--- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation (0.01s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/insert (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/evidence (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/cancel (0.00s)
+    --- PASS: TestNonemptyBusinessRestoreRollsBackOnFailureOrCancellation/isolation (0.00s)
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core
+=== RUN   TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table
+--- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/policy (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/schema (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/missing-core (0.00s)
+    --- PASS: TestBusinessCaptureSchemaIndependentPolicyAndCompleteShape/unknown-table (0.00s)
+=== RUN   TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards
+--- PASS: TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards (0.00s)
+=== RUN   TestBusinessAggregateCaptureKeepsDataRowAndFinalRevocationGuards
+--- PASS: TestBusinessAggregateCaptureKeepsDataRowAndFinalRevocationGuards (0.00s)
+=== RUN   TestCensusGeneratorBindsLiteralSchemaGrantSemantics
+--- PASS: TestCensusGeneratorBindsLiteralSchemaGrantSemantics (0.00s)
+=== RUN   TestFiniteBusinessSourceGrantMatrix
+=== RUN   TestFiniteBusinessSourceGrantMatrix/valid
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing-census
+=== RUN   TestFiniteBusinessSourceGrantMatrix/missing-routine-metadata
+=== RUN   TestFiniteBusinessSourceGrantMatrix/wildcard
+=== RUN   TestFiniteBusinessSourceGrantMatrix/global
+=== RUN   TestFiniteBusinessSourceGrantMatrix/control
+=== RUN   TestFiniteBusinessSourceGrantMatrix/unknown
+=== RUN   TestFiniteBusinessSourceGrantMatrix/write
+=== RUN   TestFiniteBusinessSourceGrantMatrix/grant-option
+=== RUN   TestFiniteBusinessSourceGrantMatrix/duplicate
+=== RUN   TestFiniteBusinessSourceGrantMatrix/other-database
+=== RUN   TestFiniteBusinessSourceGrantMatrix/role
+--- PASS: TestFiniteBusinessSourceGrantMatrix (0.03s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/valid (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing-census (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/missing-routine-metadata (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/wildcard (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/global (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/control (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/unknown (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/write (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/grant-option (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/duplicate (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/other-database (0.00s)
+    --- PASS: TestFiniteBusinessSourceGrantMatrix/role (0.00s)
+=== RUN   TestTeamArtifactReferencesUseOriginalSQLAndRejectUncoveredPaths
+--- PASS: TestTeamArtifactReferencesUseOriginalSQLAndRejectUncoveredPaths (0.00s)
+=== RUN   TestTeamCoverageRequiresValidOriginalSQLSnapshot
+--- PASS: TestTeamCoverageRequiresValidOriginalSQLSnapshot (0.00s)
+=== RUN   TestTeamWorkspaceSpecDoesNotPublishPlainSQLFingerprint
+--- PASS: TestTeamWorkspaceSpecDoesNotPublishPlainSQLFingerprint (0.00s)
+=== RUN   TestOwnerTeamProvisionHistoryIsCapturedAndCannotReplay
+--- PASS: TestOwnerTeamProvisionHistoryIsCapturedAndCannotReplay (0.00s)
+=== RUN   TestTeamArtifactReferencesCannotBeSilentlyRedactedByConfigPolicy
+--- PASS: TestTeamArtifactReferencesCannotBeSilentlyRedactedByConfigPolicy (0.00s)
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/member
+=== RUN   TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/workflow
+--- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState (0.00s)
+    --- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/member (0.00s)
+    --- PASS: TestPublicTeamRestoreRejectsUnknownMemberAndWorkflowState/workflow (0.00s)
+=== RUN   TestDeletedTeamHistoryDoesNotRequireDeletedSharedVolume
+--- PASS: TestDeletedTeamHistoryDoesNotRequireDeletedSharedVolume (0.00s)
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/valid
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/team
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/member
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/work
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/workflow
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/credentials
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/outbox
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/locks
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/owner-operation
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/template-operation
+=== RUN   TestIndependentTeamVerificationRejectsExecutableExpectedPlan/source-volume
+--- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/valid (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/team (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/member (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/work (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/workflow (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/credentials (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/outbox (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/locks (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/owner-operation (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/template-operation (0.00s)
+    --- PASS: TestIndependentTeamVerificationRejectsExecutableExpectedPlan/source-volume (0.00s)
+=== RUN   TestWorkBuddyBatchIdentityUsesValidatedLiveRowsOnly
+--- PASS: TestWorkBuddyBatchIdentityUsesValidatedLiveRowsOnly (0.00s)
+=== RUN   TestWorkBuddyBatchIdentityPreservesRequestedOrder
+--- PASS: TestWorkBuddyBatchIdentityPreservesRequestedOrder (0.00s)
+=== RUN   TestObservedWorkBuddyShapeCapturePreservesHistoricalIdentityAndAllocator
+--- PASS: TestObservedWorkBuddyShapeCapturePreservesHistoricalIdentityAndAllocator (0.00s)
+=== RUN   TestObservedWorkBuddyShapeCannotUseUnprovenAdapterOrWriteBootstrap
+--- PASS: TestObservedWorkBuddyShapeCannotUseUnprovenAdapterOrWriteBootstrap (0.00s)
+=== RUN   TestWorkBuddyUIDRestorePreservesReservationsAndHighWater
+--- PASS: TestWorkBuddyUIDRestorePreservesReservationsAndHighWater (0.00s)
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/duplicate-uid
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-low
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-high
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/owner
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/missing-live
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/collision-non-wb
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/storage-nonnull
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/pro
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-regression
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-missing
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-multiple
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-high
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unknown-layout
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/fingerprint
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-index
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-fk
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-bootstrap-advanced
+=== RUN   TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unrelated-orphan
+--- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/duplicate-uid (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-low (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/uid-high (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/owner (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/missing-live (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/collision-non-wb (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/storage-nonnull (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/pro (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-regression (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-missing (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-multiple (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/allocator-high (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unknown-layout (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/fingerprint (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-index (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-fk (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/target-bootstrap-advanced (0.00s)
+    --- PASS: TestWorkBuddyUIDRejectsInvalidDataBeforeTargetWrites/unrelated-orphan (0.00s)
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion/insert
+=== RUN   TestWorkBuddyUIDRollbackAndExhaustion/evidence
+--- PASS: TestWorkBuddyUIDRollbackAndExhaustion (0.00s)
+    --- PASS: TestWorkBuddyUIDRollbackAndExhaustion/insert (0.00s)
+    --- PASS: TestWorkBuddyUIDRollbackAndExhaustion/evidence (0.00s)
+=== RUN   TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping
+--- PASS: TestPublicWorkerNonemptyBusinessRestoreWithFrozenMapping (0.14s)
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify
+=== RUN   TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back
+--- PASS: TestCaller066DatabaseWorkerTransactionAndReadback (0.06s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/restore-and-independent-verify (0.03s)
+    --- PASS: TestCaller066DatabaseWorkerTransactionAndReadback/lost-final-fence-rolls-back (0.03s)
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format
+=== RUN   TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope
+--- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess (0.08s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/explicit-legacy (0.03s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/wrong-format (0.02s)
+    --- PASS: TestPublicWorkerAuthenticatesLegacySQLBeforeTargetAccess/incomplete-scope (0.03s)
+=== RUN   TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay
+--- PASS: TestPublicSQLWorkerKeepsNonemptyOwnerTeamAndDoesNotReplay (0.05s)
+=== RUN   TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify
+--- PASS: TestDatabaseWorkerOfflineCaptureRestoreAndIndependentVerify (0.06s)
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target
+=== RUN   TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit
+--- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish (0.23s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/missing-authorization (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-key (0.04s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-uuid (0.03s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/evidence-collision (0.04s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/lost-before-commit (0.04s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/wrong-input-hash (0.02s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/production-target (0.01s)
+    --- PASS: TestDatabaseWorkerFailuresPreserveBootstrapAndNeverPublish/memory-limit (0.03s)
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid
+=== RUN   TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant
+--- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants (0.01s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/uuid (0.00s)
+    --- PASS: TestDatabaseWorkerRejectsSourceIdentityAndWriteGrants/grant (0.01s)
+PASS
+ok  	clawreef/internal/systembackup/domain	25.933s
+=== RUN   TestAssetsRestoreVerifyAndRejectTamperInIsolatedDirectory
+--- PASS: TestAssetsRestoreVerifyAndRejectTamperInIsolatedDirectory (0.09s)
+=== RUN   TestBoundedControlChecksRetryOnlyTemporaryFailures
+=== RUN   TestBoundedControlChecksRetryOnlyTemporaryFailures/recovers
+=== RUN   TestBoundedControlChecksRetryOnlyTemporaryFailures/deadline
+=== RUN   TestBoundedControlChecksRetryOnlyTemporaryFailures/revoked
+--- PASS: TestBoundedControlChecksRetryOnlyTemporaryFailures (0.96s)
+    --- PASS: TestBoundedControlChecksRetryOnlyTemporaryFailures/recovers (0.27s)
+    --- PASS: TestBoundedControlChecksRetryOnlyTemporaryFailures/deadline (0.67s)
+    --- PASS: TestBoundedControlChecksRetryOnlyTemporaryFailures/revoked (0.02s)
+=== RUN   TestMTLSWorkerAuthorizationBindsIdentityAndFullInvocation
+--- PASS: TestMTLSWorkerAuthorizationBindsIdentityAndFullInvocation (0.04s)
+=== RUN   TestControlRequiresVerifiedClientAndMatchingFreshLease
+=== RUN   TestControlRequiresVerifiedClientAndMatchingFreshLease/expired
+=== RUN   TestControlRequiresVerifiedClientAndMatchingFreshLease/wrong-hash
+=== RUN   TestControlRequiresVerifiedClientAndMatchingFreshLease/extra-key
+=== RUN   TestControlRequiresVerifiedClientAndMatchingFreshLease/not-ready
+--- PASS: TestControlRequiresVerifiedClientAndMatchingFreshLease (0.05s)
+    --- PASS: TestControlRequiresVerifiedClientAndMatchingFreshLease/expired (0.01s)
+    --- PASS: TestControlRequiresVerifiedClientAndMatchingFreshLease/wrong-hash (0.01s)
+    --- PASS: TestControlRequiresVerifiedClientAndMatchingFreshLease/extra-key (0.01s)
+    --- PASS: TestControlRequiresVerifiedClientAndMatchingFreshLease/not-ready (0.01s)
+=== RUN   TestControlRedirectDoesNotForwardTaskIdentity
+--- PASS: TestControlRedirectDoesNotForwardTaskIdentity (0.02s)
+=== RUN   TestInvocationRejectsEmbeddedSecretsAndTrailingJSON
+--- PASS: TestInvocationRejectsEmbeddedSecretsAndTrailingJSON (0.00s)
+=== RUN   TestFormalBusinessSourceScopeBindsOriginalSourceGrant
+--- PASS: TestFormalBusinessSourceScopeBindsOriginalSourceGrant (0.00s)
+=== RUN   TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes
+=== RUN   TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/ca
+=== RUN   TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/address
+=== RUN   TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/database
+=== RUN   TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/credential
+--- PASS: TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes (0.00s)
+    --- PASS: TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/ca (0.00s)
+    --- PASS: TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/address (0.00s)
+    --- PASS: TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/database (0.00s)
+    --- PASS: TestDatabaseConnectionHasExplicitTLSAndNoDSNEscapes/credential (0.00s)
+=== RUN   TestDatabaseCredentialIsOnlyDeliveredInBoundAcquireGrant
+--- PASS: TestDatabaseCredentialIsOnlyDeliveredInBoundAcquireGrant (0.01s)
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/valid
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/unknown-reserve-ack
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/missing
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/signature
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/nonce
+=== RUN   TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/revoked-after-login
+--- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback (0.44s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/valid (0.07s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/unknown-reserve-ack (0.28s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/missing (0.02s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/signature (0.02s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/nonce (0.02s)
+    --- PASS: TestDeliveredCaptureUsesOriginalReserveAndNeverStaticFallback/revoked-after-login (0.03s)
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/valid
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/wrong-issuer
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/wrong-delegation
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/missing
+=== RUN   TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/static-mix
+--- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins (0.06s)
+    --- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/valid (0.01s)
+    --- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/wrong-issuer (0.01s)
+    --- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/wrong-delegation (0.02s)
+    --- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/missing (0.01s)
+    --- PASS: TestDeliveredMaterialsFreezeOnlyIndependentIssuerPins/static-mix (0.01s)
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/#00
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/wrong-ack
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/key-in-use
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/changed-pod
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/denied
+=== RUN   TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/unexpected-dek
+--- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata (1.54s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/#00 (0.24s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/wrong-ack (0.26s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/key-in-use (0.27s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/changed-pod (0.24s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/denied (0.27s)
+    --- PASS: TestFormalCandidateReportUsesOriginalKeyWindowAndRetriesOnlyMetadata/unexpected-dek (0.26s)
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/#00
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/invocation
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/cipher-name
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/envelope-name
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/negative-count
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/oversize
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/missing-formal
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/functional
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/legacy-complete
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/extra-candidate
+=== RUN   TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/nonce
+--- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete (0.03s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/#00 (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/invocation (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/cipher-name (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/envelope-name (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/negative-count (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/oversize (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/missing-formal (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/functional (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/legacy-complete (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/extra-candidate (0.00s)
+    --- PASS: TestFormalCandidateCannotBorrowOtherInvocationOrLegacyComplete/nonce (0.00s)
+=== RUN   TestFormalWorkspaceCandidateUsesCFramingAndNeverLegacyComplete
+--- PASS: TestFormalWorkspaceCandidateUsesCFramingAndNeverLegacyComplete (0.04s)
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/before-use
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/end-unknown
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/after-use
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/missing-source
+=== RUN   TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/no-spec
+--- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt (0.12s)
+    --- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/before-use (0.01s)
+    --- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/end-unknown (0.03s)
+    --- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/after-use (0.05s)
+    --- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/missing-source (0.01s)
+    --- PASS: TestFormalRevocationAndUnknownEndNeverReturnCandidateReceipt/no-spec (0.01s)
+=== RUN   TestFormalFailureCodesDiscardUntrustedErrors
+--- PASS: TestFormalFailureCodesDiscardUntrustedErrors (0.00s)
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/valid
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/wrong-sha
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/wrong-mapping
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/unknown-field
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/duplicate-field
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/missing-provider
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/no-formal
+=== RUN   TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/missing-permit
+--- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback (0.10s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/valid (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/wrong-sha (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/wrong-mapping (0.02s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/unknown-field (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/duplicate-field (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/missing-provider (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/no-formal (0.01s)
+    --- PASS: TestFormalMaterialsAreFrozenByOriginalInvocationAndNeverFallback/missing-permit (0.01s)
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/valid
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/revoked-before-begin
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/revoked-during-use
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/changed-pod
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/changed-claim
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-reserve
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-begin
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-end
+=== RUN   TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/expired
+--- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed (0.17s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/valid (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/revoked-before-begin (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/revoked-during-use (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/changed-pod (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/changed-claim (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-reserve (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-begin (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/unknown-end (0.02s)
+    --- PASS: TestOriginalKeyAuthorityUsesExistingMTLSControlAndFailsClosed/expired (0.02s)
+=== RUN   TestProviderInvocationCannotBorrowFunctionalOrRecoveryCalls
+--- PASS: TestProviderInvocationCannotBorrowFunctionalOrRecoveryCalls (0.07s)
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/purpose
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/installation
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/provider_key
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/provider_version
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/registry_version
+=== RUN   TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/endpoint
+--- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve (0.01s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/purpose (0.00s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/installation (0.00s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/provider_key (0.00s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/provider_version (0.00s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/registry_version (0.00s)
+    --- PASS: TestCaptureKeyJobRejectsWrongMappingBeforeOriginalReserve/endpoint (0.00s)
+=== RUN   TestLegacyTeamDatabaseFormatOnlyAdmittedForIsolatedRestore
+--- PASS: TestLegacyTeamDatabaseFormatOnlyAdmittedForIsolatedRestore (0.00s)
+=== RUN   TestControlRelayUsesOriginalTLSAndExactRetryBytes
+--- PASS: TestControlRelayUsesOriginalTLSAndExactRetryBytes (0.22s)
+=== RUN   TestLeaseRelayRejectsForeignBindingAndTerminalEvidence
+--- PASS: TestLeaseRelayRejectsForeignBindingAndTerminalEvidence (0.01s)
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/valid
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/wildcard-url
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/openid-wildcard
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/resource-url
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/metrics
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/url-write
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-list
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-write
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-wildcard
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/token-review
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/foreign-subject-review
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/named-self-review
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/incomplete
+=== RUN   TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/empty-url-rule
+--- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/valid (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/wildcard-url (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/openid-wildcard (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/resource-url (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/metrics (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/url-write (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-list (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-write (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/source-wildcard (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/token-review (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/foreign-subject-review (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/named-self-review (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/incomplete (0.00s)
+    --- PASS: TestResourceSourceRulesAcceptExactDefaultOIDCAndSelfReviewsOnly/empty-url-rule (0.00s)
+=== RUN   TestResourceSecretPolicyActualArchiveData
+=== RUN   TestResourceSecretPolicyActualArchiveData/current
+=== RUN   TestResourceSecretPolicyActualArchiveData/wrong-source-type
+=== RUN   TestResourceSecretPolicyActualArchiveData/wrong-readback-type
+=== RUN   TestResourceSecretPolicyActualArchiveData/missing-required
+=== RUN   TestResourceSecretPolicyActualArchiveData/missing-end
+--- PASS: TestResourceSecretPolicyActualArchiveData (0.05s)
+    --- PASS: TestResourceSecretPolicyActualArchiveData/current (0.01s)
+    --- PASS: TestResourceSecretPolicyActualArchiveData/wrong-source-type (0.01s)
+    --- PASS: TestResourceSecretPolicyActualArchiveData/wrong-readback-type (0.01s)
+    --- PASS: TestResourceSecretPolicyActualArchiveData/missing-required (0.01s)
+    --- PASS: TestResourceSecretPolicyActualArchiveData/missing-end (0.02s)
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/#00
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/*
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//logs/*
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//debug/*
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//metrics
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//healthz/*
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/mutation
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/list
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/resource-wildcard
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/extra-name
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/incomplete
+=== RUN   TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/no-source-right
+--- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges (0.01s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/#00 (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/* (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//logs/* (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//debug/* (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//metrics (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges//healthz/* (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/mutation (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/list (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/resource-wildcard (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/extra-name (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/incomplete (0.00s)
+    --- PASS: TestResourceSourceRulesRejectUnknownNonResourceAndSourcePrivileges/no-source-right (0.00s)
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/#00
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/secret
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/identity-uid
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/namespace-uid
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/extra-right
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/uid-drift
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/revoked-after-get
+=== RUN   TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/changed-scope
+--- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects (28.18s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/#00 (8.22s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/secret (8.22s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/identity-uid (0.05s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/namespace-uid (8.22s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/extra-right (0.02s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/uid-drift (1.82s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/revoked-after-get (1.62s)
+    --- PASS: TestResourceFormalCaptureUsesIndependentTLSCredentialAndExactOriginalObjects/changed-scope (0.02s)
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/openclaw-lite
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/openclaw-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/hermes-lite
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/hermes-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/opencode-lite
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/opencode-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/deepseek-harness-lite
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/deepseek-harness-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/workbuddy-lite
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/workbuddy-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/codex-pro
+=== RUN   TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/claude-code-pro
+--- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource (0.06s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/openclaw-lite (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/openclaw-pro (0.01s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/hermes-lite (0.01s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/hermes-pro (0.01s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/opencode-lite (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/opencode-pro (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/deepseek-harness-lite (0.01s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/deepseek-harness-pro (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/workbuddy-lite (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/workbuddy-pro (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/codex-pro (0.00s)
+    --- PASS: TestReleasePolicyChecksAllLinuxTypesWithoutRewritingSource/claude-code-pro (0.01s)
+=== RUN   TestEmptyLayoutPreservesLegacySignedPolicyEncoding
+--- PASS: TestEmptyLayoutPreservesLegacySignedPolicyEncoding (0.00s)
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/pro
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/other-agent
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/windows
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/unknown-layout
+=== RUN   TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/mutable-image
+--- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease (0.00s)
+    --- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/pro (0.00s)
+    --- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/other-agent (0.00s)
+    --- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/windows (0.00s)
+    --- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/unknown-layout (0.00s)
+    --- PASS: TestWineLayoutRequiresExplicitWorkBuddyLiteRelease/mutable-image (0.00s)
+=== RUN   TestDeepSeekLayoutRequiresMatchingImmutableLinuxRelease
+--- PASS: TestDeepSeekLayoutRequiresMatchingImmutableLinuxRelease (0.00s)
+=== RUN   TestFormalSkillsSQLChecksOriginalProjectionBeforeCandidateMySQL
+    skills_sql_mysql_test.go:24: requires disposable local MySQL
+--- SKIP: TestFormalSkillsSQLChecksOriginalProjectionBeforeCandidateMySQL (0.00s)
+=== RUN   TestNetworkCaptureDecoderAcceptsOriginalResourceInvocationWithoutWorkspace
+--- PASS: TestNetworkCaptureDecoderAcceptsOriginalResourceInvocationWithoutWorkspace (0.02s)
+=== RUN   TestLegacyWorkspaceCannotBorrowSkillSourceSpec
+--- PASS: TestLegacyWorkspaceCannotBorrowSkillSourceSpec (0.01s)
+=== RUN   TestFormalSQLSourceRevocationStopsBeforeNextTableMySQL
+    source_credentials_mysql_test.go:34: requires disposable local MySQL
+--- SKIP: TestFormalSQLSourceRevocationStopsBeforeNextTableMySQL (0.00s)
+=== RUN   TestFormalSourceGrantAllowsSuccessiveVersionsWithinFixedPrefix
+--- PASS: TestFormalSourceGrantAllowsSuccessiveVersionsWithinFixedPrefix (0.16s)
+=== RUN   TestFormalRedisSourceScopeKeepsDeploymentBoundaryAcrossTeamChanges
+--- PASS: TestFormalRedisSourceScopeKeepsDeploymentBoundaryAcrossTeamChanges (0.01s)
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/valid
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-ca
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-uuid
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-account
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/active-role
+=== RUN   TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-password
+--- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount (0.16s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/valid (0.03s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-ca (0.02s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-uuid (0.02s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-account (0.02s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/active-role (0.03s)
+    --- PASS: TestFormalSQLSourceProductionOpenerRequiresTLSIdentityAndAccount/wrong-password (0.03s)
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/empty
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/nonempty
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/revoke-at-source
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/unknown-end
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/missing-source-authority
+=== RUN   TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/cursor-cycle
+--- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback (0.14s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/empty (0.03s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/nonempty (0.03s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/revoke-at-source (0.02s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/unknown-end (0.03s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/missing-source-authority (0.01s)
+    --- PASS: TestFormalSourceRedisActualCollectorFramingAndIndependentReadback/cursor-cycle (0.02s)
+=== RUN   TestTeamSharedWorkspaceRestoresWithoutRuntimeConfigRules
+--- PASS: TestTeamSharedWorkspaceRestoresWithoutRuntimeConfigRules (0.04s)
+=== RUN   TestSharedTeamRestoreAndSeparateReadOnlyVerification
+--- PASS: TestSharedTeamRestoreAndSeparateReadOnlyVerification (0.07s)
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/wrong-key
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/corrupt-terminal
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/not-empty
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/missing-artifact
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/extra-file
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/denied
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/cancelled
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/bad-scope
+=== RUN   TestSharedTeamFailuresNeverDeleteOrReportVerified/foreign-part
+--- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified (0.40s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/wrong-key (0.04s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/corrupt-terminal (0.04s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/not-empty (0.05s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/missing-artifact (0.04s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/extra-file (0.07s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/denied (0.04s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/cancelled (0.04s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/bad-scope (0.05s)
+    --- PASS: TestSharedTeamFailuresNeverDeleteOrReportVerified/foreign-part (0.03s)
+=== RUN   TestTeamWorkspaceUsesOriginalWorkerControlAndImmutableHash
+--- PASS: TestTeamWorkspaceUsesOriginalWorkerControlAndImmutableHash (0.01s)
+=== RUN   TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode
+    teams_test.go:32: requires disposable local Redis
+--- SKIP: TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode (0.00s)
+=== RUN   TestFormalTeamsObjectCandidateContainsPinnedOriginalBytes
+    teams_test.go:149: requires disposable local MinIO
+--- SKIP: TestFormalTeamsObjectCandidateContainsPinnedOriginalBytes (0.00s)
+=== RUN   TestWorkspaceWorkerCapturesAndRestoresWithoutSource
+--- PASS: TestWorkspaceWorkerCapturesAndRestoresWithoutSource (0.05s)
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/no-grant
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/lost-fence
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/overlap
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/expired
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/invalid-receipt
+=== RUN   TestWorkerRejectsMissingGrantBadReceiptAndLostFence/unknown-config
+--- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence (0.11s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/no-grant (0.01s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/lost-fence (0.02s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/overlap (0.01s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/expired (0.01s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/invalid-receipt (0.03s)
+    --- PASS: TestWorkerRejectsMissingGrantBadReceiptAndLostFence/unknown-config (0.04s)
+PASS
+ok  	clawreef/internal/systembackup/worker	36.702s
+=== RUN   TestCoverageRejectsContainerRestartAndMissingReplica
+--- PASS: TestCoverageRejectsContainerRestartAndMissingReplica (0.01s)
+=== RUN   TestConcreteDiscoveryBuildsDatabasePlanWithoutExternalWrites
+--- PASS: TestConcreteDiscoveryBuildsDatabasePlanWithoutExternalWrites (0.05s)
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/valid
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/missing
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/nil
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/duplicate
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/rows
+=== RUN   TestPreflightUsesFrozenRestorePolicyAndLimits/memory
+--- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/valid (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/missing (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/nil (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/duplicate (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/rows (0.00s)
+    --- PASS: TestPreflightUsesFrozenRestorePolicyAndLimits/memory (0.00s)
+=== RUN   TestBindFreezesAllAdaptersAndRejectsChangedRevision
+--- PASS: TestBindFreezesAllAdaptersAndRejectsChangedRevision (0.00s)
+=== RUN   TestCaptureBundleRejectsSubstitutionAndAuthenticatesCiphertext
+--- PASS: TestCaptureBundleRejectsSubstitutionAndAuthenticatesCiphertext (0.03s)
+=== RUN   TestBuildSchedulesPinnedWorkerBeforeDelayedVolumeBinding
+--- PASS: TestBuildSchedulesPinnedWorkerBeforeDelayedVolumeBinding (0.00s)
+=== RUN   TestNodeReplacementAndUnregisteredProofEndpointAreExcluded
+--- PASS: TestNodeReplacementAndUnregisteredProofEndpointAreExcluded (0.00s)
+=== RUN   TestSharedRootsRejectDifferentBackingAndCopiedPVCNames
+--- PASS: TestSharedRootsRejectDifferentBackingAndCopiedPVCNames (0.00s)
+=== RUN   TestCapabilitiesRequireAuthenticatedCompleteLiveResponse
+--- PASS: TestCapabilitiesRequireAuthenticatedCompleteLiveResponse (0.01s)
+=== RUN   TestOverlappingBackingPaths
+--- PASS: TestOverlappingBackingPaths (0.00s)
+=== RUN   TestDeploymentWriterCannotPauseUnrelatedWorkload
+--- PASS: TestDeploymentWriterCannotPauseUnrelatedWorkload (0.00s)
+=== RUN   TestConfigurationRejectsUnregisteredReleaseAndConflictingLegacyRules
+--- PASS: TestConfigurationRejectsUnregisteredReleaseAndConflictingLegacyRules (0.00s)
+=== RUN   TestWineLayoutChangesSignedRuntimeContract
+--- PASS: TestWineLayoutChangesSignedRuntimeContract (0.01s)
+=== RUN   TestSharedWorkspaceRequiresFrozenVolumeIdentityAndContentProof
+--- PASS: TestSharedWorkspaceRequiresFrozenVolumeIdentityAndContentProof (0.00s)
+=== RUN   TestSixDomainBindUsesFrozenOwnerPlanAndCompletePauseRegistry
+--- PASS: TestSixDomainBindUsesFrozenOwnerPlanAndCompletePauseRegistry (0.00s)
+=== RUN   TestWorkBuddyProfileBindsAuthenticatedSQLIdentityAndRejectsDrift
+--- PASS: TestWorkBuddyProfileBindsAuthenticatedSQLIdentityAndRejectsDrift (0.01s)
+=== RUN   TestWorkBuddyUIDContractIsPinnedInProfile
+--- PASS: TestWorkBuddyUIDContractIsPinnedInProfile (0.00s)
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/#00
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/nonce
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/inventory
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/expiry
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/partial
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/ungated
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/remote
+=== RUN   TestWriterCoverageBindsProofToInventoryProcessAndDeadline/legacy
+--- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline (0.02s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/#00 (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/nonce (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/inventory (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/expiry (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/partial (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/ungated (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/remote (0.00s)
+    --- PASS: TestWriterCoverageBindsProofToInventoryProcessAndDeadline/legacy (0.00s)
+PASS
+ok  	clawreef/internal/systembackup/profile	3.307s
+=== RUN   TestAIGatewayCrossTableRestoreMappingConsistency
+--- PASS: TestAIGatewayCrossTableRestoreMappingConsistency (0.01s)
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/invocation_ID
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/model_ID
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/user_ID
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/source_trace_split
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/source_trace_reused
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/orphan_session
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/missing_target_session
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/missing_invocation
+=== RUN   TestAIGatewayCrossTableRestoreRejectsDrift/duplicate_model_target
+--- PASS: TestAIGatewayCrossTableRestoreRejectsDrift (0.09s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/invocation_ID (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/model_ID (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/user_ID (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/source_trace_split (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/source_trace_reused (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/orphan_session (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/missing_target_session (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/missing_invocation (0.01s)
+    --- PASS: TestAIGatewayCrossTableRestoreRejectsDrift/duplicate_model_target (0.01s)
+=== RUN   TestAIGatewayHistoryRestoreAllOrNothing
+--- PASS: TestAIGatewayHistoryRestoreAllOrNothing (0.02s)
+=== RUN   TestAIGatewayHistoryRestoreRequiresCommonProof
+--- PASS: TestAIGatewayHistoryRestoreRequiresCommonProof (0.01s)
+=== RUN   TestAuditEventRestoreRedactsAndRequiresProof
+--- PASS: TestAuditEventRestoreRedactsAndRequiresProof (0.00s)
+=== RUN   TestAuditEventRestoreRejectsReferenceDrift
+--- PASS: TestAuditEventRestoreRejectsReferenceDrift (0.00s)
+=== RUN   TestBusinessRestoreAllFifteenTablesAndInertCredentials
+--- PASS: TestBusinessRestoreAllFifteenTablesAndInertCredentials (0.03s)
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/business
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/enterprise
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/models
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/rules
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/aliases
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/batch
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/sessions
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/invocations
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/audits
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/costs
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/risk_hits
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/messages
+=== RUN   TestBusinessRestoreProofFailuresReturnNoPartialBatch/final
+--- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch (0.28s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/business (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/enterprise (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/models (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/rules (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/aliases (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/batch (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/sessions (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/invocations (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/audits (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/costs (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/risk_hits (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/messages (0.02s)
+    --- PASS: TestBusinessRestoreProofFailuresReturnNoPartialBatch/final (0.02s)
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/registry
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/checkpoint
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/capture_context
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/target_clock
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_row
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/instance_drift
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_instance
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/duplicate_instance
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/target
+=== RUN   TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_table
+--- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof (0.21s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/registry (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/checkpoint (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/capture_context (0.03s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/target_clock (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_row (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/instance_drift (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_instance (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/duplicate_instance (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/target (0.02s)
+    --- PASS: TestBusinessRestoreRejectsBindingAndInstanceDriftBeforeProof/missing_table (0.02s)
+=== RUN   TestBusinessRestoreFrozenInputAndFinalAuthority
+--- PASS: TestBusinessRestoreFrozenInputAndFinalAuthority (0.06s)
+=== RUN   TestBusinessRestoreRequiresProofsEvenForEmptyTables
+--- PASS: TestBusinessRestoreRequiresProofsEvenForEmptyTables (0.02s)
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/enterprise
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/challenges
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/caller_policies
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/models
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/aliases
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/history
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/users
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/northbound_sessions
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/rules
+=== RUN   TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/quotas
+--- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch (0.20s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/enterprise (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/challenges (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/caller_policies (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/models (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/aliases (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/history (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/users (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/northbound_sessions (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/rules (0.02s)
+    --- PASS: TestBusinessRestoreNormalizerFailuresReturnNoPartialBatch/quotas (0.02s)
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/costs
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/enterprise
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/sessions
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/audits
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/risk_hits
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/messages
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/batch
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/models
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/rules
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/aliases
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/gateway_batch
+=== RUN   TestBusinessRestoreRejectsEveryMissingProof/invocations
+--- PASS: TestBusinessRestoreRejectsEveryMissingProof (0.26s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/costs (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/enterprise (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/sessions (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/audits (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/risk_hits (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/messages (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/batch (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/models (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/rules (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/aliases (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/gateway_batch (0.02s)
+    --- PASS: TestBusinessRestoreRejectsEveryMissingProof/invocations (0.02s)
+=== RUN   TestBusinessRestoreCancellationBeforeAndAfterInitialProof
+--- PASS: TestBusinessRestoreCancellationBeforeAndAfterInitialProof (0.05s)
+=== RUN   TestBusinessRestoreCancellationDuringInputValidationDoesNotCallProof
+--- PASS: TestBusinessRestoreCancellationDuringInputValidationDoesNotCallProof (0.02s)
+=== RUN   TestEmbeddedBusinessRegistryFixtureMatchesCanonical
+--- PASS: TestEmbeddedBusinessRegistryFixtureMatchesCanonical (0.01s)
+=== RUN   TestExtendedInventoryDoesNotExpandClosedACaptureScope
+--- PASS: TestExtendedInventoryDoesNotExpandClosedACaptureScope (0.00s)
+=== RUN   TestCaptureTableAllowlist
+--- PASS: TestCaptureTableAllowlist (0.00s)
+=== RUN   TestPinnedScopeRejectsWrongDigest
+--- PASS: TestPinnedScopeRejectsWrongDigest (0.00s)
+=== RUN   TestCaptureTableAllowlistFailsClosed
+=== RUN   TestCaptureTableAllowlistFailsClosed/missing_schema_evidence
+=== RUN   TestCaptureTableAllowlistFailsClosed/pending_global_review
+=== RUN   TestCaptureTableAllowlistFailsClosed/unreviewed_user_secret
+=== RUN   TestCaptureTableAllowlistFailsClosed/wrong_secret_classification
+=== RUN   TestCaptureTableAllowlistFailsClosed/cross-category_table
+=== RUN   TestCaptureTableAllowlistFailsClosed/missing_AI_table
+=== RUN   TestCaptureTableAllowlistFailsClosed/extra_user_table
+=== RUN   TestCaptureTableAllowlistFailsClosed/wrong_verifier
+=== RUN   TestCaptureTableAllowlistFailsClosed/unreviewed_other_domain
+--- PASS: TestCaptureTableAllowlistFailsClosed (0.02s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/missing_schema_evidence (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/pending_global_review (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/unreviewed_user_secret (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/wrong_secret_classification (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/cross-category_table (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/missing_AI_table (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/extra_user_table (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/wrong_verifier (0.00s)
+    --- PASS: TestCaptureTableAllowlistFailsClosed/unreviewed_other_domain (0.00s)
+=== RUN   TestSQLCountCollector
+=== RUN   TestSQLCountCollector/count:users
+=== RUN   TestSQLCountCollector/myisam:users
+=== RUN   TestSQLCountCollector/commit
+--- PASS: TestSQLCountCollector (0.01s)
+    --- PASS: TestSQLCountCollector/count:users (0.00s)
+    --- PASS: TestSQLCountCollector/myisam:users (0.00s)
+    --- PASS: TestSQLCountCollector/commit (0.00s)
+=== RUN   TestChatMessageRestoreCompleteRedactedRow
+--- PASS: TestChatMessageRestoreCompleteRedactedRow (0.00s)
+=== RUN   TestChatMessageRestoreRequiresProofAndPreservesNull
+--- PASS: TestChatMessageRestoreRequiresProofAndPreservesNull (0.00s)
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift/negative_sequence
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift/missing_session
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift/live_trace_reuse
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift/null_invocation_drift
+=== RUN   TestChatMessageRestoreRejectsSessionAndTraceDrift/empty_role
+--- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift (0.00s)
+    --- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift/negative_sequence (0.00s)
+    --- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift/missing_session (0.00s)
+    --- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift/live_trace_reuse (0.00s)
+    --- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift/null_invocation_drift (0.00s)
+    --- PASS: TestChatMessageRestoreRejectsSessionAndTraceDrift/empty_role (0.00s)
+=== RUN   TestChatSessionRestoreCompleteHistoricalRow
+--- PASS: TestChatSessionRestoreCompleteHistoricalRow (0.00s)
+=== RUN   TestChatSessionRestoreRequiresProofForEmptyAndNullableRows
+--- PASS: TestChatSessionRestoreRequiresProofForEmptyAndNullableRows (0.00s)
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift/same_session_ID
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift/wrong_source_ID
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift/null_user_drift
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift/invalid_title
+=== RUN   TestChatSessionRestoreRejectsResumeAndReferenceDrift/reversed_times
+--- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift (0.00s)
+    --- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift/same_session_ID (0.00s)
+    --- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift/wrong_source_ID (0.00s)
+    --- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift/null_user_drift (0.00s)
+    --- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift/invalid_title (0.00s)
+    --- PASS: TestChatSessionRestoreRejectsResumeAndReferenceDrift/reversed_times (0.00s)
+=== RUN   TestCostAggregateIndependentGoldenVectors
+--- PASS: TestCostAggregateIndependentGoldenVectors (0.00s)
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/actual_count
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/NULL_amount
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/currency_whitespace
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/currency_control
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/zero_rows
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/token_upper_bound
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_upper_bound
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/less_total
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_-1
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_+1
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_01
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_1e2
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_NaN
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_1.000000000
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_1.0
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_1
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal__1.00000000
+=== RUN   TestCostAggregateExactLargeTotalsAndBounds/decimal_9999999999999999999999999999999999999999999999999
+--- PASS: TestCostAggregateExactLargeTotalsAndBounds (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/actual_count (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/NULL_amount (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/currency_whitespace (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/currency_control (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/zero_rows (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/token_upper_bound (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_upper_bound (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/less_total (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_ (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_-1 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_+1 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_01 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_1e2 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_NaN (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_1.000000000 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_1.0 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_1 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal__1.00000000 (0.00s)
+    --- PASS: TestCostAggregateExactLargeTotalsAndBounds/decimal_9999999999999999999999999999999999999999999999999 (0.00s)
+=== RUN   TestCostAggregateCurrencyBoundRejectsTruncation
+--- PASS: TestCostAggregateCurrencyBoundRejectsTruncation (0.00s)
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/query
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/missing_group
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/duplicate
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/rows_error
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/close_error
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/scan_NULL
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/row_violation
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/malformed_amount
+=== RUN   TestCostAggregateSQLFailuresReturnNoPartialResult/257_groups
+--- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult (0.04s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/query (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/missing_group (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/duplicate (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/rows_error (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/close_error (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/scan_NULL (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/row_violation (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/malformed_amount (0.00s)
+    --- PASS: TestCostAggregateSQLFailuresReturnNoPartialResult/257_groups (0.00s)
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/NULL_to_zero
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/estimated
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/prompt
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/completion
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/input
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/output
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/actual
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/internal
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/total
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/currency_case
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/actual_rows_0
+=== RUN   TestCostAggregateSameCountTargetDriftAndEmpty/actual_rows_3
+--- PASS: TestCostAggregateSameCountTargetDriftAndEmpty (0.03s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/NULL_to_zero (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/estimated (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/prompt (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/completion (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/input (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/output (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/actual (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/internal (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/total (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/currency_case (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/actual_rows_0 (0.00s)
+    --- PASS: TestCostAggregateSameCountTargetDriftAndEmpty/actual_rows_3 (0.00s)
+=== RUN   TestCostAggregateBackupBindingAndRedaction
+--- PASS: TestCostAggregateBackupBindingAndRedaction (0.01s)
+=== RUN   TestCostAggregateNormalizedBatchBindsDump
+=== RUN   TestCostAggregateNormalizedBatchBindsDump/amount
+=== RUN   TestCostAggregateNormalizedBatchBindsDump/tokens
+=== RUN   TestCostAggregateNormalizedBatchBindsDump/currency
+=== RUN   TestCostAggregateNormalizedBatchBindsDump/NULL
+--- PASS: TestCostAggregateNormalizedBatchBindsDump (0.10s)
+    --- PASS: TestCostAggregateNormalizedBatchBindsDump/amount (0.02s)
+    --- PASS: TestCostAggregateNormalizedBatchBindsDump/tokens (0.02s)
+    --- PASS: TestCostAggregateNormalizedBatchBindsDump/currency (0.02s)
+    --- PASS: TestCostAggregateNormalizedBatchBindsDump/NULL (0.02s)
+=== RUN   TestCostAggregateCaptureProofMutationAndCancellation
+--- PASS: TestCostAggregateCaptureProofMutationAndCancellation (0.01s)
+=== RUN   TestCostRecordRestorePreservesDecimalAndReferences
+--- PASS: TestCostRecordRestorePreservesDecimalAndReferences (0.00s)
+=== RUN   TestCostRecordRestoreFailsClosed
+--- PASS: TestCostRecordRestoreFailsClosed (0.00s)
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/unknown_session
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/missing_invocation
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/reused_trace
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/negative_cost
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/too_precise
+=== RUN   TestCostRecordRestoreRejectsDriftAndBadAmounts/negative_tokens
+--- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/unknown_session (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/missing_invocation (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/reused_trace (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/negative_cost (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/too_precise (0.00s)
+    --- PASS: TestCostRecordRestoreRejectsDriftAndBadAmounts/negative_tokens (0.00s)
+=== RUN   TestCostSnapshotHookDelegatesOriginalTransaction
+=== RUN   TestCostSnapshotHookDelegatesOriginalTransaction/matched
+=== RUN   TestCostSnapshotHookDelegatesOriginalTransaction/non_matching
+=== RUN   TestCostSnapshotHookDelegatesOriginalTransaction/hook_error
+=== RUN   TestCostSnapshotHookDelegatesOriginalTransaction/query_error
+--- PASS: TestCostSnapshotHookDelegatesOriginalTransaction (0.01s)
+    --- PASS: TestCostSnapshotHookDelegatesOriginalTransaction/matched (0.00s)
+    --- PASS: TestCostSnapshotHookDelegatesOriginalTransaction/non_matching (0.00s)
+    --- PASS: TestCostSnapshotHookDelegatesOriginalTransaction/hook_error (0.00s)
+    --- PASS: TestCostSnapshotHookDelegatesOriginalTransaction/query_error (0.00s)
+=== RUN   TestCostSnapshotHookRunsOnceAfterSuccessfulClose
+=== RUN   TestCostSnapshotHookRunsOnceAfterSuccessfulClose/closed
+=== RUN   TestCostSnapshotHookRunsOnceAfterSuccessfulClose/close_error
+=== RUN   TestCostSnapshotHookRunsOnceAfterSuccessfulClose/canceled
+--- PASS: TestCostSnapshotHookRunsOnceAfterSuccessfulClose (0.00s)
+    --- PASS: TestCostSnapshotHookRunsOnceAfterSuccessfulClose/closed (0.00s)
+    --- PASS: TestCostSnapshotHookRunsOnceAfterSuccessfulClose/close_error (0.00s)
+    --- PASS: TestCostSnapshotHookRunsOnceAfterSuccessfulClose/canceled (0.00s)
+=== RUN   TestDReviewABusinessReadCommitBoundary
+=== RUN   TestDReviewABusinessReadCommitBoundary/capture_counts
+=== RUN   TestDReviewABusinessReadCommitBoundary/capture_counts/healthy
+=== RUN   TestDReviewABusinessReadCommitBoundary/capture_counts/canceled_commit
+=== RUN   TestDReviewABusinessReadCommitBoundary/capture_counts/commit_error
+=== RUN   TestDReviewABusinessReadCommitBoundary/restore_verifier
+=== RUN   TestDReviewABusinessReadCommitBoundary/restore_verifier/healthy
+=== RUN   TestDReviewABusinessReadCommitBoundary/restore_verifier/canceled_commit
+=== RUN   TestDReviewABusinessReadCommitBoundary/restore_verifier/commit_error
+--- PASS: TestDReviewABusinessReadCommitBoundary (0.01s)
+    --- PASS: TestDReviewABusinessReadCommitBoundary/capture_counts (0.01s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/capture_counts/healthy (0.00s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/capture_counts/canceled_commit (0.00s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/capture_counts/commit_error (0.00s)
+    --- PASS: TestDReviewABusinessReadCommitBoundary/restore_verifier (0.01s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/restore_verifier/healthy (0.00s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/restore_verifier/canceled_commit (0.00s)
+        --- PASS: TestDReviewABusinessReadCommitBoundary/restore_verifier/commit_error (0.00s)
+=== RUN   TestDReviewARestoreMismatchAndCanceledResult
+=== RUN   TestDReviewARestoreMismatchAndCanceledResult/live_mismatch
+=== RUN   TestDReviewARestoreMismatchAndCanceledResult/canceled_mismatch_commit
+--- PASS: TestDReviewARestoreMismatchAndCanceledResult (0.00s)
+    --- PASS: TestDReviewARestoreMismatchAndCanceledResult/live_mismatch (0.00s)
+    --- PASS: TestDReviewARestoreMismatchAndCanceledResult/canceled_mismatch_commit (0.00s)
+=== RUN   TestEnterpriseAuthRestoreCompleteInertRowWithBoundProof
+--- PASS: TestEnterpriseAuthRestoreCompleteInertRowWithBoundProof (0.00s)
+=== RUN   TestEnterpriseAuthRestoreRequiresProofEvenForEmptyTable
+--- PASS: TestEnterpriseAuthRestoreRequiresProofEvenForEmptyTable (0.00s)
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/oversized_text
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/wrong_source_id
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/future_provider
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_port
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_version_alias
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_text
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/reversed_times
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/missing_actor_mapping
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/bad_target_id
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_role
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/missing_ref
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/ref_on_clear
+=== RUN   TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/unknown_bind_state
+--- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/oversized_text (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/wrong_source_id (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/future_provider (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_port (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_version_alias (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_text (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/reversed_times (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/missing_actor_mapping (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/bad_target_id (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/invalid_role (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/missing_ref (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/ref_on_clear (0.00s)
+    --- PASS: TestEnterpriseAuthRestoreRejectsRefDriftAndInvalidSource/unknown_bind_state (0.00s)
+=== RUN   TestEnterpriseAuthRestoreClearsInheritedEnvironmentPassword
+--- PASS: TestEnterpriseAuthRestoreClearsInheritedEnvironmentPassword (0.00s)
+=== RUN   TestGatewayAliasRestoreExpiresAndRemapsFullRow
+--- PASS: TestGatewayAliasRestoreExpiresAndRemapsFullRow (0.00s)
+=== RUN   TestGatewayAliasRestoreRequiresBProofAndTargetClock
+--- PASS: TestGatewayAliasRestoreRequiresBProofAndTargetClock (0.00s)
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_target_instance
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/zero_source_expiry
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/zero_target_clock
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_alias_ID
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/wrong_alias_mapping
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/duplicate_target_ID_zero
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_token_hash
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/last_use_after_update
+=== RUN   TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/unmapped_instance
+--- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_target_instance (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/zero_source_expiry (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/zero_target_clock (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_alias_ID (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/wrong_alias_mapping (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/duplicate_target_ID_zero (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/invalid_token_hash (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/last_use_after_update (0.00s)
+    --- PASS: TestGatewayAliasRestoreRejectsInvalidMappingsAndSource/unmapped_instance (0.00s)
+=== RUN   TestGatewayAliasRestoreRejectsDuplicateHash
+--- PASS: TestGatewayAliasRestoreRejectsDuplicateHash (0.00s)
+=== RUN   TestLLMModelRestoreCompleteInertRowAndExactPrices
+--- PASS: TestLLMModelRestoreCompleteInertRowAndExactPrices (0.00s)
+=== RUN   TestLLMModelRestoreProofRequiredAndNoPartialRows
+--- PASS: TestLLMModelRestoreProofRequiredAndNoPartialRows (0.00s)
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/bad_target_ID
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/ref_version_alias
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/unknown_key_state
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/URL_user_info
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/price_overflow
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/invalid_currency
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/missing_key_version
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/version_on_null
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/URL_query
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/unknown_provider_JSON_key
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/duplicate_provider_model
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/negative_price
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/too_many_price_decimals
+=== RUN   TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/wrong_source_ID
+--- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/bad_target_ID (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/ref_version_alias (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/unknown_key_state (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/URL_user_info (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/price_overflow (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/invalid_currency (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/missing_key_version (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/version_on_null (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/URL_query (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/unknown_provider_JSON_key (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/duplicate_provider_model (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/negative_price (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/too_many_price_decimals (0.00s)
+    --- PASS: TestLLMModelRestoreRejectsSecretDriftAndMalformedRows/wrong_source_ID (0.00s)
+=== RUN   TestLLMModelRestoreRejectsDuplicateDisplayNames
+--- PASS: TestLLMModelRestoreRejectsDuplicateDisplayNames (0.00s)
+=== RUN   TestLLMModelRestoreNullCredentialsStillWriteNulls
+--- PASS: TestLLMModelRestoreNullCredentialsStillWriteNulls (0.00s)
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/reviewed-metadata-only
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/unreviewed
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/wrong-owner
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/missing-verifier
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/missing-classification
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/draft
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/wrong-pin
+=== RUN   TestPinnedMetadataRegistryDoesNotExpandCaptureScope/duplicate-review
+--- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope (0.02s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/reviewed-metadata-only (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/unreviewed (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/wrong-owner (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/missing-verifier (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/missing-classification (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/draft (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/wrong-pin (0.00s)
+    --- PASS: TestPinnedMetadataRegistryDoesNotExpandCaptureScope/duplicate-review (0.00s)
+=== RUN   TestModelInvocationRestoreRedactsBodiesAndBindsReferences
+--- PASS: TestModelInvocationRestoreRedactsBodiesAndBindsReferences (0.00s)
+=== RUN   TestModelInvocationRestoreFailsClosed
+--- PASS: TestModelInvocationRestoreFailsClosed (0.00s)
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/unknown_session
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/session_mismatch
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/reused_trace
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/missing_model_mapping
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/bad_tokens
+=== RUN   TestModelInvocationRestoreRejectsDriftAndPartialRows/bad_status
+--- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/unknown_session (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/session_mismatch (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/reused_trace (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/missing_model_mapping (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/bad_tokens (0.00s)
+    --- PASS: TestModelInvocationRestoreRejectsDriftAndPartialRows/bad_status (0.00s)
+=== RUN   TestCurrentCallerRestoreDiscardsKeysWithoutErasingOriginalVersion
+--- PASS: TestCurrentCallerRestoreDiscardsKeysWithoutErasingOriginalVersion (0.00s)
+=== RUN   TestCurrentCallerRestoreRejectsPartialColumnsAndMalformedKeys
+--- PASS: TestCurrentCallerRestoreRejectsPartialColumnsAndMalformedKeys (0.00s)
+=== RUN   TestBusinessRestoreFreezesCurrentCallerColumnsAcrossAuthorityCallbacks
+--- PASS: TestBusinessRestoreFreezesCurrentCallerColumnsAcrossAuthorityCallbacks (0.02s)
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreDisablesAndRemaps
+--- PASS: TestNormalizeNorthboundCallerPolicyForRestoreDisablesAndRemaps (0.00s)
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unknown_caller
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unmapped_actor
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/invalid_actor
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/duplicate_scope
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/malformed_JSON
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/oversized_JSON
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/missing_created_time
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unknown_scope
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/enabled_without_scope
+=== RUN   TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/backward_updated_time
+--- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unknown_caller (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unmapped_actor (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/invalid_actor (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/duplicate_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/malformed_JSON (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/oversized_JSON (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/missing_created_time (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/unknown_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/enabled_without_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPolicyForRestoreRejectsUnsafeScopesAndReferences/backward_updated_time (0.00s)
+=== RUN   TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch
+=== RUN   TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/invalid_later_scope
+=== RUN   TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/duplicate_user
+=== RUN   TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/unknown_later_user
+--- PASS: TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/invalid_later_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/duplicate_user (0.00s)
+    --- PASS: TestNormalizeNorthboundCallerPoliciesForRestoreRejectsPartialBatch/unknown_later_user (0.00s)
+=== RUN   TestNormalizeNorthboundChallengeForRestoreCannotResumeAuthentication
+--- PASS: TestNormalizeNorthboundChallengeForRestoreCannotResumeAuthentication (0.00s)
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_target_ID
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/invalid_target_UTF-8
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_key
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/invalid_nonce_hash
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/unknown_status
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/wrong_mapping
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/empty_challenge_ID
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/oversized_target_ID
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/uppercase_nonce_hash
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_source_time
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/backward_update
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/target_clock_before_source
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/target_SQL_time_out_of_range
+=== RUN   TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_source_ID
+--- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_target_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/invalid_target_UTF-8 (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_key (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/invalid_nonce_hash (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/unknown_status (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/wrong_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/empty_challenge_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/oversized_target_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/uppercase_nonce_hash (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_source_time (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/backward_update (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/target_clock_before_source (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/target_SQL_time_out_of_range (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengeForRestoreRejectsUnboundAndInvalidRows/missing_source_ID (0.00s)
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_mapping
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_target_ID
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_target_challenge_ID
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/invalid_later_source
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/missing_mapping
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/extra_mapping
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_source_ID
+=== RUN   TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_source_challenge_ID
+--- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_target_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_target_challenge_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/invalid_later_source (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/missing_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/extra_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_source_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundChallengesForRestoreRequiresClosedMapping/duplicate_source_challenge_ID (0.00s)
+=== RUN   TestNormalizeNorthboundSessionForRestoreRevokesAndRemaps
+--- PASS: TestNormalizeNorthboundSessionForRestoreRevokesAndRemaps (0.00s)
+=== RUN   TestNewRuntimeScopesRestoreOnlyAsInactiveHistory
+=== RUN   TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/lite-instances:delete
+=== RUN   TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/pro-instances:delete
+=== RUN   TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/owners:usage:read
+--- PASS: TestNewRuntimeScopesRestoreOnlyAsInactiveHistory (0.00s)
+    --- PASS: TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/lite-instances:delete (0.00s)
+    --- PASS: TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/pro-instances:delete (0.00s)
+    --- PASS: TestNewRuntimeScopesRestoreOnlyAsInactiveHistory/owners:usage:read (0.00s)
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/unknown_scope
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_scope_JSON
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/backward_update
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/wrong_source_mapping
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_current_hash
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/duplicate_scope
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/future_last_use
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/target_before_source
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_status
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/missing_target_session
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/missing_user_mapping
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_previous_hash
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_history_JSON
+=== RUN   TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/current_hash_in_history
+--- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/unknown_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_scope_JSON (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/backward_update (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/wrong_source_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_current_hash (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/duplicate_scope (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/future_last_use (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/target_before_source (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_status (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/missing_target_session (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/missing_user_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_previous_hash (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/invalid_history_JSON (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionForRestoreRejectsInvalidHistoryAndScope/current_hash_in_history (0.00s)
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/invalid_later_row
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/missing_mapping
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_ID
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_session_ID
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_hash
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_target_ID
+=== RUN   TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_target_session_ID
+--- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/invalid_later_row (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/missing_mapping (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_session_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_source_hash (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_target_ID (0.00s)
+    --- PASS: TestNormalizeNorthboundSessionsForRestoreClosesBatch/duplicate_target_session_ID (0.00s)
+=== RUN   TestNorthboundRestoreScopeAllowlistMatchesRuntime
+--- PASS: TestNorthboundRestoreScopeAllowlistMatchesRuntime (0.01s)
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/target_ID_overflow
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/unknown_user
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_user_quota
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/missing_capacity
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/CPU_exceeds_capacity
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/memory_exceeds_cap
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/SQL_NULL_quota
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_quota_ID
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_target_ID
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/negative_quota
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_CPU_decimal
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_cap_decimal
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_time
+=== RUN   TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/missing_quota_mapping
+--- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/target_ID_overflow (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/unknown_user (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_user_quota (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/missing_capacity (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/CPU_exceeds_capacity (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/memory_exceeds_cap (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/SQL_NULL_quota (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_quota_ID (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/duplicate_target_ID (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/negative_quota (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_CPU_decimal (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_cap_decimal (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/invalid_time (0.00s)
+    --- PASS: TestNormalizeUserQuotasForRestoreUsesUserMappingAndExactCapacity/missing_quota_mapping (0.00s)
+=== RUN   TestVerificationReportsBackupAndMismatch
+=== RUN   TestVerificationReportsBackupAndMismatch/equal
+=== RUN   TestVerificationReportsBackupAndMismatch/record_deleted
+--- PASS: TestVerificationReportsBackupAndMismatch (0.00s)
+    --- PASS: TestVerificationReportsBackupAndMismatch/equal (0.00s)
+    --- PASS: TestVerificationReportsBackupAndMismatch/record_deleted (0.00s)
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/equal
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/money
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/tokens
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/record_deleted
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/sql_failure
+=== RUN   TestVerificationReportsRestoreDifferencesAndFailures/final_proof_failure
+--- PASS: TestVerificationReportsRestoreDifferencesAndFailures (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/equal (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/money (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/tokens (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/record_deleted (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/sql_failure (0.00s)
+    --- PASS: TestVerificationReportsRestoreDifferencesAndFailures/final_proof_failure (0.00s)
+=== RUN   TestVerificationReportsRejectInvalidTargetBeforeSQL
+--- PASS: TestVerificationReportsRejectInvalidTargetBeforeSQL (0.00s)
+=== RUN   TestVerificationReportTargetCannotChangeDuringProof
+--- PASS: TestVerificationReportTargetCannotChangeDuringProof (0.00s)
+=== RUN   TestEnterpriseAuthRestoreSafetyRejectsInheritedEnvironmentPassword
+--- PASS: TestEnterpriseAuthRestoreSafetyRejectsInheritedEnvironmentPassword (0.00s)
+=== RUN   TestLLMModelRestoreSafetyRejectsBothCredentialSources
+--- PASS: TestLLMModelRestoreSafetyRejectsBothCredentialSources (0.00s)
+=== RUN   TestSQLRestoreVerifierCountsAndInertStateInOneReadOnlyTransaction
+--- PASS: TestSQLRestoreVerifierCountsAndInertStateInOneReadOnlyTransaction (0.00s)
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/restored_row_count
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/active_credential
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/active_gateway_model
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/negative_safety_count
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/engine_unavailable
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/safety_SQL_unavailable
+=== RUN   TestSQLRestoreVerifierMismatchAndFailureBoundaries/commit_failed
+--- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/restored_row_count (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/active_credential (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/active_gateway_model (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/negative_safety_count (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/engine_unavailable (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/safety_SQL_unavailable (0.00s)
+    --- PASS: TestSQLRestoreVerifierMismatchAndFailureBoundaries/commit_failed (0.00s)
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/missing_scope
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/missing_proof
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/typed_nil_proof
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/unregistered_evidence
+=== RUN   TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/incomplete_expected
+--- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof (0.00s)
+    --- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/missing_scope (0.00s)
+    --- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/missing_proof (0.00s)
+    --- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/typed_nil_proof (0.00s)
+    --- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/unregistered_evidence (0.00s)
+    --- PASS: TestSQLRestoreVerifierRequiresPinnedScopeAndTargetProof/incomplete_expected (0.00s)
+=== RUN   TestRiskHitRestoreCompleteRedactedRow
+--- PASS: TestRiskHitRestoreCompleteRedactedRow (0.00s)
+=== RUN   TestRiskHitRestoreRequiresProofForEmptyAndNullableRows
+--- PASS: TestRiskHitRestoreRequiresProofForEmptyAndNullableRows (0.00s)
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/source_trace_reused
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/null_user_drift
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/invalid_action
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/bad_target_ID
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/invalid_summary
+=== RUN   TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/missing_rule
+--- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/source_trace_reused (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/null_user_drift (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/invalid_action (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/bad_target_ID (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/invalid_summary (0.00s)
+    --- PASS: TestRiskHitRestoreRejectsReferenceDriftAndProofFailure/missing_rule (0.00s)
+=== RUN   TestRiskRuleRestoreCompleteInertRow
+--- PASS: TestRiskRuleRestoreCompleteInertRow (0.00s)
+=== RUN   TestRiskRuleRestoreRequiresProofEvenForEmptyTable
+--- PASS: TestRiskRuleRestoreRequiresProofEvenForEmptyTable (0.00s)
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/oversized_pattern
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/empty_rule_name
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/sort_overflow
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/unknown_action
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/deprecated_action
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/unknown_severity
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/invalid_regex
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/reversed_times
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/wrong_source_rule_ID
+=== RUN   TestRiskRuleRestoreRejectsInvalidSource/bad_target_ID
+--- PASS: TestRiskRuleRestoreRejectsInvalidSource (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/oversized_pattern (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/empty_rule_name (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/sort_overflow (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/unknown_action (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/deprecated_action (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/unknown_severity (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/invalid_regex (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/reversed_times (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/wrong_source_rule_ID (0.00s)
+    --- PASS: TestRiskRuleRestoreRejectsInvalidSource/bad_target_ID (0.00s)
+=== RUN   TestRiskRuleRestoreRejectsCollisionsAndBuiltInRemap
+--- PASS: TestRiskRuleRestoreRejectsCollisionsAndBuiltInRemap (0.00s)
+=== RUN   TestSQLBackupReporterReadsBothActualViews
+=== RUN   TestSQLBackupReporterReadsBothActualViews/equal
+=== RUN   TestSQLBackupReporterReadsBothActualViews/money
+=== RUN   TestSQLBackupReporterReadsBothActualViews/tokens
+=== RUN   TestSQLBackupReporterReadsBothActualViews/record_deleted
+=== RUN   TestSQLBackupReporterReadsBothActualViews/source_failure
+=== RUN   TestSQLBackupReporterReadsBothActualViews/target_failure
+=== RUN   TestSQLBackupReporterReadsBothActualViews/proof_failure
+--- PASS: TestSQLBackupReporterReadsBothActualViews (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/equal (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/money (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/tokens (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/record_deleted (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/source_failure (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/target_failure (0.00s)
+    --- PASS: TestSQLBackupReporterReadsBothActualViews/proof_failure (0.00s)
+=== RUN   TestSQLBackupReporterRequiresDistinctAuthorizedViews
+--- PASS: TestSQLBackupReporterRequiresDistinctAuthorizedViews (0.00s)
+=== RUN   TestNormalizeUserForRestoreSeversCredentialsAndRemapsIdentity
+--- PASS: TestNormalizeUserForRestoreSeversCredentialsAndRemapsIdentity (0.00s)
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_target_ID
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/invalid_source_role
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_target_email
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_source_time
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/backward_source_time
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/wrong_source_ID
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/target_ID_overflow
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/oversized_target_name
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/control_character
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/invalid_UTF-8
+=== RUN   TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_source_ID
+--- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_target_ID (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/invalid_source_role (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_target_email (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_source_time (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/backward_source_time (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/wrong_source_ID (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/target_ID_overflow (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/oversized_target_name (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/control_character (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/invalid_UTF-8 (0.00s)
+    --- PASS: TestNormalizeUserForRestoreRejectsUnboundOrInvalidIdentity/missing_source_ID (0.00s)
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_target_ID
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/invalid_later_source
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/missing_mapping
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/extra_mapping
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_source_row
+=== RUN   TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_mapping
+--- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_target_ID (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/invalid_later_source (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/missing_mapping (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/extra_mapping (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_source_row (0.00s)
+    --- PASS: TestNormalizeUsersForRestoreRequiresClosedOneToOneMapping/duplicate_mapping (0.00s)
+=== RUN   TestVerifyBackupSnapshotRequiresProofAndCompleteCounts
+--- PASS: TestVerifyBackupSnapshotRequiresProofAndCompleteCounts (0.00s)
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/missing_table
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/negative_count
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_order
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/missing_evidence
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/invalid_evidence
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/invalid_checkpoint
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_registry
+=== RUN   TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_schema
+--- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof (0.02s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/missing_table (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/negative_count (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_order (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/missing_evidence (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/invalid_evidence (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/invalid_checkpoint (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_registry (0.00s)
+    --- PASS: TestVerifyBackupSnapshotRejectsUnboundInputsBeforeProof/wrong_schema (0.00s)
+=== RUN   TestVerifyBusinessMetadataRequiresCompleteAuthenticatedCapture
+--- PASS: TestVerifyBusinessMetadataRequiresCompleteAuthenticatedCapture (0.00s)
+=== RUN   TestVerifyBusinessMetadataRejectsCountOverflow
+--- PASS: TestVerifyBusinessMetadataRejectsCountOverflow (0.00s)
+=== RUN   TestKnownVerificationFailureCategoryMapsRestoreNormalizers
+--- PASS: TestKnownVerificationFailureCategoryMapsRestoreNormalizers (0.00s)
+PASS
+ok  	clawreef/internal/systembackupbusinessa	2.193s
