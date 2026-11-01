@@ -36,6 +36,8 @@ type publicationContinuation struct {
 	next         string
 	closed, used atomic.Bool
 	operations   sync.RWMutex
+	closeOnce    sync.Once
+	closeErr     error
 }
 
 // preparePublicationContinuation acquires the SAME publishing task with the
@@ -209,17 +211,20 @@ func (p *publicationContinuation) publishNext(ctx context.Context, store *native
 }
 
 func (p *publicationContinuation) close() error {
-	if p == nil || p.closed.Swap(true) {
+	if p == nil {
 		return nil
 	}
-	// A close joins an already entered next-stage operation before releasing
-	// its exact claim. No in-flight send may outlive a successful close.
-	p.operations.Lock()
-	defer p.operations.Unlock()
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(p.ctx), 3*time.Second)
-	defer cancel()
-	_, err := (c.ClaimCoordinator{Executor: p.service.publisherVerifierDB, InstallationID: p.service.Config.InstallationID}).Release(ctx, p.claim, p.policy.ReconcileInterval)
-	return err
+	p.closed.Store(true)
+	// Once.Do waits for the SAME in-flight close, including its join and
+	// single exact Release. Every caller observes the same completion/error.
+	p.closeOnce.Do(func() {
+		p.operations.Lock()
+		defer p.operations.Unlock()
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(p.ctx), 3*time.Second)
+		defer cancel()
+		_, p.closeErr = (c.ClaimCoordinator{Executor: p.service.publisherVerifierDB, InstallationID: p.service.Config.InstallationID}).Release(ctx, p.claim, p.policy.ReconcileInterval)
+	})
+	return p.closeErr
 }
 
 // A's assembler supplies the next immutable intent through publishNext. Until

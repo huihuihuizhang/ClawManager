@@ -1,0 +1,61 @@
+{
+  "schema_version": "d-continuation-close-join-local-evidence.v1",
+  "source_base": "0ccc46cfd3fb6603655f6fcf5a380095fd0c00f8",
+  "red": {
+    "owner": "supervisor",
+    "scope": "protocol DATA, no SQL",
+    "seconds": 3.229
+  },
+  "model": {
+    "assertions": [
+      "all closers join",
+      "one Release",
+      "shared ErrClaimLost",
+      "later close preserves same error"
+    ],
+    "seconds": 3.341,
+    "session": 39211,
+    "exit_code": 0
+  },
+  "native": {
+    "exit_code": 0,
+    "assertions": [
+      "two closers wait for actual GET",
+      "one successful Release",
+      "closed handle cannot PUT"
+    ],
+    "session": 84060,
+    "package_seconds": 6.168,
+    "case_seconds": 2.93,
+    "case": "close-joins-next-stage"
+  },
+  "package_and_exact_root_probe": {
+    "seconds": 8.027,
+    "overlay": "test only, exact supervisor source",
+    "session": 65117,
+    "exit_code": 0
+  },
+  "not_claimed": [
+    "all nine native cases rerun after close fix",
+    "formal artifact acceptance or catalog",
+    "cross-process recovery"
+  ],
+  "logs": [
+    {
+      "sha256": "22b747562c1426b6b9bef857fb51bbac0fc460ccd771ffe4063995fad61aa7f7",
+      "path": ".tools/supervisor-continuation-concurrent-close-baseline.log"
+    },
+    {
+      "sha256": "81bae47d6882dc239ef17ec8759b2e12762148bb2d5aa329a467cebb0f81adcb",
+      "path": ".tools/d-continuation-multiple-close-model.log"
+    },
+    {
+      "sha256": "55c02d19784e652177e4ea4a32d4c7f33a96ad7144c8367aeed928108763d1ca",
+      "path": ".tools/d-continuation-multiple-close-native.log"
+    },
+    {
+      "sha256": "f9a72a05de30f923eac609a760b505118277ffed1221b39e9811b391130d5757",
+      "path": ".tools/d-continuation-multiple-close-package-and-root-probe.log"
+    }
+  ]
+}
