@@ -37,6 +37,9 @@ func RequiredCaptureAccess(cfg DeploymentConfig, controllerSA ...string) ([]Capt
 	if cfg.PublicationWorker != nil {
 		add(cfg.Namespace, "", "secrets", []string{"update"}, nil)
 		add(cfg.Namespace, "batch", "jobs", []string{"patch"}, nil)
+		add(cfg.Namespace, "", "secrets", []string{"delete", "watch"}, nil)
+		add(cfg.Namespace, "", "pods", []string{"delete"}, nil)
+		add(cfg.Namespace, "batch", "jobs", []string{"watch"}, nil)
 	}
 	add(cfg.Namespace, "batch", "jobs", []string{"get", "create", "delete"}, nil)
 	add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, []string{cfg.Security.ServiceAccountName})

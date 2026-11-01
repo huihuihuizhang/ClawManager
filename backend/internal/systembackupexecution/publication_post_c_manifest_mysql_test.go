@@ -15,6 +15,7 @@ import (
 	"time"
 
 	c "clawreef/internal/systembackupcontroller"
+	kubefake "k8s.io/client-go/kubernetes/fake"
 )
 
 // Same original eleven-member capture and REAL upload-only worker/result
@@ -36,9 +37,13 @@ func TestDOriginalUploadedManifestMarkerAndCandidateCleanupMySQL(t *testing.T) {
 	runDOriginalUploadedManifestThroughRemoteCAnd102(t, true, true, true)
 }
 
+func TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL(t *testing.T) {
+	runDOriginalUploadedManifestThroughRemoteCAnd102(t, true, true, true, true)
+}
+
 func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker bool, withExit ...bool) {
 	var configure []func(*nativePublicationS3, *aNativePublicationServer)
-	if len(withExit) == 2 && withExit[1] {
+	if len(withExit) >= 2 && withExit[1] {
 		configure = append(configure, func(store *nativePublicationS3, native *aNativePublicationServer) {
 			deleteKey := nativePublicationCredential{AccessKey: "original-candidate-delete-only-local", SecretKey: strings.Repeat("d", 32), NotBefore: time.Now().Add(-time.Minute), Until: native.deadline}
 			raw, _ := json.Marshal(deleteKey)
@@ -54,7 +59,7 @@ func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker b
 		})
 	}
 	runAOriginalSixPartManifestUploadJob(t, func(ctx context.Context, t *testing.T, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture, store *nativePublicationS3, native *aNativePublicationServer) {
-		if len(withExit) == 2 && withExit[1] {
+		if len(withExit) >= 2 && withExit[1] {
 			native.candidateDeleteKey = "/" + store.config.Bucket + "/" + store.config.RemoteStagingRoot + f.publicID + "/1/manifest-candidate.json"
 		}
 		var ranges atomic.Int32
@@ -145,7 +150,7 @@ func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker b
 					t.Fatal("original kubelet stop proof missing")
 				}
 				t.Log("same first authenticated107 Pod/container/node identity explicitly exited after real local upload/result invocation returned; actual current marker consumer persisted stop witness; no cleanup/acceptance/catalog/terminal success", f.publicID)
-				if len(withExit) == 2 && withExit[1] {
+				if len(withExit) >= 2 && withExit[1] {
 					cleaned, err := f.service.cleanupOriginalPublicationCandidate(ctx, *claim, capture.Input.CaptureAttemptNo, store, exit)
 					if err != nil || cleaned == nil || !cleaned.deleted {
 						t.Fatal("actual original104 -> one dedicated DELETE -> fixed-version absence -> deleted", err)
@@ -158,6 +163,14 @@ func runDOriginalUploadedManifestThroughRemoteCAnd102(t *testing.T, withMarker b
 						t.Fatal("remote candidate cleanup did not retain original exact version", deletes, objects, lifecycle, result)
 					}
 					t.Log("actual original uploader exit receipt consumed by dedicated artifact_delete; one fixed original-version DELETE, independent NoSuchVersion and original104 deleted; remaining payload/Job/Secret cleanup and signed acceptance/catalog/terminal remain incomplete", f.publicID)
+					if len(withExit) == 3 && withExit[2] {
+						deletes := aInstallOriginalNativeCleanupDeleteAPI(t, f.owner.Client.(*kubefake.Clientset), exit)
+						resources, err := f.service.cleanupOriginalPublicationNativeResources(ctx, cleaned)
+						if err != nil || resources == nil || !resources.done || *deletes != 3 {
+							t.Fatal("actual original Secret/Pod/Job cleanup and current registered absence", err, *deletes)
+						}
+						t.Log("actual current original cleanup deleted UID/RV-bound private Secret, stopped original Pod and Job, three registered absence events, no forced grace; original payload directory/flat custody and signed acceptance/catalog/terminal remain required", f.publicID)
+					}
 				}
 			}
 			fresh, err := (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Renew(ctx, *claim, policy)

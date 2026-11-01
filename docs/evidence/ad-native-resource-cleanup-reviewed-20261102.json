@@ -1,0 +1,109 @@
+{
+  "recorded_at": "2026-11-01T17:44:04.519200+00:00",
+  "classification": "Independent original upload native-resource cleanup and exact deployment/readiness permission component review, not full-task acceptance",
+  "base": "c99e307aaf22341eadf22c05cf0c4192e58cf9db",
+  "components": [
+    "561915f5a9302594f3d0ff73bec781c889768085",
+    "bb36effb2a76efcf6efc1911cbec4ef603ad6724"
+  ],
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/kubernetes_access.go",
+      "git_blob": "1fbc8355643b7555ce614718e601e3b7fcf696a5",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/kubernetes_access_test.go",
+      "git_blob": "f8819eea7099921a16db9d6b9b13a193b734ac9f",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "git_blob": "6b7ab0b49a91911330a32cd240ccb4f1399b34b6",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "git_blob": "a1de4d17786084c64b81549447a69367b95b55d3",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup_test.go",
+      "git_blob": "8ac66b8c7e70529f8e14a58b2e27bae78fac23df",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "git_blob": "31693bf7efb03bc3a5387aed5aa2392f8292d850",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "docs/evidence/d-native-cleanup-rbac-readiness-fix-20261102.json",
+      "git_blob": "a8b851fd18b6d6e08bf7e2cf238629aad9d91a4a",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "docs/evidence/d-original-native-resource-cleanup-production-candidate-20261102.json",
+      "git_blob": "ad6ac815fb3e2f232f1e9f08461ce155fcaab57c",
+      "frozen_owner_equal": true
+    },
+    {
+      "path": "docs/system-backup-d-runtime-deployment-20261029.md",
+      "git_blob": "583ba95c527adea6045c33d51d83b49c6ca4a938",
+      "frozen_owner_equal": true
+    }
+  ],
+  "composition": "Initial reviewed8file stable snapshot independently tested, exact eight Git blobs then verified equal final bb36; merge reconstructed from final bb36 to retain history, only owner JSON report added. All tested source unchanged.",
+  "independent_checks": {
+    "session": 71591,
+    "closed": true,
+    "exit_code": 0,
+    "counter_seconds": 3.322,
+    "execution_seconds": 14.103,
+    "SQL": "all SQL environment removed; native SQL cases not executed",
+    "grants_command": "PASS compile, no test files",
+    "counter_log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-native-cleanup-rbac-c99-composed-green.log",
+      "sha256": "fe34a2e560fa23d09d4727429f0ce3db757c9434505d7d97548f16b03fba9ac0"
+    },
+    "full_log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-native-cleanup-561-permissions-c99-composed.log",
+      "sha256": "fe19e4cd7e6d9cb11542e7e3ac7462a52287cfcfb9e8f1c5a497f877397b8c86"
+    }
+  },
+  "retained_original_counterexample": {
+    "session": 7882,
+    "closed": true,
+    "exit_code": 1,
+    "seconds": 3.39,
+    "actual_failure": "Each individually denied secrets/watch,secrets/delete,pods/delete,jobs/watch was never checked and actual readiness wrongly returned nil",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-native-cleanup-rbac-2e-red.log",
+      "sha256": "e49f04724cb9b6e30a5aa3b7ad031dfb43967c7bcd4136d8d9ba69e1f821bd96"
+    },
+    "same_counter_test": "TestSupervisorNativeCleanupReadinessMustProbeDeletionAndWatches, same overlay and actual CheckCaptureKubernetesAccess entry"
+  },
+  "source_review": [
+    "Real forward branches now continue original candidate fixed-version deletion into cleanup of the original private Secret, stopped original Pod and original Job.",
+    "Requires original current publication/candidate-deleted authority, frozen authenticated original process and actual original exit proof; no prepared-only object authorizes deletion.",
+    "Freezes namespaceUID, original objectUID/resourceVersion, original material/process/marker/candidate and claim/deadline in acknowledged SQL intent; per-object send record precedes exactly one UID/RV-preconditioned Foreground DELETE. No forced zero grace.",
+    "GET/Watch confirms actual post-dispatch absence.403, retained object, replacementUID, foreign event, closed watch and object still present remain unknown/failure. Final fresh absence and bounded whole-namespace original holder scan precede current SQL validation.",
+    "Expired Secret bytes only compare immutable original ownership body; they are not reopened as a fresh grant.",
+    "PublicationWorker condition adds only dedicated-namespace secrets/delete+watch,pods/delete,jobs/watch; original secrets/update and jobs/patch remain exact independent rules. Disabled publication worker adds none; no cleanup ClusterRole/wildcard or unrelated resource.",
+    "Actual v2 grants CLI and real SSAR probe share RequiredCaptureAccess. Owner positive generated Role/SSAR tests and primary same denied-permission counter all run.",
+    "Existing dispatch returns query-only rather than another DELETE, but complete crash reentry reconstruction is not implemented by this component."
+  ],
+  "limitations": [
+    "Full original SQL/native capture->upload->C->manifest->marker->candidate->native cleanup case is prepared but has not run to completion.",
+    "Source SQL stop/metadata closure is source-reviewed and compile-regression-covered, not proved by fake-API helper tests.",
+    "No owned task-directory/flat sealed ciphertext cleanup or aggregate cleanup_result yet.",
+    "Strict immutable-intent query-only crash/ACK-loss recovery remains required; prepare currently needs original objects present and nondeleting.",
+    "No acceptance signature, catalog append, artifact_usable or successful terminal/isolated restore proven.",
+    "No remote environment or live provider/cluster accessed."
+  ],
+  "next": [
+    "D implement actual owned local payload and flat seal-custody cleanup, then aggregate evidence/acceptance/catalog/terminal",
+    "D strict recovery reads old intent/send and only observes known sends; unknown metadata errors never prove absence",
+    "A diagnose and fix actual per-control-call latency while retaining all current safety checks and original window"
+  ]
+}

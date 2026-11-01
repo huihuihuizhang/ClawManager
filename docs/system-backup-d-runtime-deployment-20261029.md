@@ -156,3 +156,17 @@ NFS 盘点工具本地 8 项测试通过，覆盖跨 namespace/DNS/endpoint、PV
 此现场证据要求继续补 Agent 协议与构建/部署接点：现有文档的 `process_group` 能力本身也不覆盖脱离进程组的工作进程，且没有完成原代次受控恢复协议。不能只部署一个返回能力 JSON 的 handler、复用升级中的不可释放隔离，或把 DELETE/404 当作备份停止证明。generation 0、直接 NFS admission、完整 writer fencing、旧库副本导入及多用户恢复仍是未完成项。
 
 本次映射更新验证：`systembackupcontroller`、`systembackup/publicadapter`、`systembackupexecution`、`cmd/system-backup-v2-controller` 测试通过，`cmd/system-backup-controller-grants` 编译通过；Agent 只读探测脚本 7 项测试通过。边界覆盖 raw source 不改写、旧 custody 零 locator 字节兼容、注册 UID 缺失/漂移、Pod IP/owner/Ready、Agent epoch 漂移、PID 缺失、跨 namespace 在 API 调用前拒绝、越界 Role 不生成，以及探测凭据不进入输出或命令参数。SQL-driver/Kubernetes fake 的通过不替代真实 MySQL/Agent/NFS 联调。测试缓存和临时构建目录在测试结束后删除。
+
+## 原上传资源清理权限（2026-11-02）
+
+启用 `publication_worker` 时，原上传 Secret、Pod、Job 的清理还需要以下权限；范围均为固定 deployment 的 `namespace`：
+
+| API group | resource | 新增 verb |
+|---|---|---|
+| core | secrets | delete、watch |
+| core | pods | delete |
+| batch | jobs | watch |
+
+实际 v2 部署模板由 `cmd/system-backup-controller-grants --kubernetes-config ... --kubernetes-config-sha256 ... --controller-service-account ...` 调用 `CaptureKubernetesGrantsWithInputs` 生成。模板和实际 `SelfSubjectAccessReview` 预检共同使用 `RequiredCaptureAccess`，上述权限只进入该 namespace 的 Role；关闭 `publication_worker` 时不增加这些权限。独立 verifier 材料仍需提供对应的 SHA256 参数。
+
+清理保持原 UID/resourceVersion 前置条件和 Foreground 删除，并在原容器退出证明之后执行。权限预检或模板生成通过不代表实际清理、验收或备份终态成功。

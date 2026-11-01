@@ -1,0 +1,55 @@
+{
+  "checks": {
+    "targeted": {
+      "result": "PASS",
+      "seconds": 3.442,
+      "session": 79881
+    },
+    "sql_off_execution": {
+      "result": "PASS",
+      "seconds": 14.342,
+      "session": 80878
+    }
+  },
+  "base_head": "d91b6f0e802f8a4806e42e995cbb7736a3f90a45",
+  "schema_version": "d-original-native-resource-cleanup-production-candidate.v1",
+  "properties": [
+    "Requires actual original candidate deleted receipt plus frozen first authenticated107 process and current publishing authority",
+    "Expired private Secret is read only for original immutable body/UID/Job-owner comparison; no original upload credential is parsed or used as a grant",
+    "Original Secret/Pod/Job UID and resourceVersion intent committed before external deletion",
+    "Each per-resource dispatch committed before one DELETE; existing or commit-unknown dispatch cannot resend",
+    "Watch armed before deletion; UID/RV preconditions and Foreground; no forced zero grace",
+    "Only actual post-dispatch API absence completes a resource;403,retained object,replacement UID,foreign event,closed stream and still-present-after-delete remain unknown",
+    "Final fresh absence reads plus whole-namespace scan reject remaining holders of original upload Secret or Job identity before current SQL receipt",
+    "Prepared single original capture/upload/C/MF/marker/exit/candidate native test now continues actual resource cleanup; no synthetic SQL cleanup states"
+  ],
+  "production_call": "actual original candidate cleanup -> cleanupOriginalPublicationNativeResources -> Secret/Pod/Job immutable intent, one UID/RV DELETE each, current SQL registered actual absence",
+  "source_pins": [
+    {
+      "sha256": "ca16b774381b474e61679d77c4eef9b74aae3e9ab018e069e889a07f850d8a3a",
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup.go"
+    },
+    {
+      "sha256": "0bced45e654a32f250ed7d5c87e1e9a679b1789e2cbfed5a597619429621a76a",
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup_test.go"
+    },
+    {
+      "sha256": "1745f2a8018cf68e64525439a153a594b65644986d9bf97f565a5726fad64a75",
+      "path": "backend/internal/systembackupexecution/publication_forward.go"
+    },
+    {
+      "sha256": "06cb84accbd7796d45cf5cc413ba1b9e1dadfca68a5c3b38b7b583916a3548dd",
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go"
+    }
+  ],
+  "prepared_native_test": "TestDOriginalUploadedManifestMarkerAndNativeCleanupMySQL",
+  "date": "2026-11-02",
+  "limits": [
+    "Only fake-API transport/observation positive and refusal cases plus SQL-off compile/regression have run",
+    "Full original SQL/native path has not run; A retains original TLS MySQL ownership",
+    "No original task-directory or flat seal-custody payload cleanup yet",
+    "Diagnostic intent/absence events are not aggregate cleanup_result or acceptance evidence",
+    "No acceptance signature, catalog append, artifact usability or terminal success",
+    "Strict query-only recovery for old/unknown cleanup stages remains required"
+  ]
+}
