@@ -1422,5 +1422,35 @@
       "CE/description Task-before-Gate source order is a real inversion; role in the recorded failure remains unproved. No retry-for-green, TTL extension or source-data reduction.",
       "A descriptor/native candidate and D full remote-C/metadata caller remain separate unaccepted work; MF/upload/acceptance/catalog/final state still incomplete."
     ]
+  },
+  "D_configured_safe_object_root_independent": {
+    "classification": "Compatibility correction to the accepted byte selector; no source/capture authorization added.",
+    "source_hunks": "Only publication_remote_capture_set.go and its TLS test hunks from D f697c6e95bb6bb15c649f1d555f24787e667f27d. No remote-C caller, in-flight SQL native or A dependency included.",
+    "integrated": "88f3da7240c191baeacafd6d7f99e89876ed76d1",
+    "problem": "Selector required Root==InstallationID+slash although existing PublicationTargetMaterials.validate permits any configured safe trailing-slash root. The actual unchanged target was accepted by native read transport but rejected before body reading.",
+    "correction": "Use the same safe-key/trailing-slash shape rule as existing target admission. Every object must still equal the original configured root plus exact backup/attempt/path; the read-only reader independently checks installation and exact configured root. Fixed versions, canonical index, checksums, full EOF, current read credentials and original budgets remain.",
+    "independent_RED": {
+      "head": "a08283c7ee07517e7a241b20713e03e8e92437e1",
+      "source": "Test-only overlay; production selector unchanged",
+      "test": "TestRemoteCaptureSetReadsAllFifteenNativeBodies/safe-original-root",
+      "session": 25695,
+      "terminal_exit": 1,
+      "closed": true,
+      "seconds": 3.267,
+      "log": ".tools/supervisor-safe-publication-root-red.log",
+      "sha256": "2b8cbecd008084426bb15b13c2056ef5b86f7b300ebd5002a3889d965d2e4b20"
+    },
+    "independent_GREEN": {
+      "source": "Two reviewed production/test hunks in root working tree, committed byte-for-byte as88f3da72",
+      "session": 80228,
+      "terminal_exit": 0,
+      "closed": true,
+      "full_execution_package_seconds": 12.408,
+      "sql_opt_in": false,
+      "log": ".tools/supervisor-safe-publication-root-green-package.log",
+      "sha256": "4a783d53e68ff24024e8007051bca38588249d02f11a35000eb98ba696fd48c9",
+      "coverage": "Existing16 selector and now23 loopback TLS cases including actual safe original configured root with15HEAD/15GET/0PUT, all prior corrupt/version/truncation/withdrawal/deadline/rebind refusals."
+    },
+    "limits": "Opaque native byte transport only; current full11/remote-C/manifest/upload/acceptance/catalog/final task success remain unproved."
   }
 }
