@@ -1,10 +1,18 @@
 package systembackupexecution
 
 import (
-	security "clawreef/internal/systembackupsecurity"
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"io"
+
+	security "clawreef/internal/systembackupsecurity"
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 )
+
+var ErrPublicationConfigBudgetMismatch = errors.New("original publication configuration budget mismatch")
 
 // Exact v12 resource-capacity ceilings (097 CHECKs and the public schema).
 // A transport ceiling never replaces the original task's configured budget.
@@ -33,14 +41,65 @@ func readPublicationLimitsTx(ctx context.Context, tx *sql.Tx, guard *security.SQ
 		return limits, errPublicationUnavailable
 	}
 	facts := guard.Facts()
-	if err := tx.QueryRowContext(ctx, `SELECT max_artifact_bytes,max_index_bytes FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? AND config_sha256=? FOR SHARE`, facts.InstallationID, facts.ConfigVersion, facts.ConfigSHA256).Scan(&limits.MaxArtifactBytes, &limits.MaxIndexBytes); err != nil {
+	var snapshot []byte
+	var taskBytes, configBytes int64
+	if err := tx.QueryRowContext(ctx, `SELECT cfg.max_artifact_bytes,cfg.max_index_bytes,b.config_snapshot_json,b.config_snapshot_size_bytes,cfg.config_size_bytes
+FROM system_backup_v2_configs cfg JOIN system_backup_v2_backups b ON b.origin_installation_id=cfg.origin_installation_id AND b.config_version=cfg.version AND b.config_snapshot_sha256=cfg.config_sha256
+WHERE cfg.origin_installation_id=? AND cfg.version=? AND cfg.config_sha256=? AND b.public_id=? FOR SHARE`, facts.InstallationID, facts.ConfigVersion, facts.ConfigSHA256, facts.BackupPublicID).Scan(&limits.MaxArtifactBytes, &limits.MaxIndexBytes, &snapshot, &taskBytes, &configBytes); err != nil {
 		return ArtifactReadLimits{}, err
 	}
-	if err := limits.validate(); err != nil {
-		return ArtifactReadLimits{}, err
+	defer clear(snapshot)
+	if taskBytes != int64(len(snapshot)) || configBytes != taskBytes {
+		return ArtifactReadLimits{}, ErrPublicationConfigBudgetMismatch
+	}
+	original, err := artifactLimitsFromConfigSnapshot(snapshot, facts.ConfigSHA256)
+	if err != nil || original != limits {
+		return ArtifactReadLimits{}, ErrPublicationConfigBudgetMismatch
 	}
 	if err := guard.RecheckTx(ctx, tx); err != nil {
 		return ArtifactReadLimits{}, err
+	}
+	return limits, nil
+}
+
+func artifactLimitsFromConfigSnapshot(raw []byte, sha string) (ArtifactReadLimits, error) {
+	var zero ArtifactReadLimits
+	if len(raw) < 2 || len(raw) > 262144 || !formalCandidateDigest(sha) || hash(raw) != sha {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	canonical, err := jsoncanonicalizer.Transform(raw)
+	if err != nil || !bytes.Equal(canonical, raw) {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var values map[string]any
+	if decoder.Decode(&values) != nil || decoder.Decode(new(any)) != io.EOF {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	capacity, ok := values["capacity"].(map[string]any)
+	if !ok {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	artifact, ok := capacity["max_artifact_bytes"].(json.Number)
+	if !ok {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	index, ok := capacity["max_index_bytes"].(json.Number)
+	if !ok {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	a, err := artifact.Int64()
+	if err != nil {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	i, err := index.Int64()
+	if err != nil {
+		return zero, ErrPublicationConfigBudgetMismatch
+	}
+	limits := ArtifactReadLimits{MaxArtifactBytes: a, MaxIndexBytes: i}
+	if limits.validate() != nil {
+		return zero, ErrPublicationConfigBudgetMismatch
 	}
 	return limits, nil
 }
