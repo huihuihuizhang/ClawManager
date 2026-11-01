@@ -297,6 +297,9 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 			t.Fatal(err)
 		}
 	}
+	if f.captureDescription {
+		f.enableOriginalDescriptionBeforePrepare(ctx, t)
+	}
 	f.composeOriginalPublicRuntime(ctx, t)
 }
 
