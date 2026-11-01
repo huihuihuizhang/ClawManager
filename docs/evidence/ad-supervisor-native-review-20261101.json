@@ -1382,5 +1382,75 @@
       "Current independent Unwrap, exact description/seed and E/P semantics, full six-container C/domain checks before any private receipt.",
       "Complete MF/upload/acceptance/catalog/cleanup/final CAS and isolated restore. No historical-source authorization or production/site proof."
     ]
+  },
+  "D_SQL_execution_Bind_diagnostic_independent": {
+    "classification": "Reviewed diagnostics-only increment. No lock-order behavior fix or proven native cause in this delivery.",
+    "source": "45b4ec3be42178786a0ed77716bf24a3abdd55cc",
+    "integrated": "b0192c4bb7b12f3cf8f3ab864f2410651614d27f",
+    "source_match": "All7 Go source files exactly equal root independently tested frozen source after newline normalization; earlier backup89e preserved.",
+    "static_SQL_check": "Original literal SQL unchanged: execution_ports13, execution_capture_initial_facts2, CE pull3. Narrow literal comparison plus hunk review; not a substitute for runtime authorization proof.",
+    "behavior": "Existing Bind delegates to observed implementation with nil reporter; optional source-literal stages and safe structured error classification preserve original SQL, locks, predicates, deadline windows, authority and return sentinels. Joined authority errors do not hide MySQL1213/1205; dependency cancellation retains fixed context classification. Driver Message/SQL/args/grants/tokens/request body never included.",
+    "independent_tests": {
+      "source_ledger": ".tools/review-d-bind-diagnostics-v1/source.json",
+      "session": 16638,
+      "terminal_exit": 0,
+      "closed": true,
+      "controller_seconds": 9.432,
+      "execution_seconds": 10.997,
+      "sql_opt_in": false,
+      "log": ".tools/supervisor-d-bind-diagnostics-v1-packages.log",
+      "scope": "Full affected packages; driver error classification/privacy cases inject model errors, not actual native deadlock reproduction."
+    },
+    "triggering_owner_native_independently_read": {
+      "source": "f9ab5e81729b7793ff627ef320c9eea82321be8a",
+      "session": 87703,
+      "terminal_exit": 1,
+      "closed": true,
+      "task": "sbk_bc8d2ac7-e5ba-4a42-96ff-06d0a7233b80",
+      "case_seconds": 140.44,
+      "package_seconds": 143.735,
+      "first_stage": "controller-source-execution-bind",
+      "first_elapsed_microseconds": 1804,
+      "context": "active",
+      "key_window_reported_remaining_microseconds": 28813230,
+      "log_sha256": "a8c2659020c32b9def7b8ba1c76e6cdffb7715193faa7cb04cfc1242888e89e2",
+      "scope": "DB880/28.676s, dedicated description stream6.163s and E1.879s succeeded; P rejected. Root read owner source/result/log, did not execute native process. No completed11/certificate/backup claim."
+    },
+    "next": [
+      "Actual InnoDB dual-transaction lock-order counterexample and common-order fix preserving final Bind/Recheck and rejecting a changed task after preliminary locator.",
+      "Diagnose exact original snapshot/owner/clock predicate or driver failure; key window still28.8s does not prove claim/gate/hold windows valid.",
+      "CE/description Task-before-Gate source order is a real inversion; role in the recorded failure remains unproved. No retry-for-green, TTL extension or source-data reduction.",
+      "A descriptor/native candidate and D full remote-C/metadata caller remain separate unaccepted work; MF/upload/acceptance/catalog/final state still incomplete."
+    ]
+  },
+  "D_configured_safe_object_root_independent": {
+    "classification": "Compatibility correction to the accepted byte selector; no source/capture authorization added.",
+    "source_hunks": "Only publication_remote_capture_set.go and its TLS test hunks from D f697c6e95bb6bb15c649f1d555f24787e667f27d. No remote-C caller, in-flight SQL native or A dependency included.",
+    "integrated": "88f3da7240c191baeacafd6d7f99e89876ed76d1",
+    "problem": "Selector required Root==InstallationID+slash although existing PublicationTargetMaterials.validate permits any configured safe trailing-slash root. The actual unchanged target was accepted by native read transport but rejected before body reading.",
+    "correction": "Use the same safe-key/trailing-slash shape rule as existing target admission. Every object must still equal the original configured root plus exact backup/attempt/path; the read-only reader independently checks installation and exact configured root. Fixed versions, canonical index, checksums, full EOF, current read credentials and original budgets remain.",
+    "independent_RED": {
+      "head": "a08283c7ee07517e7a241b20713e03e8e92437e1",
+      "source": "Test-only overlay; production selector unchanged",
+      "test": "TestRemoteCaptureSetReadsAllFifteenNativeBodies/safe-original-root",
+      "session": 25695,
+      "terminal_exit": 1,
+      "closed": true,
+      "seconds": 3.267,
+      "log": ".tools/supervisor-safe-publication-root-red.log",
+      "sha256": "2b8cbecd008084426bb15b13c2056ef5b86f7b300ebd5002a3889d965d2e4b20"
+    },
+    "independent_GREEN": {
+      "source": "Two reviewed production/test hunks in root working tree, committed byte-for-byte as88f3da72",
+      "session": 80228,
+      "terminal_exit": 0,
+      "closed": true,
+      "full_execution_package_seconds": 12.408,
+      "sql_opt_in": false,
+      "log": ".tools/supervisor-safe-publication-root-green-package.log",
+      "sha256": "4a783d53e68ff24024e8007051bca38588249d02f11a35000eb98ba696fd48c9",
+      "coverage": "Existing16 selector and now23 loopback TLS cases including actual safe original configured root with15HEAD/15GET/0PUT, all prior corrupt/version/truncation/withdrawal/deadline/rebind refusals."
+    },
+    "limits": "Opaque native byte transport only; current full11/remote-C/manifest/upload/acceptance/catalog/final task success remain unproved."
   }
 }

@@ -1,0 +1,72 @@
+{
+  "schema_version": "d-ce-execution-bind-diagnostic-source.v1",
+  "date": "2026-11-01",
+  "base_head": "f697c6e95bb6bb15c649f1d555f24787e667f27d",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics.go",
+      "sha256": "513fec26353dee7f039227c86cd56b66133bdf420ac0854d0a9b871f043e21ec"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics_test.go",
+      "sha256": "d0e91fe85f63195786824830e57ee80cc2a772f549e0853fbeb741d01c601c39"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_ports.go",
+      "sha256": "5b8bdc14b2f348ca0bb0f03dd2644035753b7fc46525013de067b8a4497144fe"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/execution_capture_initial_facts.go",
+      "sha256": "1f256b43d87cc7bab90bc1a545f02760b751b981cf472c7a69d9f33a7e485eb1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_diagnostics.go",
+      "sha256": "780676988b01a6c6be7c80c742306f0b0e3a0fc2a4a00475cff4f411fe65a24a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_diagnostics_test.go",
+      "sha256": "7b086522e14ea5cfa27639d7fe435a82e435e5bd65a2ed33216c218d9b6621b7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_pull.go",
+      "sha256": "1e384450ec72db6d2e1eebcce19e869cd13967dcb74ef3ed072e25cfbad0bbe3"
+    }
+  ],
+  "scope": [
+    "Optional BindObserved preserves existing Bind return values, SQL, lock sequence, predicates, current authorization and all deadlines. Normal Bind supplies nil observer.",
+    "Only fixed source-code boundary/class, MySQL numeric code and validated five-character SQLSTATE are observable. Driver messages, SQL text/args, authority, grants, token and request/body are never copied.",
+    "Snapshot rejection boundaries include original held-facts/clock branch; caller adds a CE-specific formatter on error only.",
+    "Structured MySQL errors take precedence over joined authority sentinels; wrapped/joined private driver Message tested. Dependency rejection reports actual nonnil ctx.Err while returning the original sentinel."
+  ],
+  "validation": {
+    "final_full_no_sql": {
+      "controller_seconds": 9.317,
+      "execution_seconds": 12.534,
+      "session": 25395,
+      "result": "PASS",
+      "log": "../.tools/d-ce-execution-bind-diagnostic-final-no-sql.log",
+      "sha256": "da9dac23166a8162163efc03b655fd80fc6d021ef6a2c9c76349c0542cdc2833",
+      "exit_code": 0
+    },
+    "driver_and_privacy_unit": {
+      "controller_seconds": 3.187,
+      "execution_seconds": 3.308,
+      "result": "PASS",
+      "log": "../.tools/d-ce-execution-bind-diagnostic-unit.log",
+      "session": 81934,
+      "exit_code": 0
+    }
+  },
+  "trigger": {
+    "observation": "Database, description D and E succeeded; P first refusal at controller-source-execution-bind with active context and about 28.813s remaining. Driver cause was lost by existing sentinel normalization.",
+    "status": "A native prerequisite RED; no D remote native run",
+    "source_head": "f9ab5e81729b7793ff627ef320c9eea82321be8a",
+    "task": "sbk_bc8d2ac7-e5ba-4a42-96ff-06d0a7233b80"
+  },
+  "limits": [
+    "This source is diagnostics only. It neither reproduces nor fixes the CE failure by itself.",
+    "Gate-before-task order inversion is a source-confirmed reachable locking risk, but its role in the recorded A native failure remains unproven until actual structured cause evidence.",
+    "No SQL or 63507 use, no retries, no source/TTL/authority weakening, no D push.",
+    "Remote C candidates 8e7743aa and f697c6e9 remain separate, not native verified."
+  ]
+}

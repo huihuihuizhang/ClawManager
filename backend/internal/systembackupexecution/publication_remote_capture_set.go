@@ -40,7 +40,7 @@ func fixedPublicationReadVersion(version string) bool {
 func selectPublicationRemoteCaptureSet(installation, backup string, attempt uint64, root, captureContext string, indexRaw []byte, expectedIndexSHA string, objects map[string]ArtifactReadObject, limits ArtifactReadLimits) (*publicationRemoteCaptureSet, error) {
 	// This version has 13 fixed short paths/roles/framing values. 32 KiB is
 	// above its maximum encoded shape, independent of the general index ceiling.
-	if installation == "" || len(backup) > 128 || !remoteCaptureBackupID.MatchString(backup) || attempt < 1 || attempt > 9007199254740991 || root != installation+"/" || !formalCandidateDigest(captureContext) || limits.validate() != nil || len(indexRaw) < 2 || len(indexRaw) > 32<<10 || int64(len(indexRaw)) > limits.MaxIndexBytes || !formalCandidateDigest(expectedIndexSHA) || hash(indexRaw) != expectedIndexSHA || len(objects) != 15 {
+	if installation == "" || len(backup) > 128 || !remoteCaptureBackupID.MatchString(backup) || attempt < 1 || attempt > 9007199254740991 || !strings.HasSuffix(root, "/") || !safePublicationKey(strings.TrimSuffix(root, "/")) || !formalCandidateDigest(captureContext) || limits.validate() != nil || len(indexRaw) < 2 || len(indexRaw) > 32<<10 || int64(len(indexRaw)) > limits.MaxIndexBytes || !formalCandidateDigest(expectedIndexSHA) || hash(indexRaw) != expectedIndexSHA || len(objects) != 15 {
 		return nil, errPublicationConflict
 	}
 	var index publicationArtifactIndex
