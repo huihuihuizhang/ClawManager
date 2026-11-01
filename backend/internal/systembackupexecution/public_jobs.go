@@ -519,31 +519,48 @@ func (o *PublicJobOwner) Stopped(ctx context.Context, a d.Authority, binding d.J
 
 // Authorize is reached only behind WorkloadIdentity + worker.ControlHandler's
 // mTLS verification. The bound Pod and saved process/Job UID must agree.
-func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.ControlRequest) (worker.Lease, error) {
+func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.ControlRequest) (_ worker.Lease, resultErr error) {
 	var lease worker.Lease
+	var a d.Authority
+	var e error
+	descriptionStage := "controller-control-dependencies"
+	descriptionUntil := time.Time{}
+	defer func() {
+		if resultErr != nil && originalDescriptionControlRequest(req) {
+			cause := e
+			if cause == nil {
+				cause = resultErr
+			}
+			logOriginalDescriptionFailure(descriptionStage, ctx, descriptionUntil, a.ClaimRowVersion, a.MaintenanceFencingToken, cause)
+		}
+	}()
 	pod, ok := boundPod(ctx)
 	if !ok || !o.ready() || !worker.ValidateControl(req) || pod.Namespace != o.Namespace || pod.ServiceAccountUID != o.Security.ServiceAccountUID {
 		return lease, worker.ErrExecution
 	}
 	task := req.Invocation.Request.Binding.BackupID
+	descriptionStage = "controller-control-original-worker"
 	attempt, e := o.originalWorkerAttempt(ctx, task, pod)
 	pendingObservation := attempt != 0 && errors.Is(e, worker.ErrNotReady)
 	if e != nil && !pendingObservation {
 		return lease, worker.ErrExecution
 	}
-	var a d.Authority
 	var owner, request, configHash string
 	var version, configVersion, fence uint64
 	var deadline time.Time
 	db := o.Gate.Authority.DB
-	if e := db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence); e != nil {
+	descriptionStage = "controller-control-task-locator"
+	e = db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence)
+	if e != nil {
 		return lease, worker.ErrNotReady
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
+	descriptionStage = "controller-control-execution-input"
 	in, e := o.readExecutionInput(ctx, a)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-original-plan"
 	plan, desc, originalPlan, e := o.Gate.Records.OpenOriginalCapturePlan(ctx, in)
 	if e != nil {
 		return lease, worker.ErrExecution
@@ -556,6 +573,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			part = p
 		}
 	}
+	descriptionStage = "controller-control-original-invocation"
 	if part == nil || peer != "spiffe://"+o.TrustDomain+"/backup/"+task+"/"+part.InvocationSHA256 {
 		return lease, worker.ErrExecution
 	}
@@ -594,6 +612,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.PendingControl("job_observation_pending")
 	}
 	var revoked bool
+	descriptionStage = "controller-control-runtime-binding"
 	if e = db.QueryRowContext(ctx, "SELECT binding_json,revoked FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=?", task, part.Intent.Namespace, part.Intent.Name).Scan(&rawBinding, &revoked); e != nil || len(rawBinding) == 0 {
 		return lease, worker.PendingControl("job_binding_pending")
 	}
@@ -601,18 +620,22 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if json.Unmarshal(rawBinding, &binding) != nil || revoked || !time.Now().Before(binding.RelayExpiresAt) {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-original-part"
 	_, record, e := o.readOriginalPart(ctx, a, binding, false, *part)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-original-mounts"
 	mounts, production, e := o.productionMountsFromOriginal(in, desc, *part)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-worker-security"
 	security, e := o.workerSecurityWithMounts(ctx, a, *part, mounts, production)
 	if e != nil {
 		return lease, worker.PendingControl("worker_mount_identity_pending")
 	}
+	descriptionStage = "controller-control-worker-process"
 	process, e := (kube.WorkerObserver{Client: o.Client}).Observe(ctx, record, security)
 	if e != nil {
 		return lease, worker.PendingControl("worker_" + kube.ObservationStage(e) + "_pending")
@@ -620,6 +643,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	if process.Name != pod.Name || process.UID != pod.UID {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-provider-qualification"
 	preparedPermit, e := o.prepareProviderPermitOriginal(ctx, in, binding, pod, req, originalPlan)
 	if e != nil {
 		return lease, worker.ErrExecution
@@ -632,15 +656,18 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
+	descriptionStage = "controller-control-transaction"
 	tx, e := db.BeginTx(ctx, nil)
 	if e != nil {
 		return lease, worker.ErrNotReady
 	}
 	defer tx.Rollback()
+	descriptionStage = "controller-control-bind"
 	guard, e := bindOriginalControlWorker(ctx, tx, o.Gate.Authority, a, req)
 	if e != nil {
 		return lease, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-process-row"
 	var old []byte
 	if e = tx.QueryRowContext(ctx, "SELECT process_json FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND resource_kind='Job' AND observed_uid=? AND revoked=FALSE FOR UPDATE", task, binding.UID).Scan(&old); e != nil {
 		return lease, worker.ErrExecution
@@ -656,7 +683,9 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return lease, worker.ErrNotReady
 		}
 	}
+	descriptionStage = "controller-control-guard-tail"
 	databaseExecutionUntil := guard.ValidUntil()
+	descriptionUntil = databaseExecutionUntil
 	if e = guard.Recheck(ctx, tx); e != nil {
 		if req.Action == "key-check" && req.Invocation.Request.Database != nil {
 			logOriginalDatabaseControlRejection("controller-key-check-tail", ctx, databaseExecutionUntil)
@@ -685,6 +714,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
+	descriptionStage = "controller-control-key-transition"
 	if req.Invocation.ProviderKey != nil && req.Action != "ready" {
 		lease.KeyUse, e = o.keyUseTx(ctx, tx, a, binding, pod, req, until)
 		if e != nil {
@@ -727,17 +757,21 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
+	descriptionStage = "controller-control-original-permit-stage"
 	if preparedPermit != nil {
 		if lease.KeyUse == nil || preparedPermit.StageOriginal(ctx, tx, *lease.KeyUse, req.Action, guard) != nil {
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
+	descriptionStage = "controller-control-plan-tail"
 	if originalPlan.RecheckTx(ctx, tx, o.Gate.Records, in) != nil || guard.Recheck(ctx, tx) != nil {
 		return worker.Lease{}, worker.ErrExecution
 	}
+	descriptionStage = "controller-control-commit"
 	if e = tx.Commit(); e != nil {
 		return lease, worker.ErrNotReady
 	}
+	descriptionStage = "controller-control-collector-tail"
 	if e = o.Gate.ValidateCollectors(ctx, a); e != nil {
 		return lease, worker.ErrExecution
 	}

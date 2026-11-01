@@ -64,14 +64,17 @@ func ConfigureCaptureDescription(ctx context.Context, i Invocation, j *CaptureKe
 }
 
 func (j *CaptureKeyJob) captureDescriptionSource(ctx context.Context) (result []byte, resultErr error) {
+	stage, status := "worker-description-pull-dependencies", 0
 	defer func() {
 		if resultErr != nil && j != nil && j.original != nil {
+			logOriginalDescriptionWorkerFailure(stage, "description-pull", ctx, j.until, status, resultErr)
 			j.original.failed = true
 		}
 	}()
 	if j == nil || j.original == nil || j.original.client == nil || !validCaptureDescriptionRequest(j.original.invocation.Request) || j.recheckDuringUse(ctx) != nil {
 		return nil, ErrNotReady
 	}
+	stage = "worker-description-pull-prepare"
 	a := j.original
 	client := a.client
 	request := ControlRequest{Invocation: a.invocation, InvocationSHA256: a.lease.Identity.InvocationSHA256, Action: "key-check", Point: a.lease.Nonce}
@@ -101,14 +104,17 @@ func (j *CaptureKeyJob) captureDescriptionSource(ctx context.Context) (result []
 	}
 	httpRequest.Header.Set("Authorization", "Bearer "+string(token))
 	httpRequest.Header.Set("Content-Type", "application/json")
+	stage = "worker-description-pull-http"
 	response, err := client.http.Do(httpRequest)
 	if err != nil {
 		return nil, ErrExecution
 	}
 	defer response.Body.Close()
+	status = response.StatusCode
 	if response.StatusCode != http.StatusOK || response.Header.Get("Content-Encoding") != "" || response.Uncompressed {
 		return nil, ErrExecution
 	}
+	stage = "worker-description-pull-body"
 	raw, err := io.ReadAll(io.LimitReader(response.Body, a.invocation.Request.MaxArchiveBytes+1))
 	keep := false
 	defer func() {
@@ -119,11 +125,13 @@ func (j *CaptureKeyJob) captureDescriptionSource(ctx context.Context) (result []
 	if err != nil || int64(len(raw)) > a.invocation.Request.MaxArchiveBytes {
 		return nil, ErrExecution
 	}
+	stage = "worker-description-pull-decode"
 	description, err := cd.Decode(raw, *a.invocation.Request.CaptureDescription)
 	if err != nil {
 		return nil, ErrExecution
 	}
 	defer description.Clear()
+	stage = "worker-description-pull-final-binding"
 	if !descriptionMatchesCarrier(description, a.invocation) || j.recheckDuringUse(bounded) != nil || bounded.Err() != nil || !time.Now().Before(j.until) {
 		return nil, ErrExecution
 	}

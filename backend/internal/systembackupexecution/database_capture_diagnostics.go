@@ -15,6 +15,9 @@ import (
 )
 
 func bindOriginalControlWorker(ctx context.Context, tx *sql.Tx, store c.SQLExecutionAuthority, authority d.Authority, request worker.ControlRequest) (*c.ExecutionAuthorityGuard, error) {
+	if request.Action == "key-check" && originalDescriptionControlRequest(request) {
+		return store.BindObserved(ctx, tx, authority, logOriginalDescriptionBindDiagnostic)
+	}
 	if request.Action == "key-check" && request.Invocation.Request.Database != nil {
 		return store.BindObserved(ctx, tx, authority, logOriginalDatabaseBindDiagnostic)
 	}
