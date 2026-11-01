@@ -311,7 +311,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T08:51:08.126167+00:00",
+  "updated_at_utc": "2026-11-01T08:56:14.959243+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -1175,7 +1175,7 @@
   "A_durable_inputs_independent_pending": {
     "source_commit": "0b11bc263778d9abb1fe3c53ce645fe9742e1101",
     "local_cherry": "f844701a2f45306ec753aa637d10668e34b141fc",
-    "status": "Component code and bounded independent unit/package checks reviewed; full native component exercise remains unproven because unchanged earlier control-evidence capture failed before certificate/new durable functions. Not accepted as complete original-task proof.",
+    "status": "Reviewed incremental component implementation: root independent bounded unit/package checks passed, exact eight source files matched, and separate D diagnostic original-task run actually exercised six durable files. Original root and D native REDs remain unresolved baseline reliability evidence, not overwritten. No complete page/publication success claim.",
     "precommit_snapshot": {
       "path": ".tools/review-a-durable-index-20261101/source.json",
       "sha256": "2ab1e6e40133a86f7046fdac18b264cc2ce284bec130127e2ef57c91aaac2fe3"
@@ -1230,7 +1230,35 @@
       "971b86188b585fde02005bd9117b9b864f47a3b0",
       "7780a511889bd76c8788250cb6322f593251d8f8"
     ],
-    "next": "Original D owns serial 63507 diagnosis using unchanged-data/window TestAOriginalSixPartDurableContainerInputsMySQL plus static stage-only logs. Keep all RED evidence; do not repeatedly retry bare case or weaken authorization."
+    "next": "Continue diagnosing intermittent original CE rejection and then implement/verify descriptor carrier, full MF, actual upload Job, independent artifact acceptance, catalog publication and final CAS. Do not substitute retry success for root-cause proof.",
+    "D_diagnostic_success_observed_not_root_executed": {
+      "path": ".tools/d-ce-direct-regression-stage-native.log",
+      "sha256": "8144363760ded4229fb7c8d4bdf51f99a66337edc4164cb8e077eeaa81994d46",
+      "linked_source": "dcb2360d658cd3d5f162c3eb5f74b7b4fed4d7de",
+      "session": 49756,
+      "terminal_evidence": "Owner commandExecution independently read by supervisor shows completed exitCode=0; full log has Go PASS/ok. No root restart or claim that root executed this process.",
+      "case_seconds": 154.45,
+      "package_seconds": 157.767,
+      "task": "sbk_f4e242dd-4efd-41cc-8177-2776f5e5b375",
+      "certificate_sha256": "198e04d3e846c1db54dc1806f27332b82d406631b93d2052a4039ae1a5558ad4",
+      "containers": 6,
+      "physical_bytes": 54115,
+      "scope": "Same original task, ten actual worker code flows, full original business C and certificate, six actual private durable container files and exact retry/readback; no publish Job/send/remote object/terminal success.",
+      "limitations": "Instrumentation adds static stage logging only; no authorization predicate, deadline or input data was changed. Timing may differ, but no timing cause is proved. This success did not reproduce or explain the prior CE failure. Initial missing-seal sql.ErrNoRows probes are expected setup absence, not demonstrated fault roots."
+    },
+    "post_merge_independent_packages": {
+      "path": ".tools/supervisor-a-durable-description-merged-packages.log",
+      "sha256": "0dc2ef14a5ce07a12dfadd05edb2a75be22fa461dbb183ac363b9b97998ef2ff",
+      "tested_head": "6ca92381dc7a395be0fa9ed0bd3ab0d129f9629d",
+      "session": 95851,
+      "terminal_exit": 0,
+      "closed": true,
+      "execution_seconds": 9.389,
+      "kube_seconds": 3.159,
+      "domain_seconds": 3.469,
+      "preserved_backup": "c8851daf5c871e89dbc2a055da2e6ce51142945b",
+      "scope": "Retained other authorized supervisor reviewed routing/operation/caller restore changes; component regression only. Earlier native evidence remains pinned to its actual linked source, never relabeled as this merge."
+    }
   },
   "A_description_protocol_independent": {
     "source_commits": [
@@ -1268,6 +1296,7 @@
       "Carrier/control require dedicated typed semantic readers, original externally authenticated bootstrap StreamSpec/checkpoint/fixed objects, complete AEAD/EOF and current post-use authorization; raw DTOs do not grant authority.",
       "Enforce actual source-plan/read/peak-memory/concurrency bounds before large allocation. No confidential source paths in public MF/header and no invented index role.",
       "Explicit supported-format changes for descriptor member; no arbitrary extra members and no fabricated historical metadata for old missing artifacts."
-    ]
+    ],
+    "component_disposition": "Accepted as inert protocol component after final root tests and failure-clear fix review. Full encrypted capture and source authentication still explicitly required."
   }
 }
