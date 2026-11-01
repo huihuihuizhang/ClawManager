@@ -1382,5 +1382,45 @@
       "Current independent Unwrap, exact description/seed and E/P semantics, full six-container C/domain checks before any private receipt.",
       "Complete MF/upload/acceptance/catalog/cleanup/final CAS and isolated restore. No historical-source authorization or production/site proof."
     ]
+  },
+  "D_SQL_execution_Bind_diagnostic_independent": {
+    "classification": "Reviewed diagnostics-only increment. No lock-order behavior fix or proven native cause in this delivery.",
+    "source": "45b4ec3be42178786a0ed77716bf24a3abdd55cc",
+    "integrated": "b0192c4bb7b12f3cf8f3ab864f2410651614d27f",
+    "source_match": "All7 Go source files exactly equal root independently tested frozen source after newline normalization; earlier backup89e preserved.",
+    "static_SQL_check": "Original literal SQL unchanged: execution_ports13, execution_capture_initial_facts2, CE pull3. Narrow literal comparison plus hunk review; not a substitute for runtime authorization proof.",
+    "behavior": "Existing Bind delegates to observed implementation with nil reporter; optional source-literal stages and safe structured error classification preserve original SQL, locks, predicates, deadline windows, authority and return sentinels. Joined authority errors do not hide MySQL1213/1205; dependency cancellation retains fixed context classification. Driver Message/SQL/args/grants/tokens/request body never included.",
+    "independent_tests": {
+      "source_ledger": ".tools/review-d-bind-diagnostics-v1/source.json",
+      "session": 16638,
+      "terminal_exit": 0,
+      "closed": true,
+      "controller_seconds": 9.432,
+      "execution_seconds": 10.997,
+      "sql_opt_in": false,
+      "log": ".tools/supervisor-d-bind-diagnostics-v1-packages.log",
+      "scope": "Full affected packages; driver error classification/privacy cases inject model errors, not actual native deadlock reproduction."
+    },
+    "triggering_owner_native_independently_read": {
+      "source": "f9ab5e81729b7793ff627ef320c9eea82321be8a",
+      "session": 87703,
+      "terminal_exit": 1,
+      "closed": true,
+      "task": "sbk_bc8d2ac7-e5ba-4a42-96ff-06d0a7233b80",
+      "case_seconds": 140.44,
+      "package_seconds": 143.735,
+      "first_stage": "controller-source-execution-bind",
+      "first_elapsed_microseconds": 1804,
+      "context": "active",
+      "key_window_reported_remaining_microseconds": 28813230,
+      "log_sha256": "a8c2659020c32b9def7b8ba1c76e6cdffb7715193faa7cb04cfc1242888e89e2",
+      "scope": "DB880/28.676s, dedicated description stream6.163s and E1.879s succeeded; P rejected. Root read owner source/result/log, did not execute native process. No completed11/certificate/backup claim."
+    },
+    "next": [
+      "Actual InnoDB dual-transaction lock-order counterexample and common-order fix preserving final Bind/Recheck and rejecting a changed task after preliminary locator.",
+      "Diagnose exact original snapshot/owner/clock predicate or driver failure; key window still28.8s does not prove claim/gate/hold windows valid.",
+      "CE/description Task-before-Gate source order is a real inversion; role in the recorded failure remains unproved. No retry-for-green, TTL extension or source-data reduction.",
+      "A descriptor/native candidate and D full remote-C/metadata caller remain separate unaccepted work; MF/upload/acceptance/catalog/final state still incomplete."
+    ]
   }
 }
