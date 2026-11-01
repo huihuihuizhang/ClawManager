@@ -36,6 +36,7 @@ type productionSourceDiscovery struct {
 	ResourceActors                                        map[string]productionSourceActor
 	TeamPlatformUnits                                     map[string][]string
 	RuntimeImageReferences                                map[string]string
+	SecretPolicy                                          *originalSecretPolicyReference `json:",omitempty"`
 }
 
 type productionSourceActor struct{ Name, UID string }

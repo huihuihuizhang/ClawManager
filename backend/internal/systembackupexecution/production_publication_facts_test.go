@@ -20,6 +20,9 @@ func checkOriginalPublicationSourceFacts(t *testing.T, discovery b.Discovery) {
 	}
 	catalog, err := appdb.EmbeddedMigrationCatalog()
 	facts := metadata.PublicationFacts
+	if len(facts.SchemaRegistryBytes) == 0 || hash(facts.SchemaRegistryBytes) != facts.SchemaRegistry.SHA256 {
+		t.Fatal("original source producer did not freeze exact independently pinned registry bytes")
+	}
 	if err != nil || facts.AppVersion != buildinfo.Version || facts.GitCommit != buildinfo.Commit || facts.MigrationCatalogSHA256 != catalog.Hash || facts.SchemaSHA256 != metadata.SQLSchema.SchemaSHA256 || facts.CoveredObjects != len(metadata.SQLSchema.Tables) || facts.ExcludedObjects < 1 || facts.SchemaRegistry != metadata.ControlEvidence.Expected.SchemaRegistry {
 		t.Fatal("original publication source provenance did not match actual producer")
 	}

@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	root "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/scope"
@@ -202,6 +203,7 @@ func (f *dOriginalSixPartTask) installOriginalMetadataSources(ctx context.Contex
 		}
 		discovery.RuntimePolicies = append(discovery.RuntimePolicies, worker.RuntimePolicy{Version: "named-original-pro-r1", Image: image, Runtime: scope.Runtime{Type: instance.Type, Mode: instance.Mode, Backend: instance.Backend, Variant: instance.Variant, OS: instance.OS}, Files: metadata.Mounts[0].Policy.Files})
 	}
+	discovery.SecretPolicy = &originalSecretPolicyReference{Protocol: root.SecretCapturePolicyVersion, Path: f.secretPolicyFile, SHA256: f.secretPolicySHA}
 	m.Discovery = discovery
 	controller := true
 	for _, object := range []runtime.Object{

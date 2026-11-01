@@ -34,6 +34,10 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		return nil, nil, err
 	}
 	defer clients.Close()
+	secretPolicy, err := authority.loadOriginalSecretPolicy(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
 	skills, err := authority.skillObjectMetadata(ctx, clients, source.Skills)
 	if err != nil {
 		return nil, nil, err
@@ -42,6 +46,10 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, err
 	}
+	if secretPolicy.ValidateSelections(secrets.Namespace, secrets.Selections) != nil {
+		return nil, nil, d.ErrNotReady
+	}
+	secrets.SecretPolicy = &secretPolicy
 	mounts, mountIdentities, runtime, err := authority.instanceMountMetadata(ctx, source, writers, sqlMetadata, skills, saved)
 	if err != nil {
 		return nil, nil, err
@@ -137,6 +145,13 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	metadata.PublicationFacts, err = observePublicationSourceFacts(sqlMetadata.Schema, sqlMetadata.Census, metadata.ControlEvidence.Expected.SchemaRegistry)
 	if err != nil {
 		return nil, nil, err
+	}
+	if s.captureMaterials.ControlEvidence == nil || s.captureMaterials.ControlEvidence.SchemaRegistrySHA256 != metadata.PublicationFacts.SchemaRegistry.SHA256 {
+		return nil, nil, d.ErrNotReady
+	}
+	metadata.PublicationFacts.SchemaRegistryBytes, err = pinnedDeploymentFile(s.captureMaterials.ControlEvidence.SchemaRegistryFile, metadata.PublicationFacts.SchemaRegistry.SHA256, 8<<20)
+	if err != nil {
+		return nil, nil, d.ErrNotReady
 	}
 	if authority.Recheck(ctx) != nil {
 		return nil, nil, d.ErrNotReady

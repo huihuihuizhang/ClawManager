@@ -280,6 +280,12 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string) {
 		if err != nil || len(capture.Parts) != 10 {
 			t.Fatal("same-task full current publisher C/domain verification", len(capture.Parts), err)
 		}
+		if sqlDomains, err := publicationSQLBusinessCounts(capture); err != nil || len(sqlDomains) != 6 {
+			t.Fatal("same-task original-registry SQL business summary inputs", err)
+		}
+		if policy, err := publicationSecretPolicyFacts(capture); err != nil || policy.RegistryVersion != f.secretPolicyVersion || policy.RegistrySHA256 != f.secretPolicySHA || policy.RequiredEntries != 1 || policy.CapturedEntries != 1 {
+			t.Fatal("same-task original independent SecretPolicy complete-C coverage", err)
+		}
 		signers, err := f.service.PublicationSignersForTask(ctx, claim)
 		if err != nil {
 			t.Fatal("same-task current original signing consumer", err)
