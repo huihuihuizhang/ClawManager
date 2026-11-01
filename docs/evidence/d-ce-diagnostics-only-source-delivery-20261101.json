@@ -1,0 +1,48 @@
+{
+  "schema_version": "d-ce-diagnostics-only-source-delivery.v1",
+  "prepared_at_utc": "2026-11-01T09:32:24.439826+00:00",
+  "head": "03122556c5a8dd1a07296078530717c6bf1f8fbb",
+  "base": "293eaa264aaeb286b61d8a5292a83d211cba9b62",
+  "scope": "failure-only original CE stage/callback/clock observability and privacy tests; not a functional repair or complete publication",
+  "source_files": {
+    "backend/internal/systembackup/worker/control_evidence.go": "538b9fff13b7f32d4a1661a67f83ba9e7c794bc6fc8ff896e228edd0565ef939",
+    "backend/internal/systembackup/worker/control_evidence_grant.go": "631370679bf9b51757c497c8c50b6d90d313466c0f5224d240e2ad150e65f8b9",
+    "backend/internal/systembackup/worker/control_evidence_pull.go": "eda451cf3295c023a191e53abcc16e60e866407fd2fab01f44a352ff8e72b996",
+    "backend/internal/systembackup/worker/control_evidence_diagnostics.go": "5e59926a1053bb93030c38b927ff1e165a373f62b2436da99863f095884eb57b",
+    "backend/internal/systembackup/worker/control_evidence_diagnostics_test.go": "722cb2278d90979b09a9eec196b4c008af2c4361b7bbcb3c8e39f855ea4540d8",
+    "backend/internal/systembackup/worker/formal_capture.go": "f727f5e527c0fb20587351ae1653377f86c7c32a628b880dac8dd38c409ae333",
+    "backend/internal/systembackupexecution/control_evidence_pull.go": "86e77bb8f10d86631d59c92fd2846fd96f117b201a9f19ecd039ea38a7430855",
+    "backend/internal/systembackupexecution/control_evidence_finalization.go": "8301628023dbe47d23c7a21de38a5cdc041e29dcde4ca6273324ba8f8881020d",
+    "backend/internal/systembackupexecution/control_evidence_diagnostics.go": "5f9e0e81af31286dfa47b83f6bd80529b1155debcd965df521f5570a0724e583",
+    "backend/internal/systembackupexecution/control_evidence_diagnostics_test.go": "e9e7f414d1148b7ce4589bc1eda97b1216b302453080a3374073f7d410ab06be"
+  },
+  "patch": {
+    "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-ce-diagnostics-only-reviewed-source.patch",
+    "sha256": "fbea6b771c88dda89f642ca78b9adb331e624b6a6ee68e643730b1ed44f405b3"
+  },
+  "excluded": [
+    "unverified current-publication remote-container candidate5ca3608b",
+    "historical DR authentication",
+    "A uncommitted description carrier/bootstrap/MF/upload code",
+    "restore/drill dispatch shared branches",
+    "source/current authority checks, default30/5 and original data changes"
+  ],
+  "native_observations": [
+    {
+      "head": "dcb2360d658cd3d5f162c3eb5f74b7b4fed4d7de",
+      "session": 49756,
+      "exit": 0,
+      "package_seconds": 157.767
+    },
+    {
+      "head": "689122b1862bd5f49f8985582e3fab0f0622d7a7",
+      "session": 26350,
+      "exit": 0,
+      "package_seconds": 154.383
+    }
+  ],
+  "old_reds": "Preserve exact80ba/90282 CE failure and exact5ca/38783 database failure; neither was reproduced/fixed by the two positive diagnostic observations.",
+  "integration": "A owns description-carrier branch in worker/formal_capture.go. Compose by function hunk: retain its description authorization/producer branches and D failure-only CE callback/clock log. Do not replace the whole file from this patch. Other listed diagnostic modules are isolated.",
+  "sql_handoff_confirmed_at": "2026-11-01 17:30:31 Asia/Shanghai",
+  "sql_ownership": "D no live SQL;63507 explicitly handed to A via supervisor. No new native run authorized by this delivery."
+}

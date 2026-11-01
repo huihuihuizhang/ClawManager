@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -191,6 +192,11 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal("original config example")
 	}
 	values := document.Request.Config
+	if options.PublicationTarget != nil {
+		if err := prepareDOriginalPublicationReferences(values, *options.PublicationTarget); err != nil {
+			t.Fatal("actual original artifact references before config/task admission", err)
+		}
+	}
 	// Independent, fixed LOCAL owner policy declared before config admission or
 	// any source metadata/UID observation. Counts are never supplied here.
 	policyVersion := "original-local-secret-policy-r1"
@@ -389,13 +395,20 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	// Match the dedicated public metadata constructor's driver transport.
 	// All TLS/UTC/account pins, SQL locks and parameter values stay original.
 	connection.InterpolateParams = true
-	if options.ControlCommitACKLoss == nil {
+	if options.ControlCommitACKLoss == nil && options.ControlBeforeQuery == nil && options.ControlAfterQuery == nil {
 		f.control, err = sql.Open("mysql", connection.FormatDSN())
 	} else {
 		connector, connectorErr := mysql.NewConnector(connection)
 		err = connectorErr
 		if connectorErr == nil {
-			f.control = sql.OpenDB(aCertificateWriteACKConnector{Connector: connector, lose: options.ControlCommitACKLoss})
+			var controlConnector driver.Connector = connector
+			if options.ControlCommitACKLoss != nil {
+				controlConnector = aCertificateWriteACKConnector{Connector: controlConnector, lose: options.ControlCommitACKLoss}
+			}
+			if options.ControlBeforeQuery != nil || options.ControlAfterQuery != nil {
+				controlConnector = dOriginalGateQueryConnector{Connector: controlConnector, before: options.ControlBeforeQuery, after: options.ControlAfterQuery}
+			}
+			f.control = sql.OpenDB(controlConnector)
 		}
 	}
 	connection.Passwd = ""
@@ -741,6 +754,9 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 	if afterValidated != nil && (denyGenerate || !completeCapture) {
 		t.Fatal("validated continuation requires the complete successful original capture")
 	}
+	if options.AfterOriginalPrepare != nil && (completeCapture || afterValidated != nil) {
+		t.Fatal("pre-collector diagnostic cannot substitute validated capture")
+	}
 	f := newDOriginalSixPartTaskWithOptions(t, options)
 	ctx, cancel := context.WithDeadline(context.Background(), f.input.Authority.DeadlineAt)
 	defer cancel()
@@ -796,16 +812,16 @@ func runDOriginalSixPartCaptureWithOptions(t *testing.T, denyGenerate, completeC
 	if len(f.claimed.Request) == 0 || f.claimed.ConfigSHA256 != hash(f.config) {
 		t.Fatal("queue lost admitted original request/config")
 	}
-	// The real scheduler's original ready_for_capture reconciliation is one
-	// second later. Re-take the SAME task; never substitute another acceptance.
-	timer := time.NewTimer(time.Second + 100*time.Millisecond)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		t.Fatal(ctx.Err())
-	case <-timer.C:
+	if options.AfterOriginalPrepare != nil {
+		if err := options.AfterOriginalPrepare(ctx, t, f, plan); err != nil {
+			t.Fatal("controlled original pre-collector diagnostic", err)
+		}
+		return
 	}
-	capture, err := f.service.Runtime.Loop.Store.Next(ctx)
+	// Match the existing deployment scheduler, including its original claim
+	// availability and transient gate refusal handling, on this same task.
+	// The controlled real-SQL counter proves release and original-budget paths.
+	capture, err := nextDOriginalWorkUsingDeploymentScheduler(ctx, f)
 	if err != nil || capture == nil || capture.Step != c.ExecutionCapture || capture.Input.Authority.TaskPublicID != f.publicID || capture.Input.Authority.AttemptNo != 1 || capture.Plan.SHA256 != plan.SHA256 || !bytes.Equal(capture.Plan.CanonicalJSON, plan.CanonicalJSON) || capture.Input.Authority.ClaimRowVersion <= f.input.Authority.ClaimRowVersion || capture.Input.Authority.MaintenanceOwner != f.publicID || capture.Input.Authority.MaintenanceFencingToken == 0 {
 		t.Fatal("original same-task reTake/acquiring epoch/frozen plan", err)
 	}

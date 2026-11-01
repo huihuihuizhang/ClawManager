@@ -1,0 +1,20 @@
+{
+  "scope": "Pre-collector original-task native SQL counter candidate, not a capture or publication proof",
+  "test": "TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL",
+  "fixture": "Fresh original admitted task, original prepare and encrypted plan; synthetic local TLS SQL, fake client-go Kubernetes and loopback providers",
+  "controlled_holder": "Explicit in-flight-request DATA transaction holds actual shared idle gate record lock. It is not an actual HTTP authorization and not the holder of a previous terminated run.",
+  "witness": "Local administrator-only performance_schema verifies holder connection, transaction and granted S record lock; unchanged native driver must return actual 3572/HY000 from original gate NOWAIT query.",
+  "paths": [
+    "Release holder after first actual 3572; existing runDeploymentPasses and SQL work store must return original capture work at first epoch.",
+    "Keep holder through immutable original source-wait budget; existing scheduling must settle task failed/quiesce_timeout without epoch, Job or key."
+  ],
+  "invariants": [
+    "No production changes or new retry loop; existing deployment interval/backoff is used.",
+    "No refresh of source_gate_wait_started_at; same task, plan, config, attempt and pending admission deadline.",
+    "No same-owner retake while current claim is live; no manual claim/deadline/status writes.",
+    "No collector or provider key; this test stops at pre-collector capture work or untouched failure.",
+    "Optional fixture hooks cannot substitute a validated completed capture.",
+    "No PROCESS or performance_schema privileges added to production role."
+  ],
+  "validation": "Native counter pending; final execution package no-SQL suite passed in 12.502s. Initial restricted-sandbox network failures are retained separately and are not a passing test."
+}

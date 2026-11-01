@@ -154,6 +154,7 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 	}
 	lock, lockErr := (migrationcoord.SQLLocker{DB: g.DB, Timeout: time.Second}).Acquire(ctx)
 	if lockErr != nil {
+		logGateAcquisitionBusy("migration-lock", lockErr)
 		return GateOwnership{}, ErrMaintenance
 	}
 	defer func() {
@@ -199,11 +200,13 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 	if err = tx.QueryRowContext(ctx, "SELECT phase,generation,fencing_token FROM system_backup_gate WHERE scope=? FOR UPDATE NOWAIT", scope).Scan(&phase, &generation, &token); err != nil {
 		var busy *mysql.MySQLError
 		if errors.As(err, &busy) && busy.Number == 3572 {
+			logGateAcquisitionBusy("gate-row-nowait", err)
 			return GateOwnership{}, ErrMaintenance
 		}
 		return GateOwnership{}, err
 	}
 	if phase != "idle" {
+		logGateAcquisitionBusy("gate-not-idle", nil)
 		return GateOwnership{}, ErrMaintenance
 	}
 	if admission != nil {
@@ -216,6 +219,7 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 		return GateOwnership{}, err
 	}
 	if outstanding != 0 {
+		logGateAcquisitionBusy("participants-not-running", nil)
 		return GateOwnership{}, ErrMaintenance
 	}
 	_, err = tx.ExecContext(ctx, "UPDATE system_backup_gate SET phase='acquiring',generation=generation+1,owner=?,registry_hash=?,acquire_deadline=TIMESTAMPADD(MICROSECOND,?,UTC_TIMESTAMP(6)),hold_deadline=TIMESTAMPADD(MICROSECOND,?,UTC_TIMESTAMP(6)),updated_at=UTC_TIMESTAMP(6) WHERE scope=?", owner, registryHash, acquire.Microseconds(), hold.Microseconds(), scope)

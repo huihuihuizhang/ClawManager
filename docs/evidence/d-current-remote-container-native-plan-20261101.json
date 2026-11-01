@@ -1,0 +1,28 @@
+{
+  "schema_version": "d-current-remote-container-native-plan.v1",
+  "status": "candidate frozen for native verification; not yet native verified",
+  "source_base": "47c2953d76c0f847a3c8e606ab5bbdeec4289e10",
+  "shared_backup": "c2bfcfd7a2c91f23c88fa923695270b8a74c7df6",
+  "prepared_at_utc": "2026-11-01T08:22:09.322155+00:00",
+  "scope": "current publication only; independent original six-container/eight-business-C and paired control-C readback under actual current publisher Unwrap; not historical DR or full finalization",
+  "native_plan": {
+    "test": "TestDOriginalRemoteContainerCaptureNativeMySQL",
+    "port": 63507,
+    "uuid": "f3756194-d52b-11f1-b8cc-745d22085e06",
+    "coordination": "A57087 naturally terminal0/closed; root explicitly handed SAN/TLS window to D",
+    "build": "must use actual clean committed HEAD linked by ldflags before capture",
+    "task": "one new original public six-part task; actual ten workers, original full data, stop/resume, C/certificate before remote consumer",
+    "transport": "local native S3 protocol fixture and actual PUT of original opaque C bytes; not an upload-only Job or production provider claim",
+    "policy": "default claim TTL30/heartbeat5; no old grant/key-use extension; actual original refs declared before config/task admission"
+  },
+  "fixture_changes": "Optional actual PublicationTarget maps only artifact_read/artifact_write/artifact_ca identity/ref before original config/task admission; core hook retains four-declaration protection. Existing callers unchanged.",
+  "safety": "No publication_pass or A MF/upload-forward changes; private C receipt does not authorize acceptance/catalog or terminal success. All old public reader signatures remain stable.",
+  "source_sha256": {
+    "production_same_task_mysql_test.go": "82de752aa338482dd00d72b8f4e15f2badd7db5384549ae301dd8fd50568d390",
+    "production_same_task_setup_test.go": "71ac81fe791b526b449ed0aa461a10ef489987a08aaffaa9d490ca7292fe4c7b",
+    "publication_same_task_mysql_test.go": "9d31d44977c0bdbcc21b7a869a97855a75190fa35975cc29a1afd9289f8983d7",
+    "publication_remote_container.go": "e4c8bde0a7809f30ced5f14dcb6e1d4e451a4ae6b1ab4ae13e366a43632fc778",
+    "publication_remote_container_mysql_test.go": "5329510246aee4192f0abd4159bf60c51af78d91be3faef99d66b3a09b48bcd7",
+    "publication_remote_container_test.go": "caf328bd546c56efd411b60e73a27e1cd7fb73e0d422faddba2ab4b632bbd6af"
+  }
+}

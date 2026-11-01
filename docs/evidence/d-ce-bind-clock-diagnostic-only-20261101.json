@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "exit_code": 0,
+    "sha256": "83c86d668a14f58e7634ae941d9dd7751eb719b07716e640d15b74d5fb83f99d",
+    "result": "PASS",
+    "log": "../.tools/d-ce-execution-bind-clock-final-no-sql.log",
+    "controller_seconds": 9.495,
+    "execution_seconds": 13.272,
+    "session": 20840
+  },
+  "reasons": [
+    "sql_error",
+    "clock_missing",
+    "claim_expired",
+    "task_deadline",
+    "gate_lease_expired",
+    "hold_deadline_expired"
+  ],
+  "schema_version": "d-ce-bind-clock-diagnostic-only.v1",
+  "sources": [
+    {
+      "sha256": "9dd28dbf8c416c7dca54026baa66c97cd28b9135eaa8528fb8aa47eb3490a441",
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics.go"
+    },
+    {
+      "sha256": "773308cdc29c5bb3375e9b022598e16bf4e8e2c2ed4f4fcc41dc5ce6340a58cb",
+      "path": "backend/internal/systembackupcontroller/execution_bind_diagnostics_test.go"
+    },
+    {
+      "sha256": "7b1fe42a9384f5087b1679a468c1276f273191dd830dbf117f79e44f40a398bf",
+      "path": "backend/internal/systembackupcontroller/execution_capture_initial_facts.go"
+    },
+    {
+      "sha256": "d16b891f8aa768145f9f2012116b69b11d12643be31e16c7d2bde4f9d9a77be8",
+      "path": "backend/internal/systembackupexecution/control_evidence_diagnostics.go"
+    }
+  ],
+  "scope": "Fixed first failing original held clock reason in original predicate order; no SQL, lock, authorization or deadline changes. Lock-order WIP isolated in stash b21316f1482c479f2b649f01beb5e102d1dddae8.",
+  "limitations": "Diagnostics only; not a native reproduction or cause fix. No SQL use.",
+  "base": "45b4ec3be42178786a0ed77716bf24a3abdd55cc"
+}

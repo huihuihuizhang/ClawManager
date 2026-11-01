@@ -1,0 +1,24 @@
+{
+  "scope": "Original eleven-member description capture attempt; failure evidence only",
+  "source_commit": "4d77beca60873c8d0d20640e17f78f1344902bcc",
+  "linked_actual_head": true,
+  "task_public_id": "sbk_e9d00fef-33b0-4411-bbf0-e7306eb70c02",
+  "native_session": 44103,
+  "natural_exit": 1,
+  "case_seconds": 26.96,
+  "package_seconds": 30.229,
+  "first_rejection": {
+    "stage": "begin-acquire-rejected",
+    "reason": "gate-row-nowait",
+    "sql_number": 3572,
+    "sql_state": "HY000"
+  },
+  "log": ".tools/d-original-eleven-remote-capture-4d77-native.log",
+  "log_sha256": "0900c02f4313ab1dc5a98c4dd387fd479108708c359a72b14dd47bd2387f72cb",
+  "limits": [
+    "Before any collector; database first-failure diagnostics were not reached.",
+    "No current remote C verification or receipt was reached.",
+    "This observation does not identify the historical shared-lock holder.",
+    "A separate controlled real-SQL counter must prove existing production scheduling before another full attempt."
+  ]
+}

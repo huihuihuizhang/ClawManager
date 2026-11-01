@@ -1,0 +1,34 @@
+{
+  "scope": "Real SQL pre-collector gate scheduling counter only",
+  "source_commit": "3b608bd29004d146857a1f4171f8c45664e8ceea",
+  "clean_source_and_actual_head_linked": true,
+  "test": "TestOriginalTaskGateNOWAITUsesExistingDeploymentSchedulingMySQL",
+  "session": 54415,
+  "natural_exit": 0,
+  "case_seconds": 139.78,
+  "package_seconds": 143.020,
+  "release_case": {
+    "seconds": 55.58,
+    "task": "sbk_51bb1208-cc55-4318-b223-b631dc083917",
+    "holder_connection": 1410,
+    "holder_transaction": "283344500693000",
+    "holder_lock_mode": "S,REC_NOT_GAP",
+    "actual_driver_rejection": "3572/HY000",
+    "outcome": "Existing scheduler returns same original capture work, first epoch/generation only, after original live claim expires."
+  },
+  "budget_case": {
+    "seconds": 84.20,
+    "task": "sbk_0041af8b-b2ae-4b5b-aab6-db982f67bd72",
+    "holder_connection": 1416,
+    "holder_transaction": "283344500693000",
+    "holder_lock_mode": "S,REC_NOT_GAP",
+    "actual_driver_rejection": "3572/HY000",
+    "outcome": "Existing scheduler settles original task failed/quiesce_timeout under continuously held shared lock, zero epochs/generation, own admission cleared."
+  },
+  "preserved": "Original plan bytes/hash, config hash, task/attempt, source wait start, pending admission deadline and existing interval/backoff/30-second claim/5-second heartbeat policy. No manual authority/deadline/status edits.",
+  "no_effects": "Both counters issue zero collector Jobs and zero provider keys; no writer pause, actual capture or publication receipt is claimed.",
+  "holder_limits": "Explicit controlled in-flight-request DATA transaction; no actual HTTP authorization or identification of any previous run's holder. PFS read through existing local administrator, no production privilege grant.",
+  "log": ".tools/d-original-gate-schedule-3b608-native.log",
+  "log_sha256": "349ecb51c595e97e48f0098624245fb9d88f0a000a081ed2d0268e69509206f3",
+  "closed": "Native session exited naturally; no established D 63507 connections after completion."
+}

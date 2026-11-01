@@ -27,11 +27,13 @@ func (g Gate) closeAdmission(ctx context.Context, scope, owner, engine string, a
 	if err = tx.QueryRowContext(ctx, "SELECT owner,close_until,UTC_TIMESTAMP(6) FROM system_backup_gate_admissions WHERE scope=? FOR UPDATE NOWAIT", scope).Scan(&prior, &until, &now); err != nil {
 		var busy *mysql.MySQLError
 		if errors.As(err, &busy) && busy.Number == 3572 {
+			logGateAcquisitionBusy("admission-row-nowait", err)
 			return ErrMaintenance
 		}
 		return err
 	}
 	if prior.Valid && prior.String != owner && until.Valid && until.Time.After(now) {
+		logGateAcquisitionBusy("admission-other-owner", nil)
 		return ErrMaintenance
 	}
 	var phase string
@@ -39,6 +41,7 @@ func (g Gate) closeAdmission(ctx context.Context, scope, owner, engine string, a
 		return err
 	}
 	if phase != "idle" {
+		logGateAcquisitionBusy("admission-gate-not-idle", nil)
 		return ErrMaintenance
 	}
 	deadline := now.Add(acquire)
