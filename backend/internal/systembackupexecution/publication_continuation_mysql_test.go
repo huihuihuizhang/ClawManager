@@ -164,14 +164,16 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 					}
 				}
 				state.mu.Unlock()
-				published, closed := make(chan error, 1), make(chan error, 1)
+				published, closed := make(chan error, 1), make(chan error, 2)
 				go func() { _, err := p.publishNext(ctx, store, intent("marker_put")); published <- err }()
 				select {
 				case <-entered:
 				case <-time.After(2 * time.Second):
 					t.Fatal("actual next-stage read not entered")
 				}
-				go func() { closed <- p.close() }()
+				for i := 0; i < 2; i++ {
+					go func() { closed <- p.close() }()
+				}
 				select {
 				case err := <-closed:
 					t.Fatal("close returned before its in-flight stage joined", err)
@@ -183,6 +185,9 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 				}
 				if err := <-closed; err != nil {
 					t.Fatal(err)
+				}
+				if err := <-closed; err != nil {
+					t.Fatal("second close did not share successful release", err)
 				}
 				if _, err := p.publishNext(ctx, store, intent("marker_put")); !errors.Is(err, c.ErrExecutionAuthority) || state.puts != 2 {
 					t.Fatal("closed handle sent another stage", err, state.puts)
