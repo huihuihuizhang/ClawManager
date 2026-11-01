@@ -34,7 +34,6 @@ type dOriginalSixPartFixtureOptions struct {
 	ControlBeforeQuery   func(context.Context, string) error
 	ControlAfterQuery    func(string, error)
 	AfterOriginalPrepare func(context.Context, *testing.T, *dOriginalSixPartTask, d.Plan) error
-<<<<<<< HEAD
 }
 
 func prepareDOriginalPublicationReferences(values map[string]any, target PublicationTargetMaterials) error {
@@ -71,8 +70,6 @@ func prepareDOriginalPublicationReferences(values map[string]any, target Publica
 		return errDOriginalCoreChanged
 	}
 	return nil
-=======
->>>>>>> eb179f5f
 }
 
 var errDOriginalCoreChanged = errors.New("original fixture capture core changed outside its pre-seal publication declarations")
