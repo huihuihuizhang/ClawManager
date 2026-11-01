@@ -550,7 +550,8 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 	var deadline time.Time
 	db := o.Gate.Authority.DB
 	descriptionStage = "controller-control-task-locator"
-	if e := db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence); e != nil {
+	e = db.QueryRowContext(ctx, "SELECT controller_owner,row_version,request_id,config_version,config_snapshot_sha256,deadline_at,maintenance_fencing_token FROM system_backup_v2_backups WHERE public_id=? AND origin_installation_id=?", task, o.Gate.Authority.InstallationID).Scan(&owner, &version, &request, &configVersion, &configHash, &deadline, &fence)
+	if e != nil {
 		return lease, worker.ErrNotReady
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}

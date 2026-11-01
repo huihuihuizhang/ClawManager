@@ -17,7 +17,7 @@ func logOriginalDescriptionWorkerFailure(stage, action string, ctx context.Conte
 		class = "context_canceled"
 	}
 	switch action {
-	case "key-reserve", "key-check", "key-begin", "key-end", "candidate", "description-pull":
+	case "ready", "key-reserve", "key-check", "key-begin", "key-end", "candidate", "description-pull":
 	default:
 		action = "other"
 	}

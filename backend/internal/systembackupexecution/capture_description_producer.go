@@ -248,7 +248,8 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 	// Preliminary locator only; Bind below acquires Gate -> Task locks and
 	// independently revalidates this exact current authority in the same TX.
 	stage = "description-authority-current-locator"
-	if readOriginalCaptureAuthorityLookup(ctx, tx, &a) != nil || a.ConfigSHA256 != request.Invocation.FormalCapture.SourceConfigSHA256 {
+	err = readOriginalCaptureAuthorityLookup(ctx, tx, &a)
+	if err != nil || a.ConfigSHA256 != request.Invocation.FormalCapture.SourceConfigSHA256 {
 		return zero, c.ErrExecutionAuthority
 	}
 	stage = "description-authority-original-hash"
@@ -263,7 +264,8 @@ func (s *DeploymentService) descriptionAuthority(ctx context.Context, request wo
 	}
 	stage = "description-authority-original-key-row"
 	var raw []byte
-	if tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE target_type='backup' AND task_public_id=? AND attempt_no=? AND phase='capture' AND resource_kind='Job' AND observed_uid=? AND namespace_name=? AND revoked=FALSE AND lifecycle='ready' AND create_dispatched=TRUE AND stopped_at IS NULL FOR SHARE`, a.TaskPublicID, a.AttemptNo, lease.KeyUse.Identity.JobUID, lease.KeyUse.Identity.Namespace).Scan(&raw) != nil {
+	err = tx.QueryRowContext(ctx, `SELECT key_use_json FROM system_backup_v2_runtime_resources WHERE target_type='backup' AND task_public_id=? AND attempt_no=? AND phase='capture' AND resource_kind='Job' AND observed_uid=? AND namespace_name=? AND revoked=FALSE AND lifecycle='ready' AND create_dispatched=TRUE AND stopped_at IS NULL FOR SHARE`, a.TaskPublicID, a.AttemptNo, lease.KeyUse.Identity.JobUID, lease.KeyUse.Identity.Namespace).Scan(&raw)
+	if err != nil {
 		return zero, c.ErrExecutionAuthority
 	}
 	stage = "description-authority-original-key-binding"
