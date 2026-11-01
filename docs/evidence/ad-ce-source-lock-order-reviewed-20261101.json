@@ -1,0 +1,60 @@
+{
+  "schema_version": "ad-ce-source-lock-order-independent-review.v1",
+  "date": "2026-11-01",
+  "base_head": "f8529e8281729291d844690e42494aecfc510e77",
+  "owner_source": "f7ce34a8a9bbadfe4a01b08d022e8383b2035c52",
+  "scope": "Exactly one original CE preliminary authority locator replacement plus shared plain SELECT helper and real MySQL counterexample test. A description producer and all other D candidates excluded.",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/control_evidence_pull.go",
+      "sha256": "b72e07a69de704d730d05005e61474e338470361d9972726c8d1a9b18d69517f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_capture_authority_lookup.go",
+      "sha256": "5055e4e8adbb7160d23241500139ac9b00ca096bdce8d8f50aa95a5340eef2da"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/original_capture_lock_order_mysql_test.go",
+      "sha256": "a9815a56668455d57febb3da3e915b9ee97f2253635771e8e0a472937868c526"
+    }
+  ],
+  "invariant": "Initial lookup is locator DATA only. Same-TX BindObserved still locks gate before task, verifies original authority hash, owner/version/config/claim/gate/windows and runtime key, and repeats tail guard/clock checks. No retry or authority relaxation.",
+  "verification": {
+    "native": {
+      "session": 3368,
+      "exit_code": 0,
+      "closed": true,
+      "package_seconds": 4.182,
+      "case_seconds": 0.76,
+      "source_overlay": ".tools/review-original-lock-order-root",
+      "database": "Separately handed-off UUID-pinned loopback instance; fresh random five-table DATA schema; inert test owner is NOT deployment authorization. Root released SQL window after natural exit.",
+      "cases": [
+        "Old task-before-gate produces actual MySQL 1213/SQLSTATE 40001 at Bind maintenance gate.",
+        "Plain locator allows gate-before-task serialization; full Bind and tail Recheck pass without retries.",
+        "Concurrent committed task version change after repeatable-read locator is rejected by current locking Bind."
+      ]
+    },
+    "integrated_package": {
+      "session": 14221,
+      "exit_code": 0,
+      "closed": true,
+      "package": "clawreef/internal/systembackupexecution",
+      "seconds": 12.701,
+      "SQL": "Native SQL environment variables disabled; complete package regression after actual CE integration."
+    },
+    "logs": {
+      "native_three_scenarios": {
+        "path": ".tools\\supervisor-original-lock-order-native.log",
+        "sha256": "91fb44d0b95e598df63bfc73d3033b757997f9f3c1f53a3371ff03a603f2a677"
+      },
+      "integrated_execution_package": {
+        "path": ".tools\\supervisor-ce-source-lock-order-integrated-package.log",
+        "sha256": "c79613f3a6b2d25ba549e6e2c53d8cffebe445a8d856e7c0bedd60880a9a05ff"
+      }
+    }
+  },
+  "limits": [
+    "Reachable deadlock and correction proven; not unique diagnosis of earlier full-task failure.",
+    "No complete eleven-member remote receipt, publication, production source authorization or page-click backup success claimed."
+  ]
+}
