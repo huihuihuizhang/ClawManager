@@ -223,7 +223,7 @@ func partFor(desc b.Discovery, unit string) (b.JobPart, error) {
 }
 
 func (o *PublicJobOwner) Bind(ctx context.Context, a d.Authority, i d.JobIntent, r kube.ResourceRecord) (d.JobBinding, error) {
-	return o.bindOriginal(ctx, a, i, r, false)
+	return c.WithOriginalControllerBinding(ctx, a, r, func(active context.Context) (d.JobBinding, error) { return o.bindOriginal(active, a, i, r, false) })
 }
 
 // Recovery binding records original identity only; it never issues credentials.
@@ -293,12 +293,14 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 	}
 	defer tx.Rollback()
 	recheck := func() error { return o.Gate.Recovery.CheckTx(ctx, tx, a) }
+	var originalGuard *c.ExecutionAuthorityGuard
 	if !recovery {
 		guard, z := o.Gate.Authority.Bind(ctx, tx, a)
 		if z != nil {
 			return zero, z
 		}
 		recheck = func() error { return guard.Recheck(ctx, tx) }
+		originalGuard = guard
 	}
 	if e = recheck(); e != nil {
 		return zero, e
@@ -312,6 +314,14 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 			return zero, c.ErrExecutionRecord
 		}
 	} else {
+		if !recovery {
+			fresh, err := c.PrepareOriginalFirstBinding(ctx, tx, a, originalGuard)
+			if err != nil {
+				return zero, err
+			}
+			originalGuard = fresh
+			recheck = func() error { return fresh.Recheck(ctx, tx) }
+		}
 		query := "UPDATE system_backup_v2_runtime_resources SET binding_json=? WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL AND target_type=? AND attempt_no=? AND phase=?"
 		if recovery {
 			query = "UPDATE system_backup_v2_runtime_resources SET binding_json=?,revoked=TRUE WHERE task_public_id=? AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND binding_json IS NULL AND target_type=? AND attempt_no=? AND phase=?"
@@ -322,6 +332,9 @@ func (o *PublicJobOwner) bindOriginal(ctx context.Context, a d.Authority, i d.Jo
 	}
 	if e = recheck(); e != nil {
 		return zero, e
+	}
+	if !recovery && c.RecheckOriginalFirstBindingCommit(ctx, tx, a, originalGuard, raw) != nil {
+		return zero, c.ErrExecutionAuthority
 	}
 	if e = tx.Commit(); e != nil {
 		return zero, c.ErrExecutionCommitUnknown

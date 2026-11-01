@@ -1,0 +1,157 @@
+{
+  "schema": "d-original-issuer-timeline-diagnostic.v1",
+  "task_public_id": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+  "build_commit": "6bd73090c44f3f9dead88fcf01f64c0c733c391f",
+  "issuer_candidate_commit": "578c3095",
+  "source_log": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-issuer-full-timeline.log",
+  "source_log_sha256": "75a693983e5629ed4b0bb9678f875d33d4c3f0cbec0c596f3db09ae418b7ea7d",
+  "diagnostic_only": true,
+  "overlay_changes": "Six current-source files add logging only; no SQL, ordering, authority, source data, nonce or deadline changes.",
+  "original_claim_ttl_seconds": 30,
+  "original_heartbeat_seconds": 5,
+  "same_original_task": true,
+  "original_migrations": 174,
+  "parts": 6,
+  "workers": 10,
+  "terminal": {
+    "exit_code": 0,
+    "test_seconds": 125.7,
+    "package_seconds": 129.219,
+    "runner": "ok",
+    "record": "ok",
+    "record_status_assertion": "validating",
+    "after_validated_callback": false
+  },
+  "sql_stream": {
+    "local_source_authorize_calls": 880,
+    "local_source_authorize_ms": 765.0161,
+    "run_formal_capture_seconds": 26.6475761,
+    "count_semantics": "local calls, not domain progress"
+  },
+  "sql_events": [
+    {
+      "event": "nonce-created",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "wall": "2026-11-01T03:13:03.5967192Z"
+    },
+    {
+      "event": "first-bind",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "wall": "2026-11-01T03:13:03.6177017Z"
+    },
+    {
+      "event": "initial-minimum",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "guard": "2026-11-01T03:13:33.030791Z",
+      "relay": "2026-11-01T03:17:13Z",
+      "request": "2026-11-01T03:17:13.8920211Z",
+      "prepared": "2026-11-01T09:12:11.739626Z",
+      "wall": "2026-11-01T03:13:03.6203543Z"
+    },
+    {
+      "event": "intent-first-persist",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "sql-now": "2026-11-01T03:13:03.621146Z",
+      "wall": "2026-11-01T03:13:03.6213834Z"
+    },
+    {
+      "event": "intent-committed",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "wall": "2026-11-01T03:13:03.6458365Z"
+    },
+    {
+      "event": "before-source-open",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "op": "capture-database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "wall": "2026-11-01T03:13:03.7337293Z",
+      "remaining": "29.2970617s"
+    },
+    {
+      "event": "provider-generate",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "part": "users_instances_database",
+      "until": "2026-11-01T03:13:33.030791Z",
+      "wall": "2026-11-01T03:13:04.0813737Z"
+    }
+  ],
+  "nearby_controller_heartbeat_events": [
+    {
+      "event": "heartbeat-start",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:12:58.0304585Z"
+    },
+    {
+      "event": "heartbeat-complete",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:12:58.0320966Z"
+    },
+    {
+      "event": "heartbeat-start",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:13:03.03064Z"
+    },
+    {
+      "event": "heartbeat-complete",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:13:03.0362572Z"
+    },
+    {
+      "event": "heartbeat-start",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:13:08.0305024Z"
+    },
+    {
+      "event": "heartbeat-complete",
+      "task": "sbk_e7732a6d-d1d5-46ad-bc10-642fa7293883",
+      "wall": "2026-11-01T03:13:08.0552062Z"
+    }
+  ],
+  "limitations": [
+    "before-source-open event precedes source constructor, not first SQL row; exact stream entry wall clock was not instrumented",
+    "passing run had favorable heartbeat phase; no proof of stable completion with roughly 25 seconds remaining",
+    "fixture has ended; its old task/C/DEK cannot be reused for A publication",
+    "no A firstForward/v12 publication or independent native readback in this run"
+  ],
+  "overlay_files": [
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackupcontroller\\execution_heartbeat.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_execution_heartbeat.go",
+      "sha256": "1e519a8308318b6e8987b2e61803b69bd121b411b95b23bc38bc22cc45a76ea8"
+    },
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackup\\worker\\key_use.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_key_use.go",
+      "sha256": "159d75cf2b848f90f2ff93f656077438c4b535bb887064a9ead8d07c909fad78"
+    },
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackupexecution\\public_jobs.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_public_jobs.go",
+      "sha256": "554120fd383cec4280c479a4d93df576785b659f501b062e74a06bdc5124c6f5"
+    },
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackupexecution\\public_key_use.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_public_key_use.go",
+      "sha256": "6165e6e054909adb5f6ab1c5c49b5256edbea49567556c074e0a907deb55a0ea"
+    },
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackupkms\\transit.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_transit.go",
+      "sha256": "11a12324bd7a7ad84b9708ff66dfc7be3cf4ab02645cfa09cac79c98ebdfac4b"
+    },
+    {
+      "original": "C:\\Users\\13542\\Desktop\\新建文件夹\\ClawManager-D\\backend\\internal\\systembackupexecution\\production_same_task_workers_test.go",
+      "diagnostic_copy": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\d-original-worker-overlay\\timeline_production_same_task_workers_test.go",
+      "sha256": "24e5365d1d94dc53742624e551534ee5890c8bdc0cd08cd6e82e95e255696003"
+    }
+  ]
+}
