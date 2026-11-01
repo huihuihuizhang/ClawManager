@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -12,14 +13,15 @@ import (
 // from source-code stage literals and fixed classifications, never SQL text,
 // parameters, authority, grants or driver error messages.
 type ExecutionBindDiagnostic struct {
-	stage, class, state string
-	number              uint16
+	stage, class, state, reason string
+	number                      uint16
 }
 
 func (v ExecutionBindDiagnostic) Stage() string     { return v.stage }
 func (v ExecutionBindDiagnostic) Class() string     { return v.class }
 func (v ExecutionBindDiagnostic) SQLState() string  { return v.state }
 func (v ExecutionBindDiagnostic) SQLNumber() uint16 { return v.number }
+func (v ExecutionBindDiagnostic) Reason() string    { return v.reason }
 
 func executionBindDiagnostic(stage string, err error) ExecutionBindDiagnostic {
 	v := ExecutionBindDiagnostic{stage: stage, class: "predicate"}
@@ -68,4 +70,28 @@ func reportExecutionBindDiagnostic(report func(ExecutionBindDiagnostic), stage s
 	if report != nil {
 		report(executionBindDiagnostic(stage, err))
 	}
+}
+
+func reportExecutionBindClockDiagnostic(report func(ExecutionBindDiagnostic), v executionSnapshot, deadline time.Time, err error) {
+	if report == nil {
+		return
+	}
+	diagnostic := executionBindDiagnostic("bind-snapshot-held-delivered-clock", err)
+	if err != nil {
+		diagnostic.reason = "sql_error"
+	} else {
+		switch {
+		case v.now.IsZero():
+			diagnostic.reason = "clock_missing"
+		case !v.now.Before(v.claimUntil):
+			diagnostic.reason = "claim_expired"
+		case !v.now.Before(deadline):
+			diagnostic.reason = "task_deadline"
+		case !v.now.Before(v.gateUntil):
+			diagnostic.reason = "gate_lease_expired"
+		case !v.now.Before(v.holdUntil):
+			diagnostic.reason = "hold_deadline_expired"
+		}
+	}
+	report(diagnostic)
 }

@@ -27,5 +27,5 @@ func logOriginalControlEvidenceRejection(stage string, ctx context.Context, unti
 }
 
 func logOriginalExecutionBindDiagnostic(v c.ExecutionBindDiagnostic) {
-	log.Printf("[system-backup-ce] stage=controller-source-execution-bind-detail boundary=%s class=%s sql_number=%d sql_state=%s", v.Stage(), v.Class(), v.SQLNumber(), v.SQLState())
+	log.Printf("[system-backup-ce] stage=controller-source-execution-bind-detail boundary=%s class=%s sql_number=%d sql_state=%s reason=%s", v.Stage(), v.Class(), v.SQLNumber(), v.SQLState(), v.Reason())
 }
