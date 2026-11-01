@@ -311,7 +311,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T05:45:45.851215+00:00",
+  "updated_at_utc": "2026-11-01T05:50:25.062383+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -511,10 +511,13 @@
     "closed": true,
     "next": "D to fix actual publisher renewal entry with delivered SQL clock under original lock, preserve RV-increment and original CAS/identity semantics; no old key/Job may adopt a new epoch. Other generic methods are not claimed safe by execution-heartbeat proof.",
     "log_relative_to_workspace_parent": ".tools/supervisor-publisher-claim-expired-wait-baseline.log",
-    "log_sha256": "e59e2b9d8026fd9b411d44ab44ead959ca2151ce4afa52dfc7e93151c42ee033"
+    "log_sha256": "e59e2b9d8026fd9b411d44ab44ead959ca2151ce4afa52dfc7e93151c42ee033",
+    "resolution": "Fixed by18471ef3 integrated70dde66a; independent original red probe now PASS; historical FAIL retained."
   },
   "reviewed_commits": {
-    "A_original_certificate_known_bytes": "1a3ef4fcdb9b5f7c2dce6ac845b3fb833ed57926"
+    "A_original_certificate_known_bytes": "1a3ef4fcdb9b5f7c2dce6ac845b3fb833ed57926",
+    "D_generic_publisher_renew": "18471ef3d4ae04080443dfda2931a1d862356d38",
+    "D_actual_existing_bind_readback": "6510f4e8a18464d661b77541f0e6f2a1cad8da2e"
   },
   "A_original_certificate_known_bytes_independent": {
     "outcome": "PASS",
@@ -561,5 +564,65 @@
       "note": "Combined command34007 exit1 because requested nonexistent internal/skillhub; actual two package results PASS retained. Correct systembackupskillhub separate command exit0. Overall failed invocation is not relabeled PASS."
     },
     "remaining": "Provider-unknown signature is conservatively query-only and not independently recoverable here. No final manifest/index/upload/seal/immutable catalog/independent restore/terminal success. Not production Linux or remote validation."
+  },
+  "D_generic_publisher_renew_independent": {
+    "outcome": "PASS",
+    "source": "18471ef3d4ae04080443dfda2931a1d862356d38",
+    "integration_and_linked_build_commit": "70dde66a78fcd98868b8407a924f6ab1ebffd2f1",
+    "exact_go_files": {
+      "backend/internal/systembackupcontroller/claim.go": "a90981817cd9dd3ba1a84970f6ec918285bf430f0b1c87e1071895434c034a40",
+      "backend/internal/systembackupcontroller/claim_coordinator_test.go": "632f07e35005f76887f456cc8c379b93ff97d78a0a0865fdffc89a541a6b7acd",
+      "backend/internal/systembackupcontroller/claim_renew.go": "fad3210cd4fdb3940db1fa6a3ecbb4d741d12a70714e8f546885f4f1a7b0b630",
+      "backend/internal/systembackupcontroller/claim_renew_test.go": "a4b4ac8fb9c597e53fd9390daabe7b5b8b8e59ede629ec61decac97c57c6cc1e",
+      "backend/internal/systembackupcontroller/claim_takeover_test.go": "c573bfd61688fee4f65464f0273241608b78d94f9431d1225d7fab7fd397cf1e",
+      "backend/internal/systembackupcontroller/claim_test.go": "6411fa3610e88799ecab87604908aac37165ac8f864974d0e52a7d445d2dbe32",
+      "backend/internal/systembackupexecution/a_publication_claim_lifecycle_mysql_test.go": "f7104d4caa0eb76e8a5719aafc8ba589698bbfd7297e9bee593fe0991204e976",
+      "backend/internal/systembackupexecution/publisher_claim_renew_mysql_test.go": "4ba8e6c9c6eb8e5453ffd286089c7f0f8cc0d0fbc109b223b168d1d042183dab"
+    },
+    "native_package_seconds": 8.76,
+    "publisher_package_seconds": 19.444,
+    "default_package_seconds": {
+      "controller": 9.317,
+      "execution": 7.93
+    },
+    "closed_sessions": {
+      "93477": 0,
+      "70919": 0,
+      "39683": 0
+    },
+    "scope": "Same supervisor test-only overlay as original FAIL, now passes actual expired lock wait with no durable mutation. Eight current CAS cases include actual DB and Conn, longer original lease, wrong owner/RV/install, terminal and expired claims; two real lock-wait committed owner/RV takeovers reject. Actual publication Acquire/Renew/Release/takeover and real Renew Commit ACK loss independently pass; empty result token and old authority/frozen Job unchanged.",
+    "skip_accounting": "93477 initially skipped both A signing cases because its separate credentials/UUID env was not set. Those skips are not passes; both then actually ran with proper independent local UUID in39683.",
+    "API": "Renew now requires own BeginTx, supports DB/Conn; Exec-only or caller-owned Tx fail before effect with ErrClaimTransactionRequired and ErrClaimLost. Original CAS/RV+1 and whole-microsecond validation retained; operations no-heartbeat branch has driver-model coverage, not actual operation MySQL coverage.",
+    "limits": "No old Job/key/nonce permit expiry or identity epoch extended. Not first-forward/final artifact, 31-second long-stream, cross-process or site evidence.",
+    "logs": [
+      {
+        "path": ".tools/supervisor-d-generic-renew-native.log",
+        "sha256": "777f7d445e798ec28cee73b84a01d343ede902b53a59f009e7749f894dc785a7"
+      },
+      {
+        "path": ".tools/supervisor-d-generic-renew-publisher-native.log",
+        "sha256": "02d2d0ab5b7b79783ff960be5850771f221c79ac7871d39d83429c87f3b95986"
+      },
+      {
+        "path": ".tools/supervisor-d-generic-renew-merged-packages.log",
+        "sha256": "abca75b5184f94253921ed8c8c9eda55e661fd90fc1cc4a2a2909ebf75385716"
+      }
+    ]
+  },
+  "D_actual_existing_bind_readback_independent": {
+    "outcome": "PASS",
+    "source": "6510f4e8a18464d661b77541f0e6f2a1cad8da2e",
+    "integration_and_linked_build_commit": "2f399e7b3462613f4f4401c46ee271e74277d01e",
+    "exact_go_files": {
+      "backend/internal/systembackupexecution/initial_binding_readback_mysql_test.go": "c539a0401a80d9fc29b8f724a29d1ead5b6301a63e2d23744e434a9ff8aff3f3"
+    },
+    "native_session": 46079,
+    "terminal_exit": 0,
+    "closed": true,
+    "package_seconds": 4.447,
+    "scope": "Actual PublicJobOwner.Bind existing-binding reads; real native read-only Commit then withheld ACK; same active run and new in-process run return original binding. Actual local certificate/sealed identity envelope, explicitly modeled immutable Kube Secret and preseeded existing binding. Independent binding/key-use bytes, lease and epoch unchanged.",
+    "limits": "Not new first-binding write ACK loss, actual Kubernetes observation, key-reserve authority for replacement fixture identity, cross-OS-process restart or full publication.",
+    "log": ".tools/supervisor-d-public-bind-readback-native.log",
+    "log_sha256": "2051bf1b4cd8014b0f8dcdd5921dc534adba23a8ceccef7a6ff4937c0b2cd862"
   }
 }
