@@ -1,0 +1,67 @@
+{
+  "schema_version": "d-capacity-original-snapshot-binding-evidence.v1",
+  "source_base": "72ea8668573a7c027ecf105c3a9c63a85ba568ae",
+  "red_v1": {
+    "scope": "32GiB injection rejected by original staging CHECK; not a read-binding proof",
+    "seconds": 6.013
+  },
+  "red_v2": {
+    "case_seconds": 2.71,
+    "package_seconds": 6.037,
+    "scope": "original full snapshot unchanged; legal16-to17GiB materialized drift accepted by fresh access"
+  },
+  "fix": {
+    "same_transaction": true,
+    "snapshot_checks": [
+      "original installation/version/SHA joins",
+      "actual bytes equals task and config size",
+      "SHA equals original guard binding",
+      "JCS and exact one JSON document",
+      "required integer capacity values and v12 ranges",
+      "materialized values equal authenticated snapshot values"
+    ],
+    "no_post_capture_rewrite": true,
+    "no_schema_change": true
+  },
+  "native": {
+    "package_seconds": 43.852,
+    "endpoint": "127.0.0.1:65298",
+    "uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+    "continuation_nine_case_seconds": 30.85,
+    "current_budget_case_seconds": 3.07,
+    "exact_root_probe_seconds": 2.57,
+    "owner_initial_case_seconds": 3.56,
+    "exit_code": 0,
+    "session": 49631,
+    "overlay": "test-only exact supervisor v2 source"
+  },
+  "package": {
+    "exit_code": 0,
+    "seconds": 8.877,
+    "session": 26414
+  },
+  "catalog_wip_shelf": ".tools/d-catalog-wip-d48e5bf9f34c4b448dc99a7289a83382/manifest.json",
+  "not_claimed": [
+    "formal six-part publication completion",
+    "typed artifact acceptance/catalog/final CAS",
+    "multi-GiB body verification"
+  ],
+  "logs": [
+    {
+      "sha256": "eac8b07bd14c3260bdb4e825527345da26ceb5cdcabc86581d6ae9ad5f330459",
+      "path": ".tools/supervisor-d-capacity-initial-snapshot-baseline.log"
+    },
+    {
+      "sha256": "79e8edc4748f3c4157057947234d8b724d6ad44636bd9e3809c86fa9f48fa4ef",
+      "path": ".tools/supervisor-d-capacity-initial-snapshot-v2.log"
+    },
+    {
+      "sha256": "d3e404ee7a270587ca2b19e947ba1946986ae060f6adbbd3dc50bd30a0c5560e",
+      "path": ".tools/d-capacity-initial-fixed-native.log"
+    },
+    {
+      "sha256": "8d4dc06ea11b34097f863605baae10595d173353a08ac6bf9ed527128475f934",
+      "path": ".tools/d-capacity-initial-fixed-package.log"
+    }
+  ]
+}

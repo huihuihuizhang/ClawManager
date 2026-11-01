@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,22 @@ import (
 )
 
 type publicationCapacityRoundTrip func(*http.Request) (*http.Response, error)
+
+func TestPublicationBudgetRequiresExactOriginalSnapshot(t *testing.T) {
+	valid := []byte(`{"capacity":{"max_artifact_bytes":17179869184,"max_index_bytes":536870912},"source":"protocol DATA"}`)
+	limits, err := artifactLimitsFromConfigSnapshot(valid, hash(valid))
+	if err != nil || limits != (ArtifactReadLimits{MaxArtifactBytes: 16 << 30, MaxIndexBytes: 512 << 20}) {
+		t.Fatal(limits, err)
+	}
+	for _, raw := range []string{`{"source":"missing capacity"}`, `{"capacity":{"max_artifact_bytes":"17179869184","max_index_bytes":536870912}}`, `{"capacity":{"max_artifact_bytes":17179869184}}`, `{"capacity":{"max_artifact_bytes":17179869184.5,"max_index_bytes":536870912}}`, `{"capacity":{"max_artifact_bytes":17179869184,"max_index_bytes":536870912},"capacity":{}}`, `{ "capacity":{"max_artifact_bytes":17179869184,"max_index_bytes":536870912}}`, `{"capacity":{"max_artifact_bytes":966367641601,"max_index_bytes":536870912}}`} {
+		if got, err := artifactLimitsFromConfigSnapshot([]byte(raw), hash([]byte(raw))); !errors.Is(err, ErrPublicationConfigBudgetMismatch) || got != (ArtifactReadLimits{}) {
+			t.Fatal("unauthenticated/invalid original budget accepted", raw, got, err)
+		}
+	}
+	if _, err := artifactLimitsFromConfigSnapshot(valid, hash([]byte("foreign original"))); !errors.Is(err, ErrPublicationConfigBudgetMismatch) {
+		t.Fatal("snapshot hash mismatch accepted", err)
+	}
+}
 
 func (f publicationCapacityRoundTrip) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 

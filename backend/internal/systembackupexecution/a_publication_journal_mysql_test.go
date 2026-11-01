@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	security "clawreef/internal/systembackupsecurity"
 )
@@ -249,7 +250,37 @@ func TestAPublicationOriginalJournalRealDDLAndLostAcknowledgements(t *testing.T)
 func newAOriginalPublicationService(t *testing.T) (*aPublisherVerifierFixture, *nativePublicationS3, *aNativePublicationServer) {
 	t.Helper()
 	store, state := newANativePublicationStore(t, time.Minute)
-	x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config})
+	// Full original ConfigValues JSON is frozen BEFORE capture/authority/key
+	// creation, matching the real 097 capacity values below. Never replace an
+	// already admitted snapshot/hash to make a new validation check pass.
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "contracts", "system-backup", "v12", "admin-control-redacted-examples.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var example struct {
+		Request struct {
+			Config map[string]json.RawMessage `json:"config"`
+		} `json:"config_update_request"`
+	}
+	if json.Unmarshal(raw, &example) != nil || len(example.Request.Config) == 0 {
+		t.Fatal("full original config fixture unavailable")
+	}
+	var capacity map[string]json.RawMessage
+	if json.Unmarshal(example.Request.Config["capacity"], &capacity) != nil {
+		t.Fatal("full original capacity fixture unavailable")
+	}
+	capacity["control_metadata_capacity_bytes"] = json.RawMessage(strconv.FormatInt(1<<30, 10))
+	capacityRaw, err := ce.Canonical(capacity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	example.Request.Config["capacity"] = capacityRaw
+	example.Request.Config["enabled"] = json.RawMessage("true")
+	snapshot, err := ce.Canonical(example.Request.Config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config, ConfigSnapshot: snapshot})
 	aStartPublisherVerifierSamePod(t, x)
 	aUseActualPublicationDDL(t, x, store.config)
 	return x, store, state
