@@ -1,0 +1,43 @@
+{
+  "schema_version": "d-original-description-remote-capture-inflight-candidate.v1",
+  "date": "2026-11-01",
+  "previous_candidate": "8e7743aa187ad31aa7e33f87d09a4cb12f159efb",
+  "base_head": "b678dd8971aff88e5a4f85473a0a28a9db652db6",
+  "fixture_fix": "f9ab5e81729b7793ff627ef320c9eea82321be8a",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_set.go",
+      "sha256": "52e3844fc5ba8fa7858a4ea0740be4daffcd5e91aa928ba7890c769c11914c5c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_capture_set_test.go",
+      "sha256": "024d2eed2999f54d1bbd6e0da560e00a0510665ff808c5726de517cafc26d933"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container_mysql_test.go",
+      "sha256": "4d4c8e7e7e39f6bac49148547ed8cdaf2e7f38aea0181ee4f56db83bc2235e19"
+    }
+  ],
+  "changes": [
+    "Retain every safe original artifact root allowed by the existing material validator, rather than inventing installation-only prefix; actual loopback TLS custom-root healthy case added.",
+    "In native SQL test, the second/final bootstrap GET flushes half its actual fixed-version body AFTER all C/domain/E/P checks; one bounded HTTP hook reads actual current SQL owner/version and calls the real coordinator Release CAS with supported one-second reconcile interval before completing body EOF.",
+    "The in-flight call must return error and zero C receipt, and hook release must itself succeed; after its return the test acquires a legitimate new claim and separately rejects the actually lost token. No manual row/Until mutation.",
+    "All native SQL assertions remain NOT RUN while A owns 63507. Earlier after-call-only claimloss candidate was not executed and is replaced by this in-flight probe."
+  ],
+  "validation": {
+    "full_execution_no_sql": {
+      "session": 44187,
+      "seconds": 14.066,
+      "log": "../.tools/d-new-remote-capture-inflight-final-no-sql.log",
+      "sha256": "db740b9bf498aa72c03e89ace0ef6bbf0cb130df60b1ffddeca5cc4c9454a500",
+      "result": "PASS",
+      "exit_code": 0
+    }
+  },
+  "native_status": "NOT RUN. A original 11-member prerequisite reproduced CE P controller-source-execution-bind rejection on exact f9ab5e81; preserve this independent candidate pending resolved prerequisite and explicit SQL handoff.",
+  "limits": [
+    "Current-original-SQL publication C candidate only; no historical DR, MF, acceptance, signed catalog, upload Job or terminal-success claim.",
+    "Clean new real HEAD must be linked before any future capture. Do not reuse failed task, nonce, key-use or provider windows.",
+    "No D push, no use of A-owned 63507."
+  ]
+}

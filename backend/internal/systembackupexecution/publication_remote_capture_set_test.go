@@ -47,13 +47,16 @@ func TestRemoteCaptureSetReadsAllFifteenNativeBodies(t *testing.T) {
 	for _, part := range []string{"mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"} {
 		paths = append(paths, "parts/"+part+"/container.enc")
 	}
-	modes := []string{"healthy", "wrong-version", "short-body", "withdrawn-read-credential", "deadline-during-body", "changed-selected-index", "wider-reader-budget"}
+	modes := []string{"healthy", "safe-original-root", "wrong-version", "short-body", "withdrawn-read-credential", "deadline-during-body", "changed-selected-index", "wider-reader-budget"}
 	for _, path := range paths {
 		modes = append(modes, "corrupt/"+path)
 	}
 	for _, mode := range modes {
 		t.Run(mode, func(t *testing.T) {
 			store, state := newANativePublicationStore(t, time.Minute)
+			if mode == "safe-original-root" {
+				store.config.Root = "tenant/original-signed-scope/"
+			}
 			if err := os.Remove(store.config.WriteCredentialFile); err != nil {
 				t.Fatal(err)
 			}
@@ -122,7 +125,7 @@ func TestRemoteCaptureSetReadsAllFifteenNativeBodies(t *testing.T) {
 				}
 			}
 			err = reader.inspectPublicationRemoteCaptureSetBytes(context.Background(), set, until)
-			if mode == "healthy" {
+			if mode == "healthy" || mode == "safe-original-root" {
 				if err != nil || state.heads != 15 || state.gets != 15 {
 					t.Fatal("all fixed native bodies required", err, state.heads, state.gets)
 				}

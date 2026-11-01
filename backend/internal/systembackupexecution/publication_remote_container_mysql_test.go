@@ -11,6 +11,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -172,7 +173,38 @@ func runDOriginalRemoteContainerCaptureNativeMySQL(t *testing.T, mode string) {
 		// Each Range is independently version-pinned. No plaintext is sent to S3.
 		ranges := 0
 		deny := false
+		var lossEnabled atomic.Bool
+		var lossMetadataReads atomic.Int32
+		type actualClaimLoss struct {
+			token c.ClaimToken
+			err   error
+		}
+		lossResult := make(chan actualClaimLoss, 1)
 		state.onRead = func(dst http.ResponseWriter, request *http.Request) bool {
+			if lossEnabled.Load() && request.Method == "GET" && request.URL.Path == "/"+store.config.Bucket+"/"+base+remoteCaptureBootstrapPath && lossMetadataReads.Add(1) == 2 {
+				// The second bootstrap GET is the final metadata pass after every
+				// C/domain/E/P check. Begin its real body, then lose the current
+				// claim outside any caller SQL transaction before finishing EOF.
+				raw := state.objects[request.URL.Path]
+				dst.Header().Set("x-amz-version-id", "original-v1")
+				dst.Header().Set("Content-Length", strconv.Itoa(len(raw)))
+				dst.WriteHeader(200)
+				_, _ = dst.Write(raw[:len(raw)/2])
+				dst.(http.Flusher).Flush()
+				// Read actual current SQL facts for the authorized fixture owner;
+				// Release itself performs the real live owner/version CAS. No row,
+				// deadline or original claim window is manually modified here.
+				lost := c.ClaimToken{Target: c.Target{Kind: c.TargetBackup, PublicID: f.publicID}}
+				lossCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				err := f.control.QueryRowContext(lossCtx, `SELECT controller_owner,row_version FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? AND controller_owner=? AND controller_lease_expires_at>UTC_TIMESTAMP(6)`, f.service.Config.InstallationID, f.publicID, f.service.PublisherOwner).Scan(&lost.Owner, &lost.RowVersion)
+				if err == nil {
+					_, err = (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Release(lossCtx, lost, time.Second)
+				}
+				cancel()
+				lossResult <- actualClaimLoss{lost, err}
+				_, _ = dst.Write(raw[len(raw)/2:])
+				return true
+			}
 			value := request.Header.Get("Range")
 			if value == "" {
 				return false
@@ -238,16 +270,22 @@ func runDOriginalRemoteContainerCaptureNativeMySQL(t *testing.T, mode string) {
 					t.Fatal("foreign actual native version minted C receipt", entry.path, err)
 				}
 			}
-			// Actual original SQL claim loss: release through the real coordinator,
-			// acquire a legitimate new publisher claim, then prove the old token
-			// cannot adopt it. No row/version/Until is rewritten by test SQL.
-			lost := *claim
-			if _, err := (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Release(ctx, lost, time.Millisecond); err != nil {
-				t.Fatal("real publisher claim release", err)
+			lossEnabled.Store(true)
+			denied, readErr := f.service.verifyOriginalRemoteContainerCapture(ctx, claim, attempt, policy, store.config, capture, objects)
+			lossEnabled.Store(false)
+			var loss actualClaimLoss
+			select {
+			case loss = <-lossResult:
+			default:
+				t.Fatal("in-flight final native GET claim-loss hook was not reached")
 			}
+			if loss.err != nil || readErr == nil || denied != nil {
+				t.Fatal("in-flight native read failed to reject actual claim loss", loss.err, readErr)
+			}
+			lost := loss.token
 			var version uint64
 			var delay int64
-			if err := f.control.QueryRowContext(ctx, `SELECT row_version,COALESCE(TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),next_reconcile_at),0) FROM system_backup_v2_backups WHERE public_id=? AND controller_owner IS NULL`, f.publicID).Scan(&version, &delay); err != nil || delay > 1_000_000 {
+			if err := f.control.QueryRowContext(ctx, `SELECT row_version,COALESCE(TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),next_reconcile_at),0) FROM system_backup_v2_backups WHERE public_id=? AND controller_owner IS NULL`, f.publicID).Scan(&version, &delay); err != nil || delay > 2_000_000 {
 				t.Fatal("real released claim row", err, delay)
 			}
 			if delay > 0 {
