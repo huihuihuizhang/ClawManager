@@ -1,0 +1,45 @@
+{
+  "schema_version": "d-public-bind-readback-local-evidence.v1",
+  "source_base": "18471ef3d4ae04080443dfda2931a1d862356d38",
+  "mysql_endpoint": "127.0.0.1:65298",
+  "mysql_server_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+  "actual_entry": "PublicJobOwner.Bind -> bindOriginal",
+  "result": "PASS",
+  "case_seconds": 1.1,
+  "package_seconds": 4.414,
+  "session": 46102,
+  "exit_code": 0,
+  "scope": [
+    "existing original binding normal read",
+    "actual underlying read-only Commit followed by lost ACK",
+    "same controller run readback",
+    "fresh in-process controller run readback",
+    "binding/key-use bytes and claim/epoch unchanged"
+  ],
+  "modeled": [
+    "Kubernetes immutable Secret and UID",
+    "preexisting binding seed matched to actual locally signed certificate"
+  ],
+  "not_claimed": [
+    "new first-binding write commit unknown",
+    "cross-process recovery",
+    "real Kubernetes observation",
+    "key-reserve authority for replaced fixture identity",
+    "full publication"
+  ],
+  "prior_test_injector_failure": {
+    "reason": "MySQL driver.ErrSkip invoked Prepare fallback before the test marker was set; no lost-ACK injection occurred",
+    "seconds": 4.416,
+    "result": "FAIL, retained"
+  },
+  "logs": [
+    {
+      "path": ".tools/d-public-bind-readback-fault-dispatch-baseline.log",
+      "sha256": "5caa6693030b7f030d0259fc83f7ee4317999a5310a2bfb69be6b8bf083083a5"
+    },
+    {
+      "path": ".tools/d-public-bind-readback-native.log",
+      "sha256": "64d3c53526cdf6f13b34b2ca624884c0298158494a707e129f6cc11b9746af80"
+    }
+  ]
+}
