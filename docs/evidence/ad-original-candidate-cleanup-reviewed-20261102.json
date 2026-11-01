@@ -1,0 +1,132 @@
+{
+  "schema_version": "supervisor-original-candidate-cleanup-reviewed.v1",
+  "base": "b573774045e268f980810342df762d9b90569a57",
+  "candidate": "3797f278ce129a16bde078dde9067e037cc7c1be",
+  "decision": "accept bounded same-flow remote-candidate cleanup component",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_cleanup.go",
+      "frozen_blob": "7d4769e7904eecad105875796ed4fcfcf5f2e3f6",
+      "composed_blob": "7d4769e7904eecad105875796ed4fcfcf5f2e3f6",
+      "sha256": "cbd0fe2ccb382633695b722cf1e088977caa8a9686794337a7764378a4c05a17",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_cleanup_test.go",
+      "frozen_blob": "5072ad74c4f43bd5e7124fc5a867f9b324d32801",
+      "composed_blob": "5072ad74c4f43bd5e7124fc5a867f9b324d32801",
+      "sha256": "50fb45b47fe24e29512762df5303a39ed48d732d1abc22d12fe41f7b2cf836c3",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_delete_s3.go",
+      "frozen_blob": "12861d588c0a3ec2b1ffe62b195399680bec3a38",
+      "composed_blob": "12861d588c0a3ec2b1ffe62b195399680bec3a38",
+      "sha256": "b078563d2320aea2c7a4b233ea32dcc63c5fb1ef397b185ee6506e174c54a15b",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_candidate_delete_s3_test.go",
+      "frozen_blob": "c3bc53f831fc1fc5b2935444e0c9881c4ab648cf",
+      "composed_blob": "c3bc53f831fc1fc5b2935444e0c9881c4ab648cf",
+      "sha256": "c804f243dcafd7e43f42a8f1c065918112fecb0b8f423c2ca17dda643d6489f3",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_s3.go",
+      "frozen_blob": "abead9c3a29c71121c2d78269c578077689a3855",
+      "composed_blob": "abead9c3a29c71121c2d78269c578077689a3855",
+      "sha256": "52819cf6a945b59f3328f2a76fa81cf8ff521c2fb835c50ca65ea7d24b657bcf",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_s3_test.go",
+      "frozen_blob": "7c3fd268e9fa0d83b7a1065c2c23a4a4c1b1c633",
+      "composed_blob": "7c3fd268e9fa0d83b7a1065c2c23a4a4c1b1c633",
+      "sha256": "510aba517adc6cf05e7dadee0a6744a70ac93655fd48c67483e18413c9ea3e84",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "frozen_blob": "477d5e97325036e5b9a0205471c4b6b3030f7872",
+      "composed_blob": "477d5e97325036e5b9a0205471c4b6b3030f7872",
+      "sha256": "6a1b9c840e1c7db8eb2acef74645170c9031a7fff72ace90840b2249788d3f94",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "frozen_blob": "d45cb981df074c4e4e6eb469c9f45f33fb2ddfad",
+      "composed_blob": "f55b9c9031e2c4032c55752dee3b149337b2002e",
+      "sha256": "da2f061a774a299780b2139aa344251f7642434d20328eb5a9165350d27512c9",
+      "composition": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "frozen_blob": "3e243e25877c176cfb0b45b90d3644ffb4b5b39b",
+      "composed_blob": "3e243e25877c176cfb0b45b90d3644ffb4b5b39b",
+      "sha256": "c906393f9e1bf658ee333f1f83dc31b12913dd1f22c3ff6f3e9d9262f50453c6",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "frozen_blob": "6eb4f7ba008375d77035b634633f613b3332a978",
+      "composed_blob": "6eb4f7ba008375d77035b634633f613b3332a978",
+      "sha256": "02044c198d33c461f5844c6f5eecf6b57dd3645f1e627be6d6d179ead92ed3da",
+      "composition": false
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "frozen_blob": "00795443cba4cfc3114d058150b1daf88aa01cda",
+      "composed_blob": "4652d573302fa5185630bd5cf61ad46476571fc3",
+      "sha256": "cf2b8609dc1093b209a2054031ef91913241451a15f149c5e79c079106412880",
+      "composition": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_config_references.go",
+      "frozen_blob": "107aedcf9a7619b85141ed78f5da77012eeb9c6f",
+      "composed_blob": "107aedcf9a7619b85141ed78f5da77012eeb9c6f",
+      "sha256": "a71c71ed465482ccc3430ce8b6fe575e06c72cb82133b3ad0c5c54c50efe32e8",
+      "composition": false
+    }
+  ],
+  "review": [
+    "Read full268line cleanup SQL state machine and182line fixed-version transport/XML absence verifier, plus actual caller/receipt/stop witness amendments.",
+    "Original current publishing authority, current artifact_delete reference/config pin, original104 owner HMAC/version, original121/16validated107 bodies and process pin, current signing history/clock/budget and frozen real stop-proof bytes remain mandatory.",
+    "Full original candidate fixed-version body read/hash precedes acknowledged104 creating->sealed->deleting intent; no provider DELETE before that commit. Unknown existing deleting state never authorizes a second DELETE.",
+    "Dedicated delete mapping requires all fields and distinct read/write identity/path; exact original candidate key/version only. Public artifacts and latest/current/null version cannot be deleted.",
+    "Independent read identity must return authenticated fixed-version explicit NoSuchVersion. Generic404/NoSuchKey/403/present/wrongversion/duplicate/nested/truncatedXML do not prove cleanup.",
+    "Original104 deleted/succeeded only after independent absence plus same-claim pre/post SQL rechecks. This is per-resource cleanup, not registered global cleanup_result evidence or terminal success.",
+    "Read unchanged104 DDL constraints and state/claim/version semantics. No migrations or new privileged owner callbacks.",
+    "Two auto-merged files retain A initial fresh preparation and unchanged30/5 before actual upload, plus D cleanup continuation.",
+    "Prepared native full-flow test now reaches actual observer and candidate cleanup; onRead Range callback mutex reentry fixed. This prepared path remains unexecuted."
+  ],
+  "primary_validation": {
+    "session": 19446,
+    "exit_code": 0,
+    "closed": true,
+    "targeted_local_tls_seconds": 3.375,
+    "full_composed_execution_seconds": 14.074,
+    "SQL": "off",
+    "downloads": "off",
+    "remote_production": "not accessed"
+  },
+  "logs": {
+    "local_tls": {
+      "file": "supervisor-candidate-delete-3797-tls-targeted.log",
+      "sha256": "6b8aa84a6728c3caecd4eaa58d785940acac411c1352da53120cfa4cb5c9e3f4"
+    },
+    "full_execution": {
+      "file": "supervisor-candidate-delete-3797-b573-composed-execution.log",
+      "sha256": "1f361b3aab79036abefd13d91a53c0ff94e4ae8d72763e156dc998924abb7d3d"
+    }
+  },
+  "not_proven": [
+    "Original same-task full native capture/upload/C/MF/marker/exit/candidatecleanup SQL path",
+    "Strict query-only recovery of existing/unknown104 deleting/deleted state",
+    "Actual uploaded Job/private Secret/task directory/flat ciphertext cleanup",
+    "Registered aggregate cleanup evidence, signed acceptance, catalog append and correct successful terminal",
+    "Full isolated restore and onsite materials/permissions"
+  ],
+  "migration175_included": false,
+  "recorded_at": "2026-11-01T17:12:11.606426+00:00"
+}
