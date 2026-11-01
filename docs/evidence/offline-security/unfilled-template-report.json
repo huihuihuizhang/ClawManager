@@ -1,0 +1,144 @@
+{
+  "protocol": "system-backup-offline-security-materials.v1",
+  "status": "incomplete",
+  "material_kind": "template",
+  "production_ready": false,
+  "checks": [
+    {
+      "slot": "installation_binding",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "three_purpose_signing",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "original_kek_mapping",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "secret_policy_selection",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:artifact",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:catalog",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:evidence",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:kms",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:secret",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "capability:signing",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_grant:capture-database",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_grant:capture-source-redis",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_grant:capture-skill-objects",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_grant:capture-team-redis",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_grant:capture-team-objects",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_resource_readonly_rules",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "source_sql_readonly_grants",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "coverage:retained_artifacts",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "coverage:inflight_and_unknown_writes",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "coverage:holds_and_catalog",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    },
+    {
+      "slot": "coverage:restore_and_prune",
+      "status": "unverified",
+      "reason": "real_input_not_provided"
+    }
+  ],
+  "unverified": [
+    "independent_trust_pin_provenance",
+    "current_installation_and_database_identity",
+    "live_revocation_and_original_task_authority",
+    "provider_acl_role_jwt_and_current_capabilities",
+    "source_credentials_and_cross_namespace_effective_permissions",
+    "authorized_mount_uid_node_and_readonly_observation",
+    "coverage_eof_adoption_writer_fence_and_transaction_recheck",
+    "independent_restore_unwrap_and_full_payload_verification",
+    "installation_binding",
+    "three_purpose_signing",
+    "original_kek_mapping",
+    "secret_policy_selection",
+    "capability:artifact",
+    "capability:catalog",
+    "capability:evidence",
+    "capability:kms",
+    "capability:secret",
+    "capability:signing",
+    "source_grant:capture-database",
+    "source_grant:capture-source-redis",
+    "source_grant:capture-skill-objects",
+    "source_grant:capture-team-redis",
+    "source_grant:capture-team-objects",
+    "source_resource_readonly_rules",
+    "source_sql_readonly_grants",
+    "coverage:retained_artifacts",
+    "coverage:inflight_and_unknown_writes",
+    "coverage:holds_and_catalog",
+    "coverage:restore_and_prune"
+  ]
+}

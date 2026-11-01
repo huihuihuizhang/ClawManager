@@ -19,6 +19,13 @@ type ownedPayloadCounts struct {
 	ContentBytes   int64
 	ArchiveEntries int64
 	Complete       bool
+	SecretPolicy   *ownedSecretPolicyCoverage `json:",omitempty"`
+}
+
+type ownedSecretPolicyCoverage struct {
+	Version, RegistryVersion, RegistrySHA256 string
+	RequiredEntries, CapturedEntries         int64
+	Complete                                 bool
 }
 
 type ownedSQLTableCount struct {

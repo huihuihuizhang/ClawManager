@@ -75,7 +75,10 @@ func CaptureKubernetesResources(ctx context.Context, c dynamic.Interface, w io.W
 
 // CaptureKubernetesResourcesGuarded rechecks original source/Job authority
 // before and after each exact GET and each emitted record, including EOF.
-func CaptureKubernetesResourcesGuarded(ctx context.Context, c dynamic.Interface, w io.Writer, namespace, namespaceUID, part string, selection []KubernetesSelection, b ObjectBudget, check func(context.Context) error) error {
+func CaptureKubernetesResourcesGuarded(ctx context.Context, c dynamic.Interface, w io.Writer, namespace, namespaceUID, part string, selection []KubernetesSelection, b ObjectBudget, check func(context.Context) error, inspect ...func(KubernetesSelection, json.RawMessage) error) error {
+	if len(inspect) > 1 {
+		return errors.New("invalid Kubernetes capture inspector")
+	}
 	if ctx == nil || check == nil || c == nil || namespace == "" || namespaceUID == "" || b.MaxBytes <= 0 || b.MaxItems <= 0 || len(selection) > b.MaxItems || (part != "deployment_resources" && part != "secret_bundle") {
 		return errors.New("invalid Kubernetes capture configuration")
 	}
@@ -129,6 +132,11 @@ func CaptureKubernetesResourcesGuarded(ctx context.Context, c dynamic.Interface,
 		raw, e := json.Marshal(object.Object)
 		if e != nil {
 			return e
+		}
+		if len(inspect) == 1 && inspect[0] != nil {
+			if e = inspect[0](item, raw); e != nil {
+				return e
+			}
 		}
 		if e = emit(KubernetesRecord{Kind: "resource", Selection: &item, Object: raw}, false); e != nil {
 			return e

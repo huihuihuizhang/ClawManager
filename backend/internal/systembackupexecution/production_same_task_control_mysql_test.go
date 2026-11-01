@@ -88,6 +88,53 @@ func (f *dOriginalSixPartTask) installLocalOriginalControlApproval(ctx context.C
 		object["decision_status"], object["approved_cross_reviewers"] = "frozen", object["required_cross_reviewers"]
 		objects = append(objects, object)
 	}
+	// Explicit LOCAL owner input for the actual observed business table set.
+	// Preserve original named category ownership (including A's caller policy),
+	// add complete metadata for current observed tables, and do not manufacture
+	// a business CaptureScope, source grant or successful capture receipt.
+	byBusiness := map[string]map[string]any{}
+	for _, entry := range objects {
+		object := entry.(map[string]any)
+		if object["object_type"] == "table" {
+			byBusiness[object["name"].(string)] = object
+		}
+	}
+	for _, name := range observed.Schema.Tables {
+		policy, ok := root.Policy(name)
+		if !ok || policy.BackupStrategy != "mysql_dump" {
+			t.Fatal("original observed business table lacks named local policy", name)
+		}
+		object := byBusiness[name]
+		if object == nil {
+			owner := "B"
+			if policy.Category == "users" || policy.Category == "ai_gateway" {
+				owner = "A"
+			}
+			if policy.Category == "teams" || policy.Category == "skill_hub" {
+				owner = "C"
+			}
+			object = map[string]any{"object_type": "table", "name": name, "owner": owner, "category": policy.Category}
+			objects = append(objects, object)
+		}
+		if object["category"] == nil || object["category"] == "" {
+			object["category"] = policy.Category
+		}
+		if object["data_classification"] == nil {
+			object["data_classification"] = policy.Classification
+		}
+		category := object["category"].(string)
+		object["backup_strategy"], object["restore_strategy"] = "mysql_dump", "normalize"
+		object["normalizer_id"], object["verifier_id"] = category+"."+name+".normalize.v1", category+"."+name+".verify.v1"
+		object["decision_status"] = "frozen"
+		var peers []string
+		for _, peer := range []string{"A", "B", "C", "D"} {
+			if peer != object["owner"] {
+				peers = append(peers, peer)
+			}
+		}
+		object["required_cross_reviewers"], object["approved_cross_reviewers"] = peers, peers
+		object["redacted_explanation"] = "Explicit local fixture owner metadata for an actually observed source table; never installed deployment approval"
+	}
 	for _, table := range proposal.Tables {
 		policy := table.Policy
 		objects = append(objects, map[string]any{"object_type": "table", "name": policy.Name, "owner": "D", "category": policy.Category, "data_classification": policy.Classification, "backup_strategy": policy.BackupStrategy, "restore_strategy": policy.RestoreStrategy, "decision_status": "frozen", "required_cross_reviewers": []string{"A", "B", "C"}, "approved_cross_reviewers": []string{"A", "B", "C"}, "redacted_explanation": "Explicit local test owner input; original finite classification and independently observed schema; never installed approval"})

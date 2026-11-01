@@ -93,12 +93,22 @@ func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation,
 		source.ClearSourceRedisSnapshot(snapshot)
 	case r.Resources != nil:
 		observed.Kind = "kubernetes_captured_json_bytes"
+		if r.Resources.SecretPolicy != nil {
+			policy := r.Resources.SecretPolicy
+			observed.SecretPolicy = &ownedSecretPolicyCoverage{Version: "system-backup-secret-policy-coverage.v1", RegistryVersion: policy.Policy.RegistryVersion, RegistrySHA256: policy.SHA256, RequiredEntries: policy.RequiredEntries()}
+		}
 		if err = worker.ReadResourceCaptureArchive(ctx, limited, *r.Resources, r.MaxArchiveBytes, func(_ source.KubernetesSelection, raw json.RawMessage) error {
 			observed.Items++
 			observed.ContentBytes += int64(len(raw))
+			if observed.SecretPolicy != nil {
+				observed.SecretPolicy.CapturedEntries++
+			}
 			return nil
 		}); err != nil {
 			return d.ErrNotReady
+		}
+		if observed.SecretPolicy != nil {
+			observed.SecretPolicy.Complete = true
 		}
 	case r.SkillObjects != nil:
 		observed.Kind = "object_payload_bytes"

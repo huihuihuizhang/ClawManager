@@ -34,6 +34,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
 	api "clawreef/internal/systembackupapi"
+	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
 	deployment "clawreef/internal/systembackupdeployment"
 	d "clawreef/internal/systembackupdispatch"
@@ -55,30 +56,31 @@ import (
 // is extended by the same-task source/worker tests; it never substitutes a
 // synthetic Prepare runner or a second task for an uncompleted capture.
 type dOriginalSixPartTask struct {
-	db, control                             *sql.DB
-	service                                 *DeploymentService
-	queue                                   c.SQLExecutionQueue
-	claimed                                 c.ClaimedBackup
-	publicID, database, server              string
-	config                                  []byte
-	profile                                 deployment.ExecutionProfile
-	directory                               string
-	sourceSpec                              worker.DatabaseSpec
-	sourceMount                             worker.FormalSourceMount
-	owner                                   *PublicJobOwner
-	input                                   d.Input
-	sourceInventory                         b.SourceInventory
-	frozenWriters                           []b.FrozenWriter
-	metadataSigner                          ed25519.PrivateKey
-	objectBodies                            map[string][]byte
-	workspaceDirectories                    map[string]string
-	packageContentMD5, unpackagedContentMD5 string
-	unpackagedBytes                         int
-	provider                                *dOriginalProvider
-	resourceSources                         map[string]worker.ResourceSourceMount
-	workers                                 *dOriginalWorkers
-	background                              *dOriginalBackground
-	sealedCore                              []byte
+	db, control                                            *sql.DB
+	service                                                *DeploymentService
+	queue                                                  c.SQLExecutionQueue
+	claimed                                                c.ClaimedBackup
+	publicID, database, server                             string
+	config                                                 []byte
+	profile                                                deployment.ExecutionProfile
+	directory                                              string
+	sourceSpec                                             worker.DatabaseSpec
+	sourceMount                                            worker.FormalSourceMount
+	owner                                                  *PublicJobOwner
+	input                                                  d.Input
+	sourceInventory                                        b.SourceInventory
+	frozenWriters                                          []b.FrozenWriter
+	metadataSigner                                         ed25519.PrivateKey
+	objectBodies                                           map[string][]byte
+	workspaceDirectories                                   map[string]string
+	packageContentMD5, unpackagedContentMD5                string
+	unpackagedBytes                                        int
+	provider                                               *dOriginalProvider
+	resourceSources                                        map[string]worker.ResourceSourceMount
+	workers                                                *dOriginalWorkers
+	background                                             *dOriginalBackground
+	sealedCore                                             []byte
+	secretPolicyFile, secretPolicyVersion, secretPolicySHA string
 }
 
 func newDOriginalSixPartTask(t *testing.T) *dOriginalSixPartTask {
@@ -184,12 +186,26 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 		t.Fatal("original config example")
 	}
 	values := document.Request.Config
+	// Independent, fixed LOCAL owner policy declared before config admission or
+	// any source metadata/UID observation. Counts are never supplied here.
+	policyVersion := "original-local-secret-policy-r1"
+	policyRaw, err := ce.Canonical(root.SecretCapturePolicy{SchemaVersion: root.SecretCapturePolicyVersion, RegistryVersion: policyVersion, RegistryKind: "secret_allowlist", NamespaceScope: "installation_namespace", CaptureMode: "encrypted_full_object", Entries: []root.SecretCapturePolicyEntry{{ID: "application-original", SecretName: "original", Required: true, ExpectedType: "Opaque", Purpose: "application_secret"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.secretPolicyFile, f.secretPolicyVersion, f.secretPolicySHA = filepath.Join(f.directory, "original-owner-secret-policy.json"), policyVersion, hash(policyRaw)
+	if err = os.WriteFile(f.secretPolicyFile, policyRaw, 0600); err != nil {
+		t.Fatal(err)
+	}
 	values["enabled"] = true
 	values["capacity"].(map[string]any)["control_metadata_capacity_bytes"] = json.Number("1073741824")
 	for _, entry := range values["registries"].([]any) {
 		registry := entry.(map[string]any)
 		if registry["registry_kind"] == "rbac_bindings" {
 			registry["version"], registry["sha256"] = "d-six-rbac-v1", hash(rbac)
+		}
+		if registry["registry_kind"] == "secret_allowlist" {
+			registry["version"], registry["sha256"] = f.secretPolicyVersion, f.secretPolicySHA
 		}
 	}
 	f.config, _ = json.Marshal(values)

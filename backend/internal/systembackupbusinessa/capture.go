@@ -72,6 +72,22 @@ func NewPinnedCaptureScope(registryJSON []byte, expectedSHA256 string) (*Capture
 	return &CaptureScope{tables: tableNames, registrySHA: expectedSHA256, schemaSHA: schemaSHA}, nil
 }
 
+// ValidatePinnedMetadataRegistry checks independently pinned frozen policy
+// metadata, including reviewed tables outside this legacy collector's scope.
+// It returns no CaptureScope, SQL table list or permission to read a source.
+// NewPinnedCaptureScope remains closed to the original A table allowlist.
+func ValidatePinnedMetadataRegistry(registryJSON []byte, expectedSHA256 string) error {
+	if !hashPattern.MatchString(expectedSHA256) {
+		return errors.New("invalid metadata registry pin")
+	}
+	digest := sha256.Sum256(registryJSON)
+	if hex.EncodeToString(digest[:]) != expectedSHA256 {
+		return errors.New("metadata registry pin mismatch")
+	}
+	_, _, err := parseCaptureRegistry(registryJSON, true)
+	return err
+}
+
 // RegistrySHA256 and SchemaSHA256 identify the pinned registry bytes and its
 // observed source schema. They are metadata, not a capture certificate.
 func (s *CaptureScope) RegistrySHA256() string {
@@ -134,6 +150,10 @@ type registry struct {
 // parseCaptureTableAllowlist validates registry structure. It alone does not
 // establish provenance; only NewPinnedCaptureScope can authorize SQL use.
 func parseCaptureTableAllowlist(registryJSON []byte) ([]string, string, error) {
+	return parseCaptureRegistry(registryJSON, false)
+}
+
+func parseCaptureRegistry(registryJSON []byte, metadataOnly bool) ([]string, string, error) {
 	var r registry
 	if err := json.Unmarshal(registryJSON, &r); err != nil {
 		return nil, "", fmt.Errorf("decode schema registry: %w", err)
@@ -170,6 +190,9 @@ func parseCaptureTableAllowlist(registryJSON []byte) ([]string, string, error) {
 		// Other A-owned categories, such as system control objects, are outside
 		// this collector. A table name or category collision must still fail.
 		if !named && !inCategory {
+			continue
+		}
+		if !named && metadataOnly && object.ObjectType == "table" && object.Owner == "A" && regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`).MatchString(object.Name) && object.Classification != nil && (*object.Classification == "public" || *object.Classification == "internal" || *object.Classification == "confidential" || *object.Classification == "secret") && object.BackupStrategy == "mysql_dump" && object.RestoreStrategy == "normalize" && object.NormalizerID == object.Category+"."+object.Name+".normalize.v1" && object.VerifierID == object.Category+"."+object.Name+".verify.v1" && len(object.RequiredCrossReviewers) > 0 {
 			continue
 		}
 		if !named || object.ObjectType != "table" || object.Owner != "A" || object.Category != policy.category ||
