@@ -1,0 +1,22 @@
+{
+  "parent_commit": "d3a180ccc4a9adf56e89f30c45d8ea0bef5b1039",
+  "scope": "review-requested tests of all-JSON-column CAST boundaries, failure/cancellation before writes and source clone fidelity",
+  "production_code_changed": false,
+  "native_mysql_port": 54774,
+  "native_mysql_version": "8.4.13",
+  "source_hashes": {
+    "backend/internal/systembackup/domain/mysql_test.go": {
+      "sha256": "3040f7ee3684288346de43d17ef3b0756f4dfe821368419970fe51d5e86d249e",
+      "git_blob": "5161c84a9ea4152e88eea54955d2cdc44c81c994"
+    },
+    "backend/internal/systembackup/domain/offline_business_mysql_test.go": {
+      "sha256": "278b3421569c36f230e9c671b682156ad8ca7feba547c916a93145fb8f11a782",
+      "git_blob": "1d7a7f844e70688d18ba37f29db9138dc64bc8d9"
+    },
+    "backend/internal/systembackup/domain/json_canonicalization_test.go": {
+      "sha256": "737825ffe61d3f4800bfa0953838d3251e91c2aa2a963144130fdb29f9eb9b6a",
+      "git_blob": "76b4918862861b25402ab6557b6657a0b3d73c4d"
+    }
+  },
+  "production_restore_qualified": false
+}
