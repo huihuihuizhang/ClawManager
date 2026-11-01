@@ -66,10 +66,9 @@ type nativePublicationObject struct {
 	payloadRead          *publicationPayloadReadReceipt
 }
 type nativePublicationS3 struct {
-	config         PublicationTargetMaterials
-	client         *http.Client
-	readOnly       bool
-	maxObjectBytes int64
+	config   PublicationTargetMaterials
+	client   *http.Client
+	readOnly bool
 }
 
 func (p PublicationTargetMaterials) validate() error {
@@ -118,7 +117,7 @@ func newPublicationS3Transport(p PublicationTargetMaterials) (*nativePublication
 		return nil, errPublicationUnavailable
 	}
 	transport := &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: roots}, TLSHandshakeTimeout: 5 * time.Second, ResponseHeaderTimeout: 10 * time.Second, MaxResponseHeaderBytes: 16384, DisableCompression: true}
-	return &nativePublicationS3{config: p, maxObjectBytes: MaxPublicationArtifactBytes, client: &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
+	return &nativePublicationS3{config: p, client: &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
 }
 
 func (s *nativePublicationS3) Close() {
@@ -180,7 +179,7 @@ func (s *nativePublicationS3) credential(write bool) (nativePublicationCredentia
 }
 
 func (s *nativePublicationS3) request(ctx context.Context, method, key, version string, body io.Reader, size int64, checksum string, deadline time.Time, write bool, contentType string) (*http.Response, error) {
-	if s == nil || s.client == nil || s.maxObjectBytes < 1 || s.maxObjectBytes > MaxPublicationArtifactBytes || ctx == nil || ctx.Err() != nil || !safePublicationKey(key) || !strings.HasPrefix(key, s.config.Root) || len(version) > 256 || version == "null" || version == "latest" || write && (method != "PUT" || version != "" || size < 1 || size > s.maxObjectBytes || !formalCandidateDigest(checksum) || body == nil) || !write && method != "GET" && method != "HEAD" {
+	if s == nil || s.client == nil || ctx == nil || ctx.Err() != nil || !safePublicationKey(key) || !strings.HasPrefix(key, s.config.Root) || len(version) > 256 || version == "null" || version == "latest" || write && (method != "PUT" || version != "" || size < 1 || size > 8<<30 || !formalCandidateDigest(checksum) || body == nil) || !write && method != "GET" && method != "HEAD" {
 		return nil, errPublicationUnavailable
 	}
 	credential, err := s.credential(write)
@@ -300,14 +299,14 @@ func (s *nativePublicationS3) stat(ctx context.Context, key, version string, dea
 	}
 	defer response.Body.Close()
 	observed := response.Header.Get("x-amz-version-id")
-	if response.StatusCode != 200 || observed == "" || observed == "null" || len(observed) > 256 || version != "" && observed != version || response.ContentLength < 1 || response.ContentLength > s.maxObjectBytes || response.Header.Get("x-amz-delete-marker") == "true" || response.Header.Get("Content-Encoding") != "" {
+	if response.StatusCode != 200 || observed == "" || observed == "null" || len(observed) > 256 || version != "" && observed != version || response.ContentLength < 1 || response.ContentLength > 8<<30 || response.Header.Get("x-amz-delete-marker") == "true" || response.Header.Get("Content-Encoding") != "" {
 		return nativePublicationObject{}, errPublicationUnavailable
 	}
 	return nativePublicationObject{Key: key, Version: observed, Size: response.ContentLength}, nil
 }
 
 func (s *nativePublicationS3) open(ctx context.Context, object nativePublicationObject, deadline time.Time) (io.ReadCloser, error) {
-	if object.Version == "" || object.Size < 1 || s == nil || object.Size > s.maxObjectBytes {
+	if object.Version == "" || object.Size < 1 {
 		return nil, errPublicationUnavailable
 	}
 	response, err := s.request(ctx, "GET", object.Key, object.Version, nil, 0, "", deadline, false, "")

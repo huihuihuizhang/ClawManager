@@ -60,13 +60,10 @@ type ArtifactVersionSearchBudget struct {
 	MaxVersions, MaxPages int
 	MaxReadBytes          int64
 }
-type ArtifactReadOnlyS3 struct {
-	store  *nativePublicationS3
-	limits ArtifactReadLimits
-}
+type ArtifactReadOnlyS3 struct{ store *nativePublicationS3 }
 
-func NewArtifactReadOnlyS3(p ArtifactReadMaterials, limits ArtifactReadLimits) (*ArtifactReadOnlyS3, error) {
-	if p.validate() != nil || limits.validate() != nil {
+func NewArtifactReadOnlyS3(p ArtifactReadMaterials) (*ArtifactReadOnlyS3, error) {
+	if p.validate() != nil {
 		return nil, errPublicationUnavailable
 	}
 	target := PublicationTargetMaterials{Version: publicationTargetVersion, InstallationID: p.InstallationID, Endpoint: p.Endpoint, Region: p.Region, Bucket: p.Bucket, Root: p.Root, ReadIdentityHash: p.ReadIdentityHash, ReadRefVersion: p.ReadRefVersion, CAIdentityHash: p.CAIdentityHash, CARefVersion: p.CARefVersion, CAFile: p.CAFile, CASHA256: p.CASHA256, ReadCredentialFile: p.ReadCredentialFile, ReadCredentialSHA256: p.ReadCredentialSHA256}
@@ -75,16 +72,11 @@ func NewArtifactReadOnlyS3(p ArtifactReadMaterials, limits ArtifactReadLimits) (
 		return nil, err
 	}
 	store.readOnly = true
-	maximum := limits.MaxArtifactBytes
-	if limits.MaxIndexBytes > maximum {
-		maximum = limits.MaxIndexBytes
-	}
-	store.maxObjectBytes = maximum
 	if _, err = store.credential(false); err != nil {
 		store.Close()
 		return nil, err
 	}
-	return &ArtifactReadOnlyS3{store: store, limits: limits}, nil
+	return &ArtifactReadOnlyS3{store}, nil
 }
 func (r *ArtifactReadOnlyS3) Close() {
 	if r != nil && r.store != nil {
@@ -171,7 +163,7 @@ func (r *ArtifactReadOnlyS3) versionPage(ctx context.Context, key, keyMarker, ve
 // missing retained versions, read failures and exhausted budgets fail closed.
 // This preserves the existing v12 index wire schema (no ad-hoc version field).
 func (r *ArtifactReadOnlyS3) ResolveIndexedObject(ctx context.Context, key, sha string, size int64, budget ArtifactVersionSearchBudget, until time.Time) (ArtifactReadObject, error) {
-	if r == nil || size < 1 || size > r.limits.MaxArtifactBytes {
+	if size < 1 {
 		return ArtifactReadObject{}, errPublicationUnavailable
 	}
 	return r.resolveHashedVersion(ctx, key, sha, size, size, budget, until)
@@ -180,15 +172,12 @@ func (r *ArtifactReadOnlyS3) ResolveIndexedObject(ctx context.Context, key, sha 
 // Metadata objects such as v12's index are hash-bound by their parent without
 // a size field. A caller-provided byte budget bounds version discovery/reads.
 func (r *ArtifactReadOnlyS3) ResolveHashedObject(ctx context.Context, key, sha string, maxBytes int64, budget ArtifactVersionSearchBudget, until time.Time) (ArtifactReadObject, error) {
-	if r == nil || maxBytes > r.limits.MaxIndexBytes {
-		return ArtifactReadObject{}, errPublicationUnavailable
-	}
 	return r.resolveHashedVersion(ctx, key, sha, 0, maxBytes, budget, until)
 }
 
 func (r *ArtifactReadOnlyS3) resolveHashedVersion(ctx context.Context, key, sha string, size, maxBytes int64, budget ArtifactVersionSearchBudget, until time.Time) (ArtifactReadObject, error) {
 	var zero ArtifactReadObject
-	if r == nil || r.store == nil || !formalCandidateDigest(sha) || size < 0 || maxBytes < 1 || maxBytes > r.store.maxObjectBytes || size > maxBytes || budget.MaxVersions < 1 || budget.MaxVersions > 10000 || budget.MaxPages < 1 || budget.MaxPages > 1000 || budget.MaxReadBytes < maxBytes || budget.MaxReadBytes > MaxPublicationArtifactBytes {
+	if r == nil || r.store == nil || !formalCandidateDigest(sha) || size < 0 || maxBytes < 1 || maxBytes > 8<<30 || size > maxBytes || budget.MaxVersions < 1 || budget.MaxVersions > 10000 || budget.MaxPages < 1 || budget.MaxPages > 1000 || budget.MaxReadBytes < maxBytes || budget.MaxReadBytes > 900<<30 {
 		return zero, errPublicationUnavailable
 	}
 	versions := []artifactNativeVersion{}
@@ -222,7 +211,7 @@ func (r *ArtifactReadOnlyS3) resolveHashedVersion(ctx context.Context, key, sha 
 				}
 				continue
 			}
-			if version.Version == "" || version.Version == "null" || version.Version == "latest" || len(version.Version) > 256 || version.Size < 1 || version.Size > MaxPublicationArtifactBytes || version.Modified.IsZero() || seen[version.Version] {
+			if version.Version == "" || version.Version == "null" || version.Version == "latest" || len(version.Version) > 256 || version.Size < 1 || version.Size > 8<<30 || version.Modified.IsZero() || seen[version.Version] {
 				return zero, errPublicationUnavailable
 			}
 			seen[version.Version] = true

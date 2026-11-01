@@ -42,7 +42,6 @@ type ArtifactCatalogContent struct {
 	installation, backup, base  string
 	attempt                     uint64
 	material                    ArtifactReadMaterials
-	limits                      ArtifactReadLimits
 	manifest, index             []byte
 	entries                     map[string]publicationArtifactEntry
 	manifestObject, indexObject ArtifactReadObject
@@ -63,7 +62,7 @@ func (c *ArtifactCatalogContent) IndexBytes() []byte {
 
 func (r *ArtifactReadOnlyS3) readVersionedBytes(ctx context.Context, key, version, sha string, maxBytes int64, until time.Time) ([]byte, ArtifactReadObject, error) {
 	var zero ArtifactReadObject
-	if r == nil || r.store == nil || version == "" || version == "null" || version == "latest" || maxBytes < 1 || maxBytes > r.limits.MaxIndexBytes || !formalCandidateDigest(sha) {
+	if r == nil || r.store == nil || version == "" || version == "null" || version == "latest" || maxBytes < 1 || maxBytes > 8<<30 || !formalCandidateDigest(sha) {
 		return nil, zero, errPublicationUnavailable
 	}
 	object, err := r.store.stat(ctx, key, version, until)
@@ -83,7 +82,7 @@ func (r *ArtifactReadOnlyS3) readVersionedBytes(ctx context.Context, key, versio
 }
 
 func (r *ArtifactReadOnlyS3) ReadCatalogIndex(ctx context.Context, catalog []byte, history *security.ArtifactSigningKeyHistory, maxIndexBytes int64, maxEntries int, budget ArtifactVersionSearchBudget, until time.Time) (*ArtifactCatalogContent, error) {
-	if r == nil || r.store == nil || history == nil || maxIndexBytes < 1 || maxIndexBytes > r.limits.MaxIndexBytes || maxEntries < 1 || maxEntries > 1000000 {
+	if r == nil || r.store == nil || history == nil || maxIndexBytes < 1 || maxIndexBytes > 8<<30 || maxEntries < 1 || maxEntries > 1000000 {
 		return nil, errPublicationUnavailable
 	}
 	var envelope struct {
@@ -143,20 +142,18 @@ func (r *ArtifactReadOnlyS3) ReadCatalogIndex(ctx context.Context, catalog []byt
 	}
 	entries := map[string]publicationArtifactEntry{}
 	last := ""
-	remaining := r.limits.MaxArtifactBytes - int64(len(index))
 	for _, entry := range parsed.Entries {
-		if !safePublicationKey(entry.Path) || entry.Path <= last || entry.Path == "artifact-index.json" || entry.Path == "manifest.json" || entry.Path == "_COMMITTED" || entry.Path == "_ACCEPTANCE" || entry.Size < 1 || entry.Size > remaining || !formalCandidateDigest(entry.SHA256) || len(entry.Framing) < 1 || len(entry.Framing) > 64 || entry.Role != "encrypted_payload" && entry.Role != "envelope" && entry.Role != "control_evidence" {
+		if !safePublicationKey(entry.Path) || entry.Path <= last || entry.Path == "artifact-index.json" || entry.Path == "manifest.json" || entry.Path == "_COMMITTED" || entry.Path == "_ACCEPTANCE" || entry.Size < 1 || entry.Size > 8<<30 || !formalCandidateDigest(entry.SHA256) || len(entry.Framing) < 1 || len(entry.Framing) > 64 || entry.Role != "encrypted_payload" && entry.Role != "envelope" && entry.Role != "control_evidence" {
 			return nil, errPublicationUnavailable
 		}
 		entries[entry.Path] = entry
-		remaining -= entry.Size
 		last = entry.Path
 	}
-	return &ArtifactCatalogContent{installation: registration.Installation, backup: registration.Backup, attempt: registration.Attempt, base: base, material: artifactReadMaterials(r.store.config), limits: r.limits, manifest: manifest, index: index, entries: entries, manifestObject: manifestObject, indexObject: indexObject}, nil
+	return &ArtifactCatalogContent{installation: registration.Installation, backup: registration.Backup, attempt: registration.Attempt, base: base, material: artifactReadMaterials(r.store.config), manifest: manifest, index: index, entries: entries, manifestObject: manifestObject, indexObject: indexObject}, nil
 }
 
 func (c *ArtifactCatalogContent) ResolveEntry(ctx context.Context, reader *ArtifactReadOnlyS3, path string, budget ArtifactVersionSearchBudget, until time.Time) (ArtifactReadObject, error) {
-	if c == nil || reader == nil || reader.store == nil || artifactReadMaterials(reader.store.config) != c.material || reader.limits != c.limits {
+	if c == nil || reader == nil || reader.store == nil || artifactReadMaterials(reader.store.config) != c.material {
 		return ArtifactReadObject{}, errPublicationUnavailable
 	}
 	entry, ok := c.entries[path]
