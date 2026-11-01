@@ -105,7 +105,7 @@ func normalizeRestoreNorthbound(ctx context.Context, input restoreNorthboundInpu
 	if *source["id"] != "1" {
 		return zero, errors.New("resources northbound singleton ID is invalid")
 	}
-	for _, column := range []string{"api_enabled", "require_explicit_callers"} {
+	for _, column := range []string{"api_enabled", "require_explicit_callers", "owner_teams_enabled"} {
 		if source[column] == nil || (*source[column] != "0" && *source[column] != "1") {
 			return zero, errors.New("resources northbound source switch is invalid")
 		}
@@ -178,9 +178,26 @@ func normalizeRestoreNorthbound(ctx context.Context, input restoreNorthboundInpu
 	if err != nil {
 		return zero, err
 	}
+	// Migration 077 uses zero to mean no dedicated creation user. Preserve
+	// that sentinel; positive identities require the same explicit user map
+	// as updated_by, even when the source owner-team switch is disabled.
+	creationUser, err := parseRestoreNorthboundInteger(source["owner_team_creation_user_id"])
+	if err != nil || creationUser < 0 {
+		return zero, errors.New("resources northbound owner creation user is invalid")
+	}
+	creationTarget := "0"
+	if creationUser > 0 {
+		mapped, err := mapping.nullable(restoreUserID, &creationUser)
+		if err != nil {
+			return zero, err
+		}
+		creationTarget = strconv.FormatInt(*mapped, 10)
+	}
 	row := cloneRestoreAuditRow(source)
 	disabled, explicit, version, targetPort := "0", "1", strconv.FormatInt(nextVersion, 10), strconv.FormatInt(policy.ExternalNodePort, 10)
 	row["api_enabled"] = &disabled
+	row["owner_teams_enabled"] = &disabled
+	row["owner_team_creation_user_id"] = &creationTarget
 	row["require_explicit_callers"] = &explicit
 	row["version"] = &version
 	row["external_node_port"] = &targetPort

@@ -14,7 +14,7 @@ import (
 const sourceCatalogTables = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'engine',COALESCE(ENGINE,''))) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE'`
 const sourceCatalogColumns = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'position',ORDINAL_POSITION,'name',COLUMN_NAME,'type',COLUMN_TYPE,'nullable',IS_NULLABLE,'default',COLUMN_DEFAULT,'extra',EXTRA)) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()`
 const sourceCatalogKeys = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'name',COLUMN_NAME,'constraint',CONSTRAINT_NAME,'position',ORDINAL_POSITION,'reference_table',REFERENCED_TABLE_NAME,'reference_column',REFERENCED_COLUMN_NAME,'sort',source_order)) FROM (SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,ORDINAL_POSITION,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME,ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY CONSTRAINT_NAME,ORDINAL_POSITION) AS source_order FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND (CONSTRAINT_NAME='PRIMARY' OR REFERENCED_TABLE_NAME IS NOT NULL)) AS original_keys`
-const sourceCatalogUnique = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'index',INDEX_NAME,'name',COLUMN_NAME,'position',SEQ_IN_INDEX,'prefix',SUB_PART,'sort',source_order)) FROM (SELECT TABLE_NAME,INDEX_NAME,COLUMN_NAME,SEQ_IN_INDEX,SUB_PART,ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY INDEX_NAME,SEQ_IN_INDEX) AS source_order FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('workbuddy_linux_identities','workbuddy_linux_identity_allocator') AND NON_UNIQUE=0 AND INDEX_NAME<>'PRIMARY') AS original_unique`
+const sourceCatalogUnique = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'index',INDEX_NAME,'name',COLUMN_NAME,'position',SEQ_IN_INDEX,'prefix',SUB_PART,'sort',source_order)) FROM (SELECT TABLE_NAME,INDEX_NAME,COLUMN_NAME,SEQ_IN_INDEX,SUB_PART,ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY INDEX_NAME,SEQ_IN_INDEX) AS source_order FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('workbuddy_linux_identities','workbuddy_linux_identity_allocator','gateway_keys','gateway_key_budget_reservations','gateway_key_budget_ledger','gateway_image_artifacts','gateway_image_jobs','llm_model_user_grants','routing_classifier_settings','northbound_admin_settings','northbound_caller_policies','northbound_owner_records','northbound_settings_audit','northbound_operations') AND NON_UNIQUE=0 AND INDEX_NAME<>'PRIMARY') AS original_unique`
 
 type sourceCatalogItem struct {
 	Table           string  `json:"table"`
@@ -136,7 +136,7 @@ func catalogBusinessGuarded(ctx context.Context, q queryer, check func() error) 
 					table.ForeignKeys = append(table.ForeignKeys, ForeignKey{Column: item.Name, Table: *item.ReferenceTable, Reference: *item.ReferenceColumn})
 				}
 			case sourceCatalogUnique:
-				if item.Prefix != nil || !identifier.MatchString(item.Index) || item.Index == "PRIMARY" || (item.Table != "workbuddy_linux_identities" && item.Table != "workbuddy_linux_identity_allocator") {
+				if item.Prefix != nil || !identifier.MatchString(item.Index) || item.Index == "PRIMARY" || !requiresUniqueCatalog(item.Table) {
 					return nil, ErrSchema
 				}
 				if len(table.UniqueKeys) == 0 || table.UniqueKeys[len(table.UniqueKeys)-1].Name != item.Index {

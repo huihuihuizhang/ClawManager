@@ -338,6 +338,8 @@ func cloneBusinessRestoreInput(input BusinessRestoreInput) BusinessRestoreInput 
 	input.CallerPolicies = append([]NorthboundCallerPolicyRestoreSource(nil), input.CallerPolicies...)
 	for i := range input.CallerPolicies {
 		input.CallerPolicies[i].UpdatedBy = cloneRiskHitInt(input.CallerPolicies[i].UpdatedBy)
+		input.CallerPolicies[i].APIKeysJSON = cloneString(input.CallerPolicies[i].APIKeysJSON)
+		input.CallerPolicies[i].APIKeysVersion = cloneRiskHitInt64(input.CallerPolicies[i].APIKeysVersion)
 	}
 	input.Models = cloneLLMModelSources(input.Models)
 	input.Rules = cloneRiskRuleSources(input.Rules)
