@@ -15,7 +15,9 @@
     "A_capture_certificate": "40d7e5fd8ad12e7103f8acb40ed6bcca50103041",
     "D_issuer_request_data": "578c30951add5959bc168f4e6c895e0a926aeddf",
     "D_mapping_request_data": "b583c65d59bc6942e68b49fefe534a0fe1f3b92e",
-    "D_mapping_comparison_scope": "8a98f125be8aeea6a3c0be87b2ea1d6c75a4d75a"
+    "D_mapping_comparison_scope": "8a98f125be8aeea6a3c0be87b2ea1d6c75a4d75a",
+    "A_payload_counts": "ea7683b56235913cb1bef86d289efd7c0c3f70c0",
+    "D_first_controller_binding_candidate": "eff7b750c46a13315b7abf441cf17826f8df98ce"
   },
   "native_test_instances": {
     "A_supervisor": {
@@ -171,6 +173,34 @@
       "package_seconds": 95.662,
       "log_relative_to_workspace_parent": ".tools/supervisor-a-d9100d1c-certificate-healthy.log",
       "log_sha256": "4e1b57dc669119d59c6d1a3fe6451452fdc9d785e3c33a81edf99ddd66dc0ae5"
+    },
+    "a_payload_counts_local": {
+      "outcome": "PASS",
+      "execution_seconds": 3.74,
+      "skillhub_seconds": 0.433,
+      "scope": "Nonempty local Redis TLS bytes; resource/object/SQL DATA parser properties; complete archive and admission negatives. No SQL/current-publisher/task acceptance.",
+      "log_relative_to_workspace_parent": ".tools/supervisor-a-payload-counts-v2-local.log",
+      "log_sha256": "f724363dafce8c4e21803c06f8c4b9b808390a5522147a90af830adcdb4aa245"
+    },
+    "ad_counts_first_binding_original_sql": {
+      "outcome": "PASS",
+      "package_seconds": 24.588,
+      "source_case_seconds": 20.04,
+      "source_inner_case_seconds": 1.15,
+      "first_binding_case_seconds": 1.22,
+      "instance_uuid": "9679c9da-d595-11f1-b25e-745d22085e06",
+      "scope": "Two exact committed candidates over base1caea630; actual full174/177 schema with82 business tables/95 excluded and nonempty captured rows/cell bytes; thirteen current-column first-binding SQL cases. Named Job DATA, rollback and domain-unknown marker only, not observed Kube Job/actual ACK-unknown/cancel-row proof.",
+      "log_relative_to_workspace_parent": ".tools/supervisor-ad-counts-firstbind-original-sql.log",
+      "log_sha256": "c3c77032960ed4c4463ec54f813a669e46c7202273d3de136df8098ee6d5d141"
+    },
+    "a_payload_counts_merged_packages": {
+      "outcome": "PASS",
+      "execution_seconds": 7.89,
+      "skillhub_seconds": 1.611,
+      "merged_code": "577cff9af22ee5b1da12af72b47088b4a99349cb",
+      "scope": "Both complete default native packages, SQL opt-ins cleared.",
+      "log_relative_to_workspace_parent": ".tools/supervisor-a-payload-counts-ea7683-merged-packages.log",
+      "log_sha256": "b16a05f1e8b5fd57d480eea211850985f9e2855ff158a378b3053678a02003dc"
     }
   },
   "complete_capture_independent": {
@@ -198,7 +228,7 @@
   "remote_activity": false,
   "readiness_state_changes": false,
   "constraints": "Original input scope, per-row/EOF checks, grant/claim/nonce/time bounds, and stop-before-resume protections were retained. No forced push.",
-  "updated_at_utc": "2026-11-01T03:47:30.165703+00:00",
+  "updated_at_utc": "2026-11-01T04:30:06.024760+00:00",
   "A_activation_scope": "Original107/121+attemptCAS, single conditional native unsuspend, unknown-ACK query-only recovery, real OS child reopen, mTLS/TokenReview/current Pod and exact original certificate reception, immutable fixed-version lookup hints with atomic cursor/evidence. Ten start and fourteen receiver cases; no provider readback or formal artifact success claim.",
   "D_held_owner_scope": "Combines original held facts and current profile/effective identity reads only under the original guard/transaction. Original deployment owner callback and current signed-file checks run first; complete locking SQL facts and a fresh SQL clock execute after callback return. Private shared lifecycle is bound to the original read instance; copy, copyback, old-instance injection, unused and closed reads reject. Real post-callback task-row mutation and original journal counts are verified. Original 24-fact/expiry, provider, policy, identity, fallback and candidate-consumer matrices passed. A subsequent independent full174 task failed at its original source permission deadline (24.996s initial window); complete capture repeatability remains unproven. No old key/nonce/time bound was renewed to hide the failure.",
   "D_held_owner_integration": {
@@ -310,5 +340,37 @@
     "limitations": "Owned fixture schema cleaned after failure; no later independent SQL final-status observation. The A owner successful29s-window certificate run is not replaced by this25s-window failure, and does not prove repeatability.",
     "window": "Supervisor session26835 terminal exit1 and closed; D63507 explicitly released to D for first-dispatch boundary work. Interrupted old schema542c/task78b3 remains retained unchanged."
   },
-  "next_capture_boundary": "Controller-only initial dispatch/Job-ready issuance coordination under a genuinely live original owner/epoch/claim and empty original nonce/intent is under design. Existing nonce/key/permit Until and default TTL30/heartbeat5 must remain unchanged; worker RPCs must not renew the controller. No such fix is claimed by this report."
+  "next_capture_boundary": "D first-controller-binding candidate eff7 now implemented with unchanged defaultTTL30/heartbeat5 and old key/nonce/permit bounds. Root exact native13 SQL cases passed; owner original capture reached validating and then publisher C/domain failed. Independent complete capture and publisher diagnosis remain; no full backup or stable-window claim.",
+  "A_payload_counts_scope": {
+    "source": "ea7683b56235913cb1bef86d289efd7c0c3f70c0",
+    "integration": "577cff9af22ee5b1da12af72b47088b4a99349cb",
+    "exact_source": "All11 source/doc files equal committed candidate, CRLF normalization only",
+    "call_path": "Actual current-Unwrap/AEAD/postread -> complete payload counts -> private publication capture receipt; missing units/counts reject before receipt. Original Skill MD5 and whole-archive policy retained.",
+    "limitations": "Redacted observations for future complete v12 manifest; no manifest/upload/eligibility/success creation, no source-independent restore proof. Root own whole-workspace golden MD5 probe was adopted as permanent test."
+  },
+  "D_first_binding_candidate_scope": {
+    "source": "eff7b750c46a13315b7abf441cf17826f8df98ce",
+    "integration": "Not yet merged to backup; original capture independently to be reproduced",
+    "review": "Same original active controller run only; first actual observed UID with empty binding/key-use/process. Full old guard checked then invalidated, same epoch renewal and new complete guard; original transaction cutoff, owner grant, full SQL facts/account/server/db retained. Existing binding/read/recovery/worker routes cannot renew old key/nonce/permit.",
+    "remaining": "Actual committed firstBind/duplicate/unknown-ACK recovery, natural original cutoff delivery delay, committed cancel row, multiJob/heartbeat faults and independent original full capture."
+  },
+  "D_first_binding_owner_full_task": {
+    "task_id": "sbk_ccad2719-cfd6-4fda-8dad-ef93fdac55d5",
+    "source": "eff7b750c46a13315b7abf441cf17826f8df98ce",
+    "A_fixture": "d9100d1c5e1befa6808b507fff653dd65b97f758",
+    "observed_by": "D owner local native run; supervisor reviewed actual log; not root independent full-task acceptance",
+    "outcome": "FAIL after successful original10-worker capture and stop/resume, original runner=ok/record=ok entered validating; current publisher complete C/domain verification failed before certificate",
+    "case_seconds": 130.97,
+    "package_seconds": 134.209,
+    "source_open_remaining_seconds": 29.6640764,
+    "source_authorize_calls": 880,
+    "source_authorize_local_seconds": 0.756921,
+    "source_stream_seconds": 25.1295495,
+    "certificate_signed": false,
+    "session": 57967,
+    "terminal_closed_owner_confirmed": true,
+    "D63507": "released; next holder supervised explicitly",
+    "log_relative_to_workspace_parent": ".tools/d-first-binding-a-d910-full.log",
+    "log_sha256": "e1f51d81db81d5cb35af12ac9d4f7bef7d8e23a9d6f1436692f50148a68e610b"
+  }
 }
