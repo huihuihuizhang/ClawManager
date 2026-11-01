@@ -29,6 +29,7 @@ type publicationContinuation struct {
 	claim        c.ClaimToken
 	attempt      uint64
 	policy       c.LeasePolicy
+	limits       ArtifactReadLimits
 	access       *security.SQLPublisherCaptureAuthority
 	target       PublicationTargetMaterials
 	actions      []publicationJournalAction
@@ -98,6 +99,14 @@ ORDER BY b.id LIMIT 1`, s.Config.InstallationID).Scan(&backup, &version, &attemp
 	}
 	if guard.Facts().Status != "publishing" || s.checkPublicationTargetTx(ctx, tx, guard.Facts(), store.config) != nil {
 		return nil, c.ErrExecutionAuthority
+	}
+	p.limits, err = readPublicationLimitsTx(ctx, tx, guard)
+	if err != nil {
+		return nil, err
+	}
+	store, err = store.withObjectLimit(p.limits.MaxArtifactBytes)
+	if err != nil {
+		return nil, err
 	}
 	p.actions, err = p.readActions(ctx, tx)
 	if err != nil {
@@ -175,6 +184,13 @@ func (p *publicationContinuation) recheckTx(ctx context.Context, tx *sql.Tx) err
 	if guard.Facts().Status != "publishing" || p.service.checkPublicationTargetTx(ctx, tx, guard.Facts(), p.target) != nil {
 		return c.ErrExecutionAuthority
 	}
+	limits, err := readPublicationLimitsTx(ctx, tx, guard)
+	if err != nil {
+		return err
+	}
+	if limits != p.limits {
+		return c.ErrExecutionAuthority
+	}
 	current, err := p.readActions(ctx, tx)
 	if err != nil {
 		return err
@@ -207,7 +223,11 @@ func (p *publicationContinuation) publishNext(ctx context.Context, store *native
 	if p.closed.Load() || ctx != p.ctx || store == nil || !reflect.DeepEqual(store.config, p.target) || p.next == "" || intent.Kind != p.next || !p.used.CompareAndSwap(false, true) {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
 	}
-	return p.service.publishOriginalJSONWithContinuation(ctx, p.claim, p.attempt, store, intent, p)
+	bounded, err := store.withObjectLimit(p.limits.MaxArtifactBytes)
+	if err != nil {
+		return nativePublicationObject{}, err
+	}
+	return p.service.publishOriginalJSONWithContinuation(ctx, p.claim, p.attempt, bounded, intent, p)
 }
 
 func (p *publicationContinuation) close() error {
