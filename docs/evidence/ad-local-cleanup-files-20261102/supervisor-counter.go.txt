@@ -1,0 +1,38 @@
+package systembackupexecution
+
+import (
+ "context"
+ "testing"
+ "clawreef/internal/systembackup/staging"
+)
+
+// Actual filesystem counter only. No SQL or task receipt is constructed.
+func TestSupervisorLocalCleanupRejectsDetachedCustodyRoot(t *testing.T) {
+ owner, stage, seals := newPublicationLocalFilesFixture(t)
+ plan, err := preparePublicationLocalFiles(context.Background(), owner, stage, seals)
+ if err != nil { t.Fatal(err) }
+ defer plan.close()
+ // Preserve the real old open inode, but replace its canonical parent entry.
+ if err = owner.Staging.Rename(".controller-seals", ".controller-seals-retired"); err != nil { t.Fatal("actual custody rename setup", err) }
+ current, err := staging.OpenSealCustody(owner.Staging)
+ if err != nil { t.Fatal(err) }
+ defer current.Close()
+ for _, seal := range seals {
+  for _, name := range []string{seal.Name,seal.Name+".intent.json"} {
+   raw, err := plan.custody.ReadFile(name)
+   if err != nil { t.Fatal(err) }
+   if err = writeStageExclusive(current,name,raw); err != nil { t.Fatal(err) }
+  }
+ }
+ authorizations := 0
+ err = staging.WithCustodyLock(context.Background(), plan.custody, func() error {
+  return plan.removeLocked(context.Background(), func(remove func()error)error { authorizations++;return remove() })
+ })
+ if err == nil || authorizations != 0 {
+  t.Fatalf("detached custody root reached removal or false absence: err=%v authorization_calls=%d old_root_absent=%v",err,authorizations,publicationLocalFilesAbsent(owner.Staging,plan.custody,stage.owner.Task,seals))
+ }
+ for _,seal := range seals {
+  if _,err = current.Lstat(seal.Name);err != nil { t.Fatal("canonical owned ciphertext changed",err) }
+  if _,err = plan.custody.Lstat(seal.Name);err != nil { t.Fatal("detached refusal already removed original inode",err) }
+ }
+}

@@ -1,0 +1,4 @@
+=== RUN   TestPublicationLocalCleanupDoesNotReadForeignCiphertext
+--- PASS: TestPublicationLocalCleanupDoesNotReadForeignCiphertext (0.07s)
+PASS
+ok  	clawreef/internal/systembackupexecution	3.390s

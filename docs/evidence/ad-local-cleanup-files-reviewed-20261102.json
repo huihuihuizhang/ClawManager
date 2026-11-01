@@ -1,0 +1,129 @@
+{
+  "schema_version": "ad-local-cleanup-files-reviewed.v1",
+  "recorded_at": "2026-11-01T19:20:22.018294+00:00",
+  "parent": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+  "scope": "Three filesystem helper/test files only, exact final owner blobs. No production SQL/native recovery route or acceptance/catalog/terminal is included. The callback used in the tests counts filesystem protocol calls, never grants task authority.",
+  "source_pins": {
+    "base": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+    "original_helper": "f5eaa32f45d96e72e000b3e477e43926c360d94c",
+    "inode_fix": "1cd548b0c126214ee72ab23577d4c43eb77e2581",
+    "fixture_fix_only": "4ddff714e0be484dd429d5448c1851160a31239a",
+    "sources": [
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_files.go",
+        "git_blob": "af153554f543feb1da3bcb6f01e1fa971142a4c1",
+        "sha256": "a0694b3af8b93581218da26057ecc33c1cf1b84398a6a1b2f44b229e5655145b",
+        "bytes": 15933,
+        "exact_final_owner": true
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_test.go",
+        "git_blob": "4885b77590bd0f62cee779549ff5bb4e2b90a3bf",
+        "sha256": "d08706d45b7ee6a7f294479dd3e8b687d160348d505a443bd0e8d6f32f6b4701",
+        "bytes": 10030,
+        "exact_final_owner": true
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_windows_test.go",
+        "git_blob": "c913757af19fc339e330ad05f16b451b96607fc6",
+        "sha256": "9a520edaf757fe0fd164483f88de8a5b7dd7248d461b4016eac26a1ba089857d",
+        "bytes": 2531,
+        "exact_final_owner": true
+      }
+    ]
+  },
+  "independent_primary": {
+    "original_counter": {
+      "session": 9894,
+      "closed": true,
+      "natural_exit": 1,
+      "package_seconds": 3.376,
+      "case_seconds": 0.08,
+      "result": "Real rename of original custody directory then canonical replacement with the same seal names. Old detached root erroneously allowed removal and old-root absence (errnil,authorization_calls1,old_root_absenttrue). Original code is rejected."
+    },
+    "inode_fixed_group": {
+      "session": 66099,
+      "closed": true,
+      "natural_exit": 1,
+      "package_seconds": 3.605,
+      "passed": [
+        "same supervisor detached-root counter",
+        "owner before-removal and after-removal canonical custody cases",
+        "exact owned removal and foreign/control preservation",
+        "unknown owned seal refusal before removal",
+        "same-content inode replacement refusal before authorization"
+      ],
+      "failure": "Windows share-deny reader fixture returned ErrExecutionRecord in prepare. Original full result is FAIL, retained unchanged."
+    },
+    "final_only_failed_case": {
+      "session": 32849,
+      "closed": true,
+      "natural_exit": 0,
+      "package_seconds": 3.39,
+      "case_seconds": 0.07,
+      "result": "Only TestPublicationLocalCleanupDoesNotReadForeignCiphertext rerun. A real exclusive byte-range lock prevents a second-handle content Read with ERROR_LOCK_VIOLATION while metadata Lstat is actually permitted; prepare succeeds without reading foreign ciphertext. Only the Windows fixture changed; production/helper ordinary tests unchanged from previous passing cases. No repeat of unchanged green groups."
+    }
+  },
+  "review": {
+    "owned_paths": "HMAC original task marker/key and exact authenticated ciphertext/envelope seal name sets; bounded depth32/entries10000 and total task-byte budget. Symlinks and unknown/partial/same-task unregistered entries refuse.",
+    "foreign_custody": "Full bounded name/metadata scan; canonical paired foreign intent cannot reuse owned Job UID or invocation. Foreign ciphertext bodies are not read.",
+    "deletion": "Complete inventory and inode/hash checks precede the separately supplied authority callback. Original marker removed last; original key and stable custody lock preserved. No recursive RemoveAll.",
+    "inode_fix": "Canonical parent .controller-seals entry must still be the same opened directory inode before inventory, deletion and absence, including final absence check."
+  },
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/original-counter.log",
+      "raw_bytes": 355,
+      "raw_sha256": "d2fe622f9624c60e69cf7ecd3d58b4e08d77ca9d456a9a43779c92e0323aae52",
+      "committed_bytes": 349,
+      "committed_sha256": "b15674c65c84837806ea6de20a00e34017272b0d5bda8779b8b17e00dace3242",
+      "git_blob": "7128c911adabeba25dcc460206072622644a9194"
+    },
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/fixed-counter-and-files.log",
+      "raw_bytes": 1526,
+      "raw_sha256": "747bd22bb61601600fc97066b432c2a076de73f6fdd239bd4e398f0c3bb44cb9",
+      "committed_bytes": 1506,
+      "committed_sha256": "274efc7b3c44922f44c50a011dbcb28bf0609353db5f526179a386e5cfae9cb1",
+      "git_blob": "8c90b5584fd3739f9cf9a0736a1830860d911e4b"
+    },
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/windows-foreign-fixture-only.log",
+      "raw_bytes": 201,
+      "raw_sha256": "c5a69e7d875af07b8d80dd9da3c3ed2523ca16607a9ed869cc342dc6e779763a",
+      "committed_bytes": 197,
+      "committed_sha256": "0618e6d9361f269220bc97b11e36c8d661b3c0354bcfab79c072763abf2ae6f1",
+      "git_blob": "02d4f428035680b34dc6cc9192036e2c88aabd0d"
+    },
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/supervisor-counter.go.txt",
+      "raw_bytes": 1825,
+      "raw_sha256": "5fc43bfc14d667dd6073d192d6df6e1e22bc5d11b2a318beed5d6f1a042229c4",
+      "committed_bytes": 1787,
+      "committed_sha256": "198d38976c41a6cdbb8178ddf0d109523f2323f636a547dbf764da641e5e9d1a",
+      "git_blob": "211931af23b14dfa8edca63b12a9eda702045dfc"
+    },
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/overlay.json",
+      "raw_bytes": 306,
+      "raw_sha256": "31fde1293258e81bd27044a09cabafd3eb719ae7839fb15fe65f3b5214bc8199",
+      "committed_bytes": 301,
+      "committed_sha256": "71147c7c9786ea94a3d822f491cec001a90e1ef106d396c0d318c194ee0a833c",
+      "git_blob": "e9722837bd2787bd9c03c5799b6084f45624d1b2"
+    },
+    {
+      "path": "docs/evidence/ad-local-cleanup-files-20261102/final-source-pins.json",
+      "raw_bytes": 1224,
+      "raw_sha256": "37bed60fd0092b9139d1242b8d7705dc4c8258f9a7fdb85908f33002767189ee",
+      "committed_bytes": 1195,
+      "committed_sha256": "59c34adbbb370b93631dd96a57c650e82697971b243b78b41a9e3fd2c096122f",
+      "git_blob": "9e6c4103497f9c9b49f158e0873450961a6e4724"
+    }
+  ],
+  "limits": [
+    "Not SQL authority, full C, cleanup_result aggregate, signed acceptance, catalog or terminal success.",
+    "Real production SQL wiring candidate1cbc, native cleanup observation83 and fresh readinessd4 remain separate and not established by this filesystem test scope.",
+    "Filesystem physical behavior validated on this Windows host; remote NFS/production execution deferred."
+  ],
+  "full_page_acceptance": false
+}

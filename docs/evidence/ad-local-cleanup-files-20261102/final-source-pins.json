@@ -1,0 +1,29 @@
+{
+  "base": "39fa93ce2c25d6319b8d7820c8da1ae137ab3485",
+  "original_helper": "f5eaa32f45d96e72e000b3e477e43926c360d94c",
+  "inode_fix": "1cd548b0c126214ee72ab23577d4c43eb77e2581",
+  "fixture_fix_only": "4ddff714e0be484dd429d5448c1851160a31239a",
+  "sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files.go",
+      "git_blob": "af153554f543feb1da3bcb6f01e1fa971142a4c1",
+      "sha256": "a0694b3af8b93581218da26057ecc33c1cf1b84398a6a1b2f44b229e5655145b",
+      "bytes": 15933,
+      "exact_final_owner": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_test.go",
+      "git_blob": "4885b77590bd0f62cee779549ff5bb4e2b90a3bf",
+      "sha256": "d08706d45b7ee6a7f294479dd3e8b687d160348d505a443bd0e8d6f32f6b4701",
+      "bytes": 10030,
+      "exact_final_owner": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_windows_test.go",
+      "git_blob": "c913757af19fc339e330ad05f16b451b96607fc6",
+      "sha256": "9a520edaf757fe0fd164483f88de8a5b7dd7248d461b4016eac26a1ba089857d",
+      "bytes": 2531,
+      "exact_final_owner": true
+    }
+  ]
+}

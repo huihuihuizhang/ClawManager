@@ -1,0 +1,6 @@
+=== RUN   TestSupervisorLocalCleanupRejectsDetachedCustodyRoot
+    supervisor_detached_custody_test.go:32: detached custody root reached removal or false absence: err=<nil> authorization_calls=1 old_root_absent=true
+--- FAIL: TestSupervisorLocalCleanupRejectsDetachedCustodyRoot (0.08s)
+FAIL
+FAIL	clawreef/internal/systembackupexecution	3.376s
+FAIL

@@ -1,0 +1,20 @@
+=== RUN   TestPublicationLocalCleanupRemovesExactOwnedFilesAndPreservesForeignTask
+--- PASS: TestPublicationLocalCleanupRemovesExactOwnedFilesAndPreservesForeignTask (0.08s)
+=== RUN   TestPublicationLocalCleanupRejectsUnknownOwnedSealBeforeAnyRemoval
+--- PASS: TestPublicationLocalCleanupRejectsUnknownOwnedSealBeforeAnyRemoval (0.03s)
+=== RUN   TestPublicationLocalCleanupRejectsInodeReplacementBeforeAuthorization
+--- PASS: TestPublicationLocalCleanupRejectsInodeReplacementBeforeAuthorization (0.03s)
+=== RUN   TestPublicationLocalCleanupBindsCanonicalCustodyDirectory
+=== RUN   TestPublicationLocalCleanupBindsCanonicalCustodyDirectory/before-removal
+=== RUN   TestPublicationLocalCleanupBindsCanonicalCustodyDirectory/after-removal-absence
+--- PASS: TestPublicationLocalCleanupBindsCanonicalCustodyDirectory (0.08s)
+    --- PASS: TestPublicationLocalCleanupBindsCanonicalCustodyDirectory/before-removal (0.04s)
+    --- PASS: TestPublicationLocalCleanupBindsCanonicalCustodyDirectory/after-removal-absence (0.04s)
+=== RUN   TestPublicationLocalCleanupDoesNotReadForeignCiphertext
+    publication_local_cleanup_files_windows_test.go:43: local inventory tried to read a foreign cipher body execution record unavailable or conflicting
+--- FAIL: TestPublicationLocalCleanupDoesNotReadForeignCiphertext (0.03s)
+=== RUN   TestSupervisorLocalCleanupRejectsDetachedCustodyRoot
+--- PASS: TestSupervisorLocalCleanupRejectsDetachedCustodyRoot (0.04s)
+FAIL
+FAIL	clawreef/internal/systembackupexecution	3.605s
+FAIL
