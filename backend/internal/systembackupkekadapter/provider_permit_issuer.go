@@ -73,6 +73,7 @@ type PreparedProviderPermitIssue struct {
 	issuer             *ProviderPermitIssuer
 	scope              ProviderPermitIssueScope
 	grant              ProviderPermitIssuerGrant
+	grantProof         *authenticatedPermitIssuerGrant
 	capability         *sqlPreparedCapability
 	mapping            OriginalRecord
 	planHash, specHash string
@@ -113,10 +114,11 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 		return nil, kms.ErrPermission
 	}
 	scope = frozen
-	g, err := readPermitIssuerGrant(ctx, i.cfg)
+	grantProof, err := authenticatePermitIssuerGrant(ctx, i.cfg)
 	if err != nil || checkControllerWorkload(ctx, i.cfg.Kubernetes, i.cfg.Workload) != nil {
 		return nil, kms.ErrPermission
 	}
+	g := grantProof.grant
 	a, identity := scope.Input.Authority, scope.WorkerIdentity
 	invocationHash, err := scope.Invocation.Hash()
 	access := *scope.Invocation.ProviderKey
@@ -171,7 +173,7 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 		}
 	}
 	until = until.UTC().Truncate(time.Microsecond)
-	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, capability: capability, mapping: mapping, planHash: planHash, specHash: specHash, until: until, original: original}, nil
+	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, grantProof: grantProof, capability: capability, mapping: mapping, planHash: planHash, specHash: specHash, until: until, original: original}, nil
 }
 
 func (p *PreparedProviderPermitIssue) ValidUntil() time.Time {
@@ -393,8 +395,7 @@ func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, g
 	if !now.Before(p.until) || guard.RecheckAfter(ctx, tx, now) != nil || bound.RequireUnrevoked(p.issuer.cfg.Binding.ConfigRef, reg.GenerateRevocation) != nil || p.capability.Recheck(ctx, tx, locked, now) != nil {
 		return kms.ErrPermission
 	}
-	g, err := readPermitIssuerGrant(ctx, p.issuer.cfg)
-	if err != nil || !reflect.DeepEqual(g, p.grant) || now.Before(g.NotBefore) || !now.Before(g.Until) {
+	if p.grantProof.recheck(ctx, p.issuer.cfg, now) != nil {
 		return kms.ErrPermission
 	}
 	raw, sig, err := (SQLOriginalReader{}).RecheckOriginal(ctx, tx, p.scope.Input.Authority.InstallationID, p.issuer.cfg.Binding.ConfigRef)

@@ -52,6 +52,127 @@ func TestOriginalGeneratePermitIssuerDelegation(t *testing.T) {
 	if _, err := readPermitIssuerGrant(context.Background(), cfg); err != nil {
 		t.Fatal("independent original Generate delegation rejected", err)
 	}
+	t.Run("prepared_current_file_and_bounds", func(t *testing.T) {
+		proof, err := authenticatePermitIssuerGrant(context.Background(), cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		original, err := os.ReadFile(cfg.GrantMount.File)
+		if err != nil {
+			t.Fatal(err)
+		}
+		check := func(current ProviderPermitIssuerConfig, at time.Time, allowed bool) {
+			t.Helper()
+			if got := proof.recheck(context.Background(), current, at); (got == nil) != allowed {
+				t.Fatalf("prepared current delegation allowed=%v: %v", allowed, got)
+			}
+		}
+		compareCurrent := func(current ProviderPermitIssuerConfig, allowed bool) {
+			t.Helper()
+			check(current, now, allowed)
+			if _, err := readPermitIssuerGrant(context.Background(), current); (err == nil) != allowed {
+				t.Fatalf("full current authentication allowed=%v: %v", allowed, err)
+			}
+		}
+		check(cfg, now, true)
+		check(cfg, grant.NotBefore, true)
+		check(cfg, grant.NotBefore.Add(-time.Nanosecond), false)
+		check(cfg, grant.Until, false)
+		check(cfg, time.Time{}, false)
+		for _, tc := range []struct {
+			name string
+			edit func(*ProviderPermitIssuerConfig)
+		}{
+			{"issuer", func(c *ProviderPermitIssuerConfig) { c.GrantMount.Issuer = public }},
+			{"capture_purpose", func(c *ProviderPermitIssuerConfig) { c.CaptureGrantSHA256 = c.GrantMount.SHA256 }},
+			{"workload_digest", func(c *ProviderPermitIssuerConfig) { c.Workload.GrantSHA256 = strings.Repeat("b", 64) }},
+			{"controller", func(c *ProviderPermitIssuerConfig) { c.Workload.PodUID = "other" }},
+			{"binding", func(c *ProviderPermitIssuerConfig) { c.Binding.Key.ProviderVersion = "other" }},
+			{"database", func(c *ProviderPermitIssuerConfig) {
+				v := *c.Capabilities
+				v.database.Database = "other"
+				c.Capabilities = &v
+			}},
+		} {
+			t.Run(tc.name, func(t *testing.T) { current := cfg; tc.edit(&current); compareCurrent(current, false) })
+		}
+		for _, tc := range []struct {
+			name string
+			raw  []byte
+		}{
+			{"empty", nil}, {"corrupt", []byte("broken")},
+			{"trailing", append(bytes.Clone(original), '\n')},
+			{"oversize", bytes.Repeat([]byte("x"), 65537)},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				if err := os.WriteFile(cfg.GrantMount.File, tc.raw, 0600); err != nil {
+					t.Fatal(err)
+				}
+				compareCurrent(cfg, false)
+			})
+		}
+		if err := os.Remove(cfg.GrantMount.File); err != nil {
+			t.Fatal(err)
+		}
+		compareCurrent(cfg, false)
+		if err := os.Mkdir(cfg.GrantMount.File, 0700); err != nil {
+			t.Fatal(err)
+		}
+		compareCurrent(cfg, false)
+		if err := os.Remove(cfg.GrantMount.File); err != nil {
+			t.Fatal(err)
+		}
+		for _, revoked := range []bool{false, true} {
+			changed := grant
+			changed.Until = changed.Until.Add(time.Minute)
+			changed.Revoked = revoked
+			fresh := sign(t, changed, nil)
+			raw, err := os.ReadFile(fresh.GrantMount.File)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(cfg.GrantMount.File, raw, 0600); err != nil {
+				t.Fatal(err)
+			}
+			check(cfg, now, false)
+			fresh.GrantMount.File = cfg.GrantMount.File
+			check(fresh, now, false) // Even replacing both pin and valid signed bytes cannot renew a prepared request.
+			if _, err := readPermitIssuerGrant(context.Background(), fresh); (err == nil) == revoked {
+				t.Fatalf("independent signed replacement revoked=%v: %v", revoked, err)
+			}
+		}
+		if err := os.WriteFile(cfg.GrantMount.File, original, 0600); err != nil {
+			t.Fatal(err)
+		}
+		check(cfg, now, true)
+		// Mutating an independently read public DTO cannot change prepared data.
+		read, err := readPermitIssuerGrant(context.Background(), cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		read.SigningPublicKey[0] ^= 1
+		read.Binding.GenerateRef.RawJSON[0] ^= 1
+		check(cfg, now, true)
+		before, err := json.Marshal(proof.grant)
+		if err != nil {
+			t.Fatal(err)
+		}
+		savedIssuer := bytes.Clone(cfg.GrantMount.Issuer)
+		cfg.Binding.GenerateRef.RawJSON[0] ^= 1
+		cfg.GrantMount.Issuer[0] ^= 1
+		after, err := json.Marshal(proof.grant)
+		if err != nil || !bytes.Equal(before, after) || !bytes.Equal(proof.raw, original) || !bytes.Equal(proof.issuer, savedIssuer) {
+			t.Fatal("caller input mutated authenticated data", err)
+		}
+		cfg.Binding.GenerateRef.RawJSON[0] ^= 1
+		cfg.GrantMount.Issuer[0] ^= 1
+		check(cfg, now, true)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if proof.recheck(ctx, cfg, now) == nil || proof.recheck(nil, cfg, now) == nil || (*authenticatedPermitIssuerGrant)(nil).recheck(context.Background(), cfg, now) == nil {
+			t.Fatal("invalid prepared context or nil proof admitted")
+		}
+	})
 	// No future Forward hash appears in signed delegation: changing the current
 	// capture grant at composition never changes this independent issuer pin.
 	other := cfg
@@ -129,6 +250,28 @@ func TestOriginalGeneratePermitIssuerDelegation(t *testing.T) {
 		other.GrantMount.Issuer = public
 		if _, err := readPermitIssuerGrant(context.Background(), other); err == nil {
 			t.Fatal("another signing purpose issued Generate authority")
+		}
+	})
+	t.Run("prepared_real_expiry", func(t *testing.T) {
+		short := grant
+		short.Until = time.Now().Add(2 * time.Second)
+		current := sign(t, short, nil)
+		proof, err := authenticatePermitIssuerGrant(context.Background(), current)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if proof.recheck(context.Background(), current, time.Now()) != nil {
+			t.Fatal("live original grant rejected")
+		}
+		time.Sleep(time.Until(short.Until) + 20*time.Millisecond)
+		if time.Now().Before(short.Until) {
+			t.Fatal("expiry fixture did not cross actual wall clock")
+		}
+		if proof.recheck(context.Background(), current, now) == nil {
+			t.Fatal("stale supplied clock revived expired original grant")
+		}
+		if _, err := readPermitIssuerGrant(context.Background(), current); err == nil {
+			t.Fatal("full current authentication revived expired original grant")
 		}
 	})
 }
