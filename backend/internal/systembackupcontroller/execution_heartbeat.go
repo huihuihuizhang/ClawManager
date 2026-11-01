@@ -43,6 +43,9 @@ func (s SQLExecutionWorkStore) RunWithExecutionHeartbeat(ctx context.Context, a 
 	}
 	child, cancel := context.WithCancel(ctx)
 	defer cancel()
+	live := newOriginalControllerRun(s, a, child)
+	active := context.WithValue(child, originalControllerRunKey{}, live)
+	defer live.close(cancel)
 	done := make(chan error, 1)
 	go func() {
 		tick := time.NewTicker(s.Queue.Policy.HeartbeatInterval)
@@ -68,8 +71,8 @@ func (s SQLExecutionWorkStore) RunWithExecutionHeartbeat(ctx context.Context, a 
 			}
 		}
 	}()
-	err := run(child)
-	cancel()
+	err := run(active)
+	live.close(cancel)
 	renewErr := <-done
 	if err != nil {
 		return err
