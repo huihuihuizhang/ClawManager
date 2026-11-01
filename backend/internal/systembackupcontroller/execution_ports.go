@@ -302,9 +302,37 @@ func (g *ExecutionAuthorityGuard) Recheck(ctx context.Context, tx *sql.Tx) error
 	return g.RecheckAfter(ctx, tx, time.Time{})
 }
 
+// Invalidate closes the original transaction's shared failure latch. It grants
+// no authority and cannot restore a failed guard or extend any bound.
+func (g *ExecutionAuthorityGuard) Invalidate() {
+	if g == nil || g.state == nil {
+		return
+	}
+	g.state.mu.Lock()
+	defer g.state.mu.Unlock()
+	g.state.failed = true
+}
+
 // RecheckAfter preserves a caller's newer SQL clock without renewing any
 // original expiry. The bound is checked BEFORE the A owner callback.
 func (g *ExecutionAuthorityGuard) RecheckAfter(ctx context.Context, tx *sql.Tx, notBefore time.Time) error {
+	return g.recheckOriginal(ctx, tx, notBefore, nil, nil)
+}
+
+// RecheckOriginal reuses this transaction's ORIGINAL lock acquisition, only
+// for the exact same authority store and input. It performs the complete
+// current owner/facts/clock recheck; it cannot adopt another claim or expiry.
+func (g *ExecutionAuthorityGuard) RecheckOriginal(ctx context.Context, tx *sql.Tx, store SQLExecutionAuthority, a dispatch.Authority) error {
+	return g.recheckOriginal(ctx, tx, time.Time{}, &store, &a)
+}
+
+func sameOriginalExecutionStore(a, b SQLExecutionAuthority) bool {
+	owner := reflect.TypeOf(a.Authorization)
+	return a.DB == b.DB && a.InstallationID == b.InstallationID && a.ApplicationScope == b.ApplicationScope && a.DeploymentEnabled == b.DeploymentEnabled &&
+		owner != nil && owner.Comparable() && owner == reflect.TypeOf(b.Authorization) && a.Authorization == b.Authorization
+}
+
+func (g *ExecutionAuthorityGuard) recheckOriginal(ctx context.Context, tx *sql.Tx, notBefore time.Time, originalStore *SQLExecutionAuthority, originalAuthority *dispatch.Authority) error {
 	if g == nil || g.state == nil {
 		return ErrExecutionAuthority
 	}
@@ -316,6 +344,9 @@ func (g *ExecutionAuthorityGuard) RecheckAfter(ctx context.Context, tx *sql.Tx, 
 	}
 	// Copies share this latch and the original context/transaction identity.
 	s.failed = true
+	if originalStore != nil && (originalAuthority == nil || *originalAuthority != s.authority || !sameOriginalExecutionStore(*originalStore, s.store)) {
+		return ErrExecutionAuthority
+	}
 	if absentExecutionDependency(ctx) || !reflect.TypeOf(ctx).Comparable() || ctx != s.ctx || ctx.Err() != nil || tx == nil || tx != s.tx {
 		return ErrExecutionAuthority
 	}

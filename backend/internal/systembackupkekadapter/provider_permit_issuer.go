@@ -187,6 +187,24 @@ const issuedPermitQuery = `SELECT inline_payload,content_checksum,content_size_b
 // after its domain/Job/candidate/observation locks, before that owner's Commit.
 // It never commits and exposes no uncommitted signed payload to its caller.
 func (p *PreparedProviderPermitIssue) Stage(ctx context.Context, tx *sql.Tx, lease worker.KeyUseLease, action string) error {
+	return p.stage(ctx, tx, lease, action, nil)
+}
+
+// StageOriginal repeats CURRENT authority checks using the exact original
+// context/transaction/store/input guard whose locks the caller still holds.
+// All provider/registry checks and the original final clock checks remain.
+func (p *PreparedProviderPermitIssue) StageOriginal(ctx context.Context, tx *sql.Tx, lease worker.KeyUseLease, action string, original *c.ExecutionAuthorityGuard) error {
+	if original == nil {
+		return kms.ErrPermission
+	}
+	err := p.stage(ctx, tx, lease, action, original)
+	if err != nil {
+		original.Invalidate()
+	}
+	return err
+}
+
+func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lease worker.KeyUseLease, action string, original *c.ExecutionAuthorityGuard) error {
 	if p == nil || ctx == nil || ctx.Err() != nil || tx == nil || lease.Identity != p.scope.WorkerIdentity || lease.Access != *p.scope.Invocation.ProviderKey || lease.Nonce == "" || len(lease.Nonce) != 32 || !authorityHash.MatchString(lease.Nonce+lease.Nonce) || !time.Now().Before(lease.Until) || lease.Until.After(p.until) || !lease.Until.Equal(lease.Until.Truncate(time.Microsecond)) || (lease.State != "reserved" && lease.State != "using" && lease.State != "finished") {
 		return kms.ErrPermission
 	}
@@ -212,7 +230,13 @@ func (p *PreparedProviderPermitIssue) Stage(ctx context.Context, tx *sql.Tx, lea
 	}
 	a := p.scope.Input.Authority
 	cfg := p.issuer.cfg
-	guard, err := cfg.Authority.Bind(ctx, tx, a)
+	guard := original
+	var err error
+	if guard == nil {
+		guard, err = cfg.Authority.Bind(ctx, tx, a)
+	} else {
+		err = guard.RecheckOriginal(ctx, tx, cfg.Authority, a)
+	}
 	if err != nil || lease.Until.After(guard.ValidUntil()) {
 		return kms.ErrPermission
 	}

@@ -711,7 +711,7 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		}
 	}
 	if preparedPermit != nil {
-		if lease.KeyUse == nil || preparedPermit.Stage(ctx, tx, *lease.KeyUse, req.Action) != nil {
+		if lease.KeyUse == nil || preparedPermit.StageOriginal(ctx, tx, *lease.KeyUse, req.Action, guard) != nil {
 			return worker.Lease{}, worker.ErrExecution
 		}
 	}
