@@ -1,0 +1,17 @@
+{
+  "Protocol": "system-backup-offline-security-materials.v1",
+  "Status": "review_only_not_authorized",
+  "InstallationID": "",
+  "Namespace": "",
+  "WorkerNamespace": "",
+  "Signing": null,
+  "KEK": null,
+  "SecretPolicy": null,
+  "Capabilities": {},
+  "SourceGrants": {},
+  "CoverageInventorySHA256": "",
+  "SourceDatabase": {
+    "ServerUUID": "",
+    "Database": ""
+  }
+}
