@@ -240,6 +240,55 @@ func TestOriginalInitialBindingCurrentSQL(t *testing.T) {
 			}
 		})
 	}
+	for _, status := range []string{"pending", "running"} {
+		t.Run("committed-cancel-"+status, func(t *testing.T) {
+			setLease()
+			before := readLease(admin)
+			result, err := admin.ExecContext(ctx, `INSERT INTO system_backup_v2_operations(origin_installation_id,target_type,target_public_id,operation_type,status) VALUES(?,'backup',?,'cancel',?)`, authority.InstallationID, authority.TaskPublicID, status)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n, e := result.RowsAffected(); e != nil || n != 1 {
+				t.Fatal("actual committed cancellation", n, e)
+			}
+			t.Cleanup(func() {
+				result, err := admin.ExecContext(ctx, `DELETE FROM system_backup_v2_operations WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND operation_type='cancel' AND status=?`, authority.InstallationID, authority.TaskPublicID, status)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				if n, e := result.RowsAffected(); e != nil || n != 1 {
+					t.Error("owned cancellation cleanup", n, e)
+				}
+			})
+			var count uint64
+			if err := admin.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_v2_operations WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND operation_type='cancel' AND status=?`, authority.InstallationID, authority.TaskPublicID, status).Scan(&count); err != nil || count != 1 {
+				t.Fatal("committed cancellation independently missing", count, err)
+			}
+			err = store.RunWithExecutionHeartbeat(ctx, authority, func(active context.Context) error {
+				_, err := c.WithOriginalControllerBinding(active, authority, record, func(scoped context.Context) (d.JobBinding, error) {
+					tx, err := db.BeginTx(scoped, nil)
+					if err != nil {
+						return d.JobBinding{}, err
+					}
+					defer tx.Rollback()
+					guard, err := owner.Gate.Authority.Bind(scoped, tx, authority)
+					if err == nil {
+						guard.Invalidate()
+						t.Fatal("current committed cancel acquired initial-binding authority")
+					}
+					return d.JobBinding{}, nil
+				})
+				return err
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !readLease(admin).Equal(before) {
+				t.Fatal("canceled task renewed its first binding claim")
+			}
+		})
+	}
 	t.Run("actual-original-cutoff-after-renewal-row-delivery", func(t *testing.T) {
 		result, err := admin.ExecContext(ctx, `UPDATE system_backup_v2_backups SET controller_lease_expires_at=TIMESTAMPADD(SECOND,2,UTC_TIMESTAMP(6)) WHERE public_id=?`, authority.TaskPublicID)
 		if err != nil {
