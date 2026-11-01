@@ -234,6 +234,10 @@ func TestAOriginalSixPartCertificatePublicationMySQL(t *testing.T) {
 }
 
 func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
+	runAOriginalSixPartCertificatePublicationConfigured(t, mode, nil, after...)
+}
+
+func runAOriginalSixPartCertificatePublicationConfigured(t *testing.T, mode string, configure func(*dOriginalSixPartFixtureOptions), after ...func(context.Context, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture)) {
 	t.Helper()
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") != "" {
 		if !regexp.MustCompile(`^[a-f0-9]{7,64}$`).MatchString(buildinfo.Commit) {
@@ -242,7 +246,11 @@ func runAOriginalSixPartCertificatePublication(t *testing.T, mode string, after 
 		t.Log("original pre-capture linked build commit", buildinfo.Commit)
 	}
 	fixture := &aSameTaskCertificateMaterials{loseSignResult: mode == "provider-sign-result-unknown", commitACKFault: mode == "dispatch-commit-ack-unknown" || mode == "store-commit-ack-unknown", loseStoreACK: mode == "store-commit-ack-unknown"}
-	runDOriginalSixPartCaptureWithOptions(t, false, true, fixture.options(), func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
+	options := fixture.options()
+	if configure != nil {
+		configure(&options)
+	}
+	runDOriginalSixPartCaptureWithOptions(t, false, true, options, func(ctx context.Context, f *dOriginalSixPartTask, work c.ExecutionWork, _ []d.ModuleResult) {
 		var version uint64
 		var delay int64
 		if err := f.control.QueryRowContext(ctx, `SELECT row_version,COALESCE(TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),next_reconcile_at),0) FROM system_backup_v2_backups WHERE public_id=? AND status='validating' AND controller_owner IS NULL`, f.publicID).Scan(&version, &delay); err != nil {
