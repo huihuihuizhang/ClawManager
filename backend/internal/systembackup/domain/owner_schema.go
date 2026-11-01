@@ -7,6 +7,7 @@ package domain
 func requiresUniqueCatalog(table string) bool {
 	switch table {
 	case "workbuddy_linux_identities", "workbuddy_linux_identity_allocator",
+		"llm_models",
 		"gateway_keys", "gateway_key_budget_reservations", "gateway_key_budget_ledger",
 		"gateway_image_artifacts", "gateway_image_jobs", "llm_model_user_grants",
 		"routing_classifier_settings", "northbound_admin_settings", "northbound_caller_policies",

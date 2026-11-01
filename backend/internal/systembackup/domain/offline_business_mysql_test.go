@@ -97,6 +97,14 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	routingSeed, _, routingPolicy := routingRestoreFixture()
 	seed.Tables = append(seed.Tables, find(routingSeed, "routing_classifier_settings"))
 	policy.Dependencies["routing_classifier_settings"] = routingPolicy.Dependencies["routing_classifier_settings"]
+	modelSeed, _, modelPolicy := modelRestoreFixture()
+	find(modelSeed, "llm_models").Rows[0]["model_group"] = Text(strings.Repeat("组", 100))
+	find(modelSeed, "llm_models").Rows[0]["capability_source"] = Text(strings.Repeat("🧭", 64))
+	for _, name := range []string{"llm_models", "llm_model_user_grants"} {
+		seed.Tables = append(seed.Tables, find(modelSeed, name))
+		policy.Dependencies[name] = modelPolicy.Dependencies[name]
+	}
+	policy.Configs.(JSONRegistry)["llm_models.provider_models_json"] = modelPolicy.Configs.(JSONRegistry)["llm_models.provider_models_json"]
 	create := func(name string) *sql.DB {
 		exec(admin, "CREATE DATABASE `"+name+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
 		cleanup("DROP DATABASE `" + name + "`")
@@ -105,7 +113,7 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		c.MultiStatements = true
 		db := open(c)
 		for _, table := range seed.Tables {
-			if table.Name == "northbound_caller_policies" || table.Name == "northbound_operations" || table.Name == "routing_classifier_settings" {
+			if table.Name == "northbound_caller_policies" || table.Name == "northbound_operations" || table.Name == "routing_classifier_settings" || table.Name == "llm_models" || table.Name == "llm_model_user_grants" {
 				continue
 			}
 			if _, skill := skillCaptureColumns[table.Name]; skill {
@@ -128,6 +136,19 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 		}
 		// Empty template prerequisite for actual owner-Team migration 077.
 		exec(db, "CREATE TABLE custom_team_templates (id INT PRIMARY KEY,user_id INT NOT NULL) ENGINE=InnoDB")
+		// Keep the existing synthetic invocation fixture separate from the
+		// empty prerequisite consumed by the complete model migration 056.
+		exec(db, "RENAME TABLE model_invocations TO fixture_legacy_invocations")
+		exec(db, "CREATE TABLE model_invocations (id INT PRIMARY KEY,latency_ms INT NULL) ENGINE=InnoDB")
+		for _, file := range []string{"045_add_llm_model_reasoning_control.sql", "049_add_llm_model_groups.sql", "053_add_llm_model_context_window.sql", "054_add_llm_model_quality_tier.sql", "056_add_gateway_deployment_routing.sql", "056_add_llm_provider_models.sql", "057_add_llm_model_capabilities.sql", "058_add_llm_model_tools_override.sql", "059_add_llm_reasoning_control_mode.sql", "062_add_model_user_access.sql", "069_add_llm_model_vision_override.sql", "070_add_llm_model_image_operations.sql", "071_add_image_budget_price.sql"} {
+			raw, err := os.ReadFile(filepath.Join("..", "..", "db", "migrations", file))
+			if err != nil {
+				t.Fatal("model migration unavailable", file)
+			}
+			exec(db, string(raw))
+		}
+		exec(db, "DROP TABLE model_invocations")
+		exec(db, "RENAME TABLE fixture_legacy_invocations TO model_invocations")
 		for _, file := range []string{"008_add_skill_management.sql", "023_add_skill_hub.sql", "039_add_skill_package_materialize.sql", "045_add_northbound_api.sql", "057_add_northbound_admin_settings.sql", "060_add_routing_classifier_settings.sql", "061_add_routing_classifier_mode.sql", "066_add_northbound_api_keys.sql", "077_add_northbound_owner_teams.sql"} {
 			raw, err := os.ReadFile(filepath.Join("..", "..", "db", "migrations", file))
 			if err != nil {
@@ -201,6 +222,11 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	routingAdapter := policy.Dependencies["routing_classifier_settings"]
 	routingAdapter.SchemaSHA256 = SchemaDigest(find(snapshot, "routing_classifier_settings"))
 	policy.Dependencies["routing_classifier_settings"] = routingAdapter
+	for _, name := range []string{"llm_models", "llm_model_user_grants"} {
+		adapter := policy.Dependencies[name]
+		adapter.SchemaSHA256 = SchemaDigest(find(snapshot, name))
+		policy.Dependencies[name] = adapter
+	}
 	key := bytes.Repeat([]byte{73}, 32)
 	binding := staging.Binding{BackupID: "offline-business", Attempt: "1", Path: "mysql/domain", CaptureContextHash: strings.Repeat("a", 64), EnvelopeID: "local-fixture"}
 	var cipher bytes.Buffer
@@ -281,6 +307,12 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 				if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM routing_classifier_settings").Scan(&classifiers) != nil || classifiers != 0 {
 					t.Fatal("classifier rollback failed")
 				}
+				for _, table := range []string{"llm_models", "llm_model_user_grants"} {
+					var count int
+					if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM `"+table+"`").Scan(&count) != nil || count != 0 {
+						t.Fatal("model/grant rollback failed")
+					}
+				}
 				return
 			}
 			if err != nil {
@@ -341,6 +373,18 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 			if reader.QueryRowContext(ctx, "SELECT routing_mode,base_url,encrypted_api_key,timeout_ms,updated_at FROM routing_classifier_settings WHERE id=1").Scan(&mode, &endpoint, &key, &timeout, &updated) != nil || mode != "rules" || endpoint != "" || key != "" || timeout != 5000 || updated != "2026-10-01 01:02:03" {
 				t.Fatal("classifier retains outbound execution or lost source history")
 			}
+			var input, output, imagePrice, accessVersion string
+			var inactive, noKeys, toolFalse, visionNull, grants int
+			if reader.QueryRowContext(ctx, "SELECT input_price,output_price,image_price_per_image,access_policy_version,is_active=0,api_key IS NULL AND api_key_secret_ref IS NULL,tools_support_override=0,vision_support_override IS NULL FROM llm_models WHERE id=5").Scan(&input, &output, &imagePrice, &accessVersion, &inactive, &noKeys, &toolFalse, &visionNull) != nil || input != "0.00000001" || output != "9999999999.99999999" || imagePrice != output || accessVersion != "2147483647" || inactive != 1 || noKeys != 1 || toolFalse != 1 || visionNull != 1 {
+				t.Fatal("model decimal/nullable/version fidelity or quarantine failed")
+			}
+			if reader.QueryRowContext(ctx, "SELECT COUNT(*) FROM llm_model_user_grants g JOIN llm_models m ON m.id=g.model_id JOIN users u ON u.id=g.user_id WHERE m.base_url='https://disabled.invalid'").Scan(&grants) != nil || grants != 2 {
+				t.Fatal("model grants or disabled endpoint lost")
+			}
+			var group, capability string
+			if reader.QueryRowContext(ctx, "SELECT model_group,capability_source FROM llm_models WHERE id=5").Scan(&group, &capability) != nil || group != strings.Repeat("组", 100) || capability != strings.Repeat("🧭", 64) {
+				t.Fatal("UTF8 VARCHAR original value lost")
+			}
 			exec(targetAdmin, "UPDATE skill_scan_results SET findings_json='changed' WHERE id=15")
 			if VerifyDrill(ctx, reader, proof, plan) == nil {
 				t.Fatal("tampering passed")
@@ -359,5 +403,5 @@ func TestOfflineBusinessRestoreMySQL(t *testing.T) {
 	if digest, _ := Digest(after); digest != before {
 		t.Fatal("source changed")
 	}
-	t.Log("local MySQL only; actual Skills, caller 057/066, operations 045/066/077 and routing 060/061 migrations; nonempty Teams/instance fixture; authenticated capture; separate target and SELECT verifier; no publication/readiness claim")
+	t.Log("local MySQL only; actual Skills, caller 057/066, operations 045/066/077, routing 060/061, model 045..071 and grants 062 migrations; nonempty Teams/instance fixture; authenticated local capture; separate target and SELECT verifier; no full-source proof/publication/readiness claim")
 }
