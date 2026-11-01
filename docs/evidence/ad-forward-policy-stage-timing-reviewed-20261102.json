@@ -1,0 +1,97 @@
+{
+  "recorded_at": "2026-11-01T17:30:44.512111+00:00",
+  "classification": "Original admitted-config fixture repair and optional diagnostic stage instrumentation; full native backup still unproven",
+  "base": "2e807e629468f29467e71dadbb0f100ca44834df",
+  "owner_components": [
+    "ffaab40eeb7b6d1b42992b5a6160d4b393a0b6f8",
+    "38bd95db7995323d7f11124fc75894fe2e90ce1c"
+  ],
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/original_control_timing.go",
+      "git_blob": "eab47c3dd6c1f26e6d4da830a2ce5d4c38ff49ed",
+      "frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/public_jobs.go",
+      "git_blob": "376896fe24a3e3b8e8eb9bd5d55693416ae10723",
+      "frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_post_c_manifest_mysql_test.go",
+      "git_blob": "ffdeda3d3c93f9a0971711325f0b9d2e9b4513b6",
+      "frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "git_blob": "3f1fb5f686c4e2332e3a60d2547b14a7abd89c90",
+      "frozen_equal": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_mysql_test.go",
+      "git_blob": "bf8e16afd02024720afda290a85797c768680b23",
+      "frozen_equal": true
+    }
+  ],
+  "independent_validation": {
+    "session": 80298,
+    "closed": true,
+    "exit_code": 0,
+    "execution_seconds": 14.674,
+    "command": "go test -count=1 -p=1 ./internal/systembackupexecution",
+    "SQL": "environment removed; native cases not executed",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-forward-policy-phase-cost-38bd-2e-composed.log",
+      "sha256": "44024bdcd374370267b71bd83b03551acad3a764ea0914c8b01484a8b33d7258"
+    }
+  },
+  "owner_sql_off_logs": [
+    {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-forward-policy-sql-off-v1.log",
+      "sha256": "dc926b3f708d624b4a8ccccde6608dfced81f8ef735ce31199a376f0280a0700"
+    },
+    {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-control-phase-cost-sql-off-v1.log",
+      "sha256": "0cceb599c45ec0d788c44350f80c7ea0b46edc29eb8cdea37e19ad6484328754"
+    }
+  ],
+  "source_review": [
+    "Fixture fixes original admitted JSON and materialized fields before creating a NEW task; never rewrites previous failed tasks/configs/capabilities. Existing fixture policy remains30/5/1.",
+    "Publication fixture acquires and renews from the SAME admitted config JSON instead of hardcoded independent caller policy. Exact production same-transaction SQL policy guard remains unchanged.",
+    "Actual production nextForwardPublicationClaim already reads all3 duration fields from the matching config SQL row; no production policy change was required.",
+    "Optional private diagnostic timers wrap actual ExecutionInput/OriginalPlan/OriginalPart/Mounts/Security/Process/ProviderQualification/GuardTail without changes to call order, arguments, returned errors or SQL/Kube/provider work.",
+    "Authorize total includes nested stages. Timings do not mint authority, permit skipping/retry, or extend any original claim/key grant."
+  ],
+  "native_failure_retained": {
+    "version": 10,
+    "task": "sbk_08e9c675-6c5c-431c-b703-4829f707f4ce",
+    "schema": "ad_d_six_ee4eabee55f16f75",
+    "exit": 1,
+    "case_seconds": 173.18,
+    "first_failure": "Exact freshRenew guard refused original30/10/10 versus fixturecaller30/5/1 before any upload delegation. Native rerun after repair still required.",
+    "log": {
+      "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\a-original-manifest-upload-native-v10.log",
+      "sha256": "7ae3ab37a9ae874d73f216654910d4ca089407d0120306d4ebc137fbc2c6973b"
+    }
+  },
+  "limits": [
+    "SQL-off compile/regression does not prove this repaired fixture can complete the native chain.",
+    "No fix to actual repeated Authorize latency yet; database key window remains tight.",
+    "No full task upload/C/manifest/marker/cleanup/terminal or isolated restore acceptance."
+  ],
+  "separate_D_cleanup_hold": {
+    "candidate": "561915f5a9302594f3d0ff73bec781c889768085",
+    "primary_counterexample": {
+      "session": 7882,
+      "closed": true,
+      "exit_code": 1,
+      "seconds": 3.39,
+      "log": {
+        "path": "C:\\Users\\13542\\Desktop\\新建文件夹\\.tools\\supervisor-native-cleanup-rbac-2e-red.log",
+        "sha256": "e49f04724cb9b6e30a5aa3b7ad031dfb43967c7bcd4136d8d9ba69e1f821bd96"
+      }
+    },
+    "actual_failure": "Real CheckCaptureKubernetesAccess omitted secrets/watch, secrets/delete, pods/delete and jobs/watch; each denied operation was never reviewed (checks0), readiness wrongly returnednil. D permission patch required before integration.",
+    "scope": "Counterexample is an overlay only; no source change or native delete accepted by mainline."
+  }
+}

@@ -284,6 +284,9 @@ func runAOriginalSixPartCertificatePublicationFixture(t *testing.T, mode string,
 			}
 		}
 		policy := c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}
+		if options.PublicationForward {
+			policy = aOriginalPublicationFixturePolicy(t, f)
+		}
 		claim, err := (c.SQLTaskClaimStore{DB: f.control, InstallationID: f.service.Config.InstallationID}).AcquireWithReceipt(ctx, c.Target{Kind: c.TargetBackup, PublicID: f.publicID}, f.service.PublisherOwner, version, policy)
 		if err != nil {
 			t.Fatal("same original publisher claim receipt", err)
