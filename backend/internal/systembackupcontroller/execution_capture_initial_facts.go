@@ -12,7 +12,7 @@ import (
 // maintenance, installation, active-config and task locks in their original
 // order, checked task/config bytes and selected only the held capture branch.
 // Combine the remaining shared metadata reads without omitting any fact.
-func (s SQLExecutionAuthority) completeHeldSnapshot(ctx context.Context, tx *sql.Tx, a d.Authority, v executionSnapshot, fence uint64) (executionSnapshot, error) {
+func (s SQLExecutionAuthority) completeHeldSnapshot(ctx context.Context, tx *sql.Tx, a d.Authority, v executionSnapshot, fence uint64, report func(ExecutionBindDiagnostic)) (executionSnapshot, error) {
 	var original []byte
 	var latest, taskFence uint64
 	var canceled int
@@ -27,10 +27,13 @@ JOIN system_backup_v2_attempts t ON t.target_type='backup' AND t.target_public_i
 WHERE original.origin_installation_id=? AND original.version=? AND original.config_sha256=? AND original.config_size_bytes=? FOR SHARE`
 	err := tx.QueryRowContext(ctx, query, a.TaskPublicID, a.AttemptNo, a.InstallationID, a.ConfigVersion, a.ConfigSHA256, len(v.config)).Scan(&original, &v.attemptStatus, &v.attemptVersion, &latest, &canceled, &taskOwner, &taskFence)
 	if err != nil || !bytes.Equal(original, v.config) || latest != a.AttemptNo || v.attemptStatus != "running" || v.attemptVersion == 0 || canceled != 0 || v.gateState != "held" || v.gateOwner != a.MaintenanceOwner || fence != a.MaintenanceFencingToken || taskOwner != a.MaintenanceOwner || taskFence != fence || fence == 0 {
+		reportExecutionBindDiagnostic(report, "bind-snapshot-held-original-facts", err)
 		return executionSnapshot{}, ErrExecutionAuthority
 	}
 	// Statement start time cannot cover delayed delivery or a lock wait.
-	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&v.now) != nil || v.now.IsZero() || !v.now.Before(v.claimUntil) || !v.now.Before(a.DeadlineAt) || !v.now.Before(v.gateUntil) || !v.now.Before(v.holdUntil) {
+	err = tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&v.now)
+	if err != nil || v.now.IsZero() || !v.now.Before(v.claimUntil) || !v.now.Before(a.DeadlineAt) || !v.now.Before(v.gateUntil) || !v.now.Before(v.holdUntil) {
+		reportExecutionBindDiagnostic(report, "bind-snapshot-held-delivered-clock", err)
 		return executionSnapshot{}, ErrExecutionAuthority
 	}
 	return v, nil
