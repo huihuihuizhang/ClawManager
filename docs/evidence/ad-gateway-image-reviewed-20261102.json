@@ -1,0 +1,281 @@
+{
+  "recorded_at": "2026-11-01T17:55:44.956523+00:00",
+  "classification": "Independent offline Gateway image two-table component accepted for ordinary public database restore; no full backup/restore or formal source/target authorization acceptance",
+  "base": "7fba1466d77858f978502fe054bfde5c7188a45f",
+  "owner_commit": "c31c3df2095299d7082787367fd78fcf6a4e94f4",
+  "tested_composed_candidate": "cb36d46bf9fed7b060a60ec8e53ab9e9936efa20",
+  "tested_candidate_base": "c99e307aaf22341eadf22c05cf0c4192e58cf9db",
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/domain/gateway_budget_restore.go",
+      "git_blob": "017051cbffc64f5ab7632957cda4cef6a6129d68",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_export_test.go",
+      "git_blob": "accf3e761cee6d12e4b03b401bad5011feec2509",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_integration.go",
+      "git_blob": "ea9f3236e79faa4336d0409c88d6ed9da5fc6f37",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_child_test.go",
+      "git_blob": "3297446c3b95a31abb9261a0ae19825bf93315fe",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_history_test.go",
+      "git_blob": "9923bc3574d2c90b327215be3f742711e6c275a5",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_readback_test.go",
+      "git_blob": "d97e9e2fe6dd859858f33119dfd6afdf8b5fdeef",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_native_test.go",
+      "git_blob": "e101ad6368859eae5866ab85e0e040c8812d9e9d",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects.go",
+      "git_blob": "27ecedca69d750abfcd0dee3d72f0365c882cc20",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_objects_test.go",
+      "git_blob": "3761a418715adac50dc4420142c637a1afe1cef7",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_restore.go",
+      "git_blob": "60a60f27b81a516d18b066a77ef356e7706efe6e",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_restore_test.go",
+      "git_blob": "e7e56d9542db99ae99a469492443f3fcdfc29cef",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_s3_fixture_test.go",
+      "git_blob": "4d17a2aa5d05c6c385dd3f907b71ab9226aca0ed",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/gateway_image_worker_test.go",
+      "git_blob": "2f8fc0983bb2cfc7ea5620f318824e59573a7c81",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/normalize.go",
+      "git_blob": "8325f445420984fb45059ae1720ab8eb372c6c5c",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/domain/restore.go",
+      "git_blob": "5112039250e49a89c5d431899f967fb2cc66d154",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "git_blob": "524370db7efd4e493a4ef23b22be1e240ba30944",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-empty-hold-public-worker.txt",
+      "git_blob": "e3089bf489b7cde3bae97541e6d8ef41b9ffec25",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-empty-public-worker-first-red.txt",
+      "git_blob": "6adc37b48100743d7e151afb83e6c9f9dd8f81c3",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-mysql-cleanup.json",
+      "git_blob": "0461ac5c8c856b28c15b0fbac732aaf96c2d22c1",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-mysql-shutdown.txt",
+      "git_blob": "706f3c119397daa3e9fa1ab2d0f52c5abbfbfaf4",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-native-before-evidence-red.txt",
+      "git_blob": "a886c960253baa9ba14130178ee0314a8eb8674f",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-native-core-fixture-red.txt",
+      "git_blob": "aae9971498e37fcff41545c991e986e8892225e5",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-native-false-fk-red.txt",
+      "git_blob": "0714cbaef44e19451f7a5a8c5686ddbf1ef71d5f",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-native-frozen.txt",
+      "git_blob": "316ea250c5a485144f34747e3fa66ad980052197",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-owner-first-unit-red.txt",
+      "git_blob": "abca308bf1989f704dcffcf6015bd6d4300bddfe",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-protocol-development-pass.txt",
+      "git_blob": "d379fa068d6c17b681207221af6ad7ef1825a3ad",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-protocol-development-red.txt",
+      "git_blob": "b76a89aedca5f07f61da78282c88d7641ff7de4d",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-scope.json",
+      "git_blob": "bd99b6f61e959d8e8b9c7b6bc162500583beebf7",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/evidence/d-offline-restore-20261102/gateway-image-twelve-packages-frozen.txt",
+      "git_blob": "1fc861e8955b959b682c39481cf31013aa68792c",
+      "frozen_composed_candidate_equal": true
+    },
+    {
+      "path": "docs/system-backup-d-offline-business-restore-20261101.md",
+      "git_blob": "7a40ccbc494f38fd0490078217ea505cdf22d97f",
+      "frozen_composed_candidate_equal": true
+    }
+  ],
+  "composition": {
+    "all30files_equal_frozen_cb36": true,
+    "go_files": 16,
+    "owner_exact_go_files": 15,
+    "worker_difference": "Only four existing mainline InterpolateParams comment/assignment lines retained. Removing exactly those4 reproduces frozen owner Git blob. No new change to query escaping/permissions in this image delivery.",
+    "worker_owner_blob": "e0b2d50f76465062a3f3b0c5838393a4b0915705",
+    "latest_A_D_changes": "Actual phase timing, original cleanup and exact Role/SSAR permissions on7f untouched; image candidate has no overlapping source files.",
+    "new_migrations_or_NB_or_175": false
+  },
+  "primary_final_combination_test": {
+    "session": 54107,
+    "exit_code": 0,
+    "closed": true,
+    "targeted_seconds": 2.921,
+    "execution_seconds": 14.215,
+    "SQL": "all SQL/native environment removed; four actual TLS/SDK+public-memorySQL tests and full execution; native image case skipped in this root run",
+    "commands": [
+      "go test -count=1 -p=1 ./internal/systembackup/domain -run TestGatewayImage(ActualVersionedSDKReadbackAndEncryptedRestartReceipt|BadMaterialRejectsBeforeAnyTargetPUT|PublicWorker)",
+      "go test -count=1 -p=1 ./internal/systembackupexecution"
+    ]
+  },
+  "independent_supervisor_frozen_cb36_tests": {
+    "packages_session": 88146,
+    "packages_exit": 0,
+    "closed": true,
+    "domain_seconds": 3.406,
+    "worker_seconds": 35.653,
+    "execution_seconds": 14.226,
+    "native_session": 60693,
+    "native_exit": 0,
+    "native_closed": true,
+    "native_package_seconds": 15.022,
+    "native_case_seconds": 12.11,
+    "native_test": "TestGatewayImagePublicWorkerActualTLSMySQL",
+    "native_base": "c99; latest7f combination receives separate primary targeted/execution verification, not a repeated native run",
+    "sql": "Fresh exclusive65299 UUID2b5516d7-d61c-11f1-b17d-745d22085e06, privateDNS/CA TLS, plaintext3159 actual; migrations072/073/074 production unchanged",
+    "provider": "Real MinIO SDK over owned TLS/SigV4 versioned protocol fixture, not native S3/MinIO deployment qualification",
+    "cleanup": {
+      "users_before_shutdown": "root plus three locked builtins",
+      "test_seconds": 12.11,
+      "runtime": "C:\\Users\\13542\\Documents\\Codex\\2026-11-01\\owner-1-d-100-100-backup\\work\\gr3\\cm-gateway-restore-34e83ddfbb00",
+      "exact_owned_runtime_removed": true,
+      "reused_binary_basedir_removed": false,
+      "native_exit": 0,
+      "peerSQL_touched": false,
+      "package_session": 88146,
+      "package_exit": 0,
+      "port": 65299,
+      "old175_failure_data_untouched": true,
+      "mysql_exit": 0,
+      "schemas_before_shutdown": "four system schemas only",
+      "native_seconds": 15.022,
+      "native_session": 60693,
+      "mysql_session": 2540,
+      "normal_shutdown": true,
+      "pid": 11492,
+      "nonce": "34e83ddfbb00456eb462911e9bf0c2f0",
+      "candidate": "cb36d46bf9fed7b060a60ec8e53ab9e9936efa20",
+      "resolved_nonce_pid_checked": true,
+      "owner": "root",
+      "sessions_before_shutdown": "cleanup CLI only",
+      "server_uuid": "2b5516d7-d61c-11f1-b17d-745d22085e06"
+    }
+  },
+  "source_and_scope_review": [
+    "Schema074 adapter retains all source fields and supports legitimate terminal tombstones after actual physical instance/key/reservation/ledger cascade and artifact expiry/GC. No invented FK or object/row resurrection.",
+    "Raw image bytes require explicit immutable source version, complete bounded GET/size/hash and AES-GCM artifactID AAD/key/length; malformed material rejects before any target PUT.",
+    "Restoration prevalidates complete SQL and object set, requires versioned empty dedicated target bucket, actual PUT returned version and independent fixed-version GET/hash/AEAD plus complete version listing. Extra/delete-marker/foreign versions reject.",
+    "Opaque receipt has no public fields/DTO authority constructor. Ordinary worker only accepts nonserialized data-plane clients/evidence; capture rejects restore-only capabilities. Formal capture/control/fullC/provider authorization inputs were not extended.",
+    "Restore seals complete expected SQL and image metadata with staging AEAD before SQL COMMIT. Verify rejects old writer receipt pointers and independently reopens authenticated SQL/image files, exact receipt/binding and complete normalized SQL digest with fresh reader.",
+    "Missing receipt, AAD or length mismatch rejects before target PUT/SQL; evidence-record failure and cancellation at real commit boundary retain bootstrap and all5owner tables empty after rollback. Owned object residue is retained until custody cleanup.",
+    "Normalizer sets artifact ready0, preparing->failed/running->unknown, settled/analytics_recorded1 without settling money or releasing image_pending hold. Binary32 key/NUL/ff, HMAC, DECIMAL/NULL and literal historical attribution remain.",
+    "Native tests invoke actual source Claim/Reserve/Arm/Finish/Settle, InstanceRepository.Delete and Save/Load/PurgeExpired. Source Load succeeds, target Load remains unavailable and actual Recover leaves complete digest unchanged.",
+    "Native independent process receives encrypted files and read-only clients, not old receipt/source/writer capability; real SQL reader DML1142 and locked writer/no sessions/login3118.",
+    "Empty orphan image_pending hold remains rejected before common DML/COMMIT0 while legitimate empty and keyless job with zero objects remain supported. Public three-table-only validator does not admit image obligation without concrete receipt."
+  ],
+  "scope_limits": [
+    "Component data correspondence is not authenticated fullC source authorization or original A final safety-material signoff.",
+    "TLS endpoint/client distinction does not prove provider IAM or all-consumer physical target isolation.",
+    "No formal_B enabling, finalCAS, current production task backup success, complete8table restore or northbound3table completion.",
+    "No live deployment/provider or remote environment accessed.175 remains held."
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/composed-three-packages.log",
+      "sha256": "1a96c2f05a9c1861c2671e2bf6114f6ea21551ac2220778adbef52b7c4c4236e"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/composed-native-six-cases.log",
+      "sha256": "637aec5e89c4e0564f7a2ae9e27c687a15f29bc15e9b7154de8643f13e36fe60"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/mysql-cleanup.json",
+      "sha256": "cf2c83b8328b240a14ecb44bd30ef8ffecf0dc89ff109ccc9aa6eaeebc537a9a"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/mysql-normal-shutdown.txt",
+      "sha256": "f3336db1a3c6fda76b989ba026bb4c7c540d748f5453fdaa9a9e07f816931a2c"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/cleanup-before-shutdown.txt",
+      "sha256": "0ac37045f13235c1d2976d2581e13f2f8d1b17bce1299ceee003948b6c824aab"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/composed-source-comparison.json",
+      "sha256": "0c1050320d4008a76c2ee91d0a19aed0002437f5bef1d88d6b321fe738127d44"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/supervisor-image-cb36-7fba-targeted.log",
+      "sha256": "dc3808f0c67c5ef1550e74d203cfac18b5adb7fed2f88a2ca890c2a204810dff"
+    },
+    {
+      "path": "docs/evidence/ad-image-independent-20261102/supervisor-image-cb36-7fba-composed-execution.log",
+      "sha256": "0703b3e742b6fff42b83e6fd7dcbdf3e31393aba8c4390b927ed792adcae9558"
+    }
+  ],
+  "next": [
+    "Other D implement northbound3tables using actual settingsCAS/audit non-atomic/history fields preparation",
+    "A solve actual original control-loop latency and finish same-task native pipeline",
+    "D complete local ciphertext cleanup and query-only recovery then aggregate evidence/acceptance/catalog/terminal"
+  ]
+}

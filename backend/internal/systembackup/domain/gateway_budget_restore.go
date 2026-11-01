@@ -128,7 +128,7 @@ func validateGatewayBudgetAdapter(a TableAdapter, t Table) error {
 	return nil
 }
 
-func validateGatewayBudgetRestore(ctx context.Context, s Snapshot, target []Table, adapters map[string]TableAdapter) (bool, error) {
+func validateGatewayBudgetRestore(ctx context.Context, s Snapshot, target []Table, adapters map[string]TableAdapter, images ...*GatewayImageReceipt) (bool, error) {
 	if err := validateGatewayAttributions(s); err != nil {
 		return false, err
 	}
@@ -159,7 +159,7 @@ func validateGatewayBudgetRestore(ctx context.Context, s Snapshot, target []Tabl
 		}
 		frozen = a.InterruptedAt
 	}
-	if err := validateGatewayBudgetRows(ctx, s, false); err != nil {
+	if err := validateGatewayBudgetRows(ctx, s, false, images...); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -224,7 +224,7 @@ func gatewayTimestamp(cell Cell, nullable bool) (time.Time, error) {
 	return at, nil
 }
 
-func validateGatewayBudgetRows(ctx context.Context, s Snapshot, quarantined bool) error {
+func validateGatewayBudgetData(ctx context.Context, s Snapshot, quarantined bool) error {
 	if ctx == nil {
 		return ErrNormalization
 	}
@@ -409,11 +409,43 @@ func validateGatewayBudgetRows(ctx context.Context, s Snapshot, quarantined bool
 				return ErrData
 			}
 		}
-		// An image reservation is not self-authenticating source/job/object
-		// evidence. Until the image owner closes its actual job+object receipts,
-		// this required nonempty state rejects before any common SQL write.
+		// An image reservation is never self-authenticating. Only the concrete
+		// actual object receipt plus complete source job/key/hold closure can
+		// admit it; the public three-table-only validator still rejects it.
 		if state == "image_pending" {
-			return ErrNormalization
+			if validateImageRows(ctx, s, quarantined) != nil {
+				return ErrNormalization
+			}
+		}
+	}
+	return nil
+}
+
+// Separate inert source validation from the write/readback material gate. Object
+// capture/restore can validate all budget values before any target PUT without
+// fabricating an object receipt; the SQL adapters still require the real result.
+func validateGatewayBudgetRows(ctx context.Context, s Snapshot, quarantined bool, images ...*GatewayImageReceipt) error {
+	if e := validateGatewayBudgetData(ctx, s, quarantined); e != nil {
+		return e
+	}
+	for _, table := range s.Tables {
+		if table.Name != "gateway_key_budget_reservations" {
+			continue
+		}
+		for _, row := range table.Rows {
+			if row["settlement_status"].String() != "image_pending" {
+				continue
+			}
+			if len(images) != 1 || images[0] == nil {
+				return ErrNormalization
+			}
+			if quarantined {
+				if images[0].quarantineMatches(ctx, s) != nil {
+					return ErrNormalization
+				}
+			} else if images[0].sourceMatches(s, images[0].data.InterruptedAt) != nil {
+				return ErrNormalization
+			}
 		}
 	}
 	return nil
@@ -478,4 +510,8 @@ func normalizeGatewayBudgetKey(row Row, frozen string) error {
 // Do not replace that readback with GetBudgetUsage or a repository finalizer.
 func VerifyGatewayBudgetQuarantine(ctx context.Context, s Snapshot) error {
 	return validateGatewayBudgetRows(ctx, s, true)
+}
+
+func verifyGatewayBudgetWithImages(ctx context.Context, s Snapshot, r *GatewayImageReceipt) error {
+	return validateGatewayBudgetRows(ctx, s, true, r)
 }

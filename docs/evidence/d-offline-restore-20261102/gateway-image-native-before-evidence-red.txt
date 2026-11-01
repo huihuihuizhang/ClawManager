@@ -1,0 +1,11 @@
+=== RUN   TestGatewayImagePublicWorkerActualTLSMySQL
+    gateway_image_native_test.go:74: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    gateway_image_native_test.go:89: real source history sequence: Claim/Reserve/Arm/Finish/Settle -> InstanceRepository.Delete -> key/reservation/ledger CASCADE with job IDs retained; real Save/Load/Finish/Settle/expiry/PurgeExpired -> signed object DELETE + artifact row deletion while job metadata unchanged PASS
+    gateway_image_native_test.go:268: actual native case=missing-receipt: bootstrap=1 five owner tables=0; writer sessions=0/login3118; target object PUTs=0; owned object residues retained through SQL rollback PASS
+    gateway_image_native_test.go:268: actual native case=wrong-AAD: bootstrap=1 five owner tables=0; writer sessions=0/login3118; target object PUTs=0; owned object residues retained through SQL rollback PASS
+    gateway_image_native_test.go:268: actual native case=wrong-length: bootstrap=1 five owner tables=0; writer sessions=0/login3118; target object PUTs=0; owned object residues retained through SQL rollback PASS
+    gateway_image_native_test.go:263: evidence fault did not reach actual sealed material; last phase=database-isolation error=backup worker operation failed; quarantine is not ready
+--- FAIL: TestGatewayImagePublicWorkerActualTLSMySQL (9.78s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	12.623s
+FAIL

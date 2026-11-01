@@ -1,0 +1,82 @@
+=== RUN   TestGatewayImageActualVersionedSDKReadbackAndEncryptedRestartReceipt
+    gateway_image_objects_test.go:149: TLS/SigV4 protocol fixture: source immutable v1 despite newer v2; actual SDK PUT/version/readback; encrypted receipt restart and full SQL/binding/DB/UUID/TLS-location correspondence; read-only write denial and writer revocation; extra version refusal PASS (not native MinIO qualification)
+--- PASS: TestGatewayImageActualVersionedSDKReadbackAndEncryptedRestartReceipt (0.04s)
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/latest
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/null-version
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/etag-observation
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/missing-version
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-hash
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-key-path
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-AAD
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-DEK
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-size
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-SQL-snapshot
+=== RUN   TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-staging-binding
+--- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT (0.07s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/latest (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/null-version (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/etag-observation (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/missing-version (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-hash (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-key-path (0.00s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-AAD (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-DEK (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-size (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-SQL-snapshot (0.01s)
+    --- PASS: TestGatewayImageBadMaterialRejectsBeforeAnyTargetPUT/wrong-staging-binding (0.01s)
+=== RUN   TestGatewayImageOwnerShapeClosureAndInertProjection
+--- PASS: TestGatewayImageOwnerShapeClosureAndInertProjection (0.00s)
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/unknown-column
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/unknown-state
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/orphan-hold
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/duplicate-job-hold
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-key
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-owner
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-estimate
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/missing-reservation
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/future-result-json
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/missing-artifact
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-artifact-owner
+=== RUN   TestGatewayImageRejectsUnknownShapeOrUnclosedHold/bad-key-length
+--- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/unknown-column (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/unknown-state (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/orphan-hold (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/duplicate-job-hold (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-key (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-owner (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-estimate (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/missing-reservation (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/future-result-json (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/missing-artifact (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/wrong-artifact-owner (0.00s)
+    --- PASS: TestGatewayImageRejectsUnknownShapeOrUnclosedHold/bad-key-length (0.00s)
+=== RUN   TestGatewayImageEmptyTablesStillRejectOrphanHoldInNormalize
+--- PASS: TestGatewayImageEmptyTablesStillRejectOrphanHoldInNormalize (0.00s)
+=== RUN   TestGatewayImageNativeVerifyChild
+    gateway_image_native_child_test.go:70: owned native parent helper only
+--- SKIP: TestGatewayImageNativeVerifyChild (0.00s)
+=== RUN   TestGatewayImagePublicWorkerActualTLSMySQL
+    gateway_image_native_test.go:74: requires D owned UUID/marker/CA-pinned disposable TLS MySQL
+--- SKIP: TestGatewayImagePublicWorkerActualTLSMySQL (0.00s)
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-orphan-hold
+    gateway_image_worker_test.go:65: exact root counterexample: empty image rows + image_pending -> actual public capture/restore refusal; target snapshot unchanged, DML=0 COMMIT=0 PASS
+=== RUN   TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-no-hold
+    gateway_image_worker_test.go:87: legitimate empty images without image_pending: actual public capture/restore/independent SELECT-only verify PASS
+--- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses (0.08s)
+    --- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-orphan-hold (0.06s)
+    --- PASS: TestGatewayImagePublicWorkerEmptyHoldRejectsBeforeDMLAndLegitimateEmptyPasses/empty-no-hold (0.02s)
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/nonempty
+    gateway_image_worker_test.go:219: staging file identity, ownership or seal is invalid
+=== RUN   TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/job-only-emptyobjects
+    gateway_image_worker_test.go:219: staging file identity, ownership or seal is invalid
+--- FAIL: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts (0.11s)
+    --- FAIL: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/nonempty (0.06s)
+    --- FAIL: TestGatewayImagePublicWorkerNonemptyAndEmptyObjectReceipts/job-only-emptyobjects (0.05s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	3.149s
+FAIL

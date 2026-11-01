@@ -1,0 +1,7 @@
+=== RUN   TestGatewayImagePublicWorkerActualTLSMySQL
+    gateway_image_native_test.go:74: private CA + DNS-verified TLS and actual plaintext login denial3159 PASS
+    gateway_image_native_test.go:89: owned fixture SQL failed (*mysql.MySQLError mysql=1054)
+--- FAIL: TestGatewayImagePublicWorkerActualTLSMySQL (3.32s)
+FAIL
+FAIL	clawreef/internal/systembackup/domain	6.293s
+FAIL

@@ -58,6 +58,12 @@ type DatabaseEnvironment struct {
 	Evidence *os.Root // separate writable encrypted output; input staging stays readonly
 	Key      []byte
 	Check    func(context.Context, string, Request) error
+	// Nonserialized IO capabilities/evidence references. These do not grant
+	// formal source or physical target authority. Check must cover those facts.
+	GatewayImages                *domain.GatewayImageReceipt                  // restore only; minted by actual fixed-version readback
+	GatewayImageReader           *domain.GatewayImageObjectClient             // verify only; independently supplied reader
+	GatewayImageEvidence         staging.Receipt                              // encrypted metadata to reopen on verify, never a proof DTO
+	GatewayImageEvidenceRecorded func(context.Context, staging.Receipt) error // custody output before SQL COMMIT
 }
 
 var databaseName = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
@@ -178,6 +184,12 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	if env.Check == nil {
 		return Result{}, ErrNotReady
 	}
+	if r.Operation == "capture-database" && (env.GatewayImages != nil || env.GatewayImageReader != nil || env.GatewayImageEvidence.Name != "" || env.GatewayImageEvidenceRecorded != nil) {
+		return Result{}, ErrRequest
+	}
+	if r.Operation == "verify-database" && env.GatewayImages != nil {
+		return Result{}, ErrRequest
+	}
 	if r.Operation == "restore-database" && (env.Evidence == nil || !separateRoots(env.Staging, env.Evidence)) {
 		return Result{}, ErrRequest
 	}
@@ -274,7 +286,17 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 		if err = check("before-verify"); err != nil {
 			return Result{}, err
 		}
-		if err = domain.VerifyDrill(ctx, env.Database, target, domain.RestorePlan{Data: source}); err != nil {
+		var imageReceipt *domain.GatewayImageReceipt
+		if domain.HasGatewayImageData(source) {
+			if env.GatewayImageReader == nil || env.GatewayImageEvidence.Name == "" {
+				return Result{}, ErrNotReady
+			}
+			imageReceipt, err = domain.OpenGatewayImageReceipt(ctx, env.Staging, env.GatewayImageEvidence, key, gatewayImageEvidenceBinding(r.Binding), env.GatewayImageReader, source, r.Receipt, r.Binding, d.Name, d.ServerUUID)
+			if err != nil {
+				return Result{}, ErrExecution
+			}
+		}
+		if err = domain.VerifyDrill(ctx, env.Database, target, domain.RestorePlan{Data: source, GatewayImages: imageReceipt}); err != nil {
 			return Result{}, ErrExecution
 		}
 		if err = check("verified-quarantine"); err != nil {
@@ -289,10 +311,13 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	if err = check("before-restore"); err != nil {
 		return Result{}, err
 	}
+	if domain.HasGatewayImageData(source) && (env.GatewayImageEvidenceRecorded == nil || domain.CheckGatewayImageSourceBinding(env.GatewayImages, r.Binding) != nil) {
+		return Result{}, ErrNotReady
+	}
 	var evidence staging.Receipt
 	var normalized domain.Snapshot
 	defer func() { clearSnapshot(normalized) }()
-	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements, Skills: d.SkillsRestore}, func(ctx context.Context, p domain.RestorePlan) error {
+	plan, err := domain.RestoreDrillWithEvidence(ctx, env.Database, target, source, domain.Policy{Placements: d.Placements, Configs: d.Configs, WorkBuddy: d.WorkBuddy, Dependencies: d.Dependencies, TeamPlacements: d.TeamPlacements, Skills: d.SkillsRestore, GatewayImages: env.GatewayImages}, func(ctx context.Context, p domain.RestorePlan) error {
 		normalized = p.Data
 		if e := check("before-evidence"); e != nil {
 			return e
@@ -301,6 +326,18 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 		evidence, e = seal(env.Evidence, d.EvidenceName, d.EvidenceBinding, p.Data)
 		if e != nil {
 			return ErrExecution
+		}
+		if domain.HasGatewayImageData(p.Data) {
+			if e = check("before-image-evidence"); e != nil {
+				return e
+			}
+			imageEvidence, e := domain.SealGatewayImageReceipt(ctx, env.GatewayImages, p.Data, evidence, d.EvidenceBinding, env.Evidence, d.EvidenceName+".images", key, gatewayImageEvidenceBinding(d.EvidenceBinding))
+			if e != nil {
+				return ErrExecution
+			}
+			if e = env.GatewayImageEvidenceRecorded(ctx, imageEvidence); e != nil {
+				return ErrExecution
+			}
 		}
 		return check("before-database-commit")
 	})
@@ -315,6 +352,11 @@ func RunDatabase(ctx context.Context, r Request, env DatabaseEnvironment) (Resul
 	result.Evidence = evidence
 	result.Quarantined = true
 	return result, nil
+}
+
+func gatewayImageEvidenceBinding(sqlBinding staging.Binding) staging.Binding {
+	sqlBinding.Path += "/gateway-images"
+	return sqlBinding
 }
 func snapshotCounts(s domain.Snapshot) Result {
 	r := Result{Tables: len(s.Tables)}

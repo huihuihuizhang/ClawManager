@@ -1,0 +1,13 @@
+2026-11-01T17:47:18.151290Z 0 [System] [MY-015015] [Server] MySQL Server - start.
+2026-11-01T17:47:18.318072Z 0 [System] [MY-010116] [Server] C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\bin\mysqld.exe (mysqld 8.4.13) starting as process 11492
+2026-11-01T17:47:18.318079Z 0 [System] [MY-015150] [Server] Server version with update: '8.4.13.0'
+2026-11-01T17:47:18.340112Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-11-01T17:47:18.779639Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-11-01T17:47:19.083072Z 0 [Warning] [MY-013829] [Server] Missing data directory for ICU regular expressions: C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\lib\private\.
+2026-11-01T17:47:19.101419Z 0 [Warning] [MY-010068] [Server] CA certificate C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\gr3\cm-gateway-restore-34e83ddfbb00/ca.pem is self signed.
+2026-11-01T17:47:19.103083Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-11-01T17:47:19.134058Z 0 [System] [MY-010931] [Server] C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\bin\mysqld.exe: ready for connections. Version: '8.4.13'  socket: ''  port: 65299  MySQL Community Server - GPL.
+2026-11-01T17:51:17.531699Z 183 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.4.13).
+2026-11-01T17:51:17.533430Z 0 [System] [MY-013105] [Server] C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\bin\mysqld.exe: Normal shutdown.
+2026-11-01T17:51:18.605195Z 0 [System] [MY-010910] [Server] C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\s175\a0a68d3f\bin\mysqld.exe: Shutdown complete (mysqld 8.4.13)  MySQL Community Server - GPL.
+2026-11-01T17:51:18.607159Z 0 [System] [MY-015016] [Server] MySQL Server - end.

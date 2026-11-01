@@ -1,0 +1,14 @@
+@@server_uuid	@@datadir	@@port	@@require_secure_transport	@@event_scheduler
+2b5516d7-d61c-11f1-b17d-745d22085e06	C:\Users\13542\Documents\Codex\2026-11-01\owner-1-d-100-100-backup\work\gr3\cm-gateway-restore-34e83ddfbb00\data\	65299	1	OFF
+Database
+information_schema
+mysql
+performance_schema
+sys
+User	Host	account_locked
+mysql.infoschema	localhost	Y
+mysql.session	localhost	Y
+mysql.sys	localhost	Y
+root	localhost	N
+ID	USER	HOST	DB	COMMAND
+182	root	localhost:55575	NULL	Query

@@ -1,0 +1,12 @@
+ok  	clawreef/internal/db	2.295s
+ok  	clawreef/internal/systembackupcontroller	9.476s
+ok  	clawreef/internal/systembackupdispatch	0.325s
+ok  	clawreef/internal/systembackup/publicadapter	4.081s
+ok  	clawreef/internal/systembackupexecution	10.279s
+ok  	clawreef/internal/systembackup/domain	3.579s
+ok  	clawreef/internal/systembackupresources	1.553s
+ok  	clawreef/internal/systembackupkekadapter	7.693s
+ok  	clawreef/internal/systembackup	5.535s
+ok  	clawreef/internal/systembackup/worker	35.917s
+ok  	clawreef/internal/systembackup/profile	4.966s
+ok  	clawreef/internal/systembackupbusinessa	2.160s
