@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"clawreef/internal/systembackup/domain"
+	cd "clawreef/internal/systembackupcapturedescription"
 	ce "clawreef/internal/systembackupcontrolevidence"
 )
 
@@ -72,7 +73,7 @@ func publicationPayloadCountsComplete(parts []publicationVerifiedPart) bool {
 	}
 	domains := map[string]bool{}
 	for _, part := range parts {
-		if part.Part == ce.Part || part.Part == ce.ProofPart {
+		if part.Part == cd.Part || part.Part == ce.Part || part.Part == ce.ProofPart {
 			continue
 		}
 		count := part.Counts
