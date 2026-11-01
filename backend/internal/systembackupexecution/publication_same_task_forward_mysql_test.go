@@ -45,6 +45,16 @@ func (x *aOriginalForwardFixture) options(o *dOriginalSixPartFixtureOptions) {
 	o.CaptureDescription = true
 	o.PublicationForward = true
 	o.BeforeOriginalConfig = func(_ context.Context, t *testing.T, f *dOriginalSixPartTask, values map[string]any) error {
+		// Freeze this fixture's EXISTING 30/5/1 controller policy in the
+		// original admitted JSON AND its materialized SQL columns. The
+		// redacted example defaults to30/10/10; never repair an old task.
+		durations, ok := values["durations"].(map[string]any)
+		if !ok {
+			return fmt.Errorf("original durations unavailable before admission")
+		}
+		durations["controller_claim_ttl_seconds"] = json.Number("30")
+		durations["controller_claim_heartbeat_seconds"] = json.Number("5")
+		durations["controller_reconcile_interval_seconds"] = json.Number("1")
 		p := &x.store.config
 		p.InstallationID = f.profile.InstallationID
 		p.Root = p.InstallationID + "/"
@@ -92,6 +102,26 @@ func (x *aOriginalForwardFixture) options(o *dOriginalSixPartFixtureOptions) {
 		core.PublicationWorker = &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "a-original-upload", ServiceAccountUID: "a-original-upload-sa"}
 		return nil
 	}
+}
+
+// Inert policy DATA from the SAME original admitted config. The actual
+// coordinator and fresh preparation guard still independently bind SQL.
+func aOriginalPublicationFixturePolicy(t *testing.T, f *dOriginalSixPartTask) c.LeasePolicy {
+	t.Helper()
+	var config struct {
+		Durations map[string]json.Number `json:"durations"`
+	}
+	if f == nil || json.Unmarshal(f.config, &config) != nil {
+		t.Fatal("original fixture config policy unavailable")
+	}
+	ttl, e1 := config.Durations["controller_claim_ttl_seconds"].Int64()
+	heartbeat, e2 := config.Durations["controller_claim_heartbeat_seconds"].Int64()
+	reconcile, e3 := config.Durations["controller_reconcile_interval_seconds"].Int64()
+	policy := c.LeasePolicy{TTL: time.Duration(ttl) * time.Second, HeartbeatInterval: time.Duration(heartbeat) * time.Second, ReconcileInterval: time.Duration(reconcile) * time.Second}
+	if e1 != nil || e2 != nil || e3 != nil || policy.Validate() != nil {
+		t.Fatal("invalid original fixture config policy")
+	}
+	return policy
 }
 
 // Explicit local administrator and permission-observer fixtures, independently
@@ -294,7 +324,7 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 	fixture := &aSameTaskCertificateMaterials{configureOptions: x.options, configurePublisher: x.publisher}
 	runAOriginalSixPartCertificatePublicationFixture(t, "capture-description", fixture, func(ctx context.Context, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture) {
 		creates, patches := aInstallOriginalUploadNativeAPI(t, f)
-		policy := c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}
+		policy := aOriginalPublicationFixturePolicy(t, f)
 		request, err := f.service.prepareOriginalForwardRequest(ctx, claim, capture.Input.CaptureAttemptNo, policy, capture, store.config)
 		if err != nil {
 			t.Fatal("original complete manifest request", err)

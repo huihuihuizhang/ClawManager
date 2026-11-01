@@ -17,7 +17,8 @@ type originalControlStageTimingData struct {
 	ElapsedNanos, MaxNanos, LastNanos int64
 }
 type originalControlActionTimingData struct {
-	Authorize, SQLBind, KeyStateSQL originalControlStageTimingData
+	Authorize, SQLBind, KeyStateSQL                                                                                           originalControlStageTimingData
+	ExecutionInput, OriginalPlan, OriginalPart, WorkerMounts, WorkerSecurity, WorkerProcess, ProviderQualification, GuardTail originalControlStageTimingData
 }
 type originalControlTimingData struct {
 	KeyReserve, KeyBegin, KeyCheck, KeyEnd, Candidate originalControlActionTimingData
@@ -34,6 +35,14 @@ const (
 	originalControlAuthorize originalControlStage = iota
 	originalControlSQLBind
 	originalControlKeyStateSQL
+	originalControlExecutionInput
+	originalControlOriginalPlan
+	originalControlOriginalPart
+	originalControlWorkerMounts
+	originalControlWorkerSecurity
+	originalControlWorkerProcess
+	originalControlProviderQualification
+	originalControlGuardTail
 )
 
 type originalControlStageTimer struct {
@@ -97,6 +106,22 @@ func (t *originalControlStageTimer) finish(failed bool) {
 		bucket = &action.SQLBind
 	case originalControlKeyStateSQL:
 		bucket = &action.KeyStateSQL
+	case originalControlExecutionInput:
+		bucket = &action.ExecutionInput
+	case originalControlOriginalPlan:
+		bucket = &action.OriginalPlan
+	case originalControlOriginalPart:
+		bucket = &action.OriginalPart
+	case originalControlWorkerMounts:
+		bucket = &action.WorkerMounts
+	case originalControlWorkerSecurity:
+		bucket = &action.WorkerSecurity
+	case originalControlWorkerProcess:
+		bucket = &action.WorkerProcess
+	case originalControlProviderQualification:
+		bucket = &action.ProviderQualification
+	case originalControlGuardTail:
+		bucket = &action.GuardTail
 	default:
 		return
 	}
