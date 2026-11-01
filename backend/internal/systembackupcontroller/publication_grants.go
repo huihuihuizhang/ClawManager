@@ -6,8 +6,9 @@ import (
 )
 
 // A separately selected publication role adds only the original immutable
-// journal writes and bounded frozen-signature chunks. No DDL, DELETE, config
-// mutation, signing authority mutation or business-source privilege is added.
+// journal writes, bounded frozen-signature chunks and terminal alert sequence
+// updates. No DDL, DELETE, config mutation, signing authority mutation or
+// business-source privilege is added.
 func publicationTableGrants(runtime, providerPermits bool) map[string][]string {
 	grants := formalCaptureTableGrants(runtime)
 	if providerPermits {
@@ -15,6 +16,7 @@ func publicationTableGrants(runtime, providerPermits bool) map[string][]string {
 	}
 	grants["system_backup_v2_external_actions"] = []string{"SELECT", "INSERT", "UPDATE"}
 	grants["system_backup_v2_evidence_chunks"] = []string{"SELECT", "INSERT"}
+	grants["system_backup_v2_alert_states"] = []string{"SELECT", "INSERT", "UPDATE"}
 	return grants
 }
 func PublicationGrantSQL(schema, user, host string, allowAnyHost, runtime, providerPermits bool) ([]string, error) {

@@ -17,8 +17,11 @@ func controlEvidenceTableGrants(runtime, providerPermits, publication bool) map[
 	if publication {
 		grants = publicationTableGrants(runtime, providerPermits)
 	}
-	for _, table := range []string{"audit_logs", "system_backup_v2_restore_drills", "system_backup_v2_preflights", "system_backup_v2_artifact_verifications", "system_backup_v2_promotions", "system_backup_v2_dependency_health", "system_backup_v2_provider_capabilities", "system_backup_v2_alert_states"} {
+	for _, table := range []string{"audit_logs", "system_backup_v2_restore_drills", "system_backup_v2_preflights", "system_backup_v2_artifact_verifications", "system_backup_v2_promotions", "system_backup_v2_dependency_health", "system_backup_v2_provider_capabilities"} {
 		grants[table] = []string{"SELECT"}
+	}
+	if !publication {
+		grants["system_backup_v2_alert_states"] = []string{"SELECT"}
 	}
 	return grants
 }
