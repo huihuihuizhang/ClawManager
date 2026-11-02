@@ -1,0 +1,22 @@
+{
+  "schema_version": "supervisor-deployment-builder-review.v1",
+  "date": "2026-11-02",
+  "source_base": "063efe42619a4631404e7c86204a0b19fbe56789",
+  "deployment_generator": {
+    "exit_code": 0,
+    "log_sha256": "c2be295ab64027ba26c90171ed3241ccc9cfaf1c3984572c022cbdcd70373571",
+    "scope": "Exact Dockerfile binary paths, optional reviewed migration history only on suspended Job, required mounts and identity rejection",
+    "skipped": 0,
+    "passed": 5
+  },
+  "publication_job_builder": {
+    "passed_root_tests": 6,
+    "log_sha256": "a02c47c4f29dd25f6ad8029244dca12f3521164873667303594e7bc0b84a33a7",
+    "exit_code": 0,
+    "scope": "Required scheduler node affinity, invalid node rejection and deterministic serialized Job intent; legacy omission remains for component callers"
+  },
+  "production_staging_caller_verified": false,
+  "actual_cluster_scheduling_verified": false,
+  "page_acceptance": false,
+  "cleanup": "Logs retained; builds and sources belong to active exclusively owned evening composition batch and are deleted when that batch ends"
+}

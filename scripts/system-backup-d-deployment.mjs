@@ -41,7 +41,7 @@ function fields(path, type) {
 const runtimeFields = fields('backend/internal/systembackupsecurity/registration_runtime.go', 'RegistrationRuntimeConfig');
 const bootstrapFields = fields('backend/internal/systembackupsecurity/bootstrap_deployment.go', 'BootstrapDeploymentConfig');
 export function requirements() {
-  return { status: 'blocked', required: ['image@sha256', 'runtime', 'bootstrap', 'bindings', 'registry_items', 'nonce_items'], runtime_fields: runtimeFields.map(f => f.name), bootstrap_fields: bootstrapFields.map(f => f.name), bindings: bindingNames,
+  return { status: 'blocked', required: ['image@sha256', 'runtime', 'bootstrap', 'bindings', 'registry_items', 'nonce_items'], optional: ['migration_history'], runtime_fields: runtimeFields.map(f => f.name), bootstrap_fields: bootstrapFields.map(f => f.name), bindings: bindingNames,
     runtime_paths: runtimePaths, bootstrap_paths: bootstrapPaths,
     stages: ['verify live database identity and migration catalog', 'run pinned migration Job', 'check compiled bootstrap requirements and full owner admission', 'run bootstrap Job creating disabled v1', 'start HTTPS runtime and verify readiness', 'administrator performs personal MFA', 'use reviewed config mutation/activation flow'],
     external_gates: ['actual registries and typed refs', 'linked owner adapters', 'live least-privilege identities and TLS', 'trusted DB-volume capacity collector', 'core logout hook', 'administrator personal MFA'],
@@ -67,7 +67,8 @@ function validateRecord(record, definitions, paths, label) {
   for (const [field, path] of Object.entries(paths)) assert.equal(record[field], path, `${label}.${field}: mount mismatch`);
 }
 export function renderDeployment(input) {
-  closed(input, ['namespace', 'image', 'migration_catalog_sha256', 'runtime', 'bootstrap', 'bindings', 'registry_items', 'nonce_items'], 'deployment');
+  const hasHistory = Object.hasOwn(input, 'migration_history');
+  closed(input, ['namespace', 'image', 'migration_catalog_sha256', 'runtime', 'bootstrap', 'bindings', 'registry_items', 'nonce_items', ...(hasHistory ? ['migration_history'] : [])], 'deployment');
   assert.ok(typeof input.namespace === 'string' && dns.test(input.namespace) && input.namespace.length <= 63, 'invalid namespace');
   assert.match(input.image, /^[a-zA-Z0-9][a-zA-Z0-9./_:-]*@sha256:[0-9a-f]{64}$/, 'image must be digest-pinned');
   assert.equal(input.migration_catalog_sha256, computeMigrationCatalog().hash, 'image catalog must be checked against current source catalog');
@@ -103,6 +104,15 @@ export function renderDeployment(input) {
   const registryPaths = items(input.registry_items, new RegExp(`^(${registryKinds.join('|')})/${versionPattern}/[0-9a-f]{64}\\.json$`));
   assert.deepEqual([...new Set(input.registry_items.map(item => item.path.split('/')[0]))].sort(), [...registryKinds].sort(), 'all nine registry projections required');
   items(input.nonce_items, new RegExp(`^[0-9a-f]{64}/${versionPattern}$`));
+  if (hasHistory) {
+    const history = input.migration_history;
+    closed(history, ['review_sha256', 'review_configmap', 'review_key', 'sources_configmap', 'sources_items'], 'migration_history');
+    assert.match(history.review_sha256, sha, 'historical review digest required');
+    for (const name of [history.review_configmap, history.sources_configmap]) assert.ok(typeof name === 'string' && dns.test(name) && name.length <= 63, 'invalid historical ConfigMap name');
+    assert.ok(typeof history.review_key === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,252}$/.test(history.review_key), 'invalid historical review key');
+    assert.ok(Array.isArray(history.sources_items) && history.sources_items.length <= 64, 'historical source limit');
+    items(history.sources_items, /^[0-9]{3}_[A-Za-z0-9_]+\.sql$/);
+  }
   for (const [kind, key] of [['provider_proof_issuers', 'provider'], ['strong_auth_issuers', 'strong'], ['rbac_bindings', 'rbac']]) {
     assert.ok(registryPaths.has(`${kind}/${input.runtime[`${key}_registry_version`]}/${input.runtime[`${key}_registry_sha256`]}.json`), `runtime ${kind} pin is not mounted`);
   }
@@ -129,6 +139,17 @@ export function renderDeployment(input) {
   };
   volumes.registries.configMap.items = input.registry_items;
   volumes.nonce.secret.items = input.nonce_items;
+  const migrationCommand = ['/usr/local/bin/system-backup-migrate', '--apply', '--dsn-file', `${prefix}/migration-credentials/dsn`, '--expected-server-uuid', input.runtime.expected_server_uuid, '--expected-database', input.runtime.expected_database, '--expected-catalog-sha256', input.migration_catalog_sha256];
+  const migrationMounts = ['migration-credentials'];
+  if (hasHistory) {
+    const history = input.migration_history;
+    volumes['migration-history-review'] = volume('migration-history-review', 'configMap', history.review_configmap);
+    volumes['migration-history-review'].configMap.items = [{ key: history.review_key, path: 'review.json' }];
+    volumes['migration-history-sources'] = volume('migration-history-sources', 'configMap', history.sources_configmap);
+    volumes['migration-history-sources'].configMap.items = history.sources_items;
+    migrationMounts.push('migration-history-review', 'migration-history-sources');
+    migrationCommand.push('--history-review-file', `${prefix}/migration-history-review/review.json`, '--expected-history-review-sha256', history.review_sha256, '--historical-sql-dir', `${prefix}/migration-history-sources`);
+  }
   function pod(command, mounts, extra = {}) {
     return { serviceAccountName: saName, automountServiceAccountToken: false, securityContext,
       containers: [{ name: 'process', image: input.image, imagePullPolicy: 'IfNotPresent', command,
@@ -136,7 +157,7 @@ export function renderDeployment(input) {
         securityContext: containerSecurity, volumeMounts: mounts.map(name => ({ name, mountPath: `${prefix}/${name}`, readOnly: true })), ...extra }],
       volumes: mounts.map(name => volumes[name]) };
   }
-  const runtimeCommand = ['/usr/local/bin/clawreef-system-backup-registration', '--runtime', `${prefix}/runtime/runtime.json`];
+  const runtimeCommand = ['/usr/local/bin/system-backup-registration', '--runtime', `${prefix}/runtime/runtime.json`];
   const env = [
     ['SYSTEM_BACKUP_REGISTRATION_RUNTIME_SHA256', runtimeHash], ['SYSTEM_BACKUP_REGISTRATION_DSN_FILE', `${prefix}/credentials/dsn`],
     ['SYSTEM_BACKUP_REGISTRATION_TLS_CERT_FILE', `${prefix}/tls/tls.crt`], ['SYSTEM_BACKUP_REGISTRATION_TLS_KEY_FILE', `${prefix}/tls/tls.key`],
@@ -149,8 +170,8 @@ export function renderDeployment(input) {
     { apiVersion: 'v1', kind: 'ServiceAccount', metadata: metadata(saName), automountServiceAccountToken: false },
     { apiVersion: 'v1', kind: 'ConfigMap', metadata: metadata(runtimeName), immutable: true, data: { 'runtime.json': runtimeRaw } },
     { apiVersion: 'v1', kind: 'ConfigMap', metadata: metadata(bootstrapName), immutable: true, data: { 'deployment.json': bootstrapRaw } },
-    job(`sbk-migrate-${bundleHash.slice(0, 16)}`, ['/usr/local/bin/clawreef-system-backup-migrate', '--apply', '--dsn-file', `${prefix}/migration-credentials/dsn`, '--expected-server-uuid', input.runtime.expected_server_uuid, '--expected-database', input.runtime.expected_database, '--expected-catalog-sha256', input.migration_catalog_sha256], ['migration-credentials']),
-    job(`sbk-bootstrap-${bundleHash.slice(0, 16)}`, ['/usr/local/bin/clawreef-system-backup-bootstrap', '--apply', '--deployment-file', `${prefix}/bootstrap/deployment.json`, '--deployment-sha256', bootstrapHash], ['bootstrap', 'bootstrap-data', 'bootstrap-credentials', 'registries', 'nonce', 'capacity']),
+    job(`sbk-migrate-${bundleHash.slice(0, 16)}`, migrationCommand, migrationMounts),
+    job(`sbk-bootstrap-${bundleHash.slice(0, 16)}`, ['/usr/local/bin/system-backup-bootstrap', '--apply', '--deployment-file', `${prefix}/bootstrap/deployment.json`, '--deployment-sha256', bootstrapHash], ['bootstrap', 'bootstrap-data', 'bootstrap-credentials', 'registries', 'nonce', 'capacity']),
     { apiVersion: 'apps/v1', kind: 'Deployment', metadata: metadata(saName), spec: {
       replicas: 0, selector: { matchLabels: { 'app.kubernetes.io/name': labels['app.kubernetes.io/name'], 'clawmanager.io/role': 'https' } },
       strategy: { type: 'Recreate' }, template: { metadata: { labels: { ...labels, 'clawmanager.io/role': 'https' }, annotations: { 'clawmanager.io/runtime-sha256': runtimeHash } },

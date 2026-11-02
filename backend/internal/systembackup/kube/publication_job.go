@@ -25,6 +25,9 @@ type PublishJobRequest struct {
 	DeadlineSeconds                                     int64
 	InputFiles                                          []PublishInputFile
 	ResultRelayURL                                      string
+	// Legacy callers may omit placement. Formal production callers must supply
+	// the node from a verified staging binding; a name is not UID/volume evidence.
+	NodeName string
 }
 
 type PublishInputFile struct{ Path, SubPath string }
@@ -62,6 +65,9 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 		return nil, ErrResource
 	}
 	if !r.Identity.valid() || !strings.HasPrefix(r.Identity.Owner, "sbk_") || len(r.Identity.Owner) != 40 || !digestImage.MatchString(r.Image) || r.DeadlineSeconds < 1 || r.DeadlineSeconds > 86400 {
+		return nil, ErrResource
+	}
+	if r.NodeName != "" && len(validation.IsDNS1123Subdomain(r.NodeName)) != 0 {
 		return nil, ErrResource
 	}
 	for _, name := range []string{r.ServiceAccount, r.StagingClaim, r.InvocationConfigMap, r.UploadCredentialSecret} {
@@ -122,6 +128,9 @@ func PublishJob(r PublishJobRequest) (*batchv1.Job, error) {
 			{Name: "memory", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{Medium: corev1.StorageMediumMemory, SizeLimit: quantity("32Mi")}}},
 		},
 	}}}}
+	if r.NodeName != "" {
+		job.Spec.Template.Spec.Affinity = &corev1.Affinity{NodeAffinity: &corev1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{{MatchFields: []corev1.NodeSelectorRequirement{{Key: "metadata.name", Operator: corev1.NodeSelectorOpIn, Values: []string{r.NodeName}}}}}}}}
+	}
 	if len(r.InputFiles) > 0 {
 		pod := &job.Spec.Template.Spec
 		mounts := append([]corev1.VolumeMount(nil), pod.Containers[0].VolumeMounts[2:]...)

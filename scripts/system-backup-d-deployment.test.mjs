@@ -38,6 +38,11 @@ test('rendered bytes match executable digest pins and mount every runtime path',
   const http = items.find(item => item.kind === 'Deployment');
   assert.equal(http.spec.replicas, 0);
   const pod = http.spec.template.spec, container = pod.containers[0];
+  const imageDefinition = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
+  for (const workload of items.filter(item => item.kind === 'Job' || item.kind === 'Deployment')) {
+    const command = workload.spec.template.spec.containers[0].command[0];
+    assert.ok(imageDefinition.includes(` ${command}\n`) || imageDefinition.includes(` ${command}\r\n`), `binary is not installed by the app image: ${command}`);
+  }
   assert.equal(pod.automountServiceAccountToken, false);
   assert.ok(container.securityContext.readOnlyRootFilesystem);
   assert.ok(container.volumeMounts.every(mount => mount.readOnly));
@@ -66,6 +71,26 @@ test('registry and nonce projections preserve required content-addressed paths',
     if (registry) assert.deepEqual(registry.configMap.items, input.registry_items);
     const nonce = pod.volumes.find(volume => volume.name === 'nonce');
     if (nonce) assert.deepEqual(nonce.secret.items, input.nonce_items);
+  }
+});
+
+test('reviewed historical ledger inputs reach only the suspended migration job', () => {
+  const input = syntheticInput();
+  input.migration_history = { review_sha256: 'b'.repeat(64), review_configmap: 'reviewed-ledger', review_key: 'review.json', sources_configmap: 'original-sql', sources_items: [{ key: 'original.sql', path: '110_historical_source.sql' }] };
+  const resources = renderDeployment(input).manifest.items;
+  const migration = resources.find(item => item.kind === 'Job' && item.metadata.name.startsWith('sbk-migrate-'));
+  const pod = migration.spec.template.spec;
+  const command = pod.containers[0].command;
+  for (const [flag, value] of [['--history-review-file', '/run/system-backup/migration-history-review/review.json'], ['--expected-history-review-sha256', input.migration_history.review_sha256], ['--historical-sql-dir', '/run/system-backup/migration-history-sources']]) assert.equal(command[command.indexOf(flag) + 1], value);
+  assert.equal(migration.spec.suspend, true);
+  assert.deepEqual(pod.volumes.find(item => item.name === 'migration-history-sources').configMap.items, input.migration_history.sources_items);
+  assert.ok(pod.containers[0].volumeMounts.every(mount => mount.readOnly));
+  for (const resource of resources.filter(item => ['Job', 'Deployment'].includes(item.kind) && item !== migration)) assert.ok(!resource.spec.template.spec.volumes.some(volume => volume.name.startsWith('migration-history-')));
+  const original = structuredClone(input.migration_history);
+  for (const mutate of [history => { history.review_sha256 = ''; }, history => { history.review_configmap = '../outside'; }, history => { history.sources_items[0].path = '../110_historical.sql'; }, history => { history.sources_items.push({ ...history.sources_items[0] }); }, history => { history.allow_missing_history = true; }]) {
+    input.migration_history = structuredClone(original);
+    mutate(input.migration_history);
+    assert.throws(() => renderDeployment(input));
   }
 });
 test('wrong target, floating image, wrong paths, missing registries and shared privilege identities fail', () => {
