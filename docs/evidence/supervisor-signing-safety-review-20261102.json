@@ -1,0 +1,238 @@
+{
+  "schema_version": "supervisor-signing-safety-review.v1",
+  "base_commit": "74ea1c940424e216c57dc53bd9a613b49f8ccfcc",
+  "dirty_source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance_mysql_test.go",
+      "sha256": "29bc1f28da1738fd73195be2aa501c968d4f527185fbdf0b3b403ec6dfad5b63"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance_test.go",
+      "sha256": "07e7fcd541681ad08628c450c395485e2ac0e9ecfc24e3427afc8bad17274ade"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance.go",
+      "sha256": "a6981cea3cf711c4a445fc57045943c745f55b220692ce427250b685d8070153"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_mysql_test.go",
+      "sha256": "584091947604ee3403a32b8188c39c5420d3d94c70017b3a1e8c01595748e75b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_signing_journal_test.go",
+      "sha256": "80f16249ab6fa4fdf77f99b2294200a795512c77e40c389967f76aac91944cad"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_signing_journal.go",
+      "sha256": "ad1cf4679d64b0036f2238ac449c11d6156d645589d7c4e5c2337e9aaaa1c644"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_test.go",
+      "sha256": "c8d1b9827197de482f8fde24a3eab9556989d2267daf4310d3fb211035630992"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog.go",
+      "sha256": "c251fba6fd192026e26528c62b59e9794e39e8d16076caa3aff3aa21e700dfd7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_continuation_mysql_test.go",
+      "sha256": "c9db59c4d806ce8f531e2f28bd16b102307fb1569b3478b65de52d028d7c1c9b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification_mysql_test.go",
+      "sha256": "48ded2dfff04f4c1fdefed805566ef32102e2331aae6bc0a90e0bfa47b744be4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification_test.go",
+      "sha256": "0d5288c833b9c6708378d5ce2a4fe45eaf14605d5ada1a852e6ae0b77c910115"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification.go",
+      "sha256": "c4184c55be4ede62a002cc414e2cdf42a422e1dd3c1fca526fcd96652caa539c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256": "fa68b3a8152069e583ed09e4b4ede4d4db5acd8e62710c8d3a6b38bbd16a7ae9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_journal.go",
+      "sha256": "01a42b9f7ac63253c18b1dc9ed8e1d1d233113638afae66726c83a21d81ca001"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_windows_test.go",
+      "sha256": "364d652df6655fd62eefb4e9044e70527b08b3cd358b3d56b4ea3db19ef402f5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files.go",
+      "sha256": "b7992efd2294807804418aa40182d8176db68b71232c02baea57e30a77c7d124"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_mysql_test.go",
+      "sha256": "a4bf8da29ac06bb664bf1bc7f56dc41af9149055c4eea144d9475cb122f09992"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_test.go",
+      "sha256": "806fe714f22ca7000240517264d5904336a7262dbf2f894cd3660d69d1bdd4a5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup.go",
+      "sha256": "0bfc44cabfb0d7be8f8ee1f1b8f46100e3fbad0fa1e0f86d140740b3ff2864a4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "sha256": "20745589541a9800be8ee0e492158d945660a2e6b6733bdfb14e3518c3260bcf"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "sha256": "cfbc7841575877ae2fdffab8035085d557901c91678ebcee7cb146ec662cef62"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "sha256": "c830af4f43eb2b9a382c87be7f83de82bfbbeae0d092e6f67fe6eb1bd31ca6fa"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_signing_journal_test.go",
+      "sha256": "663b28de0e731e45f260bcf8f1b806d9b3fef1f7e1822621ccffab1831bb2ace"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_signing_journal.go",
+      "sha256": "18893d10b17c0ea71858fd1b84a058e03a42a59e13291be545b0a7f64b4ff18a"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/binding_read_mysql_test.go",
+      "sha256": "5656afcfc35a39b9fa9df75185152da8929a598eb4f1569e1537de7bf3191c02"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/binding_read_test.go",
+      "sha256": "3811cc9af243d8531bbcfae04dc8e159fd319d3d02a65b4b7973b8065f7ec81f"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/binding_read.go",
+      "sha256": "ccb421c62e3b48701d8fe864cdd0fbe500cc41d1f4c6ad90ca0ef875a070271e"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/store.go",
+      "sha256": "b62f368a143ac019f564b3a6bff88949fa698cee6c4418ae4688d0086cb227fb"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/publication_first_stage_mysql_test.go",
+      "sha256": "6888a10328a8f7b97bc12d40939644d8de70a372a0d749031dfb4c6c7c72630b"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/publication_first_stage_test.go",
+      "sha256": "fb0aeae66e741211dcd1f83b807beb8b71b7ebb1c0e1cfe81cff3b22842d760a"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/publication_first_stage.go",
+      "sha256": "678a8a422f7ac5b320951d716e40dcdc4b1227374d2ed2aad3f35c81a599bb8f"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/sql_signing_authority.go",
+      "sha256": "e596e3a49f9233e26db9a019bcc3d1cc4a93797af59183c72323cdf9e4aa1696"
+    }
+  ],
+  "fixture": {
+    "source": "Oracle official Windows ZIP, MD5 and valid Oracle Authenticode signature checked",
+    "version": "8.4.13",
+    "server_uuid": "f4cf1bf1-d677-11f1-b48d-846993680ff3",
+    "binding": "127.0.0.1 exclusive nondefault port",
+    "tls": "SAN VERIFY_IDENTITY; TLSv1.3; TLS_AES_128_GCM_SHA256",
+    "require_secure_transport": true,
+    "fresh_business_schema_count": 0,
+    "archive_sha256": "e9cd98b1d23f122987b1afca26ad942efec5891481103d48ae3cde237fa3ea54",
+    "download_url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.13-winx64.zip",
+    "startup_correction": "Removed test-only skip-name-resolve after initial root localhost mismatch; same datadir UUID retained"
+  },
+  "a_stage_first": {
+    "package_seconds": 5.445,
+    "real_tls_test": "TestPublicationStageFirstTLSMySQL",
+    "real_tls_seconds": 1.14,
+    "real_tls_subcases": 10,
+    "unit_roots": 4,
+    "exit_code": 0,
+    "skip": false,
+    "provider_called": false,
+    "log_sha256": "c561fa59a605dea451c4ff950695fb6223fc5d1458c0802f770a8bd17dc83e4e",
+    "independent_remaining_business_schema_count": 0
+  },
+  "d_read_binding": {
+    "entire_package_seconds": 3.086,
+    "real_tls_roots": [
+      "TestReadBindingTxReadOnlyAndOriginalRevokeMySQL",
+      "TestReadBindingTxMissingAndMalformedMySQL"
+    ],
+    "real_tls_seconds": [
+      1.36,
+      0.37
+    ],
+    "scope": "Original ReadOnlyTx, existing fence and exact row locks, independent original Revoke, current persisted purpose revocations; root fixture account is not a production SELECT-only grants proof",
+    "exit_code": 0,
+    "skip": false,
+    "log_sha256": "4da474493c09bc062f49c90b10542902f7e9f17d62773a44321633a4a8c3d99a",
+    "independent_remaining_business_schema_count": 0
+  },
+  "c_components": {
+    "package_seconds": 4.405,
+    "executed_roots": [
+      "TestOwnedPayloadCountsFromNonemptyResourceHistoryData",
+      "TestOwnedPayloadCountsFromNonemptyObjectRecordsData",
+      "TestOwnedPayloadCountsRequireCompleteOriginalArchive",
+      "TestPublicationAcceptanceStrictPublicPayload",
+      "TestPublicationAcceptanceSignedBytesBindOriginalPayloadAndPurpose",
+      "TestPublicationAcceptanceRejectsMissingTypedProof",
+      "TestPublicationAcceptanceCurrentKEKBindingComparison",
+      "TestPublicationAcceptanceCurrentKEKReadRejectsMissingTransaction",
+      "TestPublicationCatalogSigningJournalRejectsUncommittedProducer",
+      "TestPublicationCatalogSigningJournalIdentitySeparatesOriginalOperations",
+      "TestPublicationCatalogStrictPublicPayload",
+      "TestPublicationCatalogSignedBytesBindOriginalArtifacts",
+      "TestPublicationCatalogRejectsMissingTypedAcceptance",
+      "TestPublicationFinalTeamRefsRequireActualWorkspaceAndConfirmation",
+      "TestPublicationFinalTeamRefsRejectCrossScopeAndObjects",
+      "TestPublicationFinalTeamRefsGzipCompletion",
+      "TestPublicationFinalTeamRefsEmptyInventoryStillRequiresSQL",
+      "TestPublicationFinalVerificationFrozenSourceAndMemberJoins",
+      "TestPublicationFinalVerificationRequiresActualCompleteProducer",
+      "TestPublicationFinalVerificationComparisonDigestIsNotFinalStamp",
+      "TestPublicationLocalCleanupRemovesExactOwnedFilesAndPreservesForeignTask",
+      "TestPublicationLocalCleanupRejectsUnknownOwnedSealBeforeAnyRemoval",
+      "TestPublicationLocalCleanupRejectsInodeReplacementBeforeAuthorization",
+      "TestPublicationLocalCleanupBindsCanonicalCustodyDirectory",
+      "TestPublicationLocalCleanupDoesNotReadForeignCiphertext",
+      "TestPublicationCompleteCleanupRejectsIncompleteHandles",
+      "TestPublicationLocalCleanupAbsenceRejectsLateUnlistedSeal",
+      "TestPublicationNativeCleanupAPIUsesOriginalUIDRVAndGracefulDeletion",
+      "TestPublicationNativeCleanupWatchNeverConvertsUnknownToAbsence",
+      "TestPublicationNativeCleanupExpiredSecretIsOwnershipDataOnly",
+      "TestPublicationNativeCleanupCannotUsePreparedCandidate",
+      "TestPublicationSigningJournalRejectsUncommittedProducer",
+      "TestPublicationSigningJournalIdentitySeparatesOriginalOperations"
+    ],
+    "exit_code": 0,
+    "skip": false,
+    "all_test_sources_compiled_with_tag": "systembackup_mysql",
+    "same_task_mysql_roots_executed": false,
+    "log_sha256": "66ae7e2fc5ec648ce61755741008d7fb7fe14e5419fd35af75e0b97e8815ed98"
+  },
+  "cleanup": {
+    "scope": "A/D/C signing safety review batch",
+    "server_uuid": "f4cf1bf1-d677-11f1-b48d-846993680ff3",
+    "business_schema_count_before_shutdown": 0,
+    "graceful_shutdown": true,
+    "owned_processes_absent": true,
+    "owned_root_removed": true,
+    "credentials_keys_mysql_distribution_go_cache_and_tmp_removed": true,
+    "full_page_acceptance": false
+  },
+  "submission_scope": "A StageFirst and D ReadBindingTx API implementation and regression; C producer consumers remain WIP pending same-task positive SQL and finalization",
+  "production_image_updated": false,
+  "full_page_acceptance": false,
+  "remaining": [
+    "User AIO OFF startup result",
+    "Existing v2 configuration report",
+    "Actual Linux original window test",
+    "C same-task local/final/acceptance/catalog positive and failure SQL",
+    "Actual immutable decision and TerminalReady",
+    "D terminal and live production installation/click acceptance"
+  ]
+}

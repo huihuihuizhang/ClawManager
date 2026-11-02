@@ -212,7 +212,7 @@ func (SQLStore) Bind(ctx context.Context, tx SQLWriteView, installationID string
 }
 
 func readBindings(ctx context.Context, tx SQLReadView, s *Snapshot, locked bool) error {
-	query := `SELECT identity_hash,registry_version,binding_sha256,core_sha256,core_json,row_version,generate_revocation_json,unwrap_revocation_json FROM system_backup_v2_kek_bindings WHERE installation_id=? ORDER BY identity_hash,registry_version`
+	query := `SELECT ` + bindingReadColumns + ` FROM system_backup_v2_kek_bindings WHERE installation_id=? ORDER BY identity_hash,registry_version`
 	if locked {
 		query += ` FOR SHARE`
 	}
@@ -222,37 +222,9 @@ func readBindings(ctx context.Context, tx SQLReadView, s *Snapshot, locked bool)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var key, version, bindingHash, coreHash string
-		var raw []byte
-		var rowVersion uint64
-		var generate, unwrap []byte
-		if rows.Scan(&key, &version, &bindingHash, &coreHash, &raw, &rowVersion, &generate, &unwrap) != nil || !kekHash.MatchString(key) || rowVersion == 0 || len(raw) == 0 {
-			return ErrKEKFacts
-		}
-		var binding Binding
-		if json.Unmarshal(raw, &binding) != nil || binding.InstallationID != s.InstallationID || binding.Key.IdentityHash != key || binding.Key.RegistryVersion != version || binding.ConfigRef != (ReferencePin{key, version}) {
-			return ErrKEKFacts
-		}
-		canonical, _, err := hashJSON(binding)
-		semanticDigest, semanticErr := semanticCoreHash(binding)
-		fingerprint, fpErr := BindingFingerprint(binding)
-		if err != nil || semanticErr != nil || fpErr != nil || semanticDigest != coreHash || !bytes.Equal(canonical, raw) || fingerprint != bindingHash {
-			return ErrKEKFacts
-		}
-		facts := BindingFacts{Binding: binding, BindingSHA256: bindingHash, RowVersion: rowVersion}
-		if len(generate) != 0 {
-			var rev Revocation
-			if json.Unmarshal(generate, &rev) != nil || rev.Purpose != GenerateRevocation {
-				return ErrKEKFacts
-			}
-			facts.GenerateRevoked = &rev
-		}
-		if len(unwrap) != 0 {
-			var rev Revocation
-			if json.Unmarshal(unwrap, &rev) != nil || rev.Purpose != UnwrapRevocation {
-				return ErrKEKFacts
-			}
-			facts.UnwrapRevoked = &rev
+		facts, err := scanBindingRow(rows, s.InstallationID)
+		if err != nil {
+			return err
 		}
 		s.Bindings = append(s.Bindings, facts)
 	}

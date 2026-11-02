@@ -382,6 +382,12 @@ func decodeFrozenSigningJSON(raw []byte, dest any) bool {
 
 func (a *SQLArtifactSigningAuthority) readFrozen(ctx context.Context, view signingSQLView, lock bool) ([]byte, time.Time, error) {
 	id := signingInputEvidenceID(a.task, a.binding.InstallationID, a.binding.Purpose)
+	return a.readFrozenID(ctx, view, lock, id)
+}
+
+// readFrozenID shares the exact bounded root/chunk validation with the
+// first-stage history reader. Its ID is private, never a caller-selected API.
+func (a *SQLArtifactSigningAuthority) readFrozenID(ctx context.Context, view signingSQLView, lock bool, id string) ([]byte, time.Time, error) {
 	raw, until, err := a.readFrozenEvidence(ctx, view, lock, id)
 	if err != nil {
 		return nil, time.Time{}, err
