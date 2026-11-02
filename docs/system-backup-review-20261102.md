@@ -46,3 +46,11 @@ C 新增的实际 SQL 本地清理 producer 正在审核和准备独占 SAN/TLS 
 第二轮实际回归已执行：现有公共签名向量通过（security 2.209s）；C 原文件清理/native 清理组件及新代码编译通过。首次 SQL 用例缺少 buildinfo commit，在建库前拒绝；补入真实基线 commit 与 dirty 文件 SHA 后，独占 MySQL 8.4.13/TLS1.3 下完整174迁移和原任务实际执行，226.86s 用例失败于数据库原30秒key/context/source截止时间，128次key-check累计28.306s，没有进入发布/本地SQL清理。SQL读回4位writer均有恢复回执、两道门禁idle、任务failed且无claim、external_actions=0；不认定现场全部物理恢复。精确边界和源码pins见 `evidence/supervisor-original-window-review-20261102-r1.json`。A据此继续当前读优化；C正向SQL闭环仍未验收，不批准推送删除实现。
 
 D 的 `system-backup-d-controller-candidate.py` 已独立检查并运行8项测试通过，包含显式/缺省Downward API v1兼容、错误挂载和私有字节变更拒绝、输出不覆盖及不回显材料内容；对应文档两段Bash语法通过。它只消费私有已审核模板和材料pins，输出零副本/forward关闭的离线候选，report明确授权/在线资源/完整验收均未验证，不执行apply或创建权限。该工具不替代仍缺的正式安装材料和现场激活验收。
+
+## 当前授权读与原窗口复核
+
+审核者从 `951f4c51` 导出独立源码快照，仅叠加 A 冻结四文件，复用本轮 D 盘缓存。`go test -mod=readonly -p 2 ./internal/systembackupkekadapter -count=1 -v -timeout=180s` 退出0，包耗时9.027s。新增 `TestHeldProviderPermitRowsCurrentMySQL` 在本轮独占、独立UUID pin的MySQL 8.4.13/TLS1.3上实际运行，14子例全部通过（0.58s）：原序读取与后续同事务批量当前读取对证据篡改、缺失、mapping撤销/合法续期行为一致；事务结束后不能复用。独立SQL读回确认该测试自建随机schema已删除。原始日志SHA256为 `a4348a943fe61c8e31e82ba99d7c86117ee1ceedc44d3139518c1aa69fe469ba`。此结果不证明原30秒采集链已成功；A/B/C组合仍须实际复测。
+
+C 新增 late-seal/absence 检查已在另一个冻结快照独立回归，`TestPublicationCompleteCleanupRejectsIncompleteHandles|TestPublicationLocal.*|TestPublicationNativeCleanup.*` 全部通过，包耗时6.490s。Windows用例在持有外来cipher的真实独占字节锁时，执行本轮自有文件删除和最终absence检查并保留外来文件，证明absence扫描不读取外来cipher；不把Windows上无效的chmod当作读访问拒绝证明。此处仍是组件证据，不能代替尚未通过的C实际SQL清理正向链。
+
+D 的独占Kubernetes MySQL诊断入口已独立静态审查，默认使用现场真实私库固定digest；长连接PF/Ready不继承普通25秒HTTP请求超时，仍保留自身有界等待。审核者运行10项本地mock全部通过，Bash入口及A三个关联Bash脚本语法检查通过。mock覆盖原测试失败码保留、精确owner/UID变化拒绝删除、原子UID删除前置条件、清理错误继续擦除本轮本地秘密及长短请求超时分离。该工具仅为新随机namespace中的独占fixture，未连接集群，未证明镜像内OpenSSL可用或真实SAN/TLS/页面成功。
