@@ -1,0 +1,37 @@
+{
+  "scope": "owned fixture DATA only; not page or production acceptance",
+  "source_snapshot": "5ae6c853c71d6ce01480c0f5960566bb311d248b",
+  "source_base": "ce9973455f96cc5f16a901f4b868ac311b76a70d",
+  "elf_sha256": "7445a2a28354d14101e17df86c5f4fa1a9849b857be56fedbff776c094298982",
+  "platform": "linux/amd64",
+  "cgo": false,
+  "selected_tests": [
+    "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+    "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL"
+  ],
+  "original_key_window_seconds": 30,
+  "whole_harness_timeout_minutes": 15,
+  "native_executed": false,
+  "full_page_acceptance": false,
+  "installation_owner_batch_included": false,
+  "migration134_included": false,
+  "archive": "clawmanager-native-5ae6c853.tar.gz",
+  "archive_sha256": "79f9c14367cf0add17cce5258bc2f86ee8d8ccd77c62509b26d6626bf161c63b",
+  "archive_bytes": 47730893,
+  "entry": "run-native-5ae6c853.sh",
+  "entry_sha256": "5f6aaddb05d56bba170757d01ad0edf66be87d2c847f1603ecb6cb26050c135e",
+  "fixture": "system-backup-d-kube-mysql-fixture.py",
+  "fixture_sha256": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+  "fixture_line_endings": "LF; content equals frozen source after CRLF normalization",
+  "runtime_runner_sha256": "b06dbc8c0e361158cee958634bacda6345cd3677395c50772b6d4f2941583d6b",
+  "expected_site_namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "delivery_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-5ae6c853-r7",
+  "local_packet_checks": {
+    "regular_files": 125,
+    "checksums_verified": 246,
+    "elf_source_link_verified": true,
+    "tar_paths_and_no_links_verified": true,
+    "entry_bash_syntax_verified": true
+  },
+  "verified_at": "2026-11-02T21:44:38.2393921+08:00"
+}

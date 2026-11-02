@@ -42,8 +42,8 @@ trap on_exit EXIT
 mkdir -m 700 -- "$logs"
 mkdir -p -- "$work/bin" "$work/backend/internal/systembackupexecution" "$work/backend/internal/systembackupbusinessa/testdata" "$work/contracts/system-backup/v12" "$work/tmp"
 cp -- "$bundle/bin/systembackupexecution.test" "$work/bin/"
-cp -- "$bundle/backend/internal/systembackupbusinessa/testdata/schema-registry-historical-15.json" "$work/backend/internal/systembackupbusinessa/testdata/"
-cp -- "$bundle/contracts/system-backup/v12/admin-control-redacted-examples.json" "$work/contracts/system-backup/v12/"
+cp -R -- "$bundle/backend/." "$work/backend/"
+cp -R -- "$bundle/contracts/." "$work/contracts/"
 for evidence in SOURCE_COMMIT SOURCE_STATE SOURCE_STATUS SOURCE_FILES.sha256 SOURCE_PATHS.nul SHA256SUMS; do
   cp -- "$bundle/$evidence" "$logs/"
 done
