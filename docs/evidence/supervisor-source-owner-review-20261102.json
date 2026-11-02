@@ -1,0 +1,297 @@
+{
+  "schema_version": "supervisor-source-owner-review.v1",
+  "observed_at": "2026-11-02T23:54:33.4444941+08:00",
+  "base_commit": "ed4d8d43",
+  "scope": "Authenticated offline enrollment and taskless source observation component source review; no production deployment, actual SQL or page acceptance",
+  "files": {
+    "backend/cmd/system-backup-owner-enroll/main_test.go": "2a121abcf7cdf57a59f9fcdc733bb3c6f5f3173be5804529b1e20c594d8ca8ac",
+    "backend/cmd/system-backup-owner-enroll/main.go": "9a4abe91abbb7a200191a25965b72c8fe4292c41a4db033abaced52924ef3cf8",
+    "backend/internal/systembackupexecution/production_source_clients.go": "55124ae3437280ab66e3dd5e1cc4f49a2ae2adaad9c966c9c24d4da03c89e0c5",
+    "backend/internal/systembackupexecution/production_source_metadata_observation_mysql_test.go": "3e582a82a704c6cb2d0d3879b57fe32396e36d7ecd55877dbf6e42856fae5e65",
+    "backend/internal/systembackupexecution/production_source_objects.go": "7ac78d18ed7821826ce5c52d163371f189b2c2b92b1a92ae3db22f8ac1ee5cfa",
+    "backend/internal/systembackupexecution/production_source_observation_inventory.go": "f022c20f1fcdf87a401e9c62fb7d5bfead29c6f1374039c992e068bcf85276fc",
+    "backend/internal/systembackupexecution/production_source_observation_metadata.go": "2e2bb6d018dc31f1d5da443531496154023f78d8023e397eae0c167a37f89817",
+    "backend/internal/systembackupexecution/production_source_read_access_test.go": "c718b30e0b754f683b51ffc074d8b37bdb0923d34dc4e265b6e9d0be49c33574",
+    "backend/internal/systembackupexecution/production_source_read_access.go": "dc15d8a42e8283111a1f99450f4821bdaddec998b7b85c4fb98daa0844ec8ec1",
+    "backend/internal/systembackupexecution/production_source_resources.go": "5162ca994dbcf38af7f63edab8180d16ea64dd4ff1ea7e912dd928cfe9945f79",
+    "backend/internal/systembackupexecution/production_source_writer_api.go": "04eac69c476fe81132ecd8b0c8cc50316ba2a07bd7e4c30be595c5c1b08f605d",
+    "backend/internal/systembackupexecution/production_source_writer_observation_mysql_test.go": "9ce1a451a40f87baa4990400a6cabc36b9072af26613433eea230f200debe577",
+    "backend/internal/systembackupexecution/production_source_writer_observation_test.go": "5b7af56b15dd536cc2d8ca1404bce7c513d707876b8485683174c64a1eb6ffe1",
+    "backend/internal/systembackupexecution/production_source_writer_observation.go": "6be522e29af57ff57b017654650e02f0a6e4664380773cf9a40e3048b162a6c1",
+    "backend/internal/systembackupexecution/production_source_writer_sql.go": "66647de42ca2709e5d4e8b3a92224ac25fa60994b91b8f60ac50f2ae7db553ca",
+    "backend/internal/systembackupinstallationowner/install/authentication_uuid_test.go": "7d96dc22d9a6f21faa094d9b51ab9e60bedc67b2a77fbe8e338e91226d01ff48",
+    "backend/internal/systembackupinstallationowner/install/authentication.go": "0b3e56d017993973e20520be83619c17b7dd76748524c246937ac04d19af81be",
+    "backend/internal/systembackupinstallationowner/install/connections_test.go": "05900cbecd681f9170de9797e21790f1b12fe9670d51e4200d4804547d18b306",
+    "backend/internal/systembackupinstallationowner/install/connections.go": "f40180dadc2ae711c060a31196e0ec38aeb470035ed046b718aa964e5ac230ad",
+    "backend/internal/systembackupinstallationowner/install/enrollment_mysql_test.go": "d4496026578e8ed2bacd46ed5727f968ee73c6c79b20ce0aed7c5e2ec354cd6c",
+    "backend/internal/systembackupinstallationowner/install/enrollment_protocol_test.go": "37beaaaf18d591b5d42e6250e23b16242e1e60d0e1477a8e0d405bf14ae71925",
+    "backend/internal/systembackupinstallationowner/install/enrollment_test.go": "63668f7ece956fc03977d3fa8fbd93d7c6b8b38aa9ffceec32c429d99e38a1dc",
+    "backend/internal/systembackupinstallationowner/install/enrollment_unknown_test.go": "90fe9e3447a4ba2980ec265644f47a73d8e1d8c2342281653c21c7703f2cb909",
+    "backend/internal/systembackupinstallationowner/install/enrollment_unknown.go": "87dac53a78162bc6085d62ea6ed296e09f0edba88ee6c0bf851bfb29e6553d56",
+    "backend/internal/systembackupinstallationowner/install/enrollment.go": "f5e7329e7862ce41c99162360d34984dd35d98a92dd4894ad627b8d702fed66d"
+  },
+  "component_batches": [
+    {
+      "name": "owner-enroll-r1-components",
+      "log_sha256": "fc4af464ca6acff30e59ebdb2a1be1aacd740ca3566eacdbb771d87be3dccadd",
+      "root_pass": 1,
+      "root_fail": 4,
+      "root_skip": 0,
+      "results": [
+        {
+          "Test": "TestOwnerEnrollPinnedConnectionsAndIdentitySubstitution",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollAuthenticatedTLSProtocolAndReplay",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollRejectsUntrustedIdentityAndRevocation",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollPlanAndCandidateCannotAuthenticate",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollCLIRequiresExplicitTrustedInputs",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "owner-enroll-r2-uuid-repair",
+      "log_sha256": "0462432e34d5dfd41db047e51bfebc3e8024fdfe60eacba06d46d5d9b939da3b",
+      "root_pass": 4,
+      "root_fail": 2,
+      "root_skip": 0,
+      "results": [
+        {
+          "Test": "TestOwnerEnrollRequiresFullOriginalServerUUID",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollPinnedConnectionsAndIdentitySubstitution",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollAuthenticatedTLSProtocolAndReplay",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollRejectsUntrustedIdentityAndRevocation",
+          "Action": "fail"
+        },
+        {
+          "Test": "TestOwnerEnrollPlanAndCandidateCannotAuthenticate",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollCLIRequiresExplicitTrustedInputs",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "owner-enroll-r3-protocol-repair",
+      "log_sha256": "77a584ce1dec131662aa8c930717a3d457089d896d232db7675e69d0b1a840e3",
+      "root_pass": 7,
+      "root_fail": 0,
+      "root_skip": 0,
+      "results": [
+        {
+          "Test": "TestOwnerEnrollCLIRequiresExplicitTrustedInputs",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollRequiresFullOriginalServerUUID",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollPinnedConnectionsAndIdentitySubstitution",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollFixturePreservesJSONAndProtobufScope",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollAuthenticatedTLSProtocolAndReplay",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollRejectsUntrustedIdentityAndRevocation",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollPlanAndCandidateCannotAuthenticate",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "owner-enroll-r4-unknown-create",
+      "log_sha256": "6afa5c94e398dd3d69a6e89952fd9bfca56dee54703504ffc254d490da7eab4c",
+      "root_pass": 8,
+      "root_fail": 0,
+      "root_skip": 0,
+      "results": [
+        {
+          "Test": "TestOwnerEnrollRequiresFullOriginalServerUUID",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollPinnedConnectionsAndIdentitySubstitution",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollFixturePreservesJSONAndProtobufScope",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollAuthenticatedTLSProtocolAndReplay",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollCLIRequiresExplicitTrustedInputs",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollRejectsUntrustedIdentityAndRevocation",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollPlanAndCandidateCannotAuthenticate",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestOwnerEnrollUnknownCreateUsesOriginalReadbackOnly",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "owner-enroll-r4-native-precondition",
+      "log_sha256": "7ba1578e34c56e465439bce2e010c33f39ef0672bac0cc681f51c593ae03de22",
+      "root_pass": 0,
+      "root_fail": 0,
+      "root_skip": 1,
+      "results": [
+        {
+          "Test": "TestOwnerEnrollOriginalLocalAdminTLSMySQL",
+          "Action": "skip"
+        }
+      ]
+    },
+    {
+      "name": "source-owner-d-metadata-writer-r1",
+      "log_sha256": "1dc3983d264afcaf17ca5622cf8b2314711771ce57a2bd8322e6a5116e2af457",
+      "root_pass": 16,
+      "root_fail": 0,
+      "root_skip": 0,
+      "results": [
+        {
+          "Test": "TestSixPartCapabilityRemainsNotReadyWithoutActualSources",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestWorkspaceCapabilityKeepsOriginalChecks",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionCapturePlanPreservesOriginalFactory",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionCapturePlanRejectsMissingInputsAndMutation",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceObservationSharesOriginalControllerWorkloadChecks",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceObservationDoesNotCreateTasklessCaptureAuthority",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceMetadataReadAccessCannotSubstituteAuthority",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceMetadataTransportRejectsMissingOriginBeforeNetwork",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceWriterGraphRequiresCompletePinnedControllerClosure",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceWriterObservationDoesNotInferPhysicalStoppedFromSQL",
+          "Action": "pass"
+        },
+        {
+          "Test": "TestSourceWriterAPIProjectionRetainsActualProcessIdentity",
+          "Action": "pass"
+        }
+      ]
+    }
+  ],
+  "review_findings": [
+    "Corrected original full 8-4-4-4-12 MySQL UUID validation; initial production defect was not hidden by changing fixture identity.",
+    "Official client-go v0.32.3 protobuf/JSON protocol fixture preserves exact authorization resource attributes; production authentication is unchanged.",
+    "Unknown create result is resolved only with original object/attempt/identity and original window; exactly one create in each TLS fault scenario.",
+    "D metadata transport negative now uses a counting successful base transport; missing private origin causes zero network calls.",
+    "D writer metadata binds complete SQL schema/images/WorkBuddy/config/profile/scope; graph/native physical-state requirements stay closed."
+  ],
+  "native_sql": "NOT_EXECUTED: actual owned SAN/TLS MySQL is absent locally; tagged enrollment test root skipped exactly once and is not counted as a pass",
+  "readiness": "NOT_READY: no new source entry is wired into production readiness or main WireServices",
+  "remaining": [
+    "Authenticated issue/import/revoke and current owner-head/grant SQL source; other installation owners remain missing.",
+    "Concrete authenticated current Vault control-resource owner mapping and write-set separation; no name-prefix exclusions.",
+    "Full successful real source SQL/API/Redis/S3/native observation with complete writer closure and pagination fault coverage.",
+    "Ordinary Redis policy purpose must originate in authenticated pre-freeze material construction.",
+    "Actual MinIO effective permission source for each publisher/worker role.",
+    "Same-task original-window full capture, physical business recovery, immutable full artifact readback, catalog and genuine successful terminal through the page."
+  ],
+  "linux_build": {
+    "status": "PASS",
+    "command": "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOMAXPROCS=2 go build -mod=readonly -p=2 ./cmd/server ./cmd/system-backup-owner-enroll",
+    "exit_code": 0,
+    "source": "ed4d8d43 plus the exact 25 reviewed files listed in this report",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "output": "Multi-main build verifies both entrypoints without emitting app binaries. No image was built or deployed."
+  },
+  "artifact_cleanup": {
+    "status": "COMPLETE",
+    "owned_root": "D:\\codex-backup-source-owner-review-1bf91505779849d2984e5833bb572be7",
+    "owner": "supervisor-source-owner-review-20261102",
+    "registered_review_worktree_removed": true,
+    "build_cache_gotmp_and_test_diagnostics_removed": true,
+    "root_absent": true,
+    "marker_removed": true,
+    "retained": "Nonsecret test evidence logs and pending R8 remote delivery only; other owner workspaces and user files preserved."
+  },
+  "remote_packet": "Existing R8 remains pinned to 723f51bc; this review does not replace its source or binary."
+}

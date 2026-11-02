@@ -13,6 +13,10 @@ import (
 )
 
 func (x *originalSourceMetadataAuthority) skillObjectMetadata(ctx context.Context, clients *productionMetadataClients, skills *sh.CaptureInventory) (worker.SkillObjectCaptureSpec, error) {
+	return captureMetadataReadAccess(x).skillObjectMetadata(ctx, clients, skills)
+}
+
+func (x sourceMetadataReadAccess) skillObjectMetadata(ctx context.Context, clients *productionMetadataClients, skills *sh.CaptureInventory) (worker.SkillObjectCaptureSpec, error) {
 	var zero worker.SkillObjectCaptureSpec
 	if skills == nil || clients == nil || clients.Objects == nil || x.Recheck(ctx) != nil {
 		return zero, d.ErrNotReady

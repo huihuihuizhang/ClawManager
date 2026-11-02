@@ -14,6 +14,10 @@ import (
 )
 
 func (x *originalSourceMetadataAuthority) resourceMetadata(ctx context.Context, clients *productionMetadataClients) (worker.ResourceCaptureSpec, worker.ResourceCaptureSpec, error) {
+	return captureMetadataReadAccess(x).resourceMetadata(ctx, clients)
+}
+
+func (x sourceMetadataReadAccess) resourceMetadata(ctx context.Context, clients *productionMetadataClients) (worker.ResourceCaptureSpec, worker.ResourceCaptureSpec, error) {
 	var zero worker.ResourceCaptureSpec
 	if clients == nil || clients.Metadata == nil || clients.API == nil || x.Recheck(ctx) != nil {
 		return zero, zero, d.ErrNotReady
@@ -44,6 +48,8 @@ func (x *originalSourceMetadataAuthority) resourceMetadata(ctx context.Context, 
 		}
 		gvr := schema.GroupVersionResource{Group: selection.Group, Version: selection.Version, Resource: selection.Resource}
 		continuation := ""
+		resourceVersion := ""
+		continuations := map[string]bool{}
 		for page := 0; ; page++ {
 			if page >= 100 || x.Recheck(ctx) != nil {
 				return zero, zero, d.ErrNotReady
@@ -52,6 +58,11 @@ func (x *originalSourceMetadataAuthority) resourceMetadata(ctx context.Context, 
 			// while enumerating original names and UIDs for the separate GET worker.
 			objects, err := clients.Metadata.Resource(gvr).Namespace(s.Config.Namespace).List(ctx, metav1.ListOptions{LabelSelector: selection.LabelSelector, Limit: 1000, Continue: continuation})
 			if err != nil || x.Recheck(ctx) != nil {
+				return zero, zero, d.ErrNotReady
+			}
+			if page == 0 {
+				resourceVersion = objects.ResourceVersion
+			} else if resourceVersion == "" || objects.ResourceVersion != resourceVersion {
 				return zero, zero, d.ErrNotReady
 			}
 			for _, object := range objects.Items {
@@ -65,9 +76,10 @@ func (x *originalSourceMetadataAuthority) resourceMetadata(ctx context.Context, 
 			if objects.Continue == "" {
 				break
 			}
-			if objects.Continue == continuation {
+			if resourceVersion == "" || continuations[objects.Continue] {
 				return zero, zero, d.ErrNotReady
 			}
+			continuations[objects.Continue] = true
 			continuation = objects.Continue
 		}
 	}

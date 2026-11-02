@@ -85,13 +85,13 @@ func readMetadataSourceCredential(m worker.FormalSourceMount) (metadataSourceCre
 // Source-owner delegation is checked at each original HTTP boundary. This is
 // a CONTROLLER metadata client, never a fake worker Invocation or Generate use.
 type sourceMetadataTransport struct {
-	authority *originalSourceMetadataAuthority
+	authority sourceMetadataReadAuthority
 	host      string
 	base      http.RoundTripper
 }
 
 func (t sourceMetadataTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	if r == nil || r.URL == nil || r.URL.Scheme != "https" || r.URL.Host != t.host || r.URL.User != nil || t.authority.Recheck(r.Context()) != nil {
+	if r == nil || r.URL == nil || t.authority == nil || t.base == nil || r.URL.Scheme != "https" || r.URL.Host != t.host || r.URL.User != nil || t.authority.Recheck(r.Context()) != nil {
 		return nil, d.ErrNotReady
 	}
 	if r.Method != "GET" && r.Method != "HEAD" && (r.Method != "POST" || (r.URL.Path != "/apis/authentication.k8s.io/v1/selfsubjectreviews" && r.URL.Path != "/apis/authorization.k8s.io/v1/selfsubjectrulesreviews")) {
@@ -114,6 +114,10 @@ func (t sourceMetadataTransport) CloseIdleConnections() {
 }
 
 func (x *originalSourceMetadataAuthority) openClients(ctx context.Context) (result *productionMetadataClients, resultErr error) {
+	return captureMetadataReadAccess(x).openClients(ctx)
+}
+
+func (x sourceMetadataReadAccess) openClients(ctx context.Context) (result *productionMetadataClients, resultErr error) {
 	if x.Recheck(ctx) != nil {
 		return nil, d.ErrNotReady
 	}
