@@ -1,0 +1,40 @@
+{
+  "schema_version": "supervisor-provider-terminal-projection-components.v1",
+  "base_commit": "1c3504620e3b456daf95f53adc647f8dd8d002b0",
+  "combined_source_final_terminal": {
+    "frozen_source_recovery_publication_go_files": 48,
+    "additional_provider_plan_observer_files": 6,
+    "exit_code": 0,
+    "root_tests_passed": 23,
+    "controller_seconds": 4.601,
+    "kekadapter_seconds": 4.650,
+    "execution_seconds": 5.388,
+    "kube": "compiled only; no matching tests",
+    "mysql_tag_sources_compiled": true,
+    "actual_sql_selected": false,
+    "terminal_two_new_sources_compiled_but_terminal_cas_not_executed": true,
+    "log_sha256": "f5715892dc2180c99b2abf0fd3d2108bb7d51458978e2c96d4dd73e6ea45f65a",
+    "new_terminal_source_sha256": "8b2a778729f1e7e60cf7e748fbe80664f9a856b1df6631ffc6aca4ec31605c5c",
+    "changed_forward_source_sha256": "f5d2558ea45bc08d9c99a53ebe324853e432cac0d238a281965e34cfc73e2b19"
+  },
+  "provider_and_read_projection": {
+    "exit_code": 0,
+    "provider_root_tests_passed": 5,
+    "read_projection_root_tests_passed": 1,
+    "read_projection_subcases": ["unregistered", "registered"],
+    "read_package_seconds": 2.243,
+    "kekadapter_seconds": 7.788,
+    "observer_cli_seconds": 4.366,
+    "log_sha256": "a4e1b93a98bdb59a27e274e4fbbad81a60bb3240723cfbe5614b0d1a960952e9",
+    "read_source_sha256": "00841a5dd6e5ed985c94df5ff4379ecfd073b7dbbf025e4bcea776614d8e6990",
+    "read_test_sha256": "e04997abd1135d2a00aabee164c49f9ad518f590dbcbea460808ae0455874c7b",
+    "cli_main_after_private_buffer_fix_sha256": "0c11c28ac25bf81a587d728e116e1df6930220907faafe8e633c4396d2536010",
+    "actual_installed_provider_test_selected": false,
+    "acceptance_ready_remains_false_without_current_evidence": true
+  },
+  "real_provider_or_sql_or_kubernetes_executed_by_supervisor": false,
+  "actual_catalog_http_query_verified": false,
+  "complete_task_terminal_sql_verified": false,
+  "full_page_acceptance": false,
+  "test_build_product_cleanup": "Exact owned batch directory removed after all test sessions completed; separate evidence retained"
+}

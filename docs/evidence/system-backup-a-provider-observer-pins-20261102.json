@@ -1,0 +1,73 @@
+{
+  "schema": "a-provider-observer-source-freeze.v1",
+  "frozen_at": "2026-11-02T15:48:00+08:00",
+  "status": "source_only_gofmt_complete_not_built_or_tested_by_a",
+  "files": {
+    "backend/internal/systembackupkekadapter/native_provider_observation.go": "85c71ae9e2e85b0a7bbcda7871d7d6605989d7fdee397e78f0d25654de5e82d6",
+    "backend/internal/systembackupkekadapter/native_provider_observation_test.go": "9493d5d541c948145c3967d3dfaa7b97d4b73abacc535af3d1e1cf1ef2fc71c6",
+    "backend/internal/systembackupkekadapter/native_provider_plan.go": "b1a5f3ce488278e2cc9d2856f4da10554b028b066c717f01fe729a74541d8aba",
+    "backend/internal/systembackupkekadapter/native_provider_plan_test.go": "abc8c959efa43ab0e4744fb8c7039ce9edae689eabb8e5c6e8fdfa822dc7b359",
+    "backend/cmd/system-backup-provider-observe/main.go": "0c11c28ac25bf81a587d728e116e1df6930220907faafe8e633c4396d2536010",
+    "backend/cmd/system-backup-provider-observe/main_test.go": "d7ae65f69b6a0c75acc9e12267e76919e4a8a8916d5990d90963a3b824c944fc",
+    "backend/internal/systembackupkekadapter/publisher_source_recovery.go": "3f62001e5f5a54fb08fe7bf812757a61d594bbb809bc4f9d766e7bed30f53266",
+    "backend/internal/systembackupkekadapter/publisher_source_recovery_test.go": "768baff37cb505abcaeed824d39298e5ffc517bad72bc1d35935eefaec3ddd39"
+  },
+  "root_validation_commands": [
+    "go test ./internal/systembackupkekadapter -run '^TestVault(RuntimePlans|JWTRolePlans|JWTTrust|PermissionObserverRejects)' -count=1 -v",
+    "go test ./cmd/system-backup-provider-observe -count=1 -v",
+    "go test ./internal/systembackupkekadapter -run '^TestVaultPermissionObserverInstalledProvider$' -count=1 -v"
+  ],
+  "real_observation_test_env": "A_VAULT_PERMISSION_OBSERVER_CONFIG: actual VaultPermissionObserverConfig JSON, separate from CLI wrapper",
+  "cli_input_fields": [
+    "Provider",
+    "GenerateSource",
+    "UnwrapSource",
+    "Revision",
+    "Until",
+    "SignerPublicSHA256"
+  ],
+  "plan_command": "system-backup-provider-observe --config-file ABS --config-sha256 SHA256 --output-directory EXISTING_PRIVATE_ABS --plan-only",
+  "observe_command": "system-backup-provider-observe --config-file ABS --config-sha256 SHA256 --output-directory EXISTING_PRIVATE_ABS --issuer-private-key-file RAW64_ED25519_PRIVATE_ABS",
+  "plan_outputs": [
+    "worker-policy.json",
+    "publisher-policy.json",
+    "observer-policy.json",
+    "worker-role.json",
+    "publisher-role.json",
+    "worker-jwt-config.json",
+    "publisher-jwt-config.json",
+    "key-create.json",
+    "request-paths.json"
+  ],
+  "observed_outputs": [
+    "generate.capability.json",
+    "unwrap.capability.json",
+    "capability-pins.json"
+  ],
+  "integration": {
+    "installer": "D enables Transit/JWT mounts, creates key, applies desired files using root material retained remotely; runtime never receives root/unseal credentials",
+    "observer_token": "one exact observer policy, no default/root or identity policies, nonzero TTL; private token file contains no newline; config pins exact SHA256",
+    "worker": "dynamic future Pod UID, original projected /run/backup/pod/token, audience clawmanager-backup-worker; real provider client checks returned signed Pod/SA metadata against original current worker authority",
+    "publisher": "fixed actual Pod UID plus ControllerVerifierWorkload, separate projected JWT and exact role/policy",
+    "jwt": "actual issuer differs from JWKS URL; pinned CA plus JWKS HTTPS or independently provided public keys; exact audiences and signed namespace/SA name/SA UID/Pod UID mappings; batch token TTL 10 seconds and leeway -1",
+    "signing": "independent observer issuer public SHA256 pinned in original input; output Source.ContentSHA256 is SHA256 of actual ProviderCapabilityFacts; at most 24-hour permission observation horizon does not renew any task/key-use deadline",
+    "evidence": "root/owner must import exact signed bytes as immutable capability evidence and independently pin Sources/issuer for existing SQLProviderCapabilityPreparation",
+    "recovery_bridge": "PublisherVerifierFactory.OpenSourceRecovery uses same private current SQLPublisherCaptureAuthority pointer and authentic capture history; C consumes returned source and access together"
+  },
+  "not_delivered": [
+    "original 30-second key-use performance acceptance",
+    "production cold first-install BootstrapAdmissionSource and original-owner PreparedCoverage adoption",
+    "positive physical witness for originally-stopped Agent instance",
+    "provider deployment, real observation, real Generate/Unwrap and complete backup task acceptance",
+    "restore-source or isolated data-restore acceptance"
+  ],
+  "cleanup": "A ran no tests, builds, SQL or remote operations and generated no test/build products; root owns validation and deletion of its artifacts",
+  "root_review": {
+    "status": "six_provider_files_component_reviewed_not_installed_or_admitted",
+    "selected_provider_root_tests_passed": 5,
+    "root_post_review_fix": "defer clearing private-key bytes before any short-key rejection",
+    "real_installed_provider_test_selected": false,
+    "bridge_review": "separate source/final combined component run",
+    "production_admission": false
+  }
+}

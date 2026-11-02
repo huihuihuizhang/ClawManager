@@ -234,6 +234,9 @@ func readTaskDetailControl(ctx context.Context, q detailReadSQL, execution TaskE
 		return zero, ErrUnavailable
 	}
 	if b := s.backup; b != nil {
+		// The persisted registration hash identifies the signed catalog record
+		// bytes. Project that same snapshot, without asserting current availability.
+		b.Checksums.Catalog = b.RegistrationSHA
 		var ok bool
 		if b.RequestedParts, ok = detailSet(parts, false, "mysql", "redis", "object_storage", "workspace", "deployment_resources", "secret_bundle"); !ok {
 			return zero, ErrUnavailable
