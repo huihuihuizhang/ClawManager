@@ -5,7 +5,7 @@ import type { BackupLiveData, BackupLiveState } from './backupLiveSource';
 import { startBackupLivePolling } from './backupLivePolling';
 import { useBackupText } from './useBackupText';
 import { systemBackupReadService } from '../../../services/systemBackupReadService';
-import { acceptanceBackupRequestJSON, createSystemBackupTask } from '../../../services/systemBackupTaskService';
+import { completeBackupRequestJSON, createSystemBackupTask } from '../../../services/systemBackupTaskService';
 import BackupLiveDetail from './BackupLiveDetail.tsx';
 import type { BackupDetailSelection } from './backupLiveDetail';
 import BackupLiveConfigHistory from './BackupLiveConfigHistory';
@@ -15,12 +15,14 @@ import BackupEvidenceDownload from './BackupEvidenceDownload.tsx';
 import BackupTaskTable from './BackupTaskTable.tsx';
 import LegacyTeamBackupHistory from './LegacyTeamBackupHistory';
 import BackupLiveCatalog from './BackupLiveCatalog';
+import { publicationMessages } from './messages';
 
 const liveSource = createBackupLiveSource(systemBackupReadService);
 type TaskGroup = 'backups' | 'drills' | 'preflights' | 'verifications';
 
 export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode }) {
-  const { b, number } = useBackupText();
+  const { b, number, locale } = useBackupText();
+  const publicationText = publicationMessages(locale);
   const [state, setState] = useState<BackupLiveState | { kind: 'loading' }>({ kind: 'loading' });
   const [revision, setRevision] = useState(0);
   const [paging, setPaging] = useState<{ kind: TaskGroup; error: boolean } | null>(null);
@@ -101,7 +103,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
     setCreating(true);
     setCreateError(null);
     try {
-      const task = await createSystemBackupTask('backup', acceptanceBackupRequestJSON, key);
+      const task = await createSystemBackupTask('backup', completeBackupRequestJSON, key);
       if (task.origin_installation_id !== installation) throw new Error('installation_changed');
       createKey.current = null;
       setCreatedID(task.public_id);
@@ -136,7 +138,8 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
   return <div className="space-y-5">
     <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold text-slate-700">{overview === null ? b('recordReads') : b('overview')}</h2>
       <div className="flex flex-wrap gap-2"><button type="button" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" onClick={refresh}>{b('refresh')}</button>
-        <button type="button" className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!canCreate || creating} onClick={() => void createBackup()}>{creating ? b('creatingBackup') : b('createBackup')}</button></div></div>
+        <button type="button" className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!canCreate || creating} onClick={() => void createBackup()}>{creating ? b('creatingBackup') : publicationText.createCompleteBackup}</button></div></div>
+    <p className="text-sm text-slate-600">{publicationText.completeBackupNotice}</p>
     {createError !== null && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{b('createBackupFailed', { code: createError })}</p>}
     {createdID !== null && <p role="status" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{b('createBackupAccepted', { id: createdID })}</p>}
     {overview === null ? <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{b('recordsOverviewUnavailable')}</p>

@@ -36,12 +36,16 @@ export function backupStatus(status: string, locale: Locale): string {
 // Copy for the live, on-demand publication reads. Other locales use English.
 export function publicationMessages(locale: string) {
  return locale.startsWith('zh') ? {
+  createCompleteBackup: '创建完整备份', completeBackupPurpose: '完整备份（非灾备验收）',
+  completeBackupNotice: '完整采集六域并发布正式产物；本次不执行隔离还原，灾备资格标为未具备。',
   catalog: '本安装的备份目录', catalogNote: '查询本安装已有的原始签名登记。列表为最终一致，不代表全局灾备目录或恢复资格。',
   readCatalog: '查询目录', refresh: '重新查询', more: '加载更多', loading: '正在读取…', failed: '读取失败，未确认本次结果。', empty: '未查询到登记记录。',
   readRecord: '读取原始记录', record: '原始签名登记', manifest: '原始 Manifest', readManifest: '读取 Manifest',
   checked: '原始字节摘要与登记引用一致', trust: '此处仅核对原始字节 SHA-256；签名由服务端验证，此处未执行独立客户端验签。此结果不授予灾备资格。',
   unavailable: '当前详情尚无已完成发布的完整登记引用。', backup: '备份任务', hash: 'SHA-256', close: '收起',
  } : {
+  createCompleteBackup: 'Create complete backup', completeBackupPurpose: 'Complete backup (without DR qualification)',
+  completeBackupNotice: 'Capture all six domains and publish the formal artifact. This run does not perform an isolated restore or establish disaster-recovery eligibility.',
   catalog: 'This installation’s backup catalog', catalogNote: 'Read existing original signed registrations for this installation. The list is eventually consistent and does not establish a global recovery catalog or recovery eligibility.',
   readCatalog: 'Read catalog', refresh: 'Read again', more: 'Load more', loading: 'Reading…', failed: 'Read failed; this result is unconfirmed.', empty: 'No registrations found.',
   readRecord: 'Read original record', record: 'Original signed registration', manifest: 'Original manifest', readManifest: 'Read manifest',

@@ -12,6 +12,7 @@ import BackupCancelUnstarted from './BackupCancelUnstarted';
 import BackupRecoveryNotice from './BackupRecoveryNotice';
 import BackupReconcileOriginal from './BackupReconcileOriginal';
 import BackupLiveManifest from './BackupLiveManifest';
+import { publicationMessages } from './messages';
 
 type DetailState = { kind: 'loading' } | { kind: 'error' }
   | { kind: 'ready'; detail: BackupTaskResource[BackupTaskKind] };
@@ -21,6 +22,7 @@ export default function BackupLiveDetail({ selection, close, reader = systemBack
   localReport?: (evidence: { public_id: string; sha256: string }) => ReactNode;
 }) {
   const { b, label, date, number, list, locale } = useBackupText();
+  const publicationText = publicationMessages(locale);
   const [state, setState] = useState<DetailState>({ kind: 'loading' });
   const [revision, setRevision] = useState(0);
   const [section, setSection] = useState<'summary' | 'events' | 'logs'>('summary');
@@ -63,7 +65,8 @@ export default function BackupLiveDetail({ selection, close, reader = systemBack
           [b('acceptanceReady'), detail.acceptance_ready ? b('ready') : b('notReady')],
           [b('backupEligibility'), detail.acceptance_eligible ? b('status_eligible') : b('ineligible')],
           [b('eligibilityReason'), list(detail.eligibility_reason_codes.map(label))],
-          [b('purpose'), label(detail.task_purpose)], [b('matrix'), detail.matrix],
+          [b('purpose'), detail.task_purpose === 'functional_test' && detail.requested_parts.length === 6 && new Set(detail.requested_parts).size === 6
+            ? publicationText.completeBackupPurpose : label(detail.task_purpose)], [b('matrix'), detail.matrix],
           [b('size'), formatBytes(detail.bytes, locale)],
         );
         break;

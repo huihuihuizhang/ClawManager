@@ -2,11 +2,19 @@ import api from './api';
 import type { SystemBackupTask } from '../types/systemBackupContract';
 import { isBackupTaskListResource } from '../pages/admin/backups/backupApiRead.ts';
 
-// Matches the acceptance request in admin-mutation-requests.schema.json.
-// Keep the body byte-identical when retrying an unknown result with the same key.
+const completeBackupParts = ['mysql', 'redis', 'object_storage', 'workspace', 'deployment_resources', 'secret_bundle'];
+
+// Retain the separate DR acceptance request for its existing callers.
 export const acceptanceBackupRequestJSON = JSON.stringify({
   task_purpose: 'acceptance',
-  requested_parts: ['mysql', 'redis', 'object_storage', 'workspace', 'deployment_resources', 'secret_bundle'],
+  requested_parts: completeBackupParts,
+});
+
+// Existing non-DR wire purpose; this request still captures every domain.
+// Keep these exact bytes with the same key when an outcome is unknown.
+export const completeBackupRequestJSON = JSON.stringify({
+  task_purpose: 'functional_test',
+  requested_parts: completeBackupParts,
 });
 
 // Supply owner-reviewed JSON and retain the exact body/key on an unknown result.

@@ -1,0 +1,60 @@
+{
+  "schema_version": "supervisor-complete-backup-ui-request-review.v1",
+  "observed_at": "2026-11-02T20:36:03.8445405+08:00",
+  "parent_commit": "24c590bf",
+  "user_scope": "Complete nonempty real six-domain backup publication; DR qualification not established; no isolated restore",
+  "files": [
+    {
+      "path": "frontend/src/services/systemBackupTaskService.ts",
+      "sha256": "4a776060e3fc80d0745cd66df8c9996616b4bba3efcfb9a9b27cc5cfa7cb8523"
+    },
+    {
+      "path": "frontend/src/services/systemBackupTaskService.test.mjs",
+      "sha256": "a14aa9f87a0b588f485f1116f74e1f37e60c5aab2323d3a7511464bad19982a0"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveWorkspace.tsx",
+      "sha256": "6a8bc5e90bf5d307515d9389565d91f2428cdcbc160fa8a3815e42fbd397ce33"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
+      "sha256": "a1f9c8933bec5455b5018abf5ffe6244038e4068147340308503a9e41dc216c0"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/messages.ts",
+      "sha256": "ed7c300b434e93c74d971842099df9dd20173ac9308d12bc8d65c71dd39a3fe2"
+    }
+  ],
+  "changes": [
+    "Live create action submits functional_test wire purpose with all six domains",
+    "Separate acceptance request unchanged",
+    "Existing explicit retry preserves immutable body and key; no automatic mutation retry",
+    "Complete non-DR purpose label only for six distinct requested storage categories"
+  ],
+  "checks": [
+    {
+      "exit_code": 0,
+      "name": "actual_transport_and_publication_regressions",
+      "file": "night-complete-backup-ui-tests-r1",
+      "passed": 15,
+      "log_sha256": "d7478491ea4821769201583031164cdbdf1f8ee9170105d2d836e5cfd29c190e"
+    },
+    {
+      "exit_code": 0,
+      "name": "full_frontend_types",
+      "file": "night-complete-backup-ui-types-r1",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit_code": 0,
+      "name": "changed_production_lint",
+      "file": "night-complete-backup-ui-lint-r1",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "test_boundary": "Actual compiled task service and original closed response validator with authenticated HTTP transport replaced; no live server/task creation",
+  "backend_complete_publication_verified": false,
+  "real_page_click_or_deployment_verified": false,
+  "test_build_outputs_generated": false,
+  "cleanup": "In-memory TypeScript transpilation; noEmit/nonincremental typecheck; uncached lint. No test build artifacts to retain."
+}
