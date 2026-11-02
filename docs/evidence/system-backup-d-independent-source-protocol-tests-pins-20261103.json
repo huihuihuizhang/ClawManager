@@ -1,0 +1,86 @@
+{
+  "schema_version": "d-independent-taskless-source-protocol-tests-source-pins.v1",
+  "status": "source_only_uncompiled_untested",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go",
+      "sha256": "01e15134efbfc9cd52f67a7dda1abd6fb5c59b40bd731c598ca34d2c97a11eb1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_materials_mysql_test.go",
+      "sha256": "a7c461c1f7cb8aaee578a01b8b46c6ba75d7e46064b202da7eac3a7d70800c6e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go",
+      "sha256": "ec8ea0e4fd7ef15878632284a02882b1e8517714d316b7b1776dc44eb0c81f73"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go",
+      "sha256": "2db2a07610337bf03173e6b9a174bcb05789e72c87c5828c27d96242740169c1"
+    }
+  ],
+  "test_entries": [
+    "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+    "TestSourceDependenciesIndependentEmptyTLSMySQL",
+    "TestSourceDependenciesIndependentOriginalDriftTLSMySQL"
+  ],
+  "fixture_declaration": [
+    "Fresh random ad_d_src_<nonce> full migrated schema and dedicated direct-grant controller/source users over the actual UUID-pinned SAN/TLS MySQL fixture. Exact server identity verified before creation/cleanup; success/failure cleanup is attached to each owned database/user.",
+    "Independent source declaration: running Lite 107/generation5/native PID32107/port21007 and running Pro109/generation6; nonempty user42/Team120/member121/Skill111/blob112/version113. Original instance7/instance9 source is never called, updated or removed; new schema must contain neither ID.",
+    "The empty declaration performs no application source seeding: users/instances/Teams/Skills/runtime source rows and versioned object root are empty. Controller/platform/participant/PVC/PV and independently declared public CA control object remain present and must be accounted, never filtered to fabricate an empty namespace.",
+    "Creates no HTTP task/session/queue/readiness input. Real original signed Forward/config/profile and original controller metadata/worker source declarations are issued before observation. No sourceMetadataAuthority call with an empty task.",
+    "Original native protocol/client and source readers use real TLS HTTP/RESP/S3/API streams, pinned CA/tokens/credentials and actual restricted SQL pools. Typed namespace API and source metadata clients both call the TLS protocol server; the compatibility Dynamic client is unused by ObserveSourceDependencies.",
+    "Redis functional_test purpose is explicitly declared before worker source-scope/controller metadata-scope hashes and signatures. No post-freeze policy or original window is rewritten."
+  ],
+  "positive_path": [
+    "Call complete DeploymentService.ObserveSourceDependencies with original bounded context.",
+    "Require nonempty metadata/writer digests and exact complete source user/instance/Teams/Skills/object collections.",
+    "Require actual native capabilities and repeated generation-addressed state GETs, continued Deployment and metadata ConfigMap pages, actual PV GET, zero mutation RPCs and no task/control/readiness row creation.",
+    "Empty path requires actual successful SQL/list EOF with zero source collections; no native call or global future stopped observer is required."
+  ],
+  "negative_protocol_cases": [
+    "missing-participant",
+    "unknown-controller",
+    "metadata-permission",
+    "metadata-rv",
+    "writer-token",
+    "native-permission",
+    "native-generation",
+    "final-metadata"
+  ],
+  "negative_semantics": "Errors must return no positive or partial observation facts and must not create task/control rows. Permission and continuation/state/final-source changes are served by actual TLS protocol responses or fixture-owned source registry changes, not a permission callback/passed DTO.",
+  "limits": [
+    "This is controlled declared protocol state plus actual restricted SQL/TLS parsing, not a deployed Kubernetes/Redis/MinIO/agent or physical stopped/recovery certification.",
+    "No stop/resume/native witness is fabricated or invoked. Original stopped fixture and its negative test remain untouched.",
+    "No source/readiness/worker/publication production files changed. Full ordinary capture/recovery/readback/catalog/same-task CAS and real owner/provider resource coverage remain unproven.",
+    "Root must compile/run this batch, require supplied actual native SQL credentials and zero skips, and report failures honestly; D has not executed it."
+  ],
+  "root_command": "go test -tags systembackup_mysql ./internal/systembackupexecution -run ^TestSourceDependenciesIndependent(AllRunning|Empty|OriginalDrift)TLSMySQL$ -count=1 -v -timeout=900s",
+  "root_env": [
+    "TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS"
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "scoped_diff_check": "passed",
+    "static_import_reference_scan": "completed_no_obvious_unused_imports",
+    "compile": "not_run",
+    "tests": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "frozen_checks": [
+    {
+      "path": "docs/evidence/system-backup-d-taskless-source-metadata-review-pins-20261102.json",
+      "sha256": "7e76ac1472b314b38481b0ef4248afdbfa24ed5617e061f3573a9dd22e580b64",
+      "source_drift": []
+    },
+    {
+      "path": "docs/evidence/system-backup-d-taskless-source-writer-pins-20261102.json",
+      "sha256": "49678a40f8e6d6a0ef93c6d19b93ac6c5557659844185608f349bcbd41517b61",
+      "source_drift": []
+    }
+  ],
+  "cleanup": "Fixture owns only exact random schema/users on the pinned disposable SQL server. Root removes its test/build products and audits native fixture cleanup per AGENTS. No build or SQL artifacts were produced by D."
+}

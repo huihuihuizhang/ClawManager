@@ -1,0 +1,51 @@
+{
+  "schema": "a-original-owner-authority-lifecycle-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_TEST_AND_NATIVE_MYSQL_VALIDATION",
+  "date": "2026-11-03",
+  "root_reported_baseline": "b222bd71d38d00e762f9d238f5ac8f90646864a8",
+  "files": {
+    "backend/internal/systembackupinstallationowner/installation_observation.go": "fda7b3c55ebc93e7f1f05cb72b38b12eafc00cd56471378e12f2760e6ed57196",
+    "backend/internal/systembackupinstallationowner/install/authority_inputs.go": "1e014175302ab21c0f32f06f16764baf0e1069c867d9fffda43b787fd3492722",
+    "backend/internal/systembackupinstallationowner/install/authority_state.go": "23de727fb1d22222bad2d59c3af07019e8742dbe9179a7a8a0c8f21fe33e8539",
+    "backend/internal/systembackupinstallationowner/install/authority_issue.go": "84ce15f67f57afe25c35fabb5fc2842b6e8eb038ebc883f2aa95c869b0649fe9",
+    "backend/internal/systembackupinstallationowner/install/authority_ledger.go": "a99782f7e52db0bc20634bf1c8665bbfb3f5a71bf5522fba5199148e9e4dcdcc",
+    "backend/internal/systembackupinstallationowner/install/authority_revoke.go": "21f313e7f895fc52e9e8e284678b252b0c4710ad4b9fa91972fec2214576a76c",
+    "backend/internal/systembackupinstallationowner/install/authority_export.go": "4bad4d353acee27828beca1adc771a3f99a31b35306593ee6fe9304966444def",
+    "backend/internal/systembackupinstallationowner/install/authority_cli_inputs.go": "3fb0e196fa0ccd53c5ef32949b304720934b485904f69ad591a077ef09cee9e6",
+    "backend/internal/systembackupinstallationowner/install/authority_issuer.go": "c2f0cba0e649d7059da86ea25b23a53a3c1dc88e74a922c0b9bc3cd00c5c3fc6",
+    "backend/internal/systembackupinstallationowner/install/authority_sql_test.go": "31b7ae1c854ec9a7f541bdc192162bd37a8eefdc009a3eb9903d78966bfa1cd5",
+    "backend/internal/systembackupinstallationowner/install/authority_fixture_test.go": "f2003af540d886a023235d4cb7f9deec0df8180537a7a31031e06aacf8173faf",
+    "backend/internal/systembackupinstallationowner/install/authority_test.go": "cc73f39f811e39ed1066f57cefc562206ed0bf6e0722fe836177bee5fd8df8e2",
+    "backend/internal/systembackupinstallationowner/install/authority_issuer_test.go": "84d640ce47b459acbf83b6dbb35419ccd02e5e0aa7c35569b2b15d13045e9a52",
+    "backend/cmd/system-backup-owner-authority/main.go": "4850db9efb7c0ec48b84ae59b90e5fe1aa5893d61fe54c35c812173dbd36e3f8",
+    "backend/cmd/system-backup-owner-authority/main_test.go": "203eba0339b68881845e5d8f787b2d0cb0bed5d90e9f1861440965ae703ebf80",
+    "backend/cmd/system-backup-owner-authority/issuer.go": "489788c7ad27752c6115c75b4b7db0402c8a79ecb6140df0982dcb8ae0294c6c",
+    "backend/cmd/system-backup-owner-authority/issuer_test.go": "64b159ebc77c8b36e49e7e96e9fa873366b28dcb70e8671780e7ffdcc3a77116"
+  },
+  "behavior": [
+    "Actual bcrypt/current local admin, original Kubernetes subject/namespace/SSAR and independently retained EnrollmentPin authenticate every lifecycle operation. Installer and consumer account pins must differ.",
+    "Capture signs outside SQL locks after original offline grant/config/reference-set and concrete provider observation. Import receives frozen signatures and no issuer key.",
+    "Original transaction order is admin then exact current head/grant locks then CAS writes, exact re-read and final SQL clock/current credential plus original observation/window checks. Existing Head protocol is unchanged; no signed predecessor hash chain is claimed.",
+    "Commit errors return ErrCommitUnknown; Resolve reads only the exact original bundle/source counters and signatures. No re-sign, provider probe, overwrite or success-row repair.",
+    "Revocation preserves original windows, needs no healthy provider, atomically changes original head/grant state, and is terminal for this enrollment.",
+    "Consumer files require actual enrolled operator and exact committed active source; exported pin derives from original independent issuer. Application entry points and other resource validators are not wired or represented as ready.",
+    "generate-issuer is pure local standard-library crypto/ed25519.GenerateKey with create-only raw64 issuer.private/raw32 issuer.public, private memory clearing, 0600 files and public fingerprint receipt. It performs no enrollment/import/network/SQL/trust selection.",
+    "Output cleanup checks exact created file identity before removal; pre-existing files are never replaced. D source-material producer/installer files are excluded from this exact list."
+  ],
+  "test_source": [
+    "database/sql transaction protocol model plus local TLS Vault protocol, real Ed25519/bcrypt and fake Kubernetes SDK responses; this is component evidence only.",
+    "Synthetic consumer account switch exercises original kernel Prepare/AuthorizeOriginal/Recheck gates but proves no actual MySQL account separation, GRANTs, InnoDB locking or race behavior.",
+    "Sources cover issue/import/duplicate, independent enrolled consumer export and original L2, revocation, commit-result loss plus exact readback, actor/target/config/issuer/enrollment/RBAC/window refusals, signature/file/resource/counter drift, head advance/stale source and atomic rollback.",
+    "Local issuer sources cover usable exact raw format/fingerprint, private output modes, no overwrite, existing output preservation and no enrollment/key-input CLI bypass."
+  ],
+  "root_commands": [
+    "go test ./internal/systembackupinstallationowner/install ./cmd/system-backup-owner-authority -run ^TestOwnerAuthority -count=1 -v",
+    "Build Linux CGO_ENABLED=0 owner-authority offline binary; root owns all test/build/cache cleanup."
+  ],
+  "remaining": [
+    "No compile/test/build/SQL/API/provider/remote/Git actions performed by A for this batch.",
+    "Native SAN/TLS MySQL installer/consumer two-account lifecycle, actual original L2 privileges, CAS concurrency, atomic rollback and commit-unknown readback remain unverified and are not counted as PASS.",
+    "Real field enrollment/provider observations, provider control-resource mapping, other resource validators and full six-domain backup/publication/independent EOF/catalog success remain separate root/D work."
+  ],
+  "cleanup": "No test/build artifacts were created by A. Root must delete validation artifacts after tests per AGENTS."
+}

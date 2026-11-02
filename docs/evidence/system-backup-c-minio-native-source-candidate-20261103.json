@@ -1,0 +1,186 @@
+{
+  "schema_version": "system-backup-c-minio-native-source-candidate.v1",
+  "status": "candidate_source_only_runtime_permission_oracle_incomplete",
+  "date": "2026-11-03",
+  "scope": "C new source files only; no C5, installer, fixture, publication loop, go.mod or go.sum edits",
+  "candidate_profile": {
+    "name": "minio-2025-04-22-builtin-flat.v1",
+    "server_version": "2025-04-22T22:12:26Z",
+    "server_commit": "0d7408fc9969caf07de6a8c3a84f9fbb10a6739e",
+    "server_madmin_dependency": "v3.0.109 (verified against candidate server go.mod)",
+    "owner_mc_release": "RELEASE.2025-04-16T18-13-26Z",
+    "owner_mc_madmin_dependency": "v3.0.107-0.20250415152934-4b504b82db63 (verified against mc go.mod)",
+    "local_signing_dependency": "existing minio-go/v7 v7.0.85 pkg/signer.SignV4; no madmin dependency added",
+    "live_installed_version": "unknown; candidate is not an observation of the live installation",
+    "compatibility": "Not live-tested. Server DTO sources checked at v3.0.109; exact older mc madmin parse-config source could not be retrieved. Its schema is a candidate requiring real pinned-mc compatibility verification."
+  },
+  "implemented_connection": [
+    "CheckCurrent reopens independently SHA-pinned startup source, verifies external Ed25519 original grant/current head/configuration observation from exact current ConfigMap UID/RV and namespace UID, then intersects original SQL/config/KEK and credential windows.",
+    "Five distinct original credential access-key hashes map to the exact original config identity/ref-version, separate from the dedicated sixth observer account. No caller Passed/proof DTO or SDK existence grants permission.",
+    "HTTPS native GETs use normal SigV4, verified CA and exact leaf SPKI; redirects, unknown version/commit, missing/incomplete/oversized responses, unexpected pagination and expired credentials refuse. One named built-in policy, enabled regular user, no group inheritance, exact closed action/resource subset; Deny/conditions/unknown policy forms refuse the entire result.",
+    "Native ServerInfo, named GetUserInfo and InfoCannedPolicyV2 plus both buckets' policy absence and versioning are collected twice. No object PUT/DELETE, policy writes, account creation or login probe.",
+    "Actual Kubernetes Deployment/ReplicaSet/Pod/ServiceAccount/Node/Service owner chain and bounded complete EndpointSlice pagination are read twice. Current owner records, credentials and SQL identity/time are re-read at the tail.",
+    "ObserveMinIOOriginalOwnerConfiguration runs the independently binary-pinned official mc with the original owner's already existing private config-v10 alias. It verifies the alias account/HTTPS endpoint, existing CA file, actual candidate ServerInfo, mc version, and six complete all-target configuration responses including envOverride; repeats all reads and pins; never creates aliases, writes config or installs rights.",
+    "The original owner's existing separately mounted private Ed25519 key can sign only the actual configuration-observation record produced by those reads. It is not generated, exposed to the controller, or used to sign a grant/head. The record explicitly has no UsersSystem/disabled-plugin/permission-success assertion. It is returned with the runtime-oracle error, not as ready evidence."
+  ],
+  "protocol": [
+    {
+      "method": "GET",
+      "path": "/minio/admin/v3/info",
+      "query": "metrics=false",
+      "permission": "admin:ServerInfo",
+      "reply": "plaintext JSON InfoMessage; exact deploymentID, region and single server version/commit gate"
+    },
+    {
+      "method": "GET",
+      "path": "/minio/admin/v3/user-info",
+      "query": "accessKey=<exact original account>",
+      "permission": "admin:GetUser",
+      "reply": "plaintext JSON UserInfo; regular builtin-only closed profile"
+    },
+    {
+      "method": "GET",
+      "path": "/minio/admin/v3/info-canned-policy",
+      "query": "name=<exact original policy>&v=2",
+      "permission": "admin:GetPolicy",
+      "reply": "plaintext JSON PolicyInfo with PolicyName, Policy, CreateDate, UpdateDate"
+    },
+    {
+      "method": "GET",
+      "path": "/<exact bucket>",
+      "query": "policy= / versioning=",
+      "permission": "s3:GetBucketPolicy / s3:GetBucketVersioning",
+      "reply": "NoSuchBucketPolicy must be genuine 404, never a 403 inference; versioning must be Enabled"
+    },
+    {
+      "method": "GET",
+      "path": "/minio/admin/v3/get-config-kv",
+      "query": "key=<whole subsystem name without colon>",
+      "permission": "admin:ConfigUpdate in this candidate server handler, despite the read-only GET",
+      "reply": "madmin.EncryptData(secret, reporting config); official pinned mc performs madmin authentication/decryption. All targets are requested, not only the default target."
+    }
+  ],
+  "owner_configuration_subsystems": [
+    "policy_plugin",
+    "policy_opa",
+    "identity_openid",
+    "identity_ldap",
+    "identity_tls",
+    "identity_plugin"
+  ],
+  "precise_remaining_gap": {
+    "error_dependency": "minio-native-effective-policy-engine-runtime-unavailable",
+    "reason": "Reviewed named-user/policy and reporting-config APIs do not supply an authenticated complete effective/runtime authorization oracle. Current config values and an original owner's signature do not by themselves establish the running plugin/OPA/identity state, reload/activation state, or all effective permission paths. A successful local JSON/TLS fixture cannot establish this native compatibility or exclusion.",
+    "current_behavior": "Even after all actual source reads, CheckCurrent returns partial private observation plus this error. CheckPublicationDependenciesWithMinIO propagates the error and cannot return success. No runtime source implementation, always-ready alternate, publication-loop hookup or complete five-role permission producer is claimed.",
+    "required_next_source": "A version-pinned authenticated native runtime/effective-permission source (or a separately reviewed source-level closed-profile proof bound to actual process/runtime configuration and reload generation), with complete plugin/group/STS/service-account/parent-policy exclusion and current revocation. Do not replace it with signed booleans, mock JSON, owner statements or capability shape validation.",
+    "additional_compatibility_gaps": [
+      "Exact selected mc/madmin parser compatibility needs original pinned binary execution evidence.",
+      "Official mc verifies TLS CA but this wrapper does not inject its own SPKI check into mc's individual encrypted GET TLS connections; native observer checks SPKI before/after. This must not be represented as an atomic per-request mc SPKI proof.",
+      "Only the narrow closed policy subset is supported. Any extra rights, conditions, group mappings, temporary/service credentials, fork, other server version, separate provider endpoint or incomplete source refuses."
+    ]
+  },
+  "installation_inputs_still_required": [
+    "Read-only preflight must first establish the actual MinIO version/commit, API transport compatibility and resource identity. Unknown/mismatched version is refused, not auto-migrated to the candidate profile.",
+    "Independent startup source file/hash, external original owner public issuer, namespace UID, epoch floor, exact grant/head/configuration-observation ConfigMap names and UIDs, and grant hash. Original owner installs/updates/revokes the actual records; reader does not self-enroll or choose pins from imported data.",
+    "Original owner grant must bind actual config SHA, TLS CA/SPKI, deployment ID, Deployment/RS/Pod/SA/Node/Service UID chain, exact image/container and all five distinct source ref/account/policy hashes with original windows.",
+    "Dedicated regular observer account already installed with admin:GetUser, admin:GetPolicy, admin:ServerInfo on *, and s3:GetBucketPolicy/s3:GetBucketVersioning only on the exact two buckets. Do not add admin:ConfigUpdate to this observer.",
+    "Original configuration owner separately holds its existing ConfigUpdate authority, original account alias, private config-v10 file/hash, pinned official mc binary/hash, existing configDir/certs/CAs certificate matching actual CA hash, original short window, and separately pinned existing owner signing key/public issuer. Only the independently authorized owner process may call the producer; no controller private-key mount or authority bootstrap is implemented.",
+    "Original target/catalog file refs, actual five independent credentials with original lifetimes, existing SQL active-config/KEK/publisher sources and owner-source RBAC. Existing C5/A deployment checks may transitively perform existing SQL binding operations; do not describe the whole call as guaranteed zero-write SQL.",
+    "Complete native runtime/effective source above must be implemented and reviewed before any ordinary publication readiness or success claim. All original publication, readback, task purpose and non-DR gates remain required."
+  ],
+  "validation": {
+    "executed_by_C": [
+      "gofmt on eight new Go files (syntax/format only)",
+      "read-only SHA pin checks"
+    ],
+    "not_executed": [
+      "go test",
+      "go build",
+      "native mc",
+      "SQL",
+      "remote/preflight",
+      "Kubernetes or MinIO calls",
+      "publication task",
+      "git mutation"
+    ],
+    "test_sources": [
+      "Actual local TLS positive native collection with independent verification of transmitted SigV4 HMAC and exact API/query shapes",
+      "Unknown version, inherited/external/disabled users, extra/missing policies, substituted account, expired credentials, wrong SPKI, incomplete/oversized replies, pagination headers and redirects",
+      "Closed policy subset: valid exact rights, Deny, condition, wildcard action, broader resource, duplicate/trailing JSON",
+      "Original external signature/current head, revocation, namespace/object UID substitution, invalid signature, original-window expiry and epoch replay",
+      "Complete two-page EndpointSlice source, repeated cursor, RV drift, terminating/substituted endpoints and missing final page",
+      "Configuration with active environment override remains configuration-only; malformed/incomplete target responses refuse; partial evidence cannot serialize as approval"
+    ],
+    "root_execution_required": "Supervisor owns tests/builds and artifact cleanup; these test sources have not been executed. No C test/build artifacts exist to delete."
+  },
+  "frozen_C5_manifest": {
+    "path": "docs/evidence/system-backup-c-taskless-publication-dependencies-pins-20261102.json",
+    "sha256": "d291294fc7613624866a3cf84513930bad0261fd1629f1018d16b658595010a2"
+  },
+  "primary_protocol_sources": [
+    "https://github.com/minio/minio/commit/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e",
+    "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/go.mod",
+    "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/iam-store.go",
+    "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handlers-users.go",
+    "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handlers-config-kv.go",
+    "https://raw.githubusercontent.com/minio/madmin-go/v3.0.109/user-commands.go",
+    "https://raw.githubusercontent.com/minio/madmin-go/v3.0.109/policy-commands.go",
+    "https://raw.githubusercontent.com/minio/madmin-go/v3.0.109/info-commands.go",
+    "https://raw.githubusercontent.com/minio/madmin-go/v3.0.109/parse-config.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/go.mod",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/admin-config-get.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/config-v10.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/config.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/globals.go"
+  ],
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_check.go",
+      "sha256": "f1a50046775d50b0296c52d6e88de3202d89c6cc8462ac1de61b5b30121c6533",
+      "bytes": 9749,
+      "kind": "candidate_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_kube.go",
+      "sha256": "01af6a2ea1e174819b406148fc5e8cc6b88a64c1cf82d371925b16a8c62c3652",
+      "bytes": 5468,
+      "kind": "candidate_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_native_test.go",
+      "sha256": "57c4ecab468c134a9e83b4e50c49ffb1c389ccdb6bee1377ca0dae15e39a6701",
+      "bytes": 12228,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_native.go",
+      "sha256": "57705257c054c0c05a2a96f5fb3f20d0f5b50b0680dd1b2e4a8f9631822c5535",
+      "bytes": 10327,
+      "kind": "candidate_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_owner.go",
+      "sha256": "9d52b5f5f54f153c1040d7827a709788404e5ecb21fe819c5ce88ccf5f64389e",
+      "bytes": 13063,
+      "kind": "candidate_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_policy.go",
+      "sha256": "c9957a1ca15ae246e788393c274039f766ed4d292b13aafdc3dc3372e4c10562",
+      "bytes": 5756,
+      "kind": "candidate_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_source_test.go",
+      "sha256": "6276d312e8d40e05d8840e2829307f40217b42828c04b8be8c81b358cc58ec36",
+      "bytes": 8968,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_source.go",
+      "sha256": "b617b7c4a774462f6013b5c6b891d576b56a3bf878c1403af1770f36045f8eab",
+      "bytes": 9218,
+      "kind": "candidate_production_source"
+    }
+  ]
+}

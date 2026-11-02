@@ -1,0 +1,418 @@
+{
+  "schema_version": "supervisor-owner-minio-source-combination-review.v1",
+  "observed_at": "2026-11-03T00:55:58.2987734+08:00",
+  "base_commit": "b0a308de8d127a5a180c3c2e9610e0776cb53d4d",
+  "files": {
+    "backend/cmd/system-backup-owner-authority/issuer_test.go": "64b159ebc77c8b36e49e7e96e9fa873366b28dcb70e8671780e7ffdcc3a77116",
+    "backend/cmd/system-backup-owner-authority/issuer.go": "489788c7ad27752c6115c75b4b7db0402c8a79ecb6140df0982dcb8ae0294c6c",
+    "backend/cmd/system-backup-owner-authority/main_test.go": "203eba0339b68881845e5d8f787b2d0cb0bed5d90e9f1861440965ae703ebf80",
+    "backend/cmd/system-backup-owner-authority/main.go": "4850db9efb7c0ec48b84ae59b90e5fe1aa5893d61fe54c35c812173dbd36e3f8",
+    "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go": "01e15134efbfc9cd52f67a7dda1abd6fb5c59b40bd731c598ca34d2c97a11eb1",
+    "backend/internal/systembackupexecution/production_source_protocol_materials_mysql_test.go": "d9d010f1f516a1e78d024275756c8a7ba151252ccf924ea521ff9cb79d479b98",
+    "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go": "a3f69a1969739aace65bff20c79357837e72e87c8e015fa0b214eded4cf82759",
+    "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go": "cffef76d1af24562fd5c619d6025178591948c70aa62bc8e3286964234c065e2",
+    "backend/internal/systembackupexecution/publication_minio_permission_check.go": "f1a50046775d50b0296c52d6e88de3202d89c6cc8462ac1de61b5b30121c6533",
+    "backend/internal/systembackupexecution/publication_minio_permission_kube.go": "01af6a2ea1e174819b406148fc5e8cc6b88a64c1cf82d371925b16a8c62c3652",
+    "backend/internal/systembackupexecution/publication_minio_permission_native_test.go": "57c4ecab468c134a9e83b4e50c49ffb1c389ccdb6bee1377ca0dae15e39a6701",
+    "backend/internal/systembackupexecution/publication_minio_permission_native.go": "57705257c054c0c05a2a96f5fb3f20d0f5b50b0680dd1b2e4a8f9631822c5535",
+    "backend/internal/systembackupexecution/publication_minio_permission_owner.go": "9d52b5f5f54f153c1040d7827a709788404e5ecb21fe819c5ce88ccf5f64389e",
+    "backend/internal/systembackupexecution/publication_minio_permission_policy.go": "c9957a1ca15ae246e788393c274039f766ed4d292b13aafdc3dc3372e4c10562",
+    "backend/internal/systembackupexecution/publication_minio_permission_source_test.go": "6276d312e8d40e05d8840e2829307f40217b42828c04b8be8c81b358cc58ec36",
+    "backend/internal/systembackupexecution/publication_minio_permission_source.go": "b617b7c4a774462f6013b5c6b891d576b56a3bf878c1403af1770f36045f8eab",
+    "backend/internal/systembackupinstallationowner/install/authority_cli_inputs.go": "3fb0e196fa0ccd53c5ef32949b304720934b485904f69ad591a077ef09cee9e6",
+    "backend/internal/systembackupinstallationowner/install/authority_export.go": "4bad4d353acee27828beca1adc771a3f99a31b35306593ee6fe9304966444def",
+    "backend/internal/systembackupinstallationowner/install/authority_fixture_test.go": "f2003af540d886a023235d4cb7f9deec0df8180537a7a31031e06aacf8173faf",
+    "backend/internal/systembackupinstallationowner/install/authority_inputs.go": "1e014175302ab21c0f32f06f16764baf0e1069c867d9fffda43b787fd3492722",
+    "backend/internal/systembackupinstallationowner/install/authority_issue.go": "84ce15f67f57afe25c35fabb5fc2842b6e8eb038ebc883f2aa95c869b0649fe9",
+    "backend/internal/systembackupinstallationowner/install/authority_issuer_test.go": "84d640ce47b459acbf83b6dbb35419ccd02e5e0aa7c35569b2b15d13045e9a52",
+    "backend/internal/systembackupinstallationowner/install/authority_issuer.go": "c2f0cba0e649d7059da86ea25b23a53a3c1dc88e74a922c0b9bc3cd00c5c3fc6",
+    "backend/internal/systembackupinstallationowner/install/authority_ledger.go": "a99782f7e52db0bc20634bf1c8665bbfb3f5a71bf5522fba5199148e9e4dcdcc",
+    "backend/internal/systembackupinstallationowner/install/authority_revoke.go": "21f313e7f895fc52e9e8e284678b252b0c4710ad4b9fa91972fec2214576a76c",
+    "backend/internal/systembackupinstallationowner/install/authority_sql_test.go": "31b7ae1c854ec9a7f541bdc192162bd37a8eefdc009a3eb9903d78966bfa1cd5",
+    "backend/internal/systembackupinstallationowner/install/authority_state.go": "23de727fb1d22222bad2d59c3af07019e8742dbe9179a7a8a0c8f21fe33e8539",
+    "backend/internal/systembackupinstallationowner/install/authority_test.go": "cc73f39f811e39ed1066f57cefc562206ed0bf6e0722fe836177bee5fd8df8e2",
+    "backend/internal/systembackupinstallationowner/installation_observation.go": "fda7b3c55ebc93e7f1f05cb72b38b12eafc00cd56471378e12f2760e6ed57196",
+    "backend/internal/systembackupinstallationowner/install/source_material_issue.go": "f2655544f271b1c0359b78bb458d0c2275a09922a8ead93958ad55d06c622d94",
+    "backend/internal/systembackupinstallationowner/install/source_material_issue_test.go": "f644bd7769ee9b00a9842409103f03a055bf052ec8fd79f45d0e75e617f3de3e",
+    "backend/internal/systembackupexecution/production_capture_producer.go": "397f795933bcc388f4a0b225fc805ca7ca692376a4fc79ca3ce3cb92c196b6f8",
+    "backend/internal/systembackupexecution/production_capture_producer_test.go": "c08c1ca993881bddf49fdc9f1ab9884441302e49fbc3bab6e1fce22184b71890",
+    "backend/cmd/system-backup-source-materials/main.go": "8272257fc3ebf1ef26597a148b71bc03ee3cc443d068cbe5ce1b5cd4d183a8d7",
+    "backend/cmd/system-backup-source-materials/main_test.go": "7a6d18f5735f9a4729c0b42dcc6ef86748774d595ad597a02c55f31a63c0e8bc",
+    "scripts/system-backup-d-owner-delivery.sh": "85dbf353ee91cb5168c38137cc99fe6281b67b0bf6cfa513b9b427d6c640363f"
+  },
+  "component_batches": [
+    {
+      "name": "independent-source-r1-local-preconditions",
+      "log_sha256": "14a6c5cb11bb8d0873cf14b0600258f144ef9967c3e04fb4727ea2abe4089a00",
+      "build_fail_events": 1,
+      "root_pass": 0,
+      "root_fail": 0,
+      "root_skip": 0,
+      "results": []
+    },
+    {
+      "name": "independent-source-r2-local-preconditions",
+      "log_sha256": "922090e47f1eb7abc2634cc5c710d2ea376ab466175e6d27e258615a0f9a4b47",
+      "build_fail_events": 0,
+      "root_pass": 0,
+      "root_fail": 0,
+      "root_skip": 3,
+      "results": [
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentEmptyTLSMySQL",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentOriginalDriftTLSMySQL",
+          "Action": "skip"
+        }
+      ]
+    },
+    {
+      "name": "independent-minio-r3-components",
+      "log_sha256": "f00b6b3ad8c3e919c6c5b40e1867da1c34753cd238b5a195575459ad1641d15e",
+      "build_fail_events": 0,
+      "root_pass": 6,
+      "root_fail": 0,
+      "root_skip": 3,
+      "results": [
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentEmptyTLSMySQL",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestSourceDependenciesIndependentOriginalDriftTLSMySQL",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOPermissionNativeTLSProtocol",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOPermissionNativeRefusesUnknownOrIncompleteSources",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOPermissionPolicyClosedSubset",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOOwnerConfigurationIsNotRuntimeProof",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOPermissionOriginalOwnerSignatureAndCurrentHead",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestMinIOPermissionKubernetesCompletePagination",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "owner-lifecycle-r1-components",
+      "log_sha256": "d2602ef21f0bd797db780923c356e6c2456d288a2efeae09180319e9c0ae7e24",
+      "build_fail_events": 0,
+      "root_pass": 18,
+      "root_fail": 0,
+      "root_skip": 0,
+      "results": [
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollRequiresFullOriginalServerUUID",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityGenerateIssuerCreateOnlyRawFormat",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityGenerateIssuerCollisionLeavesOnlyOriginal",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityIssueImportConsumerL2AndRevoke",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityCommitUnknownOnlyResolvesOriginal",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityRejectsWrongSourceBeforeSigningOrWrite",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityFrozenSourceAndResourceDriftRefuseImport",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityExportCannotTrustSelfDeclaredBundle",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerAuthorityExactHeadCASAndAtomicRollback",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollPinnedConnectionsAndIdentitySubstitution",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollFixturePreservesJSONAndProtobufScope",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/cmd/system-backup-owner-authority",
+          "Test": "TestOwnerAuthorityCLIGenerateIssuerLocalOnly",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/cmd/system-backup-owner-authority",
+          "Test": "TestOwnerAuthorityCLIRejectsMissingOrBypassInputs",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollAuthenticatedTLSProtocolAndReplay",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollRejectsUntrustedIdentityAndRevocation",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollPlanAndCandidateCannotAuthenticate",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestOwnerEnrollUnknownCreateUsesOriginalReadbackOnly",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/cmd/system-backup-owner-enroll",
+          "Test": "TestOwnerEnrollCLIRequiresExplicitTrustedInputs",
+          "Action": "pass"
+        }
+      ]
+    },
+    {
+      "name": "source-materials-r1-components",
+      "log_sha256": "c57cd801f08b77d48d5cb7b12dc9c0585312426b0ea6d11302719a4550d425ae",
+      "root_pass": 6,
+      "root_fail": 0,
+      "root_skip": 1,
+      "results": [
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestSourceMaterialAuthenticatedIssuerSignsExactOriginalScope",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupinstallationowner/install",
+          "Test": "TestSourceMaterialIssuerRejectsUnauthenticatedOrDifferentOriginalInputs",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/cmd/system-backup-source-materials",
+          "Test": "TestSourceMaterialsCommandRejectsMissingOrUnknownInputsWithoutOutput",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestProductionMaterialOriginalSourceScopeMatchesWorkerWire",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestProductionMaterialScopeRejectsWideningAndUnknownOperations",
+          "Action": "pass"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestProductionMaterialWriteRequiresPrivateDistinctExactFiles",
+          "Action": "skip"
+        },
+        {
+          "Package": "clawreef/internal/systembackupexecution",
+          "Test": "TestProductionMaterialProducerRejectsMissingAuthenticatedOwner",
+          "Action": "pass"
+        }
+      ]
+    }
+  ],
+  "scope": "36 exact source files: offline owner lifecycle, authenticated source-material signer/finalizer/CLI, partial MinIO native sources, independent source protocol test sources; no field acceptance",
+  "review_corrections": [
+    "Root fixed only a leftover unused owner alias in D material fixture; initial build failure is retained.",
+    "D supersede requires successful complete observation in the same drift fixture before injecting faults and proves actual handler reach; final metadata requires initial response < native trigger < changed response. These SQL cases remain unexecuted locally."
+  ],
+  "proof_limits": [
+    "A lifecycle SQL/CAS/L2 tests use a synthetic database/sql protocol model and fake Kubernetes responses plus real local TLS Vault protocol and real bcrypt/Ed25519. No actual MySQL accounts/GRANTs, InnoDB locking/concurrency or production owner binding are established.",
+    "C six component roots cover controlled TLS SigV4/native response parsing, signature/current-head models, Kubernetes SDK list models and closed policy parsing. They do not execute real mc, full CheckCurrent composition with actual SQL, native provider or effective policy runtime.",
+    "D three SQL protocol roots skip on Windows because Linux staging/SAN TLS MySQL is required; zero D positive tests passed. Old instance7/9 stopped fixture is unchanged.",
+    "Linux test ELF cross-compilation establishes syntax/link compatibility, not successful execution. Earlier verification ELF files were removed before the subsequent source phase.",
+    "Existing R8 source and delivery remain pinned to723f51bc; none of this later source is silently inserted into R8.",
+    "D empty protocol case proves only the declared empty SQL/object/selected resource collections when actually executed; it retains one Redis protocol key and currently observes Redis identity only. It is not complete Redis or full six-domain empty EOF proof.",
+    "D producer tests prove wire scope calculation/signing subcomponents and missing-owner refusal; full successful ProduceOriginalCaptureMaterials invocation through exact output readback/consumer load has no positive combination test in this batch. Linux private-file mode root skipped on Windows."
+  ],
+  "security_behavior": [
+    "Owner signatures and provider observation outside SQL locks; import consumes frozen bytes and independent current admin/target/head/grant CAS with final original SQL clock. Resolve never re-signs/probes/repairs.",
+    "Issuer generation is local, create-only and unenrolled; private key/seed never in app config or printed.",
+    "MinIO unknown version/ownership/source/revocation/pagination/TLS/policy state remains refused. Candidate supports only the explicit2025-04-22 profile; actual site version is unknown.",
+    "MinIO CheckCurrent still always refuses complete permission status with native-effective-policy-engine-runtime-unavailable after partial reads. It supplies no publication readiness or task-success path.",
+    "No production caller, missing owner adapter, physical source proof, DR eligibility or source/target isolation is manufactured."
+  ],
+  "remaining": [
+    "Real owned SAN/TLS MySQL installer/consumer lifecycle, actual account privileges, CAS concurrency, rollback and unknown-result verification.",
+    "Source-material signer/finalizer CLI now exists; actual complete unsigned definition/core/Forward/profile/all formal worker mappings, site-source observation and installer input generation remain incomplete. Full positive producer/consumer combination remains unproven.",
+    "Complete original L2/main owner composition, concrete current provider control-resource mappings, full original physical writer coverage and source recovery.",
+    "Complete authenticated MinIO runtime/effective policy source or verified controlled activation, actual site version and pinned mc compatibility.",
+    "Same real page task full nonempty requested capture in original windows, source restored, complete immutable independent authenticated EOF/readback, signed catalog query and genuine succeeded terminal."
+  ],
+  "linux_build": {
+    "status": "PASS",
+    "toolchain": "go1.26.1",
+    "target": "linux/amd64 CGO_ENABLED=0",
+    "packages": [
+      "./cmd/server",
+      "./cmd/northbound-gateway",
+      "./cmd/system-backup-controller",
+      "./cmd/system-backup-artifact",
+      "./cmd/secret-broker",
+      "./cmd/system-backup-import",
+      "./cmd/system-backup-legacy-inventory",
+      "./cmd/system-backup-legacy-preflight",
+      "./cmd/system-backup-seal-custody",
+      "./cmd/system-backup-migrate",
+      "./cmd/system-backup-bootstrap",
+      "./cmd/system-backup-registration",
+      "./cmd/system-backup-controller-grants",
+      "./cmd/system-backup-v2-controller",
+      "./cmd/backup-worker",
+      "./cmd/system-backup-audit-collect",
+      "./cmd/system-backup-owner-authority",
+      "./cmd/system-backup-owner-enroll"
+    ],
+    "package_count": 18,
+    "main_build_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "offline_cli_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "offline_ELFs": [
+      {
+        "name": "system-backup-owner-authority",
+        "sha256": "7f4efa204b36f136996bbf8087c4efcc4072592661a19974bd2fda96db057be7",
+        "bytes": 79439093,
+        "target": "ELF64 little-endian amd64"
+      },
+      {
+        "name": "system-backup-owner-enroll",
+        "sha256": "bb2356cbe97f70f5c64a8a28723f7d9bc2b7a8f8d882c88b85cee0ae151fd37e",
+        "bytes": 79027474,
+        "target": "ELF64 little-endian amd64"
+      }
+    ],
+    "earlier_source_protocol_test_ELF": {
+      "source": "b0a308de plus original D4 and root single-line compile repair",
+      "sha256": "68c6329beb0dfef566b9f74b5d017890ca88aeed49174d77197fc0518ae5ebb9",
+      "bytes": 123083993,
+      "elf": "ELF64 amd64",
+      "native_SQL_executed": false
+    },
+    "corrected_D_and_C_test_ELF": {
+      "source": "b0a308de plus final corrected D4 and frozen C8",
+      "sha256": "cc511921b42a38c8972bf809929fb8d144c08f9da28c9d7e178db2f4c89b8b38",
+      "bytes": 123338684,
+      "native_SQL_executed": false
+    },
+    "scope": "Compilation/header/hash checks only; Linux binaries not executed, no Docker/frontend/image/deployment build. Test ELFs were deleted after their source phase; offline ELFs deleted in batch cleanup.",
+    "final_36_file_combination": {
+      "status": "PASS",
+      "source_files": 36,
+      "main_package_count": 19,
+      "packages": [
+        "./cmd/server",
+        "./cmd/northbound-gateway",
+        "./cmd/system-backup-controller",
+        "./cmd/system-backup-artifact",
+        "./cmd/secret-broker",
+        "./cmd/system-backup-import",
+        "./cmd/system-backup-legacy-inventory",
+        "./cmd/system-backup-legacy-preflight",
+        "./cmd/system-backup-seal-custody",
+        "./cmd/system-backup-migrate",
+        "./cmd/system-backup-bootstrap",
+        "./cmd/system-backup-registration",
+        "./cmd/system-backup-controller-grants",
+        "./cmd/system-backup-v2-controller",
+        "./cmd/backup-worker",
+        "./cmd/system-backup-audit-collect",
+        "./cmd/system-backup-owner-authority",
+        "./cmd/system-backup-owner-enroll",
+        "./cmd/system-backup-source-materials"
+      ],
+      "linux_build_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "new_materials_CLI_ELF": {
+        "name": "system-backup-source-materials",
+        "sha256": "4e7b4e6c0e8aa26f79b35e90e4662299e6d38efa488dfee12f6be172f45e2837",
+        "bytes": 79731011,
+        "target": "ELF64 little-endian amd64"
+      },
+      "bash_syntax": "PASS: actual Git Bash bash -n, no delivery execution",
+      "real_native_SQL_or_Kubernetes_calls": false,
+      "deployment_or_image_build": false
+    }
+  },
+  "artifact_cleanup": {
+    "status": "COMPLETE",
+    "root": "D:\\codex-backup-independent-source-review-bca8a5a028df47678d9b06386e805a92",
+    "owner": "supervisor-independent-source-review-20261103",
+    "registered_worktree_removed": true,
+    "all_test_ELFs_and_three_offline_CLI_ELFs_removed": true,
+    "cache_gotmp_tmp_removed": true,
+    "root_absent": true,
+    "marker_removed": true,
+    "retained": "Nonsecret evidence logs and existing pending R8 delivery only. Other owners, user files and field workloads untouched."
+  },
+  "pin_document_byte_preservation": {
+    "reason": "Three owner-frozen source manifests contain CRLF and are referenced by their published exact SHA256; Git text conversion would invalidate those references.",
+    "mechanism": "Narrow -text attributes for only these three frozen documents. Original bytes and historical manifest fingerprints remain unchanged; no runtime or Go source change.",
+    "paths": [
+      "docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json",
+      "docs/evidence/system-backup-c-minio-native-source-candidate-20261103.json",
+      "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": "d-independent-source-protocol-fault-reach-supersede.v1",
+  "status": "source_only_uncompiled_untested",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go",
+      "sha256": "cffef76d1af24562fd5c619d6025178591948c70aa62bc8e3286964234c065e2",
+      "previous_sha256": "ec8ea0e4fd7ef15878632284a02882b1e8517714d316b7b1776dc44eb0c81f73"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go",
+      "sha256": "a3f69a1969739aace65bff20c79357837e72e87c8e015fa0b214eded4cf82759",
+      "previous_sha256": "2db2a07610337bf03173e6b9a174bcb05789e72c87c5828c27d96242740169c1"
+    }
+  ],
+  "prior": {
+    "path": "docs/evidence/system-backup-d-independent-source-protocol-tests-pins-20261103.json",
+    "sha256": "315ebfdeffdf3c14c8da4bf1780df230832ff32b33d6c20e6b758a70fb7e278e",
+    "historical_pin_changed": false
+  },
+  "changes": [
+    "The same f used by all drift cases must first complete a real ObserveSourceDependencies positive observation and return nonempty original facts; no original source/core/purpose/window is re-signed or extended.",
+    "Protocol server tracks request sequence and records actual injected permission/RV/continuation/generation faults at their emitting handler. Each HTTP/native fault case asserts its matching handler event was reached.",
+    "Unknown controller is inserted into the owned protocol object set and its actual Deployment-list response is recorded; a failure before that response no longer satisfies the test.",
+    "Missing participant performs actual fixture-owned SQL deletion and independent count readback requiring zero, then restores the original registration after the subcase.",
+    "Final-metadata records original v1 object metadata responses, a single native generation-state read that triggers v2, and subsequent actual v2 metadata responses. It requires strict initial-response < native-trigger < changed-response sequence."
+  ],
+  "root_material_compile_fix": {
+    "path": "backend/internal/systembackupexecution/production_source_protocol_materials_mysql_test.go",
+    "root_report": "Root changes only s, owner := f.service, f.owner to s := f.service in its private verification copy.",
+    "changed_by_D": false,
+    "root_fixed_sha256": "not_supplied; root must record independently",
+    "composition": "Original315ebf base/material source plus this two-file supersede and the separately recorded root materials compile fix. Do not interpret this two-file pin as having compiled the old uncorrected material helper."
+  },
+  "frozen_boundaries": [
+    "Original metadata review8/writer5 production validators unchanged.",
+    "Original instance7/instance9 stopped fixture untouched.",
+    "No producer/installer or source ownership widening in this corrective batch."
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "scoped_diff_check": "passed",
+    "compile": "not_run",
+    "tests": "not_run",
+    "sql": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "root_followup": "Root runs full controlled TLS/SQL positive/empty/drift cases with required credentials and zero skips; D reports no new SQL result. Root owns cleanup per AGENTS."
+}

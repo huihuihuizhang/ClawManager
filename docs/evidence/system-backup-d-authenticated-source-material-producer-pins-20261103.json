@@ -1,0 +1,101 @@
+{
+  "schema_version": "d-authenticated-original-source-material-producer-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_AND_TEST",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/source_material_issue.go": "f2655544f271b1c0359b78bb458d0c2275a09922a8ead93958ad55d06c622d94",
+    "backend/internal/systembackupinstallationowner/install/source_material_issue_test.go": "f644bd7769ee9b00a9842409103f03a055bf052ec8fd79f45d0e75e617f3de3e",
+    "backend/internal/systembackupexecution/production_capture_producer.go": "397f795933bcc388f4a0b225fc805ca7ca692376a4fc79ca3ce3cb92c196b6f8",
+    "backend/internal/systembackupexecution/production_capture_producer_test.go": "c08c1ca993881bddf49fdc9f1ab9884441302e49fbc3bab6e1fce22184b71890",
+    "backend/cmd/system-backup-source-materials/main.go": "8272257fc3ebf1ef26597a148b71bc03ee3cc443d068cbe5ce1b5cd4d183a8d7",
+    "backend/cmd/system-backup-source-materials/main_test.go": "7a6d18f5735f9a4729c0b42dcc6ef86748774d595ad597a02c55f31a63c0e8bc",
+    "scripts/system-backup-d-owner-delivery.sh": "85dbf353ee91cb5168c38137cc99fe6281b67b0bf6cfa513b9b427d6c640363f"
+  },
+  "supersedes": [],
+  "dependency": {
+    "path": "docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json",
+    "sha256": "1bfe819a8eff76b11b2cdf7dd9f76e40603439562e77a5b3674fda6339133cfe",
+    "changed_by_D": false,
+    "note": "Use the independently reviewed A lifecycle/enrollment source composition. No A lifecycle file is included or superseded by this batch."
+  },
+  "behavior": [
+    "Offline system-backup-source-materials CLI calls concrete authenticated installer PrepareSourceMaterialIssue. Actual local administrator/bcrypt, exact SQL account/server/database/time, Kubernetes principal/namespace/enrollment/update SSAR and unchanged current owner head CAS are required. No capture_certificate owner record is reinterpreted as a Redis/S3 permission.",
+    "Actual Kubernetes reads bind original controller Deployment UID/service account and worker/source API ServiceAccount UIDs. SourceMaterialIssuer is private, not JSON serializable, domain specific and rechecks original definition/current owner state/window/actors before and after signing.",
+    "One original complete six-domain functional_test declaration only. Redis purpose must already be functional_test before worker scopes/signatures and controller metadata scope/signature. Issuer must equal original independently enrolled public key. Original NotBefore/Until is preserved and bounded by original Forward/current authority windows; no refresh or multi-purpose selection.",
+    "Worker source scopes use the existing exact wire encoding and finite Redis/provider-root declarations. No fabricated skill inventory hash, task authority, ready boolean or passed DTO is used. A pure test compares both hashes to the actual worker scope function using explicit constructor input fixtures.",
+    "Builder reads pinned original core/Forward/profile/config, private source credentials and pinned TLS CAs, validates all operation mounts/control evidence/full plan, and loads original publisher-verifier inputs when required. Existing production validators/loadProductionCapture are retained unchanged.",
+    "Four distinct outputs must share one existing private absolute directory: two worker grants, metadata grant and complete canonical material bundle. Files are create-only 0600; exact byte-identical retries may reuse files, different/pre-existing/partial files are never overwritten or deleted. Every written file is independently read back; original config/Forward/publisher inputs and authenticated issuer are rechecked before the public hash/window receipt.",
+    "Errors can leave original partial files and are not success receipts. There is no config enabling, task creation, readiness publication, provider/role mutation, implicit enrollment or actual source completeness/permission claim.",
+    "Bash delivery source verifies independently selected SHA256SUMS hash, exact four-name allowlist, every checksum and exact SOURCE_COMMIT before dispatching only the selected owner-enroll, owner-authority or source-materials binary. It does not build/download/install/activate anything itself."
+  ],
+  "definition_contract": {
+    "version": "original-six-part-source-material-definition.v1",
+    "encoding": "Exact encoding/json.Marshal(ProductionMaterialDefinition); Materials must be exact canonical existing productionCaptureMaterials JSON, including all original operation mounts and source declarations.",
+    "fields": [
+      "Version",
+      "CoreFile",
+      "CoreSHA256",
+      "ConfigFile",
+      "ConfigSHA256",
+      "ForwardGrantSHA256",
+      "NotBefore",
+      "Until",
+      "PublisherVerifier",
+      "Materials"
+    ],
+    "unsigned_fields": "Materials.Redis.GrantSHA256, Materials.Objects.GrantSHA256 and Materials.Discovery.GrantSHA256 must be empty; original grant output paths and enrolled issuers must already be selected.",
+    "inputs": "Private pinned original declaration, plan/public issuer/kubeconfig, original enrollment pin, installer DSN/database CA, local administrator password and original enrolled raw64 Ed25519 key. No fabricated sample credential/UID/signature is shipped.",
+    "outputs": "Receipt contains version/purpose/file/material SHA256/scope SHA256/original absolute window only. No credential bytes or new authority/readiness flags."
+  },
+  "root_validation": {
+    "commands": [
+      "go test ./internal/systembackupinstallationowner/install -run ^TestSourceMaterial -count=1 -v",
+      "go test ./internal/systembackupexecution -run ^TestProductionMaterial -count=1 -v",
+      "go test ./cmd/system-backup-source-materials -run ^TestSourceMaterialsCommand -count=1 -v",
+      "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -o <root-owned-output>/system-backup-source-materials ./cmd/system-backup-source-materials"
+    ],
+    "model_limits": "A tests use existing real bcrypt/Ed25519 + database/sql transaction model + fake Kubernetes responses. They are component tests, not native MySQL/production permission proof. Linux private-file mode test explicitly skips on non-Linux.",
+    "pending": [
+      "Root actual compile/test including the reviewed A dependency composition",
+      "Native authenticated source-material issuance using actual original installer/database/Kubernetes/owner identities",
+      "Actual original credential permissions and complete SQL/API/Redis/S3/native writer observations",
+      "Actual source recovery/full six-domain capture/independent authenticated full content EOF/signed catalog/same-task terminal CAS"
+    ]
+  },
+  "release_contract": {
+    "status": "source_recipe_only_no_release_artifacts_built",
+    "source": "Root selects one exact reviewed committed source revision that contains A lifecycle, D producer and other reviewed dependencies. Do not label b0a308de or the R8 fixture ELF as containing this new tool.",
+    "runtime": "Build Dockerfile app and backup-worker targets from that same exact source/archive and record actual OCI digests, platform and provenance. Existing Dockerfile contains 16 runtime mains; this batch does not change it.",
+    "offline_commands": [
+      "go build -trimpath -buildvcs=false -o <release>/system-backup-owner-enroll ./cmd/system-backup-owner-enroll",
+      "go build -trimpath -buildvcs=false -o <release>/system-backup-owner-authority ./cmd/system-backup-owner-authority",
+      "go build -trimpath -buildvcs=false -o <release>/system-backup-source-materials ./cmd/system-backup-source-materials"
+    ],
+    "offline_platform": "CGO_ENABLED=0 GOOS=linux GOARCH=<same reviewed deployment architecture>",
+    "package": "Private release directory: three executable binaries and SOURCE_COMMIT containing exact 40-hex commit plus newline; SHA256SUMS contains exactly those four filenames, no paths. Independently review/select SHA256SUMS SHA256 and source commit; then invoke bash scripts/system-backup-d-owner-delivery.sh /absolute/release <commit> <manifest-sha256> enroll|authority|materials [exact original CLI flags].",
+    "excluded_secrets": [
+      "issuer private keys",
+      "DSNs",
+      "passwords",
+      "kubeconfigs",
+      "source credentials",
+      "Vault root tokens",
+      "unseal material"
+    ]
+  },
+  "boundaries": [
+    "Only these seven new files are frozen; no native SQL test source or other new A/C/D file is implicitly included.",
+    "No existing metadata review8/writer5 validators, stopped instance9 fixture, historical evidence pins or migration/template changed.",
+    "Independent protocol empty case still declares one Redis protocol key; do not call its Redis keyset empty. This batch does not change that separately reviewed fixture."
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "static_diff_check": "passed",
+    "static_import_graph": "no production install-package cycle found",
+    "compile": "not_run_by_D",
+    "tests": "not_run_by_D",
+    "SQL": "not_run_by_D",
+    "API": "not_run_by_D",
+    "build_artifacts_created": false,
+    "cleanup": "No test/build products created. Root owns all validation outputs and removes them after tests per AGENTS."
+  }
+}

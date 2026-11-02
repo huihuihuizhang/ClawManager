@@ -30,3 +30,8 @@ backend/internal/systembackupbusinessa/testdata/schema-registry-historical-15.js
 backend/internal/db/migrations/066_add_system_backup_config_and_operations.sql text eol=lf
 backend/internal/systembackupsecurity/testdata/config_proof_installation_schema_065.sql text eol=lf
 docs/evidence/system-backup-provider-issuer-*.registry.json text eol=lf
+
+# Frozen source-pin manifests are referenced by their exact published SHA-256.
+docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-native-source-candidate-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json -text whitespace=cr-at-eol
