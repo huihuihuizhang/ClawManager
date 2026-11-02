@@ -1,0 +1,147 @@
+{
+  "schema_version": "supervisor-original-read-batching-review.v1",
+  "base_commit": "f9b101df7fb7a9fade1b1423ec9bcb4c34a14e07",
+  "reviewed_backup_source_pins": [
+    {
+      "path": "backend/internal/systembackupkekadapter/provider_permit_issuer.go",
+      "sha256": "83edad9a48897a1bf2e0decc41e2cdb4a171dc30e647523e13ee2e6d6c7d529c"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/provider_permit_original_rows.go",
+      "sha256": "ab6442685a0624b0a1e4c76687ee6891e05a0a7229defe5525a4afeedbc0f6cc"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/provider_permit_original_rows_test.go",
+      "sha256": "08178c6cccdeb4f9e81143359698bcda031d478c56dfae6df08f0fb692848b5a"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/provider_permit_original_rows_mysql_test.go",
+      "sha256": "44b4a3b873350c63bf3edbce6c8a549f94145edf69bbd02091e522425cb3d068"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_catalog.go",
+      "sha256": "ac8e1ffa08150a6449a22ead8feb9569e8d9e76f89138fe6914962f27ce67702"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_catalog_test.go",
+      "sha256": "4487151df1eb4b74e308e60fd1f4b1b8cf680bbfbbb68b97b80f2d8ae0d44264"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_catalog_four_query_test.go",
+      "sha256": "d400f0bc85bdf7bc0f75e27bc27897f20de03265af27e3f43a5c27875677c421"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_catalog_batch_test.go",
+      "sha256": "12f9c165fa42a9a5cee06abc986bdce1c39907e0b9319087176e4ff18843ae05"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/mysql_test.go",
+      "sha256": "0a8d99f3e8d68db6c1cffac75b890bde4974190d4c722b544d544265ec42c6ad"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/source_row_counts_mysql_test.go",
+      "sha256": "8dce605272182a4926f9dcc0b3f2a2176f99a0fbec69e64c4eb52b9551b62798"
+    }
+  ],
+  "adjacent_skills_component_pins": [
+    {
+      "sha256": "04e4eb85e89968a4f7fecc3b645e4299d910ed2917c199a0b431fc0ca715d05a",
+      "path": "backend/internal/systembackupskillhub/archive_reader.go"
+    },
+    {
+      "sha256": "a53280995fb89a2c438924d3847562b3ba824d02ce01eaed79458acfeb742285",
+      "path": "backend/internal/systembackupskillhub/archive_reader_test.go"
+    },
+    {
+      "sha256": "744e1d9ece42f8159e9a6903682907c7a33dab98640f32a941a8868402ab203a",
+      "path": "backend/internal/systembackupskillhub/restore_sample.go"
+    },
+    {
+      "sha256": "81ed49623ab779bc8f85b7c9bd436a1f01692160b9f9016bc785aca82c2aab83",
+      "path": "backend/internal/systembackupskillhub/restore_sample_test.go"
+    }
+  ],
+  "mysql": {
+    "version": "8.4.13",
+    "uuid": "99f52dbc-d688-11f1-93f7-846993680ff3",
+    "tls": "TLSv1.3",
+    "require_secure_transport": 1,
+    "download_url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.13-winx64.zip",
+    "archive_sha256": "e9cd98b1d23f122987b1afca26ad942efec5891481103d48ae3cde237fa3ea54",
+    "oracle_authenticode": "Valid",
+    "purpose": "Owned local empty disposable instance only, not production permissions proof"
+  },
+  "tests": [
+    {
+      "scope": "B metadata/guard components",
+      "roots": 10,
+      "status": "PASS",
+      "package_seconds": 1.712,
+      "skipped": 0,
+      "log_sha256": "c3db9b39df5076af0aee11fb4d4a774907ec0073fd827433680746a5c5adde01"
+    },
+    {
+      "scope": "B real old-four-query oracle, full snapshot differential, RR, MDL, DDL and SELECT revocation",
+      "roots": 1,
+      "subcases": 6,
+      "status": "PASS",
+      "test_seconds": 2.83,
+      "package_seconds": 8.682,
+      "skipped": 0,
+      "log_sha256": "d0a5223641bf5c7e924f0d6c2f890cddbdbba98a767982a62f9de770b140c5c8",
+      "independent_business_schema_count": 0,
+      "accounts_unchanged": true
+    },
+    {
+      "scope": "A original current-row SQL/lock comparison and private request/transaction bindings; not complete StageOriginal native chain",
+      "roots": 3,
+      "actual_mysql_subcases": 13,
+      "status": "PASS",
+      "mysql_test_seconds": 1.34,
+      "package_seconds": 2.736,
+      "skipped": 0,
+      "log_sha256": "759a6798e59caad2f870b46d84b538e4dcf2faccf70ea02c1ae39aeab94c5319",
+      "independent_business_schema_count": 0,
+      "accounts_unchanged": true
+    },
+    {
+      "scope": "Skills strict real-worker-format tar reader/EOF and selection closure; no production target restore",
+      "roots": 6,
+      "status": "PASS",
+      "package_seconds": 5.892,
+      "skipped": 0,
+      "log_sha256": "ac4ce29cda2d7983c263ae95611e4ae26e8746a93eeceaaf968040e4e0b6d20d",
+      "actual_target_restore": false
+    },
+    {
+      "scope": "Teams pure-file parser/selection components, not full source authentication or real sample",
+      "roots": 9,
+      "status": "PASS",
+      "elapsed_seconds": 26.725,
+      "log_sha256": "88f7881767771f78160aa6de77dcf5af3bc6aaea4c052d1e9d79974158d3190b"
+    }
+  ],
+  "optimizations": [
+    "A combines three current identity/plan/job reads into one only under the original held plan/job transaction; all comparisons, FOR SHARE and legacy Stage behavior retained",
+    "B combines four catalog metadata SELECTs into one four-column scalar-subquery statement; original fields, budgets and guards for every actual query/Next/EOF retained; two-pass real guard count reduced by 36"
+  ],
+  "cleanup": {
+    "process_identity_checked": true,
+    "workspace_locator_setup_removed": true,
+    "business_schemas_before_shutdown": 0,
+    "accounts_unchanged": true,
+    "owner": "supervisor-catalog-review-20261102",
+    "graceful_shutdown": true,
+    "source_go_cache_tmp_mysql_data_certificates_archive_credentials_removed": true,
+    "fixture_uuid": "99f52dbc-d688-11f1-93f7-846993680ff3"
+  },
+  "limitations": [
+    "No new original-thirty-second full native success result",
+    "No complete same-task formal publication and page acceptance result",
+    "First-installation materials and deployment remain incomplete",
+    "Source physical recovery and publisher final consumer/Ready/terminal remain incomplete",
+    "Isolated target restore explicitly removed from this acceptance scope; related draft sources remain uncommitted"
+  ],
+  "full_native_window_passed": false,
+  "full_page_acceptance": false
+}

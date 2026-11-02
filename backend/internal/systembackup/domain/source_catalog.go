@@ -3,10 +3,11 @@ package domain
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"sort"
 )
 
-// Metadata is returned as four bounded rows, instead of thousands of network
+// Metadata is returned as one bounded four-column row, instead of thousands of network
 // authority round trips for individual information_schema cells. All original
 // before/after-query and before/after-Next guards still run. Business DATA rows
 // retain their original per-row guards, RR transaction and lossless Cell path.
@@ -15,6 +16,8 @@ const sourceCatalogTables = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME
 const sourceCatalogColumns = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'position',ORDINAL_POSITION,'name',COLUMN_NAME,'type',COLUMN_TYPE,'nullable',IS_NULLABLE,'default',COLUMN_DEFAULT,'extra',EXTRA)) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()`
 const sourceCatalogKeys = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'name',COLUMN_NAME,'constraint',CONSTRAINT_NAME,'position',ORDINAL_POSITION,'reference_table',REFERENCED_TABLE_NAME,'reference_column',REFERENCED_COLUMN_NAME,'sort',source_order)) FROM (SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,ORDINAL_POSITION,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME,ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY CONSTRAINT_NAME,ORDINAL_POSITION) AS source_order FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND (CONSTRAINT_NAME='PRIMARY' OR REFERENCED_TABLE_NAME IS NOT NULL)) AS original_keys`
 const sourceCatalogUnique = `SELECT JSON_ARRAYAGG(JSON_OBJECT('table',TABLE_NAME,'index',INDEX_NAME,'name',COLUMN_NAME,'position',SEQ_IN_INDEX,'prefix',SUB_PART,'sort',source_order)) FROM (SELECT TABLE_NAME,INDEX_NAME,COLUMN_NAME,SEQ_IN_INDEX,SUB_PART,ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY INDEX_NAME,SEQ_IN_INDEX) AS source_order FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('workbuddy_linux_identities','workbuddy_linux_identity_allocator','llm_models','gateway_keys','gateway_key_budget_reservations','gateway_key_budget_ledger','gateway_image_artifacts','gateway_image_jobs','llm_model_user_grants','routing_classifier_settings','northbound_admin_settings','northbound_caller_policies','northbound_owner_records','northbound_settings_audit','northbound_operations') AND NON_UNIQUE=0 AND INDEX_NAME<>'PRIMARY') AS original_unique`
+
+const sourceCatalogBatch = "SELECT (" + sourceCatalogTables + ") AS source_tables,(" + sourceCatalogColumns + ") AS source_columns,(" + sourceCatalogKeys + ") AS source_keys,(" + sourceCatalogUnique + ") AS source_unique"
 
 type sourceCatalogItem struct {
 	Table           string  `json:"table"`
@@ -33,46 +36,63 @@ type sourceCatalogItem struct {
 	Prefix          *int    `json:"prefix"`
 }
 
-func readSourceCatalogAggregate(ctx context.Context, q queryer, statement string, check func() error) ([]sourceCatalogItem, int, error) {
-	rows, err := (sourceGuardedQuery{q, check}).QueryContext(ctx, statement)
+func readSourceCatalogBatch(ctx context.Context, q queryer, check func() error) ([4][]sourceCatalogItem, error) {
+	var zero [4][]sourceCatalogItem
+	rows, err := (sourceGuardedQuery{q, check}).QueryContext(ctx, sourceCatalogBatch)
 	if err != nil {
-		return nil, 0, err
+		return zero, err
 	}
 	defer rows.Close()
+	columns, err := rows.Columns()
+	if err != nil || !slices.Equal(columns, []string{"source_tables", "source_columns", "source_keys", "source_unique"}) {
+		return zero, ErrSchema
+	}
 	next, err := sourceRowsNext(ctx, rows, check)
 	if err != nil {
-		return nil, 0, err
+		return zero, err
 	}
 	if !next {
-		return nil, 0, ErrSchema
+		return zero, ErrSchema
 	}
-	var raw []byte
-	if rows.Scan(&raw) != nil || len(raw) > 8<<20 {
-		return nil, 0, ErrCapacity
+	var raw [4][]byte
+	defer func() {
+		for _, v := range raw {
+			clear(v)
+		}
+	}()
+	if rows.Scan(&raw[0], &raw[1], &raw[2], &raw[3]) != nil {
+		return zero, ErrCapacity
 	}
-	defer clear(raw)
 	next, err = sourceRowsNext(ctx, rows, check)
 	if err != nil {
-		return nil, 0, err
+		return zero, err
 	}
 	if next || rows.Err() != nil {
-		return nil, 0, ErrDatabase
+		return zero, ErrDatabase
 	}
-	if len(raw) == 0 {
-		return nil, 0, nil
-	} // SQL NULL for an empty aggregate
-	var items []sourceCatalogItem
-	if json.Unmarshal(raw, &items) != nil || len(items) > 40000 {
-		return nil, 0, ErrSchema
+	var groups [4][]sourceCatalogItem
+	size := 0
+	for i, v := range raw {
+		size += len(v)
+		if size > 8<<20 {
+			return zero, ErrCapacity
+		}
+		if len(v) == 0 {
+			continue
+		} // SQL NULL for an empty aggregate
+		if json.Unmarshal(v, &groups[i]) != nil || len(groups[i]) > 40000 {
+			return zero, ErrSchema
+		}
 	}
-	return items, len(raw), nil
+	return groups, nil
 }
 
 func catalogBusinessGuarded(ctx context.Context, q queryer, check func() error) ([]Table, error) {
-	tableItems, size, err := readSourceCatalogAggregate(ctx, q, sourceCatalogTables, check)
+	groups, err := readSourceCatalogBatch(ctx, q, check)
 	if err != nil {
 		return nil, err
 	}
+	tableItems := groups[0]
 	if len(tableItems) < 1 || len(tableItems) > 1000 {
 		return nil, ErrSchema
 	}
@@ -86,15 +106,8 @@ func catalogBusinessGuarded(ctx context.Context, q queryer, check func() error) 
 		byName[item.Table] = index
 		tables[index] = Table{Name: item.Table, Engine: item.Engine}
 	}
-	for _, statement := range []string{sourceCatalogColumns, sourceCatalogKeys, sourceCatalogUnique} {
-		items, bytes, err := readSourceCatalogAggregate(ctx, q, statement, check)
-		size += bytes
-		if err != nil {
-			return nil, err
-		}
-		if size > 8<<20 {
-			return nil, ErrCapacity
-		}
+	for group, statement := range []string{sourceCatalogColumns, sourceCatalogKeys, sourceCatalogUnique} {
+		items := groups[group+1]
 		sort.Slice(items, func(i, j int) bool {
 			a, b := items[i], items[j]
 			if a.Table != b.Table {

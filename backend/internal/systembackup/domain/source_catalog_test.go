@@ -62,6 +62,24 @@ func memoryCatalogAggregate(tables []Table, statement string) (driver.Rows, erro
 	return rows([]string{"catalog"}, []driver.Value{raw}), nil
 }
 
+func memoryCatalogBatch(tables []Table) (driver.Rows, error) {
+	var values []driver.Value
+	for _, statement := range []string{sourceCatalogTables, sourceCatalogColumns, sourceCatalogKeys, sourceCatalogUnique} {
+		r, err := memoryCatalogAggregate(tables, statement)
+		if err != nil {
+			return nil, err
+		}
+		v := make([]driver.Value, 1)
+		err = r.Next(v)
+		r.Close()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, v[0])
+	}
+	return rows([]string{"source_tables", "source_columns", "source_keys", "source_unique"}, values), nil
+}
+
 func TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards(t *testing.T) {
 	source, _, _ := fixture()
 	tables := copyTables(source.Tables)
@@ -78,9 +96,13 @@ func TestBusinessAggregateCatalogPreservesCompleteOriginalShapeAndGuards(t *test
 		t.Fatal(err)
 	}
 	sort.Slice(want, func(i, j int) bool { return want[i].Name < want[j].Name })
+	oracle, err := catalogBusinessFourQueriesOracle(context.Background(), db, nil)
+	if err != nil || !reflect.DeepEqual(oracle, want) {
+		t.Fatal("independent four-query oracle differed", err)
+	}
 	calls := 0
 	got, err := catalogBusinessGuarded(context.Background(), db, func() error { calls++; return nil })
-	if err != nil || !reflect.DeepEqual(got, want) || calls > 30 || state.writes != 0 {
+	if err != nil || !reflect.DeepEqual(got, want) || calls != 7 || state.writes != 0 {
 		t.Fatal("complete original catalog differed", err, calls)
 	}
 	for revoke := 1; revoke <= calls; revoke++ {

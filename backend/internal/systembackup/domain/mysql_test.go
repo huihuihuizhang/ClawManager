@@ -127,6 +127,8 @@ func (c *memoryConn) QueryContext(ctx context.Context, q string, args []driver.N
 		return rows([]string{"json"}, []driver.Value{value}), nil
 	case q == sourceCatalogTables || q == sourceCatalogColumns || q == sourceCatalogKeys || q == sourceCatalogUnique:
 		return memoryCatalogAggregate(c.s.tables, q)
+	case q == sourceCatalogBatch:
+		return memoryCatalogBatch(c.s.tables)
 	case q == "SELECT @@GLOBAL.partial_revokes":
 		if c.s.wildcardGrants {
 			return one(0), nil

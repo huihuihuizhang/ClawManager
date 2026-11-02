@@ -113,6 +113,7 @@ func TestSourceRowCountsMySQL(t *testing.T) {
 	for _, table := range []string{"users", "user_quotas", "instances"} {
 		exec(t, writer, "CREATE TABLE `"+table+"`(id BIGINT UNSIGNED PRIMARY KEY,payload VARBINARY(100) NULL) ENGINE=InnoDB")
 	}
+	exec(t, writer, "CREATE TABLE workbuddy_linux_identities(id BIGINT UNSIGNED PRIMARY KEY,uid INT UNSIGNED NULL DEFAULT 10000,added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,next_uid INT GENERATED ALWAYS AS (uid+1) VIRTUAL,CONSTRAINT count_oracle_fk FOREIGN KEY(id) REFERENCES users(id),UNIQUE KEY uid_unique(uid,id)) ENGINE=InnoDB")
 	exec(t, writer, "INSERT INTO users VALUES(9007199254740993,0x00ff01)")
 	exec(t, writer, "INSERT INTO user_quotas VALUES(2,NULL)")
 	var passwordEntropy [24]byte
@@ -129,7 +130,7 @@ func TestSourceRowCountsMySQL(t *testing.T) {
 			t.Error("owned count user cleanup failed")
 		}
 	})
-	for _, table := range []string{"users", "user_quotas", "instances"} {
+	for _, table := range []string{"users", "user_quotas", "instances", "workbuddy_linux_identities"} {
 		exec(t, admin, "GRANT SELECT ON `"+name+"`.`"+table+"` TO '"+user+"'@'127.0.0.1'")
 	}
 	readerCfg := adminCfg.Clone()
@@ -140,8 +141,27 @@ func TestSourceRowCountsMySQL(t *testing.T) {
 		t.Fatal("read identity could write")
 	}
 	limits := Limits{MaxRows: 100, MaxBytes: 1 << 20}
+	t.Run("four-query-catalog-oracle", func(t *testing.T) {
+		tx, e := reader.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer tx.Rollback()
+		old, e := catalogBusinessFourQueriesOracle(ctx, tx, nil)
+		if e != nil {
+			t.Fatal("native four-query oracle", e)
+		}
+		got, e := catalogBusinessGuarded(ctx, tx, nil)
+		if e != nil || !reflect.DeepEqual(old, got) {
+			t.Fatal("native complete catalog changed", e)
+		}
+		identity := find(Snapshot{Tables: got}, "workbuddy_linux_identities")
+		if len(identity.UniqueKeys) != 1 || len(identity.ForeignKeys) != 1 || len(identity.Columns) != 4 || identity.Columns[1].Default == nil || identity.Columns[2].Extra == "" || identity.Columns[3].Extra != "VIRTUAL GENERATED" {
+			t.Fatal("native oracle lacks schema edge evidence")
+		}
+	})
 	t.Run("full-differential", func(t *testing.T) {
-		old, e := captureWithCatalog(ctx, reader, limits, nil, catalogBusinessGuarded)
+		old, e := captureWithCatalog(ctx, reader, limits, nil, catalogBusinessFourQueriesOracle)
 		if e != nil {
 			t.Fatal(e)
 		}

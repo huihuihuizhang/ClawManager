@@ -225,6 +225,12 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 	if p.original != nil && p.original.RecheckTx(ctx, tx, p.issuer.cfg.Records, p.scope.Input) != nil {
 		return kms.ErrPermission
 	}
+	var originalRows *heldProviderOriginalRows
+	if p.original != nil && original != nil {
+		// The full original-plan read above has already acquired its exact row
+		// lock in this transaction. Retain only that fact, never returned data.
+		originalRows = &heldProviderOriginalRows{ctx: ctx, tx: tx, issue: p, guard: original, plan: p.original, authority: p.scope.Input.Authority}
+	}
 	switch action {
 	case "key-reserve":
 		if lease.State != "reserved" {
@@ -256,18 +262,25 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		return kms.ErrPermission
 	}
 	next("Stage.OriginalRows")
-	var account, server, database string
-	if tx.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,DATABASE()").Scan(&account, &server, &database) != nil || account != p.grant.DatabaseAccount || server != p.grant.Database.ServerUUID || database != p.grant.Database.Database {
-		return kms.ErrPermission
-	}
-	var planHash, specHash string
 	var keyUse []byte
 	j := p.scope.Job
-	if tx.QueryRowContext(ctx, `SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase='capture' AND record_kind='plan' FOR SHARE`, a.InstallationID, a.TaskPublicID, a.AttemptNo).Scan(&planHash) != nil || planHash != p.planHash {
-		return kms.ErrPermission
-	}
-	if tx.QueryRowContext(ctx, `SELECT key_use_json,request_sha256 FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND attempt_no=? AND phase='capture' AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND revoked=FALSE AND stopped_at IS NULL AND lifecycle='ready' FOR SHARE`, a.TaskPublicID, a.AttemptNo, j.Namespace, j.Name, j.UID).Scan(&keyUse, &specHash) != nil || specHash != p.specHash {
-		return kms.ErrPermission
+	if originalRows != nil {
+		keyUse, err = originalRows.read(ctx, tx, p, guard)
+		if err != nil {
+			return kms.ErrPermission
+		}
+	} else {
+		var account, server, database string
+		if tx.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,DATABASE()").Scan(&account, &server, &database) != nil || account != p.grant.DatabaseAccount || server != p.grant.Database.ServerUUID || database != p.grant.Database.Database {
+			return kms.ErrPermission
+		}
+		var planHash, specHash string
+		if tx.QueryRowContext(ctx, `SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE origin_installation_id=? AND task_public_id=? AND attempt_no=? AND phase='capture' AND record_kind='plan' FOR SHARE`, a.InstallationID, a.TaskPublicID, a.AttemptNo).Scan(&planHash) != nil || planHash != p.planHash {
+			return kms.ErrPermission
+		}
+		if tx.QueryRowContext(ctx, `SELECT key_use_json,request_sha256 FROM system_backup_v2_runtime_resources WHERE task_public_id=? AND attempt_no=? AND phase='capture' AND resource_kind='Job' AND namespace_name=? AND resource_name=? AND observed_uid=? AND revoked=FALSE AND stopped_at IS NULL AND lifecycle='ready' FOR SHARE`, a.TaskPublicID, a.AttemptNo, j.Namespace, j.Name, j.UID).Scan(&keyUse, &specHash) != nil || specHash != p.specHash {
+			return kms.ErrPermission
+		}
 	}
 	expected, _ := json.Marshal(lease)
 	if !bytes.Equal(expected, keyUse) {
