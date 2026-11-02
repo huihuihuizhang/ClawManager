@@ -1,0 +1,40 @@
+{
+  "schema_version": "supervisor-live-publication-frontend-review.v1",
+  "observed_at": "2026-11-02T20:09:43.4727767+08:00",
+  "node": "v24.15.0",
+  "source_manifest": "docs/evidence/system-backup-c-live-publication-frontend-pins-20261102.json",
+  "source_manifest_sha256": "c75509cbf9b48e5a36a578c2902cd320b77399e03e99a85b7b3c0a8b95940e07",
+  "passed_behavior_tests": 12,
+  "skipped": 0,
+  "checks": [
+    {
+      "name": "behavior",
+      "file": "night-frontend-publication-tests-r4",
+      "log_sha256": "18b9053858353efe4e048db2b74454fc66096b77da8d955b00abd9eebf51ea4b",
+      "exit_code": 0
+    },
+    {
+      "name": "typecheck",
+      "file": "night-frontend-typecheck-r3",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    },
+    {
+      "name": "lint",
+      "file": "night-frontend-eslint-r2",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    }
+  ],
+  "fixed_findings": [
+    "Two TS null narrowing errors",
+    "Render-phase ref mutation replaced by commit-bound context",
+    "Stale reader and speculative render behavior covered"
+  ],
+  "scope": "On-demand authenticated original catalog/manifest queries with original-byte SHA validation; no task creation/purpose change",
+  "test_limits": "Component event-logic harness and React server rendering, not live browser QA",
+  "backend_original_sql_publication_success": false,
+  "page_full_backup_acceptance": false,
+  "build_artifacts_generated": false,
+  "cleanup": "No generated artifact: in-memory transpilation, tsc noEmit/nonincremental and uncached lint"
+}

@@ -14,6 +14,7 @@ import BackupLiveOperations from './BackupLiveOperations.tsx';
 import BackupEvidenceDownload from './BackupEvidenceDownload.tsx';
 import BackupTaskTable from './BackupTaskTable.tsx';
 import LegacyTeamBackupHistory from './LegacyTeamBackupHistory';
+import BackupLiveCatalog from './BackupLiveCatalog';
 
 const liveSource = createBackupLiveSource(systemBackupReadService);
 type TaskGroup = 'backups' | 'drills' | 'preflights' | 'verifications';
@@ -159,6 +160,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
         className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:opacity-50" onClick={() => loadMore(group.key)}>{paging?.kind === group.key && !paging.error ? b('loadingMore') : b('loadMore')}</button>
         {paging?.kind === group.key && paging.error && <p className="mt-2 text-sm text-red-700" role="alert">{b('readError')}</p>}</div>}</>}
     </section>; })}
+    {installation !== null && <BackupLiveCatalog key={`catalog:${installation}:${revision}`} installation={installation} />}
     <BackupLiveOperations key={installation ?? 'unknown-installation'} installation={installation} />
     <LegacyTeamBackupHistory />
     <BackupEvidenceDownload key={`download:${installation ?? ''}`} installation={installation} />

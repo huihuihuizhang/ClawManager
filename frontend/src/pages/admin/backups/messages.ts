@@ -32,3 +32,20 @@ export function backupStatus(status: string, locale: Locale): string {
  if (locale !== 'zh') return status.replaceAll('_', ' ');
  return ({pending:'等待执行',preparing:'准备中',ready_for_capture:'等待捕获',acquiring_gate:'排空写入',capturing:'捕获中',validating:'校验中',publishing:'发布中',finalization_unknown:'外部提交结果待核实',preflighting:'预检查',provisioning:'创建隔离环境',restoring:'恢复数据',normalizing:'整理恢复状态',verifying:'只读验证',running:'执行中',canceling:'取消中',succeeded:'已完成',failed:'失败',canceled:'已取消',backup:'备份',drill:'隔离恢复验证',preflight:'只读预检查',artifact_verify:'完整性校验'} as Record<string,string>)[status] ?? status;
 }
+
+// Copy for the live, on-demand publication reads. Other locales use English.
+export function publicationMessages(locale: string) {
+ return locale.startsWith('zh') ? {
+  catalog: '本安装的备份目录', catalogNote: '查询本安装已有的原始签名登记。列表为最终一致，不代表全局灾备目录或恢复资格。',
+  readCatalog: '查询目录', refresh: '重新查询', more: '加载更多', loading: '正在读取…', failed: '读取失败，未确认本次结果。', empty: '未查询到登记记录。',
+  readRecord: '读取原始记录', record: '原始签名登记', manifest: '原始 Manifest', readManifest: '读取 Manifest',
+  checked: '原始字节摘要与登记引用一致', trust: '此处仅核对原始字节 SHA-256；签名由服务端验证，此处未执行独立客户端验签。此结果不授予灾备资格。',
+  unavailable: '当前详情尚无已完成发布的完整登记引用。', backup: '备份任务', hash: 'SHA-256', close: '收起',
+ } : {
+  catalog: 'This installation’s backup catalog', catalogNote: 'Read existing original signed registrations for this installation. The list is eventually consistent and does not establish a global recovery catalog or recovery eligibility.',
+  readCatalog: 'Read catalog', refresh: 'Read again', more: 'Load more', loading: 'Reading…', failed: 'Read failed; this result is unconfirmed.', empty: 'No registrations found.',
+  readRecord: 'Read original record', record: 'Original signed registration', manifest: 'Original manifest', readManifest: 'Read manifest',
+  checked: 'Original bytes match their digest and registration references', trust: 'This view checks original-byte SHA-256. Signatures are verified by the server; this view does not independently verify signatures or grant disaster-recovery eligibility.',
+  unavailable: 'This detail does not yet contain complete references for a successfully published artifact.', backup: 'Backup task', hash: 'SHA-256', close: 'Close',
+ };
+}

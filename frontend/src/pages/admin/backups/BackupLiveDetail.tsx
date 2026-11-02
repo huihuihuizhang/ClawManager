@@ -11,6 +11,7 @@ import BackupEvidenceDownload from './BackupEvidenceDownload.tsx';
 import BackupCancelUnstarted from './BackupCancelUnstarted';
 import BackupRecoveryNotice from './BackupRecoveryNotice';
 import BackupReconcileOriginal from './BackupReconcileOriginal';
+import BackupLiveManifest from './BackupLiveManifest';
 
 type DetailState = { kind: 'loading' } | { kind: 'error' }
   | { kind: 'ready'; detail: BackupTaskResource[BackupTaskKind] };
@@ -120,6 +121,8 @@ export default function BackupLiveDetail({ selection, close, reader = systemBack
       {state.kind === 'ready' && kind === 'backups' && !localReport && reader === systemBackupReadService && <BackupReconcileOriginal key={`${public_id}:${state.detail.task.row_version}`} selection={{...selection,row_version:state.detail.task.row_version}} />}
       {state.kind === 'ready' && <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">{fields.map(([name, value]) =>
         <div key={name} className="min-w-0"><dt className="text-slate-500">{name}</dt><dd className="mt-1 break-words text-slate-900">{value}</dd></div>)}</dl>}
+      {state.kind === 'ready' && state.detail.schema_version === 'system-backup-backup-detail.v1' && !localReport && reader === systemBackupReadService
+        && <BackupLiveManifest key={`${public_id}:${revision}:${state.detail.task.row_version}`} detail={state.detail} />}
       {state.kind === 'ready' && !localReport && reader === systemBackupReadService && (kind === 'backups' || kind === 'preflights')
         && state.detail.task.can_cancel && ['pending', 'preparing', 'ready_for_capture', 'acquiring_gate', 'capturing', 'canceling', 'validating'].includes(state.detail.task.status)
         && <BackupCancelUnstarted key={public_id} selection={selection} active={state.detail.task.status !== 'pending'} canceled={() => { setState({ kind: 'loading' }); setRevision(v => v + 1); }} />}

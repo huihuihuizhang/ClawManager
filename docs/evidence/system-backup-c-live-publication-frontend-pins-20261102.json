@@ -1,0 +1,89 @@
+{
+  "schema_version": "c-live-publication-frontend-source-pins.v1",
+  "status": "reviewed_frontend_components_passed_not_deployed",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "frontend/src/pages/admin/backups/backupPublicationRead.ts",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\backupPublicationRead.ts",
+      "sha256": "d508b85a5545271aa2b8cb8854a58a67e1eae100f1822ee36b7f31ed33bca5ed"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveCatalog.tsx",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\BackupLiveCatalog.tsx",
+      "sha256": "77e11a34424b401b4393dacaa4aef87248676d492cd6778e2b01a29255fc90bd"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveManifest.tsx",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\BackupLiveManifest.tsx",
+      "sha256": "4aa4a15a6ec77e0978a03de734d81e5c4970fec84ef50cab700441d38cc1f97e"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/backupPublicationRead.test.mjs",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\backupPublicationRead.test.mjs",
+      "sha256": "e9114137f3bf810d4d58342ef803dd2482088db2b24fbeab723503c208f3e200"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/backupPublicationViews.test.mjs",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\backupPublicationViews.test.mjs",
+      "sha256": "2a7c22966e83126924aaaf90ad9fb3ef95ad879278a8b877ad35494ffa5eb096"
+    },
+    {
+      "path": "frontend/src/services/systemBackupReadService.ts",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\services\\systemBackupReadService.ts",
+      "sha256": "3c374117323b69dd01c9181687a88ee12ec6d645616322527327f68055c3d40d"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveWorkspace.tsx",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\BackupLiveWorkspace.tsx",
+      "sha256": "4a48ec60da3ffeef45755d31c17e3ab32572dcf72cef4dedb85b59664cf45bc7"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveDetail.tsx",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\BackupLiveDetail.tsx",
+      "sha256": "e133e886f875818f86e5283a4a5a11d98c1e52d132805c45e988b856f5ea883f"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/messages.ts",
+      "absolutePath": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\frontend\\src\\pages\\admin\\backups\\messages.ts",
+      "sha256": "65dc59ba2e14a796734aac93b99cde86d597b7275167e43b312eebd65f6adae8"
+    }
+  ],
+  "behavior": [
+    "On-demand actual catalog list/detail GET and exact manifest GET embedded in existing live workspace/detail. No preview fallback.",
+    "Reuse existing authenticated API/interceptors with text response and identity transform; no new token store or mutable endpoint.",
+    "Strict bounded UTF8/JSON parser rejects decoded duplicate keys, unknown closed fields, unsafe numeric bounds and noncanonical signed records. SHA uses original nested raw span and exact original manifest bytes, never parsed-object serialization.",
+    "Catalog joins installation/task/record ID and full signed-record SHA. Manifest joins independently read original catalog plus current detail manifest/index/marker/acceptance/catalog hashes and capture hash.",
+    "Displayed state binds installation/task/hash/RV AND reader identity AND a fresh context epoch. Reader change hides prior ready content immediately; changing back cannot resurrect it. Request callbacks check latest context and active AbortController; cleanup cancels old work.",
+    "UI explicitly describes original-byte digest checks, server signature verification and no independent client signature verification or grant of DR eligibility."
+  ],
+  "notChanged": [
+    "Page creation purpose/request",
+    "Terminal or DR qualification logic",
+    "Frozen staging fixture five files"
+  ],
+  "validation": {
+    "static": "Tracked diff whitespace inspected; root must run syntax/type/unit validation",
+    "commands": [
+      "From frontend: node --test src/pages/admin/backups/backupPublicationRead.test.mjs src/pages/admin/backups/backupPublicationViews.test.mjs",
+      "From frontend: node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit --incremental false",
+      "From frontend: node node_modules/eslint/bin/eslint.js [seven changed TS/TSX files]"
+    ],
+    "run": "None by this chat",
+    "artifacts": "Tests transpile in memory; tsc noEmit and nonincremental; eslint without cache. No test/build outputs generated.",
+    "testLimits": "Component behavior uses compiled actual component event logic with explicit hook-state/effect harness plus React server rendering. Not a browser/layout or authenticated real-page execution proof. Root should additionally verify actual browser behavior on the authorized live installation."
+  },
+  "rootRequiredBrowserChecks": [
+    "Authorized catalog/manifest read from actual original succeeded task; original byte digest and complete refs agree.",
+    "Switch task, installation, reader or authorization context during and after success; prior content disappears and late promise cannot write.",
+    "401/403/503, non-live response, changed record/hash/version and corruption show no new success or preview substitution.",
+    "No create/purpose/terminal/restore mutation triggered by these read controls."
+  ],
+  "rootValidation": {
+    "real_browser_or_deployment_verified": false,
+    "full_frontend_typecheck_exit": 0,
+    "behavior_tests": 12,
+    "behavior_exit": 0,
+    "changed_ts_tsx_eslint_exit": 0
+  }
+}
