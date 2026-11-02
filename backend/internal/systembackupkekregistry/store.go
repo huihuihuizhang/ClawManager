@@ -354,8 +354,39 @@ func (b *Bound) RecheckWithReadView(ctx context.Context, read SQLReadView, prepa
 	return nil
 }
 
-// CompleteScan deliberately has no success path until every original source
-// adapter, historical adoption receipt and writer mutation hook is installed.
-func (b *Bound) CompleteScan(context.Context) (LockedSnapshot, error) {
-	return LockedSnapshot{}, ErrKEKCoverage
+// CompleteScan verifies ALREADY adopted original-source coverage under this
+// transaction's unchanged shared fence. The original owner must have locked
+// its authenticated source evidence before Bind. No-argument calls still fail;
+// four persisted rows or an empty index alone cannot complete a scan. This
+// method does not adopt/backfill history or certify physical writer shutdown.
+func (b *Bound) CompleteScan(ctx context.Context, sources ...PreparedCoverage) (LockedSnapshot, error) {
+	bad := func() (LockedSnapshot, error) { return LockedSnapshot{}, ErrKEKCoverage }
+	if ctx == nil || ctx.Err() != nil || b == nil || !present(b.tx) || len(sources) != 1 || !present(sources[0]) || b.epoch != b.original.Epoch {
+		return bad()
+	}
+	prepared := sources[0]
+	if prepared.ExpectedEpoch() != b.epoch || !validCoverageSources(b.original.Coverage) || !reflect.DeepEqual(prepared.Sources(), b.original.Coverage) || prepared.References() == nil || !reflect.DeepEqual(prepared.References(), b.original.References) {
+		return bad()
+	}
+	current := Snapshot{InstallationID: b.installationID, Bindings: []BindingFacts{}, Coverage: []CoverageSource{}, References: []Reference{}}
+	if b.tx.QueryRowContext(ctx, `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=? FOR UPDATE`, b.installationID).Scan(&current.Epoch) != nil || current.Epoch != b.epoch {
+		return bad()
+	}
+	if b.tx.QueryRowContext(ctx, `SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6)`).Scan(&current.Database.ServerUUID, &current.Database.Database, &current.ObservedAt) != nil || current.Database != b.original.Database {
+		return bad()
+	}
+	if readBindings(ctx, b.tx, &current, true) != nil || readReferences(ctx, b.tx, &current, true) != nil || readCoverage(ctx, b.tx, &current, true) != nil || !SameSnapshotFacts(current, b.original) {
+		return bad()
+	}
+	now, err := b.sqlNow(ctx)
+	if err != nil || now.Before(b.original.ObservedAt) || !now.Before(prepared.ValidUntil()) || prepared.Recheck(ctx, b.tx, b.Snapshot(), now) != nil {
+		return bad()
+	}
+	// Source recheck cannot renew its original expiry. Sample again after any
+	// source read/lock wait instead of returning the earlier comparison clock.
+	current.ObservedAt, err = b.sqlNow(ctx)
+	if err != nil || current.ObservedAt.Before(now) || !current.ObservedAt.Before(prepared.ValidUntil()) || ctx.Err() != nil {
+		return bad()
+	}
+	return LockedSnapshot{facts: cloneSnapshot(current)}, nil
 }

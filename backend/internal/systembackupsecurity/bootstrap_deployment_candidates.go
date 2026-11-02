@@ -120,5 +120,8 @@ func (d *BootstrapDeployment) applyCandidates(ctx context.Context) (ConfigBootst
 	if err = d.inspectCandidateInputs(ctx); err != nil {
 		return zero, err
 	}
+	if d.kek != nil {
+		return attempt.ApplyWithKEK(d.openDatabase, d.kek)
+	}
 	return attempt.Apply(d.openDatabase)
 }

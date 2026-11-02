@@ -1,0 +1,67 @@
+{
+  "schema_version": "d-original-redis-purpose-producer-callsite-review.v1",
+  "status": "missing_production_material_producer_entry_not_a_freeze_or_publication_fix",
+  "sources": [
+    {
+      "path": "backend/cmd/system-backup-v2-controller/public_capture.go",
+      "sha256": "fac21769e68103b3db3370de311df1b8d9898677c2f3bb27094ffcc0483df2e4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_capture_materials.go",
+      "sha256": "4033e2281a3eb6cac3f26dbef7fe2fe451c4127f279bc11d2e6e74309f513235"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_authority.go",
+      "sha256": "70d16f008f776e7d91f7d97f3218b9c6e08b53db2a2871db1a6e1d1635691d44"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_freeze.go",
+      "sha256": "103e6f0b30bc4bc2a7e935affa75ed554530367bcecc3d3f490da11bae173d01"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/source_redis_module.go",
+      "sha256": "31cdf9a2ca843be9881b149821aa51174d0a885292bf6ae015dd13ab7a58d4e5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "sha256": "6e20094e153669794a71165f2852416c63bd7d90a16cb54869aac07d96dc5d0e"
+    }
+  ],
+  "actual_production_call_chain": [
+    "system-backup-v2-controller.configuredPublicStartupInputs -> ProductionCaptureInputsFromEnvironment reads one externally prepared file/SHA pair.",
+    "NewDeploymentServiceWithInputs -> loadProductionCapture accepts exactly one matching pinned bundle; validates canonical bytes and original scope/materials, not generates them.",
+    "freezeProductionSource copies Discovery.Redis unchanged into frozen productionCaptureMetadata.",
+    "Original NewSourceRedisModule.Build rejects policy.Purpose unequal to admitted Input.Backup.TaskPurpose. This check must remain."
+  ],
+  "construction_found": "Named original controller metadata/worker Redis material construction is present in test-only installOriginalMetadataSources. No executable production CLI/installer caller for productionCaptureMaterials/productionSourceDiscovery and their signed controller metadata envelope was found in the inspected repository commands/scripts.",
+  "missing_interface": {
+    "owner_boundary": "D exact material preparation/storage/loader integration jointly with A authenticated original source/signing authority; C consumes immutable frozen source and publication facts.",
+    "needed_entry": "A concrete reviewed original-source material producer callable before capture/freeze, returning original canonical bundle file+SHA and original signed grant references. No allow-all adapter or JSON approval boolean.",
+    "original_inputs": [
+      "Current independently authorized installation/config/profile/capture grant and explicitly permitted task purpose.",
+      "Original complete Redis source policy/identity/DB/prefix/exclusion/TTL limits and pinned CA/credential/source identity, not just a purpose string.",
+      "Actual controller/worker/source SA UID/namespace/issuer/key references and original minimum validity window.",
+      "Original finite operations, SQL census, resource/secret policy, TLS/object roots and owner mappings needed for a complete bundle."
+    ],
+    "required_output_binding_order": [
+      "Explicit purpose selected/authorized before Redis policy construction.",
+      "Compute original worker FormalSourceScopeSHA256 with that policy; produce corresponding original source grant/signature.",
+      "Compute sourceMetadataScope including Discovery.Redis and all original materials; produce original controller metadata grant/signature.",
+      "Canonicalize/pin the complete bundle and supply its exact file/SHA through the existing startup input. No deadline extension or post-freeze mutation."
+    ],
+    "single_bundle_limit": "Current production loader requires len(inputs)==1 and has no per-task-purpose bundle selector. A deployment must deliberately prepare the permitted-purpose bundle, or a separately reviewed finite purpose-indexed loader/producer contract is needed; neither is implemented by this review."
+  },
+  "file_boundaries": {
+    "D": "Any future producer belongs beside deployment_capture_materials/production_source_authority and its CLI/installer boundary; preserve current capture/source observers and original task/gate checks.",
+    "A": "Authenticate original owner intent, purpose/key/resource scope and actual original signing/grant source; no candidate self-approval.",
+    "C": "Do not rewrite Discovery.Redis/frozen metadata, module purpose, native payloads or publication serializers. Keep existing same-task publication consumers unchanged."
+  },
+  "scope_of_current_new_protocol_tests": "Independent fixture declares functional_test Redis policy before worker/controller scope hashes and signatures. This is test-only controlled-source material generation, not delivery of the missing production producer.",
+  "changes": {
+    "production_code": false,
+    "frozen_files": false,
+    "authorization_window": false,
+    "tests_run": false,
+    "sql_or_field_operations": false
+  }
+}

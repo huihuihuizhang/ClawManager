@@ -211,6 +211,9 @@ func (e *configBootstrapCandidateEnvironment) PrepareBootstrapConsumption(ctx co
 		}
 		kekPrepared, err = e.kek.PrepareBootstrapKEK(ctx, e.plan.db, e.plan.grant, e.plan.config)
 		if err != nil || candidateAuthorityNil(kekPrepared) {
+			kekPrepared = nil // L3 may still authorize ONLY an exact historical read.
+		}
+		if ctx.Err() != nil {
 			return zero, pd.ErrGuardRequired
 		}
 	}
@@ -218,7 +221,7 @@ func (e *configBootstrapCandidateEnvironment) PrepareBootstrapConsumption(ctx co
 	if err != nil {
 		return zero, pd.ErrUnavailable
 	}
-	s := &configBootstrapCandidateSession{plan: e.plan, authority: a.Session, canonical: e.canonical, operationID: op, hash: want, kekPrepared: kekPrepared}
+	s := &configBootstrapCandidateSession{plan: e.plan, authority: a.Session, canonical: e.canonical, operationID: op, hash: want, kekPrepared: kekPrepared, kekRequired: e.kek != nil}
 	return pd.PreparedBootstrapAuthority{Session: s, OperationPublicID: op, CapacityObservedAt: a.CapacityObservedAt}, nil
 }
 
@@ -226,6 +229,7 @@ type configBootstrapCandidateSession struct {
 	plan          *ConfigBootstrapCandidates
 	authority     BootstrapCandidateAuthoritySession
 	kekPrepared   reg.PreparedAdmission
+	kekRequired   bool
 	kekBound      *reg.Bound
 	kekWrite      pd.BootstrapSQL
 	canonical     bool
@@ -364,6 +368,9 @@ func (s *configBootstrapCandidateSession) LockOperation(ctx context.Context, tx 
 }
 
 func (s *configBootstrapCandidateSession) LockHosts(ctx context.Context, tx pd.BootstrapSQL, r pd.BootstrapConsumptionRequest, f pd.BootstrapConsumptionFacts) error {
+	if s.kekRequired && candidateAuthorityNil(s.kekPrepared) {
+		return pd.ErrGuardRequired
+	}
 	return s.authority.LockHosts(ctx, tx, r, f)
 }
 func (s *configBootstrapCandidateSession) LockReferences(ctx context.Context, tx pd.BootstrapSQL, r pd.BootstrapConsumptionRequest, f pd.BootstrapConsumptionFacts) error {
@@ -373,6 +380,14 @@ func (s *configBootstrapCandidateSession) Reserve(ctx context.Context, tx pd.Boo
 	return s.authority.Reserve(ctx, tx, r, f)
 }
 func (s *configBootstrapCandidateSession) LockEvidence(ctx context.Context, tx pd.BootstrapSQL, r pd.BootstrapConsumptionRequest, f pd.BootstrapConsumptionFacts) ([]pd.ResultEvidence, error) {
+	if s.kekRequired && candidateAuthorityNil(s.kekPrepared) {
+		return nil, pd.ErrGuardRequired
+	}
+	if s.kekPrepared != nil {
+		if err := lockBootstrapKEKOriginalEvidence(ctx, tx, s.kekPrepared, f); err != nil {
+			return nil, pd.ErrGuardRequired
+		}
+	}
 	return s.authority.LockEvidence(ctx, tx, r, f)
 }
 
@@ -390,7 +405,7 @@ func (s *configBootstrapCandidateSession) AuditIntent(ctx context.Context, tx pd
 
 func (s *configBootstrapCandidateSession) WriteBootstrap(ctx context.Context, tx pd.BootstrapSQL, _ pd.BootstrapConsumptionRequest, _ pd.BootstrapConsumptionFacts, op string, hash pd.Hash, now time.Time) (pd.BootstrapWriteResult, error) {
 	var zero pd.BootstrapWriteResult
-	if s.intentAudit <= 0 || op != s.operationID || hash != s.hash {
+	if s.intentAudit <= 0 || op != s.operationID || hash != s.hash || s.kekRequired && candidateAuthorityNil(s.kekPrepared) {
 		return zero, pd.ErrGuardRequired
 	}
 	if err := writeBootstrapConfigData(ctx, tx, s.plan.grant, s.plan.config, op, string(hash), now, s.canonical); err != nil {
@@ -427,7 +442,10 @@ func (s *configBootstrapCandidateSession) Recheck(ctx context.Context, tx pd.Boo
 	if err := verifyBootstrapConfigValues(ctx, tx, s.plan.grant, s.plan.config, s.canonical); err != nil {
 		return err
 	}
-	if s.kekPrepared != nil && (s.kekBound == nil || !pd.SameBootstrapTransaction(s.kekWrite, tx) || s.kekBound.RecheckWithReadView(ctx, tx, s.kekPrepared) != nil) {
+	if s.kekRequired && f.Replayed {
+		return s.recheckHistoricalBootstrapKEK(ctx, tx, f)
+	}
+	if (s.kekRequired || s.kekPrepared != nil) && (candidateAuthorityNil(s.kekPrepared) || s.kekBound == nil || !pd.SameBootstrapTransaction(s.kekWrite, tx) || s.kekBound.RecheckWithReadView(ctx, tx, s.kekPrepared) != nil) {
 		return pd.ErrGuardRequired
 	}
 	return nil

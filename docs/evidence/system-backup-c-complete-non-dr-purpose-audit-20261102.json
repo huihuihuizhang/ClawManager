@@ -1,0 +1,230 @@
+{
+  "schema_version": "c-complete-non-dr-original-purpose-audit.v1",
+  "status": "read_only_source_audit_no_test_or_native_execution",
+  "checkout_commit": "ed4d8d43dc3acd346f93b7c369e1337f6ce624f9",
+  "scope": "Actual complete six-domain functional_test HTTP request through original production source freeze/module/formal-material authority, full C publication/terminal and signed catalog/original manifest HTTP reads. No isolated restore or new task.",
+  "files": [
+    {
+      "path": "frontend/src/services/systemBackupTaskService.ts",
+      "sha256": "4a776060e3fc80d0745cd66df8c9996616b4bba3efcfb9a9b27cc5cfa7cb8523"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveWorkspace.tsx",
+      "sha256": "6a8bc5e90bf5d307515d9389565d91f2428cdcbc160fa8a3815e42fbd397ce33"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveManifest.tsx",
+      "sha256": "4aa4a15a6ec77e0978a03de734d81e5c4970fec84ef50cab700441d38cc1f97e"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_tasks_live.go",
+      "sha256": "3c63e9ff2315b105971a4df0421fdddf8e22b241433c3141135f6a64d2fa2858"
+    },
+    {
+      "path": "backend/internal/systembackupapi/deployment_admission.go",
+      "sha256": "86b812a370c6c1c863b072b3b78d25dc085a00a12113de7a3062e410956cd955"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_capture_materials.go",
+      "sha256": "4033e2281a3eb6cac3f26dbef7fe2fe451c4127f279bc11d2e6e74309f513235"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_authority.go",
+      "sha256": "70d16f008f776e7d91f7d97f3218b9c6e08b53db2a2871db1a6e1d1635691d44"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_freeze.go",
+      "sha256": "103e6f0b30bc4bc2a7e935affa75ed554530367bcecc3d3f490da11bae173d01"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_security.go",
+      "sha256": "323435a9713163b5ab52748dd956fa9ba7c0030d1ada511f39a398137f30b596"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_modules.go",
+      "sha256": "c222b4bc4eb92a8e31a7168459f0f90e724777eed906f7635d8ef4a0a2f045a2"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_modules_test.go",
+      "sha256": "41720c5ff72e769024b15b8da5f47c5658382ef86108a72459a53ce2969894b0"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_purpose_test.go",
+      "sha256": "6609c059d9b787d07c65e125754d3feb3566ec11e15582e9d27f2b1b5258574b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "sha256": "6e20094e153669794a71165f2852416c63bd7d90a16cb54869aac07d96dc5d0e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_mysql_test.go",
+      "sha256": "bf06e8c4948d7aa1163807ce194b0f665b0189f6fbc9008af5a1b54012c1e7b0"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_complete_fixture_test.go",
+      "sha256": "50bff4d935db835967ee86e438a14681e18139c7c76e82f52538d02f165b0752"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_credentials.go",
+      "sha256": "14b2884cd0e1e21235f4409664dd446ce7059f42d03e73508bb31c465c4dbc0a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_manifest_producer.go",
+      "sha256": "66611575a30e426665a4d74134818bf1fd9b2ad784c9e5a8f27cefba42ae770b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance.go",
+      "sha256": "806b1809289312b120b1a36efb137202fc48f0739dafd7a171b86390ce65e3ee"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_ready.go",
+      "sha256": "c3f0d6ddc633da88bbbfb22fc98e6ec305daf5a321c69853aa08887d684f65ae"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_terminal.go",
+      "sha256": "023a2e47c5e003d6d762250805c5d2d1e5b59d26d2a220e9097902a28aedf318"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog.go",
+      "sha256": "0aac8bc0b31a4ddb992591058c29f9beadfda1bb3017be75abe14c96b3d17f87"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_http_read.go",
+      "sha256": "d4ff5f4b995793dfcbf1b4faa1853f56cd79e2f3ed6016a4afcb4aceae444c2c"
+    },
+    {
+      "path": "backend/internal/systembackupread/current_facts_v1.go",
+      "sha256": "cfc25a9bb66d83cb6b9c1617525d249c4ec6a39db58762ecfdd6b77ed0fb62a9"
+    },
+    {
+      "path": "backend/internal/systembackupread/catalog_read.go",
+      "sha256": "70941f0f609fbec6439ee8ece58b7e5fc35040fb54eb9ba655554a9073e907d8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_control_mysql_test.go",
+      "sha256": "020cf72b07ad84e2dbce01c50fe97a048a47f832c660c4d16bc3386cbbc765e9"
+    },
+    {
+      "path": "backend/cmd/system-backup-v2-controller/public_capture.go",
+      "sha256": "fac21769e68103b3db3370de311df1b8d9898677c2f3bb27094ffcc0483df2e4"
+    }
+  ],
+  "primary_finding": {
+    "priority": "P1",
+    "classification": "confirmed ordinary SQL fixture input mismatch; production blocker conditional on installed original Redis purpose",
+    "title": "Original Redis capture policy purpose is still inherited from acceptance in the ordinary full SQL fixture",
+    "actual_chain": [
+      "production_capture_modules_test.go: productionModuleFixture creates both the original backup TaskPurpose and metadata.Redis.Policy.Purpose as acceptance.",
+      "production_same_task_sources_mysql_test.go:145-147 installOriginalMetadataSources discards that fixture Input and reuses its Source metadata; it never binds metadata.Redis.Policy.Purpose to f.input.Backup.TaskPurpose.",
+      "production_same_task_mysql_test.go:360-364 CompleteNonDR selects functional_test for the actual six-part HTTP request; f.input is later read from the original acquired SQL task, before installing metadata sources.",
+      "production_same_task_sources_mysql_test.go:183-199 builds real local worker source grant and productionSourceDiscovery.Redis from that unchanged acceptance policy; sourceMetadataScope and its signed metadata grant are constructed later at236+.",
+      "production_source_freeze.go:148 copies the original independently pinned Discovery.Redis into frozen metadata unchanged.",
+      "production_capture_modules.go:112,203-204 clears stale Request.SourceRedis templates and supplies frozen metadata.Redis to the actual shared Redis module.",
+      "production_source_security.go:69 compares the frozen original Redis purpose against the actual original task purpose and rejects the mismatch before an actual production part can use its mounted original inputs.",
+      "publication_complete_fixture_test.go:79-109 ordinary hook supplies authentic not_provided publication policy and repins metadata, but does not change Redis purpose. It cannot cure the above mismatch."
+    ],
+    "why_component_tests_do_not_cover_it": "production_source_purpose_test.go:newProductionPurposeFixture manually aligns both Input.Backup.TaskPurpose and metadata.Redis.Policy.Purpose before building its pure CONTENT source. That is a valid constructor test, but it does not establish that installOriginalMetadataSources or a deployed original materials generator supplies a matching ordinary policy.",
+    "minimum_fixture_contract": "Before computing ANY source metadata scope/signature or sealing original material bytes, validate the original acquired f.input is a complete backup and select metadata.Redis.Policy.Purpose=f.input.Backup.TaskPurpose from that exact existing task input. Keep all Redis source identity/server/DB/prefix/exclusion/TTL/capacity fields unchanged and validate the policy. Feed the same original policy into discovery and worker request construction. Default acceptance tests stay acceptance; CompleteNonDR stays full-six functional_test. Do not change the admitted task, drop a domain, or repair a sealed plan/source after capture.",
+    "minimum_real_installer_contract": "For this ordinary deployment, the independently authorized installer must prepare Discovery.Redis.Policy.Purpose=functional_test and preserve preserve_absolute TTL before the original sourceMetadataScope/grant and pinned capture bundle are signed/frozen. If an installed original bundle says acceptance, publishing ordinary readiness from it is insufficient; reject with a specific source-purpose/materials mismatch until an authorized matching bundle is installed. The current single fixed-purpose bundle cannot be treated as an automatically dual-purpose authorization.",
+    "no_production_shortcut": "Do not assign purpose from the task inside freezeProductionSource, weaken productionMountsFromOriginal, synthesize a new signed source grant, edit frozen metadata/source bytes, or substitute the aligned CONTENT fixture for the actual original SQL path.",
+    "source_scope_precision": "sourceMetadataScope hashes the complete original capture materials including Discovery.Redis.Policy.Purpose. In contrast, worker.FormalSourceScopeSHA256 for shared Redis binds source identity/version/SHA, TLS mapping, Redis boundary, prefixes/exclusions and TTLPolicy, not the task Purpose. Do not falsely claim that changing only Purpose necessarily changes that worker delegation hash; the original metadata scope/signature/pin still prevents a runtime rewrite.",
+    "ownership": "D owns the actual installer/material preparation and the original SQL metadata fixture. This audit did not change those sources. No C-exclusive production hardcode fix was identified; root can assign the explicit pre-freeze fixture delta without altering the frozen C5/scripts."
+  },
+  "path_review": [
+    {
+      "stage": "Page and HTTP admission",
+      "finding": "BackupLiveWorkspace uses completeBackupRequestJSON, explicit functional_test plus all six requested parts. NewAdmittedTaskWriter resolves to PublicSQLTaskWriter. Acceptance-only target/acceptance_ready restrictions are conditional on requested purpose=acceptance; default acceptance values do not replace the explicit ordinary body."
+    },
+    {
+      "stage": "Production material provenance",
+      "finding": "loadProductionCapture consumes independently SHA-pinned exact original-six-part material bytes at startup. checkProductionCaptureMaterials rechecks original bytes and structural identity; sourceMetadataAuthority checks original owner signature/config/deployment/scope and original task authority. These consumers do not independently generate a new ordinary Redis policy or owner grant. Existing controller candidate/startup glue cannot turn copied acceptance material into ordinary authority."
+    },
+    {
+      "stage": "Formal construction",
+      "finding": "Production constructors consume the frozen source, original module/writer inventory and authenticated original operation templates. Stale template SourceRedis is cleared and actual frozen metadata supplied; task identity/part index/context are assigned from original input. Correct ordinary original metadata is necessary; editing a request-purpose literal in a standalone fixture is not deployed source evidence."
+    },
+    {
+      "stage": "Full C publication",
+      "finding": "Manifest purpose comes from capture.Input.Backup.TaskPurpose. not_provided supports ordinary negative qualification while preserving full verification, key/owner checks and original windows. publicationManifestEvaluation requires all six required/completed/strong parts, complete verifiers and no disqualifying warning; functional_test has a derived negative DR reason set. Signed catalog compares the actual negative result, not a forced true."
+    },
+    {
+      "stage": "Ready and terminal",
+      "finding": "Ready retains actual purpose/target/domain/risks, full physical source recovery, content samples/cleanup and immutable decision. Terminal uses those original facts in its unique CAS and atomic event. Ordinary success persists usable from full proof but eligible=false; acceptance anomaly sequence is not advanced. No additional acceptance-only C terminal gate was found."
+    },
+    {
+      "stage": "Catalog and original manifest HTTP read",
+      "finding": "Catalog SQL filters succeeded/committed/registered, not task_purpose=acceptance or acceptance_eligible=true. Concrete HTTP bundle validates original signed catalog, marker, manifest/index and signed negative qualification. ReadBackupManifestCurrentV1 does not require current ArtifactUsable=true. Frontend manifest button uses succeeded+committed+registration+manifest hash, not DR eligibility or ArtifactUsable."
+    }
+  ],
+  "truthful_read_limit": "PublicationHTTPReader.Backup currently returns fresh ArtifactUsable=false/AcceptanceReady=false with verification_inconclusive for committed artifacts because its independent READ material does not mount fresh complete KEK/recovery availability verification. This is a known current-availability integration limitation, not an acceptance-purpose rejection or catalog/manifest GET prohibition. Never copy terminal SQL flags to manufacture a fresh approval.",
+  "legitimate_dr_or_unrelated_gates": [
+    "overview_promotion.go requires an eligible acceptance backup and corresponding recovery/drill evidence for DR promotion; preserve it.",
+    "C acceptance-purpose positive qualification remains strict; ordinary full backup succeeds with a signed negative DR assessment, not a forged eligible result.",
+    "Legacy systembackup/profile six_domain, control catalog admission and recovery.Import acceptance-only paths are not the live PublicSQLTaskWriter -> NewPublicCapture production modules -> RunPublicationPass -> CurrentV1 catalog/manifest read route. DeploymentService uses legacy control.IdentityIssuer for worker identity, which is not use of the legacy control backup flow. Do not widen legacy restore/import gates as a supposed fix for this ordinary publication task."
+  ],
+  "intentionally_not_relisted": "Already-reviewed A/D purpose fixes were treated as the baseline, not reported again as remaining blockers.",
+  "validation": "Read-only text/call-path inspection only; this report is not an executed SQL/native/page proof. No production/test source modified, no tests/remote/SQL/git mutations, no test/build artifacts generated.",
+  "d_concrete_entrypoints": [
+    {
+      "file": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "line": 45,
+      "symbol": "(*dOriginalSixPartTask).installOriginalMetadataSources",
+      "kind": "SQL fixture builder",
+      "call": "145-147 imports acceptance metadata; 183 supplies Request.SourceRedis; 199 supplies productionSourceDiscovery.Redis",
+      "required_delta": "Select the original f.input.Backup.TaskPurpose into the Redis policy immediately after decoding template metadata, before scopes/signatures/frozen material. Do not edit an admitted task or a captured source.",
+      "limit": "Fixture only: its local TLS sources and keys are not production owner enrollment."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "line": 185,
+      "symbol": "worker.FormalSourceScopeSHA256 + worker.FormalSourceGrant fixture signing",
+      "kind": "SQL fixture worker delegation",
+      "call": "190 builds original worker grant; 191 signs FormalSourceGrantDomain with fixture private key",
+      "required_delta": "Prepare the matching original policy before invoking the delegation builder; retain identity/server/DB/prefix/exclusion/TTL boundaries.",
+      "limit": "Shared Redis worker scope does not itself include Purpose; the complete metadata scope does. No claim that changing Purpose requires widening worker delegation."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "line": 236,
+      "symbol": "sourceMetadataScope(m) -> originalSourceMetadataGrant -> signedSourceMetadataGrant",
+      "kind": "SQL fixture metadata signing entry",
+      "call": "241 puts scope into originalSourceMetadataGrant; 242 signs sourceMetadataGrantDomain with fixture private; 243-248 writes grant/material and calls loadProductionCapture",
+      "required_delta": "Purpose must already match original task before sourceMetadataScope and owner signature. Preserve original signature, scope, hash and deadline checks.",
+      "limit": "This is the concrete existing signing entry in the SQL fixture, not a deployable production signer."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/production_same_task_control_mysql_test.go",
+      "line": 237,
+      "symbol": "(*dOriginalSixPartTask).repinOriginalMetadataSource",
+      "kind": "Fixture-only re-signing helper",
+      "call": "Recomputes original material scope, signs with f.metadataSigner, writes original grant/material and reloads pinned inputs",
+      "required_delta": "Do not use this helper as evidence that a production installer can rewrite frozen authority or as a post-capture repair.",
+      "limit": "The helper holds an explicit test-only owner key; production controller must not hold or synthesize that authority."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/production_source_authority.go",
+      "line": 66,
+      "symbol": "sourceMetadataScope",
+      "kind": "Production canonical scope calculator, not signer",
+      "call": "Full material bytes including Discovery.Redis.Policy.Purpose, excluding only later GrantFile/GrantSHA256",
+      "required_delta": "Actual D producer must prepare functional_test Redis policy and compute this exact scope before independently authorized original owner signs originalSourceMetadataGrant under sourceMetadataGrantDomain (line22).",
+      "limit": "A scope hash is not approval or a signature. No production original-source-metadata signing CLI/builder was found in backend/cmd or scripts; current consumer must not be described as that missing producer."
+    },
+    {
+      "file": "backend/cmd/system-backup-v2-controller/public_capture.go",
+      "line": 145,
+      "symbol": "configuredPublicStartupInputs",
+      "kind": "Actual production startup consumer",
+      "call": "155 reads ProductionCaptureInputsFromEnvironment; line70 NewDeploymentServiceWithInputs -> deployment_capture_materials.go:75 loadProductionCapture -> production_source_authority.go:143 sourceMetadataAuthority",
+      "required_delta": "D installer must provide the authentic matching original material through SYSTEM_BACKUP_CAPTURE_MATERIALS_FILE/SHA256, correct original core reference and independently issued signed source-metadata grant.",
+      "limit": "These paths only load/recheck existing pinned material and original owner signature; they do not generate a purpose policy or issue a grant."
+    }
+  ],
+  "evidence_limits": [
+    "All conclusions are read-only source/call-path inspection. The ordinary SQL source mismatch was not executed in this audit.",
+    "Production failure is conditional on actual installed Discovery.Redis.Policy.Purpose being acceptance or otherwise mismatched; current live installed material has not been read.",
+    "CONTENT tests explicitly aligning purpose are valid unit assembly tests but do not validate the real original SQL fixture/material producer.",
+    "A runtime assignment after freeze would invalidate original scope/pin/signature; this audit grants no permission to perform it.",
+    "Root owns D implementation and subsequent validation. C5, MinIO scripts and D sources remain untouched. R8 is not rebuilt; tomorrow remote instructions remain the separately owned supervisor document."
+  ]
+}

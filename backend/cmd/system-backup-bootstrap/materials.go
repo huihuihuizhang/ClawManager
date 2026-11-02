@@ -46,6 +46,9 @@ func composeBootstrapMaterialOwners(base systembackupsecurity.BootstrapOwnerAdap
 	if err != nil {
 		return systembackupsecurity.BootstrapOwnerAdapters{}, nil, err
 	}
+	// Materials.Owners composes its three validators; preserve D's independent
+	// compiled KEK source through that map-copying boundary.
+	owners.KEK = base.KEK
 	return owners, materials, nil
 }
 

@@ -20,6 +20,7 @@ type BootstrapOwnerAdapters struct {
 	References     map[string]BootstrapResourceValidator
 	CrossResources BootstrapResourceValidator
 	Candidates     *BootstrapDeploymentCandidates // Fixed Go composition only; never loaded from deployment JSON.
+	KEK            BootstrapKEKPreparation        // Independent compiled source; never supplied by deployment JSON.
 }
 
 // All paths belong to a SHA-pinned deployment document, never an HTTP body.
@@ -57,6 +58,7 @@ type BootstrapDeployment struct {
 	sources      BootstrapAdmissionSources
 	openDatabase func() (*sql.DB, error)
 	candidates   *BootstrapDeploymentCandidates
+	kek          BootstrapKEKPreparation
 }
 
 // MissingBootstrapOwnerAdapters reports only owner integration dependencies.
@@ -81,7 +83,13 @@ func MissingBootstrapOwnerAdapters(a BootstrapOwnerAdapters) []string {
 }
 
 func LoadBootstrapDeployment(path, digest string, owners BootstrapOwnerAdapters) (*BootstrapDeployment, error) {
-	if owners.Candidates != nil && !owners.Candidates.valid() {
+	if (owners.Candidates != nil && !owners.Candidates.valid()) || (owners.KEK != nil && candidateAuthorityNil(owners.KEK)) {
+		return nil, ErrRegistrationUnavailable
+	}
+	// The concrete original KEK source requires the candidate route's merged
+	// L8 evidence prelock. Never silently send it through the legacy native-Tx
+	// admission path, which cannot establish that original lock prefix.
+	if owners.KEK != nil && owners.Candidates == nil {
 		return nil, ErrRegistrationUnavailable
 	}
 	raw, err := boundedFile(path, 16384)
@@ -131,7 +139,7 @@ func LoadBootstrapDeployment(path, digest string, owners BootstrapOwnerAdapters)
 	for k, v := range owners.References {
 		sources.References[k] = v
 	}
-	d := &BootstrapDeployment{config: c, grant: g, raw: configRaw, sources: sources}
+	d := &BootstrapDeployment{config: c, grant: g, raw: configRaw, sources: sources, kek: owners.KEK}
 	if owners.Candidates != nil {
 		// Copy the outer object too: replacing the caller's factory variable
 		// cannot replace the immutable selection/authority after loading.
@@ -235,7 +243,7 @@ func (d *BootstrapDeployment) Apply(ctx context.Context) (ConfigBootstrapResult,
 	if err != nil || database == nil {
 		return zero, ErrRegistrationUnavailable
 	}
-	return (ConfigBootstrapService{DB: database, Admission: admission}).bootstrapLegacyPrepared(ctx, d.grant, config)
+	return (ConfigBootstrapService{DB: database, Admission: admission, KEK: d.kek}).bootstrapLegacyPrepared(ctx, d.grant, config)
 }
 
 func openBootstrapDatabase(c BootstrapDeploymentConfig) (*sql.DB, error) {

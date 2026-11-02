@@ -1,0 +1,398 @@
+{
+  "schema_version": "supervisor-bootstrap-kek-wiring-review.v1",
+  "observed_at": "2026-11-03T00:09:30.8173196+08:00",
+  "base_commit": "b222bd71d38d00e762f9d238f5ac8f90646864a8",
+  "scope": "Guarded installation bootstrap KEK composition and coverage/replay component behavior; no actual provider admission or deployment",
+  "reviewed_files": {
+    "backend/internal/systembackupsecurity/bootstrap_deployment.go": "aed77469fdb52bb17a56ecc5dd3edf8be78afbaa479a30bc38cd6e2855d5f7de",
+    "backend/internal/systembackupsecurity/bootstrap_deployment_candidates.go": "177a64dd1c9a29733d5b392231d3a8f59a1ced32971346066ebf3ad4866dd984",
+    "backend/internal/systembackupsecurity/config_bootstrap_candidate_attempt.go": "43c9359ed5400b3d6f4097ba4d90582dde5c32bb790f3ba8989e4ca36cf3358d",
+    "backend/internal/systembackupsecurity/bootstrap_deployment_kek_test.go": "b403e1888e76dc544565ca074e650af50cc160e9ea6612581101079114deb6e9",
+    "backend/cmd/system-backup-bootstrap/materials.go": "2605bda4088b2671baa2a1e762a8c65e2e7064c676fcd02c9aa1e50f02c006bc",
+    "backend/internal/systembackupsecurity/bootstrap_kek_evidence.go": "2168833319c5e1c1f0c6d26f93d33984a5ddb0550ee2bf853a4d62c2198a0d98",
+    "backend/internal/systembackupsecurity/bootstrap_kek_evidence_test.go": "ef7f28c2e4607a8bd245dfe8d86e32ef6145a967e2d8ec35f9c17b1639688b45",
+    "backend/internal/systembackupsecurity/config_bootstrap_candidates.go": "1d6a01e22fa5a44cad70fdbfc0706062eef64fc4597ba457f1c4099371bffbb3",
+    "backend/internal/systembackupsecurity/bootstrap_kek_transaction.go": "5ed43ff9df7d74048ccfab0444540aa0b286e0155733f2c24af8e1bea99bebbd",
+    "backend/internal/systembackupkekregistry/store.go": "fe8f177b476d5bfa19436788a7e8eda97fe005123324c1b58bed5558c945abd9",
+    "backend/internal/systembackupkekregistry/coverage_scan_test.go": "b0c5be59d0ec658e1a5c3f8b893167819a4273e9df163233d835ede12c305588",
+    "scripts/system-backup-d-deployment.mjs": "5405cc45807048ed361182d1f879666cc73d589aa1ab34bb7161517e1718f3b5",
+    "scripts/system-backup-d-deployment.test.mjs": "58576db0bb9e0d581aa620f2959e301631df36b28840b773a0121805d7aa5f33",
+    "backend/internal/systembackupkekregistry/committed.go": "fb97794fd94dee9df28001ab81ee1eb29363a67a13365fbe9b7cfe3947138f19",
+    "backend/internal/systembackupsecurity/bootstrap_kek_replay_test.go": "329b2c447bc7ce201ac45f65fdc2b0c3da5c01cd146fc4ef346d1221e2b23a5f"
+  },
+  "excluded_old_pin": {
+    "path": "deployments/k8s/system-backup-registration.template.json",
+    "old_expected_sha256": "fa207c100342c044717656932c751c138480f37980adf828d54fa4654b2b08b1",
+    "current_sha256": "5d44047f46478e75ffbcf44049cbd99ecbc735be81d33d69b93ecb1718c5bc9d",
+    "action": "Kept current backup template, no overwrite or stale source copy."
+  },
+  "components": {
+    "command": "CGO_ENABLED=0 GOMAXPROCS=2 go test -mod=readonly -p=2 ./internal/systembackupsecurity ./internal/systembackupkekregistry ./cmd/system-backup-bootstrap -run 'Bootstrap|CompleteScan' -count=1 -json -timeout 300s",
+    "exit_code": 0,
+    "root_pass": 58,
+    "root_fail": 0,
+    "root_skip": 0,
+    "log_sha256": "ddbaa369d6953f15a6514f092489dc9db726f0a0d1c5d0528b67c0758c87bd63",
+    "root_results": [
+      {
+        "Package": "clawreef/internal/systembackupkekregistry",
+        "Test": "TestCompleteScanRequiresCurrentOriginalSourceAndPreservesFenceAndExpiry",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapGrantFilePinsExactBytesAndCanBeRevoked",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityRequiresFixedSourcesAndIndependentAuthority",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityRefreshesOriginalGrantOnEveryRetry",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityOriginalWindowAndRequestCannotBeRebound",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityValidatesAllNineRegistryFiles",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityOwnsSourcesAndDelegatesEveryStage",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityDetachesCallerNestedRequestAndReusedBuffers",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityClipsIdentityWithExactSQLPrecision",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityRechecksAfterCallbackWait",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityRejectsReplacedRequestAndUnsafeClock",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestPinnedBootstrapCandidateAuthorityRedactsAndRetainsDelegatedFailures",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateCapacityOriginalSampleAndBudget",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateCapacityBindingAndOutput",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateCapacityMissingReportDefersOnlyNewConsumption",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateFilesRequireClosedOriginalProfileAndAuthority",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateFilesRejectLateOriginalGrantAndRBACChanges",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateFilesKeepResourceFailureAfterHistoricalBranch",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateFilesBoundLocalReadsByOriginalWindowAndContext",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateFilesDelegateResourcesOnceAndRedact",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapDeploymentCandidatesImmutableComposition",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapDeploymentCandidatesApplyConsumerAndHistoricalRetry",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapDeploymentCandidatesPreparationAndLateFilesBeforeCredentials",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptKEKPreservesOriginalAttemptAndRefusesNewUse",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptTypedNilKEKDoesNotOpenDatabase",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapDeploymentCandidatePassesCompiledKEKToOriginalAttempt",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestDeploymentApplyUsesAtomicBootstrapAndPreservesUnknownCommitKey",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapKEKEvidenceLocksSelectedUnionBeforeOriginalCheckAndFence",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapKEKSameKeyReplayDoesNotNeedExpiredMaterialOrNewBound",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptPreparesBeforeDatabaseAndDoesNotRenew",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptPreparationFailureNeverNeedsDatabase",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptCancellationAndConcurrentCopies",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptOpenerFailureClosesDatabaseAndSealsCopies",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidatePlanIsDetachedAndRequiresAuthority",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAStagesKeepEarlyPrefixAndOneIntent",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateGlobalConfigPrefixStreamsForeignFactsBeforeReplayDecision",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAttemptBudgetStartsBeforePreparation",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAFinalReadRejectsCallbackChangesWithHashPreserved",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateAReplayReachesExactOperationAfterExistingConfig",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateARejectsMissingAuditIdentity",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateTypedNilContextRejectedBeforeAuthorityOrSQL",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCanonicalCandidateInsertUsesOneValidatedConfig",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/cmd/system-backup-bootstrap",
+        "Test": "TestBootstrapMaterialCompositionCannotBypassMissingAuthorityOrOwners",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCandidateServiceConsumerIntegration",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapInlineCannotInitializeAfterC1StorageExists",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapInlineExactHistoryMayReadWithoutDomainButNeverWriteAgain",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapInlineLateAuthorizationAndFixedChecksRollback",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapInlineUsesFreshSQLTimeAfterInstallationWait",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapInlinePreparedKeepsOriginalBoundedContext",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapRejectsSharedSigningReferenceIdentity",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapRulesMatchContract",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCanonicalAndSQLSnapshot",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapRejectsIncompleteAmbiguousAndUnsafeConfig",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapAtomicIdempotencyAndReauthorization",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapCanonicalCandidateWritesExactSnapshotAtomically",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapRollsBackEveryWriteAndUnknownCommitRetries",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestBootstrapFailsClosedBeforeWrites",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupsecurity",
+        "Test": "TestMFAUsesCurrentConfigAndClosedBootstrapGrant",
+        "Action": "pass"
+      }
+    ]
+  },
+  "reviewed_invariants": [
+    "Original attempt/session/context/operation/observation times preserved across independent KEK preparation before SQL.",
+    "Failed or absent physical KEK source refuses fresh use; only current-authorized exact immutable original historical operation can be read without refreshing expiry or acquiring new source locks.",
+    "Original selected candidate/KEK source evidence and chunk ranges are prelocked as one sorted complete L8 union before KEK fence and source checks.",
+    "CompleteScan requires exactly one original typed authenticated coverage source matching unchanged adopted facts, same transaction fence/database, and independent final SQL time; no-argument or incomplete coverage remains refused.",
+    "Current main still supplies only three original owner validators; material composition does not synthesize remaining owners, Original L2, KEK mapping or physical adoption."
+  ],
+  "native_and_field_scope": "No actual MySQL/InnoDB lock-order, physical writer shutdown/adoption, provider/network, Kubernetes or page calls were executed. Synthetic driver and protocol results do not establish production acceptance.",
+  "purpose_audits": [
+    {
+      "path": "docs/evidence/system-backup-c-complete-non-dr-purpose-audit-20261102.json",
+      "sha256": "c489dc526d7f3020fdfe8bd39bd4748c98003e56d79a76c6d7e109733cba0f7e",
+      "referenced_files": 26,
+      "current_source_drift": 0
+    },
+    {
+      "path": "docs/evidence/system-backup-d-redis-purpose-producer-review-20261102.json",
+      "sha256": "cd159d001942c30769b0ae0d06f86e178cdbb9a972ccd8f8ae9cd197a6e9468b",
+      "referenced_files": 6,
+      "current_source_drift": 0
+    }
+  ],
+  "remaining": [
+    "Production authenticated installer owner issue/import/revoke and current grant/head sources.",
+    "Complete compiled resource owner validators and original L2 main composition; main still refuses missing owners.",
+    "Actual KEK original coverage/adoption and production signed provider mapping; no DR eligibility may be inferred.",
+    "Executable authenticated pre-freeze production capture-materials builder with ordinary full-six purpose before original scope/signature.",
+    "Actual complete writer observation, provider role permissions, same-task full capture/recovery/publication/readback/catalog/success evidence through the real page."
+  ],
+  "image_entrypoint_compile": {
+    "status": "PASS",
+    "toolchain": "go1.26.1 windows/amd64",
+    "target": "linux/amd64 CGO_ENABLED=0",
+    "command": "GOMAXPROCS=2 go build -mod=readonly -p=2 <all 16 main packages extracted from original Dockerfile>",
+    "dockerfile_sha256": "2c6392ee60b8d34174f58f706bcf1983379268c96beccec80c0dba7ae6173ca3",
+    "package_count": 16,
+    "packages": [
+      "./cmd/server",
+      "./cmd/northbound-gateway",
+      "./cmd/system-backup-controller",
+      "./cmd/system-backup-artifact",
+      "./cmd/secret-broker",
+      "./cmd/system-backup-import",
+      "./cmd/system-backup-legacy-inventory",
+      "./cmd/system-backup-legacy-preflight",
+      "./cmd/system-backup-seal-custody",
+      "./cmd/system-backup-migrate",
+      "./cmd/system-backup-bootstrap",
+      "./cmd/system-backup-registration",
+      "./cmd/system-backup-controller-grants",
+      "./cmd/system-backup-v2-controller",
+      "./cmd/backup-worker",
+      "./cmd/system-backup-audit-collect"
+    ],
+    "exit_code": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts": "Multiple-main build verifies compilation without emitting app binaries. No image, Docker stages, frontend bundle or runtime behavior were built/verified in this step."
+  },
+  "artifact_cleanup": {
+    "status": "COMPLETE",
+    "root": "D:\\codex-backup-bootstrap-review-6a09b192529d4791b7aaa222d39b4f1f",
+    "owner": "supervisor-bootstrap-review-20261103",
+    "worktree_removed": true,
+    "cache_gotmp_tmp_removed": true,
+    "root_absent": true,
+    "marker_removed": true,
+    "retained": "Nonsecret diagnostic evidence logs and pending R8 delivery only; unrelated owner drafts and user files unchanged."
+  },
+  "remote_delivery": "R8 remains pinned to723f51bc and does not test this later bootstrap batch or owner enrollment. No app image update."
+}

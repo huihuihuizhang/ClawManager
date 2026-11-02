@@ -20,9 +20,20 @@ func (SQLStore) ReadCommitted(ctx context.Context, db *sql.DB, installationID, o
 	if ctx == nil || ctx.Err() != nil || db == nil || installationID == "" || operationID == "" {
 		return Binding{}, AdmissionObservation{}, ErrKEKFacts
 	}
+	return (SQLStore{}).ReadCommittedInView(ctx, db, installationID, operationID)
+}
+
+// ReadCommittedInView compares the immutable prior admission/config/succeeded
+// operation inside the original caller's read capability. It deliberately adds
+// no FOR UPDATE/SHARE locks after a historical branch and does not consult live
+// provider material, refresh an observation, open a DB or grant any key use.
+func (SQLStore) ReadCommittedInView(ctx context.Context, view SQLReadView, installationID, operationID string) (Binding, AdmissionObservation, error) {
+	if ctx == nil || ctx.Err() != nil || !present(view) || installationID == "" || operationID == "" {
+		return Binding{}, AdmissionObservation{}, ErrKEKFacts
+	}
 	var coreRaw, obsRaw []byte
 	var coreHash, bindingHash, obsHash, identity, version, configHash string
-	err := db.QueryRowContext(ctx, `SELECT b.core_json,b.core_sha256,b.binding_sha256,a.observation_json,a.observation_sha256,a.identity_hash,a.registry_version,a.config_sha256
+	err := view.QueryRowContext(ctx, `SELECT b.core_json,b.core_sha256,b.binding_sha256,a.observation_json,a.observation_sha256,a.identity_hash,a.registry_version,a.config_sha256
 		FROM system_backup_v2_kek_admissions a
 		JOIN system_backup_v2_kek_bindings b ON b.installation_id=a.installation_id AND b.identity_hash=a.identity_hash AND b.registry_version=a.registry_version
 		JOIN system_backup_v2_configs c ON c.origin_installation_id=a.installation_id AND c.version=a.config_version AND c.config_sha256=a.config_sha256 AND c.kek_identity_hash=a.identity_hash AND c.kek_ref_version=a.registry_version

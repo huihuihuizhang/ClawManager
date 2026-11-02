@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	reg "clawreef/internal/systembackupkekregistry"
 	pd "clawreef/internal/systembackupproducer"
 )
 
@@ -92,6 +93,21 @@ func (a *PreparedConfigBootstrapCandidateAttempt) Close() {
 // D then creates its own issuer-bound prepared token using the captured session,
 // request and context, without repeating preparation or generating a new op ID.
 func (a *PreparedConfigBootstrapCandidateAttempt) Apply(openDatabase func() (*sql.DB, error)) (ConfigBootstrapResult, error) {
+	return a.apply(openDatabase, nil)
+}
+
+// ApplyWithKEK adds the independent KEK preparation after the deployment's
+// credential open, before its original SQL transaction. It uses the SAME
+// prepared authority, operation ID and bounded context, without re-preparing
+// candidate resources or replacing their original observation timestamps.
+func (a *PreparedConfigBootstrapCandidateAttempt) ApplyWithKEK(openDatabase func() (*sql.DB, error), kek BootstrapKEKPreparation) (ConfigBootstrapResult, error) {
+	if candidateAuthorityNil(kek) {
+		return ConfigBootstrapResult{}, ErrRegistrationUnavailable
+	}
+	return a.apply(openDatabase, kek)
+}
+
+func (a *PreparedConfigBootstrapCandidateAttempt) apply(openDatabase func() (*sql.DB, error), kek BootstrapKEKPreparation) (ConfigBootstrapResult, error) {
 	var zero ConfigBootstrapResult
 	if a == nil || a.state == nil || !a.state.used.CompareAndSwap(false, true) {
 		return zero, ErrRegistrationUnavailable
@@ -108,6 +124,24 @@ func (a *PreparedConfigBootstrapCandidateAttempt) Apply(openDatabase func() (*sq
 	if err != nil || db == nil || s.ctx.Err() != nil {
 		return zero, ErrRegistrationUnavailable
 	}
+	if kek != nil {
+		// Only our privately constructed, still-unused session can receive this
+		// preparation. Never accept a replacement session from caller data.
+		session, ok := s.authority.Session.(*configBootstrapCandidateSession)
+		if !ok || session == nil || session.plan != s.plan || session.kekPrepared != nil || session.kekBound != nil {
+			return zero, ErrRegistrationUnavailable
+		}
+		session.kekRequired = true
+		prepared, prepareErr := kek.PrepareBootstrapKEK(s.ctx, db, s.plan.grant, s.plan.config)
+		if s.ctx.Err() != nil {
+			return zero, ErrRegistrationUnavailable
+		}
+		// A failed physical dependency must not preempt L3's exact historical
+		// read. Keep no authority on failure; every new-use callback refuses.
+		if prepareErr == nil && !candidateAuthorityNil(prepared) {
+			session.kekPrepared = prepared
+		}
+	}
 	environment := &preparedConfigBootstrapEnvironment{state: s}
 	consumer, err := pd.NewBootstrapCandidateConsumer(db, s.plan.request.Scope, environment)
 	if err != nil {
@@ -117,7 +151,14 @@ func (a *PreparedConfigBootstrapCandidateAttempt) Apply(openDatabase func() (*sq
 	if err != nil {
 		return zero, candidateBootstrapError(err)
 	}
-	return consumePreparedConfigBootstrap(s.ctx, db, s.plan.grant, consumer, prepared)
+	result, err := consumePreparedConfigBootstrap(s.ctx, db, s.plan.grant, consumer, prepared)
+	if err == nil && kek != nil {
+		binding, observation, readErr := (reg.SQLStore{}).ReadCommitted(s.ctx, db, s.plan.grant.InstallationID, result.OperationPublicID)
+		if readErr != nil || binding.InstallationID != s.plan.grant.InstallationID || observation.ConfigSHA256 != s.plan.grant.ConfigSHA256 {
+			return zero, ErrRegistrationCommitUnknown
+		}
+	}
+	return result, err
 }
 
 type preparedConfigBootstrapEnvironment struct {

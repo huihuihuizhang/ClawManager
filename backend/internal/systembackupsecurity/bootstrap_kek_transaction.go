@@ -37,6 +37,11 @@ func stageBootstrapKEK(ctx context.Context, tx reg.SQLWriteView, installation, o
 	if err != nil {
 		return nil, ErrRegistrationUnavailable
 	}
+	if original, ok := prepared.(bootstrapKEKOriginalEvidence); ok {
+		if _, scanErr := bound.CompleteScan(ctx, original.OriginalCoverage()); scanErr != nil {
+			return nil, ErrRegistrationUnavailable
+		}
+	}
 	if err = bound.StageAdmission(ctx, operation, 1, prepared); err != nil {
 		return nil, ErrRegistrationUnavailable
 	}
