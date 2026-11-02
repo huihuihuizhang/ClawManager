@@ -1,0 +1,142 @@
+{
+  "schema_version": "supervisor-publication-decision-components.v1",
+  "base_commit": "a577ef4dc83f939b630a34d5ced195f6ed03557a",
+  "dirty_source_pins": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance_mysql_test.go",
+      "sha256": "29bc1f28da1738fd73195be2aa501c968d4f527185fbdf0b3b403ec6dfad5b63"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance_test.go",
+      "sha256": "07e7fcd541681ad08628c450c395485e2ac0e9ecfc24e3427afc8bad17274ade"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_acceptance.go",
+      "sha256": "a6981cea3cf711c4a445fc57045943c745f55b220692ce427250b685d8070153"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_mysql_test.go",
+      "sha256": "584091947604ee3403a32b8188c39c5420d3d94c70017b3a1e8c01595748e75b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_signing_journal_test.go",
+      "sha256": "80f16249ab6fa4fdf77f99b2294200a795512c77e40c389967f76aac91944cad"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_signing_journal.go",
+      "sha256": "ad1cf4679d64b0036f2238ac449c11d6156d645589d7c4e5c2337e9aaaa1c644"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog_test.go",
+      "sha256": "c8d1b9827197de482f8fde24a3eab9556989d2267daf4310d3fb211035630992"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_catalog.go",
+      "sha256": "c251fba6fd192026e26528c62b59e9794e39e8d16076caa3aff3aa21e700dfd7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_continuation_mysql_test.go",
+      "sha256": "c9db59c4d806ce8f531e2f28bd16b102307fb1569b3478b65de52d028d7c1c9b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification_mysql_test.go",
+      "sha256": "48ded2dfff04f4c1fdefed805566ef32102e2331aae6bc0a90e0bfa47b744be4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification_test.go",
+      "sha256": "0d5288c833b9c6708378d5ce2a4fe45eaf14605d5ada1a852e6ae0b77c910115"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_final_verification.go",
+      "sha256": "c4184c55be4ede62a002cc414e2cdf42a422e1dd3c1fca526fcd96652caa539c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_forward.go",
+      "sha256": "fa68b3a8152069e583ed09e4b4ede4d4db5acd8e62710c8d3a6b38bbd16a7ae9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_journal.go",
+      "sha256": "01a42b9f7ac63253c18b1dc9ed8e1d1d233113638afae66726c83a21d81ca001"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_windows_test.go",
+      "sha256": "364d652df6655fd62eefb4e9044e70527b08b3cd358b3d56b4ea3db19ef402f5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_files.go",
+      "sha256": "b7992efd2294807804418aa40182d8176db68b71232c02baea57e30a77c7d124"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_mysql_test.go",
+      "sha256": "a4bf8da29ac06bb664bf1bc7f56dc41af9149055c4eea144d9475cb122f09992"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup_test.go",
+      "sha256": "806fe714f22ca7000240517264d5904336a7262dbf2f894cd3660d69d1bdd4a5"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_local_cleanup.go",
+      "sha256": "0bfc44cabfb0d7be8f8ee1f1b8f46100e3fbad0fa1e0f86d140740b3ff2864a4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "sha256": "20745589541a9800be8ee0e492158d945660a2e6b6733bdfb14e3518c3260bcf"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "sha256": "cfbc7841575877ae2fdffab8035085d557901c91678ebcee7cb146ec662cef62"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_same_task_forward_mysql_test.go",
+      "sha256": "c830af4f43eb2b9a382c87be7f83de82bfbbeae0d092e6f67fe6eb1bd31ca6fa"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_signing_journal_test.go",
+      "sha256": "663b28de0e731e45f260bcf8f1b806d9b3fef1f7e1822621ccffab1831bb2ace"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_signing_journal.go",
+      "sha256": "18893d10b17c0ea71858fd1b84a058e03a42a59e13291be545b0a7f64b4ff18a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_decision_mysql_test.go",
+      "sha256": "64c03bf1719d3583da94679abf7e15ae60ce6e12de59fa281ee05405e211d9fd"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_decision.go",
+      "sha256": "d406001e5cf4183ed2a299506038c0c5691accd60f935ee0caf2a01d2d2b192d"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_decision_test.go",
+      "sha256": "fd54a2e570062f338eeeedfef631aeb82f25a8e964106844c6ab7bd53606d9f6"
+    }
+  ],
+  "command": "go test -mod=readonly -tags systembackup_mysql -p 2 ./internal/systembackupexecution -run '^TestPublicationDecision(CanonicalPreimage|ClockAndStableIdentity|RejectsUnboundProof)$' -count=1 -v -timeout=180s",
+  "test_roots": [
+    "TestPublicationDecisionCanonicalPreimage",
+    "TestPublicationDecisionClockAndStableIdentity",
+    "TestPublicationDecisionRejectsUnboundProof"
+  ],
+  "result": {
+    "status": "PASS",
+    "package_seconds": 1.31,
+    "skipped": 0,
+    "log_sha256": "05e5a0c172c69fcf840c25dde812f399c751a9079b3cdd99c54074f03f28544b"
+  },
+  "scope": "Internal canonical preimage/clock/stable identity/unbound proof components; MySQL-tagged package test sources compile but no SQL test root executes",
+  "cleanup": {
+    "owner": "supervisor-decision-review-20261102",
+    "no_go_compile_link_processes_confirmed": true,
+    "owned_source_cache_tmp_removed": true,
+    "workspace_locator_removed": true
+  },
+  "limitations": [
+    "No actual MySQL roots executed",
+    "No full same-task local cleanup/final/acceptance/catalog/decision success proof",
+    "Source recovery positive evidence producer and its final consumer remain incomplete",
+    "Cross-process decision proof/preimage reconstruction remains unavailable",
+    "No Ready or terminal success enabled",
+    "No site deployment or full page backup acceptance"
+  ],
+  "full_page_acceptance": false
+}
