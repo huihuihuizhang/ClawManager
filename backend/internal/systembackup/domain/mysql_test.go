@@ -16,6 +16,8 @@ import (
 )
 
 type memoryDB struct {
+	sourceQuery                                func(string) (driver.Rows, bool, error) // count/corruption observations only, not an RR model
+	queries                                    []string
 	rollbackDone                               chan struct{} // optional synchronization for cancellation tests
 	castQueries                                int
 	castJSON                                   func(context.Context, string) (string, error) // injected failure/cancellation only; native MySQL tests render JSON
@@ -106,6 +108,12 @@ func (c *memoryConn) table(name string) *Table {
 }
 func one(n int) driver.Rows { return rows([]string{"n"}, []driver.Value{int64(n)}) }
 func (c *memoryConn) QueryContext(ctx context.Context, q string, args []driver.NamedValue) (driver.Rows, error) {
+	if c.s.sourceQuery != nil {
+		c.s.queries = append(c.s.queries, q)
+		if result, handled, err := c.s.sourceQuery(q); handled {
+			return result, err
+		}
+	}
 	switch {
 	case q == "SELECT CAST(? AS JSON)":
 		c.s.castQueries++

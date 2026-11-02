@@ -243,6 +243,10 @@ func capture(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Con
 }
 
 func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), sourceChecks ...func() error) (Snapshot, error) {
+	return captureWithCatalogMode(ctx, db, limits, check, readCatalog, false, sourceChecks...)
+}
+
+func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, check func(*sql.Conn) error, readCatalog func(context.Context, queryer, func() error) ([]Table, error), countEmpty bool, sourceChecks ...func() error) (Snapshot, error) {
 	var authorize func() error
 	if len(sourceChecks) > 1 {
 		return Snapshot{}, ErrIsolation
@@ -286,6 +290,31 @@ func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check fu
 		}
 	}
 	result := Snapshot{Version: Version}
+	var counts map[string]uint64
+	if countEmpty {
+		var counted []Table
+		for _, t := range tables {
+			if _, ok := selected[t.Name]; ok {
+				counted = append(counted, t)
+			} else if !external[t.Name] && (strings.HasPrefix(t.Name, "user_") || strings.HasPrefix(t.Name, "enterprise_auth_") || strings.HasPrefix(t.Name, "instance_") || strings.HasPrefix(t.Name, "runtime_") || strings.HasPrefix(t.Name, "openclaw_") || strings.HasPrefix(t.Name, "workbuddy_") || strings.HasPrefix(t.Name, "team_") || strings.HasPrefix(t.Name, "skill_") || strings.HasPrefix(t.Name, "chat_")) {
+				return Snapshot{}, ErrSchema
+			}
+		}
+		counts, err = captureSourceRowCounts(ctx, tx, counted, authorize)
+		if err != nil {
+			return Snapshot{}, err
+		}
+		// COUNT has acquired transaction-duration MDL on every selected table.
+		// Refuse DDL between the original catalog and COUNT, including empty
+		// tables whose data SELECT will be omitted. Never adopt a new shape.
+		locked, e := readCatalog(ctx, tx, authorize)
+		if e != nil {
+			return Snapshot{}, e
+		}
+		if !sameSourceCatalog(tables, locked) {
+			return Snapshot{}, ErrSchema
+		}
+	}
 	var byteCount, rowCount int64
 	for _, t := range tables {
 		if _, ok := selected[t.Name]; !ok {
@@ -296,6 +325,16 @@ func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check fu
 		}
 		if t.Engine != "InnoDB" || len(t.PrimaryKey) == 0 || len(t.Columns) == 0 {
 			return Snapshot{}, ErrSchema
+		}
+		if countEmpty {
+			n, ok := counts[t.Name]
+			if !ok {
+				return Snapshot{}, ErrSchema
+			}
+			if n == 0 {
+				result.Tables = append(result.Tables, t)
+				continue
+			}
 		}
 		var cols, pk []string
 		for _, c := range t.Columns {
@@ -357,6 +396,9 @@ func captureWithCatalog(ctx context.Context, db *sql.DB, limits Limits, check fu
 		rows.Close()
 		if err != nil {
 			return Snapshot{}, ErrDatabase
+		}
+		if countEmpty && uint64(len(t.Rows)) != counts[t.Name] {
+			return Snapshot{}, ErrIsolation
 		}
 		result.Tables = append(result.Tables, t)
 	}

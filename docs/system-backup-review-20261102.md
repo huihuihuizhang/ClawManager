@@ -54,3 +54,7 @@ D 的 `system-backup-d-controller-candidate.py` 已独立检查并运行8项测�
 C 新增 late-seal/absence 检查已在另一个冻结快照独立回归，`TestPublicationCompleteCleanupRejectsIncompleteHandles|TestPublicationLocal.*|TestPublicationNativeCleanup.*` 全部通过，包耗时6.490s。Windows用例在持有外来cipher的真实独占字节锁时，执行本轮自有文件删除和最终absence检查并保留外来文件，证明absence扫描不读取外来cipher；不把Windows上无效的chmod当作读访问拒绝证明。此处仍是组件证据，不能代替尚未通过的C实际SQL清理正向链。
 
 D 的独占Kubernetes MySQL诊断入口已独立静态审查，默认使用现场真实私库固定digest；长连接PF/Ready不继承普通25秒HTTP请求超时，仍保留自身有界等待。审核者运行10项本地mock全部通过，Bash入口及A三个关联Bash脚本语法检查通过。mock覆盖原测试失败码保留、精确owner/UID变化拒绝删除、原子UID删除前置条件、清理错误继续擦除本轮本地秘密及长短请求超时分离。该工具仅为新随机namespace中的独占fixture，未连接集群，未证明镜像内OpenSSL可用或真实SAN/TLS/页面成功。
+
+B 冻结六文件在A/B/C组合快照中通过整个domain包回归（8.565s）；新增MySQL五项真实专项全部通过（2.25s），包括全snapshot差分、同RR并发插入/更新/删除、COUNT保留MDL及rollback释放、COUNT前DDL拒绝和有限SELECT撤销拒绝。随机schema和账号已独立确认不存在。其他未设置其专属fixture环境的native恢复/worker用例仍为SKIP，未认定通过。原始日志SHA256为 `55dd273db952b367e62642331512be46382d3a4c89af947f648dd0481e4b18d2`。
+
+同一冻结A/B/C快照的原窗口复测仍失败：`TestPublicationOriginalLocalCleanupSameTaskMySQL` 193.42s，包198.455s；数据库160次key-check累计28.1627152s，最后原key/context/source deadline逾期2.129ms。前序七个worker通过，未进入发布或SQL本地清理，不能将更多key-check解释为完整采集成功。A/B优化按保持当前读/权限/快照语义的窄范围回归审核，不宣称已解决原30秒。完整源码pins与失败记录见 `evidence/supervisor-original-window-review-20261102-r2.json`。公共C的SQL删除实现继续保留未验收状态，不随此性能切片提交；后续正常最终验证、acceptance/catalog和真实部署也仍未完成。

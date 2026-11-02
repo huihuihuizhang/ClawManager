@@ -346,6 +346,10 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 	if p.recheck(ctx, tx, guard, bound, locked, now) != nil {
 		return kms.ErrPermission
 	}
+	// The first full recheck above acquired both exact provider rows in the
+	// existing capability -> issuer-file -> mapping order. Only subsequent
+	// checks in THIS original transaction may batch their CURRENT row reads.
+	providerRows := &heldProviderPermitRows{ctx: ctx, tx: tx, issue: p, guard: guard, authority: a, capability: p.capability, source: p.capability.pin.Source, mapping: cfg.Binding.ConfigRef}
 	if newPermit {
 		if _, err = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_evidence(public_id,owner_target_type,owner_target_public_id,evidence_type,storage_state,inline_payload,content_checksum,content_size_bytes,media_type,encryption,redaction_classification,observed_health,expires_at) VALUES (?,'backup',?,'diagnostic','inline',?,?,?,'application/json','none','internal','healthy',?)`, id, a.TaskPublicID, raw, checksum, size, expires); err != nil {
 			return kms.ErrPermission
@@ -380,7 +384,7 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 			break
 		}
 	}
-	change := &issuedPermitReferenceChange{issue: p, tx: tx, guard: guard, bound: bound, locked: locked, reference: r, until: lease.Until}
+	change := &issuedPermitReferenceChange{issue: p, tx: tx, guard: guard, bound: bound, locked: locked, reference: r, until: lease.Until, providerRows: providerRows}
 	if state == reg.ReferencePlanned {
 		err = bound.RetainPlanned(ctx, change)
 	} else {
@@ -398,7 +402,7 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		}
 	}
 	next("Stage.RegistryTail")
-	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheck(ctx, tx, guard, bound, locked, now) != nil {
+	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheckRows(ctx, tx, guard, bound, locked, now, providerRows) != nil {
 		return kms.ErrPermission
 	}
 	p.id = id
@@ -408,13 +412,14 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 }
 
 type issuedPermitReferenceChange struct {
-	issue     *PreparedProviderPermitIssue
-	tx        *sql.Tx
-	guard     *c.ExecutionAuthorityGuard
-	bound     *reg.Bound
-	locked    reg.LockedSnapshot
-	reference reg.Reference
-	until     time.Time
+	issue        *PreparedProviderPermitIssue
+	tx           *sql.Tx
+	guard        *c.ExecutionAuthorityGuard
+	bound        *reg.Bound
+	locked       reg.LockedSnapshot
+	reference    reg.Reference
+	until        time.Time
+	providerRows *heldProviderPermitRows
 }
 
 func (p *issuedPermitReferenceChange) Reference() reg.Reference { return p.reference }
@@ -425,10 +430,14 @@ func (p *issuedPermitReferenceChange) Recheck(ctx context.Context, view reg.SQLR
 	if view != p.tx || !reg.SameSnapshotFacts(locked.Facts(), p.locked.Facts()) || !now.Before(p.until) {
 		return kms.ErrPermission
 	}
-	return p.issue.recheck(ctx, p.tx, p.guard, p.bound, locked, now)
+	return p.issue.recheckRows(ctx, p.tx, p.guard, p.bound, locked, now, p.providerRows)
 }
 
-func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time) (resultErr error) {
+func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time) error {
+	return p.recheckRows(ctx, tx, guard, bound, locked, now, nil)
+}
+
+func (p *PreparedProviderPermitIssue) recheckRows(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time, rows *heldProviderPermitRows) (resultErr error) {
 	cost := startProviderPermitTimer(ctx, "Recheck")
 	defer func() { cost.finish(resultErr != nil) }()
 	segment := startProviderPermitTimer(ctx, "Recheck.GuardAndRevocation")
@@ -441,17 +450,30 @@ func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, g
 		return kms.ErrPermission
 	}
 	next("Recheck.Capability")
-	if p.capability.Recheck(ctx, tx, locked, now) != nil {
-		return kms.ErrPermission
+	var raw, sig []byte
+	if rows == nil {
+		if p.capability.Recheck(ctx, tx, locked, now) != nil {
+			return kms.ErrPermission
+		}
+	} else {
+		next("Recheck.CurrentRows")
+		evidence, currentRaw, currentSig, err := rows.read(ctx, tx, p, guard)
+		if err != nil || p.capability.recheckEvidence(ctx, locked.Facts(), now, evidence) != nil {
+			return kms.ErrPermission
+		}
+		raw, sig = currentRaw, currentSig
 	}
 	next("Recheck.IssuerGrant")
 	if p.grantProof.recheck(ctx, p.issuer.cfg, now) != nil {
 		return kms.ErrPermission
 	}
 	next("Recheck.Mapping")
-	raw, sig, err := (SQLOriginalReader{}).RecheckOriginal(ctx, tx, p.scope.Input.Authority.InstallationID, p.issuer.cfg.Binding.ConfigRef)
-	if err != nil {
-		return kms.ErrPermission
+	if rows == nil {
+		var err error
+		raw, sig, err = (SQLOriginalReader{}).RecheckOriginal(ctx, tx, p.scope.Input.Authority.InstallationID, p.issuer.cfg.Binding.ConfigRef)
+		if err != nil {
+			return kms.ErrPermission
+		}
 	}
 	if p.recheckMapping(raw, sig, now) != nil {
 		return kms.ErrPermission

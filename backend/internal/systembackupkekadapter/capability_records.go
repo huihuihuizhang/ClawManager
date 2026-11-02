@@ -113,11 +113,18 @@ func readCapabilityEvidence(ctx context.Context, view reg.SQLReadView, installat
 	var hash string
 	var size uint64
 	err := view.QueryRowContext(ctx, `SELECT inline_payload,content_checksum,content_size_bytes,expires_at FROM system_backup_v2_evidence WHERE public_id=? AND owner_target_type='system' AND owner_target_public_id=? AND evidence_type='capability_snapshot' AND storage_state='inline' AND observed_health='healthy' AND encryption='none'`+suffix, pin.Source.RecordID, installation).Scan(&e.raw, &hash, &size, &e.until)
-	h := sha256.Sum256(e.raw)
-	if err != nil || len(e.raw) == 0 || len(e.raw) > 8192 || uint64(len(e.raw)) != size || hash != hex.EncodeToString(h[:]) || e.until.IsZero() {
+	if err != nil || validateCapabilityEvidenceRow(e, hash, size) != nil {
 		return capabilityEvidence{}, admission.ErrCandidate
 	}
 	return e, nil
+}
+
+func validateCapabilityEvidenceRow(e capabilityEvidence, hash string, size uint64) error {
+	h := sha256.Sum256(e.raw)
+	if len(e.raw) == 0 || len(e.raw) > 8192 || uint64(len(e.raw)) != size || hash != hex.EncodeToString(h[:]) || e.until.IsZero() {
+		return admission.ErrCandidate
+	}
+	return nil
 }
 
 func authenticateProviderCapability(e capabilityEvidence, pin ProviderCapabilityPin, binding reg.Binding, operation kms.Operation, now time.Time) (ProviderCapabilityRecord, error) {
@@ -266,11 +273,25 @@ func (p *sqlPreparedCapability) Recheck(ctx context.Context, view reg.SQLReadVie
 	return p.recheck(ctx, view, locked.Facts(), now)
 }
 func (p *sqlPreparedCapability) recheck(ctx context.Context, view reg.SQLReadView, facts reg.Snapshot, now time.Time) error {
-	if p == nil || ctx == nil || ctx.Err() != nil || now.IsZero() || facts.InstallationID != p.record.Facts.Binding.InstallationID || facts.Database != p.database || now.Before(p.record.NotBefore) || !now.Before(p.until) {
+	if p.recheckBounds(ctx, facts, now) != nil {
 		return admission.ErrCandidate
 	}
 	e, err := readCapabilityEvidence(ctx, view, facts.InstallationID, p.pin, true)
-	if err != nil || !bytes.Equal(e.raw, p.evidence.raw) || !e.until.Equal(p.evidence.until) {
+	if err != nil {
+		return admission.ErrCandidate
+	}
+	return p.recheckEvidence(ctx, facts, now, e)
+}
+
+func (p *sqlPreparedCapability) recheckBounds(ctx context.Context, facts reg.Snapshot, now time.Time) error {
+	if p == nil || ctx == nil || ctx.Err() != nil || now.IsZero() || facts.InstallationID != p.record.Facts.Binding.InstallationID || facts.Database != p.database || now.Before(p.record.NotBefore) || !now.Before(p.until) {
+		return admission.ErrCandidate
+	}
+	return nil
+}
+
+func (p *sqlPreparedCapability) recheckEvidence(ctx context.Context, facts reg.Snapshot, now time.Time, e capabilityEvidence) error {
+	if p.recheckBounds(ctx, facts, now) != nil || !bytes.Equal(e.raw, p.evidence.raw) || !e.until.Equal(p.evidence.until) {
 		return admission.ErrCandidate
 	}
 	// Prepare already authenticated the complete signed immutable document.

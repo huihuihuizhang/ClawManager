@@ -1,0 +1,289 @@
+{
+  "schema_version": "supervisor-original-window-review.v2",
+  "recorded_at": "2026-11-02T02:51:30.2544878Z",
+  "classification": "Independent frozen A+B+C native failure under unchanged original 30-second window; no positive local SQL-cleanup or page acceptance",
+  "source": {
+    "base_commit": "951f4c517e0584d6ef1ee5424c1edd41f97c9f28",
+    "overlays": [
+      {
+        "path": "backend/internal/systembackupkekadapter/capability_records.go",
+        "sha256": "3b39c75d9af39c420ee9dbb102bc5e7c51e9df590ae43bb8d37c0f83960c5e03"
+      },
+      {
+        "path": "backend/internal/systembackupkekadapter/provider_permit_issuer.go",
+        "sha256": "93551f8fa72b6d61ba80e5f3458cfce38c917efd4c3c0fd674d0ef3bb8fed8b3"
+      },
+      {
+        "path": "backend/internal/systembackupkekadapter/provider_permit_current_rows.go",
+        "sha256": "c2291d0cb91585de6abfed4f8d4b3d4ab6c0b5d34a38c2a210ad0d02873ca570"
+      },
+      {
+        "path": "backend/internal/systembackupkekadapter/provider_permit_current_rows_test.go",
+        "sha256": "71ef7af98a60ef6ccc3cd562875ed79257b46d2ddf5b660ae9c5b538469891bf"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/mysql.go",
+        "sha256": "f6afab5b71e41e3838d42de0bc16db757a6d09b4a77863428b2bb0e24c62637f"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/mysql_test.go",
+        "sha256": "b0e246800970d27d584eb92e3a82029895090833e74d05209c1b5eb5b5ce9f12"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/source_table_grants.go",
+        "sha256": "8e8af8a6d44c218b532e3b6cad6c9840c3d62f90a0e2c0db57a7348e5d013218"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/source_row_counts.go",
+        "sha256": "bb31e5a18c8e5b81d984330861d6b3ae851c14729c9ab5ec17edfa9dbdb450cc"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/source_row_counts_test.go",
+        "sha256": "9e423c196ab10116ab318b13913942747a7f14930607cb1897472bed907e0f3c"
+      },
+      {
+        "path": "backend/internal/systembackup/domain/source_row_counts_mysql_test.go",
+        "sha256": "60ee49df9bb119ed889ee9f458c8d795a05901c28466560d7295239c023fe27d"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/production_same_task_mysql_test.go",
+        "sha256": "46a8ef3a57e50a8d6223b9f27ccac9191cffbdd163381fe394767644f29770cb"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/a_permit_native_diagnostic_test.go",
+        "sha256": "ab3fb1ba83e1c2c2334b80f3292d585a6ae3cbb594c9dfa79bd1a8b62edbd123"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup.go",
+        "sha256": "0bfc44cabfb0d7be8f8ee1f1b8f46100e3fbad0fa1e0f86d140740b3ff2864a4"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_mysql_test.go",
+        "sha256": "a4bf8da29ac06bb664bf1bc7f56dc41af9149055c4eea144d9475cb122f09992"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_test.go",
+        "sha256": "806fe714f22ca7000240517264d5904336a7262dbf2f894cd3660d69d1bdd4a5"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_files.go",
+        "sha256": "b7992efd2294807804418aa40182d8176db68b71232c02baea57e30a77c7d124"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_local_cleanup_files_windows_test.go",
+        "sha256": "364d652df6655fd62eefb4e9044e70527b08b3cd358b3d56b4ea3db19ef402f5"
+      },
+      {
+        "path": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+        "sha256": "20745589541a9800be8ee0e492158d945660a2e6b6733bdfb14e3518c3260bcf"
+      }
+    ]
+  },
+  "a_current_rows": {
+    "package_seconds": 9.027,
+    "exit_code": 0,
+    "raw_log_sha256": "a4348a943fe61c8e31e82ba99d7c86117ee1ceedc44d3139518c1aa69fe469ba",
+    "owned_schema_absence_independently_observed": true,
+    "native_case_seconds": 0.58,
+    "native_cases": 14
+  },
+  "b_exact_counts": {
+    "owned_schema_and_account_absence_independently_observed": true,
+    "package_seconds": 8.565,
+    "exit_code": 0,
+    "raw_log_sha256": "55dd273db952b367e62642331512be46382d3a4c89af947f648dd0481e4b18d2",
+    "other_opt_in_native_cases": "not configured; skipped, not accepted",
+    "native_case_seconds": 2.25,
+    "native_cases": 5
+  },
+  "original_chain": {
+    "case_seconds": 193.42,
+    "raw_log": {
+      "path": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab\\abc-original-window-review.log",
+      "sha256": "983c3445628f0b0f4e53ee6782ffbd35d4f50f43d5c8307cce465e13030743fc"
+    },
+    "owned_schema": "ad_d_six_4b9bcf0797b6aa23",
+    "key_check_failures": 1,
+    "task": "sbk_078f2a8d-6e96-4c97-81a8-39ce6dafb74b",
+    "exit_code": 1,
+    "key_remaining_us": -2129,
+    "key_check_segments": {
+      "Authorize": {
+        "Calls": 160,
+        "Failures": 1,
+        "ElapsedNanos": 27344238400,
+        "MaxNanos": 627450300,
+        "LastNanos": 37603200
+      },
+      "SQLBind": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 2318106000,
+        "MaxNanos": 82313400,
+        "LastNanos": 12331700
+      },
+      "KeyStateSQL": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 249981200,
+        "MaxNanos": 14634700,
+        "LastNanos": 1027200
+      },
+      "ExecutionInput": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 768065600,
+        "MaxNanos": 22494600,
+        "LastNanos": 2231700
+      },
+      "OriginalPlan": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 3582064900,
+        "MaxNanos": 153687300,
+        "LastNanos": 14069100
+      },
+      "OriginalPart": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 564942500,
+        "MaxNanos": 12338200,
+        "LastNanos": 2700300
+      },
+      "WorkerMounts": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 946289400,
+        "MaxNanos": 18654400,
+        "LastNanos": 3207700
+      },
+      "WorkerSecurity": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 748785900,
+        "MaxNanos": 28030300,
+        "LastNanos": 4566300
+      },
+      "WorkerProcess": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 335990900,
+        "MaxNanos": 18253700,
+        "LastNanos": 1761400
+      },
+      "ProviderQualification": {
+        "Calls": 160,
+        "Failures": 1,
+        "ElapsedNanos": 2066341000,
+        "MaxNanos": 54860100,
+        "LastNanos": 4820700
+      },
+      "GuardTail": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 803385100,
+        "MaxNanos": 39882700,
+        "LastNanos": 3019800
+      },
+      "Dependencies": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 178866800,
+        "MaxNanos": 3942800,
+        "LastNanos": 520200
+      },
+      "OriginalWorker": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 270237600,
+        "MaxNanos": 18402300,
+        "LastNanos": 1128400
+      },
+      "TaskLocator": {
+        "Calls": 160,
+        "Failures": 0,
+        "ElapsedNanos": 205024900,
+        "MaxNanos": 33056200,
+        "LastNanos": 512600
+      },
+      "RecordObservation": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 457657000,
+        "MaxNanos": 14783200,
+        "LastNanos": 1736400
+      },
+      "ObservationGuard": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 753416800,
+        "MaxNanos": 18014500,
+        "LastNanos": 2616000
+      },
+      "PermitStage": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 6688921100,
+        "MaxNanos": 123842200,
+        "LastNanos": 28013400
+      },
+      "PlanTail": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 402822000,
+        "MaxNanos": 9510700,
+        "LastNanos": 1229000
+      },
+      "FinalGuard": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 749603900,
+        "MaxNanos": 26588500,
+        "LastNanos": 2555700
+      },
+      "Commit": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 435028400,
+        "MaxNanos": 7933000,
+        "LastNanos": 3864200
+      },
+      "Collectors": {
+        "Calls": 159,
+        "Failures": 0,
+        "ElapsedNanos": 4304190700,
+        "MaxNanos": 204023800,
+        "LastNanos": 11542700
+      }
+    },
+    "segment_warning": "Parent and child scopes overlap; do not sum",
+    "test": "TestPublicationOriginalLocalCleanupSameTaskMySQL",
+    "rejection": "database-using-key-check original key/context/source deadline",
+    "positive_sql_cleanup_verified": false,
+    "reached_publication": false,
+    "database_elapsed_us": 28680929,
+    "key_check_client_seconds": 28.1627152,
+    "package_seconds": 198.455,
+    "key_check_calls": 160
+  },
+  "physical_restore_independently_verified": false,
+  "full_page_acceptance": false,
+  "deployment_changed": false,
+  "sql_readback": {
+    "source_resumed_after_collectors_stopped": true,
+    "maintenance_gate": "idle",
+    "collectors_stopped": true,
+    "maintenance_gate_owner_present": false,
+    "writers": 4,
+    "row_version": 8,
+    "external_actions": 0,
+    "app_gate": "idle",
+    "source_resumed": true,
+    "app_gate_owner_present": false,
+    "failure_category": "runner_failed",
+    "paused": 4,
+    "status": "failed",
+    "claim_owner_present": false,
+    "resumed": 4
+  }
+}
