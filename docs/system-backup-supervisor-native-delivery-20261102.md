@@ -1,5 +1,7 @@
 # 审核者交付：zhanghui08 隔离 Linux 原窗口诊断
 
+用户已执行本页修复原生入口：真正运行ELF但原30秒数据库采集仍失败（139次HTTP key-check累计28.38秒，test208.56秒）；隔离fixture和交付清理均报告成功。完整用户结果见evidence/supervisor-user-native-config-result-20261102.json。测试结束后本地51181049归档已按原摘要删除，下面上传命令作为已执行历史保留，当前不能重跑或上传已删除归档。下一步读取已保留的lfBeHa70原生日志并修复实际调用瓶颈，不重跑startup-only、不使用本文历史命令更新现场镜像。
+
 首轮先以startup-only探针定位了 InnoDB `io_setup()` EAGAIN；AIO OFF修复的用户成功结果见下一段。原生执行入口见末节，使用单独固定的875e3960探针，不再调用归档内旧探针。前半节保留首轮交付来源和用户已执行命令，不能将其当作最新启动方案。
 
 用户现已回传修复探针`startup-verified`：8.4.8、TLSv1.3/TLS_AES_128_GCM_SHA256、实际AIO OFF、原退出/诊断/清理均0且residuals空，native_started=false。记录见`evidence/supervisor-kube-startup-success-user-report-20261102.json`。现在可按末节给出的固定三文件命令进入原生诊断；此成功仅解决隔离数据库启动，未证明原30秒窗口、C正式发布或页面成功。

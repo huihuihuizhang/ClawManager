@@ -1,0 +1,206 @@
+{
+  "schema_version": "supervisor-user-native-and-config-report.v1",
+  "source": "User supplied console output; supervisor did not SSH, execute remote SQL or kubectl",
+  "attachment_sha256": "9ba0493ee56a1193fc4d81567b133edfccb513e8b3af74e1a5df4685811aee9b",
+  "observe_exit": 0,
+  "configuration_observation": {
+    "schema_version": "d-v2-config-observe.v1",
+    "read_only": true,
+    "context": "kubernetes-admin@kubernetes",
+    "namespace": "clawmanager-zhanghui08-system",
+    "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "deployment_uid": "27916932-fc61-432c-b515-081f18db34a8",
+    "pod": "mysql-74bd777b8-j85z7",
+    "pod_uid": "6d314752-86e1-41ce-9831-af03179dcf3b",
+    "container": "mysql",
+    "server_uuid": "f1f5f76a-95f5-11f1-b08e-366835b4a029",
+    "server_version": "8.4.8",
+    "database": "clawmanager",
+    "tables": {
+      "system_backup_v2_installation_state": {
+        "present": false,
+        "columns": {
+          "active_config_version": false,
+          "last_effective_enabled": false,
+          "matrix_key": false,
+          "origin_installation_id": false,
+          "row_version": false
+        },
+        "missing_columns": [
+          "active_config_version",
+          "last_effective_enabled",
+          "matrix_key",
+          "origin_installation_id",
+          "row_version"
+        ]
+      },
+      "system_backup_v2_configs": {
+        "present": false,
+        "columns": {
+          "canonical_config_json": false,
+          "config_sha256": false,
+          "config_size_bytes": false,
+          "enabled": false,
+          "origin_installation_id": false,
+          "version": false
+        },
+        "missing_columns": [
+          "canonical_config_json",
+          "config_sha256",
+          "config_size_bytes",
+          "enabled",
+          "origin_installation_id",
+          "version"
+        ]
+      },
+      "system_backup_installation_kek_authority": {
+        "present": false,
+        "columns": {
+          "identity_hash": false,
+          "installation_id": false,
+          "registry_version": false,
+          "signature": false,
+          "signed_record": false
+        },
+        "missing_columns": [
+          "identity_hash",
+          "installation_id",
+          "registry_version",
+          "signature",
+          "signed_record"
+        ]
+      },
+      "system_backup_v2_kek_bindings": {
+        "present": false,
+        "columns": {
+          "identity_hash": false,
+          "installation_id": false,
+          "registry_version": false
+        },
+        "missing_columns": [
+          "identity_hash",
+          "installation_id",
+          "registry_version"
+        ]
+      },
+      "system_backup_v2_kek_admissions": {
+        "present": false,
+        "columns": {
+          "config_sha256": false,
+          "config_version": false,
+          "installation_id": false
+        },
+        "missing_columns": [
+          "config_sha256",
+          "config_version",
+          "installation_id"
+        ]
+      },
+      "system_backup_v2_evidence": {
+        "present": false,
+        "columns": {
+          "encryption": false,
+          "evidence_type": false,
+          "inline_payload": false,
+          "observed_health": false,
+          "owner_target_public_id": false,
+          "owner_target_type": false,
+          "storage_state": false
+        },
+        "missing_columns": [
+          "encryption",
+          "evidence_type",
+          "inline_payload",
+          "observed_health",
+          "owner_target_public_id",
+          "owner_target_type",
+          "storage_state"
+        ]
+      }
+    },
+    "observations": [],
+    "skipped": {
+      "installation_rows": "missing_required_columns",
+      "active_config_rows": "missing_required_columns",
+      "kek_mapping_count": "missing_required_columns",
+      "kek_binding_count": "missing_required_columns",
+      "kek_admission_count": "missing_required_columns",
+      "capability_snapshot_count": "missing_required_columns"
+    },
+    "row_limit_per_installation_or_config_group": 11,
+    "rows_may_be_truncated": {
+      "installation": false,
+      "config": false
+    },
+    "generate_unwrap_classification": "not_authenticated_or_classified; capability_snapshot_count is candidate existence only",
+    "authenticated_config": false,
+    "tls_verified": false,
+    "permissions_verified": false,
+    "coverage_verified": false,
+    "first_installation_decision": "requires_owner_review; no configuration or task created"
+  },
+  "configuration_conclusion": "All six named tables reported absent in the observed clawmanager database; this is not proof of deployment migration state for every table or account privilege",
+  "native_source_commit": "51181049e97e4ff3946e75b6c1568dfe2e00b1a1",
+  "fixture_source_commit": "875e3960b9b67cc5108b1aad23936214b9984319",
+  "fixture": {
+    "scope": "isolated fixture DATA; not page or production acceptance",
+    "stage": "diagnostic-finished",
+    "mode": "native-diagnostic",
+    "native_started": true,
+    "namespace": "sbk-apermit-660dd7159c0c016ecc81",
+    "namespace_uid": "3e6ca64e-5116-4d3c-93cd-681d73fa8d9d",
+    "owner": "660dd7159c0c016ecc819f7101f38e77",
+    "server_version": "8.4.8",
+    "observed_image_ids": {
+      "mysql": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "tls": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977"
+    },
+    "server_uuid": "27f80168-d682-11f1-a06d-a67aabae4b2d",
+    "session_tls": {
+      "Ssl_cipher": "TLS_AES_128_GCM_SHA256",
+      "Ssl_version": "TLSv1.3"
+    },
+    "diagnostics_exit_code": 0,
+    "fixture_configuration": {
+      "innodb_use_native_aio": "OFF"
+    },
+    "observed_innodb_use_native_aio": "OFF",
+    "production_equivalent_performance": false,
+    "original_exit_code": 1,
+    "cleanup_exit_code": 0,
+    "residuals": [],
+    "full_acceptance": false
+  },
+  "native_test": "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+  "native_test_status": "FAIL",
+  "native_test_seconds": 208.56,
+  "database_failure": {
+    "stage": "database-using-key-check",
+    "sentinel": "database_rejected",
+    "context": "deadline",
+    "key_remaining_us": -1400,
+    "context_remaining_us": -1401,
+    "source_remaining_us": -1401,
+    "elapsed_us": 28359550,
+    "callback_entered": true,
+    "callback_succeeded": false,
+    "key_check": {
+      "Calls": 139,
+      "HTTPAttempts": 139,
+      "Failures": 1,
+      "ElapsedNanos": 28382927694,
+      "MaxNanos": 273822829,
+      "LastNanos": 2073435
+    }
+  },
+  "failed_fixture_task": "sbk_02d13ec6-3be4-4829-9c2c-1f5a34f909ea",
+  "failed_fixture_schema": "ad_d_six_de6f3661e12fe84b",
+  "review_logs": "/tmp/clawmanager-native-07407aaca722415ebecf9265106c0ac0/clawmanager-native-logs-51181049.lfBeHa70",
+  "entry_exit": 1,
+  "delivery_cleanup_exit": 0,
+  "remote_archive_erasure": "Entry reported successful cleanup; no separate remote filesystem inspection by supervisor",
+  "local_archive_erasure": "Exact full path, regular non-reparse file and original SHA256 checked; archive removed and absence confirmed after native test ended",
+  "reached_publication": false,
+  "full_page_acceptance": false,
+  "production_image_changed": false
+}
