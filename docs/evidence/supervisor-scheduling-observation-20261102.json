@@ -28,6 +28,23 @@
   "scheduler_fit": "not_verified",
   "planned_writer_releases_credited": 0,
   "observations_atomic": false,
+  "latest_post_cleanup_user_observation": {
+    "started_at": "2026-11-02T08:59:10.294294+00:00",
+    "finished_at": "2026-11-02T08:59:12.989455+00:00",
+    "user_reported_pod_cleanup_before_reobservation": true,
+    "cleanup_performed_by_supervisor": false,
+    "nodes": [
+      {"name": "k8s-master", "nonterminal": 104, "nonterminal_headroom": 6, "all_bound": 111, "succeeded": 7, "terminating_bound": 7, "resource_version": "124444853"},
+      {"name": "node1", "nonterminal": 62, "nonterminal_headroom": 48, "all_bound": 81, "succeeded": 19, "terminating_bound": 15, "resource_version": "124442678"}
+    ],
+    "node_allocatable_pods_each": 110,
+    "nodes_ready_without_taints_or_pressures": true,
+    "claim_identity_and_topology_unchanged": true,
+    "conservative_script_status": "BLOCKED_OBSERVED_SLOTS_OR_NODE",
+    "status_does_not_prove_actual_scheduler_or_kubelet_refusal": true,
+    "scheduler_fit": "not_verified",
+    "observations_atomic": false
+  },
   "required_follow_up": ["original data node and PV identity on data Jobs", "staging hostPath node identity on publisher", "place control processes only after node/resource/volume assessment", "fresh after-stop and before-publish capacity observations"],
   "node_labels_or_business_pods_modified": false,
   "full_page_acceptance": false
