@@ -32,18 +32,20 @@ mysql 通过容器内 socket 读取；这不是源库独立 observer 账号或 T
 
 | 文件 | SHA256 |
 | --- | --- |
-| `scripts/system-backup-d-v2-config-observe.py` | `765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c` |
-| `scripts/system-backup-d-v2-config-observe.test.py` | `be16d89b46c2aeea8ba963b43bd86339f283f1c7d7afaa1fc5708881819448ff` |
+| `scripts/system-backup-d-v2-config-observe.py` | `a7a5fa84887842d285e4d397de25db6cd6778d799b9c36782620b2f08e63d660` |
+| `scripts/system-backup-d-v2-config-observe.test.py` | `6a1c8105a13e5f33c02207a5f05e5a51a1ab46f8a77712fbcccc5325d865ebbb` |
 
-根审核从上述冻结快照独立运行15项 mock，全部PASS，耗时0.030秒；原始测试日志SHA256为 `c32c66994a16cd5eb39959eb391b5b87af06132404dd8d88978e88ef13837e3e`。覆盖完整只读观察、缺表/列、canonical缺列、namespace/owner/Pod UID/container重启拒绝、数据库身份变化、秘密字段注入拒绝、认证缺项不回显、无默认/login-path回退、超时有界。没有执行真实 SQL、kubectl 或网络；根审核已准确删除测试临时树，无构建产物。mock PASS不代表现场配置、TLS、权限、coverage或首次安装授权已满足。
+本次修正 typed list 兼容性：旧版 `765b22dd…` 对 list item 强制要求 kind，现场合法的 ReplicaSetList/PodList item 省略 TypeMeta 时会错误拒绝。新版严格检查固定资源路径、父列表 kind/API version 和每项 namespace；item 省略 kind/apiVersion 可用于候选发现，显式错误值仍拒绝；选中后按名称单独 GET ReplicaSet/Pod，严格检查完整 TypeMeta、UID、owner 链和容器身份。没有放宽 namespace UID、owner、Pod UID 或 containerID 检查。拒绝 reason 细化为固定校验点，例如 `replicasetlist_kind_mismatch`、`pod_list_item_api_version_mismatch`、`pod_uid_changed`，不含 raw object/spec/env。
+
+新版已静态 AST 解析通过，新增8项 mock（含子用例），交根审核统一运行；D 未执行测试、真实 SQL、kubectl、网络或构建。旧版根审核15项 mock PASS（0.030秒，日志SHA256 `c32c66994a16cd5eb39959eb391b5b87af06132404dd8d88978e88ef13837e3e`）仅是旧快照历史记录，不是新版验证结果。mock PASS不代表现场配置、TLS、权限、coverage或首次安装授权已满足。
 
 Python 源码小交付已冻结在本机：
 
 ```text
-C:\Users\zhanghui08\Desktop\clawmanager\ClawManager\.tmp-v2-config-observe-delivery-765b22dd\system-backup-d-v2-config-observe.py
+C:\Users\zhanghui08\Desktop\clawmanager\ClawManager\.tmp-v2-config-observe-delivery-a7a5fa84\system-backup-d-v2-config-observe.py
 ```
 
-这是已核验源码副本，不是测试二进制；本次仅补本文，冻结Python和测试文件不修改。
+这是已核验源码副本，不是测试二进制；旧版源码副本不覆盖，新上传应使用本次摘要。
 
 ## 本地 PowerShell 上传
 
@@ -51,8 +53,8 @@ C:\Users\zhanghui08\Desktop\clawmanager\ClawManager\.tmp-v2-config-observe-deliv
 
 ```powershell
 $ErrorActionPreference = 'Stop'
-$ObserveFile = 'C:\Users\zhanghui08\Desktop\clawmanager\ClawManager\.tmp-v2-config-observe-delivery-765b22dd\system-backup-d-v2-config-observe.py'
-$ObserveExpected = '765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c'
+$ObserveFile = 'C:\Users\zhanghui08\Desktop\clawmanager\ClawManager\.tmp-v2-config-observe-delivery-a7a5fa84\system-backup-d-v2-config-observe.py'
+$ObserveExpected = 'a7a5fa84887842d285e4d397de25db6cd6778d799b9c36782620b2f08e63d660'
 if ((Get-FileHash -LiteralPath $ObserveFile -Algorithm SHA256).Hash.ToLowerInvariant() -cne $ObserveExpected) {
   throw '冻结脚本摘要不符；停止上传'
 }
@@ -72,7 +74,7 @@ if ($LASTEXITCODE -ne 0) { throw '上传失败' }
   set -euo pipefail
   cd /tmp/clawmanager-native-07407aaca722415ebecf9265106c0ac0
   printf '%s  %s\n' \
-    '765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c' \
+    'a7a5fa84887842d285e4d397de25db6cd6778d799b9c36782620b2f08e63d660' \
     'system-backup-d-v2-config-observe.py' | sha256sum --check --strict -
   set +e
   python3 -B ./system-backup-d-v2-config-observe.py
@@ -85,4 +87,6 @@ if ($LASTEXITCODE -ne 0) { throw '上传失败' }
 
 退出0表示只读盘点完成，包括正常的missing结果，不表示配置可用或已获bootstrap/coverage授权。退出1表示固定拒绝/读失败，不能据此补造凭据或配置。`authenticated_config`、`tls_verified`、`permissions_verified`、`coverage_verified` 固定为false；`first_installation_decision`明确仍需owner审核。本工具不会根据计数、enabled或hash布尔自动创建配置/任务，也不代替正式准入。
 
-本轮仅文档交付，无远连、SQL、编译或提交；前述现场执行命令由用户自行操作。
+本轮交付兼容性修复、mock 和本文，无远连、SQL、编译或提交；前述现场执行命令由用户自行操作。
+
+根审核随后从上述新摘要的独立源码快照运行23项mock，全部通过（0.098s），日志SHA256为`176ec6ee293fbe50318f5f3594caae5d8a62f6d79c62632028a07d5390487a0c`；临时树已删除，交付副本与新Python摘要相同。测试没有连接集群或执行SQL，新现场盘点仍待用户回传。原`workload_identity_changed`没有留下具体API响应，不能认定现场身份确实变化，也不能认定缺少配置；本次修复了代码中对合法typed list形状的已确认兼容缺陷。该形状及typed collection约定见[Kubernetes官方API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/#collections)。

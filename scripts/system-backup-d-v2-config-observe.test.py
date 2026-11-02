@@ -28,12 +28,13 @@ def owner(kind, name, uid):
 
 
 def obj(kind, name, uid):
-    return {"kind": kind, "metadata": {"namespace": m.NAMESPACE, "name": name, "uid": uid}}
+    return {"apiVersion": "apps/v1" if kind in ("Deployment", "ReplicaSet") else "v1",
+            "kind": kind, "metadata": {"namespace": m.NAMESPACE, "name": name, "uid": uid}}
 
 
 class ObserveTests(unittest.TestCase):
     def setUp(self):
-        self.ns = {"metadata": {"name": m.NAMESPACE, "uid": m.NAMESPACE_UID}}
+        self.ns = {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": m.NAMESPACE, "uid": m.NAMESPACE_UID}}
         self.deployment = obj("Deployment", "mysql", DEPLOY_UID)
         self.deployment["spec"] = {"selector": {"matchLabels": {"app": "mysql"}},
             "template": {"spec": {"containers": [{"name": "mysql", "image": "private/mysql@sha256:" + "a" * 64}]}}}
@@ -56,6 +57,8 @@ class ObserveTests(unittest.TestCase):
             {"kind": "kek_mapping_count", "count": 1}, {"kind": "kek_binding_count", "count": 1},
             {"kind": "kek_admission_count", "count": 1}, {"kind": "capability_snapshot_count", "count": 2}]
         self.calls, self.sql_calls = [], []
+        self.list_overrides = {}
+        self.omit_list_item_type_meta = True
         self.exec_rc = 0
         self.patch = patch.object(m.subprocess, "run", side_effect=self.subprocess)
         self.patch.start()
@@ -94,13 +97,81 @@ class ObserveTests(unittest.TestCase):
             self.assertIn("/namespaces/" + m.NAMESPACE + "/", cmd[1])
             self.assertIn("labelSelector=app%3Dmysql", cmd[1])
             self.assertIn("limit=16", cmd[1])
-            output = {"metadata": {}, "items": [self.rs]}
+            output = {"apiVersion": "apps/v1", "kind": "ReplicaSetList", "metadata": {}, "items": [self.rs]}
         elif cmd[0] == "get" and "/pods?" in cmd[1]:
             self.assertIn("/namespaces/" + m.NAMESPACE + "/", cmd[1])
-            output = {"metadata": {}, "items": [self.pod]}
+            output = {"apiVersion": "v1", "kind": "PodList", "metadata": {}, "items": [self.pod]}
         else:
             self.fail("Unexpected mock command; no external execution allowed")
+        if "items" in output:
+            output = copy.deepcopy(output)
+            if self.omit_list_item_type_meta:
+                for item in output["items"]:
+                    item.pop("kind", None)
+                    item.pop("apiVersion", None)
+            output = self.list_overrides.get(output["kind"], output)
         return SimpleNamespace(returncode=0, stdout=json.dumps(output).encode(), stderr=b"")
+
+    def test_real_typed_lists_omit_item_type_meta_and_selected_objects_are_get(self):
+        report = m.Observer().run()
+        self.assertEqual(report["pod_uid"], POD_UID)
+        first_exec = next(i for i, args in enumerate(self.calls) if "exec" in args)
+        for resource, name in (("replicaset", "mysql-rs"), ("pod", "mysql-rs-pod")):
+            self.assertTrue(any(args[3:] == ["-n", m.NAMESPACE, "get", resource, name, "-o", "json"]
+                                for args in self.calls[:first_exec]))
+
+    def test_explicit_correct_item_type_meta_is_also_accepted(self):
+        self.omit_list_item_type_meta = False
+        self.assertEqual(m.Observer().run()["pod_uid"], POD_UID)
+
+    def test_wrong_parent_type_meta_refuses_before_exec(self):
+        for kind, version, item in (("ReplicaSetList", "apps/v1", self.rs), ("PodList", "v1", self.pod)):
+            for field, value, reason in (("kind", "List", "kind_mismatch"), ("apiVersion", "v2", "api_version_mismatch")):
+                with self.subTest(kind=kind, field=field):
+                    parent = {"kind": kind, "apiVersion": version, "metadata": {}, "items": [copy.deepcopy(item)]}
+                    parent[field] = value
+                    self.list_overrides = {kind: parent}
+                    with self.assertRaises(m.Refused) as error: m.Observer().run()
+                    self.assertEqual(error.exception.reason, kind.lower() + "_" + reason)
+                    self.assertFalse(self.sql_calls)
+
+    def test_explicit_wrong_item_type_meta_refuses_before_exec(self):
+        for kind, version, item in (("ReplicaSetList", "apps/v1", self.rs), ("PodList", "v1", self.pod)):
+            for field, value, reason in (("kind", "Unrelated", "kind_mismatch"), ("apiVersion", "v2", "api_version_mismatch")):
+                with self.subTest(kind=kind, field=field):
+                    changed = copy.deepcopy(item)
+                    changed[field] = value
+                    self.list_overrides = {kind: {"kind": kind, "apiVersion": version, "metadata": {}, "items": [changed]}}
+                    with self.assertRaises(m.Refused) as error: m.Observer().run()
+                    self.assertEqual(error.exception.reason, item["kind"].lower() + "_list_item_" + reason)
+                    self.assertFalse(self.sql_calls)
+
+    def test_list_item_namespace_mismatch_refuses_before_exec(self):
+        changed = copy.deepcopy(self.pod)
+        changed["metadata"]["namespace"] = "other-namespace"
+        self.list_overrides = {"PodList": {"kind": "PodList", "apiVersion": "v1", "metadata": {}, "items": [changed]}}
+        with self.assertRaises(m.Refused) as error: m.Observer().run()
+        self.assertEqual(error.exception.reason, "pod_list_item_namespace_mismatch")
+        self.assertFalse(self.sql_calls)
+
+    def test_selected_single_object_still_requires_type_meta(self):
+        self.pod.pop("apiVersion")
+        with self.assertRaises(m.Refused) as error: m.Observer().run()
+        self.assertEqual(error.exception.reason, "pod_api_version_mismatch")
+        self.assertFalse(self.sql_calls)
+
+    def test_selected_single_object_uid_change_refuses_after_list_discovery(self):
+        self.list_overrides = {"PodList": {"kind": "PodList", "apiVersion": "v1", "metadata": {}, "items": [copy.deepcopy(self.pod)]}}
+        self.pod["metadata"]["uid"] = DEPLOY_UID
+        with self.assertRaises(m.Refused) as error: m.Observer().run()
+        self.assertEqual(error.exception.reason, "pod_uid_changed")
+        self.assertFalse(self.sql_calls)
+
+    def test_raw_listing_resource_paths_are_pinned(self):
+        m.Observer().run()
+        raw = [args[4] for args in self.calls if args[3:4] == ["get"] and args[4].startswith("--raw=")]
+        self.assertEqual(raw, ["--raw=/apis/apps/v1/namespaces/" + m.NAMESPACE + "/replicasets?labelSelector=app%3Dmysql&limit=16",
+                               "--raw=/api/v1/namespaces/" + m.NAMESPACE + "/pods?labelSelector=app%3Dmysql&limit=16"])
 
     def test_complete_metadata_is_read_only_and_not_an_authorization(self):
         report = m.Observer().run()

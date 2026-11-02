@@ -1,0 +1,51 @@
+{
+  "schema_version": "supervisor-kube-startup-success-user-report.v1",
+  "evidence_source": "User-executed pasted Bash output; supervisor did not connect to cluster",
+  "expected_tool_sha256_from_issued_command": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+  "filename_checksum_reported_ok": true,
+  "fixture_report": {
+    "scope": "isolated fixture DATA; not page or production acceptance",
+    "stage": "startup-verified",
+    "mode": "startup-only",
+    "native_started": false,
+    "namespace": "sbk-apermit-d9ee60b88611e60088ee",
+    "namespace_uid": "17f7165c-193a-4410-9604-34b31037335b",
+    "owner": "d9ee60b88611e60088eedc70c0aa3966",
+    "server_version": "8.4.8",
+    "observed_image_ids": {
+      "mysql": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "tls": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977"
+    },
+    "server_uuid": "a7e87348-d67e-11f1-9084-96172e87895f",
+    "session_tls": {
+      "Ssl_cipher": "TLS_AES_128_GCM_SHA256",
+      "Ssl_version": "TLSv1.3"
+    },
+    "diagnostics_exit_code": 0,
+    "fixture_configuration": {
+      "innodb_use_native_aio": "OFF"
+    },
+    "observed_innodb_use_native_aio": "OFF",
+    "production_equivalent_performance": false,
+    "original_exit_code": 0,
+    "cleanup_exit_code": 0,
+    "residuals": [],
+    "full_acceptance": false
+  },
+  "pod_uid": "7eaba33b-5d72-4937-b62d-251aa3ed9745",
+  "remote_logs": "/tmp/clawmanager-startup-only.zZQ7FaBL/logs",
+  "entry_exit": 0,
+  "cleanup_independently_verified_by_supervisor": false,
+  "config_observer": {
+    "expected_sha256": "765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c",
+    "filename_checksum_reported_ok": true,
+    "exit_code": 1,
+    "status": "refused",
+    "reason": "workload_identity_changed",
+    "authentication_or_config_existence_proven": false
+  },
+  "conclusion": "AIO OFF isolated MySQL startup/SAN TLS session and reported cleanup succeeded. Native backup test remains unexecuted. Config observer identity refusal is not evidence of missing configuration.",
+  "next_action": "User runs separately pinned native entry; supervisor fixes typed-list observer compatibility without weakening exact namespace/workload identity checks",
+  "production_image_updated": false,
+  "full_page_acceptance": false
+}

@@ -214,15 +214,30 @@ class Observer:
 
     def namespace(self):
         item = self.get("namespace", NAMESPACE)
+        self.type_meta(item, "Namespace")
         require(item["metadata"]["name"] == NAMESPACE and item["metadata"]["uid"] == NAMESPACE_UID
                 and not item["metadata"].get("deletionTimestamp"), "namespace_identity_changed")
 
-    def metadata(self, item, kind, name=None, uid=None):
-        meta = item["metadata"]
-        require(item.get("kind") == kind and meta.get("namespace") == NAMESPACE and not meta.get("deletionTimestamp"), "workload_identity_changed")
-        require(type(meta.get("name")) is str and re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,252}", meta["name"]), "workload_identity_changed")
-        require(UUID.fullmatch(meta.get("uid", "")), "workload_identity_changed")
-        require((name is None or meta["name"] == name) and (uid is None or meta["uid"] == uid), "workload_identity_changed")
+    def type_meta(self, item, kind, listed=False):
+        version = "apps/v1" if kind in ("Deployment", "ReplicaSet", "ReplicaSetList") else "v1"
+        point = kind.lower() + ("_list_item" if listed else "")
+        require(type(item) is dict, point + "_shape_invalid")
+        # Typed Kubernetes lists can omit their items' TypeMeta. An explicitly
+        # supplied value must still match; single-resource GETs require both.
+        require((listed and "kind" not in item) or item.get("kind") == kind, point + "_kind_mismatch")
+        require((listed and "apiVersion" not in item) or item.get("apiVersion") == version, point + "_api_version_mismatch")
+
+    def metadata(self, item, kind, name=None, uid=None, listed=False):
+        self.type_meta(item, kind, listed)
+        point = kind.lower() + ("_list_item" if listed else "")
+        meta = item.get("metadata")
+        require(type(meta) is dict, point + "_metadata_invalid")
+        require(meta.get("namespace") == NAMESPACE, point + "_namespace_mismatch")
+        require(not meta.get("deletionTimestamp"), point + "_deleting")
+        require(type(meta.get("name")) is str and re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,252}", meta["name"]), point + "_name_invalid")
+        require(type(meta.get("uid")) is str and UUID.fullmatch(meta["uid"]), point + "_uid_invalid")
+        require(name is None or meta["name"] == name, point + "_name_changed")
+        require(uid is None or meta["uid"] == uid, point + "_uid_changed")
         return meta
 
     def owned_by(self, item, kind, name, uid):
@@ -230,10 +245,17 @@ class Observer:
         return len(owners) == 1 and owners[0].get("apiVersion") == "apps/v1" and owners[0].get("kind") == kind and owners[0].get("name") == name and owners[0].get("uid") == uid
 
     def listing(self, resource):
+        require(resource in ("replicasets", "pods"), "unsupported_listing_resource")
+        kind, path = ("ReplicaSet", "/apis/apps/v1/") if resource == "replicasets" else ("Pod", "/api/v1/")
         query = urlencode({"labelSelector": self.selector, "limit": "16"})
-        obj = json.loads(self.command(["get", "--raw=/apis/apps/v1/namespaces/" + NAMESPACE + "/replicasets?" + query]
-            if resource == "replicasets" else ["get", "--raw=/api/v1/namespaces/" + NAMESPACE + "/pods?" + query]))
-        require(not obj.get("metadata", {}).get("continue") and len(obj["items"]) <= 16, "workload_listing_limit")
+        obj = json.loads(self.command(["get", "--raw=" + path + "namespaces/" + NAMESPACE + "/" + resource + "?" + query]))
+        self.type_meta(obj, kind + "List")
+        require(type(obj.get("metadata")) is dict and type(obj.get("items")) is list, kind.lower() + "list_shape_invalid")
+        require(not obj["metadata"].get("continue") and len(obj["items"]) <= 16, "workload_listing_limit")
+        for item in obj["items"]:
+            self.type_meta(item, kind, listed=True)
+            require(type(item.get("metadata")) is dict and item["metadata"].get("namespace") == NAMESPACE,
+                    kind.lower() + "_list_item_namespace_mismatch")
         return obj["items"]
 
     def container(self, pod):
@@ -262,7 +284,7 @@ class Observer:
         replicas = {}
         for rs in self.listing("replicasets"):
             if self.owned_by(rs, "Deployment", "mysql", self.deployment_uid) and not rs["metadata"].get("deletionTimestamp"):
-                meta = self.metadata(rs, "ReplicaSet")
+                meta = self.metadata(rs, "ReplicaSet", listed=True)
                 replicas[meta["uid"]] = meta["name"]
         candidates = []
         for pod in self.listing("pods"):
@@ -270,11 +292,13 @@ class Observer:
                 continue
             for uid, name in replicas.items():
                 if self.owned_by(pod, "ReplicaSet", name, uid):
-                    meta = self.metadata(pod, "Pod")
-                    candidates.append((meta["name"], meta["uid"], name, uid, pod))
+                    meta = self.metadata(pod, "Pod", listed=True)
+                    candidates.append((meta["name"], meta["uid"], name, uid))
         require(len(candidates) == 1, "mysql_pod_missing_or_ambiguous")
-        self.pod_name, self.pod_uid, self.rs_name, self.rs_uid, pod = candidates[0]
-        self.container(pod)
+        self.pod_name, self.pod_uid, self.rs_name, self.rs_uid = candidates[0]
+        # The list discovers candidates only. Re-read the selected resources by
+        # name and UID, requiring full single-object TypeMeta and owner chains.
+        self.recheck()
 
     def recheck(self):
         self.namespace()

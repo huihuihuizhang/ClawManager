@@ -1,0 +1,18 @@
+{
+  "schema_version": "supervisor-v2-config-observe-review.v2",
+  "original_tool_sha256": "765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c",
+  "user_original_result": {"filename_checksum_ok": true, "status": "refused", "reason": "workload_identity_changed", "exit_code": 1},
+  "original_failure_response_saved": false,
+  "confirmed_code_defect": "Raw typed Kubernetes list items may omit TypeMeta; original metadata reader required kind and mocks always supplied it",
+  "site_cause_limit": "Exact failed object/condition was not retained; compatibility defect is fixed but is not an independent observation of the site's API response",
+  "reference": "https://kubernetes.io/docs/reference/using-api/api-concepts/#collections",
+  "new_script_sha256": "a7a5fa84887842d285e4d397de25db6cd6778d799b9c36782620b2f08e63d660",
+  "new_tests_sha256": "6a1c8105a13e5f33c02207a5f05e5a51a1ab46f8a77712fbcccc5325d865ebbb",
+  "independent_test": {"mock_cases": 23, "elapsed_seconds": 0.098, "exit_code": 0, "log_sha256": "176ec6ee293fbe50318f5f3594caae5d8a62f6d79c62632028a07d5390487a0c", "scratch_removed": true},
+  "identity_checks": "Typed parent list and endpoint, reject explicitly wrong item types, selected objects re-read individually with complete TypeMeta, original namespace UID/Deployment/ReplicaSet/Pod ownership and UID/container ID checks retained",
+  "real_sql_executed_by_supervisor": false,
+  "cluster_connected_by_supervisor": false,
+  "authenticated_config": false,
+  "production_image_updated": false,
+  "full_page_acceptance": false
+}

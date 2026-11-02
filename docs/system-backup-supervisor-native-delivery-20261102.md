@@ -1,6 +1,8 @@
 # 审核者交付：zhanghui08 隔离 Linux 原窗口诊断
 
-当前应先完成 AIO OFF 的 startup-only 探针。首轮旧入口已在 Pod 启动前失败；随后小探针定位到 InnoDB `io_setup()` EAGAIN，native/SQL均未启动。启动通过后的执行入口见末节，使用单独固定的875e3960探针，不再调用归档内旧探针。前半节保留首轮交付来源和用户已执行命令，不能将其当作最新启动方案。
+首轮先以startup-only探针定位了 InnoDB `io_setup()` EAGAIN；AIO OFF修复的用户成功结果见下一段。原生执行入口见末节，使用单独固定的875e3960探针，不再调用归档内旧探针。前半节保留首轮交付来源和用户已执行命令，不能将其当作最新启动方案。
+
+用户现已回传修复探针`startup-verified`：8.4.8、TLSv1.3/TLS_AES_128_GCM_SHA256、实际AIO OFF、原退出/诊断/清理均0且residuals空，native_started=false。记录见`evidence/supervisor-kube-startup-success-user-report-20261102.json`。现在可按末节给出的固定三文件命令进入原生诊断；此成功仅解决隔离数据库启动，未证明原30秒窗口、C正式发布或页面成功。
 
 冻结源码 `51181049e97e4ff3946e75b6c1568dfe2e00b1a1`，clean detached worktree；构建前后核对3681文件。Linux amd64、CGO=0 testbinary编译退出0，不是已经运行native测试。46,870,961字节归档不含现场凭据、业务数据或安装材料。独立来源记录见 `evidence/supervisor-linux-native-delivery-20261102.json`。
 
