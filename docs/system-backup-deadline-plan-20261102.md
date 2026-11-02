@@ -39,7 +39,7 @@
 3. 公共C发布收尾尚无同任务整链正向结果；D源恢复producer、A受控记录桥接与C Ready组合23组件根已通过，无真实SQL/物理现场证明。公共C两路caller到唯一终态CAS新增源码已冻结，尚未编译和组合验证；不能继承旧组件结果。恢复后的具体Pod/规格、原平台卷pin、残缺证据历史及恢复后新业务lease必须正确处理。
 4. 原本stopped实例仍缺独立正向物理观察，若真实源含该实例则必须补齐。不能用SQL stopped、404、空slot或共享Pod Ready代替，也不能为跑通从请求范围删掉该源。
 5. 真实非空任务及最终产物尚未产生；两个业务C目前只能交工具/规则。已有Skills reader六组件根通过不等于真实非空或最终成品已验收。原Teams/Skills SQL、对象固定版本、workspace实际内容及Redis原策略须在该任务完整产物中核对。
-6. 官方Vault镜像已在现场导入、私库完整摘要读回通过。首次安装在provider-start因ErrImageNeverPull停止，专用Longhorn PVC已Bound；用户随后登记原repo@digest缓存引用。原安装接续脚本d71b481f已通过13本地模拟用例并交用户，实际TLS/JWT/持久化仍待现场结果，不能算提供方安装已通过。
+6. 16:51用户回传真实Vault提供方验收完成：官方镜像原摘要保持，TLS/分权JWT Generate与Unwrap/越权拒绝及Pod重建后同cluster、同PVC、同签名键、同密文读回通过。现场ErrImageNeverPull、Raft父目录缺失与双身份Pod触发110/110容量上限均已定位并修复。生产owner映射、KEK源独立性、目标分类仍为false；提供方基础验证不能替代这些准入。原材料保留远端/root/sbk-vault-owner-20261102-01，未导出。
 7. 页面侧仍缺真实CurrentTaskFacts实现、HTTP catalog列表/manifest入口、以及部署发布六模块supported_parts/acceptance readiness准入。这些不能靠从SQL成功状态翻Ready布尔、返回签名日记或仅有模块工厂替代，今晚组合与明早部署前必须实际接通。
 
 ## 本次排除与保持

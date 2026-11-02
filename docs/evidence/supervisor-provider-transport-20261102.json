@@ -80,19 +80,46 @@
     "mock_log_sha256": "d77aa53dd3765c0ef28e67355dd5afda42ec49ee82f5785176ce377cbb9d4d14",
     "fixes": ["resume only exact pre-initialization owned resources", "same nonroot init creates missing Raft parent on original PVC", "only provider template patched with original UID and resourceVersion", "explicit API defaults preserve repeatability; foreign init refused", "one live identity Pod at a time; use token before Pod deletion", "persistence operation continues existing initialized provider without reinitialization", "closed tool diagnostics and original failure stage retained"],
     "submitted_to_user": true,
-    "actual_installation_result_pending": true,
+    "actual_installation_result_pending": false,
     "business_workloads_or_nodes_restarted": false
   },
   "field_provider_progress": {
-    "provider_ready_pod": "sbk-transit-zh-977a1b9a-ff5b66574-cc5t5",
+    "observed_before_restart_ready_pod": "sbk-transit-zh-977a1b9a-ff5b66574-cc5t5",
     "provider_ready": true,
     "initialized_and_configured": true,
     "provider_cluster_id": "520416dc-1249-7d73-2b19-cb0f1ce53014",
-    "jwt_smoke_passed": false,
-    "persistence_restart_verified": false,
-    "not_full_install_acceptance": true
+    "jwt_smoke_passed": true,
+    "persistence_restart_verified": true,
+    "full_backup_admission_or_page_acceptance": false
   },
-  "provider_installed": false,
+  "verified_persistence_user_report": {
+    "schema_version": "d-transit-install-report.v1",
+    "status": "completed",
+    "operation": "persistence",
+    "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "provider_cluster_id": "520416dc-1249-7d73-2b19-cb0f1ce53014",
+    "endpoint": "https://sbk-transit-zh-977a1b9a.clawmanager-zhanghui08-system.svc:8200",
+    "key_name": "sbk-transit-zh-977a1b9a-kek",
+    "provider_version": "1",
+    "jwt_mount": "sbk-transit-zh-977a1b9a-jwt",
+    "jwt_smoke_passed": true,
+    "persistence_restart_verified": true,
+    "storage_class": "longhorn",
+    "data_pvc": "sbk-transit-zh-977a1b9a-data",
+    "pvc_binding": {"claim_uid": "e710fd14-6b7f-434f-b423-4962a5f7bea6", "pv": "pvc-e710fd14-6b7f-434f-b423-4962a5f7bea6", "pv_uid": "71589533-e966-4dcc-bdfe-351674dc859b", "pv_spec_sha256": "761ac9d41a9c74f307f87aa8f4d57d2ac254cadd13b6e9cde4330f7e46856bbb"},
+    "ca_sha256": "b60e97026a0d3e56e6d0456c82cb3f1c88b0e2ce587be0f19e4e6b1106f2bde3",
+    "signing": {
+      "capture": {"key_name": "sbk-transit-zh-977a1b9a-capture", "provider_version": "1", "public_key": "PYSc56yzuKnvmBq/RyNR2+UzlxViFXqj2QlbAtBUje8="},
+      "acceptance": {"key_name": "sbk-transit-zh-977a1b9a-acceptance", "provider_version": "1", "public_key": "2NJB6jkSJFOKRmY61ia4Z+kn548sEHOR1yuK5efOmV0="},
+      "catalog": {"key_name": "sbk-transit-zh-977a1b9a-catalog", "provider_version": "1", "public_key": "iKpkeGaj/JPyUOrmxj4GR3MI0FH/eMHNINbHVj2inYs="}
+    },
+    "owner_material_exported": false,
+    "persistent_data_deleted": false,
+    "production_owner_mapping_registered": false,
+    "source_independent_verified": false,
+    "backup_target_classified": false
+  },
+  "provider_installed": true,
   "production_owner_mapping_registered": false,
   "full_page_acceptance": false,
   "execution_owner": "User connects and runs remote Bash; supervisor has not connected or uploaded"
