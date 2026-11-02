@@ -1,0 +1,39 @@
+{
+  "schema_version": "supervisor-composition-and-owner-review.v1",
+  "observed_at": "2026-11-02T21:47:07.7081232+08:00",
+  "source_snapshot": "5ae6c853c71d6ce01480c0f5960566bb311d248b",
+  "component_root_pass": 19,
+  "component_skip": 0,
+  "component_log_sha256": "42f035fe7a4d28d830060dcdcd60daef8480901d1ee47d3403caaf5535091dd4",
+  "linux_compile_pass": true,
+  "native_executed": false,
+  "owner_first_batch": {
+    "compiles": true,
+    "selected_tests_pass": false,
+    "failed_root_tests": [
+      "TestCaptureSigningObserverTLSActualProtocolAndProbeDomain",
+      "TestCaptureSigningObserverRejectsProviderAndWorkloadDrift",
+      "TestCaptureSigningValidatorPreparesOnlyExactOwnerConfigGrant",
+      "TestInstallationOwnerCopiedPreparationCannotMintAnotherL2Guard",
+      "TestInstallationOwnerCurrentHeadAdminAndIdentityRemainMandatory",
+      "TestInstallationOwnerHistoricalIdentityDoesNotReusePhysicalPermission",
+      "TestInstallationOwnerUnlinkedL2AndForeignTransactionRefuse",
+      "TestInstallationOwnerCodecIndependentPinAndPurpose",
+      "TestInstallationOwnerCurrentIdentityCanDescribeExpiredPhysicalDependency"
+    ],
+    "log_sha256": "32958aad1b7863b040e9065144afaebb4c5875ea17c4ced9ca0c5cdb195318c6",
+    "sql_executed": false,
+    "initial_root_harness_error": "First isolated copy missed contracts resources; fixed before second run",
+    "status": "Returned to A for source/fixture diagnosis; not approved"
+  },
+  "migration_catalog": {
+    "count": 175,
+    "sha256": "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292",
+    "repository_contract_component_pass": true,
+    "actual_sql_migration_executed": false,
+    "approved_for_deploy": false
+  },
+  "full_page_acceptance": false,
+  "disaster_recovery_qualification": false,
+  "isolated_restore_in_scope": false
+}

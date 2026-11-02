@@ -1,0 +1,13 @@
+{
+  "schema_version": "supervisor-native-r7-cleanup.v1",
+  "observed_at": "2026-11-02T21:48:07.3773511+08:00",
+  "owned_review_root": "D:\\codex-backup-native-review-56f9aa3b83d84aecae1562f7de607672",
+  "registered_review_worktree_removed": true,
+  "live_owned_executables_at_check": 0,
+  "source_caches_binaries_archives_and_owner_test_copy_removed": true,
+  "pending_remote_delivery_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-5ae6c853-r7",
+  "pending_archive_sha256": "79f9c14367cf0add17cce5258bc2f86ee8d8ccd77c62509b26d6626bf161c63b",
+  "pending_delivery_reason": "User remote test not yet executed; retain until test completion, then delete build artifact",
+  "private_logs_preserved": true,
+  "remote_actions_executed": false
+}
