@@ -1,0 +1,24 @@
+{
+  "schema_version": "supervisor-source-final-components.v1",
+  "scope": "Combined source-recovery and publication component tests; no SQL, live Kubernetes, provider, page or complete task acceptance",
+  "base_commit": "b98c4f093c88c3131fc5e792a3b665d97c186605",
+  "additional_frozen_go_files": 47,
+  "r1": {"exit_code": 1, "reason": "Unused controller import; one unused import removed before r2"},
+  "r2": {
+    "exit_code": 0,
+    "selected_root_tests_passed": 23,
+    "controller_root_tests": 4,
+    "kekadapter_root_tests": 1,
+    "execution_root_tests": 18,
+    "kube_package": "compiled; no matching tests, not counted as passed tests",
+    "mysql_tag_sources_compiled": true,
+    "actual_sql_selected": false,
+    "log_sha256": "1518deaa7c37c95821d1341af5dc2317ac898653092b0863b1bce38d51d579d1",
+    "selection": "^(Test(SourceRecovery|SourceRecovered|RecoveredInstanceMount|PlatformVolume|PublisherSourceRecovery)|TestPublication(Ready|ContentSample|FinalVerification|Decision))",
+    "skip": "MySQL|Native"
+  },
+  "original_thirty_second_window_proven": false,
+  "physical_field_recovery_proven": false,
+  "complete_publication_proven": false,
+  "full_page_acceptance": false
+}

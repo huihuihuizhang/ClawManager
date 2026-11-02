@@ -1,0 +1,50 @@
+{
+  "schema_version": "supervisor-provider-transport.v1",
+  "scope": "User-reported read-only field prerequisites and local official image delivery; provider and backup acceptance not executed",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "field_prerequisites": {
+    "user_reported": true,
+    "host_architecture": "x86_64",
+    "docker": false,
+    "buildctl": false,
+    "ctr": true,
+    "nerdctl": true,
+    "private_registry_http_status": 200,
+    "docker_hub_reachable_from_field_host": false,
+    "hashicorp_releases_http_status": 200,
+    "storage_class": "longhorn",
+    "storage_class_provisioner": "driver.longhorn.io",
+    "storage_class_reclaim_policy": "Delete",
+    "business_pvcs_must_not_be_reused": true,
+    "jwt_issuer": "https://kubernetes.default.svc.cluster.local",
+    "jwks_uri": "https://10.130.14.23:6443/openid/v1/jwks",
+    "jwks_public_key_count": 1,
+    "jwks_json_sha256": "578fa8fb65ec23d3b3ff2319a87ff58e97aa36975895da91dc31d25120847ec4",
+    "nodes": [
+      {"name": "k8s-master", "uid": "bc1fb478-0388-4f53-96b4-8d186301f6af", "architecture": "amd64", "runtime": "containerd://2.2.4"},
+      {"name": "node1", "uid": "fe1cc275-6fa1-484e-8bf6-7b21193daffd", "architecture": "amd64", "runtime": "containerd://2.2.5"}
+    ]
+  },
+  "local_delivery": {
+    "upstream": "hashicorp/vault:2.2.1",
+    "platform": "linux/amd64",
+    "original_manifest_digest": "sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+    "original_config_and_all_seven_layer_bytes_sha256_verified": true,
+    "original_manifest_and_blobs_modified": false,
+    "outer_oci_reference": "10.130.14.23:5000/clawmanager-backup-vault:2.2.1-2194d86d",
+    "archive_name": "vault-official-2.2.1-linux-amd64.oci.tar",
+    "archive_bytes": 201799680,
+    "archive_sha256": "b6e6a6230dad679c81827d27b62e23912e6f0f79ab71ff7c09fc6bdd6012a4de",
+    "import_script": "scripts/system-backup-supervisor-vault-import.sh",
+    "import_script_sha256": "0f0912359c184730cb522e4d6af9c6a6accf36760b609e3f765de3b18bfef5dd",
+    "validation": ["B independent read-only review", "Bash syntax check", "bounded import and push", "original failure preserved during cleanup"],
+    "official_image_default_cmd_is_dev_and_must_be_overridden": true
+  },
+  "field_node_import_executed": false,
+  "field_private_registry_readback_executed": false,
+  "provider_installed": false,
+  "production_owner_mapping_registered": false,
+  "full_page_acceptance": false,
+  "execution_owner": "User connects and runs remote Bash; supervisor has not connected or uploaded"
+}
