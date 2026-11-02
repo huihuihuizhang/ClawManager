@@ -29,7 +29,9 @@ func (q sourceGuardedQuery) QueryContext(ctx context.Context, statement string, 
 	if sourceReadGuard(ctx, q.check) != nil {
 		return nil, ErrIsolation
 	}
+	finish := BeginCaptureTiming(ctx, CaptureSQLQuery)
 	rows, err := q.queryer.QueryContext(ctx, statement, args...)
+	finish.Finish(err)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +45,13 @@ func sourceReadGuard(ctx context.Context, check func() error) error {
 	if ctx == nil || ctx.Err() != nil {
 		return ErrIsolation
 	}
-	if check != nil && check() != nil {
-		return ErrIsolation
+	if check != nil {
+		finish := BeginCaptureTiming(ctx, CaptureGuard)
+		err := check()
+		finish.Finish(err)
+		if err != nil {
+			return ErrIsolation
+		}
 	}
 	return nil
 }
@@ -53,7 +60,9 @@ func sourceRowsNext(ctx context.Context, rows *sql.Rows, check func() error) (bo
 		rows.Close()
 		return false, ErrIsolation
 	}
+	finish := BeginCaptureTiming(ctx, CaptureSQLNext)
 	next := rows.Next()
+	finish.Finish(rows.Err())
 	if sourceReadGuard(ctx, check) != nil {
 		rows.Close()
 		return false, ErrIsolation
@@ -260,25 +269,34 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 	if db == nil || !limits.valid() {
 		return Snapshot{}, ErrData
 	}
+	finishConnection := BeginCaptureTiming(ctx, CaptureConnection)
 	conn, err := db.Conn(ctx)
+	finishConnection.Finish(err)
 	if err != nil {
 		return Snapshot{}, ErrDatabase
 	}
 	defer conn.Close()
 	if check != nil {
-		if err = check(conn); err != nil {
+		finish := BeginCaptureTiming(ctx, CaptureSessionBefore)
+		err = check(conn)
+		finish.Finish(err)
+		if err != nil {
 			return Snapshot{}, err
 		}
 	}
 	if sourceReadGuard(ctx, authorize) != nil {
 		return Snapshot{}, ErrIsolation
 	}
+	finishBegin := BeginCaptureTiming(ctx, CaptureBeginRR)
 	tx, err := conn.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	finishBegin.Finish(err)
 	if err != nil {
 		return Snapshot{}, ErrDatabase
 	}
 	defer tx.Rollback()
+	finishCatalog := BeginCaptureTiming(ctx, CaptureCatalogInitial)
 	tables, err := readCatalog(ctx, tx, authorize)
+	finishCatalog.Finish(err)
 	if err != nil {
 		return Snapshot{}, err
 	}
@@ -300,14 +318,18 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 				return Snapshot{}, ErrSchema
 			}
 		}
+		finishCounts := BeginCaptureTiming(ctx, CaptureExactCounts)
 		counts, err = captureSourceRowCounts(ctx, tx, counted, authorize)
+		finishCounts.Finish(err)
 		if err != nil {
 			return Snapshot{}, err
 		}
 		// COUNT has acquired transaction-duration MDL on every selected table.
 		// Refuse DDL between the original catalog and COUNT, including empty
 		// tables whose data SELECT will be omitted. Never adopt a new shape.
+		finishLocked := BeginCaptureTiming(ctx, CaptureCatalogLocked)
 		locked, e := readCatalog(ctx, tx, authorize)
+		finishLocked.Finish(e)
 		if e != nil {
 			return Snapshot{}, e
 		}
@@ -353,6 +375,9 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 		if err != nil {
 			return Snapshot{}, ErrDatabase
 		}
+		// Reuse only scan slots within this table. rawCell still owns every
+		// returned byte slice; rows and authorization boundaries are unchanged.
+		scan := newCaptureScanSlots(len(cols))
 		for {
 			next, guardErr := sourceRowsNext(ctx, rows, authorize)
 			if guardErr != nil {
@@ -361,16 +386,12 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 			if !next {
 				break
 			}
-			values := make([]any, len(cols))
-			pointers := make([]any, len(cols))
-			for i := range values {
-				pointers[i] = &values[i]
-			}
-			if rows.Scan(pointers...) != nil {
+			values, scanErr := scan.scan(ctx, rows)
+			if scanErr != nil {
 				rows.Close()
 				return Snapshot{}, ErrDatabase
 			}
-			r := Row{}
+			r := make(Row, len(cols))
 			for i, v := range values {
 				cell, e := rawCell(v)
 				if e != nil {
@@ -385,6 +406,7 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 				}
 				r[t.Columns[i].Name] = cell
 			}
+			clear(values) // release driver-owned intermediate references per row
 			rowCount++
 			if rowCount > limits.MaxRows {
 				rows.Close()
@@ -416,14 +438,22 @@ func captureWithCatalogMode(ctx context.Context, db *sql.DB, limits Limits, chec
 	if sourceReadGuard(ctx, authorize) != nil {
 		return Snapshot{}, ErrIsolation
 	}
-	if err = tx.Commit(); err != nil {
+	finishCommit := BeginCaptureTiming(ctx, CaptureCommitRR)
+	err = tx.Commit()
+	finishCommit.Finish(err)
+	if err != nil {
 		return Snapshot{}, ErrDatabase
 	}
 	// Recheck the original session after the complete RR, before returning any
 	// source bytes to the encrypting collector. A mid-capture grant/identity
 	// change cannot be certified by an earlier admission observation.
-	if check != nil && check(conn) != nil {
-		return Snapshot{}, ErrIsolation
+	if check != nil {
+		finish := BeginCaptureTiming(ctx, CaptureSessionAfter)
+		err = check(conn)
+		finish.Finish(err)
+		if err != nil {
+			return Snapshot{}, ErrIsolation
+		}
 	}
 	if sourceReadGuard(ctx, authorize) != nil {
 		return Snapshot{}, ErrIsolation

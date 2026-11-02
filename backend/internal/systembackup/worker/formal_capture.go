@@ -183,7 +183,7 @@ func (s originalUseSink) Write(p []byte) (int, error) {
 		}
 		return 0, s.ctx.Err()
 	}
-	if s.job.recheckDuringUse(s.ctx) != nil {
+	if measuredCaptureKeyCheck(s.ctx, s.job.recheckDuringUse) != nil {
 		if s.onRejected != nil {
 			s.onRejected("database-cipher-sink-key-before", s.ctx)
 		}
@@ -196,7 +196,7 @@ func (s originalUseSink) Write(p []byte) (int, error) {
 		}
 		return n, e
 	}
-	if s.job.recheckDuringUse(s.ctx) != nil {
+	if measuredCaptureKeyCheck(s.ctx, s.job.recheckDuringUse) != nil {
 		if s.onRejected != nil {
 			s.onRejected("database-cipher-sink-key-tail", s.ctx)
 		}
@@ -214,12 +214,22 @@ func RunFormalCapture(ctx context.Context, i Invocation, job *CaptureKeyJob, env
 	}
 	return runFormalCapture(ctx, i, job, env)
 }
-func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env FormalCaptureEnvironment) (FormalCaptureResult, error) {
+func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env FormalCaptureEnvironment) (captured FormalCaptureResult, captureErr error) {
 	var zero FormalCaptureResult
 	if ctx == nil || job == nil || !validFormalInvocation(i) || !ValidateRecordedInvocation(i) || !time.Now().Before(i.Request.Deadline) || env.Staging == nil {
 		return zero, ErrRequest
 	}
 	r := i.Request
+	ctx, finishTiming := startDatabaseCaptureTiming(ctx, i, job, &env)
+	defer func() {
+		diagnosticErr := captureErr
+		if diagnosticErr == nil && captured.Version == "" {
+			// A panic/abnormal exit is not a returned candidate. Do not recover
+			// it or change the original return/error; only the DATA is rejected.
+			diagnosticErr = ErrExecution
+		}
+		finishTiming(diagnosticErr)
+	}()
 	if r.CaptureDescription != nil {
 		release, err := cd.AdmitDecodeMemory(*r.CaptureDescription)
 		if err != nil {
@@ -247,7 +257,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if job.Recheck(ctx) != nil {
+		if measuredCaptureKeyCheck(ctx, job.Recheck) != nil {
 			return ErrNotReady
 		}
 		if r.ControlEvidence != nil && env.ControlEvidence.Authorize(ctx, i) != nil {
@@ -297,6 +307,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			databaseFailure.observe(stage, failedCtx, ceOriginalKeyUntil, env.SourceValidUntil, ceUseStarted)
 		}
 	}
+	finishDEK := domain.BeginCaptureTiming(ctx, domain.CaptureDEKUse)
 	wrapped, err := job.WithDEK(ctx, func(useCtx context.Context, key []byte) error {
 		ceCallbackEntered = true
 		inUseCheck := func() error {
@@ -307,7 +318,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 				}
 				return useCtx.Err()
 			}
-			if job.recheckDuringUse(useCtx) != nil {
+			if measuredCaptureKeyCheck(useCtx, job.recheckDuringUse) != nil {
 				recordDatabaseFailure("database-using-key-check", useCtx)
 				if ceFirstFailure == "" {
 					ceFirstFailure = "worker-formal-dek-using-key-check"
@@ -333,6 +344,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			return e
 		}
 		var err error
+		finishCipher := domain.BeginCaptureTiming(useCtx, domain.CaptureCipherStaging)
 		result.Ciphertext, err = staging.WriteUnpublishedFile(useCtx, env.Staging, r.ArtifactName, func(dst io.Writer) error {
 			var e error
 			var observeSink func(string, context.Context)
@@ -391,33 +403,46 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 						recordDatabaseFailure("database-source-authorizer-missing", useCtx)
 						return ErrNotReady
 					}
+					finishDomain := domain.BeginCaptureTiming(useCtx, domain.CaptureDomain)
 					s, e := capture(useCtx, env.Database, domain.Limits{MaxRows: r.Database.MaxRows, MaxBytes: r.Database.MaxMemoryBytes}, r.Database.Name, r.Database.ServerUUID)
+					finishDomain.Finish(e)
 					if e != nil {
 						recordDatabaseFailure("database-source-capture", useCtx)
 						return ErrExecution
 					}
 					defer clearSnapshot(s)
-					if r.Database.SourceScope == domain.BusinessTableSourceScope && (r.Database.CaptureSchema == nil || r.Database.CaptureSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || domain.VerifyBusinessCapturedSnapshot(s, *r.Database.CaptureSchema) != nil) {
-						recordDatabaseFailure("database-snapshot-domain", useCtx)
-						return ErrExecution
-					}
-					if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
-						recordDatabaseFailure("database-snapshot-teams", useCtx)
-						return ErrExecution
-					}
-					if r.Database.SkillsInventory != nil && domain.VerifySkillCapture(s, *r.Database.SkillsInventory) != nil {
-						recordDatabaseFailure("database-snapshot-skills", useCtx)
-						return ErrExecution
+					finishVerify := domain.BeginCaptureTiming(useCtx, domain.CaptureSnapshotVerify)
+					verifyErr := func() error {
+						if r.Database.SourceScope == domain.BusinessTableSourceScope && (r.Database.CaptureSchema == nil || r.Database.CaptureSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || domain.VerifyBusinessCapturedSnapshot(s, *r.Database.CaptureSchema) != nil) {
+							recordDatabaseFailure("database-snapshot-domain", useCtx)
+							return ErrExecution
+						}
+						if r.Database.TeamsInventory != nil && domain.VerifyTeamCapture(s, *r.Database.TeamsInventory) != nil {
+							recordDatabaseFailure("database-snapshot-teams", useCtx)
+							return ErrExecution
+						}
+						if r.Database.SkillsInventory != nil && domain.VerifySkillCapture(s, *r.Database.SkillsInventory) != nil {
+							recordDatabaseFailure("database-snapshot-skills", useCtx)
+							return ErrExecution
+						}
+						return nil
+					}()
+					finishVerify.Finish(verifyErr)
+					if verifyErr != nil {
+						return verifyErr
 					}
 					counts := snapshotCounts(s)
 					result.Rows, result.Tables = counts.Rows, counts.Tables
-					return staging.Compress(stream, func(compressed io.Writer) error {
+					finishEncode := domain.BeginCaptureTiming(useCtx, domain.CaptureEncodeCompress)
+					encodeErr := staging.Compress(stream, func(compressed io.Writer) error {
 						if e := domain.Encode(&budgetWriter{w: compressed, left: r.MaxArchiveBytes}, s); e != nil {
 							recordDatabaseFailure("database-snapshot-encode", useCtx)
 							return ErrExecution
 						}
 						return inUseCheck()
 					})
+					finishEncode.Finish(encodeErr)
+					return encodeErr
 				}
 				if r.WorkBuddyIdentity != nil && domain.VerifyWorkBuddyUIDWorkspace(env.Workspace, *r.WorkBuddyIdentity) != nil {
 					return ErrExecution
@@ -447,6 +472,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 			})
 			return e
 		})
+		finishCipher.Finish(err)
 		ceCallbackSucceeded = err == nil
 		if err != nil {
 			recordDatabaseFailure("database-stream-or-staging", useCtx)
@@ -456,6 +482,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		}
 		return err
 	})
+	finishDEK.Finish(err)
 	if err != nil {
 		if r.Database != nil {
 			stage := "database-dek-post-use-authority"
@@ -485,6 +512,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 	if err != nil {
 		return zero, ErrExecution
 	}
+	finishEnvelope := domain.BeginCaptureTiming(ctx, domain.CaptureEnvelopeStaging)
 	result.Envelope, err = staging.WriteUnpublishedFile(ctx, env.Staging, i.FormalCapture.EnvelopeName, func(dst io.Writer) error {
 		if e := check(); e != nil {
 			return e
@@ -492,6 +520,7 @@ func runFormalCapture(ctx context.Context, i Invocation, job formalKeyUse, env F
 		_, e := dst.Write(envelope)
 		return e
 	})
+	finishEnvelope.Finish(err)
 	if err != nil {
 		return zero, ErrExecution
 	}

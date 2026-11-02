@@ -1,0 +1,133 @@
+{
+  "schema_version": "b-capture-window-review.v1",
+  "recorded_date": "2026-11-02",
+  "base_commit": "b98c4f093c88c3131fc5e792a3b665d97c186605",
+  "stdlib_file_scope": {
+    "files": [
+      "backend/internal/systembackup/domain/capture_timing.go",
+      "backend/internal/systembackup/domain/capture_timing_test.go",
+      "backend/internal/systembackup/domain/capture_scan.go",
+      "backend/internal/systembackup/domain/capture_scan_test.go"
+    ],
+    "typechecked": "exact named production/test files only, not domain/worker package",
+    "passed_roots": [
+      "TestCaptureTimingsBoundedDetachedAndNested",
+      "TestCaptureTimingsPreserveContextAndDoNotAuthorize",
+      "TestCaptureTimingsConcurrentSnapshots",
+      "TestCaptureScanReusesSlotsWithoutLosingRawValues",
+      "TestCaptureScanFailureClearsScratchAndReturnsNoValues"
+    ],
+    "skipped": 0,
+    "exit_code": 0,
+    "vet_exit_code": 0
+  },
+  "benchmarks": {
+    "scope": "Windows memory database/sql three-column scan and local timer spans only; no MySQL/provider/network",
+    "three_runs": true,
+    "scan_per_row_baseline": {
+      "bytes_per_op": 272,
+      "allocs_per_op": 10
+    },
+    "scan_per_table_reuse": {
+      "bytes_per_op": 176,
+      "allocs_per_op": 8
+    },
+    "timer_enabled": {
+      "bytes_per_op": 0,
+      "allocs_per_op": 0,
+      "nanoseconds_per_op": [
+        44.26,
+        44.98,
+        42.49
+      ]
+    }
+  },
+  "syntax_only": {
+    "syntax_only": true,
+    "files": [
+      "internal/systembackup/domain/mysql.go",
+      "internal/systembackup/domain/capture_timing.go",
+      "internal/systembackup/domain/capture_timing_test.go",
+      "internal/systembackup/domain/capture_scan.go",
+      "internal/systembackup/domain/capture_scan_test.go",
+      "internal/systembackup/domain/capture_timing_integration_test.go",
+      "internal/systembackup/worker/formal_capture.go",
+      "internal/systembackup/worker/database_capture_timing.go",
+      "internal/systembackup/worker/database_capture_timing_test.go"
+    ]
+  },
+  "package_tests": {
+    "exit_code": 1,
+    "executed_tests": 0,
+    "failure": "setup failed; original JCS dependency absent in module cache; GOPROXY=off",
+    "missing_dependency": "github.com/cyberphone/json-canonicalization@v0.0.0-20261011152517-32a48195b9b2",
+    "attempt": "initial implementation attempt; final package source remains uncompiled for same unchanged dependency blocker; no repeated download attempts"
+  },
+  "pending_tests": [
+    "TestCaptureTimingDoesNotChangeQueryGuardsOrFailureResults",
+    "TestDatabaseCaptureTiming*",
+    "TestMeasuredCaptureKeyCheck*",
+    "full domain/worker package regression",
+    "same-task original thirty-second native chain"
+  ],
+  "unchanged_authority": [
+    "key/source/request deadlines",
+    "source authorize before/after key check",
+    "query and Next/EOF before/after guards",
+    "single readonly RR and MDL catalog comparison",
+    "finite table grants/session/schema census",
+    "original rawCell values and capacity checks",
+    "no retries, permission cache, publication or control ABI changes"
+  ],
+  "real_database_connected": false,
+  "cluster_connected": false,
+  "reference_server_connected": false,
+  "dependencies_installed": false,
+  "migration_executed": false,
+  "committed": false,
+  "pushed": false,
+  "full_native_window_passed": false,
+  "evidence_sha256": {
+    "final-benchmarks.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "final-benchmarks.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final-benchmarks.txt": "061d757178d4e193c5183084562d020a4e99f001d7936838817127aac95ad4ba",
+    "package-tests.exit.txt": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+    "package-tests.jsonl": "0cf7d6230a3a44a6f217251441a87e1b2f0a6e227a1f10b05ca38f44f938084a",
+    "package-tests.stderr.txt": "3997834262e82f5575130d1acd87f322b3c2c7ef235f55158046bc382e48bbe7",
+    "scan-benchmark.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "scan-benchmark.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scan-benchmark.txt": "27f01aa67a4c2b273eff509998ebec22f0e0f0a8149c9bf4a79c7d2d0f039881",
+    "stdlib-component-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "stdlib-component-tests.jsonl": "126b93ddf783da853105162ab247661c49280cdcb71204dfcde390acad961bc9",
+    "stdlib-component-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdlib-final-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "stdlib-final-tests.jsonl": "1de765232486fd76ee912c71daef9a64037aedd771785bb833105cb4bd6e7dd9",
+    "stdlib-final-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdlib-final-vet.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "stdlib-final-vet.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdlib-final-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdlib-vet.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "stdlib-vet.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdlib-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "syntax-check.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "syntax-check.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "syntax_check.go": "9f70a55a17b41984b1b6884062efa070d596dbee1f9a1ffedbc61d2592a6065f",
+    "timing-benchmark.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "timing-benchmark.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "timing-benchmark.txt": "db7ede9183077637f4ef89455aa7e73988bc1798b1dae5623fecd9f6190aac9f"
+  },
+  "cleanup": {
+    "schema_version": "b-capture-window-cleanup.v1",
+    "result": "blocked_by_policy",
+    "automatic_review": "rejected exec_command before execution; reason supplied: blocked by policy",
+    "attempted_targets": [
+      "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-capture-window-20261102/cache",
+      "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-capture-window-20261102/tmp"
+    ],
+    "both_targets_still_exist": true,
+    "retry_or_alternative_deletion_attempted": false,
+    "other_owner_cleanup_attempted": false,
+    "shared_cache_cleanup_attempted": false,
+    "evidence_retained": true
+  }
+}

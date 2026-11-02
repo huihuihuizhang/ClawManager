@@ -1,0 +1,12 @@
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"# clawreef/internal/systembackup/domain\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"internal\\systembackup\\secret_capture_policy.go:14:2: module lookup disabled by GOPROXY=off\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-fail"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"start","Package":"clawreef/internal/systembackup/domain"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"output","Package":"clawreef/internal/systembackup/domain","Output":"FAIL\tclawreef/internal/systembackup/domain [setup failed]\n"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"fail","Package":"clawreef/internal/systembackup/domain","Elapsed":0,"FailedBuild":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"# clawreef/internal/systembackup/worker\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-output","Output":"internal\\systembackup\\secret_capture_policy.go:14:2: module lookup disabled by GOPROXY=off\n"}
+{"ImportPath":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer","Action":"build-fail"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"start","Package":"clawreef/internal/systembackup/worker"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"output","Package":"clawreef/internal/systembackup/worker","Output":"FAIL\tclawreef/internal/systembackup/worker [setup failed]\n"}
+{"Time":"2026-11-02T15:20:33.3682287+08:00","Action":"fail","Package":"clawreef/internal/systembackup/worker","Elapsed":0,"FailedBuild":"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"}

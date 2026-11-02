@@ -1,0 +1,24 @@
+{"Time":"2026-11-02T15:28:52.1339447+08:00","Action":"start","Package":"command-line-arguments"}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"run","Package":"command-line-arguments","Test":"TestCaptureTimingsBoundedDetachedAndNested"}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsBoundedDetachedAndNested","Output":"=== RUN   TestCaptureTimingsBoundedDetachedAndNested\n"}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsBoundedDetachedAndNested","Output":"--- PASS: TestCaptureTimingsBoundedDetachedAndNested (0.00s)\n"}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"pass","Package":"command-line-arguments","Test":"TestCaptureTimingsBoundedDetachedAndNested","Elapsed":0}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"run","Package":"command-line-arguments","Test":"TestCaptureTimingsPreserveContextAndDoNotAuthorize"}
+{"Time":"2026-11-02T15:28:52.4564579+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsPreserveContextAndDoNotAuthorize","Output":"=== RUN   TestCaptureTimingsPreserveContextAndDoNotAuthorize\n"}
+{"Time":"2026-11-02T15:28:52.4569933+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsPreserveContextAndDoNotAuthorize","Output":"--- PASS: TestCaptureTimingsPreserveContextAndDoNotAuthorize (0.00s)\n"}
+{"Time":"2026-11-02T15:28:52.4569933+08:00","Action":"pass","Package":"command-line-arguments","Test":"TestCaptureTimingsPreserveContextAndDoNotAuthorize","Elapsed":0}
+{"Time":"2026-11-02T15:28:52.4569933+08:00","Action":"run","Package":"command-line-arguments","Test":"TestCaptureTimingsConcurrentSnapshots"}
+{"Time":"2026-11-02T15:28:52.4569933+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsConcurrentSnapshots","Output":"=== RUN   TestCaptureTimingsConcurrentSnapshots\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureTimingsConcurrentSnapshots","Output":"--- PASS: TestCaptureTimingsConcurrentSnapshots (0.00s)\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"pass","Package":"command-line-arguments","Test":"TestCaptureTimingsConcurrentSnapshots","Elapsed":0}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"run","Package":"command-line-arguments","Test":"TestCaptureScanReusesSlotsWithoutLosingRawValues"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureScanReusesSlotsWithoutLosingRawValues","Output":"=== RUN   TestCaptureScanReusesSlotsWithoutLosingRawValues\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureScanReusesSlotsWithoutLosingRawValues","Output":"--- PASS: TestCaptureScanReusesSlotsWithoutLosingRawValues (0.00s)\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"pass","Package":"command-line-arguments","Test":"TestCaptureScanReusesSlotsWithoutLosingRawValues","Elapsed":0}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"run","Package":"command-line-arguments","Test":"TestCaptureScanFailureClearsScratchAndReturnsNoValues"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureScanFailureClearsScratchAndReturnsNoValues","Output":"=== RUN   TestCaptureScanFailureClearsScratchAndReturnsNoValues\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"output","Package":"command-line-arguments","Test":"TestCaptureScanFailureClearsScratchAndReturnsNoValues","Output":"--- PASS: TestCaptureScanFailureClearsScratchAndReturnsNoValues (0.00s)\n"}
+{"Time":"2026-11-02T15:28:52.4575373+08:00","Action":"pass","Package":"command-line-arguments","Test":"TestCaptureScanFailureClearsScratchAndReturnsNoValues","Elapsed":0}
+{"Time":"2026-11-02T15:28:52.4580768+08:00","Action":"output","Package":"command-line-arguments","Output":"PASS\n"}
+{"Time":"2026-11-02T15:28:52.4711715+08:00","Action":"output","Package":"command-line-arguments","Output":"ok  \tcommand-line-arguments\t0.337s\n"}
+{"Time":"2026-11-02T15:28:52.4711715+08:00","Action":"pass","Package":"command-line-arguments","Elapsed":0.337}

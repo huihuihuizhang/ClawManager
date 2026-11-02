@@ -1,0 +1,233 @@
+{
+  "base_before": "1c3504620e3b456daf95f53adc647f8dd8d002b0",
+  "files": [
+    {
+      "path": "backend\\internal\\systembackup\\domain\\mysql.go",
+      "sha256": "aeb9cb6d6af2f4683d45342295da0d6f631d8a763d7d84f6decb35e7d1fc5b01"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\worker\\formal_capture.go",
+      "sha256": "867ef40dc420b091f58f502bb756defc30439945ee41f184a6b17029f9a5a171"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\domain\\capture_scan.go",
+      "sha256": "2a75b4ea9c82acdc4e0de696f056bc12487b1c48f7c4a57838cbfe662b53562a"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\domain\\capture_scan_test.go",
+      "sha256": "611e50e57cadbfc915de2085de785ea20aada27c117ce5266a27a96d6a7217f1"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\domain\\capture_timing.go",
+      "sha256": "af813e553f7cb50d784e29ef795e9bfe9ad4519eed68b88af907c6473a5d8873"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\domain\\capture_timing_integration_test.go",
+      "sha256": "e04a41ba1554e56d0695eb3226909f10c9e0e2a1f25c7c3292fb214b919deae7"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\domain\\capture_timing_test.go",
+      "sha256": "9575ce14faf279c5ad5e4065d0ba57b02cb8542aed50b23d8c526cffead1391f"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\worker\\database_capture_timing.go",
+      "sha256": "84abbcbc5819b3cd7cfa16a545b028530d62bdc43db0265356e9cfdc9ebdb9e2"
+    },
+    {
+      "path": "backend\\internal\\systembackup\\worker\\database_capture_timing_test.go",
+      "sha256": "f0abe565df3023f5edd5c5c5d516ef5477a6a32fa15b583eae21646e6822f951"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\README.md",
+      "sha256": "526d9a1fb872cb2ee32206ffa7b37d15236ed76e0d7fe15ee616685865d9ea15"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\cleanup.json",
+      "sha256": "3b8b8e2f060f4eaf9a38251d0f3e59ead0b92c01e2124e88686acbc03f9cf939"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\final-benchmarks.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\final-benchmarks.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\final-benchmarks.txt",
+      "sha256": "061d757178d4e193c5183084562d020a4e99f001d7936838817127aac95ad4ba"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\package-tests.exit.txt",
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\package-tests.jsonl",
+      "sha256": "0cf7d6230a3a44a6f217251441a87e1b2f0a6e227a1f10b05ca38f44f938084a"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\package-tests.stderr.txt",
+      "sha256": "3997834262e82f5575130d1acd87f322b3c2c7ef235f55158046bc382e48bbe7"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\scan-benchmark.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\scan-benchmark.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\scan-benchmark.txt",
+      "sha256": "27f01aa67a4c2b273eff509998ebec22f0e0f0a8149c9bf4a79c7d2d0f039881"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\source-pins.json",
+      "sha256": "0f526e440cc4ff18b29fe0e402651bce9017a16f8af607641b72f07c9c423848"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-component-tests.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-component-tests.jsonl",
+      "sha256": "126b93ddf783da853105162ab247661c49280cdcb71204dfcde390acad961bc9"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-component-tests.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-tests.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-tests.jsonl",
+      "sha256": "1de765232486fd76ee912c71daef9a64037aedd771785bb833105cb4bd6e7dd9"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-tests.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-vet.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-vet.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-final-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-vet.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-vet.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\stdlib-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\summary.json",
+      "sha256": "28018d3b2bccb2e0a2776f03003b6aa49c77fe6b6e004a68543265d6104b9ff7"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\syntax-check.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\syntax-check.json",
+      "sha256": "f5a01a54b431b7089645889c47ee08e9b59485b3e15cac0ce1f25f7c12e63106"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\syntax-check.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\syntax_check.go",
+      "sha256": "9f70a55a17b41984b1b6884062efa070d596dbee1f9a1ffedbc61d2592a6065f"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\timing-benchmark.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\timing-benchmark.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-capture-window-20261102\\timing-benchmark.txt",
+      "sha256": "db7ede9183077637f4ef89455aa7e73988bc1798b1dae5623fecd9f6190aac9f"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\README.md",
+      "sha256": "09c4d7b16fe85fbe51f272a47874119aaa1ffc829dbcd86a49b2632d6915a56d"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\pre-update-worktree.json",
+      "sha256": "6b1c9e7acf45acaf20947c7a16de5834f0db4afe768d4d1337d39a3242177f17"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\provider-script-syntax.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\provider-script-syntax.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\provider-script-syntax.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\summary.json",
+      "sha256": "e8c1e30135c0de422f902664079ea2d3d56effe6abbac088e44498d822b1c5cc"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-final-tests.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-final-tests.stderr.txt",
+      "sha256": "6c8d4f1676fce03f73d5eefbda5d862f942a63797281924c4253b53237ec24a0"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-final-tests.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-tests.exit.txt",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-tests.stderr.txt",
+      "sha256": "cfc4aff8b078b7171bd2f0864cf7e6faa180bddc45d220ecd55e034e94d75c42"
+    },
+    {
+      "path": "docs\\evidence\\b-contact-review-20261102\\timing-reader-tests.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs\\system-backup-b-capture-window-20261102.md",
+      "sha256": "e229325f737fabb24a9bce3813d78fd3710aad9ddabc23ff304086348395bd04"
+    },
+    {
+      "path": "docs\\system-backup-b-contact-review-20261102.md",
+      "sha256": "b55777a38adcc460b60ad980dfdd085ad396a0e5404e6bab6b2727843fcf678e"
+    },
+    {
+      "path": "scripts\\system-backup-b-capture-timing.py",
+      "sha256": "9467b13c1d6d65905654c06b2c08738b5cd51ae46526c4f8d10dae9c1408240c"
+    },
+    {
+      "path": "scripts\\system-backup-b-capture-timing.test.py",
+      "sha256": "3d446be9380434fa7aa16c4a557374f38c867e57faf546f3d249776ced5cd872"
+    }
+  ]
+}

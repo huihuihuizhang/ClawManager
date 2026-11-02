@@ -1,0 +1,7 @@
+goos: windows
+goarch: amd64
+cpu: Intel(R) Core(TM) Ultra 7 155H
+BenchmarkCaptureTimingGuardOverhead/disabled-22         	92131747	         2.732 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCaptureTimingGuardOverhead/enabled-22          	 6387615	        37.45 ns/op	      48 B/op	       1 allocs/op
+PASS
+ok  	command-line-arguments	0.930s

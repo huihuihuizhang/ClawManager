@@ -1,0 +1,14 @@
+{
+  "schema_version": "b-capture-window-cleanup.v1",
+  "result": "blocked_by_policy",
+  "automatic_review": "rejected exec_command before execution; reason supplied: blocked by policy",
+  "attempted_targets": [
+    "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-capture-window-20261102/cache",
+    "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-capture-window-20261102/tmp"
+  ],
+  "both_targets_still_exist": true,
+  "retry_or_alternative_deletion_attempted": false,
+  "other_owner_cleanup_attempted": false,
+  "shared_cache_cleanup_attempted": false,
+  "evidence_retained": true
+}

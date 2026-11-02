@@ -1,0 +1,15 @@
+test_candidate_is_diagnostic_only (__main__.TimingAnalysisTests) ... ok
+test_cli_is_read_only_and_outputs_safe_errors (__main__.TimingAnalysisTests) ... ok
+test_conflicting_reports_for_same_pin_are_ambiguous (__main__.TimingAnalysisTests) ... ok
+test_does_not_infer_an_expected_pin (__main__.TimingAnalysisTests) ... ok
+test_identical_copies_are_not_new_checks (__main__.TimingAnalysisTests) ... ok
+test_json_corruption_duplicate_fields_and_marker_ambiguity (__main__.TimingAnalysisTests) ... ok
+test_log_budget_and_foreign_corruption_fail_closed (__main__.TimingAnalysisTests) ... ok
+test_selects_original_pin_without_summing_parents_or_clamping_windows (__main__.TimingAnalysisTests) ... ok
+test_stage_labels_match_the_actual_go_recorder (__main__.TimingAnalysisTests) ... ok
+test_strict_schema_and_integer_contract (__main__.TimingAnalysisTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.434s
+
+OK

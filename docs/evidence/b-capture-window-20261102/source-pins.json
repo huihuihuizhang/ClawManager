@@ -1,0 +1,46 @@
+{
+  "base_commit": "b98c4f093c88c3131fc5e792a3b665d97c186605",
+  "status": "local_uncommitted",
+  "sources": [
+    {
+      "path": "backend/internal/systembackup/domain/mysql.go",
+      "sha256": "aeb9cb6d6af2f4683d45342295da0d6f631d8a763d7d84f6decb35e7d1fc5b01"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/capture_timing.go",
+      "sha256": "af813e553f7cb50d784e29ef795e9bfe9ad4519eed68b88af907c6473a5d8873"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/capture_timing_test.go",
+      "sha256": "9575ce14faf279c5ad5e4065d0ba57b02cb8542aed50b23d8c526cffead1391f"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/capture_scan.go",
+      "sha256": "2a75b4ea9c82acdc4e0de696f056bc12487b1c48f7c4a57838cbfe662b53562a"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/capture_scan_test.go",
+      "sha256": "611e50e57cadbfc915de2085de785ea20aada27c117ce5266a27a96d6a7217f1"
+    },
+    {
+      "path": "backend/internal/systembackup/domain/capture_timing_integration_test.go",
+      "sha256": "e04a41ba1554e56d0695eb3226909f10c9e0e2a1f25c7c3292fb214b919deae7"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/formal_capture.go",
+      "sha256": "867ef40dc420b091f58f502bb756defc30439945ee41f184a6b17029f9a5a171"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database_capture_timing.go",
+      "sha256": "84abbcbc5819b3cd7cfa16a545b028530d62bdc43db0265356e9cfdc9ebdb9e2"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/database_capture_timing_test.go",
+      "sha256": "f0abe565df3023f5edd5c5c5d516ef5477a6a32fa15b583eae21646e6822f951"
+    },
+    {
+      "path": "docs/system-backup-b-capture-window-20261102.md",
+      "sha256": "e229325f737fabb24a9bce3813d78fd3710aad9ddabc23ff304086348395bd04"
+    }
+  ]
+}
