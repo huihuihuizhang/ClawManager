@@ -69,36 +69,115 @@ $env:VITE_SYSTEM_BACKUP_LIVE_READ = '1'
 npm run dev -- --host 127.0.0.1
 ```
 
-也可直接给已部署前端 origin，无需本地启动前端。E2E 依赖在 `e2e/` 执行 `npm ci`；Chrome 可用时默认 channel=chrome，缺 Chrome 由环境 owner 安装浏览器。登录态可用 Playwright `codegen --save-storage` 对实际登录页交互完成真实认证；私有 state 放到仓库根 `.tmp-*` 忽略目录，勿复用 seeded auth setup 的默认管理员。
+## zhanghui08 最终环境：Bash 点击命令
 
-## 远测命令与日志
+用户指定页面 `https://10.130.14.23:32643/admin/instances`。参数必须传 **origin** `https://10.130.14.23:32643/`；脚本在该 origin 打开 `/admin/backups/records`，不把 instances 路径传给 BACKUP_LIVE_URL。不需要本地前后端启动或 SSH。以下均为待执行命令，本轮没有连接该地址、安装或部署。
 
-以下 PowerShell 在运行浏览器的验收机执行，替换真实已授权 origin 和已完成认证的私有 state 路径；不需要 SSH，不在此步骤部署或改生产。值未提供前不要直接执行示例。
+**当前 readiness 尚未具备完整备份条件，这套命令只能采真实拒绝/受阻证据，不能证明完整成功。** 不得改 readiness、绕过认证或关闭 TLS 来取得成功。
 
-```powershell
-Set-Location 'C:\Users\zhanghui08\Desktop\clawmanager\ClawManager'
-$env:BACKUP_LIVE_URL = 'https://REPLACE-WITH-AUTHORIZED-FRONTEND/'
-$env:BACKUP_LIVE_STORAGE_STATE = 'C:\REPLACE-WITH-PRIVATE-STATE\admin.json'
-$env:BACKUP_LIVE_TIMEOUT_MS = '600000'
-$env:PLAYWRIGHT_CHANNEL = 'chrome'
-node e2e/backup-live-click.mjs
-$clickExit = $LASTEXITCODE
-Write-Output "backup click exit=$clickExit"
+### 依赖、可信 CA 与真实登录态
+
+只要求两个必填参数：`REPO_ROOT`（验收机实际 checkout 绝对路径）和 `BACKUP_LIVE_STORAGE_STATE`（实际管理员在该 origin 完成真实登录/MFA 后导出的 Playwright storage state 绝对路径）。认证文件是只读秘密输入，父目录权限 700、文件 600，不打印、不提交，不使用 fixture token、seeded admin 或其他 origin 的 state。
+
+浏览器使用锁文件的 Playwright 及自带完整 Chromium，设置 `PLAYWRIGHT_CHANNEL=chromium`，不要求安装 Google Chrome。验收机需已具备 Node/npm 及 Chromium 所需 Linux 系统库；主命令安装 npm 依赖并下载独占浏览器。缺系统库时，由环境管理员在本轮打印的工具目录执行 `./node_modules/.bin/playwright install-deps chromium`，或使用 `install --with-deps chromium`；不借启动 flags 绕过环境故障。参考 [Playwright 官方浏览器文档](https://playwright.dev/docs/browsers)。
+
+CA 沿用实际浏览器已受信的证书链。私有 CA 须由环境 owner 通过可信渠道核对并配置到该验收用户实际浏览器的信任库，服务端链完整且叶证书 SAN 包含 IP `10.130.14.23`；未信任或 SAN 不符就停止修复证书，不关闭 TLS 校验。Linux 信任库说明见 [Chromium 官方证书管理](https://chromium.googlesource.com/chromium/src.git/+/master/docs/linux/cert_management.md)。无需为本脚本额外提供 NSS 路径、昵称或指纹参数。`NODE_EXTRA_CA_CERTS=/absolute/trusted/root-ca.pem` 是可选的 Node/npm 下载信任配置，**不等于 Chromium 信任**；按现有环境设置即可。禁止 `NODE_TLS_REJECT_UNAUTHORIZED=0`、`ignoreHTTPSErrors` 和 `--ignore-certificate-errors`。
+
+登录态生成是独立交互步骤。若需新建，在已安装 Playwright/Chromium 且配置好浏览器 CA 信任的交互环境，选择不存在的新私有输出文件，真实完成认证后关闭浏览器保存：
+
+```bash
+# cwd 是已安装 Playwright 的工具 e2e 目录；路径为实际用户指定的新私有输出。
+: "${BACKUP_LIVE_STORAGE_STATE:?absolute new private output filename}"
+[[ "$BACKUP_LIVE_STORAGE_STATE" = /* && ! -e "$BACKUP_LIVE_STORAGE_STATE" ]] || exit 1
+if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+  printf '%s\n' 'No interactive display: do not run codegen; supply genuine state from an approved interactive browser session.' >&2
+else
+  ( umask 077
+    ./node_modules/.bin/playwright codegen --browser chromium \
+      --save-storage="$BACKUP_LIVE_STORAGE_STATE" \
+      'https://10.130.14.23:32643/admin/instances'
+  )
+fi
 ```
 
-stdout 给出唯一绝对 `receipt.json` 路径，目录 `.tmp-backup-live-click-*` 已被现有 `.gitignore` 忽略。当前生产限制下预期退出 1（按钮不可用或 API 拒绝），不是采集通过；未来公开成品条件齐全预期退出 2，需补上述同任务实证。不要把两个退出码改为成功。
+**无 DISPLAY/Wayland 的 SSH shell 不得盲跑 codegen**；虚拟显示也不能替用户完成真实认证。可在可交互、可访问该 origin 的环境生成后，经私有渠道放到验收机；如会话绑定设备/IP、过期或不满足 MFA freshness，应重新真实登录，不改库续期。主命令不删除登录态输入。
 
-记录审核结论后清理本次日志目录：将 `$clickReceiptDirectory` 设为 stdout 返回 receipt 的父目录，只删该目录。以下校验必须通过；不枚举/删除所有 `.tmp-*`，不删认证输入或他人目录。
+### Bash 主命令：独占工具目录、安装、点击及日志
 
-```powershell
-$clickRoot = (Resolve-Path -LiteralPath '.').Path
-$clickDirectory = (Resolve-Path -LiteralPath $clickReceiptDirectory).Path
-if ((Split-Path -Parent $clickDirectory) -ne $clickRoot -or
-    (Split-Path -Leaf $clickDirectory) -notlike '.tmp-backup-live-click-*') { throw 'Unexpected cleanup target' }
-Remove-Item -LiteralPath $clickDirectory -Recurse -Force
+下面复制 `e2e/package.json`、`package-lock.json` 和三个 `backup-live*.mjs` 到唯一 mktemp run 目录的 `e2e/`，在其中 npm ci、安装本次独占 Chromium 并运行。复制脚本的 root 自然是 run 目录，receipt 也在 run 内。不触碰原 checkout 已有 `e2e/node_modules`，不启动、连接 SSH 或部署服务。Node/npm 和系统库的安装属于验收机环境准备，不在本命令自动改系统。
+
+```bash
+# 在外层设置两个真实绝对路径：
+# export REPO_ROOT=/absolute/path/to/ClawManager
+# export BACKUP_LIVE_STORAGE_STATE=/absolute/private/path/admin-state.json
+# 可选：export NODE_EXTRA_CA_CERTS=/absolute/trusted/root-ca.pem
+(
+  set -euo pipefail
+  umask 077
+  : "${REPO_ROOT:?absolute checkout path required}"
+  : "${BACKUP_LIVE_STORAGE_STATE:?absolute genuine authenticated state required}"
+  [[ "$REPO_ROOT" = /* && "$BACKUP_LIVE_STORAGE_STATE" = /* ]]
+  click_repo=$(realpath -e -- "$REPO_ROOT")
+  click_state=$(realpath -e -- "$BACKUP_LIVE_STORAGE_STATE")
+  [[ -d "$click_repo/e2e" && -f "$click_state" ]]
+  command -v node >/dev/null
+  command -v npm >/dev/null
+  click_run=$(mktemp -d "$click_repo/.tmp-backup-live-bash-XXXXXXXX")
+  click_run=$(realpath -e -- "$click_run")
+  [[ "$(dirname -- "$click_run")" = "$click_repo" && "$(basename -- "$click_run")" = .tmp-backup-live-bash-* ]]
+  printf 'logs_and_receipts=%s\ntool_cwd=%s/e2e\n' "$click_run" "$click_run"
+  click_cleanup_builds() {
+    [[ ! -L "$click_run" && "$(realpath -e -- "$click_run")" = "$click_run" && "$(dirname -- "$click_run")" = "$click_repo" ]] || return 1
+    [[ "$(basename -- "$click_run")" = .tmp-backup-live-bash-* ]] || return 1
+    rm -rf -- "$click_run/e2e/node_modules" "$click_run/browsers" "$click_run/npm-cache"
+  }
+  trap 'click_trap_rc=$?; printf "%s\n" "$click_trap_rc" >"$click_run/process-exit-code.txt"; click_cleanup_builds' EXIT
+  mkdir -- "$click_run/e2e"
+  for click_file in package.json package-lock.json backup-live-click.mjs backup-live-contract.mjs backup-live-contract.test.mjs; do
+    click_source=$(realpath -e -- "$click_repo/e2e/$click_file")
+    [[ "$click_source" = "$click_repo/e2e/$click_file" && -f "$click_source" ]]
+    cp -- "$click_source" "$click_run/e2e/$click_file"
+  done
+  export PLAYWRIGHT_BROWSERS_PATH="$click_run/browsers"
+  export npm_config_cache="$click_run/npm-cache"
+  cd "$click_run/e2e"
+  npm ci
+  # chromium channel needs the full bundled browser; do not pass --only-shell.
+  ./node_modules/.bin/playwright install chromium
+  export BACKUP_LIVE_URL='https://10.130.14.23:32643/'
+  export BACKUP_LIVE_STORAGE_STATE="$click_state"
+  export BACKUP_LIVE_TIMEOUT_MS=600000
+  export PLAYWRIGHT_CHANNEL=chromium
+  set +e
+  node ./backup-live-click.mjs >"$click_run/click.stdout.json" 2>"$click_run/click.stderr.log"
+  click_rc=$?
+  set -e
+  printf '%s\n' "$click_rc" >"$click_run/exit-code.txt"
+  printf 'click_exit=%s\nlogs_and_receipts=%s\n' "$click_rc" "$click_run"
+  cat "$click_run/click.stdout.json"
+  exit "$click_rc"
+)
+# 外层读取上一命令 $?；exit-code.txt 保存点击退出码，process-exit-code.txt 也记录安装等前置失败。
+# 外层若启用 set -e，非零会结束外层脚本；自动编排时用 if 包装整个子 shell。
 ```
 
-入口不生成构建文件、浏览器 trace/video 或下载。服务测试结束正常停止 `go run`/Vite，Go 临时运行二进制随退出回收；若另做构建，构建 owner 必须按 AGENTS 清理自己产物。
+当前预期退出 **1**（按钮不可用、认证/依赖不足或 API not_ready），不是采集通过。未来公开成品条件齐全时退出 **2**，仍需同任务六模块（含非空 Teams/Skills）、源 writer 物理恢复及正式产物/catalog 实证；**不提供完整验收退出 0**。stdout 给出 receipt 绝对路径，其目录也在 run 内；`click.stdout.json`、`click.stderr.log`、退出码文件和 receipt 均保留供审核。stderr 是私有故障日志，审核前不对外上传。非零不得触发自动重试点击。
+
+### 精准清理
+
+EXIT trap 只删除本次 run 内的 npm 安装、独占浏览器二进制和 npm cache 等测试构建产物；保留复制工具、日志和 receipt。不会删除原 checkout 安装、认证输入、CA 配置或远端任务/产物。审核后将 `BACKUP_CLICK_RUN_DIR` 设为主命令打印的唯一绝对 run 路径，按 realpath 核验后只删整个本次 run，不枚举其他目录：
+
+```bash
+: "${REPO_ROOT:?absolute checkout path}"
+: "${BACKUP_CLICK_RUN_DIR:?exact logs_and_receipts directory printed by this run}"
+[[ "$REPO_ROOT" = /* && "$BACKUP_CLICK_RUN_DIR" = /* ]]
+click_repo=$(realpath -e -- "$REPO_ROOT")
+click_run=$(realpath -e -- "$BACKUP_CLICK_RUN_DIR")
+[[ ! -L "$BACKUP_CLICK_RUN_DIR" && "$(dirname -- "$click_run")" = "$click_repo" && "$(basename -- "$click_run")" = .tmp-backup-live-bash-* ]] || exit 1
+rm -rf -- "$click_run"
+```
+
+不生成前端 dist、Go 测试二进制或浏览器 trace/video。本节仅更新最终环境执行方案，脚本业务逻辑未变；安装、登录、点击、清理命令均尚未在该环境执行。前次本机 Git Bash `bash -n` 在启动阶段被 Windows 沙箱拒绝创建 signal pipe，未执行语法检查，不计为通过；本文命令只作静态核对。本轮未生成测试构建产物。
 
 ## 本轮验证及后续接口
 

@@ -29,4 +29,8 @@ go test -mod=readonly -p 2 ./internal/systembackupkekadapter ./internal/systemba
 
 用户确认最终前端 origin 为 `https://10.130.14.23:32643`，目标是 zhanghui08 环境、远测 shell 为 Bash。默认密钥认证被拒绝后，用户明确改为自己连接、自己测试，审核者提供命令；停止继续尝试 SSH。未建立远程会话、未上传或部署。已提供只读 namespace/deployment/pod 版本和工具/磁盘盘点命令，待用户回传。Bash 页面命令见 D 交接；隔离 SQL 组件命令见 C 交接，均须满足前提，不能将 SKIP 或公开投影误作完整备份成功。
 
+用户随后回传：context 为 `kubernetes-admin@kubernetes`；namespace 为 `clawmanager-zhanghui08-system`，UID `337cfe30-2c17-4b8e-b32a-760778b8098e`；App 为 `backup-test-zh-fix18`，实际 digest `c16f07c25c6dc8362aa09b7a1e81f5d1204f2812ae542bbcb21a3946975c6c9d`。未找到备份 controller；用户明确新增内容从未部署，其他 namespace 也没有。主机找到 Bash/git/Python3/kubectl，未找到 Node/npm/Go，可用磁盘约 1.8TB。这是用户执行回传，非审核者独立现场测量。下一步先完成生产收尾和同版本 App/controller/Worker 部署材料，不能在旧镜像上验收当前源码。
+
+D 的 Bash 交接已改为独占工具目录，仅要求真实 repo 和登录态两个路径，不触碰已有 node_modules；现场证书沿浏览器实际信任链。审核者对三个 Bash 代码块执行 `bash --noprofile --norc -n` 通过，未执行安装、登录或点击，语法检查临时目录已删除。
+
 用户已有 `docs/deployment_cn.md` 修改及 `.worktrees/` 保留，不纳入本轮提交。
