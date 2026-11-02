@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"path"
 	"sort"
 	"time"
 
@@ -100,8 +99,8 @@ func (s *DeploymentService) publicationJobInputs(ctx context.Context, claim c.Cl
 		if err != nil {
 			return nil, err
 		}
-		var original FormalCandidateRecord
-		if decodeProviderDeploymentJSON(record.CandidateJSON, &original) != nil || hash(record.CandidateJSON) != record.CandidateSHA256 {
+		seals, err := publicationRecordSeals(record)
+		if err != nil {
 			return nil, c.ErrExecutionRecord
 		}
 		invocationSHA, err := record.Invocation.Hash()
@@ -112,20 +111,12 @@ func (s *DeploymentService) publicationJobInputs(ctx context.Context, claim c.Cl
 		for index, item := range []struct {
 			name    string
 			receipt staging.Receipt
-		}{{cipherPath, original.Candidate.Ciphertext}, {envelopePath, original.Candidate.Envelope}} {
+		}{{cipherPath, seals[0].Intent.Original}, {envelopePath, seals[1].Intent.Original}} {
 			object, ok := expected[item.name]
 			if !ok || object.SHA256 != item.receipt.SHA256 || object.Bytes != item.receipt.Size {
 				return nil, c.ErrExecutionRecord
 			}
-			sealScope := record.SealScope
-			if index == 1 {
-				sealScope.Unit += "/formal-envelope"
-			}
-			reference, err := staging.SealReferenceForIntent(staging.SealIntent{Schema: "controller-staging-seal-intent.v1", Scope: sealScope, Original: item.receipt})
-			if err != nil {
-				return nil, err
-			}
-			inputs = append(inputs, kube.PublishInputFile{Path: item.name, SubPath: ".controller-seals/" + path.Base(reference)})
+			inputs = append(inputs, kube.PublishInputFile{Path: item.name, SubPath: ".controller-seals/" + seals[index].Name})
 			delete(expected, item.name)
 		}
 	}
