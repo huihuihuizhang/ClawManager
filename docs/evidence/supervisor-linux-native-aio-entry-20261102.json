@@ -1,0 +1,36 @@
+{
+  "schema_version": "supervisor-linux-native-aio-entry.v1",
+  "native_source_commit": "51181049e97e4ff3946e75b6c1568dfe2e00b1a1",
+  "archive_sha256": "266197f53f21f4ac8cdc3c0c079499ab298531005520e706d8e3054bf664d64c",
+  "archive_bytes": 46870961,
+  "native_binary_sha256": "74ce2612742e13d4a5680e5c9bdac1dd8292d141e0d29da200ee3c0828363db9",
+  "fixture_source_commit": "875e3960b9b67cc5108b1aad23936214b9984319",
+  "fixture_sha256": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+  "fixture_native_aio": "OFF",
+  "production_equivalent_performance": false,
+  "entry_source": "scripts/system-backup-supervisor-native-aio-875e3960.sh",
+  "entry_sha256": "d88d94bc18cb92d3a7bc8e54bf63ca3e7cea937052c3baed4b86d26d0f635c8b",
+  "local_checks": {
+    "bash_syntax_exit": 0,
+    "archive_extracted_and_all_checksums_verified": true,
+    "control_flow_cases": [
+      {"case": "success", "exit": 0},
+      {"case": "test7-summary9", "exit": 7},
+      {"case": "summary9", "exit": 9},
+      {"case": "cleanup-failure", "exit": 1},
+      {"case": "wrong-fixture-preflight", "exit": 1}
+    ],
+    "log_sha256": "0aa3a03477c327eafe3da5b3a03fd94375d7afa0f3fd294c51dc99c127ebd208",
+    "harness_sha256": "76c0bc9eb1814b180e7c5024085f2898b4d543aa4d3687b63f7f2f5b5a32e3f7",
+    "scope": "Fake native fixture process only; actual archive extraction and byte checks",
+    "temporary_archive_copies_and_extractions_removed": true,
+    "real_native_executed": false,
+    "real_sql_executed": false,
+    "cluster_connected": false
+  },
+  "next_remote_stage": "Wait for fixed startup-only success, then user uploads the original archive plus new entry and fixture Python and runs the new entry",
+  "pending_original_native_archive_retained_locally": true,
+  "cleanup_original_archive_after_native_phase": true,
+  "production_image_updated": false,
+  "full_page_acceptance": false
+}
