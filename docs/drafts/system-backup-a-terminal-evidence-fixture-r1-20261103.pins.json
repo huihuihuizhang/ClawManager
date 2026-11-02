@@ -1,0 +1,28 @@
+{
+  "schema": "a-terminal-evidence-source-fixture-supersede.pins.v1",
+  "date": "2026-11-03",
+  "status": "FROZEN_SOURCE_ONLY_FIXTURE_SUPERSEDE_NOT_TESTED",
+  "files": [
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_source_test.go",
+      "supersedes_sha256": "a47a772f8f8b27bd1b3bfcfd233c13ee39a6d4d8cb6f86dbb7f55ab2c1876e48",
+      "sha256": "c22a7e7009a197bb3a55c6c76cb0d2ce5371e2961b9a363495ecf5908fa7cddf"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_mapping_issue_test.go",
+      "supersedes_sha256": "7f48ef7b753769ee98f21d0ab8134077a9e5ef1f38d94b1d31ec0a7cb9c62ebb",
+      "sha256": "85764dd33753afacf89cd20102f01b91c6c291fc446ad2a4af31f8449fd2dd14"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/functional_classification_test.go",
+      "supersedes_sha256": "8f71b2179bfd11c4d2b860cf0d8dd977960d2ccb7c667eb268e2b0564a430e0d",
+      "sha256": "465e70c139583260087029d3b258acfa046b47d2fca1cf018566e90eb157de97"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-terminal-evidence-fixture-r1-20261103.json",
+      "supersedes_sha256": null,
+      "sha256": "598f876510dea5a925e05dbc4df95e853c51d72af6b09d747088c51dfb1d8bee"
+    }
+  ],
+  "validation": "Test fixture changes + gofmt only. No production transaction/producer validation weakened. Root owns execution/cleanup; historical manifests/failures preserved."
+}

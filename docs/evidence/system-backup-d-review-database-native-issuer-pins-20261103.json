@@ -1,0 +1,76 @@
+{
+  "schema_version": "system-backup-d-small-source-review-batch.v1",
+  "id": "database-native-issuer",
+  "status": "FROZEN_REVIEW_SPLIT_SOURCE_ONLY_PENDING_ROOT_VALIDATION",
+  "historical_source_manifest": {
+    "path": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+    "sha256": "4089b451dd79b3a8510c425775c34a120ec473a6b969873fc22ec819064e088a",
+    "unchanged": true
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "sha256": "d34522d2343f505773c3127b3d3a2ca69824738bafd949c70bea5c7f4d7317d2"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_native.go",
+      "sha256": "2aa6114042187467836ac8cddc3ca803c1301525566fb52e5c701e3a861d6c2a"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_issue_test.go",
+      "sha256": "cff3286f68eca64857d2d0c2595fca7025612f2ea57aa82cae183c2defbe1c1d"
+    }
+  ],
+  "required_coapply_batch_ids": [],
+  "new_or_changed_exported_surface": [
+    {
+      "symbol": "install.DatabaseSourceIssueVersion",
+      "provider": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "caller": "DB issue definition validator/real sequence/CLI",
+      "baseline": "fixed original-database-source-issue.v1"
+    },
+    {
+      "symbol": "install.DatabaseSourceIssueDefinition",
+      "provider": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "caller": "actual issue caller; no caller-supplied SQL/probe authority",
+      "baseline": "Version/OriginalDefinitionSHA256/Account/Service/ServiceUID/Port/Source"
+    },
+    {
+      "symbol": "install.DatabaseSourceIssueResult",
+      "provider": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "caller": "sequence method/CLI receipt",
+      "baseline": "DefinitionSHA256/ScopeSHA256/actual Source/NotBefore/Until"
+    },
+    {
+      "symbol": "(*install.SourceMaterialIssuer).IssueDatabaseSource(context.Context,string,string,[]byte)",
+      "provider": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "caller": "production_capture_database_issue.go",
+      "baseline": "requires pre-existing genuine nonserializable SourceMaterialIssuer; observeDatabaseSource/databaseSourceConnector/writeDatabaseSourceGrant are REQUIRED sibling definitions in database_source_material_native.go"
+    }
+  ],
+  "baseline_dependencies": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/source_material_issue.go",
+      "sha256": "f2655544f271b1c0359b78bb458d0c2275a09922a8ead93958ad55d06c622d94"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/source_material_issue_test.go",
+      "sha256": "f644bd7769ee9b00a9842409103f03a055bf052ec8fd79f45d0e75e617f3de3e"
+    }
+  ],
+  "root_validation_commands": [
+    "go test ./internal/systembackupinstallationowner/install -run '^TestDatabaseSource' -count=1 -v"
+  ],
+  "limits": "Issuer file MUST include native sibling for compile and actual TLS MySQL/census path. Actual driver/private key/grant side effects are not supplied by callbacks. Tests are closed driver config, real owner Service drift pre-native refusal and exact file conflicts; positive native IssueDatabaseSource remains unexecuted and not claimed.",
+  "validation": {
+    "files_are_exact_historical_batch_bytes": true,
+    "source_modified_by_this_split": false,
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "cleanup": "Root removes its test/build/SQL/cache products after verification per AGENTS."
+}

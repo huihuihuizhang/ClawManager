@@ -1,0 +1,52 @@
+{
+  "schema": "a-native-host-concrete-composition-seam.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_AND_D_MAIN_INTEGRATION",
+  "date": "2026-11-03",
+  "root_remote_status": "Root reports b9c1d23a4adfb48d233a22c12416e7f9fa11e2be local/remote equality; release NO_GO. This A batch performs no Git/network verification.",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/native_host_composition.go": "aa0fa06413ca4b605114685b91858e04064ce906e0473f04f913c4bca8116f76",
+    "backend/internal/systembackupinstallationowner/install/native_host_composition_test.go": "cfc72902260dd212e6e636dd36f8143e009f28aaf5bab21afb00f50e89839caa"
+  },
+  "supersedes": [],
+  "dependencies": [
+    "docs/drafts/system-backup-a-terminal-original-source-20261103.pins.json 1b85b19c65bd7a34d3d1bd87d5fa40381f7428e441b59fccd10a938a1ae8354d unchanged",
+    "docs/drafts/system-backup-a-native-host-kek-followup-20261103.pins.json 381fcbeef3359ca5b130ee0741dd7ff676ee6619a0140d685e1b87814363bded unchanged",
+    "docs/drafts/system-backup-a-bootstrap-current-admin-select-only-20261103.pins.json unchanged; root native helper d2f1b9 not touched"
+  ],
+  "actual_new_entries": [
+    "(*BootstrapTerminalOriginal).WithNativeHostSource(BootstrapNativeHostFiles) -> *NativeHostBootstrapTerminalOriginal",
+    "(*BootstrapTerminalOriginal).NativeHostDeploymentCandidates(selections, BootstrapNativeHostFiles) -> *security.BootstrapDeploymentCandidates, *NativeHostBootstrapTerminalOriginal"
+  ],
+  "integration": [
+    "D corrected NewEnrolledTerminalInstallationMaterials now returns owners, concrete original, error and no old capture/Materials wrapper. This new method uses that SAME concrete source and actual resources; D does not need to reconstruct nonce/CA or access private resource maps.",
+    "Call original.NativeHostDeploymentCandidates(selections, nativeSourcePins); after current missing-owner gate install returned candidates as owners.Candidates. Preserve independent owners.KEK set by the real source linker.",
+    "All actual concrete owner instances and grouped source pointer aliases are preserved. No provider is prepared twice, no generic Original callback is accepted and no metadata supplies executable owner code.",
+    "No new resource slot is added: all twenty-three missing resources remain missing. Missing concrete sources stay gated before input/credential/provider/SQL work.",
+    "The actual native host supplement/observer remains mandatory on the selected new candidate route. The old original constructor and all frozen twenty/seven files are unchanged.",
+    "Do not put capture.CandidateAuthority or Materials around the returned native authority. It already returns the actual six-stage terminal session plus the real native host condition."
+  ],
+  "C_minio_read_only_findings": [
+    "C has now implemented ReadSQLCurrentCandidate with shared ControlledSQLReader/SampleTime. Existing ordinary reader detects controlled views too; the earlier historical inventory clock warning must not be mistaken for current unfixed source.",
+    "No BootstrapTerminalResource/PrepareTerminalResource was found in current C execution/MinIO leaf source at this read.",
+    "Existing MinIOPublicationPermissionReader.CheckCurrentEffectiveV2 requires DeploymentService Runtime/Forward and publisherVerifierDB, calls publicationStore/currentPublicationCatalog/readPublicationDependencySQL. It cannot be used unchanged as pre-config bootstrap native authority.",
+    "Actual reusable native seams are originalUses/native credential loads, minioPermissionKubernetes, collectV2, minioEffectiveGuardAllV2, exact original owner/source tail comparisons. They need a new C original-window entry with typed original SQL/native pins, not enabled-v1/task publication prerequisites.",
+    "Five terminal aliases must share one concrete C owner for artifact_delete/artifact_read/artifact_write/catalog_append/catalog_read, current consumer SQL head->grant->sorted refs at L2/history/final and physical native checks outside SQL. No second SQL signature domain or permission reader."
+  ],
+  "source_inventory": "docs/drafts/system-backup-a-remaining-23-owner-inventory-20261103.json remains frozen; each entry has actual reuse paths, missing code and native/site inputs. New database source sequence producer was already recorded as concurrent source, not falsely listed as missing implementation.",
+  "validation": {
+    "test_build_products_created": false,
+    "not_executed": [
+      "Go compile/test/list/vet/build",
+      "SQL/migrations/native API/provider/remote",
+      "Git/commit/push"
+    ],
+    "a_executed": [
+      "gofmt parse/format on these two new files",
+      "SHA parity of previous A twenty-file/seven-file/admin-five frozen batches"
+    ],
+    "cleanup": "Root retains test/build/SQL/Git ownership and must remove all test/build products after testing per AGENTS.",
+    "test": "Constructor metadata composition only: exact concrete resource aliases/capture retained, original terminal object/map not reused mutably, twenty-three missing slots unchanged, nil terminal/empty selections refuse. No full consumption/native SQL or site admission claim.",
+    "root_component_command": "go test ./internal/systembackupinstallationowner/install -run ^TestNativeHostComposition -count=1 -v"
+  },
+  "main_changes": "None. D must explicitly select this new route; A does not claim main/page/first-install/six-domain completion or DR eligibility."
+}

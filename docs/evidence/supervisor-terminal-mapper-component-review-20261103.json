@@ -1,0 +1,336 @@
+{
+  "schema_version": "supervisor-terminal-mapper-component-review.v1",
+  "reviewed_at": "2026-11-02T22:26:27.643127+00:00",
+  "baseline_commit": "54f6222fc307e742712115e651a31ec01189022b",
+  "decision": "SOURCE_INTEGRATION_ONLY; NO_GO_FOR_FIELD_DEPLOYMENT_OR_FULL_PAGE_ACCEPTANCE",
+  "acceptance_scope": {
+    "real_page_nonempty_complete_requested_six_domain_backup_required": true,
+    "source_business_original_state_restored_required": true,
+    "same_task_formal_artifact_independent_full_readback_signed_catalog_and_succeeded_required": true,
+    "isolated_restore": false,
+    "disaster_recovery_qualified": false
+  },
+  "source_files_and_documents": {
+    "backend/internal/systembackupsecurity/bootstrap_terminal_resources.go": "ea2d66aafb6f51b5b6a7d1233895d871b692695dc264df9f43b6be0f5c600f3c",
+    "backend/internal/systembackupbootstrapsecurity/terminal_resources.go": "54dde9054cf32cf5b277ba8332d86fce37a6bbc32d5afc35ff6bd9003ab0119d",
+    "backend/internal/systembackupbootstrapsecurity/terminal_resources_test.go": "9e1eb362e1d5edec9bae6d0805e293d19538bf79f501697c8b2a37d7713ca2b4",
+    "backend/internal/systembackupnoncebootstrap/terminal_resource.go": "c3dd1f3824bb8192f9c0f25eb650576a63f59a0c4b300ce391cdbe20ecb3904c",
+    "backend/internal/systembackupnoncebootstrap/terminal_resource_test.go": "5199b111fb3aaf5f68ddb5f8a8bd25b8e3df4640676014ea356c0bb04e4981e0",
+    "backend/internal/systembackupcatrust/terminal_resource.go": "0e3c513fe8f23cb41e9035063000024b67ed23cc7fe7c723fe18b7936638fcca",
+    "backend/internal/systembackupcatrust/terminal_resource_test.go": "c2e1d689d852b11fce39097f68312893801154abd5813cb03e640af43bae76ed",
+    "backend/internal/systembackupevidence/bootstrap_original_source.go": "5c4d38eab6361cf50f2e1d4657b4de567be8019f2c02866963654d6add0a4a8c",
+    "backend/internal/systembackupevidence/bootstrap_original_source_test.go": "c22a7e7009a197bb3a55c6c76cb0d2ce5371e2961b9a363495ecf5908fa7cddf",
+    "backend/internal/systembackupproducer/original_shared_source.go": "7894c55c5b9b7dac4cb1347ceb39df41e8ac5536da2998f0fef86abe6387c107",
+    "backend/internal/systembackupproducer/original_shared_source_test.go": "acc12bac132eb64a9cfd9fc670c15e705d8d96497d7a52dd8873f771dec942da",
+    "backend/internal/systembackupinstallationowner/install/terminal_mapping.go": "812be15059039f76ae561a3355b3dfdc312e04269aa6b39e6806ac8442197e2d",
+    "backend/internal/systembackupinstallationowner/install/terminal_mapping_issue_test.go": "85764dd33753afacf89cd20102f01b91c6c291fc446ad2a4af31f8449fd2dd14",
+    "backend/internal/systembackupinstallationowner/install/terminal_host.go": "1d39ad5912b3357487e1cd22ed4f285e50254b71d212f5ee3b64a64864be2130",
+    "backend/internal/systembackupinstallationowner/install/terminal_original.go": "9ae51b9444d9c12a1301a1707cab0e4a8f1a7ca884d1444cd17bbc56166c487e",
+    "backend/internal/systembackupinstallationowner/install/terminal_original_test.go": "1657b793c91f417018de8fc55ba975d974873a0d64e990644a1c40cd4624b0f4",
+    "backend/internal/systembackupinstallationowner/install/terminal_owners.go": "e15507563983a5d037e721d4aab60347d6e44ce2ea0335374881baac41b6f710",
+    "backend/internal/systembackupinstallationowner/install/terminal_load.go": "fe3938335ed00adcdc2d756b4a312c4962b870012e8d6976d9ec12d807b145c3",
+    "backend/internal/systembackupinstallationowner/install/terminal_sql.go": "345d23f381432f7330983e061662a96bc3ab34440cca3d272f1c8a6a7bcd4bde",
+    "backend/internal/systembackupinstallationowner/install/terminal_export.go": "f8b348b899d603de5d7d6e799284227742dc6c33cba2f20e793a9a9af471af71",
+    "backend/internal/systembackupinstallationowner/install/native_host_mapping.go": "313c19cf1329a9347f90f174117205bd449eeb51c6d2221f7f976c38703c70c5",
+    "backend/internal/systembackupinstallationowner/install/native_host_observation.go": "848784eb589a6881a5264184a728359801d04b1b63d6fed57550c099323a2681",
+    "backend/internal/systembackupinstallationowner/install/native_host_terminal.go": "8b1300623faf4fecdb14c98404d0a3bbf4833b9219e429d2a20e5585a7027708",
+    "backend/internal/systembackupinstallationowner/install/native_host_mapping_test.go": "cd001e4aad5170b0ac66c3a5298debb6332b1a8858fecc65696b5d0752bfdfca",
+    "docs/drafts/system-backup-a-remaining-23-owner-inventory-20261103.json": "fb4cca2e054a4763c8a9d8ab0933afe73b7a201462af288ac9afb6250e2d1339",
+    "backend/internal/systembackupinstallationowner/install/native_host_composition.go": "aa0fa06413ca4b605114685b91858e04064ce906e0473f04f913c4bca8116f76",
+    "backend/internal/systembackupinstallationowner/install/native_host_composition_test.go": "cfc72902260dd212e6e636dd36f8143e009f28aaf5bab21afb00f50e89839caa",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_types.go": "ba6343483f8d8bdfaf842d5a59fa9cc00a3f48a3161bf160d38f543d74aec08d",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_issue.go": "7c8252f7494ba5926da293bac4c7c3a334aafb21d5b2abcff0b8ef4adf26d94f",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_owner.go": "2a6ebb5462e02ab63ff8b3d81141e1dffd5c3ff5af50935645ac93d0327122ad",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_test.go": "465e70c139583260087029d3b258acfa046b47d2fca1cf018566e90eb157de97",
+    "docs/drafts/system-backup-a-functional-scope-audit-20261103.json": "2b79436cfc3f2d644042fa647bef5e4f79558264dc6befb193f71772ad101b4b",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_component_fixture_test.go": "eadfaae85f7e8ce91892d1b34c3432e17739022eabac2993387b4f86cbe11b07",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_component_sql_test.go": "885f874f692485b3dfd554b8fafe055e063742ec6513a3b7adc445c5a5232179",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_component_test.go": "c58442eb1ba663494734d3a179e1b5d4bb318a7c6a0a6ffba44f84db08143522",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal.go": "75257cc6b3903f9d04c605ecb491618f35c47a19955990ef288bd42512631c54",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go": "7e2d50ce09cb8ef7379b4ffd1ce366eed9bea4b063a1d2b9085366695828184a",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go": "1ec1a94e499bcc856733e693d7f86df4df3a6dc59460a27ed08a07bb86bc61a6",
+    "backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go": "767c7e59aa4215ca9cf654803edbde5227aac8fbef66962233d2e1b561ec7646",
+    "backend/internal/systembackupevidence/bootstrap_original_host.go": "f04224dfb49c4e990308c70a2ca4a11e664f341b0835fd64483d8a6394d81dcb",
+    "backend/internal/systembackupevidence/bootstrap_original_host_test.go": "40624965ecbc22cd377d9ff770c190fdf584cfb4ea54d391493c2a1cf4eb8917",
+    "backend/internal/systembackupkms/config_validation.go": "f70e0ee37bdd2d935a8229d79a75dd50ea2578182ab3c5fe3dfb23468870721d",
+    "backend/internal/systembackupkms/config_validation_test.go": "0ef6d75e74f2d4d09d06b3a6eb77fb0b67a6e3a8136852d248713f74c3d18566",
+    "backend/internal/systembackup/kube/formal_materials_validation.go": "0c63e079ed3cbc3d0d2c7c9ddb5f8eb54d3141625d4a0988898fe99ec4899efc",
+    "backend/internal/systembackup/kube/formal_materials_validation_test.go": "fc51e76393b854157ca018a37d0e1d89a45318e15c4b4e014fc3bbcc1edf3f9d",
+    "backend/internal/systembackup/worker/source_team_objects_scope.go": "d2b420126d6d0b57121f5177d1cba9b0f223270c08ab2c67169e786aa233d798",
+    "backend/internal/systembackup/worker/source_team_objects_scope_test.go": "d23cc1b6aad7e6109f6f081b84c63585d0e688e7dfd5f5efdee73f44f2fcfeb8",
+    "backend/internal/systembackupexecution/production_capture_materialize.go": "a9b3c52d1ffb3f257dbf4d0647a74dfdc1b514c03d2fbdc395f77a8979fc87c5",
+    "backend/internal/systembackupexecution/production_capture_materialize_complete_test.go": "7d59f2c8bc76bc2a6f7bfd49a15d1c6ab5f408a6e6e5e236531f3a44166bd0a7",
+    "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go": "b48b954711a56d86ffa62531a80c8e93e1bc17406fba53d6ce08080dccfb8bc7",
+    "backend/internal/systembackupexecution/production_capture_materialize_diagnostic_test.go": "7cb6f7b948a54778c468491178c7c5907a68655e5fb26b7c7b511f84da1e95f7",
+    "backend/internal/systembackupexecution/production_capture_materialize_grant_window_test.go": "b071f177e3888425afc8007df39cdda57e1a8f0af39f6798b27f8cf7461eda91",
+    "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go": "d34522d2343f505773c3127b3d3a2ca69824738bafd949c70bea5c7f4d7317d2",
+    "backend/internal/systembackupinstallationowner/install/database_source_material_native.go": "2aa6114042187467836ac8cddc3ca803c1301525566fb52e5c701e3a861d6c2a",
+    "backend/internal/systembackupinstallationowner/install/database_source_material_issue_test.go": "cff3286f68eca64857d2d0c2595fca7025612f2ea57aa82cae183c2defbe1c1d",
+    "backend/internal/systembackupexecution/production_capture_database_issue.go": "6f135dc14e4d01ef4a378ab6343b0b1be2d8c71fc15d41165a84f76e84b616fd",
+    "backend/internal/systembackupexecution/production_capture_database_issue_test.go": "0de4f3d7dd4e4f29eb8dfff3600230d935634668e36f09c664c03cb6dfb6aab5",
+    "backend/internal/systembackupexecution/production_capture_database_output_test.go": "a1d9b6e2f946ddda260cde100477391fdb1ce602d6c8065c2733105076067fac",
+    "backend/internal/systembackupexecution/production_capture_materialize_test.go": "fdf27777892968d5746b92371aba249af2d1d4e7cb8704dd36160c4b7586a37a",
+    "backend/internal/systembackupinstallationowner/install/terminal_original_public_source.go": "ef4a8df705a0e3d9cad202b6a65fa106721b4065e99b0573a6a87fff0de6712b",
+    "backend/internal/systembackupinstallationowner/install/terminal_locator_race_test.go": "f8de23ea57069ab8b066b6722cd5ed5bc3742e08eecd3bb50b4e2ed275220a4d",
+    "docs/drafts/system-backup-a-terminal-locator-auth-r1-20261103.json": "3d067251d79d91249ba5378ba79d363428954bd793050261976cb273c42bc361",
+    "docs/drafts/system-backup-a-terminal-evidence-fixture-r1-20261103.json": "598f876510dea5a925e05dbc4df95e853c51d72af6b09d747088c51dfb1d8bee"
+  },
+  "frozen_manifests": {
+    "docs/drafts/system-backup-a-terminal-original-source-20261103.pins.json": "1b85b19c65bd7a34d3d1bd87d5fa40381f7428e441b59fccd10a938a1ae8354d",
+    "docs/drafts/system-backup-a-native-host-kek-followup-20261103.pins.json": "381fcbeef3359ca5b130ee0741dd7ff676ee6619a0140d685e1b87814363bded",
+    "docs/drafts/system-backup-a-native-host-composition-20261103.pins.json": "6d4be957997cbf20bd9503a42136949dcbee942fdd39bbfb3722d86450e99050",
+    "docs/drafts/system-backup-a-functional-classification-20261103.pins.json": "d45f29a7bd0aa0db30097d560c1900410fcb1b008a97f2ca38c0147365ec3eaf",
+    "docs/evidence/system-backup-c-minio-terminal-owner-source-20261103.json": "b6f740326070cd8e61c3ab36c9caf6f427225cdf6f54b63187f02df97307dc85",
+    "docs/evidence/system-backup-c-minio-terminal-region-supersede-source-20261103.json": "e383eeddb0d84cf9ba752522d40a74d1ce1c5099508dba58e1f1cd3a5774e91c",
+    "docs/evidence/system-backup-c-minio-terminal-concrete-components-source-20261103.json": "8eff17c0b189296c91b5f7af1ed93b2804d93c09fbe4ae1e2ea1b7acac4dcdde",
+    "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json": "02224802da4fd0c3a8c135f509809b62d480119645c687e754463bb03d660a04",
+    "docs/evidence/system-backup-d-review-mapper-validation-pins-20261103.json": "fb0140bdedc1293f07bae3e7b6fac6e4a81d15255a7594f2b5695b6e889041ec",
+    "docs/evidence/system-backup-d-review-mapper-core-pins-20261103.json": "26e64099bae6a0277f80eb9234889775b2dd6e19e5a89006190cdb1280ff3987",
+    "docs/evidence/system-backup-d-review-mapper-diagnostics-pins-20261103.json": "18e4d574fd9995b267c43b9b5dd943c8075075d18edeaddfd2a21781ef9f6f80",
+    "docs/evidence/system-backup-d-mapper-source-grant-window-supersede-pins-20261103.json": "703d68f851e21661740da43e1ea1708b6d0e979eed29d9da57ded4c2c1f2d7ab",
+    "docs/evidence/system-backup-d-review-database-native-issuer-pins-20261103.json": "364e81b1dcfab088d5214f4b433e6200fdea21d34e8ae43e6a677f7a032c5976",
+    "docs/evidence/system-backup-d-review-database-sequence-pins-20261103.json": "fcfdfbd4c06309a9e2f0d19feb0e063c23e6a85bec259e0ea9dcf4c15bae8872",
+    "docs/evidence/system-backup-d-database-output-reservation-supersede-pins-20261103.json": "16eb5d290253cd5036ee42e3fdb2ee622ff00c532d5e8c63327a63c26821d257",
+    "docs/drafts/system-backup-a-terminal-locator-auth-r1-20261103.pins.json": "9c0f967450817384c4c317aed2b5fcf2b866d94cb1a8bf78a717365a647651ea",
+    "docs/drafts/system-backup-a-terminal-evidence-fixture-r1-20261103.pins.json": "f6ba20ae0555921ba8f09a132724951abf37415e835cfb4e2aab68ad63bdc401"
+  },
+  "root_documents": {
+    ".gitattributes": "3d57f5cc60f6ebd657ab9867fc1381fff0e182bc563f5910dc53b4a35946c9ce",
+    "docs/system-backup-supervisor-next-remote-20261103.md": "73b617545d47b6befc5b2d603ffefedea67573fb440a0640197f6c0d00735b9b"
+  },
+  "explicit_terminal_supersedes": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_load.go",
+      "supersedes_sha256": "7a6b60708ac0a51cbc11f828c54eeadcd76c5e874a9b8a36fee4d9eeec44b447",
+      "sha256": "fe3938335ed00adcdc2d756b4a312c4962b870012e8d6976d9ec12d807b145c3"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/native_host_terminal.go",
+      "supersedes_sha256": "c2842b528d5f8c794ec2161c4f9d818c095bfcc69875827de626967e9b875b44",
+      "sha256": "8b1300623faf4fecdb14c98404d0a3bbf4833b9219e429d2a20e5585a7027708"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_original_public_source.go",
+      "supersedes_sha256": null,
+      "sha256": "ef4a8df705a0e3d9cad202b6a65fa106721b4065e99b0573a6a87fff0de6712b"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_locator_race_test.go",
+      "supersedes_sha256": null,
+      "sha256": "f8de23ea57069ab8b066b6722cd5ed5bc3742e08eecd3bb50b4e2ed275220a4d"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-terminal-locator-auth-r1-20261103.json",
+      "supersedes_sha256": null,
+      "sha256": "3d067251d79d91249ba5378ba79d363428954bd793050261976cb273c42bc361"
+    },
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_source_test.go",
+      "supersedes_sha256": "a47a772f8f8b27bd1b3bfcfd233c13ee39a6d4d8cb6f86dbb7f55ab2c1876e48",
+      "sha256": "c22a7e7009a197bb3a55c6c76cb0d2ce5371e2961b9a363495ecf5908fa7cddf"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_mapping_issue_test.go",
+      "supersedes_sha256": "7f48ef7b753769ee98f21d0ab8134077a9e5ef1f38d94b1d31ec0a7cb9c62ebb",
+      "sha256": "85764dd33753afacf89cd20102f01b91c6c291fc446ad2a4af31f8449fd2dd14"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/functional_classification_test.go",
+      "supersedes_sha256": "8f71b2179bfd11c4d2b860cf0d8dd977960d2ccb7c667eb268e2b0564a430e0d",
+      "sha256": "465e70c139583260087029d3b258acfa046b47d2fca1cf018566e90eb157de97"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-terminal-evidence-fixture-r1-20261103.json",
+      "supersedes_sha256": null,
+      "sha256": "598f876510dea5a925e05dbc4df95e853c51d72af6b09d747088c51dfb1d8bee"
+    }
+  ],
+  "explicit_mapper_supersedes": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "sha256": "a9b3c52d1ffb3f257dbf4d0647a74dfdc1b514c03d2fbdc395f77a8979fc87c5",
+      "supersedes_sha256": "4301a14d743b4f2c53d3eb983f0b391501f6b67bf64db9a9ddf28cfdc9fc90c7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "sha256": "6f135dc14e4d01ef4a378ab6343b0b1be2d8c71fc15d41165a84f76e84b616fd",
+      "supersedes_sha256": "19877b0eae6dccc41afa79816d307034c74870c652bf71eeeaf0fa66cc0c18a7"
+    }
+  ],
+  "review_findings_and_resolutions": [
+    {
+      "priority": "P1",
+      "finding": "Terminal and native-host loaders selected issuer plan/public from a second locator read without matching its already authenticated source.files SHA; restoring original locator before final current-file checks could conceal transient selection of a non-enrolled signing key.",
+      "resolution": "Both real call sites use readBootstrapOriginalPublicSource. It compares exact locator bytes against authenticated same-path original pin before selecting plan/key, preserves independent plan/public hashes and poisons the loaded attempt on failure. Existing final current checks remain.",
+      "proof": "Two actual consumer-load + shared production key-selection regressions use exact pinned mapping/native record and real foreign Ed25519 signatures, reject transient foreign locator then restore original bytes, reject reuse of poisoned source and allow a new independent original load. These are not complete thirty-owner positive admission tests."
+    },
+    {
+      "finding": "Evidence fixture used generic Transactions.Run without bootstrap clockContext, so initial source.Lock refused before positive read and some fault tests could pass before injection.",
+      "resolution": "Only test fixture changed to actual caller-owned RepeatableRead tx with GuardInTx, original guarded SampleTime/floor and explicit commit; forwarded driver query counters require reaching evidence/chunk reads and successful-Lock callbacks as appropriate. Production transaction/source checks unchanged.",
+      "proof": "Positive detached-facts and all original EOF/projection/chunk/current/copy/context tests passed under Linux."
+    },
+    {
+      "finding": "Two issuer fixtures moved ResultRequest.Scope but left Evidence.OwnerID at vector installation; strict producer validation refused before signed issuer path.",
+      "resolution": "Only fixture owner association changed before original hash calculation. Producer validation unchanged. Revocation negative now also requires both actual producer record reads and intended original admin role mutation.",
+      "proof": "Previously failing four issuer/native-host/classification roots now pass."
+    },
+    {
+      "priority": "P2",
+      "finding": "DB/Teams signed source grant windows accepted by mapper could be refused later by worker for zero NotBefore or lifetime over 24 hours.",
+      "resolution": "Mapper rejects before CREATE; same actual worker constraints, original key/signature/scope/file hashes and unchanged signed definition window coverage retained.",
+      "proof": "Linux executes all four independently re-signed zero/25h DB/Teams cases without skips."
+    },
+    {
+      "priority": "P2",
+      "finding": "Database source grant output could collide with reserved future capture bundle/metadata or existing Redis/object grant coordinates.",
+      "resolution": "Exact original typed definition/hash and clean absolute output precheck runs before authority recheck, private signing-key read or native issuer. No cleanup/rename substitutes for refusal.",
+      "proof": "Linux executes four reserved-coordinate cases, confirms no extra SQL/sign/native path and no mutation of existing or future outputs."
+    },
+    {
+      "finding": "MinIO finite error parser needed optional exact signed Region while rejecting malformed or foreign values.",
+      "resolution": "C explicit region supersede retains exact status/code/key/EOF and all duplicate/unknown/structure refusals.",
+      "proof": "All ten MinIO protocol/concrete-owner component roots pass; no live MinIO compatibility claim."
+    }
+  ],
+  "implemented_source_boundaries": [
+    "Original A terminal consumes independently signed full selection/owner bindings, original capture current SQL, complete C1 record projections and evidence metadata/chunks to EOF, original capacity/retention and same original context/transaction. Missing compiled owners still close before credentials/provider/SQL work.",
+    "Native host supplement derives actual workload through existing production peer observer, binds immutable peer ConfigMap, exact imageID and PodSpec profiles rather than accepting copied workload hashes. These tests use controlled Kubernetes transport.",
+    "Functional classification owns two original registries, allows explicit same-cluster-copy and unavailable disaster identity metadata for functional_test/not_provided without manufacturing disaster independence or relaxing key/source/provider checks.",
+    "One concrete C MinIO owner supplies five original purposes and private short physical deadline. Current seven-row SQL/revocation uses the original guarded SampleTime; history stays subject to current identity and fresh-only checks stay separate. Native I/O remains outside caller SQL locks.",
+    "Mapper validates all nine declared operations, independent Teams scope, actual KMS structural/window constraints and actual Job material projection before object CREATE; diagnostics distinguish created, reused and ownership-unknown without auto deletion.",
+    "Database source producer stays in the original sequence/context and failure latch, uses strict native TLS connector and preserves exact grant retries; no positive real source database issuance was executed here."
+  ],
+  "verification": {
+    "linux_component_distinct_roots_passed": 50,
+    "linux_subcases_passed": 147,
+    "linux_fail": 0,
+    "linux_skip": 0,
+    "linux_component_roots": {
+      "clawreef/internal/systembackupproducer::TestOriginalSharedSourceClosedRecords": "pass",
+      "clawreef/internal/systembackupproducer::TestOriginalSharedSourceRejectsCorruptionAndIncompleteEOF": "pass",
+      "clawreef/internal/systembackupevidence::TestBootstrapOriginalHostNativeProjectionUsesProductionPeerIdentity": "pass",
+      "clawreef/internal/systembackupevidence::TestBootstrapOriginalHostRejectsUnboundSourceAndTailDrift": "pass",
+      "clawreef/internal/systembackupevidence::TestBootstrapOriginalEvidenceReadsCompleteRowsAndChunks": "pass",
+      "clawreef/internal/systembackupevidence::TestBootstrapOriginalEvidenceRejectsActualSQLDriftAndEOF": "pass",
+      "clawreef/internal/systembackupevidence::TestBootstrapOriginalEvidenceRecheckAndCopyFailuresLatch": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestDatabaseSourceConnectorKeepsNativeTLSAndClosedDriverOptions": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestDatabaseSourceIssuerRejectsOriginalServiceDriftBeforeNativeSigningComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestDatabaseSourceGrantFileRetainsExactOriginalRetryAndConflicts": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestFunctionalClassificationAcceptsOneDomainAndExplicitUnavailableMap": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestFunctionalClassificationIssuerUsesActualOriginalAuthorityWithoutDRProbe": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestFunctionalClassificationOwnerIsConcreteGroupedAndCandidateOnly": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestNativeHostCompositionPreservesConcreteInstancesWithoutFillingOwners": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalNativeHostMappingActuallyDerivesC1WorkloadAndBridgesProfiles": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestNativeHostTerminalStillRefusesTwentyThreeMissingOwners": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestNativeHostCheckCopiesCannotReviveOriginal": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapTerminalLocatorRejectsTransientNonEnrolledMappingKey": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestNativeHostTerminalLocatorRejectsTransientNonEnrolledNativeKey": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapOriginalMappingIssuerReadsActualSourcesOutsideOwnerLocks": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapOriginalMappingIssuerRejectsRevocationAfterProducerRead": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapTerminalOriginalKeepsTwentyThreeMissingOwnersClosed": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapTerminalOriginalRejectsWrongConcretePurpose": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestBootstrapOriginalMappingSignatureAndTransportNeverCreateAuthority": "pass",
+      "clawreef/internal/systembackupbootstrapsecurity::TestTerminalRegistryCopyAndWrongContextCannotReviveOriginal": "pass",
+      "clawreef/internal/systembackupnoncebootstrap::TestTerminalNonceCopyPoisonsOriginalBeforeSQL": "pass",
+      "clawreef/internal/systembackupcatrust::TestTerminalCACopyPoisonsOriginalBeforeSQL": "pass",
+      "clawreef/internal/systembackupkms::TestPureCaptureConfigValidationKeepsWorkerConstructorChecks": "pass",
+      "clawreef/internal/systembackup/kube::TestFormalMaterialPreflightRejectsSameInvalidPathsAsJobBuilder": "pass",
+      "clawreef/internal/systembackup/worker::TestOriginalTeamsObjectPrefixScopeMatchesActualWorkerScope": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcretePrepareAndOriginalGuardedFresh": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcretePhysicalFailurePreservesOnlyHistory": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcreteCurrentSQLChangesRejectAndLatch": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcreteAttemptAndClockFailuresStayLatched": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcreteExpiredObservationDoesNotRenewHistory": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalConcreteA20MapKeepsOtherOwnersClosed": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalNativeErrorRegionStrictness": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOBootstrapTerminalIdentityOnlyDeadlineAndFailureLatch": "pass",
+      "clawreef/internal/systembackupexecution::TestDatabaseSourceIssueUsesOriginalSequenceContextAndFailureLatchComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestDatabaseSourceIssueRejectsReservedSequenceOutputsBeforeNativeSigningComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingHandlesAllNineOriginalOperationsComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingRejectsZeroKMSWindowBeforeConsumptionComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingRejectsBuilderInvalidProjectionBeforeCreateComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalMaterializationDiagnosticSeparatesCreatedReusedAndUnknown": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingCannotBorrowAnotherOperationFiles": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureMappingFailureLatchesRealOwnerSequenceComponent": "pass"
+    },
+    "linux_go_json_sha256": "951657089a29737f17206fee0b40e1317a743ab3cc610d8e0a4dd468966f30b0",
+    "linux_audit_sha256": "88a3e4ba67f10b2378296b40f06009272f30aa4d65bd8683187ef21f180ff12a",
+    "initial_windows_terminal_attempt": {
+      "counts": {
+        "pass": 27,
+        "fail": 5,
+        "skip": 0
+      },
+      "go_json_sha256": "5baeb5c6e4ff32216d51279e2be9ee2adbb6313f85e7c73d8e95be363988b9c3",
+      "status": "FAILED; five failures retained, explicitly fixed and superseded by Linux final run"
+    },
+    "windows_mapper_attempt": {
+      "root_counts": {
+        "pass": 10,
+        "fail": 0,
+        "skip": 6
+      },
+      "go_json_sha256": "b301869c71659bc368e2f328534ae6ccfd7b48cd708dfa05a51c5c4d455d1633",
+      "scope": "Linux-required tests/subcases skipped; parent roots with all child cases skipped are not credited as proof. Final actual Linux run supersedes this gap."
+    },
+    "linux_precompile": "PASS, run=^$ only; zero execution credit",
+    "full_linux_server_build": {
+      "exit": 0,
+      "sha256": "87e5582ad50032f6a85f98fd1254e05cca0faafcae18d31b98fbb1085ddabb63",
+      "format": "ELF64 little-endian AMD64",
+      "exact_snapshot_go_files": 59,
+      "binary_deleted": true
+    },
+    "native_mysql_roots_executed_this_batch": 0,
+    "transport_scope": "Controlled database/sql and Kubernetes models plus actual local TLS/SigV4 transmissions to finite protocol fixtures. Not live SQL locks, actual MinIO, actual Vault or field provider qualification."
+  },
+  "remaining_main_and_site_dependencies": [
+    "No complete positive full-owner terminal load through six phases and private final read view, actual first-install materials, field application deployment or page task was proved by this batch.",
+    "A SQL KEK source linker two files depend on a separate unreviewed source batch and were explicitly excluded here; reference:kek and independent real Generate/Unwrap admission must both be correctly assembled.",
+    "A signing-resource fifteen-file batch, D schema136/catalog177/lifecycle/main composition batches and C actual MinIO SQL-owner CLI/export are separate unreviewed or unexecuted deliveries, not installed capabilities in this commit.",
+    "B candidate-only source registry protocol and real taskless source reader/closed parts-writers semantics remain separate; the old enabled-v1/Forward observer cannot fill candidate owners. Its initial file capability time boundary is under A review. status_relay and other missing concrete owners remain closed.",
+    "Original-window field capture performance, actual source writer restoration, complete six-domain nonempty artifact, independent fixed-version EOF/SHA/decrypt/business readback, signed queryable catalog and same-task succeeded all remain unverified.",
+    "Production MySQL peer TLS/SAN and least-privilege accounts, actual MinIO finite version/permission qualification and current provider/control inputs remain pending user field observations after 2026-11-03 08:30 Asia/Shanghai."
+  ],
+  "remote_delivery": {
+    "R8": "Unchanged fixed source 723f51bc9834d4f6f417828968576903de3f29dd; diagnostic packet is not acceptance of newer backup commits. Existing four payload hashes retained.",
+    "old_supplemental_eleven_tests": "Remains withdrawn and deleted.",
+    "runbook_changes": "Clarified fixed-source evidence scope and explicit date only; transfer and Bash command blocks unchanged."
+  },
+  "cleanup": {
+    "terminal-mapper-docker-cleanup.json": {
+      "sha256": "6f9792ee9a98de408238f82e9f25044c8eef2c37302e2c1a8f4be747134078d0",
+      "receipt": {
+        "recorded_at": "2026-11-02T22:24:23.6962290Z",
+        "owned_volume_removed": "codex-terminal-minio-tmp-3028b00798324a96",
+        "stop_exit": 0,
+        "preexisting_go_image_and_buildkit_retained": true,
+        "owner": "supervisor-terminal-minio-review-20261103",
+        "field_access_performed": false,
+        "compiled_server_and_linux_tmp_removed": true,
+        "owned_containers_absent": true,
+        "desktop_prior_off_restored": true
+      }
+    },
+    "terminal-mapper-worktree-cleanup.json": {
+      "sha256": "fad876a292100f9d91a833c75a8d95334ea7df3cbb6d5686c51438284510244b",
+      "receipt": {
+        "user_files_and_pending_R8_retained": true,
+        "owned_detached_worktree_removed": true,
+        "recorded_at": "2026-11-02T22:24:53.3430412Z",
+        "final_source_document_hashes_verified": 63,
+        "text_evidence_retained": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab",
+        "owned_windows_linux_caches_tmp_and_binaries_removed": true,
+        "root": "D:\\codex-backup-terminal-review-3028b00798324a96aaa6856d03f9405b",
+        "owner": "supervisor-terminal-minio-review-20261103",
+        "final_manifest_hashes_verified": 17
+      }
+    }
+  },
+  "retained_evidence_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab",
+  "field_access_performed": false
+}

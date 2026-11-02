@@ -1,0 +1,94 @@
+{
+  "schema_version": "system-backup-d-database-output-reservation-supersede-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_B_REVIEW_ROOT_COMPONENT_EXECUTION",
+  "finding": "B/root confirmed same-sequence DB source grant output could occupy not-yet-existing final material bundle or controller metadata-grant coordinate and only fail later in Finalize. Actual native issuer validates its own inputs but does not own sequence future output reservation.",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "sha256": "6f135dc14e4d01ef4a378ab6343b0b1be2d8c71fc15d41165a84f76e84b616fd",
+      "supersedes_sha256": "19877b0eae6dccc41afa79816d307034c74870c652bf71eeeaf0fa66cc0c18a7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_output_test.go",
+      "sha256": "a1d9b6e2f946ddda260cde100477391fdb1ce602d6c8065c2733105076067fac"
+    }
+  ],
+  "fix": [
+    "Inside actual OriginalCaptureSequence.IssueDatabaseSourceGrant, after same-context mutex/latch enter and before authority.Recheck, private-key loading or native issuer, require databaseSourceOutputDisjoint.",
+    "Preflight reads only selected issue-definition bytes, exact SHA and typed JCS roundtrip plus same original ProductionMaterialDefinition hash/version and clean absolute grant output. No credentials, signing key, source connection or current owner is supplied by data.",
+    "Reject exact output collision with core.CaptureModules.Path, controller Discovery.GrantFile, original Redis.GrantFile and Objects.GrantFile, plus original core/config/Forward/key/issue-definition/credential file inputs. Existing original fixed paths are preserved; no automatic rename, delete, overwrite, re-sign, retry or new window.",
+    "All actual issuer authentication, original scope/service/TLS/finite SQL/full census/owner/window/signature/create-only/readback checks remain independently executed for nonconflicting original inputs. No native or owner call is replaced by the preflight.",
+    "Private helper lives in this same sequence source file and uses existing jsoncanonicalizer dependency already present in repository. No new exported helper, callback or source scope."
+  ],
+  "regression": {
+    "root": "TestDatabaseSourceIssueRejectsReservedSequenceOutputsBeforeNativeSigningComponent",
+    "cases": [
+      "future-bundle (must be absent before and after)",
+      "future-metadata (must be absent before and after)",
+      "redis-grant (must retain exact Begin bytes)",
+      "objects-grant (must retain exact Begin bytes)"
+    ],
+    "reach": "Actual A component enrollment and actual B Begin first complete. Same exact JCS issue data passes the pure path guard with a distinct output, then only output path changes to reserved coordinate. No native positive grant is claimed.",
+    "assertions": "Actual same-sequence call rejects, returns no granted Source, permanently latches failure; no additional original owner SQL query or SQL mutation is reached, output remains absent or byte-identical as appropriate, same-context retry remains rejected without extra queries.",
+    "native_sign_write_limit": "Actual straight-line code calls private-key read and native issuer/signing only after the rejected coordinate guard and owner.Recheck. The component confirms no owner query is reached and no output is written; it does not execute or model a successful native MySQL grant."
+  },
+  "unchanged_dependencies": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "sha256": "d34522d2343f505773c3127b3d3a2ca69824738bafd949c70bea5c7f4d7317d2",
+      "provides": "DatabaseSourceIssueDefinition/DatabaseSourceIssueVersion/DatabaseSourceIssueResult/SourceMaterialIssuer.IssueDatabaseSource"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_native.go",
+      "sha256": "2aa6114042187467836ac8cddc3ca803c1301525566fb52e5c701e3a861d6c2a",
+      "provides": "actual native TLS driver/census/closed-connection/grant write implementation"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "efcfba4efd686449387044f62447c465bb221e30849241548adf48e295939568",
+      "provides": "same ctx/mutex/latch/Begin/four existing fixed-output validation and Finalize unchanged"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go",
+      "sha256": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7",
+      "provides": "actual newMaterialProducerComponent with real A enrollment/B inputs"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go",
+      "sha256": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282",
+      "provides": "strict SQL component transport and queries/executions counters"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_test.go",
+      "sha256": "dcaa19c9562418a5e9cbfdae302c78c7120fb860da6d36584bfd93a5697d6a61",
+      "provides": "existing producer component helper dependencies"
+    }
+  ],
+  "historical_manifests_unchanged": [
+    {
+      "path": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+      "sha256": "4089b451dd79b3a8510c425775c34a120ec473a6b969873fc22ec819064e088a"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-review-database-sequence-pins-20261103.json",
+      "sha256": "fcfdfbd4c06309a9e2f0d19feb0e063c23e6a85bec259e0ea9dcf4c15bae8872"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-mapper-database-native-host-review-index-20261103.json",
+      "sha256": "3795256d44c89aebc272f2a50bc610cb700758e7d904205bc99bbb4952e466f7"
+    }
+  ],
+  "composition": "Start with complete existing DB native-issuer3 + sequence2 + CLI2 (seven Go files) and real baseline A/B dependencies. Supersede only sequence production_capture_database_issue.go19877->6f135 and add this regression (eight Go files). Do not omit issuer native sibling or old sequence context test. No mapper/clock/source3 file changed by this DB patch.",
+  "root_command": "go test ./internal/systembackupexecution -run '^TestDatabaseSourceIssue' -count=1 -v",
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false,
+    "source_clock_or_source3_changed": false,
+    "cleanup": "Root removes its test/build products after validation per AGENTS."
+  }
+}

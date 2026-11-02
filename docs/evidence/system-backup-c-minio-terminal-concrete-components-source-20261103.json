@@ -1,0 +1,47 @@
+{
+  "version":"system-backup-c-minio-terminal-concrete-components-source.v1",
+  "date":"2026-11-03",
+  "status":"SOURCE_ONLY_COMPONENTS_NOT_EXECUTED",
+  "new_files":[
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_component_fixture_test.go","sha256":"eadfaae85f7e8ce91892d1b34c3432e17739022eabac2993387b4f86cbe11b07","bytes":24188},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_component_sql_test.go","sha256":"885f874f692485b3dfd554b8fafe055e063742ec6513a3b7adc445c5a5232179","bytes":9754},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_component_test.go","sha256":"c58442eb1ba663494734d3a179e1b5d4bb318a7c6a0a6ffba44f84db08143522","bytes":10851}
+  ],
+  "required_unchanged_concrete_owner_files":[
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal.go","sha256":"75257cc6b3903f9d04c605ecb491618f35c47a19955990ef288bd42512631c54","bytes":13014},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go","sha256":"7e2d50ce09cb8ef7379b4ffd1ce366eed9bea4b063a1d2b9085366695828184a","bytes":10518},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go","sha256":"1ec1a94e499bcc856733e693d7f86df4df3a6dc59460a27ed08a07bb86bc61a6","bytes":12688},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go","sha256":"767c7e59aa4215ca9cf654803edbde5227aac8fbef66962233d2e1b561ec7646","bytes":15467}
+  ],
+  "parent_manifests":[
+    {"path":"docs/evidence/system-backup-c-minio-terminal-owner-source-20261103.json","sha256":"b6f740326070cd8e61c3ab36c9caf6f427225cdf6f54b63187f02df97307dc85"},
+    {"path":"docs/evidence/system-backup-c-minio-terminal-region-supersede-source-20261103.json","sha256":"e383eeddb0d84cf9ba752522d40a74d1ce1c5099508dba58e1f1cd3a5774e91c"}
+  ],
+  "source_scope":"Additive tests only. No edits to production owner files, A20 source, historical manifests, already-passed SQL lifecycle/reader/native source batch, main, migrations, deployment docs, Git or remote state.",
+  "construction":{
+    "owner":"Call actual NewMinIOBootstrapTerminalResource and PrepareTerminalResource with independent ORIGINAL test deployment input files. No injected observation callback, Passed DTO, manually populated fresh deadline or successful substitute MinIO owner.",
+    "original_material":"Actual private credential files, disabled original config, original offline grant FILE, native definition, v2 startup source, closed original descriptors/scopes/provider/provenance/capability intent, seven separately signed original SQL records and independently supplied test enrolled public pin. The test signs declarations as its synthetic original issuer; it does not execute Installer.Enroll/SQL import, which remain separate already-verified roots.",
+    "physical":"Production native observation and protocol code executes real TLS/CA/SPKI/SigV4 requests with six separated credentials. A front TLS fixture serves current named/self/owner-guard/bucket APIs; S3 forwards the same signed request preserving signed Host through a second CA/SPKI-pinned TLS hop to the existing exact-owned-key protocol model. Neither server regenerates request signatures. This is a finite controlled protocol model, not live MinIO.",
+    "current_source":"Production shared seven-record codec/current SQL reader executes against a strict SELECT-only database/sql transport MODEL. Original exact keys, FOR SHARE, admin-prefix-before-head, sorted five refs, state/index/signature/hash/tuple parity are observed by real owner code. Every Exec/unplanned query/clock expression fails. This is not actual SQL lock or native database evidence.",
+    "guard":"Actual pd.NewTransactions.GuardInTx constructs the real original pd.Transaction with SampleTime floor/failure latch and context identity. A test-only admin prefix/final-read policy is explicit test composition, provides no MinIO approval and does not stand in for complete A20/capture authority. Owner L2/L5/Recheck run on the actual guarded write view, which satisfies BootstrapReadSQL; these cases do not exercise D's separate private final bootstrapReadView.",
+    "no_locked_network":"Provider HTTP and Kubernetes callbacks assert no open SQL transaction. Native request counters remain fixed across L2/L5/tail, verifying production methods do not repeat physical observation under locks."
+  },
+  "new_test_roots":[
+    {"name":"TestMinIOBootstrapTerminalConcretePrepareAndOriginalGuardedFresh","scope":"Real original Prepare produces private short deadline and actual retained catalog version; caller public pin/path mutations cannot change constructor-owned binding; returned deadline cannot mutate state; actual D guarded L2/L5/identity/fresh tail rereads exact seven-row groups with shared SampleTime and no network."},
+    {"name":"TestMinIOBootstrapTerminalConcretePhysicalFailurePreservesOnlyHistory","scope":"Unknown finite native version and accepted bad checksum keep only current SQL identity/history; no fresh deadline, no native refresh in identity, L5 refuses fresh use."},
+    {"name":"TestMinIOBootstrapTerminalConcreteCurrentSQLChangesRejectAndLatch","scope":"Original signed terminal revoke, disabled original admin, foreign consumer account, ref index drift and changed tail row-version tuple reject and latch despite previously successful actual physical Prepare."},
+    {"name":"TestMinIOBootstrapTerminalConcreteAttemptAndClockFailuresStayLatched","scope":"Different context, forwarded foreign read view, D clock regression/failure, pre-L2 L5, repeated L2/L5 and copied check poison the original attempt. Resetting model time/failure cannot reset actual D SampleTime latch."},
+    {"name":"TestMinIOBootstrapTerminalConcreteExpiredObservationDoesNotRenewHistory","scope":"Move controlled SQL observation after the unchanged real Prepare deadline but within original identity windows: current identity/history remains possible, fresh L5 fails; no deadline renewal or manually forged fresh observation."},
+    {"name":"TestMinIOBootstrapTerminalConcreteA20MapKeepsOtherOwnersClosed","scope":"Actual A20 constructor accepts one concrete pointer under all five purpose keys; missing other owners continue to prevent candidate preparation before provider/SQL input access. No placeholders fill missing slots. Legacy Prepare stays refused."}
+  ],
+  "verification":{
+    "performed_by_C":["gofmt","static API/interface/call-site review","source SHA256/bytes"],
+    "not_performed_by_C":["go test","go build","go vet","native SQL","live MinIO","Docker","Git","remote mutation"],
+    "root_targeted_command":"go test ./internal/systembackupexecution -run '^TestMinIOBootstrapTerminalConcrete' -count=1 -v",
+    "root_all_terminal_command":"go test ./internal/systembackupexecution -run '^TestMinIOBootstrapTerminal' -count=1 -v",
+    "root_count":"Six new component roots; combined with four existing Region/protocol roots, ten terminal roots. No result is claimed until root executes them.",
+    "artifacts":"C created no test/build products; root must delete products from its tests/builds after verification per user AGENTS.md."
+  },
+  "known_root_result_kept_separate":"Root reports the earlier real MySQL 8.4.8/TLS1.3 C native three-root rerun passed after prepared monitor a851 supersede, including both real performance_schema wait-edge/ordered-seven-row cases; cleanup had no residuals. Its prior failure remains historical. These new controlled source components do not expand that native proof to actual MinIO, full A20, field deployment or main acceptance.",
+  "release":"NO_GO remains. No successful complete thirty-owner A20 composition, actual private final bootstrap read-view integration, field MinIO/provider/site compatibility, full ordinary six-domain backup -> immutable publication -> independent complete readback -> signed queryable catalog -> same task succeeded, page/deployment acceptance or DR eligibility is claimed."
+}

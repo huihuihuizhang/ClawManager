@@ -1,0 +1,79 @@
+{
+  "schema": "a-functional-non-dr-classification-registry-owner-source.v1",
+  "status": "FROZEN_NEW_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_AND_ACTUAL_SOURCE_INTEGRATION",
+  "date": "2026-11-03",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/functional_classification_types.go": "ba6343483f8d8bdfaf842d5a59fa9cc00a3f48a3161bf160d38f543d74aec08d",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_issue.go": "7c8252f7494ba5926da293bac4c7c3a334aafb21d5b2abcff0b8ef4adf26d94f",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_owner.go": "2a6ebb5462e02ab63ff8b3d81141e1dffd5c3ff5af50935645ac93d0327122ad",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_test.go": "8f71b2179bfd11c4d2b860cf0d8dd977960d2ccb7c667eb268e2b0564a430e0d",
+    "docs/drafts/system-backup-a-functional-scope-audit-20261103.json": "2b79436cfc3f2d644042fa647bef5e4f79558264dc6befb193f71772ad101b4b"
+  },
+  "go_files": 4,
+  "test_files": 1,
+  "new_concrete_registry_owners": [
+    "registry:failure_domains",
+    "registry:disaster_identity_mapping"
+  ],
+  "grouping": "One actual FunctionalClassificationOwner pointer, prepared/authorized once for both keys by the existing terminal resource de-duplication.",
+  "source_supersedes": [],
+  "scope_interpretation_supersede": "Historical remaining-23 inventory remains frozen. This new scope audit clarifies physical DR independence, disaster identity availability and isolated restore success are NOT functional backup prerequisites; actual original source/permissions and all functional safety remain.",
+  "existing_branch": "originalPublicationPolicy not_provided + actual functional_test; existing acceptanceRecoveryFactsTx still checks current KEK binding, original Unwrap and GenerateRevoked, publicationManifestEvaluation returns exact ineligible reasons, terminal expects eligible=false for functional_test.",
+  "issuer": "Installer.IssueFunctionalClassification(ctx,password,enrollment,exactActiveBundle,bundleSHA,definitionFile,definitionSHA,fullSelection,RequestFiles,existingIssuerPrivate)",
+  "issuer_properties": [
+    "Real current local-admin bcrypt/role/active/local; actual Kubernetes owner/namespace/enrollment/SSAR; exact current original committed capture tuple and original window before/after.",
+    "Separate explicit functional classification protocol signature, not capture permission reinterpreted. Signature outside every SQL lock; exact original file hashes/selection/config/two registry pins and final role/CAS/window remain mandatory.",
+    "No source/provider/SQL writes or issuer generation; no disaster or provider probe; no claim to read/Generate/Unwrap/use a key from this classification alone."
+  ],
+  "registry_contract": [
+    "Failure-domain registry keeps existing system-backup-original-failure-domains.v1 wire, complete previous-event hash chain, stable immutable IDs/identities, no rename/reissue/inactive resurrection; this functional profile permits a SINGLE original active shared domain.",
+    "This is an ORIGINAL owner administrative classification, not native physical-independence proof. Target domain must be among the original source domains; same-cluster-copy plus attestation_missing/same_failure_domain risks are explicit.",
+    "New closed system-backup-original-disaster-identity-map.v1 functional profile requires state=unavailable with all TWENTY exact original purpose/identity/version entries and finite reasons. No alternative credential/ref can be supplied, guessed or promoted.",
+    "Reject available/DR/acceptance/provided claims, missing/unknown references, changed installation/pins, broken chain/reused identity, unsafe transport/conditional-commit/provider failures disguised as harmless DR risk. Actual permissions and other real owners still must pass."
+  ],
+  "consumer": "NewFunctionalClassificationOwner(captureSameAsTerminal, FunctionalClassificationFiles) implements existing BootstrapTerminalResource; actual enrolled independent public source/signature/config/request/record/enrollment checks, original current capture SQL revocation anchor through an IDENTITY-ONLY guard, and complete exact local registries. Primary capture owner physical probe remains mandatory and separate.",
+  "consumer_locks": [
+    "Candidate-only; legacy Prepare returns a refusal.",
+    "L2 after primary capture current locks and before MinIO current head/grant/refs: grouped classification anchor reuses those SAME original capture rows; all SampleTime observations share the original guarded transaction/floor.",
+    "Same context/current exact source pins, registry bytes, original current role/head/grant/window and final local-file/SQL check; no network/provider/API calls under SQL and no commit/Exec exposed.",
+    "Original consumer locator reread is explicitly matched to its already independently loaded source pin before it selects the signature verification key; trust pin reread SHA and capture record SHA checked.",
+    "Current anchor revocation/expiry, file drift, wrong context/transaction and copied check all refuse/latch. It is not an independent mutable provider permission domain or task grant."
+  ],
+  "publication_output": "SaveFrozenFunctionalClassification writes create-only 0600 inert classification record/signature/exact SHA plus existing originalPublicationPolicy wire/SHA. same-cluster-copy + not_provided + nil attestation pins is signed by its exact policy hash inside the classification. It cannot output eligible=true or restore/DR success.",
+  "D_integration": [
+    "First issue signed classification after exact original capture tuple is committed, using the actual two registries already selected in ORIGINAL ConfigValues; no enabled-v1/task/future Job required.",
+    "Install classification public files/pin and the exact two registry files under RegistrationFiles kind/version/hash paths, preserving independently enrolled capture consumer source.",
+    "Use original.WithFunctionalClassification(files) after D constructs the actual terminal, then use NativeHostDeploymentCandidates on the returned terminal. Both new registry checks have the exact same enrolled source pointer as the primary capture owner and preserve all other concrete resource aliases.",
+    "Add the returned same grouped classification object under BOTH corresponding owners.Registries inventory keys; preserve independent owners.KEK, C five-purpose grouped owner and all remaining resources. Record its actual BindingSHA256 for both keys in the original BootstrapOriginalMapping.",
+    "Alternatively LinkFunctionalClassificationOwners adds the same concrete object to pre-terminal base maps and preserves KEK/candidates/cross/refs; do not supply a different capture source.",
+    "Original Missing30 list is unchanged. Seven-source code fixture plus these real two has twenty-one missing; no main/remote/first-install readiness is claimed. C newly frozen five-purpose owner is independent of this batch and remains subject to root review/testing."
+  ],
+  "scope_audit": "docs/drafts/system-backup-a-functional-scope-audit-20261103.json contains exact existing symbols and a unique twenty-three-entry hard-functional versus DR-only proof matrix.",
+  "still_hard": [
+    "Complete real six-domain/nonempty scope and every original authorization/ref",
+    "Actual writer inventory/fence and full original physical writer-state recovery",
+    "Real Generate/Unwrap/current key revocation/all original coverage/adoption/history",
+    "Formal artifacts/capture/acceptance/catalog signatures/independent EOF readback/same-task succeeded",
+    "Current provider transport/scoped permissions/conditional/checksum guarantees; no broken provider hidden as DR risk"
+  ],
+  "unresolved_existing_scope": "Older profile.Config.Validate still requires target namespace/name/storage/staging metadata even in backup mode, although Driver.Probe skips target-admin connection. This is explicitly recorded for D if encountered, not silently changed or falsely called actual restore proof.",
+  "validation": {
+    "test_build_products_created": false,
+    "cleanup": "Root owns tests/build/SQL/Git and must remove test/build products at end per AGENTS.",
+    "root_command": "go test ./internal/systembackupinstallationowner/install -run ^TestFunctionalClassification -count=1 -v",
+    "a_executed": [
+      "gofmt parse/format on four new files only",
+      "23 unique scope matrix entries and referenced source paths checked",
+      "Previous A terminal20/native-host7/composition2/admin5 frozen source hashes unchanged"
+    ],
+    "tests": "Explicit models only: positive ONE domain / unavailable full map, negative DR/acceptance/provider-failure disguise/missing coverage; real original bcrypt/Ed25519/protocol-model issue/final current role, no added SQL writes or provider signing, bad signature and revoked admin; concrete grouped composition/copy refusal. Native consumer shared D final-view integration and all-owner positive are not claimed.",
+    "not_executed": [
+      "Go compile/test/list/vet/build",
+      "native SQL/migrations/provider/API/remote",
+      "Git/commit/push"
+    ]
+  },
+  "historical_frozen": "All earlier source/manifest batches and root native helper correction remain untouched.",
+  "DR_eligibility": "false_or_not_provided",
+  "global_functional_goal": "not completed; actual remaining owner/source/writer/provider/publication integration and root/site acceptance remain."
+}

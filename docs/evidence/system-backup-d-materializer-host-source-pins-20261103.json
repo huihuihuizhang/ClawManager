@@ -1,0 +1,51 @@
+{
+  "schema_version": "system-backup-d-materializer-host-source-pins.v1",
+  "status": "source_only_unintegrated_pending_root_review_and_verification",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "sha256": "51c4bbabf640e232c8d3ee1c38063b3f1e690688e29132b5fc1396fbfda89049"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_test.go",
+      "sha256": "fdf27777892968d5746b92371aba249af2d1d4e7cb8704dd36160c4b7586a37a"
+    },
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_host.go",
+      "sha256": "f04224dfb49c4e990308c70a2ca4a11e664f341b0835fd64483d8a6394d81dcb"
+    },
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_host_test.go",
+      "sha256": "40624965ecbc22cd377d9ff770c190fdf584cfb4ea54d391493c2a1cf4eb8917"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-materializer-host-source-contract-20261103.json",
+      "sha256": "d7adec1e0f38b7938d43a3f269d77b7d92aaf823841cd2d74ccba43787848d58"
+    }
+  ],
+  "unchanged_B_dependencies": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "efcfba4efd686449387044f62447c465bb221e30849241548adf48e295939568"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence_test.go",
+      "sha256": "16341e373cc711b8c2be999fa8d49debc54ecb2925d6ee228644d2b857ce12ea"
+    }
+  ],
+  "minio_batch": {
+    "path": "docs/evidence/system-backup-d-minio-original-sql-pins-20261103.json",
+    "sha256": "dd32f238597a9a5870d01794d663641275460835c5016d1a1892d1bd4bc02997",
+    "all_ten_sources_unchanged": true
+  },
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "integration": "No main/CLI, A terminal authority, existing enabled-v1 observer or runtime deployment changed. Contract documents remaining sources and tests precisely."
+}

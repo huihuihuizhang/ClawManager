@@ -1,0 +1,56 @@
+{
+  "version": "system-backup-c-minio-terminal-owner-source.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_UNEXECUTED_NOT_MAIN_ACCEPTANCE",
+  "files": [
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal.go","sha256":"75257cc6b3903f9d04c605ecb491618f35c47a19955990ef288bd42512631c54","bytes":13014},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go","sha256":"7e2d50ce09cb8ef7379b4ffd1ce366eed9bea4b063a1d2b9085366695828184a","bytes":10518},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go","sha256":"44b79060349a0e895812e55f69bc8198fec558f3998cc3986302645f607b7a60","bytes":12120},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go","sha256":"a21d9b57c2415cab64e1d4a805cd84e19904272593d0a6366cafa9393fd3f390","bytes":12226}
+  ],
+  "required_interface": {
+    "path":"backend/internal/systembackupsecurity/bootstrap_terminal_resources.go",
+    "sha256":"ea2d66aafb6f51b5b6a7d1233895d871b692695dc264df9f43b6be0f5c600f3c",
+    "changes_required":false,
+    "constructor":"systembackupexecution.NewMinIOBootstrapTerminalResource(actualKubernetesClient, independentlyInstalledInput)",
+    "composition":"Outer composition supplies owner.TerminalResources() to A20 NewBootstrapTerminalOriginal; install must not import execution (execution already imports install). Merge with independently concrete other owners, rejecting collisions.",
+    "shared_keys":["reference:artifact_delete","reference:artifact_read","reference:artifact_write","reference:catalog_append","reference:catalog_read"],
+    "shared_instance":"TerminalResources returns the same pointer under all five keys; A20 prepares and authorizes that pointer once. Each original mapping ResourceBinding has its identical BindingSHA256."
+  },
+  "original_inputs": {
+    "trust":"Independent enrolled SQLTrustPin, never selected from HTTP/task/current rows; public key and input reference slice are defensively copied.",
+    "bundle":"Pinned original install SQLBundle, verified using shared seven-record codec and its single-NUL signature domains. No signature reimplementation or resigning.",
+    "offline_grant":"Actual original pinned grant FILE, ReadBootstrapGrantFile, full OfflineBootstrapGrant equality, actor ID/username, installation/server/database/config and all five config reference identities/versions.",
+    "definition":"Pinned original taskless native definition plus effective v2 startup source; original Kube grant/head UIDs, issuer, epoch, signed head bytes, observer mapping, provider and all five role mappings must agree with the SQL grant.",
+    "reference_files":"Exactly five original canonical MinIOBootstrapReferenceDescriptor files in binary purpose order. Version=original-minio-terminal-reference.v1; Reference is the signed SQL Reference with only DescriptorSHA256 empty. Hash actual file bytes against signed DescriptorSHA256; compare all other fields.",
+    "scope_profile":"original-minio-terminal-scope.v1: SHA256(JCS({Version:profile,Purpose:purpose,Provider:providerIdentityHash,Bucket:bucket,Root:root,StagingRoot:stagingRoot})). Credential locator hash is SHA256 of the exact absolute original path UTF-8 bytes, never secret bytes or account/ref identity.",
+    "provider_profile":"original-minio-terminal-provider.v1: SHA256(JCS({Version:profile,Provider:originalProviderWithIdentityHashEmpty})); Provider.IdentityProfile remains this explicit profile. Native actual version/commit and exact pod imageID are observed, not inferred from this declaration.",
+    "provenance":"Actual pinned canonical MinIOBootstrapImageProvenance file; Version=original-minio-image-provenance.v1 and exact ImageID/ServerVersion/ServerCommit; file hash equals independently signed ImageProvenanceSHA256. This is owner provenance mapping, not binary attestation or invented registry verification.",
+    "protocol_profile":"original-minio-terminal-s3-protocol.v1 for all five refs; artifact_read requires range_read. CapabilityIntentSHA256 must match original file and grant for every ref.",
+    "intent":"Canonical MinIOBootstrapCapabilityIntent: Version,InstallationID,AuthorityID,GrantID,Nonce (64 lower hex),ArtifactKey,ArtifactBadChecksumKey,CatalogKey,CatalogBadChecksumKey,NotBefore,Until. Exact keys are staging/bootstrap-probes/<nonce>/protocol.bin and reject-checksum.bin; catalogRoot/bootstrap-probes/<nonce>/protocol.json and reject-checksum.json. Intent covers original grant window. Only preauthorized dedicated keys are touched."
+  },
+  "behavior": {
+    "prepare":"Actual native TLS+CA+SPKI+SigV4, finite named/effective six-principal source, exact running MinIO 2025-04-22T22:12:26Z commit 0d7408fc9969caf07de6a8c3a84f9fbb10a6739e, both bucket policies/versioning, actual bounded Kube topology/UID/RV, original source/file tails; no active config, Forward, future task or SQL connection required.",
+    "protocol":"Correct payload SHA with intentionally wrong checksum rejected as exact native 400 XAmzContentChecksumMismatch; independent GET confirms missing bad key. Actual immutable PUT; independent full body+version GET; DIFFERENT second conditional PUT must return exact 412 PreconditionFailed; latest and exact version readbacks unchanged; artifact byte range 1-7 exact 206/body/Content-Range. Actual delete credential deletes only observed staging version, independent exact GET confirms native NoSuchVersion. Catalog append/read use separate credentials/bucket and canonical dedicated probe body.",
+    "inventory":"ProbeInventory returns detached audit coordinates/state only, no Passed or admission token. Successful staging exact version is deleted and recorded. Catalog exact reserved probe/version is intentionally retained; retries authenticate its body/version and re-probe conditional refusal. Failed/uncertain requests remain indexed by original four fixed owned keys with outcome_unknown; never assume acknowledgement is cleanup.",
+    "L2":"Same original context and factory-issued guarded transaction. ReadSQLCurrentCandidate SampleTime shares D floor/latch; actual consumer CURRENT_USER/server/database, current local admin, ordered head -> grant -> five exact refs FOR SHARE. Compare signed declarations to original verified snapshot; deny current revoked/changed identity before operation lookup. Capture/admin prefix already held by A20.",
+    "history":"No native freshness, Kube availability, protocol deadline or physical source callback required at identity recheck. Current original SQL identity/revocation, actor and grant/head identity windows remain mandatory. Physical prepare failure yields identity-only check with nil dependency deadline.",
+    "fresh":"Private dependency deadline begins before first external observation and is clipped to signed maximum age <=30s, original owner/reference/credential/protected windows and context. Completion never renews it. L5 and fresh tail use same original transaction/context, original SQL comparison tuple and shared SampleTime; no provider/file/credential I/O under locks. Fresh SQL time must also be >= initial observation start.",
+    "latch":"Wrong context/transaction, copied check identity, repeats/out-of-order L2/L5, changed/revoked rows, source errors, time regression/expiry latch failure. No admission after failure.",
+    "legacy":"Prepare always refuses legacy config-order path; no raw tx clock or alternate Kube-only bypass."
+  },
+  "source_verification": {
+    "performed":["gofmt source formatting","static interface/API/source reads","exact A20 interface SHA256","source SHA256 and byte counts"],
+    "not_performed":["go test","go build","go vet","native SQL","live MinIO","Docker","Git","remote mutation"],
+    "test_roots":["TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe","TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider","TestMinIOBootstrapTerminalIdentityOnlyDeadlineAndFailureLatch"],
+    "root_command":"go test ./internal/systembackupexecution -run '^TestMinIOBootstrapTerminal' -count=1 -v",
+    "test_scope":"Local actual HTTPS and independently HMAC-verified transmitted SigV4 with finite protocol model, five separated roles, owned-key bounds, retained probe retry and refusal cases; no fake successful physical DTO. These tests do NOT exercise complete terminal enrollment/seven-row SQL/A20 integration.",
+    "root_followup_required":["Compile/test additive batch and review source before integration","Exercise full concrete owner with actual A20 original guarded transaction, SQL revoke/changed comparison, monotone/failing SampleTime, fresh/history distinction and one grouped Prepare","Actual native MinIO finite-release compatibility and owner-authorized dedicated probe inventory","Actual full six-domain ordinary backup -> immutable publication -> full independent readback -> signed queryable catalog -> same task succeeded"],
+    "test_build_artifacts":"C created no test/build products. Root must delete products from its tests/builds after verification per user AGENTS.md."
+  },
+  "primary_source_review":[
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/object-handlers.go",
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/api-errors.go"
+  ],
+  "release":"NO_GO; additive concrete owner source is not actual main3/30 closure, site compatibility, deployment/page acceptance, DR eligibility, or proof of successful ordinary full backup. Frozen historical source/manifests and R8 remain unchanged."
+}

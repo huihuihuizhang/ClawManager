@@ -1,0 +1,69 @@
+{
+  "schema_version": "system-backup-d-small-source-review-batch.v1",
+  "id": "mapper-diagnostics",
+  "status": "FROZEN_REVIEW_SPLIT_SOURCE_ONLY_PENDING_ROOT_VALIDATION",
+  "historical_source_manifest": {
+    "path": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+    "sha256": "56da9cf92c25c83cb178cffda955acb0d49a2fc1f7289d307a81453bcdc4c7e8",
+    "unchanged": true
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "sha256": "b48b954711a56d86ffa62531a80c8e93e1bc17406fba53d6ce08080dccfb8bc7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic_test.go",
+      "sha256": "7cb6f7b948a54778c468491178c7c5907a68655e5fb26b7c7b511f84da1e95f7"
+    }
+  ],
+  "required_coapply_batch_ids": [
+    "mapper-core",
+    "mapper-validation"
+  ],
+  "new_or_changed_exported_surface": [
+    {
+      "symbol": "OriginalMaterializationAsset",
+      "provider": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "caller": "mapper independent Kubernetes create/readback provenance",
+      "baseline": "private receipt data only; UID/content hash and created/reused/create-unknown disposition"
+    },
+    {
+      "symbol": "OriginalMaterializationDiagnosticReference",
+      "provider": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "caller": "MaterializationDiagnosticForError and CLI JSON output",
+      "baseline": "locator/status/phase/hash only"
+    },
+    {
+      "symbol": "MaterializationDiagnosticForError(error) (OriginalMaterializationDiagnosticReference,bool)",
+      "provider": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "caller": "cmd/system-backup-first-install-materials/main.go error path",
+      "baseline": "typed error unwrap; no cleanup or permission capability"
+    }
+  ],
+  "baseline_dependencies": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "efcfba4efd686449387044f62447c465bb221e30849241548adf48e295939568"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer.go",
+      "sha256": "397f795933bcc388f4a0b225fc805ca7ca692376a4fc79ca3ce3cb92c196b6f8"
+    }
+  ],
+  "root_validation_commands": [
+    "go test ./internal/systembackupexecution -run '^TestOriginalMaterializationDiagnostic' -count=1 -v"
+  ],
+  "limits": "Core and diagnostics depend on each other's private helpers/types and MUST be co-applied. persist depends on existing writeOriginalMaterialFile from production_capture_producer.go. Reports possible residuals, no ownership/deletion/absence certificate or automatic cleanup. Success means complete_not_finalized, never Finalize success.",
+  "validation": {
+    "files_are_exact_historical_batch_bytes": true,
+    "source_modified_by_this_split": false,
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "cleanup": "Root removes its test/build/SQL/cache products after verification per AGENTS."
+}

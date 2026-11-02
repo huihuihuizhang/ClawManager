@@ -1,0 +1,47 @@
+{
+  "schema_version": "system-backup-d-mapper-source-grant-window-supersede-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_B_REVIEW_ROOT_COMPONENT_EXECUTION",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "sha256": "a9b3c52d1ffb3f257dbf4d0647a74dfdc1b514c03d2fbdc395f77a8979fc87c5",
+      "supersedes_sha256": "4301a14d743b4f2c53d3eb983f0b391501f6b67bf64db9a9ddf28cfdc9fc90c7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_grant_window_test.go",
+      "sha256": "b071f177e3888425afc8007df39cdda57e1a8f0af39f6798b27f8cf7461eda91"
+    }
+  ],
+  "unchanged_dependencies": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_complete_test.go",
+      "sha256": "7d59f2c8bc76bc2a6f7bfd49a15d1c6ab5f408a6e6e5e236531f3a44166bd0a7",
+      "provides": "completeMappingComponentsFixture; same actual A enrollment/B sequence and explicit component DB/Teams signed inputs"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_credentials.go",
+      "sha256": "14b2884cd0e1e21235f4409664dd446ce7059f42d03e73508bb31c465c4dbc0a",
+      "provides": "actual unchanged FormalCaptureSources.readGrant structural/window contract"
+    }
+  ],
+  "finding": "B/root confirmed validly signed zero NotBefore or >24h DB/Teams grant could pass mapper while actual worker readGrant rejects. No native/production result is inferred.",
+  "fix": [
+    "In mappingComponents DB/Teams branch before any object CREATE, reject raw signed envelope >65536 or empty/>32768 record, require actual lowercase config digest shape, NotBefore nonzero and Until-NotBefore <=24h.",
+    "Same actual worker now-sample style: sample once, require currently within grant window; retain exact original declaration window coverage, signer/signature/scope/config/worker/credential/revoked checks.",
+    "No worker source change, source scope change, truncated/renewed grant, permission widening or runtime caller change. No new exported helper or missing-symbol dependency."
+  ],
+  "regression": "New TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent runs DB/Teams x zero/25h =4 cases. Same original valid grant must pass mapping first. Read actual fixture grant, change only temporal field, re-sign with original enrolled key, update exact grant/file SHA and require original-window coverage still valid; mapper must reject. Pure mapping branch is called before CREATE in unchanged MaterializeMappings order. This is explicit component signed metadata, not native DB/S3 permission or full nine-op Finalize positive proof.",
+  "composition": "Use existing mapper validation6+core2+diagnostics2 minimum10 composition, supersede only materialize.go4301->a9b3 and add this one regression file (11 total Go files). Existing helpers/diagnostic/CLI and baseline B/A dependency pins remain exact. Historical12/small-batch/core/index manifests are unchanged; this is the explicit subsequent source supersede.",
+  "root_command": "go test ./internal/systembackupexecution -run '^TestOriginalCaptureMapping' -count=1 -v",
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git": "not_run",
+    "test_build_artifacts_created": false,
+    "source_clock_or_source3_modified": false,
+    "cleanup": "Root removes all its test/build products after validation per AGENTS."
+  }
+}

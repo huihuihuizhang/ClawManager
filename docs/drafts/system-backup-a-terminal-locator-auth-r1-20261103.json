@@ -1,0 +1,20 @@
+{
+  "schema": "a-terminal-original-locator-auth-supersede.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_SUPERSEDE_NOT_EXECUTED",
+  "root_authorization": "Priority independent authentication P1, terminal_load.go and native_host_terminal.go; preserve historical frozen lists, add exact old/new SHA and transient substituted locator/non-enrolled signature regressions. Source/gofmt only.",
+  "problem": "capture.load authenticates an independent locator/pin/enrollment, but both terminal entrypoints reread the locator and used that second unchecked value to select PlanFile/PlanSHA256/IssuerPublicFile. Replacing it briefly with a self-consistent foreign plan/key and restoring before current-files tail could choose a non-enrolled mapping/native signature issuer.",
+  "fix": "Both entrypoints now call readBootstrapOriginalPublicSource with their exact already loaded consumerCaptureState. Before decoding the second locator or opening any dependent source, its RAW SHA256 must equal source.files' independently authenticated hash for that exact capture.sourceFile path. Source context/failure state, closed locator/plan and original public hash are checked; failure latches the loaded source. Existing caller current-files/current-source tails remain.",
+  "production_files": [
+    "backend/internal/systembackupinstallationowner/install/terminal_load.go",
+    "backend/internal/systembackupinstallationowner/install/native_host_terminal.go",
+    "backend/internal/systembackupinstallationowner/install/terminal_original_public_source.go"
+  ],
+  "regressions": [
+    "TestBootstrapTerminalLocatorRejectsTransientNonEnrolledMappingKey: real original consumer load with enrollment/TLS/signatures; foreign plan/public and an exactly SHA-pinned mapping valid only under the foreign key; replace only the second locator, restore before the old current-files tail, require rejection and failed-source latch.",
+    "TestNativeHostTerminalLocatorRejectsTransientNonEnrolledNativeKey: first mapping genuinely signed by enrolled key; extra native record exactly pinned and signed by foreign key for the legitimate original mapping. Same transient second-locator substitution/restore must refuse foreign key selection. Both tests preserve exact pinned record/signature bytes and prove a NEW original consumer load succeeds after restoration."
+  ],
+  "test_scope": "The deterministic regression calls the actual shared production public-key selection boundary after actual capture.load; both production entrypoints use that boundary. No injectable production read callback or fake thirty-owner success is introduced. Signature/host records in this test are comparison fixtures, not evidence of a complete native source or full candidate admission.",
+  "root_test_metadata_only": "cd backend; go test ./internal/systembackupinstallationowner/install -run '^(TestBootstrapTerminalLocator|TestNativeHostTerminalLocator)' -count=1 -v",
+  "validation": "gofmt only; no Go compile/test/list/vet/build, SQL, provider/remote or Git executed. No test/build products created. Old root failures/reports and historical pin manifests remain intact. Root owns actual validation and post-test cleanup."
+}

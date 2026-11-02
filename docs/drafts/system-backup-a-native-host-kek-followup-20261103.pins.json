@@ -1,0 +1,81 @@
+{
+  "schema": "a-native-bootstrap-host-and-original-kek-link-source.v1",
+  "status": "FROZEN_NEW_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_AND_INTEGRATION_REVIEW",
+  "date": "2026-11-03",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/native_host_mapping.go": "313c19cf1329a9347f90f174117205bd449eeb51c6d2221f7f976c38703c70c5",
+    "backend/internal/systembackupinstallationowner/install/native_host_observation.go": "848784eb589a6881a5264184a728359801d04b1b63d6fed57550c099323a2681",
+    "backend/internal/systembackupinstallationowner/install/native_host_terminal.go": "c2842b528d5f8c794ec2161c4f9d818c095bfcc69875827de626967e9b875b44",
+    "backend/internal/systembackupinstallationowner/install/native_host_mapping_test.go": "cd001e4aad5170b0ac66c3a5298debb6332b1a8858fecc65696b5d0752bfdfca",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek.go": "a34e7db2aa1d3db00b90a3aa9b3d42d7d73a8e71e63e271e95c5c8066b7701ee",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_test.go": "3c82d2b8b681087b21c64dcb29cd0ce1cec0d6842cbd47c13d9967ff2c70f5ca",
+    "docs/drafts/system-backup-a-remaining-23-owner-inventory-20261103.json": "fb4cca2e054a4763c8a9d8ab0933afe73b7a201462af288ac9afb6250e2d1339"
+  },
+  "go_files": 6,
+  "test_files": 2,
+  "inventory_entries": 23,
+  "supersedes": [],
+  "frozen_previous": {
+    "current_admin5": "unchanged",
+    "native_mysql_test": "not touched; root owns its explicit chmod test-only exception",
+    "terminal20": "unchanged; 1b85b19c65bd7a34d3d1bd87d5fa40381f7428e441b59fccd10a938a1ae8354d"
+  },
+  "reuse_dependency": {
+    "path": "backend/internal/systembackupevidence/bootstrap_original_host.go",
+    "entry": "systembackupevidence.ObserveBootstrapOriginalHost",
+    "sha256": "f04224dfb49c4e990308c70a2ca4a11e664f341b0835fd64483d8a6394d81dcb",
+    "owner": "D frozen native host source, read-only reused, not edited by A"
+  },
+  "conclusion_old_host": "Frozen terminal_host.go only copied the supplied original C1 service workload hash onto namespace/Pod/SA UID and JCS(PodSpec) observations. It does NOT independently prove that C1 workload belongs to that actual Pod. An explicit signed association alone is insufficient for this native claim.",
+  "new_host_issuer": [
+    "Installer.IssueBootstrapOriginalNativeMapping constructs actual old mapping using existing authenticated current SQL/admin/enrollment/actual C1 Domain+Grant producer, then checks/signs a distinct native-host supplement outside locks and final-confirms exact current original capture CAS/role/window.",
+    "Native binding pins include the C1 producer issuer and exact D BootstrapOriginalHostInput: actual immutable peer CM UID/key/hash, container/imageID, read-only volume/path, namespace/Pod/SA/cluster identities, source scope and raw PodSpec hash.",
+    "D actual native observer derives workload hash via the production SystemPeerAuthenticator. It must equal actual selected C1 grant host. Additional exact peer read requires its actual issuer to equal the actual C1 producer issuer.",
+    "Bridge both existing PodSpec profiles on ONE actual Pod: D exact json.Marshal hash and frozen A JCS hash. Do not equate different encodings or invent a workload hash.",
+    "Source observation is refreshed only through actual native preparation at consumption; supplement itself has no Passed/ready/capability bit and does not become a resource grant."
+  ],
+  "new_host_consumer": [
+    "NewNativeHostBootstrapTerminalOriginal(capture, terminalFiles, concreteResources, BootstrapNativeHostFiles) accepts NO generic Original authority. It constructs its private concrete frozen terminal.",
+    "Missing twenty-three concrete resource owners still refuse BEFORE any input/credential/provider/SQL I/O. Source files and native constructor do not fill a slot.",
+    "Strict original-enrolled-key supplemental signature and exact original mapping SHA/selection/plan/enrollment/actor/target/original window must match. Every finite native host must match the old signed original mapping; no unknown/missing host.",
+    "Native observation runs outside SQL before the single frozen terminal provider preparation; no duplicate capture probe, nonce/CA preparation, capacity read, or generic Original callback is introduced by this module.",
+    "Actual same concrete terminal six-method session is returned with one additional private native host condition and original supplement file pins. It uses the original guarded context/transaction and shared SampleTime; every failure/copy poisons original state.",
+    "Native dependency is min of all D observations (at most fifteen seconds), old valid host observation and unchanged signed window. Expired/missing physical observation closes fresh use; exact history still checks signed original metadata/current capture and MinIO SQL authority.",
+    "No Kubernetes/provider calls under SQL; final checks use only fixed local supplemental pins and original SQL time/transaction. Capacity report stays single-read LAST and is never restamped or reread.",
+    "D must explicitly select THIS new factory in its corrected direct candidate composition, not route the frozen old factory through capture.CandidateAuthority/Materials wrappers."
+  ],
+  "physical_timing_limit": "All independent prepared resources must fit the original fifteen-second native observation deadline; if preparation exhausts it fresh use closes. No claim of full successful thirty-owner preparation or site acceptance is made.",
+  "kek_link": [
+    "LinkOriginalSQLBootstrapKEK(base, sourceFile, independentlyInstalledSHA) loads strict create-only deployed public source metadata, checks exact SHA/JCS/closed EOF/roundtrip and constructs existing concrete NewSQLBootstrapKEKPreparation.",
+    "Constructor reads no database credentials/DSN, opens no SQL/provider, creates no current authority or source receipt, and refuses overwriting existing owners.KEK.",
+    "Actual runtime keeps separate Generate/Unwrap, original mapping, four partitions, adoption and sixteen independent witness sources. No live LIST/census is relabeled immutable snapshot/writer fence/backfill/adoption.",
+    "It connects independent owners.KEK ONLY, copies owner maps and preserves candidate/cross/other objects. reference:kek remains absent until a real terminal reference owner with original D fence/evidence order is implemented."
+  ],
+  "inventory": "docs/drafts/system-backup-a-remaining-23-owner-inventory-20261103.json",
+  "concurrent_new_database_source": [
+    "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go SourceMaterialIssuer.IssueDatabaseSource",
+    "backend/internal/systembackupexecution/production_capture_database_issue.go OriginalCaptureSequence.IssueDatabaseSourceGrant",
+    "Read-only discovered; no A duplicate/edits/freeze/compile/SQL verification. Root/B/D own current source and CLI/materializer integration."
+  ],
+  "root_validation_commands": [
+    "go test ./internal/systembackupinstallationowner/install -run ^TestOriginalNativeHostMapping -count=1 -v",
+    "go test ./internal/systembackupinstallationowner/install -run ^TestNativeHost -count=1 -v",
+    "go test ./internal/systembackupbootstrapmaterials -run ^TestOriginalSQLKEKLink -count=1 -v"
+  ],
+  "validation": {
+    "test_build_products_created": false,
+    "a_executed": [
+      "gofmt -w/-l on six new Go files; parse/format only",
+      "23 unique inventory keys and every referenced reuse path exists",
+      "SHA equality of frozen previous terminal twenty and current-admin five files"
+    ],
+    "cleanup": "Root must remove its test/build products after testing per AGENTS.",
+    "fixture_limits": "Existing real crypto/local protocol and explicit SQL/Kubernetes models only. Native host tests do not supply twenty-three fake owners or claim full consumer positive/native SQL proof.",
+    "not_executed": [
+      "Go compile/test/list/vet/build",
+      "SQL/migrations/native provider/API/remote operations",
+      "Git/commit/push"
+    ]
+  },
+  "main_gate": "No new resource owner slots or existing/new main wiring changed by A; original main baseline stays 3/30. No six-domain completion, site/page acceptance or DR eligibility is claimed."
+}

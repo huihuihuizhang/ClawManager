@@ -1,0 +1,128 @@
+{
+  "schema": "a-functional-backup-versus-dr-scope-audit.v1",
+  "date": "2026-11-03",
+  "requested_outcome": "Actual complete six-domain functional backup/publication; no isolated restore; DR eligibility false or not provided.",
+  "status": "SOURCE_AUDIT_AND_NEW_CONCRETE_OWNERS_PENDING_ROOT_VALIDATION",
+  "invariants": [
+    "Keep complete six-domain/nonempty actual scope and every current original authorization/provider reference.",
+    "Keep full actual writer inventory, pause/fence rules and physical restoration of the ORIGINAL writer state.",
+    "Keep real Generate/Unwrap, source coverage/adoption, protected historical key mappings and current revocation checks.",
+    "Keep formal encrypted artifacts, signed capture/acceptance/catalog records, independent complete readback and same-task succeeded.",
+    "No empty part, skipped reference, Passed flag, synthetic ready DTO, boolean AND relation proof, unconditional success owner or blanket removal of Missing30.",
+    "Do not require physical source/target failure-domain independence, available disaster external identities or successful isolated restore merely to perform the requested functional backup."
+  ],
+  "existing_purpose_and_profile_branches": [
+    {
+      "file": "backend/internal/systembackupdeployment/profile.go",
+      "symbol": "ExecutionProfile.CanonicalIdentity",
+      "finding": "Explicitly accepts same-cluster-copy and dependence/attestation risk vocabulary. RestoreTargetRef/RestoreTargetHash are still required syntactically; this function does not itself observe a restore target or prove restore success. Do not infer native disaster availability from those strings."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/production_publication_policy.go",
+      "symbol": "originalPublicationPolicy.validate / decodeOriginalPublicationPolicy",
+      "finding": "not_provided is an existing accepted recovery-evidence state with nil recovery selection and nil attestation pins. Target class/domain/risks and exact original config/failure-domain registry pins remain frozen. The new owner emits this EXISTING wire with same-cluster-copy and explicit non-DR risks."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_policy_startup.go",
+      "symbol": "checkOriginalPublicationPolicyCurrent",
+      "finding": "Current signed owner/recovery evidence fetch and verifyPublicationRecoveryEvidence are inside the provided branch. not_provided does not require those DR receipts; ordinary original publication policy, Forward/current config and publisher checks still remain."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_recovery_current.go",
+      "symbol": "preparePublicationRecoveryFacts",
+      "finding": "Existing not_provided branch returns non-independent KEK metadata and policy/target/capture binding, with original bounded access. It does not create a disaster recovery proof."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_acceptance.go",
+      "symbol": "acceptanceRecoveryFactsTx",
+      "finding": "not_provided is allowed ONLY for actual functional_test. Before that branch the code still checks real current KEK binding, ReadCurrentOriginalUnwrapTx and GenerateRevoked. Removing those checks would violate requested functional safety."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_recovery_evidence.go",
+      "symbol": "publicationDomainIdentities / verifyPublicationRecoveryEvidence",
+      "finding": "This is the provided-DR proof path: complete append-only history, distinct original identities, source/target exclusion, independent dependencies, dr-ready-external and zero risks. Its two-or-more-event requirement is not a demand to invent a second physical domain for functional backup. New functional registry owner permits one original active domain while retaining complete append-only/anti-reuse checks. This existing DR verifier is unchanged and still rejects insufficient DR material."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_acceptance.go",
+      "symbol": "publicationManifestEvaluation / publicationOriginalEvaluation",
+      "finding": "Functional target/risk/attestation/recoverability conditions become exact disqualification reasons and eligible=false. They do not become an error for functional_test; acceptance with disqualifiers is rejected. Independent verified capture, manifest and cleanup remain prerequisites."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/publication_terminal.go",
+      "symbol": "publicationTerminalScope / applyOriginalPublicationTerminal",
+      "finding": "Terminal guard requires eligible to equal purpose==acceptance. Thus eligible=false is expected for functional_test, and actual complete artifact, source recovery, current owner and same-task checks still precede the sole succeeded transition. No terminal code changed in this A batch."
+    },
+    {
+      "file": "backend/internal/systembackupcontroller/acceptance_alert_sequence.go",
+      "symbol": "AdvanceAcceptanceAlertSequence",
+      "finding": "Functional success does not advance acceptance/recovery alert success clocks; it returns the existing sequence. Functional completion must not be promoted to DR/acceptance readiness."
+    },
+    {
+      "file": "backend/internal/systembackup/profile/config.go",
+      "symbol": "Config.Validate / Driver.Probe",
+      "finding": "Mode=backup already skips native TargetAdmin DB probe; target mode skips source probe. Validate still unconditionally requires target namespace/name/storage/staging metadata and source!=target shape. Those remaining legacy syntax/composition requirements are an explicit D follow-up if encountered; this audit does not falsely call them actual restore proof or silently weaken that older profile."
+    },
+    {
+      "file": "backend/internal/systembackup/profile/six_domain.go",
+      "symbol": "Driver.authorizeAcceptance",
+      "finding": "Actual acceptance business authorization is purpose-specific and returns without invoking acceptance authorization for other purposes. Full six-domain owner/Contribute/publisher logic remains mandatory."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/deployment_source_recovery.go",
+      "symbol": "original source recovery checks",
+      "finding": "This concerns restoration of original physical writer/source state, not optional isolated disaster restore. It MUST NOT be skipped because a name contains recovery or purpose is functional_test. Source3 actual native failures remain real blockers owned by D."
+    },
+    {
+      "file": "backend/internal/systembackupexecution/deployment_capture_capability.go",
+      "symbol": "checkCaptureCapability",
+      "finding": "The six-part structural batch still deliberately has no positive branch until complete original source/writer/publisher observations are integrated. Neither acceptance_ready=false nor not_provided is itself an error, but missing actual six-domain source capability remains a real blocker. This A classification patch does not override it."
+    }
+  ],
+  "remaining_23_scope_matrix": [
+    {"key":"registry:parts","functional_hard_requirement":"All actual mandatory six-domain collectors, original source association, exact scope and nonempty data; no empty substitutes.","dr_only_not_required":"Restore execution or disaster-target readiness is not a part-collector proof.","local_action":"Concrete source/collector registry owner still required; no waiver."},
+    {"key":"registry:redis_sources","functional_hard_requirement":"Actual exact source/topology/TTL/ACL/collector and writer facts.","dr_only_not_required":"Disaster Redis endpoint/identity availability may be explicitly unavailable; it cannot replace normal source permission.","local_action":"Original-window native source adapter remains; do not route through a future Job."},
+    {"key":"registry:failure_domains","functional_hard_requirement":"Real original owner-signed classification, exact config pin, complete append-only stable ID history and current owner authorization.","dr_only_not_required":"Physical independence and valid DR attestation are not required for same-cluster functional backup.","local_action":"NEW concrete FunctionalClassificationOwner; accepts one existing active shared domain with conservative non-DR risks. Does not fabricate another domain."},
+    {"key":"registry:disaster_identity_mapping","functional_hard_requirement":"Real original signed typed state, complete coverage of all twenty exact current references, current scope/version and revocation anchor.","dr_only_not_required":"Alternate disaster identities can be explicitly unavailable; no credentials/ref are guessed and no restore operation is granted.","local_action":"NEW SAME grouped FunctionalClassificationOwner. Exact unavailable entries required; unknown/missing refs, available claims or DR profile rejected."},
+    {"key":"registry:source_writers","functional_hard_requirement":"Complete native writer set, differences/unknowns rejected, actual fence/pause and physical original-state restoration.","dr_only_not_required":"None of these writer requirements is a DR-only proof.","local_action":"No relaxation. Existing D original-window/native failures remain blockers."},
+    {"key":"registry:secret_allowlist","functional_hard_requirement":"Actual current namespace/Secret identity/version/purpose/use and least-privilege source read/broker scope.","dr_only_not_required":"Disaster broker/credential availability can be unavailable in the separate typed map.","local_action":"Real original-window allowlist adapter still required; no empty policy or sample substituted."},
+    {"key":"reference:artifact_write","functional_hard_requirement":"Actual original scoped write/conditional-create/checksum/TLS and current authority.","dr_only_not_required":"Source-independent placement/credentials are qualification claims only; source dependence is explicit risk.","local_action":"Keep C grouped native/SQL owner and full physical checks."},
+    {"key":"reference:artifact_read","functional_hard_requirement":"Actual exact original immutable-version scope and independent complete readback.","dr_only_not_required":"Reachability after hypothetical source disaster is not ordinary original read permission.","local_action":"Keep C grouped owner and independent real readback."},
+    {"key":"reference:artifact_delete","functional_hard_requirement":"Actual exact scoped version/delete-marker/absence capability and business hold/retention gates.","dr_only_not_required":"No disaster-location deletion identity is required when explicitly unavailable; original deletion capability is not waived.","local_action":"Keep C grouped owner and original business guards."},
+    {"key":"reference:artifact_upload_issuer","functional_hard_requirement":"Real issuer/subject/audience/scoped short credential policy and current revocation.","dr_only_not_required":"External disaster-independent issuer availability is a separate qualification issue.","local_action":"Concrete original-window issuer owner remains; no static broad credential substitution."},
+    {"key":"reference:evidence_store","functional_hard_requirement":"Actual original typed store/root, integrity/retention/object/channel association and original current authority.","dr_only_not_required":"Physically independent disaster evidence placement is not a functional prerequisite.","local_action":"Actual evidence owner still required; signed unavailable disaster mapping does not approve a store."},
+    {"key":"reference:evidence_write","functional_hard_requirement":"Actual scoped conditional/checksum write with correct unknown/failure handling.","dr_only_not_required":"Disaster write identity may be unavailable; normal write scope/permission cannot be missing.","local_action":"No waiver; concrete evidence source owner needed."},
+    {"key":"reference:evidence_read","functional_hard_requirement":"Exact object/version/checksum, current original read permission and retained history.","dr_only_not_required":"Hypothetical disaster read identity not required for current functional publication/readback.","local_action":"No waiver of actual read source or independent EOF verification."},
+    {"key":"reference:evidence_delete","functional_hard_requirement":"Exact original deletion/absence permissions plus owner/reference/retention business guards.","dr_only_not_required":"No proof of disaster credential availability is needed for this classification.","local_action":"No waiver of real source, scope or GC business checks."},
+    {"key":"reference:evidence_kek","functional_hard_requirement":"Real evidence wrap/unwrap and protected retained historical mappings/current revocation.","dr_only_not_required":"Source-independent disaster key availability and isolated restore unwrap are not functional bootstrap prerequisites.","local_action":"Do not replace real TransitKeys/keyring authority with classification metadata."},
+    {"key":"reference:kek","functional_hard_requirement":"Real Generate and Unwrap, actual independent purpose authorities, original mapping, complete four-partition coverage/adoption and retained key/fence checks.","dr_only_not_required":"DR source independence or isolated-target restore success may remain unproven/false.","local_action":"Keep existing real SQL preparation and all original coverage. Classification is never KEK admission."},
+    {"key":"reference:acceptance_signing","functional_hard_requirement":"Actual purpose-separated signer/current permission/public history and a real signed functional acceptance result with eligible=false.","dr_only_not_required":"The business purpose acceptance/DR qualification is distinct from signing a truthful functional result.","local_action":"Real signer resource owner still required; no capture-key reuse or skipped record."},
+    {"key":"reference:catalog_signing","functional_hard_requirement":"Actual catalog-only signer/current source and historical verification; real formal catalog records.","dr_only_not_required":"Disaster independent signing service availability can be unavailable.","local_action":"Do not waive actual catalog signature or purpose separation."},
+    {"key":"reference:catalog_read","functional_hard_requirement":"Actual original root/version/read identity and independent catalog readback.","dr_only_not_required":"Reachability after hypothetical disaster is optional qualification.","local_action":"Keep C grouped concrete native/SQL source."},
+    {"key":"reference:catalog_append","functional_hard_requirement":"Actual scoped append-only conditional-create/current original authority.","dr_only_not_required":"Disaster-independent append issuer/location is not required for functional success.","local_action":"Keep C grouped source and real append semantics."},
+    {"key":"reference:catalog_snapshot","functional_hard_requirement":"Actual complete immutable catalog/index snapshot association and retained verification semantics.","dr_only_not_required":"An independently disaster-reachable snapshot is not a functional prerequisite; a live LIST still cannot masquerade as an immutable snapshot.","local_action":"Real snapshot owner still required; no metadata-only substitute."},
+    {"key":"reference:status_relay","functional_hard_requirement":"Actual deployment mTLS/current authorization and later real task/attempt/Job cursor checks.","dr_only_not_required":"A disaster relay deployment need not be available; no future Job may be invented for bootstrap.","local_action":"Keep secure original deployment owner and actual later runtime bindings."},
+    {"key":"cross_resources","functional_hard_requirement":"Exact installation/config/grant/ref versions, full coverage, principal/key/purpose separation, writer/allowlist and retained-history relationships.","dr_only_not_required":"Source dependence and shared failure domain are permitted as truthful non-DR risks, not as asserted independence.","local_action":"Real relation owner still required; cannot AND fake Passed flags or waive broken TLS/permissions/conditional commit."}
+  ],
+  "new_concrete_implementation": {
+    "files": [
+      "backend/internal/systembackupinstallationowner/install/functional_classification_types.go",
+      "backend/internal/systembackupinstallationowner/install/functional_classification_issue.go",
+      "backend/internal/systembackupinstallationowner/install/functional_classification_owner.go",
+      "backend/internal/systembackupinstallationowner/install/functional_classification_test.go"
+    ],
+    "issuer": "Installer.IssueFunctionalClassification: actual password/admin/enrollment/exact current committed capture tuple; exact original request/config/two registry pins; distinct explicit classification signature outside SQL locks; final exact files/current original CAS/role/window. No source/provider/SQL write, issuer generation or DR probe.",
+    "resource": "FunctionalClassificationOwner implements actual BootstrapTerminalResource for failure_domains and disaster_identity_mapping, same pointer/preparation for both. It authenticates independent enrolled public source and exact classification bytes; an identity-only capture guard checks only the current original revocation anchor, while the terminal PRIMARY capture owner still needs its actual probe. No class guard is used as a physical capture/provider proof.",
+    "history": "Single actual existing domain permitted only for this functional profile; complete original history/chain/identity anti-reuse retained. Twenty exact original current references must each state unavailable with a finite reason. No external credential/ref is manufactured or used.",
+    "composition": "(*BootstrapTerminalOriginal).WithFunctionalClassification uses the same exact original capture instance, copies actual resource aliases and adds TWO concrete owners. Then use NativeHostDeploymentCandidates, preserving independent owners.KEK. D must explicitly wire it; no frozen file or main changed.",
+    "publication": "Issuer emits the existing originalPublicationPolicy wire with same-cluster-copy, sorted original dependence risks, not_provided and nil attestation pins. It is signed by hash within the original classification; it cannot emit eligible=true or DR/restore success.",
+    "runtime": "L2/final current SQL is through the same guarded transaction/SampleTime and original owner guard; only controlled local registry/source files are reread. Legacy config-order route explicitly refuses. Failures/wrong context/reflection copies latch original state. No SQL commit/Exec or provider/API I/O under locks.",
+    "requirements": "All thirty owner requirements remain. Code-level seven-source fixture plus these two has twenty-one missing; main and actual data admission are not claimed complete. C five-purpose owner is independently frozen and not falsely counted ready here."
+  },
+  "validation": {
+    "A_execution": "gofmt and static source/hash/path checks only; no Go compile/test/build/list/vet, SQL, provider/API/remote or Git",
+    "new_test_scope": "One original shared domain/explicit unavailable map positive, DR/acceptance/provider-failure disguise/missing coverage negative; actual original authenticated issuance and no added SQL writes/provider signing; original role revocation negative; concrete grouped source composition/copy refusal. SQL/Kubernetes are explicit existing protocol models, not native site admission.",
+    "test_build_products_created": false,
+    "DR_eligibility": "false_or_not_provided",
+    "global_functional_goal": "not yet achieved; real remaining source/provider/writer/publication integration still required"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "a-terminal-original-locator-auth-supersede.pins.v1",
+  "date": "2026-11-03",
+  "status": "FROZEN_SOURCE_ONLY_SUPERSEDE_NOT_TESTED",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_load.go",
+      "supersedes_sha256": "7a6b60708ac0a51cbc11f828c54eeadcd76c5e874a9b8a36fee4d9eeec44b447",
+      "sha256": "fe3938335ed00adcdc2d756b4a312c4962b870012e8d6976d9ec12d807b145c3"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/native_host_terminal.go",
+      "supersedes_sha256": "c2842b528d5f8c794ec2161c4f9d818c095bfcc69875827de626967e9b875b44",
+      "sha256": "8b1300623faf4fecdb14c98404d0a3bbf4833b9219e429d2a20e5585a7027708"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_original_public_source.go",
+      "supersedes_sha256": null,
+      "sha256": "ef4a8df705a0e3d9cad202b6a65fa106721b4065e99b0573a6a87fff0de6712b"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_locator_race_test.go",
+      "supersedes_sha256": null,
+      "sha256": "f8de23ea57069ab8b066b6722cd5ed5bc3742e08eecd3bb50b4e2ed275220a4d"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-terminal-locator-auth-r1-20261103.json",
+      "supersedes_sha256": null,
+      "sha256": "3d067251d79d91249ba5378ba79d363428954bd793050261976cb273c42bc361"
+    }
+  ],
+  "validation": "gofmt only. Root owns tests/build/SQL/Git/cleanup; no test products created. Historical manifests and failures preserved."
+}

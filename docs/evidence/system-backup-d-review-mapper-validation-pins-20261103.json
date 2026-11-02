@@ -1,0 +1,92 @@
+{
+  "schema_version": "system-backup-d-small-source-review-batch.v1",
+  "id": "mapper-validation",
+  "status": "FROZEN_REVIEW_SPLIT_SOURCE_ONLY_PENDING_ROOT_VALIDATION",
+  "historical_source_manifest": {
+    "path": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+    "sha256": "56da9cf92c25c83cb178cffda955acb0d49a2fc1f7289d307a81453bcdc4c7e8",
+    "unchanged": true
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupkms/config_validation.go",
+      "sha256": "f70e0ee37bdd2d935a8229d79a75dd50ea2578182ab3c5fe3dfb23468870721d"
+    },
+    {
+      "path": "backend/internal/systembackupkms/config_validation_test.go",
+      "sha256": "0ef6d75e74f2d4d09d06b3a6eb77fb0b67a6e3a8136852d248713f74c3d18566"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/formal_materials_validation.go",
+      "sha256": "0c63e079ed3cbc3d0d2c7c9ddb5f8eb54d3141625d4a0988898fe99ec4899efc"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/formal_materials_validation_test.go",
+      "sha256": "fc51e76393b854157ca018a37d0e1d89a45318e15c4b4e014fc3bbcc1edf3f9d"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_team_objects_scope.go",
+      "sha256": "d2b420126d6d0b57121f5177d1cba9b0f223270c08ab2c67169e786aa233d798"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_team_objects_scope_test.go",
+      "sha256": "d23cc1b6aad7e6109f6f081b84c63585d0e688e7dfd5f5efdee73f44f2fcfeb8"
+    }
+  ],
+  "required_coapply_batch_ids": [],
+  "new_or_changed_exported_surface": [
+    {
+      "symbol": "systembackupkms.ValidateCaptureConfig(Config) error",
+      "provider": "backend/internal/systembackupkms/config_validation.go",
+      "caller": "production_capture_materialize.go mappingComponents",
+      "baseline": "systembackupkms/transit.go Config, validKey, text, keyName, digest, hash; test transit_test.go testConfig/resolverFunc; no new resolver/HTTP authority"
+    },
+    {
+      "symbol": "kube.ValidateFormalJobMaterials(*FormalJobMaterials) error",
+      "provider": "backend/internal/systembackup/kube/formal_materials_validation.go",
+      "caller": "production_capture_materialize.go MaterializeMappings before object CREATE",
+      "baseline": "kube/formal_materials.go exact attachFormalMaterials, FormalJobMaterials; local dummy Job only, returns error only"
+    },
+    {
+      "symbol": "worker.TeamObjectsSourceScopeSHA256(FormalSourceMount) (string,error)",
+      "provider": "backend/internal/systembackup/worker/source_team_objects_scope.go",
+      "caller": "production_capture_materialize.go mappingComponents and complete mapping test",
+      "baseline": "worker/source_credentials.go sourceDigest/validObjectSourcePrefixes and actual FormalSourceScopeSHA256 encoding; no object keys or source permission invented"
+    }
+  ],
+  "baseline_dependencies": [
+    {
+      "path": "backend/internal/systembackup/kube/formal_materials.go",
+      "sha256": "44f768b692837675c5c9dc0d69e5c1cd5991ad9ca5b2fead0be40c6e7c949ab3"
+    },
+    {
+      "path": "backend/internal/systembackupkms/transit.go",
+      "sha256": "71d3700d363fd668623be15a568b8e10936bf30b1d1dcede8e4760ed898bdea4"
+    },
+    {
+      "path": "backend/internal/systembackupkms/transit_test.go",
+      "sha256": "5f7a35e27253480d1164688d9f9517170f60decb202da075c3608d77c71cb4fd"
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_credentials.go",
+      "sha256": "14b2884cd0e1e21235f4409664dd446ce7059f42d03e73508bb31c465c4dbc0a"
+    }
+  ],
+  "root_validation_commands": [
+    "go test ./internal/systembackupkms -run '^TestPureCaptureConfigValidationKeepsWorkerConstructorChecks$' -count=1 -v",
+    "go test ./internal/systembackup/kube -run '^TestFormalMaterialPreflightRejectsSameInvalidPathsAsJobBuilder$' -count=1 -v",
+    "go test ./internal/systembackup/worker -run '^TestOriginalTeamsObjectPrefixScopeMatchesActualWorkerScope$' -count=1 -v"
+  ],
+  "limits": "Pure structural/worker scope parity only. No provider permission or native source observation.",
+  "validation": {
+    "files_are_exact_historical_batch_bytes": true,
+    "source_modified_by_this_split": false,
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "cleanup": "Root removes its test/build/SQL/cache products after verification per AGENTS."
+}

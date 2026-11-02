@@ -1,0 +1,104 @@
+{
+  "schema": "a-bootstrap-terminal-original-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_REVIEW_AND_REAL_SOURCE_INTEGRATION",
+  "date": "2026-11-03",
+  "files": {
+    "backend/internal/systembackupsecurity/bootstrap_terminal_resources.go": "ea2d66aafb6f51b5b6a7d1233895d871b692695dc264df9f43b6be0f5c600f3c",
+    "backend/internal/systembackupbootstrapsecurity/terminal_resources.go": "54dde9054cf32cf5b277ba8332d86fce37a6bbc32d5afc35ff6bd9003ab0119d",
+    "backend/internal/systembackupbootstrapsecurity/terminal_resources_test.go": "9e1eb362e1d5edec9bae6d0805e293d19538bf79f501697c8b2a37d7713ca2b4",
+    "backend/internal/systembackupnoncebootstrap/terminal_resource.go": "c3dd1f3824bb8192f9c0f25eb650576a63f59a0c4b300ce391cdbe20ecb3904c",
+    "backend/internal/systembackupnoncebootstrap/terminal_resource_test.go": "5199b111fb3aaf5f68ddb5f8a8bd25b8e3df4640676014ea356c0bb04e4981e0",
+    "backend/internal/systembackupcatrust/terminal_resource.go": "0e3c513fe8f23cb41e9035063000024b67ed23cc7fe7c723fe18b7936638fcca",
+    "backend/internal/systembackupcatrust/terminal_resource_test.go": "c2e1d689d852b11fce39097f68312893801154abd5813cb03e640af43bae76ed",
+    "backend/internal/systembackupevidence/bootstrap_original_source.go": "5c4d38eab6361cf50f2e1d4657b4de567be8019f2c02866963654d6add0a4a8c",
+    "backend/internal/systembackupevidence/bootstrap_original_source_test.go": "a47a772f8f8b27bd1b3bfcfd233c13ee39a6d4d8cb6f86dbb7f55ab2c1876e48",
+    "backend/internal/systembackupproducer/original_shared_source.go": "7894c55c5b9b7dac4cb1347ceb39df41e8ac5536da2998f0fef86abe6387c107",
+    "backend/internal/systembackupproducer/original_shared_source_test.go": "acc12bac132eb64a9cfd9fc670c15e705d8d96497d7a52dd8873f771dec942da",
+    "backend/internal/systembackupinstallationowner/install/terminal_mapping.go": "812be15059039f76ae561a3355b3dfdc312e04269aa6b39e6806ac8442197e2d",
+    "backend/internal/systembackupinstallationowner/install/terminal_mapping_issue_test.go": "7f48ef7b753769ee98f21d0ab8134077a9e5ef1f38d94b1d31ec0a7cb9c62ebb",
+    "backend/internal/systembackupinstallationowner/install/terminal_host.go": "1d39ad5912b3357487e1cd22ed4f285e50254b71d212f5ee3b64a64864be2130",
+    "backend/internal/systembackupinstallationowner/install/terminal_original.go": "9ae51b9444d9c12a1301a1707cab0e4a8f1a7ca884d1444cd17bbc56166c487e",
+    "backend/internal/systembackupinstallationowner/install/terminal_original_test.go": "1657b793c91f417018de8fc55ba975d974873a0d64e990644a1c40cd4624b0f4",
+    "backend/internal/systembackupinstallationowner/install/terminal_owners.go": "e15507563983a5d037e721d4aab60347d6e44ce2ea0335374881baac41b6f710",
+    "backend/internal/systembackupinstallationowner/install/terminal_load.go": "7a6b60708ac0a51cbc11f828c54eeadcd76c5e874a9b8a36fee4d9eeec44b447",
+    "backend/internal/systembackupinstallationowner/install/terminal_sql.go": "345d23f381432f7330983e061662a96bc3ab34440cca3d272f1c8a6a7bcd4bde",
+    "backend/internal/systembackupinstallationowner/install/terminal_export.go": "f8b348b899d603de5d7d6e799284227742dc6c33cba2f20e793a9a9af471af71"
+  },
+  "source_file_count": 20,
+  "test_file_count": 7,
+  "supersedes": [],
+  "production_entry": "install.NewBootstrapTerminalOriginal(capture, BootstrapTerminalFiles, map[string]security.BootstrapTerminalResource); NO other BootstrapCandidateAuthority argument or field",
+  "actual_main_baseline": "3/30 at root remote source 8c254765b325a6ecbbfbe70bc4879f946cf2e69b; this batch changes no main wiring",
+  "concrete_slots": [
+    "registry:rbac_bindings",
+    "registry:provider_proof_issuers",
+    "registry:strong_auth_issuers",
+    "reference:capture_signing",
+    "reference:nonce_hmac",
+    "reference:artifact_ca",
+    "reference:evidence_ca"
+  ],
+  "completeness": "Only seven concrete slots may be composed from this batch plus existing owners. All remaining twenty-three remain missing; Prepare refuses before input/credential/provider/SQL work. No success stubs fill them.",
+  "issuer_producer": [
+    "IssueBootstrapOriginalMapping authenticates the real current password/local admin, original enrollment/public pin and exact active committed capture bundle.",
+    "Read-only admin/head/grant snapshot releases ALL original locks before complete SELECT-only producer Domain/Grant reads and actual Kubernetes host observation. No reversed producer-domain/owner lock nesting.",
+    "Actual original C1 Domain selects producer issuer identity; actual active C1 Service grants select opaque workload hashes. Explicit authenticated original association binds these to actual enrolled runtime namespace/pod/SA UIDs and complete PodSpec hash. Job/controller closure is not implemented.",
+    "Full request selection, actor/target/config/ref/registry/grant/enrollment/window and concrete source binding comparison hashes are signed outside SQL locks. Caller-owned request/bindings/bundle are detached before waits.",
+    "Final original Kubernetes authority and exact SQL CAS/current-role/live-window confirmation remain mandatory. No source/producer/config rows are written; no capability verdict is manufactured.",
+    "SaveFrozenBootstrapOriginalMapping writes only create-only 0600 inert record/signature/exact SHA64 files, never consumer trust or issuer enrollment."
+  ],
+  "terminal_phases": [
+    "L2 current admin/RBAC -> capture head/grant -> grouped MinIO head -> grant -> five refs sorted by Purpose -> operation/config. MinIO is supplied as one concrete resource object under all five purpose keys; prepared and authorized once per attempt.",
+    "Authorize authenticates the original signed mapping and actual current capture owner plus each compiled current owner domain. No old Domain epoch/open-state freshness requirement is added to exact historical read.",
+    "L4 rechecks exact already-held original C1 receipt/run/history/grant rows and the signed actual API observation for the selected service hosts.",
+    "L5 rechecks actual target rows, exact original local files, concrete nonce/CA/registry and other reference owner checks; no provider or API I/O under SQL.",
+    "L6 reserves the original existing capacity ledger with original observation age and 73728 charge. Report read is last in outside-SQL preparation; never reset or restamp.",
+    "L8 independently reads full original evidence registry immutable/mutable metadata and all ordered chunks to EOF with original selected channel/store/write/KEK/recovery/object/manifest association. No claims; immutable object version and ready row version exact. Alias selections expand to one returned fact per D candidate.",
+    "Work-end checks current identity for both history/fresh. Fresh rechecks all already-held C1/ref/evidence/chunk rows, original physical deadlines/files and capacity reservation. Historical read skips old physical capacity/evidence/observation stages but never skips actual current capture/MinIO revocation.",
+    "Private sessions bind original context and guarded transaction; failures, wrong contexts and copied checks cannot revive original attempt. Public evidence comparison pointers are detached from private source state."
+  ],
+  "shared_minio_contract": [
+    "Use C systembackupminioauthority/sql_contract.go SQLGrantVersion/SQLHeadVersion/SQLReferenceVersion plus NUL domains and C typed codec/current reader. No MinIO SQL domain or replacement reader is defined by this batch.",
+    "Consumer locks use C FOR SHARE reader. Installer/revoke use D original FOR UPDATE lifecycle; after its locks C installer readback may retain existing shared reads.",
+    "Observed integration gap: frozen C sql_read.go sampleSQL currently reads raw UTC_TIMESTAMP(6). Candidate path must use the same BootstrapSQL.SampleTime clock floor/failure latch, including inside C reader, before counting it as integrated.",
+    "C SQL authority source is not yet linked/tested by this A batch. No current or legacy MinIO owner is reported present merely from its declarations."
+  ],
+  "root_integration_notes": [
+    "Use this terminal directly as candidate authority, not CaptureSigningCandidateAuthority/Materials wrappers requiring another Original.",
+    "Owners() is concrete inventory only; root/D must set actual candidate factory and preserve independent owners.KEK real Generate/Unwrap preparation. Never enable legacy config-order admission for new MinIO SQL owner without separate lock-order review.",
+    "Remaining concrete owners must implement TerminalKeys, BindingSHA256, PrepareTerminalResource and five check methods: AuthorizeIdentity, RecheckIdentity, DependencyDeadline, LockReferences, Recheck.",
+    "Resource physical failures must retain an identity-only check with nil DependencyDeadline when safe, so same-task history is decided after actual current L2 checks. Missing compiled implementations or missing independent mapping stays closed.",
+    "All source bindings are exact comparison metadata selected by the original issuer, never executable source, Passed bool, ready verdict or permission from a DTO.",
+    "ReadOriginalSharedRecord is DATA-only exact closed storage/projection/hash/PK/EOF validation; it creates no lock/execution/admission credential. Consumer calls it only for exact rows already held at earlier D phases."
+  ],
+  "validation": {
+    "a_executed": [
+      "gofmt -w on exactly these new files",
+      "gofmt -l returned no paths; syntax/format check only",
+      "SHA256 equality of five frozen current-admin files and two root-corrected consumer fixture files"
+    ],
+    "a_not_executed": [
+      "Go compilation/test/list/vet/build",
+      "native SQL/migrations",
+      "actual provider/remote/API operations",
+      "Git/commit/push",
+      "test/build cleanup owned by root"
+    ],
+    "root_component_commands": [
+      "go test ./internal/systembackupproducer -run ^TestOriginalSharedSource -count=1 -v",
+      "go test ./internal/systembackupevidence -run ^TestBootstrapOriginalEvidence -count=1 -v",
+      "go test ./internal/systembackupinstallationowner/install -run ^TestBootstrap -count=1 -v",
+      "go test ./internal/systembackupbootstrapsecurity -run ^TestTerminalRegistry -count=1 -v",
+      "go test ./internal/systembackupnoncebootstrap -run ^TestTerminalNonce -count=1 -v",
+      "go test ./internal/systembackupcatrust -run ^TestTerminalCA -count=1 -v"
+    ],
+    "fixture_limits": [
+      "SQL tests are explicit database/sql protocol models, not native MySQL privilege/InnoDB proof.",
+      "Evidence source tests exercise real guarded Work capability; they do not manufacture D private bootstrap final-read view or another missing owner.",
+      "Mapping tests reuse actual bcrypt/Ed25519/enrollment/capture protocols and original SQL model; Kubernetes is the existing controlled fixture, not real cluster enrollment.",
+      "No full thirty-owner consumption, deployment/page acceptance, six-domain success or DR eligibility is claimed."
+    ],
+    "cleanup": "No tests/builds executed by A and no test build products created. Root must delete products after its tests per AGENTS."
+  },
+  "excluded_frozen": "All previously pinned A batches, root-corrected fixtures, current-admin five files, D/C WIP and main are unchanged by this batch."
+}

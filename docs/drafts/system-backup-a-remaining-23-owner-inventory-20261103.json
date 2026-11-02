@@ -1,0 +1,223 @@
+{
+  "schema": "a-remaining-bootstrap-owner-source-inventory.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_READ_ONLY_INVENTORY_NOT_ADMISSION_OR_DEPLOYMENT",
+  "baseline": {
+    "root_remote": "8c254765b325a6ecbbfbe70bc4879f946cf2e69b",
+    "old_main_linked": 3,
+    "terminal_concrete_slots_available_with_finite_nonce_CA_bindings": 7,
+    "remaining_terminal_slots": 23,
+    "new_native_host_and_KEK_composition_add_resource_slots": 0,
+    "none_of_the_following_is_counted_as_already_integrated": true
+  },
+  "entries": [
+    {
+      "key": "registry:parts",
+      "responsibility": "A/B/C part collectors; D composition",
+      "reuse": ["backend/internal/systembackup/profile/six_domain.go", "backend/internal/systembackup/worker/control.go", "backend/internal/systembackupexecution/production_capture_materialize.go"],
+      "existing_boundary": "Actual six-domain/capture execution and finite formal operation mapping exist. SixDomainOwner is an interface; neither a schema catalog nor presence of a part label proves a concrete collector is linked.",
+      "missing_source": "Concrete original-window parts registry owner: exact required part/matrix to actual collector and authenticated source mapping, version/scope/expiry and same-attempt recheck. No BootstrapTerminalResource currently owns this key.",
+      "site_inputs": ["Full original parts registry bytes/version/hash", "Exact original deployment/core/operation mapping pins", "All mandatory native source scopes and collector profiles"]
+    },
+    {
+      "key": "registry:redis_sources",
+      "responsibility": "C native Redis; B workload/writer association",
+      "reuse": ["backend/internal/systembackup/redis.go", "backend/internal/systembackup/redis_source_capture.go", "backend/internal/systembackup/redis_source_readback.go", "backend/internal/systembackup/worker/source_credentials.go"],
+      "existing_boundary": "ConnectRedis, CaptureSourceRedis and strict snapshot readback execute real bounded native reads. Formal worker source open still needs an Invocation/CaptureKeyJob; that task permission cannot become pre-config bootstrap authority.",
+      "missing_source": "Original-window concrete Redis owner that observes actual server/topology/DB/key prefixes/TTL/ACL under original source delegation, freezes finite observations and binds registry entries without a future Job/task.",
+      "site_inputs": ["Original Redis source registry and source/server identities", "Exact TLS address/server name/CA and independent credential locator/version", "Finite included/excluded prefixes and TTL/consistency policy", "Actual writer/fence source"]
+    },
+    {
+      "key": "registry:failure_domains",
+      "responsibility": "A/B/C native facts; D relation model",
+      "reuse": ["backend/internal/systembackupdeployment/profile.go", "backend/internal/systembackupresources/control_exclusion.go"],
+      "existing_boundary": "ExecutionProfile validates target-class/risk vocabulary; control exclusion performs actual related target checks. Neither declares physical isolation or authenticates failure-domain history.",
+      "missing_source": "Concrete append-only original failure-domain/attestation owner and full source-target exclusion relation. Same-cluster functional backup may retain overlap/risk; it must not manufacture DR eligibility.",
+      "site_inputs": ["Stable original failure-domain IDs and append-only binding history", "Actual source/target placements", "Original administrator attestation issuer/window", "Explicit same-cluster-copy risk classification where applicable"]
+    },
+    {
+      "key": "registry:disaster_identity_mapping",
+      "responsibility": "A security mapping; B/C resource semantics",
+      "reuse": ["backend/internal/systembackupresources/restore_five.go", "backend/internal/systembackupresources/restore_readback.go", "backend/internal/systembackupdeployment/profile.go"],
+      "existing_boundary": "Typed restore target/readback code exists; runtime restore and isolated target authority cannot authorize an original bootstrap identity map.",
+      "missing_source": "Original signed versioned mapping owner, exact installation/resource/purpose coverage, nonambiguous external identity availability and current revocation/expiry. Functional backup does not need a claim of isolated restore success.",
+      "site_inputs": ["Exact original-to-disaster typed mappings and versions", "Original independent identity/provider pins", "Availability/permission observations or explicit non-DR risk state"]
+    },
+    {
+      "key": "registry:source_writers",
+      "responsibility": "B native writer closure; A/C source contributions",
+      "reuse": ["backend/internal/systembackupexecution/production_source_writer_observation.go", "backend/internal/systembackupexecution/production_source_writer_api.go", "backend/internal/systembackupexecution/production_source_writer_sql.go", "backend/internal/systembackup/profile/writers.go"],
+      "existing_boundary": "ObserveSourceDependencies performs actual registry/API/native observations and repeat reads. It enters through DeploymentService/newSourceSQLObservation and current source delegation; do not substitute an enabled-v1/task-dependent invocation for original-window source authority.",
+      "missing_source": "Concrete bootstrap writer owner using the original signed metadata grant/immutable materialization, complete difference check and original freeze/recovery semantics; same-attempt current SQL recheck with no native I/O under SQL.",
+      "site_inputs": ["Complete MySQL/Redis/object/workspace/runtime writers registry", "Actual named Deployment/Pod/SA/container identities", "Current DB/source credentials and observations", "Original writer fence and physical recovery protocol"]
+    },
+    {
+      "key": "registry:secret_allowlist",
+      "responsibility": "A policy; B/C actual consumers",
+      "reuse": ["backend/internal/systembackup/secret_capture_policy.go", "backend/internal/systembackupexecution/production_secret_policy.go", "backend/internal/systembackup/worker/resource_credentials.go"],
+      "existing_boundary": "DecodeSecretCapturePolicy validates the real encrypted-full-object policy; native capture validates selected Secrets. A valid policy document alone supplies neither actual source access nor workload/UID coverage.",
+      "missing_source": "Original-window concrete registry owner joining exact policy pins to actual namespace/Secret UID/type/version/purpose/use and the real broker/minimal read authority; reject unknown selected names and drift.",
+      "site_inputs": ["Original 097 secret_allowlist registry version/hash and exact policy bytes", "Actual namespace/Secret names/UIDs/types and required/optional entries", "Consumer workload and broker conversion mapping", "Independent source credential/delegation pins"]
+    },
+    {
+      "key": "reference:artifact_write",
+      "responsibility": "C native MinIO; A original authorization; D SQL lifecycle",
+      "reuse": ["backend/internal/systembackupminioauthority/sql_contract.go", "backend/internal/systembackupminioauthority/sql_read.go", "backend/internal/systembackupexecution/publication_minio_effective_v2_native.go", "backend/internal/systembackupinstallationowner/install/minio_sql_issue.go", "backend/internal/systembackupinstallationowner/install/minio_sql_store.go"],
+      "existing_boundary": "C native policy/provenance checker plus exact SQL typed reader exist; D real signed SQL head/grant/five-ref lifecycle exists. No complete linked terminal owner is counted from those declarations/readers alone.",
+      "missing_source": "C's one grouped concrete BootstrapTerminalResource for all five MinIO purposes: actual Prepare observation outside SQL, current consumer SQL FOR SHARE at L2 and final exact current rows. Use shared SQL*Version plus NUL domains and shared SampleTime; no second codec/reader.",
+      "site_inputs": ["Independent enrolled SQL trust pin and original public issuer", "Exact artifact descriptor/ref/root/scope and credential locator/version", "Native MinIO endpoint/CA/SPKI/image/provenance and actual grant/head mirror pins", "Actual scoped conditional-create/checksum capability observation"]
+    },
+    {
+      "key": "reference:artifact_read",
+      "responsibility": "C grouped MinIO owner",
+      "reuse": ["backend/internal/systembackupminioauthority/sql_contract.go", "backend/internal/systembackupminioauthority/sql_read.go", "backend/internal/systembackupexecution/publication_minio_effective_v2_native.go"],
+      "existing_boundary": "Same concrete C native/SQL sources as artifact_write, with a distinct exact read principal/ref. No latest fallback or write/delete authority is implied.",
+      "missing_source": "Register the SAME grouped C terminal object under this purpose; actual current SQL plus physical exact-version read policy observation and final recheck.",
+      "site_inputs": ["Exact artifact historical object/version read scope", "Distinct original read principal/account/credential pins", "Original typed read descriptor and SQL reference row"]
+    },
+    {
+      "key": "reference:artifact_delete",
+      "responsibility": "C grouped MinIO owner",
+      "reuse": ["backend/internal/systembackupminioauthority/sql_contract.go", "backend/internal/systembackupminioauthority/sql_read.go", "backend/internal/systembackupexecution/publication_minio_effective_v2_policy.go"],
+      "existing_boundary": "Exact flat-policy normalization and original MinIO current source exist. Provider permission does not waive hold/retention/lease or deletion business authority.",
+      "missing_source": "SAME grouped C terminal object, exact version/root/delete-marker/absence policy validation with current SQL revocation at L2/history/final.",
+      "site_inputs": ["Distinct exact delete principal/ref/version", "Finite bucket/root and version/delete-marker rules", "Original normalized native policy/profile pins and scoped absence semantics"]
+    },
+    {
+      "key": "reference:artifact_upload_issuer",
+      "responsibility": "C issuer; A identity/scope/window policy",
+      "reuse": ["backend/internal/systembackupkekadapter/provider_permit_issuer.go", "backend/internal/systembackup/worker/source_credentials.go", "backend/internal/systembackupminioauthority/contract.go"],
+      "existing_boundary": "Provider-permit code is KMS-specific; FormalSourceGrant authorizes capture-source access. Neither is an artifact STS/OIDC upload issuer. C SQL MinIO five-purpose enum excludes artifact_upload_issuer.",
+      "missing_source": "Concrete original upload-issuer identity/delegation/current revocation and actual short credential issuance/adoption policy observation. Do not relabel a static broad credential or KMS issuer.",
+      "site_inputs": ["Original issuer identity and STS/OIDC/adoption mechanism", "Exact subject/audience/policy/scope", "Original credential issuance window and revocation source", "Typed upload-issuer reference"]
+    },
+    {
+      "key": "reference:evidence_store",
+      "responsibility": "A original evidence owner; C provider native facts",
+      "reuse": ["backend/internal/systembackupevidence/s3.go", "backend/internal/systembackupevidence/producer_binding.go", "backend/internal/systembackupevidence/bootstrap_original_source.go"],
+      "existing_boundary": "NewS3Store and MatchProducerBinding enforce actual bounded object and complete channel/store/write/KEK/object metadata relationships. Ready registry rows are data, not provider authority; the C five-purpose SQL domain does not include evidence_store.",
+      "missing_source": "Concrete original evidence store/root owner, independent permission/current source and native provider observations, bootstrap reference adapter and same-tx current/final identity checks.",
+      "site_inputs": ["Independent evidence store/root and provider identity/version", "Exact endpoint/CA/TLS target", "Original retention/immutable-version semantics", "Evidence-specific original authority and channel/recovery profile pins"]
+    },
+    {
+      "key": "reference:evidence_write",
+      "responsibility": "A evidence publishing authority",
+      "reuse": ["backend/internal/systembackupevidence/s3.go", "backend/internal/systembackupevidence/system_publication.go", "backend/internal/systembackupevidence/system_publish_runtime.go"],
+      "existing_boundary": "Actual S3 conditional write/publication/unknown handling exists but requires an independently authenticated credential/owner channel. Download read or original capture signing does not authorize publication.",
+      "missing_source": "Original-window evidence write principal/typed descriptor authority, real scoped conditional-create/checksum observation and terminal current-domain adapter.",
+      "site_inputs": ["Evidence-only exact write principal/version/credential locator", "Finite evidence root/prefix", "Original conditional-create/checksum policy profile and permission observation", "Original write grant/current revocation source"]
+    },
+    {
+      "key": "reference:evidence_read",
+      "responsibility": "A evidence read owner",
+      "reuse": ["backend/internal/systembackupevidence/s3.go", "backend/internal/systembackupevidence/download_authority.go", "backend/internal/systembackupevidence/download_admission_environment.go"],
+      "existing_boundary": "Exact-version evidence reads and real authenticated download authority exist. Download uses current configured/request authority; it is not a pre-config provider-resource grant.",
+      "missing_source": "Original evidence read principal/source binding/current revocation and concrete bootstrap adapter, without introducing a future download/task prerequisite.",
+      "site_inputs": ["Independent read-only evidence credential/ref/version", "Exact object/immutable-version/checksum and root policy", "Original current permission head and historical retention source"]
+    },
+    {
+      "key": "reference:evidence_delete",
+      "responsibility": "A evidence owner; C native deletion semantics",
+      "reuse": ["backend/internal/systembackupevidence/s3.go", "backend/internal/systembackupevidence/download_retention_gc.go", "backend/internal/systembackupevidence/download_retention_gc_references.go"],
+      "existing_boundary": "Actual exact deletion/absence and GC reference/retention guards exist. GC eligibility and provider deletion permission are separate; neither supplies the missing bootstrap original provider source.",
+      "missing_source": "Evidence-specific exact delete principal/current authority and native policy/absence observation plus terminal resource adapter.",
+      "site_inputs": ["Original evidence delete principal/ref/version", "Exact finite root/version/absence proof policy", "Independent current revocation source", "Original owner/reference/retention rules retained for later actual GC"]
+    },
+    {
+      "key": "reference:evidence_kek",
+      "responsibility": "A evidence key authority",
+      "reuse": ["backend/internal/systembackupevidence/transit.go", "backend/internal/systembackupevidence/transit_keyring.go", "backend/internal/systembackupevidence/system_transit.go"],
+      "existing_boundary": "NewTransitKeys/NewTransitKeyring execute actual purpose-bound wrap/unwrap with original credentials. A constructed keyring or the backup-data KEK grant is not evidence-key admission.",
+      "missing_source": "Independent original evidence KEK mapping/current permission source, exact new-write/historical unwrap coverage and concrete terminal owner; retain real provider operations and all retained evidence references.",
+      "site_inputs": ["Evidence-specific KEK identity/version/provider route", "Separate original wrap/unwrap authority and credentials", "Exact protected historical evidence key mappings and revocation semantics", "TLS/native provider permission observations"]
+    },
+    {
+      "key": "reference:kek",
+      "responsibility": "A original key/coverage; B/C actual use/reference partitions; D original SQL fence",
+      "reuse": ["backend/internal/systembackupkekadapter/bootstrap_source_factory.go", "backend/internal/systembackupkekadapter/native_provider_observation.go", "backend/internal/systembackupkekadapter/native_installation_mapping.go", "backend/internal/systembackupkekadapter/coverage_owner_sql.go", "backend/internal/systembackupkekadapter/sql_coverage_census.go", "backend/internal/systembackupkekregistry/stage.go"],
+      "existing_boundary": "NewSQLBootstrapKEKPreparation is a REAL concrete independent owners.KEK preparation. It reads original mapping, separate Generate/Unwrap and complete four-partition adoption/sixteen witnesses. New LinkOriginalSQLBootstrapKEK connects it from independently pinned public source metadata, without DB/credential/provider I/O at construction. It deliberately does NOT fill this resource slot.",
+      "missing_source": "Concrete reference:kek terminal resource using the SAME original binding/current authorities and D prelocked evidence/fence snapshot; must not run KEK fence early at L5 or skip real Generate/Unwrap/coverage/adoption. Original immutable external snapshot/writer-fence/backfill/adoption producers still need actual owner inputs; live SQL/S3 census alone cannot sign them.",
+      "site_inputs": ["Original SQL mapping pin/public issuer", "Distinct actual Generate and Unwrap permission record pins/issuers", "All four coverage partitions with adoption and sixteen independently pinned witness sources", "Actual native provider/role/policy/CA configuration", "Original immutable external snapshot, writer fence, backfill and adoption receipts"]
+    },
+    {
+      "key": "reference:acceptance_signing",
+      "responsibility": "A signing authority; D acceptance assembly",
+      "reuse": ["backend/internal/systembackupsecurity/signing_owner_records.go", "backend/internal/systembackupsecurity/original_signing_resolver.go", "backend/internal/systembackupsecurity/transit_signing_credentials.go", "backend/internal/systembackup/control/acceptance.go"],
+      "existing_boundary": "Actual signature-checked original business signing records and credential Transit signing exist. The business record binds BackupPublicID/attempt/operation/frozen input; no future acceptance task can be required to admit the initial provider resource.",
+      "missing_source": "Independent original acceptance-signing resource permission/current revocation and real public-key/probe observation, separate from capture signing and from later acceptance business approval.",
+      "site_inputs": ["Separate acceptance key/provider version/public history", "Exact purpose-specific role/policy/JWT workload and scope", "Original acceptance permission issuer/current head", "Retained verification keys/protection windows"]
+    },
+    {
+      "key": "reference:catalog_signing",
+      "responsibility": "A signing authority; C catalog content",
+      "reuse": ["backend/internal/systembackupsecurity/signing_owner_records.go", "backend/internal/systembackupsecurity/original_signing_resolver.go", "backend/internal/systembackupsecurity/transit_signing_credentials.go", "backend/internal/systembackupexecution/publication_catalog_signing_journal.go"],
+      "existing_boundary": "Actual frozen-input and purpose-bound catalog signature paths exist. Capture's signed public histories prove key separation data, not catalog signing permission or its current SQL revocation.",
+      "missing_source": "Catalog-specific original provider permission/current owner and initial resource observation/terminal adapter, without a future catalog publication prerequisite.",
+      "site_inputs": ["Separate catalog signing key/provider version and full public history", "Catalog domain/payload and workload role/policy pins", "Original permission/current revocation source", "History retention/protection windows"]
+    },
+    {
+      "key": "reference:catalog_read",
+      "responsibility": "C grouped MinIO owner; A original/current authorization",
+      "reuse": ["backend/internal/systembackupminioauthority/sql_contract.go", "backend/internal/systembackupminioauthority/sql_read.go", "backend/internal/systembackupexecution/publication_minio_effective_v2_native.go", "backend/internal/systembackupread/catalog_read.go"],
+      "existing_boundary": "CatalogRead is one of C's EXACT five SQL/native purposes. Configured catalog read paths do not replace this original source, but the grouped C bootstrap owner can reuse native source and SQL codec directly.",
+      "missing_source": "Register the SAME grouped C BootstrapTerminalResource under catalog_read with exact native read principal and original current SQL checks; do not add a second SQL domain.",
+      "site_inputs": ["Original catalog root/read descriptor/version and principal pins", "Catalog immutable-version scope", "Same enrolled SQL grant/head/five-ref trust source", "Actual C native policy/provenance observations"]
+    },
+    {
+      "key": "reference:catalog_append",
+      "responsibility": "C grouped MinIO owner",
+      "reuse": ["backend/internal/systembackupminioauthority/sql_contract.go", "backend/internal/systembackupminioauthority/sql_read.go", "backend/internal/systembackupexecution/publication_minio_effective_v2_policy.go", "backend/internal/systembackupexecution/publication_catalog.go"],
+      "existing_boundary": "CatalogAppend is one of C's exact five purposes. Actual append/publish code still needs original scoped conditional-create authority; a catalog target DTO is not that authority.",
+      "missing_source": "SAME grouped C terminal owner, current SQL source and actual append-only conditional-create policy observation with original finite scope/window.",
+      "site_inputs": ["Independent append principal/ref/version and exact root", "Original conditional-create/append-only policy", "Same enrolled current SQL source and native provider provenance"]
+    },
+    {
+      "key": "reference:catalog_snapshot",
+      "responsibility": "C catalog/index owner; A trust/retention",
+      "reuse": ["backend/internal/systembackup/host/catalog.go", "backend/internal/systembackupgcmetadata/catalog.go", "backend/internal/systembackup/control/catalog_scans.go", "backend/internal/systembackupcontract/catalog.go"],
+      "existing_boundary": "Actual bounded catalog/SQL metadata census and catalog scan code exist. SQL census or a live LIST is not an immutable original catalog snapshot; this purpose is outside C's five-purpose SQL enum.",
+      "missing_source": "Original immutable snapshot/index owner, exact namespace/prefix/version/snapshot history and independently authorized read/verify policy, with original-window bootstrap adapter.",
+      "site_inputs": ["Original catalog snapshot/index immutable locator/version/hash", "Root/namespace/prefix binding", "Independent snapshot signer/read authority and retention/protection source", "Actual complete snapshot semantics rather than a live partial listing"]
+    },
+    {
+      "key": "reference:status_relay",
+      "responsibility": "B relay; A workload trust",
+      "reuse": ["backend/internal/systembackupevidence/relay_peer.go", "backend/internal/systembackupcontroller/authenticated_relay_sql.go", "backend/internal/systembackupexecution/deployment_relay.go", "backend/internal/systembackup/worker/relay.go"],
+      "existing_boundary": "Actual mTLS peer/Job binding, replay and original SQL checkpoint checks exist. RelayJobBinding is task/attempt/Job-specific and cannot be invented before first config.",
+      "missing_source": "Original deployment-level relay service/transport/current revocation owner and finite bootstrap resource observation, while preserving actual later Job UID/generation/task/attempt checks.",
+      "site_inputs": ["Original service endpoint/version and mTLS CA/certificate/workload pins", "Deployment-level original current grant/revocation", "Exact relay policy/profile", "Actual Job/attempt identity deferred until real task execution"]
+    },
+    {
+      "key": "cross_resources",
+      "responsibility": "A relational security; B/C native facts; D assembly",
+      "reuse": ["backend/internal/systembackupresources/control_exclusion.go", "backend/internal/systembackupdeployment/profile.go", "backend/internal/systembackupevidence/producer_binding.go", "backend/internal/systembackupsecurity/installation_signing.go", "backend/internal/systembackupkekregistry/coverage.go"],
+      "existing_boundary": "Specific scope/owner/channel/key/reference/exclusion checks exist. Boolean AND of valid individual owner checks is not an installation-wide relation proof; runtime enabled-v1/task sources cannot substitute for original-window facts.",
+      "missing_source": "Concrete same-installation/config/grant original relation owner joining all registry/ref versions, credential/signing-purpose separation, writer and failure-domain dependencies, secret allowlist, key/evidence historical retention and non-DR classification. It must consume exact real owner observations, not caller Passed flags.",
+      "site_inputs": ["All original registry/ref typed bindings and source provenance", "Actual purpose/principal/key separation facts", "Full writer/allowlist and source-target dependence relationships", "Historical key/evidence/reference protection and original windows", "Explicit functional backup risk state with DR eligibility false/unprovided"]
+    }
+  ],
+  "original_window_source_priorities": [
+    "P0 C grouped five-purpose MinIO bootstrap owner: reuse shared SQL constants/codec/current reader, actual native six-principal observations and authoritative SQL revocation; candidate clock must use SampleTime.",
+    "P0 native host: frozen A terminal_host.go copied the SQL workload hash. New signed native-host supplement plus explicit new terminal entry reuses D ObserveBootstrapOriginalHost, actual imageID/immutable peer CM/read-only mount, production-derived workload hash and double GET; bridges raw-Go-JSON/JCS PodSpec profiles from one actual Pod. Old mapping alone remains insufficient.",
+    "P0 D original capture entry requires actual native KMS configs, finite credential/CA files and an independently signed capture-database source grant. During this inventory a NEW concurrent concrete source appeared: backend/internal/systembackupinstallationowner/install/database_source_material_issue.go SourceMaterialIssuer.IssueDatabaseSource. It is distinct from SignWorkerSource, which remains Redis/Skill-only. Reuse the new exact source rather than duplicating it; its source/integration/root tests are not claimed complete by A.",
+    "P0 the new database source issuer actually checks original Service UID/address and the finite TLS MySQL account/native census before signing. backend/internal/systembackupexecution/production_capture_database_issue.go already adds OriginalCaptureSequence.IssueDatabaseSourceGrant on the SAME original sequence. Required site inputs remain the original source definition, Service/UID/port, exact native worker credential/hash, independently enrolled issuer and original capture database/schema census/business policy. Root/B/D must align materializer CLI integration without future Job/task or enabled-v1 prerequisites; A neither changed nor verified these concurrent files.",
+    "P1 real SQL KEK preparation can be linked now as owners.KEK using new LinkOriginalSQLBootstrapKEK, preserving full Generate/Unwrap plus coverage/adoption. reference:kek stays missing until its real terminal resource adapter exists.",
+    "P1 evidence-specific owner/store/write/read/delete/key sources are separate from capture and from the five-purpose MinIO SQL domain; no domain aliasing or healthy row shortcut.",
+    "P1 remaining registry/source/signer/relay relation owners need real original-window adapters. Existing runtime implementations are reusable mechanisms, not already-complete bootstrap authority."
+  ],
+  "D_frozen_entrypoint_followups": [
+    "installation_terminal.go currently wraps the already-complete terminal with capture.CandidateAuthority then Materials, which repeats capture/nonce/CA preparation and checks. Root has requested a separate D correction; do not change frozen D files in this A batch.",
+    "The stronger native-host terminal must be explicitly selected in that corrected candidate factory. Do not claim the old seven-slot constructor now proves native C1 host association.",
+    "Preserve actual owners.KEK when constructing the candidate route. Never enable new MinIO SQL authority through legacy config-order admission.",
+    "All 23 keys above remain missing until concrete code is linked; source declarations, constructors, DTOs and passed component tests do not close main/page/first-install acceptance."
+  ],
+  "local_source_work_without_site_execution": [
+    "Implemented in this A follow-up: actual native-host derived association issuer/consumer and JCS/raw profile bridge, plus exact-file linker to existing real SQL KEK preparation. These add no resource-owner slots.",
+    "C can finish the grouped five-purpose terminal adapter against its real shared SQL/native source without inventing a domain or a healthy flag; actual native permission observations and root integration tests remain required before credit.",
+    "D can fix duplicate terminal wrappers and select the explicit native-host terminal and independent KEK source from real finite bindings. This is source composition, not site activation.",
+    "Original-window parts/Redis/writer/allowlist adapters can be implemented by factoring the concrete native mechanisms named per entry away from enabled-v1/task entry gates, while preserving original issuer, scope, actual read, difference/fence and current SQL checks. The adapters still need native site data to pass.",
+    "Evidence provider/key owners, acceptance/catalog resource permissions and snapshot/relay/original relation owners require actual current-source implementation as well as native inputs. Existing task-bound APIs must not be wrapped with dummy permission success.",
+    "Root/B/D can connect the new real database source producer to the same capture installation sequence/materializer CLI. Preserve original schema/native census and real source-credential/TLS checks; A has not duplicated or changed that concurrent implementation."
+  ],
+  "validation": {"method": "Static source read and path checks only", "A_go_compilation_tests_build": "not_run", "A_SQL_provider_remote_Git": "not_run", "test_build_products_created": false, "DR_eligibility": "false_or_unprovided"}
+}

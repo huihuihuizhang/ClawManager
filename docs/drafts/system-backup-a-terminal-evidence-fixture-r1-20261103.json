@@ -1,0 +1,22 @@
+{
+  "schema": "a-terminal-evidence-source-fixture-supersede.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_FIXTURE_SUPERSEDE_NOT_EXECUTED",
+  "root_reported_failures": [
+    "TestBootstrapOriginalEvidenceReadsCompleteRowsAndChunks refused at source.Lock: generic Transactions.Run has no bootstrap clockContext, so SameBootstrapTransaction correctly rejects before rows.",
+    "functionalIssueFixture / terminalMappingIssueFixture copied unconfigured_artifact into installation_test without moving result.Evidence.OwnerID; strict producer ResultRequest validation correctly rejected before signing. Four positive roots depended on these two fixtures."
+  ],
+  "evidence_fixture_fix": "runOriginalEvidence now starts a real caller-owned database/sql transaction at RepeatableRead, executes actual Transactions.GuardInTx and commits only that original tx after all guarded checks succeed. Generic Run, SameBootstrapTransaction, SampleTime, source production logic and final-view restrictions are unchanged. The test reports actual caller commit as bool rather than fabricating a CommitReceipt.",
+  "no_vacuous_negative": "A forwarding driver probe counts actual evidence/chunk queries without supplying responses or authorization. EVERY run must enter real guarded Work and query the original evidence table. Chunk faults must query chunks, and recheck/copy/context faults must reach their post-successful-Lock callback. Missing/EOF/column/iteration/close/current/latch and detached public-versus-private fact assertions remain.",
+  "producer_fixture_fix": "Synchronize result.Evidence.OwnerID with the selected result.Scope.Installation BEFORE BootstrapConsumptionHash/producer validation in both fixtures. No production schema/hash/validation is relaxed. Existing positive signature checks plus two exact producer reads remain; the revocation-after-producer-read negative additionally requires source.reads==2 and the intended actual admin-role mutation, preventing early-error false passes.",
+  "changed_tests_only": [
+    "backend/internal/systembackupevidence/bootstrap_original_source_test.go",
+    "backend/internal/systembackupinstallationowner/install/terminal_mapping_issue_test.go",
+    "backend/internal/systembackupinstallationowner/install/functional_classification_test.go"
+  ],
+  "root_test_commands_metadata_only": [
+    "cd backend; go test ./internal/systembackupevidence -run ^TestBootstrapOriginalEvidence -count=1 -v",
+    "cd backend; go test ./internal/systembackupinstallationowner/install -run '^(TestBootstrapOriginalMappingIssuer|TestOriginalNativeHostMapping|TestFunctionalClassification)' -count=1 -v"
+  ],
+  "validation": "gofmt only; no Go compile/test/list/vet/build, SQL, provider/remote or Git executed. No test/build products created. Historical frozen lists/failed root results are not rewritten. Root owns execution and cleanup. Functional/site NO_GO remains."
+}

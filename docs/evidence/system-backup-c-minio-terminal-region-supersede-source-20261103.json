@@ -1,0 +1,53 @@
+{
+  "version":"system-backup-c-minio-terminal-region-supersede-source.v1",
+  "date":"2026-11-03",
+  "status":"SOURCE_ONLY_UNEXECUTED_NOT_MAIN_ACCEPTANCE",
+  "reason":"B concrete-owner review P1: finite upstream APIErrorResponse has optional Region and getAPIErrorResponse fills globalSite.Region(); prior strict XML whitelist refused valid native site-region error replies and silently left fresh dependency unavailable.",
+  "historical_manifest":{
+    "path":"docs/evidence/system-backup-c-minio-terminal-owner-source-20261103.json",
+    "sha256":"b6f740326070cd8e61c3ab36c9caf6f427225cdf6f54b63187f02df97307dc85",
+    "unchanged":true
+  },
+  "supersedes_only":[
+    {
+      "path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go",
+      "old_sha256":"44b79060349a0e895812e55f69bc8198fec558f3998cc3986302645f607b7a60",
+      "old_bytes":12120,
+      "sha256":"1ec1a94e499bcc856733e693d7f86df4df3a6dc59460a27ed08a07bb86bc61a6",
+      "bytes":12688
+    },
+    {
+      "path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go",
+      "old_sha256":"a21d9b57c2415cab64e1d4a805cd84e19904272593d0a6366cafa9393fd3f390",
+      "old_bytes":12226,
+      "sha256":"767c7e59aa4215ca9cf654803edbde5227aac8fbef66962233d2e1b561ec7646",
+      "bytes":15467
+    }
+  ],
+  "semantics":{
+    "finite_release":"MinIO 2025-04-22T22:12:26Z / commit 0d7408fc9969caf07de6a8c3a84f9fbb10a6739e only",
+    "optional_region":"Omitted Region remains valid because upstream tags it omitempty. Present Region must exactly equal the original signed provider region used for this exact request, not a value selected from the response. Explicit empty Region is refused. Empty expected region is refused.",
+    "all_call_sites":"Checksum and both conditional-create error checks use writer.provider.Region. Missing bad key and deleted exact version checks use reader.provider.Region. Providers were already bound to original signed SQL provider/definition and exact original TLS transport before probing.",
+    "strictness_retained":"Exact status and expected finite error code, original key where provided, nonempty Message/RequestId/HostId, complete single Error XML, duplicate/unknown/nested/attributed/namespaced field rejection remain enforced. No additional vocabulary other than Region was accepted.",
+    "terminal_identity":"No changes to A20 interfaces, grouping, SQL locking, current actor/revocation, SampleTime floor/latch, identity-only history or short fresh deadline. No new readiness DTO or native callback."
+  },
+  "regression_source":{
+    "roots":[
+      "TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe",
+      "TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider",
+      "TestMinIOBootstrapTerminalNativeErrorRegionStrictness",
+      "TestMinIOBootstrapTerminalIdentityOnlyDeadlineAndFailureLatch"
+    ],
+    "full_protocol_model":"All finite error replies now emit valid us-east-1 by default. Both with-region and omitted-region scenarios run the real TLS/SigV4 five-role protocol twice, including retained catalog retry. Four independent mismatch scenarios target checksum, conditional-create, missing bad key and deleted exact version replies.",
+    "parser_matrix":"For checksum400/conditional412/NoSuchKey404/NoSuchVersion404: accept omitted/matching Region; reject wrong/empty/duplicate matching/duplicate conflicting/nested/namespaced/attributed Region, unknown fields, wrong status/code/key, empty independently supplied expected region, truncated XML and second XML document.",
+    "root_command":"go test ./internal/systembackupexecution -run '^TestMinIOBootstrapTerminal' -count=1 -v",
+    "executed_by_C":false,
+    "performed_by_C":["pinned primary-source review","gofmt","static call-site/source inspection","source/hash/bytes and unchanged historical manifest verification"],
+    "test_build_artifacts":"No tests/builds were executed by C and no test/build products were created. Root must delete its test/build products after verification per user AGENTS.md."
+  },
+  "primary_source":{
+    "url":"https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/api-errors.go",
+    "reviewed":"APIErrorResponse Region field with xml/json omitempty, and getAPIErrorResponse Region: globalSite.Region()."
+  },
+  "release":"NO_GO. This source fix does not establish full concrete-owner A20/SQL integration, actual live MinIO compatibility, source inventory acceptance, main3/30, ordinary full six-domain backup success, deployment/page acceptance or DR eligibility. B continued boundary review and root verification remain separate."
+}

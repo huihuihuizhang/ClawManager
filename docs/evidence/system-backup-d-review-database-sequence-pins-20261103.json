@@ -1,0 +1,68 @@
+{
+  "schema_version": "system-backup-d-small-source-review-batch.v1",
+  "id": "database-sequence",
+  "status": "FROZEN_REVIEW_SPLIT_SOURCE_ONLY_PENDING_ROOT_VALIDATION",
+  "historical_source_manifest": {
+    "path": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+    "sha256": "4089b451dd79b3a8510c425775c34a120ec473a6b969873fc22ec819064e088a",
+    "unchanged": true
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "sha256": "19877b0eae6dccc41afa79816d307034c74870c652bf71eeeaf0fa66cc0c18a7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue_test.go",
+      "sha256": "0de4f3d7dd4e4f29eb8dfff3600230d935634668e36f09c664c03cb6dfb6aab5"
+    }
+  ],
+  "required_coapply_batch_ids": [
+    "database-native-issuer"
+  ],
+  "new_or_changed_exported_surface": [
+    {
+      "symbol": "(*OriginalCaptureSequence).IssueDatabaseSourceGrant(context.Context,string,string)",
+      "provider": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "caller": "cmd/system-backup-database-source-grant/main.go",
+      "baseline": "OriginalCaptureSequence/enter/failed/privateFile/authority come from exact B production_capture_sequence.go; recheck before private key read, same ctx/mutex/permanent failure latch"
+    }
+  ],
+  "baseline_dependencies": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "efcfba4efd686449387044f62447c465bb221e30849241548adf48e295939568"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence_test.go",
+      "sha256": "16341e373cc711b8c2be999fa8d49debc54ecb2925d6ee228644d2b857ce12ea"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go",
+      "sha256": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go",
+      "sha256": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_test.go",
+      "sha256": "dcaa19c9562418a5e9cbfdae302c78c7120fb860da6d36584bfd93a5697d6a61"
+    }
+  ],
+  "root_validation_commands": [
+    "go test ./internal/systembackupexecution -run '^TestDatabaseSourceIssueUsesOriginalSequenceContextAndFailureLatchComponent$' -count=1 -v"
+  ],
+  "limits": "Requires complete native issuer3 including result type; cannot copy sequence caller alone. No B source edits, alternate signing path or window renewal. Begin's Redis/Skill metadata grants can remain if subsequent native DB issuance fails.",
+  "validation": {
+    "files_are_exact_historical_batch_bytes": true,
+    "source_modified_by_this_split": false,
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "cleanup": "Root removes its test/build/SQL/cache products after verification per AGENTS."
+}
