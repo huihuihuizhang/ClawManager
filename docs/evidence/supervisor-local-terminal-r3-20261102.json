@@ -1,0 +1,182 @@
+{
+  "schema_version": "supervisor-local-terminal-composition.v1",
+  "status": "failed_before_publication",
+  "source_base": "9d9165536a96b1f04c74752ce5d3f89ebb2253b8",
+  "source": "Explicit dirty overlay pinned by evening-composition-source-pins-r3.json; includes A R2 and original RPC hook, D source recovery and B063 capture Go changes",
+  "actual_mysql_version": "8.4.13",
+  "tls": "TLSv1.3",
+  "source_server_uuid": "2783fb92-d69d-11f1-92a3-846993680ff3",
+  "scope": "Local original task and actual SQL; Kubernetes, S3 and provider transports are fixtures",
+  "test": "TestPublicationTerminalOriginalHappyPathMySQL",
+  "exit_code": 1,
+  "test_seconds": 372.96,
+  "package_seconds": 378.391,
+  "task": "sbk_99188254-3d9d-45ee-a33a-b3472125b896",
+  "schema": "ad_d_six_eb92412399661043",
+  "failed_stage": "capture-database database-using-key-check",
+  "sentinel": "database_rejected",
+  "key_source_context_remaining_us": -62612,
+  "keycheck": {
+    "calls": 63,
+    "http_attempts": 63,
+    "elapsed_nanos": 24455114300,
+    "failures": 1
+  },
+  "nested_keycheck_metrics": {
+    "Authorize": {
+      "Calls": 63,
+      "Failures": 1,
+      "ElapsedNanos": 23671154500,
+      "MaxNanos": 850539200,
+      "LastNanos": 307856600
+    },
+    "SQLBind": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 1430674900,
+      "MaxNanos": 82984300,
+      "LastNanos": 27515900
+    },
+    "KeyStateSQL": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 253106600,
+      "MaxNanos": 21359500,
+      "LastNanos": 3204700
+    },
+    "ExecutionInput": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 698103900,
+      "MaxNanos": 60852200,
+      "LastNanos": 4656200
+    },
+    "OriginalPlan": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 3075550800,
+      "MaxNanos": 241633900,
+      "LastNanos": 24628000
+    },
+    "OriginalPart": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 679683300,
+      "MaxNanos": 104078300,
+      "LastNanos": 5819800
+    },
+    "WorkerMounts": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 1255543100,
+      "MaxNanos": 164955500,
+      "LastNanos": 12077100
+    },
+    "WorkerSecurity": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 679167300,
+      "MaxNanos": 45990900,
+      "LastNanos": 8624400
+    },
+    "WorkerProcess": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 249439600,
+      "MaxNanos": 11536800,
+      "LastNanos": 4862900
+    },
+    "ProviderQualification": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 2163090200,
+      "MaxNanos": 208130900,
+      "LastNanos": 20458000
+    },
+    "GuardTail": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 724035600,
+      "MaxNanos": 57161900,
+      "LastNanos": 7890600
+    },
+    "Dependencies": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 175158300,
+      "MaxNanos": 6761400,
+      "LastNanos": 2883700
+    },
+    "OriginalWorker": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 195974900,
+      "MaxNanos": 13762400,
+      "LastNanos": 1272600
+    },
+    "TaskLocator": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 123465100,
+      "MaxNanos": 5197900,
+      "LastNanos": 1858800
+    },
+    "RecordObservation": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 471117200,
+      "MaxNanos": 34777900,
+      "LastNanos": 3856700
+    },
+    "ObservationGuard": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 663385300,
+      "MaxNanos": 34412200,
+      "LastNanos": 7397000
+    },
+    "PermitStage": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 5986708200,
+      "MaxNanos": 255793600,
+      "LastNanos": 72330800
+    },
+    "PlanTail": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 345946700,
+      "MaxNanos": 15689600,
+      "LastNanos": 12961400
+    },
+    "FinalGuard": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 686329900,
+      "MaxNanos": 36456200,
+      "LastNanos": 31358000
+    },
+    "Commit": {
+      "Calls": 63,
+      "Failures": 0,
+      "ElapsedNanos": 272062900,
+      "MaxNanos": 44459400,
+      "LastNanos": 44459400
+    },
+    "Collectors": {
+      "Calls": 63,
+      "Failures": 1,
+      "ElapsedNanos": 3100009300,
+      "MaxNanos": 155400500,
+      "LastNanos": 6213900
+    }
+  },
+  "window_extended": false,
+  "original_quiesce_resume_failure_repeated": false,
+  "physical_source_recovery_certified": false,
+  "publication_executed": false,
+  "terminal_success": false,
+  "full_page_acceptance": false,
+  "log_sha256": "7e09b4400a75abefbe775fe2d618cd6418c69e6feaf6667b4ccf0ab172f07c92",
+  "cleanup": "Owned server and diagnostic schemas remain only for the active final RPC verification batch; delete all owned build and test artifacts on batch completion"
+}
