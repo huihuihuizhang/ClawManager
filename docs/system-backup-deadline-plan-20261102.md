@@ -34,11 +34,13 @@
 
 ## 仍需关闭的硬依赖
 
-1. 现场Linux原30秒采集仍FAIL：139次HTTP key-check累计28.382927694秒，完整SQL快照尚未采集完。B四次catalog合一候选的10组件根通过，但真实SQL及组合性能待核；A控制热链收益也未实测。
+1. 16:17回传的新1c350462 Linux原30秒采集仍FAIL：132次HTTP key-check累计28.099540498秒，Authorize132次累计27.552083234秒，完整SQL快照尚未采集完。A4原行读取批次与B6单次catalog已在独占真实MySQL上通过针对性测试，但此次新现场组合仍不足以在原窗口完成。132/139均为中途失败，不能直接相减推断全部调用减少量。根已交A按新server分段处理同RPC重复读取，禁止延时或删除实际读取前后检查。
 2. 用户只读盘点所查六张v2/config/KEK/evidence表不存在，新增内容未部署。真实迁移、首次安装owner材料、Generate/Unwrap授权、KEK映射和PreparedCoverage必须实际到位，不能生成占位凭据或直接改enabled冒充准入。 用户随后明确确认现场没有真实KEK提供方，并要求准备安装命令。D须新增真实提供方安装/持久化/TLS/初始化/分权接线，A须提供真实映射与权限观测/coverage及bootstrap材料源；这是真实新增依赖，17:00安装包目标仍有延期风险。初始化私密材料只保存在远程受限目录，不打印或回传对话。
-3. 公共C发布收尾尚无同任务整链正向结果；D源恢复producer及当前publisher消费、A受控记录桥接、Ready/终态仍在实现。恢复后的具体Pod/规格、原平台卷pin、残缺证据历史及恢复后新业务lease必须正确处理。
+3. 公共C发布收尾尚无同任务整链正向结果；D源恢复producer、A受控记录桥接与C Ready组合23组件根已通过，无真实SQL/物理现场证明。公共C两路caller到唯一终态CAS新增源码已冻结，尚未编译和组合验证；不能继承旧组件结果。恢复后的具体Pod/规格、原平台卷pin、残缺证据历史及恢复后新业务lease必须正确处理。
 4. 原本stopped实例仍缺独立正向物理观察，若真实源含该实例则必须补齐。不能用SQL stopped、404、空slot或共享Pod Ready代替，也不能为跑通从请求范围删掉该源。
 5. 真实非空任务及最终产物尚未产生；两个业务C目前只能交工具/规则。已有Skills reader六组件根通过不等于真实非空或最终成品已验收。原Teams/Skills SQL、对象固定版本、workspace实际内容及Redis原策略须在该任务完整产物中核对。
+6. 官方Vault镜像已在现场导入、私库完整摘要读回通过。首次安装在provider-start因ErrImageNeverPull停止，专用Longhorn PVC已Bound；用户随后登记原repo@digest缓存引用。原安装接续脚本d71b481f已通过13本地模拟用例并交用户，实际TLS/JWT/持久化仍待现场结果，不能算提供方安装已通过。
+7. 页面侧仍缺真实CurrentTaskFacts实现、HTTP catalog列表/manifest入口、以及部署发布六模块supported_parts/acceptance readiness准入。这些不能靠从SQL成功状态翻Ready布尔、返回签名日记或仅有模块工厂替代，今晚组合与明早部署前必须实际接通。
 
 ## 本次排除与保持
 

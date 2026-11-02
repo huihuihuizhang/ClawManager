@@ -30,11 +30,22 @@ timeout --signal=TERM --kill-after=10s 240s ctr -n k8s.io images import --platfo
 ctr -n k8s.io images ls > "$scratch/images"
 python3 -B - "$scratch/images" "$ref" "$digest" <<'PY'
 from pathlib import Path
-import sys
+import subprocess, sys
 rows=[line.split() for line in Path(sys.argv[1]).read_text().splitlines()]
 matches=[row for row in rows if row and row[0]==sys.argv[2]]
 if len(matches)!=1 or len(matches[0])<3 or matches[0][2]!=sys.argv[3]:
     raise SystemExit('Imported reference does not point to the pinned original manifest.')
+digest_ref=sys.argv[2].rsplit(':',1)[0]+'@'+sys.argv[3]
+digest_matches=[row for row in rows if row and row[0]==digest_ref]
+if digest_matches and (len(digest_matches)!=1 or len(digest_matches[0])<3 or digest_matches[0][2]!=sys.argv[3]):
+    raise SystemExit('Existing digest reference differs; refusing replacement.')
+if not digest_matches:
+    subprocess.run(['ctr','-n','k8s.io','images','tag','--local',sys.argv[2],digest_ref],check=True,timeout=40)
+subprocess.run(['ctr','-n','k8s.io','images','label',digest_ref,'io.cri-containerd.image=managed'],check=True,timeout=40)
+updated=subprocess.run(['ctr','-n','k8s.io','images','ls'],check=True,stdout=subprocess.PIPE,timeout=40)
+refs={r[0]:r[2] for r in (line.split() for line in updated.stdout.decode().splitlines()) if len(r)>=3}
+if refs.get(digest_ref)!=sys.argv[3]:
+    raise SystemExit('CRI digest-reference registration readback failed.')
 PY
 ctr -n k8s.io content get "$digest" > "$scratch/local-manifest"
 printf '%s  %s\n' "${digest#sha256:}" "$scratch/local-manifest" | sha256sum --check --strict -

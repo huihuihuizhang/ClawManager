@@ -172,12 +172,19 @@ def certificate(owner):
     run(["openssl", "verify", "-CAfile", str(ca), "-verify_hostname", dns, str(cert)])
 
 
+def provider_data_initializer():
+    # Vault opens its FSM before creating the configured Raft directory.
+    # The Pod's original non-root UID/GID/fsGroup applies to this container.
+    return {"name": "prepare-raft-directory", "image": IMAGE, "imagePullPolicy": "Never", "command": ["/bin/sh", "-ec", "umask 077; mkdir -p /data/raft; test -d /data/raft; test -w /data/raft"], "terminationMessagePath": "/dev/termination-log", "terminationMessagePolicy": "File", "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}}, "resources": {"requests": {"cpu": "25m", "memory": "16Mi"}, "limits": {"cpu": "100m", "memory": "64Mi"}}, "volumeMounts": [{"name": "data", "mountPath": "/data"}]}
+
+
 def manifests(owner, storage_class):
     name = owner.state["prefix"]
     server = name + "." + NAMESPACE + ".svc"
     config = {"ui": False, "disable_mlock": True, "api_addr": "https://" + server + ":8200", "cluster_addr": "https://127.0.0.1:8201", "storage": {"raft": {"path": "/data/raft", "node_id": name}}, "listener": {"tcp": {"address": "0.0.0.0:8200", "cluster_address": "0.0.0.0:8201", "tls_cert_file": "/tls/server.pem", "tls_key_file": "/tls/server-key.pem", "tls_min_version": "tls12"}}}
     labels = {LABEL: owner.state["run"], "app.kubernetes.io/name": name}
     pod = {"nodeName": owner.state["node"], "serviceAccountName": name, "automountServiceAccountToken": False, "securityContext": {"runAsNonRoot": True, "runAsUser": 65532, "runAsGroup": 65532, "fsGroup": 65532, "seccompProfile": {"type": "RuntimeDefault"}}, "containers": [{"name": "vault", "image": IMAGE, "imagePullPolicy": "Never", "command": [CLI, "server", "-config=/config/server.json"], "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}}, "ports": [{"name": "https", "containerPort": 8200}], "resources": {"requests": {"cpu": "100m", "memory": "256Mi"}, "limits": {"cpu": "1", "memory": "512Mi"}}, "volumeMounts": [{"name": "data", "mountPath": "/data"}, {"name": "tls", "mountPath": "/tls", "readOnly": True}, {"name": "config", "mountPath": "/config", "readOnly": True}, {"name": "tmp", "mountPath": "/tmp"}], "readinessProbe": {"exec": {"command": [CLI, "status", "-address=https://127.0.0.1:8200", "-ca-cert=/tls/ca.pem"]}, "periodSeconds": 5, "timeoutSeconds": 3}, "livenessProbe": {"tcpSocket": {"port": "https"}, "periodSeconds": 10, "initialDelaySeconds": 20}}], "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": name + "-data"}}, {"name": "tls", "secret": {"secretName": name + "-tls", "defaultMode": 0o440}}, {"name": "config", "configMap": {"name": name + "-config"}}, {"name": "tmp", "emptyDir": {"medium": "Memory", "sizeLimit": "32Mi"}}]}
+    pod["initContainers"] = [provider_data_initializer()]
     return [
         ("serviceaccounts", {"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {"name": name}, "automountServiceAccountToken": False}),
         ("persistentvolumeclaims", {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": name + "-data"}, "spec": {"accessModes": ["ReadWriteOnce"], "storageClassName": storage_class, "resources": {"requests": {"storage": "2Gi"}}}}),
@@ -465,10 +472,61 @@ def persistence(owner, api):
         raise
 
 
+def resume_install_owner(owner):
+    """Authenticate this exact pre-initialization install; never adopt or create."""
+    state = owner.state
+    require(state.get("schema_version") == "d-transit-owned-install.v1" and state.get("context") == CONTEXT and state.get("namespace") == NAMESPACE and state.get("namespace_uid") == NAMESPACE_UID and state.get("pending") is None, "original_install_state_unknown")
+    require(re.fullmatch(r"[a-f0-9]{16}", state.get("run", "")) and state.get("prefix") == "sbk-transit-zh-" + state["run"][:8], "original_install_owner_changed")
+    require(not (owner.directory / "init-material.json").exists() and not (owner.directory / "init-material.json").is_symlink() and not state.get("cluster_id") and not state.get("configured") and not state.get("jwt_mount"), "initialization_already_started_do_not_repeat")
+    require(state.get("node") in NODES and state.get("node_uid") == NODES[state["node"]] and state.get("image") == IMAGE, "original_install_node_or_image_changed")
+    node = json.loads(kube("get", "node", state["node"], "-o", "json"))
+    require(node["metadata"].get("uid") == state["node_uid"] and node.get("status", {}).get("nodeInfo", {}).get("architecture") == "amd64" and not node["metadata"].get("deletionTimestamp"), "original_scheduling_node_changed")
+    require(type(state.get("storage_class")) is str and re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,252}", state["storage_class"]), "original_storage_class_missing")
+    storage = json.loads(kube("get", "storageclass", state["storage_class"], "-o", "json"))
+    require(not storage["metadata"].get("deletionTimestamp") and "nfs" not in storage.get("provisioner", "").lower(), "original_storage_class_rejected")
+    expected = manifests(owner, state["storage_class"])
+    require(set(state.get("resources", {})) == {resource + "/" + obj["metadata"]["name"] for resource, obj in expected}, "original_seven_resource_set_changed")
+    observed = {}
+    for resource, obj in expected:
+        guard()
+        name = obj["metadata"]["name"]
+        actual = get(resource, name)
+        uid = state["resources"][resource + "/" + name]
+        require(UUID.fullmatch(uid) and actual and actual.get("apiVersion") == obj["apiVersion"] and actual.get("kind") == obj["kind"] and actual.get("metadata", {}).get("uid") == uid and actual["metadata"].get("namespace") == NAMESPACE and actual["metadata"].get("labels", {}).get(LABEL) == state["run"] and not actual["metadata"].get("deletionTimestamp"), "original_owned_resource_changed")
+        observed[resource] = actual
+        if resource in ("secrets", "configmaps"):
+            require(actual.get("immutable") is True and actual.get("data") == obj["data"], "original_tls_or_server_config_changed")
+    pod = observed["deployments"]["spec"]["template"]["spec"]
+    containers = pod.get("containers", [])
+    require(pod.get("nodeName") == state["node"] and pod.get("serviceAccountName") == state["prefix"] and pod.get("automountServiceAccountToken") is False and len(containers) == 1 and containers[0].get("name") == "vault" and containers[0].get("image") == IMAGE and containers[0].get("imagePullPolicy") == "Never" and containers[0].get("command") == [CLI, "server", "-config=/config/server.json"], "original_provider_deployment_changed")
+    claim = observed["persistentvolumeclaims"]
+    require(claim.get("spec", {}).get("storageClassName") == state["storage_class"] and claim["spec"].get("accessModes") == ["ReadWriteOnce"] and claim["spec"].get("resources", {}).get("requests", {}).get("storage") == "2Gi", "original_data_claim_changed")
+    pvc_binding(owner)
+    ensure_provider_data_initializer(owner, observed["deployments"])
+
+
+def ensure_provider_data_initializer(owner, deployment):
+    """Patch only the original provider template, retaining all data/material."""
+    spec = deployment["spec"]["template"]["spec"]
+    security = spec.get("securityContext", {})
+    require(security.get("runAsNonRoot") is True and security.get("runAsUser") == 65532 and security.get("runAsGroup") == 65532 and security.get("fsGroup") == 65532, "original_provider_nonroot_identity_changed")
+    data = [volume for volume in spec.get("volumes", []) if volume.get("name") == "data"]
+    require(data == [{"name": "data", "persistentVolumeClaim": {"claimName": owner.state["prefix"] + "-data"}}], "original_provider_data_mount_changed")
+    expected = [provider_data_initializer()]
+    if "initContainers" in spec:
+        require(spec["initContainers"] == expected, "original_provider_init_containers_changed")
+        return
+    metadata = deployment["metadata"]
+    require(metadata.get("uid") == owner.state["resources"]["deployments/" + owner.state["prefix"]] and type(metadata.get("resourceVersion")) is str and metadata["resourceVersion"], "original_provider_patch_identity_missing")
+    guard()
+    patch = [{"op": "test", "path": "/metadata/uid", "value": metadata["uid"]}, {"op": "test", "path": "/metadata/resourceVersion", "value": metadata["resourceVersion"]}, {"op": "add", "path": "/spec/template/spec/initContainers", "value": expected}]
+    kube("-n", NAMESPACE, "patch", "deployment", owner.state["prefix"], "--type=json", "-p", json.dumps(patch), "-o", "jsonpath={.metadata.uid}")
+
+
 def main():
     global PHASE, IMAGE, IMAGE_DIGESTS, CLI, VERSION
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("install", "unseal", "smoke", "uninstall"))
+    parser.add_argument("operation", choices=("install", "resume-install", "unseal", "smoke", "uninstall"))
     parser.add_argument("--state-dir", required=True, type=Path)
     parser.add_argument("--storage-class")
     parser.add_argument("--image-input", type=Path)
@@ -518,7 +576,21 @@ def main():
             saved_image = owner.state["image_input"]
             IMAGE, IMAGE_DIGESTS, CLI, VERSION = saved_image["image"], set(saved_image["image_id_digests"]), saved_image["entrypoint"], saved_image["version"]
             require(owner.state.get("context") == CONTEXT and owner.state.get("namespace_uid") == NAMESPACE_UID and owner.state.get("image") == IMAGE and owner.state.get("pending") is None, "original_install_state_unknown")
-            if args.operation == "uninstall":
+            if args.operation == "resume-install":
+                PHASE = "resume-original-install-identities"
+                resume_install_owner(owner)
+                PHASE = "provider-start"
+                api = API(owner)
+                require(api.call("GET", "sys/init").get("initialized") is False, "already_initialized_never_reinitialize")
+                PHASE = "initialize"
+                initialize(owner, api)
+                PHASE = "configure"
+                configure(owner, api)
+                PHASE = "jwt-smoke"
+                smoke(owner, api)
+                PHASE = "persistent-restart-readback"
+                api = persistence(owner, api)
+            elif args.operation == "uninstall":
                 PHASE = "owned-uninstall-retaining-keys"
                 name = owner.state["prefix"]
                 for resource, item, group in (("deployments", name, "apis/apps/v1"), ("networkpolicies", name, "apis/networking.k8s.io/v1"), ("services", name, "api/v1"), ("configmaps", name + "-config", "api/v1"), ("secrets", name + "-tls", "api/v1"), ("serviceaccounts", name, "api/v1")):

@@ -61,6 +61,27 @@
   },
   "field_node_import_executed": true,
   "field_private_registry_readback_executed": true,
+  "field_startup_failures": [
+    {"installer_sha256": "6f8c97707ee9dc2fc3823b061116e8ecdfdebae80b3f9db2ddff89809c969f5b", "stage": "provider-start", "reason": "ErrImageNeverPull", "diagnostic_attachment_sha256": "e59715c3c7e32c1b441197c93214fc5145f1f50717d1398570d12fd58a3770da"},
+    {"installer_sha256": "d71b481f00362dcfcba759ef43549a6787738db98d5ccc7c2a271103341ef2ba", "stage": "provider-start", "reason": "Raft /data/raft parent directory absent; CrashLoopBackOff", "diagnostic_attachment_sha256": "481133d8b6358f628501ed341ad19095340dfa47e98bace5831e6e41f266f3de"}
+  ],
+  "field_cri_image_verified_after_digest_alias_fix": {
+    "manifest_digest": "sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+    "config_id": "sha256:8794a735d581b92ae3d138e677fc79b5722749ce53674334507f2141e35da8c8",
+    "contents": "complete (8/8)",
+    "unpacked": true,
+    "exact_repo_digest_present_in_cri": true
+  },
+  "latest_import_script_sha256": "0bf7f7cbea82647d93b28d0e186fe06a35aefe450a192d323c777ef80cf3c7e7",
+  "latest_installer_review": {
+    "script_sha256": "9de074926dd3b262cd3cf4e7d7915be689ba5bf6af2fa16dd4efd07a70c683b6",
+    "local_mock_cases_passed": 17,
+    "mock_log_sha256": "9c524811876d9267898f86b3ec65aeee49af8552bc6b067760d35418806addc6",
+    "fixes": ["resume only exact pre-initialization owned resources", "same nonroot init creates missing Raft parent on original PVC", "only provider template patched with original UID and resourceVersion", "explicit API defaults preserve repeatability; foreign init refused"],
+    "submitted_to_user": true,
+    "actual_installation_result_pending": true,
+    "business_workloads_or_nodes_restarted": false
+  },
   "provider_installed": false,
   "production_owner_mapping_registered": false,
   "full_page_acceptance": false,

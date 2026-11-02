@@ -1,11 +1,11 @@
 """Local mocked safety checks for the exact reviewed operator-run installer."""
-import hashlib, json, types, unittest
+import copy, hashlib, json, tempfile, types, unittest
 from pathlib import Path
 from unittest.mock import patch
 
 P=Path('scripts/system-backup-d-transit-install.py')
 raw=P.read_bytes()
-assert hashlib.sha256(raw).hexdigest()=='6f8c97707ee9dc2fc3823b061116e8ecdfdebae80b3f9db2ddff89809c969f5b'
+assert hashlib.sha256(raw).hexdigest()=='9de074926dd3b262cd3cf4e7d7915be689ba5bf6af2fa16dd4efd07a70c683b6'
 m=types.ModuleType('installer_under_review')
 exec(compile(raw,str(P),'exec'),m.__dict__)
 m.IMAGE='verified-private-repo@sha256:'+'a'*64
@@ -89,5 +89,80 @@ class Review(unittest.TestCase):
 
     def test_restart_replacement_pod_is_required(self): self.restart(True)
     def test_restart_preserves_deployment_uid_and_readback_gate(self): self.restart(False)
+
+    def resume_case(self,fault=None):
+        o=owner()
+        o.state.pop('jwt_mount'); o.state.pop('signing')
+        o.state.update(schema_version='d-transit-owned-install.v1',context=m.CONTEXT,namespace=m.NAMESPACE,namespace_uid=m.NAMESPACE_UID,node_uid=m.NODES['k8s-master'],image=m.IMAGE)
+        objects={}
+        for i,(resource,obj) in enumerate(m.manifests(o,'longhorn'),1):
+            obj=copy.deepcopy(obj); name=obj['metadata']['name']
+            uid='00000000-0000-0000-0000-'+str(i).zfill(12)
+            obj['metadata'].update(uid=uid,namespace=m.NAMESPACE,labels={m.LABEL:o.state['run']})
+            objects[(resource,name)]=obj
+            o.state['resources'][resource+'/'+name]=uid
+        reason=None
+        if fault=='pending': o.state['pending']='provider-init'; reason='original_install_state_unknown'
+        if fault=='uid': objects[('deployments',o.state['prefix'])]['metadata']['uid']='replacement'; reason='original_owned_resource_changed'
+        if fault=='tls': objects[('secrets',o.state['prefix']+'-tls')]['data']['server.pem']='changed'; reason='original_tls_or_server_config_changed'
+        def kube(*args,**kwargs):
+            if args[:2]==('get','node'): return json.dumps({'metadata':{'uid':m.NODES['k8s-master']},'status':{'nodeInfo':{'architecture':'amd64'}}}).encode()
+            if args[:2]==('get','storageclass'): return json.dumps({'metadata':{},'provisioner':'driver.longhorn.io'}).encode()
+            raise AssertionError('unexpected external operation')
+        with tempfile.TemporaryDirectory(prefix='vault-resume-mock-') as directory:
+            o.directory=Path(directory)
+            if fault=='initialized': (o.directory/'init-material.json').write_text('mock'); reason='initialization_already_started_do_not_repeat'
+            with patch.object(m,'guard'),patch.object(m,'get',side_effect=lambda resource,name:objects.get((resource,name))),patch.object(m,'kube',side_effect=kube),patch.object(m,'pvc_binding') as pv:
+                if reason:
+                    with self.assertRaisesRegex(m.Refused,reason): m.resume_install_owner(o)
+                    pv.assert_not_called()
+                else:
+                    m.resume_install_owner(o); pv.assert_called_once_with(o)
+
+    def test_resume_exact_existing_install_does_not_recreate(self): self.resume_case()
+    def test_resume_pending_initialization_refused(self): self.resume_case('pending')
+    def test_resume_replaced_resource_refused(self): self.resume_case('uid')
+    def test_resume_changed_tls_refused(self): self.resume_case('tls')
+    def test_resume_existing_initialization_material_refused(self): self.resume_case('initialized')
+
+    def test_missing_raft_parent_prepared_without_root_or_extra_mount(self):
+        o=owner(); pod=dict(m.manifests(o,'longhorn'))['deployments']['spec']['template']['spec']
+        init=pod['initContainers'][0]
+        self.assertTrue(pod['securityContext']['runAsNonRoot'])
+        self.assertEqual(pod['securityContext']['runAsUser'],65532)
+        self.assertIn('mkdir -p /data/raft',init['command'][-1])
+        self.assertEqual(init['volumeMounts'],[{'name':'data','mountPath':'/data'}])
+        self.assertFalse(init['securityContext']['allowPrivilegeEscalation'])
+        self.assertEqual(init['securityContext']['capabilities'],{'drop':['ALL']})
+        self.assertNotIn('env',init)
+
+    def initializer(self,existing=None):
+        o=owner(); name=o.state['prefix']; o.state['resources']['deployments/'+name]='deployment-uid'
+        deployment=dict(m.manifests(o,'longhorn'))['deployments']
+        deployment['metadata'].update(uid='deployment-uid',resourceVersion='7')
+        if existing is None: deployment['spec']['template']['spec'].pop('initContainers')
+        else: deployment['spec']['template']['spec']['initContainers']=existing
+        return o,deployment
+
+    def test_initializer_patch_changes_only_original_uid_rv_template(self):
+        o,deployment=self.initializer()
+        with patch.object(m,'guard'),patch.object(m,'kube') as k:
+            m.ensure_provider_data_initializer(o,deployment)
+            args=k.call_args.args; data=json.loads(args[args.index('-p')+1])
+            self.assertEqual(data[:2],[{'op':'test','path':'/metadata/uid','value':'deployment-uid'},{'op':'test','path':'/metadata/resourceVersion','value':'7'}])
+            self.assertEqual(data[2],{'op':'add','path':'/spec/template/spec/initContainers','value':[m.provider_data_initializer()]})
+            k.assert_called_once()
+
+    def test_existing_initializer_with_explicit_defaults_does_not_patch(self):
+        o,deployment=self.initializer([m.provider_data_initializer()])
+        with patch.object(m,'kube') as k:
+            m.ensure_provider_data_initializer(o,deployment); k.assert_not_called()
+
+    def test_foreign_initializer_refused_before_patch(self):
+        init=m.provider_data_initializer(); init['env']=[{'name':'foreign','value':'mock'}]
+        o,deployment=self.initializer([init])
+        with patch.object(m,'kube') as k:
+            with self.assertRaisesRegex(m.Refused,'original_provider_init_containers_changed'): m.ensure_provider_data_initializer(o,deployment)
+            k.assert_not_called()
 
 if __name__=='__main__': unittest.main(verbosity=2)
