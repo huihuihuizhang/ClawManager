@@ -30,11 +30,23 @@ func inspectOwnedBusinessPayload(ctx context.Context, i worker.Invocation, candi
 }
 
 func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, out *ownedPayloadCounts) error {
+	return inspectOwnedBusinessPayloadRelations(ctx, i, candidate, plaintext, nil, out)
+}
+
+func inspectOwnedBusinessPayloadRelations(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, relations *publicationFinalTeamRelations, out *ownedPayloadCounts) (resultErr error) {
+	defer func() {
+		if relations != nil && resultErr != nil {
+			relations.failed = true
+		}
+	}()
 	if out != nil {
 		*out = ownedPayloadCounts{}
 	}
 	observed := ownedPayloadCounts{Version: "system-backup-inert-payload-counts.v1", Complete: true}
 	if ctx == nil || ctx.Err() != nil || plaintext == nil || !worker.ValidateFormalCaptureResult(i, &candidate) || i.Request.ControlEvidence != nil {
+		return d.ErrNotReady
+	}
+	if relations != nil && relations.begin(i) != nil {
 		return d.ErrNotReady
 	}
 	z, err := gzip.NewReader(plaintext)
@@ -77,6 +89,9 @@ func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation,
 			return d.ErrNotReady
 		}
 		if spec.SkillsInventory != nil && domain.VerifySkillCapture(snapshot, *spec.SkillsInventory) != nil {
+			return d.ErrNotReady
+		}
+		if relations != nil && relations.observeSQL(snapshot) != nil {
 			return d.ErrNotReady
 		}
 		observed = countOwnedSQLSnapshot(snapshot)
@@ -158,7 +173,11 @@ func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation,
 		}
 	case r.Operation == "capture-workspace":
 		observed.Kind = "archive_entry_bytes"
-		if inspectOwnedWorkspace(ctx, i, candidate, limited, &observed) != nil {
+		var teamRead *publicationFinalTeamWorkspaceRead
+		if relations != nil {
+			teamRead = relations.workspaceRead(i)
+		}
+		if inspectOwnedWorkspaceRelations(ctx, i, candidate, limited, teamRead, &observed) != nil {
 			return d.ErrNotReady
 		}
 	default:
@@ -167,6 +186,9 @@ func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation,
 	var extra [1]byte
 	n, tailErr := limited.Read(extra[:])
 	if n != 0 || tailErr != io.EOF || limited.N <= 0 || z.Close() != nil || ctx.Err() != nil {
+		return d.ErrNotReady
+	}
+	if relations != nil && relations.parsedPart(i) != nil {
 		return d.ErrNotReady
 	}
 	if out != nil {
@@ -197,6 +219,10 @@ func zeroArchiveTail(r io.Reader) error {
 }
 
 func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, src io.Reader, counts ...*ownedPayloadCounts) error {
+	return inspectOwnedWorkspaceRelations(ctx, i, candidate, src, nil, counts...)
+}
+
+func inspectOwnedWorkspaceRelations(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, src io.Reader, teamRead *publicationFinalTeamWorkspaceRead, counts ...*ownedPayloadCounts) error {
 	if len(counts) > 1 {
 		return d.ErrNotReady
 	}
@@ -224,6 +250,9 @@ func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate w
 			break
 		}
 		if err != nil || validator.Observe(header) != nil {
+			return d.ErrNotReady
+		}
+		if teamRead.observe(header) != nil {
 			return d.ErrNotReady
 		}
 		files++
@@ -258,6 +287,9 @@ func inspectOwnedWorkspace(ctx context.Context, i worker.Invocation, candidate w
 		}
 	}
 	if validator.Finish() != nil || files != candidate.Files || total != candidate.Bytes || r.WorkBuddyIdentity != nil && (!marker || !home) || zeroArchiveTail(src) != nil {
+		return d.ErrNotReady
+	}
+	if teamRead.complete() != nil {
 		return d.ErrNotReady
 	}
 	if len(counts) == 1 && counts[0] != nil {

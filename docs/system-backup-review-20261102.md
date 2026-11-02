@@ -62,3 +62,7 @@ B 冻结六文件在A/B/C组合快照中通过整个domain包回归（8.565s）�
 A 原context timing hook已实际接入测试源码，新增独占实例入口在任何fixture创建前检查TLS/独立UUID/全库可见性和空业务库，不删除按census推断的库。Linux打包工具绑定构建前source receipt与构建后精确文件集合/hash；运行入口只选择原candidate-cleanup测试，不宣称覆盖C的新SQL本地清理。审核者对实际runner进行7项本地假程序故障测试：成功、测试失败、测试与tee同时失败、仅tee失败、测试与退出码日志写入同时失败、测试与清理同时失败、仅清理失败均符合预期；原测试退出7始终保留，只有清理失败时返回1。假程序替代ELF，uname/stat/tee/rm按案例替换，不涉及Go/native SQL/Docker/网络；各轮临时树已删除。Bash语法和PowerShell AST解析通过，不能据此声称实际Linux诊断通过。
 
 首次Linux构建准备在source receipt阶段暴露逐文件启动sha256sum的性能问题，尚未开始Go编译。审核者核对准确shell路径、启动时间和命令后主动取消该准备阶段，改为同一NUL清单的`xargs -0 -r sha256sum --`批量执行；保留逐路径regular/non-symlink预检和打包时文件集合/全部字节重核。实际空格/Unicode文件的摘要与旧循环一致，虚拟换行/tab/字面shell字符参数的NUL边界一致；完整3681文件来源快照也完成。旧半成品receipt不用于后续构建证明，新构建必须从新冻结提交重新取得receipt。
+
+两位C新增的最终关系检查已完成独立窄回归：Skills在冻结511源码上2根用例及20种损坏/遗漏反例通过，publicadapter4.424s；Teams三文件加Skills两文件的独立冻结快照中，4组Team SQL/文件关系、确认边界及原OwnedPayload邻近回归通过，execution4.629s。日志SHA分别为 `896cd545d9c2e29329fffd2ef5e5f5840213b87e378dfe2b0b280457a85c7222`、`37cb3e2eb00b5ea8fc1fb146a6d022ed8205cf1809ffda8531ec4251de9b0fae`。它们是由现有reader/原Skills校验复用的纯内容关系检查，不授权、不生成完整final proof；公共C真实caller、同原任务SQL正向和最终签名链仍待统一验证，不能据此开放readiness。
+
+Linux诊断ELF已从51181049干净worktree实际构建并验ELF架构、构建前后3681文件来源及全部内部校验，交付归档46,870,961字节。用户Bash入口经真实归档提取与假诊断程序3种退出/清理路径验证，未执行ELF/SQL/Kubernetes。完整执行命令、两个交付摘要和清理规则见 `system-backup-supervisor-native-delivery-20261102.md`；现场镜像未更新，实际远测和页面验收仍未完成。

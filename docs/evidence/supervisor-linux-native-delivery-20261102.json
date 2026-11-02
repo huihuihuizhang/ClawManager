@@ -1,0 +1,28 @@
+{
+  "schema_version": "supervisor-linux-native-delivery.v1",
+  "recorded_at": "2026-11-02T03:29:08.5364020Z",
+  "source_commit": "51181049e97e4ff3946e75b6c1568dfe2e00b1a1",
+  "source_state": "clean",
+  "source_files": 3681,
+  "source_hash_manifest_sha256": "1ea7bf5f63f5bbb8c6aaf687e9cccc05a668a9e19f67f1e8e779a9a6b11a70f4",
+  "build_exit_code": 0,
+  "platform": "linux/amd64",
+  "cgo_enabled": false,
+  "binary_sha256": "74ce2612742e13d4a5680e5c9bdac1dd8292d141e0d29da200ee3c0828363db9",
+  "binary_bytes": 120699340,
+  "archive_path": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-51181049\\clawmanager-native-51181049.tar.gz",
+  "archive_bytes": 46870961,
+  "archive_sha256": "266197f53f21f4ac8cdc3c0c079499ab298531005520e706d8e3054bf664d64c",
+  "entry_path": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-51181049\\run-remote-51181049.sh",
+  "entry_sha256": "4e95f6328043fc9cbecb2f57fbe72743ddb143d38fb50d2a54f00fc07790ed2c",
+  "entry_local_mock_cases": [
+    "success deletes own archive/work and keeps logs",
+    "test failure7 plus summary failure9 preserves7 and cleans",
+    "summary failure9 returns9 and cleans"
+  ],
+  "real_native_executed": false,
+  "live_cluster_executed": false,
+  "full_page_acceptance": false,
+  "scope": "Same original task fixture/candidate cleanup under unchanged30-second key policy; no C local SQL-cleanup or App deployment",
+  "user_execution": "User connects and executes Bash; no SSH performed by supervisor"
+}
