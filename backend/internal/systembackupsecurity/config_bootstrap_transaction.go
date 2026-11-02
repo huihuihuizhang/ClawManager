@@ -135,17 +135,8 @@ func (s ConfigBootstrapService) bootstrapLegacyPrepared(ctx context.Context, g O
 	if now, err = bootstrapInlineNow(ctx, tx, g, now, until); err != nil {
 		return zero, err
 	}
-	var username, role, provider string
-	var active bool
-	err = tx.QueryRowContext(ctx, "SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR UPDATE", g.UserID).Scan(&username, &role, &active, &provider)
-	if errors.Is(err, sql.ErrNoRows) {
-		return zero, ErrRegistrationPermission
-	}
-	if err != nil {
-		return zero, ErrProviderEvidenceStorage
-	}
-	if username != g.Username || role != "admin" || !active || provider != "local" {
-		return zero, ErrRegistrationPermission
+	if err = lockBootstrapCurrentAdmin(ctx, tx, g); err != nil {
+		return zero, err
 	}
 	if err = s.Admission.Authorize(ctx, tx, g, c, now); err != nil {
 		return zero, registrationBoundaryError(err)
@@ -296,9 +287,7 @@ func (s ConfigBootstrapService) finishInlineBootstrap(ctx context.Context, tx *s
 	if err = s.Admission.Authorize(ctx, tx, g, c, now); err != nil {
 		return registrationBoundaryError(err)
 	}
-	var username, role, provider string
-	var active bool
-	if tx.QueryRowContext(ctx, "SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR UPDATE", g.UserID).Scan(&username, &role, &active, &provider) != nil || username != g.Username || role != "admin" || !active || provider != "local" {
+	if lockBootstrapCurrentAdmin(ctx, tx, g) != nil {
 		return ErrRegistrationPermission
 	}
 	var actualOp, actualHash, status string

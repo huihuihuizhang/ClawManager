@@ -1,0 +1,81 @@
+{
+  "schema_version": "system-backup-minio-original-sql-source-contract.v1",
+  "status": "source_only_pending_A_C_review_and_root_verification",
+  "migration": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql",
+  "reuse_review": {
+    "capture_owner_ledger": "Not reusable: capture_signing domain and record bindings do not authorize five MinIO purposes.",
+    "system_backup_v2_provider_capabilities": "Not reusable: observed capability/evidence cache has no independently enrolled issuer, signed original purpose mapping or current owner revocation authority.",
+    "kubernetes_permission_head": "Retained as an independent native Prepare source; a copied head or cached GET cannot supply same-transaction SQL current authority."
+  },
+  "ownership": {
+    "D": "Additive schema, complete migration catalog, canonical/mirror classification and control-table exclusion. No SQL execution or runtime authority installation.",
+    "C": "Reviewed domain-separated record types, independently authenticated original operator/issuer installer, atomic CAS/revoke and partial/unknown-commit recovery; exact native permission/capability binding and short observation freshness. No signing key is mounted into bootstrap consumer.",
+    "A": "Same-original-transaction authority read/lock/verification and actual resource/candidate authority consumption. Reject unavailable or mismatched current source before operation lookup; no allow-all Original.",
+    "root": "Independent review/tests/native verification, integration, source freeze and test/build artifact cleanup."
+  },
+  "tables": {
+    "system_backup_minio_owner_heads": {
+      "key": ["installation_id", "enrollment_id", "authority_id"],
+      "selection": ["current_grant_id", "current_grant_revision", "permission_epoch"],
+      "current": ["head_revision", "head_sha256", "signed_head", "signature", "head_state", "row_version"],
+      "authority_id": "Independently pinned original MinIO authority selector; never inferred from a candidate, provider response, future config or task. Multiple authorities are locked in ASCII byte order of the complete key.",
+      "no_grant_fk": "Head intentionally has no reverse FK to grant: installer first locks/creates head, then grant, then refs in one transaction. An externally visible active head with a missing grant is rejected. Never use deferred external repair as readiness."
+    },
+    "system_backup_minio_owner_grants": {
+      "key": ["installation_id", "enrollment_id", "authority_id", "grant_id", "record_revision"],
+      "current": ["permission_epoch", "record_sha256", "signed_record", "signature", "grant_state", "row_version"],
+      "foreign_key": "First three columns -> exact MinIO head, ON DELETE RESTRICT."
+    },
+    "system_backup_minio_owner_refs": {
+      "key": ["installation_id", "enrollment_id", "authority_id", "grant_id", "record_revision", "purpose"],
+      "indexed_signed_mapping": ["descriptor_sha256", "provider_identity_hash", "scope_hash", "identity_hash", "identity_version"],
+      "current": ["ref_sha256", "signed_ref", "signature", "ref_state", "row_version"],
+      "foreign_key": "First five columns -> exact grant revision, ON DELETE RESTRICT.",
+      "exact_set_in_order": ["artifact_delete", "artifact_read", "artifact_write", "catalog_append", "catalog_read"],
+      "order": "Lock five exact keys in the listed ASCII purpose order. Do not rely on a database optimizer's multi-row locking order or ENUM presentation order. Reject fewer/more/different mappings; no partial authority."
+    }
+  },
+  "signed_payload_contract": {
+    "encoding": "Canonical UTF-8 JSON, exact raw byte hash, Ed25519 signature; reject noncanonical/unknown/duplicate fields. No raw passwords, access/secret keys or private signing key bytes. SQL JSON_VALID/hash checks alone are not signature or provenance verification.",
+    "domains": {
+      "head": "system-backup-minio-original-sql-head.v1 plus one NUL byte",
+      "grant": "system-backup-minio-original-sql-grant.v1 plus one NUL byte",
+      "ref": "system-backup-minio-original-sql-ref.v1 plus one NUL byte"
+    },
+    "common_original_identity": ["schema version and exact purpose domain", "installation_id, enrollment_id, authority_id and independently pinned issuer public-key identity", "exact original authenticated admin subject/owner binding", "original server_uuid, database and database account", "original namespace/name/immutable UID, MinIO deployment/provider resource identities and native permission profile", "absolute UTC not_before and until"],
+    "head": ["complete head SQL key", "head_revision, permission_epoch, current_grant_id and current_grant_revision", "selected grant raw SHA256", "current active/revoked head state", "original Kubernetes grant/head names, immutable UIDs and their pinned signed payload SHA256"],
+    "grant": ["complete grant SQL key and permission_epoch", "exact five purpose/ref raw SHA256 pairs in ASCII purpose order", "original issuer/enrollment/source identity and absolute window"],
+    "ref": ["complete ref SQL key and all five indexed_signed_mapping fields with exact equality", "actual account SHA256 and credential-file SHA256 plus exact retained credential version/locator", "original named policy name/hash and normalized effective policy SHA256", "exact provider identity, bucket, root and staging scope", "credential capability profile and independently reviewed immutable-operation protocol profile", "original not_before/until and protected retention boundary"],
+    "state_semantics": "Head state is signed and must equal SQL head_state. Grant/ref immutable signed raw records authenticate the original mappings; their current SQL active/revoked state and row_version are additional controlled current authority. Never turn revoked rows active again. Every head mutation increments head_revision and row_version; replacement grant epoch strictly increases; revocation may retain the selected grant epoch while signing a new revoked head.",
+    "index_parity": "Verify exact signed payload/index parity for every duplicated identity, selector, revision, epoch and mapping field before using a row. A valid signature over another row is not accepted. Head selected grant raw hash and exact five grant-listed ref hashes must equal actual selected bytes. All signatures use the independently pinned MinIO SQL issuer, never the capture signing domain or a key supplied by these rows."
+  },
+  "locking_and_cas": {
+    "global_order": ["existing original current admin/RBAC locks", "capture owner head/grant if authentication requires that domain", "exact MinIO head(s) in full-key ASCII order", "selected MinIO grant(s) in full-key ASCII order", "five MinIO ref keys in ASCII purpose order", "existing L3 operation/config/producer locks"],
+    "consumer": "Use the caller's existing original controlled SQL transaction. MySQL 8.4 SELECT ... FOR SHARE, exact keys and strict bounded payloads; verify current server/account/database/time via the existing transaction contract. No new transaction, commit, network, Kube GET, credential read/hash, native probe or signing inside L2. History also checks current identity/head/revocation before return. Fresh use additionally checks the separately short physical observation deadline.",
+    "installer": "Authenticate original enrollment/admin and inspect native permission/capability outside write locks. Begin one controlled transaction, acquire the same ordered prefix with FOR UPDATE, verify exact expected head revision/hash/row_version/state and all grant/ref row versions, then atomically insert the next grant plus all five refs and CAS the signed head. First install requires absence under the controlled key lock; duplicate/concurrent first install fails closed. No enabled config, operation, task, capture certificate or future backup object is a prerequisite.",
+    "revoke": "Same ordered locks and exact original expected values. Sign a new revoked head, CAS head revision/row_version, revoke current grant/all five refs with row_version increments atomically. Zero affected rows, missing/extra refs or unexpected state aborts. Never lock earlier-domain rows after MinIO locks. No DELETE permission or automatic history cleanup.",
+    "unknown_commit": "C must define concrete idempotent independent readback by original tuple and all expected hashes/versions; an uncertain commit is unavailable until resolved. Never overwrite drift, regenerate identity/window or treat a previous receipt as current authority.",
+    "dual_source": "C must bind installed SQL signed head to actual original Kube/native grant/head identities and explicit epoch. Prepare rejects either-source mismatch/revocation; L2 consumes current controlled SQL source. Coordinated owner mutation/recovery must fail closed during partial Kube/SQL transition. This migration does not claim distributed atomicity."
+  },
+  "observation_limits": {
+    "permissions": "Exact native users/policies and declared protocol support are separate. Named/effective PutObject permission does not prove immutable conditional create, checksum rejection, exact-version EOF, cleanup or canonical catalog append.",
+    "probes": "Only independently owner-authorized original disposable probe keys/versions within exact staging scope. Never delete production objects, use a future task object, or count 403 as capability.",
+    "freshness": "Original absolute issuer/credential/retention windows and short native physical observation deadlines are separate. Fresh use must satisfy both; do not refresh an old observation by copying/signing it. Historical result access may survive physical observation expiry only after current identity/revocation authorization.",
+    "readiness": "Schema and classification add zero validator slots and do not establish six-domain readiness, publication, terminal CAS or DR qualification."
+  },
+  "classification": {
+    "all_three": "secret / metadata_only / reference_only / pending_owner_review; approved_cross_reviewers stays empty",
+    "no_restore": "No signed payloads, current states, revisions or role mappings are dumped/restored. Independently enrolled target authority is never overwritten/rolled back.",
+    "fresh_census": "New full migration catalog/schema identities invalidate prior complete-census and signed-material hashes. Owners must regenerate real source observations/pins; never reuse prior census as complete."
+  },
+  "validation": {
+    "catalog_generation": "Source generation only; no build/test/SQL execution",
+    "gofmt": "Source formatting only",
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  }
+}

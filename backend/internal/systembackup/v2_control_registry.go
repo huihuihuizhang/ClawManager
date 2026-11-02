@@ -69,5 +69,8 @@ func init() {
 		"system_backup_installation_kek_authority_history",
 		"system_backup_installation_owner_heads",
 		"system_backup_installation_owner_grants",
+		"system_backup_minio_owner_heads",
+		"system_backup_minio_owner_grants",
+		"system_backup_minio_owner_refs",
 	)
 }

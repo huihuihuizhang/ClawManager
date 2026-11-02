@@ -57,7 +57,8 @@ func Registry() []ObjectPolicy {
 	for _, name := range controlTables {
 		classification := "internal"
 		switch name {
-		case "system_backup_installation_owner_heads", "system_backup_installation_owner_grants":
+		case "system_backup_installation_owner_heads", "system_backup_installation_owner_grants",
+			"system_backup_minio_owner_heads", "system_backup_minio_owner_grants", "system_backup_minio_owner_refs":
 			// Signed owner authority is independently enrolled at the target;
 			// its rows are never exported or restored from a source backup.
 			classification = "secret"

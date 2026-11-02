@@ -324,13 +324,7 @@ func (s *configBootstrapCandidateSession) Authorize(ctx context.Context, tx pd.B
 }
 
 func (s *configBootstrapCandidateSession) checkAdmin(ctx context.Context, tx pd.ReadSQL) error {
-	var username, role, provider string
-	var active bool
-	g := s.plan.grant
-	if err := tx.QueryRowContext(ctx, "SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR UPDATE", g.UserID).Scan(&username, &role, &active, &provider); err != nil {
-		return pd.ErrGuardRequired
-	}
-	if username != g.Username || role != "admin" || !active || provider != "local" {
+	if lockBootstrapCurrentAdmin(ctx, tx, s.plan.grant) != nil {
 		return pd.ErrGuardRequired
 	}
 	return nil

@@ -1,0 +1,294 @@
+{
+  "schema_version": "supervisor-original-sequence-sql-review.v1",
+  "reviewed_at": "2026-11-02T20:10:10.243715+00:00",
+  "baseline_commit": "8c254765b325a6ecbbfbe70bc4879f946cf2e69b",
+  "decision": "SOURCE_INTEGRATION_ONLY; NO_GO_FOR_FIELD_DEPLOYMENT_OR_FULL_ACCEPTANCE",
+  "acceptance_scope": {
+    "real_page_nonempty_complete_requested_backup": true,
+    "source_business_original_state_restored": true,
+    "same_task_formal_artifact_independent_full_readback_catalog_and_succeeded_required": true,
+    "isolated_restore": false,
+    "disaster_recovery_qualified": false
+  },
+  "source_files": {
+    "backend/internal/systembackupsecurity/bootstrap_admin_source.go": "bec3ba8ee8c16d8d65ec71586ac520a5951fbca00afa10d1a3f9c86b1fb4b2aa",
+    "backend/internal/systembackupsecurity/config_bootstrap_transaction.go": "3008df8efebd053561c807cab32a61e8641a314fb4c144d224d0e15648b05ec7",
+    "backend/internal/systembackupsecurity/config_bootstrap_candidates.go": "5f9b6ee2357271bc809c23895ce5b7058d1804b6e1c7ace6a9a95b672886e67a",
+    "backend/internal/systembackupsecurity/bootstrap_admin_source_test.go": "750c9ecc18b86319da5e490f06f0c49c2d35d5bfe25c40a8ba7ae6ca1bad07a8",
+    "backend/internal/systembackupsecurity/bootstrap_admin_source_mysql_test.go": "b01b6084791030430288c8250b4eb56e5b69757fed13b71d99743cb162be9f1c",
+    "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583",
+    "backend/internal/migrationcatalog/reviewed_catalog.go": "1a5896781bafd3dbb68d8a699782334c11f0d8ba1270183e299960091475e3bc",
+    "docs/backup-team-integration/catalog.json": "9de5ecffb78178c7c19f6c1e2520fca0c592edf4f1d3a629da6c0dd67fbac1a0",
+    "contracts/system-backup/v12/schema-registry.json": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f",
+    "backend/internal/systembackupbusinessa/testdata/schema-registry.json": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f",
+    "scripts/backup-team-catalog.py": "ebaf5ac32f8d1ff16b242a1b169b0deb0cd824ddaae486817f676731bdea05f1",
+    "backend/internal/systembackup/schemaobjects/control_tables.go": "d8c9d2a4e67e9bcc84c5ea24ce731aec0f28f48831b547cb0c8a05979f13065d",
+    "backend/internal/systembackup/v2_control_registry.go": "fe0872586dd2cc8e217c7810eceb3ae87d14528f6adc348acea3f8760b4a3789",
+    "backend/internal/systembackup/registry.go": "505ddbec5191a7178fcdd4d9f1775456431a56109b8d61f2c9dfd486db3104fd",
+    "docs/evidence/system-backup-d-minio-original-sql-contract-20261103.json": "0c521de9d7b1c65f9111ef0185aa192dcd6cf8d7bd06e721b8bc0ec5df2a1945",
+    "backend/internal/systembackupexecution/production_capture_sequence.go": "efcfba4efd686449387044f62447c465bb221e30849241548adf48e295939568",
+    "backend/internal/systembackupexecution/production_capture_sequence_test.go": "16341e373cc711b8c2be999fa8d49debc54ecb2925d6ee228644d2b857ce12ea",
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go": "d2f1b9e00cd6009a2eb2e4f19be944d15fa3316907e882abc2043a963fc0eef3",
+    "scripts/system-backup-b-local-mysql-fixture.py": "58f678f200b1e22dded8741728f6989a5bb5a9b9a765a8e51a2901609dcb2f6c",
+    "docs/system-backup-supervisor-owner-source-remote-20261103.md": "9fda11dedff6d932491517ef1b011663aab7c1a105847de09449dd12620e9694"
+  },
+  "frozen_manifests": {
+    "docs/drafts/system-backup-a-bootstrap-current-admin-select-only-20261103.pins.json": "6d9ad361d0f199c4f90c88f29b5d7e65ccf3d7ddd065a47f81d2891542fcd3f5",
+    "docs/evidence/system-backup-d-minio-original-sql-pins-20261103.json": "dd32f238597a9a5870d01794d663641275460835c5016d1a1892d1bd4bc02997"
+  },
+  "root_corrections": [
+    {
+      "path": "backend/internal/systembackup/schemaobjects/control_tables.go",
+      "previous_sha256": "c7327502f566f7954056e3fe64795baae9be038ac4295d951eb6792327198a12",
+      "sha256": "d8c9d2a4e67e9bcc84c5ea24ce731aec0f28f48831b547cb0c8a05979f13065d",
+      "reason": "keep canonical excluded control table slice in ASCII order; retain all three new metadata-only MinIO authority tables and original parity check"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go",
+      "previous_sha256": "7f1f687e9d32c67858592f12d3940903075428fa0746ea158b6c53b1d5dd5242",
+      "sha256": "d2f1b9e00cd6009a2eb2e4f19be944d15fa3316907e882abc2043a963fc0eef3",
+      "reason": "Native test helper must create a private 0700 export directory on Linux. Original T.TempDir child follows umask; production privateDirectory remains unchanged."
+    }
+  ],
+  "component_tests": {
+    "distinct_roots_passed": 68,
+    "skipped": 0,
+    "root_results": {
+      "clawreef/internal/systembackupexecution::TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOPermissionProducerCompleteStartupAndActualConsumerComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestMinIOPermissionProducerRejectsPostCommitNativeAndOwnerTailsComponent": "pass",
+      "clawreef/internal/migrationcatalog::TestComputeIsSortedLFNormalizedAndContentAddressed": "pass",
+      "clawreef/internal/migrationcatalog::TestComputeRejectsNilFilesystem": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCurrentAdminUsesSameReadOnlyLockForLegacyAndCandidate": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionRejectsTypedNilBeforeAnySource": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionRejectsTypedNilPreparedCheck": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionDetachesOwnerTablesBeforeTrustedCallbacks": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionRequiresEveryAdapterBeforeProviderWork": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionPreparedSnapshotAndRevokedRetry": "pass",
+      "clawreef/internal/systembackupsecurity::TestAdmissionRejectsDriftBeforeAnyWrite": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapGrantFilePinsExactBytesAndCanBeRevoked": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateCapacityOriginalSampleAndBudget": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateCapacityBindingAndOutput": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateCapacityMissingReportDefersOnlyNewConsumption": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateFilesRequireClosedOriginalProfileAndAuthority": "pass",
+      "clawreef/internal/migrationcatalog::TestRepositoryCatalogMatchesSystemBackupContract": "pass",
+      "clawreef/internal/systembackupbusinessa::TestPinnedMetadataRegistryDoesNotExpandCaptureScope": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateFilesRejectLateOriginalGrantAndRBACChanges": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateFilesKeepResourceFailureAfterHistoricalBranch": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateFilesBoundLocalReadsByOriginalWindowAndContext": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateFilesDelegateResourcesOnceAndRedact": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapDeploymentCandidatesImmutableComposition": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapDeploymentCandidatesApplyConsumerAndHistoricalRetry": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapDeploymentCandidatesPreparationAndLateFilesBeforeCredentials": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptKEKPreservesOriginalAttemptAndRefusesNewUse": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptTypedNilKEKDoesNotOpenDatabase": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapDeploymentCandidatePassesCompiledKEKToOriginalAttempt": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapKEKEvidenceLocksSelectedUnionBeforeOriginalCheckAndFence": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapKEKSameKeyReplayDoesNotNeedExpiredMaterialOrNewBound": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapOriginalResourceIdentityBeforeHistoryAndOnReplay": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapOriginalResourceDenialPrecedesAnyOperationLookup": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptPreparesBeforeDatabaseAndDoesNotRenew": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptPreparationFailureNeverNeedsDatabase": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptCancellationAndConcurrentCopies": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptOpenerFailureClosesDatabaseAndSealsCopies": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidatePlanIsDetachedAndRequiresAuthority": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAStagesKeepEarlyPrefixAndOneIntent": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateGlobalConfigPrefixStreamsForeignFactsBeforeReplayDecision": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAttemptBudgetStartsBeforePreparation": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAFinalReadRejectsCallbackChangesWithHashPreserved": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateAReplayReachesExactOperationAfterExistingConfig": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateARejectsMissingAuditIdentity": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateTypedNilContextRejectedBeforeAuthorityOrSQL": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCanonicalCandidateInsertUsesOneValidatedConfig": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCandidateServiceConsumerIntegration": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapInlineCannotInitializeAfterC1StorageExists": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapInlineExactHistoryMayReadWithoutDomainButNeverWriteAgain": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapInlineLateAuthorizationAndFixedChecksRollback": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapInlineUsesFreshSQLTimeAfterInstallationWait": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapInlinePreparedKeepsOriginalBoundedContext": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapRejectsSharedSigningReferenceIdentity": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapRulesMatchContract": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCanonicalAndSQLSnapshot": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapRejectsIncompleteAmbiguousAndUnsafeConfig": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapAtomicIdempotencyAndReauthorization": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapCanonicalCandidateWritesExactSnapshotAtomically": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapRollsBackEveryWriteAndUnknownCommitRetries": "pass",
+      "clawreef/internal/systembackupsecurity::TestBootstrapFailsClosedBeforeWrites": "pass",
+      "clawreef/internal/systembackup::TestControlCensusRegistryMatchesOriginalPolicy": "pass",
+      "clawreef/internal/systembackup::TestOptionalSourceTablesRetainOriginalBusinessClassification": "pass",
+      "clawreef/internal/systembackup::TestRegistryCoversEmbeddedTableMigrations": "pass"
+    },
+    "log_sha256": {
+      "sequence-sql-linux-r1-components.jsonl": "b4c3035d97858ba970217c969445166a43b9551cf8cc6f3f0b1b7b05f2d64530",
+      "sequence-sql-linux-r2-registry.jsonl": "e73091d1c416673abcef46fce27a38bc3f601f71fef86f7c37ca085ac370643e"
+    },
+    "initial_sorted_registry_failure": "retained; canonical ordered control table slice fixed and all three affected registry roots passed on exact final source"
+  },
+  "native_sql": {
+    "scope": "LOCAL_FIXTURE_DATA_ONLY; actual Linux MySQL SQL, controlled Kubernetes/Runtime/Redis/S3 protocols; no field acceptance",
+    "mysql_version": "8.4.8",
+    "mysql_image_id": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+    "go_image_id": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+    "security": "No host ports; isolated container network; independent socket UUID then verified SAN/TLS1.3; private credential files removed",
+    "selected_root_count": 5,
+    "passed_root_count": 2,
+    "failed_root_count": 3,
+    "overall_status": "FAILED",
+    "passed_groups": [
+      {
+        "package": "clawreef/internal/systembackupinstallationowner/install",
+        "passed_tests": [
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/concurrent_original_head_cas_one_winner",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/initial_issue_import_original_l2",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/real_account_privileges",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/real_commit_lost_ack_exact_original_readback",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/real_grant_failure_rolls_back_head",
+          "TestOwnerAuthorityNativeTLSMySQLLifecycle/real_revocation_denies_original_consumer_l2"
+        ],
+        "json_sha256": "a2af0711404f8d66fd755c88e0f8bc0907998cf66207a777b27d89aa45c22775"
+      },
+      {
+        "package": "clawreef/internal/systembackupsecurity",
+        "passed_tests": [
+          "TestBootstrapCurrentAdminReadOnlyAccountTLSMySQL"
+        ],
+        "json_sha256": "7f0f7fbadce20a32183bea38df28c468ceec887a55bf9e26bb187735ff7dd11e"
+      }
+    ],
+    "failed_roots": {
+      "TestSourceDependenciesIndependentAllRunningTLSMySQL": "fail",
+      "TestSourceDependenciesIndependentEmptyTLSMySQL": "fail",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL": "fail"
+    },
+    "failure_details": [
+      {
+        "test": "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:39: actual local source partial_revokes=false; underscore schema grants use original quoting"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+        "output": "2026/11/02 20:01:34 http: TLS handshake error from 127.0.0.1:49870: remote error: tls: bad certificate"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentAllRunningTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:39: original runtime workspace aliases execution record unavailable or conflicting"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentEmptyTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:79: actual local source partial_revokes=false; underscore schema grants use original quoting"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentEmptyTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:85: genuinely empty source collections did not reach successful EOF public execution adapter unavailable"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentOriginalDriftTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:105: actual local source partial_revokes=false; underscore schema grants use original quoting"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentOriginalDriftTLSMySQL",
+        "output": "production_source_protocol_observation_mysql_test.go:105: original runtime workspace aliases execution record unavailable or conflicting"
+      },
+      {
+        "test": "TestSourceDependenciesIndependentOriginalDriftTLSMySQL",
+        "output": "2026/11/02 20:02:32 http: TLS handshake error from 127.0.0.1:60130: remote error: tls: bad certificate"
+      }
+    ],
+    "actual_migration_application": {
+      "catalog_entries": 176,
+      "independent_databases": 3,
+      "all_entries_applied_each_time": true,
+      "migration_135_applied_each_time": true,
+      "qualification": "DDL application only, not positive source observation or authority lifecycle qualification"
+    },
+    "json_logs": {
+      "go-0.jsonl": "a2af0711404f8d66fd755c88e0f8bc0907998cf66207a777b27d89aa45c22775",
+      "go-1.jsonl": "7f0f7fbadce20a32183bea38df28c468ceec887a55bf9e26bb187735ff7dd11e",
+      "go-2.jsonl": "87ac127402820aced36b5a57e4e22a4d5c305d5270158faf3bf37b01f0044d51"
+    },
+    "prior_attempts": [
+      {
+        "owner": "b-mysql-036e095cf7ff41c2a2f25448b2775ab8",
+        "result": "cold compile exceeded attach deadline; zero tests; cleanup passed"
+      },
+      {
+        "owner": "b-mysql-271bd90c8f724da0b3d91a52c593ecf0",
+        "result": "actual owner export test failed because unprivatized TempDir; root changed only test helper to chmod0700; production checks unchanged; cleanup passed"
+      }
+    ]
+  },
+  "linux_server_build": {
+    "status": "PASS",
+    "elf": "ELF64 little-endian AMD64",
+    "sha256": "41e09b864193b113bcdcb980575b62146e32f18bb4c95a819ef364660257274b",
+    "network": "none",
+    "source_and_modules": "read-only",
+    "deployment_image": "not built or deployed",
+    "precompile_binaries": "compile/cache preparation only; not credited as executed tests; removed with owned volume"
+  },
+  "additional_checks": {
+    "catalog_consistency": "PASS",
+    "frozen_source_parity": "18 source files matched workspace and actual tested snapshot before deletion; 2 independent manifest hashes matched workspace",
+    "runner_json_audit": "11 positive/negative offline verifier cases passed; actual go failure correctly rejected the whole fixture",
+    "runner_sha256": "58f678f200b1e22dded8741728f6989a5bb5a9b9a765a8e51a2901609dcb2f6c"
+  },
+  "deferred_source_findings": [
+    {
+      "owner": "D",
+      "batch": "first-install-entrypoints",
+      "finding": "terminal candidate wrapped by old capture and material wrappers repeats source preparation and capture locks after MinIO prefix",
+      "state": "owner confirmed; direct-authority supersede frozen, not yet tested"
+    },
+    {
+      "owner": "A",
+      "batch": "terminal-original-source",
+      "finding": "host helper copies C1 workload hash without deriving identity from actual peer config/image association",
+      "state": "owner confirmed; actual host-source patch in progress; old twenty-file batch not accepted as physical proof"
+    },
+    {
+      "owner": "D",
+      "batch": "materializer-host-source",
+      "finding": "mappingComponents missing actual capture-team-objects and capture-description operations",
+      "state": "source confirmed; fix requested"
+    },
+    {
+      "owner": "D",
+      "batch": "materializer-host-source",
+      "finding": "zero KMS.NotBefore can pass materializer but is rejected by actual worker newTransit",
+      "state": "source confirmed; fix requested"
+    },
+    {
+      "owner": "D",
+      "batch": "materializer-host-source",
+      "finding": "input item.Path validation lacks Job builder forbidden character checks, e.g. bad:name",
+      "state": "source confirmed; fix requested"
+    }
+  ],
+  "remote_delivery": {
+    "R8": "unchanged; original-window diagnostics and read-only actual MinIO prerequisites only; user execution after 08:30",
+    "owner_source_bb7df95a9ec4": "WITHDRAWN; known native fixture/source failures; old owned archive and ELF products deleted, delivery receipt retained",
+    "field_image": "backup-test-zh-fix18; no field update"
+  },
+  "limitations": [
+    "Actual production main still lacks complete concrete bootstrap/source owners; terminal/direct-main/MinIO lifecycle and mapper repairs are separate source batches, not included here.",
+    "AllRunning/Empty/OriginalDrift failures have been returned to D and remain open. Source observation, original-window full capture, full physical writer restoration and publication cannot be approved.",
+    "New MinIO tables are secret metadata_only/reference_only, pending_owner_review; fresh census/pins are mandatory. No signed SQL authority or native MinIO capability is installed by this migration.",
+    "No real page task, complete formal artifact upload, independent fixed-version EOF/SHA/decrypt/business readback, signed catalog query or same-task succeeded terminal has been accepted."
+  ],
+  "cleanup": {
+    "owned_fixture_assets": "all three runner attempts report no residuals; containers, volumes and private credentials removed",
+    "owned_build_volume": "codex-sequence-review-tmp-8daa12be9385456e removed after owner-label and no-container checks",
+    "introduced_mysql_test_image": "removed after exact image ID, sole tag and no-container checks; pre-existing Go image and unrelated buildx retained",
+    "worktree_binaries_and_private_caches": "owned exact D:/codex-backup-sequence-review-8daa12be9385456eb3d3f7a43b80921a removed after source parity check",
+    "local_engine": "stop command exited 0; original stopped state restored",
+    "retained": "nonsecret evidence and unchanged pending R8 user remote packet"
+  },
+  "full_page_acceptance": false,
+  "disaster_recovery_qualified": false
+}

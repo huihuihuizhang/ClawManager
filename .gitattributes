@@ -9,6 +9,8 @@ backend/internal/systembackup*/**/*.sql text eol=lf
 backend/internal/systembackup*/**/*.pem text eol=lf
 backend/cmd/system-backup*/**/*.go text eol=lf
 scripts/system-backup-d-first-install-inputs.py text eol=lf
+scripts/system-backup-b-local-mysql-fixture.py text eol=lf
+scripts/backup-team-catalog.py -text whitespace=cr-at-eol
 backend/internal/migrationcatalog/*.go text eol=lf
 backend/internal/migrationcoord/*.go text eol=lf
 docs/backup-team-integration/** text eol=lf
@@ -50,3 +52,4 @@ docs/evidence/system-backup-d-first-install-inputs-review-20261103.json -text wh
 docs/evidence/system-backup-d-first-install-owner-slots-20261103.json -text whitespace=cr-at-eol
 docs/evidence/system-backup-d-material-producer-full-call-component-pins-20261103.json -text whitespace=cr-at-eol
 docs/system-backup-c-minio-owner-install-20261103.md -text whitespace=cr-at-eol
+docs/drafts/system-backup-a-bootstrap-current-admin-select-only-20261103.pins.json -text whitespace=cr-at-eol

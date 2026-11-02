@@ -1,0 +1,45 @@
+{
+  "schema": "a-bootstrap-current-admin-select-only-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPONENT_AND_TAGGED_NATIVE_SQL_VALIDATION",
+  "date": "2026-11-03",
+  "files": {
+    "backend/internal/systembackupsecurity/bootstrap_admin_source.go": "bec3ba8ee8c16d8d65ec71586ac520a5951fbca00afa10d1a3f9c86b1fb4b2aa",
+    "backend/internal/systembackupsecurity/config_bootstrap_transaction.go": "3008df8efebd053561c807cab32a61e8641a314fb4c144d224d0e15648b05ec7",
+    "backend/internal/systembackupsecurity/config_bootstrap_candidates.go": "5f9b6ee2357271bc809c23895ce5b7058d1804b6e1c7ace6a9a95b672886e67a",
+    "backend/internal/systembackupsecurity/bootstrap_admin_source_test.go": "750c9ecc18b86319da5e490f06f0c49c2d35d5bfe25c40a8ba7ae6ca1bad07a8",
+    "backend/internal/systembackupsecurity/bootstrap_admin_source_mysql_test.go": "b01b6084791030430288c8250b4eb56e5b69757fed13b71d99743cb162be9f1c"
+  },
+  "supersedes": [
+    {
+      "file": "backend/internal/systembackupsecurity/config_bootstrap_transaction.go",
+      "previous_sha256": "0447648f58e4dbc5ee8c7e4c20873a0a4719f5dc0ab26cb770d8be2348ce951e",
+      "scope": "Only initial and finishInlineBootstrap current admin read now call the same shared locking helper; grant/DB identity, original current admin fields, initial error classifications, lock order, operation/history/config/audit/source/clock and completion are unchanged."
+    },
+    {
+      "file": "backend/internal/systembackupsecurity/config_bootstrap_candidates.go",
+      "previous_sha256": "1d6a01e22fa5a44cad70fdbfc0706062eef64fc4597ba457f1c4099371bffbb3",
+      "scope": "Only private checkAdmin delegates the same current-admin helper; retains pd.ErrGuardRequired on denial/storage failure. All other candidate stages remain unchanged."
+    }
+  ],
+  "finding": "Actual current/bootstrap user reads used FOR UPDATE while the new real consumer fixture grants only five SELECT columns on users. MySQL8.4 FOR UPDATE additionally requires UPDATE/DELETE/LOCK TABLES; original code only reads the exact admin row. FOR SHARE holds username/role/active/provider stable against writes until caller tx completion without granting administrator-row write privilege.",
+  "primary_source": "https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html",
+  "lock_scope": "Same original users id and same L2 position before owner head/grant and operation lookup. Shared row lock retained through the original transaction/final checks; no row update, password hash read, clock change, privilege auto-grant, new lock range or transaction completion.",
+  "test_source": [
+    "Component protocol model asserts both original helper and concrete candidate checkAdmin use exactly SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR SHARE and still reject inactive/current-name drift.",
+    "Opt-in real SAN TLS1.3 MySQL test reuses the independently UUID-pinned loopback/non3306 owned-schema fixture; creates a single random limited account with only SELECT(id,username,role,is_active,auth_provider). Password hash read and old FOR UPDATE must return actual MySQL1142/1143 privilege errors.",
+    "Actual new helper and candidate checkAdmin both succeed under the limited real account. Root revoker UPDATE waits on the held shared users row, verified via exact owned-schema/writer-connection performance_schema lock wait. Original reader rechecks before completion; after commit revocation persists and next original/candidate source reads reject.",
+    "This tests the administrator source and actual privilege/lock behavior only; it does not execute full catalog, provider admission, other23 owners or whole bootstrap. Existing firstStageNativeDatabase creates unrelated minimal owned publication fixture tables; no migration/catalog completion claim."
+  ],
+  "native_dependency": {
+    "file": "backend/internal/systembackupsecurity/publication_first_stage_mysql_test.go",
+    "sha256": "6888a10328a8f7b97bc12d40939644d8de70a372a0d749031dfb4c6c7c72630b",
+    "reason": "Existing controlled TLS/UUID/schema marker/cleanup helper; no edits."
+  },
+  "root_commands": [
+    "go test ./internal/systembackupsecurity -run ^(TestBootstrapCurrentAdmin|TestAdmission|TestConfigBootstrap|TestBootstrapOriginalResource) -count=1 -v",
+    "go test -tags=systembackup_mysql ./internal/systembackupsecurity -run ^TestBootstrapCurrentAdminReadOnlyAccountTLSMySQL$ -count=1 -timeout=2m -v"
+  ],
+  "missing_inputs": "Native test explicitly SKIPs without TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS plus A_PERMIT_NATIVE_DISPOSABLE_SERVER_UUID. Compile or SKIP is not actual SQL PASS.",
+  "isolation": "Lifecycle17, nativeSQL3, originalL2link10 and enrolledConsumer14 remain frozen. D main/source-material/installer and C files unchanged; current main3/30 and missing full Original are not counted complete.",
+  "cleanup": "A ran gofmt/static/source/SHA plus primary MySQL doc lookup only. No Go compile/test/build/list/vet, SQL/API/provider/remote or Git. Native source closes limited connection, verifies independent UUID and owned schema marker before dropping only the exact created account; existing helper drops exact owned schema. Root removes resulting test/build artifacts per AGENTS."
+}

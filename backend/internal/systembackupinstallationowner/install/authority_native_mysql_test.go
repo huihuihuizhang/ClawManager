@@ -291,6 +291,9 @@ func nativeAuthorityExactBundle(t *testing.T, ctx context.Context, n *nativeAuth
 func nativeAuthorityExport(t *testing.T, ctx context.Context, n *nativeAuthorityFixture, pack []byte) string {
 	t.Helper()
 	directory := t.TempDir()
+	if e := os.Chmod(directory, 0700); e != nil {
+		t.Fatal("private native export directory", e)
+	}
 	if _, e := n.f.i.ExportCommitted(ctx, n.f.password, n.f.enrollment, pack, hash(pack), directory); e != nil {
 		t.Fatal("actual committed consumer export", e)
 	}

@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 175,
-    "hash": "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292"
+    "file_count": 176,
+    "hash": "4bb18aba27672d6e0b6b4eed0d400fd9ec3234f12803a7115ea114425515d26b"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 141,
+    "object_count": 144,
     "policy_recorded": 79,
-    "policy_pending": 62,
+    "policy_pending": 65,
     "cross_review_pending": 79
   },
   "objects": [
@@ -4143,6 +4143,100 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/134_backup_v2_installation_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_minio_owner_heads",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.minio_owner_heads.reference.verify.v1",
+      "depends_on": [
+        "table:users"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Only schema metadata is recorded. Independently enrolled MinIO authority, signed payloads/signatures, exact role mappings, current states and revisions are never exported or restored. Target authority must never be overwritten or rolled back. users is a semantic current-owner binding, not a DDL foreign key. Grants reference heads; refs reference their exact grant revision; both DDL foreign keys use ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_minio_owner_grants",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.minio_owner_grants.reference.verify.v1",
+      "depends_on": [
+        "table:system_backup_minio_owner_heads",
+        "table:users"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Only schema metadata is recorded. Independently enrolled MinIO authority, signed payloads/signatures, exact role mappings, current states and revisions are never exported or restored. Target authority must never be overwritten or rolled back. users is a semantic current-owner binding, not a DDL foreign key. Grants reference heads; refs reference their exact grant revision; both DDL foreign keys use ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_minio_owner_refs",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.minio_owner_refs.reference.verify.v1",
+      "depends_on": [
+        "table:system_backup_minio_owner_grants"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Only schema metadata is recorded. Independently enrolled MinIO authority, signed payloads/signatures, exact role mappings, current states and revisions are never exported or restored. Target authority must never be overwritten or rolled back. users is a semantic current-owner binding, not a DDL foreign key. Grants reference heads; refs reference their exact grant revision; both DDL foreign keys use ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

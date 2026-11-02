@@ -1,0 +1,75 @@
+{
+  "schema_version": "system-backup-d-minio-original-sql-source-pins.v1",
+  "status": "source_only_pending_A_C_review_and_root_verification",
+  "files": [
+    {
+      "path": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql",
+      "sha256": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583"
+    },
+    {
+      "path": "backend/internal/migrationcatalog/reviewed_catalog.go",
+      "sha256": "1a5896781bafd3dbb68d8a699782334c11f0d8ba1270183e299960091475e3bc"
+    },
+    {
+      "path": "docs/backup-team-integration/catalog.json",
+      "sha256": "9de5ecffb78178c7c19f6c1e2520fca0c592edf4f1d3a629da6c0dd67fbac1a0"
+    },
+    {
+      "path": "contracts/system-backup/v12/schema-registry.json",
+      "sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "backend/internal/systembackupbusinessa/testdata/schema-registry.json",
+      "sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "scripts/backup-team-catalog.py",
+      "sha256": "ebaf5ac32f8d1ff16b242a1b169b0deb0cd824ddaae486817f676731bdea05f1"
+    },
+    {
+      "path": "backend/internal/systembackup/schemaobjects/control_tables.go",
+      "sha256": "c7327502f566f7954056e3fe64795baae9be038ac4295d951eb6792327198a12"
+    },
+    {
+      "path": "backend/internal/systembackup/v2_control_registry.go",
+      "sha256": "fe0872586dd2cc8e217c7810eceb3ae87d14528f6adc348acea3f8760b4a3789"
+    },
+    {
+      "path": "backend/internal/systembackup/registry.go",
+      "sha256": "505ddbec5191a7178fcdd4d9f1775456431a56109b8d61f2c9dfd486db3104fd"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-minio-original-sql-contract-20261103.json",
+      "sha256": "0c521de9d7b1c65f9111ef0185aa192dcd6cf8d7bd06e721b8bc0ec5df2a1945"
+    }
+  ],
+  "migration_catalog": {
+    "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
+    "file_count": 176,
+    "hash": "4bb18aba27672d6e0b6b4eed0d400fd9ec3234f12803a7115ea114425515d26b"
+  },
+  "summary": {
+    "object_count": 144,
+    "policy_recorded": 79,
+    "policy_pending": 65,
+    "cross_review_pending": 79
+  },
+  "supersedes": "Only migration catalog, canonical/mirror registry and control classification outputs of the D migration134 batch; migration134 itself and existing object policies remain unchanged.",
+  "validation": {
+    "source_generation": "completed",
+    "gofmt": "completed",
+    "independent_static_catalog_identity": "matched",
+    "mirror_identical": true,
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "boundaries": [
+    "No runtime source installed, no MinIO authority rows or credentials created, no bootstrap readiness/Original adapter linked.",
+    "A/C must review signed domain/types, CAS/revoke/dual-source recovery and original same-transaction consumer against the exact contract before use.",
+    "Actual source census and all dependent materials must be freshly generated for migration135; old complete-census pins are stale."
+  ]
+}
