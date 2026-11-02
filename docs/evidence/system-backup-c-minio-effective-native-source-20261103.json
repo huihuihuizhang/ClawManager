@@ -1,0 +1,169 @@
+{
+  "schema_version": "system-backup-c-minio-effective-native-source.v1",
+  "date": "2026-11-03",
+  "status": "source_only_superseding_candidate_not_compiled_or_live_verified",
+  "frozen_previous_batch": {
+    "path": "docs/evidence/system-backup-c-minio-native-source-candidate-20261103.json",
+    "sha256": "59a6aba109b59950a6aaf498d220f174a74430624445e06ffec8594d1918dbf3",
+    "change": "No previous eight source files or previous manifest changed. The former missing-oracle conclusion is superseded only for the finite original built-in credential profile by the independently audited native accountinfo path below. Previous CheckCurrent and C5/main loop behavior remain frozen."
+  },
+  "exact_upstream_profile": {
+    "server_tag": "RELEASE.2025-04-22T22-12-26Z",
+    "server_commit": "0d7408fc9969caf07de6a8c3a84f9fbb10a6739e",
+    "madmin_version_from_server_go_mod": "v3.0.109",
+    "policy_package_from_server_go_mod": "github.com/minio/pkg/v3 v3.1.0",
+    "installed_server_version_and_binary_compatibility": "UNKNOWN. An actual upstream image/binary identity mapping to this profile is still required. A version string from an unaudited fork is insufficient. Unknown/mismatched native version/commit is refused by the reused source.",
+    "scope": "Six authenticating accounts: five original publication principals and one original observer, each a current enabled regular built-in user with a single exact original policy in the closed supported subset. No general IAM interpreter, arbitrary external engine support or global identity-provider census is claimed."
+  },
+  "native_runtime_proof": {
+    "endpoint": "GET /minio/admin/v3/accountinfo, no query parameters",
+    "authentication": "Normal SigV4 using EACH original account's own actual mounted credential. The server validates the admin signature; this handler does not require an extra AccountInfo admin grant. No observer rights are added.",
+    "reply": "Plain JSON AccountName, Server, Policy, Buckets. Only current Policy and exact authenticating AccountName are evidence. Bucket Read/Write booleans and usage statistics are ignored. Unknown top-level fields, missing fields, incomplete/oversized/paginated replies refuse.",
+    "runtime_branch": "AccountInfoHandler uses current authenticated cred. Root or a non-nil current AuthZ plugin returns the compiled consoleAdmin default; derived credentials report their parent. Otherwise it returns GetCombinedPolicy(PolicyDBGet(accountName, cred.Groups...)). This is the actual in-memory source, not a reporting configuration or startup declaration.",
+    "closed_exclusion": "The compiled consoleAdmin default includes admin:*, kms:* and s3:*; it cannot match the original narrow policy hash and exact closed action/resource set. Thus accepted self policies exclude root and the active AuthZ-plugin branch at observation time, including legacy OPA using that same pointer. Original named GetUserInfo separately refuses temporary/service users, LDAP-mode missing enabled status, group memberships and policy-name drift. Parent AccountName substitution refuses.",
+    "hidden_or_embedded_group_paths": "AccountInfo's default branch includes actual cred.Groups and current PolicyDBGet merges group mappings. Any additional effective policy changes the exact canonical original policy hash or falls outside the closed set and refuses. This does not assert all groups or external identities are globally disabled.",
+    "policy_hash_provenance": "The expected hash is from the independently installed ORIGINAL signed permission-owner grant (observer hash from its independent startup source), already checked against the actual named policy. It is never computed from an uploaded/effective response and treated as an original authority pin. The narrow profile requires native normalized single-policy serialization to equal that original hash; incompatible policy IDs or merged forms refuse.",
+    "limits": "This proves a bounded current policy observation for the finite selected credentials, not future operation success, protection against a compromised server or an atomic transaction across all native requests. Original task/provider-use/readback/terminal gates still apply."
+  },
+  "official_source_chain": [
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/go.mod",
+      "locus": "madmin v3.0.109 and pkg/v3 v3.1.0 dependencies"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-router.go",
+      "locus": "accountinfo GET routes to AccountInfoHandler"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handlers-users.go",
+      "locus": "AccountInfoHandler; GetUserInfo; InfoCannedPolicy. Native current account/policy branch described above."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/madmin-go/v3.0.109/user-commands.go",
+      "locus": "AccountInfo(ctx, AccountOpts{}) uses this exact GET and decodes unencrypted JSON; current DTO fields"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/iam.go",
+      "locus": "IsAllowed checks the same current AuthZ pointer before root/STS/service/regular policy branches; Init builds plugin with legacy OPA fallback, then IAM store. Regular requests use PolicyDBGet + GetCombinedPolicy."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/iam-store.go",
+      "locus": "GetUserInfo rejects temporary/service accounts in built-in mode; non-built-in branch omits enabled status. PolicyDBGet includes cache mappings and credential groups; MergePolicies loads current cached policies."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/pkg/v3.1.0/policy/constants.go",
+      "locus": "Compiled DefaultPolicies consoleAdmin contains all admin, KMS and S3 rights, independent of an IAM named policy with the same name"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/pkg/v3.1.0/policy/policy.go",
+      "locus": "MergePolicies clones statements, removes duplicates, drops document ID; IsAllowed evaluates Deny, then owner/Allow. Unsupported or changed merged serialization is refused by this candidate."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/signature-v4-utils.go",
+      "locus": "checkKeyValid identifies actual root and derived credentials; current effective self policy discriminates the root branch directly"
+    }
+  ],
+  "startup_and_reload_audit": {
+    "findings": [
+      "IAM Init snapshots globalServerConfig and sets current AuthN/AuthZ pointers; its AuthZ fallback includes legacy OPA. Init runs after initial config loading.",
+      "Reporting get-config-kv clones globalServerConfig, not simply the persisted configuration. Identity/policy subsystems are absent from SubSystemsDynamic. Regular config writes and IDP writes save storage and dynamically apply only listed subsystems.",
+      "Reporting env fields are generated from standard subsystem keys. Legacy OPA LookupConfig checks EnvIamOpaURL first; this path cannot be inferred absent from standard reporting alone.",
+      "loadEnvVarsFromFiles can load MINIO_CONFIG_ENV_FILE and call os.Setenv before server initialization. Linux proc environ only exposes initial execve environment, not later mutations; reading it alone would still be incomplete.",
+      "Therefore a config signature, Pod Env list, process uptime, restart annotation or isolated proc environ hash is insufficient on its own. An exhaustive startup-only proof would additionally need all environment transformations, persisted metadata, pointer writers and activation causality. This batch avoids claiming that proof and uses the actual current native runtime branch instead."
+    ],
+    "sources": [
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/config.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/config-current.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handlers-config-kv.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handlers-idp-config.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/internal/config/config.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/internal/config/policy/plugin/config.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/internal/config/policy/opa/config.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/common-main.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/internal/config/constants.go",
+      "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/server-main.go",
+      "https://man7.org/linux/man-pages/man5/proc_pid_environ.5.html"
+    ],
+    "controlled_activation_decision": "No restart, image upgrade, credential reset, pods/exec privilege or new target provider is required merely to observe this exact native branch. If the installed server cannot be independently matched to this upstream profile, audit its actual version before porting the source, or explicitly provision a separately authorized controlled provider. Do not relabel an unknown/forked server or reset an existing provider to make it fit. No activation/restart action or command was executed or added."
+  },
+  "implementation": {
+    "new_constructor": "NewMinIOEffectivePublicationPermissionReader",
+    "new_input_version": "minio-publication-effective-permission-source.v1",
+    "new_input_fields": [
+      "Version",
+      "Installation",
+      "Namespace",
+      "NamespaceUID",
+      "Issuer",
+      "MinimumEpoch",
+      "Grant",
+      "Head",
+      "GrantSHA256",
+      "ObserverCredentialFile",
+      "ObserverCredentialSHA256",
+      "ObserverAccountSHA256",
+      "ObserverPolicyName",
+      "ObserverPolicySHA256"
+    ],
+    "source_entry": "CheckCurrentEffective",
+    "composition_entry": "CheckPublicationDependenciesWithMinIOEffective",
+    "flow": "Original SQL/deployment/config/KEK sources; independently pinned original permission grant + current revocable head; actual current resource/process chain; observer named-user/policy/bucket/version source; observer and five actual credential self-policy reads twice; repeat original observer source; tail resource, SQL, owner and credential reads; intersect every original window.",
+    "process_generation_binding": "Reuses current original Deployment/RS/Pod/SA/Node/Service UID chain and full EndpointSlice pagination. Before/after snapshot includes complete container statuses (imageID, containerID, Running.StartedAt and RestartCount). Effective policy is read directly from the serving process rather than inferred from this birth metadata.",
+    "no_configuration_producer_gap": "New input schema contains no Engine object. No fake UID, mc producer, ConfigUpdate account or signed disabled-plugin assertion is required. Original grant/head authority is still actual, current and external; the reader does not generate keys, enroll an owner or issue authority records.",
+    "no_automatic_rollout": "The old C5, old CheckCurrent, old candidate constructor, publication loop, D installer/fixtures, runtime permissions and purpose/DR gates are unchanged. Supervisor must explicitly review and select the new source after validation."
+  },
+  "required_installation_and_source_permissions": [
+    "After 2026-11-03 08:30 Asia/Shanghai, first establish actual server version/commit, original upstream image/binary provenance, native HTTPS CA/SPKI and current provider resource identity via the separately authorized preflight. This batch does not execute it.",
+    "Independent new-schema startup source file and SHA; existing external original permission issuer public key; minimum epoch; exact namespace UID and grant/head ConfigMap names/UIDs; original grant hash. Original configuration owner must actually install/sign/revoke these records; runtime holds no owner private key.",
+    "Original signed grant binds actual config SHA, provider TLS/resource/image identity and five distinct original config refs/accounts/named-policy hashes with original windows. Existing original target/catalog credentials must authenticate as the corresponding regular users.",
+    "Existing observer requires only admin:GetUser, admin:GetPolicy, admin:ServerInfo, and exact-bucket s3:GetBucketPolicy/s3:GetBucketVersioning. Its own current effective policy is checked too, so root or extra ConfigUpdate authority refuses. No new runtime observer privilege is needed.",
+    "Each of the five existing role credentials performs its own read-only native accountinfo GET. For the exact reviewed handler this needs signature authentication, not a new IAM privilege. Missing/denied/unsupported API refuses; do not add broad admin rights to force a pass.",
+    "Existing runtime Kubernetes GET rights for namespace and exact grant/head/provider owner chain, and LIST EndpointSlices with complete bounded pagination. No new Secret listing, nodes/proxy, pods/exec, deployment patch, service restart or mutation rights are needed.",
+    "No native mc execution or compatibility claim is needed by this new path. Previous mc compatibility remains unverified and is not counted as evidence for the new source."
+  ],
+  "validation": {
+    "performed_by_C": [
+      "gofmt parse/format on the three NEW files",
+      "read-only frozen eight-file and manifest hash verification"
+    ],
+    "not_performed": [
+      "compilation",
+      "go test",
+      "go build",
+      "SQL",
+      "remote/Kubernetes/MinIO calls",
+      "real mc",
+      "source installation",
+      "restart",
+      "image upgrade",
+      "publication task",
+      "git mutation"
+    ],
+    "new_test_source_roots": [
+      "TestMinIOEffectiveSelfPolicyActualFiveCredentialGETs",
+      "TestMinIOEffectiveOwnerCurrentRevocableSourceWithoutEngineDeclaration"
+    ],
+    "test_scope": "Local TLS with independently verified transmitted SigV4 from all five actual role credentials plus observer; original complete self policy; native root/plugin consoleAdmin; parent and hidden group expansion; named-only/effective mismatch; missing/unauthenticated/incomplete/unknown response; observer root/broader rights; actual original signed grant/head with no engine object and revocation/epoch/UID/signature/expiry negatives. Not live native compatibility or SQL integration.",
+    "supervisor_only": "Root owns compile/tests/native verification and deletes resulting build/test products. C created no test/build products. A future native pass and same-task backup success are not claimed."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_check.go",
+      "sha256": "081b9fc9ca10fd9001597193838aa90149817cde5908eb550ae46683fff6a758",
+      "bytes": 7338,
+      "kind": "superseding_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_source_test.go",
+      "sha256": "acd296c2e3927b44ac1cecc496fcfabc7abd6e7706ac0da846a7f374466998ad",
+      "bytes": 7934,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_source.go",
+      "sha256": "2fb4056327f2462c37919b3d786876feb3e53f366a25d692f428cdfed6a3615d",
+      "bytes": 9665,
+      "kind": "superseding_production_source"
+    }
+  ]
+}

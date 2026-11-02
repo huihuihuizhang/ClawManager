@@ -35,3 +35,5 @@ docs/evidence/system-backup-provider-issuer-*.registry.json text eol=lf
 docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json -text whitespace=cr-at-eol
 docs/evidence/system-backup-c-minio-native-source-candidate-20261103.json -text whitespace=cr-at-eol
 docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json -text whitespace=cr-at-eol
+docs/drafts/system-backup-a-owner-authority-native-mysql-20261103.pins.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-effective-native-source-20261103.json -text whitespace=cr-at-eol

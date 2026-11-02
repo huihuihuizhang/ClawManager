@@ -1,0 +1,39 @@
+{
+  "schema": "a-original-owner-native-mysql-lifecycle-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_TAGGED_COMPILE_AND_ACTUAL_SQL_EXECUTION",
+  "date": "2026-11-03",
+  "baseline_pin": "docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json",
+  "baseline_sha256": "1bfe819a8eff76b11b2cdf7dd9f76e40603439562e77a5b3674fda6339133cfe",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fixture_test.go": "107e818205a11590f47b84ccb0dd6296c064406371b875784e9122dc8c92ceb7",
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fault_test.go": "16d62879fb3bb6bc2525070718c5fd382fc3d310afa1939960a47ab614a33858",
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go": "7f1f687e9d32c67858592f12d3940903075428fa0746ea158b6c53b1d5dd5242"
+  },
+  "dependencies": [
+    "The frozen 17-file lifecycle batch, already reviewed/tested by root; every baseline file hash was independently rechecked unchanged before this freeze.",
+    "Existing reviewed enrollment test fixtures and original capture owner kernel.",
+    "backend/internal/db/migrations/134_backup_v2_installation_owner_authority.sql",
+    "contracts/system-backup/v12/admin-control-resources.schema.json"
+  ],
+  "source_gap": "No migration 175 file exists anywhere under backend in the current workspace. This batch applies only actual migration 134, not a reconstructed or claimed migration 175.",
+  "test": "TestOwnerAuthorityNativeTLSMySQLLifecycle",
+  "tag": "systembackup_mysql",
+  "scope": [
+    "Real SAN-verified TLS1.3 MySQL at independently UUID-pinned loopback non3306 disposable endpoint. Actual MySQL driver results and CURRENT_USER are never replaced. Missing controlled credentials/independent UUID yields explicit SKIP, never PASS.",
+    "Create a fresh random owned schema plus marker; apply exact original two-table 134 DDL. Create actual installer/consumer loopback SQL accounts with REQUIRE SSL. Installer SELECT users and SELECT/INSERT/UPDATE owner tables; consumer SELECT only five nonpassword users columns and owner tables.",
+    "Verify actual 1142/1143 SQL privilege errors for consumer password-hash read/owner UPDATE and installer users UPDATE/owner DELETE.",
+    "Rebind controlled enrollment and original request to actual schema/server/two actual account values. Real authenticated issue/import then exported independent enrolled pin and concrete original Prepare/AuthorizeOriginal/RecheckOriginalIdentity/Recheck on the real consumer transaction. The actual installer connection must fail the consumer account gate.",
+    "Two separately signed bundles for the same original head concurrently reach real writable transactions after real admin locks. A finite forwarding connector gates both immediately before actual head FOR UPDATE, then releases both to actual MySQL. Exactly one distinct source succeeds; loser has no source row, original counters advance once.",
+    "An owned real MySQL BEFORE INSERT trigger rejects the grant after actual head UPDATE. The forwarding driver observes both Exec attempts, no commit, exact old head/signatures/counters and total grant row count remain unchanged.",
+    "Commit-result uncertainty uses a precisely scoped driver-boundary fault AFTER the actual MySQL driver successfully COMMITs. Only the caller acknowledgement is suppressed once. This is not claimed as a network/wire proxy fault. Exact original bundle Resolve must do zero further Exec/commit/provider signing, and independent privileged SQL readback must match exact original signed bytes/counters with no extra grants.",
+    "Actual revocation updates exact head/grant atomically despite controlled provider metadata drift, preserves original record, supports exact resolve and denies the original real consumer L2 plus old-bundle resurrection."
+  ],
+  "controlled_fixtures": "Vault is a local SAN TLS protocol fixture with real Ed25519 probe signatures; Kubernetes is the explicit fake SDK fixture. No field Kubernetes enrollment/provider/whole app admission/other23 validators/six-domain success evidence is claimed.",
+  "root_commands": [
+    "From backend: go test -tags=systembackup_mysql ./internal/systembackupinstallationowner/install -run ^TestOwnerAuthorityNativeTLSMySQLLifecycle$ -count=1 -timeout=5m -v",
+    "Root may instead compile the tagged Linux test binary offline and execute against controlled SQL; preserve the package working-directory layout plus exact migration134 and contract fixture assets.",
+    "Inputs: TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS absolute private JSON file; A_PERMIT_NATIVE_DISPOSABLE_SERVER_UUID independently selected actual UUID. Credential fields follow existing native pattern: Host,User,Password,CAFile,TLSServerName,ServerUUID,Port."
+  ],
+  "cleanup": "Test cleanup closes actual limited/fault connections, verifies independent server UUID and original random schema marker, then drops only successfully created exact random users and schema. Early pre-marker cleanup is bound to successful exact CREATE ownership. Root owns all execution, binary/cache/report artifact removal after testing per AGENTS.",
+  "execution": "A ran only gofmt, static inspection of actual cached MySQL driver interfaces and SHA verification. No Go compile/test/list/build, SQL, API/provider/remote, Git, or test/build artifacts."
+}

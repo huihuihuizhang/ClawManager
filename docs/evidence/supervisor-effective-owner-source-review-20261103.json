@@ -1,0 +1,161 @@
+{
+  "schema_version": "supervisor-effective-owner-source-review.v1",
+  "reviewed_at": "2026-11-02T18:05:00.211054+00:00",
+  "baseline_commit": "f4d73c79b509bc8d647c685887f729110632bb2b",
+  "reviewed_source_files": {
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fixture_test.go": "107e818205a11590f47b84ccb0dd6296c064406371b875784e9122dc8c92ceb7",
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fault_test.go": "16d62879fb3bb6bc2525070718c5fd382fc3d310afa1939960a47ab614a33858",
+    "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go": "7f1f687e9d32c67858592f12d3940903075428fa0746ea158b6c53b1d5dd5242",
+    "backend/internal/systembackupexecution/publication_minio_effective_check.go": "081b9fc9ca10fd9001597193838aa90149817cde5908eb550ae46683fff6a758",
+    "backend/internal/systembackupexecution/publication_minio_effective_source_test.go": "acd296c2e3927b44ac1cecc496fcfabc7abd6e7706ac0da846a7f374466998ad",
+    "backend/internal/systembackupexecution/publication_minio_effective_source.go": "2fb4056327f2462c37919b3d786876feb3e53f366a25d692f428cdfed6a3615d"
+  },
+  "frozen_manifests": {
+    "docs/drafts/system-backup-a-owner-authority-native-mysql-20261103.pins.json": "f688359ae4a9557e823ff888ae9189796b141173927cec04ad4c4d84aba8c621",
+    "docs/evidence/system-backup-c-minio-effective-native-source-20261103.json": "835f82fc9834a1ce5be72b031d25dd0cf4d86e8904794d8b35688ab5f1765620"
+  },
+  "tagged_windows_components": {
+    "exit_code": 0,
+    "root_results": [
+      {
+        "Package": "clawreef/internal/systembackupexecution",
+        "Test": "TestMinIOEffectiveSelfPolicyActualFiveCredentialGETs",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupexecution",
+        "Test": "TestMinIOEffectiveOwnerCurrentRevocableSourceWithoutEngineDeclaration",
+        "Action": "pass"
+      },
+      {
+        "Package": "clawreef/internal/systembackupinstallationowner/install",
+        "Test": "TestOwnerAuthorityNativeTLSMySQLLifecycle",
+        "Action": "skip"
+      }
+    ],
+    "native_mysql_skipped": true
+  },
+  "linux_cross_compile": {
+    "exit_code": 0,
+    "binaries": {
+      "owner.test": "abf9d3d476ae67bcd2901c56bace0aaa2d317f50836f6b4dbb695b221e73796a",
+      "execution.test": "312e712c81a731ace191f13535643d33fc454e2d3a11be6c17b31d5ad6413635"
+    },
+    "cgo": false,
+    "goos": "linux",
+    "goarch": "amd64",
+    "native_executed": false
+  },
+  "wrapper_validation": {
+    "wrapper_validation_only": true,
+    "cases": [
+      {
+        "case": "complete",
+        "expected_exit": 0,
+        "matched": true
+      },
+      {
+        "case": "missing",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "duplicate",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "skip",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "nested-skip",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "fail",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "nonzero",
+        "expected_exit": 1,
+        "matched": true
+      },
+      {
+        "case": "missing-summary",
+        "expected_exit": 1,
+        "matched": true
+      }
+    ],
+    "native_executed": false
+  },
+  "archive_validation": {
+    "archive_sha256": "50dc0067011cced13150e8da1563c771cde27580046a510b42c6bcaa2ec2703a",
+    "ordinary_files": 121,
+    "checksum_records_checked": 239,
+    "special_or_external_archive_members": 0,
+    "source_overlay_verified": true,
+    "elf_hashes_verified": true,
+    "native_executed": false
+  },
+  "supplemental_delivery": {
+    "schema_version": "supervisor-owner-source-native-packet.v1",
+    "source_base_commit": "f4d73c79b509bc8d647c685887f729110632bb2b",
+    "source_overlay": {
+      "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fixture_test.go": "107e818205a11590f47b84ccb0dd6296c064406371b875784e9122dc8c92ceb7",
+      "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fault_test.go": "16d62879fb3bb6bc2525070718c5fd382fc3d310afa1939960a47ab614a33858",
+      "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go": "7f1f687e9d32c67858592f12d3940903075428fa0746ea158b6c53b1d5dd5242",
+      "backend/internal/systembackupexecution/publication_minio_effective_check.go": "081b9fc9ca10fd9001597193838aa90149817cde5908eb550ae46683fff6a758",
+      "backend/internal/systembackupexecution/publication_minio_effective_source_test.go": "acd296c2e3927b44ac1cecc496fcfabc7abd6e7706ac0da846a7f374466998ad",
+      "backend/internal/systembackupexecution/publication_minio_effective_source.go": "2fb4056327f2462c37919b3d786876feb3e53f366a25d692f428cdfed6a3615d"
+    },
+    "source_is_clean_commit": false,
+    "overlay_id": "bb7df95a9ec4",
+    "binary_sha256": {
+      "owner.test": "abf9d3d476ae67bcd2901c56bace0aaa2d317f50836f6b4dbb695b221e73796a",
+      "execution.test": "312e712c81a731ace191f13535643d33fc454e2d3a11be6c17b31d5ad6413635"
+    },
+    "platform": "linux/amd64",
+    "cgo": false,
+    "source_receipt_sha256": "d72b9ca55667b29d00ad16acb31c4a5ea461fd3ebcb6107b1e8b899ae0d18c82",
+    "native_executed": false,
+    "full_page_acceptance": false,
+    "production_minio_verified": false,
+    "disaster_recovery_qualified": false,
+    "scope": "owned disposable MySQL plus controlled API/Redis/S3/Vault fixtures; not field integration",
+    "original_window_timing_tests_included": false,
+    "owner_timeout_minutes": 5,
+    "execution_timeout_minutes": 10,
+    "fixture_runner_timeout_minutes": 18,
+    "delivery_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-owner-source-bb7df95a9ec4",
+    "archive": "clawmanager-native-owner-source-bb7df95a9ec4.tar.gz",
+    "archive_sha256": "50dc0067011cced13150e8da1563c771cde27580046a510b42c6bcaa2ec2703a",
+    "archive_bytes": 86671040,
+    "entry": "run-owner-source-bb7df95a9ec4.sh",
+    "entry_sha256": "7645e9a255b3086e73973144fa1ad65e9e1436c3fa20368ab65127ed163ff437",
+    "fixture": "system-backup-d-kube-mysql-fixture.py",
+    "fixture_sha256": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+    "runner_sha256": "74290a1f917302198ce869f9305bb729af35b98a6cafe7fe270dc13bce912d2f"
+  },
+  "root_scripts": {
+    "scripts/system-backup-supervisor-owner-source-native-run.sh": "74290a1f917302198ce869f9305bb729af35b98a6cafe7fe270dc13bce912d2f",
+    "scripts/system-backup-supervisor-owner-source-assemble.py": "4cc145b02f5ee07b09c07b2d590497162f6804015d9789ce0d957050c8e9988c"
+  },
+  "limits": [
+    "A native SQL lifecycle not executed. Kubernetes and Vault remain explicit controlled fixtures; commit uncertainty injected at actual driver commit acknowledgement, not a network proxy.",
+    "C finite effective policy source v1 may refuse harmless statement/action/resource serialization order changes; v2 normalization is a separate pending review. No installed MinIO binary/version or real effective permissions have been proven.",
+    "Migration count 175 is not a claim of a 175-numbered SQL file. A native fixture intentionally applies only actual migration134 owner tables.",
+    "No production main/WireServices composition completed; main owner slots remain 3/30. No production image update, real page task, complete writer recovery or same-task successful publication/readback/catalog acceptance.",
+    "R8 original-window packet remains unchanged and pending. Supplemental 11 native checks are not yet executed.",
+    "No isolated restore in current acceptance scope; disaster recovery qualification remains false."
+  ],
+  "cleanup": {
+    "finished_review_worktree_and_build_cache": "removed after exact absolute path, owner marker and process checks; no build residuals",
+    "pending_delivery_archive_retained_until_user_remote_test_ends": true
+  },
+  "full_page_acceptance": false,
+  "disaster_recovery_qualified": false
+}
