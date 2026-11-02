@@ -1,0 +1,26 @@
+{
+  "schema_version": "supervisor-backup-acceptance-scope.v1",
+  "date": "2026-11-02",
+  "user_choice": "Complete backup publication loop; explicitly no DR qualification",
+  "required": [
+    "Real page starts one real nonempty task",
+    "All six requested parts fully captured in original authorization window",
+    "All source business and originally stopped participants return original physical state",
+    "Formal artifact uploaded and independently read completely at fixed versions",
+    "Authenticated signed catalog query",
+    "Same task genuinely succeeded with truthful artifact usability"
+  ],
+  "not_executed": [
+    "Isolated restore"
+  ],
+  "dr_qualified": false,
+  "acceptance_ready": false,
+  "qualification_must_remain_truthful": true,
+  "allowed_implementation": "Formal complete non-DR publication terminal path, preserving original evidence and authorization",
+  "disallowed": [
+    "Partial range or deleting stopped participant",
+    "Extending original authorization window",
+    "Fabricated physical recovery or independent verification",
+    "Setting DR eligibility true without evidence"
+  ]
+}
