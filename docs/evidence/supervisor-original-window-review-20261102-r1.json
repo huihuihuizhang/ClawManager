@@ -1,0 +1,103 @@
+{
+  "schema_version": "supervisor-original-window-review.v1",
+  "recorded_at": "2026-11-02T01:46:11.1159708Z",
+  "base_commit": "b7ec7afe5d239c4b61f78b0f1567c29b8c52e581",
+  "classification": "Independent local native failure; no formal publication or local SQL-cleanup acceptance",
+  "test": "TestPublicationOriginalLocalCleanupSameTaskMySQL",
+  "task": "sbk_2e270017-3ee3-45de-b088-eda61f91787a",
+  "owned_schema": "ad_d_six_edd2b61e67e9ca1b",
+  "exit_code": 1,
+  "case_seconds": 226.86,
+  "package_seconds": 232.405,
+  "initial_preflight": "First unlinked run rejected before fixture creation; rerun linked to real base commit with exact dirty source hashes",
+  "mysql": {
+    "sync_binlog": 1,
+    "port": 56579,
+    "uuid": "28d759d3-d65c-11f1-9591-846993680ff3",
+    "version": "8.4.13",
+    "tls": "TLSv1.3",
+    "cipher": "TLS_AES_128_GCM_SHA256",
+    "host": "127.0.0.1",
+    "innodb_flush_log_at_trx_commit": 1
+  },
+  "database": {
+    "key_remaining_us": -16567,
+    "rejection": "database-using-key-check: original key/context/source deadline",
+    "authorize_calls": 127,
+    "original_plan_seconds": 3.7090958,
+    "authorize_seconds": 27.4107204,
+    "key_check_failures": 1,
+    "permit_stage_seconds": 7.0140147,
+    "key_check_client_seconds": 28.3064519,
+    "key_check_calls": 128,
+    "commit_seconds": 0.3774441,
+    "collectors_seconds": 4.3537813
+  },
+  "permit_detail": {
+    "guard_and_revocation_seconds": 2.3315685,
+    "capability_seconds": 0.507293,
+    "issuer_grant_seconds": 0.3465456,
+    "recheck_seconds": 3.7468658,
+    "mapping_seconds": 0.5200958,
+    "stage_calls": 129,
+    "recheck_calls": 388,
+    "limit": "Permit window includes reserve/begin and is not identical to key-check-only subset; parents and children overlap, never sum them",
+    "stage_seconds": 7.1253076
+  },
+  "sql_readback": {
+    "status": "failed",
+    "paused": 4,
+    "maintenance_owner_present": false,
+    "row_version": 8,
+    "failure_category": "runner_failed",
+    "maintenance_gate": "idle",
+    "writers": 4,
+    "external_actions": 0,
+    "app_gate_owner_present": false,
+    "resumed": 4,
+    "claim_owner_present": false,
+    "app_gate": "idle"
+  },
+  "source_pins": {
+    "dirty_sources": [
+      {
+        "sha256": "46a8ef3a57e50a8d6223b9f27ccac9191cffbdd163381fe394767644f29770cb",
+        "path": "internal/systembackupexecution/production_same_task_mysql_test.go"
+      },
+      {
+        "sha256": "20745589541a9800be8ee0e492158d945660a2e6b6733bdfb14e3518c3260bcf",
+        "path": "internal/systembackupexecution/publication_native_cleanup.go"
+      },
+      {
+        "sha256": "0bfc44cabfb0d7be8f8ee1f1b8f46100e3fbad0fa1e0f86d140740b3ff2864a4",
+        "path": "internal/systembackupexecution/publication_local_cleanup.go"
+      },
+      {
+        "sha256": "a4bf8da29ac06bb664bf1bc7f56dc41af9149055c4eea144d9475cb122f09992",
+        "path": "internal/systembackupexecution/publication_local_cleanup_mysql_test.go"
+      },
+      {
+        "sha256": "791f60dcc981d6a667de209618bac15fd512777a73de1a26ab91614d45c2d160",
+        "path": "internal/systembackupexecution/publication_local_cleanup_test.go"
+      },
+      {
+        "sha256": "ab3fb1ba83e1c2c2334b80f3292d585a6ae3cbb594c9dfa79bd1a8b62edbd123",
+        "path": "internal/systembackupexecution/a_permit_native_diagnostic_test.go"
+      }
+    ],
+    "base_commit": "b7ec7afe5d239c4b61f78b0f1567c29b8c52e581"
+  },
+  "raw_log": {
+    "path": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab\\c-local-cleanup-linked.log",
+    "sha256": "21047b263380d235e7c516283d4b0362d2602b9a1f92b615a389fbd2d1c8122b"
+  },
+  "physical_restore_independently_verified": false,
+  "full_page_acceptance": false,
+  "positive_sql_cleanup_verified": false,
+  "remaining": [
+    "A current-read optimization under unchanged original window",
+    "C complete original capture-to-SQL-cleanup positive execution",
+    "acceptance/catalog finalization",
+    "same-version deployment and actual page acceptance"
+  ]
+}

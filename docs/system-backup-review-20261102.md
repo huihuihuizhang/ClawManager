@@ -42,3 +42,7 @@ A 已核对现有 `PublicationSignersForTask → PublicationSigningKey → Prepa
 D 已核对根 Dockerfile 的 `app` target 同时包含 App 和 v2 controller、`backup-worker` 独立输出；App 默认启动不会自动运行 v2 controller。`system-backup-d-release-package-20261102.md` 目前只准备同源 OCI 候选构建与真实安装材料接点，不是完整可启用清单。审核者对两段 Bash 执行 `bash -n` 通过，并原样提取其清理函数，用失败的假 Docker 命令验证：builder 删除失败仍删除本轮 context；原构建退出 7 保持 7；构建成功但清理失败返回 1。测试未连接 Docker 或远端，临时目录已清理。
 
 C 新增的实际 SQL 本地清理 producer 正在审核和准备独占 SAN/TLS MySQL 回归，尚未批准提交。原 native context 分段计时接线也已在工作区应用，待本轮统一编译验证；不能复用首轮的回归结果证明新代码。
+
+第二轮实际回归已执行：现有公共签名向量通过（security 2.209s）；C 原文件清理/native 清理组件及新代码编译通过。首次 SQL 用例缺少 buildinfo commit，在建库前拒绝；补入真实基线 commit 与 dirty 文件 SHA 后，独占 MySQL 8.4.13/TLS1.3 下完整174迁移和原任务实际执行，226.86s 用例失败于数据库原30秒key/context/source截止时间，128次key-check累计28.306s，没有进入发布/本地SQL清理。SQL读回4位writer均有恢复回执、两道门禁idle、任务failed且无claim、external_actions=0；不认定现场全部物理恢复。精确边界和源码pins见 `evidence/supervisor-original-window-review-20261102-r1.json`。A据此继续当前读优化；C正向SQL闭环仍未验收，不批准推送删除实现。
+
+D 的 `system-backup-d-controller-candidate.py` 已独立检查并运行8项测试通过，包含显式/缺省Downward API v1兼容、错误挂载和私有字节变更拒绝、输出不覆盖及不回显材料内容；对应文档两段Bash语法通过。它只消费私有已审核模板和材料pins，输出零副本/forward关闭的离线候选，report明确授权/在线资源/完整验收均未验证，不执行apply或创建权限。该工具不替代仍缺的正式安装材料和现场激活验收。
