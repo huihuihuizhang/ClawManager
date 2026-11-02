@@ -1,0 +1,807 @@
+{
+  "schema_version": "supervisor-user-native-control-timing.v1",
+  "source": "User extracted numeric diagnostic lines from existing native.log; no rerun or supervisor remote access",
+  "native_log_sha256": "8d8f93b25c1787c4dd96bd89117612c4073a67e8c436a8f3a97ea56ee79d8495",
+  "attachment_sha256": "6e95d4a909044cd02d7b2fa5b308ac21dddc83a3f1734e2919f8dc1e459ef81d",
+  "native_source_commit": "51181049e97e4ff3946e75b6c1568dfe2e00b1a1",
+  "operation": "capture-database",
+  "source_open_seconds": 0.418035629,
+  "original_key_remaining_after_source_open_seconds": 28.597633952,
+  "worker": {
+    "KeyReserve": {
+      "Calls": 1,
+      "HTTPAttempts": 1,
+      "Failures": 0,
+      "ElapsedNanos": 168801032,
+      "MaxNanos": 168801032,
+      "LastNanos": 168801032
+    },
+    "KeyBegin": {
+      "Calls": 1,
+      "HTTPAttempts": 1,
+      "Failures": 0,
+      "ElapsedNanos": 218777207,
+      "MaxNanos": 218777207,
+      "LastNanos": 218777207
+    },
+    "KeyCheck": {
+      "Calls": 139,
+      "HTTPAttempts": 139,
+      "Failures": 1,
+      "ElapsedNanos": 28382927694,
+      "MaxNanos": 273822829,
+      "LastNanos": 2073435
+    },
+    "KeyEnd": {
+      "Calls": 0,
+      "HTTPAttempts": 0,
+      "Failures": 0,
+      "ElapsedNanos": 0,
+      "MaxNanos": 0,
+      "LastNanos": 0
+    },
+    "Candidate": {
+      "Calls": 0,
+      "HTTPAttempts": 0,
+      "Failures": 0,
+      "ElapsedNanos": 0,
+      "MaxNanos": 0,
+      "LastNanos": 0
+    }
+  },
+  "controller": {
+    "KeyReserve": {
+      "Authorize": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 166387210,
+        "MaxNanos": 166387210,
+        "LastNanos": 166387210
+      },
+      "SQLBind": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 9361533,
+        "MaxNanos": 9361533,
+        "LastNanos": 9361533
+      },
+      "KeyStateSQL": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 2535781,
+        "MaxNanos": 2535781,
+        "LastNanos": 2535781
+      },
+      "ExecutionInput": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 2853073,
+        "MaxNanos": 2853073,
+        "LastNanos": 2853073
+      },
+      "OriginalPlan": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 25618603,
+        "MaxNanos": 25618603,
+        "LastNanos": 25618603
+      },
+      "OriginalPart": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 3372441,
+        "MaxNanos": 3372441,
+        "LastNanos": 3372441
+      },
+      "WorkerMounts": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4283166,
+        "MaxNanos": 4283166,
+        "LastNanos": 4283166
+      },
+      "WorkerSecurity": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 2911879,
+        "MaxNanos": 2911879,
+        "LastNanos": 2911879
+      },
+      "WorkerProcess": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 1054106,
+        "MaxNanos": 1054106,
+        "LastNanos": 1054106
+      },
+      "ProviderQualification": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 11225095,
+        "MaxNanos": 11225095,
+        "LastNanos": 11225095
+      },
+      "GuardTail": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4104175,
+        "MaxNanos": 4104175,
+        "LastNanos": 4104175
+      },
+      "Dependencies": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 730331,
+        "MaxNanos": 730331,
+        "LastNanos": 730331
+      },
+      "OriginalWorker": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 745000,
+        "MaxNanos": 745000,
+        "LastNanos": 745000
+      },
+      "TaskLocator": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 651597,
+        "MaxNanos": 651597,
+        "LastNanos": 651597
+      },
+      "RecordObservation": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 2682769,
+        "MaxNanos": 2682769,
+        "LastNanos": 2682769
+      },
+      "ObservationGuard": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4015302,
+        "MaxNanos": 4015302,
+        "LastNanos": 4015302
+      },
+      "PermitStage": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 43395574,
+        "MaxNanos": 43395574,
+        "LastNanos": 43395574
+      },
+      "PlanTail": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 1500752,
+        "MaxNanos": 1500752,
+        "LastNanos": 1500752
+      },
+      "FinalGuard": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 3132611,
+        "MaxNanos": 3132611,
+        "LastNanos": 3132611
+      },
+      "Commit": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 1023677,
+        "MaxNanos": 1023677,
+        "LastNanos": 1023677
+      },
+      "Collectors": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 15305065,
+        "MaxNanos": 15305065,
+        "LastNanos": 15305065
+      }
+    },
+    "KeyBegin": {
+      "Authorize": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 215870288,
+        "MaxNanos": 215870288,
+        "LastNanos": 215870288
+      },
+      "SQLBind": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 45219850,
+        "MaxNanos": 45219850,
+        "LastNanos": 45219850
+      },
+      "KeyStateSQL": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4526043,
+        "MaxNanos": 4526043,
+        "LastNanos": 4526043
+      },
+      "ExecutionInput": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 7672591,
+        "MaxNanos": 7672591,
+        "LastNanos": 7672591
+      },
+      "OriginalPlan": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 22218177,
+        "MaxNanos": 22218177,
+        "LastNanos": 22218177
+      },
+      "OriginalPart": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4912731,
+        "MaxNanos": 4912731,
+        "LastNanos": 4912731
+      },
+      "WorkerMounts": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 7378014,
+        "MaxNanos": 7378014,
+        "LastNanos": 7378014
+      },
+      "WorkerSecurity": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 5488410,
+        "MaxNanos": 5488410,
+        "LastNanos": 5488410
+      },
+      "WorkerProcess": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 2765752,
+        "MaxNanos": 2765752,
+        "LastNanos": 2765752
+      },
+      "ProviderQualification": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 15670701,
+        "MaxNanos": 15670701,
+        "LastNanos": 15670701
+      },
+      "GuardTail": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 7779140,
+        "MaxNanos": 7779140,
+        "LastNanos": 7779140
+      },
+      "Dependencies": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 796752,
+        "MaxNanos": 796752,
+        "LastNanos": 796752
+      },
+      "OriginalWorker": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 964020,
+        "MaxNanos": 964020,
+        "LastNanos": 964020
+      },
+      "TaskLocator": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 957788,
+        "MaxNanos": 957788,
+        "LastNanos": 957788
+      },
+      "RecordObservation": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 3807083,
+        "MaxNanos": 3807083,
+        "LastNanos": 3807083
+      },
+      "ObservationGuard": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 4427941,
+        "MaxNanos": 4427941,
+        "LastNanos": 4427941
+      },
+      "PermitStage": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 43326408,
+        "MaxNanos": 43326408,
+        "LastNanos": 43326408
+      },
+      "PlanTail": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 1557363,
+        "MaxNanos": 1557363,
+        "LastNanos": 1557363
+      },
+      "FinalGuard": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 3027686,
+        "MaxNanos": 3027686,
+        "LastNanos": 3027686
+      },
+      "Commit": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 1452818,
+        "MaxNanos": 1452818,
+        "LastNanos": 1452818
+      },
+      "Collectors": {
+        "Calls": 1,
+        "Failures": 0,
+        "ElapsedNanos": 26374155,
+        "MaxNanos": 26374155,
+        "LastNanos": 26374155
+      }
+    },
+    "KeyCheck": {
+      "Authorize": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 27834858595,
+        "MaxNanos": 268570052,
+        "LastNanos": 244288841
+      },
+      "SQLBind": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 2685070725,
+        "MaxNanos": 46246513,
+        "LastNanos": 14717022
+      },
+      "KeyStateSQL": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 304224086,
+        "MaxNanos": 4295652,
+        "LastNanos": 1540109
+      },
+      "ExecutionInput": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 1018532732,
+        "MaxNanos": 21699550,
+        "LastNanos": 11179978
+      },
+      "OriginalPlan": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 3770150395,
+        "MaxNanos": 49924353,
+        "LastNanos": 41713807
+      },
+      "OriginalPart": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 720066635,
+        "MaxNanos": 11543730,
+        "LastNanos": 5686137
+      },
+      "WorkerMounts": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 852629083,
+        "MaxNanos": 9870580,
+        "LastNanos": 7303638
+      },
+      "WorkerSecurity": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 836240235,
+        "MaxNanos": 21737775,
+        "LastNanos": 21518225
+      },
+      "WorkerProcess": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 252804109,
+        "MaxNanos": 5763148,
+        "LastNanos": 1715864
+      },
+      "ProviderQualification": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 1993080773,
+        "MaxNanos": 29552666,
+        "LastNanos": 13728023
+      },
+      "GuardTail": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 721029795,
+        "MaxNanos": 20472405,
+        "LastNanos": 3623023
+      },
+      "Dependencies": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 159212930,
+        "MaxNanos": 3871951,
+        "LastNanos": 1381288
+      },
+      "OriginalWorker": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 234102677,
+        "MaxNanos": 13307648,
+        "LastNanos": 1902970
+      },
+      "TaskLocator": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 189015265,
+        "MaxNanos": 3976846,
+        "LastNanos": 1321711
+      },
+      "RecordObservation": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 565062411,
+        "MaxNanos": 9250966,
+        "LastNanos": 2490692
+      },
+      "ObservationGuard": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 749286478,
+        "MaxNanos": 9338377,
+        "LastNanos": 6684815
+      },
+      "PermitStage": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 6728344519,
+        "MaxNanos": 73595599,
+        "LastNanos": 53280612
+      },
+      "PlanTail": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 326750130,
+        "MaxNanos": 5789931,
+        "LastNanos": 3820360
+      },
+      "FinalGuard": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 709091555,
+        "MaxNanos": 10210166,
+        "LastNanos": 8529882
+      },
+      "Commit": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 264050172,
+        "MaxNanos": 4253388,
+        "LastNanos": 1615046
+      },
+      "Collectors": {
+        "Calls": 138,
+        "Failures": 0,
+        "ElapsedNanos": 4206777229,
+        "MaxNanos": 58669377,
+        "LastNanos": 37075093
+      }
+    },
+    "KeyEnd": {
+      "Authorize": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "SQLBind": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "KeyStateSQL": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ExecutionInput": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalPlan": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalPart": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerMounts": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerSecurity": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerProcess": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ProviderQualification": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "GuardTail": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Dependencies": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalWorker": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "TaskLocator": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "RecordObservation": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ObservationGuard": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "PermitStage": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "PlanTail": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "FinalGuard": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Commit": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Collectors": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      }
+    },
+    "Candidate": {
+      "Authorize": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "SQLBind": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "KeyStateSQL": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ExecutionInput": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalPlan": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalPart": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerMounts": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerSecurity": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "WorkerProcess": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ProviderQualification": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "GuardTail": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Dependencies": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "OriginalWorker": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "TaskLocator": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "RecordObservation": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "ObservationGuard": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "PermitStage": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "PlanTail": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "FinalGuard": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Commit": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      },
+      "Collectors": {
+        "Calls": 0,
+        "Failures": 0,
+        "ElapsedNanos": 0,
+        "MaxNanos": 0,
+        "LastNanos": 0
+      }
+    }
+  },
+  "timing_caveat": "Authorize is a parent interval; child scopes may overlap. Do not sum intervals or infer the unfinished HTTP request completed.",
+  "status": "Original thirty-second database capture still failed; no candidate or key-end",
+  "actions": [
+    "B four-catalog-query scalar-subquery batching candidate frozen; expected two-pass reduction of 36 real guard boundaries, not verified native benefit",
+    "A current controller authorization SQL round-trip reduction under original locks and current checks",
+    "No source/worker authorization checks removed, no TTL caching, no deadline extended"
+  ],
+  "full_page_acceptance": false
+}
