@@ -55,6 +55,7 @@ class FixtureTests(unittest.TestCase):
         self.forward = Process()
         self.runner = Process(result=7)
         self.version = "8.0.36"
+        self.aio = "0"
         self.events = []
 
     def tearDown(self):
@@ -102,7 +103,8 @@ class FixtureTests(unittest.TestCase):
             if "cat" in args: return b"-----BEGIN CERTIFICATE-----\nLOCAL MOCK CA\n-----END CERTIFICATE-----\n"
             self.assertIn("--ssl-mode=VERIFY_IDENTITY", args[-1])
             self.assertIn("--protocol=TCP", args[-1])
-            return (self.version + "\t" + NS_UID + "\tTLSv1.3\t1\nSsl_cipher\tTLS_AES_256_GCM_SHA384\nSsl_version\tTLSv1.3\n").encode()
+            self.assertIn("@@innodb_use_native_aio", args[-1])
+            return (self.version + "\t" + NS_UID + "\tTLSv1.3\t1\t" + self.aio + "\nSsl_cipher\tTLS_AES_256_GCM_SHA384\nSsl_version\tTLSv1.3\n").encode()
         self.fail("unhandled local mock command")
 
     def popen(self, args, **kwargs):
@@ -136,6 +138,7 @@ class FixtureTests(unittest.TestCase):
         self.assertTrue(all("emptyDir" in v or "secret" in v for v in pod["volumes"]))
         self.assertIn("DNS:localhost,IP:127.0.0.1", pod["initContainers"][0]["command"][-1])
         self.assertIn("--tls-version=TLSv1.3", pod["containers"][0]["args"])
+        self.assertIn("--innodb-use-native-aio=OFF", pod["containers"][0]["args"])
         self.assertEqual(self.resources["NetworkPolicy"]["spec"]["ingress"], [])
         with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(code), 7)
         self.assertTrue(self.forward.terminated)
@@ -144,6 +147,9 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(json.loads((self.f.logs / "fixture.json").read_text())["cleanup_exit_code"], 0)
         report = json.loads((self.f.logs / "fixture.json").read_text())
         self.assertEqual(report["server_version"], "8.0.36")
+        self.assertEqual(report["fixture_configuration"], {"innodb_use_native_aio": "OFF"})
+        self.assertEqual(report["observed_innodb_use_native_aio"], "OFF")
+        self.assertFalse(report["production_equivalent_performance"])
         self.assertEqual(set(report["observed_image_ids"]), {"mysql", "tls"})
 
     def test_changed_namespace_uid_refuses_delete_but_removes_local_secrets(self):
@@ -212,6 +218,19 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(self.f.server_version, "8.4.8")
         with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(7), 7)
 
+    def test_native_aio_on_rejects_before_runner_and_records_observation(self):
+        self.aio = "1"
+        with self.assertRaises(fixture.Refused): self.run_fixture()
+        self.assertIsNone(self.f.runner)
+        self.assertIsNone(self.f.forward)
+        with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(1), 1)
+        report = json.loads((self.f.logs / "fixture.json").read_text())
+        self.assertEqual(report["observed_innodb_use_native_aio"], "ON")
+        self.assertEqual(report["fixture_configuration"]["innodb_use_native_aio"], "OFF")
+        self.assertEqual(report["stage"], "fixture-aio-configuration")
+        self.assertIsNone(self.ns)
+        self.assertFalse(self.f.work.exists())
+
     def parse_args(self, extra):
         argv = ["fixture", "--scratch", str(self.root), "--logs", str(self.root / "parse-logs")] + extra
         with patch.object(fixture.sys, "argv", argv), patch.object(fixture.sys, "platform", "linux"), \
@@ -243,6 +262,7 @@ class FixtureTests(unittest.TestCase):
         self.assertIsNone(self.f.runner)
         self.assertFalse((self.f.work / "credentials.json").exists())
         self.assertEqual(self.f.session_tls["Ssl_version"], "TLSv1.3")
+        self.assertEqual(self.f.innodb_use_native_aio, "OFF")
         with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(0), 0)
         report = json.loads((self.f.logs / "fixture.json").read_text())
         self.assertFalse(report["native_started"])

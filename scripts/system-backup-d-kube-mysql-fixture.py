@@ -59,6 +59,7 @@ class Fixture:
         self.server_version = None
         self.server_uuid = None
         self.session_tls = {}
+        self.innodb_use_native_aio = None
         self.image_ids = {}
         self.password = None
         self.last_command_error = None
@@ -81,6 +82,9 @@ class Fixture:
             "pod_uid": self.pod_uid, "owner": self.owner, "stage": self.stage,
             "server_version": self.server_version, "observed_image_ids": self.image_ids,
             "server_uuid": self.server_uuid, "session_tls": self.session_tls,
+            "fixture_configuration": {"innodb_use_native_aio": "OFF"},
+            "observed_innodb_use_native_aio": self.innodb_use_native_aio,
+            "production_equivalent_performance": False,
             "port_forward_pid": self.forward.pid if self.forward else None,
             "runner_pid": self.runner.pid if self.runner else None}, indent=2) + "\n")
 
@@ -284,7 +288,8 @@ class Fixture:
             "containers": [{"name": "mysql", "image": self.args.mysql_image, "imagePullPolicy": "IfNotPresent",
                 "securityContext": security,
                 "args": ["--ssl-ca=/run/fixture-tls/ca.crt", "--ssl-cert=/run/fixture-tls/server.crt",
-                         "--ssl-key=/run/fixture-tls/server.key", "--require-secure-transport=ON", "--tls-version=TLSv1.3"],
+                         "--ssl-key=/run/fixture-tls/server.key", "--require-secure-transport=ON", "--tls-version=TLSv1.3",
+                         "--innodb-use-native-aio=OFF"],
                 "env": [{"name": "MYSQL_ROOT_PASSWORD_FILE", "value": "/run/fixture-password/password"}, {"name": "MYSQL_ROOT_HOST", "value": "%"}],
                 "ports": [{"name": "mysql", "containerPort": 3306}],
                 "readinessProbe": {"tcpSocket": {"port": "mysql"}, "periodSeconds": 2, "failureThreshold": 90},
@@ -322,9 +327,10 @@ class Fixture:
         self.pod_identity()
         require(set(self.image_ids) == {"mysql", "tls"})
         self.stage = "uuid-and-server-tls"
-        sql = 'MYSQL_PWD="$(cat /run/fixture-password/password)"; export MYSQL_PWD; exec mysql --user=root --protocol=TCP --host=127.0.0.1 --ssl-mode=VERIFY_IDENTITY --ssl-ca=/run/fixture-tls/ca.crt --tls-version=TLSv1.3 --batch --skip-column-names -e "SELECT VERSION(),@@server_uuid,@@tls_version,@@require_secure_transport; SHOW SESSION STATUS WHERE Variable_name IN (\'Ssl_version\',\'Ssl_cipher\')"'
+        sql = 'MYSQL_PWD="$(cat /run/fixture-password/password)"; export MYSQL_PWD; exec mysql --user=root --protocol=TCP --host=127.0.0.1 --ssl-mode=VERIFY_IDENTITY --ssl-ca=/run/fixture-tls/ca.crt --tls-version=TLSv1.3 --batch --skip-column-names -e "SELECT VERSION(),@@server_uuid,@@tls_version,@@require_secure_transport,@@innodb_use_native_aio; SHOW SESSION STATUS WHERE Variable_name IN (\'Ssl_version\',\'Ssl_cipher\')"'
         values = self.exec_pod(["/bin/sh", "-ec", sql]).decode().strip().split()
-        require(len(values) == 8)
+        require(len(values) == 9)
+        self.innodb_use_native_aio = {"0": "OFF", "OFF": "OFF", "1": "ON", "ON": "ON"}.get(values[4])
         version = re.fullmatch(r"(\d{1,2})\.(\d{1,2})\.(\d{1,3})(?:[-+._A-Za-z0-9]{0,96})", values[0])
         require(version is not None)
         self.server_version = values[0]
@@ -336,7 +342,10 @@ class Fixture:
         require(UUID.fullmatch(values[1]) and values[2] == "TLSv1.3" and values[3] in ("1", "ON"))
         server_uuid = values[1]
         self.server_uuid = server_uuid
-        tls = dict(zip(values[4::2], values[5::2]))
+        self.stage = "fixture-aio-configuration"
+        self.checkpoint()
+        require(self.innodb_use_native_aio == "OFF")
+        tls = dict(zip(values[5::2], values[6::2]))
         require(set(tls) == {"Ssl_version", "Ssl_cipher"} and tls["Ssl_version"] == "TLSv1.3")
         require(re.fullmatch(r"[A-Za-z0-9_-]{1,128}", tls["Ssl_cipher"]))
         self.session_tls = tls
@@ -454,6 +463,8 @@ class Fixture:
                   "namespace": self.namespace, "namespace_uid": self.uid, "owner": self.owner,
                   "server_version": self.server_version, "observed_image_ids": self.image_ids,
                   "server_uuid": self.server_uuid, "session_tls": self.session_tls, "diagnostics_exit_code": self.diagnostics_exit_code,
+                  "fixture_configuration": {"innodb_use_native_aio": "OFF"},
+                  "observed_innodb_use_native_aio": self.innodb_use_native_aio, "production_equivalent_performance": False,
                   "original_exit_code": original, "cleanup_exit_code": cleanup, "residuals": self.residuals,
                   "full_acceptance": False}
         if self.logs_created:

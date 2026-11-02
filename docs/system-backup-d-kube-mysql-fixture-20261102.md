@@ -8,7 +8,11 @@
 
 现场上一轮在 `pod-ready-openssl-tls` 失败，native 未启动；原退出1、清理0、residuals为空，只说明原 Pod 未达到 Ready，不能判断具体原因。用户随后只读检查已有 MySQL 容器，确认 MySQL 8.4.8、OpenSSL 3.5.1 和 `/usr/bin/openssl` 存在；这不是新 fixture 的启动成功证据，也不需要读取生产 Secret 或证书。
 
-只上传相邻的 `.sh` 和 `.py` 两个小文件即可执行下面命令，**不需要 A bundle、ELF、Go 或重新编译**。`--startup-only` 仍使用原镜像、TLS、NetworkPolicy、资源及安全设置；只创建本轮独占资源，读取版本/UUID/配置，并以 `VERIFY_IDENTITY` 和临时 CA 实际建立本 Pod 内 TCP TLS1.3 会话，记录 Ssl_version/Ssl_cipher，检查 loopback port-forward 后清理。不调用 A runner，不创建业务或 synthetic 测试 schema。正常 native 模式仍强制要求 `--bundle` 并核验 SHA256SUMS。
+用户回传旧探针 `2180d7ea...` 的实际启动结果后，当前失败点已明确：本轮 namespace `sbk-apermit-bc820a9bc593928385e5`、UID `d5f15b2d-9644-4767-95e3-4bc1c02a6455`、Pod UID `7989b409-5883-4395-90e8-ca2e85dbb12b`；同固定 digest 的 tls init 退出0，mysql 在初始化数据文件时 `io_setup() failed with EAGAIN`，5次尝试后报 MY-012584/MY-012954 `Cannot initialize AIO sub-system` 并退出1。该轮 original=1、cleanup=0、diagnostics=0、residuals=[]、native_started=false。日志定位到原生 AIO 初始化失败，不是本轮证书生成失败；没有读取宿主机 AIO 计数，不能据此断言具体哪个进程占用配额。
+
+此版只在**新隔离 fixture** 的 mysqld 参数增加 `--innodb-use-native-aio=OFF`，避开 Linux native AIO 上下文分配。MySQL 8.4 官方说明该参数为启动时设置，原生 AIO 子系统问题阻止 InnoDB 启动时可设0；同时说明原生 AIO 对高 I/O 负载的可扩展性有影响，见 [MySQL 官方 innodb_use_native_aio 说明](https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_use_native_aio)。不修改 sysctl、生产 MySQL、原 TLS、NetworkPolicy、安全或资源设置。**此配置的诊断时延不是生产等价性能验收**，不能沿用旧探针的测试结果代替本版检查。
+
+上传相邻的 `.sh` 和 `.py` 可执行下面完整命令；也可只上传 `.py`，直接用 `python3 -B /absolute/path/system-backup-d-kube-mysql-fixture.py` 加相同参数运行。**不需要 A bundle、ELF、Go 或重新编译**。`--startup-only` 只创建本轮独占资源，读取版本/UUID/实际 AIO 配置，并以 `VERIFY_IDENTITY` 和临时 CA 实际建立本 Pod 内 TCP TLS1.3 会话，记录 Ssl_version/Ssl_cipher，检查 loopback port-forward 后清理。不调用 A runner，不创建业务或 synthetic 测试 schema。正常 native 模式仍强制要求 `--bundle` 并核验 SHA256SUMS。
 
 下列命令在运行机器上执行；先将 `FIXTURE_TOOL_DIR` 填为两个小文件所在的实际绝对目录。本次显式启用两个原容器的脱敏尾日志，避免失败后只剩退出码。
 
@@ -25,7 +29,7 @@
     cd -- "$fixture_tools"
     sha256sum --check --strict <<'SHA256'
 db86c7b9d5ca7015a1c11329216cb87124d79fe0150094a723a544d7a173c261  system-backup-d-kube-mysql-fixture.sh
-2180d7ea96523df6c88c4a7731f94e6dc60835a1390c1ae5d457a6944d33a18c  system-backup-d-kube-mysql-fixture.py
+fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873  system-backup-d-kube-mysql-fixture.py
 SHA256
   )
   fixture_base=$(realpath -e -- "${TMPDIR:-/tmp}")
@@ -56,6 +60,8 @@ SHA256
 默认只有 status/events；`--include-init-logs` 仅采本轮 tls init，`--include-container-logs` 采本轮 mysql 和 tls。每次取日志前重新核验原 Pod owner/UID，每容器最多40行/4096字节。先替换本轮随机密码及其 base64、私钥 PEM、凭据 URI、常见密码赋值和 SQL 行，再做输出字节截断。不导出 Secret、完整 Pod、Env、原始 SQL、密码或 CA 私钥；kubectl 失败正文不落盘。不是生产 Pod 日志或任意容器日志入口。
 
 诊断 API、日志或诊断文件写入失败记录 `diagnostics_exit_code=1`，继续清理，不覆盖 `original_exit_code` 或 `cleanup_exit_code`，不单独把成功改成失败；诊断缺失以 notes/独立退出字段识别。`fixture.json` 另记 mode/native_started/server_uuid/session_tls。startup-only 退出0只说明隔离启动检查和清理通过，full_acceptance 永远false。
+
+`ownership.json` 和 `fixture.json` 均区分要求的 `fixture_configuration.innodb_use_native_aio="OFF"` 与数据库查询所得 `observed_innodb_use_native_aio`。查询实际 `@@innodb_use_native_aio` 后只接受OFF；若实际ON，记录ON并在启动 port-forward/A runner 前拒绝，然后清理；未查询到时保持null，不用启动参数冒充实际观测。`production_equivalent_performance` 固定为false。
 
 ## 资源与边界
 
@@ -153,8 +159,12 @@ rm -rf -- "$fixture_run"
 
 ## 本地验证
 
-2026-11-02 根审核在独立快照运行16项 mock，全部 PASS，耗时0.395秒。覆盖 startup-only 无 bundle/ELF、实际 TLS 会话查询、启动失败的精确诊断/双容器脱敏，以及诊断失败不覆盖原结果或阻止清理。命令：`py -3.10 -B scripts/system-backup-d-kube-mysql-fixture.test.py`。测试全部 mock，不运行 kubectl/真实MySQL/网络；测试临时目录由 tearDown 清理，无构建产物。现场 startup-only 结果仍待回传，不能将 mock PASS 写成新 fixture 实测通过。
+2026-11-02 根审核在旧探针独立快照运行16项 mock，全部 PASS，耗时0.395秒。覆盖 startup-only 无 bundle/ELF、实际 TLS 会话查询、启动失败的精确诊断/双容器脱敏，以及诊断失败不覆盖原结果或阻止清理。命令：`py -3.10 -B scripts/system-backup-d-kube-mysql-fixture.test.py`。测试全部 mock，不运行 kubectl/真实MySQL/网络；测试临时目录由 tearDown 清理，无构建产物。现场旧探针失败及清理情况见开头，不能将 mock PASS 写成新 fixture 实测通过。
 
-根审核验证并冻结的 SHA256：Python `2180d7ea96523df6c88c4a7731f94e6dc60835a1390c1ae5d457a6944d33a18c`；mock `bf25cefa34256ebc0e2cb9aca331f45455e6432404cb9dd2137f76105ac07311`。Python 已复制到不可变的小交付目录；本次验证后仅更新本文，不再修改这两个文件。
+旧探针已审核 SHA256：Python `2180d7ea96523df6c88c4a7731f94e6dc60835a1390c1ae5d457a6944d33a18c`；mock `bf25cefa34256ebc0e2cb9aca331f45455e6432404cb9dd2137f76105ac07311`。该旧交付副本不修改。
+
+本次 AIO OFF 修复冻结 SHA256：Python `fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873`；mock `1bc2874ffa6db773af25f0bcf90ba9e39279ef20e3b3ce298d0a7ba960d26ea7`。mock 新增实际AIO=ON时拒绝、保留实际观测并清理的用例，现共17项；按根任务要求，本轮未运行测试、编译或远程命令，交根审核统一验证。
+
+根审核随后在独立源码快照运行17项mock全部通过（0.407s），测试临时树已删除。日志SHA256为`a1597e7d4d058915b8942407b2c5ab5e0975519a443b5b9754640e1ff89293fd`；交付副本重新核对为同一冻结Python摘要。此处只证明本地mock；AIO OFF的新隔离实例尚待用户实际启动。
 
 Windows mock 对 os.getpgid 使用 create=True，不改变 Linux 生产逻辑。旧版本 Bash 曾做语法检查；本次新增命令仍待根任务统一检查。本轮没有连接远端、执行 kubectl 或编译 Go；用户提供的已有容器版本/OpenSSL 信息不替代新 fixture 实测。
