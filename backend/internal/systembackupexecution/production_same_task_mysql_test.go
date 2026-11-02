@@ -39,6 +39,7 @@ import (
 	c "clawreef/internal/systembackupcontroller"
 	deployment "clawreef/internal/systembackupdeployment"
 	d "clawreef/internal/systembackupdispatch"
+	permitdiag "clawreef/internal/systembackupkekadapter"
 	read "clawreef/internal/systembackupread"
 	security "clawreef/internal/systembackupsecurity"
 	"github.com/go-sql-driver/mysql"
@@ -572,6 +573,17 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
+		ctx, permitCosts := permitdiag.WithProviderPermitTiming(r.Context())
+		r = r.WithContext(ctx)
+		defer func() {
+			if snapshot := permitCosts.Snapshot(); len(snapshot) != 0 {
+				// Numeric diagnostics with fixed labels only; no request or material.
+				encoded, err := json.Marshal(snapshot)
+				if err == nil {
+					t.Logf("provider-permit-stage-timing DATA %s", encoded)
+				}
+			}
+		}()
 		r = r.WithContext(context.WithValue(r.Context(), originalControlTimingContextKey{}, &f.controlCosts))
 		f.service.controlHandler().ServeHTTP(w, r)
 	}))

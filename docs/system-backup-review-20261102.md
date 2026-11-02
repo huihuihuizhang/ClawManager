@@ -58,3 +58,5 @@ D 的独占Kubernetes MySQL诊断入口已独立静态审查，默认使用现�
 B 冻结六文件在A/B/C组合快照中通过整个domain包回归（8.565s）；新增MySQL五项真实专项全部通过（2.25s），包括全snapshot差分、同RR并发插入/更新/删除、COUNT保留MDL及rollback释放、COUNT前DDL拒绝和有限SELECT撤销拒绝。随机schema和账号已独立确认不存在。其他未设置其专属fixture环境的native恢复/worker用例仍为SKIP，未认定通过。原始日志SHA256为 `55dd273db952b367e62642331512be46382d3a4c89af947f648dd0481e4b18d2`。
 
 同一冻结A/B/C快照的原窗口复测仍失败：`TestPublicationOriginalLocalCleanupSameTaskMySQL` 193.42s，包198.455s；数据库160次key-check累计28.1627152s，最后原key/context/source deadline逾期2.129ms。前序七个worker通过，未进入发布或SQL本地清理，不能将更多key-check解释为完整采集成功。A/B优化按保持当前读/权限/快照语义的窄范围回归审核，不宣称已解决原30秒。完整源码pins与失败记录见 `evidence/supervisor-original-window-review-20261102-r2.json`。公共C的SQL删除实现继续保留未验收状态，不随此性能切片提交；后续正常最终验证、acceptance/catalog和真实部署也仍未完成。
+
+A 原context timing hook已实际接入测试源码，新增独占实例入口在任何fixture创建前检查TLS/独立UUID/全库可见性和空业务库，不删除按census推断的库。Linux打包工具绑定构建前source receipt与构建后精确文件集合/hash；运行入口只选择原candidate-cleanup测试，不宣称覆盖C的新SQL本地清理。审核者对实际runner进行7项本地假程序故障测试：成功、测试失败、测试与tee同时失败、仅tee失败、测试与退出码日志写入同时失败、测试与清理同时失败、仅清理失败均符合预期；原测试退出7始终保留，只有清理失败时返回1。假程序替代ELF，uname/stat/tee/rm按案例替换，不涉及Go/native SQL/Docker/网络；各轮临时树已删除。Bash语法和PowerShell AST解析通过，不能据此声称实际Linux诊断通过。
