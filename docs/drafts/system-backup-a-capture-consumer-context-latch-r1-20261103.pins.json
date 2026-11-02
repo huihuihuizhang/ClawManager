@@ -1,0 +1,24 @@
+{
+  "schema": "a-enrolled-bootstrap-capture-consumer-context-latch-supersede.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_AFFECTED_TEST_RERUN",
+  "date": "2026-11-03",
+  "baseline_pin": "docs/drafts/system-backup-a-enrolled-bootstrap-capture-consumer-20261103.pins.json",
+  "baseline_sha256": "323a58fcdc21497657b5fb74086d9981d617806ab1e7dea3b2414fac75bbeb36",
+  "supersede_file": "backend/internal/systembackupinstallationowner/install/consumer_capture.go",
+  "previous_sha256": "152f0b5992611188be8afdd20230b64967362e90ddf449650b296d49ba5ff34b",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/consumer_capture.go": "d81d88e81c12f1edb51e03b4c6b70275f9234dc8358e95564bedb9299b84aaa9",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_context_test.go": "c37ee8972f476f49fb0b9de0bc26a340ce07ff6423453dddca12b08e388fc9ba"
+  },
+  "finding": "Root review found that current() returned directly for wrong/canceled context before failed.Store; wrappers returned early without invoking the inner original failure latch, so the original ctx could revive the same preparation.",
+  "change": "Separate nil-state rejection. Every non-nil state refusal in the initial failed/wrong-context/canceled-context branch now calls finish(ErrInstall), atomically latching failure. Existing local-file/source refusals already latch. No other consumer/candidate/source/permission/window/SQL behavior changed.",
+  "tests": [
+    "Two root component tests use actual captureConsumerCheck and captureConsumerSession wrappers with real successfully verified consumer state from the existing local TLS API/Vault/signature fixture. Subcases cover foreign live context, canceled foreign context, and nil context.",
+    "Legacy test enters the actual original wrapper with a real model transaction. After first refusal, restoring original ctx and resource Recheck must still refuse; every driver query, provider sign and API request remains at the prior count.",
+    "Candidate test uses actual production wrapper plus real verified source state. Its named inner spy always denies, counts every method, and would perform a counted SQL read if Authorize were reached. Wrong-context then original-context Authorize and historical Recheck must all refuse with zero inner calls/SQL/API/signing. This spy grants no authority and supplies no production owner fallback."
+  ],
+  "root_command": "go test ./internal/systembackupinstallationowner/install -run ^TestCaptureConsumer(Legacy|Candidate)ContextRefusalIsTerminal$ -count=1 -v",
+  "regression": "Root may rerun the affected consumer/component set against the exact prior snapshot plus these2 files. Preserve the old323a58fc manifest; do not recalculate it as if the correction were part of the original freeze.",
+  "isolation": "Only consumer_capture.go superseded and one new test file. Old native11/R8 archives, nativeSQL3, lifecycle17, original-link10, other13 consumer files, admin-source5 and C/D files unchanged.",
+  "execution": "A performed source/gofmt/SHA only. No test/compile/build/list/SQL/API/provider/remote/Git actions and no test/build artifacts; root owns rerun and cleanup."
+}

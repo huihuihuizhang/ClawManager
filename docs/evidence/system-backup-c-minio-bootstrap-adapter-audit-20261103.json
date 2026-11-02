@@ -1,0 +1,144 @@
+{
+  "schema_version": "system-backup-c-minio-bootstrap-adapter-audit.v1",
+  "date": "2026-11-03",
+  "status": "insufficient_original_authority_no_validator_linked",
+  "decision": "Do not populate five BootstrapResourceValidator slots from the v2 permission declaration/receipt alone. Current native observation is useful concrete Prepare work, but original transactional MinIO ref/head authority, immutable-operation capability evidence and short observation freshness are still missing. No adapter that merely returns nil was added.",
+  "frozen_producer": {
+    "path": "docs/evidence/system-backup-c-minio-owner-install-producer-20261103.json",
+    "sha256": "94cbd0f46a7c2f15f3558fc96440e9f362c32137e7a51db38d0cce1bb08a8970",
+    "unchanged": true
+  },
+  "d_alignment": {
+    "requirements": "docs/evidence/system-backup-d-first-install-owner-slots-20261103.json",
+    "actual_entry": "backend/cmd/system-backup-bootstrap/main.go::linkedOwnerAdapters",
+    "composition_entry": "backend/cmd/system-backup-bootstrap/materials.go::composeBootstrapMaterialOwners / composeBootstrapMaterials / runWithBootstrapMaterials",
+    "legacy_contract": "backend/internal/systembackupsecurity/bootstrap_admission.go::BootstrapResourceValidator.Prepare -> BootstrapResourceCheck.Recheck; bootstrap_original_resource.go::BootstrapOriginalResourceAuthority.AuthorizeBootstrapOriginal",
+    "candidate_contract": "backend/internal/systembackupsecurity/config_bootstrap_candidates.go::BootstrapCandidateAuthority.PrepareBootstrapCandidates -> BootstrapCandidateAuthoritySession.Authorize/LockReferences/Recheck with controlled pd.BootstrapSQL/BootstrapReadSQL",
+    "required_selection": "A reviewed compiled constructor must supply exact purpose-keyed validators and the separately reviewed original candidate authority. Adding only References entries does not establish the candidate Session authority; overwriting existing slots or supplying declaration-derived callbacks is prohibited.",
+    "unchanged_main": "Current main still only links three registry slots. This audit fills zero additional slots and does not change a 3/30 result to completed."
+  },
+  "available_sources": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_producer.go",
+      "symbols": [
+        "readMinIOPermissionProductionInputs",
+        "observeOriginalMinIOPermissions",
+        "ObserveOriginalMinIOPermissions"
+      ],
+      "facts": "Actual separately pinned owner definition, target/catalog files and six distinct long-term credentials; exact current native release/commit, named users/policies, normalized actual own policies, non-owner help discriminator, buckets and Kubernetes source with native tails. Usable for lock-free bootstrap Prepare once bootstrap ORIGINAL authority is supplied.",
+      "limits": "This observation returns serializable source facts, not an opaque bootstrap admission. It performs GETs and creates no conditional immutable put/readback/delete capability probe. Its Until currently intersects original credential/grant windows and is not independently clipped to a short bootstrap observation freshness deadline."
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_source.go",
+      "symbols": [
+        "NewMinIOEffectivePublicationPermissionV2Reader",
+        "effectiveOwnerV2"
+      ],
+      "facts": "Actual independently pinned public issuer, exact signed permission grant and current active head, namespace/ConfigMap UIDs, epoch/hash/window.",
+      "limits": "Current head and revocation source is Kubernetes GET. Cannot be re-read inside no-network L2 or fresh-use SQL callbacks. A copied signed head file or previous UID/resourceVersion snapshot does not provide current original transactional revocation or exact ref mapping."
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_permission_issue.go",
+      "symbols": [
+        "PrepareMinIOPermissionIssue",
+        "MinIOPermissionIssuer.CreateOriginal"
+      ],
+      "facts": "Existing authenticated enrolled operator and owner-side existing key; exact independent scoped declaration; new Kubernetes resource Create and UID/signature/epoch tail readback.",
+      "limits": "Does not register a MinIO head/grant/ref mapping in a controlled SQL authority source. Its SQL reads authenticate existing owner identity/capture ledger; no MinIO SQL authority rows are written."
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/record.go",
+      "symbols": [
+        "Record",
+        "RecordVersion",
+        "Binding"
+      ],
+      "facts": "Existing enrolled capture owner record authenticates full original bootstrap grant/config selection and capture_signing reference with signer histories.",
+      "limits": "Fixed capture-signing record/domain/Binding contract. Full ReferenceSetSHA256 binding is not current MinIO role/policy/scope/ref authorization. Do not reinterpret this record, its owner SQL head or a capture-signing success as five MinIO resource capabilities."
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/ledger.go",
+      "symbols": [
+        "readOwnerLedger"
+      ],
+      "facts": "Current SQL local admin, capture owner signed head/grant, original database account/server/database and windows under original controlled transaction.",
+      "limits": "Only original capture authority contract exists here. It cannot answer which current MinIO permission epoch maps five exact original references, whether those mappings were revoked, or whether native observation corresponds to current provider/purpose capability state."
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapsecurity/reference.go",
+      "symbols": [
+        "DecodeSecurityReference",
+        "SecurityReference.MatchesBootstrapPin"
+      ],
+      "facts": "Exact descriptor bytes and structural purpose/ref correspondence helper.",
+      "limits": "Explicitly metadata only; no actual provider resolution, permission, capability, retained-version or current authority."
+    }
+  ],
+  "slots": [
+    {
+      "purpose": "artifact_write",
+      "available": "Exact independent write credential and current narrow native PutObject scope, provider TLS/UID/version and original fixed ref.",
+      "missing": "Current transactional original ref/head mapping; immutable conditional-create/checksum rejection semantics and supported put/multipart capability source bound to that exact role/provider/root/version. A named/effective PutObject allow does not prove immutable create or upload capability."
+    },
+    {
+      "purpose": "artifact_read",
+      "available": "Exact independent read credential and narrow GetObject/GetObjectVersion scope, native own policy and original fixed ref.",
+      "missing": "Current transactional original ref/head mapping; authenticated immutable-version exact content/length/checksum (and range if declared) capability evidence on an independently owner-authorized original probe object. Not a future backup object or future task result."
+    },
+    {
+      "purpose": "artifact_delete",
+      "available": "Exact independent delete credential with v2 DeleteObject/DeleteObjectVersion restricted to staging and separate immutable-version application checks.",
+      "missing": "Current transactional original ref/head mapping and managed cleanup-object authority/capability source; safe original owner-designated probe object/versions and exact deletion semantics. Never test by deleting a production object, treating a 403 as capability, or deleting an unowned key."
+    },
+    {
+      "purpose": "catalog_read",
+      "available": "Independent catalog bucket/credential/root and normalized native GetObject/GetObjectVersion scope.",
+      "missing": "Current transactional original catalog ref/head mapping and owner-controlled immutable catalog read/canonical framing/signature trust capability relationship; artifact_read or a catalog signer cannot supply it."
+    },
+    {
+      "purpose": "catalog_append",
+      "available": "Independent catalog bucket/append credential/root and normalized native PutObject scope.",
+      "missing": "Current transactional original catalog ref/head mapping and immutable append protocol/collision/checksum semantics. General PutObject permission, signer success or a manually signed scope declaration is not append capability."
+    }
+  ],
+  "minimum_next_source_contract": {
+    "kind": "Additive original MinIO bootstrap authority, reviewed with A/C/D. This is a proposed contract, not an implemented or installed schema.",
+    "registration": "Existing enrolled operator and original owner key must install an explicit MinIO purpose-domain authority BEFORE bootstrap in the exact original database/account/server namespace. It must be independent of future active config/task rows. Reuse original identity authentication, not the capture record's resource authorization.",
+    "sql_source": "Define separately typed original MinIO permission head/grant/ref rows (or another already existing controlled authoritative SQL source after evidence is supplied). Current capture-domain rows cannot be repurposed. D owns migration/installation mechanics; no ad-hoc CREATE/INSERT executed or added to bootstrap checks here.",
+    "identity_fields": [
+      "installation/enrollment/issuer and exact original admin subject",
+      "original server_uuid/database/database account",
+      "namespace/provider deployment and resource immutable identities",
+      "original minio permission profile + epoch/head state/current row version",
+      "domain-separated signed grant/head raw bytes/hash/signature + original public pin and absolute windows"
+    ],
+    "reference_mapping_fields": [
+      "purpose",
+      "original descriptor SHA and provider_identity_hash/scope_hash",
+      "identity_hash + exact identity_version (never secret hash as identity)",
+      "actual account SHA and actual credential-file pin/version",
+      "normalized original named/effective policy SHA",
+      "exact provider/bucket/root/staging scope",
+      "credential capability and independently reviewed protocol profile",
+      "original not_before/until/protected retention boundaries/current state/row version"
+    ],
+    "write_and_revoke_rules": "Owner installer creates initial rows only after authenticating original enrollment/admin and actual native observation. Atomic CAS governs original head/ref epoch and revocation with a documented lock order. Consumer uses that actual source, not a SQL cache lacking controlled revocation. Kubernetes and SQL dual-source drift must fail closed, with explicit partial/unknown-commit recovery; no implicit self-enrollment or overwrite.",
+    "prepare": "Separate per-purpose BootstrapResourceValidator constructs privately owned one-shot state. Decode exact BootstrapConfig/OfflineBootstrapGrant and match all five references and original config hash. Read installed MinIO grant/head and original current SQL source outside consumer locks; perform concrete native permission and independent capability observations with readback/tails; snapshot immutable descriptors and actual fixed credential identities. Do not construct DeploymentService or require an already-active publication config.",
+    "l2": "After the existing original admin/RBAC prefix and BEFORE operation/history lookup, AuthorizeBootstrapOriginal uses the SAME supplied tx (candidate path: controlled pd.BootstrapSQL) to sample SQL time and read/lock current original MinIO head/grant/ref rows in reviewed order. Compare exact signed original identities, purpose/ref mappings, epoch/state/row versions and windows to Prepare; retain guard bound to same context/transaction/config/grant. No network, provider calls, credential hashing, new preparation or Commit/Rollback.",
+    "freshness": "Explicit finite native-observation deadline must be distinct from long owner grant/credential validity, clipped to all original windows and an independently reviewed profile maximum. Capture the observation start/end; do not issue a renewed observation deadline in L2 or tail. Current v2 source Until alone must not be treated as this short lease.",
+    "fresh_use_tail": "Actual external permission/capability tail measurements belong to lock-free Prepare. At fresh-use Work-end Recheck, repeat original SQL identity/window/ref mapping through the same controlled transaction and check the private immutable native observation is still within its fixed short deadline, plus allowed local pin/resource checks. No provider I/O in Recheck. If a requirement demands a new network sample after locking, the attempt must release/rollback and perform a new outside-lock preparation under a separately reviewed orchestration; it cannot smuggle network I/O into the callback.",
+    "history": "Keep original L2 current identity/ref authority for exact historical retries. Missing/expired physical observation refuses fresh consumption; do not require a new capability probe before the operation/history branch just to return authorized exact history. Candidate adapter must separately carry identity and dependency deadlines and preserve replay semantics.",
+    "capability_probe": "Use an independently owner-authorized finite probe intent with exact keys/versions/checksums, role credentials, bounded bytes and original cleanup/retention ownership; no future task IDs/config-derived admission, arbitrary probes, production-object deletion, or widening existing role policy. Probe mutations and any retained immutable catalog probe must be explicitly inventoried and reviewed before execution. Existing permission-only observation is not this source.",
+    "d_link": "Once genuine sources/probes exist, add five concrete adapters in independent files, compose them into BootstrapOwnerAdapters.References via a reviewed compiled function and layer the same concrete owner into CandidateAuthority sessions. D then explicitly invokes the composition from the real main bootstrap entry. Requirements output must still list every unrelated missing owner. Do not alter disaster qualification or isolated-restore prerequisites for ordinary functional backup publication."
+  },
+  "anti_cycle_rules": [
+    "Do not call DeploymentService.CheckCurrentEffectiveV2 or CheckPublicationDependenciesWithMinIOEffectiveV2 from first-install Prepare: these reopen active publication config/Forward/runtime/SQL sources that bootstrap is creating.",
+    "Use original independently pinned disabled bootstrap config/grant plus pre-existing owner authority and current native resources instead. The existing taskless producer observer is the concrete non-active-config starting point.",
+    "Do not generate initial ref identity from credential secret bytes, fabricate registered refs, derive issuer pin from the signed candidate, or treat a current policy response's hash as its own original trust authority.",
+    "Do not implement an allow-all Original, callback-provided Passed, identity-only MinIO validator, generic capture signer substitution, or a non-authorizing metadata matcher disguised as BootstrapResourceValidator."
+  ],
+  "scope": "Ordinary functional complete backup/publication remains the goal. This audit does not add DR qualification or isolated-restore requirements. Full six-domain nonempty capture, immutable publish, independent complete readback, signed catalog and same-task succeeded remain unfulfilled.",
+  "work_done": "Static source inspection and this independent audit only. No source validators/startup wiring were falsely added. Root can forward this exact D alignment and source contract; no outbound message was sent to D.",
+  "validation": "No tests, builds, Git operations, SQL/native/remote/site actions. No test/build products created.",
+  "files": []
+}

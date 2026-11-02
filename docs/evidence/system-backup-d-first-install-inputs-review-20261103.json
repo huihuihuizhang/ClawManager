@@ -1,0 +1,97 @@
+{
+  "schema_version": "d-original-field-first-install-input-preparation-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED_NOT_FIRST_INSTALL_READY",
+  "baseline_commit": "f4d73c79b509bc8d647c685887f729110632bb2b",
+  "files": {
+    "scripts/system-backup-d-first-install-inputs.py": "dbd5f6af63a29318f2106a64b12c5bdf0cbe564af9b3cccd07e5e17fd967b3be",
+    "scripts/system-backup-d-first-install-prepare.sh": "6f12e3d208e27fe5624403479755975df7ae8da8666b296ba64826676ad2f595",
+    "backend/cmd/system-backup-source-sql-observe/main.go": "7d7541e324ba85ab383eacc35842c6088fc25f8bfe71bda6857c00442305dc5f",
+    "backend/cmd/system-backup-source-sql-observe/main_test.go": "5f22a6180b1de5f85efd69fe32d380f1796d8bd5c4bba611715f11c191fd0781",
+    "backend/cmd/system-backup-source-sql-observe/proposal.go": "ea28d4dcdf2f8ded0d89fb5403236ae8bb2ec7a9d1ddfd5c3e143e7838b689d3",
+    "docs/evidence/system-backup-d-first-install-owner-slots-20261103.json": "b6bb0abfd756c8e1f13b46d40b40bbdb3602b88728cc3a124af8c93cd0646a99"
+  },
+  "supersedes": [],
+  "frozen_A17_C8_D7_changed": false,
+  "tonight": {
+    "remote_calls": false,
+    "private_values_read_or_output": false,
+    "SQL_calls": false,
+    "credential_files_read": false,
+    "deployments_or_permissions_changed": false,
+    "executed_build_or_test": false,
+    "artifacts_created": false
+  },
+  "existing_tools": {
+    "scripts/system-backup-a-field-inventory.py": "Public Pod/PVC references and finite bound-PV identities, no SQL/Secret/container-file reads. Does not collect full controller graph or original operator/current distinct role identities.",
+    "scripts/system-backup-d-native-deployment-inventory.py": "Only named openclaw-runtime/hermes-runtime scope; no expected namespace UID refusal. Cannot prove the entire writer set.",
+    "scripts/system-backup-d-runtime-discover.sh": "Public metadata discovery; no namespace UID refusal and no original owner authentication. Not a complete six-domain or installer input command.",
+    "scripts/system-backup-d-v2-config-observe.py": "Pinned read-only SQL/public v2 metadata via MySQL root socket in exec; explicitly not production SAN/TLS or runtime finite role proof.",
+    "scripts/system-backup-a-live-chain-db-inventory.sh": "Historical schema/UUID identity with root socket/exec. No production TLS/finite-account proof.",
+    "scripts/system-backup-a-redis-live-observe.py": "Pinned Redis Pod INFO via exec. Keyspace/persistence metadata only; no original Redis TLS/finite ACL/capture source proof.",
+    "backend/cmd/system-backup-observer/main.go": "Task/control observer with pinned identity and verified TLS support; requires task pins and does not generate/install a production source account or full original source inputs.",
+    "backend/cmd/system-backup-provider-observe/main.go": "Actual installed Vault Generate/Unwrap permission observation using independent narrow observer source; not a MySQL/source credential/worker formal mapper/bootstrap owner factory.",
+    "backend/cmd/system-backup-controller-grants/main.go": "Existing exact SQL-role and pinned deployment Kubernetes RBAC renderer; use for review after core/verifier identities exist. No permission application. It does not produce actual core/Forward/formal worker mappings."
+  },
+  "retained_evidence": {
+    "mysql": "docs/evidence/a-live-chain-environment-review-20261021.json records original production MySQL 8.4.8, clawmanager, UUID f1f5f76a-95f5-11f1-b08e-366835b4a029. Kept as historical comparison only; actual TLS/roles still not observed.",
+    "prior_provider_TLS": "docs/evidence/a-field-public-inventory-review-20261028.json accepted user-pasted explicit-CA/hostname checks to old lab Bao/MinIO health endpoints under temporary narrow ingress. Retain within that exact scope; do not repeat speculatively or reuse these CA pins as production MySQL PKI/actual installed Transit authorization.",
+    "private_admin_references": "Existing lab administrative references were already recorded. This batch does not read them, ask for repeated token/password values, create buckets/tokens, or treat admin credentials as runtime source roles."
+  },
+  "new_public_input_tool": {
+    "command": "scripts/system-backup-d-first-install-inputs.py owner|inventory|sql-plan|templates",
+    "actual_guard": "Fixed original namespace/UID; actual kubectl SelfSubjectReview subject/UID/sorted-groups comparison; namespace and owner front/back equality. This is public comparison input, not an enrollment or resource capability.",
+    "collected": "All nine namespace workload types, ServiceAccounts, Services, PVCs, ConfigMap identities; actual workload owners/UIDs/generation/replicas, service-account names/UID candidates, images/actual Pod imageIDs/containerIDs/restarts, mount paths and Secret/ConfigMap/projected key/path REFS only. Finite bound PV reads require exact current namespace/name/claim UID and repeat equality; no cluster-wide PV list.",
+    "privacy": "Only selected public Go-template fields reach subprocess stdout and output files. No Secret API requests, data/log/container-file/env-value/command/args/annotation selection, exec, SQL/provider calls or writes. kubectl itself retrieves workload/ConfigMap API objects before client projection; this is not a server-side redaction guarantee or Secret-value observation.",
+    "no_fabrication": "Unknown owner references, zero replicas and non-Deployment controller types remain explicit topology review items. Provider/control objects are never auto-excluded. SourceScopeComplete=false/AcceptanceReady=false throughout.",
+    "outputs": "Create-only 0600 public first-install-public-inputs.json and source-sql-plan.candidate.json in an existing private directory. Existing files/failed partial files are never overwritten or deleted.",
+    "generated_plan": "Actual selected Service UID/port/ClusterIP (headless: exact namespace service DNS), original owner/namespace, original DBA-selected UUID/database/account/CA/SAN and optional original census spec. No free endpoint, localhost/fixture fallback, DSN/password or whole unsigned Materials hand-entry."
+  },
+  "new_SQL_tool": {
+    "command": "backend/cmd/system-backup-source-sql-observe",
+    "modes": [
+      "render-source-account: public local proposal only; rejects DSN/CA-file arguments and performs no network/SQL or secret reads",
+      "tls: actual production Service-bound TCP/TLS13 with original CA, default SAN/chain verification, actual peer leaf DER SHA256/DNS/IP SANs, exact CURRENT_USER/CURRENT_ROLE/DATABASE/server UUID/current SQL clock front/back",
+      "source: retains the same actual session, exact existing domain.ValidateBusinessSourceGrants and original domain.CheckBusinessSchemaCensus, then pinned file/identity readback"
+    ],
+    "account_proposal": "Builds exact finite business-table SELECT plus SHOW_ROUTINE and EXECUTE-on-one-census grants from production policy. A distinct LOCKED metadata definer needs explicit schema SELECT/SHOW VIEW/TRIGGER/EVENT and mysql.global_grants/role_edges SELECT to expose complete authenticated metadata; this is a material permission change for separate DBA review, not automatically applied. No root, combined source/definer or host=% proposal. CREATE is plain create-only; conflicts are not repaired or replaced.",
+    "actual_census": "Uses domain.SchemaCensusProjection and exact BEGIN/body/END hash for review. No fake schema report is accepted. Actual server partial_revokes/definer/READS SQL DATA/SECURITY DEFINER/body/catalog are checked later by source mode. Source login credentials are delivered by DBA secure existing channel; no password is generated in the proposal.",
+    "limits": "No actual SQL/MySQL certificate/permissions were tested by D. Public inventory binding is not an authenticated resource authority. Native observer output is readonly evidence, not full writer/source completeness, bootstrap admission or readiness. No account/routine creation/GRANT execution/cert generation/restart/deployment/config/task writes.",
+    "network": "Run later on an existing approved operator host with a route to the actual Service ClusterIP; headless requires cluster DNS. No new Pod, port-forward, proxy or network-policy change is performed. CA/DSN public/private files retain selected pins and private delivery mode; source mode needs a fresh <=15min original public inventory."
+  },
+  "needed_actual_sources": {
+    "production MySQL PKI": "DBA exports original public CA/chain/leaf with independently retained CA hash and SAN names for the selected production Service; compare actual mounted TLS certificate references in fresh inventory. If actual production leaf lacks SAN/verified TLS13, prepare a specific DBA-controlled certificate/mount/server-TLS change using observed workload/volume/UID and client compatibility review; do not issue a fixture CA or silently relax verification. No such field patch can be UID-complete before fresh public inventory.",
+    "installer and consumer SQL": "A owns actual original installer versus consumer account separation, local admin authentication, enrollment/head/grant lifecycle/CAS/revoke/readback. D does not substitute its finite source role or this public inventory for A authority.",
+    "business source SQL": "D proposal and real TLS/source observer; DBA actual production certificate/account/census installation and secure private DSN delivery are independent reviewed changes. Source has exact business-table SELECT + one metadata routine, no control rows or writes.",
+    "controller SQL": "Use existing system-backup-controller-grants --schema <original> --user <actual_precreated_controller> --host <actual finite host> --runtime-control --formal-verifier --formal-provider-permits --publication --control-evidence to render exact review SQL. Apply only through separately reviewed DBA action and retain CheckDeploymentDatabaseWithInputs checks.",
+    "controller/worker/source identities": "Fresh inventory derives actual Deployment/SA/UID candidates. Select distinct actual roles from original owner plan. Missing roles require explicit finite SA/Deployment/Role/RoleBinding manifests with real release digest/control TLS/leases before UID collection; no reuse of kubernetes-admin as workload identity or automatic creation in this batch.",
+    "full writer closure": "D must bind actual business SQL/runtime participants/instances and all namespace controller/Pod owner graphs, native state/PID/generation/port, API RV and volume backing identities. Full all-running observation can avoid stopped witness only if it really establishes no stopped writer. Stopped/incomplete native evidence still rejects. Original stopped instance9 fixture is unchanged.",
+    "source credentials": "Actual Redis TLS ACL/server/DB/prefix declaration and Skill/Teams object roots; original private files or immutable Secret key/path refs from owner-approved secure delivery. New public tool collects refs only, no value or credential hash proof. Missing actual credentials are explicit sources, not dummy placeholder files.",
+    "MinIO publication dependencies": "C owns actual MinIO deployment owner/finite policy/credential/TLS/versioning/write/read/delete/catalog observations. D only consumes its independently authenticated typed source. A capture owner or C publication DTO cannot fill source credential authority.",
+    "provider control ownership": "Installed Transit/provider-control resources remain in original namespace inventory. D/A/C must add exact authenticated control ownership plus business/control write-set, permissions and physical backing-path non-overlap; no sbk-name/prefix/label/extra PVC alone excludes a controller.",
+    "core/profile/Forward/seven operations": "D still must assemble actual role selections, staged original files and A/C authenticated resource exports into canonical core/profile/Forward, seven complete operation mounts, original credentials/CAs, grant files and independently pinned final bundle. Original source-material signer is not that complete assembler. Formal worker ConfigMap/Secret byte hashes and UIDs, permit delivery, custody/control-evidence inputs and complete Runtime sources remain unresolved original inputs."
+  },
+  "exact_owner_worklist": {
+    "path": "docs/evidence/system-backup-d-first-install-owner-slots-20261103.json",
+    "sha256": "b6bb0abfd756c8e1f13b46d40b40bbdb3602b88728cc3a124af8c93cd0646a99",
+    "main_still": "3/30; 27 missing",
+    "main_changed": false,
+    "policy": "Each of 30 rows has explicit owner/source/next connection, including pre-v1 authority dependency. No inventory/hash/CLI result is inserted as an adapter and no acceptance-ready shortcut is made."
+  },
+  "morning_commands": "# Root supplies the reviewed source/binary package; execute field commands only\n# after 2026-11-03 08:30 Asia/Shanghai, on the existing approved operator host.\n# No credentials are printed by these commands.\n# 1. Public comparison only. Compare with the retained ORIGINAL owner; context\n# name alone is not an owner identity and this output is not enrollment.\nkubectl --context=kubernetes-admin@kubernetes --request-timeout=15s auth whoami -o json\nkubectl --context=kubernetes-admin@kubernetes --request-timeout=15s get namespace clawmanager-zhanghui08-system -o jsonpath='{.metadata.uid}{\"\\n\"}'\n# 2. Set only public selections from the reviewed original owner/DBA records:\n# SBK_PUBLIC_OUTPUT_PARENT=/absolute/existing/private/directory\n# SBK_ORIGINAL_OWNER_SUBJECT=<retained exact Kubernetes principal>\n# SBK_ORIGINAL_OWNER_UID=<retained exact UID; empty only when original SSR has no UID>\n# SBK_ORIGINAL_OWNER_GROUPS_SHA256=<reviewed groups hash from the helper owner mode>\n# SBK_MYSQL_SOURCE_ACCOUNT=<existing or explicitly proposed finite user@host>\n# SBK_MYSQL_CA_SHA256=<DBA independently selected production public CA file hash>\n# SBK_CENSUS_DEFINER=<distinct original/proposed locked metadata user@host>\n# Optional actual original body pin: SBK_CENSUS_DEFINITION_SHA256=<actual installed body hash>\n# Service=mysql, database=clawmanager and UUID=f1f5f76a-95f5-11f1-b08e-366835b4a029\n# default only as HISTORICAL original comparison pins. A mismatch is rejected,\n# never silently refreshed. Do not reuse an isolated fixture UUID/CA/account.\n# Export those public selection variables, then:\nbash scripts/system-backup-d-first-install-prepare.sh\n# Helper owner comparison/hash, using the independently selected owner subject:\n# python3 scripts/system-backup-d-first-install-inputs.py owner --owner-subject \"$SBK_ORIGINAL_OWNER_SUBJECT\" --owner-uid \"${SBK_ORIGINAL_OWNER_UID:-}\"\n# 3. Select/review the generated PUBLIC inventory and SQL plan files/hashes.\n# Native observer must be built from the next reviewed commit containing this\n# source. Root delivers the binary; do not pretend f4d73c79 already contains it.\n# Set SQL_OBSERVER to that exact verified binary, PUBLIC_INPUT_FILE,\n# SOURCE_SQL_PLAN and SOURCE_SQL_PLAN_SHA to the reviewed fresh files/pin.\n\"$SQL_OBSERVER\" --mode render-source-account --plan-file \"$SOURCE_SQL_PLAN\" --plan-sha256 \"$SOURCE_SQL_PLAN_SHA\" --inventory-file \"$PUBLIC_INPUT_FILE\" > \"$REVIEW_OUTPUT/source-account-proposal.json\"\n# This JSON is a permission/routine CHANGE PROPOSAL only, NOT an apply command.\n# DBA verifies original UUID/schema/account/partial_revokes, locked definer,\n# actual optional table existence and secure credential delivery before any\n# separately approved application. It contains no source-login password.\n# 4. Only after DBA's actual production PKI/account/census delivery is reviewed,\n# run the following on the existing host with a route to the observed Service\n# ClusterIP (or cluster DNS for headless Service). This starts a real TLS/MySQL\n# connection and reads the selected private DSN, so it is NOT tonight's action:\n\"$SQL_OBSERVER\" --mode tls --plan-file \"$SOURCE_SQL_PLAN\" --plan-sha256 \"$SOURCE_SQL_PLAN_SHA\" --inventory-file \"$PUBLIC_INPUT_FILE\" --dsn-file \"$SBK_SOURCE_DSN_FILE\" --ca-file \"$SBK_PRODUCTION_MYSQL_CA_FILE\"\n\"$SQL_OBSERVER\" --mode source --plan-file \"$SOURCE_SQL_PLAN\" --plan-sha256 \"$SOURCE_SQL_PLAN_SHA\" --inventory-file \"$PUBLIC_INPUT_FILE\" --dsn-file \"$SBK_SOURCE_DSN_FILE\" --ca-file \"$SBK_PRODUCTION_MYSQL_CA_FILE\"\n# Fresh owner/namespace inventory is required within 15 minutes; recollect\n# after reviewed PKI/account/workload changes. No insecure TLS, localhost tunnel,\n# automatic role creation, restart, deployment or config enabling is provided.",
+  "root_validation": {
+    "commands": [
+      "Set SBK_PUBLIC_INPUTS_PYTHON to the reviewed actual Python3 executable, then go test ./cmd/system-backup-source-sql-observe -run \"TestProductionSQL|TestProductionSourceAccount|TestFirstInstallActualProjection\" -count=1 -v",
+      "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -o <root-owned-output>/system-backup-source-sql-observe ./cmd/system-backup-source-sql-observe",
+      "bash -n scripts/system-backup-d-first-install-prepare.sh",
+      "Python ast.parse of scripts/system-backup-d-first-install-inputs.py without import/remote calls/pyc products"
+    ],
+    "tests": "New test source: real local TLS SAN/CA refusal component; original Service/owner/namespace/staleness/loopback guards; actual generated Go templates executed by text/template with private canaries; exact proposed finite grant set validated by existing production validator. No MySQL/field/production identity success is claimed.",
+    "D_validation": "gofmt and static diff check only; no code/script/template/test execution, build, SQL/API/remote/secret read. Root removes all test/build/cache products after validation per AGENTS."
+  },
+  "remaining": [
+    "D independent full successful ProduceOriginalCaptureMaterials component/consumer load/original-window tail-refusal combination test source is still to be added separately; frozen seven-file batch unchanged.",
+    "Actual field inventory and all production SQL/PKI/account actions remain unexecuted.",
+    "Original material assembler/formal worker mappings/pre-bootstrap original authority/main27 owner adapters/full writer+control mapping and final capture EOF/catalog/CAS are not closed.",
+    "This preparation batch is reviewable progress, not an installed or available first application. No automatic permission/deployment/restart follows its reports."
+  ]
+}

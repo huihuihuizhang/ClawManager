@@ -1,0 +1,130 @@
+{
+  "schema_version": "system-backup-c-minio-owner-producer-component-source.v1",
+  "date": "2026-11-03",
+  "status": "source_only_not_compiled_or_executed",
+  "scope": "Two new complete-producer component test source files; no production/frozen source edit by C, no test/build/Git/native/remote/site execution.",
+  "historical_parent": {
+    "path": "docs/evidence/system-backup-c-minio-owner-install-producer-20261103.json",
+    "sha256": "94cbd0f46a7c2f15f3558fc96440e9f362c32137e7a51db38d0cce1bb08a8970",
+    "note": "Historical 12-file source freeze retained. Root separately reported/removes duplicate minioEffectiveGuardFixtureError from frozen v2_native_test.go, retaining the old manifest history and documenting old->new source hash. C does not modify either helper file. These tests reuse the sole helper in guard_test.go."
+  },
+  "real_call_chain": [
+    "Construct actual A install.Installer using independently declared Plan/public pin, strict database/sql connector, actual bcrypt and fake Kubernetes auth protocol.",
+    "Call actual Installer.Enroll before permission definition production and retain returned original enrollment pin.",
+    "Call COMPLETE ProduceOriginalMinIOPermissionSource, not CreateOriginal alone or a substituted signing/observation/export helper.",
+    "Full native pre-commit source measurement: 58 actual local TLS GETs, actual independently verified transmitted SigV4 from six credentials, native named+effective policies and genuine-shaped help denial, server/bucket and Kubernetes identity checks.",
+    "Actual issuer authentication/rechecks, owner-side existing Ed25519 key, actual Kubernetes Create of grant and head and exact readbacks.",
+    "Complete post-commit measurement: another 58 actual local TLS GETs; SQL/enrollment/native/resource original tails remain production code.",
+    "Actual 0600 source export and producer's final V2 consumer original-head read.",
+    "Test independently loads the actual generated source bytes through NewMinIOEffectivePublicationPermissionV2Reader and effectiveOwnerV2 using receipt File+SHA, verifies original grant/head signatures, UIDs, epoch and unchanged original windows; rejects V1 loading, altered startup bytes and overwrite/reissue."
+  ],
+  "test_roots": [
+    {
+      "name": "TestMinIOPermissionProducerCompleteStartupAndActualConsumerComponent",
+      "assertions": [
+        "complete producer success and actual original SQL queries",
+        "exact actual output/receipt/grant/head hashes and independently enrolled public issuer",
+        "actual Kubernetes created grant immutable/head mutable with UID/RV and domain-separated signatures",
+        "exact original grant/ref/policy/provider/window bytes",
+        "58 pre + 58 post native requests, 24 self + 24 help requests, two post bucket passes",
+        "actual consumer current signed-owner loading",
+        "V1 schema consumer refuses V2 startup",
+        "existing startup prevents overwrite/re-sign and remains byte-identical",
+        "altered actual startup bytes fail original receipt pin",
+        "exactly enrollment+grant+head Kubernetes creates, zero SQL executions and zero open transactions"
+      ]
+    },
+    {
+      "name": "TestMinIOPermissionProducerRejectsPostCommitNativeAndOwnerTailsComponent",
+      "scenarios": [
+        {
+          "scenario": "post-commit-native-generation",
+          "injection": "Only after actual head Create, native user-info UpdatedAt changes for every tail pass while original enabled single-policy user and policy content remain valid. Both actual complete native post passes succeed individually, then the COMPLETE producer rejects pre/post native generation drift.",
+          "expected": "ErrCommitUnknown; zero success receipt; both signed resources retained; no startup export."
+        },
+        {
+          "scenario": "post-commit-original-sql-window",
+          "injection": "After both actual post-commit native bucket passes complete, D's strict SQL model returns time beyond ORIGINAL grant Until but within the operator/context deadline. Actual issuer.Recheck/snapshot rejects the original SQL window at the producer tail.",
+          "expected": "ErrCommitUnknown; original SQL tail event required; both signed resources retained; no startup export."
+        },
+        {
+          "scenario": "post-output-current-owner-head-revoked",
+          "injection": "Only after actual startup file exists and the real final consumer begins its Kubernetes namespace read, update the actual tracked head to revoked using the SAME original enrolled private key/domain and a new resourceVersion.",
+          "expected": "Complete producer's final effectiveOwnerV2 refuses the actual signed current revoked head and returns ErrCommitUnknown/zero receipt. Startup really exists; independent consumer constructs from intact bytes then refuses that same revoked source. File and signed partial resources remain intact for inspection."
+        }
+      ],
+      "common_assertions": [
+        "both actual complete native observations are reached in all negative scenarios",
+        "signatures/windows/epoch remain original; current signed revoked head verified where applicable",
+        "retries do not renew, delete, replace or re-sign partial resources or startup",
+        "original selected definition remains byte/hash identical",
+        "native and fake Kubernetes callbacks assert no original SQL transaction is open",
+        "zero SQL writes or task/config/activation mutations"
+      ]
+    }
+  ],
+  "fixture_boundaries": {
+    "sql": "Reuses D frozen producerComponentSQL / producerComponentConnector strict database/sql read-only repeatable-read model. A's real New/authenticate/Enroll/snapshot/CreateOriginal/Recheck methods execute. This is not native MySQL/TLS/GRANT evidence.",
+    "kubernetes": "Explicit fake API objects with exact original UID/resourceVersion chain, complete ready EndpointSlice, actual create/readback behavior, auth SelfSubjectReview/SSAR and real original enrollment document. Not field Kubernetes evidence.",
+    "native": "Local HTTPS server with actual CA/SPKI validation and independent SigV4 HMAC verification for all six actual request credentials. Exact source response changes drive production decisions; no caller Passed/native-success callback or exported fake permission proof.",
+    "event_flags": "Atomic booleans/counters identify real head creation, actual output existence and source injection timing only. They never enter production authorization inputs or replace native/owner checks.",
+    "credentials": "Real pinned private credential JSON files are loaded by production decoders, including actual minimum secret lengths. Test keys/secrets remain t.TempDir 0600 files; private directories 0700; t.Cleanup clears owned password/key memory.",
+    "config": "D componentConfigValues reads the complete original public disabled ConfigValues contract and real DecodeBootstrapConfig. Five role identity/ref fields derive from this original fixed config, not active runtime config or a future task.",
+    "readiness": "Successful local consumer load is NOT whole DeploymentService readiness, BootstrapResourceValidator authority, live MinIO compatibility, native MySQL, first installation, page acceptance or publication completion."
+  },
+  "unchanged_bootstrap_gap": {
+    "path": "docs/evidence/system-backup-c-minio-bootstrap-adapter-audit-20261103.json",
+    "sha256": "7c04f8d1e4408a39afff493b46f38952eb06ec5d3cb140bec11d10deb0d3706a",
+    "status": "No missing transactional MinIO authority/capability/freshness source is manufactured by these tests. Five bootstrap slots remain unlinked and main 3/30 is not completed. Functional complete backup publication remains objective; no DR qualification or isolated restore added."
+  },
+  "existing_test_dependencies": [
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go",
+      "sha256": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7",
+      "use": "componentConfigValues only; no D producer substitution"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go",
+      "sha256": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282",
+      "use": "strict read-only database/sql original authentication/snapshot protocol model"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_native_test.go",
+      "sha256": "57c4ecab468c134a9e83b4e50c49ffb1c389ccdb6bee1377ca0dae15e39a6701",
+      "use": "explicit original native response/role credentials fixture and independent transmitted SigV4 verification"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_guard_test.go",
+      "sha256": "13ba689d3705e546b1769153db65188e534e2b29596715afde54895d3a87b718",
+      "use": "sole minioEffectiveGuardFixtureError native JSON AccessDenied fixture"
+    }
+  ],
+  "validation": {
+    "performed": [
+      "gofmt parse/format on TWO new test source files only",
+      "static original producer/installer/candidate contract reads",
+      "read-only dependency/source hash checks"
+    ],
+    "not_performed": [
+      "go test",
+      "go build",
+      "compile/typecheck",
+      "native SQL",
+      "remote/native/Kubernetes commands",
+      "Git operations"
+    ],
+    "root_next": "Root independently reviews/runs the two roots and appropriate package compile; root cleans all test/build products per AGENTS. C created no test/build products."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_producer_component_fixture_test.go",
+      "sha256": "8ada11608ae1fd3856b9df42d9a9d519be1d9d85adb2185fa86b433fd8ab49e4",
+      "bytes": 21344
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_producer_component_test.go",
+      "sha256": "89968e42087c5b9dcc47668661c441fb0c7b2c7e48df0923e10aab9619f0d9a5",
+      "bytes": 9551
+    }
+  ]
+}

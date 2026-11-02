@@ -153,10 +153,13 @@ func (a *preparedBootstrapAdmission) authorize(g OfflineBootstrapGrant, c Bootst
 }
 
 func (a *preparedBootstrapAdmission) Authorize(ctx context.Context, tx *sql.Tx, g OfflineBootstrapGrant, c BootstrapConfig, now time.Time) error {
-	if ctx.Err() != nil || tx == nil {
+	if candidateAuthorityNil(ctx) || ctx.Err() != nil || tx == nil {
 		return ErrRegistrationUnavailable
 	}
-	return a.authorize(g, c, now)
+	if err := a.authorize(g, c, now); err != nil {
+		return err
+	}
+	return a.authorizeOriginalResources(ctx, tx, g, c, now)
 }
 
 func (a *preparedBootstrapAdmission) ValidateAndReserve(ctx context.Context, tx *sql.Tx, g OfflineBootstrapGrant, c BootstrapConfig, now time.Time) error {

@@ -1,0 +1,227 @@
+{
+  "schema_version": "first-install-exact-bootstrap-owner-worklist.v1",
+  "status": "SOURCE_AUDIT_NOT_FIELD_ADMISSION",
+  "baseline_commit": "f4d73c79b509bc8d647c685887f729110632bb2b",
+  "main_file": "backend/cmd/system-backup-bootstrap/main.go",
+  "main_sha256": "7276e3aca5d8222a3a1286e5d031aaa46d0e2f0a52e2bbebf5f93552b06db691",
+  "main_changed": false,
+  "linked_count": 3,
+  "required_count": 30,
+  "missing_count": 27,
+  "rows": [
+    {
+      "slot": "registry:parts",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original immutable complete parts/schema/classification catalog and exact version/hash; public input inventory is not a part validator.",
+      "next_connection": "No parts BootstrapResourceValidator found; implement original catalog/profile/purpose checks and same-transaction Recheck, then link registry:parts."
+    },
+    {
+      "slot": "registry:redis_sources",
+      "linked_in_main": false,
+      "owner": "D/A",
+      "source": "Actual Redis TLS CA/SAN, finite ACL, server identity/DB/prefixes and independently owned original source policy.",
+      "next_connection": "Existing metadata Redis reader supplies runtime facts, not a bootstrap registry adapter. Prepare authenticated original source before SQL locks and bind exact source registry."
+    },
+    {
+      "slot": "registry:failure_domains",
+      "linked_in_main": false,
+      "owner": "A",
+      "source": "Original failure-domain registry with real provider/staging identities; ordinary non-DR evidence remains not_provided where unavailable.",
+      "next_connection": "Implement/link immutable failure-domain registry owner; never substitute a successful DR assertion."
+    },
+    {
+      "slot": "registry:disaster_identity_mapping",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original installation/cluster/namespace/database/source identity mapping and exact controlled registry bytes.",
+      "next_connection": "Implement/link typed mapping owner; namespace UID alone is not cross-resource authority or isolated restore readiness."
+    },
+    {
+      "slot": "registry:source_writers",
+      "linked_in_main": false,
+      "owner": "D",
+      "source": "Full original SQL/runtime participants + all namespace controllers/pods + native generation/PID state + exact business/control ownership.",
+      "next_connection": "Runtime ObserveSourceDependencies is not a bootstrap pre-v1 authority. Build authenticated original pre-bootstrap observation constructor without requiring a future enabled config or empty task; same-transaction original identities/window recheck."
+    },
+    {
+      "slot": "registry:rbac_bindings",
+      "linked_in_main": true,
+      "owner": "A",
+      "source": "Existing fixed /run/system-backup/registries pinned security registry bytes",
+      "constructor": "bootstrapsecurity.NewRBAC",
+      "pending": "Actual original registry bytes/pins/role/current issuer validity still required at Prepare; linked is not field readiness."
+    },
+    {
+      "slot": "registry:secret_allowlist",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original finite secret resource disposition/UID/keys/classification and role separation, including enrollment/control objects.",
+      "next_connection": "Implement/link finite secret allowlist owner. No prefix ignore or Secret values in this public prep; metadata-only source census remains separately required."
+    },
+    {
+      "slot": "registry:strong_auth_issuers",
+      "linked_in_main": true,
+      "owner": "A",
+      "source": "Existing fixed /run/system-backup/registries pinned security registry bytes",
+      "constructor": "bootstrapsecurity.NewIssuers",
+      "pending": "Actual original registry bytes/pins/role/current issuer validity still required at Prepare; linked is not field readiness."
+    },
+    {
+      "slot": "registry:provider_proof_issuers",
+      "linked_in_main": true,
+      "owner": "A",
+      "source": "Existing fixed /run/system-backup/registries pinned security registry bytes",
+      "constructor": "bootstrapsecurity.NewIssuers",
+      "pending": "Actual original registry bytes/pins/role/current issuer validity still required at Prepare; linked is not field readiness."
+    },
+    {
+      "slot": "reference:artifact_write",
+      "linked_in_main": false,
+      "owner": "C/D",
+      "source": "Actual MinIO finite original immutable put/multipart owner and distinct credential reference/root/TLS.",
+      "next_connection": "C MinIO publication source is not a BootstrapResourceValidator. Adapt its authenticated owner observation to this exact reference and locked original checks."
+    },
+    {
+      "slot": "reference:artifact_read",
+      "linked_in_main": false,
+      "owner": "C/D",
+      "source": "Actual independent finite artifact version/content read role/root/TLS and original account identity.",
+      "next_connection": "Provide separate actual read owner adapter; a write credential or future task completion is not read authority."
+    },
+    {
+      "slot": "reference:artifact_delete",
+      "linked_in_main": false,
+      "owner": "C/D",
+      "source": "Actual finite artifact cleanup/delete role and original managed object scope, distinct from source/read/signing credentials.",
+      "next_connection": "Provide explicit original delete owner adapter without testing by deleting a production object."
+    },
+    {
+      "slot": "reference:artifact_upload_issuer",
+      "linked_in_main": false,
+      "owner": "A/C",
+      "source": "Original authenticated upload issuer public history and exact upload scope/purpose/validity.",
+      "next_connection": "Provide separate BootstrapResourceValidator; do not treat an issuer registry or capture signer as upload authority."
+    },
+    {
+      "slot": "reference:artifact_ca",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original public artifact endpoint CA plus exact security descriptor/provider/scope pins and absolute window.",
+      "next_connection": "Concrete systembackupcatrust.New exists. Main still does not invoke composeBootstrapMaterials with authenticated original bindings; do not count it linked."
+    },
+    {
+      "slot": "reference:evidence_store",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Original evidence location/ownership/immutability/encryption/retention and explicit physical backing identity.",
+      "next_connection": "Provide store owner adapter and original relational checks, separate from artifact bucket/location."
+    },
+    {
+      "slot": "reference:evidence_write",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Actual finite evidence write role, root/TLS and matching original evidence-store identity.",
+      "next_connection": "Provide exact write owner adapter, not a broad provider credential."
+    },
+    {
+      "slot": "reference:evidence_read",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Actual independent finite evidence read/content/version capability.",
+      "next_connection": "Provide exact read owner adapter; metadata probe alone is insufficient."
+    },
+    {
+      "slot": "reference:evidence_delete",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Original finite evidence cleanup role/retention/source scope and exact identity.",
+      "next_connection": "Provide exact delete owner adapter; no production deletion probe."
+    },
+    {
+      "slot": "reference:evidence_ca",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original public evidence endpoint CA and exact independent descriptor/provider/scope pins.",
+      "next_connection": "Concrete systembackupcatrust.New exists but requires authenticated composeBootstrapMaterials input and its own linked reference."
+    },
+    {
+      "slot": "reference:evidence_kek",
+      "linked_in_main": false,
+      "owner": "C/A/D",
+      "source": "Original evidence KEK binding/purpose/history/complete registry census and real live Generate/Unwrap permission source.",
+      "next_connection": "Independent BootstrapKEKPreparation wiring is not the reference:evidence_kek slot; bind its actual owner source to this resource validator."
+    },
+    {
+      "slot": "reference:kek",
+      "linked_in_main": false,
+      "owner": "C/A/D",
+      "source": "Original backup KEK binding/history/census and independently authenticated Generate/Unwrap capability.",
+      "next_connection": "NewSQLBootstrapKEKPreparation exists as a separate boundary. Supply exact reference:kek validator and compiled main preparation; do not count a DTO/receipt hash or KEK source existence as admission."
+    },
+    {
+      "slot": "reference:capture_signing",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Authenticated enrolled exact committed A owner head/grant + exported consumer pin + concrete CaptureSigningObserver and original complete bootstrap request.",
+      "next_connection": "owner.NewCaptureSigningValidator exists; connect the actually authenticated committed original source to main. A record containing its own issuer is not a trust source. No reinterpretation as Redis/S3 permission."
+    },
+    {
+      "slot": "reference:acceptance_signing",
+      "linked_in_main": false,
+      "owner": "A",
+      "source": "Original acceptance_record signer purpose/history/retention and actual signing permission owner, independent from capture owner scope.",
+      "next_connection": "Typed runtime signing consumer is not this bootstrap reference adapter; implement/link exact acceptance signing resource authority."
+    },
+    {
+      "slot": "reference:catalog_signing",
+      "linked_in_main": false,
+      "owner": "A",
+      "source": "Original catalog_record signer purpose/history/retention and actual signing permission owner.",
+      "next_connection": "Implement/link separate catalog signing reference authority; capture certificate signing does not fill it."
+    },
+    {
+      "slot": "reference:catalog_read",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Actual finite independent catalog read capability, original root/TLS/version and signer trust separation.",
+      "next_connection": "Provide original catalog read BootstrapResourceValidator."
+    },
+    {
+      "slot": "reference:catalog_append",
+      "linked_in_main": false,
+      "owner": "C",
+      "source": "Actual immutable catalog append capability/root and current original append protocol owner.",
+      "next_connection": "Provide append adapter; do not infer append from general put or signing ability."
+    },
+    {
+      "slot": "reference:catalog_snapshot",
+      "linked_in_main": false,
+      "owner": "C/A",
+      "source": "Original fixed-version catalog snapshot storage/read/signature capability and retention relationship.",
+      "next_connection": "Provide snapshot adapter and controlled original identity relation."
+    },
+    {
+      "slot": "reference:nonce_hmac",
+      "linked_in_main": false,
+      "owner": "A/D",
+      "source": "Original exact-version controlled external_secret 32-byte nonce material/descriptor, protected-until and identity distinct from material hash.",
+      "next_connection": "Concrete systembackupnoncebootstrap.New exists. Link through authenticated original composition; a newly generated candidate/boolean cannot supply Original authority."
+    },
+    {
+      "slot": "reference:status_relay",
+      "linked_in_main": false,
+      "owner": "B/D",
+      "source": "Original finite authenticated Runtime/worker status relay role, message trust/nonce/window and exact participant identity.",
+      "next_connection": "Implement/link status relay bootstrap resource validator; a lease registration or healthy endpoint alone is insufficient."
+    },
+    {
+      "slot": "cross_resources",
+      "linked_in_main": false,
+      "owner": "A/D/C",
+      "source": "Original signer/credential/nonce purpose separation and retention; actual business/control write-set, volume/backing-path and permissions non-overlap; original source/failure-domain identity relations",
+      "next_connection": "Implement independent compiled cross-resource owner with actual original facts before locks and SQL/local recheck. A bundle containing all selected hashes or typed excluded=true does not implement this authority."
+    }
+  ],
+  "invariant": "No missing slot is replaced by public inventory, schema-only approval, future enabled config, permission widening, provider control exclusion or material CLI existence."
+}

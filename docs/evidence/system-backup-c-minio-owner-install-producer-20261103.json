@@ -1,0 +1,196 @@
+{
+  "schema_version": "system-backup-c-minio-owner-install-producer.v2",
+  "date": "2026-11-03",
+  "status": "source_only_not_compiled_or_tested_or_installed",
+  "intent": "Provide an actual existing-enrollment owner grant/head/startup producer, exact six-role source/installation steps and separately selected v2 current-source reader. No site action tonight, no fake source or permission proof.",
+  "unchanged_parents": [
+    {
+      "path": "docs/evidence/system-backup-c-minio-native-source-candidate-20261103.json",
+      "sha256": "59a6aba109b59950a6aaf498d220f174a74430624445e06ffec8594d1918dbf3",
+      "source_files": 8,
+      "mismatches": 0
+    },
+    {
+      "path": "docs/evidence/system-backup-c-minio-effective-native-source-20261103.json",
+      "sha256": "835f82fc9834a1ce5be72b031d25dd0cf4d86e8904794d8b35688ab5f1765620",
+      "source_files": 3,
+      "mismatches": 0
+    },
+    {
+      "path": "docs/evidence/system-backup-c-minio-effective-owner-guard-20261103.json",
+      "sha256": "166de2fee61159d9ea674816cd62d3f8e6188ed53b3a0c16e673c8bf7a6d88f6",
+      "source_files": 2,
+      "mismatches": 0
+    }
+  ],
+  "exact_profile": {
+    "server_version": "2025-04-22T22:12:26Z",
+    "server_commit": "0d7408fc9969caf07de6a8c3a84f9fbb10a6739e",
+    "madmin": "v3.0.109",
+    "policy_package": "github.com/minio/pkg/v3 v3.1.0",
+    "profile": "minio-2025-04-22-builtin-flat.v2",
+    "live_version_image_tls_compatibility": "UNKNOWN; independently establish original upstream image/binary provenance before selecting this profile. Native strings alone from an unaudited fork do not establish it."
+  },
+  "actual_six_account_sources": {
+    "five": "Exact original fixed config refs and owner-pinned target/catalog credential files. originalUses checks actual credential hashes, own account hashes, distinct accounts, fixed refs/windows. Native observer checks enabled regular user, exact single named policy, no groups. Each own credential reads accountinfo and ConfigUpdate-gated static help denial.",
+    "observer": "Separate owner-pinned observer credential and exact read-only named policy: admin:GetUser/GetPolicy/ServerInfo plus exact two bucket GetBucketPolicy/GetBucketVersioning. Its own actual effective policy and non-owner discriminator are mandatory too.",
+    "existence": "UNKNOWN tonight. Native observe/produce cannot pass if absent, mismapped, disabled or broader. Runbook requires named original-owner inventory before any new resource.",
+    "new_resources": "Only original MinIO administrator with existing original rights may prepare NEW uniquely owner-named accounts/policies/mappings on the exact original target. No replacing/broadening existing users or policies, group grants, ConfigUpdate for runtime, bucket changes, restarts or image upgrades. Existing owner ref-registration and new target/catalog material production are prerequisites; this code does not invent registered refs."
+  },
+  "producer": {
+    "cli": "backend/cmd/system-backup-minio-permission-owner/main.go",
+    "actions": [
+      "policies",
+      "observe",
+      "produce"
+    ],
+    "owner_authentication": "Existing Plan/public pin -> actual SQL local admin bcrypt and target account/server/db -> real Kubernetes SelfSubjectReview/namespace UID/SSAR -> existing enrollment UID/document -> current SQL original-owner head/grant snapshot and exact tail. No self-enrollment or caller approval capability.",
+    "private_key": "Existing original enrolled raw Ed25519 private key, owner-side private file only; regenerated public must match independent existing public/enrollment. No controller private key, no new key generator.",
+    "signing": "Only fixed typed independently SHA-pinned definition grant; exact fixed domain system-backup-minio-permission-owner.v1\\x00. Head uses system-backup-minio-permission-head.v1\\x00, active epoch 1 and exact grant hash. Signatures authorize scope, not assert native permissions.",
+    "native_proof": "Two complete native named-user/policy/server/bucket passes bracket two complete six-account self-policy + owner-discriminator pairs; full Kubernetes current identity and EndpointSlice reads/tails. Before and after actual signed resource commit, reopen original files and repeat real source observation.",
+    "writes": "Initial-install-only Kubernetes Create for two NEW original-owner ConfigMaps. Grant immutable; head mutable for separately authorized signed revocation maintenance. Never Apply/Update or overwrite existing objects, no SQL/user/policy writes. Actual returned UID, exact data/signature, current resourceVersion, epoch/window and enrollment/SQL tail are read back.",
+    "outputs": "Only after committed original resource/readback and real native tails, exclusive-create 0600 canonical minio-permission.source.json in an existing private directory; separate receipt carries file/hash, definition/grant/head hashes, UIDs and epoch. Final consumer reads actual current signed sources again.",
+    "unknown_commit": "Exit 4 / ErrCommitUnknown on partial/unknown resource create, failed post-commit source, export or final readback. Inspect original exact named sources before retry. No automatic cleanup, overwrite, replacement epoch or recovery.",
+    "limits": "No rotation/recovery/revocation command in this initial installer. Existing head refuses. Not an atomic native/Kubernetes/SQL transaction, future S3 success, publication admission or acceptance proof."
+  },
+  "v2_changes": [
+    "Official ActionSet and ResourceSet marshal maps without sorting. Pin explicitly NORMALIZED ORIGINAL policy: retain all fields, reject duplicates/trailing/unknowns, sort Action/Resource sets and canonical statement order, then closed full-profile validation and original hash comparison. Named and effective native replies must match the same independently selected original pin.",
+    "Staging-only artifact_delete adds actual native s3:DeleteObject alongside s3:DeleteObjectVersion. Frozen v1 is insufficient for this handler. Existing application exact version/permit/staging checks remain mandatory and unchanged.",
+    "Artifact and catalog buckets must differ: current catalog root is under installation/, itself artifact root; same bucket would give artifact PutObject coverage over catalog. No changing an existing bucket to force acceptance.",
+    "Explicit NewMinIOEffectivePublicationPermissionV2Reader / CheckCurrentEffectiveV2 / CheckPublicationDependenciesWithMinIOEffectiveV2. No C5/main-loop or D installer/fixture edit and no automatic rollout."
+  ],
+  "startup_contract": {
+    "version": "minio-publication-effective-permission-source.v2",
+    "definition_version": "original-minio-permission-definition.v2",
+    "file": "minio-permission.source.json",
+    "fields": [
+      "Version",
+      "Installation",
+      "Namespace",
+      "NamespaceUID",
+      "Issuer",
+      "MinimumEpoch",
+      "Grant",
+      "Head",
+      "GrantSHA256",
+      "ObserverCredentialFile",
+      "ObserverCredentialSHA256",
+      "ObserverAccountSHA256",
+      "ObserverPolicyName",
+      "ObserverPolicySHA256"
+    ],
+    "selection": "D selects exact original-owner File+SHA independently from reviewed receipt, not from task or source document self-hashing. No private key or Passed/Engine field. Final runtime source rechecks SQL/config/KEK/signing and current original native/owner resources."
+  },
+  "official_primary_sources": [
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/object-handlers.go",
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/admin-handlers-users.go",
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/signature-v4-utils.go",
+    "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/admin-handlers-config-kv.go",
+    "https://raw.githubusercontent.com/minio/pkg/v3.1.0/policy/actionset.go",
+    "https://raw.githubusercontent.com/minio/pkg/v3.1.0/policy/resourceset.go",
+    "https://raw.githubusercontent.com/minio/pkg/v3.1.0/policy/policy.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/admin-policy-create.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/admin-policy-attach.go",
+    "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-04-16T18-13-26Z/cmd/admin-user-add.go"
+  ],
+  "validation": {
+    "performed_by_C": [
+      "gofmt parse/format only on NEW Go source",
+      "official primary-source reads",
+      "read-only source/parent hash verification"
+    ],
+    "not_performed": [
+      "tests",
+      "builds",
+      "SQL",
+      "remote/native/MinIO/Kubernetes commands",
+      "site installation",
+      "Git operations"
+    ],
+    "root_only_tests": [
+      "TestMinIOPermissionOwnerCreatesOnlyEnrolledOriginalSources",
+      "TestMinIOPermissionOwnerRefusesSubstitutionAndPartialCommit",
+      "TestMinIOEffectiveV2NormalizesNativeSetsWithoutDroppingAuthority",
+      "TestMinIOEffectiveV2DeletePolicyIsStagingOnlyAndRequiresBothActions",
+      "TestMinIOEffectiveV2NativeSixAccountsAndS3OwnerPredicate",
+      "TestMinIOEffectiveV2OwnerEpochUIDAndRevocation"
+    ],
+    "scope": "Source tests only, not executed here. Local TLS SigV4, fake Kubernetes and existing database/sql model do not establish live native/MySQL compatibility or full producer-to-live installation. Root alone runs tests/compiles and deletes build/test products.",
+    "c_products": "No test/build products were created by C."
+  },
+  "remaining": "Root independent audit/tests/Linux compile; actual 08:30 version/image/TLS/UID/credentials/native observations; original owner account/ref/material preparation if missing; reviewed owner installation; D explicit runtime selection; real nonempty six-domain full publication, complete independent readback, signed catalog and same-task succeeded with truthful non-DR. No claim C is closed.",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_permission_issue.go",
+      "sha256": "18ceafc7279443bc13157c56c3d223c188f8bae6b93249e075f822934f681990",
+      "bytes": 11340,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_permission_issue_test.go",
+      "sha256": "80658c8833b3e2b7aafdfb315ea19f5d4dde4d94f81eb1310a2c2d4257bdcd9a",
+      "bytes": 5631,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_source.go",
+      "sha256": "fd2488b323dcc6d06a9aaf8fde32ea8ced1d3a5e83a79fc19f668b5c1a8b05a0",
+      "bytes": 5006,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_native.go",
+      "sha256": "0b2973168da60226a3f4a3950ceca6c06563510bbe370ffc13dfe5dd4162f6de",
+      "bytes": 3911,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_check.go",
+      "sha256": "e6f2f4f33d676a068d0870fe6d4fa21739c255977846024baa721d147693d8d0",
+      "bytes": 7268,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_policy.go",
+      "sha256": "a8d28859e97a032e3342aafcd0550215b7122c1a63f97d449c00f53aec5feacf",
+      "bytes": 6716,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_permission_producer.go",
+      "sha256": "c703997a8f6b786d335a75552b34b9025a7564045c653081d3be65ebba3826bf",
+      "bytes": 13193,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_source_test.go",
+      "sha256": "548ccc502cb5f604d153ca270ac953fbcaac0a8a9bf32844344434252f750707",
+      "bytes": 3413,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_native_test.go",
+      "sha256": "4af6f06f596a8ba0e486279becc3618b23171c16ea5fb99704027c382d060326",
+      "bytes": 6325,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_v2_policy_test.go",
+      "sha256": "64e60efd96f3378676b150a39c92630372e7b056b3d7b68b3faec0db8add40bb",
+      "bytes": 2669,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/cmd/system-backup-minio-permission-owner/main.go",
+      "sha256": "da8c8e16a741a6a109cb07f2fb9c89890b85a5ecaa9d436950125e3c6f67cead",
+      "bytes": 4226,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "docs/system-backup-c-minio-owner-install-20261103.md",
+      "sha256": "c633d6c231e27bbfc33dfb1d4efc86269aa84dc7948e5fb364ff798f0710939f",
+      "bytes": 15729,
+      "kind": "owner_installation_runbook"
+    }
+  ]
+}

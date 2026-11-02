@@ -1,0 +1,52 @@
+{
+  "schema_version": "d-original-material-producer-full-call-component-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_UNCOMPILED_UNTESTED",
+  "baseline_commit": "f4d73c79b509bc8d647c685887f729110632bb2b",
+  "files": {
+    "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282",
+    "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7",
+    "backend/internal/systembackupexecution/production_capture_producer_component_test.go": "dcaa19c9562418a5e9cbfdae302c78c7120fb860da6d36584bfd93a5697d6a61"
+  },
+  "supersedes": [],
+  "frozen_production_changed": false,
+  "dependency": {
+    "path": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+    "sha256": "da5b423b02b84688ab635950ea497d3394a098e9fef6fab7239637205b3f6045",
+    "scope": "Use the exact already reviewed A17 + D7 dependency composition in f4d73c79. These three new test files do not edit A/C/D frozen production/test inputs or native SQL sources."
+  },
+  "positive": {
+    "root": "TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent",
+    "original": "Fresh private test directory, independently selected enrolled Ed25519 issuer and separate Forward signer, complete disabled config through real security decoder and real public contract defaults, same-cluster-copy profile with explicit source risks, seven operation declarations/finite original source scopes and original absolute window. No real instance7/9 rows are seeded or rewritten.",
+    "authentication": "Calls real install.New, real Installer.Enroll and then real ProduceOriginalCaptureMaterials. Real bcrypt/Ed25519 and actual authentication/namespace/enrollment/SSAR/actor/window code execute through explicitly controlled database/sql and fake Kubernetes API models; no success authority callback/boolean replaces them.",
+    "output": "Read all actual generated files; decode canonical envelopes/records; verify worker and metadata signatures with the independently enrolled public key, actual worker scope and full metadata scope, original config/core/Forward/credential hashes and exact NotBefore/Until.",
+    "consumer": "A separate ordinary DeploymentService uses the original production loadProductionCapture and checkProductionCaptureMaterials against the actual generated file/hash, then verifies loaded grant pin. This is local material consumption, not NewDeploymentService full source/provider/task readiness.",
+    "retry": "Complete producer is called again on exact original inputs. Requires same receipt/material bytes/window, SQL Exec=0, no open SQL tx and enrollment object created once. Byte drift on the test-owned output is rejected by actual consumer check."
+  },
+  "tail": {
+    "root": "TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent",
+    "reach": "A fresh original fixture arms an actual Deployment GET handler hook. It advances the controlled SQL clock only after stat confirms all four nonempty generated files already exist. The test requires tailReached=true and all four actual signatures/scopes/original windows to verify, so a failure before output does not satisfy the case.",
+    "boundary": "Injected SQL time is original SourceMaterial Until + 1 microsecond while remaining earlier than the authenticated operator/context deadline. This targets the original source grant window tail, not a context expiry or arbitrary broad wall-clock failure.",
+    "refusal": "Requires a non-nil error and exactly zero successful receipt after the post-output original authority recheck. It verifies original definition hash/Until, no SQL writes/open tx/additional enrollment; a same-original retry must also fail and preserve every existing output byte. No renewal, overwrite, delete or repaired successful row is introduced."
+  },
+  "limits": [
+    "These are component sources, not executed results. SQL is a strict database/sql protocol model with RO RR enforcement and no prior capture head; enrolled original owner identity authenticates first source issuance. It proves no InnoDB/native SQL privileges, production TLS, real cluster principal or production source provider permissions.",
+    "Pure production operation constructors supply declared inputs; original registry/ref/config declarations and CE source locators are not presented as actual resource approvals. The unused local source TLS fixture fails if the producer tries to call it: this signer does not establish Redis/S3/native source completeness.",
+    "Complete calls retain native Linux private-directory/file mode checks. Both roots explicitly SKIP non-Linux; cross compilation alone is not positive execution. Root must run both on a controlled local Linux environment before counting them PASS. No remote execution tonight.",
+    "No isolated restore, readiness, full content EOF, actual source/writer recovery, provider control exclusion, catalog or terminal CAS is exercised/claimed. Main remains 3/30.",
+    "The d727279f input-preparation review remains an unchanged historical source pin; its pending note about these tests is addressed only by this independent source batch, without claiming execution."
+  ],
+  "root_commands": [
+    "On controlled LOCAL Linux with exact reviewed source, go test ./internal/systembackupexecution -run ^TestOriginalMaterialProducer -count=1 -v -timeout=180s",
+    "On Windows these two roots must visibly SKIP for native Linux private modes; do not reinterpret skip/cross compile as a complete producer PASS. Root owns compilation/execution/cleanup."
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "static_diff_check": "passed",
+    "compile": "not_run_by_D",
+    "tests": "not_run_by_D",
+    "SQL": "not_run_by_D",
+    "API": "not_run_by_D",
+    "build_or_test_artifacts_created": false,
+    "cleanup": "No test/build artifacts created. Root removes all validation products after testing per AGENTS."
+  }
+}

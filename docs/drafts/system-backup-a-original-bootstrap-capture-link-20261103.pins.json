@@ -1,0 +1,40 @@
+{
+  "schema": "a-original-bootstrap-capture-source-link.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_TEST",
+  "date": "2026-11-03",
+  "files": {
+    "backend/internal/systembackupsecurity/bootstrap_admission.go": "69d33050a97c5a4d6e231e3da08c8362153222b869b821db719c96d1c892ad10",
+    "backend/internal/systembackupsecurity/bootstrap_original_resource.go": "3cb34e5682729c23320afa225a441454b3314a41811ab667b3d3ae5ed4ea4946",
+    "backend/internal/systembackupsecurity/bootstrap_original_resource_test.go": "1015b2398b1738d9b2ae77e714d7a7968373f4c273ca1f2b227e26ca73799699",
+    "backend/internal/systembackupinstallationowner/bootstrap_original.go": "1169e2b53cdf1d2e0c9894722e21e4cbb3e5ec9a3df6bd4df8cbfa9297f65522",
+    "backend/internal/systembackupinstallationowner/bootstrap_original_test.go": "a834d45864c38483f8bf31534ab500dea057c47470160925b24c7cc21de116c1",
+    "backend/internal/systembackupinstallationowner/bootstrap_candidate_authority.go": "40acfeed9d66770584339a88a3bb8c626f9cdf95fc74686160368ce784d90a59",
+    "backend/internal/systembackupinstallationowner/bootstrap_candidate_copy.go": "bd368a3327763fd9bc5bbcdaac47d9dbc15e4989019853340cab4befcb2b2ebb",
+    "backend/internal/systembackupinstallationowner/bootstrap_candidate_authority_test.go": "91bd535bd0687da51af0834c214d4411b3676357f8b3d0097fe0919a13daa1b9",
+    "backend/internal/systembackupbootstrapmaterials/installation_capture.go": "73046060e875bd64f13c2be3f2d96a2e57a22cb4524787d70efc17abba3e25f4",
+    "backend/internal/systembackupbootstrapmaterials/installation_capture_test.go": "c7e214fb9000338ebc9dd4624e8fb845f00fa073fb4aef61b9250daf96ae2d48"
+  },
+  "supersede": {
+    "file": "backend/internal/systembackupsecurity/bootstrap_admission.go",
+    "previous_sha256": "545fde75dd6c31f37ce234f1db0a7578d580c9da125860126e21db8f3e0f62a5",
+    "scope": "Only Authorize: preserve grant/RBAC first, then concrete prepared resource current-identity L2 hook before operation/history lookup; nil context refusal. No admission completeness, provider resource or capacity checks relaxed."
+  },
+  "behavior": [
+    "Concrete PreparedCaptureSigning implements BootstrapOriginalResourceAuthority. Initial legacy L2 mints actual signed source guard; later authorization rechecks the same guard/ctx/tx/head/grant/admin/SQL account and signed windows without provider probe. Physical new-use remains the unchanged Recheck.",
+    "CaptureSigningCandidateAuthority requires a real independently supplied Original authority and the concrete capture validator. Prepare verifies original signed exact full selection hash through existing PrepareCandidateAttempt, then delegates original preparation. No default success implementation of missing original methods exists.",
+    "At original candidate L2, delegate original current authority then concrete AuthorizeCandidate; clip identity and dependency independently. Missing physical probe closes only new use and does not preempt current authorized exact history. New references and final fresh-use recheck require concrete capture resources; historical final recheck still requires current capture identity.",
+    "All six original methods remain mandatory and delegated, with failure latch, one ctx/guarded transaction/request hash and stage constraints. No network/provider or credential hashing is introduced under SQL locks.",
+    "NewInstallationMaterials composes concrete capture+nonce+artifactCA+evidenceCA and preserves independently compiled KEK. With the existing three real registry validators this is 7/30 implementations and exactly23 remain missing; it does not fill them."
+  ],
+  "root_commands": [
+    "go test ./internal/systembackupinstallationowner ./internal/systembackupsecurity ./internal/systembackupbootstrapmaterials -run ^(TestCaptureSigning(BootstrapOriginal|Candidate)|TestBootstrapOriginalResource|TestInstallationMaterials) -count=1 -v",
+    "Root should also run relevant existing admission/capture/material regressions and build, then delete all validation artifacts per AGENTS."
+  ],
+  "main_integration": "D-owned main/materials files are unchanged. Replace composition with NewInstallationMaterials(original,capture,nonce,artifactCA,evidenceCA), use its Owners and same value as NewBootstrapDeploymentCandidates authority. Actual independently enrolled capture consumer loader is being implemented as a separate new-file batch; Original provider/host/reference/capacity/evidence authority is still required, not a caller-selected passed validator.",
+  "scope_limits": [
+    "Tests use the named synthetic Original only to assert delegation and denial, plus real local TLS capture protocol/Ed25519 and SQL protocol model; they are not real MySQL or whole first-install evidence.",
+    "Frozen lifecycle17 and nativeSQL3 are untouched. No 175-numbered migration is required: 175 is the current complete catalog entry count, owner-specific native scope uses actual134. Earlier native manifest source_gap text is superseded by this clarification, not a blocker.",
+    "A performed gofmt/static review/SHA only; no Go compile/test/build/list, actual SQL/API/provider/remote or Git actions."
+  ],
+  "cleanup": "No test/build artifacts created by A; root owns execution and cleanup."
+}

@@ -1,0 +1,131 @@
+{
+  "schema_version": "system-backup-c-minio-effective-owner-guard.v1",
+  "date": "2026-11-03",
+  "status": "source_only_not_compiled_or_executed_not_publication_ready",
+  "parent_source_manifest": {
+    "path": "docs/evidence/system-backup-c-minio-effective-native-source-20261103.json",
+    "sha256": "835f82fc9834a1ce5be72b031d25dd0cf4d86e8904794d8b35688ab5f1765620",
+    "unchanged": "All three parent files, all eight earlier C8 files, C5 and all existing manifests remain byte-identical. This supplement corrects the bare accountinfo owner-exclusion claim; do not select the bare parent entry as a complete S3 owner-branch proof."
+  },
+  "source_level_predicate_gap": {
+    "actual_s3_owner": "checkKeyValid sets owner for AccessKey==root OR ParentUser==root (except site replicator). It does not require the service-account classification for that second alternative.",
+    "accountinfo_predicate": "AccountInfo changes AccountName to ParentUser only for IsTemp/IsServiceAccount. An opaque malformed/historical stored credential could have ParentUser==root but fail those classifications. AccountInfo could then show the regular narrow policy while S3 receives owner=true. This is a source-level boundary, not a claim that the unknown installation contains such a credential.",
+    "claims_path": "For authenticated non-temporary/non-service credentials with no session token, checkClaimsFromToken returns empty request claims and checkKeyValid assigns them to cred.Claims. Consequently the ordinary accountinfo branch and regular S3 branch use the same current account/groups policy inputs once the owner predicate is independently excluded.",
+    "correction": "Retain actual current self-policy plus exact original policy hash/closed rules, native regular-user status and source bindings; additionally exercise the same native owner predicate through a pure read-only help authorization gate. A 403 alone is not full permission evidence."
+  },
+  "native_owner_discriminator": {
+    "method": "GET",
+    "path": "/minio/admin/v3/help-config-kv",
+    "query": "key=&subSys=policy_plugin",
+    "required_server_action": "admin:ConfigUpdate",
+    "normal_expected_result": "HTTP 403 with complete native JSON APIErrorResponse Code=AccessDenied, exact Resource path and request/host identifiers; duplicate/unknown fields, wrong context, other codes and non-403 statuses refuse.",
+    "why_it_discriminates": "validateAdminReq calls checkAdminRequestAuth, which authenticates via the same getReqAccessKeyV4/checkKeyValid path and passes its actual owner flag to IAMSys.IsAllowed. With no AuthZ plugin, owner=true returns Allow before regular policies. HelpConfigKVHandler then only calls GetHelp for the fixed valid key and encodes static help; it performs no bucket/storage read capable of disguising a backend permission failure as IAM denial.",
+    "plugin_exclusion": "Actual self accountinfo first rejects the current AuthZ/legacy-OPA compiled-consoleAdmin branch. Neither narrow role policies nor the observer's closed policy grants ConfigUpdate. Expected denial therefore distinguishes regular scoped accounts from the S3 owner bypass without installing any new right.",
+    "all_modes": "The exact reviewed admin router registers help-config-kv outside enableConfigOps. Config-update permission is checked, but this GET reads help text only. It does not read configuration values, decrypt config, create credentials, change configuration or restart the server.",
+    "all_six": "Each of the five actual mounted role credentials and the actual observer credential performs its authenticated self-policy GET immediately followed by the fixed help GET. The observer is checked as well as the five publication roles."
+  },
+  "immutable_primary_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/signature-v4-utils.go",
+      "locus": "checkKeyValid actual owner predicate"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/internal/auth/credentials.go",
+      "locus": "IsTemp and IsServiceAccount classification predicates"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/auth-handler.go",
+      "locus": "validateAdminSignature, checkAdminRequestAuth, checkClaimsFromToken, authenticateRequest and authorizeRequest"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/RELEASE.2025-04-22T22-12-26Z/cmd/admin-handler-utils.go",
+      "locus": "validateAdminReq: initialized object layer, signature and IAM action gate; failures use native JSON API errors"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/admin-handlers-config-kv.go",
+      "locus": "HelpConfigKVHandler checks ConfigUpdate, obtains fixed help and JSON-encodes it"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/admin-router.go",
+      "locus": "Exact help path/query registration in all config modes"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/api-errors.go",
+      "locus": "APIErrorResponse fields and getAPIErrorResponse"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/api-response.go",
+      "locus": "writeErrorResponseJSON uses reqURL.Path and plain JSON"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/admin-handlers-users.go",
+      "locus": "AccountInfoHandler: actual current plugin/root sentinel, parent selection and current combined policy"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/iam.go",
+      "locus": "IsAllowed current AuthZ, owner, STS, service and regular branches; initialization fallback includes legacy OPA"
+    }
+  ],
+  "implementation": {
+    "source_entry": "CheckCurrentEffectiveGuarded",
+    "composition_entry": "CheckPublicationDependenciesWithMinIOEffectiveGuarded",
+    "input": "Same independently installed minio-publication-effective-permission-source.v1 schema as parent 835f82fc; no owner private key, new grant constructor, callback or Passed field",
+    "bracketing": "Two complete parent native/SQL/owner/resource/credential snapshots must agree and bracket all six self-policy/help pairs. Original windows and caller context bound every read. New source returns only a private current observation; neither C5 nor the publication loop is wired automatically.",
+    "operation_budget": "At most 104 native GETs for the supported two-bucket parent composition plus existing bounded Kubernetes and SQL checks. Whole guarded source timeout is 45 seconds, each parent source retains its 15-second bound, and earlier caller/original credential/owner deadlines take precedence. Native performance has not been measured.",
+    "process_scope": "Actual policy data comes from the serving native process. Kubernetes snapshots bind Pod UID, container ID, image ID, Running.StartedAt and RestartCount. These snapshots are not an opaque MinIO incarnation ID and do not claim detection of an in-container self-exec restart or arbitrary ABA changes. No uninterrupted-process, continuous permission, activation-causality or future-operation guarantee is made.",
+    "activation_decision": "The current runtime branch can be observed without inferring it from startup config; no controlled restart or new provider is needed solely for this finite observation. Unknown actual server/image identity remains a refusal. If an uninterrupted activation-generation proof is separately required, that is still a different owner-side installation requirement; neither a Pod annotation nor proc environ alone provides it."
+  },
+  "new_required_operation_matrix_finding": {
+    "status": "known_functional_profile_gap_before_publication_selection",
+    "frozen_v1_rule": "artifact_delete currently allows only s3:DeleteObjectVersion under the staging prefix.",
+    "actual_candidate_server": "DeleteObjectHandler first authorizes policy.DeleteObjectAction; a versionId does not remove that initial gate. The repository candidate-delete client sends DELETE with an exact versionId. Therefore the frozen v1 observation subset must not be called a complete usable delete capability for this upstream release.",
+    "next_change_required": "A separately reviewed superseding role/profile and original-owner policy installation must cover the actual required DeleteObject authorization while preserving exact-version/staging-only application-use guards. Do not silently broaden the frozen role, add broad admin rights, weaken cleanup, or declare succeeded from this source batch. The guarded source is current effective-policy evidence, not satisfaction of that outstanding operation-profile work.",
+    "native_source": "https://raw.githubusercontent.com/minio/minio/0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/cmd/object-handlers.go",
+    "native_locus": "DeleteObjectHandler checkRequestAuthType(ctx, r, policy.DeleteObjectAction, bucket, object)",
+    "repository_source": "backend/internal/systembackupexecution/publication_candidate_delete_s3.go"
+  },
+  "installation_and_permissions": [
+    "Existing original five credentials, existing observer credentials and original public permission grant/current head sources only. Do NOT grant ConfigUpdate to any of these accounts to make the negative help check succeed; success there is a rejection condition.",
+    "No new runtime observer rights, owner private-key mount, pods/exec, config value read, native mc, Secret listing, deployment patch, image upgrade or service restart.",
+    "First establish actual live MinIO version/commit and independently trusted upstream image/binary identity using the authorized post-08:30 preflight. No live inspection or preflight was executed here.",
+    "Resolve the exact native operation-profile finding above before using any candidate source as a complete ordinary-publication prerequisite. All original task purpose, signing, readback, cleanup, terminal CAS and non-DR qualification checks remain required.",
+    "Existing composed SQL/deployment checks may transitively perform their existing binding operations; only the new native source operations are fixed read-only GETs. Do not describe the whole composition as guaranteed zero-write SQL."
+  ],
+  "test_sources": [
+    "TestMinIOEffectiveGuardDistinguishesS3OwnerPredicate: local TLS, real independent transmitted SigV4 verification for all six credentials, narrow self-policy positive, opaque parent-owner/observer-owner counterexamples, signature/disabled/missing-api/wrong-resource/duplicate/trailing/redirect negatives",
+    "TestMinIOEffectiveGuardRequiresCompleteUnambiguousNativeError: exact native JSON field shape and incomplete/duplicate/unknown/unrelated/error-code refusals"
+  ],
+  "validation": {
+    "performed": [
+      "gofmt syntax/format only on two new Go files",
+      "read-only parent-three and frozen-eight byte hash verification"
+    ],
+    "not_performed": [
+      "go test",
+      "go build",
+      "MySQL",
+      "native remote or Kubernetes/MinIO calls",
+      "real mc",
+      "source installation",
+      "restart",
+      "image upgrade",
+      "git mutation",
+      "publication or page acceptance"
+    ],
+    "cleanup": "No test/build products created by C. Supervisor owns execution and cleanup."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_guard.go",
+      "sha256": "ba6ceaeef18b0fa0d5c11ea5d28c11342691e612d2efb0588befb029c656e995",
+      "bytes": 8375,
+      "kind": "superseding_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_minio_effective_guard_test.go",
+      "sha256": "13ba689d3705e546b1769153db65188e534e2b29596715afde54895d3a87b718",
+      "bytes": 6124,
+      "kind": "test_source_not_executed"
+    }
+  ]
+}

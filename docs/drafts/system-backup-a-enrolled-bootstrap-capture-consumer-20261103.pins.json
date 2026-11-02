@@ -1,0 +1,54 @@
+{
+  "schema": "a-enrolled-bootstrap-capture-consumer-source.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_TEST_AND_CLI_BUILD",
+  "date": "2026-11-03",
+  "dependencies": {
+    "lifecycle_pin": "docs/drafts/system-backup-a-owner-authority-lifecycle-20261103.pins.json",
+    "lifecycle_sha256": "1bfe819a8eff76b11b2cdf7dd9f76e40603439562e77a5b3674fda6339133cfe",
+    "original_link_pin": "docs/drafts/system-backup-a-original-bootstrap-capture-link-20261103.pins.json",
+    "original_link_sha256": "429a5ff0d5c5fdaf7df588970c3c7aa0ed316620d3d96abc882833cb0e4aed30"
+  },
+  "files": {
+    "backend/internal/systembackupinstallationowner/capture_signing_identity_only.go": "26029f6efc3952a47562e555692d2a202fb9fb153dc2d380471404d5f1e5e367",
+    "backend/internal/systembackupinstallationowner/capture_signing_identity_only_test.go": "35a9c2d11e13cf00c10e02f89fb84e5d9ff117f8e95a38531bee2586a18bb8f1",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture.go": "152f0b5992611188be8afdd20230b64967362e90ddf449650b296d49ba5ff34b",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_request.go": "d08ba0a18c735da56abb07d3c7d06d05a5fa7eeb324c3b7429af1719f4647f53",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_kube.go": "3b25e91c63251ca6e712c5323b4174b96d8366c762119db3888835384c8e160b",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_kube_test.go": "077fa4d2b1f932ff3f901592b5dd82155055222be1c32bccde045c3464e45510",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_candidate.go": "f0ca0a5dfc6402b5c7d633f9904aa89dab522417f3f1676bd748897f0d3001c3",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_test.go": "9f3537c15a5e8983571138f0247eb33ae891e87c42d7ac7da03cacffa5805112",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_export.go": "8fc43c755e4aaa48f73453a3a2916035b2d9a99f042b88c59565de7760e3f350",
+    "backend/internal/systembackupinstallationowner/install/consumer_capture_export_test.go": "97a15535d6fa7a831edfd0f45735d0a19e16221c5b87ad03a124797cfcfc252e",
+    "backend/internal/systembackupbootstrapmaterials/installation_consumer.go": "544a95bad64ce79e76d646c0837efab8ac40614d2166bd3d9eb4bd339be0419e",
+    "backend/internal/systembackupbootstrapmaterials/installation_consumer_test.go": "36661813266e316b5bef70fbafcb41ad654e2556d3d99f3ceba6dd1c78c89dbb",
+    "backend/cmd/system-backup-owner-consumer/main.go": "5fa21a32cd19f48c3a51ad29c275d58f07f9060d3fd9d6c5616709900f37007b",
+    "backend/cmd/system-backup-owner-consumer/main_test.go": "ac193050a753d04a3db9699080c1876b5613d43dc900969fe55c3ee9252ded43"
+  },
+  "behavior": [
+    "NewCaptureSigningConsumer is a concrete deferred deployment adapter. Constructor opens no files/credentials/SQL/network, so requirements remains side-effect-free. Prepare reads independently deployed source SHA64, original plan/public fingerprint, exported trust/enrollment pins and exact signed record/signature, config/grant and observer mapping. No record/candidate public key establishes trust.",
+    "Consumer opens no installer DSN/admin password/issuer private key. Static pinned Kubernetes client rejects insecure/proxy/exec/auth-provider/impersonation/basic-auth inputs and disables environment proxy. It compares actual immutable original enrollment API UID/doc against independent pin, then existing concrete Vault/Kubernetes probe and original SQL current source checks remain mandatory.",
+    "Current local trusted source files are rechecked before legacy/candidate L2 and end-of-work checks, with original context/transaction and failure latch. No API/provider/password hashing is performed under SQL locks.",
+    "Missing physical provider CA/observer yields only an explicit concrete identity-only capture validator. It verifies original signatures/current SQL admin/head/grant/account/window, supplies no observation/dependency lifetime, and cannot authorize new use. History still requires original identity; fresh reference/final checks require physical pins and actual observation.",
+    "Authenticated ExportBootstrapCaptureConsumer + standalone system-backup-owner-consumer CLI produce exactly8 create-only0600 output files from actual local admin + original enrollment + independently signed exact committed active head/grant. Consumer Kubeconfig transport and original enrollment get are checked before output. No signing, SQL writes, app config mutation or secret/private-key export occurs. Source readback uncertainty returns exit3 and requires same original frozen bundle resolve; no overwrite/repair/re-sign.",
+    "NewEnrolledInstallationMaterials composes actual deferred capture source with existing concrete nonce/artifactCA/evidenceCA and mandatory independent Original. It preserves compiled KEK and all23 remaining owner requirements; neither source JSON nor a generic passed validator supplies other owner implementations."
+  ],
+  "main_integration": [
+    "D-owned main.go/materials.go were not edited. Current main remains3/30 until D links this reviewed source; constructor/component availability is not a claim that main or first install is complete.",
+    "For fixed deployment composition, create install.NewCaptureSigningConsumer(\"/run/system-backup/installation-owner/capture-consumer.json\",\"/run/system-backup/installation-owner/capture-consumer.sha256\"). The authenticated exporter produces both files; the user independently retains/deploys/selects the exact bytes. SHA file is exactly64 lowercase hex bytes without newline.",
+    "To link only the concrete capture source for requirements, call capture.Owners(base): copies maps, rejects collision/existing Candidates, preserves KEK and adds only capture_signing.",
+    "For the real material/candidate path, call bootstrapmaterials.NewEnrolledInstallationMaterials(base, independentlySuppliedOriginal, capture, nonceBinding, artifactCABinding, evidenceCABinding). Use returned owners and returned *Materials in NewBootstrapDeploymentCandidates(originalSelections, materials), then call existing run with those owners. Existing three registries plus these four references are7/30;23 remain missing.",
+    "No production terminal BootstrapCandidateAuthority implementation exists in current searched sources beyond wrappers; actual independent host/reference/capacity/evidence/purpose association authorities must be supplied. This batch connects concrete capture identity/resource calls and cannot legitimately manufacture that missing original source."
+  ],
+  "tests": [
+    "Controlled local SAN TLS API front proxy preserves official JSON/protobuf TokenReview decoding and real signed Vault probe; exact source/model L2, no installer SQL during Prepare, no network during locked checks, foreign enrollment/public/pin/unknown-private-input refusals, late pin removal/failure latch.",
+    "Missing provider CA retains only current signed source identity and denies fresh resource recheck; separate concrete candidate test exercises actual guarded pd.Transaction with identity-only history/new-use separation.",
+    "Authenticated source exporter emits8 loadable create-only public files without new sign/SQL writes; static Kubernetes transport negatives and standalone CLI bypass/private-key flags refused.",
+    "SQL here is the explicit existing transaction protocol model and synthetic account switch. Actual MySQL account/GRANT/lock proof is only the separate frozen native suite, which root reported tagged compilation plus explicit SKIP for unavailable credentials, not PASS."
+  ],
+  "root_commands": [
+    "go test ./internal/systembackupinstallationowner ./internal/systembackupinstallationowner/install ./internal/systembackupsecurity ./internal/systembackupbootstrapmaterials ./cmd/system-backup-owner-consumer -run ^(TestCapture(Signing|Consumer)|TestBootstrapOriginalResource|TestInstallationMaterials) -count=1 -v",
+    "Root build Linux CGO_ENABLED=0 system-backup-owner-consumer and relevant bootstrap entry; A performs no compile/test/build."
+  ],
+  "limits": "Source-only. No field enrollment/provider/mc/actual MySQL execution, full first install, page acceptance, other23 owner success, DR eligibility, or six-domain backup/publication/independent EOF/catalog/same-task success is claimed. 175 denotes full migration catalog item count, not a missing numbered migration.",
+  "cleanup": "A created only source/pins and ran gofmt/static SDK/source/hash checks. No test/build artifacts. Root owns actual validation and removal of all resulting binaries/caches/test artifacts per AGENTS."
+}
