@@ -1,0 +1,198 @@
+{
+  "schema_version": "d-morning-hard-gaps-draft.v2",
+  "date": "2026-11-02",
+  "target_date": "2026-11-03",
+  "status": "draft_for_root_review_not_deployment_approval",
+  "draft": {
+    "path": "docs/drafts/system-backup-d-morning-hard-gaps-20261102.md",
+    "sha256": "845db123eb8c6e82ab9ca30af3208d661d4d447c3b67539266e43e1bed1413a6"
+  },
+  "item_count": 14,
+  "actual_main_missing_owner_slots": 27,
+  "remaining_after_three_material_validators": 24,
+  "sources": [
+    {
+      "path": "backend/cmd/system-backup-bootstrap/main.go",
+      "sha256": "7276e3aca5d8222a3a1286e5d031aaa46d0e2f0a52e2bbebf5f93552b06db691"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap/materials.go",
+      "sha256": "2605bda4088b2671baa2a1e762a8c65e2e7064c676fcd02c9aa1e50f02c006bc"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_bootstrap_rules.go",
+      "sha256": "4c73858c02c59e25a562b1a956f28765ee7063db85cba3f52360c589756c6666"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/bootstrap_deployment.go",
+      "sha256": "aed77469fdb52bb17a56ecc5dd3edf8be78afbaa479a30bc38cd6e2855d5f7de"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/bootstrap_deployment_candidates.go",
+      "sha256": "177a64dd1c9a29733d5b392231d3a8f59a1ced32971346066ebf3ad4866dd984"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_bootstrap_candidates.go",
+      "sha256": "1d6a01e22fa5a44cad70fdbfc0706062eef64fc4597ba457f1c4099371bffbb3"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/materials.go",
+      "sha256": "c5514c6342edc96b86825c485005055f859cab053bb0084a7b9f85dca509144f"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/coverage.go",
+      "sha256": "9e08bfc4045084efbd5920a8261d989e69aaa6f86fcc60a500b7f153053fa432"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_sql_witness.go",
+      "sha256": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_factory.go",
+      "sha256": "4eccdc4add8b1585366c871573e7b06457a33a5f4e4b769817637c66945d9f6d"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_owner_sql.go",
+      "sha256": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/deployment.go",
+      "sha256": "e9518334a945c693cff528a987c9d721d2766d9199eb161964a9429c92895592"
+    },
+    {
+      "path": "backend/cmd/system-backup-migrate/main.go",
+      "sha256": "3073694b5828eeecea146b7d367fc68b305f3830c17e53b1b997b89fec2cb06e"
+    },
+    {
+      "path": "backend/internal/db/backup_migration_entry.go",
+      "sha256": "623ce4460c0a3338a4829f201c4c274c7b2d1f3598721d66880a2810b3370a1a"
+    },
+    {
+      "path": "backend/internal/db/migration_history.go",
+      "sha256": "4a247b3e30bc894ecb18753bb667afc456dafce6ded3f79539150f182d8b3ba8"
+    },
+    {
+      "path": "backend/cmd/server/main.go",
+      "sha256": "7be411a46235d1c6fb7b92d1a250ac55b407d8dec975279bbc13fc0b93448fd8"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_read_live.go",
+      "sha256": "bba0702af579902612b546536b33e7f173256971866ebbb366a340b2076fd35d"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_tasks_live.go",
+      "sha256": "3c63e9ff2315b105971a4df0421fdddf8e22b241433c3141135f6a64d2fa2858"
+    },
+    {
+      "path": "backend/cmd/system-backup-v2-controller/public_capture.go",
+      "sha256": "fac21769e68103b3db3370de311df1b8d9898677c2f3bb27094ffcc0483df2e4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_service.go",
+      "sha256": "daef733296049171ba478f1221e686f5b20b715c56a3e588eda8aa124794412e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_platform.go",
+      "sha256": "890dbcbdad0b1168044d68514bcd9108967240c6fd1fd6718d75d66a1736d3f8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_file_bindings.go",
+      "sha256": "25f3981c0ee4bb22b72140e892f21923da34b0cb1e56545a1890a6a3730050f4"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_policy_startup.go",
+      "sha256": "32e3bf9cc2ae8a90ce6393d644b8a3aa4fb599e68d516a6fd5c3d21a95ef014f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_config.go",
+      "sha256": "363f00ae20790f29b077e8812f6450b9570736a185266708dc18b1749959904e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_staging_location.go",
+      "sha256": "42da69013475c70b9e4b748046e6b1d27cdaf21217f599933fc23526681cd3c1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_job.go",
+      "sha256": "9d7aef057eb9395e6ec2f8a06ad49013e12bc6ef6d7ead774aa39bb990397ed5"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/runtime_source_recovery.go",
+      "sha256": "981642c8150d27f0cf363b0622ddefe88657cf36df0a4188634970057dd651f5"
+    },
+    {
+      "path": "backend/internal/systembackupapi/deployment_admission.go",
+      "sha256": "86b812a370c6c1c863b072b3b78d25dc085a00a12113de7a3062e410956cd955"
+    },
+    {
+      "path": "deployments/k8s/system-backup-registration.template.json",
+      "sha256": "fa207c100342c044717656932c751c138480f37980adf828d54fa4654b2b08b1"
+    },
+    {
+      "path": "docs/evidence/supervisor-user-native-config-result-20261102.json",
+      "sha256": "1192f6df5c592432531d2012666b6fc08660c8dc1e580588e45ae1198e77f71b"
+    },
+    {
+      "path": "docs/evidence/supervisor-provider-transport-20261102.json",
+      "sha256": "7be710298be9efa3cf3873cdb1b01cfbb2e2fd69c2c271377db38efc88a3b276"
+    },
+    {
+      "path": "docs/evidence/supervisor-local-terminal-r3-20261102.json",
+      "sha256": "2f61c9551837763cfaa5353ea2494cc1ccbc649b74dbd59256c1104c49e03d3d"
+    },
+    {
+      "path": "docs/evidence/supervisor-rpc-http-incomplete-20261102.json",
+      "sha256": "46982a5a158706b1e5e869f34382b4afdf31f0a8138bd741aff103c8998ae54e"
+    },
+    {
+      "path": "docs/evidence/supervisor-evening-cleanup-20261102.json",
+      "sha256": "c6ca7d6efb1006697b42bb7bc3bdef4728149af6dc0c7c73ed0536dffd324451"
+    },
+    {
+      "path": "frontend/src/pages/admin/backups/BackupLiveWorkspace.tsx",
+      "sha256": "97af3f8e15fba4da8b718c34857c0aedc912babda0d3eb6c60ec287fb4396f61"
+    },
+    {
+      "path": "frontend/src/services/systemBackupTaskService.ts",
+      "sha256": "ff4470fcf3b4b217e8753cc39d0f875a9ce905c356f3958b5ea275fe99b3ed7b"
+    },
+    {
+      "path": "frontend/src/types/systemBackupContract.ts",
+      "sha256": "e794d7b7d683224330affa8c5e2fb97f1ac0c953cad078215321049ce6f53939"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_profile.go",
+      "sha256": "a8a8b0c1384439475b2fea10701bfb4767a14df8652c7925ca60446cd0570100"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_publication_policy.go",
+      "sha256": "d31367ec4438f85930047b96d4ef56fc19bc04d8b796e9b8caa5701a7639768b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_recovery_current.go",
+      "sha256": "d26b0cd2fa442e2c47e00f9e9ac5966a9d040d14191ecbcf3011cbc097c4444e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_manifest_producer.go",
+      "sha256": "66611575a30e426665a4d74134818bf1fd9b2ad784c9e5a8f27cefba42ae770b"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_ready.go",
+      "sha256": "e1c4a804506e1fd1a4a86f2e1fa888280ec91d7798a27301bfba3874b709bb8e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_terminal.go",
+      "sha256": "8b2a778729f1e7e60cf7e748fbe80664f9a856b1df6631ffc6aca4ec31605c5c"
+    }
+  ],
+  "operations": {
+    "production_code_written": false,
+    "build": false,
+    "test": false,
+    "sql": false,
+    "remote": false,
+    "git_mutation": false
+  },
+  "caveat": "Local working-tree snapshot and archived field receipts only; no claim that missing field materials have been re-observed remotely.",
+  "supersedes_draft_sha256": "bd61143f84fc94b755cbb50ba669c00b26082bcdf7f64438cc438fb2782631e1",
+  "scope": "Complete nonempty six-part page backup publication plus independent readback and same-task success; no restore, no automatic DR/acceptance requirement. Current page defaults acceptance; ordinary terminal semantics require C confirmation."
+}

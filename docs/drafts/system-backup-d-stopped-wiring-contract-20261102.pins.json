@@ -1,0 +1,78 @@
+{
+  "schema_version": "d-stopped-wiring-contract-draft.v1",
+  "status": "proposed_contract_no_production_change",
+  "draft": {
+    "path": "docs/drafts/system-backup-d-stopped-wiring-contract-20261102.md",
+    "sha256": "f72977f5a446025f0f243d3bb53c6c103bce00932a98f4b8e6f70a955caa4c2e"
+  },
+  "source_observations": [
+    {
+      "path": "backend/internal/services/runtime_agent_backup.go",
+      "sha256": "b0672c5dfce677f2cc519f56fc072a57983de4c523d55ab4e2bd48ba5de418c1"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/runtime_control.go",
+      "sha256": "41ed3fb355e06105ea3f9d164642e0b3bec8f9dca4e83df566f3890459169e18"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/runtime_source_recovery.go",
+      "sha256": "981642c8150d27f0cf363b0622ddefe88657cf36df0a4188634970057dd651f5"
+    },
+    {
+      "path": "backend/internal/systembackupcontroller/runtime_source_recovery_semantics.go",
+      "sha256": "9f24c4ed060a25ce8053dcb9c5aa9c13229a6afbbaa4aa980dc2e45cbe3cbb20"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_source_recovery.go",
+      "sha256": "f2248959dc210b3fd3416fa5cc6f952944f9747179b2382b55b8ca2ef115bc15"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapsecurity/rbac.go",
+      "sha256": "77a95ae82716650e5ba8b4975c86d3ebd9ab4571989a1c07b7394a2aae34afa4"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapsecurity/issuers.go",
+      "sha256": "124789339490092fcb079c5d797b6e236b60c8e29b211ce9b1d60da4a5f4b112"
+    },
+    {
+      "path": "backend/internal/systembackupnoncebootstrap/nonce.go",
+      "sha256": "70fc874de4c9a92985b57250f54c569205f6d03f1c720c529ab20088d3299367"
+    },
+    {
+      "path": "backend/internal/systembackupcatrust/ca.go",
+      "sha256": "780be82610a39d306577537a3981d1a3444c9fea82e412621b078aed36d3407c"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_factory.go",
+      "sha256": "4eccdc4add8b1585366c871573e7b06457a33a5f4e4b769817637c66945d9f6d"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/materials.go",
+      "sha256": "c5514c6342edc96b86825c485005055f859cab053bb0084a7b9f85dca509144f"
+    },
+    {
+      "path": ".a-agent-stopped-52f47fc-20261102/source/clawmanager-agent/gateway/backup_protocol.go",
+      "sha256": "bd47c253f98004500c5995a0ace50f7dd64805fc41bb158e71a45e08bad448dc"
+    },
+    {
+      "path": ".a-agent-stopped-52f47fc-20261102/source/clawmanager-agent/slots/backup.go",
+      "sha256": "95b2e4132a7d2fb295927ead4cf48fa3fa811a36db38a57b8a41e544e3ee0a50"
+    },
+    {
+      "path": ".a-agent-stopped-52f47fc-20261102/source/clawmanager-agent/slots/writer.go",
+      "sha256": "b20bdb43588422facfe9ae299759cf15afd7be66c7649cf28db4d8447de28ecd"
+    },
+    {
+      "path": ".a-agent-stopped-52f47fc-20261102/source/clawmanager-agent/slots/command_writer.go",
+      "sha256": "8159be13e25ecac420f870aec470c4c043b8aa139b8fa040aff6ab7c52892eff"
+    },
+    {
+      "path": ".a-agent-stopped-52f47fc-20261102/source/clawmanager-agent/gateway/isolated_recovery_linux.go",
+      "sha256": "1c9a5a1e9c0014bb622ccde06eb3454120b3aa265235c9baaf3d1fa10c4cb52f"
+    }
+  ],
+  "candidate_note": "A candidate hashes are read observations only, not a freeze request or approval; A owns ongoing edits.",
+  "remaining_owner_slots": 24,
+  "direct_ready_resource_validators_in_those_slots": 0,
+  "validation": "Read-only source inspection; no build, test, SQL, remote operation or git mutation."
+}

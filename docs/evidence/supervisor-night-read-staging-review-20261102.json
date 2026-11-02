@@ -1,0 +1,68 @@
+{
+  "schema_version": "supervisor-night-review.v1",
+  "date": "2026-11-02",
+  "source_export_commit": "c5a83f85",
+  "source_overlay": "Pinned dirty A/D/C composition; not equivalent to a deployed release",
+  "source_pins_sha256": "3cddf8905b2ac1ec39521ef53894417cbb673adc97481775b0264d3c6fc71d82",
+  "c_http_fixture_fix_sha256": "489d428e09e2dcc12fad2b9f7be3c095f1da9b36512da59aaf5fc460cd027b02",
+  "runs": [
+    {
+      "log_sha256": "2dc0d334b524ce1c84dea9e77e60946bb74dfb966a70d442473dc20595b61e88",
+      "exit_code": 1,
+      "file": "night-http-staging-r5",
+      "passed": 7,
+      "name": "http_staging_r5",
+      "failed": 1,
+      "scope": "Initial HTTP positive fixture had wrong acceptance signing domain; later corrected"
+    },
+    {
+      "log_sha256": "9d23f5a1d9100ab7545371eaa5115c2710f807ece8d887aa7ce21bdd847621db",
+      "exit_code": 0,
+      "file": "night-http-staging-r6",
+      "passed": 8,
+      "name": "http_staging_r6",
+      "failed": 0,
+      "scope": "Catalog read, authenticated signed metadata read, HTTP routes and actual API-shaped staging binding; real SQL not executed"
+    },
+    {
+      "log_sha256": "bbbeaad7b60c5afcc0e6dd1d3fc3b439c9740e61db7bb7302c746ebb51f17669",
+      "exit_code": 0,
+      "file": "night-a-s1-components-r1",
+      "passed": 3,
+      "name": "a_s1_components",
+      "failed": 0,
+      "scope": "Dormant candidate component scope and field equivalence; actual SQL lock order, result-delivery expiry and original RPC remain unproven"
+    },
+    {
+      "log_sha256": "4619a268ac64af36a3111dcd87dfa6c56fd48a690a342543042b0e04bc5805a9",
+      "exit_code": 0,
+      "file": "night-publication-process-r1",
+      "passed": 7,
+      "name": "publication_process",
+      "failed": 0,
+      "scope": "Pinned API process observations and publication Job builder; actual scheduling and native Linux SQL positive path not executed"
+    }
+  ],
+  "final_passed_root_tests": 18,
+  "skips": 0,
+  "production_code_enabled_by_this_batch": false,
+  "actual_mysql_test_executed": false,
+  "native_linux_or_page_acceptance": false,
+  "original_thirty_second_window_proven": false,
+  "dormant_s1_enabled": false,
+  "remaining": [
+    "Original-window capture failure",
+    "Originally-stopped native physical witness",
+    "First-install owner and production material wiring",
+    "Real six-domain readiness declaration",
+    "Purpose/DR scope clarification pending",
+    "Full original task publication/catalog/terminal success"
+  ],
+  "cleanup": {
+    "deleted": true,
+    "running_owned_processes": 0,
+    "owner": "supervisor-http-review-20261102",
+    "scope": "Build binaries, cold Go cache, test temp and source snapshots only; owner draft source remains",
+    "root": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-supervisor-http-67a3f2b43dc84fcfbad6fc89fe176ce3"
+  }
+}
