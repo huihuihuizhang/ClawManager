@@ -148,6 +148,12 @@ func (h ControlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(lease)
 }
 func validControl(r ControlRequest) bool {
+	return validControlWithInvocationJSON(r, nil)
+}
+
+// The optional output belongs only to this validation/send call. It is data,
+// not a saved authorization result; all field and clock checks still run.
+func validControlWithInvocationJSON(r ControlRequest, invocationJSON *[]byte) bool {
 	q := r.Invocation.Request
 	if q.CaptureDescription != nil && !captureDescriptionOperation(q.Operation) {
 		return false
@@ -217,7 +223,17 @@ func validControl(r ControlRequest) bool {
 	} else if q.Database != nil || r.Invocation.EvidencePath != "" || q.Version != Version || (q.Operation != "capture-workspace" && q.Operation != "restore-workspace") || q.MaxFiles <= 0 || q.MaxFiles > 1_000_000 || q.MaxFileBytes <= 0 || q.MaxArchiveBytes < q.MaxFileBytes || q.MaxArchiveBytes > 1<<50 || q.MaxCompressedBytes <= 0 || q.MaxCompressedBytes > 1<<50 {
 		return false
 	}
-	h, e := r.Invocation.Hash()
+	var h string
+	var e error
+	if invocationJSON == nil {
+		h, e = r.Invocation.Hash()
+	} else {
+		*invocationJSON, e = json.Marshal(r.Invocation)
+		if e == nil {
+			sum := sha256.Sum256(*invocationJSON)
+			h = hex.EncodeToString(sum[:])
+		}
+	}
 	if e != nil || h != r.InvocationSHA256 || !time.Now().Before(r.Invocation.Request.Deadline) {
 		return false
 	}
@@ -236,6 +252,35 @@ func validControl(r ControlRequest) bool {
 		return r.Point == "" && validResult(q, r.Result)
 	}
 	return false
+}
+
+// Keep the exact ControlRequest field order/tags. Invocation is the JSON just
+// hashed in this call, so outer encoding need not walk that structure again.
+// Reflection and legacy byte-differential tests guard this closed projection.
+type controlRequestWire struct {
+	Invocation       json.RawMessage      `json:"invocation"`
+	InvocationSHA256 string               `json:"invocation_sha256"`
+	Action           string               `json:"action"`
+	Point            string               `json:"point,omitempty"`
+	Result           *Result              `json:"result,omitempty"`
+	Candidate        *FormalCaptureResult `json:"candidate,omitempty"`
+}
+
+func marshalControlRequestWire(r ControlRequest, invocationJSON []byte) ([]byte, error) {
+	return json.Marshal(controlRequestWire{invocationJSON, r.InvocationSHA256, r.Action, r.Point, r.Result, r.Candidate})
+}
+
+func encodeControlRequest(r ControlRequest) ([]byte, error) {
+	var invocationJSON []byte
+	defer func() { clear(invocationJSON) }()
+	if !validControlWithInvocationJSON(r, &invocationJSON) {
+		return nil, ErrRequest
+	}
+	raw, err := marshalControlRequestWire(r, invocationJSON)
+	if err != nil {
+		return nil, ErrRequest
+	}
+	return raw, nil
 }
 
 func ValidateControl(r ControlRequest) bool { return validControl(r) }
@@ -365,10 +410,7 @@ func (c *ControlClient) send(ctx context.Context, request ControlRequest) (_ Lea
 		started := time.Now()
 		defer func() { c.captureCosts.record(request.Action, time.Since(started), resultErr != nil, httpAttempted) }()
 	}
-	if !validControl(request) {
-		return Lease{}, ErrRequest
-	}
-	b, e := json.Marshal(request)
+	b, e := encodeControlRequest(request)
 	if e != nil {
 		return Lease{}, ErrRequest
 	}

@@ -1,0 +1,39 @@
+{
+  "schema_version": "supervisor-control-encoding-review.v1",
+  "observed_at": "2026-11-02T20:58:50.2787241+08:00",
+  "files": [
+    {
+      "sha256": "419567ed1f571ef99e1f233b7a54c736cfb3396535f684405c4f2c8b3c0cf579",
+      "path": "backend/internal/systembackup/worker/control.go"
+    },
+    {
+      "sha256": "1cd97ce222c64003230c8b2048fdc8efadcd097fe783aa2ee2de6482352e3951",
+      "path": "backend/internal/systembackup/worker/control_encode_test.go"
+    }
+  ],
+  "passed_root_tests": [
+    "TestControlWireProjectionCoversEveryRequestField",
+    "TestControlWireExactLegacyBytesWithEscapesAndOptionalFields",
+    "TestControlEncodeValidationAndErrorsMatchLegacy",
+    "TestControlEncodeSendPreservesFaultOrderAndHTTPCount",
+    "TestControlEncodeRebuildsBodyAndReadsTokenOnEverySend"
+  ],
+  "combined_component_passed_roots": 19,
+  "skipped": 0,
+  "log_sha256": "42f035fe7a4d28d830060dcdcd60daef8480901d1ee47d3403caaf5535091dd4",
+  "behavior": "Serialize full Invocation once within each send for original hash and original outer JSON bytes; no cross-call cache, HTTP count, auth/revocation guard or deadline change",
+  "original_window_or_page_success_proven": false,
+  "native_runner": {
+    "fixture_key_window_seconds": 30,
+    "syntax": "Git Bash -n exit0",
+    "selected_roots": [
+      "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+      "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL"
+    ],
+    "path": "scripts/system-backup-supervisor-native-window-run.sh",
+    "go_test_timeout_minutes": 15,
+    "elf_executed": false,
+    "sha256": "05691c7710cd8f357a1912550a497716cf3ccf2c4c817514c3f4a4b252e725b6"
+  },
+  "cleanup": "Windows unit run ended; owned same-source Linux compilation remains active. Remove owned build intermediates when compilation/package staging finishes; remove staged binaries/archive after remote test ends."
+}
