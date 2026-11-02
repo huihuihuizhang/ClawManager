@@ -35,6 +35,7 @@ type productionCaptureMetadata struct {
 	MountIdentities       map[string]kube.MountIdentity   `json:",omitempty"`
 	FormalMountIdentities map[string][]kube.MountIdentity `json:",omitempty"`
 	Mounts                []productionInstanceMount
+	PlatformMounts        []sourceRecoveryPlatformMount `json:",omitempty"`
 	Skills                worker.SkillObjectCaptureSpec
 	Redis                 c.RedisCapturePolicy
 	Deployment, Secrets   worker.ResourceCaptureSpec
@@ -59,6 +60,16 @@ type productionPartDraft struct {
 // The production module factory uses all six original constructors and
 // ONE shared SQL export. This function performs no I/O or resource mutation.
 func productionCaptureModules(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, operations map[string]productionCaptureOperation, revision string) (*b.CaptureModules, error) {
+	plan, err := newProductionCapturePlan(operations, revision)
+	if err != nil {
+		return nil, err
+	}
+	return plan.build(in, source, until, writers, "")
+}
+
+// The compatibility wrapper and production's attached plan share this exact
+// original constructor path, including shared SQL/Redis and CE finalization.
+func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, operations map[string]productionCaptureOperation, revision string) (*b.CaptureModules, error) {
 	if source.Teams == nil || source.Skills == nil || source.TeamFacts == nil || !source.TeamFacts.MatchesInventory(*source.Teams) || len(source.CaptureMetadata) > 8<<20 || revision == "" || len(writers) == 0 {
 		return nil, d.ErrNotReady
 	}

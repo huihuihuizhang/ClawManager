@@ -1,7 +1,7 @@
 {
   "namespace": "clawmanager-zhanghui08-system",
   "image": "",
-  "migration_catalog_sha256": "d4fe00a440acf094e1def2d99586e333bed7803ba82b504ab25829b133680a21",
+  "migration_catalog_sha256": "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292",
   "runtime": {
     "expected_server_uuid": "",
     "expected_database": "",

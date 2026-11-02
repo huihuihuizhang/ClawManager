@@ -65,11 +65,14 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 				t.Fatal(err)
 			}
 			if mode == "finalization-required" {
-				for _, kind := range publicationContinuationOrder[1:3] {
+				for _, kind := range publicationContinuationOrder[1:2] {
 					aRefreshPublicationPayloadCapacity(t, x)
 					if _, err := h.service.publishOriginalJSON(ctx, h.token, h.original.AttemptNo, store, intent(kind)); err != nil {
 						t.Fatal(err)
 					}
+				}
+				if _, err := h.service.publishOriginalJSON(ctx, h.token, h.original.AttemptNo, store, intent("acceptance_put")); !errors.Is(err, ErrPublicationFinalizationRequired) {
+					t.Fatal("naked JSON created acceptance without typed full proof", err)
 				}
 				if _, err := h.service.publishOriginalJSON(ctx, h.token, h.original.AttemptNo, store, intent("catalog_registration_append")); !errors.Is(err, ErrPublicationCatalogUnavailable) {
 					t.Fatal("artifact writer was treated as catalog append authority", err)
@@ -120,11 +123,11 @@ func TestOriginalPublicationContinuationMySQL(t *testing.T) {
 			}
 			if mode == "finalization-required" {
 				if err := h.service.runPublicationContinuation(ctx, store); !errors.Is(err, ErrPublicationFinalizationRequired) {
-					t.Fatal("confirmed catalog was treated as acceptance", err)
+					t.Fatal("confirmed manifest/marker was treated as typed acceptance", err)
 				}
 				var status string
 				var usable bool
-				if err := h.admin.QueryRow(`SELECT status,artifact_usable FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&status, &usable); err != nil || status != "publishing" || usable || state.puts != 3 {
+				if err := h.admin.QueryRow(`SELECT status,artifact_usable FROM system_backup_v2_backups WHERE public_id=?`, h.original.TaskPublicID).Scan(&status, &usable); err != nil || status != "publishing" || usable || state.puts != 2 {
 					t.Fatal("premature success", status, usable, state.puts, err)
 				}
 				return

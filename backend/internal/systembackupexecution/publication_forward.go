@@ -12,7 +12,9 @@ import (
 // First-forward selection uses the SAME original backup and common claim
 // receipt. Query-only 102 recovery remains first in RunPublicationPass. This
 // path prepares complete MF and activates the original upload-only Job.
-// Native fixed-version C readback and finalization remain independent steps.
+// Complete fixed-version C verification feeds the real acceptance/catalog,
+// immutable decision, Ready and unique terminal transaction. Confirmed objects
+// or successful verification alone never mean task success.
 func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context, store *nativePublicationS3) (resultErr error) {
 	if err := s.CheckPublisherVerifierReadiness(ctx); err != nil {
 		return err
@@ -35,7 +37,11 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	if err != nil {
 		return err
 	}
+	var terminal publicationTerminalProgress
 	defer func() {
+		if terminal.committed || terminal.commitUnknown {
+			return // The terminal transaction owns claim removal; unknown is READ only.
+		}
 		releaseCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
 		defer cancel()
 		_, err := (c.ClaimCoordinator{Executor: s.publisherVerifierDB, InstallationID: s.Config.InstallationID}).Release(releaseCtx, claim, policy.ReconcileInterval)
@@ -50,8 +56,12 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 		if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, PublicationUploadRequest{}, policy.ReconcileInterval); err != nil {
 			return err
 		}
-		_, err := s.completeOriginalPublicationThroughNativeCleanup(ctx, &claim, attempt, policy, store, publicationVerifiedCapture{})
-		return err
+		proof, err := s.completeOriginalPublicationThroughFinalVerification(ctx, &claim, attempt, policy, store, publicationVerifiedCapture{})
+		if err != nil {
+			return err
+		}
+		// Lost original invocation state permits only a known decision query.
+		return s.completeOriginalPublicationTerminal(ctx, claim, attempt, proof, false, &terminal)
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
@@ -72,6 +82,9 @@ func (s *DeploymentService) runPublicationForwardPreparation(ctx context.Context
 	if err := s.startAndAwaitOriginalPublicationUpload(ctx, claim, attempt, store.config, request, policy.ReconcileInterval); err != nil {
 		return err
 	}
-	_, err = s.completeOriginalPublicationThroughNativeCleanup(ctx, &claim, attempt, policy, store, capture)
-	return err
+	proof, err := s.completeOriginalPublicationThroughFinalVerification(ctx, &claim, attempt, policy, store, capture)
+	if err != nil {
+		return err
+	}
+	return s.completeOriginalPublicationTerminal(ctx, claim, attempt, proof, true, &terminal)
 }

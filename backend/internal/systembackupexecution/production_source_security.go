@@ -53,14 +53,20 @@ func (o *PublicJobOwner) originalProductionMounts(ctx context.Context, a d.Autho
 
 func (o *PublicJobOwner) productionMountsFromOriginal(in d.Input, discovery b.Discovery, part b.JobPart) ([]kube.MountIdentity, bool, error) {
 	if o.productionSource == nil {
+		if completeProductionCaptureInput(in) {
+			return nil, false, d.ErrNotReady
+		}
 		return nil, false, nil
 	}
-	if in.Backup == nil || in.Backup.TaskPurpose != "acceptance" {
+	if supportedPublicCapture(in) == nil {
 		return nil, false, nil
+	}
+	if !completeProductionCaptureInput(in) || o.supportsCapture(in) != nil {
+		return nil, false, d.ErrNotReady
 	}
 	var source b.SourceInventory
 	var metadata productionCaptureMetadata
-	if json.Unmarshal(discovery.Source, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil {
+	if json.Unmarshal(discovery.Source, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Redis.Policy.Purpose != in.Backup.TaskPurpose {
 		return nil, false, d.ErrNotReady
 	}
 	original, err := partFor(discovery, part.Intent.JobUnitKey)

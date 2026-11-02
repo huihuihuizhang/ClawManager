@@ -370,10 +370,14 @@ func (p *publicationNativeCleanup) recheckCompleteTx(ctx context.Context, tx *sq
 	return p.recheckTx(ctx, tx)
 }
 
-func (s *DeploymentService) completeOriginalPublicationThroughNativeCleanup(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, store *nativePublicationS3, capture publicationVerifiedCapture) (*publicationNativeCleanup, error) {
+func (s *DeploymentService) completeOriginalPublicationThroughNativeCleanup(ctx context.Context, claim *c.ClaimToken, attempt uint64, policy c.LeasePolicy, store *nativePublicationS3, capture publicationVerifiedCapture) (*publicationCompleteCleanup, error) {
 	candidate, err := s.completeOriginalPublicationThroughCandidateCleanup(ctx, claim, attempt, policy, store, capture)
 	if err != nil {
 		return nil, err
 	}
-	return s.cleanupOriginalPublicationNativeResources(ctx, candidate)
+	native, err := s.cleanupOriginalPublicationNativeResources(ctx, candidate)
+	if err != nil {
+		return nil, err
+	}
+	return s.cleanupOriginalPublicationLocal(ctx, native)
 }

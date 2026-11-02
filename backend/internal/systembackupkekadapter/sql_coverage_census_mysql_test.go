@@ -118,6 +118,15 @@ func TestSQLCoverageCensusOriginalSourcesMySQL(t *testing.T) {
 		t.Fatal("full original source census failed", err)
 	}
 	facts := first.Facts()
+	var ownerTables int
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('system_backup_installation_owner_heads','system_backup_installation_owner_grants')`).Scan(&ownerTables); err != nil || ownerTables != 2 {
+		t.Fatal("actual migration134 authority tables unavailable", err)
+	}
+	for _, table := range facts.Tables {
+		if table.Table == "system_backup_installation_owner_heads" || table.Table == "system_backup_installation_owner_grants" {
+			t.Fatal("installation authorization rows entered lifecycle payload", table.Table)
+		}
+	}
 	if len(facts.Tables) < 45 {
 		t.Fatal("original sources missing from census", len(facts.Tables))
 	}
@@ -269,14 +278,16 @@ func TestSQLCoverageCensusOriginalSourcesMySQL(t *testing.T) {
 	if _, err = db.ExecContext(ctx, `INSERT INTO system_backup_config_versions(version,config_json,actor_id) VALUES (3,'{}',1)`); err != nil {
 		t.Fatal("rollback leaked source locks", err)
 	}
-	if _, err = db.ExecContext(ctx, "CREATE TABLE system_backup_unreviewed_source(id BIGINT PRIMARY KEY)"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = scanner.Observe(ctx); err == nil {
-		t.Fatal("unknown backup source silently omitted")
-	}
-	if _, err = db.ExecContext(ctx, "DROP TABLE system_backup_unreviewed_source"); err != nil {
-		t.Fatal(err)
+	for _, unknown := range []string{"system_backup_unreviewed_source", "system_backup_installation_owner_grants_history"} {
+		if _, err = db.ExecContext(ctx, "CREATE TABLE `"+unknown+"`(id BIGINT PRIMARY KEY)"); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = scanner.Observe(ctx); err == nil {
+			t.Fatal("unknown backup source silently omitted", unknown)
+		}
+		if _, err = db.ExecContext(ctx, "DROP TABLE `"+unknown+"`"); err != nil {
+			t.Fatal(err)
+		}
 	}
 	wrong := identity
 	wrong.Database = "different_database"

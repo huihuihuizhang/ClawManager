@@ -69,7 +69,7 @@ func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap
 		}
 		f.resultHandler.ServeHTTP(w, r)
 	}), func(value control.IdentityIssuer) { issuer = value })
-	options := aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &f.store.config, AttemptNo: 1, PublicationWorker: &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}, WorkerIssuer: &issuer, ObserveControlDSN: func(dsn string) { f.controlDSN = dsn }}
+	options := aPublisherVerifierFixtureOptions{FullService: true, PublicationStaging: true, PublicationTarget: &f.store.config, AttemptNo: 1, PublicationWorker: &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}, WorkerIssuer: &issuer, ObserveControlDSN: func(dsn string) { f.controlDSN = dsn }}
 	options.WrapControlConnector = wrap
 	if len(concurrentTrace) == 1 {
 		options.ConcurrentPublisherSQLTrace = concurrentTrace[0]
@@ -89,8 +89,6 @@ func newAPublicationMaterialFixtureControl(t *testing.T, enableResult bool, wrap
 	cfg := h.service.Config
 	for _, object := range []runtime.Object{
 		&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: cfg.Namespace, Name: cfg.PublicationWorker.ServiceAccountName, UID: types.UID(cfg.PublicationWorker.ServiceAccountUID)}},
-		&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Namespace: cfg.Namespace, Name: cfg.StagingClaim, UID: "staging-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "staging-pv"}},
-		&corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: "staging-pv", UID: "staging-pv-uid"}, Spec: corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Namespace: cfg.Namespace, Name: cfg.StagingClaim, UID: "staging-uid"}}},
 	} {
 		if err := f.client.Tracker().Add(object); err != nil {
 			t.Fatal(err)

@@ -85,37 +85,68 @@ func sameOriginalContainerMember(expected, actual pc.Member) bool {
 }
 
 func (s *DeploymentService) inspectOriginalRemoteContainerMember(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, object ArtifactReadObject, capture publicationVerifiedCapture, part publicationVerifiedPart, member pc.Member, location pc.MemberLocation) error {
+	_, err := s.inspectOriginalRemoteContainerMemberRelations(ctx, claim, attempt, reader, object, capture, part, member, location, nil)
+	return err
+}
+
+// Keep the SAME current verifier, envelope, authenticated stream and final
+// Recheck. Only the finalizer selects the enhanced concrete content parser;
+// ordinary callers keep their existing parser and receive no mutable hook.
+// A record escapes only AFTER the full cipher/EOF and current recheck succeed.
+func (s *DeploymentService) inspectOriginalRemoteContainerMemberRelations(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, object ArtifactReadObject, capture publicationVerifiedCapture, part publicationVerifiedPart, member pc.Member, location pc.MemberLocation, relations *publicationFinalTeamRelations) (c.PublisherCaptureRecord, error) {
+	return s.inspectOriginalRemoteContainerMemberSamples(ctx, claim, attempt, reader, object, capture, part, member, location, relations, nil)
+}
+
+func (s *DeploymentService) inspectOriginalRemoteContainerMemberSamples(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, object ArtifactReadObject, capture publicationVerifiedCapture, part publicationVerifiedPart, member pc.Member, location pc.MemberLocation, relations *publicationFinalTeamRelations, samples *publicationContentSamples) (c.PublisherCaptureRecord, error) {
+	var zero c.PublisherCaptureRecord
 	verifier, err := s.PublisherVerifierForPart(ctx, claim, attempt, part.Part)
 	if err != nil {
-		return err
+		return zero, err
 	}
 	defer verifier.Close()
 	bounded, cancel := context.WithDeadline(ctx, verifier.ValidUntil())
 	defer cancel()
 	record, err := verifier.CapturedRecord(bounded)
 	if err != nil {
-		return err
+		return zero, err
 	}
 	original, candidate, err := publicationContainerMember(capture, part, record)
 	if err != nil || !sameOriginalContainerMember(original, member) {
-		return c.ErrExecutionRecord
+		return zero, c.ErrExecutionRecord
 	}
 	envelope, err := reader.ReadContainerEnvelope(bounded, object, member, location, verifier.ValidUntil())
 	if err != nil {
-		return err
+		return zero, err
 	}
 	defer clear(envelope)
 	bound, err := verifier.ForEnvelope(bounded, envelope)
 	if err != nil {
-		return err
+		return zero, err
 	}
+	var observed ownedPayloadCounts
 	_, err = reader.InspectContainerCipher(bounded, object, member, location, envelope, bound, func(plain io.Reader) error {
+		if relations != nil {
+			return inspectOwnedBusinessPayloadRelations(bounded, record.Invocation, candidate, plain, relations, &observed)
+		}
 		return inspectOwnedBusinessPayload(bounded, record.Invocation, candidate, plain)
 	}, verifier.ValidUntil())
 	if err != nil {
-		return err
+		return zero, err
 	}
-	return verifier.Recheck(bounded)
+	if err = verifier.Recheck(bounded); err != nil {
+		return zero, err
+	}
+	if relations != nil {
+		if err = relations.confirmPart(record.Invocation); err != nil {
+			return zero, err
+		}
+	}
+	if samples != nil {
+		if err = samples.confirm(record.Invocation, object, member, location, observed); err != nil {
+			return zero, err
+		}
+	}
+	return record, nil
 }
 
 func (s *DeploymentService) readOriginalRemoteContainerControl(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, capture publicationVerifiedCapture, part publicationVerifiedPart, objects map[string]ArtifactReadObject) (_ []byte, resultErr error) {

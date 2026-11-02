@@ -471,8 +471,9 @@ func publicationLocalPathAbsent(err error) bool {
 	return ok && os.IsNotExist(path.Err)
 }
 
-// Only exact previously frozen names are queried. A surviving file, unknown
-// result or replacement task directory never becomes permission to remove it.
+// Query only; never remove a survivor. Besides exact frozen names, inspect
+// bounded custody metadata so a late/unlisted same-task seal cannot be hidden
+// by an otherwise empty original set. Foreign ciphertext is never read/hashed.
 func publicationLocalFilesAbsent(parent, custody *os.Root, task string, seals []publicationLocalSeal) bool {
 	if parent == nil || custody == nil || task == "" || filepath.Base(task) != task || !publicationLocalCustodyCurrent(parent, custody) {
 		return false
@@ -484,11 +485,78 @@ func publicationLocalFilesAbsent(parent, custody *os.Root, task string, seals []
 		return false
 	}
 	for _, seal := range seals {
+		if seal.Intent.Scope.Task != task || seal.Intent.Scope.Installation != seals[0].Intent.Scope.Installation {
+			return false
+		}
 		for _, name := range []string{seal.Name, seal.Name + ".intent.json"} {
 			if _, err := custody.Lstat(name); !publicationLocalPathAbsent(err) {
 				return false
 			}
 		}
 	}
+	if !publicationLocalForeignCustodyOnly(custody, task, seals) {
+		return false
+	}
 	return publicationLocalCustodyCurrent(parent, custody)
+}
+
+// Called under the shared custody lock by the production absence consumer.
+// Unknown names, partial/unpaired copies and target-task attribution all fail
+// closed; canonical paired foreign intents justify preserving those files.
+func publicationLocalForeignCustodyOnly(custody *os.Root, task string, seals []publicationLocalSeal) bool {
+	if custody == nil || len(seals) == 0 {
+		return false
+	}
+	directory, err := custody.Open(".")
+	if err != nil {
+		return false
+	}
+	entries, readErr := directory.ReadDir(10001)
+	closeErr := directory.Close()
+	if readErr != nil && readErr != io.EOF || closeErr != nil || len(entries) > 10000 {
+		return false
+	}
+	files := map[string]os.FileInfo{}
+	for _, entry := range entries {
+		info, err := custody.Lstat(entry.Name())
+		if err != nil || !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 || info.Size() < 0 {
+			return false
+		}
+		files[entry.Name()] = info
+	}
+	jobs, invocations := map[string]bool{}, map[string]bool{}
+	for _, seal := range seals {
+		jobs[seal.Intent.Scope.JobUID] = true
+		invocations[seal.Intent.Scope.InvocationSHA256] = true
+	}
+	checked := map[string]bool{}
+	for name := range files {
+		if name == ".custody.lock" || name == ".custody-policy.json" {
+			continue
+		}
+		base := strings.TrimSuffix(name, ".intent.json")
+		if !strings.HasPrefix(base, "seal-") || !strings.HasSuffix(base, ".enc") || !formalCandidateDigest(strings.TrimSuffix(strings.TrimPrefix(base, "seal-"), ".enc")) {
+			return false
+		}
+		if checked[base] {
+			continue
+		}
+		object, hasObject := files[base]
+		intent, hasIntent := files[base+".intent.json"]
+		if !hasObject || !hasIntent || intent.Size() < 1 || intent.Size() > 8192 {
+			return false
+		}
+		raw, err := readStageFile(custody, base+".intent.json", 8192)
+		var other staging.SealIntent
+		if err != nil || json.Unmarshal(raw, &other) != nil {
+			return false
+		}
+		canonical, err := json.Marshal(other)
+		ref, refErr := staging.SealReferenceForIntent(other)
+		if err != nil || refErr != nil || !bytes.Equal(raw, canonical) || ref != "controller-staging-seal.v1/"+base || other.Scope.Installation != seals[0].Intent.Scope.Installation || other.Scope.Task == task || jobs[other.Scope.JobUID] || invocations[other.Scope.InvocationSHA256] || object.Size() != other.Original.Size {
+			return false
+		}
+		checked[base] = true
+	}
+	return true
 }

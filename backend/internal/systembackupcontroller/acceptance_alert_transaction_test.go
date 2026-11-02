@@ -275,6 +275,20 @@ func TestAcceptanceTerminalSequenceSkipsNonSequenceOutcomes(t *testing.T) {
 	}
 }
 
+func TestAcceptanceTerminalCompleteNonDRSuccessLeavesSequenceUnchanged(t *testing.T) {
+	state := &acceptanceTransactionTestState{now: time.Now().UTC(), terminalRows: 1, preStatus: "publishing", postStatus: "succeeded", postPurpose: "functional_test", postDecided: true}
+	db := sql.OpenDB(acceptanceTransactionConnector{state: state})
+	defer db.Close()
+	err := ApplyAcceptanceTerminalWithSequence(context.Background(), db, "installation_test", 7, acceptanceTarget(), 4,
+		AcceptanceTerminalOutcome{TaskType: TargetBackup, Purpose: "functional_test", Status: "succeeded", EligibilityDecided: true, Eligible: false},
+		func(ctx context.Context, executor Executor) (sql.Result, error) {
+			return executor.ExecContext(ctx, "UPDATE system_backup_v2_backups SET status = 'succeeded', acceptance_eligible = FALSE, eligibility_reason_codes = 'functional_test', eligibility_decided_at = UTC_TIMESTAMP(6), row_version = row_version + 1 WHERE origin_installation_id = ? AND public_id = ? AND row_version = ? AND status = 'publishing'", "installation_test", acceptanceTarget().PublicID, uint64(4))
+		})
+	if err != nil || !reflect.DeepEqual(state.order, []string{"begin", "lock-task", "task-cas", "verify-task", "event", "commit"}) {
+		t.Fatal("complete ordinary success changed acceptance sequence or duplicated event", err, state.order)
+	}
+}
+
 func TestAcceptanceTerminalEventFailureRollsBackTaskAndSequence(t *testing.T) {
 	for _, test := range []struct {
 		name      string

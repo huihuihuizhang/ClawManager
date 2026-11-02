@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 174,
-    "hash": "d4fe00a440acf094e1def2d99586e333bed7803ba82b504ab25829b133680a21"
+    "file_count": 175,
+    "hash": "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 139,
+    "object_count": 141,
     "policy_recorded": 79,
-    "policy_pending": 60,
+    "policy_pending": 62,
     "cross_review_pending": 79
   },
   "objects": [
@@ -4086,6 +4086,69 @@
       ],
       "approved_cross_reviewers": [],
       "redacted_explanation": "Preserve definitions, owner isolation, relationships, original states, results and artifact references. Isolated restoration normalizes active work and removes source execution/credential references; no interrupted work is resumed."
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_installation_owner_heads",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.installation_owner_heads.reference.verify.v1",
+      "depends_on": [
+        "table:users"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Only schema metadata is recorded. Signed owner heads/grants, signatures, active/revoked states and all record/head/row revisions are never exported or restored. Independently enrolled target authority must never be overwritten or rolled back. users is a semantic current-owner/actor binding, not a DDL foreign key.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/134_backup_v2_installation_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_installation_owner_grants",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.installation_owner_grants.reference.verify.v1",
+      "depends_on": [
+        "table:system_backup_installation_owner_heads",
+        "table:users"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Only schema metadata is recorded. Signed owner heads/grants, signatures, active/revoked states and all record/head/row revisions are never exported or restored. Independently enrolled target authority must never be overwritten or rolled back. users is a semantic current-owner/actor binding, not a DDL foreign key. The grants-to-heads dependency is the actual migration134 foreign key with ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/134_backup_v2_installation_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
     }
   ]
 }

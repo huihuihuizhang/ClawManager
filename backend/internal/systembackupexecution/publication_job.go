@@ -166,6 +166,10 @@ func (s *DeploymentService) checkPublicationJobResources(ctx context.Context) er
 // No native creation, task mutation or new delegation occurs in this exact
 // definition. It is also used to authenticate the original Job on reopen.
 func (s *DeploymentService) publicationJobDefinition(ctx context.Context, claim c.ClaimToken, attempt uint64, request PublicationUploadRequest) (*batchv1.Job, string, error) {
+	stagingNode, err := s.publicationStagingNode(ctx)
+	if err != nil || stagingNode == "" {
+		return nil, "", c.ErrExecutionAuthority
+	}
 	inputs, err := s.publicationJobInputs(ctx, claim, attempt, request)
 	if err != nil {
 		return nil, "", err
@@ -188,7 +192,7 @@ func (s *DeploymentService) publicationJobDefinition(ctx context.Context, claim 
 		return nil, "", c.ErrExecutionAuthority
 	}
 	endpoint.Path, endpoint.RawPath = PublicationResultPath, ""
-	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs, ResultRelayURL: endpoint.String()})
+	want, err := kube.PublishJob(kube.PublishJobRequest{Identity: kube.Identity{Namespace: s.Config.Namespace, Name: name, Owner: claim.Target.PublicID}, Image: s.Config.WorkerImage, ServiceAccount: s.Config.PublicationWorker.ServiceAccountName, StagingClaim: s.Config.StagingClaim, NodeName: stagingNode, InvocationConfigMap: name + "-request", UploadCredentialSecret: name + "-upload", RequestSHA256: requestSHA, DeadlineSeconds: seconds, InputFiles: inputs, ResultRelayURL: endpoint.String()})
 	if err != nil {
 		return nil, "", err
 	}

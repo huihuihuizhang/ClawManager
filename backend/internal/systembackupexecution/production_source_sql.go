@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"path"
 	"reflect"
 	"strings"
@@ -27,10 +28,6 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 	if x.Recheck(ctx) != nil || x.service.Source == nil {
 		return zero, d.ErrNotReady
 	}
-	template := x.service.captureMaterials.Operations["capture-database"].Request.Database
-	if template == nil || template.SchemaCensus == nil {
-		return zero, d.ErrNotReady
-	}
 	tx, err := x.service.Source.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, d.ErrNotReady
@@ -41,6 +38,24 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 	}
 	instances, err := domain.ReadSourceInstances(ctx, tx)
 	if err != nil || !reflect.DeepEqual(instances, source.Instances) {
+		return zero, d.ErrNotReady
+	}
+	metadata, err := readProductionSQLMetadata(ctx, x.service, tx, instances)
+	if err != nil || tx.Commit() != nil || x.Recheck(ctx) != nil {
+		return zero, d.ErrNotReady
+	}
+	return metadata, nil
+}
+
+// Shared actual read-only SQL reader. Callers retain their own mandatory
+// authority before and after this transaction; it cannot approve any task.
+func readProductionSQLMetadata(ctx context.Context, s *DeploymentService, tx *sql.Tx, instances []b.InstanceIdentity) (productionSQLSourceMetadata, error) {
+	var zero productionSQLSourceMetadata
+	if s == nil || tx == nil || s.captureMaterials == nil || ctx == nil || ctx.Err() != nil {
+		return zero, d.ErrNotReady
+	}
+	template := s.captureMaterials.Operations["capture-database"].Request.Database
+	if template == nil || template.SchemaCensus == nil {
 		return zero, d.ErrNotReady
 	}
 	census, err := domain.ObserveBusinessSchemaCensus(ctx, tx, *template.SchemaCensus)
@@ -57,7 +72,7 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 	}
 	metadata := productionSQLSourceMetadata{Schema: schema, Census: census, Images: map[int]string{}, WorkBuddy: map[int]domain.WorkBuddyUIDIdentity{}}
 	byID := map[int]b.InstanceIdentity{}
-	for _, instance := range source.Instances {
+	for _, instance := range instances {
 		byID[instance.ID] = instance
 	}
 	rows, err := tx.QueryContext(ctx, "SELECT id,os_version,image_registry,image_tag FROM instances ORDER BY id")
@@ -73,13 +88,12 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 		}
 		metadata.Images[id] = productionImageReference(byID[id], osVersion, registry, tag)
 	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil || len(metadata.Images) != len(source.Instances) {
+	err = errors.Join(rows.Err(), rows.Close())
+	if err != nil || len(metadata.Images) != len(instances) {
 		return zero, d.ErrNotReady
 	}
 	hasWorkBuddy := false
-	for _, instance := range source.Instances {
+	for _, instance := range instances {
 		hasWorkBuddy = hasWorkBuddy || workBuddyUIDSource(instance)
 	}
 	if hasWorkBuddy {
@@ -116,8 +130,7 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 				maximum = identity.UID
 			}
 		}
-		err = rows.Err()
-		rows.Close()
+		err = errors.Join(rows.Err(), rows.Close())
 		if err != nil {
 			return zero, d.ErrNotReady
 		}
@@ -125,7 +138,7 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 		if tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM workbuddy_linux_identity_allocator").Scan(&count) != nil || count != 1 || tx.QueryRowContext(ctx, "SELECT id,next_uid FROM workbuddy_linux_identity_allocator").Scan(&id, &next) != nil || id != 1 || next < 10000 || next > 65534 || next <= maximum {
 			return zero, d.ErrNotReady
 		}
-		for _, instance := range source.Instances {
+		for _, instance := range instances {
 			identity, exists := metadata.WorkBuddy[instance.ID]
 			if workBuddyUIDSource(instance) {
 				if !exists || identity.UserID != instance.UserID {
@@ -140,7 +153,7 @@ func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, sourc
 			}
 		}
 	}
-	if x.service.checkSourceIdentity(ctx, tx) != nil || tx.Commit() != nil || x.Recheck(ctx) != nil {
+	if s.checkSourceIdentity(ctx, tx) != nil || ctx.Err() != nil {
 		return zero, d.ErrNotReady
 	}
 	return metadata, nil

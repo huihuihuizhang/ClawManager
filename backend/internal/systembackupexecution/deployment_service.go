@@ -127,6 +127,10 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 	if e = s.attachPublicationSigners(ctx, db, client, inputs.ControllerPodName); e != nil {
 		return nil, e
 	}
+	stage = "staging-location"
+	if e = s.checkStagingLocation(ctx, client); e != nil {
+		return nil, e
+	}
 	stage = "issuer"
 	rootRaw, e := os.ReadFile(cfg.IssuerCertificate)
 	if e != nil || len(rootRaw) > 65536 {
@@ -226,6 +230,9 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 		}
 	}
 	stage = "staging"
+	if e = s.checkStagingLocation(ctx, client); e != nil {
+		return nil, e
+	}
 	s.staging, e = os.OpenRoot(cfg.StagingDirectory)
 	if e != nil {
 		return nil, c.ErrExecutionAuthority
@@ -412,6 +419,9 @@ func (p deploymentBaseProbe) Check(ctx context.Context) error {
 	return p.Service.RuntimeBaseReady(ctx)
 }
 func (s *DeploymentService) RuntimeBaseReady(ctx context.Context) error {
+	if s.Config.StagingLocation != nil && s.checkStagingLocation(ctx, s.Runtime.Owner.Client) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if e := s.Runtime.Owner.Gate.Ready(ctx); e != nil {
 		return e
 	}
@@ -463,12 +473,16 @@ func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *s
 	return nil
 }
 func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr error) {
-	stage := "forward-enabled"
+	stage := "capture-capability"
 	defer func() {
 		if resultErr != nil {
 			resultErr = deploymentFailure{stage, resultErr}
 		}
 	}()
+	if e := s.checkCaptureCapability(); e != nil {
+		return e
+	}
+	stage = "forward-enabled"
 	if s.executionUnavailable.Load() {
 		stage = "execution-recovery"
 		var active int

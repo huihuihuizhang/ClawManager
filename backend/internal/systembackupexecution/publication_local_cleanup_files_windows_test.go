@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"clawreef/internal/systembackup/staging"
 	"github.com/google/uuid"
 	"golang.org/x/sys/windows"
 )
@@ -63,5 +64,18 @@ func TestPublicationLocalCleanupDoesNotReadForeignCiphertext(t *testing.T) {
 	defer plan.close()
 	if len(plan.flatFiles) != 4 {
 		t.Fatal("foreign cipher entered exact removal set")
+	}
+	ctx := context.Background()
+	if err = staging.WithCustodyLock(ctx, plan.custody, func() error {
+		if err := plan.removeLocked(ctx, func(remove func() error) error { return remove() }); err != nil {
+			return err
+		}
+		if !publicationLocalFilesAbsent(owner.Staging, plan.custody, stage.owner.Task, seals) {
+			return errors.New("absence scan read a locked foreign cipher or rejected its metadata")
+		}
+		_, err := plan.custody.Lstat(foreign.Name)
+		return err
+	}); err != nil {
+		t.Fatal("query-only absence must preserve and avoid reading foreign ciphertext", err)
 	}
 }

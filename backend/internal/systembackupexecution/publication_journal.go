@@ -102,7 +102,18 @@ func (d *DeploymentService) beginPublicationActionWithProof(ctx context.Context,
 }
 
 func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker) (publicationJournalAction, bool, error) {
+	return d.beginPublicationActionWithAcceptanceProof(ctx, claim, attempt, target, intent, continuation, postC, marker, nil)
+}
+
+func (d *DeploymentService) beginPublicationActionWithAcceptanceProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker, acceptance *publicationSignedAcceptance) (publicationJournalAction, bool, error) {
+	return d.beginPublicationActionWithCatalogProof(ctx, claim, attempt, target, intent, continuation, postC, marker, acceptance, nil)
+}
+
+func (d *DeploymentService) beginPublicationActionWithCatalogProof(ctx context.Context, claim c.ClaimToken, attempt uint64, target PublicationTargetMaterials, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker, acceptance *publicationSignedAcceptance, catalog *publicationSignedCatalog) (publicationJournalAction, bool, error) {
 	var zero publicationJournalAction
+	if d == nil || ctx == nil || ctx.Err() != nil {
+		return zero, false, c.ErrExecutionAuthority
+	}
 	intent.Deadline = intent.Deadline.UTC().Truncate(time.Microsecond)
 	if intent.validate(target) != nil || target.InstallationID != d.Config.InstallationID {
 		return zero, false, errPublicationUnavailable
@@ -143,6 +154,16 @@ func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Con
 			return zero, false, err
 		}
 	}
+	if acceptance != nil {
+		if err := acceptance.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
+	if catalog != nil {
+		if err := catalog.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
 	actionKey := publicationActionKey(claim.Target.PublicID, attempt, intent.Kind)
 	previous, err := scanPublicationAction(tx.QueryRowContext(ctx, "SELECT "+publicationActionColumns+" FROM system_backup_v2_external_actions WHERE origin_installation_id=? AND target_type='backup' AND target_public_id=? AND action_type=? AND action_key=? FOR UPDATE", d.Config.InstallationID, claim.Target.PublicID, intent.Kind, actionKey))
 	if err == nil {
@@ -162,7 +183,7 @@ func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Con
 	// A valid catalog transport/current purpose mapping is not independent
 	// artifact acceptance. Existing actions remain query-only above; creation
 	// waits for the typed verified-artifact/catalog-signature producer.
-	if intent.Kind == "catalog_registration_append" {
+	if intent.Kind == "catalog_registration_append" && catalog == nil || intent.Kind == "acceptance_put" && acceptance == nil {
 		return zero, false, ErrPublicationFinalizationRequired
 	}
 	if intent.Deadline.After(access.ValidUntil()) || !time.Now().Before(intent.Deadline) {
@@ -190,6 +211,16 @@ func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Con
 	if guard.RecheckTx(ctx, tx) != nil {
 		return zero, false, c.ErrClaimLost
 	}
+	if acceptance != nil {
+		if err := acceptance.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
+	if catalog != nil {
+		if err := catalog.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
 	result, err := tx.ExecContext(ctx, `UPDATE system_backup_v2_backups SET status='publishing',can_cancel=FALSE,commit_started_at=COALESCE(commit_started_at,UTC_TIMESTAMP(6)),finalization_action_public_id=?,attention_reason='none' WHERE origin_installation_id=? AND public_id=? AND controller_owner=? AND row_version=? AND controller_lease_expires_at>UTC_TIMESTAMP(6) AND deadline_at>UTC_TIMESTAMP(6) AND status IN ('validating','publishing')`, id, d.Config.InstallationID, claim.Target.PublicID, claim.Owner, claim.RowVersion)
 	if err != nil || publicationOneRow(result) != nil {
 		return zero, false, c.ErrClaimLost
@@ -202,6 +233,16 @@ func (d *DeploymentService) beginPublicationActionWithStageProof(ctx context.Con
 	}
 	if marker != nil {
 		if err := marker.recheckClockTx(ctx, tx); err != nil {
+			return zero, false, err
+		}
+	}
+	if acceptance != nil {
+		if err := acceptance.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
+			return zero, false, err
+		}
+	}
+	if catalog != nil {
+		if err := catalog.recheckTx(ctx, tx, d, claim, attempt, target, intent); err != nil {
 			return zero, false, err
 		}
 	}
@@ -365,10 +406,18 @@ func (d *DeploymentService) publishOriginalJSONWithProof(ctx context.Context, cl
 }
 
 func (d *DeploymentService) publishOriginalJSONWithStageProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker) (nativePublicationObject, error) {
+	return d.publishOriginalJSONWithAcceptanceProof(ctx, claim, attempt, store, intent, continuation, postC, marker, nil)
+}
+
+func (d *DeploymentService) publishOriginalJSONWithAcceptanceProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker, acceptance *publicationSignedAcceptance) (nativePublicationObject, error) {
+	return d.publishOriginalJSONWithCatalogProof(ctx, claim, attempt, store, intent, continuation, postC, marker, acceptance, nil)
+}
+
+func (d *DeploymentService) publishOriginalJSONWithCatalogProof(ctx context.Context, claim c.ClaimToken, attempt uint64, store *nativePublicationS3, intent publicationJSONIntent, continuation *publicationContinuation, postC *publicationPostCManifest, marker *publicationPostManifestMarker, acceptance *publicationSignedAcceptance, catalog *publicationSignedCatalog) (nativePublicationObject, error) {
 	if store == nil || intent.Kind == "catalog_registration_append" && store.catalog == nil || intent.Kind != "catalog_registration_append" && store.catalog != nil {
 		return nativePublicationObject{}, ErrPublicationCatalogUnavailable
 	}
-	action, send, err := d.beginPublicationActionWithStageProof(ctx, claim, attempt, store.config, intent, continuation, postC, marker)
+	action, send, err := d.beginPublicationActionWithCatalogProof(ctx, claim, attempt, store.config, intent, continuation, postC, marker, acceptance, catalog)
 	if err != nil {
 		return nativePublicationObject{}, err
 	}

@@ -31,6 +31,8 @@ import (
 // material loaders. They do not replace the original task, capture Authority,
 // encrypted plan, ten worker results or current publication claim.
 type aSameTaskCertificateMaterials struct {
+	httpHistory        security.FileSigningRecordReader
+	httpHistoryPin     security.InstallationSigningPin
 	signs              atomic.Int64
 	loseSignResult     bool
 	commitACKFault     bool
@@ -227,6 +229,7 @@ func (aFixture *aSameTaskCertificateMaterials) installSigners(t *testing.T, f *d
 	materials.Record = security.FileSigningRecordReader{RecordFile: privateFile("a-original-signing-record.json", raw), SignatureFile: privateFile("a-original-signing-record.sig", ed25519.Sign(key, append([]byte(security.InstallationSigningDomain), raw...)))}
 	clear(key)
 	materials.Pin = security.InstallationSigningPin{InstallationID: g.InstallationID, Revision: record.Revision, RecordSHA256: hash(raw), Issuer: issuer}
+	aFixture.httpHistory, aFixture.httpHistoryPin = materials.Record, materials.Pin
 	raw, _ = json.Marshal(materials)
 	if err = os.WriteFile(s.Config.PublicationSigners.Path, raw, 0600); err != nil {
 		t.Fatal("original signer material", err)
@@ -293,6 +296,19 @@ func runAOriginalSixPartCertificatePublicationFixture(t *testing.T, mode string,
 		}
 		taskVersionChanged := false
 		defer func() {
+			// A real terminal transaction has already cleared this claim. Observe
+			// that exact task/version independently; never Release the old claim.
+			if !taskVersionChanged {
+				readCtx, stop := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+				defer stop()
+				var terminalVersion uint64
+				var terminalStatus string
+				var ownerCleared, leaseCleared bool
+				readErr := f.control.QueryRowContext(readCtx, `SELECT status,row_version,controller_owner IS NULL,controller_lease_expires_at IS NULL FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=?`, f.service.Config.InstallationID, f.publicID).Scan(&terminalStatus, &terminalVersion, &ownerCleared, &leaseCleared)
+				if readErr == nil && terminalStatus == "succeeded" && claim.RowVersion != ^uint64(0) && terminalVersion == claim.RowVersion+1 && ownerCleared && leaseCleared {
+					return
+				}
+			}
 			_, err := (c.ClaimCoordinator{Executor: f.control, InstallationID: f.service.Config.InstallationID}).Release(ctx, claim, time.Second)
 			if taskVersionChanged {
 				if !errors.Is(err, c.ErrClaimLost) {

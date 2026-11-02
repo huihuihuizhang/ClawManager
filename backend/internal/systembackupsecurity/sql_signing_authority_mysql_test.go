@@ -24,6 +24,14 @@ import (
 // It creates its own randomly named database and restricted SQL workload and
 // proves only the production signing SQL/transactions/grants, not all app DDL.
 func TestSQLSigningOwnerMySQL(t *testing.T) {
+	for _, taskPurpose := range []string{"acceptance", "functional_test"} {
+		t.Run(taskPurpose, func(t *testing.T) {
+			testSQLSigningOwnerMySQL(t, taskPurpose)
+		})
+	}
+}
+
+func testSQLSigningOwnerMySQL(t *testing.T, taskPurpose string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	path, expectedUUID := os.Getenv("A_SIGNING_MYSQL_DSN_FILE"), os.Getenv("A_SIGNING_MYSQL_SERVER_UUID")
@@ -178,7 +186,7 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	if err = owner.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = owner.ExecContext(ctx, `INSERT INTO system_backup_v2_backups VALUES (?,?,?,'validating',?,11,?,?,3,?,'acceptance',?)`, f.pin.InstallationID, f.task.BackupPublicID, f.task.OperationID, grant.ControllerOwner, now.Add(time.Minute), now.Add(2*time.Minute), grant.ConfigSHA256, "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle"); err != nil {
+	if _, err = owner.ExecContext(ctx, `INSERT INTO system_backup_v2_backups VALUES (?,?,?,'validating',?,11,?,?,3,?,?,?)`, f.pin.InstallationID, f.task.BackupPublicID, f.task.OperationID, grant.ControllerOwner, now.Add(time.Minute), now.Add(2*time.Minute), grant.ConfigSHA256, taskPurpose, "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = owner.ExecContext(ctx, `INSERT INTO system_backup_v2_attempts VALUES ('backup',?,'capture',?,'sealed')`, f.task.BackupPublicID, f.task.AttemptNo); err != nil {
@@ -297,6 +305,19 @@ func TestSQLSigningOwnerMySQL(t *testing.T) {
 	}
 	if f.login != 3 || f.signed != 3 || f.authorized != 0 {
 		t.Fatal("real SQL gate did not use three automatic owners")
+	}
+	otherPurpose := "functional_test"
+	if taskPurpose == otherPurpose {
+		otherPurpose = "acceptance"
+	}
+	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET task_purpose=? WHERE public_id=?`, otherPurpose, f.task.BackupPublicID); err != nil {
+		t.Fatal(err)
+	}
+	if value, _, e := prepared[0].SignCommitted(ctx); e == nil || len(value) != 0 || f.login != 3 || f.signed != 3 {
+		t.Fatal("changed real SQL task purpose reused frozen authorization")
+	}
+	if _, err = owner.ExecContext(ctx, `UPDATE system_backup_v2_backups SET task_purpose=? WHERE public_id=?`, taskPurpose, f.task.BackupPublicID); err != nil {
+		t.Fatal(err)
 	}
 	originalPod, e := k.CoreV1().Pods(controller.Namespace).Get(ctx, controller.PodName, metav1.GetOptions{})
 	if e != nil {

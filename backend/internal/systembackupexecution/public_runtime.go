@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -117,6 +118,28 @@ func NewPublicCapture(cfg PublicCaptureConfig) (*PublicCapture, error) {
 		return nil, e
 	}
 	scheduler := &c.SQLExecutionWorkStore{Queue: cfg.Queue, Authority: o.Gate.Authority, Records: o.Gate.Records, PrepareCapture: o.Gate.PrepareCapture, FinishCapture: o.Gate.FinishCapture}
+	scheduler.FinishCapture = func(ctx context.Context, work c.ExecutionWork, outcome c.ExecutionOutcome) error {
+		// B's Capture (including its original Resume defer) has already returned.
+		// Preserve original failure/recovery recording even when source-proof
+		// production is unavailable. It is a successful capture precondition only.
+		if outcome.Err != nil || work.Step != c.ExecutionCapture {
+			return o.Gate.FinishCapture(ctx, work, outcome)
+		}
+		// Let the original locked outcome logic consume a concurrent cancellation
+		// before attempting optional successful-capture observations. An ordinary
+		// success reaches the mandatory proof boundary and rolls back unchanged.
+		if err := o.Gate.FinishCapture(ctx, work, outcome); !errors.Is(err, c.ErrSourceRecoveryProofRequired) {
+			return err
+		}
+		if o.productionSource == nil {
+			return c.ErrSourceRecoveryProofRequired
+		}
+		prepared, err := o.Gate.PrepareSourceRecovery(ctx, work, o.productionSource.observeSourceRecovery)
+		if err != nil {
+			return err
+		}
+		return o.Gate.FinishCaptureWithSourceRecovery(ctx, work, outcome, prepared)
+	}
 	durable := c.DurableExecutionStore{Scheduler: scheduler, Records: o.Gate.Records}
 	leased := c.LeasedExecutionRunner{Runner: bound, Store: scheduler}
 	loop := c.TaskExecutionLoop{Guard: publicCaptureGuard{Outer: cfg.Guard, Owner: o}, Store: durable, Dispatch: d.Dispatcher{Runner: leased, Ports: ports}, Interval: cfg.Queue.Policy.ReconcileInterval}

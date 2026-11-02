@@ -184,6 +184,29 @@ func decodeMetadataCanonical(raw []byte, out any) error {
 }
 
 func (x *originalSourceMetadataAuthority) checkLocal(ctx context.Context) error {
+	if x == nil || x.delegation().checkLocal(ctx) != nil {
+		return d.ErrNotReady
+	}
+	// Capture always retains its real original task authority. The deployment
+	// observer has a separate constructor and cannot supply an empty task here.
+	return x.owner.Gate.Authority.Check(ctx, x.input.Authority)
+}
+
+// The source owner's existing controller metadata delegation is shared by
+// capture and deployment observation. It grants no task or key-use authority.
+type sourceMetadataDelegation struct {
+	service             *DeploymentService
+	owner               *PublicJobOwner
+	grant               originalSourceMetadataGrant
+	scope, configSHA256 string
+	until               time.Time
+}
+
+func (x *originalSourceMetadataAuthority) delegation() *sourceMetadataDelegation {
+	return &sourceMetadataDelegation{service: x.service, owner: x.owner, grant: x.grant, scope: x.scope, configSHA256: x.input.Authority.ConfigSHA256, until: x.until}
+}
+
+func (x *sourceMetadataDelegation) checkLocal(ctx context.Context) error {
 	if x == nil || ctx == nil || ctx.Err() != nil || x.service == nil || x.owner == nil || x.owner.Client == nil || !time.Now().Before(x.until) || x.service.checkProductionCaptureMaterials() != nil {
 		return d.ErrNotReady
 	}
@@ -223,7 +246,7 @@ func (x *originalSourceMetadataAuthority) checkLocal(ctx context.Context) error 
 		return d.ErrNotReady
 	}
 	observed, err := sourceMetadataScope(*m)
-	if err != nil || observed != x.scope || g.ScopeSHA256 != x.scope || g.Version != sourceMetadataGrantVersion || g.InstallationID != s.Config.InstallationID || g.ControllerOwner != s.Config.ControllerOwner || g.DeploymentConfigSHA256 != s.ConfigDigest || g.CaptureGrantSHA256 != s.Forward.GrantSHA256() || g.ConfigSHA256 != x.input.Authority.ConfigSHA256 || g.Namespace != s.Config.Namespace || g.NamespaceUID != s.Config.NamespaceUID || g.ControllerDeployment != p.ControllerDeployment || g.ControllerDeploymentUID != p.ControllerDeploymentUID || g.ControllerServiceAccount != p.ControllerServiceAccount || g.ControllerServiceAccountUID != p.ControllerServiceAccountUID || g.Revoked || g.NotBefore.IsZero() || time.Now().Before(g.NotBefore) || g.Until.Sub(g.NotBefore) > 24*time.Hour {
+	if err != nil || observed != x.scope || g.ScopeSHA256 != x.scope || g.Version != sourceMetadataGrantVersion || g.InstallationID != s.Config.InstallationID || g.ControllerOwner != s.Config.ControllerOwner || g.DeploymentConfigSHA256 != s.ConfigDigest || g.CaptureGrantSHA256 != s.Forward.GrantSHA256() || g.ConfigSHA256 != x.configSHA256 || g.Namespace != s.Config.Namespace || g.NamespaceUID != s.Config.NamespaceUID || g.ControllerDeployment != p.ControllerDeployment || g.ControllerDeploymentUID != p.ControllerDeploymentUID || g.ControllerServiceAccount != p.ControllerServiceAccount || g.ControllerServiceAccountUID != p.ControllerServiceAccountUID || g.Revoked || g.NotBefore.IsZero() || time.Now().Before(g.NotBefore) || g.Until.Sub(g.NotBefore) > 24*time.Hour {
 		return d.ErrNotReady
 	}
 	raw, err := pinnedDeploymentFile(p.GrantFile, p.GrantSHA256, 65536)
@@ -235,11 +258,22 @@ func (x *originalSourceMetadataAuthority) checkLocal(ctx context.Context) error 
 	if decodeMetadataCanonical(raw, &signed) != nil || decodeMetadataCanonical(signed.Record, &original) != nil || original != g || !ed25519.Verify(p.Issuer, append([]byte(sourceMetadataGrantDomain), signed.Record...), signed.Signature) {
 		return d.ErrNotReady
 	}
-	return x.owner.Gate.Authority.Check(ctx, x.input.Authority)
+	return nil
 }
 
 func (x *originalSourceMetadataAuthority) Recheck(ctx context.Context) error {
 	if x.checkLocal(ctx) != nil {
+		return d.ErrNotReady
+	}
+	if x.delegation().checkWorkload(ctx) != nil {
+		return d.ErrNotReady
+	}
+	// Retain the original task/file/SQL recheck after the last workload GET.
+	return x.checkLocal(ctx)
+}
+
+func (x *sourceMetadataDelegation) checkWorkload(ctx context.Context) error {
+	if x == nil || x.service == nil || x.service.captureMaterials == nil || x.service.captureMaterials.Discovery == nil || x.owner == nil || x.owner.Client == nil || ctx == nil || ctx.Err() != nil {
 		return d.ErrNotReady
 	}
 	s, p := x.service, x.service.captureMaterials.Discovery
@@ -279,7 +313,5 @@ func (x *originalSourceMetadataAuthority) Recheck(ctx context.Context) error {
 	if err != nil || string(sourceSA.UID) != p.SourceAPIServiceAccountUID || sourceSA.DeletionTimestamp != nil {
 		return d.ErrNotReady
 	}
-	// No provider/source IO after this original SQL and file recheck. A renewal,
-	// revocation or replacement during the last workload GET closes this object.
-	return x.checkLocal(ctx)
+	return nil
 }

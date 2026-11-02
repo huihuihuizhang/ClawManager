@@ -36,16 +36,19 @@ import (
 )
 
 type aOriginalForwardFixture struct {
-	store   *nativePublicationS3
-	native  *aNativePublicationServer
-	domains []byte
-	task    *dOriginalSixPartTask
-	test    *testing.T
+	store         *nativePublicationS3
+	native        *aNativePublicationServer
+	domains       []byte
+	task          *dOriginalSixPartTask
+	test          *testing.T
+	completeNonDR bool
 }
 
 func (x *aOriginalForwardFixture) options(o *dOriginalSixPartFixtureOptions) {
 	o.CaptureDescription = true
 	o.PublicationForward = true
+	o.CompleteNonDR = x.completeNonDR
+	aOriginalCompleteStagingOptions(o)
 	previousAfterQuery := o.ControlAfterQuery
 	o.ControlAfterQuery = func(query string, cause error) {
 		if previousAfterQuery != nil {
@@ -145,6 +148,9 @@ func aOriginalPublicationFixturePolicy(t *testing.T, f *dOriginalSixPartTask) c.
 // signed before Prepare. These authenticate test evidence only; the named local
 // domains do not certify production physical isolation or recovery readiness.
 func (x *aOriginalForwardFixture) publisher(ctx context.Context, t *testing.T, f *dOriginalSixPartTask, p *PublisherVerifierMaterials) error {
+	if x.completeNonDR {
+		return x.completeNonDRPublisher(ctx, t, f, p)
+	}
 	owner, sig, err := (a.SQLOriginalReader{DB: f.db}).ReadOriginal(ctx, p.Binding.InstallationID, p.Binding.ConfigRef)
 	if err != nil {
 		return err
@@ -328,6 +334,18 @@ func TestAOriginalSixPartManifestUploadJobMySQL(t *testing.T) {
 // An optional continuation receives only this actually completed original
 // upload. Default A transport test retains its narrower original scope.
 func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(context.Context, *testing.T, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture, *nativePublicationS3, *aNativePublicationServer), configureTarget ...func(*nativePublicationS3, *aNativePublicationServer)) {
+	runAOriginalSixPartManifestUploadJobWithHooks(t, afterUploaded, nil, configureTarget...)
+}
+
+type aOriginalPublicationUploadHooks struct {
+	CompleteNonDR   bool
+	BeforeAdmission func(*dOriginalSixPartFixtureOptions, *nativePublicationS3)
+	SigningFixture  func(*aSameTaskCertificateMaterials)
+}
+
+// Optional test hooks expose the original pre-admission options and actual
+// provider fixture/counter. Existing callers retain the exact nil-hook path.
+func runAOriginalSixPartManifestUploadJobWithHooks(t *testing.T, afterUploaded func(context.Context, *testing.T, *dOriginalSixPartTask, *c.ClaimToken, publicationVerifiedCapture, *nativePublicationS3, *aNativePublicationServer), hooks *aOriginalPublicationUploadHooks, configureTarget ...func(*nativePublicationS3, *aNativePublicationServer)) {
 	if os.Getenv("TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS") == "" {
 		t.Skip("requires exclusively handed-over original SAN/TLS MySQL")
 	}
@@ -338,7 +356,21 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 		configure(store, native)
 	}
 	x := &aOriginalForwardFixture{store: store, native: native}
+	if hooks != nil {
+		x.completeNonDR = hooks.CompleteNonDR
+	}
 	fixture := &aSameTaskCertificateMaterials{configureOptions: x.options, configurePublisher: x.publisher}
+	if hooks != nil {
+		if hooks.BeforeAdmission != nil {
+			fixture.configureOptions = func(o *dOriginalSixPartFixtureOptions) {
+				x.options(o)
+				hooks.BeforeAdmission(o, store)
+			}
+		}
+		if hooks.SigningFixture != nil {
+			hooks.SigningFixture(fixture)
+		}
+	}
 	runAOriginalSixPartCertificatePublicationFixture(t, "capture-description", fixture, func(ctx context.Context, f *dOriginalSixPartTask, claim *c.ClaimToken, capture publicationVerifiedCapture) {
 		creates, patches := aInstallOriginalUploadNativeAPI(t, f)
 		policy := aOriginalPublicationFixturePolicy(t, f)
@@ -347,7 +379,11 @@ func runAOriginalSixPartManifestUploadJob(t *testing.T, afterUploaded func(conte
 			t.Fatal("original complete manifest request", err)
 		}
 		m, err := decodePublicationManifestV12(request.ManifestInput)
-		if err != nil || m.Purpose != "acceptance" || len(m.Eligibility.Disqualifiers) != 0 || len(request.Objects) != 15 {
+		wantPurpose := "acceptance"
+		if x.completeNonDR {
+			wantPurpose = "functional_test"
+		}
+		if err != nil || m.Purpose != wantPurpose || !x.completeNonDR && len(m.Eligibility.Disqualifiers) != 0 || len(m.Parts) != 6 || len(request.Objects) != 15 {
 			t.Fatal("original complete acceptance MF facts", err)
 		}
 		if err = f.service.renewFreshOriginalPublicationPreparation(ctx, claim, capture.Input.CaptureAttemptNo, policy, store.config, request); err != nil {

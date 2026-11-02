@@ -520,6 +520,13 @@ func (o *PublicJobOwner) Stopped(ctx context.Context, a d.Authority, binding d.J
 // Authorize is reached only behind WorkloadIdentity + worker.ControlHandler's
 // mTLS verification. The bound Pod and saved process/Job UID must agree.
 func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.ControlRequest) (_ worker.Lease, resultErr error) {
+	return o.authorizeOriginalControl(ctx, peer, req, true)
+}
+
+// The private implementation selector exists only to compare the two complete
+// current SQL paths in the original fixture. Both retain every authorization
+// boundary; no request field/header or exported API selects legacy execution.
+func (o *PublicJobOwner) authorizeOriginalControl(ctx context.Context, peer string, req worker.ControlRequest, currentHeldPrefix bool) (_ worker.Lease, resultErr error) {
 	cost := startOriginalControlStage(ctx, req, originalControlAuthorize)
 	defer func() { cost.finish(resultErr != nil) }()
 	var lease worker.Lease
@@ -564,6 +571,14 @@ func (o *PublicJobOwner) Authorize(ctx context.Context, peer string, req worker.
 		return lease, worker.ErrNotReady
 	}
 	a = d.Authority{InstallationID: o.Gate.Authority.InstallationID, TaskPublicID: task, TaskType: "backup", RequestID: request, ConfigVersion: configVersion, ConfigSHA256: configHash, AttemptNo: attempt, Phase: "capture", ClaimOwner: owner, ClaimRowVersion: version, MaintenanceOwner: task, MaintenanceFencingToken: fence, DeadlineAt: deadline}
+	if currentHeldPrefix && !pendingObservation && req.Action == "key-check" && req.Invocation.ProviderKey != nil && req.Invocation.FormalCapture != nil {
+		active, closeRead, scopeErr := c.OpenOriginalHeldControlReadScope(ctx, o.Gate.Authority, a)
+		if scopeErr != nil {
+			return lease, worker.ErrExecution
+		}
+		defer closeRead()
+		ctx = active
+	}
 	descriptionStage = "controller-control-execution-input"
 	inputCost := startOriginalControlStage(ctx, req, originalControlExecutionInput)
 	in, e := o.readExecutionInput(ctx, a)

@@ -107,6 +107,10 @@ func (s SQLExecutionAuthority) snapshotObserved(ctx context.Context, tx *sql.Tx,
 	if tx == nil || !validExecutionInput(a, s.InstallationID) {
 		return v, ErrExecutionAuthority
 	}
+	if useOriginalHeldControlRead(ctx, s, a) {
+		reportHere = false
+		return s.snapshotOriginalHeldControl(ctx, tx, a, report)
+	}
 	if s.ApplicationScope != "" {
 		var engine, phase, owner string
 		var token, generation uint64

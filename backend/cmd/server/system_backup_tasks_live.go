@@ -31,7 +31,14 @@ func linkedSystemBackupTaskApplication(db *sql.DB, sessions *systembackupsecurit
 			log.Print("backup execution profile unavailable; task submission disabled, authorized history and unstarted cancellation retained")
 		}
 	}
-	details := systembackupapi.SQLTaskDetails{DB: db}
+	var details systembackupapi.TaskDetails = systembackupapi.SQLTaskDetails{DB: db}
+	if os.Getenv("SYSTEM_BACKUP_PUBLICATION_READ_FILE") != "" || os.Getenv("SYSTEM_BACKUP_PUBLICATION_READ_SHA256") != "" {
+		current, readErr := loadPublicationHTTPRead(os.Getenv)
+		if readErr != nil {
+			log.Print("backup current publication reader unavailable; no current availability approval")
+		}
+		details = systembackupapi.CurrentSQLTaskDetails{DB: db, Current: current}
+	}
 	application, err := composeSystemBackupTaskApplication(db, sessions, writer, details, os.Getenv)
 	if err != nil {
 		return nil

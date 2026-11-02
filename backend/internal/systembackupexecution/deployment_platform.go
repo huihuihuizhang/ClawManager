@@ -161,6 +161,15 @@ func (s *DeploymentService) checkAutoscalers(ctx context.Context, w PlatformDepl
 
 // Deployment diagnostics never serialize Pod env/Secret/source file contents.
 func (s *DeploymentService) PublicCapability() json.RawMessage {
-	raw, _ := json.Marshal(map[string]any{"protocol": "public-v1", "scope": s.Config.CaptureScope, "parts": []string{"workspace"}, "acceptance_ready": false})
+	scope, parts := "", []string{}
+	if s != nil {
+		scope = s.Config.CaptureScope
+		// Retain the historical workspace diagnostic only for its actual
+		// profiles. A six-part deployment cannot fall back to this declaration.
+		if scope == "platform-workspace" || scope == "runtime-workspace" {
+			parts = []string{"workspace"}
+		}
+	}
+	raw, _ := json.Marshal(map[string]any{"protocol": "public-v1", "scope": scope, "parts": parts, "acceptance_ready": false})
 	return raw
 }

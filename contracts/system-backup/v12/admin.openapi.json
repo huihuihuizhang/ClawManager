@@ -265,7 +265,7 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/List"
+            "$ref": "#/components/responses/CatalogRecordList"
           },
           "default": {
             "$ref": "#/components/responses/Error"
@@ -283,7 +283,7 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Resource"
+            "$ref": "#/components/responses/CatalogRecord"
           },
           "default": {
             "$ref": "#/components/responses/Error"
@@ -1906,6 +1906,14 @@
             }
           }
         }
+      },
+      "CatalogRecord": {
+        "description": "Original verified registration from this installation",
+        "content": {"application/json": {"schema": {"$ref": "admin-catalog-record-resources.schema.json#/$defs/CatalogRecordResource"}}}
+      },
+      "CatalogRecordList": {
+        "description": "Eventual paginated local original registrations, not a global recovery catalog",
+        "content": {"application/json": {"schema": {"$ref": "admin-catalog-record-resources.schema.json#/$defs/CatalogRecordList"}}}
       },
       "Manifest": {
         "description": "Verified system-backup manifest",

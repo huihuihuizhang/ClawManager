@@ -12,8 +12,10 @@ import (
 )
 
 type productionSourceBinding struct {
-	service *DeploymentService
-	owner   *PublicJobOwner
+	service        *DeploymentService
+	owner          *PublicJobOwner
+	plan           *productionCapturePlan
+	materialSHA256 string
 }
 
 func (s *DeploymentService) attachProductionSources(owner *PublicJobOwner, profile b.LinuxProfileConfig) (b.LinuxProfileConfig, func(d.Input, b.SourceInventory, time.Time, []b.FrozenWriter) (*b.CaptureModules, error), error) {
@@ -36,12 +38,23 @@ func (s *DeploymentService) attachProductionSources(owner *PublicJobOwner, profi
 			return b.LinuxProfileConfig{}, nil, d.ErrNotReady
 		}
 	}
+	plan, err := newProductionCapturePlan(s.captureMaterials.Operations, s.captureMaterials.Revision)
+	if err != nil {
+		return b.LinuxProfileConfig{}, nil, err
+	}
+	binding.plan, binding.materialSHA256 = plan, s.captureInput.SHA256
 	profile = b.WithSkillCaptureInventory(b.WithTeamsSourceFacts(profile))
 	profile.BuildParts = nil
 	profile.FreezeSourcesWithWriters = func(ctx context.Context, in d.Input, source b.SourceInventory, writers []b.FrozenWriter) (*team.Inventory, json.RawMessage, error) {
+		if s.Config.StagingLocation != nil && s.checkStagingLocation(ctx, owner.Client) != nil {
+			return nil, nil, d.ErrNotReady
+		}
 		return s.freezeProductionSource(ctx, owner, in, source, writers, nil)
 	}
 	profile.CheckFrozenSources = func(ctx context.Context, in d.Input, current, frozen b.SourceInventory, writers []b.FrozenWriter) error {
+		if s.Config.StagingLocation != nil && s.checkStagingLocation(ctx, owner.Client) != nil {
+			return d.ErrNotReady
+		}
 		var saved productionCaptureMetadata
 		if decodeMetadataCanonical(frozen.CaptureMetadata, &saved) != nil {
 			return d.ErrNotReady
@@ -59,11 +72,34 @@ func (s *DeploymentService) attachProductionSources(owner *PublicJobOwner, profi
 	}
 	// The factory is PURE and consumes the exact post-writer source metadata.
 	// Original files/source grants are rechecked by the freeze/check hooks.
-	factory := func(in d.Input, source b.SourceInventory, hold time.Time, writers []b.FrozenWriter) (*b.CaptureModules, error) {
-		return productionCaptureModules(in, source, hold, writers, s.captureMaterials.Operations, s.captureMaterials.Revision)
-	}
+	factory := binding.moduleFactory()
 	owner.productionSource = binding
 	return profile, factory, nil
+}
+
+func (x *productionSourceBinding) matchesCapturePlan() bool {
+	return x != nil && x.service != nil && x.owner != nil && x.owner.productionSource == x && x.service.ForwardEnabled && x.service.captureMaterials != nil && x.service.captureInput != nil && x.materialSHA256 != "" && x.materialSHA256 == x.service.captureInput.SHA256 && x.plan.matches(x.service.captureMaterials.Operations, x.service.captureMaterials.Revision)
+}
+
+func (x *productionSourceBinding) moduleFactory() func(d.Input, b.SourceInventory, time.Time, []b.FrozenWriter) (*b.CaptureModules, error) {
+	plan := x.plan
+	return func(in d.Input, source b.SourceInventory, hold time.Time, writers []b.FrozenWriter) (*b.CaptureModules, error) {
+		if !x.matchesCapturePlan() || x.plan != plan {
+			return nil, d.ErrNotReady
+		}
+		cfg := x.service.Config
+		node := cfg.Workspace.Node
+		if cfg.StagingLocation != nil {
+			if cfg.StagingLocation.validate(cfg) != nil {
+				return nil, d.ErrNotReady
+			}
+			node = cfg.StagingLocation.Node
+		}
+		if node == "" || node != cfg.Workspace.Node || cfg.Security.NodeUIDs[node] == "" {
+			return nil, d.ErrNotReady
+		}
+		return plan.build(in, source, hold, writers, node)
+	}
 }
 
 func (o *PublicJobOwner) supportsCapture(in d.Input) error {
@@ -80,8 +116,14 @@ func (o *PublicJobOwner) supportsCapture(in d.Input) error {
 	if in.Authority.TaskType == "preflight" && in.Backup == nil {
 		return nil
 	}
-	if in.Authority.TaskType != "backup" || in.Backup == nil || in.Backup.TaskPurpose != "acceptance" || d.ValidateBackupSpec(in.Backup) != nil {
+	if !completeProductionCaptureInput(in) {
 		return d.ErrNotReady
 	}
 	return nil
+}
+
+// This is only the admitted task shape. Original authority, config, grants,
+// materials and source-window checks still run at their existing boundaries.
+func completeProductionCaptureInput(in d.Input) bool {
+	return in.Authority.TaskType == "backup" && d.ValidateBackupSpec(in.Backup) == nil && len(in.Backup.RequestedParts) == 6
 }

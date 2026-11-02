@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"clawreef/internal/systembackup/worker"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -18,6 +19,7 @@ type dOriginalSixPartFixtureOptions struct {
 	// Actual artifact purpose mapping declared before original config/task
 	// admission. No existing JSON, source settings or claim is rewritten.
 	PublicationTarget *PublicationTargetMaterials
+	CompleteNonDR     bool // Original request purpose selected before HTTP admission; all six parts remain.
 	// Explicit new pre-capture protocol variant. Legacy ten workers stay ten.
 	CaptureDescription       bool
 	PublicationForward       bool
@@ -31,9 +33,12 @@ type dOriginalSixPartFixtureOptions struct {
 	ControlCommitACKLoss *atomic.Bool
 	// Controlled pre-collector diagnostics only; nil preserves the original
 	// connector and continuation. These cannot replace a validated capture.
-	ControlBeforeQuery   func(context.Context, string) error
-	ControlAfterQuery    func(string, error)
-	AfterOriginalPrepare func(context.Context, *testing.T, *dOriginalSixPartTask, d.Plan) error
+	ControlBeforeQuery func(context.Context, string) error
+	ControlAfterQuery  func(string, error)
+	// Optional fixture-only wrapper of the SAME production authorizer. It
+	// preserves mTLS/TokenReview and the original request/window/capture path.
+	WrapOriginalControlAuthorizer func(worker.Authorizer) worker.Authorizer
+	AfterOriginalPrepare          func(context.Context, *testing.T, *dOriginalSixPartTask, d.Plan) error
 }
 
 func prepareDOriginalPublicationReferences(values map[string]any, target PublicationTargetMaterials) error {

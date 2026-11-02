@@ -78,6 +78,81 @@ func TestVerifyAcceptanceCandidate(t *testing.T) {
 	if err := history.VerifyAcceptanceCandidate(good, binding); err != nil {
 		t.Fatal(err)
 	}
+	t.Run("functional_test_negative_qualification", func(t *testing.T) {
+		decision := func(accepted bool, codes []string) map[string]any {
+			p := copyAcceptanceMap(payload)
+			digest := sha256.Sum256(acceptanceCanonicalArray(codes))
+			p["local_acceptance"], p["local_reason_codes"], p["local_reason_codes_hash"] = accepted, codes, hex.EncodeToString(digest[:])
+			return p
+		}
+		ordinary := makeDoc(decision(false, []string{"functional_test"}))
+		// Verify the original signed ordinary receipt through both independent
+		// read interfaces. This authenticates a negative qualification only.
+		for _, codes := range [][]string{
+			{"functional_test"},
+			{"attestation_invalid", "consistency_not_strong", "disqualifying_warning", "functional_test", "kek_not_recoverable", "target_not_external", "target_risk"},
+		} {
+			raw := makeDoc(decision(false, codes))
+			if err := VerifyAcceptanceCandidate(raw, binding, []AcceptanceCandidateKey{key}); err != nil {
+				t.Fatal("valid signed ordinary negative qualification rejected", err)
+			}
+			if err := history.VerifyAcceptanceCandidate(raw, binding); err != nil {
+				t.Fatal("ordinary negative qualification history read rejected", err)
+			}
+		}
+		for _, tc := range []struct {
+			name     string
+			accepted bool
+			codes    []string
+		}{
+			{"ordinary_marked_eligible", true, []string{"functional_test"}},
+			{"eligible_mixed_with_ordinary", true, []string{"eligible", "functional_test"}},
+			{"negative_receipt_contains_eligible", false, []string{"eligible", "functional_test"}},
+			{"wrong_case", false, []string{"Functional_test"}},
+			{"unknown_reason", false, []string{"functional_test_only"}},
+			{"unsorted", false, []string{"functional_test", "attestation_invalid"}},
+			{"duplicate", false, []string{"functional_test", "functional_test"}},
+			{"empty", false, []string{}},
+			{"eight_reasons", false, []string{"attestation_invalid", "consistency_not_strong", "disqualifying_warning", "eligible", "functional_test", "kek_not_recoverable", "target_not_external", "target_risk"}},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				if err := history.VerifyAcceptanceCandidate(makeDoc(decision(tc.accepted, tc.codes)), binding); err == nil {
+					t.Fatal("invalid signed ordinary qualification accepted")
+				}
+			})
+		}
+		badHash := decision(false, []string{"functional_test"})
+		badHash["local_reason_codes_hash"] = hash
+		if err := history.VerifyAcceptanceCandidate(makeDoc(badHash), binding); err == nil {
+			t.Fatal("signed ordinary receipt with wrong reason digest accepted")
+		}
+		for _, mutation := range []string{"reason_with_updated_hash", "signature", "domain"} {
+			t.Run("tampered_"+mutation, func(t *testing.T) {
+				var doc map[string]map[string]any
+				if json.Unmarshal(ordinary, &doc) != nil {
+					t.Fatal("ordinary receipt fixture")
+				}
+				switch mutation {
+				case "reason_with_updated_hash":
+					codes := []string{"target_risk"}
+					digest := sha256.Sum256(acceptanceCanonicalArray(codes))
+					doc["payload"]["local_reason_codes"] = codes
+					doc["payload"]["local_reason_codes_hash"] = hex.EncodeToString(digest[:])
+				case "signature":
+					doc["signature"]["value"] = base64.RawURLEncoding.EncodeToString(make([]byte, ed25519.SignatureSize))
+				case "domain":
+					doc["signature"]["domain_separator"] = "clawmanager.system-backup.capture_certificate.v1"
+				}
+				raw, err := json.Marshal(doc)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := history.VerifyAcceptanceCandidate(raw, binding); err == nil {
+					t.Fatal("tampered ordinary receipt accepted")
+				}
+			})
+		}
+	})
 	otherInstallation := binding
 	otherInstallation.OriginInstallationID = "installation_other"
 	if err := history.VerifyAcceptanceCandidate(good, otherInstallation); err == nil {

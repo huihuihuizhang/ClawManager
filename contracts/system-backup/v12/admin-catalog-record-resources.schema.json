@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local original signed catalog registration read resources",
+  "x-contract-version": "system-backup-plan.v12",
+  "x-contract-status": "candidate",
+  "description": "Current installation's existing original registrations; not a global recovery catalog or recoverability assertion.",
+  "$defs": {
+    "CatalogRecordResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "record_sha256", "record"],
+      "properties": {
+        "id": {"$ref": "admin-api-common.schema.json#/$defs/CatalogRecordPublicId"},
+        "record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "record": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["payload", "signature"],
+          "properties": {
+            "payload": {
+              "allOf": [
+                {"$ref": "public-c-crypto-v1/catalog-payload.schema.json"},
+                {"properties": {"event_type": {"const": "artifact_registered"}}, "required": ["event_type"]}
+              ]
+            },
+            "signature": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["algorithm", "domain_separator", "key_id", "key_purpose", "key_version", "protected_header", "value"],
+              "properties": {
+                "algorithm": {"const": "EdDSA"},
+                "domain_separator": {"const": "clawmanager.system-backup.catalog_record.v1"},
+                "key_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                "key_purpose": {"const": "catalog_record"},
+                "key_version": {"type": "string", "minLength": 1, "maxLength": 128},
+                "protected_header": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^[A-Za-z0-9_-]+$"},
+                "value": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[A-Za-z0-9_-]+$"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "CatalogRecordList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "next_cursor", "consistency"],
+      "properties": {
+        "items": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/CatalogRecordResource"}},
+        "next_cursor": {"$ref": "admin-api-common.schema.json#/$defs/NullableCursor"},
+        "consistency": {"const": "eventual"}
+      }
+    }
+  }
+}

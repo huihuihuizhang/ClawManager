@@ -167,25 +167,64 @@ func TestPublicationFirstProcessCannotIgnoreAnotherPrivateGrantHolder(t *testing
 }
 
 func TestPublicationOriginalProcessReadsActualPinnedNodeAPI(t *testing.T) {
-	job, pod, m, _ := publicationUploadExitData(t)
-	pod.Status.Phase = corev1.PodRunning
-	pod.Status.ContainerStatuses[0].State = corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}
-	client := kubefake.NewSimpleClientset(&pod, &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: pod.Spec.NodeName, UID: "node-uid"}})
-	service := &DeploymentService{Runtime: &PublicCapture{Owner: &PublicJobOwner{Client: client}}, Config: DeploymentConfig{PublicationWorker: &PublicationWorkerReference{ServiceAccountUID: "publisher-sa"}}}
-	service.Config.Security.NodeUIDs = map[string]string{pod.Spec.NodeName: "node-uid"}
-	process, err := service.originalPublicationProcessFromPod(context.Background(), job, &pod, m, 1)
-	if err != nil || process.Pod.UID != string(pod.UID) || process.NodeUID != "node-uid" {
-		t.Fatal("actual first original process API observation", err)
-	}
-	node, err := client.CoreV1().Nodes().Get(context.Background(), pod.Spec.NodeName, metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	node.UID = "replacement-node"
-	if err = client.Tracker().Update(corev1.SchemeGroupVersion.WithResource("nodes"), node, ""); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = service.originalPublicationProcessFromPod(context.Background(), job, &pod, m, 1); err == nil {
-		t.Fatal("replacement actual Node UID accepted")
+	for _, fault := range []string{"current", "other-known-node", "node-replaced", "claim-replaced", "controller-exited", "binding-deleted", "expired-context", "missing-binding"} {
+		t.Run(fault, func(t *testing.T) {
+			service, client, controller, node, claim, pv := stagingLocationFixture()
+			job, pod, m, _ := publicationUploadExitData(t)
+			job.Namespace, pod.Namespace, m.Namespace = service.Config.Namespace, service.Config.Namespace, service.Config.Namespace
+			pod.Spec.NodeName = node.Name
+			pod.Status.Phase = corev1.PodRunning
+			pod.Status.ContainerStatuses[0].State = corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}
+			service.Config.PublicationWorker = &PublicationWorkerReference{ServiceAccountUID: "publisher-sa"}
+			ctx := context.Background()
+			switch fault {
+			case "other-known-node":
+				other := node.DeepCopy()
+				other.Name, other.UID = "other-known-node", "other-known-uid"
+				service.Config.Security.NodeUIDs[other.Name] = string(other.UID)
+				if err := client.Tracker().Add(other); err != nil {
+					t.Fatal(err)
+				}
+				pod.Spec.NodeName = other.Name
+			case "node-replaced":
+				node.UID = "replacement-node"
+				if _, err := client.CoreV1().Nodes().Update(ctx, node, metav1.UpdateOptions{}); err != nil {
+					t.Fatal(err)
+				}
+			case "claim-replaced":
+				claim.UID = "replacement-claim"
+				if _, err := client.CoreV1().PersistentVolumeClaims(claim.Namespace).Update(ctx, claim, metav1.UpdateOptions{}); err != nil {
+					t.Fatal(err)
+				}
+			case "controller-exited":
+				controller.Status.ContainerStatuses[0].State = corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}
+				if _, err := client.CoreV1().Pods(controller.Namespace).Update(ctx, controller, metav1.UpdateOptions{}); err != nil {
+					t.Fatal(err)
+				}
+			case "binding-deleted":
+				if err := client.CoreV1().PersistentVolumes().Delete(ctx, pv.Name, metav1.DeleteOptions{}); err != nil {
+					t.Fatal(err)
+				}
+			case "expired-context":
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithDeadline(ctx, time.Now().Add(-time.Second))
+				defer cancel()
+			case "missing-binding":
+				service.Config.StagingLocation = nil
+			}
+			if err := client.Tracker().Add(&pod); err != nil {
+				t.Fatal(err)
+			}
+			for _, sequence := range []uint64{1, 2} {
+				process, err := service.originalPublicationProcessFromPod(ctx, job, &pod, m, sequence)
+				if fault == "current" {
+					if err != nil || process.Pod.UID != string(pod.UID) || process.NodeUID != "original-node-uid" {
+						t.Fatal("actual original staging/process observation", err)
+					}
+				} else if err == nil || process.Pod.UID != "" {
+					t.Fatal("invalid current staging accepted", fault, sequence)
+				}
+			}
+		})
 	}
 }

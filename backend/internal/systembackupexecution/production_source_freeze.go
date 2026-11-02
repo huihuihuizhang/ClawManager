@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"reflect"
 	"sort"
 	"strconv"
@@ -15,30 +16,42 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *PublicJobOwner, in d.Input, source b.SourceInventory, writers []b.FrozenWriter, saved *productionCaptureMetadata) (*team.Inventory, json.RawMessage, error) {
+func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *PublicJobOwner, in d.Input, source b.SourceInventory, writers []b.FrozenWriter, saved *productionCaptureMetadata) (teamsOut *team.Inventory, metadataOut json.RawMessage, failure error) {
+	stage := "source_inventory"
+	defer func() {
+		if failure != nil {
+			// Closed stage names only: never log source metadata or credentials.
+			log.Printf("[system-backup-public] source-freeze=%s recheck=%t", stage, saved != nil)
+		}
+	}()
 	if source.TeamFacts == nil || source.Skills == nil || len(writers) == 0 {
 		return nil, nil, d.ErrNotReady
 	}
+	stage = "source_authority"
 	authority, err := s.sourceMetadataAuthority(ctx, owner, in)
 	if err != nil {
 		return nil, nil, err
 	}
 	ctx, cancel := context.WithDeadline(ctx, authority.until)
 	defer cancel()
+	stage = "sql_metadata"
 	sqlMetadata, err := authority.sqlMetadata(ctx, source)
 	if err != nil {
 		return nil, nil, err
 	}
+	stage = "source_clients"
 	clients, err := authority.openClients(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer clients.Close()
+	stage = "secret_policy"
 	secretPolicy, err := authority.loadOriginalSecretPolicy(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	var publicationPolicy *frozenPublicationPolicy
+	stage = "publication_policy"
 	if s.captureMaterials.Discovery.PublicationPolicy != nil || s.requiresOriginalPublicationPolicy() {
 		loaded, err := authority.loadOriginalPublicationPolicy(ctx)
 		if err != nil {
@@ -46,10 +59,12 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		}
 		publicationPolicy = &loaded
 	}
+	stage = "skill_metadata"
 	skills, err := authority.skillObjectMetadata(ctx, clients, source.Skills)
 	if err != nil {
 		return nil, nil, err
 	}
+	stage = "resource_metadata"
 	deployment, secrets, err := authority.resourceMetadata(ctx, clients)
 	if err != nil {
 		return nil, nil, err
@@ -58,11 +73,13 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		return nil, nil, d.ErrNotReady
 	}
 	secrets.SecretPolicy = &secretPolicy
+	stage = "instance_mounts"
 	mounts, mountIdentities, runtime, err := authority.instanceMountMetadata(ctx, source, writers, sqlMetadata, skills, saved)
 	if err != nil {
 		return nil, nil, err
 	}
 	mapping := team.AutomaticStorageMapping{RedisID: s.captureMaterials.Discovery.Redis.Policy.Source.ID, RedisServerID: s.captureMaterials.Discovery.Redis.ServerID, RedisDatabase: s.captureMaterials.Discovery.Redis.Policy.DB, Claims: []team.SharedClaimIdentity{}, Objects: []team.ObjectRef{}, Writers: []team.WriterBinding{}}
+	stage = "team_storage"
 	for _, fact := range source.TeamFacts.Teams {
 		if fact.PVC == "" {
 			continue
@@ -119,6 +136,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	for _, instance := range source.Instances {
 		owners[instance.ID] = instance.UserID
 	}
+	stage = "team_binding"
 	teams, err := team.BindAutomaticStorage(ctx, *source.TeamFacts, mapping, users, owners)
 	if err != nil {
 		return nil, nil, d.ErrNotReady
@@ -128,11 +146,25 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		return nil, nil, d.ErrNotReady
 	}
 	metadata := productionCaptureMetadata{Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
+	stage = "platform_mounts"
+	if saved == nil {
+		metadata.PlatformMounts, err = s.freezePlatformSourceRecoveryMounts(ctx, owner, writers)
+	} else {
+		metadata.PlatformMounts, err = s.currentPlatformSourceRecoveryMounts(ctx, owner, writers)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	if saved != nil && !reflect.DeepEqual(metadata.PlatformMounts, saved.PlatformMounts) {
+		return nil, nil, d.ErrNotReady
+	}
+	stage = "formal_mounts"
 	metadata.FormalMountIdentities = map[string][]kube.MountIdentity{}
 	for operation, original := range s.captureMaterials.Operations {
 		metadata.FormalMountIdentities[operation] = append([]kube.MountIdentity{}, original.MountIdentities...)
 	}
 	if saved == nil {
+		stage = "control_evidence_registration"
 		ref, err := authority.registerSourceExclusion(ctx, sqlMetadata)
 		if err != nil {
 			return nil, nil, err
@@ -142,6 +174,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 			return nil, nil, err
 		}
 	} else {
+		stage = "control_evidence_recheck"
 		if saved.ControlEvidence.Validate() != nil || saved.ControlEvidence.Expected.Backup != in.Authority.TaskPublicID || saved.ControlEvidence.Expected.Attempt != in.Authority.AttemptNo || saved.ControlEvidence.Expected.ConfigSHA256 != in.Authority.ConfigSHA256 {
 			return nil, nil, d.ErrNotReady
 		}
@@ -150,6 +183,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		}
 		metadata.ControlEvidence = saved.ControlEvidence
 	}
+	stage = "publication_facts"
 	metadata.PublicationFacts, err = observePublicationSourceFacts(sqlMetadata.Schema, sqlMetadata.Census, metadata.ControlEvidence.Expected.SchemaRegistry)
 	if err != nil {
 		return nil, nil, err
@@ -162,9 +196,11 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, d.ErrNotReady
 	}
+	stage = "source_recheck"
 	if authority.Recheck(ctx) != nil {
 		return nil, nil, d.ErrNotReady
 	}
+	stage = "metadata_encoding"
 	raw, err := json.Marshal(metadata)
 	if err != nil || len(raw) > 8<<20 {
 		return nil, nil, d.ErrNotReady

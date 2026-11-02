@@ -26,6 +26,8 @@ var excludedControlTables = []string{
 	"system_backup_gate_admissions",
 	"system_backup_installation_kek_authority",
 	"system_backup_installation_kek_authority_history",
+	"system_backup_installation_owner_grants",
+	"system_backup_installation_owner_heads",
 	"system_backup_installation_state",
 	"system_backup_job_sends",
 	"system_backup_mutation_leases",

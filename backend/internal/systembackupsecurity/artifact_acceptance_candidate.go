@@ -117,10 +117,10 @@ func VerifyAcceptanceCandidate(raw []byte, binding AcceptanceCandidateBinding, k
 	if err != nil || len(payload.LocalReasonCodes) == 0 || len(payload.LocalReasonCodes) > 7 {
 		return bad()
 	}
-	allowed := map[string]bool{"eligible": true, "consistency_not_strong": true, "disqualifying_warning": true,
+	allowed := map[string]bool{"eligible": true, "functional_test": true, "consistency_not_strong": true, "disqualifying_warning": true,
 		"target_not_external": true, "target_risk": true, "attestation_invalid": true, "kek_not_recoverable": true}
 	for i, code := range payload.LocalReasonCodes {
-		if !allowed[code] || i > 0 && payload.LocalReasonCodes[i-1] >= code {
+		if !allowed[code] || i > 0 && payload.LocalReasonCodes[i-1] >= code || !payload.LocalAcceptance && code == "eligible" {
 			return bad()
 		}
 	}

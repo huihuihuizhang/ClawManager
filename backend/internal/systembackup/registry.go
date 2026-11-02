@@ -55,7 +55,14 @@ func Registry() []ObjectPolicy {
 		out = append(out, ObjectPolicy{name, "instances", "secret", "mysql_dump", "normalize"})
 	}
 	for _, name := range controlTables {
-		out = append(out, ObjectPolicy{name, "system_backup", "internal", "metadata_only", "reference_only"})
+		classification := "internal"
+		switch name {
+		case "system_backup_installation_owner_heads", "system_backup_installation_owner_grants":
+			// Signed owner authority is independently enrolled at the target;
+			// its rows are never exported or restored from a source backup.
+			classification = "secret"
+		}
+		out = append(out, ObjectPolicy{name, "system_backup", classification, "metadata_only", "reference_only"})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out

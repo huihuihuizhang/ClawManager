@@ -58,6 +58,8 @@ import (
 // is extended by the same-task source/worker tests; it never substitutes a
 // synthetic Prepare runner or a second task for an uncompleted capture.
 type dOriginalSixPartTask struct {
+	originalReadAuthorizer                                 *security.SystemBackupReadAuthorizer
+	originalReadRequest                                    *http.Request
 	controlCosts                                           originalControlTimingRegistry
 	captureDescription                                     bool
 	db, control                                            *sql.DB
@@ -301,7 +303,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	if os.WriteFile(capacityFile, capacity, 0600) != nil {
 		t.Fatal("named capacity input fixture")
 	}
-	if _, err = f.db.Exec("INSERT INTO system_backup_v2_execution_readiness(origin_installation_id,task_type,config_version,profile_sha256,owner,generation,ready,checked_at,expires_at,execution_protocol,supported_parts,acceptance_ready) VALUES(?,'backup',1,?,'named-local-readiness-input',1,TRUE,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),'public-v1','mysql,redis,object_storage,workspace,deployment_resources,secret_bundle',TRUE)", installation, profileSHA); err != nil {
+	if _, err = f.db.Exec("INSERT INTO system_backup_v2_execution_readiness(origin_installation_id,task_type,config_version,profile_sha256,owner,generation,ready,checked_at,expires_at,execution_protocol,supported_parts,acceptance_ready) VALUES(?,'backup',1,?,'named-local-readiness-input',1,TRUE,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),'public-v1','mysql,redis,object_storage,workspace,deployment_resources,secret_bundle',?)", installation, profileSHA, !options.CompleteNonDR); err != nil {
 		t.Fatal(err)
 	}
 	registryFile := filepath.Join(f.directory, "registries", "rbac_bindings", "d-six-rbac-v1", hash(rbac)+".json")
@@ -355,11 +357,16 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := httptest.NewRequest(http.MethodPost, "https://localhost/api/v1/admin/system-backups", strings.NewReader(`{"task_purpose":"acceptance","requested_parts":["mysql","redis","object_storage","workspace","deployment_resources","secret_bundle"]}`))
+	purpose := "acceptance"
+	if options.CompleteNonDR {
+		purpose = "functional_test"
+	}
+	request := httptest.NewRequest(http.MethodPost, "https://localhost/api/v1/admin/system-backups", strings.NewReader(`{"task_purpose":"`+purpose+`","requested_parts":["mysql","redis","object_storage","workspace","deployment_resources","secret_bundle"]}`))
 	request.TLS = &tls.ConnectionState{}
 	request.Header.Set("Authorization", "Bearer "+access)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Idempotency-Key", "d-six-original-task-"+run)
+	f.originalReadAuthorizer, f.originalReadRequest = reads, request.Clone(context.Background())
 	response := httptest.NewRecorder()
 	api.NewHandler(application).Create(response, request, read.BackupTask, "d-six-original-request-"+run)
 	if response.Code != http.StatusAccepted {
@@ -513,6 +520,10 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	core.CapacityFile = capacityFile
 	core.RuntimeSources.Supported = append(core.RuntimeSources.Supported, b.AgentKind{Type: "hermes", Mode: "pro", Variant: "linux", OS: "linux"})
 	core.StagingDirectory = filepath.Join(f.directory, "staging")
+	if options.PublicationForward {
+		configurePublicationStagingFixture(t, &core)
+		core.StagingLocation.Container, core.StagingLocation.Volume = "platform", "staging"
+	}
 	if os.MkdirAll(core.StagingDirectory, 0700) != nil {
 		t.Fatal("private task staging")
 	}
@@ -585,7 +596,7 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 			}
 		}()
 		r = r.WithContext(context.WithValue(r.Context(), originalControlTimingContextKey{}, &f.controlCosts))
-		f.service.controlHandler().ServeHTTP(w, r)
+		serveDOriginalControlWithAuthorizer(f, options, w, r)
 	}))
 	controlServer.TLS = &tls.Config{Certificates: []tls.Certificate{{Certificate: [][]byte{serverDER}, PrivateKey: serverPrivate}}, MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: issuerRoots}
 	controlServer.StartTLS()
@@ -653,15 +664,16 @@ func newDOriginalSixPartTaskWithOptions(t *testing.T, options dOriginalSixPartFi
 	one := int32(1)
 	controller := true
 	labels := map[string]string{"app": "d-original-platform"}
+	platformTemplate := corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: labels}, Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "platform", Image: core.WorkerImage}}}}
 	client := kubefake.NewSimpleClientset(
 		&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: core.Namespace, UID: "ns-uid"}},
 		&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node", UID: "node-uid", Labels: map[string]string{corev1.LabelOSStable: "linux"}}},
 		&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "source-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "source-pv"}, Status: corev1.PersistentVolumeClaimStatus{Phase: corev1.ClaimBound}},
 		&corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: "source-pv", UID: "source-pv-uid"}, Spec: corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Name: "source", Namespace: core.Namespace, UID: "source-uid"}}},
 		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-original-7", Namespace: core.Namespace, UID: "d-original-7-uid", ResourceVersion: "1"}, Spec: corev1.PodSpec{NodeName: "node", Volumes: []corev1.Volume{{Name: "data", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "source"}}}}, Containers: []corev1.Container{{Name: "desktop", Image: "original/openclaw@sha256:" + strings.Repeat("a", 64), VolumeMounts: []corev1.VolumeMount{{Name: "data", MountPath: "/workspaces"}}}}}, Status: corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}, ContainerStatuses: []corev1.ContainerStatus{{Name: "desktop", ContainerID: "containerd://d-original-7", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}}}}},
-		&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "dep-uid", Generation: 1, ResourceVersion: "1"}, Spec: appsv1.DeploymentSpec{Replicas: &one, Selector: &metav1.LabelSelector{MatchLabels: labels}, Template: corev1.PodTemplateSpec{ObjectMeta: metav1.ObjectMeta{Labels: labels}, Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "platform", Image: core.WorkerImage}}}}}, Status: appsv1.DeploymentStatus{ObservedGeneration: 1, Replicas: 1, ReadyReplicas: 1}},
-		&appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "d-platform-rs", Namespace: core.Namespace, UID: "d-platform-rs-uid", Labels: labels, OwnerReferences: []metav1.OwnerReference{{Kind: "Deployment", Name: "source", UID: "dep-uid", Controller: &controller}}}},
-		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-platform-pod", Namespace: core.Namespace, UID: "d-platform-pod-uid", ResourceVersion: "1", Labels: labels, OwnerReferences: []metav1.OwnerReference{{Kind: "ReplicaSet", Name: "d-platform-rs", UID: "d-platform-rs-uid", Controller: &controller}}}, Spec: corev1.PodSpec{NodeName: "node", Containers: []corev1.Container{{Name: "platform", Image: core.WorkerImage}}}, Status: corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}, ContainerStatuses: []corev1.ContainerStatus{{Name: "platform", ContainerID: "containerd://d-platform", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}}}}},
+		&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "source", Namespace: core.Namespace, UID: "dep-uid", Generation: 1, ResourceVersion: "1"}, Spec: appsv1.DeploymentSpec{Replicas: &one, Selector: &metav1.LabelSelector{MatchLabels: labels}, Template: *platformTemplate.DeepCopy()}, Status: appsv1.DeploymentStatus{ObservedGeneration: 1, Replicas: 1, ReadyReplicas: 1}},
+		&appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "d-platform-rs", Namespace: core.Namespace, UID: "d-platform-rs-uid", Labels: labels, OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "Deployment", Name: "source", UID: "dep-uid", Controller: &controller}}}, Spec: appsv1.ReplicaSetSpec{Replicas: &one, Selector: &metav1.LabelSelector{MatchLabels: labels}, Template: *platformTemplate.DeepCopy()}},
+		&corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "d-platform-pod", Namespace: core.Namespace, UID: "d-platform-pod-uid", ResourceVersion: "1", Labels: labels, OwnerReferences: []metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "ReplicaSet", Name: "d-platform-rs", UID: "d-platform-rs-uid", Controller: &controller}}}, Spec: corev1.PodSpec{NodeName: "node", Containers: []corev1.Container{{Name: "platform", Image: core.WorkerImage}}}, Status: corev1.PodStatus{Phase: corev1.PodRunning, Conditions: []corev1.PodCondition{{Type: corev1.PodReady, Status: corev1.ConditionTrue}}, ContainerStatuses: []corev1.ContainerStatus{{Name: "platform", ContainerID: "containerd://d-platform", Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{StartedAt: metav1.Now()}}}}}},
 	)
 	f.owner = &PublicJobOwner{Gate: gate, Identity: forward, Client: client, Dynamic: fake.NewSimpleDynamicClient(runtime.NewScheme()), Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, TrustDomain: core.TrustDomain, Security: core.Security, Staging: stage, AllowKubeletStopWitness: true}
 	f.owner.Issuer = control.IdentityIssuer{Certificate: issuer, Signer: issuerPrivate, ServerRoots: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: issuerDER}), TrustDomain: core.TrustDomain}

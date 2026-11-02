@@ -24,7 +24,7 @@ type publicationCertificateFactsFixture struct {
 	config        []byte
 }
 
-// Full production 174 schema, but named historical DATA for the reader's SQL
+// Full production 175 schema, but named historical DATA for the reader's SQL
 // properties. These records are not an actual capture/verification/signing
 // success and cannot pass prepareOriginalCaptureCertificate's complete C gate.
 // No capture Authority, source grant or private artifact signer is constructed.
@@ -91,8 +91,8 @@ func newPublicationCertificateFactsFixture(t *testing.T) *publicationCertificate
 		}
 	})
 	catalog, err := appdb.EmbeddedMigrationCatalog()
-	if err != nil || len(catalog.Filenames) != 174 || catalog.Hash != "d4fe00a440acf094e1def2d99586e333bed7803ba82b504ab25829b133680a21" {
-		t.Fatal("reviewed 174 migration catalog changed", err)
+	if err != nil || len(catalog.Filenames) != 175 || catalog.Hash != "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292" {
+		t.Fatal("reviewed 175 migration catalog changed", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -100,7 +100,7 @@ func newPublicationCertificateFactsFixture(t *testing.T) *publicationCertificate
 		t.Fatal("actual complete migration runner", err)
 	}
 	var count, fk int
-	if admin.QueryRow(`SELECT COUNT(*) FROM schema_migrations`).Scan(&count) != nil || count != 174 || admin.QueryRow(`SELECT @@foreign_key_checks`).Scan(&fk) != nil || fk != 1 {
+	if admin.QueryRow(`SELECT COUNT(*) FROM schema_migrations`).Scan(&count) != nil || count != 175 || admin.QueryRow(`SELECT @@foreign_key_checks`).Scan(&fk) != nil || fk != 1 {
 		t.Fatal("complete original migration/FK evidence unavailable", count, fk)
 	}
 	password := uuid.NewString() + uuid.NewString()
@@ -207,7 +207,7 @@ func (f *publicationCertificateFactsFixture) seed(t *testing.T) (security.Publis
 	return facts, capture, owner.Resource
 }
 
-func TestPublicationCertificateCurrentComplete104RowsFull174MySQL(t *testing.T) {
+func TestPublicationCertificateCurrentComplete104RowsFull175MySQL(t *testing.T) {
 	f := newPublicationCertificateFactsFixture(t)
 	for _, mode := range []string{"current", "extra-resource", "replaced-uid", "expired-lease", "expired-task", "stage-row-version", "task-row-version", "finished-at", "marker", "marker-key-version", "lifecycle", "missing-resource"} {
 		t.Run(mode, func(t *testing.T) {
@@ -223,7 +223,7 @@ func TestPublicationCertificateCurrentComplete104RowsFull174MySQL(t *testing.T) 
 			}
 			original, err := read(nil)
 			if err != nil {
-				t.Fatal("healthy current full-174 locked row read", err)
+				t.Fatal("healthy current full-175 locked row read", err)
 			}
 			var result sql.Result
 			switch mode {

@@ -11,6 +11,13 @@ import (
 // Captured is NOT published or independently recoverable: success stops at
 // validating for the separately authorized M3 finalizer.
 func (g SQLCaptureGate) FinishCapture(ctx context.Context, w ExecutionWork, out ExecutionOutcome) error {
+	return g.FinishCaptureWithSourceRecovery(ctx, w, out, nil)
+}
+
+// FinishCaptureWithSourceRecovery preserves failure/cancellation/recovery paths.
+// Only the original successful capture projection requires positive source
+// observations registered atomically before it can become validating.
+func (g SQLCaptureGate) FinishCaptureWithSourceRecovery(ctx context.Context, w ExecutionWork, out ExecutionOutcome, source *PreparedSourceRecovery) error {
 	if !g.ready() {
 		return d.ErrNotReady
 	}
@@ -62,6 +69,12 @@ func (g SQLCaptureGate) FinishCapture(ctx context.Context, w ExecutionWork, out 
 		var digest string
 		if tx.QueryRowContext(ctx, "SELECT payload_sha256 FROM system_backup_v2_execution_records WHERE task_public_id=? AND attempt_no=? AND phase=? AND record_kind='capture_result' FOR SHARE", a.TaskPublicID, a.AttemptNo, a.Phase).Scan(&digest) != nil || !executionHash.MatchString(digest) {
 			return ErrExecutionRecord
+		}
+		if source == nil {
+			return ErrSourceRecoveryProofRequired
+		}
+		if e = source.StageTx(ctx, tx, w); e != nil {
+			return e
 		}
 	}
 	r, e := tx.ExecContext(ctx, `UPDATE system_backup_v2_backups SET status=?,failure_category=?,finished_at=?,can_cancel=?,controller_owner=NULL,controller_lease_expires_at=NULL,row_version=row_version+1,next_reconcile_at=NULL WHERE public_id=? AND controller_owner=? AND row_version=? AND controller_lease_expires_at>UTC_TIMESTAMP(6)`, status, category, finished, status == "validating", a.TaskPublicID, a.ClaimOwner, a.ClaimRowVersion)

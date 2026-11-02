@@ -156,7 +156,14 @@ func (s *DeploymentService) originalPublicationProcessFromPod(ctx context.Contex
 	if s == nil || s.Config.PublicationWorker == nil || s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner.Client == nil || pod == nil {
 		return publicationUploadProcess{}, c.ErrExecutionAuthority
 	}
-	nodeUID := s.Config.Security.NodeUIDs[pod.Spec.NodeName]
+	stagingNode, err := s.publicationStagingNode(ctx)
+	if err != nil || stagingNode == "" || pod.Spec.NodeName != stagingNode {
+		return publicationUploadProcess{}, c.ErrExecutionAuthority
+	}
+	nodeUID := s.Config.Security.NodeUIDs[stagingNode]
+	if nodeUID == "" || nodeUID != s.Config.StagingLocation.NodeUID {
+		return publicationUploadProcess{}, c.ErrExecutionAuthority
+	}
 	process, err := publicationUploadProcessData(job, pod, m, s.Config.PublicationWorker.ServiceAccountUID, nodeUID)
 	if err != nil {
 		return publicationUploadProcess{}, err

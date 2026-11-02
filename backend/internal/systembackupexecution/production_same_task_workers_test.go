@@ -65,6 +65,20 @@ func (p dOriginalTracePorts) Check(ctx context.Context, a d.Authority) error {
 	}
 	return err
 }
+func (p dOriginalTracePorts) CheckRecovery(ctx context.Context, a d.Authority, id string, state d.WriterState) error {
+	err := p.ExecutionJobPorts.CheckRecovery(ctx, a, id, state)
+	if err != nil {
+		p.t.Log("original recovery fence failure", id, closedExecutionCode(err))
+	}
+	return err
+}
+func (p dOriginalTracePorts) BeforeResume(ctx context.Context, a d.Authority) error {
+	err := p.ExecutionJobPorts.BeforeResume(ctx, a)
+	if err != nil {
+		p.t.Log("original collector/resume barrier failure", closedExecutionCode(err))
+	}
+	return err
+}
 func (p dOriginalTracePorts) ObserveJob(ctx context.Context, a d.Authority, b d.JobBinding) (d.JobObservation, error) {
 	value, err := p.ExecutionJobPorts.ObserveJob(ctx, a, b)
 	if err != nil {

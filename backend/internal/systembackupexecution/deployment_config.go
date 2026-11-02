@@ -42,6 +42,7 @@ type DeploymentConfig struct {
 	StagingDirectory    string                      `json:"staging_directory"`
 	SealCustodyMaxBytes int64                       `json:"seal_custody_max_bytes"`
 	StagingClaim        string                      `json:"staging_claim"`
+	StagingLocation     *StagingLocationReference   `json:"staging_location,omitempty"`
 	WorkerImage         string                      `json:"worker_image"`
 	Security            kube.WorkerSecurity         `json:"worker_security"`
 	ControlURL          string                      `json:"control_url"`
@@ -133,6 +134,9 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.StagingLocation != nil && cnf.StagingLocation.validate(cnf) != nil {
+		return c.ErrExecutionAuthority
+	}
 	if cnf.PublicationWorker != nil && cnf.PublicationWorker.validate(cnf.Security.ServiceAccountName, cnf.Security.ServiceAccountUID) != nil {
 		return c.ErrExecutionAuthority
 	}

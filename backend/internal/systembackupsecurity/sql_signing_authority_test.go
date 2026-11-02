@@ -27,11 +27,12 @@ type signingSQLTestState struct {
 	grant                                                 SQLSigningOwnerGrant
 	claim                                                 SQLSigningClaim
 	now, lease, deadline                                  time.Time
-	status, attemptStatus, parts, captureHash             string
+	status, attemptStatus, purpose, parts, captureHash    string
 	attempt, epoch                                        int64
 	canceled, missingSource, sourceRunning, wrongDatabase bool
 	evidence                                              map[string][]driver.Value
 	writes, commits                                       int
+	afterEvidenceWrite                                    func()
 }
 type signingSQLConnector struct{ s *signingSQLTestState }
 
@@ -108,7 +109,7 @@ func (c *signingSQLConn) QueryContext(_ context.Context, q string, args []driver
 		if len(args) != 2 || args[0].Value != s.f.pin.InstallationID || args[1].Value != s.f.task.BackupPublicID {
 			return registrationRow(), nil
 		}
-		return registrationRow(s.f.pin.InstallationID, s.f.task.OperationID, s.status, s.claim.ControllerOwner, int64(s.claim.RowVersion), s.lease, s.deadline, int64(s.grant.ConfigVersion), s.grant.ConfigSHA256, "acceptance", s.parts), nil
+		return registrationRow(s.f.pin.InstallationID, s.f.task.OperationID, s.status, s.claim.ControllerOwner, int64(s.claim.RowVersion), s.lease, s.deadline, int64(s.grant.ConfigVersion), s.grant.ConfigSHA256, s.purpose, s.parts), nil
 	case strings.Contains(q, "FROM system_backup_v2_attempts"):
 		return registrationRow(s.attempt, s.attemptStatus), nil
 	case strings.Contains(q, "FROM system_backup_v2_operations"):
@@ -152,6 +153,9 @@ func (c *signingSQLConn) ExecContext(_ context.Context, q string, args []driver.
 	}
 	c.working[id] = []driver.Value{bytes.Clone(args[2].Value.([]byte)), args[3].Value, args[4].Value, "backup", args[1].Value, "diagnostic", "inline", "healthy", "none", args[5].Value}
 	c.s.writes++
+	if c.s.afterEvidenceWrite != nil {
+		c.s.afterEvidenceWrite()
+	}
 	return driver.RowsAffected(1), nil
 }
 
@@ -165,7 +169,7 @@ func newSigningSQLFixture(t *testing.T) (*installationSigningFixture, *signingSQ
 	}
 	f.writeRecord(true)
 	now := time.Now().UTC()
-	state := &signingSQLTestState{t: t, f: f, grant: grant, claim: SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 11}, now: now, lease: now.Add(time.Minute), deadline: now.Add(2 * time.Minute), status: "validating", attemptStatus: "sealed", parts: "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle", captureHash: strings.Repeat("d", 64), attempt: f.task.AttemptNo, epoch: 17, evidence: map[string][]driver.Value{}}
+	state := &signingSQLTestState{t: t, f: f, grant: grant, claim: SQLSigningClaim{ControllerOwner: grant.ControllerOwner, RowVersion: 11}, now: now, lease: now.Add(time.Minute), deadline: now.Add(2 * time.Minute), status: "validating", attemptStatus: "sealed", purpose: "acceptance", parts: "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle", captureHash: strings.Repeat("d", 64), attempt: f.task.AttemptNo, epoch: 17, evidence: map[string][]driver.Value{}}
 	db := sql.OpenDB(signingSQLConnector{state})
 	t.Cleanup(func() { db.Close() })
 	s, err := NewSQLInstallationArtifactSigners(context.Background(), db, f.reader, f.pin, f.mounts, f.task, state.claim)
@@ -210,7 +214,16 @@ func stageSigningSQLFixture(t *testing.T, db *sql.DB, s *SQLInstallationArtifact
 }
 
 func TestSQLInstallationArtifactSignersAutomaticOriginalTaskToTLS(t *testing.T) {
+	for _, taskPurpose := range []string{"acceptance", "functional_test"} {
+		t.Run(taskPurpose, func(t *testing.T) {
+			testSQLInstallationArtifactSignersAutomaticOriginalTaskToTLS(t, taskPurpose)
+		})
+	}
+}
+
+func testSQLInstallationArtifactSignersAutomaticOriginalTaskToTLS(t *testing.T, taskPurpose string) {
 	f, state, db, s := newSigningSQLFixture(t)
+	state.purpose = taskPurpose
 	for _, mount := range f.mounts {
 		input := signingSQLInput(t, f.task, mount.Binding)
 		stageSigningSQLFixture(t, db, s, mount.Binding.Purpose, input, false)
@@ -251,6 +264,7 @@ func TestSQLSigningAuthorityRejectsDriftBeforeProvider(t *testing.T) {
 		"new capture epoch":      func(s *signingSQLTestState) { s.epoch++ },
 		"changed capture result": func(s *signingSQLTestState) { s.captureHash = strings.Repeat("e", 64) },
 		"failed task":            func(s *signingSQLTestState) { s.status = "failed" },
+		"changed task purpose":   func(s *signingSQLTestState) { s.purpose = "functional_test" },
 	} {
 		t.Run(name, func(t *testing.T) {
 			f, state, db, s := newSigningSQLFixture(t)
@@ -312,5 +326,147 @@ func TestSQLSigningAuthorityRechecksAfterProviderAndCurrentMaterial(t *testing.T
 	f.writeRecord(false)
 	if _, err := signer.Sign(context.Background(), input); err == nil || f.login != 1 {
 		t.Fatal("revoked original SQL capability reached provider")
+	}
+}
+
+func TestSQLSigningAuthorityRequiresExactPurposeAndCompleteParts(t *testing.T) {
+	for _, taskPurpose := range []string{"acceptance", "functional_test", "functional", "ACCEPTANCE", "functional_test ", ""} {
+		t.Run("purpose_"+taskPurpose, func(t *testing.T) {
+			f, state, db, s := newSigningSQLFixture(t)
+			state.purpose = taskPurpose
+			input := signingSQLInput(t, f.task, f.mounts[0].Binding)
+			tx, e := db.BeginTx(context.Background(), nil)
+			if e != nil {
+				t.Fatal(e)
+			}
+			defer tx.Rollback()
+			e = s.StageSigningInput(context.Background(), tx, "capture_certificate", input)
+			allowed := taskPurpose == "acceptance" || taskPurpose == "functional_test"
+			if (e == nil) != allowed || (!allowed && state.writes != 0) || f.login != 0 || f.signed != 0 {
+				t.Fatal("task purpose authorization", e, "allowed", allowed)
+			}
+		})
+	}
+	for _, taskPurpose := range []string{"acceptance", "functional_test"} {
+		for _, parts := range []string{"", "workspace", "mysql,redis,object_storage,workspace,deployment_resources", "redis,mysql,object_storage,workspace,deployment_resources,secret_bundle", "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle,workspace"} {
+			t.Run(taskPurpose+"_parts_"+parts, func(t *testing.T) {
+				f, state, db, s := newSigningSQLFixture(t)
+				state.purpose, state.parts = taskPurpose, parts
+				tx, e := db.BeginTx(context.Background(), nil)
+				if e != nil {
+					t.Fatal(e)
+				}
+				defer tx.Rollback()
+				if e = s.StageSigningInput(context.Background(), tx, "capture_certificate", signingSQLInput(t, f.task, f.mounts[0].Binding)); e == nil || state.writes != 0 || f.login != 0 || f.signed != 0 {
+					t.Fatal("incomplete or reordered domain scope authorized", e)
+				}
+			})
+		}
+	}
+}
+
+func TestSQLSigningAuthorityPurposeRemainsBoundAcrossStageAndProvider(t *testing.T) {
+	for _, initial := range []string{"acceptance", "functional_test"} {
+		other := "functional_test"
+		if initial == other {
+			other = "acceptance"
+		}
+		for _, phase := range []string{"during_stage", "before_authorize", "after_login", "after_sign", "legacy_unbound_ticket"} {
+			t.Run(initial+"_"+phase, func(t *testing.T) {
+				f, state, db, s := newSigningSQLFixture(t)
+				state.purpose = initial
+				input := signingSQLInput(t, f.task, f.mounts[0].Binding)
+				if phase == "during_stage" {
+					state.afterEvidenceWrite = func() { state.purpose = other }
+					tx, e := db.BeginTx(context.Background(), nil)
+					if e != nil {
+						t.Fatal(e)
+					}
+					defer tx.Rollback()
+					if s.StageSigningInput(context.Background(), tx, "capture_certificate", input) == nil || len(state.evidence) != 0 || state.commits != 0 || f.login != 0 || f.signed != 0 {
+						t.Fatal("purpose changed during original Stage transaction")
+					}
+					return
+				}
+				stageSigningSQLFixture(t, db, s, "capture_certificate", input, true)
+				switch phase {
+				case "before_authorize":
+					state.purpose = other
+				case "after_login":
+					f.afterLogin = func() { state.purpose = other }
+				case "after_sign":
+					f.afterSign = func() { state.purpose = other }
+				case "legacy_unbound_ticket":
+					id := signingInputEvidenceID(f.task, f.pin.InstallationID, "capture_certificate")
+					v := state.evidence[id]
+					var frozen frozenSQLSigningInput
+					if json.Unmarshal(v[0].([]byte), &frozen) != nil {
+						t.Fatal("frozen fixture")
+					}
+					frozen.TaskPurpose = ""
+					raw, e := json.Marshal(frozen)
+					if e != nil {
+						t.Fatal(e)
+					}
+					h := sha256.Sum256(raw)
+					v[0], v[1], v[2] = raw, hex.EncodeToString(h[:]), int64(len(raw))
+					state.evidence[id] = v
+				}
+				signer, _ := s.Signer("capture_certificate")
+				value, e := signer.Sign(context.Background(), input)
+				wantLogin, wantSign := 0, 0
+				if phase == "after_login" || phase == "after_sign" {
+					wantLogin = 1
+				}
+				if phase == "after_sign" {
+					wantSign = 1
+				}
+				if e == nil || len(value) != 0 || f.login != wantLogin || f.signed != wantSign {
+					t.Fatal("purpose drift or unbound ticket returned signature", e, f.login, f.signed)
+				}
+			})
+		}
+	}
+}
+
+func TestSQLSigningAuthorityGuardRetainsOriginalTaskPurpose(t *testing.T) {
+	for _, initial := range []string{"acceptance", "functional_test"} {
+		t.Run(initial, func(t *testing.T) {
+			f, state, db, s := newSigningSQLFixture(t)
+			state.purpose = initial
+			binding := f.mounts[0].Binding
+			input := signingSQLInput(t, f.task, binding)
+			stageSigningSQLFixture(t, db, s, binding.Purpose, input, true)
+			h := sha256.Sum256(input)
+			r := ArtifactSigningAuthorizationRequest{Task: f.task, Signing: TransitSigningRequest{Binding: binding, InputSHA256: hex.EncodeToString(h[:])}}
+			guard, e := s.owners[binding.Purpose].AuthorizeArtifactSigning(context.Background(), r)
+			if e != nil {
+				t.Fatal(e)
+			}
+			state.purpose = "functional_test"
+			if initial == state.purpose {
+				state.purpose = "acceptance"
+			}
+			// Adversarial in-memory evidence rewrite isolates the original
+			// guard's facts comparison from the frozen-ticket mismatch check.
+			// The real signing SQL role has no UPDATE on either source table.
+			id := signingInputEvidenceID(f.task, f.pin.InstallationID, binding.Purpose)
+			v := state.evidence[id]
+			var frozen frozenSQLSigningInput
+			if json.Unmarshal(v[0].([]byte), &frozen) != nil {
+				t.Fatal("frozen fixture")
+			}
+			frozen.TaskPurpose = state.purpose
+			raw, e := json.Marshal(frozen)
+			if e != nil {
+				t.Fatal(e)
+			}
+			h = sha256.Sum256(raw)
+			v[0], v[1], v[2] = raw, hex.EncodeToString(h[:]), int64(len(raw))
+			state.evidence[id] = v
+			if guard.Use.Recheck(context.Background(), r.Signing) == nil || f.login != 0 || f.signed != 0 {
+				t.Fatal("original guard accepted a different task purpose")
+			}
+		})
 	}
 }

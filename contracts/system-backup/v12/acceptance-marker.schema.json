@@ -25,7 +25,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "enum": ["eligible", "consistency_not_strong", "disqualifying_warning", "target_not_external", "target_risk", "attestation_invalid", "kek_not_recoverable"] }
+          "items": { "enum": ["eligible", "functional_test", "consistency_not_strong", "disqualifying_warning", "target_not_external", "target_risk", "attestation_invalid", "kek_not_recoverable"] }
         },
         "local_reason_codes_hash": { "$ref": "artifact-common.schema.json#/$defs/Sha256" },
         "decision_at": { "$ref": "artifact-common.schema.json#/$defs/Timestamp" },

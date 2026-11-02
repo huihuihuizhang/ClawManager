@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"clawreef/internal/systembackup/kube"
 	c "clawreef/internal/systembackupcontroller"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -120,14 +121,14 @@ func TestPublicationJobOriginal121SingleSendSuspendedMySQL(t *testing.T) {
 	if os.Getenv("A_SIGNING_MYSQL_CREDENTIALS_FILE") == "" {
 		t.Skip("requires owned local MySQL")
 	}
-	for _, mode := range []string{"current", "sending-commit-ack-lost", "bound-commit-ack-lost", "create-ack-lost", "sending-absent", "release-during-create", "source-hash-drift", "upload-sa-drift", "upload-sa-forbidden", "bound-row-drift-during-get"} {
+	for _, mode := range []string{"current", "sending-commit-ack-lost", "bound-commit-ack-lost", "create-ack-lost", "sending-absent", "release-during-create", "source-hash-drift", "upload-sa-drift", "upload-sa-forbidden", "bound-row-drift-during-get", "staging-binding-deleted", "old-unplaced-intent"} {
 		t.Run(mode, func(t *testing.T) {
 			store, provider := newANativePublicationStore(t, time.Minute)
 			defer store.Close()
 			store.config.RemoteStagingRoot = "remote-staging/installation_test/"
 			worker := &PublicationWorkerReference{Protocol: publicationPresignedUploadVersion, ServiceAccountName: "publish-upload", ServiceAccountUID: "publish-upload-sa"}
 			boundary := &aStageCommitBoundary{}
-			x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationTarget: &store.config, AttemptNo: 1, PublicationWorker: worker, WrapControlConnector: func(inner driver.Connector) driver.Connector {
+			x := newAPublisherVerifierFixtureOptions(t, aPublisherVerifierFixtureOptions{FullService: true, PublicationStaging: true, PublicationTarget: &store.config, AttemptNo: 1, PublicationWorker: worker, WrapControlConnector: func(inner driver.Connector) driver.Connector {
 				return aPublicationJobBoundaryConnector{inner, boundary}
 			}})
 			aStartPublisherVerifierSamePod(t, x)
@@ -140,8 +141,6 @@ func TestPublicationJobOriginal121SingleSendSuspendedMySQL(t *testing.T) {
 			cfg := h.service.Config
 			for _, object := range []runtime.Object{
 				&corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: cfg.Namespace, Name: worker.ServiceAccountName, UID: types.UID(worker.ServiceAccountUID)}},
-				&corev1.PersistentVolumeClaim{ObjectMeta: metav1.ObjectMeta{Namespace: cfg.Namespace, Name: cfg.StagingClaim, UID: "staging-uid"}, Spec: corev1.PersistentVolumeClaimSpec{VolumeName: "staging-pv"}},
-				&corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: "staging-pv", UID: "staging-pv-uid"}, Spec: corev1.PersistentVolumeSpec{ClaimRef: &corev1.ObjectReference{Namespace: cfg.Namespace, Name: cfg.StagingClaim, UID: "staging-uid"}}},
 			} {
 				if err := client.Tracker().Add(object); err != nil {
 					t.Fatal(err)
@@ -177,6 +176,36 @@ func TestPublicationJobOriginal121SingleSendSuspendedMySQL(t *testing.T) {
 			}
 			request.CredentialHash = hash(delegated)
 			clear(delegated)
+			var oldIntentSHA, oldIntentName string
+			if mode == "old-unplaced-intent" {
+				legacy, _, e := h.service.publicationJobDefinition(ctx, h.token, 1, request)
+				if e != nil {
+					t.Fatal("original definition before legacy placement fault", e)
+				}
+				legacy.Spec.Template.Spec.Affinity = nil
+				delete(legacy.Annotations, "backup.clawmanager.io/v2-spec-sha256")
+				if len(legacy.Annotations) == 0 {
+					legacy.Annotations = nil
+				}
+				delete(legacy.Labels, "backup.clawmanager.io/v2-task")
+				delete(legacy.Spec.Template.Labels, "backup.clawmanager.io/v2-task")
+				raw, e := json.Marshal(legacy)
+				if e != nil {
+					t.Fatal(e)
+				}
+				oldIntentSHA, oldIntentName = hash(raw), legacy.Name
+				if _, e = h.admin.Exec(`INSERT INTO system_backup_v2_attempts(target_type,target_public_id,attempt_no,phase) VALUES('backup',?,1,'publish')`, request.Backup); e != nil {
+					t.Fatal(e)
+				}
+				if _, e = h.admin.Exec(`INSERT INTO system_backup_v2_job_send_intents(origin_installation_id,task_public_id,phase,job_unit_key,namespace_name,namespace_uid,job_name,spec_sha256,send_state,send_started_at) VALUES(?,?,'publish','artifact-upload',?,?,?,?, 'sending',UTC_TIMESTAMP(6))`, request.Installation, request.Backup, cfg.Namespace, cfg.NamespaceUID, oldIntentName, oldIntentSHA); e != nil {
+					t.Fatal(e)
+				}
+			}
+			if mode == "staging-binding-deleted" {
+				if e := client.CoreV1().PersistentVolumes().Delete(ctx, cfg.StagingLocation.PV, metav1.DeleteOptions{}); e != nil {
+					t.Fatal(e)
+				}
+			}
 			if mode == "source-hash-drift" {
 				request.Objects[0].SHA256 = hash([]byte("changed original C"))
 			}
@@ -217,6 +246,9 @@ func TestPublicationJobOriginal121SingleSendSuspendedMySQL(t *testing.T) {
 				if job.Spec.Suspend == nil || !*job.Spec.Suspend {
 					t.Fatal("publication Job ran before resources/107 binding")
 				}
+				if kube.ContentHash(job.Spec.Template.Spec.Affinity) != kube.ContentHash(&corev1.Affinity{NodeAffinity: &corev1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{{MatchFields: []corev1.NodeSelectorRequirement{{Key: "metadata.name", Operator: corev1.NodeSelectorOpIn, Values: []string{cfg.StagingLocation.Node}}}}}}}}) {
+					t.Fatal("native upload Job lost original staging node affinity")
+				}
 				job.UID, job.Generation = "12345678-1234-4123-8123-123456789abc", 1
 				if mode != "sending-absent" {
 					if err := client.Tracker().Create(batchv1.SchemeGroupVersion.WithResource("jobs"), job, job.Namespace); err != nil {
@@ -241,6 +273,25 @@ func TestPublicationJobOriginal121SingleSendSuspendedMySQL(t *testing.T) {
 				return true, job, nil
 			})
 			job, err := h.service.ensureSuspendedPublicationJob(ctx, h.token, 1, store.config, request)
+			if mode == "old-unplaced-intent" || mode == "staging-binding-deleted" {
+				if err == nil || job != nil || creates != 0 {
+					t.Fatal("invalid staging/old intent reached Create", err, creates)
+				}
+				if mode == "old-unplaced-intent" {
+					var state, digest, name string
+					var uid sql.NullString
+					if h.admin.QueryRow(`SELECT send_state,spec_sha256,job_name,job_uid FROM system_backup_v2_job_send_intents WHERE task_public_id=? AND phase='publish' AND job_unit_key='artifact-upload'`, request.Backup).Scan(&state, &digest, &name, &uid) != nil || state != "sending" || digest != oldIntentSHA || name != oldIntentName || uid.Valid {
+						t.Fatal("old intent was rewritten")
+					}
+					if _, e := h.service.ensureSuspendedPublicationJob(ctx, h.token, 1, store.config, request); e == nil || creates != 0 {
+						t.Fatal("old intent was resent")
+					}
+				}
+				if provider.puts != 0 || provider.gets != 0 || provider.heads != 0 {
+					t.Fatal("refused Job reached native artifact provider")
+				}
+				return
+			}
 			if mode == "source-hash-drift" || mode == "upload-sa-drift" || mode == "upload-sa-forbidden" {
 				if err == nil || creates != 0 {
 					t.Fatal("changed input/SA reached native Create", err)

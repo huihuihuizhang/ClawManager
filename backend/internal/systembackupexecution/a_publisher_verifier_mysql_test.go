@@ -35,6 +35,7 @@ import (
 	w "clawreef/internal/systembackupwire"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubefake "k8s.io/client-go/kubernetes/fake"
 )
 
 type aPublisherVerifierFixture struct {
@@ -69,6 +70,7 @@ type aPublisherVerifierFixtureOptions struct {
 	ConfigureExecutionGrant     func(*c.ExecutionGrant)
 	AttemptNo                   uint64
 	PublicationWorker           *PublicationWorkerReference
+	PublicationStaging          bool
 	ObserveControlDSN           func(string)
 	PreparePublicationTarget    func(*PublicationTargetMaterials)
 }
@@ -260,6 +262,9 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 					cfg.Writers[i].Namespace = cfg.Namespace
 				}
 				cfg.Security.Volumes = []kube.MountIdentity{{Kind: "PersistentVolumeClaim", Name: "source", UID: "source-uid", PVName: "source-pv", PVUID: "source-pv-uid"}, {Kind: "PersistentVolumeClaim", Name: "staging", UID: "staging-uid", PVName: "staging-pv", PVUID: "staging-pv-uid"}}
+				if fixture.PublicationStaging {
+					configurePublicationStagingFixture(t, &cfg)
+				}
 				return cfg
 			}
 		}
@@ -285,6 +290,9 @@ func newAPublisherVerifierFixtureOptions(t *testing.T, fixture aPublisherVerifie
 	ctx := context.Background()
 	g := h.cfg.Deployment
 	actor := h.cfg.Workload
+	if fixture.PublicationStaging {
+		installPublicationStagingFixture(t, h.service, h.owner.Client.(*kubefake.Clientset), actor.PodName)
+	}
 	// Extend only the focused A fixture role, on this UUID/marker-owned schema.
 	for _, migration := range []string{"127_backup_v2_kek_registry.sql", "128_backup_installation_kek_authority.sql"} {
 		raw, err := os.ReadFile(filepath.Join("..", "db", "migrations", migration))

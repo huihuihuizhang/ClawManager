@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/middleware"
 	"clawreef/internal/systembackupapi"
+	"clawreef/internal/systembackupexecution"
 	"clawreef/internal/systembackupread"
 	"clawreef/internal/systembackupsecurity"
 	"github.com/gin-gonic/gin"
@@ -19,10 +20,11 @@ import (
 // A nil authorizer represents an enabled but unavailable deployment, not a
 // permission to fall back to fixture data.
 type liveBackupRead struct {
-	db         *sql.DB
-	authorizer *systembackupsecurity.SystemBackupReadAuthorizer
-	cursorKey  []byte
-	tasks      *systembackupapi.Handler
+	publication *systembackupexecution.PublicationHTTPReader
+	db          *sql.DB
+	authorizer  *systembackupsecurity.SystemBackupReadAuthorizer
+	cursorKey   []byte
+	tasks       *systembackupapi.Handler
 }
 
 func loadLiveBackupRead(db *sql.DB, sessions *systembackupsecurity.SQLLoginSessions, getenv func(string) string) (*liveBackupRead, error) {
@@ -47,13 +49,17 @@ func loadLiveBackupRead(db *sql.DB, sessions *systembackupsecurity.SQLLoginSessi
 	if err != nil {
 		return live, errors.New("live read authority pin unavailable")
 	}
+	live.publication, err = loadPublicationHTTPRead(getenv)
+	if err != nil {
+		return live, errors.New("publication read material or signing history pin unavailable")
+	}
 	return live, nil
 }
 
 func registerBackupReadLive(admin *gin.RouterGroup, live *liveBackupRead) {
 	unavailable := func(c *gin.Context) { liveReadError(c, systembackupread.ErrUnavailable) }
 	for _, path := range []string{
-		"/system-backup-overview", "/system-backup-catalog-scans", "/system-backup-catalog-records",
+		"/system-backup-overview", "/system-backup-catalog-scans",
 		"/system-backup-catalog-imports", "/system-backup-prune-runs", "/system-backup-promotions",
 	} {
 		admin.GET(path, unavailable)
@@ -88,7 +94,9 @@ func registerBackupReadLive(admin *gin.RouterGroup, live *liveBackupRead) {
 		admin.GET(route.path+"/:id/events", func(c *gin.Context) { live.listTaskEvents(c, kind) })
 		admin.GET(route.path+"/:id/logs", unavailable)
 	}
-	admin.GET("/system-backups/:id/manifest", unavailable)
+	admin.GET("/system-backup-catalog-records", live.listCatalogRecords)
+	admin.GET("/system-backup-catalog-records/:id", live.getCatalogRecord)
+	admin.GET("/system-backups/:id/manifest", live.getBackupManifest)
 	admin.GET("/system-backup-operations", live.listOperations)
 	admin.GET("/system-backup-operations/:id", live.getOperation)
 }
