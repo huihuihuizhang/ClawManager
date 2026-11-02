@@ -39,8 +39,10 @@ PHASE = "arguments"
 
 
 class Refused(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason, diagnostics=None):
         self.reason = reason
+        self.stage = PHASE
+        self.diagnostics = diagnostics or {}
 
 
 def require(ok, reason):
@@ -48,12 +50,29 @@ def require(ok, reason):
         raise Refused(reason)
 
 
+def tool_operation(argv):
+    # Closed labels only: no command arguments, names, paths or tool output.
+    tool = Path(argv[0]).name if argv else ""
+    if tool == "kubectl":
+        if "create" in argv and "token" in argv:
+            return "kubectl-create-token"
+        for verb in ("wait", "patch", "delete", "create", "get", "port-forward"):
+            if verb in argv:
+                return "kubectl-" + verb
+        return "kubectl-other"
+    return "openssl" if tool == "openssl" else "other-tool"
+
+
 def run(argv, data=None, timeout=40, allowed=(0,)):
+    operation = tool_operation(argv)
     try:
         result = subprocess.run(argv, input=data, capture_output=True, timeout=timeout)
-    except (OSError, subprocess.TimeoutExpired):
-        raise Refused("tool_unavailable_or_timeout") from None
-    require(result.returncode in allowed and len(result.stdout) <= 2097152, "tool_failed_or_output_limit")
+    except subprocess.TimeoutExpired:
+        raise Refused("tool_unavailable_or_timeout", {"tool_operation": operation, "timed_out": True}) from None
+    except OSError:
+        raise Refused("tool_unavailable_or_timeout", {"tool_operation": operation, "launch_failed": True}) from None
+    if result.returncode not in allowed or len(result.stdout) > 2097152:
+        raise Refused("tool_failed_or_output_limit", {"tool_operation": operation, "exit_code": result.returncode, "output_limit_exceeded": len(result.stdout) > 2097152})
     return result.stdout
 
 
@@ -344,6 +363,9 @@ def configure(owner, api):
 
 
 def bind_identity(owner, api, action, pod, sa, context64):
+    global PHASE
+    require(action in ("generate", "unwrap"), "smoke_action_invalid")
+    PHASE = "jwt-smoke-" + action + "-identity-readback"
     root = owner.read("init-material.json")["root_token"]
     sa_obj, pod_obj = get("serviceaccounts", sa), get("pods", pod)
     require(sa_obj and pod_obj and pod_obj["spec"].get("serviceAccountName") == sa and pod_obj["metadata"].get("labels", {}).get(LABEL) == owner.state["run"], "smoke_workload_identity_changed")
@@ -356,10 +378,14 @@ def bind_identity(owner, api, action, pod, sa, context64):
     else:
         parameters["ciphertext"] = ["vault:v1:*"]
     policy = json.dumps({"path": {path: {"capabilities": ["update"], "allowed_parameters": parameters}}})
+    PHASE = "jwt-smoke-" + action + "-policy"
     api.call("PUT", "sys/policies/acl/" + name, {"policy": policy}, root)
     claims = {"/kubernetes.io/namespace": NAMESPACE, "/kubernetes.io/serviceaccount/uid": sa_obj["metadata"]["uid"], "/kubernetes.io/pod/uid": pod_obj["metadata"]["uid"]}
+    PHASE = "jwt-smoke-" + action + "-role"
     api.call("POST", "auth/" + owner.state["jwt_mount"] + "/role/" + name, {"role_type": "jwt", "bound_audiences": [AUDIENCE], "bound_subject": "system:serviceaccount:" + NAMESPACE + ":" + sa, "bound_claims": claims, "claim_mappings": {key: value for key, value in zip(claims, ("namespace", "service_account_uid", "pod_uid"))}, "user_claim": "sub", "token_type": "batch", "token_no_default_policy": True, "token_policies": [name], "token_ttl": "20s", "token_max_ttl": "20s", "token_explicit_max_ttl": "20s", "clock_skew_leeway": -1, "expiration_leeway": -1, "not_before_leeway": -1}, root)
+    PHASE = "jwt-smoke-" + action + "-token-request"
     jwt = kube("-n", NAMESPACE, "create", "token", sa, "--audience=" + AUDIENCE, "--duration=600s", "--bound-object-kind=Pod", "--bound-object-name=" + pod, "--bound-object-uid=" + pod_obj["metadata"]["uid"]).decode().strip()
+    PHASE = "jwt-smoke-" + action + "-login"
     result = api.call("POST", "auth/" + owner.state["jwt_mount"] + "/login", {"role": name, "jwt": jwt})["auth"]
     require(result.get("token_type") == "batch" and result.get("renewable") is False and result.get("policies") == [name] and 1 <= result.get("lease_duration", 0) <= 20, "jwt_token_profile_rejected")
     metadata = result.get("metadata", {})
@@ -367,60 +393,94 @@ def bind_identity(owner, api, action, pod, sa, context64):
     return result["client_token"]
 
 
-def smoke(owner, api):
+def smoke_identity(owner, api, action, context64, use):
+    """Use a live actual Pod identity, then release its one node Pod slot."""
+    global PHASE
     name = owner.state["prefix"]
-    created = []
+    sa = pod = name + "-smoke-" + action
     try:
-        smoke_config = {"ui": False, "disable_mlock": True, "api_addr": "https://127.0.0.1:8200", "storage": {"inmem": {}}, "listener": {"tcp": {"address": "127.0.0.1:8200", "tls_cert_file": "/tls/server.pem", "tls_key_file": "/tls/server-key.pem"}}}
-        owner.create({"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": name + "-smoke-config"}, "immutable": True, "data": {"server.json": json.dumps(smoke_config)}}, "configmaps")
-        for action in ("generate", "unwrap"):
-            sa, pod = name + "-smoke-" + action, name + "-smoke-" + action
-            owner.create({"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {"name": sa}, "automountServiceAccountToken": False}, "serviceaccounts")
-            owner.create({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": pod}, "spec": {"nodeName": owner.state["node"], "serviceAccountName": sa, "automountServiceAccountToken": False, "restartPolicy": "Never", "securityContext": {"runAsNonRoot": True, "runAsUser": 65532, "runAsGroup": 65532, "fsGroup": 65532, "seccompProfile": {"type": "RuntimeDefault"}}, "containers": [{"name": "smoke", "image": IMAGE, "imagePullPolicy": "Never", "command": [CLI, "server", "-config=/config/server.json"], "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}}, "volumeMounts": [{"name": "config", "mountPath": "/config", "readOnly": True}, {"name": "tls", "mountPath": "/tls", "readOnly": True}, {"name": "tmp", "mountPath": "/tmp"}], "resources": {"requests": {"cpu": "25m", "memory": "128Mi"}, "limits": {"cpu": "500m", "memory": "256Mi"}}}], "volumes": [{"name": "config", "configMap": {"name": name + "-smoke-config"}}, {"name": "tls", "secret": {"secretName": name + "-tls", "defaultMode": 0o440}}, {"name": "tmp", "emptyDir": {"medium": "Memory", "sizeLimit": "16Mi"}}]}}, "pods")
-            created.append((sa, pod))
-            kube("-n", NAMESPACE, "wait", "pod/" + pod, "--for=condition=Ready", "--timeout=120s", timeout=130)
-        context64 = base64.b64encode(("clawmanager.transit.bootstrap-smoke.v1\x00" + owner.state["run"]).encode()).decode()
-        generate = bind_identity(owner, api, "generate", created[0][1], created[0][0], context64)
-        unwrap = bind_identity(owner, api, "unwrap", created[1][1], created[1][0], context64)
-        key = name + "-kek"
-        if (owner.directory / "persistence-check.json").exists():
-            original = owner.read("persistence-check.json")
-            old_plain = api.call("POST", "transit/decrypt/" + key, {"context": original["context"], "ciphertext": original["ciphertext"]}, unwrap)["data"]["plaintext"]
-            require(hashlib.sha256(base64.b64decode(old_plain, validate=True)).hexdigest() == original["plaintext_sha256"], "original_persisted_ciphertext_did_not_unwrap")
-            owner.state["original_ciphertext_readback_passed"] = True
-        wrapped = api.call("POST", "transit/datakey/plaintext/" + key, {"context": context64, "bits": "256", "key_version": "1"}, generate)["data"]
-        require(len(base64.b64decode(wrapped["plaintext"], validate=True)) == 32 and wrapped["ciphertext"].startswith("vault:v1:"), "real_datakey_shape")
-        opened = api.call("POST", "transit/decrypt/" + key, {"context": context64, "ciphertext": wrapped["ciphertext"]}, unwrap)["data"]
-        require(opened["plaintext"] == wrapped["plaintext"], "real_unwrap_mismatch")
-        if not (owner.directory / "persistence-check.json").exists():
-            owner.write("persistence-check.json", {"context": context64, "ciphertext": wrapped["ciphertext"], "plaintext_sha256": hashlib.sha256(base64.b64decode(wrapped["plaintext"], validate=True)).hexdigest()})
-        api.call("POST", "transit/decrypt/" + key, {"context": context64, "ciphertext": wrapped["ciphertext"]}, generate, expected=(403,))
-        api.call("POST", "transit/datakey/plaintext/" + key, {"context": context64, "bits": "256", "key_version": "1"}, unwrap, expected=(403,))
-        api.call("POST", "transit/decrypt/" + key, {"context": base64.b64encode(b"wrong-context").decode(), "ciphertext": wrapped["ciphertext"]}, unwrap, expected=(400, 403))
-        owner.state["jwt_smoke_passed"] = True
-        owner.save()
+        PHASE = "jwt-smoke-" + action + "-create-service-account"
+        owner.create({"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {"name": sa}, "automountServiceAccountToken": False}, "serviceaccounts")
+        PHASE = "jwt-smoke-" + action + "-create-pod"
+        owner.create({"apiVersion": "v1", "kind": "Pod", "metadata": {"name": pod}, "spec": {"nodeName": owner.state["node"], "serviceAccountName": sa, "automountServiceAccountToken": False, "restartPolicy": "Never", "securityContext": {"runAsNonRoot": True, "runAsUser": 65532, "runAsGroup": 65532, "fsGroup": 65532, "seccompProfile": {"type": "RuntimeDefault"}}, "containers": [{"name": "smoke", "image": IMAGE, "imagePullPolicy": "Never", "command": [CLI, "server", "-config=/config/server.json"], "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}}, "volumeMounts": [{"name": "config", "mountPath": "/config", "readOnly": True}, {"name": "tls", "mountPath": "/tls", "readOnly": True}, {"name": "tmp", "mountPath": "/tmp"}], "resources": {"requests": {"cpu": "25m", "memory": "128Mi"}, "limits": {"cpu": "500m", "memory": "256Mi"}}}], "volumes": [{"name": "config", "configMap": {"name": name + "-smoke-config"}}, {"name": "tls", "secret": {"secretName": name + "-tls", "defaultMode": 0o440}}, {"name": "tmp", "emptyDir": {"medium": "Memory", "sizeLimit": "16Mi"}}]}}, "pods")
+        PHASE = "jwt-smoke-" + action + "-wait-ready"
+        kube("-n", NAMESPACE, "wait", "pod/" + pod, "--for=condition=Ready", "--timeout=120s", timeout=130)
+        token = bind_identity(owner, api, action, pod, sa, context64)
+        PHASE = "jwt-smoke-" + action + "-real-crypto"
+        return use(token)  # All token use finishes BEFORE this Pod is deleted.
     finally:
-        cleanup_failed = False
+        original_error = sys.exc_info()[1]
+        PHASE = "jwt-smoke-" + action + "-owned-cleanup"
+        failed = False
         root = owner.read("init-material.json")["root_token"]
-        for action in ("generate", "unwrap"):
-            scoped = name + "-" + action
+        scoped = name + "-" + action
+        for path in ("auth/" + owner.state["jwt_mount"] + "/role/" + scoped, "sys/policies/acl/" + scoped):
             try:
-                api.call("DELETE", "auth/" + owner.state["jwt_mount"] + "/role/" + scoped, token=root, expected=(204,))
-                api.call("DELETE", "sys/policies/acl/" + scoped, token=root, expected=(204,))
+                api.call("DELETE", path, token=root, expected=(204,))
             except Exception:
-                cleanup_failed = True
-        for sa, pod in reversed(created):
+                failed = True
+        if "pods/" + pod in owner.state["resources"]:
             try:
                 owner.delete("pods", pod)
                 kube("-n", NAMESPACE, "wait", "--for=delete", "pod/" + pod, "--timeout=60s", timeout=70)
+            except Exception:
+                failed = True
+        if "serviceaccounts/" + sa in owner.state["resources"]:
+            try:
                 owner.delete("serviceaccounts", sa)
             except Exception:
-                cleanup_failed = True
+                failed = True
+        if failed and isinstance(original_error, Refused):
+            original_error.diagnostics["cleanup_incomplete"] = True
+        else:
+            require(not failed, "owned_smoke_cleanup_incomplete")
+
+
+def smoke(owner, api):
+    global PHASE
+    name = owner.state["prefix"]
+    context64 = base64.b64encode(("clawmanager.transit.bootstrap-smoke.v1\x00" + owner.state["run"]).encode()).decode()
+    key = name + "-kek"
+
+    def generate(token):
+        wrapped = api.call("POST", "transit/datakey/plaintext/" + key, {"context": context64, "bits": "256", "key_version": "1"}, token)["data"]
+        require(len(base64.b64decode(wrapped["plaintext"], validate=True)) == 32 and wrapped["ciphertext"].startswith("vault:v1:"), "real_datakey_shape")
+        api.call("POST", "transit/decrypt/" + key, {"context": context64, "ciphertext": wrapped["ciphertext"]}, token, expected=(403,))
+        if not (owner.directory / "persistence-check.json").exists():
+            owner.write("persistence-check.json", {"context": context64, "ciphertext": wrapped["ciphertext"], "plaintext_sha256": hashlib.sha256(base64.b64decode(wrapped["plaintext"], validate=True)).hexdigest()})
+        return wrapped
+
+    try:
+        smoke_config = {"ui": False, "disable_mlock": True, "api_addr": "https://127.0.0.1:8200", "storage": {"inmem": {}}, "listener": {"tcp": {"address": "127.0.0.1:8200", "tls_cert_file": "/tls/server.pem", "tls_key_file": "/tls/server-key.pem"}}}
+        PHASE = "jwt-smoke-create-config"
+        owner.create({"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": name + "-smoke-config"}, "immutable": True, "data": {"server.json": json.dumps(smoke_config)}}, "configmaps")
+        wrapped = smoke_identity(owner, api, "generate", context64, generate)
+        # The first identity has been cleaned and its Pod deletion confirmed.
+        # Only the wrapped bytes/plaintext comparison data survive; no token.
+        def unwrap(token):
+            original = owner.read("persistence-check.json")
+            require(original["context"] == context64, "original_persistence_context_changed")
+            old_plain = api.call("POST", "transit/decrypt/" + key, {"context": original["context"], "ciphertext": original["ciphertext"]}, token)["data"]["plaintext"]
+            require(hashlib.sha256(base64.b64decode(old_plain, validate=True)).hexdigest() == original["plaintext_sha256"], "original_persisted_ciphertext_did_not_unwrap")
+            owner.state["original_ciphertext_readback_passed"] = True
+            opened = api.call("POST", "transit/decrypt/" + key, {"context": context64, "ciphertext": wrapped["ciphertext"]}, token)["data"]
+            require(opened["plaintext"] == wrapped["plaintext"], "real_unwrap_mismatch")
+            api.call("POST", "transit/datakey/plaintext/" + key, {"context": context64, "bits": "256", "key_version": "1"}, token, expected=(403,))
+            api.call("POST", "transit/decrypt/" + key, {"context": base64.b64encode(b"wrong-context").decode(), "ciphertext": wrapped["ciphertext"]}, token, expected=(400, 403))
+        smoke_identity(owner, api, "unwrap", context64, unwrap)
+        owner.state["jwt_smoke_passed"] = True
+        owner.save()
+    finally:
+        original_error = sys.exc_info()[1]
+        PHASE = "jwt-smoke-config-cleanup"
         try:
-            owner.delete("configmaps", name + "-smoke-config")
+            if "configmaps/" + name + "-smoke-config" in owner.state["resources"]:
+                owner.delete("configmaps", name + "-smoke-config")
         except Exception:
-            cleanup_failed = True
-        require(not cleanup_failed, "owned_smoke_cleanup_incomplete")
+            if isinstance(original_error, Refused):
+                original_error.diagnostics["cleanup_incomplete"] = True
+            else:
+                raise Refused("owned_smoke_cleanup_incomplete") from None
 
 
 def pvc_binding(owner):
@@ -526,7 +586,7 @@ def ensure_provider_data_initializer(owner, deployment):
 def main():
     global PHASE, IMAGE, IMAGE_DIGESTS, CLI, VERSION
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("install", "resume-install", "unseal", "smoke", "uninstall"))
+    parser.add_argument("operation", choices=("install", "resume-install", "unseal", "smoke", "persistence", "uninstall"))
     parser.add_argument("--state-dir", required=True, type=Path)
     parser.add_argument("--storage-class")
     parser.add_argument("--image-input", type=Path)
@@ -598,11 +658,16 @@ def main():
                 owner.state["uninstalled_data_retained"] = True
                 owner.save()
             else:
+                if args.operation == "persistence":
+                    require(owner.state.get("configured") is True and owner.state.get("cluster_id") and owner.state.get("jwt_mount"), "original_configured_provider_required")
                 api = API(owner)
                 PHASE = args.operation
                 unseal(owner, api)
-                if args.operation == "smoke":
+                if args.operation in ("smoke", "persistence"):
                     smoke(owner, api)
+                if args.operation == "persistence":
+                    PHASE = "persistent-restart-readback"
+                    api = persistence(owner, api)
         PHASE = "final-identities"
         guard()
         report = {"schema_version": "d-transit-install-report.v1", "status": "completed", "operation": args.operation, "context": CONTEXT, "namespace": NAMESPACE, "namespace_uid": NAMESPACE_UID, "provider_cluster_id": owner.state.get("cluster_id"), "image": IMAGE, "endpoint": "https://" + owner.state["prefix"] + "." + NAMESPACE + ".svc:8200", "key_name": owner.state["prefix"] + "-kek", "provider_version": "1", "jwt_mount": owner.state.get("jwt_mount"), "jwt_smoke_passed": owner.state.get("jwt_smoke_passed", False), "persistence_restart_verified": owner.state.get("persistence_restart_verified", False), "storage_class": owner.state["storage_class"], "data_pvc": owner.state["prefix"] + "-data", "pvc_binding": owner.state.get("pvc_binding"), "ca_sha256": hashlib.sha256(owner.read("ca.pem", False)).hexdigest(), "signing": owner.state.get("signing"), "persistent_data_deleted": False, "owner_material_exported": False, "production_owner_mapping_registered": False, "source_independent_verified": False, "backup_target_classified": False}
@@ -610,7 +675,7 @@ def main():
         print(json.dumps(report, sort_keys=True))
         return 0
     except Refused as error:
-        print(json.dumps({"schema_version": "d-transit-install-report.v1", "status": "refused", "stage": PHASE, "reason": error.reason, "raw_diagnostics_withheld": True}))
+        print(json.dumps({"schema_version": "d-transit-install-report.v1", "status": "refused", "stage": error.stage, "reason": error.reason, "diagnostics": error.diagnostics, "raw_diagnostics_withheld": True}))
         return 1
     except Exception:
         print(json.dumps({"schema_version": "d-transit-install-report.v1", "status": "refused", "stage": PHASE, "reason": "private_error_details_withheld"}))

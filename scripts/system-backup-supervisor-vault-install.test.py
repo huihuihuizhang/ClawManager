@@ -1,11 +1,11 @@
 """Local mocked safety checks for the exact reviewed operator-run installer."""
-import copy, hashlib, json, tempfile, types, unittest
+import base64, copy, hashlib, json, tempfile, types, unittest
 from pathlib import Path
 from unittest.mock import patch
 
 P=Path('scripts/system-backup-d-transit-install.py')
 raw=P.read_bytes()
-assert hashlib.sha256(raw).hexdigest()=='9de074926dd3b262cd3cf4e7d7915be689ba5bf6af2fa16dd4efd07a70c683b6'
+assert hashlib.sha256(raw).hexdigest()=='d2207885e0c91c81d47eec69b3dbd9d601a65739db1d2965520c481e64595514'
 m=types.ModuleType('installer_under_review')
 exec(compile(raw,str(P),'exec'),m.__dict__)
 m.IMAGE='verified-private-repo@sha256:'+'a'*64
@@ -164,5 +164,66 @@ class Review(unittest.TestCase):
         with patch.object(m,'kube') as k:
             with self.assertRaisesRegex(m.Refused,'original_provider_init_containers_changed'): m.ensure_provider_data_initializer(o,deployment)
             k.assert_not_called()
+
+    def smoke_owner(self,directory):
+        o=owner(); o.directory=Path(directory); o.active={}; o.events=[]
+        def create(obj,resource):
+            name=obj['metadata']['name']; o.state['resources'][resource+'/'+name]='mock-uid'
+            if resource=='pods':
+                self.assertFalse(o.active,'second Pod created before first deletion')
+                o.active[name]=True; o.events.append('create:'+name)
+        def delete(resource,name,*args):
+            if resource=='pods': o.active.pop(name); o.events.append('delete:'+name)
+        def read(name,json_value=True):
+            return {'root_token':'mock-only'} if name=='init-material.json' else json.loads((o.directory/name).read_text())
+        def write(name,value,**kwargs):
+            (o.directory/name).write_text(json.dumps(value))
+        o.create=create; o.delete=delete; o.read=read; o.write=write
+        return o
+
+    def test_smoke_uses_only_one_live_identity_and_original_ciphertext(self):
+        with tempfile.TemporaryDirectory(prefix='vault-sequential-mock-') as directory:
+            o=self.smoke_owner(directory); plain=base64.b64encode(b'm'*32).decode(); crypto=[]
+            def bind(o,api,action,pod,sa,context):
+                self.assertIn(pod,o.active); return 'mock-'+action
+            def call(method,path,body=None,token=None,expected=(200,204)):
+                if method=='DELETE': return {}
+                action=token.removeprefix('mock-')
+                self.assertIn(o.state['prefix']+'-smoke-'+action,o.active,'token used after Pod deletion')
+                crypto.append((action,path,expected))
+                if 403 in expected or 400 in expected: return {}
+                if '/datakey/' in path:
+                    self.assertEqual(action,'generate'); return {'data':{'plaintext':plain,'ciphertext':'vault:v1:mock'}}
+                self.assertEqual(action,'unwrap'); self.assertEqual(body['ciphertext'],'vault:v1:mock')
+                return {'data':{'plaintext':plain}}
+            def kube(*args,**kwargs):
+                if '--for=delete' in args: self.assertFalse(o.active)
+                return b''
+            with patch.object(m,'bind_identity',side_effect=bind),patch.object(m,'kube',side_effect=kube):
+                m.smoke(o,types.SimpleNamespace(call=call))
+                first=json.loads((o.directory/'persistence-check.json').read_text())
+                m.smoke(o,types.SimpleNamespace(call=call))
+                self.assertEqual(json.loads((o.directory/'persistence-check.json').read_text()),first)
+            self.assertFalse(o.active); self.assertTrue(o.state['jwt_smoke_passed']); self.assertTrue(o.state['original_ciphertext_readback_passed'])
+            self.assertTrue(any(a=='generate' and '/decrypt/' in p and 403 in e for a,p,e in crypto))
+            self.assertTrue(any(a=='unwrap' and '/datakey/' in p and 403 in e for a,p,e in crypto))
+
+    def test_failed_identity_use_keeps_original_stage_and_cleans_pod(self):
+        with tempfile.TemporaryDirectory(prefix='vault-sequential-fail-mock-') as directory:
+            o=self.smoke_owner(directory)
+            def fail(token): raise m.Refused('mock_original_failure')
+            with patch.object(m,'bind_identity',return_value='mock-generate'),patch.object(m,'kube',return_value=b''):
+                with self.assertRaises(m.Refused) as caught:
+                    m.smoke_identity(o,types.SimpleNamespace(call=lambda *a,**k:{}),'generate','mock-context',fail)
+            self.assertEqual(caught.exception.reason,'mock_original_failure')
+            self.assertEqual(caught.exception.stage,'jwt-smoke-generate-real-crypto')
+            self.assertFalse(o.active)
+
+    def test_tool_failure_diagnostics_do_not_expose_arguments_or_output(self):
+        result=types.SimpleNamespace(returncode=7,stdout=b'mock-private-output',stderr=b'mock-private-error')
+        with patch.object(m.subprocess,'run',return_value=result):
+            with self.assertRaises(m.Refused) as caught: m.run(['kubectl','create','token','mock-private-argument'])
+        self.assertEqual(caught.exception.diagnostics,{'tool_operation':'kubectl-create-token','exit_code':7,'output_limit_exceeded':False})
+        self.assertNotIn('mock-private',json.dumps(caught.exception.diagnostics))
 
 if __name__=='__main__': unittest.main(verbosity=2)

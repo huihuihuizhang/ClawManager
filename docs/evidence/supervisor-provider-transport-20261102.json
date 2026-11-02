@@ -63,7 +63,8 @@
   "field_private_registry_readback_executed": true,
   "field_startup_failures": [
     {"installer_sha256": "6f8c97707ee9dc2fc3823b061116e8ecdfdebae80b3f9db2ddff89809c969f5b", "stage": "provider-start", "reason": "ErrImageNeverPull", "diagnostic_attachment_sha256": "e59715c3c7e32c1b441197c93214fc5145f1f50717d1398570d12fd58a3770da"},
-    {"installer_sha256": "d71b481f00362dcfcba759ef43549a6787738db98d5ccc7c2a271103341ef2ba", "stage": "provider-start", "reason": "Raft /data/raft parent directory absent; CrashLoopBackOff", "diagnostic_attachment_sha256": "481133d8b6358f628501ed341ad19095340dfa47e98bace5831e6e41f266f3de"}
+    {"installer_sha256": "d71b481f00362dcfcba759ef43549a6787738db98d5ccc7c2a271103341ef2ba", "stage": "provider-start", "reason": "Raft /data/raft parent directory absent; CrashLoopBackOff", "diagnostic_attachment_sha256": "481133d8b6358f628501ed341ad19095340dfa47e98bace5831e6e41f266f3de"},
+    {"installer_sha256": "9de074926dd3b262cd3cf4e7d7915be689ba5bf6af2fa16dd4efd07a70c683b6", "stage": "jwt-smoke", "reason": "Second simultaneous identity Pod refused: OutOfpods, used110 capacity110", "diagnostic_attachment_sha256": "9d863d1afa4fc4bdda2f697e8abd61a687852caa480052e35207e3ddf6edaee8"}
   ],
   "field_cri_image_verified_after_digest_alias_fix": {
     "manifest_digest": "sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
@@ -74,13 +75,22 @@
   },
   "latest_import_script_sha256": "0bf7f7cbea82647d93b28d0e186fe06a35aefe450a192d323c777ef80cf3c7e7",
   "latest_installer_review": {
-    "script_sha256": "9de074926dd3b262cd3cf4e7d7915be689ba5bf6af2fa16dd4efd07a70c683b6",
-    "local_mock_cases_passed": 17,
-    "mock_log_sha256": "9c524811876d9267898f86b3ec65aeee49af8552bc6b067760d35418806addc6",
-    "fixes": ["resume only exact pre-initialization owned resources", "same nonroot init creates missing Raft parent on original PVC", "only provider template patched with original UID and resourceVersion", "explicit API defaults preserve repeatability; foreign init refused"],
+    "script_sha256": "d2207885e0c91c81d47eec69b3dbd9d601a65739db1d2965520c481e64595514",
+    "local_mock_cases_passed": 20,
+    "mock_log_sha256": "d77aa53dd3765c0ef28e67355dd5afda42ec49ee82f5785176ce377cbb9d4d14",
+    "fixes": ["resume only exact pre-initialization owned resources", "same nonroot init creates missing Raft parent on original PVC", "only provider template patched with original UID and resourceVersion", "explicit API defaults preserve repeatability; foreign init refused", "one live identity Pod at a time; use token before Pod deletion", "persistence operation continues existing initialized provider without reinitialization", "closed tool diagnostics and original failure stage retained"],
     "submitted_to_user": true,
     "actual_installation_result_pending": true,
     "business_workloads_or_nodes_restarted": false
+  },
+  "field_provider_progress": {
+    "provider_ready_pod": "sbk-transit-zh-977a1b9a-ff5b66574-cc5t5",
+    "provider_ready": true,
+    "initialized_and_configured": true,
+    "provider_cluster_id": "520416dc-1249-7d73-2b19-cb0f1ce53014",
+    "jwt_smoke_passed": false,
+    "persistence_restart_verified": false,
+    "not_full_install_acceptance": true
   },
   "provider_installed": false,
   "production_owner_mapping_registered": false,
