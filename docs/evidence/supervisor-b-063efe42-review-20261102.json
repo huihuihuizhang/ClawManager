@@ -1,0 +1,32 @@
+{
+  "schema_version": "supervisor-b-capture-window-review.v1",
+  "reviewed_commit": "063efe42619a4631404e7c86204a0b19fbe56789",
+  "parent_commit": "9d9165536a96b1f04c74752ce5d3f89ebb2253b8",
+  "integration": "Fast-forward after independent changed-path comparison confirmed no overlap with local A/D/C uncommitted work",
+  "code_scope": "Bounded per-invocation SQL/key/source timing and per-table scan scratch reuse; no policy deadline, SQL grant, Query/Next/EOF guard or control protocol relaxation",
+  "test_source": "Independent git archive of exact reviewed commit; active C SQL snapshot remains on earlier pinned base",
+  "package_tests": {
+    "command": "go test -mod=readonly -p=2 ./internal/systembackup/domain ./internal/systembackup/worker -count=1 -json -timeout=180s",
+    "exit_code": 0,
+    "passed_root_tests": 168,
+    "skipped_root_tests": 14,
+    "domain_seconds": 6.359,
+    "worker_seconds": 39.473,
+    "log_sha256": "d05cbf42275295a43125e99f287b93f7536cd4c806948af441ba659087ffd27e",
+    "skipped_tests": ["TestOfflineBusinessRestoreMySQL", "TestSourceRowCountsMySQL", "TestGatewayBudgetPublicWorkerActualTLSMySQL", "TestGatewayImageNativeVerifyChild", "TestGatewayImagePublicWorkerActualTLSMySQL", "TestJointEightNativeVerifyChild", "TestJointEightPublicWorkerActualTLSMySQL", "TestNorthboundNativeVerifyChild", "TestNorthboundPublicWorkerActualTLSMySQL", "TestDatabaseTransportPreservesNativeParametersWithoutPrepare", "TestFormalSkillsSQLChecksOriginalProjectionBeforeCandidateMySQL", "TestFormalSQLSourceRevocationStopsBeforeNextTableMySQL", "TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode", "TestFormalTeamsObjectCandidateContainsPinnedOriginalBytes"],
+    "actual_mysql_or_native_or_production_material_tests_executed": false
+  },
+  "python_tests": {
+    "command": "python -I -B scripts/system-backup-b-capture-timing.test.py",
+    "passed_root_tests": 10,
+    "exit_code": 0,
+    "elapsed_seconds": 1.064,
+    "log_sha256": "669d32e6ecc771b25546c8840b024c5ffb1d6817a17bce335745adf6c786b3b8"
+  },
+  "original_author_jcs_cache_blocker_reproduced_on_supervisor": false,
+  "new_dependency_download_required": false,
+  "original_author_cleanup": "Original evidence still reports policy-blocked cache/tmp cleanup on a different machine; not claimed complete by supervisor",
+  "supervisor_cleanup": "Python temporary fixtures removed by test context; source/cache remains in the still-active exclusively owned evening verification batch and must be deleted when that batch ends",
+  "original_thirty_second_window_proven": false,
+  "real_page_or_complete_publication_proven": false
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "supervisor-evening-initial-sql-review.v1",
+  "base_commit": "9d9165536a96b1f04c74752ce5d3f89ebb2253b8",
+  "exact_additional_go_files": 54,
+  "mysql": {"version": "8.4.13", "server_uuid": "2783fb92-d69d-11f1-92a3-846993680ff3", "tls": "TLSv1.3", "require_secure_transport": true, "owned_initial_business_schemas": 0, "scope": "Local disposable instance; no field or production proof"},
+  "prefix_components": {"passed_roots": 2, "controller_seconds": 3.317, "execution_package": "compiled only; no matching tests", "log_sha256": "0d96b4fe3490b5eb3da502eb0836d75fb18746ca0935f5347a57cf83e486daf8"},
+  "prefix_actual_sql": {
+    "exit_code": 1,
+    "package_seconds": 7.327,
+    "current_field_differential_root": "PASS",
+    "lock_order_root": "FAIL",
+    "lock_subcases_passed": 1,
+    "lock_subcases_failed": 5,
+    "failures": ["maintenance row acquired before blocked runtime capture", "runtime capture row absent before blocked maintenance", "backup row acquired before blocked installation state", "backup row acquired before blocked active config", "runtime capture row absent before blocked backup"],
+    "log_sha256": "06b8b2e52ee43138ef9397750a602bba3937a81dc67a4c37c1fee6addc5077cb",
+    "production_dispatch_enabled": false,
+    "decision": "Reject activation until actual lock-order equivalence passes; LATERAL shape and faster local calls are insufficient"
+  },
+  "publication_terminal_happy_path": {
+    "exit_code": 1,
+    "test_seconds": 72.70,
+    "package_seconds": 78.256,
+    "original_task": "sbk_dad7a195-bc34-4b3f-9862-a3374ee0f4c4",
+    "owned_schema": "ad_d_six_2506c83607515f76",
+    "stage": "capture quiesce/resume before publication",
+    "runner": "quiesce_resume_failed",
+    "record": "recovery-required",
+    "terminal_cas_executed": false,
+    "log_sha256": "08a4f70cb486b0372ce71e48b8e3d297ec2e083623dbb1fb3a8dcdbac345989c",
+    "next_action": "D diagnoses exact production/frozen-fixture physical lifecycle mismatch; no synthetic SourceRecovery or SQL-stopped shortcut",
+    "fixture_old_release_fix_sha256": "c37f26ef1d1b9fd692e46585a48a1a6670c3cd7e3079979d6b5d6fe65f2f2f3a"
+  },
+  "commit_unknown_test": "Not repeated while identical quiesce prerequisite is known to fail",
+  "owned_mysql_still_live_for_diagnosis_and_corrected_tests": true,
+  "full_page_acceptance": false
+}
