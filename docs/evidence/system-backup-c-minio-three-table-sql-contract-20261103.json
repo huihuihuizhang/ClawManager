@@ -1,0 +1,162 @@
+{
+  "schema_version": "system-backup-c-minio-three-table-sql-contract.v1",
+  "date": "2026-11-03",
+  "status": "DDL_observed_for_alignment_not_frozen_schema_acceptance_no_SQL_lifecycle_implementation",
+  "parent": {
+    "path": "docs/evidence/system-backup-c-minio-bootstrap-authority-source-contract-20261103.json",
+    "sha256": "bb7176b9437b844b027e2149710c7bb2ed44a8266b2323a98b28c9f7ed99b907",
+    "note": "Retained unchanged as earlier proposal. This agreement chooses D's THREE tables, capture-before-MinIO owner lock order and DISTINCT SQL wire shapes/domains. The old general Grant/Head proposal is not accepted as these SQL record versions."
+  },
+  "source": {
+    "path": "backend/internal/systembackupminioauthority/sql_contract.go",
+    "sha256": "d71033fdf560af702e2ba16c6f4701be86b9bd484c4bf060e80fe262c2e9aba1",
+    "bytes": 5401
+  },
+  "shared_metadata": {
+    "path": "backend/internal/systembackupminioauthority/contract.go",
+    "sha256": "44fa114a4cc3e3a489b5246e97339673c44d32e3f84d42db5b765cc75c9daa8b",
+    "use": "Target/Enrollment/Actor/Provider/Reference/PermissionSource/ObservationBinding metadata and finite profile limits only. Old Grant/Head/SignedBundle versions remain unused proposal history."
+  },
+  "observed_DDL": {
+    "path": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql",
+    "sha256_at_read": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583",
+    "bytes_at_read": 5506,
+    "status": "D-authored working source, read only by C. Actual final DDL/schema acceptance and global lock prefix confirmation must come from D/root before concrete SQL implementation. No migration executed or edited."
+  },
+  "wire": {
+    "grant": "SQLGrant; version/domain system-backup-minio-sql-owner-grant.v1 / same + NUL",
+    "head": "SQLHead; version/domain system-backup-minio-sql-owner-head.v1 / same + NUL",
+    "reference": "SQLReferenceRecord; version/domain system-backup-minio-sql-owner-ref.v1 / same + NUL",
+    "bundle": "SQLBundle; Version system-backup-minio-sql-owner-bundle.v1; Action install or revoke. Bundle is not authority; signed components use the independently enrolled original key.",
+    "encoding": "Exact RFC8785 canonical unique complete JSON, reject unknown/trailing/case aliases, positive counters <= 2^53-1 and UTC microsecond times. SHA256 is lowercase 64 hex. Every SQL materialized key/index/state/hash must match verified signed payload and original pin.",
+    "no_mix": "Never decode capture records, old contract.go Grant/Head, or Kubernetes permission grant/head under these SQL versions. Reuse existing enrolled key/identity authentication, never the capture ledger as MinIO domain authorization.",
+    "digest_DAG": "Canonical SQLReferenceRecord raw bytes -> per-purpose SQLReferenceHash -> canonical five-entry ordered array ReferenceSetSHA256 -> signed SQLGrant/GrantSHA256 -> signed SQLHead/HeadSHA256. Ref records bind original AuthorityID/GrantID/RecordRevision/PermissionEpoch/ConfigSHA256 and original Target/Enrollment, but do not embed GrantSHA256; no circular hash dependency.",
+    "authority_selection": "SQLTrustPin fixes AuthorityID, original target/enrollment/issuer, GrantID/revision/hash, minimum permission epoch/head revision and ref-set SHA independently of rows/task/candidate. No lookup of arbitrary alternate authority IDs to bypass revocation."
+  },
+  "exact_column_parity": {
+    "system_backup_minio_owner_heads": {
+      "key": "(installation_id,enrollment_id,authority_id)",
+      "mapping": {
+        "installation_id": "SQLHead.Target.InstallationID",
+        "enrollment_id": "SQLHead.Enrollment.ID",
+        "authority_id": "SQLHead.AuthorityID = independently pinned SQLTrustPin.AuthorityID",
+        "head_revision": "SQLHead.HeadRevision",
+        "permission_epoch": "SQLHead.PermissionEpoch",
+        "current_grant_id": "SQLHead.CurrentGrantID",
+        "current_grant_revision": "SQLHead.CurrentGrantRevision",
+        "head_sha256": "SHA256(exact canonical SQLHead raw bytes)",
+        "signed_head": "exact SQLHead raw bytes, <=262144 bytes",
+        "signature": "exact 64-byte Ed25519(SQLHeadDomain || signed_head) under independent enrolled key",
+        "head_state": "SQLHead.State (active or revoked)",
+        "row_version": "SQL CAS generation; starts 1, positive <=2^53-1; not copied from caller without actual locked row",
+        "updated_at": "DB diagnostic time, never a validity/authority replacement"
+      },
+      "additional_checks": "Signed SQLHead also carries exact GrantSHA256 and ReferenceSetSHA256, target/enrollment and original windows; these need not be new DDL columns because full signed payload and locked selected grant/ref parity are mandatory."
+    },
+    "system_backup_minio_owner_grants": {
+      "key": "(installation_id,enrollment_id,authority_id,grant_id,record_revision)",
+      "mapping": {
+        "installation_id": "SQLGrant.Target.InstallationID",
+        "enrollment_id": "SQLGrant.Enrollment.ID",
+        "authority_id": "SQLGrant.AuthorityID",
+        "grant_id": "SQLGrant.GrantID",
+        "record_revision": "SQLGrant.RecordRevision",
+        "permission_epoch": "SQLGrant.PermissionEpoch = current head permission_epoch",
+        "record_sha256": "SHA256(exact canonical SQLGrant raw bytes) = SQLHead.GrantSHA256",
+        "signed_record": "exact SQLGrant raw bytes, <=262144 bytes",
+        "signature": "64-byte Ed25519(SQLGrantDomain || signed_record)",
+        "grant_state": "Lifecycle projection; initial active, becomes revoked ONLY in same authoritative signed-head CAS transaction",
+        "row_version": "Original grant row CAS generation, starts 1; payload/signature immutable",
+        "created_at": "Diagnostic SQL time; no authority lease inferred"
+      },
+      "additional_checks": "Grant binds complete original disabled ConfigSHA256/BootstrapGrantSHA256, actor, provider, source/probe intent, original windows and exact ordered five Ref hashes. Consumer verifies all five actual ref rows and original config refs; no native permission/capability inferred solely from declaration."
+    },
+    "system_backup_minio_owner_refs": {
+      "key": "(installation_id,enrollment_id,authority_id,grant_id,record_revision,purpose)",
+      "mapping": {
+        "installation_id": "SQLReferenceRecord.Target.InstallationID",
+        "enrollment_id": "SQLReferenceRecord.Enrollment.ID",
+        "authority_id": "SQLReferenceRecord.AuthorityID",
+        "grant_id": "SQLReferenceRecord.GrantID",
+        "record_revision": "SQLReferenceRecord.RecordRevision",
+        "purpose": "SQLReferenceRecord.Reference.Purpose",
+        "descriptor_sha256": "Reference.DescriptorSHA256 (original closed descriptor bytes)",
+        "provider_identity_hash": "Reference.ProviderIdentityHash = signed grant Provider.IdentityHash under reviewed original identity profile",
+        "scope_hash": "Reference.ScopeSHA256 under reviewed original scope profile",
+        "identity_hash": "Reference.IdentityHash = exact original BootstrapConfig reference identity",
+        "identity_version": "Reference.IdentityVersion = exact original BootstrapConfig ref version; application cap <=128 and no latest/current/default even though DDL VARCHAR(255)",
+        "ref_sha256": "SHA256(exact canonical SQLReferenceRecord raw bytes), also selected SQLGrant.References[purpose].SHA256",
+        "signed_ref": "exact canonical SQLReferenceRecord raw bytes, <=65536 bytes",
+        "signature": "64-byte Ed25519(SQLReferenceDomain || signed_ref)",
+        "ref_state": "Lifecycle projection; initial active, ALL FIVE revoked atomically with signed-head/grant revoke. No standalone mutable-ref authorization path",
+        "row_version": "Starts 1; included in exact SQLExpected.ReferenceRows CAS; signed record/signature/identity projections never replaced"
+      },
+      "additional_checks": "Ref PermissionEpoch, ConfigSHA256, Target and Enrollment are signed even where no extra DDL projection exists. Require exactly five rows and five sorted hashes, no missing/duplicate purpose, exact ref-set hash, five distinct accounts and observer separation; verify actual original descriptors/provider/scope before admitting use."
+    }
+  },
+  "identity_and_freshness": {
+    "enrollment": "Existing A Installer authenticatedOperator/enrollment/privateKey primitives authenticate original operator and key; no new Enroll/key generator in SQL issuer/import/revoke. Do not call capture snapshot/current to manufacture MinIO domain authority.",
+    "actor": "Original actor comes from actual SQL local-admin authentication and independently enrolled document. Installer SQL CURRENT_USER matches Actor.InstallerDatabaseAccount; consumer CURRENT_USER matches Target.ConsumerDatabaseAccount, exact original server/database in both.",
+    "provider": "Finite exact actual native six-account permission profile, original TLS/resource identity and independently selected upstream image/binary provenance; no version-string-only acceptance.",
+    "probe": "Reference.Capability/CapabilityProfile/CapabilityIntentSHA256 and ObservationBinding are original scope to measure, not Passed/evidence. Concrete original bounded condition/checksum/immutable read/delete/append measurements still required separately before fresh use.",
+    "native_deadline": "Private one-shot observation start sampled before first external source measurement; fixed deadline=min(all original grant/head/ref/credential/probe windows, start+signed maximum age, start+compiled 30s). No renewal at L2, commit, tail, replay or retry.",
+    "references": "Use independent original fixed disabled config and original bootstrap grant bytes. Do not query an active config or future task to authorize first install. Credential byte pins and AccessKey hashes never substitute reference identities."
+  },
+  "initial_install": {
+    "outside_locks": [
+      "Authenticate actual original local admin/password, Kubernetes owner/enrollment and existing independent issuer key.",
+      "Load/verify exact independent new SQL intent, descriptor/material/probe source; measure real native source/capability and Kubernetes readback/tails.",
+      "Freeze all five canonical ref records/signatures, ref-set digest, SQLGrant/signature and active SQLHead/signature. Grant revision=1, permission epoch=1, head revision=1. Expected all zero/empty; no ref CAS entries. No signing under SQL locks."
+    ],
+    "transaction": [
+      "Use one explicit original installer SQL tx and original SQL clock; lock current admin/RBAC first, capture owner prefix only if legitimately required by A/D, then exact MinIO head FOR UPDATE.",
+      "Prove absent pinned head under exact composite PK/gap protection; colliding/nonidentical source rows fail. Never allocate a fresh AuthorityID/name as automatic retry.",
+      "Insert head first, selected grant second (FK to head), then exactly five refs in fixed binary Purpose order (FK to grant), all row_version=1/state active.",
+      "Read actual complete original head/grant/refs in same order, verify signed bytes/index/hash/parity/count and original windows against fresh SQL time. Roll back on any missing or mixed row; SQL JSON/hash CHECKs do not replace signature/JCS/ref membership checks.",
+      "Commit once. Any commit/readback ambiguity returns explicit unknown, not a success or new bundle."
+    ],
+    "after_commit": "Read exact committed SQL original state, real native/Kubernetes source/auth tails outside locks; only then export exclusive private bootstrap trust input and separate receipt. If tail/export fails, leave inspectable original source state and return unknown. No task/config/operation rows are created by owner install.",
+    "idempotency": "An exact identical already-committed bundle can only be resolved/read back under actual current original auth. Different bytes, windows, keys, refs, expected tuples or IDs conflict. Never re-sign, overwrite or silently repair partial authority."
+  },
+  "CAS_revoke": {
+    "before_locks": "Authenticate current original operator/enrollment and existing private key. Read exact original head/grant/five refs and freeze SQLExpected including each actual ref row_version/ref hash. Build new signed SQLHead with HeadRevision+1 and State revoked; same target/enrollment/AuthorityID/permission epoch/current grant ID+revision/grant hash/ref-set/original windows. Grant and all five signed-ref raw bytes/signatures unchanged.",
+    "lock_order": "current admin/RBAC -> capture owner prefix if needed -> MinIO head -> selected grant -> artifact_delete, artifact_read, artifact_write, catalog_append, catalog_read refs. Installer/revoke use FOR UPDATE; SELECT-only consumer uses FOR SHARE on the same ordered original rows. Same lock order does not mean the same lock strength.",
+    "CAS": "UPDATE original head WHERE complete original PK + head row_version/revision/permission_epoch/current grant ID+revision/head hash/state active. UPDATE selected grant WHERE original PK + original row_version/hash/state active. UPDATE each exact ref WHERE original PK + purpose + original row_version/ref_sha256/state active. Require exactly one affected row per update; increment each row_version, never extend windows or replace old grant/ref bytes.",
+    "atomic_result": "All seven rows (head+grant+five refs) become mutually consistent revoked in one transaction. On any mismatch/overflow/not-exact count, rollback. Locked final readback verifies new signed head and unchanged signed grant/ref payloads with revoked projections. Revoked is terminal; no reactivation/epoch reset.",
+    "availability": "Revocation does not require a successful current MinIO capability probe; an expired old permission window may still be revoked while original operator auth/key are current. Never renew old permission/custody windows to revoke.",
+    "after_commit": "SQL is authoritative; update the Kubernetes revocation mirror only OUTSIDE SQL locks using exact original UID/RV and owner signature. Mirror failure cannot reactivate SQL authority. Any new admitted-use consumer must read SQL authority, so old V2-only consumer cannot be selected as this route.",
+    "resolve": "Lost commit acknowledgement is resolved by exact original rows and frozen bundle under current original authentication; no fallback activation, private-key re-sign, deletion or creation under new AuthorityID."
+  },
+  "global_lock_alignment": {
+    "chosen_order": "Preserve pre-existing D L1 installation/config/producer-domain prefix, then current admin/RBAC -> capture owner (if required) -> MinIO head -> current grant -> five MinIO refs in ASCII purpose order -> existing operation/history/business config/host/ref/evidence stages. A/D existing earlier locks are not moved behind MinIO.",
+    "important_existing_callers": "Existing captureCandidateSession.Authorize delegates Original before its concrete capture guard. Existing legacy reference iteration may reach artifact before capture. Therefore five References map entries alone do NOT enforce capture-before-MinIO: A/D terminal Original / original L2 prefix must concretely establish capture owner first and preserve the same transaction/guard before C MinIO locks. Do not claim this is already wired.",
+    "consumer_L2": "SELECT-only consumer uses FOR SHARE on head, selected grant and all five exact ref keys, retaining the same supplied original tx or controlled pd.BootstrapSQL; SQL time + original actor/head/grant/ref identities/windows/revocation precede operation/history lookup. Do not grant consumer UPDATE, DELETE or LOCK TABLES. No native/Kubernetes I/O, credential read/hash, signing, new preparation, separate SQL connection, Commit/Rollback or new business lock range.",
+    "shared_five_views": "One concrete attempt-local owner batch/observation shared by five exact-purpose adapters. First owner authorization locks all required MinIO original rows; later views retain same context/config/grant/tx guard and purpose mapping, not a reusable cross-attempt cache.",
+    "fresh_tail": "Same SELECT-only controlled tx/view and FOR SHARE original-row reads: re-sample SQL time and exact original identities/row versions/ref mappings/windows, reject revoked/expired/private observation deadline; allowed controlled immutable local-pin checks only. Installer/revoke retain FOR UPDATE. Real native tail measurements belong in lock-free Prepare; no new provider sample in callback.",
+    "history": "Current original L2 identity/mapping always precedes exact history; fresh observation expiry refuses new use without requiring renewal before historical branch. Candidate retains separate identity/dependency limits.",
+    "installer_prohibition": "No owner installer/revoker that already holds MinIO rows may later acquire capture owner, domain/config/history/task/host/business reference locks. All network/auth/signing precedes owner SQL transaction."
+  },
+  "D_A_next_alignment": [
+    "D returns frozen actual 135 DDL/source/hash and role/upgrade integration; confirm table/index parity with this concrete map, transaction isolation/gap handling and seven-row revoke semantics.",
+    "A confirms terminal Original actually preserves capture-before-MinIO in legacy and candidate L2 and provides original descriptor/identity/scope/custody semantics without substituting capture resource authorization.",
+    "After these contracts match, C implements concrete Issue/Import/Resolve/Revoke using exact D tables and actual existing operator auth, plus controlled original consumers/native evidence binding. No wrapper around an unimplemented generic Source is delivered instead.",
+    "Concrete fresh-use capability probe source remains outstanding; these metadata-only tables and signatures never become a capability pass by themselves."
+  ],
+  "validation": {
+    "C_performed": [
+      "Read D working DDL and original source/lock contracts only",
+      "gofmt new declarations-only sql_contract.go",
+      "read-only hashes"
+    ],
+    "C_not_performed": [
+      "tests",
+      "builds",
+      "typechecks",
+      "Git",
+      "SQL/native/remote/site operations"
+    ],
+    "root_reported_complete_producer_tests": "Root reports both new complete-producer component roots actually PASS in local --network none Linux container, including all three post-commit rejection cases. Accepted scope is strict controlled SQL model/fake Kubernetes/local TLS, not live field or full publication acceptance.",
+    "products": "No test/build products created by C."
+  },
+  "objective": "Continue functional complete backup publication. No DR qualification/isolated restore prerequisite added; main missing owners/full same-task publication remains unfinished."
+}

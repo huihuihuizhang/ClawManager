@@ -1,0 +1,24 @@
+{
+  "schema_version": "system-backup-d-native-source-tls-boundary-fix.v1",
+  "status": "source_only_pending_root_native_rerun",
+  "observed_root_failures": {
+    "log": ".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/b-mysql-fb84b237c65b45149847a3d1c1e77915/go-2.jsonl",
+    "AllRunning": "FAIL 25.92s at original runtime workspace aliases, preceded by remote TLS bad certificate",
+    "Empty": "FAIL 29.02s after fixture setup at ObserveSourceDependencies with public execution adapter unavailable",
+    "OriginalDrift": "FAIL 28.83s at the same original runtime workspace alias setup boundary",
+    "validation_limit": "Root's actual 176-migration TLS MySQL run is evidence of these failures, not source/backup success. D performed read-only log/source inspection and no test/SQL execution."
+  },
+  "deterministic_TLS_cause": {
+    "production": "services.NewRuntimeAgentClientWithPinnedCA pins TLS 1.3 and ServerName=lite-agent.clawmanager.internal",
+    "fixture_defect": "newSourceProtocolScenario used default httptest.NewTLSServer certificate without that DNS SAN. ResolveGatewaySource -> gatewayCapabilities -> actual pinned native client rejects TLS; SQL/runtime alias wrapper reports ErrExecutionRecord. This is not evidence that finite SQL grants or runtime row projections should be weakened.",
+    "minimal_fix": "Only the protocol scenario server changes to an explicitly generated TLS 1.3 self-signed test certificate with DNS lite-agent.clawmanager.internal/localhost and IP 127.0.0.1/::1 SANs. Same certificate bytes remain independently pinned for native, Kubernetes and S3 protocol transports before original core signing. No production TLS check or original core is changed after signing.",
+    "regression": "TestSourceProtocolTLSUsesActualPinnedRuntimeHostname uses the actual production pinned RuntimeAgent client and actual TLS/native BackupCapabilities request; validates both production DNS and loopback IP SAN. Source added, not executed by D."
+  },
+  "Empty_status": {
+    "cause": "Not yet established. It reached a different boundary; this TLS fix is not claimed to solve Empty.",
+    "minimum_diagnostics": "Actual production source observer now emits fixed code-only rejection boundary labels at constructor bindings, owner grant, profile, current config state, controller/workload, staging, finite source SQL identity/grants, complete SQL schema metadata, inventory, transport, object and resource boundaries. Same public ErrNotReady and all original conditions remain. No raw errors, queries, paths, credentials, rows or derived identities are logged.",
+    "root_next": "Run isolated TestSourceProtocolTLSUsesActualPinnedRuntimeHostname first, then actual original three SQL source roots with these exact pins. First fixed boundary label should determine which existing Empty guard rejects. No synthetic observer, ready flag, task, privilege grant or owner substitution was added; root must report actual results before any further fix/claim."
+  },
+  "validation": {"gofmt": "completed", "source_and_failure_log_read": "completed", "tests": "not_run", "build": "not_run", "sql": "not_run", "remote": "not_run", "git_mutation": "not_run", "test_build_artifacts_created": false},
+  "scope": "Does not include still-unfrozen mapper/Teams/description/diagnostic or database source grant changes. No backup/publication/DR/readiness result or remote package activation. Root owns all validation and test/build cleanup."
+}

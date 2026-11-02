@@ -44,20 +44,24 @@ func (x *sourceSQLObservation) observeMetadata(ctx context.Context) (SourceMetad
 	var zero SourceMetadataObservation
 	before, err := x.observeInventory(ctx)
 	if err != nil {
+		sourceObservationRejected(sourceObserverInventory)
 		return zero, err
 	}
 	access := x.metadataReadAccess()
 	clients, err := access.openClients(ctx)
 	if err != nil {
+		sourceObservationRejected(sourceObserverTransport)
 		return zero, err
 	}
 	defer clients.Close()
 	skills, err := access.skillObjectMetadata(ctx, clients, before.source.Skills)
 	if err != nil {
+		sourceObservationRejected(sourceObserverSkillObjects)
 		return zero, err
 	}
 	deployment, secrets, err := access.resourceMetadata(ctx, clients)
 	if err != nil {
+		sourceObservationRejected(sourceObserverResources)
 		return zero, err
 	}
 	// Repeat actual finite source reads rather than treating a credential or an

@@ -1,0 +1,58 @@
+{
+  "schema_version": "system-backup-d-source-inventory-detail-diagnostics-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_ROOT_COMPILE_AND_ACTUAL_SOURCE3_REQUIRED_NO_ROOT_CAUSE_FIX_CLAIM",
+  "prior_actual_failure": {
+    "root_log": ".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/b-mysql-53abd9a041b048ef9a2dff87c7e53154/go-0.jsonl",
+    "result": "AllRunning FAIL test:49; Empty FAIL test:85; OriginalDrift FAIL test:110 baseline. All log source-inventory rejected. Three isolated schemas applied all176 migrations. Prior bad certificate and fixture workspace-alias errors no longer appear.",
+    "historical_failure_record_preserved": true,
+    "expectations_or_cases_changed": false
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "sha256": "7e15fc2c60d66045a5d0b068499fc8e1aabd3b5e2aa5f163cd19670accbb4c7e",
+      "supersedes_sha256": "27c6eba8c6bd573ffe2d85808a82a63027deeb7f69f08406351f8d0df8bd4082"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_inventory.go",
+      "sha256": "966062cfec2ac0ccf6a9722ff3c110dbbb26e2075a122b3775630d51361cf108",
+      "supersedes_sha256": "f022c20f1fcdf87a401e9c62fb7d5bfead29c6f1374039c992e068bcf85276fc"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_detail.go",
+      "sha256": "9ce778218ffbfc16d7697ca7b09281e360777d4b74b4c1d91709bb760c79ec54"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_detail_test.go",
+      "sha256": "6a9069b0f33e9bab8a16fbff179ea94ce98d008f8bed05d51549ad1393fb28fb"
+    }
+  ],
+  "static_findings": [
+    "observeInventory first calls x.observe; baseline has previously unlabelled actual source identity/snapshot/instance/SQL-clock/commit/original-window guards. Therefore the old aggregate source-inventory label alone does not prove the second inventory RR started.",
+    "Fixture initialization already read the same actual domain.ReadSourceInstances, team.ReadSourceFacts and domain.ReadSkillCaptureInventory via the real publicadapter wrappers with the same restricted source. No evidence supports adding SQL grants or changing the projection merely because inventory rejected later.",
+    "Both snapshots still use exact current original authority, source identity/grants/full census, finite instances/users/team/skill readers, equality checks and original deadline. No case, expectation, SQL, source data, owner, purpose, window or credential changed.",
+    "No deterministic root cause was established from the old log. This batch only exposes the earliest exact code boundary on the original rerun; no SQL/permission/time repair is asserted."
+  ],
+  "changes": [
+    "Add private closed 33-entry code table: stage source-sql-observation or source-inventory, fixed boundary label, status rejected. No dynamic error/path/token/SQL/rows/identity/hash/elapsed-time output.",
+    "Previously unlabelled SQL baseline rejects get exact labels for input, original prefix, begin, snapshot identity/grants, instance read/shape, SQL clock read/identity/original-window, projection, commit, original tail and deadline.",
+    "Inventory exposes baseline observation, begin, original prefix, identity, users read/shape/EOF, instance read/drift/runtime/owner, Teams/Skills, metadata read/drift, identity tail, commit, original tail, deadline and projection.",
+    "Compound short-circuit guards were separated in the same order only to identify their first failure. Queries, transaction options, Rollback/Commit, rechecks and limits are unchanged. Every replaced public rejection remains the identical d.ErrNotReady; baseline error propagation is preserved.",
+    "Existing original top-level diagnostics remain frozen/unchanged; nested labels do not replace their coarse stage. No extra I/O, retry, callback, delay or observer authority added."
+  ],
+  "root_next": [
+    "Compile the exact four-file supersede, then run TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary and the existing fixed-label diagnostic regression.",
+    "Use the exact original source3 positive/empty/drift roots, without skip/expectation/case changes. The first detail log is the relevant guard; later baseline-observation/source-inventory logs are propagation.",
+    "If minimizing fixture reruns, Empty plus AllRunning separate zero/nonzero sets; do not count the drift root as passed until its actual baseline and all injected event-reached subcases pass.",
+    "Root retains original failure logs, reports actual result and cleans all test/build/cache/isolated SQL products per AGENTS. D performs no runtime verification."
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "compile": "not_run",
+    "tests": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false
+  }
+}

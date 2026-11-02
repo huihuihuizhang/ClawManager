@@ -1,0 +1,57 @@
+{
+  "version":"system-backup-c-minio-native-monitor-prepared-supersede-source.v1",
+  "date":"2026-11-03",
+  "status":"SOURCE_ONLY_NATIVE_RERUN_REQUIRED",
+  "historical_manifest":{
+    "path":"docs/evidence/system-backup-c-minio-sql-native-regression-source-20261103.json",
+    "sha256":"f8a8c72a807b11fc112010b391298784b90eb172b51c3b8c134fee388e8f5c08",
+    "unchanged":true
+  },
+  "supersedes_only":[{
+    "path":"backend/internal/systembackupinstallationowner/install/minio_sql_native_monitor_test.go",
+    "old_sha256":"db0eff11f4b6a7f2919d4a6c1c16bd0f1416d3c03f9fdfe5f70f324761228c3e",
+    "old_bytes":4357,
+    "sha256":"a851bd772bb9bd63d05371bcb547d4d632a331e13f607c6d901509de3bad7b24",
+    "bytes":7070
+  }],
+  "unchanged_regression_and_fixture":[
+    {"path":"backend/internal/systembackupinstallationowner/install/minio_sql_native_test.go","sha256":"94dfecb679114c1ba225571dd5a117922e37023c2a60aed134b511a45372a230","bytes":10989},
+    {"path":"backend/internal/systembackupinstallationowner/install/minio_sql_native_fixture_test.go","sha256":"f5883fe81fa910b0ef4ad8d5f5c5b374666246e9af688f48459aecf62c74b05e","bytes":14688}
+  ],
+  "observed_failure":{
+    "root_audit":".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/source-minio-c-native-r1-audit.json",
+    "root_jsonl":".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/b-mysql-ab5bc620b0a74a09a9b641b92c98e837/go-0.jsonl",
+    "test":"TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder",
+    "head":"actual seven-row exclusive lock order differs [] after the actual server wait/release stage",
+    "catalog_append":"actual acquired lock prefix differs [] before server wait assertion",
+    "interpretation":"Actual non-acquired attempt events existed, but no acquired rows events were recorded. This is a monitor gap, not proof of correct or incorrect production lock order; native rerun with the fixed monitor remains mandatory."
+  },
+  "confirmed_source_cause":{
+    "dependency":"github.com/go-sql-driver/mysql v1.9.0",
+    "local_dependency_source":"C:/Users/zhanghui08/go/pkg/mod/github.com/go-sql-driver/mysql@v1.9.0/connection.go",
+    "native_fixture":"mysql.NewConfig retains InterpolateParams=false; actual installer connector is its clone. No driver interpolation configuration was changed.",
+    "driver":"mysqlConn.query returns driver.ErrSkip for parameterized query when InterpolateParams=false. QueryContext forwards that error after finishing its context watcher. database/sql then uses native PrepareContext and mysqlStmt.QueryContext.",
+    "gap":"Old monitor wrapped only successful Conn.QueryContext rows. It returned ErrSkip normally; database/sql's prepared fallback statement and rows were unwrapped. Its native Rows.Next therefore never reached nativeMinioLockRows.Next, so acquired remained empty despite actual queries/locks."
+  },
+  "correction":{
+    "instrumentation":"Add independent nativeMinioLockStmt wrapping the actual native statement from Conn.Prepare/PrepareContext. Stmt.QueryContext/Query forward unchanged SQL arguments/context and wrap only matching exact lock-query returned native rows with the existing nativeMinioLockRows.",
+    "execution_route":"Conn.QueryContext still returns driver.ErrSkip unchanged. database/sql retains its actual default fallback and statement-close lifetime. No monitor-owned SQL execution fallback, transaction, fabricated rows or lock results.",
+    "transparency":"Pass through native Stmt.ExecContext and ColumnConverter to preserve context cancellation, execution and original argument conversion. Embedded Stmt retains Close/Exec/NumInput. Missing mandatory pinned-driver context capabilities fail instead of substituting results.",
+    "acquired":"Unchanged nativeMinioLockRows.Next first calls actual driver.Rows.Next. Only a successful real first row emits the acquired event. No acquired event is produced by Prepare, QueryContext return, attempt dispatch, time delay or static expected sequence.",
+    "preserved_assertions":"All original shared-blocker, exact real connection IDs, performance_schema exact owned schema/table wait-edge requirement, no-commit-through-lock, original seven-row acquired order and signed post-revoke readback assertions remain unchanged in minio_sql_native_test.go.",
+    "scope":"Only the explicitly superseded native monitor test source changed. Production SQL/lifecycle/current reader, migration135, existing A fault/native fixture source, other frozen SQL sources, Region owner files, historical manifests and remote state were not changed by this patch."
+  },
+  "verification":{
+    "performed_by_C":["read exact root failure JSONL and audit","inspect original native fixture connector defaults","inspect actual local mysql v1.9.0 query/prepare/statement source","review primary pinned driver source","gofmt and static source inspection","SHA256 and byte counts"],
+    "not_performed_by_C":["go test","go build","go vet","SQL execution","Docker","Git","remote mutation"],
+    "root_targeted_command":"go test -tags=systembackup_mysql ./internal/systembackupinstallationowner/install -run '^TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder$' -count=1 -v",
+    "root_full_native_command":"go test -tags=systembackup_mysql ./internal/systembackupinstallationowner/install -run '^TestMinIOSQLOwnerNativeTLS' -count=1 -v",
+    "preconditions":"Reuse actual owned independent UUID/SAN/TLS1.3 MySQL fixture and actual performance_schema lock wait visibility; missing actual inputs remain unverified, never replace with a model.",
+    "test_build_artifacts":"C ran no tests/builds and created no test/build products. Root must remove its own test/build products after verification per user AGENTS.md."
+  },
+  "primary_sources":[
+    "https://raw.githubusercontent.com/go-sql-driver/mysql/v1.9.0/connection.go",
+    "https://raw.githubusercontent.com/go-sql-driver/mysql/v1.9.0/statement.go"
+  ],
+  "release":"NO_GO remains. Source diagnosis/correction does not promote the previously failed native root to PASS, prove production lock order, or establish actual main3/30, full ordinary six-domain backup success, provider/site compatibility or DR eligibility."
+}

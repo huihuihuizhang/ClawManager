@@ -1,0 +1,34 @@
+{
+  "schema_version": "system-backup-d-minio-sql-domain-supersede.v1",
+  "status": "source_contract_alignment_no_runtime_execution",
+  "supersedes": {
+    "path": "docs/evidence/system-backup-d-minio-original-sql-contract-20261103.json",
+    "sha256": "0c521de9d7b1c65f9111ef0185aa192dcd6cf8d7bd06e721b8bc0ec5df2a1945",
+    "scope": "Only the three suggested signing domains and proposed payload shape in signed_payload_contract. The actual C shared leaf SQL wire types and version-derived domains below are normative for this batch. Historical document and migration135 remain unchanged."
+  },
+  "normative_source": {
+    "path": "backend/internal/systembackupminioauthority/sql_contract.go",
+    "sha256": "d71033fdf560af702e2ba16c6f4701be86b9bd484c4bf060e80fe262c2e9aba1",
+    "records": ["SQLGrant", "SQLHead", "SQLReferenceRecord"],
+    "other_shapes": ["SQLReferenceHash", "SQLTrustPin", "SQLReferenceCAS", "SQLExpected", "SQLSignedReference", "SQLBundle"]
+  },
+  "domains": [
+    {"record": "SQLGrant", "version_constant": "SQLGrantVersion", "version": "system-backup-minio-sql-owner-grant.v1", "domain_constant": "SQLGrantDomain", "bytes": "Exact UTF-8 version bytes followed by ONE NUL byte", "superseded_suggestion": "system-backup-minio-original-sql-grant.v1 plus one NUL byte"},
+    {"record": "SQLHead", "version_constant": "SQLHeadVersion", "version": "system-backup-minio-sql-owner-head.v1", "domain_constant": "SQLHeadDomain", "bytes": "Exact UTF-8 version bytes followed by ONE NUL byte", "superseded_suggestion": "system-backup-minio-original-sql-head.v1 plus one NUL byte"},
+    {"record": "SQLReferenceRecord", "version_constant": "SQLReferenceVersion", "version": "system-backup-minio-sql-owner-ref.v1", "domain_constant": "SQLReferenceDomain", "bytes": "Exact UTF-8 version bytes followed by ONE NUL byte", "superseded_suggestion": "system-backup-minio-original-sql-ref.v1 plus one NUL byte"}
+  ],
+  "wire_rules": [
+    "Use the exact typed fields in normative sql_contract.go and C's reviewed canonical codec. Never decode old contract.go Grant/Head proposal shapes, capture-signing records or Kubernetes permission records as SQL authority; no compatibility or legacy-domain verification fallback.",
+    "SQLReferenceRecord deliberately has no GrantSHA256. It binds exact original authority/grant/revision/epoch/config tuple. SQLGrant.References lists exactly five purpose/raw canonical reference-record SHA256 pairs in binary purpose order; SQLGrant.ReferenceSetSHA256 hashes canonical JSON of that array. Never hash credentials, signatures or SQL projections in place of those record bytes.",
+    "SQLHead selects current_grant_id/current_grant_revision/permission_epoch. This version supports initial HeadRevision=RecordRevision=PermissionEpoch=1 active install, then signed HeadRevision+1 revoked state with all other ORIGINAL fields/windows unchanged. No reactivation, rotation or fresh epoch is implemented by this batch; the old D document's possible replacement-epoch language is not permission to add one.",
+    "SQLBundle carries no issuer public key. Import uses independently pinned original Plan/enrollment authority. Initial install/revoke resolve/retry retain exact original frozen bytes/signatures and window."
+  ],
+  "unchanged": {
+    "migration": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql contains no hardcoded signing domain and needs no DDL amendment",
+    "classification": "All three authority tables remain secret / metadata_only / reference_only / pending_owner_review; original frozen ten-file batch is unchanged",
+    "lock_order": "Existing original admin/RBAC -> capture owner if needed -> exact MinIO head -> selected grant -> all five refs in ASCII purpose order, before later operation/config locks; never reverse the prefix",
+    "consumer": "Same original controlled transaction, exact SELECT ... FOR SHARE; no network, credential reads/hashes, signing, new transaction or commit in L2",
+    "installer": "Same ordered prefix with FOR UPDATE, initial seven-row atomic installation, exact CAS/revoke and independent unknown-commit resolution; no DELETE or automatic history cleanup"
+  },
+  "validation": {"static_source_read_and_sha256": "completed", "tests": "not_run", "build": "not_run", "sql": "not_run", "remote": "not_run", "git_mutation": "not_run", "test_build_artifacts_created": false}
+}

@@ -1,0 +1,182 @@
+{
+  "schema_version": "system-backup-c-minio-bootstrap-authority-source-contract.v1",
+  "date": "2026-11-03",
+  "status": "proposed_typed_contract_for_A_D_alignment_no_lifecycle_or_adapter_implemented",
+  "source": {
+    "path": "backend/internal/systembackupminioauthority/contract.go",
+    "sha256": "44fa114a4cc3e3a489b5246e97339673c44d32e3f84d42db5b765cc75c9daa8b",
+    "bytes": 8238
+  },
+  "purpose": "Concrete typed grant/head/ref/native-observation semantics and SQL lock requirements before D schema alignment. This package contains only wire declarations/constants, no issuer/importer/SQL/revoke/source interface/BootstrapResourceValidator implementation and no permission method. It fills no main slot and adds no unimplemented-source wrapper.",
+  "domain": {
+    "grant_version": "system-backup-minio-bootstrap-authority-grant.v1",
+    "grant_domain": "system-backup-minio-bootstrap-authority-grant.v1\\x00",
+    "head_version": "system-backup-minio-bootstrap-authority-head.v1",
+    "head_domain": "system-backup-minio-bootstrap-authority-head.v1\\x00",
+    "key": "Existing independently enrolled owner's original Ed25519 key. Capture signing domains/record payloads are never accepted as MinIO authority.",
+    "wire": "Exact complete unique RFC8785 canonical JSON; reject unknown/duplicate/trailing/case-alias fields; counters positive <= 2^53-1; all signed times UTC, exact microseconds and fixed original endpoints. No secrets/private keys or self-selected issuer in SignedBundle.",
+    "five_reference_order": [
+      "artifact_delete",
+      "artifact_read",
+      "artifact_write",
+      "catalog_append",
+      "catalog_read"
+    ],
+    "scope": "Initial epoch 1 and terminal revocation only. No rotation/reactivation/epoch bypass is implied; any future renewal requires a separately reviewed version/transition."
+  },
+  "field_semantics": {
+    "Target": "Exact original installation, server_uuid, database, CONSUMER CURRENT_USER identity, cluster namespace UID. ConsumerDatabaseAccount corresponds to independently selected original runtime/bootstrap writer account, not installer account.",
+    "Enrollment": "Existing immutable ConfigMap UID/document hash and pinned plan hash, issuer ID/public fingerprint, original owner subject/UID/groups hash. Consumer public key comes from independent enrollment pin, never bundle or SQL row self-claims.",
+    "Actor": "Original enrolled local admin ID/username and original installer SQL CURRENT_USER account. Installer must really bcrypt-authenticate SQL local admin and Kubernetes owner; L2 locks and checks current original local admin active/local/admin state without hashing a password under locks.",
+    "Grant.ConfigSHA256": "Original complete disabled candidate ConfigValues SHA. It is not an active-config lookup and cannot require bootstrap's future result.",
+    "Grant.BootstrapGrantSHA256": "Exact independently selected ORIGINAL offline bootstrap grant-file bytes, including original request/bounds; not a hash invented from caller request data.",
+    "Grant.ReferenceSetSHA256": "SHA256 of canonical array of exactly FIVE complete typed Reference records in binary Purpose order. Not the full twenty-reference set and not a secret hash. Original complete config and bootstrap-grant hashes independently bind the full bootstrap request.",
+    "Provider": "Actual original TLS origin, CA/SPKI, deploymentID, exact upstream version/commit and independently trusted image/binary provenance; full Kubernetes UID/image/process source. A server-reported version string alone is insufficient.",
+    "Reference.IdentityHash/IdentityVersion": "Exact original fixed descriptor identity/version with its existing identity canonical profile. No current/latest/default, no credential secret hash as identity, no fabrication from future task/config creation.",
+    "Reference.DescriptorSHA256/ProviderIdentityHash/ScopeSHA256": "Original closed security descriptor bytes and independently reviewed provider/scope canonical identities. Field names do not make the draft descriptor/profile final; A must align the actual descriptor/profile semantics.",
+    "Reference.AccountSHA256/CredentialFileSHA256/CredentialLocatorSHA256": "Account SHA is actual AccessKey bytes; credential-file SHA pins actual private credential bytes, locator SHA pins original controlled private location declaration. They remain provenance pins, never reference identities or permission proof. Six role/observer accounts distinct; no session/derived credentials or groups.",
+    "Reference.Policy": "Exact independently selected original named normalized policy; actual named and effective policies must both match. Closed v2 action/resource profile; staging DeleteObject + DeleteObjectVersion; artifact and catalog buckets distinct.",
+    "Reference.Capability/CapabilityProfile/CapabilityIntentSHA256": "Original permitted capability contract and bounded independently owner-authorized probe intent, not a caller Passed bit. Actual condition/checksum/immutable append/read/delete observations must be separately performed. IAM policy plus this signed field alone cannot approve capability.",
+    "Reference.NotBefore/Until/ProtectedUntil": "Original credential/scope validity and independently sourced custody/retention protection boundary. Cannot extend them to make an operation pass or infer protection from a healthy endpoint. Revocation preserves original windows.",
+    "PermissionSource": "Bindings to independently installed original Kubernetes permission grant/head UIDs and hashes plus observer role provenance; original v2 normalized profile retained. They do not make Kubernetes GET legal inside SQL locks or replace SQL current revocation.",
+    "ObservationBinding": "Original owner-authorized concrete profile, definition/probe-intent hashes and maximum freshness bound. It contains no observed response, CheckedAt, passed/ready, or trusted caller evidence.",
+    "ObservationBinding.MaximumAgeMicroseconds": "Positive and <= compiled 30,000,000 microseconds. Future implementation must clamp to all original bounds; signed caller value cannot exceed the profile limit.",
+    "Head": "Current SQL authority binds target/enrollment/grant hash/reference set/epoch/revision/state/windows. Signatures and materialized SQL columns must agree exactly. A copied/old head is insufficient.",
+    "Expected": "Exact original head/grant row-version+hash/state compare/CAS tuple. Zero is allowed only when actual unique original head key is absent under lock; expected does not prove absence.",
+    "SignedBundle": "Freeze original signed bytes and Expected before import. Public issuer deliberately absent; importer independently loads original enrollment pin. Commit failure never triggers a new signature or renewed window."
+  },
+  "required_logical_rows_for_D": {
+    "note": "Table names, migration number, exact engine/SQL types and integration with any existing controlled source are D-owned and pending alignment. No DDL is emitted/executed here. C requires the following semantics whether represented in two source tables plus signed ref set or an additional immutable ref index.",
+    "head": {
+      "unique_key": [
+        "installation_id",
+        "enrollment_id"
+      ],
+      "columns": [
+        "epoch",
+        "head_revision",
+        "grant_id",
+        "grant_sha256",
+        "reference_set_sha256",
+        "head_sha256",
+        "signed_head",
+        "signature",
+        "head_state",
+        "row_version"
+      ],
+      "limits": "One exact ORIGINAL current head; active/revoked only; complete signed head and independent key verified; positive versions; no automatic replacement if missing or conflicting. updated_at is diagnostic SQL time, never substitute signed validity."
+    },
+    "grant": {
+      "unique_key": [
+        "installation_id",
+        "enrollment_id",
+        "grant_id",
+        "epoch"
+      ],
+      "columns": [
+        "record_sha256",
+        "signed_record",
+        "signature",
+        "reference_set_sha256",
+        "grant_state",
+        "row_version"
+      ],
+      "limits": "Signed payload contains exact target, enrollment, actor, provider and five References. Record/signature/ref-set bytes immutable. State/row-version changes only through original head CAS transaction; grant-state revocation must match current signed head. Reject colliding nonidentical preexisting rows."
+    },
+    "references": {
+      "authoritative_form": "Exactly FIVE typed signed References embedded in the immutable signed grant. Consumer must parse/verify them completely before using SQL projections.",
+      "optional_projection_key": [
+        "installation_id",
+        "enrollment_id",
+        "grant_id",
+        "epoch",
+        "purpose"
+      ],
+      "optional_projection_columns": [
+        "reference_sha256",
+        "identity_hash",
+        "identity_version",
+        "descriptor_sha256",
+        "provider_identity_hash",
+        "scope_sha256",
+        "account_sha256",
+        "credential_file_sha256",
+        "credential_locator_sha256",
+        "policy_name",
+        "normalized_policy_sha256",
+        "capability",
+        "capability_profile",
+        "capability_intent_sha256",
+        "not_before",
+        "until",
+        "protected_until",
+        "row_version"
+      ],
+      "limits": "If D requires ref rows, these are immutable indexed projections of the signed original ref set; verify count 5, exact purpose/descriptor/payload hashes and complete signed agreement. No independent mutable ref-state path that can bypass head CAS. Head/grant revoke closes every ref. Fixed-key/unique-purpose and distinct account integrity are required. The observer is separate, not a sixth config-ref row."
+    },
+    "minimality": "A separate ref table is not intrinsically required if the controlled original signed grant is the full immutable authoritative typed mapping. Do not create three new services or duplicate an already legitimate source. D/A must demonstrate any reused source has this ORIGINAL domain/current revocation/lock/projection semantics."
+  },
+  "lock_requirements": {
+    "outside_locks": [
+      "Read independently pinned original plan/public/enrollment and actual private source material; real SQL local-admin password check and Kubernetes subject/enrollment auth.",
+      "Verify exact original typed intent/probe ownership; measure current native six-account permission+capability and Kubernetes UID/tails. Freeze one-shot observation, signed original bytes and expected CAS.",
+      "Never acquire producer/config/task/history locks while doing network/probe/key signing. No native calls or bcrypt inside transaction."
+    ],
+    "consumer_L2": [
+      "Preserve D's existing installation/config/producer-domain/current-admin/RBAC prefix; the MinIO domain cannot open a separate connection/transaction or bypass that prefix.",
+      "Before operation-key/history lookup, lock the exact ORIGINAL MinIO head then current grant using supplied transaction/view (FOR SHARE semantics). Verify original key/signatures, database CURRENT_USER/server/db and exact target/enrollment/actor, epoch/state/hashes/versions/windows.",
+      "Verify complete signed five-reference set and compare each exact BootstrapConfig reference BEFORE history; if ref projections exist and are part of original authority, lock their five fixed original keys in binary Purpose order at this same owner-authority stage. No generic/business credential or provider locks here.",
+      "All five validators share one private attempt owner snapshot/guard: first authorization locks the entire original owner batch; later purpose views verify same context/transaction/grant/config/row tuple without creating another authority. It is not a cache across attempts.",
+      "Then D continues original L3 history, L4 hosts, L5 business references/capacity/evidence and fixed final guard. No new backward lock acquisition or late dependency preparation."
+    ],
+    "installer_and_revoker": [
+      "Authenticate original operator/enrollment and sign/freeze bytes OUTSIDE locks. In one original SQL write tx, lock current enrolled local-admin row first, exact MinIO head FOR UPDATE second, referenced grant third, then optional five original MinIO ref projection keys in binary Purpose order.",
+      "Initial install proves ORIGINAL head absence under unique-key gap/row protection at the agreed isolation; insert initial active head/grant/exact ref set atomically with row_version=1. Existing nonidentical rows conflict; do not overwrite. A rolled-back/unknown import never generates a new bundle/epoch.",
+      "Revoke locks the same original actor/head/grant/ref order, compares exact Expected epoch/revision/hashes/row versions, and atomically CASes head to a newly signed revoked head plus grant revoked state/versions. Same original grant/epoch/windows/ref payload; increment head revision and row versions; overflow refuses.",
+      "Revoked terminal. Exact already-committed identical revoke may resolve replay under original current authentication; no reactivation, deletion or rewriting an active result. Import must affect exactly the expected rows.",
+      "Installer/revoker must never lock bootstrap producer-domain/config/operation/history/task/host/business-reference rows AFTER acquiring MinIO owner locks, and must never call capture snapshot/current as MinIO authority. No provider/Kubernetes I/O, signing or tx completion from consumer callbacks."
+    ],
+    "peer_owner_order_pending": "A/D must choose and enforce ONE order for all owner-domain batches at L2, consistently for legacy and candidate paths. Current reference iteration reaches artifact purposes before capture_signing; a practical composition can lock this entire MinIO batch at first artifact occurrence and retain it through later capture/catalog checks. Do not assume Go map iteration or mix MinIO->capture and capture->MinIO acquisition paths. This global peer order is an alignment requirement, not claimed already integrated.",
+    "tail": [
+      "At Work-end Recheck retain the SAME supplied tx/view; re-sample SQL time, current original MinIO head/grant/ref tuple and original current local-admin state; compare exact prepared guard and reject revocation/row/version/window/mapping drift.",
+      "Private actual observation deadline = min(original owner/head/ref/credential/probe windows, first external observation start + signed maximum age, first external observation start + compiled 30 seconds). Deadline never restarts at commit, L2, tail or retry.",
+      "Fresh-use capability/permission native tail measurement runs in lock-free Prepare. Work-end only checks private immutable observed facts and current controlled original SQL/local pins. Never perform a new network probe inside Recheck.",
+      "Candidate exact history retains current L2 identity/mapping authority but does not demand an old physical probe be renewed before history lookup. Missing/expired observation blocks fresh use; candidate identity/dependency deadlines remain distinct.",
+      "If D needs a post-lock NEW external sample, it requires separately reviewed rollback/re-prepare/restart outside locks; not network I/O smuggled into an existing final callback."
+    ]
+  },
+  "source_of_truth_and_partial_commits": {
+    "bootstrap_revocation": "SQL is authoritative on this new route. A signed original Kubernetes head snapshot cannot hide a newer SQL revoke. Prepare additionally requires actual Kubernetes source to match authorized initial binding/current expected mirror state; drift denies.",
+    "initial_install_sequence": "Existing operator auth -> original native/probe observations and frozen typed signed bundle -> existing/new original Kubernetes source readback -> original SQL install/CAS transaction and exact committed readback -> post-commit original native/source/auth tails -> exclusive export of new independent bootstrap trust input/receipt. No startup export claims success on partial/unknown state.",
+    "revoke_sequence": "SQL CAS revoke first; external Kubernetes revocation mirror update afterward outside SQL locks with exact original UID/RV and signature. Failure to mirror leaves local consumers denied by authoritative SQL, never restores active state. MinIO outage must not require a new native capability probe to revoke; original enrolled operator authentication still applies.",
+    "old_runtime": "Existing V2-only Kubernetes consumer does NOT implement SQL revocation and cannot be deployed as the new contract's consumer. D must explicitly select a concrete consumer that rechecks this SQL authority before every admitted use; do not auto-export the old V2 startup as proof of new-source installation.",
+    "resolve": "On lost SQL commit/readback, head/grant conflicts or failed post-commit tail, return explicit unknown/blocked result. Resolve reads exact original signed head/grant/ref state and frozen bundle under current original authentication; no re-signing, window renewal, repaired success row, new names/epoch or auto-delete.",
+    "separate_identities": "Existing capture issuer key/enrollment authentication may be reused, but capture signed head/grant/state is never reinterpreted as MinIO purpose authority and no capture source table is repurposed. The new MinIO grant/head carry their own signed state/domain."
+  },
+  "prepare_and_integration_shape": {
+    "C_after_schema": "Implement actual original-domain Issue/Import/Resolve/Revoke inside install package using existing authenticatedOperator/enrollment/key primitives plus exact D SQL contract, and concrete locked consumer readers in MinIO package. No generic Original callback or unimplemented-source wrapper.",
+    "five_slots": "artifact_delete/read/write and catalog_append/read. Common one-shot batch does actual native/protocol measurement once outside locks, then exposes five exact per-purpose views; no five independent 58-request observations that invalidate an earlier freshness window.",
+    "first_install": "Use original disabled BootstrapConfig/OfflineBootstrapGrant and pre-existing original typed SQL owner rows. Do not invoke CheckCurrentEffectiveV2 or DeploymentService publicationStore because they depend on the future active config/runtime publication state.",
+    "candidate": "Implement both concrete BootstrapResourceValidator/BootstrapOriginalResourceAuthority and concrete candidate authority composition once sources exist; adding References alone does not give candidate Session.Authorize/LockReferences/Recheck original authority.",
+    "D_entry": "D explicitly composes and calls concrete owner from system-backup-bootstrap main / composeBootstrapMaterialOwners before LoadBootstrapDeployment. Preserve unrelated missing slots and purpose/DR logic; no false count completion.",
+    "A_needed": "Confirm independently enrolled identity/public-key derivation, original actor binding, descriptor/identity/scope canonical profiles, custody retention and peer-owner L2 order.",
+    "D_needed": "Return actual reused/new schema mapping, keys/columns/SQL type limits, uniqueness/FK/state/privilege semantics, exact existing global lock prefix and peer-owner order, controlled candidate SQL reader capabilities, migration/install/unknown-commit protocol. Then C can implement against exact statements rather than placeholders."
+  },
+  "remaining_actual_capability_source": "Current v2 producer is permission-only. Independent original bounded probe intents/objects and actual condition/checksum/read/delete/append evidence are still required before fresh bootstrap consumption. Signed capability scope fields and this contract do not supply them; no production object deletion or grant widening is authorized by this file.",
+  "validation": {
+    "performed": [
+      "static source/lock-contract inspection",
+      "gofmt on the NEW declarations-only Go source",
+      "read-only SHA checks"
+    ],
+    "not_performed": [
+      "tests",
+      "builds",
+      "typecheck",
+      "Git",
+      "SQL/remote/native/site actions"
+    ],
+    "products": "No build/test products created. Existing producer 12-file historical freeze and new complete-producer two-test source freeze remain unmodified by C."
+  },
+  "objective": "Functional nonempty complete six-domain backup publication, independent complete readback, signed queryable catalog and same-task succeeded. This contract neither completes main 3/30 nor adds DR qualification/isolated restore prerequisites."
+}

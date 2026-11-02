@@ -1,0 +1,77 @@
+{
+  "schema_version": "system-backup-d-source-sql-clock-driver-supersede-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_AND_ACTUAL_SOURCE3",
+  "actual_prior_result": "Root source3 real isolated TLS MySQL run .tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/b-mysql-53abd9a041b048ef9a2dff87c7e53154/go-0.jsonl remains three FAIL at source-inventory, all176 migrations applied per schema. It is preserved and not reclassified.",
+  "static_root_cause": {
+    "driver": "worker.OpenDatabase -> databaseConfig explicitly sets mysql.Config.ParseTime=false (worker/database.go:169), preserving native raw capture cells.",
+    "actual_link": "Independent fixture production_source_protocol_base_mysql_test.go constructs workerSource with that actual opener and assigns DeploymentService.Source=workerSource at line500. The normal DeploymentService constructor instead sets its source SQL config ParseTime=true in deployment_service.go:213. The observer decoder preserves this parsed-time path while also accepting the actual raw driver representation used by the independent source3 fixture; no claim is made that every production source connection was failing.",
+    "rejection": "sourceSQLObservation.observe directly scanned UTC_TIMESTAMP(6) into *time.Time. With ParseTime=false, the MySQL DATETIME result is raw []byte; database/sql cannot convert that driver value to *time.Time. This is an unlabelled original baseline rejection propagated as source-inventory and applies to both empty and nonempty sources.",
+    "scope": "Static driver/value-contract conflict is established from actual code. D has not executed a new native result; root must confirm the corrected original source3 and report any later failures."
+  },
+  "historical_diagnostic_batch": {
+    "path": "docs/evidence/system-backup-d-source-inventory-detail-diagnostics-pins-20261103.json",
+    "sha256": "4645477f4b48cadbaedf9c2dd14872baba5092b7368b5fc37bd8d90eb1de8cd1",
+    "unchanged": true,
+    "composition": "Its production_source_observation.go pin 7e15... is explicitly superseded here. Other three diagnostic files remain exact and required."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "sha256": "458b58bb80cdada31d2dc85432e76b9952a447e9b261ac3abbf2c342a138806b",
+      "supersedes_sha256": "7e15fc2c60d66045a5d0b068499fc8e1aabd3b5e2aa5f163cd19670accbb4c7e",
+      "changes": "Scan SQL clock into any, strictly decode this one UTC microsecond clock at observer boundary; SQL text and all identities/windows/tails unchanged."
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_clock.go",
+      "sha256": "75d9a7b7a3c2a54ba34aeab0c2510853d006120c1affc7094c03a8ca3d8edc38"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_clock_test.go",
+      "sha256": "a196360f9fb2d83c542c4a6a3089429ce4747b37cc4c2d5d1b9eebd1318ee697"
+    }
+  ],
+  "required_unchanged_diagnostics": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_inventory.go",
+      "sha256": "966062cfec2ac0ccf6a9722ff3c110dbbb26e2075a122b3775630d51361cf108"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_detail.go",
+      "sha256": "9ce778218ffbfc16d7697ca7b09281e360777d4b74b4c1d91709bb760c79ec54"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_detail_test.go",
+      "sha256": "6a9069b0f33e9bab8a16fbff179ea94ce98d008f8bed05d51549ad1393fb28fb"
+    }
+  ],
+  "immutable_read_only_dependencies": [
+    {
+      "path": "backend/internal/systembackup/worker/database.go",
+      "sha256": "992fd8c57dca73877cff9baaaabdf736f261582c35bd729fbeda799b926889aa"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go",
+      "sha256": "01e15134efbfc9cd52f67a7dda1abd6fb5c59b40bd731c598ca34d2c97a11eb1"
+    }
+  ],
+  "guards": [
+    "Never set ParseTime=true on the worker database: raw SQL capture cells and source credential transport stay unchanged.",
+    "Decoder accepts only canonical MySQL UTC DATETIME(6) byte/string or already parsed zero-offset microsecond time.Time. It rejects empty/NULL/zero/invalid date/alternate layout/timezone suffix/short or excessive precision/nonzero offset/submicrosecond time. Bytes are decoded only for this clock and never emitted.",
+    "The unchanged SQL statement, exact server/database identity, original grant NotBefore/Until comparison, transaction commit, owner tail and original wall-clock deadline still decide acceptance. No local timestamp substitutes for SQL UTC; no window renewal, longer deadline, extra query or fallback callback.",
+    "Original three source tests, fixture data, empty EOF expectations, all injected drift event reach requirements and original stopped fixtures remain unchanged. No ready/config/task/owner or privilege widening."
+  ],
+  "root_commands": [
+    "go test ./internal/systembackupexecution -run '^(TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision|TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary|TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels)$' -count=1 -v",
+    "go test -tags systembackup_mysql ./internal/systembackupexecution -run '^TestSourceDependenciesIndependent(AllRunning|Empty|OriginalDrift)TLSMySQL$' -count=1 -v -timeout=900s"
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "compile": "not_run",
+    "tests": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git": "not_run",
+    "test_build_artifacts_created": false,
+    "cleanup": "Root owns actual verification and removes test/build/SQL/cache products after testing per AGENTS."
+  }
+}

@@ -49,7 +49,9 @@ type sourceProtocolScenario struct {
 func newSourceProtocolScenario(t *testing.T, empty bool) *sourceProtocolScenario {
 	t.Helper()
 	s := &sourceProtocolScenario{empty: empty, objects: map[string]runtime.Object{}, reads: map[string]int{}, events: map[string][]int{}}
-	s.server = httptest.NewTLSServer(http.HandlerFunc(s.serveHTTP))
+	s.server = httptest.NewUnstartedServer(http.HandlerFunc(s.serveHTTP))
+	s.server.TLS = sourceProtocolOriginalTLS(t)
+	s.server.StartTLS()
 	t.Cleanup(s.server.Close)
 	return s
 }

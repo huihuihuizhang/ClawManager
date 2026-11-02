@@ -33,7 +33,7 @@ type observedSourceSQL struct {
 
 func (s *DeploymentService) newSourceSQLObservation(ctx context.Context) (*sourceSQLObservation, error) {
 	if s == nil || ctx == nil || ctx.Err() != nil || !s.ForwardEnabled || s.Forward == nil || s.Source == nil || s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner.Gate.Authority.DB == nil || s.profileHash == "" || s.checkProductionCaptureMaterials() != nil || s.captureMaterials.Discovery == nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationRejected(sourceObserverBindings)
 	}
 	deadline, bounded := ctx.Deadline()
 	grant := s.Forward.DeploymentBinding()
@@ -45,7 +45,7 @@ func (s *DeploymentService) newSourceSQLObservation(ctx context.Context) (*sourc
 	var envelope signedSourceMetadataGrant
 	var original originalSourceMetadataGrant
 	if err != nil || decodeMetadataCanonical(raw, &envelope) != nil || len(envelope.Record) < 2 || len(envelope.Record) > 32768 || len(envelope.Signature) != ed25519.SignatureSize || decodeMetadataCanonical(envelope.Record, &original) != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationRejected(sourceObserverGrant)
 	}
 	scope, err := sourceMetadataScope(*s.captureMaterials)
 	if err != nil {
@@ -70,7 +70,7 @@ func (x *sourceSQLObservation) checkDeployment(ctx context.Context) error {
 	}
 	y, s := x.delegation, x.delegation.service
 	if s == nil || !s.ForwardEnabled || s.Forward == nil || s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner != y.owner || s.Source != x.source || x.source == nil || x.control == nil || s.Runtime.Owner.Gate.Authority.DB != x.control || y.checkLocal(ctx) != nil || s.Forward.CheckDeployment(ctx, x.control) != nil {
-		return d.ErrNotReady
+		return sourceObservationRejected(sourceObserverBindings)
 	}
 	g := s.Forward.DeploymentBinding()
 	profile, err := api.LoadExecutionProfile(s.Config.ProfileFile)
@@ -79,7 +79,7 @@ func (x *sourceSQLObservation) checkDeployment(ctx context.Context) error {
 	}
 	_, profileSHA, err := profile.CanonicalIdentity()
 	if err != nil || profile.InstallationID != s.Config.InstallationID || profileSHA != x.profileSHA256 || profileSHA != g.ProfileSHA256 || s.profileHash != x.profileSHA256 || !forwardCaptureActions(g) {
-		return d.ErrNotReady
+		return sourceObservationRejected(sourceObserverProfile)
 	}
 	tx, err := x.control.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
@@ -95,7 +95,7 @@ func (x *sourceSQLObservation) checkDeployment(ctx context.Context) error {
 	if tx.QueryRowContext(ctx, `SELECT s.active_config_version,s.last_effective_enabled,c.enabled,c.config_sha256,c.config_size_bytes,c.canonical_config_json,UTC_TIMESTAMP(6)
 FROM system_backup_v2_installation_state s JOIN system_backup_v2_configs c ON c.origin_installation_id=s.origin_installation_id AND c.version=s.active_config_version
 WHERE s.origin_installation_id=?`, s.Config.InstallationID).Scan(&version, &effective, &enabled, &sum, &size, &raw, &now) != nil || !effective || !enabled || version != g.ConfigVersion || sum != g.ConfigSHA256 || sum != y.configSHA256 || size != int64(len(raw)) || len(raw) < 2 || len(raw) > 262144 || hash(raw) != sum || now.Before(y.grant.NotBefore) || now.Before(g.NotBefore) || !now.Before(y.until) {
-		return d.ErrNotReady
+		return sourceObservationRejected(sourceObserverConfigState)
 	}
 	var canonical struct {
 		Enabled bool `json:"enabled"`
@@ -110,8 +110,14 @@ WHERE s.origin_installation_id=?`, s.Config.InstallationID).Scan(&version, &effe
 }
 
 func (x *sourceSQLObservation) recheck(ctx context.Context) error {
-	if x.checkDeployment(ctx) != nil || x.delegation.checkWorkload(ctx) != nil || x.delegation.service.checkStagingLocation(ctx, x.delegation.owner.Client) != nil {
+	if x.checkDeployment(ctx) != nil {
 		return d.ErrNotReady
+	}
+	if x.delegation.checkWorkload(ctx) != nil {
+		return sourceObservationRejected(sourceObserverController)
+	}
+	if x.delegation.service.checkStagingLocation(ctx, x.delegation.owner.Client) != nil {
+		return sourceObservationRejected(sourceObserverStaging)
 	}
 	// A config, pin or grant replacement during the last GET closes the object.
 	return x.checkDeployment(ctx)
@@ -119,54 +125,71 @@ func (x *sourceSQLObservation) recheck(ctx context.Context) error {
 
 func (x *sourceSQLObservation) observe(ctx context.Context) (*observedSourceSQL, error) {
 	if x == nil || x.delegation == nil || ctx == nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLInput)
 	}
 	ctx, cancel := context.WithDeadline(ctx, x.delegation.until)
 	defer cancel()
 	if x.recheck(ctx) != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLOriginal)
 	}
 	s := x.delegation.service
 	// Actual least-privilege source grants/census are required, not control SQL.
 	if s.checkSource(ctx) != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationRejected(sourceObserverSQLIdentity)
 	}
 	tx, err := x.source.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLBegin)
 	}
 	defer tx.Rollback()
 	if s.checkSourceIdentity(ctx, tx) != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLSnapshotIdentity)
 	}
 	instances, err := domain.ReadSourceInstances(ctx, tx)
 	if err != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLInstancesRead)
 	}
 	for index, instance := range instances {
 		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || (index > 0 && instances[index-1].ID >= instance.ID) || (instance.Status != "running" && instance.Status != "stopped") {
-			return nil, d.ErrNotReady
+			return nil, sourceObservationDetailRejected(sourceSQLInstancesShape)
 		}
 	}
 	metadata, err := readProductionSQLMetadata(ctx, s, tx, instances)
 	if err != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationRejected(sourceObserverSQLMetadata)
 	}
 	// Preserve an explicit empty collection only after complete successful EOF.
 	if instances == nil {
 		instances = []b.InstanceIdentity{}
 	}
 	out := &observedSourceSQL{metadata: metadata, instances: instances, configVersion: s.Forward.DeploymentBinding().ConfigVersion, configSHA256: x.delegation.configSHA256, profileSHA256: x.profileSHA256, sourceScopeSHA256: x.delegation.scope, until: x.delegation.until}
-	if tx.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE(),CURRENT_USER(),UTC_TIMESTAMP(6)").Scan(&out.server, &out.database, &out.account, &out.observedAt) != nil || out.server != s.Config.SourceServerUUID || out.database != s.Config.SourceDatabase || out.observedAt.Before(x.delegation.grant.NotBefore) || !out.observedAt.Before(out.until) {
-		return nil, d.ErrNotReady
+	var sqlClock any
+	if tx.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE(),CURRENT_USER(),UTC_TIMESTAMP(6)").Scan(&out.server, &out.database, &out.account, &sqlClock) != nil {
+		return nil, sourceObservationDetailRejected(sourceSQLClockRead)
+	}
+	out.observedAt, err = decodeSourceObservationSQLTime(sqlClock)
+	if err != nil {
+		return nil, sourceObservationDetailRejected(sourceSQLClockRead)
+	}
+	if out.server != s.Config.SourceServerUUID || out.database != s.Config.SourceDatabase {
+		return nil, sourceObservationDetailRejected(sourceSQLClockIdentity)
+	}
+	if out.observedAt.Before(x.delegation.grant.NotBefore) || !out.observedAt.Before(out.until) {
+		return nil, sourceObservationDetailRejected(sourceSQLClockWindow)
 	}
 	raw, err := json.Marshal(instances)
 	if err != nil {
-		return nil, d.ErrNotReady
+		return nil, sourceObservationDetailRejected(sourceSQLProjection)
 	}
 	out.inventorySHA256 = hash(raw)
-	if tx.Commit() != nil || x.recheck(ctx) != nil || !time.Now().Before(out.until) {
-		return nil, d.ErrNotReady
+	if tx.Commit() != nil {
+		return nil, sourceObservationDetailRejected(sourceSQLCommit)
+	}
+	if x.recheck(ctx) != nil {
+		return nil, sourceObservationDetailRejected(sourceSQLOriginalTail)
+	}
+	if !time.Now().Before(out.until) {
+		return nil, sourceObservationDetailRejected(sourceSQLDeadline)
 	}
 	return out, nil
 }

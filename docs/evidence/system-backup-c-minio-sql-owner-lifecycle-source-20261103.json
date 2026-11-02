@@ -1,0 +1,161 @@
+{
+  "schema_version": "system-backup-c-minio-sql-owner-lifecycle-source.v1",
+  "date": "2026-11-03",
+  "status": "source_only_not_compiled_or_executed",
+  "minimum_target": "Actual existing-operator scope signing; first atomic head+grant+five-ref installation; exact original tuple independent resolve; signed terminal SQL-head seven-row CAS revoke; explicit unknown commit. No resurrection/renewal, no signing/provider/Kubernetes/credential hashing under SQL locks.",
+  "normative_domains": {
+    "source": "backend/internal/systembackupminioauthority/sql_contract.go",
+    "sha256": "d71033fdf560af702e2ba16c6f4701be86b9bd484c4bf060e80fe262c2e9aba1",
+    "constants": [
+      "SQLGrantVersion/SQLGrantDomain",
+      "SQLHeadVersion/SQLHeadDomain",
+      "SQLReferenceVersion/SQLReferenceDomain"
+    ],
+    "meaning": "Use unchanged exact shared typed wire and version + ONE NUL. Strictly refuse old proposal/capture/Kubernetes payloads as SQL authority; no dual-domain compatibility.",
+    "D_alignment": {
+      "path": "docs/evidence/system-backup-d-minio-sql-domain-supersede-20261103.json",
+      "sha256": "c20ed4044cc8803c69fd9c0efb40c5d7cb8366a1d640a726112421e429c15dc0",
+      "DDL": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql",
+      "DDL_sha256": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583"
+    }
+  },
+  "clock_supersede": {
+    "path": "backend/internal/systembackupminioauthority/sql_read.go",
+    "from_sha256": "a69f0b7f206e9bde2e537fc389fceed25d6e00e5fb53e20a7dc5ee03d19259f8",
+    "to_sha256": "d442918471b78f2c90ce724ee44d5f4dea59f6b4ce50a5b589607477d4cfb751",
+    "historical_manifest": "docs/evidence/system-backup-c-minio-select-only-record-source-20261103.json",
+    "historical_manifest_sha256": "364d1372f647357ff6ccf9c6d8e4def28230576b8d0002570fe8c88291169a62",
+    "change": "Small explicit dispatch in sampleSQL: an existing ControlledSQLReader routes to SampleTime-based sampling, never raw UTC. Historical manifest is unchanged. New candidate_clock.go supplies the implementation and explicit candidate entry.",
+    "A_terminal": {
+      "path": "docs/drafts/system-backup-a-terminal-original-source-20261103.pins.json",
+      "sha256": "1b85b19c65bd7a34d3d1bd87d5fa40381f7428e441b59fccd10a938a1ae8354d"
+    },
+    "entry": "ReadSQLCurrentCandidate(ctx, original BootstrapSQL/BootstrapReadSQL-compatible view, pin)",
+    "sampling": "SampleTime before identity-only SELECT CURRENT_USER(),@@server_uuid,DATABASE(), then SampleTime after. Both outer source snapshots retain same original floor/failure latch; no raw candidate clock scan. Existing ordinary entry also detects a controlled view to avoid an accidental fallback. Bare *sql.Tx cannot satisfy candidate entry.",
+    "locks": "Consumer all seven exact rows FOR SHARE only; no new write/commit capability, no raw tx extraction. Installer acquires original rows FOR UPDATE privately; its readback may reuse FOR SHARE after exclusive locks. No privileges broadened.",
+    "limits": "Controlled-clock protocol test is not an executed real D final-guard integration test; root/A must run actual guarded candidate integration."
+  },
+  "production_entries": [
+    "Installer.IssueMinIOSQLInstall(ctx,password,enrollment,intentFile,intentSHA,existingIssuerPrivate)",
+    "Installer.ImportMinIOSQLAuthority(ctx,password,enrollment,independentPin,frozenBundle,bundleSHA)",
+    "Installer.ResolveMinIOSQLAuthority(ctx,password,enrollment,independentPin,frozenBundle,bundleSHA)",
+    "Installer.IssueMinIOSQLRevocation(ctx,password,enrollment,independentPin,existingIssuerPrivate)",
+    "SaveMinIOSQLBundle(existingPrivateDirectory,exactFrozenBytes)",
+    "SQLCurrentSnapshot.SignedRecords() returns detached actual verified signed payload copies only"
+  ],
+  "original_authentication": {
+    "operator": "Actual existing A authenticate -> current SQL local-admin bcrypt/password role/active/local -> actual Kubernetes owner subject/UID/groups/namespace/enrollment/SSAR. Original actual plan/public hash/enrollment pin compared to shared SQLTrustPin. No caller UserID/PASSED and no issuer generation or enrollment performed by this lifecycle.",
+    "issuer": "Existing raw canonical Ed25519 key must match independently enrolled original public pin; signing only outside read/write tx. Import/resolve receives no private key and never re-signs.",
+    "separation": "No capture owner ledger query or capture purpose authority. Existing operator/enrollment authentication is reused as identity only. Test model rejects all capture authority table queries.",
+    "metadata": "Original owner scope intent is SHA-pinned canonical file. Five signed references and grant must exactly match independent pin/record DAG, actor, target, original config/ref fields and shared SQL types. This is authorized metadata, not physical operation permission evidence."
+  },
+  "initial_install": {
+    "before_locks": "Require actual original SQL head absence on exact independently pinned authority key; read actual signed original Kubernetes permission grant/head UIDs/RV/hash/signatures/config/provider/five refs/windows outside locks. Freeze all seven canonical signatures. Final current original SQL admin/hash/head-absence snapshot after signing and Kubernetes tails.",
+    "transaction": "One original RepeatableRead write tx; lock current original admin first, then exact MinIO head FOR UPDATE (absence under original PK/gap), existing selected grant and five refs in exact ASCII order when present. Insert head then grant then five refs, exactly one affected row each; FK/unique violations close attempt. No operation/config/task/history rows touched.",
+    "final": "Read actual complete seven-row state through shared strict codec, compare raw bytes/signatures/hashes/index/state/row versions and source actor. Recheck original SQL window/current admin before commit; expired final window rolls the whole batch back.",
+    "after_commit": "Independent actual original SQL readback, outside-lock original Kubernetes binding/auth tail, then fresh original SQL tuple/window readback. Lost commit or failed postcommit tail returns ErrCommitUnknown with zero receipt. No repair or auto-delete.",
+    "retries": "Only identical currently committed original tuple can return metadata replay. Existing conflicting authority or revoked head refuses initial install; no new AuthorityID/epoch or overwritten row."
+  },
+  "revoke_and_resolve": {
+    "revoke_issue": "Read current actual active original seven-row SQL tuple, preserve original grant/ref bytes/signatures/windows and epoch, sign only new terminal HeadRevision=2/State=revoked. Verify exact original tuple again after signing. Actual current operator/enrollment required; MinIO permission-head/provider health is not required to deny use.",
+    "CAS": "Same original ordered FOR UPDATE prefix. Compare complete frozen old tuple and signed unchanged mapping; atomically update head/grant/all five ref states and row versions, each exactly one affected row. Any missing/zero-row/CAS mismatch/overflow aborts. Final exact original readback before commit; no head/ref revival, rotation or window extension.",
+    "expired": "Old permission window may expire while original operator auth remains valid; revoke preserves old Until and is still permitted. It never creates a renewed permission lease.",
+    "unknown": "Lost commit acknowledgement returns ErrCommitUnknown even when all seven rows persisted. Resolve separately authenticates actual current original operator, reads exact current original tuple and all signed bytes, and returns metadata receipt only if exact. It has no key/probe/Exec/renewal/repair action.",
+    "source_recovery": "This minimum lifecycle does NOT mutate the Kubernetes revocation mirror or export a readiness/startup trust file. SQL is authoritative for new route; old V2-only consumers must not be selected. Explicit outside-lock mirror/recovery/export integration remains, along with actual native protocol capability source.",
+    "receipt": "Version original-minio-sql-metadata-receipt.v1; exact state/authority/installation/enrollment/hashes/seven-row comparison and replay marker. It is explicitly METADATA only. A SQL resolve after a failed physical tail does not claim the physical/native source recovered."
+  },
+  "tests_source_only": [
+    "TestOriginalMinIOSQLSevenRowInstallResolveAndTerminalRevokeComponent",
+    "TestOriginalMinIOSQLInstallAndRevokeMidBatchRollbackComponent",
+    "TestOriginalMinIOSQLUnknownCommitIndependentTupleResolveComponent",
+    "TestOriginalMinIOSQLRejectsForeignKeyAndRetainsExpiredRevokeWindowsComponent",
+    "TestOriginalMinIOSQLRejectsOriginalWindowAndPostCommitSourceTailComponent",
+    "TestMinIOSQLCandidateUsesOriginalControlledSampleTimeOnly",
+    "TestMinIOSQLCandidateClockRegressionAndFailureRemainLatched"
+  ],
+  "test_scope": {
+    "lifecycle": "Actual A Installer.New/Enroll/bcrypt/Ed25519 via existing explicit fixture, actual new issue/import/resolve/revoke; actual database/sql with private working copy, unique/FK/key/CAS/row-count checks, seven-row atomic commit/rollback and persisted lost-commit response. Actual fake Kubernetes original enrollment/signed source/API timing. No Native MinIO, real MySQL privilege/InnoDB lock wait or field evidence.",
+    "negative": "Foreign key/enrollment; phase failure at third ref insert/revoke rolls all prior changes back; lost install/revoke commit separately resolves original tuple and rejects wrong tuple/revoked actor; no old active resurrection or new revoked revision; source head disappearance does not block SQL revoke; SQL expiry during final install rolls back; postcommit original source disappearance produces unknown; original expired revoke keeps old windows.",
+    "clock": "Strict readonly query model rejects every raw UTC_TIMESTAMP in candidate path; 4 samples/2 identity reads per full read, shared locks only, source never completes caller tx; first-phase or final-phase regression/failure latches and never falls back to raw SQL.",
+    "prerequisites": "Uses prior C strict codec/reader test fixtures plus existing frozen A authority/enrollment protocol helpers; historical manifests and frozen files are not edited, except the one explicitly pinned reader supersede.",
+    "not_ready": "These are source-only tests, not executed. No current native capability is manufactured from signed scope/SQL state. No BootstrapTerminalResource is claimed linked merely because metadata exists."
+  },
+  "validation": {
+    "C_performed": [
+      "gofmt parse/format on new Go files and the explicitly superseded sql_read.go only",
+      "static source/DDL/domain/clock contract reads",
+      "read-only hashes"
+    ],
+    "C_not_performed": [
+      "tests",
+      "builds",
+      "typecheck",
+      "Git",
+      "SQL/native/remote/site operations"
+    ],
+    "products": "No test/build products created by C. Root runs independent checks and cleans products."
+  },
+  "remaining": "Root compile/component review (including actual guarded candidate clock); native operation capability/probe source and short private observation; concrete grouped A terminal consumption; outside-lock Kube mirror recovery/trust export and explicit D tool/main composition. No main3/30, deployment/page, full six-domain publication/readback/catalog/same-task succeeded or DR qualification is completed by this metadata lifecycle.",
+  "files": [
+    {
+      "path": "backend/internal/systembackupminioauthority/record_bytes.go",
+      "sha256": "5b13b55fe90abe4f70322dbc2589905e7783891937406eaa7dc2a68dca4235cb",
+      "bytes": 843,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_inputs.go",
+      "sha256": "dc47cc9686426f8b8bebad468d8adf7752864d7d1647930c2a36dc9a62d7723c",
+      "bytes": 11587,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_issue.go",
+      "sha256": "44213c90e8c86d06360de1c89c5f33385167c065a1462d3369dfb4b444047a92",
+      "bytes": 6660,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_store.go",
+      "sha256": "21b3d402c207f6379e73e673e9664886e39b8b6b341b321caff2067ae4525ef9",
+      "bytes": 9984,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_model_test.go",
+      "sha256": "601f96c5a1d84913093ae366eaa35585f23542b5e79d66c9c4f7352350cc3a9d",
+      "bytes": 9658,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_fixture_test.go",
+      "sha256": "c841fc29e1c6ef21a28074e85719c57797d6dce1b8ff8c3664ea312a1b6dc0ce",
+      "bytes": 10009,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_lifecycle_test.go",
+      "sha256": "5a2a627a3e749d857f586f5994d2064242e0b855f4a3ca0f85088bf10db15f00",
+      "bytes": 12038,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/candidate_clock.go",
+      "sha256": "bae0dc2ddb332840b4131a74e08e54843277fb2a1a08848b620d3ba027d21ed0",
+      "bytes": 1674,
+      "kind": "new_production_source"
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/candidate_clock_test.go",
+      "sha256": "5ba68d0005d978e0d4cced3bcf6a782ac919076dad9d8ef70631b63f24f07727",
+      "bytes": 5239,
+      "kind": "test_source_not_executed"
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/sql_read.go",
+      "sha256": "d442918471b78f2c90ce724ee44d5f4dea59f6b4ce50a5b589607477d4cfb751",
+      "bytes": 9319,
+      "kind": "explicit_clock_supersede"
+    }
+  ]
+}

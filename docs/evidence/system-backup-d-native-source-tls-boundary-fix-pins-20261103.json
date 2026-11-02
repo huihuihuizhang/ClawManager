@@ -1,0 +1,47 @@
+{
+  "schema_version": "system-backup-d-native-source-tls-boundary-fix-pins.v1",
+  "status": "source_only_pending_root_native_rerun",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go",
+      "sha256": "78eb14423f6c1020d7c452ec337d5a6e7920cac44d22c7eacdf44aa604047ab1",
+      "supersedes_sha256": "cffef76d1af24562fd5c619d6025178591948c70aa62bc8e3286964234c065e2"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_tls_test.go",
+      "sha256": "f008a584bc2a55cc2a2c13017dc2477d701463c6ab432f5b37d22093c6168066"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "sha256": "27c6eba8c6bd573ffe2d85808a82a63027deeb7f69f08406351f8d0df8bd4082",
+      "supersedes_sha256": "d74c4bcf32822887caa9aaea3c284ca6997fe02fb3c863d5ce81fca288adecc6"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_metadata.go",
+      "sha256": "7bc5cf1f3549234c38b71838c4a726437dc643ef1bc9af797d5163304a5e7252",
+      "supersedes_sha256": "2e2bb6d018dc31f1d5da443531496154023f78d8023e397eae0c167a37f89817"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_diagnostics.go",
+      "sha256": "29cb90e2cc4d81b139f06e52f96442f35c5aedfe7ab1f5f17fba74863d2fc694"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_diagnostics_test.go",
+      "sha256": "9137b56fa3c0c870496bbb7f0deeda124bbe67ca42b09560289d96f18c93353d"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-20261103.json",
+      "sha256": "dc4f192ff39847b50a9c8cbff43e186b511411de372a83ca0a6a2385c8cfc115"
+    }
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  },
+  "limitations": "Deterministic native TLS fixture SAN defect fixed in source; Empty cause still unknown. Fixed diagnostics preserve original errors/checks. No native PASS claimed."
+}

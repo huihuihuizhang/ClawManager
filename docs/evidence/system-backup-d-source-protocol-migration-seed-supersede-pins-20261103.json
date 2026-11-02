@@ -1,0 +1,69 @@
+{
+  "schema_version": "system-backup-d-source-protocol-migration-seed-supersede-pins.v1",
+  "status": "FROZEN_INDEPENDENT_FIXTURE_ONLY_PENDING_ROOT_NATIVE_SOURCE3",
+  "prior_actual": {
+    "log": ".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/b-mysql-b936e606df7545b98dc7b91e58c59096/go-0.jsonl",
+    "root_report": "Clock/detail/TLS four components PASS. OriginalDrift root and all8 injected event-reached subcases PASS. AllRunning FAIL at original collection assertion; Empty FAIL at original zero-collection assertion. No source rejection stage in those two cases. Neither failed root is counted PASS.",
+    "preserved": true
+  },
+  "static_cause": {
+    "migration001": "Full migration001 deliberately inserts the default admin user and its user_quotas row; independent source fixture did not reset that initial login before declaring a one-user/empty scenario.",
+    "migration023": "Migration023 deliberately inserts ten Skill Hub tags. The prior Empty branch returned without checking/removing migration-created source keysets; lack of added scenario seeds was not proof of empty source.",
+    "confidence": "This is actual migration/source-code evidence, not a measured post-r2 SQL count. D has not queried the retained MySQL fixture. New runtime assertions require exact independently read SQL sets and will fail rather than assume these candidate counts.",
+    "intent_preserved": "Keep original AllRunning users42/instances107,109/Teams120/member121/Skill111/blob112/version113 and original genuinely empty users/instances/Teams/Skills case. Original observed collection count conditions are unchanged and strengthened."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go",
+      "sha256": "df61c0a045b337a30602fb9a3ad8d704d7b7d0891e3f3c6ea963d9c0d4f1c676",
+      "supersedes_sha256": "01e15134efbfc9cd52f67a7dda1abd6fb5c59b40bd731c598ca34d2c97a11eb1",
+      "change": "One explicit call immediately after full pinned migration runner and before config/core/scenario seed/grant/definitions: prepareSourceProtocolOriginalCollections."
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go",
+      "sha256": "d3bbcaaa06ba25bfcbc6f9b439c8a7bd0b187cda0c146544603de44fc35d65ec",
+      "supersedes_sha256": "a3f69a1969739aace65bff20c79357837e72e87c8e015fa0b214eded4cf82759",
+      "change": "Independent original SQL keysets checked after fixture declaration and after successful nonempty/empty observations. Existing count/EOF/control-row/readiness/drift event assertions unchanged."
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_collections_mysql_test.go",
+      "sha256": "e7538406be15f2f91ab2e9f9aeed653cb22cdc4cafd14933c5bc966eec08e0d3",
+      "change": "Required private test helper definitions for the two callers. Must copy all three files; no production function is added."
+    }
+  ],
+  "ownership_and_setup": [
+    "Only the independent fixture's newly CREATEd ad_d_src_<16hex> schema on its existing task-owned localhost SAN/TLS instance is accepted. Actual server UUID/database are rechecked inside the setup RR transaction; no existing source/profile or original instance7/9 fixture is borrowed.",
+    "Before deletion, require zero instances/Teams/members/all eight Skills tables except tags; exactly one user with default id1/admin/email/role/active/local metadata; exactly one own quota; all ten original tag id/key pairs and complete EOF. Any unknown or missing row refuses setup rather than deleting it.",
+    "Delete only the exact checked default login and exact id/key tags. Original FK CASCADE removes its sole checked quota; require users/quotas/tags all zero after setup and successful COMMIT. No blanket DELETE/TRUNCATE, FK disabling, seed-DML skip, production SQL or original source-filter change.",
+    "All176 full migrations still execute unchanged before this explicit test-scenario construction. Actual permissions/census/metadata keysets, declared original core/window/purpose/grants and real restricted observer then apply unchanged.",
+    "sourceProtocolCollectionDeclaration is fixed before observing. Independent f.db SELECT id FROM each fixed table ORDER BY id consumes all actual rows to EOF, requires exact declared IDs, then compares the actual returned observer inventory and all8 Skill keysets. Unknown/duplicate/missing Skill collections fail. No observer DTO supplies expected counts.",
+    "The preparation is before the scenario source is declared or signed, not a post-observation deletion to satisfy assertions. Original test intent and nonempty source scope remain unchanged."
+  ],
+  "dependency_composition": [
+    "Use the exact root31 source3 snapshot plus this three-file test supersede. The newly required helper source must accompany the two callers.",
+    "Keep clock+detail composite manifest44517fa... source bytes unchanged. Its historical read-only base fixture dependency01e151... is explicitly superseded by df61c0... here; its clock/production behavior is not edited.",
+    "Prior diagnostic4/clock3/TLS7/fault-reach historical manifests remain unchanged and their old failure results retained."
+  ],
+  "read_only_migration_dependencies": [
+    {
+      "path": "backend/internal/db/migrations/001_init_schema.sql",
+      "sha256": "f08923b5e4dfab3b560a7736833cc53b8733f55cdae4c2990393d07770f9451b"
+    },
+    {
+      "path": "backend/internal/db/migrations/023_add_skill_hub.sql",
+      "sha256": "7d8151146dcc1b56570f8b9bfe3f158fd6aac0100cc5a6b0a13fbd90ed7a5ca7"
+    }
+  ],
+  "root_validation_command": "go test -tags systembackup_mysql ./internal/systembackupexecution -run '^TestSourceDependenciesIndependent(AllRunning|Empty|OriginalDrift)TLSMySQL$' -count=1 -v -timeout=900s",
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false,
+    "production_source_changed": false,
+    "cleanup": "Root verifies and removes its test/build/isolated SQL/cache products after testing per AGENTS."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "system-backup-c-minio-select-only-record-source.v1",
+  "date": "2026-11-03",
+  "status": "source_only_not_compiled_or_executed",
+  "requested_lock_mode_correction": {
+    "path": "docs/evidence/system-backup-c-minio-three-table-sql-contract-20261103.json",
+    "old_sha256": "34d4bf1e8eec97e5545722a66c3b56c6bfbf8256a57f6e62ec2bc0827860a856",
+    "new_sha256": "553990394558b3d72dac261a40fa195e8b6a1248ecf3ca50824487ba83525f57",
+    "bytes": 18696,
+    "reason": "Root identified ambiguous/wrong consumer lock strength in prior line123. Changed only three text values: CAS_revoke.lock_order, global_lock_alignment.consumer_L2, global_lock_alignment.fresh_tail.",
+    "semantics": "Same ordered original rows; SELECT-only consumer uses FOR SHARE, installer/revoke FOR UPDATE. No consumer UPDATE/DELETE/LOCK TABLES grants. Signature domains/types/provider permission semantics unchanged.",
+    "history": "Prior hash retained here as explicit superseded evidence; this correction is authorized by root. No D frozen contract/DDL or C frozen type declaration file edited."
+  },
+  "concrete_new_source": {
+    "codec": "Actual strict unique/canonical complete record and bundle codec; original independent pin, separate existing SQL signature domains, exact seven-record signature/hash DAG, fixed target/enrollment/authority/config/purpose/epoch/window/ref/account/scope relationships. No permission/admission method or current SQL proof is returned by signature verification.",
+    "sql_reader": "Actual exact queries to D's three tables, head then selected grant then five keys in literal ASCII purpose sequence; all SELECT ... FOR SHARE. Checks original account/server/database/SQL clock, full signed/index/state/hash/row parity and original current local-admin identity on same caller SQL view. No Exec, write locks, transaction creation/completion, provider I/O or credential read/hash.",
+    "role_separation": "ReadSQLCurrent requires actual CURRENT_USER equals independently pinned consumer account. ReadSQLCurrentForInstaller remains a shared-lock read and requires actual CURRENT_USER equals signed original installer account, distinct from consumer. Offline installer will acquire exclusive ordered locks separately, never via a consumer lock flag.",
+    "current_state": "Snapshot exposes detached original SQL comparisons and signed declarations; RequireCurrent checks original signed current state/windows only. Actual original owner/enrollment, same-context/transaction guard, native effective permission, protocol capability and short physical observation remain mandatory concrete A/C preparation/consumer work. No BootstrapResourceValidator/Original wrapper was inserted.",
+    "preconditions": "Caller must already hold the original current-admin/RBAC/capture-prefix locks and bind prepared original signed actor to the same OfflineBootstrapGrant actor BEFORE this reader. Its actor reread is the already-held same row, not permission to acquire another earlier-domain lock after MinIO. Caller supplies original controlled SQL transaction/view, never a separate DB connection.",
+    "bounds": "Canonical/closed field validation; finite 2025-04-22 profile; separate catalog bucket; original fixed five purposes; no rotation/reactivation/epoch reset; explicit counters/bounds. Current revoked/expired declarations remain inspectable for exact owner revoke/history but RequireCurrent refuses fresh identity use."
+  },
+  "tests_source_only": [
+    "TestMinIOSQLRecordSetExactSignedSevenRecordDAG",
+    "TestMinIOSQLRecordSetRejectsOriginalPinDomainAndReferenceSubstitution",
+    "TestMinIOSQLBundleExactInitialAndRevokeCASShape",
+    "TestMinIOSQLConsumerUsesSelectOnlySharedOriginalRowsInOrder",
+    "TestMinIOSQLCurrentRejectsProjectionStateIdentityAndWindowDrift"
+  ],
+  "test_scope": "Three cryptographic/record roots and two strict database/sql SELECT-only protocol roots. Driver rejects every FOR UPDATE/Exec/prepare and source-owned transaction lifecycle; verifies exact original key/order, scalar/index drift, signatures/domains, current actor, revoked/expired state and detached comparison data. Not actual MySQL role execution, native evidence, SQL lifecycle installation or field acceptance. Tests not run by C.",
+  "unchanged_types": [
+    {
+      "path": "backend/internal/systembackupminioauthority/contract.go",
+      "sha256": "44fa114a4cc3e3a489b5246e97339673c44d32e3f84d42db5b765cc75c9daa8b"
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/sql_contract.go",
+      "sha256": "d71033fdf560af702e2ba16c6f4701be86b9bd484c4bf060e80fe262c2e9aba1"
+    }
+  ],
+  "D_observed_contract": {
+    "path": "docs/evidence/system-backup-d-minio-original-sql-contract-20261103.json",
+    "sha256": "0c521de9d7b1c65f9111ef0185aa192dcd6cf8d7bd06e721b8bc0ec5df2a1945",
+    "DDL": "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql",
+    "DDL_sha256": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583",
+    "columns": "All concrete source queries match D head/grant/ref columns and fixed keys.",
+    "domain_naming_alignment": "D JSON states system-backup-minio-original-sql-{grant,head,ref}.v1, while unchanged C SQL declarations use system-backup-minio-sql-owner-{grant,head,ref}.v1. Root instructed retaining original C domains/types during lock fix; no domain was changed here. A/D/root must explicitly align this remaining nomenclature before signing/importing or selecting a runtime consumer. Codec uses only unchanged C constants; never accepts both domains or falls back."
+  },
+  "remaining": "Concrete existing-operator SQL Issue/Import/Resolve/seven-row CAS revoke and Kube mirror recovery still to implement after signature-domain and actual A/D lock-prefix alignment; actual native/protocol capability source and short private observation; concrete A current-original consumption and D explicit main wiring. This source adds no bootstrap slot and does not complete main 3/30 or full backup publication.",
+  "validation": {
+    "C_performed": [
+      "gofmt on four NEW Go files only",
+      "static original source/DDL/contract reads",
+      "read-only hash checks"
+    ],
+    "C_not_performed": [
+      "go test",
+      "go build",
+      "typecheck",
+      "SQL/native/remote/site actions",
+      "Git operations"
+    ],
+    "products": "No test/build products created by C. Root owns independent tests/compile and cleanup."
+  },
+  "files": [
+    {
+      "path": "backend/internal/systembackupminioauthority/codec.go",
+      "sha256": "27d35b02dd8c5246a927ff4ab35d45488da4aa623ab5d46710be7c4c59a54667",
+      "bytes": 17546
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/sql_read.go",
+      "sha256": "a69f0b7f206e9bde2e537fc389fceed25d6e00e5fb53e20a7dc5ee03d19259f8",
+      "bytes": 9218
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/codec_test.go",
+      "sha256": "3f54d7b8e71f9574eee2d5a5b11983e7e8e7fcc585cee56232458c5fe3173b1c",
+      "bytes": 12305
+    },
+    {
+      "path": "backend/internal/systembackupminioauthority/sql_read_test.go",
+      "sha256": "6ba305391b991dd3e3b179b322657f2898267a18451dd15cc6bc27477e3b1cd5",
+      "bytes": 9878
+    }
+  ]
+}

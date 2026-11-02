@@ -1,0 +1,24 @@
+{
+  "schema_version": "system-backup-d-source-tls-regression-interface-supersede.v1",
+  "status": "source_only_pending_root_retest",
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_tls_test.go",
+      "supersedes_sha256": "f008a584bc2a55cc2a2c13017dc2477d701463c6ab432f5b37d22093c6168066",
+      "sha256": "9bb6cb119e7d5b0e1eb2dbc6a94b0d04a77add558758b22f86cbc3b7e437be02"
+    }
+  ],
+  "historical_batch": {
+    "path": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+    "sha256": "09e0da20de67d4032816798b681befde8580c25686ccf5876aadee51eee92771",
+    "unchanged": true
+  },
+  "fix": "One type assertion only: actual services.RuntimeAgentBackupClient exposes BackupCapabilities. Existing native client construction, method call and production interfaces unchanged. No fake interface or method was added.",
+  "validation": {
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "git_mutation": "not_run",
+    "test_build_artifacts_created": false
+  }
+}

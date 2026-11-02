@@ -22,6 +22,7 @@ func sourceProtocolFixture(t *testing.T, empty bool) (*dOriginalSixPartTask, *so
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	scenario.installMetadata(ctx, t, f)
+	verifySourceProtocolOriginalCollections(ctx, t, f, scenario.empty)
 	if err := checkDOriginalCoreUnchanged(f.service, f.sealedCore); err != nil {
 		t.Fatal("independent scenario core changed after its original signing", err)
 	}
@@ -49,6 +50,7 @@ func TestSourceDependenciesIndependentAllRunningTLSMySQL(t *testing.T) {
 		t.Fatal("complete independent running source protocol observation", err)
 	}
 	source := facts.metadata.inventory.source
+	assertSourceProtocolObservedCollections(ctx, t, f, false, source)
 	if len(source.Users) != 1 || len(source.Instances) != 2 || source.Instances[0].ID != 107 || source.Instances[1].ID != 109 || len(source.TeamFacts.Teams) != 1 || len(source.Skills.Skills) != 1 || len(facts.metadata.skills.Objects) != 1 {
 		t.Fatal("complete actual independently declared SQL/object collections changed")
 	}
@@ -85,6 +87,7 @@ func TestSourceDependenciesIndependentEmptyTLSMySQL(t *testing.T) {
 		t.Fatal("genuinely empty source collections did not reach successful EOF", err)
 	}
 	source := facts.metadata.inventory.source
+	assertSourceProtocolObservedCollections(ctx, t, f, true, source)
 	if len(source.Users) != 0 || len(source.Instances) != 0 || len(source.TeamFacts.Teams) != 0 || len(source.TeamFacts.Members) != 0 || len(source.Skills.Skills) != 0 || len(source.Skills.Blobs) != 0 || len(source.Skills.Versions) != 0 || len(facts.metadata.skills.Objects) != 0 || len(facts.metadata.secrets.Selections) != 0 {
 		t.Fatal("empty source was produced by dropping nonempty source data")
 	}

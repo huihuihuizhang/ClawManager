@@ -1,0 +1,122 @@
+{
+  "schema_version": "system-backup-c-minio-sql-native-regression-source.v1",
+  "date": "2026-11-03",
+  "status": "source_only_systembackup_mysql_tag_not_compiled_or_executed",
+  "parent_lifecycle": {
+    "path": "docs/evidence/system-backup-c-minio-sql-owner-lifecycle-source-20261103.json",
+    "sha256": "e3cde38e6c42884d9853be6cb5f1691d7dd86a82dad8048892cc108c5dabf5e1",
+    "unchanged": true
+  },
+  "tag": "systembackup_mysql",
+  "root_test_command": "go test -tags=systembackup_mysql ./internal/systembackupinstallationowner/install -run '^TestMinIOSQLOwnerNativeTLS' -count=1 -v",
+  "required_original_fixture_inputs": {
+    "credential_file_env": "TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS",
+    "independent_uuid_env": "A_PERMIT_NATIVE_DISPOSABLE_SERVER_UUID",
+    "scope": "Same existing native fixture contract: private bounded closed credentials, exact independent actual server UUID, loopback non3306 port, explicit private CA/SAN hostname and TLS1.3. Missing original inputs SKIP as unverified, never fake pass or no-TLS fallback.",
+    "new_requirement_for_lock_proof": "Actual disposable root fixture must be able to read performance_schema.data_lock_waits/data_locks/threads. Missing/denied/disabled wait evidence fails the lock regression; it is not silently inferred from delay."
+  },
+  "actual_native_setup": {
+    "base_fixture": "newNativeAuthorityFixture",
+    "isolation": "Existing independently UUID/SAN-TLS validated random owned schema + ownership marker and generated finite installer/consumer accounts. Existing cleanup verifies UUID/marker before deleting only owned users/schema. No fixed/dev/production DB, 3306 or field action.",
+    "actual_migrations": "Retain actual migration134, real users/local bcrypt record and limited accounts; apply exact source migration135 (three real InnoDB tables) inside the owned schema only. Initial actual capture authority is issued/imported/exported against real134 rows; never replaced with a model/boolean.",
+    "migration135_sha256": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583",
+    "minimum_roles": "Existing installer receives only SELECT/INSERT/UPDATE on exact new three tables; existing consumer only SELECT on them. No UPDATE/DELETE/LOCK TABLES for consumer, no password_hash column grant, no DELETE for installer. Actual denied queries verify these bounds.",
+    "C_fixture_models": "No minioSQLModel is constructed. Native metadata declaration container has model=nil and actual Installer.db exactly equals real SAN/TLS installer. All lifecycle/identity source statements go to actual MySQL.",
+    "original_prefix": "Consumer explicitly locks real users/admin row, authenticates/rechecks actual current migration134 capture owner head/grant/account before MinIO FOR SHARE. Identity-only capture prefix is intentional for this SQL identity test; it does not supply any fresh provider observation or claim full consumption.",
+    "source_limits": "Kubernetes/enrollment and pre-existing signed MinIO permission source remain explicitly controlled SDK fixtures. Real SQL tests do not certify actual MinIO policies/protocol capability, real cluster ownership, bootstrap full source completeness or task publication."
+  },
+  "native_test_roots": [
+    {
+      "name": "TestMinIOSQLOwnerNativeTLSSevenRowsSelectOnlyAndTerminalCAS",
+      "scope": [
+        "actual original-operator Issue and exactly seven initial real rows with signatures/index/CAS tuple",
+        "independent same-original tuple Resolve without state rewrite",
+        "real SELECT-only FOR SHARE current source with actual134/users prefix",
+        "real denial of consumer FOR UPDATE/UPDATE/DELETE/password_hash access and installer DELETE",
+        "actual seven-row signed terminal SQL-head CAS to revoked with original tuple counters",
+        "old active bundle cannot resurrect; terminal source cannot issue another revoke revision",
+        "actual current revoked source remains inspectable but RequireCurrent refuses fresh identity"
+      ]
+    },
+    {
+      "name": "TestMinIOSQLOwnerNativeTLSAtomicRollbackAndUnknownResolve",
+      "scope": [
+        "actual owned MySQL BEFORE INSERT trigger SIGNAL on third ref forces whole head+grant+five-ref transaction rollback; all three table counts remain zero while134/users remain",
+        "after DROP of exact owned trigger, re-use same original frozen bytes",
+        "existing real-driver lost-ack wrapper suppresses only caller response AFTER actual successful COMMIT; exactly7 actual Execs, server persists rows and method returns ErrCommitUnknown",
+        "independent actual native tuple Resolve with no new Exec/signature/lease",
+        "actual BEFORE UPDATE trigger SIGNAL at third revoked ref rolls all head/grant/ref state/counters back to exact active signed tuple",
+        "same frozen revoke succeeds after exact owned trigger removal"
+      ]
+    },
+    {
+      "name": "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder",
+      "subcases": [
+        {
+          "blocked": "head",
+          "proof": "Actual SELECT-only complete consumer holds original134/users prefix and all seven MinIO shared rows. Writer blocks at exact MinIO head. Require actual performance_schema edge for both real connection IDs, exact owned schema and head table, then release blocker and verify complete ordered terminal revoke."
+        },
+        {
+          "blocked": "catalog_append",
+          "proof": "A TEST-ONLY diagnostic SELECT-only ref blocker retains actual original admin/capture prefix and holds only catalog_append ref (not a production admission). It exposes writer's later stage: actual acquired head, grant, artifact_delete/read/write precede wait at catalog_append. Require actual wait edge on refs; release and assert acquired sequence ends with catalog_append/catalog_read."
+        }
+      ],
+      "instrumentation": "Actual MySQL driver's exact SQL/rows/locks are untouched. Monitor emits starting event at actual FOR UPDATE and acquired event only after actual driver delivers its first row; records real connection ID. No fake SQL row, timed-success heuristic, synthetic lock result or grant widening.",
+      "wait_limit": "8s bounded polling, 25ms interval; SQL test context4min and actual connector timeouts retained. Failure cleanup releases blocker/cancels before closing writer DB; owned root cleanup remains original.",
+      "claimed_scope": "Real InnoDB shared/exclusive wait and acquisition order in an owned disposable server when root executes successfully. Not a network/protocol/field claim from source alone."
+    }
+  ],
+  "unchanged_existing_dependencies": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fixture_test.go",
+      "sha256": "107e818205a11590f47b84ccb0dd6296c064406371b875784e9122dc8c92ceb7",
+      "use": "actual independent UUID/SAN TLS owned schema/marker/accounts,134/users,real original auth fixture and cleanup"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fault_test.go",
+      "sha256": "16d62879fb3bb6bc2525070718c5fd382fc3d310afa1939960a47ab614a33858",
+      "use": "real-driver post-COMMIT acknowledgement loss and pass-through TLS/connection lifecycle"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_test.go",
+      "use": "existing actual IssueCapture/SQL denial helpers; unchanged, not copied as fake native results"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_lifecycle_test.go",
+      "use": "non-model helper functions invoke actual lifecycle; no model row/assertion helper used by native tests"
+    }
+  ],
+  "source_windows": "Native-only original scope declaration is chosen BEFORE signing with 5-minute SQL/ref validity and 10-minute permission source/protection. These are declared fixture original bounds, not renewal of an already signed window. Production lifecycle window checks unchanged.",
+  "validation": {
+    "C_performed": [
+      "gofmt parse/format on exactly three NEW tagged test files",
+      "read-only source/dependency SHA checks"
+    ],
+    "C_not_performed": [
+      "Go test/build/typecheck",
+      "MySQL SQL or DDL",
+      "TLS/native/remote/site operations",
+      "credential reads from environment",
+      "Git operations"
+    ],
+    "products": "No test/build products created by C. Root executes with owned original fixture, records PASS/SKIP/failure truthfully and cleans build/test products."
+  },
+  "readiness": "This adds no owner slots or deployment/main wiring, and no native capability/complete six-domain publication/readback/catalog/same-task success/DR qualification. Root-only execution remains required.",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_native_fixture_test.go",
+      "sha256": "f5883fe81fa910b0ef4ad8d5f5c5b374666246e9af688f48459aecf62c74b05e",
+      "bytes": 14688
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_native_monitor_test.go",
+      "sha256": "db0eff11f4b6a7f2919d4a6c1c16bd0f1416d3c03f9fdfe5f70f324761228c3e",
+      "bytes": 4357
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_native_test.go",
+      "sha256": "94dfecb679114c1ba225571dd5a117922e37023c2a60aed134b511a45372a230",
+      "bytes": 10989
+    }
+  ]
+}

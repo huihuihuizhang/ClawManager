@@ -1,0 +1,145 @@
+{
+  "schema_version": "system-backup-d-morning-production-mysql-gap-review.v1",
+  "status": "STATIC_ONLY_FIELD_PKI_ACCOUNTS_UNPROVEN_NOT_READY",
+  "date": "2026-11-03",
+  "timezone": "Asia/Shanghai",
+  "earliest_user_field_window": "2026-11-03 08:30 Asia/Shanghai; commands below are operator instructions, not executed by D",
+  "source3_priority": "Root's latest compact snapshot says Linux compile completed and isolated TLS MySQL source3 rerun started. No new source3 result was available to D at this review. Diagnose actual fixed-stage failures before speculative source changes; fixture SQL PASS never proves field PKI or accounts.",
+  "answer": {
+    "current_production_ca_san": "NOT ESTABLISHED CURRENT. Retained 2026-10-28 operator report records a TEST TLS deployment with SAN mysql.clawmanager-zhanghui08-system.svc, mysql.clawmanager-zhanghui08-system.svc.cluster.local and mysql; leaf expiry 2027-01-26 03:59:24 UTC; historical CA file SHA256 3ffbe72ac1b0c14cf7bea27364b3b840738652205143e2067cf046c5c707e32f. This is historical test-environment evidence, not independently observed current production PKI. Do not install this hash automatically.",
+    "historical_files": "The historical controlled server directory /root/system-backup-test-tls.8najDckN and TLS Secret system-backup-test-mysql-tls-20261028 UID a02df05b-7ae7-4280-b6c6-aacc4e933082 are comparison references only. Their current existence, mounts, owners, bytes and validity are unknown. Never read/export their private key. Historical temporary observer account and CA copy were explicitly deleted.",
+    "finite_source_account": "NO CURRENT PROOF OR DELIVERED PRIVATE FILE PATH established in inspected evidence. Deleted probe accounts and isolated fixture users cannot be reused as an installed source role. Actual finite source CURRENT_USER/role/grants/full census and secure credential delivery remain required.",
+    "installer_account": "NO CURRENT FIELD DELIVERY PROOF established. Plan.InstallerDatabaseAccount, exact independent plan/enrollment/issuer/local-admin and native TLS account must come from A/DBA original owner records. Existing administrative references do not demonstrate a distinct installed installer role.",
+    "consumer_account": "NO CURRENT FIELD DELIVERY PROOF established. Plan.Target.DatabaseAccount must differ from installer and source; bootstrap deployment expected account must match it. Capture consumer export contains identity/grant/enrollment/Kubernetes pins, not a new consumer SQL login or TLS client installation.",
+    "important_consumer_tls_source_gap": "Actual systembackupsecurity.openBootstrapDatabase currently parses private DSN and calls sql.Open without the explicit independently pinned CA+ServerName+TLS13 construction used by install.OpenConnections. CLI does not register a custom private-CA TLS config. DSN tls=true uses platform trust; a supplied self-signed CA file alone is not consumed by this path. tls=skip-verify/preferred cannot prove required verified identity. A/root must resolve the reviewed consumer connector/PKI delivery path before apply. This is static source evidence, not a claim of observed plaintext or a source change."
+  },
+  "reuse_existing_tools": {
+    "public": "scripts/system-backup-d-first-install-inputs.py owner|inventory|sql-plan and scripts/system-backup-d-first-install-prepare.sh already collect exact namespace/owner/workload/SA/Service/PVC/CM identity and secret/configmap key/mount REFS only. They do not inspect Secret values or certificates or connect to SQL.",
+    "fields": [
+      "Inventory: owner.subject/uid/groups_sha256, namespace_uid, observed_at; selected Service name/uid/cluster_ip/ports, current MySQL owner graph/Pod UID/imageID/mounts/Secret-key refs.",
+      "SQL plan: Service/ServiceUID/Port/Address, Database/ServerUUID/Account, TLSServerName/CASHA256, Census.Version/Definer/DefinitionSHA256/PartialRevokes."
+    ],
+    "missing": [
+      "No actual production CA/leaf file presence, SAN/validity/chain/peer handshake or server TLS settings is proved by the public inventory.",
+      "Account is a DBA public selection, not account existence/password delivery/grants evidence.",
+      "Optional census pins may be absent in candidate; source mode and DB grant require complete actual reviewed census.",
+      "No installer/consumer DSN/CA/role installation is collected or authenticated by this public source plan."
+    ],
+    "sql_observer": "Existing system-backup-source-sql-observe --mode tls authenticates actual original Service address, TLS13, independently pinned CA and SAN plus exact CURRENT_USER/CURRENT_ROLE=NONE/server UUID/database/time. --mode source additionally runs the unchanged finite source grant validator and full schema census. Reuse these instead of creating another preflight tool.",
+    "proposal": "--mode render-source-account prints an exact permission/census installation proposal only. It neither creates source login nor password, applies GRANT, issues certificates nor mutates SQL.",
+    "no_duplicate": "No new precheck implementation, MinIO probe, SSH command, exec command, deployment, role or certificate generator was added."
+  },
+  "earliest_readbacks": [
+    {
+      "item": "Original public identity and topology",
+      "needed": "Original operator subject/UID/group pin and namespace UID, actual MySQL Service UID/address/port and current controller/Pod UID/image digest/certificate mount refs. Compare historical UUID f1f5f76a-95f5-11f1-b08e-366835b4a029/database clawmanager only as retained original pins; never silently refresh mismatches.",
+      "tool": "Use existing public inventory directly first if CA/account selections are still unknown; prepare.sh intentionally requires those selections and is not the first step when they are missing."
+    },
+    {
+      "item": "Actual delivered public PKI",
+      "needed": "DBA-selected current CA bundle file and independently retained exact-file SHA; public leaf plus any intermediates; certificate DNS/IP SAN, validity, issuer/serial/DER fingerprint, verified hostname chain; current workload mount association and private-key custody/permissions confirmed locally by DBA without sending key bytes. Native observer must later prove the running peer uses this chain."
+    },
+    {
+      "item": "Three separate account identities",
+      "needed": "Public exact user@host and intended runtime network source for source/installer/consumer; secure file paths, regular-file/no-symlink/0600 and parent0700 metadata only. Actual session CURRENT_USER/database/server UUID/TLS/role and SHOW GRANTS. Do not send passwords, DSNs, auth strings, password hashes or private keys."
+    },
+    {
+      "item": "Native server and census",
+      "needed": "MySQL version, TLS13 negotiation, ssl CA/cert KEY PATHS from controlled DBA records (no key bytes), require_secure_transport/skip_name_resolve/partial_revokes, actual source network host, census definer/security/read-data mode/body SHA and full finite result through existing source observer. DBA TLS session alone does not prove source/consumer session TLS or permissions."
+    }
+  ],
+  "reviewed_bash_instructions": [
+    {
+      "phase": "08:30 public inventory only, existing approved operator host, no SQL or credentials",
+      "assumptions": "Root provides the exact reviewed package and selects an existing private empty output directory; public variables come from retained original owner records, never from a new observation silently adopted as original.",
+      "bash": "set -euo pipefail\nset +x\numask 077\n: \"${REVIEW_OUTPUT:?existing absolute private empty output directory}\"\n: \"${SBK_ORIGINAL_OWNER_SUBJECT:?retained exact original subject}\"\n: \"${SBK_ORIGINAL_OWNER_GROUPS_SHA256:?retained reviewed sorted-groups SHA256}\"\npython3 scripts/system-backup-d-first-install-inputs.py inventory \\\n  --owner-subject \"$SBK_ORIGINAL_OWNER_SUBJECT\" --owner-uid \"${SBK_ORIGINAL_OWNER_UID:-}\" \\\n  --owner-groups-sha256 \"$SBK_ORIGINAL_OWNER_GROUPS_SHA256\" \\\n  --output-directory \"$REVIEW_OUTPUT\"\n# Retain printed file and SHA. This creates only public comparison evidence.\n# Do not substitute kubernetes-admin identity for workload/service identities."
+    },
+    {
+      "phase": "Local public certificate metadata only; no socket/Secret/private key read",
+      "assumptions": "DBA supplies exact absolute public certificate files via existing secure delivery. Do not assume the historical directory exists. Root fills only public pins and private file paths; no password values.",
+      "bash": ": \"${SBK_PRODUCTION_MYSQL_CA_FILE:?DBA-delivered public CA bundle path}\"\n: \"${SBK_PRODUCTION_MYSQL_LEAF_FILE:?DBA-delivered public leaf path}\"\n: \"${SBK_MYSQL_CA_SHA256:?independently retained selected production CA file SHA256}\"\n: \"${SBK_MYSQL_TLS_SERVER_NAME:?reviewed original Service DNS SAN}\"\ntest \"$(sha256sum -- \"$SBK_PRODUCTION_MYSQL_CA_FILE\" | cut -d ' ' -f 1)\" = \"$SBK_MYSQL_CA_SHA256\"\nopenssl x509 -in \"$SBK_PRODUCTION_MYSQL_LEAF_FILE\" -noout \\\n  -subject -issuer -serial -dates -fingerprint -sha256 -ext subjectAltName\nif [[ -n \"${SBK_PRODUCTION_MYSQL_INTERMEDIATE_FILE:-}\" ]]; then\n  openssl verify -CAfile \"$SBK_PRODUCTION_MYSQL_CA_FILE\" \\\n    -untrusted \"$SBK_PRODUCTION_MYSQL_INTERMEDIATE_FILE\" -purpose sslserver \\\n    -verify_hostname \"$SBK_MYSQL_TLS_SERVER_NAME\" \"$SBK_PRODUCTION_MYSQL_LEAF_FILE\"\nelse\n  openssl verify -CAfile \"$SBK_PRODUCTION_MYSQL_CA_FILE\" -purpose sslserver \\\n    -verify_hostname \"$SBK_MYSQL_TLS_SERVER_NAME\" \"$SBK_PRODUCTION_MYSQL_LEAF_FILE\"\nfi\n# Local certificate success is not proof of the running MySQL peer."
+    },
+    {
+      "phase": "After public selections exist: reuse existing plan and real native observer, read-only SQL",
+      "assumptions": "Root provides verified SQL_OBSERVER binary. PUBLIC_INPUT_FILE/INVENTORY_SHA are fresh original inventory from phase one (<=15 minutes); SQL_PLAN_OUTPUT is another existing private empty directory. SBK_SOURCE_DSN_FILE is delivered privately by DBA, never printed. Current expected source account is distinct from installer/consumer. No TLS/source command is run if missing.",
+      "bash": ": \"${PUBLIC_INPUT_FILE:?selected public inventory path}\"\n: \"${INVENTORY_SHA:?selected inventory SHA256}\"\n: \"${SQL_PLAN_OUTPUT:?existing private empty output directory}\"\n: \"${SBK_MYSQL_SOURCE_ACCOUNT:?actual DBA-selected finite source user@host}\"\n: \"${SBK_MYSQL_SERVER_UUID:?retained original production UUID}\"\n: \"${SBK_CENSUS_DEFINER:?actual reviewed distinct locked metadata definer}\"\n: \"${SBK_CENSUS_DEFINITION_SHA256:?actual reviewed exact installed routine body SHA256}\"\n: \"${SBK_CENSUS_PARTIAL_REVOKES:?reviewed actual 0 or 1}\"\ncensus_flags=()\ncase \"$SBK_CENSUS_PARTIAL_REVOKES\" in 0) ;; 1) census_flags+=(--census-partial-revokes);; *) exit 2;; esac\npython3 scripts/system-backup-d-first-install-inputs.py sql-plan \\\n  --inventory-file \"$PUBLIC_INPUT_FILE\" --inventory-sha256 \"$INVENTORY_SHA\" \\\n  --mysql-service mysql --mysql-port 3306 --mysql-database clawmanager \\\n  --mysql-server-uuid \"$SBK_MYSQL_SERVER_UUID\" --mysql-account \"$SBK_MYSQL_SOURCE_ACCOUNT\" \\\n  --mysql-ca-sha256 \"$SBK_MYSQL_CA_SHA256\" --mysql-tls-server-name \"$SBK_MYSQL_TLS_SERVER_NAME\" \\\n  --census-definer \"$SBK_CENSUS_DEFINER\" --census-definition-sha256 \"$SBK_CENSUS_DEFINITION_SHA256\" \\\n  --output-directory \"$SQL_PLAN_OUTPUT\" \"${census_flags[@]}\"\n# Root/operator selects SOURCE_SQL_PLAN and SOURCE_SQL_PLAN_SHA from this receipt.\n: \"${SQL_OBSERVER:?reviewed verified native observer binary}\"\n: \"${SOURCE_SQL_PLAN:?selected actual public plan file}\"\n: \"${SOURCE_SQL_PLAN_SHA:?independently selected plan SHA256}\"\n: \"${SBK_SOURCE_DSN_FILE:?private delivered finite-source Go DSN file}\"\n\"$SQL_OBSERVER\" --mode tls --plan-file \"$SOURCE_SQL_PLAN\" --plan-sha256 \"$SOURCE_SQL_PLAN_SHA\" \\\n  --inventory-file \"$PUBLIC_INPUT_FILE\" --dsn-file \"$SBK_SOURCE_DSN_FILE\" --ca-file \"$SBK_PRODUCTION_MYSQL_CA_FILE\"\n\"$SQL_OBSERVER\" --mode source --plan-file \"$SOURCE_SQL_PLAN\" --plan-sha256 \"$SOURCE_SQL_PLAN_SHA\" \\\n  --inventory-file \"$PUBLIC_INPUT_FILE\" --dsn-file \"$SBK_SOURCE_DSN_FILE\" --ca-file \"$SBK_PRODUCTION_MYSQL_CA_FILE\"\n# Explicit mysql/3306/clawmanager are original selections to verify, not discovered replacement values.\n# If any change occurred, stop for original owner review and recollect fresh public inventory."
+    },
+    {
+      "phase": "Existing mysql client profiles only: source/installer/consumer identity and grants, no account creation",
+      "assumptions": "Optional diagnostic for DBA/operator after profiles already exist. Each is a private mysql client option file, NOT a Go DSN or worker JSON credential. Root supplies paths only. Connect from the actual intended network source; operator-host success does not prove future Pod user@host matching. No profile creation, copying credentials or account alteration is included.",
+      "bash": ": \"${SBK_MYSQL_TLS_SERVER_NAME:?selected Service DNS with verified SAN}\"\n: \"${SBK_SOURCE_CLIENT_CNF:?existing private source mysql-client profile path}\"\n: \"${SBK_INSTALLER_CLIENT_CNF:?existing private installer mysql-client profile path}\"\n: \"${SBK_CONSUMER_CLIENT_CNF:?existing private consumer mysql-client profile path}\"\nfor role in source installer consumer; do\n  case \"$role\" in\n    source) profile=\"$SBK_SOURCE_CLIENT_CNF\";;\n    installer) profile=\"$SBK_INSTALLER_CLIENT_CNF\";;\n    consumer) profile=\"$SBK_CONSUMER_CLIENT_CNF\";;\n  esac\n  printf 'role=%s\\n' \"$role\"\n  stat -c 'mode=%a type=%F' -- \"$profile\"\n  mysql --defaults-file=\"$profile\" --protocol=TCP --host=\"$SBK_MYSQL_TLS_SERVER_NAME\" --port=3306 \\\n    --ssl-mode=VERIFY_IDENTITY --ssl-ca=\"$SBK_PRODUCTION_MYSQL_CA_FILE\" --tls-version=TLSv1.3 \\\n    --database=clawmanager --batch --raw \\\n    --execute=\"SELECT CURRENT_USER(),CURRENT_ROLE(),DATABASE(),@@server_uuid,UTC_TIMESTAMP(6); SHOW SESSION STATUS WHERE Variable_name IN ('Ssl_version','Ssl_cipher'); SHOW GRANTS FOR CURRENT_USER;\"\ndone\n# SHOW GRANTS is safe metadata on this MySQL8 target; no mysql.user authentication_string selection.\n# Review exact current accounts/grants independently; do not use a successful DBA/root connection as their substitute."
+    },
+    {
+      "phase": "Existing verified DBA metadata connection only, no passwords or routine body output",
+      "assumptions": "Use only an already approved privately delivered mysql-client profile. This is a controlled DBA readback, not finite source proof; if the account cannot read the metadata, report unavailable rather than add grants automatically.",
+      "bash": ": \"${SBK_DBA_METADATA_CLIENT_CNF:?existing approved private mysql-client profile path}\"\nmysql --defaults-file=\"$SBK_DBA_METADATA_CLIENT_CNF\" --protocol=TCP \\\n  --host=\"$SBK_MYSQL_TLS_SERVER_NAME\" --port=3306 --database=clawmanager \\\n  --ssl-mode=VERIFY_IDENTITY --ssl-ca=\"$SBK_PRODUCTION_MYSQL_CA_FILE\" --tls-version=TLSv1.3 \\\n  --batch --raw --execute=\"SELECT @@version,@@server_uuid,DATABASE(),UTC_TIMESTAMP(6),@@tls_version,@@require_secure_transport,@@skip_name_resolve,@@partial_revokes; SELECT ROUTINE_NAME,DEFINER,SECURITY_TYPE,SQL_DATA_ACCESS,SHA2(ROUTINE_DEFINITION,256) AS routine_definition_sha256 FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME='system_backup_source_schema_census' AND ROUTINE_TYPE='PROCEDURE';\"\n# NULL/missing routine hash or missing row is NOT a valid census. Body-byte/hash compatibility is finally checked by existing source mode."
+    }
+  ],
+  "real_installation_prerequisites": [
+    "PKI change only if fresh readback proves the existing selected service PKI insufficient: DBA/owner must review actual controller UID, immutable TLS Secret/key refs, volume mount paths, service SAN, TLS13 support, leaf/intermediate/root chain and private-key ownership, client trust migration and single-replica restart impact. No unconditional new CA or replacing a current valid certificate. Do not enable global require_secure_transport before all current clients are reviewed.",
+    "Finite source account if missing: DBA creates via secure credential workflow with actual finite user@host and REQUIRE SSL, exact business-table SELECT plus SHOW_ROUTINE and EXECUTE on only system_backup_source_schema_census, no role/global data wildcard/control-table access/writes/GRANT OPTION. Use existing render-source-account proposal; review actual optional tables first, no blanket GRANT.",
+    "Census if missing: exact production SchemaCensusProjection, distinct locked non-login definer, required schema SELECT/SHOW VIEW/TRIGGER/EVENT plus SHOW_ROUTINE and narrow mysql.global_grants/mysql.role_edges metadata reads. Actual partial_revokes/body hash/definer/READS SQL DATA/SQL SECURITY DEFINER must match. These are explicit reviewed DBA changes, not migrations proven installed by fixture PASS.",
+    "Installer/consumer separation and finite exact permissions belong to A's actual original install/consume route. Installer authenticates real local administrator (private password file; internal bcrypt hash read is never a public diagnostic output), original Kubernetes subject and original enrollment. Consumer must receive its actual distinct SQL identity and reviewed original owner-table/shared-lock/control permissions; users current-admin read is SELECT of id/username/role/is_active/auth_provider, not permission to update administrator rows. Do not reuse source account, root, old deleted probe or guessed five/six-table grants.",
+    "All three account matching hosts must correspond to their actual intended network identities. skip_name_resolve was historically ON and deleted Pod IP 10.244.235.224 must not be reused as a future pin. Missing actual workload/SA/network route remains an installation prerequisite; no temporary Pod/port-forward/network-policy change is proposed.",
+    "DB grant CLI adds no new source permissions beyond the same existing finite validator/census. It needs actual original installer plan/enrollment/key/local-admin inputs plus original capture-database request and DatabaseSourceIssueDefinition. Root must deliver reviewed binary and private file paths, not ask user to paste passwords.",
+    "Worker credential file is exact canonical worker.DatabaseCredential JSON: username string, password byte slice encoded as base64 by Go JSON (not a literal password string and not the observer Go DSN). Source.CredentialFile/CredentialSHA256, Source.Issuer, empty original GrantSHA256 and create-only GrantFile in existing0700 dir must match. The public SQL plan is useful source data, not directly the signed DB issue definition or an owner authority.",
+    "Original production request must bind Database.Address to actual Service ClusterIP:port (headless exact namespace service DNS), Name, ServerUUID, RootCA bytes, TLSServerName, SourceScope reviewed-business-tables.v1 and actual SchemaCensus. IssueDefinition binds Account, Service/UID/Port and OriginalDefinitionSHA256; exact original window and current owner checks remain mandatory. Never invent a fake enabled config/task or re-sign a declaration on a diagnostic failure.",
+    "Consumer private-CA/TLS pin integration identified above must be resolved in an explicit reviewed source/PKI delivery change before bootstrap apply; neither mysql-client diagnostic nor source observer configures the Go consumer connector."
+  ],
+  "read_only_sources": [
+    {
+      "path": "docs/system-backup-d-field-tls-observer-20261028.md",
+      "sha256": "a62463cdb3b7c1fe4416b22125a9a20c4e4509268de8d77fc1494c414b08cd32"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-first-install-inputs-review-20261103.json",
+      "sha256": "d727279f99a4e9f964555bc1f547dab024c12a46a72881a7c6e130ae0c6f4c71"
+    },
+    {
+      "path": "scripts/system-backup-d-first-install-inputs.py",
+      "sha256": "dbd5f6af63a29318f2106a64b12c5bdf0cbe564af9b3cccd07e5e17fd967b3be"
+    },
+    {
+      "path": "scripts/system-backup-d-first-install-prepare.sh",
+      "sha256": "6f12e3d208e27fe5624403479755975df7ae8da8666b296ba64826676ad2f595"
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/main.go",
+      "sha256": "7d7541e324ba85ab383eacc35842c6088fc25f8bfe71bda6857c00442305dc5f"
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/proposal.go",
+      "sha256": "ea28d4dcdf2f8ded0d89fb5403236ae8bb2ec7a9d1ddfd5c3e143e7838b689d3"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/connections.go",
+      "sha256": "f40180dadc2ae711c060a31196e0ec38aeb470035ed046b718aa964e5ac230ad"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/bootstrap_deployment.go",
+      "sha256": "aed77469fdb52bb17a56ecc5dd3edf8be78afbaa479a30bc38cd6e2855d5f7de"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+      "sha256": "4089b451dd79b3a8510c425775c34a120ec473a6b969873fc22ec819064e088a"
+    }
+  ],
+  "validation": {
+    "source_only": true,
+    "executed": [
+      "bounded source/document reads",
+      "SHA256 metadata of the exact listed public sources",
+      "one read-only root chat compact snapshot"
+    ],
+    "not_executed": [
+      "test/build/go list/vet",
+      "SQL/MySQL/OpenSSL/Python/Bash commands above",
+      "SSH/remote/Kubernetes/provider calls",
+      "credential/private-key reads",
+      "Git operations"
+    ],
+    "test_build_artifacts_created": false,
+    "frozen_source_modified": false,
+    "cleanup": "No test/build products created. Root removes its own products after verification per AGENTS."
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "schema_version": "supervisor-source-minio-native-review.v1",
+  "reviewed_at": "2026-11-02T21:54:09.954103+00:00",
+  "baseline_commit": "b9c1d23a4adfb48d233a22c12416e7f9fa11e2be",
+  "decision": "SOURCE_INTEGRATION_ONLY; NO_GO_FOR_FIELD_DEPLOYMENT_OR_FULL_PAGE_ACCEPTANCE",
+  "acceptance_scope": {
+    "real_page_nonempty_complete_requested_backup": true,
+    "source_business_original_state_restored_required": true,
+    "same_task_formal_artifact_independent_full_readback_catalog_and_succeeded_required": true,
+    "isolated_restore": false,
+    "disaster_recovery_qualified": false
+  },
+  "source_files": {
+    "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go": "78eb14423f6c1020d7c452ec337d5a6e7920cac44d22c7eacdf44aa604047ab1",
+    "backend/internal/systembackupexecution/production_source_protocol_tls_test.go": "9bb6cb119e7d5b0e1eb2dbc6a94b0d04a77add558758b22f86cbc3b7e437be02",
+    "backend/internal/systembackupexecution/production_source_observation.go": "458b58bb80cdada31d2dc85432e76b9952a447e9b261ac3abbf2c342a138806b",
+    "backend/internal/systembackupexecution/production_source_observation_metadata.go": "7bc5cf1f3549234c38b71838c4a726437dc643ef1bc9af797d5163304a5e7252",
+    "backend/internal/systembackupexecution/production_source_observation_diagnostics.go": "29cb90e2cc4d81b139f06e52f96442f35c5aedfe7ab1f5f17fba74863d2fc694",
+    "backend/internal/systembackupexecution/production_source_observation_diagnostics_test.go": "9137b56fa3c0c870496bbb7f0deeda124bbe67ca42b09560289d96f18c93353d",
+    "docs/evidence/system-backup-d-native-source-tls-boundary-fix-20261103.json": "dc4f192ff39847b50a9c8cbff43e186b511411de372a83ca0a6a2385c8cfc115",
+    "backend/internal/systembackupminioauthority/codec.go": "27d35b02dd8c5246a927ff4ab35d45488da4aa623ab5d46710be7c4c59a54667",
+    "backend/internal/systembackupminioauthority/sql_read.go": "d442918471b78f2c90ce724ee44d5f4dea59f6b4ce50a5b589607477d4cfb751",
+    "backend/internal/systembackupminioauthority/codec_test.go": "3f54d7b8e71f9574eee2d5a5b11983e7e8e7fcc585cee56232458c5fe3173b1c",
+    "backend/internal/systembackupminioauthority/sql_read_test.go": "6ba305391b991dd3e3b179b322657f2898267a18451dd15cc6bc27477e3b1cd5",
+    "backend/internal/systembackupminioauthority/contract.go": "44fa114a4cc3e3a489b5246e97339673c44d32e3f84d42db5b765cc75c9daa8b",
+    "backend/internal/systembackupminioauthority/sql_contract.go": "d71033fdf560af702e2ba16c6f4701be86b9bd484c4bf060e80fe262c2e9aba1",
+    "backend/internal/systembackupminioauthority/record_bytes.go": "5b13b55fe90abe4f70322dbc2589905e7783891937406eaa7dc2a68dca4235cb",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_inputs.go": "dc47cc9686426f8b8bebad468d8adf7752864d7d1647930c2a36dc9a62d7723c",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_issue.go": "44213c90e8c86d06360de1c89c5f33385167c065a1462d3369dfb4b444047a92",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_store.go": "21b3d402c207f6379e73e673e9664886e39b8b6b341b321caff2067ae4525ef9",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_model_test.go": "601f96c5a1d84913093ae366eaa35585f23542b5e79d66c9c4f7352350cc3a9d",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_fixture_test.go": "c841fc29e1c6ef21a28074e85719c57797d6dce1b8ff8c3664ea312a1b6dc0ce",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_lifecycle_test.go": "5a2a627a3e749d857f586f5994d2064242e0b855f4a3ca0f85088bf10db15f00",
+    "backend/internal/systembackupminioauthority/candidate_clock.go": "bae0dc2ddb332840b4131a74e08e54843277fb2a1a08848b620d3ba027d21ed0",
+    "backend/internal/systembackupminioauthority/candidate_clock_test.go": "5ba68d0005d978e0d4cced3bcf6a782ac919076dad9d8ef70631b63f24f07727",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_native_fixture_test.go": "f5883fe81fa910b0ef4ad8d5f5c5b374666246e9af688f48459aecf62c74b05e",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_native_monitor_test.go": "a851bd772bb9bd63d05371bcb547d4d632a331e13f607c6d901509de3bad7b24",
+    "backend/internal/systembackupinstallationowner/install/minio_sql_native_test.go": "94dfecb679114c1ba225571dd5a117922e37023c2a60aed134b511a45372a230",
+    "docs/evidence/system-backup-d-minio-sql-domain-supersede-20261103.json": "c20ed4044cc8803c69fd9c0efb40c5d7cb8366a1d640a726112421e429c15dc0",
+    "backend/internal/systembackupexecution/production_source_observation_inventory.go": "966062cfec2ac0ccf6a9722ff3c110dbbb26e2075a122b3775630d51361cf108",
+    "backend/internal/systembackupexecution/production_source_observation_detail.go": "9ce778218ffbfc16d7697ca7b09281e360777d4b74b4c1d91709bb760c79ec54",
+    "backend/internal/systembackupexecution/production_source_observation_detail_test.go": "6a9069b0f33e9bab8a16fbff179ea94ce98d008f8bed05d51549ad1393fb28fb",
+    "backend/internal/systembackupexecution/production_source_observation_clock.go": "75d9a7b7a3c2a54ba34aeab0c2510853d006120c1affc7094c03a8ca3d8edc38",
+    "backend/internal/systembackupexecution/production_source_observation_clock_test.go": "a196360f9fb2d83c542c4a6a3089429ce4747b37cc4c2d5d1b9eebd1318ee697",
+    "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go": "df61c0a045b337a30602fb9a3ad8d704d7b7d0891e3f3c6ea963d9c0d4f1c676",
+    "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go": "d3bbcaaa06ba25bfcbc6f9b439c8a7bd0b187cda0c146544603de44fc35d65ec",
+    "backend/internal/systembackupexecution/production_source_protocol_collections_mysql_test.go": "e7538406be15f2f91ab2e9f9aeed653cb22cdc4cafd14933c5bc966eec08e0d3"
+  },
+  "frozen_manifests": {
+    "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json": "09e0da20de67d4032816798b681befde8580c25686ccf5876aadee51eee92771",
+    "docs/evidence/system-backup-c-minio-select-only-record-source-20261103.json": "364d1372f647357ff6ccf9c6d8e4def28230576b8d0002570fe8c88291169a62",
+    "docs/evidence/system-backup-c-minio-sql-owner-lifecycle-source-20261103.json": "e3cde38e6c42884d9853be6cb5f1691d7dd86a82dad8048892cc108c5dabf5e1",
+    "docs/evidence/system-backup-c-minio-sql-native-regression-source-20261103.json": "f8a8c72a807b11fc112010b391298784b90eb172b51c3b8c134fee388e8f5c08",
+    "docs/evidence/system-backup-d-source-tls-interface-supersede-pins-20261103.json": "8c6d8af145ea76abe235e65e3fdd1de754e668effce8ca64fee9359fbacb7f72",
+    "docs/evidence/system-backup-d-source-inventory-detail-diagnostics-pins-20261103.json": "4645477f4b48cadbaedf9c2dd14872baba5092b7368b5fc37bd8d90eb1de8cd1",
+    "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json": "44517fa60da472ee39e027ef73b223d563ec340c3b995a600988bdc6fa55c082",
+    "docs/evidence/system-backup-c-minio-native-monitor-prepared-supersede-source-20261103.json": "c4589a911fc6c8f2b9acb0f991709e1ec06a4d505217855a3b06c00fc629559a",
+    "docs/evidence/system-backup-d-source-protocol-migration-seed-supersede-pins-20261103.json": "8f31fc7105aa2ef1db41587832ec5ebe6c0b5afd7325f8849b4ecfce3b1fb382"
+  },
+  "additional_documents": {
+    "docs/evidence/system-backup-c-minio-three-table-sql-contract-20261103.json": "553990394558b3d72dac261a40fa195e8b6a1248ecf3ca50824487ba83525f57",
+    "docs/evidence/system-backup-c-minio-bootstrap-authority-source-contract-20261103.json": "bb7176b9437b844b027e2149710c7bb2ed44a8266b2323a98b28c9f7ed99b907",
+    "docs/evidence/system-backup-d-morning-production-mysql-gap-review-20261103.json": "487fffb520ac44ca774c5458709a688c108c1c0f90a0f893d195cfe1c52a7c2d",
+    "docs/system-backup-supervisor-mysql-public-cert-20261103.md": "c145ea2134fdb7c8990ba23e50aea7fd450d92c12c8f9db17e58db85614f6741",
+    "docs/system-backup-supervisor-next-remote-20261103.md": "28543cd4e90e81c5148b8a061ba025eef890efbd5dfffa24060b50cf6b3a0e65"
+  },
+  "explicit_supersedes": [
+    {
+      "path": "backend/internal/systembackupminioauthority/sql_read.go",
+      "old": "a69f0b7f206e9bde2e537fc389fceed25d6e00e5fb53e20a7dc5ee03d19259f8",
+      "new": "d442918471b78f2c90ce724ee44d5f4dea59f6b4ce50a5b589607477d4cfb751"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_tls_test.go",
+      "old": "f008a584bc2a55cc2a2c13017dc2477d701463c6ab432f5b37d22093c6168066",
+      "new": "9bb6cb119e7d5b0e1eb2dbc6a94b0d04a77add558758b22f86cbc3b7e437be02",
+      "reason": "one-line actual native client interface correction after compile failure"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "old": "27c6eba8c6bd573ffe2d85808a82a63027deeb7f69f08406351f8d0df8bd4082",
+      "new": "7e15fc2c60d66045a5d0b068499fc8e1aabd3b5e2aa5f163cd19670accbb4c7e",
+      "manifest": "docs/evidence/system-backup-d-source-inventory-detail-diagnostics-pins-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_inventory.go",
+      "old": "f022c20f1fcdf87a401e9c62fb7d5bfead29c6f1374039c992e068bcf85276fc",
+      "new": "966062cfec2ac0ccf6a9722ff3c110dbbb26e2075a122b3775630d51361cf108",
+      "manifest": "docs/evidence/system-backup-d-source-inventory-detail-diagnostics-pins-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "old": "7e15fc2c60d66045a5d0b068499fc8e1aabd3b5e2aa5f163cd19670accbb4c7e",
+      "new": "458b58bb80cdada31d2dc85432e76b9952a447e9b261ac3abbf2c342a138806b",
+      "manifest": "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/minio_sql_native_monitor_test.go",
+      "old": "db0eff11f4b6a7f2919d4a6c1c16bd0f1416d3c03f9fdfe5f70f324761228c3e",
+      "new": "a851bd772bb9bd63d05371bcb547d4d632a331e13f607c6d901509de3bad7b24",
+      "manifest": "docs/evidence/system-backup-c-minio-native-monitor-prepared-supersede-source-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_base_mysql_test.go",
+      "old": "01e15134efbfc9cd52f67a7dda1abd6fb5c59b40bd731c598ca34d2c97a11eb1",
+      "new": "df61c0a045b337a30602fb9a3ad8d704d7b7d0891e3f3c6ea963d9c0d4f1c676",
+      "reason": "fresh owned fixture exact migration-seed construction and independent full SQL keysets; production source filters unchanged"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_observation_mysql_test.go",
+      "old": "a3f69a1969739aace65bff20c79357837e72e87c8e015fa0b214eded4cf82759",
+      "new": "d3bbcaaa06ba25bfcbc6f9b439c8a7bd0b187cda0c146544603de44fc35d65ec",
+      "reason": "fresh owned fixture exact migration-seed construction and independent full SQL keysets; production source filters unchanged"
+    }
+  ],
+  "changes": [
+    "Canonical signed seven-record MinIO authority DAG, SELECT-only FOR SHARE in the original guarded SQL transaction, controlled SampleTime with failure/regression latch.",
+    "Original installer seven-row atomic install, exact terminal revoke CAS, independent exact tuple resolve after unknown commit; external probes and signing outside SQL locks.",
+    "Source SQL UTC timestamp decoder supports raw MySQL UTC6 bytes and parsed UTC time without changing worker ParseTime=false, authorization windows, or source filters.",
+    "Closed enum-only source diagnostics preserve original public errors and checks; actual runtime TLS test uses original hostname SAN with verification enabled.",
+    "Native monitor now observes actual prepared-statement first-row delivery; actual shared-lock/revoke performance_schema assertions remain intact.",
+    "Source fixture asserts and removes only exact known migration seed rows in its newly owned verified schema before declaration; independent full EOF keysets cover twelve business tables. Production source filters and count assertions remain unchanged.",
+    "Added complete read-only field public MySQL certificate commands and linked them before unchanged R8 transfer/run commands."
+  ],
+  "verification": {
+    "component_distinct_roots_passed": 16,
+    "component_results": {
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLCandidateUsesOriginalControlledSampleTimeOnly": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLCandidateClockRegressionAndFailureRemainLatched": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLRecordSetExactSignedSevenRecordDAG": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLRecordSetRejectsOriginalPinDomainAndReferenceSubstitution": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLBundleExactInitialAndRevokeCASShape": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLConsumerUsesSelectOnlySharedOriginalRowsInOrder": "pass",
+      "clawreef/internal/systembackupminioauthority::TestMinIOSQLCurrentRejectsProjectionStateIdentityAndWindowDrift": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalMinIOSQLSevenRowInstallResolveAndTerminalRevokeComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalMinIOSQLInstallAndRevokeMidBatchRollbackComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalMinIOSQLUnknownCommitIndependentTupleResolveComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalMinIOSQLRejectsForeignKeyAndRetainsExpiredRevokeWindowsComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestOriginalMinIOSQLRejectsOriginalWindowAndPostCommitSourceTailComponent": "pass",
+      "clawreef/internal/systembackupexecution::TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels": "pass",
+      "clawreef/internal/systembackupexecution::TestSourceProtocolTLSUsesActualPinnedRuntimeHostname": "pass",
+      "clawreef/internal/systembackupexecution::TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision": "pass",
+      "clawreef/internal/systembackupexecution::TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary": "pass"
+    },
+    "native_distinct_roots_passed": 6,
+    "native_results": {
+      "TestMinIOSQLOwnerNativeTLSSevenRowsSelectOnlyAndTerminalCAS": "pass",
+      "TestMinIOSQLOwnerNativeTLSAtomicRollbackAndUnknownResolve": "pass",
+      "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder": "pass",
+      "TestSourceDependenciesIndependentAllRunningTLSMySQL": "pass",
+      "TestSourceDependenciesIndependentEmptyTLSMySQL": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL": "pass"
+    },
+    "native_subcases_passed": 10,
+    "native_subcase_results": {
+      "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder/head": "pass",
+      "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder/catalog_append": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/missing-participant": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/unknown-controller": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/metadata-permission": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/metadata-rv": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/writer-token": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/native-permission": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/native-generation": "pass",
+      "TestSourceDependenciesIndependentOriginalDriftTLSMySQL/final-metadata": "pass"
+    },
+    "fixture_attempts_in_execution_order": {
+      "b-mysql-53abd9a041b048ef9a2dff87c7e53154": {
+        "status": "FAILED",
+        "go_json_sha256": "5653034764f3e83df45de523b61097a236b21e5d435908bd79b2f786e39fdc60",
+        "result_sha256": "80158f7d637e388058a895575e0c044e95c18a23c3270ab12a0f51b2669e3e45",
+        "root_results": {
+          "TestSourceDependenciesIndependentAllRunningTLSMySQL": "fail",
+          "TestSourceDependenciesIndependentEmptyTLSMySQL": "fail",
+          "TestSourceDependenciesIndependentOriginalDriftTLSMySQL": "fail"
+        },
+        "owned_test_assets_removed": true
+      },
+      "b-mysql-ab5bc620b0a74a09a9b641b92c98e837": {
+        "status": "FAILED",
+        "go_json_sha256": "54dbe7b58e4b5f57ebc50cf2b8d17c35cd520684760ed32d351b2c5b4ad08b03",
+        "result_sha256": "e98f2ee461667d18de02d63149b63393a8246500697832cc018015f4e823dd58",
+        "root_results": {
+          "TestOriginalMinIOSQLSevenRowInstallResolveAndTerminalRevokeComponent": "pass",
+          "TestOriginalMinIOSQLInstallAndRevokeMidBatchRollbackComponent": "pass",
+          "TestOriginalMinIOSQLUnknownCommitIndependentTupleResolveComponent": "pass",
+          "TestOriginalMinIOSQLRejectsForeignKeyAndRetainsExpiredRevokeWindowsComponent": "pass",
+          "TestOriginalMinIOSQLRejectsOriginalWindowAndPostCommitSourceTailComponent": "pass",
+          "TestMinIOSQLOwnerNativeTLSSevenRowsSelectOnlyAndTerminalCAS": "pass",
+          "TestMinIOSQLOwnerNativeTLSAtomicRollbackAndUnknownResolve": "pass",
+          "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder": "fail"
+        },
+        "owned_test_assets_removed": true
+      },
+      "b-mysql-277ddcd4da6440f8afbf0ed5f4ba5853": {
+        "status": "PASSED_LOCAL_FIXTURE",
+        "go_json_sha256": "c34b1b8dbd5395e58751afe257d021e4a8a3b05bfd6e7217881dd51add8e84a6",
+        "result_sha256": "768c4d5c48c03c878a0a5cbea2cd45d035265b94f930e6b0ad79a92266e39f30",
+        "root_results": {
+          "TestMinIOSQLOwnerNativeTLSSevenRowsSelectOnlyAndTerminalCAS": "pass",
+          "TestMinIOSQLOwnerNativeTLSAtomicRollbackAndUnknownResolve": "pass",
+          "TestMinIOSQLOwnerNativeTLSSharedLocksBlockRevokeInOrder": "pass"
+        },
+        "owned_test_assets_removed": true
+      },
+      "b-mysql-b936e606df7545b98dc7b91e58c59096": {
+        "status": "FAILED",
+        "go_json_sha256": "3a56ab96ccb274dd1d0b50bb2906eab0d7a44993def7e4c90699bc365d7c4931",
+        "result_sha256": "db052e1bc803b87fe107d56b01acaa841a8dbcd33fa1e8c4bfff6bab05472ea4",
+        "root_results": {
+          "TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision": "pass",
+          "TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary": "pass",
+          "TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels": "pass",
+          "TestSourceDependenciesIndependentAllRunningTLSMySQL": "fail",
+          "TestSourceDependenciesIndependentEmptyTLSMySQL": "fail",
+          "TestSourceDependenciesIndependentOriginalDriftTLSMySQL": "pass",
+          "TestSourceProtocolTLSUsesActualPinnedRuntimeHostname": "pass"
+        },
+        "owned_test_assets_removed": true
+      },
+      "b-mysql-cd507e11eef5406aa3e71695f3a9e79c": {
+        "status": "PASSED_LOCAL_FIXTURE",
+        "go_json_sha256": "1d96ebb8775a3b5bf4b8d957c43fd85450e288a71fdbfb748bc38e6685545228",
+        "result_sha256": "b2ba36ce8f8b0a499340b97f744d656a0c2d74e947c5ce0d8e1db0bb0cb249c5",
+        "root_results": {
+          "TestSourceDependenciesIndependentAllRunningTLSMySQL": "pass",
+          "TestSourceDependenciesIndependentEmptyTLSMySQL": "pass",
+          "TestSourceDependenciesIndependentOriginalDriftTLSMySQL": "pass"
+        },
+        "owned_test_assets_removed": true
+      }
+    },
+    "earlier_failures_retained": [
+      "Initial D compile failed on wrong native client interface assertion; corrected assertion then TLS/diagnostic roots passed.",
+      "D native r1 failed source inventory timestamp scan with raw driver; canonical decoder then inventory advanced.",
+      "C native r1 passed two roots but lock monitor missed prepared statement row events; actual prepared monitor r2 passed all three.",
+      "D native r2 passed drift root and eight faults but nonempty/empty assertions exposed default admin and skill-tag migration seed assumptions; exact owned fixture seed construction r3 passed all three."
+    ],
+    "source_fixture_migrations_per_owned_schema": 176,
+    "native_environment": "Local owned MySQL 8.4.8 Linux amd64, SAN verification and TLS1.3; no host ports or field access.",
+    "full_linux_server_build": {
+      "exit": 0,
+      "sha256": "3897e3a5ca3a34db0d0201c79d6c75a331ce0f1d41dda365cc50c5aa796b577f",
+      "format": "ELF64 little-endian AMD64",
+      "scope": "31-file snapshot contains final production code; final three additions change only fixture tests",
+      "binary_deleted_after_batch": true
+    },
+    "public_certificate_bash_syntax": "PASS via Git Bash -n; not executed on field"
+  },
+  "proof_limits_and_remaining_dependencies": [
+    "Actual MySQL SQL grants, locks, rollback, current-row checks, all migrations and full table-key readback were executed locally. Kube/runtime/Redis/object/MinIO protocol inputs in these tests remain controlled fixtures.",
+    "No actual field MinIO permissions/version qualification, original capture performance result, physical writer stop/recovery, formal backup artifact, catalog publication or task succeeded evidence in this batch.",
+    "New MinIO terminal/protocol owner and concrete-owner regressions, A20/host composition/functional registry/signing resource owners, D mapper/database issuer/direct main are separate source batches awaiting independent review and execution; they are not included or credited as installed.",
+    "First-install complete resource assembly and production wiring remain incomplete. Production MySQL peer TLS/SAN and least-privilege account qualifications remain unverified.",
+    "R8 remains pending user execution after 2026-11-03 08:30 Asia/Shanghai; its four published hashes and payload are unchanged. Old supplemental eleven-test packet remains withdrawn and deleted.",
+    "No application image deployment, real page task, isolated restore or disaster-recovery qualification was performed."
+  ],
+  "cleanup": {
+    "source-minio-windows-cleanup.json": {
+      "sha256": "0f9e24ad6057ae4dc1fdb68bb8e7ce62b8e9712a794cad6b518e5182a3736a5f",
+      "receipt": {
+        "windows_test_sessions": "60963 and 59716 terminal; native tag compile93081 terminal",
+        "binary_sha256": "51d6c23a361a3e58c8bcbe714f6397110e6d880b5042352e0b2c2958f2658511",
+        "compile_scope": "Windows native tag type-check only; no SQL execution",
+        "cleanup": "private Windows binary/cache/tmp removed; ongoing Linux cache/work volume preserved"
+      }
+    },
+    "source-minio-docker-cleanup.json": {
+      "sha256": "5cdfa000493d188a4d6b7780a44cc04a89a1ff083fa7d2452af69b7c5398dcf7",
+      "receipt": {
+        "owned_containers_absent": true,
+        "recorded_at": "2026-11-02T21:51:22.7511751Z",
+        "stop_exit": 0,
+        "field_access_performed": false,
+        "preexisting_go_image_and_buildkit_retained": true,
+        "owner": "supervisor-sequence-sql-review-20261103",
+        "desktop_prior_off_restored": true,
+        "introduced_mysql_image_removed": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+        "owned_build_volume_removed": true
+      }
+    },
+    "source-minio-worktree-cleanup.json": {
+      "sha256": "70e250f5f743e8d0ee3595637957332c0bd0e6e3e48d46caba25c10376ffac10",
+      "receipt": {
+        "owned_linux_cache_and_tmp_and_binaries_removed": true,
+        "frozen_manifest_hashes_verified": 9,
+        "final_source_hashes_verified": 34,
+        "root": "D:\\codex-backup-sequence-review-54a806fe656a45f8963fd671782afd5a",
+        "owner": "supervisor-sequence-sql-review-20261103",
+        "retained_text_evidence": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab",
+        "recorded_at": "2026-11-02T21:52:21.8050477Z",
+        "owned_detached_worktree_removed": true,
+        "user_files_and_pending_R8_retained": true
+      }
+    }
+  },
+  "retained_evidence_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab",
+  "user_field_access": "User connects and tests; root made no SSH/SCP/field calls in this batch."
+}

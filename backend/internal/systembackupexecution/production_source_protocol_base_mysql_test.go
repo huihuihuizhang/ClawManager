@@ -136,6 +136,10 @@ func newTasklessProtocolBase(t *testing.T, scenario *sourceProtocolScenario) *dO
 	if err = appdb.ApplyPinnedMigrations(migrate, f.db, appdb.MigrationTarget{ServerUUID: f.server, Database: f.database, CatalogSHA256: catalog.Hash}); err != nil {
 		t.Fatal("original full migration runner", err)
 	}
+	// Full migrations create a default login/quota and Skill tags. Establish
+	// this test-owned empty source BEFORE declaring/signing the independent
+	// scenario; never filter those rows out of an observed source inventory.
+	prepareSourceProtocolOriginalCollections(ctx, t, f)
 	installation := "installation_d_six_" + run
 	f.profile = deployment.ExecutionProfile{InstallationID: installation, Revision: "d-original-six-r1", Orchestrator: "kubernetes", Profile: "cluster", TargetClass: "dr-ready-external", TargetRisks: []string{}, FailureDomain: "local-protocol-fixture", RestoreTargetRef: "isolated-original-target", RestoreTargetHash: strings.Repeat("f", 64)}
 	profileRaw, profileSHA, err := f.profile.CanonicalIdentity()
