@@ -1,0 +1,27 @@
+{
+  "schema_version": "supervisor-v2-config-observe-review.v1",
+  "source_commit_before_addition": "74ea1c940424e216c57dc53bd9a613b49f8ccfcc",
+  "script": "scripts/system-backup-d-v2-config-observe.py",
+  "script_sha256": "765b22dddc7d4545e4a4d74f47a983c0fc02d37c13fdf512b75f11f25872c53c",
+  "test_sha256": "be16d89b46c2aeea8ba963b43bd86339f283f1c7d7afaa1fc5708881819448ff",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "context": "kubernetes-admin@kubernetes",
+  "independent_mock_test": {
+    "cases": 15,
+    "exit_code": 0,
+    "elapsed_seconds": 0.03,
+    "log_sha256": "c32c66994a16cd5eb39959eb391b5b87af06132404dd8d88978e88ef13837e3e",
+    "temporary_source_tree_removed": true
+  },
+  "observations_available": "Only metadata/byte consistency/candidate counts after exact Deployment/ReplicaSet/Pod/container identity checks; absent tables/columns reported without dependent SELECTs",
+  "writes": false,
+  "canonical_or_signed_body_export": false,
+  "credential_export": false,
+  "real_sql_executed": false,
+  "cluster_connected": false,
+  "production_image_updated": false,
+  "authenticated_config": false,
+  "full_page_acceptance": false,
+  "next_action": "User uploads single frozen Python and returns read-only report; review whether existing admitted config is available or first installation wiring is required"
+}
