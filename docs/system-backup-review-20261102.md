@@ -34,3 +34,11 @@ go test -mod=readonly -p 2 ./internal/systembackupkekadapter ./internal/systemba
 D 的 Bash 交接已改为独占工具目录，仅要求真实 repo 和登录态两个路径，不触碰已有 node_modules；现场证书沿浏览器实际信任链。审核者对三个 Bash 代码块执行 `bash --noprofile --norc -n` 通过，未执行安装、登录或点击，语法检查临时目录已删除。
 
 用户已有 `docs/deployment_cn.md` 修改及 `.worktrees/` 保留，不纳入本轮提交。
+
+## 第二轮审核中的接点
+
+A 已核对现有 `PublicationSignersForTask → PublicationSigningKey → PreparePublicationRecord → Stage → SignCommitted`，无需新建签名框架。精确 payload/当前授权/唯一发送边界见 `system-backup-a-publication-signing-consumer-20261102.md`；legacy recovery DTO 与公共 v12 不兼容，不能替代。该文档仅静态核对，不代表正式接受/目录已经发布。
+
+D 已核对根 Dockerfile 的 `app` target 同时包含 App 和 v2 controller、`backup-worker` 独立输出；App 默认启动不会自动运行 v2 controller。`system-backup-d-release-package-20261102.md` 目前只准备同源 OCI 候选构建与真实安装材料接点，不是完整可启用清单。审核者对两段 Bash 执行 `bash -n` 通过，并原样提取其清理函数，用失败的假 Docker 命令验证：builder 删除失败仍删除本轮 context；原构建退出 7 保持 7；构建成功但清理失败返回 1。测试未连接 Docker 或远端，临时目录已清理。
+
+C 新增的实际 SQL 本地清理 producer 正在审核和准备独占 SAN/TLS MySQL 回归，尚未批准提交。原 native context 分段计时接线也已在工作区应用，待本轮统一编译验证；不能复用首轮的回归结果证明新代码。
