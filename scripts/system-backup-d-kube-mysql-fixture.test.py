@@ -45,7 +45,8 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(self.root.parent, ROOT)
         args = SimpleNamespace(bundle=self.root / "bundle", scratch=self.root, logs=self.root / "logs",
                                context="mock-context", mysql_image=fixture.MYSQL_IMAGE,
-                               port=0, cleanup_timeout=1)
+                               port=0, cleanup_timeout=1, startup_only=False,
+                               include_init_logs=False, include_container_logs=False)
         self.f = fixture.Fixture(args)
         self.resources = {}
         self.calls = []
@@ -54,6 +55,7 @@ class FixtureTests(unittest.TestCase):
         self.forward = Process()
         self.runner = Process(result=7)
         self.version = "8.0.36"
+        self.events = []
 
     def tearDown(self):
         self.temp.cleanup()
@@ -70,6 +72,11 @@ class FixtureTests(unittest.TestCase):
             self.assertEqual(data["preconditions"], {"uid": NS_UID})
             self.ns = None
             return b"{}"
+        if args[0] == "get" and any("/events?" in arg for arg in args):
+            self.assertIn("involvedObject.uid%3D" + POD_UID, args[1])
+            self.assertIn("limit=24", args[1])
+            self.assertLessEqual(timeout, 10)
+            return json.dumps({"items": self.events}).encode()
         if "create" in args:
             self.resources[data["kind"]] = data
             if data["kind"] == "Pod":
@@ -85,9 +92,17 @@ class FixtureTests(unittest.TestCase):
             self.assertIn("--timeout=240s", args)
             return b""
         self.assertFalse(stream)
+        if "logs" in args:
+            self.assertIn(args[args.index("-c") + 1], ("tls", "mysql"))
+            self.assertIn("--tail=40", args)
+            self.assertIn("--limit-bytes=4096", args)
+            return ("startup error " + self.f.password + " " + fixture.base64.b64encode(self.f.password.encode()).decode()
+                    + "\n-----BEGIN PRIVATE KEY-----\nPRIVATE VALUE\n-----END PRIVATE KEY-----\nSELECT secret FROM fixture;\n").encode()
         if "exec" in args:
             if "cat" in args: return b"-----BEGIN CERTIFICATE-----\nLOCAL MOCK CA\n-----END CERTIFICATE-----\n"
-            return (self.version + "\t" + NS_UID + "\tTLSv1.3\t1\n").encode()
+            self.assertIn("--ssl-mode=VERIFY_IDENTITY", args[-1])
+            self.assertIn("--protocol=TCP", args[-1])
+            return (self.version + "\t" + NS_UID + "\tTLSv1.3\t1\nSsl_cipher\tTLS_AES_256_GCM_SHA384\nSsl_version\tTLSv1.3\n").encode()
         self.fail("unhandled local mock command")
 
     def popen(self, args, **kwargs):
@@ -196,6 +211,100 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(self.run_fixture(), 7)
         self.assertEqual(self.f.server_version, "8.4.8")
         with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(7), 7)
+
+    def parse_args(self, extra):
+        argv = ["fixture", "--scratch", str(self.root), "--logs", str(self.root / "parse-logs")] + extra
+        with patch.object(fixture.sys, "argv", argv), patch.object(fixture.sys, "platform", "linux"), \
+                patch.object(fixture.os, "uname", return_value=SimpleNamespace(machine="x86_64"), create=True), \
+                patch.object(fixture.shutil, "which", side_effect=lambda tool: tool if tool in ("bash", "kubectl") else None), \
+                patch.object(fixture.subprocess, "run") as run:
+            result = fixture.parse()
+            run.assert_not_called()
+            return result
+
+    def test_startup_only_parse_needs_no_bundle_checksum_or_elf(self):
+        args = self.parse_args(["--startup-only", "--include-container-logs"])
+        self.assertIsNone(args.bundle)
+        self.assertTrue(args.startup_only)
+        self.assertTrue(args.include_container_logs)
+
+    def test_normal_mode_still_rejects_missing_bundle(self):
+        argv = ["fixture", "--scratch", str(self.root), "--logs", str(self.root / "parse-logs")]
+        with patch.object(fixture.sys, "argv", argv), patch.object(fixture.sys, "platform", "linux"), \
+                patch.object(fixture.os, "uname", return_value=SimpleNamespace(machine="x86_64"), create=True), \
+                patch.object(fixture.shutil, "which", return_value="mock-tool"), patch.object(fixture.subprocess, "run") as run:
+            with self.assertRaises(fixture.Refused): fixture.parse()
+            run.assert_not_called()
+
+    def test_startup_only_never_launches_native_or_creates_credentials(self):
+        self.f.args.startup_only = True
+        self.f.args.bundle = None
+        self.assertEqual(self.run_fixture(), 0)
+        self.assertIsNone(self.f.runner)
+        self.assertFalse((self.f.work / "credentials.json").exists())
+        self.assertEqual(self.f.session_tls["Ssl_version"], "TLSv1.3")
+        with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(0), 0)
+        report = json.loads((self.f.logs / "fixture.json").read_text())
+        self.assertFalse(report["native_started"])
+        self.assertEqual(report["mode"], "startup-only")
+        self.assertIsNone(self.ns)
+        self.assertFalse(self.f.work.exists())
+        self.assertFalse(any("logs" in args for args, _ in self.calls))
+
+    def test_ready_failure_collects_owned_status_events_and_redacted_logs_before_delete(self):
+        self.f.args.startup_only = True
+        self.f.args.include_container_logs = True
+        original = self.f.command
+        def fail_ready(args, data=None, timeout=45, stream=False):
+            if "wait" in args:
+                self.resources["Pod"]["status"].update({"phase": "Failed", "reason": "Error",
+                    "conditions": [{"type": "Ready", "status": "False", "reason": "ContainersNotReady"}]})
+                self.resources["Pod"]["status"]["initContainerStatuses"][0]["state"] = {
+                    "terminated": {"reason": "Error", "exitCode": 1, "message": "failed " + self.f.password}}
+                self.events = [{"involvedObject": {"uid": POD_UID, "name": "mysql", "kind": "Pod", "namespace": self.f.namespace},
+                                "reason": "Failed", "message": "owned " + self.f.password},
+                               {"involvedObject": {"uid": NS_UID}, "message": "foreign event"}]
+                raise fixture.Refused()
+            return original(args, data, timeout, stream)
+        self.f.command = fail_ready
+        with self.assertRaises(fixture.Refused): self.run_fixture()
+        password = self.f.password
+        with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(self.f.finish(1), 1)
+        text = (self.f.logs / "startup-diagnostics.json").read_text()
+        summary = json.loads(text)
+        self.assertNotIn(password, text)
+        self.assertNotIn(fixture.base64.b64encode(password.encode()).decode(), text)
+        self.assertNotIn("PRIVATE VALUE", text)
+        self.assertNotIn("SELECT secret", text)
+        self.assertNotIn("foreign event", text)
+        self.assertEqual(summary["pod"]["init_containers"][0]["current"]["exitCode"], 1)
+        self.assertEqual(set(summary["log_tails"]), {"tls", "mysql"})
+        self.assertEqual(len(summary["events"]), 1)
+        delete_index = next(i for i, (args, _) in enumerate(self.calls) if args[0] == "delete")
+        self.assertTrue(all(i < delete_index for i, (args, _) in enumerate(self.calls) if "logs" in args or any("/events?" in a for a in args)))
+        self.assertIsNone(self.f.runner)
+        self.assertIsNone(self.ns)
+        self.assertFalse(self.f.work.exists())
+
+    def test_diagnostic_failure_preserves_original_failure_and_still_cleans(self):
+        self.assertEqual(self.run_fixture(), 7)
+        with patch.object(self.f, "collect_startup_diagnostics", side_effect=RuntimeError("mock")), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.f.finish(7), 7)
+        self.assertIsNone(self.ns)
+        self.assertFalse(self.f.work.exists())
+        self.assertEqual(json.loads((self.f.logs / "fixture.json").read_text())["diagnostics_exit_code"], 1)
+
+    def test_diagnostic_failure_does_not_replace_success_or_cleanup_result(self):
+        self.f.args.startup_only = True
+        self.assertEqual(self.run_fixture(), 0)
+        with patch.object(self.f, "collect_startup_diagnostics", side_effect=RuntimeError("mock")), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.f.finish(0), 0)
+        report = json.loads((self.f.logs / "fixture.json").read_text())
+        self.assertEqual(report["original_exit_code"], 0)
+        self.assertEqual(report["cleanup_exit_code"], 0)
+        self.assertEqual(report["diagnostics_exit_code"], 1)
+        self.assertIsNone(self.ns)
+        self.assertFalse(self.f.work.exists())
 
     def test_http_bases_keep_bounded_short_requests_and_unlimited_stream_requests(self):
         completed = SimpleNamespace(returncode=0, stdout=b"")
