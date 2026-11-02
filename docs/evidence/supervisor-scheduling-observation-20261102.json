@@ -1,0 +1,34 @@
+{
+  "schema_version": "supervisor-scheduling-observation.v1",
+  "script_sha256": "f2100ddbbeec235b6f63d7ad66274a279e1899d620644dad86c166bea80b53c2",
+  "test_source_sha256": "e6f65a3c51e8cb601cc4767ee74ae3129ed093f03018fa6a68b2421836c6fb14",
+  "local_component_cases_passed": 6,
+  "test_log_sha256": "59753171660350c6735ee4b12925f50e7f8606c102caf33752e5551608bad819",
+  "user_executed_read_only": true,
+  "observed_at": "2026-11-02T08:55:42.301129+00:00",
+  "stage": "before-stop",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "nodes": [
+    {"name": "k8s-master", "uid": "bc1fb478-0388-4f53-96b4-8d186301f6af", "allocatable_pods": 110, "running": 109, "succeeded": 7, "all_bound": 116, "terminating_bound": 7, "nonterminal_headroom": 1, "ready": true, "storage_node_label": "true"},
+    {"name": "node1", "uid": "fe1cc275-6fa1-484e-8bf6-7b21193daffd", "allocatable_pods": 110, "running": 98, "succeeded": 19, "all_bound": 117, "terminating_bound": 15, "nonterminal_headroom": 12, "ready": true, "storage_node_label": null}
+  ],
+  "node_pressures_or_taints_observed": false,
+  "business_claims": [
+    {"name": "clawmanager-workspaces", "uid": "12354b07-dd21-4d40-ac9b-da5c97699109", "access_mode": "ReadWriteMany", "pv_uid": "d57c7bc1-3d3c-45e8-a898-0d2e5e340810"},
+    {"name": "mysql-data", "uid": "e3c297bd-a00a-4a60-bce7-7368a69e8fd2", "access_mode": "ReadWriteOnce", "pv_uid": "2661bbff-e182-4189-9a09-3c23d5c71050"},
+    {"name": "minio-data", "uid": "e7bc8d73-e8fb-4010-8751-d9a0c8bb2467", "access_mode": "ReadWriteOnce", "pv_uid": "b1d05395-a5f5-4421-ae52-d63f7ce03327"},
+    {"name": "redis-data", "uid": "34941b96-4f87-4c08-a1c4-843c3d18fa2e", "access_mode": "ReadWriteOnce", "pv_uid": "074f1c17-d597-4e62-a9a5-63561cd8d565"}
+  ],
+  "all_four_business_claims_storage_kind": "hostPath",
+  "all_four_business_claims_storage_class": "manual",
+  "all_four_required_node_affinity": "clawmanager.io/storage-node In [true]",
+  "provider_claim_storage": "longhorn CSI, RWO, no PV node affinity observed",
+  "conservative_script_status": "BLOCKED_OBSERVED_SLOTS_OR_NODE",
+  "conservative_status_counts_completed_bound_pods_and_is_not_global_admission_proof": true,
+  "scheduler_fit": "not_verified",
+  "planned_writer_releases_credited": 0,
+  "observations_atomic": false,
+  "required_follow_up": ["original data node and PV identity on data Jobs", "staging hostPath node identity on publisher", "place control processes only after node/resource/volume assessment", "fresh after-stop and before-publish capacity observations"],
+  "node_labels_or_business_pods_modified": false,
+  "full_page_acceptance": false
+}
