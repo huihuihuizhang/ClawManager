@@ -1,0 +1,39 @@
+{
+  "schema_version": "supervisor-kube-startup-user-report.v1",
+  "evidence_source": "User-executed Bash output; supervisor did not connect to cluster",
+  "delivery_source_commit": "51181049e97e4ff3946e75b6c1568dfe2e00b1a1",
+  "archive_checksum_reported_ok": true,
+  "remote_directory": "/tmp/clawmanager-native-07407aaca722415ebecf9265106c0ac0",
+  "remote_logs": "/tmp/clawmanager-native-07407aaca722415ebecf9265106c0ac0/clawmanager-native-logs-51181049.XWkIKC7g",
+  "fixture_report": {
+    "stage": "pod-ready-openssl-tls",
+    "namespace": "sbk-apermit-5c3087a880c03ded40e3",
+    "namespace_uid": "8e8a7775-00ae-4da7-bf36-b7e036be3b42",
+    "owner": "5c3087a880c03ded40e3b6e8c2d59b5d",
+    "server_version": null,
+    "observed_image_ids": {},
+    "original_exit_code": 1,
+    "cleanup_exit_code": 0,
+    "residuals": [],
+    "full_acceptance": false
+  },
+  "entry_exit": 1,
+  "delivery_cleanup_exit": 0,
+  "native_test_started": false,
+  "cleanup_independently_verified_by_supervisor": false,
+  "subsequent_user_read_only_image_check": {
+    "namespace_uid_checked": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "deployment": "mysql",
+    "container": "mysql",
+    "init_container_names_observed": ["sbk-test-tls-prepare"],
+    "uid": 0,
+    "openssl_path": "/usr/bin/openssl",
+    "openssl_version": "3.5.1 (1 Jul 2025)",
+    "mysqld_binary_version": "8.4.8 for Linux on x86_64",
+    "mysql_client_version": "8.4.8 for Linux on x86_64"
+  },
+  "conclusion": "Ready wait failed before native/SQL. Existing image contains OpenSSL; root cause remains unknown because original fixture deleted Pod without retaining startup status/events/log details.",
+  "next_action": "Owned startup-only probe with bounded redacted diagnostics before cleanup; no ELF or business database work",
+  "production_image_updated": false,
+  "full_page_acceptance": false
+}

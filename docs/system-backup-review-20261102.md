@@ -66,3 +66,7 @@ A 原context timing hook已实际接入测试源码，新增独占实例入口�
 两位C新增的最终关系检查已完成独立窄回归：Skills在冻结511源码上2根用例及20种损坏/遗漏反例通过，publicadapter4.424s；Teams三文件加Skills两文件的独立冻结快照中，4组Team SQL/文件关系、确认边界及原OwnedPayload邻近回归通过，execution4.629s。日志SHA分别为 `896cd545d9c2e29329fffd2ef5e5f5840213b87e378dfe2b0b280457a85c7222`、`37cb3e2eb00b5ea8fc1fb146a6d022ed8205cf1809ffda8531ec4251de9b0fae`。它们是由现有reader/原Skills校验复用的纯内容关系检查，不授权、不生成完整final proof；公共C真实caller、同原任务SQL正向和最终签名链仍待统一验证，不能据此开放readiness。
 
 Linux诊断ELF已从51181049干净worktree实际构建并验ELF架构、构建前后3681文件来源及全部内部校验，交付归档46,870,961字节。用户Bash入口经真实归档提取与假诊断程序3种退出/清理路径验证，未执行ELF/SQL/Kubernetes。完整执行命令、两个交付摘要和清理规则见 `system-backup-supervisor-native-delivery-20261102.md`；现场镜像未更新，实际远测和页面验收仍未完成。
+
+用户随后实际运行该包：归档校验OK，在`pod-ready-openssl-tls`阶段失败，native/SQL尚未启动；报告原退出1、资源清理0、residuals空、交付清理0。审核者未独立连接核查。原工具清理前没有保存Pod启动状态/事件，当前不能据此定位调度、拉取、init或MySQL进程原因。用户追加的只读现有MySQL镜像检查确认OpenSSL3.5.1及MySQL8.4.8/Linux x86_64存在，排除CLI缺失，但不能证明本次新Pod已启动。完整用户回传边界见`evidence/supervisor-kube-startup-user-report-20261102.json`。D正在补不需要bundle的独占startup-only探针，先解决启动可观测性，不降低TLS/镜像/权限/网络策略，也不在相同未知条件下重传大包盲跑。
+
+新一轮公共C冻结快照（基线7f617ce7，叠加精确10文件）已统一编译并通过最终验证结构/拒绝边界、Teams关系、OwnedPayload以及local/native清理组件，execution2.203s；三个`TestPublicationFinalVerification*`根确实执行，未选择真实MySQL根。日志SHA256为`c341e5cd22439282a51a2f8b2c8a75c144b531a6f9a5768ab682c7b92b9d0275`。这仍不证明原SQL清理/最终远端验证正向链；其实现继续待真实同任务验收。A静态确认当前claim路径不复用旧DEK/旧30秒live lease，但原capture grant/RecordKeys/CaptureKeys及保留的staging HMAC key仍须有效，安装材料不能提前删除或轮换。
