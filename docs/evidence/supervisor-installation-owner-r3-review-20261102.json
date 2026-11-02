@@ -1,0 +1,38 @@
+{
+  "schema_version": "supervisor-installation-owner-r3-review.v1",
+  "observed_at": "2026-11-02T21:58:55.0016266+08:00",
+  "source_pins_sha256": "e022ca0406c30a6da2e4acda81449cb212c734d3d318d731fd97ca2f3fb45a24",
+  "frozen_pins_file": "owner-first-batch-r3-pins.json",
+  "isolated_source_base": "5ae6c853c71d6ce01480c0f5960566bb311d248b",
+  "root_pass": 16,
+  "root_fail": 2,
+  "failed_roots": [
+    "TestCaptureSigningObserverTLSActualProtocolAndProbeDomain",
+    "TestCaptureSigningValidatorPreparesOnlyExactOwnerConfigGrant"
+  ],
+  "skips": 0,
+  "exit_code": 1,
+  "log_sha256": "58b2c2964120cc3da6ac8754b4ef19f0e8782f698888620cf89de2ca6f1087ef",
+  "finding": "Nested JSON wire-name correction resolves codec and ledger failures; actual local TLS protocol observation and validator positive path still fail. Returned to A.",
+  "additional_checks": [
+    {
+      "exit_code": 0,
+      "name": "catalog_generator_check"
+    },
+    {
+      "pass": 3,
+      "name": "catalog_generator_unit",
+      "exit_code": 0
+    },
+    {
+      "pass": 5,
+      "name": "deployment_template",
+      "exit_code": 0
+    }
+  ],
+  "actual_mysql_or_provider_tested": false,
+  "first_installation_completed": false,
+  "production_wiring_enabled": false,
+  "full_page_acceptance": false,
+  "pending_build_cleanup": "Review batch remains open for two-test correction; remove owned root after final run"
+}

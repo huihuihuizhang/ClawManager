@@ -1,0 +1,58 @@
+{
+  "schema_version": "supervisor-installation-owner-r4-review.v1",
+  "observed_at": "2026-11-02T22:02:42.5544639+08:00",
+  "source_pins_sha256": "0bda4db95dfe6d78cb5e2c93dfad8a5b2921e9d7b9475c1167e0613a6f2c4c95",
+  "isolated_base": "5ae6c853c71d6ce01480c0f5960566bb311d248b",
+  "root_pass": 19,
+  "failed": 0,
+  "skipped": 0,
+  "exit_code": 0,
+  "passed_roots": [
+    "TestInstallationOwnerCLIOnlyGeneratesUntrustedCandidate",
+    "TestCaptureSigningObserverTLSActualProtocolAndProbeDomain",
+    "TestCaptureSigningJSONSubsetCanonicalValues",
+    "TestCaptureSigningObserverRejectsProviderAndWorkloadDrift",
+    "TestCaptureSigningValidatorPreparesOnlyExactOwnerConfigGrant",
+    "TestEnrollmentCandidateNeverEstablishesTrust",
+    "TestInstallationOwnerCopiedPreparationCannotMintAnotherL2Guard",
+    "TestInstallationOwnerCurrentHeadAdminAndIdentityRemainMandatory",
+    "TestInstallationOwnerHistoricalIdentityDoesNotReusePhysicalPermission",
+    "TestInstallationOwnerUnlinkedL2AndForeignTransactionRefuse",
+    "TestInstallationOwnerCodecIndependentPinAndPurpose",
+    "TestInstallationOwnerCodecRejectsCaseDuplicateUnknownAndWhitespace",
+    "TestInstallationOwnerCodecNestedReferenceUsesExactJSONTags",
+    "TestInstallationOwnerHeadRevocationAndOriginalWindow",
+    "TestInstallationOwnerCurrentIdentityCanDescribeExpiredPhysicalDependency",
+    "TestInstallationOwnerAuthorityMigrationIsEmbeddedWithoutSeedApproval",
+    "TestPreUsernameHistoryReviewCannotAuthorizeMergedCatalog",
+    "TestMigration056AddsLLMProviderModelCatalog",
+    "TestRepositoryCatalogMatchesSystemBackupContract"
+  ],
+  "log_sha256": "b5b8e715daf7bf06c7259015a5fa23fc812e2f84792b272b6dc0ea7d50d6d461",
+  "reviewed_fixes": [
+    "Strict nested JSON declared names; casing/duplicate aliases remain rejected",
+    "Complete scalar values compared using canonical single-element arrays; role/config security fields and hashes remain strict"
+  ],
+  "protocol_test_boundary": "Real local TLS and signing cryptography; fake Kubernetes and simulated Vault, not actual cluster/provider",
+  "actual_mysql_lock_test_executed": false,
+  "first_installation_or_enrollment_completed": false,
+  "remaining": [
+    "Actual SAN/TLS MySQL owner ledger and lock tests",
+    "New owner tables full census/metadata classification synchronization",
+    "Independent user enrollment and actual owner material issuance/import",
+    "Original aggregate L2 and production main wiring",
+    "Other missing bootstrap owners",
+    "Original-window native RPC and full page same-task acceptance"
+  ],
+  "migration_catalog": {
+    "generator_check_pass": true,
+    "actual_migration_executed": false,
+    "deployment_template_tests": 5,
+    "count": 175,
+    "generator_tests": 3,
+    "repository_component_pass": true,
+    "hash": "5bb2b0320880d4259826510f3cee10ce6ca2fbd817ec9a6f5f6c450c5b16d292"
+  },
+  "full_page_acceptance": false,
+  "disaster_recovery_qualification": false
+}

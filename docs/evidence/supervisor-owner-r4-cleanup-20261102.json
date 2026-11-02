@@ -1,0 +1,11 @@
+{
+  "schema_version": "supervisor-owner-r4-cleanup.v1",
+  "observed_at": "2026-11-02T22:04:38.8626446+08:00",
+  "owned_root": "D:\\codex-backup-owner-review-cfd186b18926422fa0cf6ece672f79c2",
+  "owned_root_removed": true,
+  "source_tar_snapshot_cache_temp_private_fixture_outputs_removed": true,
+  "live_owned_executables_at_check": 0,
+  "private_test_logs_preserved": true,
+  "pending_r7_remote_delivery_unchanged": true,
+  "sql_or_remote_actions_executed": false
+}
