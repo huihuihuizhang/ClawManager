@@ -1,0 +1,46 @@
+{
+  "scope": "owned fixture DATA only; not page or production acceptance",
+  "source_snapshot": "723f51bc9834d4f6f417828968576903de3f29dd",
+  "source_base": "cfbb4272",
+  "elf_sha256": "4be816cfa2cbd019d89d030e06415095849eec852169f6f1848536f2cc6edddc",
+  "platform": "linux/amd64",
+  "cgo": false,
+  "selected_tests": [
+    "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+    "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL"
+  ],
+  "original_key_window_seconds": 30,
+  "whole_harness_timeout_minutes": 15,
+  "native_executed": false,
+  "full_page_acceptance": false,
+  "installation_owner_batch_included": true,
+  "installation_owner_tests_selected": false,
+  "migration134_included": true,
+  "archive": "clawmanager-native-723f51bc.tar.gz",
+  "archive_sha256": "b8b356e5f1459d021d00476818ff60ff02d2e45f87f3359f218c13f4a31d95ce",
+  "archive_bytes": 47995751,
+  "entry": "run-native-723f51bc.sh",
+  "entry_sha256": "2b93c7d2de339da76bbb778029a9da34f90b9c7834e3885d8f8a9ab7fc4c341a",
+  "fixture": "system-backup-d-kube-mysql-fixture.py",
+  "fixture_sha256": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+  "fixture_line_endings": "LF; content equals frozen source after CRLF normalization",
+  "runtime_runner_sha256": "b06dbc8c0e361158cee958634bacda6345cd3677395c50772b6d4f2941583d6b",
+  "expected_site_namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "delivery_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-723f51bc-r8",
+  "verified_at": "2026-11-02T23:00:18.227324+08:00",
+  "independent_checks": {
+    "files": 125,
+    "checksums": 246,
+    "tar_paths_and_no_links": true,
+    "source_git_clean": true,
+    "elf_and_linked_commit": true,
+    "entry_bash_syntax": true
+  },
+  "supersedes": "5ae6c853 R7; latest native candidate matches full server source 723f51bc",
+  "adjunct_prerequisites": {
+    "file": "system-backup-c-minio-prerequisites.py",
+    "sha256": "bbd58fc4e510fcf018cf4ddfa0cdab53a88e8d86f94fdb6ae5d0c362b6e651f0",
+    "offline_tests_pass": 12,
+    "scope": "read-only metadata and version; no provider permission conclusion"
+  }
+}

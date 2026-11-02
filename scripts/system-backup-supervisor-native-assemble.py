@@ -29,7 +29,9 @@ def main():
     root, repo, out = map(Path, sys.argv[1:4])
     expected_elf = sys.argv[4]
     assert re.fullmatch('[a-f0-9]{64}', expected_elf)
-    assert root.is_absolute() and (root / '.owner').read_text().strip() == 'supervisor-native-review-20261102'
+    assert root.is_absolute() and (root / '.owner').read_text().strip() in {
+        'supervisor-native-review-20261102', 'supervisor-combination-review-20261102',
+    }
     assert not out.exists() and out.parent.resolve() == repo.resolve()
     meta = json.loads((root / 'source-pins.json').read_text(encoding='utf-8-sig'))
     commit = meta['snapshot_commit']
@@ -49,7 +51,10 @@ def main():
     assert header[:6] == b'\x7fELF\x02\x01' and int.from_bytes(header[18:20], 'little') == 62
     assert sha(binary) == expected_elf
     fixture = source / 'scripts/system-backup-d-kube-mysql-fixture.py'
-    assert sha(fixture) == '81fc43a5f571a5b8a25f6efb1253c579c7661aa771a4dcd1659a8c5ab539f265'
+    assert sha(fixture) in {
+        '81fc43a5f571a5b8a25f6efb1253c579c7661aa771a4dcd1659a8c5ab539f265',
+        'fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873',
+    }
     fixture_bytes = fixture.read_bytes().replace(b'\r\n', b'\n')
     fixture_sha = hashlib.sha256(fixture_bytes).hexdigest()
     assert fixture_sha == 'fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873'
@@ -75,7 +80,9 @@ def main():
                            'TestOriginalHeldPrefixSameRPCControlDifferentialMySQL'],
         'original_key_window_seconds': 30, 'whole_harness_timeout_minutes': 15,
         'native_executed': False, 'full_page_acceptance': False,
-        'installation_owner_batch_included': False, 'migration134_included': False,
+        'installation_owner_batch_included': (source / 'backend/internal/systembackupinstallationowner/record.go').is_file(),
+        'installation_owner_tests_selected': False,
+        'migration134_included': (source / 'backend/internal/db/migrations/134_backup_v2_installation_owner_authority.sql').is_file(),
     }
     (package / 'BUILD-REVIEW.json').write_text(json.dumps(review, indent=2) + '\n', encoding='utf-8')
     sums(package, package / 'DELIVERY_SHA256SUMS')

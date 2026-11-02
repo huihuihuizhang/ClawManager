@@ -1,0 +1,104 @@
+{
+  "schema_version": "c-minio-publication-permission-source-review.v1",
+  "status": "interface_proposal_pending_original_owner_materials_not_authority",
+  "scope": "Complete real six-domain non-DR publication. This review neither installs provider permissions nor runs a probe, SQL, signing, object write or isolated restore.",
+  "frozen_sources": "Existing C taskless five-source batch remains unchanged. Its known_ordinary_blocker was historical: current A SQL signing source now permits acceptance or functional_test with the exact full six-part set, and root reports the A/D/C R2 component combination passed. No native SQL/page conclusion follows.",
+  "repository_findings": [
+    {
+      "path": "backend/internal/systembackupsecurity/capability.go",
+      "symbol": "ValidateCapabilityEvidence",
+      "finding": "Authenticates no producer, issuer or native endpoint. Checks role/identity/version/scope/time/content shape and cleanup. Supported, unsupported and degraded observations are valid; nonempty observations need not contain the complete required code set. It cannot itself authorize five provider purposes."
+    },
+    {
+      "path": "backend/internal/systembackupevidence/capability_content.go",
+      "symbol": "NewCapabilityRedactor",
+      "finding": "Closed-schema content and expected policy/expiry comparison. Its own contract says producer authentication and D transaction-time current authority remain external. Registered evidence checksum/healthy/expiry alone cannot supply that missing provenance."
+    },
+    {
+      "path": "backend/internal/systembackupproducer/result.go",
+      "symbol": "ResultSession.Authenticate",
+      "finding": "Existing framework can authenticate evaluator provenance, the complete result request, original scope/run/input/profile and times, and configured projection. No concrete MinIO account/effective-policy observer or C deployment selection for five original principal-use bindings was found in current wiring. Reuse this framework once A/D install real observer/target/evidence provenance; do not replace it with a callback returning nil."
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/providerproof_s3.go",
+      "symbol": "S3ExternalActionObserver",
+      "finding": "Actual task-targeted versioned object presence observer for existing manifest/marker/acceptance external actions. It reads native object metadata/full content and authenticates expected identity/action/version/hash/length. It does not observe current PUT/DELETE/catalog-append IAM permissions, and cannot be called tasklessly with a dummy external action."
+    },
+    {
+      "path": "backend/internal/systembackup/recovery/provider.go",
+      "symbol": "RequireCapabilities",
+      "finding": "Consumer validates current capability statuses/identity/time but takes inert Capability values. Actual trusted producer/source integration remains required."
+    },
+    {
+      "path": "backend/internal/systembackupexecution/publication_native_s3.go",
+      "symbol": "PublicationTargetMaterials",
+      "finding": "Explicit transport mapping, not provider permission or readiness proof. Current publication uses versionId reads; candidate cleanup deletes an exact version and confirms NoSuchVersion, so generic bucket read/write or ordinary unversioned delete claims are insufficient."
+    }
+  ],
+  "conclusion": "Repository interfaces and evidence storage are reusable, but no sufficiently authenticated, current five-purpose MinIO permission source is wired for direct C consumption. This was a source review only; it does not assert that live owner-issued materials do not exist. Root/A/D must identify any existing registered current source and its original pins/provenance before creating a new one.",
+  "reusable_after_owner_installation": [
+    "CapabilityEvidence/closed CapabilityRedactor for bounded redacted observation content; require every exact required code supported/none and exact independently derived request scope for each required purpose",
+    "Original producer scope/domain/grant/run/evaluator admission, authenticated complete result/receipt, current revocation and original observation/evidence windows",
+    "Original current config references and exact artifact/catalog/CA/publication-policy bindings already read by C",
+    "Existing C dependency upper bounds, real signer factory and actual staging checks; no change to original full task verification or publication loop"
+  ],
+  "minimum_missing_inputs": {
+    "original_authorization": "Independently enrolled original MinIO permission-owner/evaluator issuer or existing authenticated producer scope with immutable evaluator-profile pin; exact installation/config hash/provider target hash, five allowed principal-use tuples, original grant revision/epoch, not_before/until, current revocation read source and exact source/evidence/receipt IDs+hashes. A self-supplied JSON document or a privileged local credential file is not this source.",
+    "observer_identity": "A dedicated installed MinIO read-only observer identity, separated from all five operational credentials and held by the original observer workload. Bind actual Namespace/Pod/SA or original producer subject to the original observation grant. It performs only reviewed named metadata GETs, never creates/attaches a policy or changes a user. Raw target/admin secrets and IAM responses are never returned to C/logs.",
+    "transport": "Exact original HTTPS MinIO admin and S3 endpoints, independently pinned CA/TLS identity, provider/deployment or service/cluster identity, observed installed server image/version/API profile, region and exact artifact bucket/formal root/remote staging root plus independent catalog bucket/root. Never derive the trusted endpoint or CA from incoming evidence. The repo deployment image is not evidence of the running version.",
+    "principal_binding": "For each of artifact_read, artifact_write, artifact_delete, catalog_read, catalog_append: exact current config identity_hash/ref_version -> independently owner-bound native principal/account fingerprint and account kind; exact policy identities+content hashes and exact resources/request conditions. Do not infer internal identity_hash from AccessKey or treat one CapabilityEvidence.IdentityHash as all five distinct principals.",
+    "current_read_source": "Actual native account status and complete effective policy sources, including parent/group/session and bucket/resource policies when applicable; issuer/evaluator and current grant checks before and after observation. Exact named live sources are needed, not just healthy evidence metadata or a response-shape hash.",
+    "source_selection": "A/D must install independently pinned source selection for each of the five principal-use bindings, or a reviewed authenticated producer scope hash that explicitly commits the complete five-binding map. Existing configured-target/role canonicality must be reviewed; never overload an artifact or catalog identity with unrelated principals.",
+    "expiry": "Original authority not_before/until and current revocation fence; native service-account/STS/session expiration when present; original observation started/finished/expires; evidence expiry, evaluator/observer identity validity and trusted maximum observation age. Output is their intersection with current config/Forward/C dependency bounds. No now+TTL renewal, no use of local credential-file Until as provider-issued expiry."
+  },
+  "minimal_native_profile": {
+    "initial_scope": "Explicit built-in non-root regular users, no groups, STS/federation, parent inheritance or unknown conditions. This is a proposed minimum supported profile, not an assertion about the installed accounts. Other kinds fail with a concrete unsupported-profile error until all their authority sources are read.",
+    "api_profile": "Version-pinned MinIO Admin v3 reference profile, subject to exact installed-version verification by root/A/D. Use named GetUserInfo/accessKey, InfoCannedPolicyV2/name and read exact bucket policy; get bucket versioning if the capability conclusion includes retained versions. If service accounts are actually required, InfoServiceAccount, parent effective policy and native expiration are additionally mandatory.",
+    "observer_permissions": "For the minimal flat-user profile: only reviewed admin:GetUser and admin:GetPolicy metadata permissions, plus s3:GetBucketPolicy and optionally s3:GetBucketVersioning on exact target buckets. Group/service-account/STS read rights are not silently granted. Admin API permissions can be broader than a target account allowlist; do not claim server-side per-account scoping merely because the client enforces names. Keep this credential inside an isolated original observer, or place a source-owner read-only broker in front.",
+    "read_allowlist": "GET /minio/admin/v3/user-info?accessKey=<original named account>; GET /minio/admin/v3/info-canned-policy?name=<original policy>&v=2; GET <exact S3 bucket>?policy; optionally GET <exact bucket>?versioning. No enumerate-all/export-IAM, PUT/POST policy management, user management, signing, object PUT or DELETE.",
+    "evaluation": "Use exact server-compatible IAM semantics: explicit deny overrides allow; evaluate full resource and request condition context for the original controller/uploader use. Reject unknown identity kind, omitted inherited/session/resource policy, unsupported condition, unknown caller/network context, missing account, disabled/revoked identity, broad/unreviewed policy and unobserved source. Never parse policy by substring or trust a supplied allowed/passed boolean.",
+    "stability": "Bind endpoint/provider identity, original owner/evaluator source and full account/policy/resource facts before and after the bounded read. A pair of equal hashes is not a globally atomic MinIO IAM snapshot or a grant valid through a future operation; task-time current checks and actual provider operations remain mandatory."
+  },
+  "purpose_requirements": [
+    {
+      "purpose": "artifact_read",
+      "required": "Versioned object GET/read over original formal artifact and original remote-staging namespaces; exact bucket/root and native account binding; version-list permission only where the actual required read path uses listing."
+    },
+    {
+      "purpose": "artifact_write",
+      "required": "Actual PUT permission over exactly the original upload staging and formal publication namespaces; independent write principal. Conditional create/checksum/length/provider deadline semantics require separately authenticated actual capability observations, not inference from IAM PutObject permission."
+    },
+    {
+      "purpose": "artifact_delete",
+      "required": "Exact-version delete rights for original remote candidate staging namespace only, including native DeleteObjectVersion semantics; do not grant formal artifact or catalog deletion. Independent read confirms exact NoSuchVersion at task time."
+    },
+    {
+      "purpose": "catalog_read",
+      "required": "Versioned object GET/read for the independent original catalog root using its own exact principal and reference."
+    },
+    {
+      "purpose": "catalog_append",
+      "required": "Actual conditional PUT permission for the original independent catalog namespace. IAM PutObject allowance does not prove append-only/immutability or conditional-create support; those remain separately authenticated capability and original native-use checks."
+    }
+  ],
+  "proposed_concrete_consumer": "After real sources are installed: a C concrete MinIOPublicationPermissionReader constructed only from independently pinned startup files, actual DB/workload identity and original observer authority. CheckCurrent(ctx, service) derives all expected original bindings itself, reads native named metadata or authenticated original producer receipts, validates raw source/provenance/windows, and returns a private inert observation/error. No caller-supplied pass DTO or approval callback. Only a new reviewed batch may replace the frozen five-source checker final missing-source branch.",
+  "ownership": {
+    "A": "Original source/evaluator identity, permission-owner grant and current revocation/authentication; preserve existing source trust and negative-acceptance verification.",
+    "D": "Actual installed endpoint/API version, observer workload and read-only privileges, canonical target/config/producer/evidence source installation and original expiry mapping.",
+    "C": "Concrete read/consumer, independently derived five-purpose bindings, exact supported-code and expiry/currentness validation, then D dependency call; retain complete non-DR publication checks."
+  },
+  "references": [
+    "https://github.com/minio/minio/blob/master/cmd/admin-handlers-users.go",
+    "https://github.com/minio/madmin-go/blob/v3.0.110/user-commands.go",
+    "https://github.com/minio/madmin-go/blob/v3.0.110/policy-commands.go"
+  ],
+  "not_executed": [
+    "Native MinIO observation",
+    "SQL",
+    "Go compile/tests",
+    "Any provider mutation",
+    "Schema/generated/source edits",
+    "Git mutation"
+  ],
+  "test_build_artifacts_created": false
+}

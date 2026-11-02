@@ -1,0 +1,15 @@
+{
+  "schema_version": "supervisor-combination-r8-cleanup.v1",
+  "observed_at": "2026-11-02T23:04:31.3129382+08:00",
+  "build_root": "D:\\codex-backup-combination-review-8abb2628232c46d4943ac0d433591eb7",
+  "registered_source_worktree_removed": true,
+  "all_owned_source_tar_go_caches_binaries_and_staging_removed": true,
+  "live_owned_executables_at_check": 0,
+  "superseded_r7_delivery_removed": true,
+  "pending_r8_delivery": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-delivery-723f51bc-r8",
+  "pending_r8_archive_sha256": "b8b356e5f1459d021d00476818ff60ff02d2e45f87f3359f218c13f4a31d95ce",
+  "pending_reason": "User remote test not yet executed; delete after test completion",
+  "private_logs_preserved": true,
+  "command_powershell_and_bash_syntax_verified": true,
+  "real_remote_or_deploy_executed": false
+}

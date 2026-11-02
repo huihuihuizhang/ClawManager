@@ -1,0 +1,105 @@
+{
+  "schema_version": "c-readonly-minio-prerequisites-source.v1",
+  "status": "sources_frozen_root_offline_tests_passed_remote_unexecuted",
+  "files": [
+    {
+      "path": "scripts/system-backup-c-minio-prerequisites.py",
+      "sha256": "bbd58fc4e510fcf018cf4ddfa0cdab53a88e8d86f94fdb6ae5d0c362b6e651f0"
+    },
+    {
+      "path": "scripts/system-backup-c-minio-prerequisites.test.py",
+      "sha256": "eba6320863fa2311bd51c768c3614d0fa6a3a7d5f269cbe3316a279b9b0eec1f"
+    }
+  ],
+  "fixed_scope": {
+    "context": "kubernetes-admin@kubernetes",
+    "namespace": "clawmanager-zhanghui08-system",
+    "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "deployment": "minio",
+    "service": "minio",
+    "container": "minio",
+    "cli_overrides_allowed": false
+  },
+  "invocation": "User-run only after root validation. Next stated user remote window starts 2026-11-03 08:30 Asia/Shanghai. This chat performed no SSH or Kubernetes execution.",
+  "script_dependencies": [
+    "Python 3 standard library",
+    "kubectl with the existing exact context and metadata-read permission; existing pods/exec permission is needed only for the exact minio --version command; no privilege installation or widening by this script"
+  ],
+  "allowed_kubectl": [
+    "get exact namespace with name/UID/deletion-only projection",
+    "get namespace deployments using a bounded safe projection; no env values/args/annotations/logs",
+    "get app=minio ReplicaSet/Pod metadata; authenticate Deployment UID -> ReplicaSet UID -> Pod UID controller ownership",
+    "get exact selected service-account name/UID and exact minio service selectors/ports",
+    "recheck namespace and exact selected Pod/container before and after exec",
+    "exec exact pod/<original-name>, exact --container=minio, literal command minio --version; no shell, stdin or TTY"
+  ],
+  "output": [
+    "Exact desired image plus observed Pod imageID/containerID/restarts, Deployment/Pod/SA/Service UIDs and port metadata",
+    "Controlled internal DNS endpoint candidates; scheme/reachability/admin API compatibility remain unknown",
+    "TLS mount candidates and Secret/ConfigMap reference names only; never material bodies or certificate contents; TLS verified remains false",
+    "Allowlisted publication input env NAME declarations and namespace mount/reference candidates; these are only configuration signals",
+    "Five principal material/authority states remain unknown: no content/source authorization was read",
+    "Version and hex commit are parsed from a bounded recognized minio version line; other stdout is discarded and stderr is DEVNULL"
+  ],
+  "safeguards": [
+    "Namespace UID verified before other resource reads, before exec and after exec",
+    "No Secret or ConfigMap GET; projection never selects literal env values, command/args, annotations, logs, Secret data/stringData, mounted file contents or tokens/passwords",
+    "Deployment/RS/Pod list limits and bounded string/tree/output/deadline checks; exact context and namespace on every applicable request",
+    "No create/apply/patch/delete/restart, policy/identity installation, object/provider permission test or backup acceptance",
+    "kubectl exec has no atomic UID precondition; replacement before/after rejects and discards the version; report explicitly does not claim atomic UID binding",
+    "Nonzero kubectl output and parser errors return fixed diagnostic codes with no raw tool output"
+  ],
+  "exit_codes": {
+    "0": "Filtered prerequisites/version observed; principal permissions and admin API profile still unknown",
+    "1": "Filtered metadata retained but version command denied/unavailable/output shape unknown",
+    "2": "Scope/identity/selection/shape/tool refusal or unsupported CLI arguments; no acceptance claim"
+  },
+  "offline_tests": {
+    "methods": 12,
+    "coverage": [
+      "Exact immutable context/namespace UID and owner/container selection",
+      "Namespace replacement before/during exec; Pod/container replacement before/during exec",
+      "Ambiguous/unowned/unready/missing container and list-limit refusal",
+      "Version/parser/stderr canary non-disclosure and unknown principal statuses",
+      "No CLI scope overrides and fixed error codes",
+      "Actual kubectl Go-template projections rendered with standard-library text/template against fixture args/env/annotations canaries; numeric targetPort and list-limit behavior"
+    ],
+    "dependencies": "Root-side Python 3 and Go stdlib only; Go is not required on the remote collector host",
+    "cleanup": "Tests suppress Python bytecode. Local Go source and isolated GOCACHE are inside TemporaryDirectory and removed after the test. Go network resolution disabled with GOTOOLCHAIN=local, GOPROXY=off, GOSUMDB=off."
+  },
+  "root_validation_commands": [
+    "Windows from repo: py -3 -B scripts/system-backup-c-minio-prerequisites.test.py",
+    "Linux from repo: python3 -B scripts/system-backup-c-minio-prerequisites.test.py"
+  ],
+  "completed_validation": [
+    "Static Python AST parse of both files only, via py -3 -B; collector/tests not executed",
+    "Twelve test methods counted from AST",
+    "Frozen C taskless five-source pin comparison: zero drift",
+    "Root executed 12 offline tests: PASS/0 skip/exit 0, including actual Go-template rendering. Log tail inspected: Ran 12 tests / OK. No kubectl/SSH/provider execution."
+  ],
+  "not_executed": [
+    "kubectl or minio --version",
+    "SSH or any remote operation",
+    "SQL",
+    "Provider reads/writes/deletes",
+    "Git mutation by this chat"
+  ],
+  "generated_test_build_artifacts": true,
+  "root_offline_validation": {
+    "tests": 12,
+    "passed": 12,
+    "skipped": 0,
+    "exit_code_reported_by_root": 0,
+    "log": ".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/minio-prerequisites-offline-r1.log",
+    "log_sha256": "3ce6432d1ea84fa931e730b189430c058165e51ccb8163969f8642b9def95a1c",
+    "cleanup": "Root reports temporary Go source/cache directories removed. This chat generated no test/build products. Retained log is evidence."
+  },
+  "user_execution_handoff": {
+    "from": "R8 transfer directory containing the separately SHA-pinned Python collector",
+    "command": "python3 -B ./system-backup-c-minio-prerequisites.py",
+    "checksum": "bbd58fc4e510fcf018cf4ddfa0cdab53a88e8d86f94fdb6ae5d0c362b6e651f0",
+    "earliest_stated_window": "2026-11-03 08:30 Asia/Shanghai",
+    "transport": "Root owns the complete R8 transfer/destination/checksum command; this standalone script is not relabeled as the R8 linked ELF commit.",
+    "interpretation": "Exit 0 means prerequisites/version observed only. Five principal states, TLS verification and admin API compatibility remain unknown; no provider permission or complete backup/page PASS."
+  }
+}

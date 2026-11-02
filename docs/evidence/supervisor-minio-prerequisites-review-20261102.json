@@ -1,0 +1,25 @@
+{
+  "schema_version": "supervisor-minio-prerequisites-offline-review.v1",
+  "observed_at": "2026-11-02T23:01:29.4321749+08:00",
+  "files": [
+    {
+      "path": "scripts/system-backup-c-minio-prerequisites.py",
+      "sha256": "bbd58fc4e510fcf018cf4ddfa0cdab53a88e8d86f94fdb6ae5d0c362b6e651f0"
+    },
+    {
+      "path": "scripts/system-backup-c-minio-prerequisites.test.py",
+      "sha256": "eba6320863fa2311bd51c768c3614d0fa6a3a7d5f269cbe3316a279b9b0eec1f"
+    }
+  ],
+  "offline_test_exit": 0,
+  "offline_tests_pass": 12,
+  "log_sha256": "3ce6432d1ea84fa931e730b189430c058165e51ccb8163969f8642b9def95a1c",
+  "scope": "Namespace/context pinned metadata projection plus exact MinIO container --version only; real Go template projection and fake kubectl protocol tests",
+  "target_namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "secret_values_or_unfiltered_env_args_logs_read": false,
+  "real_kubectl_provider_or_remote_actions_executed": false,
+  "provider_permissions_verified": false,
+  "temporary_go_build_cleanup": "TemporaryDirectory context removes generated Go source and isolated cache after child completion",
+  "kubectl_exec_uid_precondition": "No atomic UID option; exact namespace/pod/container checked before and after, replaced observation refused",
+  "full_page_acceptance": false
+}
