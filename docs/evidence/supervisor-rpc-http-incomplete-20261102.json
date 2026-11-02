@@ -1,0 +1,26 @@
+{
+  "schema_version": "supervisor-rpc-and-http-validation.v1",
+  "rpc": {
+    "comparison_executed": false,
+    "exit_code": 1,
+    "log_sha256": "46acaa8397db23cddfeda1fcd208c6a249227322aac9d91005c13f9a58679d08",
+    "stage": "original extended source loader",
+    "test_seconds": 52.77,
+    "fixture_fix_sha256": "2c91a1ee1655635de0f66e172f92d01910f003c1b24a6d36c15c3490042bfdb7",
+    "fixture_fix_tested": false,
+    "reason": "capture description requires a finite sufficient process memory declaration",
+    "test": "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL",
+    "package_seconds": 57.485
+  },
+  "http_and_staging": {
+    "complete_multi_package_pass": false,
+    "live_process_present": false,
+    "confirmed_passed_package": "clawreef/internal/systembackupread",
+    "status": "interrupted_or_external_stop",
+    "log_sha256": "7c7db143f8b7967707eadb8b0741f869ad70682440a0e2a96396982ae909f1d4",
+    "exit_receipt_present": false,
+    "confirmed_passed_roots": 2
+  },
+  "production_or_page_pass": false,
+  "cleanup_complete": true
+}

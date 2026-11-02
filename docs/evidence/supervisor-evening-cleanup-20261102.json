@@ -1,0 +1,19 @@
+{
+  "schema_version": "supervisor-evening-cleanup.v1",
+  "observed_at": "2026-11-02T11:22:15.4946221Z",
+  "owned_root": "D:\\codex-backup-local-composition-39d684a5d00d4b3f8926c91803604e21",
+  "owner": "supervisor-local-composition-20261102",
+  "mysql_process_21284_present": false,
+  "mysql_listener_65115_present": false,
+  "http_staging_test": "Interrupted or externally stopped; no exit receipt. Two catalog reader roots passed, complete multi-package result unproven.",
+  "last_completed_sql": "Original happy R3 failed capture database; RPC R3 failed before comparison because finite memory declaration missing",
+  "precleanup_schemas": [
+    "ad_d_six_2506c83607515f76",
+    "ad_d_six_9d08aa922ec107a5",
+    "ad_d_six_eb92412399661043"
+  ],
+  "precleanup_accounts": 4,
+  "schema_census": "Last independent live-server census before observed process disappearance",
+  "graceful_shutdown_observed": false,
+  "deleted": true
+}

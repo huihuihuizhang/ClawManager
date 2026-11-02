@@ -18,5 +18,5 @@
   "production_staging_caller_verified": false,
   "actual_cluster_scheduling_verified": false,
   "page_acceptance": false,
-  "cleanup": "Logs retained; builds and sources belong to active exclusively owned evening composition batch and are deleted when that batch ends"
+  "cleanup": "Completed owned evening batch removed after verifying no owned process or listener; build outputs, caches, source snapshots, MySQL data, TLS private keys and test credentials deleted. See supervisor-evening-cleanup-20261102.json."
 }

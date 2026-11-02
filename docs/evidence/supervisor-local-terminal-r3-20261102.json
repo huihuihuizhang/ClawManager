@@ -178,5 +178,5 @@
   "terminal_success": false,
   "full_page_acceptance": false,
   "log_sha256": "7e09b4400a75abefbe775fe2d618cd6418c69e6feaf6667b4ccf0ab172f07c92",
-  "cleanup": "Owned server and diagnostic schemas remain only for the active final RPC verification batch; delete all owned build and test artifacts on batch completion"
+  "cleanup": "Completed owned evening batch removed after verifying no owned process or listener; build outputs, caches, source snapshots, MySQL data, TLS private keys and test credentials deleted. See supervisor-evening-cleanup-20261102.json."
 }

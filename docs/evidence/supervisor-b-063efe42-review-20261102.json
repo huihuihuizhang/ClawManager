@@ -13,7 +13,22 @@
     "domain_seconds": 6.359,
     "worker_seconds": 39.473,
     "log_sha256": "d05cbf42275295a43125e99f287b93f7536cd4c806948af441ba659087ffd27e",
-    "skipped_tests": ["TestOfflineBusinessRestoreMySQL", "TestSourceRowCountsMySQL", "TestGatewayBudgetPublicWorkerActualTLSMySQL", "TestGatewayImageNativeVerifyChild", "TestGatewayImagePublicWorkerActualTLSMySQL", "TestJointEightNativeVerifyChild", "TestJointEightPublicWorkerActualTLSMySQL", "TestNorthboundNativeVerifyChild", "TestNorthboundPublicWorkerActualTLSMySQL", "TestDatabaseTransportPreservesNativeParametersWithoutPrepare", "TestFormalSkillsSQLChecksOriginalProjectionBeforeCandidateMySQL", "TestFormalSQLSourceRevocationStopsBeforeNextTableMySQL", "TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode", "TestFormalTeamsObjectCandidateContainsPinnedOriginalBytes"],
+    "skipped_tests": [
+      "TestOfflineBusinessRestoreMySQL",
+      "TestSourceRowCountsMySQL",
+      "TestGatewayBudgetPublicWorkerActualTLSMySQL",
+      "TestGatewayImageNativeVerifyChild",
+      "TestGatewayImagePublicWorkerActualTLSMySQL",
+      "TestJointEightNativeVerifyChild",
+      "TestJointEightPublicWorkerActualTLSMySQL",
+      "TestNorthboundNativeVerifyChild",
+      "TestNorthboundPublicWorkerActualTLSMySQL",
+      "TestDatabaseTransportPreservesNativeParametersWithoutPrepare",
+      "TestFormalSkillsSQLChecksOriginalProjectionBeforeCandidateMySQL",
+      "TestFormalSQLSourceRevocationStopsBeforeNextTableMySQL",
+      "TestFormalTeamsCaptureRequiresIndependentSourceGrantAndProviderMode",
+      "TestFormalTeamsObjectCandidateContainsPinnedOriginalBytes"
+    ],
     "actual_mysql_or_native_or_production_material_tests_executed": false
   },
   "python_tests": {
@@ -26,7 +41,7 @@
   "original_author_jcs_cache_blocker_reproduced_on_supervisor": false,
   "new_dependency_download_required": false,
   "original_author_cleanup": "Original evidence still reports policy-blocked cache/tmp cleanup on a different machine; not claimed complete by supervisor",
-  "supervisor_cleanup": "Python temporary fixtures removed by test context; source/cache remains in the still-active exclusively owned evening verification batch and must be deleted when that batch ends",
+  "supervisor_cleanup": "Completed owned evening batch removed after verifying no owned process or listener; build outputs, caches, source snapshots, MySQL data, TLS private keys and test credentials deleted. See supervisor-evening-cleanup-20261102.json.",
   "original_thirty_second_window_proven": false,
   "real_page_or_complete_publication_proven": false
 }
