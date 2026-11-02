@@ -21,8 +21,10 @@ if [[ $# = 2 && $1 = --snapshot ]]; then
     source_paths > "$receipt/SOURCE_PATHS.nul"
     while IFS= read -r -d '' source_path; do
       [[ -f $source_path && ! -L $source_path ]] || { echo 'nonregular/redirected source input refused' >&2; exit 1; }
-      sha256sum -- "$source_path"
-    done < "$receipt/SOURCE_PATHS.nul" > "$receipt/SOURCE_FILES.sha256"
+    done < "$receipt/SOURCE_PATHS.nul"
+    # Use the same exact paths/checksum format without a process per file.
+    # NUL separation preserves whitespace; argv never interprets paths as code.
+    xargs -0 -r sha256sum -- < "$receipt/SOURCE_PATHS.nul" > "$receipt/SOURCE_FILES.sha256"
   )
   echo 'source snapshot recorded; reviewer must bind this receipt to the actual build before packaging'
   exit 0

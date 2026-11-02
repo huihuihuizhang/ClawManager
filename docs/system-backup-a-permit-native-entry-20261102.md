@@ -34,7 +34,7 @@ bundle/
 
 本入口 **不需要随包复制 migrations 目录**：`internal/db/migrations.go` 使用 `//go:embed migrations/*.sql`，原 fixture 调用 `EmbeddedMigrationCatalog` 和 `ApplyPinnedMigrations`。构建时必须包含当轮完整且已审核的 migrations，binary 的内嵌 catalog 即实际使用版本；不能运行时塞一份旧 SQL 来修复 binary。其他测试（如 A journal 的窄 fixture）有直接读磁盘 SQL 的路径，不在本入口选择范围；禁止把 `-test.run` 改成全包后仍沿用本精简清单。无需整个 contracts、其他 testdata、Go源码、node/npm/go、mysql CLI、kubectl 或 worker 可执行程序。
 
-工具依赖按阶段明确区分：snapshot/package 需要 Bash、Git、find、支持 `-z` 的 sort、cmp、sha256sum、od、tr 和 cp/chmod/mkdir 等文件工具；该脚本本身不调用 Go。`run-diagnostic.sh` 需要 Linux amd64、Bash、GNU coreutils/grep（尤其 sha256sum `--strict`、stat `-c`、mktemp/cp/chmod/tee/rm、uname），archive 解包命令另需 tar/gzip。原 CGO_ENABLED=0 的 testbinary 自带 Go runtime、HTTP/TLS services 和内嵌 migrations，目标机无需 Go/node/npm/mysql CLI/kubectl。可选 `run-disposable.sh` 额外要求 Docker daemon/CLI、openssl，以及已预加载的审核 MySQL8.4 digest 镜像；不 pull。PowerShell 验证入口只供有 Go、Git 和所需 module cache 的构建机使用，支持 PowerShell5.1/7语法，不是无Go现场的入口。若现场没有 Docker，不能默认为可运行自建实例方案；需在独立诊断机运行，或由 owner 事先提供同机 loopback 上的专用 SAN/TLS 实例。不要在现场安装 Go 临时冷编译。
+工具依赖按阶段明确区分：snapshot/package 需要 Bash、Git、find、支持 `-z` 的 sort、支持 `-0/-r` 的 xargs、cmp、sha256sum、od、tr 和 cp/chmod/mkdir 等文件工具；该脚本本身不调用 Go。`run-diagnostic.sh` 需要 Linux amd64、Bash、GNU coreutils/grep（尤其 sha256sum `--strict`、stat `-c`、mktemp/cp/chmod/tee/rm、uname），archive 解包命令另需 tar/gzip。原 CGO_ENABLED=0 的 testbinary 自带 Go runtime、HTTP/TLS services 和内嵌 migrations，目标机无需 Go/node/npm/mysql CLI/kubectl。可选 `run-disposable.sh` 额外要求 Docker daemon/CLI、openssl，以及已预加载的审核 MySQL8.4 digest 镜像；不 pull。PowerShell 验证入口只供有 Go、Git 和所需 module cache 的构建机使用，支持 PowerShell5.1/7语法，不是无Go现场的入口。若现场没有 Docker，不能默认为可运行自建实例方案；需在独立诊断机运行，或由 owner 事先提供同机 loopback 上的专用 SAN/TLS 实例。不要在现场安装 Go 临时冷编译。
 
 ## 3. 专用凭据与实例要求
 
