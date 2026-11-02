@@ -41,8 +41,26 @@
     "validation": ["B independent read-only review", "Bash syntax check", "bounded import and push", "original failure preserved during cleanup"],
     "official_image_default_cmd_is_dev_and_must_be_overridden": true
   },
-  "field_node_import_executed": false,
-  "field_private_registry_readback_executed": false,
+  "field_import_user_receipt": {
+    "attachment_sha256": "bac0fff72a73a0c118474018a3d83c9b8bec9b787c4cccc10c2b7f0af3fe9f09",
+    "result": "official_image_import_and_registry_readback=passed",
+    "import_elapsed_seconds": 5.5,
+    "push_elapsed_seconds": 12.1,
+    "original_manifest_digest_retained": true,
+    "transfer_archive_deleted": true
+  },
+  "installer_review": {
+    "script": "scripts/system-backup-d-transit-install.py",
+    "script_sha256": "6f8c97707ee9dc2fc3823b061116e8ecdfdebae80b3f9db2ddff89809c969f5b",
+    "image_input_sha256": "34b344918156116ac990c7a6a59e1b14f79a63b7574f9dadef5cd2057706a3ca",
+    "local_mock_cases_passed": 8,
+    "mock_log_sha256": "b551493461d4148454bb9b1db39733eaf261fbd89bf9f571da309495de06186f",
+    "mock_scope": "Namespace replacement refusal, existing-resource refusal, delete UID precondition/replacement refusal, nondev manifest/new PVC, exact Pod/context/JWT leeway, restart Pod replacement/deployment UID/readback gate",
+    "linux_private_file_permissions_tested": false,
+    "actual_provider_operations_tested_by_supervisor": false
+  },
+  "field_node_import_executed": true,
+  "field_private_registry_readback_executed": true,
   "provider_installed": false,
   "production_owner_mapping_registered": false,
   "full_page_acceptance": false,

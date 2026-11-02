@@ -1,0 +1,15 @@
+{
+  "schema_version": "d-transit-image-input.v1",
+  "image": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+  "image_id_digests": [
+    "sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855"
+  ],
+  "entrypoint": "/bin/vault",
+  "version": "2.2.1",
+  "architecture": "amd64",
+  "transport_tag": "10.130.14.23:5000/clawmanager-backup-vault:2.2.1-2194d86d",
+  "upstream_reference": "hashicorp/vault:2.2.1",
+  "provenance": "supervisor verified official Docker manifest/config/layer bytes; original manifest digest retained",
+  "archive_sha256": "b6e6a6230dad679c81827d27b62e23912e6f0f79ab71ff7c09fc6bdd6012a4de",
+  "node_pull_tested": false
+}
