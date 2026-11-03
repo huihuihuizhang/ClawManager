@@ -1,0 +1,34 @@
+{
+  "schema_version": "supervisor-original-archive-private-file-limit-review.v1",
+  "source_manifest_sha256": "9e47138df21fbec10ca3f33631b719ac4208ed586dbddb90c2288d2cc0ba1e1b",
+  "problem": "The three provider definition/recheck/native-plan callers requested a 1 MiB read limit which the actual private reader rejects before reading any file.",
+  "accepted_change": "Exactly three call sites use a private helper with the existing 262144-byte maximum. The shared reader, readonly SQL path, source hash/identity and native authorization are unchanged.",
+  "original_provider_sha256": "dabdb96e9f88e107c82b0c01018e445780aa9c33ee1354aceefdac5794c02dd5",
+  "independent_validation": {
+    "scope": "Actual complete install package, in the frozen D4+A3+B4+C5 combination with the three-call fix.",
+    "windows_default_vet": true,
+    "private_file_roots": 2,
+    "private_file_subcases": 3,
+    "combined_roots_passed": 16,
+    "combined_subcases_passed": 66,
+    "skipped": [
+      "TestOriginalMaintenanceExpiryRetainsAdmissionWithEmptyParticipants",
+      "TestGateWatchdogRequiresActualParticipantResume"
+    ],
+    "native_mysql_or_full_provider_authorization_executed": false,
+    "linux_complete_package": "running; not claimed as passed",
+    "log_sha256": "1acb14d6a6ef3bb928437db17f1ba099eb5d238e04cefe8b530c79942d869a37"
+  },
+  "owner_linux_validation": {
+    "evidence": "docs/evidence/system-backup-c-original-archive-filelimit-fix-20261104.json",
+    "scope": "Mechanically extracted exact production ReadPrivateFile function plus the new helper/tests; real file IO, size boundary, uid/0600 and symlink refusals. Not the full provider/gate/native-copy path.",
+    "roots": 2,
+    "subcases": 3,
+    "failures": 0,
+    "skips": 0
+  },
+  "test_artifact_lifecycle": "Windows test executables are owned by go test and removed on completion. The current combination Linux build/validation batch is still active; its owned binaries/cache/tmp are removed after that batch ends.",
+  "field_deployment": false,
+  "first_adoption_complete": false,
+  "page_backup_complete": false
+}

@@ -88,7 +88,7 @@ func (i *Installer) PrepareOriginalAdoptionArchiveProvider(ctx context.Context, 
 		reservation.ServerUUID != i.plan.Target.ServerUUID || reservation.Database != i.plan.Target.Database {
 		return nil, ErrInstall
 	}
-	raw, err := ReadPrivateFile(sourceFile, 1<<20)
+	raw, err := readOriginalArchivePrivateFile(sourceFile)
 	var d OriginalArchiveProviderDefinition
 	identity, identityErr := controller.OriginalAdoptionReservationIdentitySHA256(reservation)
 	if err != nil || hash(raw) != sourceSHA || decodeExact(raw, &d) != nil || identityErr != nil ||
@@ -210,7 +210,7 @@ func (p *OriginalAdoptionArchiveProvider) current() error {
 		p.operator.authority(p.ctx, p.enrollment) != nil {
 		return p.fail()
 	}
-	raw, err := ReadPrivateFile(p.sourceFile, 1<<20)
+	raw, err := readOriginalArchivePrivateFile(p.sourceFile)
 	if err != nil || hash(raw) != p.sourceSHA {
 		return p.fail()
 	}
@@ -255,7 +255,7 @@ func (p *OriginalAdoptionArchiveProvider) CreateUnadmittedEncryptedCopy(ctx cont
 		native.MaxSeconds > p.definition.MaximumSeconds {
 		return nil, p.fail()
 	}
-	planRaw, err := ReadPrivateFile(native.PlanFile, 1<<20)
+	planRaw, err := readOriginalArchivePrivateFile(native.PlanFile)
 	var plan struct {
 		Root          string `json:"root"`
 		PodUID        string `json:"pod_uid"`
