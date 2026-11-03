@@ -1,0 +1,330 @@
+{
+  "schema_version": "supervisor-signing-resource-native-review.v1",
+  "reviewed_at": "2026-11-03T00:34:54.221521+00:00",
+  "baseline_commit": "d04a644c9e210d82537f63503ecb4fa4f303b86b",
+  "decision": "SOURCE_INTEGRATION_ONLY; NO_GO_FOR_FIELD_DEPLOYMENT_OR_FULL_PAGE_ACCEPTANCE",
+  "acceptance_scope": {
+    "real_page_nonempty_complete_requested_six_domain_backup_required": true,
+    "source_business_original_state_restored_required": true,
+    "same_task_formal_artifact_independent_full_readback_signed_catalog_and_succeeded_required": true,
+    "isolated_restore": false,
+    "disaster_recovery_qualified": false
+  },
+  "source_files_and_documents": {
+    "backend/internal/systembackupinstallationowner/signing_resource_contract.go": "779f80f4a3beb5dba5820ccd43bb0103c402c62cb1fd646bcab879ccec65e31b",
+    "backend/internal/systembackupinstallationowner/signing_resource_codec.go": "32111977cb2e8274b23824f34108277888581cd0ef246d39cba2eebeeaf33953",
+    "backend/internal/systembackupinstallationowner/signing_resource_sql.go": "fa32b3f81761cece7e156f0748facb6ba62738fdcc05e1ec67b08f288f0386ad",
+    "backend/internal/systembackupinstallationowner/signing_resource_material.go": "8c0bb54746d65b182fbdf881e297c800307da7c4387df2fcdca2b4fa358ef5cc",
+    "backend/internal/systembackupinstallationowner/signing_resource_metadata.go": "0ab645cbef99b0e6e5ce876b935f93c42fbaaea8cdaa0269b9de882c188dde61",
+    "backend/internal/systembackupinstallationowner/signing_resource_observe.go": "b51a89a279d7ecb65ee49bfd2eb45afda50121bdd8c509545e678d1db854b10e",
+    "backend/internal/systembackupinstallationowner/signing_resource_terminal.go": "adafd93962dc670580a0970c348eacadf0cd536f6c535a63fe92269f2a728ec5",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_issue.go": "7b766d09cc79bc2d5dbb19897b10d8d18484b026c16e52abaa33db953dc302c2",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_revoke.go": "b49735f84c8f222d0abcf4b5827c5cd3ca7ca1ed3d518f87510f74558d73d883",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_composition.go": "aa83cf7e59f6ab9322a01d25f92a7701134329fc8c8cedcd343786185605fb6d",
+    "backend/internal/systembackupinstallationowner/signing_resource_test.go": "ded163dff6774920409774fa301142a93431ff6e7a983c359b92a54fdaf77f87",
+    "backend/internal/systembackupinstallationowner/signing_resource_sql_test.go": "2106c455a44d57e9060bff4f7e7ba96d74e5011a15a53411cc303ae4ea96f0ab",
+    "backend/internal/systembackupinstallationowner/signing_resource_observe_test.go": "c3ec2ab5973ebc065817761e0098e509861cf6a265ff859c95122df765b1b705",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_bundle_test.go": "7107d33a5a4dad8b4d2949a7f4a28275174a2a9d72a3129c98ba81a2aa22d95c",
+    "docs/drafts/system-backup-a-signing-resource-sql-contract-20261103.json": "d44e4f252aa026c4aad879a7cdaa3fb3afe1578f517c08285d180ee9dd3ce40d",
+    "backend/internal/db/migrations/136_backup_v2_signing_resource_authority.sql": "1471b28fe470f5fab5d0519a3c73f844629da31858416bf72c5d887ec290e1b5",
+    "backend/internal/db/signing_resource_authority_migration_test.go": "930aff68a26c99d4c9cb837825565cb77a41df818499e0862b759d5f99b855e5",
+    "backend/internal/migrationcatalog/reviewed_catalog.go": "de31912b1dd202bbdd449c8d17cf1883a4e3479735b93766a897e151d7a0654f",
+    "docs/backup-team-integration/catalog.json": "be00fb11136c3498199a727ee91d6d84f09636503390e5ab7df65461eff4ae13",
+    "contracts/system-backup/v12/schema-registry.json": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+    "backend/internal/systembackupbusinessa/testdata/schema-registry.json": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+    "backend/internal/systembackup/v2_control_registry.go": "6dac94581e70a9539d114c241e3428ac02ad7979d8066bea1c96aa57e70e6cc6",
+    "backend/internal/systembackup/schemaobjects/control_tables.go": "65291a92de849b07d1529bb9194e9ec01a9f82bec3cafc89c06c199abc9cf207",
+    "scripts/backup-team-catalog.py": "4d894735f79ee9ba028696358b82813d2efce96a348c4287f53367aca3682e97",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_sql_rows.go": "2f43940195e6f526e1ac23082bed207166e9056a698983521561a810f99b8108",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store.go": "55c088109dacd0cc7e682e046ef6a30de30252f7bec67a37ff136dfe31a4cbe8",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store_test.go": "32d57c79f3b58520e650a0cc24ba5e47b5e369b256c52a07f2d747129d8d2e6b",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_fixture_test.go": "80b91a4b490ad3a9b5c9470a98b6dbc0a8f26fb2c1f439920dc7a1f0a00dfba3",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_monitor_test.go": "9f6a7d947532062e0556f8c42e87a2ed0d48eeac6f4e5be03404349f1c74d2be",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_readback_test.go": "9b14819badeca3d52bfdb9a151adcd998f91c34d23ed7c6a0b46c5c8d9b97d4b",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_scenarios_test.go": "49944153b5ad2349b69fec92ce15d8d929611b6aedf2e201d1980343f1d044cc",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_schema_test.go": "0ce00a1957007bc3439f3fa04bded5650a502788d0eaa8075d10d560aa676639",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_drift_test.go": "e392eab7036c4f95abe9c18a68d7e345cc179160ac174b87a0f7bee359f76c0a",
+    "docs/evidence/system-backup-d-signing-resource-native-foundation-handoff-20261103.md": "7ee772d51f10f02730fc7330efd327b33b6aad76124975f31e59bff9afcc3e97",
+    "scripts/system-backup-b-local-mysql-fixture.py": "0b945407076c522eed45081afc4eda7c99d04336d3d01b5ea58e5f8a5a355a5c",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_declaration_test.go": "66b0a1717fc013abbdd81ac3d3f93beaba051e61bb7fe3374c4c7f7c5c3c47dc",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_roots_test.go": "44e30e94d03aface835b9d27b0876c9de2c8917fc16aded89a7c3bea9fcc32d4",
+    "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-handoff-20261103.md": "2de9ae0961248667607a0aa6789f9e69089f359133c61fd5ca114c906a7d3753",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_issuer_helper_test.go": "2938c1ce67b9b969a5d0ef62fb520a6bfcf489b817a77cc3a2c998cb6a450e98",
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_actual_issuer_test.go": "3431797b289d0f42b394868578155c1463ee4a9e9e59b30cfbb27195aec4db82",
+    "docs/drafts/system-backup-a-native-signer-issuer-helper-20261103.json": "066d1f4c11e05fd3a3da68c4d6d4a3313091c138d3ddb59b09ef7cc27f2115fd"
+  },
+  "frozen_manifests": {
+    "docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json": "e42a1530e66a12b7d0176d41b5a66aa9a0e04bcc62b576f368cb40ff19d10d8b",
+    "docs/evidence/system-backup-d-signing-resource-schema136-pins-20261103.json": "9671b9173886072fb1fea071e0ae6df4ceb2ac962588c3c94f43bff7c3d4b076",
+    "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json": "6ae43be027d8387262aa3ecf8914082e8df640aabaec4e3bd1144a22c1e636a7",
+    "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json": "36d192bac4de14ceea2514ce3bd8f3defa5e500882e8e33a6bf091297bf79ec4",
+    "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json": "ed732cdf36a34849626e1354c9655d3d269d1dda8711bd1390a0b488129b17f1",
+    "docs/drafts/system-backup-a-native-signer-actual-issuer-root-20261103.pins.json": "11a45c2b204fc2402e7a1e941bb4fd42afb3a8f62f59f2adcee34c54394ca98f"
+  },
+  "schema_supersedes": [
+    {
+      "path": "backend/internal/migrationcatalog/reviewed_catalog.go",
+      "sha256": "de31912b1dd202bbdd449c8d17cf1883a4e3479735b93766a897e151d7a0654f",
+      "supersedes_sha256": "1a5896781bafd3dbb68d8a699782334c11f0d8ba1270183e299960091475e3bc"
+    },
+    {
+      "path": "docs/backup-team-integration/catalog.json",
+      "sha256": "be00fb11136c3498199a727ee91d6d84f09636503390e5ab7df65461eff4ae13",
+      "supersedes_sha256": "9de5ecffb78178c7c19f6c1e2520fca0c592edf4f1d3a629da6c0dd67fbac1a0"
+    },
+    {
+      "path": "contracts/system-backup/v12/schema-registry.json",
+      "sha256": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+      "supersedes_sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "backend/internal/systembackupbusinessa/testdata/schema-registry.json",
+      "sha256": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+      "supersedes_sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "backend/internal/systembackup/v2_control_registry.go",
+      "sha256": "6dac94581e70a9539d114c241e3428ac02ad7979d8066bea1c96aa57e70e6cc6",
+      "supersedes_sha256": "fe0872586dd2cc8e217c7810eceb3ae87d14528f6adc348acea3f8760b4a3789"
+    },
+    {
+      "path": "backend/internal/systembackup/schemaobjects/control_tables.go",
+      "sha256": "65291a92de849b07d1529bb9194e9ec01a9f82bec3cafc89c06c199abc9cf207",
+      "supersedes_sha256": "d8c9d2a4e67e9bcc84c5ea24ce731aec0f28f48831b547cb0c8a05979f13065d"
+    },
+    {
+      "path": "scripts/backup-team-catalog.py",
+      "sha256": "4d894735f79ee9ba028696358b82813d2efce96a348c4287f53367aca3682e97",
+      "supersedes_sha256": "ebaf5ac32f8d1ff16b242a1b169b0deb0cd824ddaae486817f676731bdea05f1"
+    }
+  ],
+  "root_native_runner_supersede": {
+    "path": "scripts/system-backup-b-local-mysql-fixture.py",
+    "old_sha256": "58f678f200b1e22dded8741728f6989a5bb5a9b9a765a8e51a2901609dcb2f6c",
+    "sha256": "0b945407076c522eed45081afc4eda7c99d04336d3d01b5ea58e5f8a5a355a5c",
+    "reason": "Allow only the additional exact supervisor signing review owner label to reuse its own source.parent/linux-cache; path equality, fixed local image IDs, independent UUID, private fixture credentials and owned cleanup remain unchanged. Root workflow exception, not provider/source permission.",
+    "syntax_ast": "PASS"
+  },
+  "changes": [
+    "Independent purpose-partitioned original acceptance/catalog signer resource Grant/Head codec, controlled SQL current reader and concrete grouped terminal owner. Existing capture authorization and later task business signing authority remain distinct.",
+    "Additive migration136 creates signer heads/grants; reviewed full migration catalog becomes177. Both tables remain installation-local excluded control metadata, never restored as runnable authority; canonical/mirror registry and generator agree.",
+    "Authenticated installer locks original admin then acceptance head/grant before catalog head/grant. Atomic install and exact terminal revoke preserve signed original grant bytes/windows; lost commit acknowledgement is unknown until exact independent readback resolves it.",
+    "Actual native consumer SELECT-only and installer column-scoped privileges, raw tuple/CAS/signature/state checks, rollback and actual performance_schema wait edges verified locally.",
+    "Actual IssueSigningResourceInstall emits both original purposes using real native admin/enrollment and controlled TLS Vault/Kube protocols; actual import/resolve/four-row/SELECT-only readback succeeds after probe service closes.",
+    "Root runner permits one additional exact supervisor owner label for its own source.parent/linux-cache; all path/immutable-image/independent-UUID/private-credential/owned-cleanup restrictions retained."
+  ],
+  "verification": {
+    "catalog_generator_check_exit": 0,
+    "component_roots_passed": 19,
+    "component_subcases_passed": 28,
+    "component_results": {
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceObserverActualPurposeJWTAndNonBusinessProbe": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceObserverRejectsOtherPurposeMetadataAndTailDrift": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceCurrentSQLExactPurposeAndSharedClock": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceCurrentRevocationAndSourceDrift": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceIndependentPurposeAndOriginalGrantDomain": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourceReusesExactInstalledMappingAndCompletePublicHistory": "pass",
+      "clawreef/internal/systembackupinstallationowner::TestSigningResourcePreservesLegacySignedMaterialBytes": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestSigningResourceBundleSeparateGrantAndTerminalRevocation": "pass",
+      "clawreef/internal/db::TestSigningResourceAuthorityMigrationIsIndependentAndHasNoSeed": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestSigningResourceSQLInstallReplayRevokeAndUnknownResolveComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestSigningResourceSQLRejectsChangedExpectedTupleWithoutWritesComponent": "pass",
+      "clawreef/internal/systembackupinstallationowner/install::TestSigningResourceSQLPurposeOrderUsesOriginalCodecComponent": "pass",
+      "clawreef/internal/migrationcatalog::TestComputeIsSortedLFNormalizedAndContentAddressed": "pass",
+      "clawreef/internal/migrationcatalog::TestComputeRejectsNilFilesystem": "pass",
+      "clawreef/internal/migrationcatalog::TestRepositoryCatalogMatchesSystemBackupContract": "pass",
+      "clawreef/internal/systembackupbusinessa::TestEmbeddedBusinessRegistryFixtureMatchesCanonical": "pass",
+      "clawreef/internal/systembackupbusinessa::TestPinnedMetadataRegistryDoesNotExpandCaptureScope": "pass",
+      "clawreef/internal/systembackup::TestRegistryCoversEmbeddedTableMigrations": "pass",
+      "clawreef/internal/systembackup::TestCoverageRejectsUnknownObjectsAndInjection": "pass"
+    },
+    "component_go_json_sha256": "8ef763a8ab0b35a3759f228931ca8e68e7c91b72003488492c5800116e60fe0e",
+    "component_root_fail": 0,
+    "component_root_skip": 0,
+    "schemaobjects_package_has_no_test_roots": true,
+    "native_roots_passed": 5,
+    "native_lock_subcases_passed": 2,
+    "native_results": {
+      "TestSigningResourceSQLNativeFull177AndNarrowRoles": "pass",
+      "TestSigningResourceSQLNativeDeclaredInstallReplayAndRevoke": "pass",
+      "TestSigningResourceSQLNativeDeclaredRollbackLostACKAndResolve": "pass",
+      "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder": "pass",
+      "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback": "pass"
+    },
+    "native_subcases": {
+      "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/head:acceptance_record": "pass",
+      "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/grant:catalog_record": "pass"
+    },
+    "native_attempts": {
+      "b-mysql-efc8d3ae1a974d959cc548e383ec5e48": {
+        "result": {
+          "schema_version": "b-local-mysql-fixture.v1",
+          "status": "PASSED_LOCAL_FIXTURE",
+          "scope": "LOCAL_FIXTURE_DATA_ONLY",
+          "production_accepted": false,
+          "tests": [
+            {
+              "package": "clawreef/internal/systembackupinstallationowner/install",
+              "passed_tests": [
+                "TestSigningResourceSQLNativeFull177AndNarrowRoles"
+              ],
+              "json_sha256": "e0bff87d99341f5322016781bedc9b726cc8db1de9a953f716d2eb2f5b2d5e0a"
+            }
+          ],
+          "selection_sha256": "974d59b090b5eda00b8ce5aa27afe772e3ad1aadaa6f807a36edeb56649cf2a5",
+          "server_uuid": "0a43aff6-d70f-11f1-8ef0-626dfba34055",
+          "mysql_image": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+          "go_image": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+          "san_verified": true,
+          "tls": "TLSv1.3",
+          "host_ports_published": false,
+          "supervisor_cache_preserved": true,
+          "cleanup_failures": [],
+          "owned_test_assets_removed": true,
+          "finished_at": "2026-11-02T22:55:02.252515+00:00"
+        },
+        "migration_counts": {
+          "TestSigningResourceSQLNativeFull177AndNarrowRoles": 177
+        },
+        "roots": {
+          "TestSigningResourceSQLNativeFull177AndNarrowRoles": "pass"
+        },
+        "subcases": {},
+        "result_sha256": "b0deb3b074f3c55db0636b672eb3271d6a82499d8105905535ed2aa2504d2d63"
+      },
+      "b-mysql-63b88ffb22c1421f9ae9798ce221d7cd": {
+        "result": {
+          "schema_version": "b-local-mysql-fixture.v1",
+          "status": "PASSED_LOCAL_FIXTURE",
+          "scope": "LOCAL_FIXTURE_DATA_ONLY",
+          "production_accepted": false,
+          "tests": [
+            {
+              "package": "clawreef/internal/systembackupinstallationowner/install",
+              "passed_tests": [
+                "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder",
+                "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/grant:catalog_record",
+                "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/head:acceptance_record",
+                "TestSigningResourceSQLNativeDeclaredInstallReplayAndRevoke",
+                "TestSigningResourceSQLNativeDeclaredRollbackLostACKAndResolve"
+              ],
+              "json_sha256": "245299de52142fd820a9b84540976669b8f664e339f3d9852424de99438340c2"
+            }
+          ],
+          "selection_sha256": "d421629f7c4e89e0944de73140059694d89dc29bb8437787de74f443aa0b47da",
+          "server_uuid": "9d8bb0c5-d710-11f1-b2ee-122fb3f3ac81",
+          "mysql_image": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+          "go_image": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+          "san_verified": true,
+          "tls": "TLSv1.3",
+          "host_ports_published": false,
+          "supervisor_cache_preserved": true,
+          "cleanup_failures": [],
+          "owned_test_assets_removed": true,
+          "finished_at": "2026-11-02T23:00:25.013127+00:00"
+        },
+        "migration_counts": {
+          "TestSigningResourceSQLNativeDeclaredInstallReplayAndRevoke": 177,
+          "TestSigningResourceSQLNativeDeclaredRollbackLostACKAndResolve": 177,
+          "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/head:acceptance_record": 177,
+          "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/grant:catalog_record": 177
+        },
+        "roots": {
+          "TestSigningResourceSQLNativeDeclaredInstallReplayAndRevoke": "pass",
+          "TestSigningResourceSQLNativeDeclaredRollbackLostACKAndResolve": "pass",
+          "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder": "pass"
+        },
+        "subcases": {
+          "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/head:acceptance_record": "pass",
+          "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder/grant:catalog_record": "pass"
+        },
+        "result_sha256": "6516d7d9fc118655e17317891f247ecb9fef5f0a9a3aa07b348afbc97518d9a8"
+      },
+      "b-mysql-1cac813803e54b2a842a9fba6fb4bbbc": {
+        "result": {
+          "schema_version": "b-local-mysql-fixture.v1",
+          "status": "PASSED_LOCAL_FIXTURE",
+          "scope": "LOCAL_FIXTURE_DATA_ONLY",
+          "production_accepted": false,
+          "tests": [
+            {
+              "package": "clawreef/internal/systembackupinstallationowner/install",
+              "passed_tests": [
+                "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback"
+              ],
+              "json_sha256": "b24539cb7299b0adbcbec2e55881a792edf13fcdb7843d86fd039a8de6769ff6"
+            }
+          ],
+          "selection_sha256": "8c1610639a6485068b324f8701a1ef594c111885d60fb8c64a91e0a7646c771c",
+          "server_uuid": "63083b4c-d711-11f1-803d-b1ad4c776ec4",
+          "mysql_image": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+          "go_image": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+          "san_verified": true,
+          "tls": "TLSv1.3",
+          "host_ports_published": false,
+          "supervisor_cache_preserved": true,
+          "cleanup_failures": [],
+          "owned_test_assets_removed": true,
+          "finished_at": "2026-11-02T23:04:38.004477+00:00"
+        },
+        "migration_counts": {
+          "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback": 177
+        },
+        "roots": {
+          "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback": "pass"
+        },
+        "result_sha256": "e06b91b6a88103486a71d5f1ad74d1d6fcbe27f633957d37e35a3793d2a95e7a",
+        "limits": "Actual original issuer method and real native SQL; TLS Vault/Kube controlled, no current full terminal/main/field/backup acceptance."
+      }
+    },
+    "owned_full177_schemas": 6,
+    "native_environment": "Owned MySQL8.4.8 Linux amd64, independent UUID per fixture, SAN verified TLS1.3, no published host ports. Kube/Vault controlled, not field provider proof.",
+    "full_linux_server_build": {
+      "exit": 0,
+      "sha256": "a607a3e9f0117edfbc3cb153794bec2b062095ea1668dbc3afdbf2f5ed7198dd",
+      "format": "ELF64 little-endian AMD64",
+      "binary_deleted": true
+    }
+  },
+  "proof_limits_and_remaining": [
+    "Declared SQL lifecycle roots intentionally use explicit original test issuer declarations; they do not establish production provider qualification. Separate actual issuer root invokes real IssueSigningResourceInstall but still uses controlled TLS Vault and Kube transports.",
+    "Neither native SQL readback nor component tests prove full grouped terminal positive admission through all owners/private final read view, complete first installation or actual deployment.",
+    "D signing consumer exporter/CLI/main composition, C MinIO first-install CLI and native provider qualification, A original KEK/reference owner, B taskless source registries/physical full reader remain separate unreviewed or unexecuted batches; none counted installed here.",
+    "Actual server task route remains conditional on public-v1/profile/V2 flags and current authorization. Root source search found WireServices only in its definition/tests; D must verify equivalent real bootstrap/mutation and runtime wiring rather than add a nominal call.",
+    "Original-window field capture performance, actual full writer recovery, six-domain nonempty artifact, independent fixed-version EOF/SHA/decrypt/business readback, signed catalog query and same task succeeded remain unverified.",
+    "R8 diagnostic source723f51bc and four payload hashes unchanged, pending user execution. No SSH/SCP/field calls or application image deployment in this batch. No isolated restore or disaster-recovery qualification."
+  ],
+  "newline_preservation": "Narrow -text rules preserve exact published CRLF hashes of new catalog/mirror JSON and frozen manifests; frozen owner bytes were not rewritten.",
+  "cleanup": {
+    "signing-docker-cleanup.json": {
+      "sha256": "3853e0f7b48a4c947c4c94e1ba732f73d70cdd740021996848a1bc35fec279ef",
+      "receipt": {
+        "field_access_performed": false,
+        "introduced_mysql_image_removed": "sha256:2952e3be7807f06fc18de50b3ea1a632d5c70d63482ff7d7376fe3aa8999babf",
+        "recorded_at": "2026-11-03T00:34:33.0236222Z",
+        "startup_observation_timeout_repolled_same_engine": true,
+        "preexisting_go_image_and_buildkit_retained": true,
+        "owned_build_volume_removed": "codex-signing-tmp-b456daa7b439413e",
+        "owner": "supervisor-signing-resource-review-20261103",
+        "stop_exit": 0,
+        "desktop_prior_off_restored": true,
+        "owned_containers_absent": true,
+        "server_and_linux_tmp_removed": true
+      }
+    },
+    "signing-worktree-cleanup.json": {
+      "sha256": "eab0ff4de0b2bb114106d66a96629adc52406e574eb5199fcdc5ef648ef5b8b2",
+      "receipt": {
+        "root": "D:\\codex-backup-signing-review-b456daa7b439413e812be399e98180f5",
+        "recorded_at": "2026-11-03T00:31:08.5105662Z",
+        "owned_worktree_cache_and_binaries_removed": true,
+        "user_files_and_pending_R8_retained": true,
+        "text_evidence_retained": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab",
+        "source_document_hashes_verified": 41,
+        "owner": "supervisor-signing-resource-review-20261103",
+        "manifest_hashes_verified": 6
+      }
+    }
+  },
+  "retained_evidence_directory": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\.tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab"
+}

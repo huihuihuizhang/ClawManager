@@ -1,0 +1,54 @@
+{
+  "schema_version": "system-backup-d-signing-resource-native-declaration-roots-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_AND_NATIVE_SQL",
+  "go_source_count": 2,
+  "file_count": 3,
+  "complete_native_go_source_count_with_foundation": 8,
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_declaration_test.go",
+      "sha256": "66b0a1717fc013abbdd81ac3d3f93beaba051e61bb7fe3374c4c7f7c5c3c47dc"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_roots_test.go",
+      "sha256": "44e30e94d03aface835b9d27b0876c9de2c8917fc16aded89a7c3bea9fcc32d4"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-handoff-20261103.md",
+      "sha256": "2de9ae0961248667607a0aa6789f9e69089f359133c61fd5ca114c906a7d3753"
+    }
+  ],
+  "required_complete_dependencies": [
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+      "sha256": "36d192bac4de14ceea2514ce3bd8f3defa5e500882e8e33a6bf091297bf79ec4",
+      "recursive": true
+    }
+  ],
+  "supersedes_scope": "Earlier foundation prerequisite only: explicit test declarations now permit native SQL lifecycle roots; production issuance/provider proof remains separately unverified. No historical file bytes rewritten.",
+  "all_native_roots": [
+    "TestSigningResourceSQLNativeFull177AndNarrowRoles",
+    "TestSigningResourceSQLNativeDeclaredInstallReplayAndRevoke",
+    "TestSigningResourceSQLNativeDeclaredRollbackLostACKAndResolve",
+    "TestSigningResourceSQLNativeDeclaredConsumerRevokeLockOrder"
+  ],
+  "lock_subcases": [
+    "head:acceptance_record",
+    "grant:catalog_record"
+  ],
+  "declaration_helper": "nativeSignerOriginalDeclarationInputs",
+  "actual_production_issuer_helper_symbol_reserved_for_A": "issueNativeSigningResourceOriginalBundles",
+  "claims": {
+    "original_enrolled_native_fixture_key_signs_new_explicit_test_declarations": true,
+    "old_model_signed_target_transplanted": false,
+    "production_IssueSigningResourceInstall_called": false,
+    "provider_authorization_verified": false,
+    "compiled_by_d": false,
+    "tests_run_by_d": false,
+    "native_sql_executed_by_d": false,
+    "test_build_products_created": false,
+    "end_to_end_backup_complete": false,
+    "deployment_approved": false,
+    "dr_status": "unavailable/not_provided"
+  }
+}

@@ -41,6 +41,8 @@ var excludedControlTables = []string{
 	"system_backup_resources",
 	"system_backup_restore_evidence",
 	"system_backup_restore_jobs",
+	"system_backup_signing_resource_grants",
+	"system_backup_signing_resource_heads",
 	"system_backup_stage_resources",
 	"system_backup_strong_auth_nonces",
 	"system_backup_tasks",

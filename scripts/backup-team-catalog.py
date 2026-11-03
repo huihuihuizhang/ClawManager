@@ -80,6 +80,8 @@ def outputs():
                     "system_backup_minio_owner_heads",
                     "system_backup_minio_owner_grants",
                     "system_backup_minio_owner_refs",
+                    "system_backup_signing_resource_heads",
+                    "system_backup_signing_resource_grants",
                 ]) + '\t)\n}\n')
     yield ROOT / "backend/internal/systembackup/v2_control_registry.go", registry
 

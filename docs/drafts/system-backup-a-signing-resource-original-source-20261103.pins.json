@@ -1,0 +1,74 @@
+{
+  "schema": "system-backup-a-signing-resource-original-source.pins.v1",
+  "date": "2026-11-03",
+  "status": "FROZEN_SOURCE_ONLY_NOT_COMPILED_NOT_OPERATIONAL",
+  "reported_root_baseline": "54f6222fc307e742712115e651a31ec01189022b",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_contract.go",
+      "sha256": "779f80f4a3beb5dba5820ccd43bb0103c402c62cb1fd646bcab879ccec65e31b"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_codec.go",
+      "sha256": "32111977cb2e8274b23824f34108277888581cd0ef246d39cba2eebeeaf33953"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_sql.go",
+      "sha256": "fa32b3f81761cece7e156f0748facb6ba62738fdcc05e1ec67b08f288f0386ad"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_material.go",
+      "sha256": "8c0bb54746d65b182fbdf881e297c800307da7c4387df2fcdca2b4fa358ef5cc"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_metadata.go",
+      "sha256": "0ab645cbef99b0e6e5ce876b935f93c42fbaaea8cdaa0269b9de882c188dde61"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_observe.go",
+      "sha256": "b51a89a279d7ecb65ee49bfd2eb45afda50121bdd8c509545e678d1db854b10e"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_terminal.go",
+      "sha256": "adafd93962dc670580a0970c348eacadf0cd536f6c535a63fe92269f2a728ec5"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_issue.go",
+      "sha256": "7b766d09cc79bc2d5dbb19897b10d8d18484b026c16e52abaa33db953dc302c2"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_revoke.go",
+      "sha256": "b49735f84c8f222d0abcf4b5827c5cd3ca7ca1ed3d518f87510f74558d73d883"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_composition.go",
+      "sha256": "aa83cf7e59f6ab9322a01d25f92a7701134329fc8c8cedcd343786185605fb6d"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_test.go",
+      "sha256": "ded163dff6774920409774fa301142a93431ff6e7a983c359b92a54fdaf77f87"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_sql_test.go",
+      "sha256": "2106c455a44d57e9060bff4f7e7ba96d74e5011a15a53411cc303ae4ea96f0ab"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/signing_resource_observe_test.go",
+      "sha256": "c3ec2ab5973ebc065817761e0098e509861cf6a265ff859c95122df765b1b705"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_bundle_test.go",
+      "sha256": "7107d33a5a4dad8b4d2949a7f4a28275174a2a9d72a3129c98ba81a2aa22d95c"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-signing-resource-sql-contract-20261103.json",
+      "sha256": "d44e4f252aa026c4aad879a7cdaa3fb3afe1578f517c08285d180ee9dd3ce40d"
+    }
+  ],
+  "validation": "gofmt only; no Go tests/list/build/vet, SQL, actual provider/remote or Git; no test/build products created",
+  "pending": "D actual new schema, atomic installer import/revoke/unknown-commit resolve, independent consumer export/selection and full main/CLI/native integration; no full backup/DR or page readiness claim",
+  "root_test_commands": [
+    "cd backend; go test ./internal/systembackupinstallationowner -run ^TestSigningResource -count=1 -v",
+    "cd backend; go test ./internal/systembackupinstallationowner/install -run ^TestSigningResource -count=1 -v"
+  ]
+}

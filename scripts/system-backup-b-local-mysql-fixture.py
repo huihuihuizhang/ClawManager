@@ -429,7 +429,10 @@ def main():
         if args.go_cache_dir:
             args.go_cache_dir = local_path(args.go_cache_dir, True)
             if (args.go_cache_dir != args.source.parent / "linux-cache"
-                    or (args.source.parent / ".owner").read_text(encoding="ascii").strip() != "supervisor-sequence-sql-review-20261103"):
+                    or (args.source.parent / ".owner").read_text(encoding="ascii").strip() not in {
+                        "supervisor-sequence-sql-review-20261103",
+                        "supervisor-signing-resource-review-20261103",
+                    }):
                 raise FixtureError("supervisor_cache_owner_or_path")
         selection_file = local_path(args.selection_json)
         root = local_path(args.evidence_root, True)

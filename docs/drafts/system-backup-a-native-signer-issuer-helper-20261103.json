@@ -1,0 +1,18 @@
+{
+  "schema": "a-native-signer-target-bound-actual-issuer-helper.v1",
+  "date": "2026-11-03",
+  "status": "FROZEN_NEW_TEST_HELPER_SOURCE_ONLY_NOT_EXECUTED",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/signing_resource_native_issuer_helper_test.go": "2938c1ce67b9b969a5d0ef62fb520a6bfcf489b817a77cc3a2c998cb6a450e98"
+  },
+  "build_tag": "systembackup_mysql",
+  "exact_interface": "func issueSigningResourcesForNativeTarget(t *testing.T, ctx context.Context, f *authorityFixture) ([]owner.SigningResourceTrustPin, [][]byte)",
+  "D_call_site": "native := newNativeSigningSQLFixture(t,ctx); pins,bundles := issueSigningResourcesForNativeTarget(t,ctx,native.n.f); inputs := nativeSignerIssuedInputs(t,native,pins,bundles); then D's existing runNativeSignerLifecycle/runNativeSignerRollbackAndLostACK/runNativeSignerLockCase use those verified inputs.",
+  "target_binding": "Uses the ALREADY actual-SQL/enrolled Installer and queries its real CURRENT_USER/@@server_uuid/DATABASE/UTC clock. Requires exact distinct installer versus consumer account and exact plan target. Never overwrites an already signed Target, original enrolled issuer/public, enrollment document or capture bundle. New source-only local offline config/grant declarations use that exact target and actor; actual issuer still authenticates their scope.",
+  "actual_issuer_boundary": "Both acceptance_record and catalog_record outputs come ONLY from actual f.i.IssueSigningResourceInstall with real native local admin bcrypt/account/head absence and current controlled enrollment. The helper never directly signs a resource Grant/Head or manufactures a positive DTO. It requires exactly two own-purpose non-business JWT/Transit challenge signatures.",
+  "controlled_protocol_boundary": "Existing Kube SDK/TokenReview responses are controlled. The local Vault server uses real SAN TLS and three distinct Ed25519 keys/role/policy mappings with complete public histories, exact ACL/trust/public metadata and actual challenge verification by A's observer. Existing public installation material is fixture-signed in InstallationSigningDomain only. These are not field enrollment/Vault authorization or full bootstrap evidence.",
+  "config_scope": "All THREE signing config refs (including capture identity through ReferenceIdentity) match the controlled installed public mapping before offline config/grant hashes and real resource issuance are computed. Other config slots are inert fixture input and no success validator is supplied. The original f.files/f.grant/f.record/capture ledger are not rewritten.",
+  "provider_independence": "Local probe server closes before the helper returns; D import/revoke/resolve tests thus need no live provider. Actual consumer physical terminal readiness is NOT established by SQL authority readback and still needs fresh actual native observations separately.",
+  "no_duplication": "New uniquely named helper only. The frozen A15 batch and D's existing native/lifecycle/schema files are untouched. D may use this helper instead of its separately permitted codec-only fixture; preserve the latter's narrower proof boundary if retained.",
+  "validation": "gofmt only; no Go compile/test/build/list/vet, SQL, Git, Docker or remote execution. Root owns actual native run and cleanup. No test/build products created."
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": "system-backup-d-signing-resource-sql-lifecycle-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_A_REVIEW_ROOT_COMPILE_COMPONENT_NATIVE_SQL",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_rows.go",
+      "sha256": "2f43940195e6f526e1ac23082bed207166e9056a698983521561a810f99b8108"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store.go",
+      "sha256": "55c088109dacd0cc7e682e046ef6a30de30252f7bec67a37ff136dfe31a4cbe8"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store_test.go",
+      "sha256": "32d57c79f3b58520e650a0cc24ba5e47b5e369b256c52a07f2d747129d8d2e6b"
+    }
+  ],
+  "required_complete_dependencies": [
+    {
+      "path": "docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json",
+      "sha256": "e42a1530e66a12b7d0176d41b5a66aa9a0e04bcc62b576f368cb40ff19d10d8b",
+      "scope": "Actual A15 exact Grant/Head/TrustPin/CAS contract, Inspect/Encode functions, native issuer/revoke, private signingResourceBundle/signingResourcePin and originalSigningResourceBundleFixture. All source remains unchanged."
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-schema136-pins-20261103.json",
+      "sha256": "9671b9173886072fb1fea071e0ae6df4ceb2ac962588c3c94f43bff7c3d4b076",
+      "scope": "Fresh schema136 and catalog177/classification; not executed or assumed already installed."
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_sql_test.go",
+      "sha256": "31b7ae1c854ec9a7f541bdc192162bd37a8eefdc009a3eb9903d78966bfa1cd5",
+      "scope": "strict pre-existing authorityConnector/authorityRows/cloneValues/row/counter component transport reused without capture queries"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_fixture_test.go",
+      "sha256": "f2003af540d886a023235d4cb7f9deec0df8180537a7a31031e06aacf8173faf",
+      "scope": "actual real crypto/authenticated A installer fixture"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/enrollment_test.go",
+      "sha256": "63668f7ece956fc03977d3fa8fbd93d7c6b8b38aa9ffceec32c429d99e38a1dc",
+      "scope": "actual auth transport/current local administrator and enrolled Kubernetes model"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_bundle_test.go",
+      "sha256": "7107d33a5a4dad8b4d2949a7f4a28275174a2a9d72a3129c98ba81a2aa22d95c",
+      "scope": "A actual codec fixture; no D copy of signature protocol"
+    }
+  ],
+  "new_exported_surface": [
+    "SigningResourceSQLInput {Pin owner.SigningResourceTrustPin; Bundle []byte; SHA256 string}: exact pre-signed original transport data, not approval/native callback.",
+    "SigningResourceSQLItemReceipt and SigningResourceSQLReceipt: current exact metadata comparison/replay receipt only, no usability/readiness/admission flag.",
+    "(*Installer).ImportSigningResourceSQLAuthority(ctx,password,enrollment,[]SigningResourceSQLInput): one or both purposes, atomic ordered domain import or terminal revoke.",
+    "(*Installer).ResolveSigningResourceSQLAuthority(ctx,password,enrollment,[]SigningResourceSQLInput): exact original tuple readback, never write/probe/sign/repair."
+  ],
+  "semantics": [
+    "Actual i.authenticate verifies local admin password/active/local/current account/database/UUID; same original enrolled Kubernetes owner and SSAR verified by A signingResourcePin outside every SQL transaction. Signed bundle decoded only by A's existing actual signingResourceBundle and Inspect codecs.",
+    "Clone original issuer/raw bundle, reject duplicate/unknown purposes and sort acceptance_record before catalog_record. No capture/MinIO/task ledger is read by standalone signer lifecycle.",
+    "Original current-admin FOR SHARE prefix -> exact head then exact grant FOR UPDATE for each selected purpose. Acquire ALL selected purpose row/gap locks before any write. Consumer remains unchanged A SELECT-only FOR SHARE with shared guarded BootstrapSQL.SampleTime; D's local installer clock view cannot mint a consumer guard.",
+    "Installer time samples are actual SQL i.database checks under the same original account/server/database/UTC clock. Each snapshot shares monotone per-attempt floor; owner/admin is rechecked before commit and after readback. No local now replaces SQL time.",
+    "Initial install requires exact absent original head/gap, A original grant/head windows and row-version1. Insert head then grant, exactly one row each. Existing different/revoked/mixed tuple rejects; no authority switch, grant rotation, new epoch or resurrection.",
+    "Revoke requires exact Expected CAS (all original indexed revisions/epochs/hashes/state/row versions), exact unchanged original grant and signature, and A canonical original head changed ONLY active1->revoked2. UPDATE predicates include full original raw payload/signature and original indexed CAS; exactly one row each, preserving original grant bytes/window/epoch.",
+    "Before commit, independently read every selected exact tuple and check final admin/SQL clock/original install window. Any failure rolls back all selected writes. No signing key, signature creation, provider/network/native file/capability call exists under locks.",
+    "Commit error is always ErrCommitUnknown; post-commit readback/owner/window failure is also unknown. Exact original bundle is retained; no automatic retry or successful replacement lease.",
+    "Two fresh shared-lock snapshots surround the post-commit original owner/Kubernetes tail; exact bytes/signatures/index/state/row versions required. Install tail retains original grant window. Read-only resolve compares exact desired tuple without rewriting it; current revoke prevents resolving old active install.",
+    "Resolve may report exact expired active metadata as DATA only. It never grants resource usability. A actual consumer RequireCurrent rejects revoked/expired for fresh AND historical admission independently of provider health.",
+    "All grant/head SQL predicates derive from unchanged A normative projections; write branch only changes FOR SHARE->FOR UPDATE. Exact single-NUL domains remain owned solely by A codec. No alternate permission protocol or capture grant interpretation."
+  ],
+  "component_sources": [
+    "TestSigningResourceSQLInstallReplayRevokeAndUnknownResolveComponent: actual A authenticated fixture + strict separate-domain SQL model; normal and lost-commit subcases, exact readback, no-write replay, terminal revoke retaining raw grant, old-active resolve/reactivation denial, zero new signer/capture calls and no open tx.",
+    "TestSigningResourceSQLRejectsChangedExpectedTupleWithoutWritesComponent: a validly signed revoke with changed expected row-version refuses before writes and preserves exact old state.",
+    "TestSigningResourceSQLPurposeOrderUsesOriginalCodecComponent: explicit original A-codec signed two-purpose declarations supplied in reverse input order; both purpose gaps lock acceptance then catalog before first write."
+  ],
+  "limits": [
+    "These new roots are not compiled/executed by D and model no native InnoDB/table CHECK/FK/SQL privileges; no provider success or field installation claim.",
+    "Native root verification must run schema136/catalog177, SELECT-only consumer/FOR SHARE and narrow installer FOR UPDATE/DML roles, concurrent raw tuple CAS/revocation, affected-row failure, commit ACK loss/readback, and whole A/C/native final read-view integration.",
+    "Import/resolve source APIs exist; no dedicated lifecycle CLI or consumer-file exporter is delivered by this batch. Existing A SaveFrozenSigningResourceBundle is inert transport, not installation. Current main intentionally still lists the two signing reference owners missing until actual source selection/native observers are wired.",
+    "Root54f6222... verified34 source results and historical176 migration failures/PASS remain unchanged. New177 and these owners are unverified source integration only; site/page NO_GO and DR unavailable/not_provided remain."
+  ],
+  "root_commands": [
+    "go test ./internal/systembackupinstallationowner/install -run '^TestSigningResourceSQL' -count=1 -v",
+    "go test ./internal/systembackupinstallationowner -run '^TestSigningResource' -count=1 -v"
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "tests": "not_run",
+    "compile": "not_run",
+    "sql": "not_run",
+    "remote": "not_run",
+    "git": "not_run",
+    "test_build_artifacts_created": false,
+    "cleanup": "Root removes its test/build/SQL/cache products after verification per AGENTS."
+  }
+}

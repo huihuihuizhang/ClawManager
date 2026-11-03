@@ -1,0 +1,51 @@
+{
+  "schema": "a-native-signer-actual-issuer-root.pins.v1",
+  "date": "2026-11-03",
+  "status": "FROZEN_SOURCE_ONLY_NEW_TOP_LEVEL_NATIVE_ROOT_NOT_EXECUTED",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_issuer_helper_test.go",
+      "sha256": "2938c1ce67b9b969a5d0ef62fb520a6bfcf489b817a77cc3a2c998cb6a450e98"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_actual_issuer_test.go",
+      "sha256": "3431797b289d0f42b394868578155c1463ee4a9e9e59b30cfbb27195aec4db82"
+    }
+  ],
+  "D_native_dependencies": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_fixture_test.go",
+      "sha256": "80b91a4b490ad3a9b5c9470a98b6dbc0a8f26fb2c1f439920dc7a1f0a00dfba3"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_schema_test.go",
+      "sha256": "0ce00a1957007bc3439f3fa04bded5650a502788d0eaa8075d10d560aa676639"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_monitor_test.go",
+      "sha256": "9f6a7d947532062e0556f8c42e87a2ed0d48eeac6f4e5be03404349f1c74d2be"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_readback_test.go",
+      "sha256": "9b14819badeca3d52bfdb9a151adcd998f91c34d23ed7c6a0b46c5c8d9b97d4b"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_scenarios_test.go",
+      "sha256": "49944153b5ad2349b69fec92ce15d8d929611b6aedf2e201d1980343f1d044cc"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_drift_test.go",
+      "sha256": "e392eab7036c4f95abe9c18a68d7e345cc179160ac174b87a0f7bee359f76c0a"
+    }
+  ],
+  "additional_dependencies": "Existing frozen A signing resource14Go + D actual signer lifecycle/migration136/catalog177 and existing native authority fixture. Only the two newly named A test Go files are in this mutation allowlist.",
+  "test_root": "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback",
+  "root_command_metadata_only": "cd backend; go test -tags systembackup_mysql ./internal/systembackupinstallationowner/install -run ^TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback$ -count=1 -v",
+  "requires": [
+    "Root-owned disposable SAN/TLS13 MySQL credentials TEST_D_SIXPART_TLS_MYSQL_CREDENTIALS",
+    "Independently selected A_PERMIT_NATIVE_DISPOSABLE_SERVER_UUID; skip is unverified, never PASS",
+    "Actual full177 migrations and narrowly scoped installer/consumer identities from D fixture"
+  ],
+  "scope": "Fresh native fixture -> actual A IssueSigningResourceInstall twice -> D real Import -> exact Resolve -> four signed raw rows -> SELECT-only current consumer. Kube/Vault controlled, actual source-only protocol helper closes Vault before import. No direct resource Grant/Head signing, no mutated signed Target, no main/terminal/backup/site acceptance claim.",
+  "validation": "gofmt only; no Go compile/test/build/list/vet/SQL/Git/provider/remote. Root owns actual native execution and cleanup. No products created."
+}

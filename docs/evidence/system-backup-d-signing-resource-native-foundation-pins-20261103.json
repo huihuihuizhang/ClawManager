@@ -1,0 +1,84 @@
+{
+  "schema_version": "system-backup-d-signing-resource-native-foundation-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_ONE_NATIVE_ROOT_LIFECYCLE_ROOTS_PENDING_ACTUAL_A_TARGET_BOUND_ISSUER",
+  "go_source_count": 6,
+  "file_count": 7,
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_fixture_test.go",
+      "sha256": "80b91a4b490ad3a9b5c9470a98b6dbc0a8f26fb2c1f439920dc7a1f0a00dfba3"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_monitor_test.go",
+      "sha256": "9f6a7d947532062e0556f8c42e87a2ed0d48eeac6f4e5be03404349f1c74d2be"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_readback_test.go",
+      "sha256": "9b14819badeca3d52bfdb9a151adcd998f91c34d23ed7c6a0b46c5c8d9b97d4b"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_scenarios_test.go",
+      "sha256": "49944153b5ad2349b69fec92ce15d8d929611b6aedf2e201d1980343f1d044cc"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_schema_test.go",
+      "sha256": "0ce00a1957007bc3439f3fa04bded5650a502788d0eaa8075d10d560aa676639"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_drift_test.go",
+      "sha256": "e392eab7036c4f95abe9c18a68d7e345cc179160ac174b87a0f7bee359f76c0a"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-native-foundation-handoff-20261103.md",
+      "sha256": "7ee772d51f10f02730fc7330efd327b33b6aad76124975f31e59bff9afcc3e97"
+    }
+  ],
+  "required_complete_dependencies": [
+    {
+      "path": "docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json",
+      "sha256": "e42a1530e66a12b7d0176d41b5a66aa9a0e04bcc62b576f368cb40ff19d10d8b"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-schema136-pins-20261103.json",
+      "sha256": "9671b9173886072fb1fea071e0ae6df4ceb2ac962588c3c94f43bff7c3d4b076"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json",
+      "sha256": "6ae43be027d8387262aa3ecf8914082e8df640aabaec4e3bd1144a22c1e636a7"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fixture_test.go",
+      "sha256": "107e818205a11590f47b84ccb0dd6296c064406371b875784e9122dc8c92ceb7"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/authority_native_mysql_fault_test.go",
+      "sha256": "16d62879fb3bb6bc2525070718c5fd382fc3d310afa1939960a47ab614a33858"
+    }
+  ],
+  "existing_top_level_roots": [
+    "TestSigningResourceSQLNativeFull177AndNarrowRoles"
+  ],
+  "not_test_roots": [
+    "runNativeSignerLifecycle",
+    "runNativeSignerRollbackAndLostACK",
+    "runNativeSignerLockCase"
+  ],
+  "missing_actual_a_helper": "issueNativeSigningResourceOriginalBundles(t *testing.T, ctx context.Context, n *nativeAuthorityFixture) ([]owner.SigningResourceTrustPin, [][]byte)",
+  "root_verification_required": [
+    "Compile exact source dependencies",
+    "Run native schema/roles/FK/CHECK root with independently owned TLS MySQL UUID fixture",
+    "Add lifecycle/fault/lock roots only after actual A target-bound issuer helper exists",
+    "Delete all test/build products after tests"
+  ],
+  "claims": {
+    "gofmt_static_verified": true,
+    "frozen_A15_schema9_lifecycle3_main6_unchanged": true,
+    "compiled_by_d": false,
+    "tests_run_by_d": false,
+    "native_sql_executed_by_d": false,
+    "provider_field_proof": false,
+    "end_to_end_backup_complete": false,
+    "deployment_approved": false,
+    "dr_status": "unavailable/not_provided"
+  }
+}

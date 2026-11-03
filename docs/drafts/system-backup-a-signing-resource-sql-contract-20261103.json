@@ -1,0 +1,67 @@
+{
+  "schema": "a-signing-resource-original-sql-contract.v1",
+  "status": "SOURCE_ONLY_NOT_COMPILED_D_SCHEMA_IMPORT_REVOKE_RESOLVE_AND_MAIN_ASSEMBLY_PENDING",
+  "date": "2026-11-03",
+  "purpose": "Independent original RESOURCE permission for installed acceptance_record and catalog_record signers before config/task creation. Not capture authorization and not later task business signing authority.",
+  "existing_reuse": [
+    "systembackupsecurity.InstallationSigningRecord/InstallationSigningPermission: original installed public key/role mappings; its SQLSigningOwnerGrant is task/config-claim scoped and cannot bootstrap a future task.",
+    "systembackupinstallationowner.Binding/PurposeKeys and existing IdentityVersion canonical bootstrap signing identity profile: map ACTUAL bootstrap/signing purpose without key-material hashes.",
+    "Existing strict TLS/no-proxy/no-redirect Vault read/request, Kubernetes TokenReview/Pod/SA identity primitives, canonical ACL/JWT role/trust helpers and complete public-history metadata checks. No AuthenticatedRecord capture capability is fabricated or reinterpreted."
+  ],
+  "normative_source": "backend/internal/systembackupinstallationowner/signing_resource_contract.go",
+  "root_reported_baseline": "54f6222fc307e742712115e651a31ec01189022b; root reports pushed and verified. A performed no Git or Go checks and does not change that baseline's verified files.",
+  "source_apis": {
+    "original_install": "install.Installer.IssueSigningResourceInstall: real bcrypt/local admin + distinct installer SQL identity + immutable enrollment/current Kubernetes original subject; explicit per-purpose intent, exact original offline grant/config; existing installed public material; actual JWT/role/policy/history and non-business signature; final exact source/role/window/absence read. No SQL writes.",
+    "original_revoke": "install.Installer.IssueSigningResourceRevocation: real original admin/enrollment + exact original installed raw bundle/current four-column scope; terminal head 1->2; unchanged raw grant/signature/window/epoch + complete CAS. Provider-independent; no SQL writes.",
+    "transport": "install.SigningResourceBundle / DecodeSigningResourceBundle / SaveFrozenSigningResourceBundle. Closed canonical transport <=262144 bytes, base64 raw signed Grant/GrantSignature/Head/HeadSignature. Explicit install or revoke + independent PlanSHA256/EnrollmentDocumentSHA256 + Expected SigningResourceCAS. Decoding returns detached DATA, never authenticates importer.",
+    "current_candidate": "ReadSigningResourceCandidate(ctx,pd.BootstrapReadSQL,pin). Exact admin then purpose head->grant, consumer CURRENT_USER/uuid/database, shared SampleTime. Returns detached SigningResourceSnapshot only; RequireCurrent denies revoked/expired for BOTH fresh and historical use.",
+    "current_installer": "ReadSigningResourceForInstaller(ctx,pd.BootstrapReadSQL,pin,distinctPlanInstallerAccount), with an actual authenticated installer SQL-clock view under admin prefix. Same concrete codec/projections; Comparison/Declarations/SignedRecords return detached copied DATA for D's CAS/readback. No password/key authentication is supplied by this reader.",
+    "native": "NewSigningResourceObserver(SigningObserverConfig). ObserveSigningResource verifies the distinct original grant before I/O, three-role/policy/JWT-trust/full public history separation, own actual runtime TokenReview + JWT login + exact-version Transit challenge signature. Starts <=30s window BEFORE all API work; caps by original grant/context/observer TTL/own <=10s runtime lease. Tail health/metadata/identity/file pins, no deadline refresh.",
+    "terminal": "NewSigningResources: exact sorted two inputs, separately selected immutable pins/files/public material, distinct runtime JWT paths. ONE concrete pointer owns acceptance_signing and catalog_signing. Legacy Prepare refuses. Current identity always checks all four SQL rows; missing physical observation yields nil dependency deadline but never removes current revocation checks. Context/copy/raw-transaction failure latches. Local file reads occur before final shared SQL clock. No provider/API under SQL.",
+    "composition": "install.BootstrapTerminalOriginal.WithSigningResources(inputs): preserves primary capture and every other exact resource pointer; adds both aliases with SAME resource pointer before native-host candidate composition. Does not fill missing other owners, KEK or DR availability. No main/CLI/exporter route is installed by this batch."
+  },
+  "existing_public_material": "SigningResourceGrant.SigningMaterialSHA256/SigningMaterialRevision bind the independently installed InstallationSigningRecord/Pin. CheckSigningResourceMaterial authenticates its original signature and exact raw hash, all three permission mappings and complete public histories. It preserves legacy signed whitespace/order/RFC3339 offsets/nanoseconds without rewriting bytes; closed canonical comparison rejects aliases/duplicates/unknown fields. Historical expired/revoked public keys remain DATA; the selected current public key must be unrevoked and cover the grant. SQLOwner/task claims are NOT reused as bootstrap authority.",
+  "signature_domains": [
+    "SigningResourceGrantVersion + NUL = system-backup-original-signing-resource-grant.v1 + NUL",
+    "SigningResourceHeadVersion + NUL = system-backup-original-signing-resource-head.v1 + NUL",
+    "SigningResourceProbeVersion + NUL = system-backup-original-signing-resource-probe.v1 + NUL; probe is non-business challenge, not capture/acceptance/catalog record payload"
+  ],
+  "known_purposes_binary_order": ["acceptance_record", "catalog_record"],
+  "tables": [
+    {
+      "table": "system_backup_signing_resource_heads",
+      "primary_key_binary": ["installation_id", "enrollment_id", "authority_id", "purpose"],
+      "columns": {"head_revision":"BIGINT UNSIGNED >0", "permission_epoch":"BIGINT UNSIGNED >0", "current_grant_id":"bounded original ASCII/UTF8 token", "current_grant_revision":"BIGINT UNSIGNED >0", "head_sha256":"lowercase ASCII SHA256(complete signed_head RAW bytes)", "signed_head":"bounded canonical JSON blob <=65536", "signature":"RAW Ed25519 exactly64 bytes", "head_state":"ENUM(active,revoked)", "row_version":"BIGINT UNSIGNED >0"},
+      "head_semantics": "One independently pinned authority/purpose; grant revision=1 and permission_epoch=1 ONLY, initial head_revision=1 active and row_version=1, terminal head_revision=2 revoked with row_version increment. No revival, authority switch, grant rotation, key/version extension or new permission epoch in this minimum v1. Preserve original NotBefore/Until on revoke."
+    },
+    {
+      "table": "system_backup_signing_resource_grants",
+      "primary_key_binary": ["installation_id", "enrollment_id", "authority_id", "purpose", "grant_id", "record_revision"],
+      "foreign_key": "installation_id/enrollment_id/authority_id/purpose -> SAME signer-resource head (grant-to-head only; no capture/task FK)",
+      "columns": {"permission_epoch":"BIGINT UNSIGNED >0", "record_sha256":"lowercase ASCII SHA256(complete signed_record RAW bytes)", "signed_record":"bounded canonical JSON blob <=262144", "signature":"RAW Ed25519 exactly64 bytes", "grant_state":"ENUM(active,revoked) exact head state", "row_version":"BIGINT UNSIGNED >0"},
+      "grant_semantics": "Independent explicit original grant for ONE Binding/Reference purpose. Signed raw grant retains exact independently enrolled target/actor/plan/config/offline-grant scope, original windows and actual installed three-purpose key/role/policy separation observations. Other two Bindings/public histories confer no permission. Revoke changes indexed state/row_version only; raw original grant/signature remain byte-identical."
+    }
+  ],
+  "minimum_lock_order": [
+    "Original admin/current RBAC prefix first",
+    "Existing primary capture authority prefix when terminal route uses it",
+    "Existing MinIO head/grant/five refs prefix, selected at artifact_write before either signing reference in terminal reference order",
+    "Signing resource head -> grant for acceptance_record, then head -> grant for catalog_record, binary purpose order; both aliases must share ONE resource object",
+    "Then operation/config and later owner domains according to root-approved global order; no reverse nested transaction or provider I/O",
+    "Standalone signer installer lifecycle locks admin then signer rows only; it never acquires capture/MinIO/task locks after its own head. Root/D must retain this relative order when integrating the new schema."
+  ],
+  "consumer": "Exact consumer account/@@server_uuid/DATABASE identity and current original admin from signed grant; all authoritative candidate time via same BootstrapSQL/BootstrapReadSQL.SampleTime. Exact signed bytes/index/state/row_version and original issuer/enrollment/authority/purpose pin. FOR SHARE reads only. Revoked/expired closes fresh AND historical admission without any healthy provider requirement.",
+  "installer_revoke": "Root/D original authenticated installer locks same exact PK prefix FOR UPDATE. Initial actual absence/gap, signed grants/heads frozen outside SQL, exactly-one affected row CAS, final exact readback and current role/window. Revoke/resolve do not require provider health, create replacement leases or re-sign original grants. Lost commit remains unknown and resolves exact raw tuples only.",
+  "D_minimum_remaining_implementation": [
+    "Add an authorized NEW migration/catalog entry for these two purpose-partitioned tables, NOT a rewrite of frozen migrations. Binary exact PKs/known purposes, bounded signed blobs/signatures/hash formats/states/counters, grant-to-head FK only. Root owns actual DDL and native MySQL verification.",
+    "Actual authenticated import-install locks original admin then exact purpose head gap FOR UPDATE; closed bundle + independent enrollment/plan/issuer/actor/purpose pin; insert exact head then grant atomically, both row_version=1, exactly-one affected row each. Exact reread using shared codec/source tuples before commit; role/hash/window recheck last. No source probe/signing under SQL.",
+    "Actual import-revoke locks original admin then purpose head/grant FOR UPDATE; compare EVERY Expected CAS field and raw original grant/signature; update only signed head/head_state/head_revision/row_version and grant_state/row_version. Preserve raw grant/signature/epoch/window; exactly-one affected row each, exact final readback.",
+    "Commit-error resolution authenticates the same original operator/current enrollment/plan and exact signed bundle; read exact selected source tuple using the installer reader. Report committed only for EXACT expected result bytes/states/versions; old exact tuple remains not-applied, anything else is unknown/conflict. Never replace authority, renew leases or rerun provider probes to resolve.",
+    "Wire actual CLI issuance/import/revoke/resolve plus independent consumer source deployment/selection and WithSigningResources on the enrolled terminal route; preserve complete thirty-owner/real KEK/native host/physical writer-recovery gates. No actual main readiness or first-install success is established by these APIs alone."
+  ],
+  "privileges": "Consumer SELECT only on exact signer head/grant fields plus existing selected original users columns; no password hash/INSERT/UPDATE/DELETE. Installer lifecycle has only required signer-domain writes and existing real original admin read. No broadening capture/task privileges.",
+  "requested_D_action": "Coordinate exact migration/catalog number and implement DDL/lifecycle CAS against this fixed purpose-partitioned domain. A does not execute DDL/SQL, invent tables as existing, change a frozen migration, or count this domain operational before root actual verification.",
+  "test_source": "TestSigningResource* in parent package covers independent signature/purpose/separation, existing legacy material bytes, exact SQL purpose/admin/shared-clock/projection/revocation and raw-transaction refusal, local TLS own JWT/non-business probe, other-purpose metadata/tail/JWT drift. Install TestSigningResourceBundle* covers signed transport and exact original revocation CAS; protocol models and local TLS are not native installation/provider evidence.",
+  "root_test_commands_metadata_only": ["cd backend; go test ./internal/systembackupinstallationowner -run ^TestSigningResource -count=1 -v", "cd backend; go test ./internal/systembackupinstallationowner/install -run ^TestSigningResource -count=1 -v"],
+  "validation": "A source-only + gofmt. No Go compile/tests/list/vet/build, SQL, provider/network/remote or Git executed. No test/build products created. Root must execute actual checks and delete their products afterwards. Functional backup/publication/full independent readback/catalog/same-task success still mandatory; DR not_provided/eligible=false remains unchanged."
+}

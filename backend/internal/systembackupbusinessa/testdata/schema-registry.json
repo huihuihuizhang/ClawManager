@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 176,
-    "hash": "4bb18aba27672d6e0b6b4eed0d400fd9ec3234f12803a7115ea114425515d26b"
+    "file_count": 177,
+    "hash": "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",
@@ -16,9 +16,9 @@
     "evidence": null
   },
   "summary": {
-    "object_count": 144,
+    "object_count": 146,
     "policy_recorded": 79,
-    "policy_pending": 65,
+    "policy_pending": 67,
     "cross_review_pending": 79
   },
   "objects": [
@@ -4237,6 +4237,68 @@
       "sources": {
         "migration": [
           "backend/internal/db/migrations/135_backup_v2_minio_owner_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_signing_resource_heads",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.signing_resource_heads.reference.verify.v1",
+      "depends_on": [
+        "table:users"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Schema metadata only. Original enrolled signer resource permission, raw signed records/signatures, current head/grant states/epochs and row revisions are installation-local authority and never exported or restored. No capture/task authorization or future task is inferred. users is a semantic current-admin binding, not a DDL FK. The exact purpose grant references its own head with ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/136_backup_v2_signing_resource_authority.sql"
+        ],
+        "repository_create": [],
+        "repository_alter": [],
+        "deployment_bootstrap": [],
+        "exception": null
+      }
+    },
+    {
+      "object_type": "table",
+      "name": "system_backup_signing_resource_grants",
+      "owner": "D",
+      "category": "system_backup",
+      "data_classification": "secret",
+      "backup_strategy": "metadata_only",
+      "restore_strategy": "reference_only",
+      "excluded_reason": null,
+      "normalizer_id": null,
+      "verifier_id": "system_backup.signing_resource_grants.reference.verify.v1",
+      "depends_on": [
+        "table:system_backup_signing_resource_heads"
+      ],
+      "decision_status": "pending_owner_review",
+      "required_cross_reviewers": [
+        "A",
+        "C"
+      ],
+      "approved_cross_reviewers": [],
+      "redacted_explanation": "Schema metadata only. Original enrolled signer resource permission, raw signed records/signatures, current head/grant states/epochs and row revisions are installation-local authority and never exported or restored. No capture/task authorization or future task is inferred. users is a semantic current-admin binding, not a DDL FK. The exact purpose grant references its own head with ON DELETE RESTRICT.",
+      "sources": {
+        "migration": [
+          "backend/internal/db/migrations/136_backup_v2_signing_resource_authority.sql"
         ],
         "repository_create": [],
         "repository_alter": [],

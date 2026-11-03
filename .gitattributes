@@ -59,3 +59,10 @@ docs/drafts/system-backup-a-native-host-composition-20261103.pins.json -text whi
 docs/drafts/system-backup-a-functional-classification-20261103.pins.json -text whitespace=cr-at-eol
 docs/drafts/system-backup-a-terminal-locator-auth-r1-20261103.pins.json -text whitespace=cr-at-eol
 docs/drafts/system-backup-a-terminal-evidence-fixture-r1-20261103.pins.json -text whitespace=cr-at-eol
+docs/backup-team-integration/catalog.json -text whitespace=cr-at-eol
+contracts/system-backup/v12/schema-registry.json -text whitespace=cr-at-eol
+backend/internal/systembackupbusinessa/testdata/schema-registry.json -text whitespace=cr-at-eol
+docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json -text whitespace=cr-at-eol
+docs/drafts/system-backup-a-native-signer-actual-issuer-root-20261103.pins.json -text whitespace=cr-at-eol

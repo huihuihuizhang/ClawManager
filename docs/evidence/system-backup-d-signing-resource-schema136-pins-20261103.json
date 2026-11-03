@@ -1,0 +1,99 @@
+{
+  "schema_version": "system-backup-d-signing-resource-schema136-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_A_CONTRACT_REVIEW_ROOT_SQL",
+  "files": [
+    {
+      "path": "backend/internal/db/migrations/136_backup_v2_signing_resource_authority.sql",
+      "sha256": "1471b28fe470f5fab5d0519a3c73f844629da31858416bf72c5d887ec290e1b5"
+    },
+    {
+      "path": "backend/internal/db/signing_resource_authority_migration_test.go",
+      "sha256": "930aff68a26c99d4c9cb837825565cb77a41df818499e0862b759d5f99b855e5"
+    },
+    {
+      "path": "backend/internal/migrationcatalog/reviewed_catalog.go",
+      "sha256": "de31912b1dd202bbdd449c8d17cf1883a4e3479735b93766a897e151d7a0654f",
+      "supersedes_sha256": "1a5896781bafd3dbb68d8a699782334c11f0d8ba1270183e299960091475e3bc"
+    },
+    {
+      "path": "docs/backup-team-integration/catalog.json",
+      "sha256": "be00fb11136c3498199a727ee91d6d84f09636503390e5ab7df65461eff4ae13",
+      "supersedes_sha256": "9de5ecffb78178c7c19f6c1e2520fca0c592edf4f1d3a629da6c0dd67fbac1a0"
+    },
+    {
+      "path": "contracts/system-backup/v12/schema-registry.json",
+      "sha256": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+      "supersedes_sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "backend/internal/systembackupbusinessa/testdata/schema-registry.json",
+      "sha256": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+      "supersedes_sha256": "5fb3bfd84d49b999f12df34fa06efb95cb3f8f617a3cb1df8cd147cea151481f"
+    },
+    {
+      "path": "backend/internal/systembackup/v2_control_registry.go",
+      "sha256": "6dac94581e70a9539d114c241e3428ac02ad7979d8066bea1c96aa57e70e6cc6",
+      "supersedes_sha256": "fe0872586dd2cc8e217c7810eceb3ae87d14528f6adc348acea3f8760b4a3789"
+    },
+    {
+      "path": "backend/internal/systembackup/schemaobjects/control_tables.go",
+      "sha256": "65291a92de849b07d1529bb9194e9ec01a9f82bec3cafc89c06c199abc9cf207",
+      "supersedes_sha256": "d8c9d2a4e67e9bcc84c5ea24ce731aec0f28f48831b547cb0c8a05979f13065d"
+    },
+    {
+      "path": "scripts/backup-team-catalog.py",
+      "sha256": "4d894735f79ee9ba028696358b82813d2efce96a348c4287f53367aca3682e97",
+      "supersedes_sha256": "ebaf5ac32f8d1ff16b242a1b169b0deb0cd824ddaae486817f676731bdea05f1"
+    }
+  ],
+  "A_normative_dependency": {
+    "path": "docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json",
+    "sha256": "e42a1530e66a12b7d0176d41b5a66aa9a0e04bcc62b576f368cb40ff19d10d8b",
+    "contract": "backend/internal/systembackupinstallationowner/signing_resource_contract.go SHA779f80f4a3beb5dba5820ccd43bb0103c402c62cb1fd646bcab879ccec65e31b; exact single-NUL Grant/Head signature domains and A codec unchanged"
+  },
+  "catalog": {
+    "old_file_count": 176,
+    "old_hash": "4bb18aba27672d6e0b6b4eed0d400fd9ec3234f12803a7115ea114425515d26b",
+    "old_bytes_verified": true,
+    "new_file_count": 177,
+    "new_hash": "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3",
+    "method": "Same domain/NUL and uint64 BE length-prefixed filename + LF-normalized content as actual migrationcatalog.Compute. Read-only hash with new136 excluded exactly reproduced old176 hash before writing new catalog. No SQL executed.",
+    "historical_migrations_changed": false
+  },
+  "schema": {
+    "tables": [
+      "system_backup_signing_resource_heads",
+      "system_backup_signing_resource_grants"
+    ],
+    "purpose_order": [
+      "acceptance_record",
+      "catalog_record"
+    ],
+    "key": "head PK installation/enrollment/authority/purpose; grant PK same prefix+grant/revision; grant-to-own-head only FK ON DELETE RESTRICT",
+    "payload": "raw canonical head<=65536 and grant<=262144; raw Ed25519 signature64; exact raw SHA256; epoch1/revision1; head active1->terminal revoked2; no capture/task FK or approval seed",
+    "classification": "Both secret/metadata_only/reference_only/pending_owner_review. Registries146, recorded79, pending67, cross-review-pending79. Canonical/mirror exact same bytes. Raw permission rows/signatures/current identity are installation-local and never restored as runnable authority.",
+    "control_lists": "schemaobjects exclusions stay ASCII sorted; both versioned/unversioned control inventories and generator include exact two new names."
+  },
+  "lifecycle_contract": {
+    "consumer": "Reuse unchanged A ReadSigningResourceCandidate and normative FOR SHARE projections; exact original current account/admin and shared SampleTime floor/latch.",
+    "installer": "D followup acquires original admin/current RBAC first then purpose head->grant FOR UPDATE, acceptance before catalog. Use actual A bundle/InspectGrant/InspectHead; no private key, network, provider or signature creation under locks. Exact raw/index/row-version CAS, no revival or rotation; commit-unknown resolves exact original tuples only.",
+    "not_yet_included": "Actual D installer import/revoke/unknown resolve is the next independent source batch, not falsely claimed implemented or installed by this schema-only batch."
+  },
+  "root_checks": [
+    "go test ./internal/db -run '^TestSigningResourceAuthorityMigration' -count=1 -v",
+    "python scripts/backup-team-catalog.py --check (root only; D did not execute generator)",
+    "Actual fresh local MySQL full177 migrations and purpose FK/CHECK/SELECT-only/exclusive lifecycle tests; previous root176 PASS remains scoped to original verified source."
+  ],
+  "validation": {
+    "gofmt": "completed",
+    "source_hash_and_json_only": true,
+    "tests": "not_run",
+    "build": "not_run",
+    "sql": "not_run",
+    "git": "not_run",
+    "remote": "not_run",
+    "test_build_artifacts_created": false,
+    "verified_clock_source_minio34_go_files_changed": false,
+    "cleanup": "Root deletes its test/build/SQL/cache products after validation per AGENTS."
+  }
+}
