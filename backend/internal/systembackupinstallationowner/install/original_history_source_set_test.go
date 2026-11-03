@@ -86,7 +86,7 @@ func TestOriginalHistoryCoverageRequiresActualAuthenticationAndNativeCap(t *test
 	defer cancel()
 	var p PreparedOriginalAdoptionCoverage
 	p.origin = &p
-	if p.bindOriginalHistoryControls(ctx, a.SQLBootstrapKEKConfig{}, a.OriginalAdoptionControlRecords{}) == nil {
+	if p.bindOriginalHistoryControls(ctx, a.SQLCoverageOwnerConfig{}, a.OriginalAdoptionControlRecords{}) == nil {
 		t.Fatal("unauthenticated record transport produced sources")
 	}
 	if _, e := p.OriginalHistoryInspection(ctx); e == nil {

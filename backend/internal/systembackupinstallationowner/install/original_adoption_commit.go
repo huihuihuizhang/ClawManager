@@ -96,6 +96,24 @@ type originalAdoptionCommitExpected struct {
 // PreparedCoverage. All B/C I/O is finished BEFORE opening this transaction.
 // A's existing authentication does not itself mint the missing history source.
 func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalAdoption(ctx context.Context, hold *OriginalWriterHold, records a.OriginalAdoptionControlRecords, preparation *a.SQLBootstrapKEKPreparation, coverage *PreparedOriginalAdoptionCoverage) (OriginalAdoptionCommitInspection, error) {
+	if p == nil || p.operator == nil || p.operator.installer == nil || preparation == nil {
+		return OriginalAdoptionCommitInspection{}, ErrInstall
+	}
+	cfg, err := preparation.OriginalConfiguration()
+	if err != nil {
+		return OriginalAdoptionCommitInspection{}, ErrInstall
+	}
+	owner, err := a.NewSQLCoverageOwnerPreparation(a.SQLCoverageOwnerConfig{DB: p.operator.installer.db, Database: cfg.Database, InstallationID: cfg.InstallationID, Adoption: cfg.Adoption, Witnesses: cfg.Witnesses})
+	if err != nil {
+		return OriginalAdoptionCommitInspection{}, ErrInstall
+	}
+	return p.CommitOriginalOwnerAdoption(ctx, hold, records, owner, coverage)
+}
+
+// First adoption authenticates the original coverage owners; it does not
+// require later configuration Generate/Unwrap or mapping admission. This is
+// the ONE actual transaction body, also used by the compatibility wrapper.
+func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalOwnerAdoption(ctx context.Context, hold *OriginalWriterHold, records a.OriginalAdoptionControlRecords, owner *a.SQLCoverageOwnerPreparation, coverage *PreparedOriginalAdoptionCoverage) (OriginalAdoptionCommitInspection, error) {
 	var zero OriginalAdoptionCommitInspection
 	if p == nil || hold == nil || hold.set == nil || coverage == nil {
 		return zero, ErrInstall
@@ -104,17 +122,13 @@ func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalAdoption(ctx context.Cont
 	defer hold.set.mu.Unlock()
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.origin != p || p.used || !consumerSameContext(ctx, p.ctx) || hold.recheckBeforeSQL(ctx) != nil || coverage.origin != coverage || coverage.hold != hold || coverage.history == nil || coverage.sourceSet == nil || coverage.sqlMetadata == nil || coverage.sourceSet.metadata != coverage.sqlMetadata || !coverage.sourceSet.local(ctx, false) || coverage.tx != nil || preparation == nil {
+	if p.origin != p || p.used || !consumerSameContext(ctx, p.ctx) || hold.recheckBeforeSQL(ctx) != nil || coverage.origin != coverage || coverage.hold != hold || coverage.history == nil || coverage.sourceSet == nil || coverage.sqlMetadata == nil || coverage.sourceSet.metadata != coverage.sqlMetadata || !coverage.sourceSet.local(ctx, false) || coverage.tx != nil || owner == nil {
 		return zero, ErrInstall
 	}
-	// The original independently installed config constructs the owner, never
-	// pins inferred from submitted records. Same existing production constructor.
-	cfg, err := preparation.OriginalConfiguration()
-	if err != nil || cfg.InstallationID != p.reservation.InstallationID || cfg.Database != (reg.DatabaseIdentity{ServerUUID: p.database.ServerUUID, Database: p.database.Database}) {
-		return zero, ErrInstall
-	}
-	owner, err := a.NewSQLCoverageOwnerPreparation(a.SQLCoverageOwnerConfig{DB: p.operator.installer.db, Database: cfg.Database, InstallationID: cfg.InstallationID, Adoption: cfg.Adoption, Witnesses: cfg.Witnesses})
-	if err != nil || owner == nil {
+	// Read only the independent constructor-fixed17 owner pins from A.
+	// The real DB pointer and installation identity remain original production inputs.
+	cfg, err := owner.FirstAdoptionConfiguration()
+	if err != nil || cfg.DB != p.operator.installer.db || cfg.InstallationID != p.reservation.InstallationID || cfg.Database != (reg.DatabaseIdentity{ServerUUID: p.database.ServerUUID, Database: p.database.Database}) {
 		return zero, ErrInstall
 	}
 	if p.operator.authority(ctx, p.enrollment) != nil || hold.set.owner.operation != p.reservation.OperationID || hold.set.inventorySHA != p.reservation.SourceWritersSHA256 {

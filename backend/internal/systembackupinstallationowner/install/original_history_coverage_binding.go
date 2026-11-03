@@ -52,6 +52,19 @@ func originalAdoptionNativeUntil(proof *originalHeldReadiness) (time.Time, error
 			return time.Time{}, ErrInstall
 		}
 	}
+	for _, provider := range s.providerDependencies {
+		if provider == nil || !add(provider.nativeUntil) || !add(provider.sourceUntil) {
+			return time.Time{}, ErrInstall
+		}
+	}
+	// Before A1 the installed provider has no future active KEK record. Consume
+	// its genuine same-hold local observation without renewing it or doing I/O.
+	if len(s.preAdoptionProviders) != 0 {
+		cap, err := s.actualHold.originalVaultDependenciesUntil(s.owner.ctx)
+		if err != nil || !add(cap) {
+			return time.Time{}, ErrInstall
+		}
+	}
 	if until.IsZero() || !time.Now().Before(until) {
 		return time.Time{}, ErrInstall
 	}
@@ -61,7 +74,7 @@ func originalAdoptionNativeUntil(proof *originalHeldReadiness) (time.Time, error
 // This is called ONLY after actual original Stage -> Bind -> A authentication
 // has filled the same coverage tx/cut/auth/native/epoch fields. Reading a DTO
 // before that point cannot construct Sources or bind metadata to an arbitrary tx.
-func (p *PreparedOriginalAdoptionCoverage) bindOriginalHistoryControls(ctx context.Context, cfg a.SQLBootstrapKEKConfig, records a.OriginalAdoptionControlRecords) error {
+func (p *PreparedOriginalAdoptionCoverage) bindOriginalHistoryControls(ctx context.Context, cfg a.SQLCoverageOwnerConfig, records a.OriginalAdoptionControlRecords) error {
 	if p == nil || p.origin != p || p.sourceSet == nil || p.sourceSet.origin != p.sourceSet || p.sqlMetadata == nil || p.sourceSet.metadata != p.sqlMetadata || !p.sourceSet.local(ctx, true) || p.sourceSet.hold != p.hold || !consumerSameContext(ctx, p.ctx) || p.tx == nil || p.cut == nil || p.authenticated == nil || p.native == nil || p.native.set != p.hold.set || p.epoch == ^uint64(0) || p.refs == nil || len(p.refs) != 0 || len(p.sources) != 0 {
 		return ErrInstall
 	}

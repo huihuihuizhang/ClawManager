@@ -32,6 +32,19 @@ func (r *OriginalWriterRecoveryAuthorization) inspectOriginal(ctx context.Contex
 		return zero, ErrInstall
 	}
 	states := map[string]any{}
+	for _, provider := range s.preAdoptionProviders {
+		if provider == nil || provider.origin != provider || provider.set != s {
+			return zero, ErrInstall
+		}
+		states["provider-dependency/"+provider.input.Workload.Deployment] = provider.originalState()
+	}
+	for _, provider := range s.providerDependencies {
+		if provider == nil || provider.origin != provider || provider.set != s {
+			return zero, ErrInstall
+		}
+		states["provider-dependency/"+provider.selection.Deployment] = provider.initial
+	}
+
 	actors := map[string]flow.State{}
 	dispatched := map[string]bool{}
 	actions := map[string]string{}

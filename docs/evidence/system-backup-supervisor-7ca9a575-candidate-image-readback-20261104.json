@@ -1,0 +1,151 @@
+{
+  "schema_version": "supervisor-final-image-byte-readback.v1",
+  "source_commit": "7ca9a575b65e396fb8a3d2990f1f24a315225bf4",
+  "images_archive_sha256": "d88cf43b9f25f0505f2acdc1b659975dcbf4bc40a7ba24e4e9229140c13ad5e7",
+  "images": {
+    "app": {
+      "tag": "clawmanager-page-trial:page-20261104-7ca9a575-r1",
+      "config_digest": "sha256:6d6fc26f74925272e49d094d29d7da7aed895226233a6429e55a776aa74886ca",
+      "matched_files": 553,
+      "layers": [
+        {
+          "layer": "blobs/sha256/f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870",
+          "compressed_sha256": "f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870",
+          "diff_id": "sha256:08000c18d16dadf9553d747a58cf44023423a9ab010aab96cf263d2216b8b350"
+        },
+        {
+          "layer": "blobs/sha256/61ca4f733c802afd9e05a32f0de0361b6d713b8b53292dc15fb093229f648674",
+          "compressed_sha256": "61ca4f733c802afd9e05a32f0de0361b6d713b8b53292dc15fb093229f648674",
+          "diff_id": "sha256:d71eae0084c1aa823dd8fb2ecf8604d5c0f4911226c042bb1f8297e819f4b192"
+        },
+        {
+          "layer": "blobs/sha256/b464cfdf2a6319875aeb27359ec549790ce14d8214fcb16ef915e4530e5ed235",
+          "compressed_sha256": "b464cfdf2a6319875aeb27359ec549790ce14d8214fcb16ef915e4530e5ed235",
+          "diff_id": "sha256:c56f134d380585340a68d0db2f2c170641a1c0ff72ccf2438cf2f693df756a85"
+        },
+        {
+          "layer": "blobs/sha256/d7e5070240863957ebb0b5a44a5729963c3462666baa2947d00628cb5f2d5773",
+          "compressed_sha256": "d7e5070240863957ebb0b5a44a5729963c3462666baa2947d00628cb5f2d5773",
+          "diff_id": "sha256:e244aa659f612a80c40dd8645812301e3def6b15ec67b9e486ed2201172b51d1"
+        },
+        {
+          "layer": "blobs/sha256/81bd8ed7ec6789b0cb7f1b47ee731c522f6dba83201ec73cd6bca1350f582948",
+          "compressed_sha256": "81bd8ed7ec6789b0cb7f1b47ee731c522f6dba83201ec73cd6bca1350f582948",
+          "diff_id": "sha256:b8d7d1d2263425d6044e059b2810017d062d659b9b755241f3747eda77726250"
+        },
+        {
+          "layer": "blobs/sha256/197eb75867ef4fcecd4724f17b0972ab0489436860a594a9445f8eaff8155053",
+          "compressed_sha256": "197eb75867ef4fcecd4724f17b0972ab0489436860a594a9445f8eaff8155053",
+          "diff_id": "sha256:811a4dbbf4a5309e4390cf655c12db92e1a4304fb9d9731f83e7b02e95a617c6"
+        },
+        {
+          "layer": "blobs/sha256/34a64644b756511a2e217f0508e11d1a572085d66cd6dc9a555a082ad49a3102",
+          "compressed_sha256": "34a64644b756511a2e217f0508e11d1a572085d66cd6dc9a555a082ad49a3102",
+          "diff_id": "sha256:947e805a4ac71f68e6703550c0b36c2aa2e554c4fa670ca2da6a25c6d7dccb66"
+        },
+        {
+          "layer": "blobs/sha256/39c2ddfd6010082a4a646e7ca44e95aca9bf3eaebc00f17f7ccc2954004f2a7d",
+          "compressed_sha256": "39c2ddfd6010082a4a646e7ca44e95aca9bf3eaebc00f17f7ccc2954004f2a7d",
+          "diff_id": "sha256:0d853d50b128aa460b47e7121849463a14b18d4fd976caf5014744aae24d28aa"
+        },
+        {
+          "layer": "blobs/sha256/a7b62378e2112f79d8db7695f187bba830b1950ebcc960983db3f2d49de7156c",
+          "compressed_sha256": "a7b62378e2112f79d8db7695f187bba830b1950ebcc960983db3f2d49de7156c",
+          "diff_id": "sha256:6cc4460d773fc783f2daed61c4fbfbfd8e2e7dd65882da8701e065b34216e2af"
+        },
+        {
+          "layer": "blobs/sha256/a55accaa23b490f619f297531517791933e2c6dbc2f7bae8f4793806a1589b36",
+          "compressed_sha256": "a55accaa23b490f619f297531517791933e2c6dbc2f7bae8f4793806a1589b36",
+          "diff_id": "sha256:7f222d04a9952439de980fe79999c2a79deea2b17df0aab513e7293224d84a2d"
+        },
+        {
+          "layer": "blobs/sha256/be772132d0d78b6f138ecd1644f6b5fd995336f112458779a3e5c9dea967d261",
+          "compressed_sha256": "be772132d0d78b6f138ecd1644f6b5fd995336f112458779a3e5c9dea967d261",
+          "diff_id": "sha256:c8549e7a46507e425f32e3020ca0e96de127f665acb1ad732c63f43c1b568091"
+        },
+        {
+          "layer": "blobs/sha256/b6e20794d24b438e9f8396d30d124188d9edde87e1692234c8576a81ac63e0fb",
+          "compressed_sha256": "b6e20794d24b438e9f8396d30d124188d9edde87e1692234c8576a81ac63e0fb",
+          "diff_id": "sha256:c9a30af32f0a59e5a1d2f537dcd9cc0c93220b7695f9fb97d3aa0bc8b94e2717"
+        },
+        {
+          "layer": "blobs/sha256/317e7a436c8693eea218464bf2e6575da61076085074ad3c76a9cc7c035b82d9",
+          "compressed_sha256": "317e7a436c8693eea218464bf2e6575da61076085074ad3c76a9cc7c035b82d9",
+          "diff_id": "sha256:5907d5e33094b4ac3a8ff3a5f9d0068de02859a7625e15b9d1152fad5305a29c"
+        },
+        {
+          "layer": "blobs/sha256/d4142264be612f6410bb6d0fafe130486987c5614048c43fc23da0041c1e81a9",
+          "compressed_sha256": "d4142264be612f6410bb6d0fafe130486987c5614048c43fc23da0041c1e81a9",
+          "diff_id": "sha256:493235f72f4c54ec589dd6b0e985866199f15c0f0d284a60170ea85f474a5dd9"
+        },
+        {
+          "layer": "blobs/sha256/ff32c1452093240b7f5e064ae4525d7834e21085d541f6bcd695c8b4c4c25df8",
+          "compressed_sha256": "ff32c1452093240b7f5e064ae4525d7834e21085d541f6bcd695c8b4c4c25df8",
+          "diff_id": "sha256:3022585bf3a3511d38902e03dd7aef670414231722eb14333c0af0245d6e3ea9"
+        },
+        {
+          "layer": "blobs/sha256/e6d8fbf3e6ad74d15c9aec0fd7b6636468965f27bd1f8aeec02e4a64fb505615",
+          "compressed_sha256": "e6d8fbf3e6ad74d15c9aec0fd7b6636468965f27bd1f8aeec02e4a64fb505615",
+          "diff_id": "sha256:dbeef96c6d61880821c0be356a7da3cbb492bb80f86e273769c2d9a7c403fea1"
+        },
+        {
+          "layer": "blobs/sha256/79d5ec129b3ae4dc263d087f36e1cfa83cd9857ed12460a6403b4cf00da23e30",
+          "compressed_sha256": "79d5ec129b3ae4dc263d087f36e1cfa83cd9857ed12460a6403b4cf00da23e30",
+          "diff_id": "sha256:4b3f6bff7385e0591c01413491c8862e7ca98e22b8c0cf57c6947e0ff0c783d4"
+        },
+        {
+          "layer": "blobs/sha256/ec5e152130a112c056677dc00361f6e8aa4367c3e413279871989f52d566a071",
+          "compressed_sha256": "ec5e152130a112c056677dc00361f6e8aa4367c3e413279871989f52d566a071",
+          "diff_id": "sha256:cc36221365c81b86d95598306bfe8ffd6bd33a1d801459bfa0782e05cf081cda"
+        },
+        {
+          "layer": "blobs/sha256/2087992e81b93bbd83b8dd10c40f4278078019a558944d3646db71700f0ffc7e",
+          "compressed_sha256": "2087992e81b93bbd83b8dd10c40f4278078019a558944d3646db71700f0ffc7e",
+          "diff_id": "sha256:641f4ef3fd4516db5e940ce86c570efb3c54c8871c270ebf7fa6006ac92a7a64"
+        },
+        {
+          "layer": "blobs/sha256/ba3f5c4b24a9a00e0e00ff4cddd75fe82160fe350b1fc8ad525ea6e52b3e0911",
+          "compressed_sha256": "ba3f5c4b24a9a00e0e00ff4cddd75fe82160fe350b1fc8ad525ea6e52b3e0911",
+          "diff_id": "sha256:3d0d0ce76123ff16501ab22f247bf47ff0a3a485dc784613965e1d95481e64d8"
+        },
+        {
+          "layer": "blobs/sha256/e1335fca140ae09dee54052c19d0b3241bdb879cc3134790b5cf041fd3b4f47b",
+          "compressed_sha256": "e1335fca140ae09dee54052c19d0b3241bdb879cc3134790b5cf041fd3b4f47b",
+          "diff_id": "sha256:13b39c1f0d6d9bdc43269f5fecbb4c9bebd0ebb76170cb724289d67886b91fe7"
+        },
+        {
+          "layer": "blobs/sha256/3493b1786130496d8e435fee9699ff18a37f42f7bf423372efbfa3daf73ab7ad",
+          "compressed_sha256": "3493b1786130496d8e435fee9699ff18a37f42f7bf423372efbfa3daf73ab7ad",
+          "diff_id": "sha256:941bb08f80b6750c0c3b63549344629f01ac6688b390ec55b68beacf7e973fc6"
+        },
+        {
+          "layer": "blobs/sha256/d41d8fddcb3035a00eec1e14c91bcf6f7cbc3a056c35ababcb051b058ce83be0",
+          "compressed_sha256": "d41d8fddcb3035a00eec1e14c91bcf6f7cbc3a056c35ababcb051b058ce83be0",
+          "diff_id": "sha256:31d310d2792c4fd3ad894cf4f95ceab359a3b2ba0cf5d94d5ef3bcd9513c119b"
+        },
+        {
+          "layer": "blobs/sha256/da048c9059bf12682c555c4b0d12bdad98320b28e0ed431f52a4604446a41ba3",
+          "compressed_sha256": "da048c9059bf12682c555c4b0d12bdad98320b28e0ed431f52a4604446a41ba3",
+          "diff_id": "sha256:cb9442a5e47e8b97a2263f2079ed9f5692745646b83e17e8d35618887d1ef145"
+        }
+      ]
+    },
+    "worker": {
+      "tag": "clawmanager-backup-worker:page-20261104-7ca9a575-r1",
+      "config_digest": "sha256:fe0e96ec44d4d9c6ffca72bca8e0cba000a1fdf9eb62e290ac3bd188fadc89ef",
+      "matched_files": 2,
+      "layers": [
+        {
+          "layer": "blobs/sha256/af581ddb942950a7003177c8f2867104b6c8d9683d4e6813e68d5c91a77834e0",
+          "compressed_sha256": "af581ddb942950a7003177c8f2867104b6c8d9683d4e6813e68d5c91a77834e0",
+          "diff_id": "sha256:818a57ad6639c19a9285aa17defbf8581a8c74d5f237e014c208470653e2b3fe"
+        }
+      ]
+    }
+  },
+  "status": "IMAGE_BYTES_MATCH_BUILD_INPUTS_NOT_FIELD_ACCEPTANCE",
+  "application_started": false,
+  "workload_mutated": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}

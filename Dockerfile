@@ -93,6 +93,7 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-source-registries \
       system-backup-status-relay-owner \
       system-backup-first-install-materials \
+      system-backup-first-adoption \
       system-backup-database-source-grant \
       system-backup-kek-window-owner \
       system-backup-kek-authority \

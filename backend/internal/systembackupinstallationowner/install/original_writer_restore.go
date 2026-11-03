@@ -343,6 +343,19 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 	if fence.check(ctx) != nil {
 		return ErrInstall
 	}
+	// This dependency was never mutated or stopped. Fresh recovery authority
+	// checks its original API/native-storage identity without resurrecting the
+	// expired original capture/provider grant as recovery permission.
+	for _, provider := range s.preAdoptionProviders {
+		if provider.recheckAPI(ctx) != nil {
+			return ErrInstall
+		}
+	}
+	for _, provider := range s.providerDependencies {
+		if provider.recheckAPI(ctx) != nil {
+			return ErrInstall
+		}
+	}
 	k := fence.operator.installer.kube
 	ns := fence.operator.installer.plan.Target.Namespace
 	namespace, err := k.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})

@@ -138,7 +138,7 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		return nil, ErrInstall
 	}
 	var wg sync.WaitGroup
-	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped)+len(s.deployments))
+	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped)+len(s.deployments)+len(s.providerDependencies)+len(s.preAdoptionProviders))
 	run := func(fn func() error) {
 		wg.Add(1)
 		go func() {
@@ -147,6 +147,14 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 				failures <- err
 			}
 		}()
+	}
+	for _, provider := range s.preAdoptionProviders {
+		provider := provider
+		run(func() error { return provider.observeNative(ctx) })
+	}
+	for _, provider := range s.providerDependencies {
+		provider := provider
+		run(func() error { return provider.observeNative(ctx) })
 	}
 	for _, w := range s.deployments {
 		if w.redis != nil {
@@ -175,6 +183,18 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		return nil, ErrInstall
 	}
 	responses := []any{}
+	for _, provider := range s.preAdoptionProviders {
+		if provider.recheckLocal(ctx, time.Now().UTC()) != nil {
+			return nil, ErrInstall
+		}
+		responses = append(responses, provider.originalState())
+	}
+	for _, provider := range s.providerDependencies {
+		if provider.recheckLocal(ctx, time.Now().UTC()) != nil {
+			return nil, ErrInstall
+		}
+		responses = append(responses, provider.initial)
+	}
 	for _, w := range s.deployments {
 		if w.redis != nil {
 			responses = append(responses, w.redis.held.Data())
@@ -202,6 +222,16 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 	if s == nil || s.owner.checkCurrentGate(ctx, c.GateAcquiring, c.GateHeld) != nil || s.checkApplicationGate(ctx, "acquiring", "held") != nil || s.owner.checkInstances(ctx) != nil || s.recheckVolumePins(ctx) != nil {
 		return ErrInstall
+	}
+	for _, provider := range s.preAdoptionProviders {
+		if provider.recheckAPI(ctx) != nil {
+			return ErrInstall
+		}
+	}
+	for _, provider := range s.providerDependencies {
+		if provider.recheckAPI(ctx) != nil {
+			return ErrInstall
+		}
 	}
 	current, pods, deps, _, err := s.owner.readKubernetesCensus(ctx)
 	if err != nil || len(deps) != len(s.initial.Deployments) || !reflect.DeepEqual(current.PVCs, s.initial.PVCs) || len(current.StatefulSets)+len(current.DaemonSets)+len(current.Jobs)+len(current.CronJobs)+len(current.Autoscalers) != 0 {
@@ -344,6 +374,16 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 	}
 	if len(s.deployments)+len(s.proPods) == 0 || len(s.nodes) == 0 && len(s.stopped) == 0 {
 		return ErrInstall
+	}
+	for _, provider := range s.preAdoptionProviders {
+		if provider.recheckLocal(ctx, now) != nil {
+			return ErrInstall
+		}
+	}
+	for _, provider := range s.providerDependencies {
+		if provider.recheckLocal(ctx, now) != nil {
+			return ErrInstall
+		}
 	}
 	for _, w := range s.deployments {
 		if w.redis != nil && (w.redis.held == nil || w.redis.held.Recheck(ctx, owner.operation, s.inventorySHA, "held", now) != nil) {

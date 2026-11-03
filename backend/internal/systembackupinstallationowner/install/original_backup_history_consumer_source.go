@@ -152,7 +152,14 @@ func originalConsumerGap(kind, name, container string) error {
 }
 
 func (s *originalFiniteBackupConsumerSource) classify(ctx context.Context, pod *corev1.Pod, spec *corev1.PodSpec, c *corev1.Container, status *corev1.ContainerStatus, init bool) (originalBackupStartupDisposition, error) {
-	d, err := classifyOriginalBackupViewStartup(spec, c, status, init)
+	d, err := classifyOriginalSecretBrokerStartup(ctx, s.prep, s.hold, pod, spec, c, status, init)
+	if err == nil {
+		return d, nil
+	}
+	if !errors.Is(err, errOriginalBackupConsumerUnclassified) {
+		return originalBackupStartupDisposition{}, err
+	}
+	d, err = classifyOriginalBackupViewStartup(spec, c, status, init)
 	if err == nil {
 		return d, nil
 	}

@@ -369,7 +369,7 @@ func redisGateReadCommands(allowed, safe map[string]bool) string {
 	return out
 }
 func redisGateSetUser(user redisGateUser, root redisGateSelector, selectors []redisGateSelector) [][]byte {
-	args := [][]byte{[]byte("ACL"), []byte("SETUSER"), []byte(user.Name), []byte("resetcommands"), []byte("clearselectors")}
+	args := [][]byte{[]byte("ACL"), []byte("SETUSER"), []byte(user.Name), []byte("-@all"), []byte("clearselectors")}
 	for _, token := range strings.Fields(root.Commands) {
 		args = append(args, []byte(token))
 	}

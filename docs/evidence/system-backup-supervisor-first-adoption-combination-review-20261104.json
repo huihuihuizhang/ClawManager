@@ -1,0 +1,233 @@
+{
+  "schema_version": "supervisor-original-first-adoption-combination-review.v1",
+  "accepted_base": "7ca9a575b65e396fb8a3d2990f1f24a315225bf4",
+  "selected_source_targets": 299,
+  "source_diff_targets": 50,
+  "selection_sha256": "d98e78ea50e00cec2a7a6f74c8749d44094c38fb89f7dece8d37f19976d540e7",
+  "results": {
+    "windows-targeted": {
+      "roots": 34,
+      "subcases": 123,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "e4a1442cc72b6a673ea44389b38d3b00a55534812298d979230e5b0a3c378848"
+    },
+    "windows-cli-boundary": {
+      "roots": 5,
+      "subcases": 12,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "e2c28232d3e83535daed0b571a6e650da94fd356654196527ff7802ba74da62d"
+    },
+    "linux-install": {
+      "roots": 23,
+      "subcases": 106,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "9731c27c0165ec0909d4729d6448393e3d1b6c0d07dbc14b67a10767742d2f74"
+    },
+    "linux-owner": {
+      "roots": 3,
+      "subcases": 8,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "9ce0cdd03647a1e74f4e89192ae151145f00a51270d0b69e5e10a4cbddb344c9"
+    },
+    "linux-kek": {
+      "roots": 1,
+      "subcases": 0,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "feabe3360e77482bdb1fbb39ce6ae4b4a8d1439e5604c0dd40813540116d5622"
+    },
+    "linux-adoption": {
+      "roots": 5,
+      "subcases": 12,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "cf547a94b1bf326db70c81a0ca0f3b140a5c06eb1c8a5016f1013ac70dac8fa6"
+    },
+    "linux-backup": {
+      "roots": 3,
+      "subcases": 0,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "acf673a17456ea0f2d7fda0195f5dd9f396f639f598875540fb927f1a7addf39"
+    }
+  },
+  "expected_unique_test_roots": 35,
+  "source_maps": {
+    "v11_actual_adoption_maps": [
+      {
+        "path": ".a-original-adoption-issuance-20261104/source-map.json",
+        "sha256": "af0674a924e8a61786bb2f64b143f15837c689eb33ba3bf3038f2e0520bc9bc1"
+      },
+      {
+        "path": "backend/.d-original-first-adoption-session-20261104/source-map.json",
+        "sha256": "68fbc8523c719f6d07b831c2845c7926195f925971fa0de4645228c8ec6aaa25"
+      },
+      {
+        "path": "backend/.d-original-owner-adoption-commit-20261104/source-map.json",
+        "sha256": "e81b2d265449cdc1aecc250b84a2f7c25319acefa610acf097b26e08bba6e0e2"
+      },
+      {
+        "path": "backend/.d-original-first-adoption-execute-20261104/source-map.json",
+        "sha256": "53860df2a73dfcd47cdcaa5d2a6db1b6d894079dc0744ca3562890ff87eae802"
+      },
+      {
+        "path": "backend/.d-original-adoption-reconcile-20261103/source-map.json",
+        "sha256": "779d36861b447deb60666d1947dadee6a58f58da6982ac9bd88c2ec559f2d046"
+      },
+      {
+        "path": "backend/.d-original-first-adoption-caller-20261104/source-map.json",
+        "sha256": "209c1715d63255a61a5462a416a0a8ce0fa7b71f47da991f124c7652f29fbc10"
+      },
+      {
+        "path": "backend/.c-original-backup-native-peers-r2-20261104/source-map.json",
+        "sha256": "5a0fba9644c45dbb37aa317e5045873c6da19fa1bd25563abfdb000666aa13b1"
+      },
+      {
+        "path": "backend/.c-original-peer-serviceaccount-r3-20261104/source-map.json",
+        "sha256": "8821eae33fd2289083e581cfc36a4dcca01c53f7ccefdc559b2d6ffb191229b3"
+      },
+      {
+        "path": "backend/.d-original-vault-provider-dependency-20261104/source-map.json",
+        "sha256": "b0c54da0f0b161372ef3c9ab1fbf6f7fd2bb06e77a779e8bc7b2ac5da8175b93"
+      }
+    ],
+    "v11_intake_recovery": "Original nested snapshot path exceeded Windows MAX_PATH before metadata commit. Verified every partial byte against accepted baseline or exact frozen chain; replayed all33 in memory; wrote31 final targets into short hashed snapshots; no Go check ran on partial tree.",
+    "v11_known_blockers": [
+      "Vault dependency currently requires active config/owner/mapping, a concrete A1/A2 cycle; genuine pre-configuration observation/claim proof requested from D. C kept-provider startup bridge must preserve source identity without fake cold proof.",
+      "Actual17/nativeSQL/adoption and full page backup not proved; remaining native peers/installers still required."
+    ],
+    "v11_root_provider_bridge_and_cap": [
+      {
+        "target": "backend/internal/systembackupinstallationowner/install/original_history_coverage_binding.go",
+        "before_sha256": "8d8b4c70c34e748e49c21af71fbd453d0fe90c3c4e39b38412bfb237d5a9ae97",
+        "after_sha256": "15f4cb935251c7f5653a8b4a315d32cae81ce41c31d6d81f9d5ccec6c9552937"
+      },
+      {
+        "target": "backend/internal/systembackupinstallationowner/install/original_backup_native_peers.go",
+        "before_sha256": "8ad2a8077048bc0f93e35c09ff1f4b66f87c1d44b2b3f1ff2531a03cf2fd739b",
+        "after_sha256": "934dbcf367a7c61ade71d59a6a481ced8d129ee96a0c2eff2cd08d2e0ba71177"
+      },
+      {
+        "target": "backend/internal/systembackupinstallationowner/install/original_backup_kept_vault_peer.go",
+        "before_sha256": null,
+        "after_sha256": "0486e653d192d57eb1c542ff46ca4e42e78af55e979283fd87bd72024e160e60"
+      },
+      {
+        "target": "backend/internal/systembackupinstallationowner/install/original_history_provider_cap_test.go",
+        "before_sha256": null,
+        "after_sha256": "c828e018e67941348d37d7bf9d04e1e7a5cfce83e1c172d5b570201526da9756"
+      }
+    ],
+    "v11_zero_fixture_fix": {
+      "target": "backend/internal/systembackupinstallationowner/install/original_history_source_set_test.go",
+      "before_sha256": "c94e1f55f5d69cdda316b515bcc3dbaf5e3a6fd64b6437e73eaf6ff29d858bf5",
+      "after_sha256": "dfa1a33e3a09444b22f572118b8114e4e97ab7a46a5c2a3d5c07f307e3475749",
+      "reason": "Production parameter now uses actual SQLCoverageOwnerConfig; negative zero-value fixture changes type only."
+    },
+    "v11r3_official_fixes": [
+      {
+        "path": "backend/.d-original-first-adoption-caller-r2-20261104/source-map.json",
+        "sha256": "db0d790fce48d44f9f19ae74ead385f8ae3f9e674781ca18343671f6a9af47d0"
+      },
+      {
+        "path": "backend/.d-source-core-new-fields-20261104/source-map.json",
+        "sha256": "35c30b6529b1a111d5c50cf50f0e5a8a3d5140f12a87b5be1b74af2c78238a12"
+      },
+      {
+        "path": "backend/.d-native-redis-acl-command-fix-20261104/source-map.json",
+        "sha256": "38f6053bacb93ac511f0025d0fff88a1cb9555b8ba74cde0da1f9cd9bafb2e88"
+      }
+    ],
+    "v11r4_pre_adoption_and_broker_maps": [
+      {
+        "path": "backend/.d-pre-adoption-vault-dependency-20261104/source-map.json",
+        "sha256": "15aacca5bedfd6d4b6155acf1228fa939a01548728221f1a6a9788f39141c3b2"
+      },
+      {
+        "path": ".a-original-secret-broker-profile-20261104/source-map.json",
+        "sha256": "464f53aef24092119513c4db1979712896bf13bc9fe8202896778b76d40146bb"
+      }
+    ],
+    "v11_cli_runtime_fix": {
+      "before_sha256": "59ad08059386fcce2f045997a8a7c64e151d63893b810b747138c3fcab6004aa",
+      "after_sha256": "51351f0f003167c8ce4ee279be78378016e5a9508bcbc17920ca908144624fe4",
+      "reason": "Go regexp repeat maximum is1000: match allowed alphabet with + and retain exact 1024-byte bound separately; nonempty still required by +. Original runtime panic log retained."
+    },
+    "v11_official_cli_boundary": {
+      "path": "backend/.d-original-first-adoption-caller-r3-20261104/source-map.json",
+      "sha256": "7c4d5f4e0136ed21d5a6a08bb14b48740dd9a82d707d0aa102fa807f1fece186",
+      "production": "Root fix retained; official bytes identical after CRLF normalization",
+      "test": "Official actual CLI 0/1024/1025 boundary"
+    }
+  },
+  "actual_changes": [
+    "Original administrator/enrollment and same genuine history source/hold issue the actual17 source-owner records, bind four partition witnesses, and use actual independent SQLCoverageOwnerPreparation. Private create-only Ed25519 role materials are generated/read back before source stop.",
+    "Original first-adoption session consumes the same actual coverage into the real transaction commit and independent SQL readback. Actual command separates confirmed adoption, fresh-authority source recovery and page-backup status; ambiguous commit requires exact original reconciliation.",
+    "Actual pre-adoption Vault dependency observes current empty head, native key/JWT/permissions/Kubernetes trust and dedicated CSI claim identity without future active KEK/config authority. Source classifier and native minimum consume the genuine same-hold provider observation.",
+    "Finite original MinIO/Vault/MySQL/Redis and actual secret-broker/wait-init startup decoders preserve complete retained controller/Pod membership and constrained admission-added service-account projection. Unknown startup remains a concrete dependency.",
+    "Known source-core fields source_tls/redis_read_keepers remain bound by the complete signed deployment digest. Redis ACL gate uses native -@all instead of invalid resetcommands. Root fixed actual CLI-init regexp panic while preserving the original1024-byte alphabet/length bound; official boundary cases0/1024/1025 execute."
+  ],
+  "validation_boundary": [
+    "35 unique selected roots execute across Windows combination+CLI boundary runs and the exact Linux five-package run, zero failure/skip. These cover parser/closed-schema rejection, cap arithmetic, material/identity guards and actual protocol/file models; they do not prove real original source scans or positive17 native issuance/adoption.",
+    "Both actual Linux first-adoption and original-maintenance production entries compile. No real Kube/MySQL/Vault/Redis/MinIO service was contacted; no source was stopped and no application was deployed.",
+    "Original migration, complete selection/material/config producers, real readable Redis/MinIO/formal provider keepers, runtime startup closure, full page nonempty collection/publication/readback/catalog/success remain unverified or unfinished.",
+    "Earlier zero-config test compile mismatch and actual r2 CLI init panic are retained in failure logs and never counted as success. No authorization window was extended."
+  ],
+  "completed_builds": [
+    {
+      "path": "bins-v11r4/adoption.test",
+      "bytes": 87263722,
+      "sha256": "79afe723b610f161be8c03fe1de1e37b586f84465443900e84319a1a7532e5a0"
+    },
+    {
+      "path": "bins-v11r4/backup.test",
+      "bytes": 95694154,
+      "sha256": "905e7d8e4596fc3aa600131f600a2e14551055331c52973e97745a3730968780"
+    },
+    {
+      "path": "bins-v11r4/install.test",
+      "bytes": 111260666,
+      "sha256": "21b50b203b15ddb3492f5cd00b9666b6e73a3e248a3286792f0511f7923babe9"
+    },
+    {
+      "path": "bins-v11r4/kek.test",
+      "bytes": 96220724,
+      "sha256": "78235f46a1a3a5f6bff2aa8d393835be150dd8a572740c9d9282858cb9c6e122"
+    },
+    {
+      "path": "bins-v11r4/owner.test",
+      "bytes": 92795267,
+      "sha256": "0b8b54bd1cdb886c6b67c5423d436d5a1caea61be319100ae5b53673c63be90c"
+    },
+    {
+      "path": "bins-v11r4/system-backup-first-adoption",
+      "bytes": 85969887,
+      "sha256": "cf8a866b28e55bc70f13c3faa625c3d8cdfead47be425b2802667beda4df00bf",
+      "buildinfo_sha256": "198bad29499ae703be17605f0aa5be84249e6c4335a890ed3b6738b66d1b04cc"
+    },
+    {
+      "path": "bins-v11r4/system-backup-original-maintenance",
+      "bytes": 85966490,
+      "sha256": "e859d3cdb045f3c3de2b8f889869e424991283a194462efaf47ba98136f2f5fd",
+      "buildinfo_sha256": "9697355b2e0ff77a4b589fb80365910b8726426814d51ab533e6d10cb66ef77c"
+    }
+  ],
+  "superseded_test_build": {
+    "path": "bins-v11r4/adoption.test",
+    "bytes": 87260844,
+    "sha256": "3b96e6cb1afd71d728cd8459f4716cb618128204504fce05837f4d46ee473046",
+    "reason": "Official boundary-only test source added; same production bytes after CRLF normalization",
+    "cleanup": "hashed then removed before rebuild"
+  },
+  "cleanup": {
+    "binaries": "Seven final Linux test/build checks plus one superseded CLI test check hashed and removed; output directory absent.",
+    "owned_containers": []
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

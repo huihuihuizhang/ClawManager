@@ -58,7 +58,7 @@ func TestRedisReadGateReadbackRejectsUnexpectedWriteAndSelectorGrants(t *testing
 		t.Fatal("selector OR bypass accepted")
 	}
 	args := redisGateSetUser(want, want.redisGateSelector, nil)
-	if !reflect.DeepEqual(args[:5], [][]byte{[]byte("ACL"), []byte("SETUSER"), []byte("original"), []byte("resetcommands"), []byte("clearselectors")}) {
+	if !reflect.DeepEqual(args[:5], [][]byte{[]byte("ACL"), []byte("SETUSER"), []byte("original"), []byte("-@all"), []byte("clearselectors")}) {
 		t.Fatal("old selectors remained active")
 	}
 }

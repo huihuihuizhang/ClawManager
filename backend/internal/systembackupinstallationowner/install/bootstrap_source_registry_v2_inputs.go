@@ -29,8 +29,8 @@ type bootstrapSourceMaterialsWire struct {
 	MaxObjects                                                                  int
 	MaxObjectBytes, MaxObjectTotalBytes                                         int64
 	ResourceTypes                                                               []json.RawMessage
-	ControlEvidence                                                             json.RawMessage `json:"ControlEvidence,omitempty"`
-	ControlEvidenceSource                                                       json.RawMessage `json:"ControlEvidenceSource,omitempty"`
+	ControlEvidence                                                             json.RawMessage               `json:"ControlEvidence,omitempty"`
+	ControlEvidenceSource                                                       json.RawMessage               `json:"ControlEvidenceSource,omitempty"`
 	Discovery                                                                   *bootstrapSourceDiscoveryWire `json:",omitempty"`
 }
 type bootstrapSourceDiscoveryWire struct {
@@ -83,24 +83,27 @@ func BootstrapSourceMetadataScopeFromMaterials(raw []byte) (string, error) {
 }
 
 type bootstrapSourceCoreWire struct {
-	Version           string `json:"schema_version"`
-	CaptureScope      string `json:"capture_scope"`
-	InstallationID    string `json:"installation_id"`
-	ControllerOwner   string `json:"controller_owner"`
-	ApplicationScope  string `json:"application_scope"`
-	Namespace         string `json:"namespace"`
-	NamespaceUID      string `json:"namespace_uid"`
-	SourceDSNFile     string `json:"source_dsn_file"`
-	SourceUser        string `json:"source_user"`
-	SourceDatabase    string `json:"source_database"`
-	SourceServerUUID  string `json:"source_server_uuid"`
-	ProfileFile       string `json:"profile_file"`
-	CaptureModules    struct{ Protocol, Path string } `json:"capture_modules"`
-	ForwardGrant      struct{ Path string; PublicKey string `json:"public_key_base64"` } `json:"forward_grant"`
-	RuntimeSources    struct {
+	Version          string                          `json:"schema_version"`
+	CaptureScope     string                          `json:"capture_scope"`
+	InstallationID   string                          `json:"installation_id"`
+	ControllerOwner  string                          `json:"controller_owner"`
+	ApplicationScope string                          `json:"application_scope"`
+	Namespace        string                          `json:"namespace"`
+	NamespaceUID     string                          `json:"namespace_uid"`
+	SourceDSNFile    string                          `json:"source_dsn_file"`
+	SourceUser       string                          `json:"source_user"`
+	SourceDatabase   string                          `json:"source_database"`
+	SourceServerUUID string                          `json:"source_server_uuid"`
+	ProfileFile      string                          `json:"profile_file"`
+	CaptureModules   struct{ Protocol, Path string } `json:"capture_modules"`
+	ForwardGrant     struct {
+		Path      string
+		PublicKey string `json:"public_key_base64"`
+	} `json:"forward_grant"`
+	RuntimeSources struct {
 		AgentTokenFile string `json:"agent_token_file"`
-		AgentCAFile string `json:"agent_ca_file"`
-		AgentCASHA256 string `json:"agent_ca_sha256"`
+		AgentCAFile    string `json:"agent_ca_file"`
+		AgentCASHA256  string `json:"agent_ca_sha256"`
 	} `json:"runtime_sources"`
 }
 
@@ -115,7 +118,7 @@ func decodeBootstrapSourceCore(raw []byte) (bootstrapSourceCoreWire, error) {
 	if _, err := jsoncanonicalizer.Transform(raw); err != nil {
 		return out, ErrInstall
 	}
-	allowed := strings.Fields("schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
+	allowed := strings.Fields("source_tls redis_read_keepers schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
 	known := map[string]bool{}
 	for _, name := range allowed {
 		known[name] = true
@@ -170,7 +173,7 @@ func ValidateBootstrapSourceV2Inputs(r BootstrapSourceRegistryV2Record, coreRaw,
 
 func validateBootstrapSourceForward(r BootstrapSourceRegistryV2Record, public64, profileSHA string, raw []byte) error {
 	var envelope struct {
-		Payload string `json:"payload_base64"`
+		Payload   string `json:"payload_base64"`
 		Signature string `json:"signature_base64"`
 	}
 	if bootstrapSourceStrictJSON(raw, &envelope, 65536) != nil {
@@ -183,14 +186,14 @@ func validateBootstrapSourceForward(r BootstrapSourceRegistryV2Record, public64,
 		return ErrInstall
 	}
 	var grant struct {
-		Version string `json:"schema_version"`
-		Installation string `json:"installation_id"`
-		Controller string `json:"controller_owner"`
-		Config string `json:"config_sha256"`
-		Profile string `json:"profile_sha256"`
-		Deployment string `json:"deployment_config_sha256"`
-		NotBefore time.Time `json:"not_before"`
-		Until time.Time `json:"expires_at"`
+		Version      string    `json:"schema_version"`
+		Installation string    `json:"installation_id"`
+		Controller   string    `json:"controller_owner"`
+		Config       string    `json:"config_sha256"`
+		Profile      string    `json:"profile_sha256"`
+		Deployment   string    `json:"deployment_config_sha256"`
+		NotBefore    time.Time `json:"not_before"`
+		Until        time.Time `json:"expires_at"`
 	}
 	// The old execution envelope is read ONLY as independently signed original
 	// DATA/window. Never construct a Forward object or require enabled config.

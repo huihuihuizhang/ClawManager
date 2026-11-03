@@ -21,7 +21,9 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
-	RedisReadKeepers                                         []OriginalRedisReadKeeperSelection `json:",omitempty"`
+	PreAdoptionVaultDependencies                             []PreAdoptionVaultDependencySelection `json:",omitempty"`
+	VaultProviderDependencies                                []OriginalVaultProviderSelection      `json:",omitempty"`
+	RedisReadKeepers                                         []OriginalRedisReadKeeperSelection    `json:",omitempty"`
 	GatewayRecoveryMode                                      string
 	ApplicationScope                                         string
 	Participants                                             []OriginalMaintenanceParticipant
@@ -49,6 +51,8 @@ func (e OriginalWriterSourceFailure) Error() string {
 }
 
 type PreparedOriginalWriterSet struct {
+	preAdoptionProviders  []*preAdoptionVaultProvider
+	providerDependencies  []*originalVaultProviderDependency
 	historyMounted        *originalMountedHistoryInputs
 	mu                    sync.Mutex
 	nodes                 []*originalWholeNodeScope
@@ -110,7 +114,7 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	selected := map[string]OriginalDeploymentSelection{}
 	databaseCount := 0
 	for _, dep := range selection.Deployments {
-		if dep.Name == "" || dep.UID == "" || selected[dep.Name].UID != "" || dep.Role != "writer" && dep.Role != "agent" && dep.Role != "database" {
+		if dep.Name == "" || dep.UID == "" || selected[dep.Name].UID != "" || dep.Role != "writer" && dep.Role != "agent" && dep.Role != "database" && dep.Role != "provider-dependency" {
 			return nil, ErrInstall
 		}
 		selected[dep.Name] = dep
@@ -305,6 +309,12 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		}
 		redisSelections[native.Deployment] = native
 	}
+	if set.prepareOriginalProviderDependencies(ctx) != nil {
+		return nil, OriginalWriterSourceFailure{Dependency: "original_vault_provider_dependency_preflight_required"}
+	}
+	if set.preparePreAdoptionVaultDependencies(ctx) != nil {
+		return nil, OriginalWriterSourceFailure{Dependency: "pre_adoption_installed_vault_dependency_required"}
+	}
 	for _, dep := range selection.Deployments {
 		if dep.Role == "writer" {
 			w, e := p.prepareDeployment(ctx, dep, j)
@@ -335,6 +345,12 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		return nil, ErrInstall
 	}
 	states := map[string]any{}
+	for _, provider := range set.preAdoptionProviders {
+		states["provider-dependency/"+provider.input.Workload.Deployment] = provider.originalState()
+	}
+	for _, provider := range set.providerDependencies {
+		states["provider-dependency/"+provider.selection.Deployment] = provider.initial
+	}
 	for _, g := range set.gateways {
 		states[g.ID()] = g.state
 	}
@@ -378,6 +394,16 @@ func (s *PreparedOriginalWriterSet) recheckPreflight(ctx context.Context) error 
 	if s.historyMounted == nil || s.historyMounted.installer != s.owner.operator.installer || s.historyMounted.recheckReferences(ctx) != nil {
 		return ErrInstall
 	}
+	for _, provider := range s.preAdoptionProviders {
+		if provider.observeNative(ctx) != nil {
+			return ErrInstall
+		}
+	}
+	for _, provider := range s.providerDependencies {
+		if provider.observeNative(ctx) != nil {
+			return ErrInstall
+		}
+	}
 	current, _, _, _, err := s.owner.readKubernetesCensus(ctx)
 	if err != nil || !reflect.DeepEqual(current, s.initial) {
 		return ErrInstall
@@ -388,6 +414,12 @@ func (s *PreparedOriginalWriterSet) recheckPreflight(ctx context.Context) error 
 func (s *PreparedOriginalWriterSet) closePrivate() {
 	if s == nil {
 		return
+	}
+	for _, provider := range s.preAdoptionProviders {
+		provider.close()
+	}
+	for _, provider := range s.providerDependencies {
+		provider.close()
 	}
 	if s.historyMounted != nil {
 		s.historyMounted.close()

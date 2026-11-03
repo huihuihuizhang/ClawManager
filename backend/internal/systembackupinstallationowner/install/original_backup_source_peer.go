@@ -106,9 +106,7 @@ func classifyOriginalBackupSourcePeer(ctx context.Context, p *PreparedOriginalAd
 		}
 		profile = "original-held-native-redis-startup.v1"
 	default:
-		// MinIO/Vault/Agent or another actual peer needs its own supported
-		// concrete startup/source association, not an exemption by service name.
-		return zero, errOriginalBackupConsumerUnclassified
+		return classifyOriginalBackupNativePeer(ctx, p, h, actual, spec, c, status, until)
 	}
 	if !time.Now().Before(until) || !originalEmptyHistoryOwner(ctx, p, h, false) {
 		return zero, ErrInstall
@@ -176,7 +174,7 @@ func originalPeerContainerMatches(pod *corev1.Pod, spec *corev1.PodSpec, c *core
 		if x.Name == c.Name {
 			// Pod and retained controller must select the same actual container.
 			// A differing override/mount is not excused by sharing an imageID.
-			if !reflect.DeepEqual(x, *c) {
+			if !originalPeerCapturedContainerEqual(pod, spec, x, *c) {
 				return false
 			}
 			count++
