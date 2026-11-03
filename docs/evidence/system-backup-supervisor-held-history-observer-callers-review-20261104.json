@@ -1,0 +1,93 @@
+{
+  "schema_version": "supervisor-held-history-and-formal-observer-callers-review.v1",
+  "accepted_base": "05182c03a00134b0ebb67df1db0a5d25613f8791",
+  "selected_source_targets": 212,
+  "selection_sha256": "e549ac5e55579a3a8510b4e867a5fbd426f42e5ac55ca5495e2fca51559f179c",
+  "source_maps": [
+    {
+      "owner": "C-held-root-EOF",
+      "path": "backend/.c-held-history-root-eof-consumer-20261104/source-map.json",
+      "sha256": "26fb8f322f070f52077f0e31ab1fcb6c55f730e79fb8a02ca12e12511bf72303"
+    },
+    {
+      "owner": "D-formal-stopped-Pro-material-producer",
+      "path": "backend/.d-formal-stopped-pro-material-producer-20261104/source-map.json",
+      "sha256": "b4f8bf3f23c582e86c833b2805879d908fdd9f0d7b8c0c6066af8f1b5a2804a0"
+    }
+  ],
+  "official_D_r2": {
+    "path": "backend/.d-formal-stopped-pro-material-producer-r2-20261104/source-map.json",
+    "sha256": "af1516a18ed0237bce80b6cc4175f02eff5c3d0d947152295fdffce6b08dae76"
+  },
+  "results": {
+    "v5r3-windows-targeted": {
+      "roots": 21,
+      "subcases": 57,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "1a41d5db9e03a215edbf9086ed7893e253a74bbf75b41df0a7da383ed1963072"
+    },
+    "v5r3-linux-install": {
+      "roots": 12,
+      "subcases": 41,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "f5747a1b924485b0b77894de70a6170a3977776eebe105d294c965148b271a0c"
+    },
+    "v5r3-linux-source-registries": {
+      "roots": 4,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "4ff494daa8de45c8c804e2072d0c409fb3add49a21672fef4f420441636252c5"
+    }
+  },
+  "linux_complete_package_compile": [
+    "install",
+    "cmd/system-backup-source-registries (imports complete execution package)"
+  ],
+  "reviewed_callers": [
+    "C5 existing empty-history source now actually consumes exact original heldFilesystem observation pointers, calls native directory EOF under actual owner/gate checks before and after source scans, and performs pure local final-SQL binding/cap rechecks.",
+    "C locked EOF constructor binds true original prep/hold/set/node/current stopped opaque/exact anchor path and original deadline. It refuses nonempty or unknown roots and does not construct complete SourceSet, NoS3 or PreparedCoverage.",
+    "P7 CLI prepare-observer-materials calls real original Installer/source-authoring authority and full actual SQL/native stopped-Pro volume-node reads. It emits new unsigned config/material/selection chain, private immutable Secret manifest and UID/ResourceVersion/container-guarded JSON patch.",
+    "Formal observer consumer now checks pinned node UID set against signed deployment node identities. New transport material is taken only from the original selected pins; no new PKI/credential issuance or workload apply occurs."
+  ],
+  "historical_failures": [
+    {
+      "log": "logs/v5-windows-targeted.jsonl",
+      "sha256": "6dcd376d653895dc409af129b212e6a179b5f7a20976485b1d149ef127389621",
+      "reason": "D producer encoding/json unused import caused execution and CLI build failure. Exact official r2 removes only that import."
+    },
+    {
+      "log": "logs/v5r2-windows-targeted.jsonl",
+      "sha256": "3d842d3ab27e4502b44d42afe4b8a99c6fb6f12480fc970f6e2c260dbf422007",
+      "reason": "Old CLI frozen-output test supplied noncanonical mixed-separator Windows t.TempDir path; production canonical guard correctly refused. Independent diagnostic confirmed absolute=true, clean=false, OpenRoot success and all three outputs absent. Only test input normalized with filepath.Clean; no production change or test skip."
+    }
+  ],
+  "validation_limits": [
+    "Actual local filesystem EOF/identity checks, SQL/native/API models and private-handle refusal regressions only. No successful full native held-set EOF authorization, first-adoption factory, actual provider/signing, deployed P7 handshake, Redis keeper, page task or formal publication acceptance.",
+    "P7 producer compiled with the complete execution/CLI package; it was not run against a real installer/Kubernetes source and no production five-output set was generated.",
+    "Finite source boundary follows actual SQL configuration versions and durable task config_snapshot consumers. General arbitrary old-process memory is not a universal prerequisite; real SecretRef/storage bindings and actually enabled independent consumers/output history still must close.",
+    "C5 existing three-S3 and strict-zero-SQL branch remains unchanged; legitimate FS-only/exact singleton classification requires the genuine D1 complete factory."
+  ],
+  "completed_test_binaries": [
+    {
+      "path": "bins-v5r3/install.test",
+      "bytes": 109675139,
+      "sha256": "413c1bc2a6577b4607a33862955d0f72e9fd7ca7d4d81a5bca40843d39571375"
+    },
+    {
+      "path": "bins-v5r3/source-registries.test",
+      "bytes": 88171885,
+      "sha256": "168bdc62a2a117373422a0f856fde8df096cda05e6f2fd4c394ed9a2a0147213"
+    }
+  ],
+  "cleanup": {
+    "owned_containers": [],
+    "binaries": "2 completed Linux test binaries hashed and removed; both empty failed-batch output directories removed; verified absent before commit",
+    "cache_tmp": "retained only for immediately announced D1 factory and D Redis keeper caller integration"
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

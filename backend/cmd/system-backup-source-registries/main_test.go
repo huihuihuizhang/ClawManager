@@ -41,7 +41,7 @@ func TestSourceRegistryCLIOwnerBindingsShareOriginalCapture(t *testing.T) {
 }
 
 func TestSourceRegistryCLIFrozenOutputPreflight(t *testing.T) {
-	dir := t.TempDir()
+	dir := filepath.Clean(t.TempDir())
 	if err := os.Chmod(dir, 0700); err != nil {
 		t.Fatal(err)
 	}

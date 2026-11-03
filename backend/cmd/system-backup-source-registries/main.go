@@ -131,6 +131,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	switch action {
 	case "produce-facts":
 		required = append(required, "source-selection-file", "source-selection-sha256")
+	case "prepare-observer-materials":
+		required = append(required, "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory")
 	case "prepare-mount-materials":
 		required = append(required, "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "output-directory")
 	case "issue-v2":
@@ -141,7 +143,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	flags := flag.NewFlagSet(action, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	values := map[string]*string{}
-	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "definition-file", "definition-sha256", "consumption-file", "consumption-sha256", "request-files-file", "request-files-sha256", "bundle-file", "bundle-sha256", "issuer-private-file", "output-directory"} {
+	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "definition-file", "definition-sha256", "consumption-file", "consumption-sha256", "request-files-file", "request-files-sha256", "bundle-file", "bundle-sha256", "issuer-private-file", "output-directory"} {
 		values[name] = flags.String(name, "", "")
 	}
 	if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
@@ -216,6 +218,16 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	if action == "prepare-observer-materials" {
+		receipt, err := execution.ProduceFormalStoppedProObserverMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"))
+		if err != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 4
+		}
+		return 0
+	}
 	if action == "prepare-mount-materials" {
 		receipt, err := execution.ProduceOriginalInstanceMountMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("mount-layouts-file"), get("mount-layouts-sha256"), get("output-directory"))
 		if err != nil {

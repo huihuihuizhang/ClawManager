@@ -16,6 +16,7 @@ import (
 type FormalStoppedProObserverConfig struct {
 	CAFile, CASHA256, CertificateFile, CertificateSHA256, KeyFile, KeySHA256 string
 	Endpoints                                                                map[string]q.ProofEndpoint
+	NodeUIDs                                                                 map[string]string
 }
 
 func (s *DeploymentService) formalStoppedProObserver() (*q.StoppedProNodeObservationClient, error) {
@@ -23,6 +24,17 @@ func (s *DeploymentService) formalStoppedProObserver() (*q.StoppedProNodeObserva
 		return nil, d.ErrNotReady
 	}
 	config := s.Config.RuntimeSources.StoppedProObserver
+	if len(config.NodeUIDs) == 0 || len(config.NodeUIDs) != len(config.Endpoints) {
+		return nil, d.ErrNotReady
+	}
+	for node, uid := range config.NodeUIDs {
+		if uid == "" || s.Config.Security.NodeUIDs[node] != uid {
+			return nil, d.ErrNotReady
+		}
+		if _, ok := config.Endpoints[node]; !ok {
+			return nil, d.ErrNotReady
+		}
+	}
 	for _, pin := range []struct{ file, digest string }{{config.CAFile, config.CASHA256}, {config.CertificateFile, config.CertificateSHA256}, {config.KeyFile, config.KeySHA256}} {
 		raw, err := pinnedDeploymentFile(pin.file, pin.digest, 262144)
 		clear(raw)

@@ -24,10 +24,11 @@ type originalEmptyHistoryAuthority interface {
 }
 
 type originalEmptyHistoryReadInputs struct {
-	scopes     a.OriginalEmptyHistoryScopes
-	filesystem []*os.Root
-	revision   string
-	until      time.Time
+	scopes         a.OriginalEmptyHistoryScopes
+	filesystem     []*os.Root
+	heldFilesystem []*originalHeldHistoryRootEOF
+	revision       string
+	until          time.Time
 }
 
 // This private classified source is created only AFTER actual source reads.
@@ -76,8 +77,16 @@ func collectOriginalEmptyHistorySource(ctx context.Context, p *PreparedOriginalA
 	}
 	inputs.scopes.Additional = append([]*a.S3CoverageCensus(nil), inputs.scopes.Additional...)
 	inputs.filesystem = append([]*os.Root(nil), inputs.filesystem...)
+	inputs.heldFilesystem = append([]*originalHeldHistoryRootEOF(nil), inputs.heldFilesystem...)
 	until := inputs.until
-	for _, cap := range []time.Time{p.until, hold.set.owner.until, p.reservation.ExpiresAt} {
+	caps := []time.Time{p.until, hold.set.owner.until, p.reservation.ExpiresAt}
+	for _, root := range inputs.heldFilesystem {
+		if root.prep != p || root.hold != hold || !root.local(ctx, false) || root.observedAt.IsZero() {
+			return nil, ErrInstall
+		}
+		caps = append(caps, root.until)
+	}
+	for _, cap := range caps {
 		if cap.IsZero() {
 			return nil, ErrInstall
 		}
@@ -97,11 +106,16 @@ func collectOriginalEmptyHistorySource(ctx context.Context, p *PreparedOriginalA
 }
 
 func validOriginalEmptyHistoryInputs(i originalEmptyHistoryReadInputs) bool {
-	if !digestPattern.MatchString(i.revision) || i.until.IsZero() || i.scopes.Artifact == nil || i.scopes.Staging == nil || i.scopes.Catalog == nil || len(i.scopes.Additional) > 256 || len(i.filesystem) > 256 {
+	if !digestPattern.MatchString(i.revision) || i.until.IsZero() || i.scopes.Artifact == nil || i.scopes.Staging == nil || i.scopes.Catalog == nil || len(i.scopes.Additional) > 256 || len(i.filesystem) > 256 || len(i.heldFilesystem) > 256 {
 		return false
 	}
 	for _, scope := range i.scopes.Additional {
 		if scope == nil {
+			return false
+		}
+	}
+	for _, root := range i.heldFilesystem {
+		if root == nil || root.origin != root || root.failed || root.observedAt.IsZero() || root.until.IsZero() {
 			return false
 		}
 	}
@@ -125,11 +139,16 @@ func originalEmptyHistoryOwner(ctx context.Context, p *PreparedOriginalAdoptionS
 }
 
 func sameOriginalEmptyHistoryInputs(a, b originalEmptyHistoryReadInputs) bool {
-	if a.revision != b.revision || !a.until.Equal(b.until) || a.scopes.Artifact != b.scopes.Artifact || a.scopes.Staging != b.scopes.Staging || a.scopes.Catalog != b.scopes.Catalog || len(a.scopes.Additional) != len(b.scopes.Additional) || len(a.filesystem) != len(b.filesystem) {
+	if a.revision != b.revision || !a.until.Equal(b.until) || a.scopes.Artifact != b.scopes.Artifact || a.scopes.Staging != b.scopes.Staging || a.scopes.Catalog != b.scopes.Catalog || len(a.scopes.Additional) != len(b.scopes.Additional) || len(a.filesystem) != len(b.filesystem) || len(a.heldFilesystem) != len(b.heldFilesystem) {
 		return false
 	}
 	for n, p := range a.scopes.Additional {
 		if p != b.scopes.Additional[n] {
+			return false
+		}
+	}
+	for n, p := range a.heldFilesystem {
+		if p != b.heldFilesystem[n] {
 			return false
 		}
 	}
@@ -171,6 +190,14 @@ func (s *originalEmptyHistorySource) readActualEmptySources(ctx context.Context)
 	if err != nil || !validOriginalEmptyHistoryInputs(inputs) || !sameOriginalEmptyHistoryInputs(inputs, s.inputs) || !emptyOriginalSQLObservation(p.observed) {
 		return ErrInstall
 	}
+	for _, root := range inputs.heldFilesystem {
+		if root.prep != p || root.hold != s.hold {
+			return ErrInstall
+		}
+		if err := root.recheckBeforeOriginalHistoryRootSQLLocked(ctx); err != nil {
+			return err
+		}
+	}
 	for _, old := range s.roots {
 		if old.recheck(ctx) != nil {
 			return ErrInstall
@@ -206,6 +233,11 @@ func (s *originalEmptyHistorySource) readActualEmptySources(ctx context.Context)
 	for _, root := range roots {
 		if root.recheck(ctx) != nil {
 			return ErrInstall
+		}
+	}
+	for _, root := range inputs.heldFilesystem {
+		if err := root.recheckBeforeOriginalHistoryRootSQLLocked(ctx); err != nil {
+			return err
 		}
 	}
 	if s.authority.recheckOriginalEmptyHistoryBeforeSQL(ctx, s.inputs) != nil || s.hold.recheckBeforeSQL(ctx) != nil || p.operator.authority(ctx, p.enrollment) != nil || !time.Now().Before(s.until) {
@@ -272,6 +304,11 @@ func (s *originalEmptyHistorySource) recheckOriginalHistory(ctx context.Context,
 	}()
 	if s.origin != s || s.failed || s.sqlAt.IsZero() || tx == nil || !originalEmptyHistoryOwner(ctx, s.prep, s.hold, true) || !consumerSameContext(ctx, s.ctx) || now.IsZero() || now.Before(s.sqlAt) || !now.Before(s.until) {
 		return ErrInstall
+	}
+	for _, root := range s.inputs.heldFilesystem {
+		if !root.matchesOriginalRootEOFAtSQL(ctx, s.prep, s.hold, now) {
+			return ErrInstall
+		}
 	}
 	facts := locked.Facts()
 	if facts.Database != s.prep.observed.Facts().Database || facts.InstallationID != s.prep.observed.Facts().InstallationID || facts.References == nil || len(facts.References) != 0 || (s.boundTx != nil && (s.boundTx != tx || facts.Epoch != s.epoch)) {

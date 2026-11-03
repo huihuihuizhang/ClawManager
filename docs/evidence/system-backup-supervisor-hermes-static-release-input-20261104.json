@@ -1,0 +1,28 @@
+{
+  "schema_version": "supervisor-hermes-static-formal-input-review.v1",
+  "archive": {
+    "schema_version": "supervisor-hermes-static-release-input.v1",
+    "archive": ".tmp-supervisor-hermes-release-input-20261104/release-inputs/hermes-web-static-71a8726fded4-linux-image-input.tar.gz",
+    "bytes": 16597091,
+    "sha256": "780da2240f4ae44ddeeacffbfaa2e25b1d2a09a93d7a7786ef193eb1cdba0508",
+    "asset_count": 337,
+    "hermes_source_tree": "71a8726fded44e6c234f91e517d14a0de996380b",
+    "accepted_commit": "05182c03a00134b0ebb67df1db0a5d25613f8791",
+    "page_backup_completed": false
+  },
+  "original_source_commit": "a2cc03be63d4903b98cd4a2fedd48d4fbc65fc04",
+  "same_locked_hermes_source_tree": "71a8726fded44e6c234f91e517d14a0de996380b",
+  "original_verified_bundle_sha256": "94368bf3131ecb1a92dbd75b68f72752cd92fe0870d57fe74abe075b3536f4fb",
+  "original_build_receipt_sha256": "6cda9485d4cd08e59dba3b86d723b3dd1091a139822427fed7ea7b5ec93ceb5e",
+  "original_final_layer": "blobs/sha256/066867d1a4afeddb55a0ed03e88b93bcca4f21dbb58d74095d5cf44fb16f1db4",
+  "original_final_compressed_layer_sha256": "066867d1a4afeddb55a0ed03e88b93bcca4f21dbb58d74095d5cf44fb16f1db4",
+  "asset_count": 337,
+  "archive_members": 339,
+  "untrusted_or_duplicate_members": 0,
+  "verification": "All337 original build receipt SHA256 values matched actual final-layer file bodies; full final-layer compressed SHA and gzip EOF/CRC checked. New standalone asset archive independently reread through gzip EOF and all337 member SHA rechecked.",
+  "old_runtime_whiteouts": "Only original OCI lower-layer deletion metadata was omitted; no old backend, backup UI, key or credential body is copied.",
+  "deployment_usage": "Formal renderer input for the unchanged locked Hermes subtree. Recheck subtree equality against the actual final accepted commit before final image assembly; the main backup frontend uses its separate current live-enabled build.",
+  "new_test_build_products": 0,
+  "field_or_page_acceptance": false,
+  "dr_qualified": false
+}
