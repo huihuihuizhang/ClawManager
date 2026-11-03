@@ -55,11 +55,14 @@ func (g *RedisReadServiceGate) RestoreWithFreshClients(ctx context.Context, admi
 			return ErrRedisReadGate
 		}
 	}
-	closed := g.closed
+	closed, dispatched := g.closed, g.ownerSent
 	g.mu.Unlock()
 	if closed {
 		_, e := g.ObserveRecovered(ctx, fresh)
 		return e
+	}
+	if !dispatched {
+		return g.ConfirmNeverAcquired(ctx, fresh)
 	}
 	return g.Restore(ctx, fresh)
 }

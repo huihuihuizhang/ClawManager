@@ -35,19 +35,20 @@ type originalEmptyHistoryReadInputs struct {
 // It is not PreparedCoverage; D still owns the original17 controls, their exact
 // own-row journal, final transaction, authenticated source associations and epoch.
 type originalEmptyHistorySource struct {
-	mu        sync.Mutex
-	origin    *originalEmptyHistorySource
-	ctx       context.Context
-	prep      *PreparedOriginalAdoptionSQLCut
-	hold      *OriginalWriterHold
-	authority originalEmptyHistoryAuthority
-	inputs    originalEmptyHistoryReadInputs
-	roots     []*originalEmptyHistoryRootObservation
-	until     time.Time
-	sqlAt     time.Time
-	boundTx   *sql.Tx
-	epoch     uint64
-	failed    bool
+	filesystemOnly *originalFilesystemOnlyHistory
+	mu             sync.Mutex
+	origin         *originalEmptyHistorySource
+	ctx            context.Context
+	prep           *PreparedOriginalAdoptionSQLCut
+	hold           *OriginalWriterHold
+	authority      originalEmptyHistoryAuthority
+	inputs         originalEmptyHistoryReadInputs
+	roots          []*originalEmptyHistoryRootObservation
+	until          time.Time
+	sqlAt          time.Time
+	boundTx        *sql.Tx
+	epoch          uint64
+	failed         bool
 }
 
 func (*originalEmptyHistorySource) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -179,6 +180,9 @@ func emptyOriginalSQLObservation(p *a.UnadmittedSQLCoverageCensus) bool {
 // All actual SQL/S3/FS/native I/O stays OUTSIDE the final SQL lock segment.
 // Repeated calls retain the original roots, revision and expiry; no renewal.
 func (s *originalEmptyHistorySource) readActualEmptySources(ctx context.Context) error {
+	if s != nil && s.filesystemOnly != nil {
+		return s.readActualFilesystemOnlySources(ctx)
+	}
 	if s == nil || s.origin != s || s.failed || !originalEmptyHistoryOwner(ctx, s.prep, s.hold, false) || !consumerSameContext(ctx, s.ctx) || !time.Now().Before(s.until) {
 		return ErrInstall
 	}
@@ -314,7 +318,11 @@ func (s *originalEmptyHistorySource) recheckOriginalHistory(ctx context.Context,
 	if facts.Database != s.prep.observed.Facts().Database || facts.InstallationID != s.prep.observed.Facts().InstallationID || facts.References == nil || len(facts.References) != 0 || (s.boundTx != nil && (s.boundTx != tx || facts.Epoch != s.epoch)) {
 		return ErrInstall
 	}
-	if s.authority.recheckOriginalEmptyHistoryLocked(ctx, tx, locked, now) != nil {
+	if s.filesystemOnly != nil {
+		if s.filesystemOnly.recheckLocked(ctx, tx, locked, now) != nil {
+			return ErrInstall
+		}
+	} else if s.authority.recheckOriginalEmptyHistoryLocked(ctx, tx, locked, now) != nil {
 		return ErrInstall
 	}
 	if s.boundTx == nil {

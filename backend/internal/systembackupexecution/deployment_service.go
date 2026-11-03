@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -38,6 +39,8 @@ import (
 )
 
 type DeploymentService struct {
+	redisReadMu              sync.Mutex
+	redisRead                map[string]*formalRedisReadWriter
 	PublisherOwner           string
 	publicationGeneration    uint64
 	executionUnavailable     atomic.Bool

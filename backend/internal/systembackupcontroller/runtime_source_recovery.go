@@ -2,6 +2,7 @@ package systembackupcontroller
 
 import (
 	"bytes"
+	sb "clawreef/internal/systembackup"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -27,6 +28,7 @@ var ErrSourceRecoveryStoppedWitnessRequired = errors.New("originally stopped sou
 // observer. It is data, never a grant or a caller-constructible prepared proof.
 // Each observation covers exactly one writer from the encrypted original plan.
 type SourceRecoveryObservation struct {
+	redisNative                     *sb.VerifiedRedisReadServiceObservation
 	WriterID, OriginalSHA256, Scope string
 	Facts                           json.RawMessage
 	References                      []SourceRecoverySQLReference
@@ -66,12 +68,13 @@ type sourceRecoveryLeaf struct {
 // readback plus the actual observer, or by exact durable replay. Registration
 // alone grants nothing; current publisher history consumption is separate.
 type PreparedSourceRecovery struct {
-	gate    SQLCaptureGate
-	a       d.Authority
-	desc    b.Discovery
-	root    sourceRecoveryRoot
-	entries []ce.RegisteredEvidence
-	parts   []sourceRecoveryCapturedPart
+	redisNative map[string]*sb.VerifiedRedisReadServiceObservation
+	gate        SQLCaptureGate
+	a           d.Authority
+	desc        b.Discovery
+	root        sourceRecoveryRoot
+	entries     []ce.RegisteredEvidence
+	parts       []sourceRecoveryCapturedPart
 }
 
 type sourceRecoveryCapturedPart struct {
@@ -279,6 +282,9 @@ func validSourceRecoveryObservation(ob SourceRecoveryObservation) bool {
 		return false
 	}
 	switch ob.Scope {
+	case RedisReadServiceRecoveryScope:
+		_, e := redisReadServiceFacts(ob)
+		return e == nil
 	case "registered_application_mutation_lease_boundary":
 		return facts.Version == "source-recovery-lease-observation.v1" && len(ob.References) == 1 && ob.References[0].Kind == "lease_epoch" && ob.References[0].Identity == ob.WriterID && ob.References[0].SHA256 == recordHash(ob.Facts)
 	case "current_stopped_pro_native_baseline_and_volume_bindings":
@@ -476,10 +482,17 @@ func (g SQLCaptureGate) PrepareSourceRecovery(ctx context.Context, w ExecutionWo
 	if len(observations) != len(desc.Writers) {
 		return nil, ErrSourceRecoveryProofRequired
 	}
+	p.redisNative = map[string]*sb.VerifiedRedisReadServiceObservation{}
 	byID := map[string]SourceRecoveryObservation{}
 	for _, ob := range observations {
 		if !validSourceRecoveryObservation(ob) || byID[ob.WriterID].WriterID != "" {
 			return nil, ErrSourceRecoveryProofRequired
+		}
+		if ob.Scope == RedisReadServiceRecoveryScope {
+			if ob.redisNative == nil {
+				return nil, ErrSourceRecoveryProofRequired
+			}
+			p.redisNative[ob.WriterID] = ob.redisNative
 		}
 		byID[ob.WriterID] = ob
 	}
@@ -849,6 +862,9 @@ func (p *PreparedSourceRecovery) StageTx(ctx context.Context, tx *sql.Tx, w Exec
 	if count, err := sourceRecoveryFamilyCountTx(ctx, tx, p.root.Scope); err != nil || count != 0 {
 		return ErrSourceRecoveryProofRequired
 	}
+	if p.checkRedisReadServiceNative(ctx) != nil {
+		return ErrSourceRecoveryProofRequired
+	}
 	var capacity, retention int64
 	var now time.Time
 	if tx.QueryRowContext(ctx, `SELECT control_metadata_capacity_bytes,evidence_retention_seconds,UTC_TIMESTAMP(6) FROM system_backup_v2_configs WHERE origin_installation_id=? AND version=? AND config_sha256=? FOR SHARE`, p.a.InstallationID, p.a.ConfigVersion, p.a.ConfigSHA256).Scan(&capacity, &retention, &now) != nil || retention < 60 || retention > 10*365*86400 {
@@ -865,6 +881,9 @@ func (p *PreparedSourceRecovery) StageTx(ctx context.Context, tx *sql.Tx, w Exec
 		if err := ce.RegisterSQL(ctx, tx, p.root.Scope, p.entries[start:min(start+256, len(p.entries))], now.Add(time.Duration(retention)*time.Second)); err != nil {
 			return err
 		}
+	}
+	if p.checkRedisReadServiceNative(ctx) != nil {
+		return ErrSourceRecoveryProofRequired
 	}
 	return p.gate.Recovery.CheckTx(ctx, tx, p.a)
 }

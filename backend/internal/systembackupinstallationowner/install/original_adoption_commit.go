@@ -22,6 +22,8 @@ type originalClassifiedHistorySource interface {
 }
 
 type PreparedOriginalAdoptionCoverage struct {
+	sourceSet     *originalHistorySourceSet
+	sqlMetadata   *originalHistorySQLMetadata
 	origin        *PreparedOriginalAdoptionCoverage
 	ctx           context.Context
 	hold          *OriginalWriterHold
@@ -63,7 +65,7 @@ func (p *PreparedOriginalAdoptionCoverage) ValidUntil() time.Time {
 }
 
 func (p *PreparedOriginalAdoptionCoverage) Recheck(ctx context.Context, view reg.SQLReadView, locked reg.LockedSnapshot, now time.Time) error {
-	if p == nil || p.origin != p || p.history == nil || p.hold == nil || p.hold.origin != p.hold || p.hold.closed || p.hold.adoptionUnknown || !consumerSameContext(ctx, p.ctx) || p.cut == nil || p.authenticated == nil || p.native == nil || now.IsZero() || !now.Before(p.until) {
+	if p == nil || p.origin != p || p.history == nil || p.hold == nil || p.hold.origin != p.hold || p.hold.closed || p.hold.adoptionUnknown || !consumerSameContext(ctx, p.ctx) || p.cut == nil || p.authenticated == nil || p.native == nil || p.sourceSet == nil || p.sqlMetadata == nil || p.sourceSet.metadata != p.sqlMetadata || !p.sourceSet.local(ctx, true) || now.IsZero() || !now.Before(p.until) {
 		return ErrInstall
 	}
 	tx, ok := view.(*sql.Tx)
@@ -102,7 +104,7 @@ func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalAdoption(ctx context.Cont
 	defer hold.set.mu.Unlock()
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if p.origin != p || p.used || !consumerSameContext(ctx, p.ctx) || hold.recheckBeforeSQL(ctx) != nil || coverage.origin != coverage || coverage.hold != hold || coverage.history == nil || coverage.tx != nil || preparation == nil {
+	if p.origin != p || p.used || !consumerSameContext(ctx, p.ctx) || hold.recheckBeforeSQL(ctx) != nil || coverage.origin != coverage || coverage.hold != hold || coverage.history == nil || coverage.sourceSet == nil || coverage.sqlMetadata == nil || coverage.sourceSet.metadata != coverage.sqlMetadata || !coverage.sourceSet.local(ctx, false) || coverage.tx != nil || preparation == nil {
 		return zero, ErrInstall
 	}
 	// The original independently installed config constructs the owner, never
@@ -124,6 +126,13 @@ func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalAdoption(ctx context.Cont
 	proof, err := hold.set.refreshNativeHold(ctx)
 	if err != nil {
 		return zero, err
+	}
+	nativeUntil, err := originalAdoptionNativeUntil(proof)
+	if err != nil {
+		return zero, err
+	}
+	if nativeUntil.Before(coverage.until) {
+		coverage.until = nativeUntil
 	}
 	original, err := p.scanner.BeginOriginalTransaction(ctx)
 	if err != nil {
@@ -177,6 +186,10 @@ func (p *PreparedOriginalAdoptionSQLCut) CommitOriginalAdoption(ctx context.Cont
 	coverage.native = proof
 	coverage.epoch = bound.Snapshot().Facts().Epoch
 	coverage.until = until
+	if coverage.bindOriginalHistoryControls(ctx, cfg, records) != nil {
+		return zero, ErrInstall
+	}
+	until = coverage.until
 	if !reflect.DeepEqual(coverage.refs, bound.Snapshot().Facts().References) {
 		return zero, ErrInstall
 	} // actual backfill must already be complete

@@ -74,7 +74,11 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-installation-owner \
       system-backup-owner-enroll \
       system-backup-original-enroll \
+      system-backup-original-observer-pki \
       system-backup-original-maintenance \
+      backup-node-observer \
+      backup-gateway-node-observer \
+      backup-stopped-pro-node-observer \
       system-backup-owner-authority \
       system-backup-owner-consumer \
       system-backup-signing-resource-owner \

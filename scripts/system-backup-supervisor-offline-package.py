@@ -96,7 +96,7 @@ def main():
     # Use all original Dockerfile command mappings plus explicitly reviewed new tools.
     dockerfile = (source / "Dockerfile").read_text(encoding="utf-8")
     tools = dict(re.findall(r"-o /out/([\w-]+) ./cmd/([\w-]+)", dockerfile))
-    for name in re.findall(r"(?m)^\s+(system-backup-[\w-]+)(?:\s+\\|;\s+do)", dockerfile):
+    for name in re.findall(r"(?m)^\s+(system-backup-[\w-]+|backup-(?:node|gateway-node|stopped-pro-node)-observer)(?:\s+\\|;\s+do)", dockerfile):
         tools[name] = name
     for name in args.extra_tool:
         if not re.fullmatch(r"[a-z][a-z0-9-]+", name):

@@ -202,6 +202,20 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 		facts := sourceRecoveryPhysicalFacts{Version: "source-recovery-physical-observation.v1"}
 		var cp sourceRecoveryCheckpoint
 		ref, isPlatform := platform[writer.ID]
+		if isPlatform {
+			native, e := s.formalRedisSelection(ref)
+			if e != nil {
+				return nil, e
+			}
+			if native != nil {
+				ob, e := s.observeFormalRedisReadRecovery(ctx, in, writer, source, metadata)
+				if e != nil {
+					return nil, e
+				}
+				out = append(out, ob)
+				continue
+			}
+		}
 		if !isPlatform {
 			runtime, err := s.RuntimeControl.ObserveSourceRecoveryRuntime(ctx, in, writer)
 			if err != nil {

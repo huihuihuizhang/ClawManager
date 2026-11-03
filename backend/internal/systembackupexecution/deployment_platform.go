@@ -140,6 +140,12 @@ func (s *DeploymentService) platformWriterLeaf(o *PublicJobOwner) func(context.C
 		for _, ref := range cfg.Writers {
 			ref := ref
 			id := "deployment/" + ref.Namespace + "/" + ref.Name
+			if native, selected, e := s.buildFormalRedisReadWriter(ctx, o, in, inventory, ref, frozen); e != nil {
+				return nil, e
+			} else if selected {
+				out = append(out, native)
+				continue
+			}
 			w := &quiesce.DeploymentWriter{Platform: true, Client: o.Client, Namespace: ref.Namespace, Name: ref.Name, UID: ref.UID, FenceID: in.Authority.TaskPublicID + "/attempt/" + strconv.FormatUint(in.Authority.AttemptNo, 10), PollInterval: 200 * time.Millisecond}
 			w.Guard = func(ctx context.Context, point string, state flow.State) error {
 				recovery := point == "before-resume" || point == "recovery-check-stopped" || point == "check-resumed"

@@ -59,6 +59,12 @@ func (p *PreparedSourceRecovery) validateProducerLeaves() error {
 			}
 			continue
 		}
+		if leaf.SourceRecoveryObservation.Scope == RedisReadServiceRecoveryScope {
+			if p.validateRedisReadServiceLeaf(writer, leaf, source) != nil {
+				return ErrSourceRecoveryProofRequired
+			}
+			continue
+		}
 		if !writer.Original.Running {
 			var stoppedFacts struct{ Runtime *SourceRecoveryRuntime }
 			if json.Unmarshal(leaf.Facts, &stoppedFacts) != nil || stoppedFacts.Runtime == nil {

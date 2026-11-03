@@ -239,7 +239,7 @@ func (g *RedisReadServiceGate) identity(ctx context.Context) error {
 		return ErrRedisReadGate
 	}
 	pod, e := g.kube.CoreV1().Pods(g.in.Namespace).Get(ctx, g.in.Pod, metav1.GetOptions{})
-	if e != nil || string(pod.UID) != g.in.PodUID || pod.DeletionTimestamp != nil {
+	if e != nil || string(pod.UID) != g.in.PodUID || pod.DeletionTimestamp != nil || len(pod.Spec.Containers) != 1 {
 		return ErrRedisReadGate
 	}
 	namespace, e := g.kube.CoreV1().Namespaces().Get(ctx, g.in.Namespace, metav1.GetOptions{})

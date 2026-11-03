@@ -1,0 +1,255 @@
+{
+  "schema_version": "supervisor-history-formal-redis-observer-pki-review.v1",
+  "accepted_base": "4d0efa3211bb774fa1c7f9e40f930e1892d027cd",
+  "selected_source_targets": 236,
+  "selection_sha256": "f8eb29b544893b062883fe43e650e382ccb1541fb22c908953e9bef398380d1f",
+  "inputs": {
+    "v7_history_factory_maps": [
+      {
+        "owner": "C-FS-only",
+        "path": "backend/.c-finite-filesystem-history-consumer-20261104/source-map.json",
+        "sha256": "240711ab436ed6d98c59819fc82626b62e42eedf54bf5b6c9286703da59ae848"
+      },
+      {
+        "owner": "D-history-factory",
+        "path": "backend/.d-finite-original-history-factory-20261104/source-map.json",
+        "sha256": "a907b2ba403662630a83c9b56af00878a53a7ce755431ec9fa616cf1c1899090"
+      },
+      {
+        "owner": "D-Redis-native-r2",
+        "path": "backend/.d-native-redis-read-gate-v2-r2-20261104/source-map.json",
+        "sha256": "1771c5509aad7400a73ca6372b381be7045c52cabd2a47442e791a5386d1f75b"
+      }
+    ],
+    "v7_formal_redis_map": {
+      "path": "backend/.d-formal-redis-read-keeper-20261104/source-map.json",
+      "sha256": "125080a818095a8522fce41156c55522f32bda7823f470ecc0dd496c356b3099"
+    },
+    "root_Redis_cap_review": {
+      "target": "backend/internal/systembackupinstallationowner/install/original_history_coverage_binding.go",
+      "before_sha256": "a277edc7c6865d2306c5bfabbc58cf2de83a1be742b8dc59689ed07ab3d6023e",
+      "after_sha256": "3fe178ed69546afda5d9f31066229d5e9999156035ce54dcc503eb93b9b0c5f2",
+      "change": "Include exact original Redis opaque observation ValidUntil in the shortest original lifetime; nil deployment/held proof refuses. No renewal or production checks weakened."
+    },
+    "v7_observer_pki_map": {
+      "path": ".a-first-install-observer-pki-20261104/source-map.json",
+      "sha256": "28886e9964703c2b5300aed2b4d1b5f8f60179e77a0c80aa25a656d7cc0df547",
+      "owner_reviewed_base": "d43d4b15b2633f1e5a90510b21c94b20d765e605"
+    },
+    "root_installed_observer_tools": {
+      "required": [
+        "system-backup-original-observer-pki",
+        "backup-node-observer",
+        "backup-gateway-node-observer",
+        "backup-stopped-pro-node-observer"
+      ],
+      "resolved_command_count": 46,
+      "mapping_sha256": "62b28b1e189f23b3ae54235594755430ddf1fdda853f2532a78c9a91033389fc"
+    },
+    "v7_observer_pki_r2": {
+      "path": ".a-first-install-observer-pki-r2-20261104/source-map.json",
+      "sha256": "186e2424ed5fab1af5f55b995529ca91782e86283d0da0cf0b9fdc087886ff98"
+    },
+    "v7_inspection_lock_map": {
+      "path": "backend/.c-history-inspection-preparation-lock-20261104/source-map.json",
+      "sha256": "a4a6216ef44e58cddd6a8d45208666910d1430325e3c359f3ad667ec046301e4",
+      "merges": [
+        {
+          "target": "backend/internal/systembackupinstallationowner/install/original_history_coverage_binding.go",
+          "accepted_before_sha256": "3fe178ed69546afda5d9f31066229d5e9999156035ce54dcc503eb93b9b0c5f2",
+          "owner_before_sha256": "a277edc7c6865d2306c5bfabbc58cf2de83a1be742b8dc59689ed07ab3d6023e",
+          "owner_after_sha256": "6f314a4480a8b343afb8e2a2d0cde640237994e355e6db8e3de0a4269e4a7157",
+          "merged_sha256": "d0d06edc48f8f186d530c102ce49562c37321d4a97ac173a05f0db5d7710d902",
+          "merge_exit": 0
+        }
+      ]
+    },
+    "v7_B_native_CLI_map": {
+      "path": ".b-native-observer-cli-20261104/source-map.json",
+      "sha256": "e108df888a2c077d8f6e91687d40f27cb145bb7658b11b6465112d122c3c3f8d",
+      "equivalent_D_map_sha256": "88a5a5d7bfd3b632e7c043c2c41c8167c7abd3d17c9a353b685822606d40383f"
+    },
+    "v7_native_library_projection": {
+      "compiled_selection_before_CLI_sha256": "5416b268b375c74ed1b7a62a5df9c24363780a59a64d35a63319b2a863e7909c",
+      "scope": "The4 Linux test packages and7 existing entry builds are byte-identical. Only2 new main packages and packaging enumeration changed after their compile; new mains are compiled separately before acceptance."
+    }
+  },
+  "results": {
+    "v7r3-windows-targeted": {
+      "roots": 34,
+      "subcases": 105,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [
+        "clawreef/cmd/system-backup-original-observer-pki",
+        "clawreef/cmd/backup-stopped-pro-node-observer",
+        "clawreef/cmd/system-backup-original-maintenance"
+      ],
+      "log_sha256": "2392f17f6cb09869ca9690990ca9f75cdaee111c18017bfd005ef2df77d2f780"
+    },
+    "v7-new-CLI-windows-compile": {
+      "roots": 0,
+      "subcases": 0,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [
+        "clawreef/cmd/backup-node-observer",
+        "clawreef/cmd/backup-gateway-node-observer"
+      ],
+      "log_sha256": "87caf7952908cd80c91d8eda49cef4d34d907aaea799b8589993641a5f78f12a"
+    },
+    "v7r3-linux-install": {
+      "roots": 18,
+      "subcases": 82,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [],
+      "log_sha256": "dd952e7bfe84f3980742d66543300157c3a53f6a231b2da159f178217c3be7fa"
+    },
+    "v7r3-linux-systembackup": {
+      "roots": 5,
+      "subcases": 0,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [],
+      "log_sha256": "10a4f6078825c1ed55016fbd6ca80c94c8994ffa267c5ea8d754d405d4150364"
+    },
+    "v7r3-linux-controller": {
+      "roots": 1,
+      "subcases": 0,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [],
+      "log_sha256": "f3a2834d29e254665cdd45a9bf09d8693c70b8d3d26a30263db28974cde035cc"
+    },
+    "v7r3-linux-execution": {
+      "roots": 10,
+      "subcases": 33,
+      "test_skips": 0,
+      "failures": 0,
+      "compile_only_packages": [],
+      "log_sha256": "2952031fdebc0502b97dfafb93e666a9ed9af332c20fc1d5e1ff1aedcb6f1f50"
+    }
+  },
+  "actual_changes": [
+    "Finite filesystem-only history consumer and genuine source-set/coverage binding factory now call the original adoption commit. Inspection holds both original locks; the shortest native lifetime includes Redis opaque hold expiry.",
+    "Formal page Redis writer and dedicated source-recovery leaf use original ACL custody, actual Pod/container/PVC identity and same-process private native handles. Recovery cannot reopen a fenced ACL as its original state.",
+    "Original observer PKI CLI validates original installer authority and actual Kubernetes identities, issues distinct client/node mTLS leaves, and writes private create-only files. Production material issuance has not run on site.",
+    "Both native whole-node and gateway-node server CLI sources are included. Dockerfile and offline builder resolve all four required observer tools among 46 installed commands."
+  ],
+  "root_merges": [
+    {
+      "target": "deployment_config.go",
+      "sha256": "f1f88f4fb2234db170215a0548b246c451b07ef9f52f5de75686566cb713e8cb",
+      "change": "Preserve accepted strict source MySQL TLS fields/import/validation while adding formal Redis configuration; owner input was stale."
+    },
+    {
+      "target": "original_history_coverage_binding.go",
+      "sha256": "d0d06edc48f8f186d530c102ce49562c37321d4a97ac173a05f0db5d7710d902",
+      "change": "Exact union of shortest original Redis lifetime and C preparation lock."
+    }
+  ],
+  "corrected_failures": [
+    {
+      "log": "v7-windows-targeted",
+      "exit": 1,
+      "reason": "A production file shadowed an incompatible current variable; official A r2 renames the authority variable without changing checks."
+    },
+    {
+      "log": "v7r2-windows-targeted",
+      "exit": 1,
+      "reason": "Existing Windows test fixture used a noncanonical temporary path. Only filepath.Clean was added to test input; production validation remains strict."
+    }
+  ],
+  "validation_boundary": [
+    "Real PKI crypto/net.Pipe TLS handshakes, local encrypted custody and filesystem primitives ran. Kubernetes and ACL authority cases remain models; MySQL TLS uses a protocol fixture, not a native MySQL server.",
+    "No real Redis server, original SQL adoption, full source-set positive proof, native CRI deployment, physical source restoration or page task has completed.",
+    "The concrete independent backup-consumer history producer and real 17-source issuance/adoption readback remain incomplete. A factory/interface alone does not establish coverage.",
+    "Actual source TLS/principals/mounts and formal Redis configuration producers, MinIO/NFS/Vault readable keepers, original database migration and same-version field installation remain direct delivery risks.",
+    "Nine Linux entrypoints are compile checks only. All 13 generated binaries are test-build artifacts and will be removed after hashing; final release must be built from accepted source."
+  ],
+  "completed_build_binaries": [
+    {
+      "path": "bins-v7r3/controller.test",
+      "bytes": 95749666,
+      "sha256": "d5c6babc71b433eae443e8dbb34c932b3ec602060bfcea651f35c9058a1f0ff2"
+    },
+    {
+      "path": "bins-v7r3/execution.test",
+      "bytes": 131615209,
+      "sha256": "2b7507efe3e29f641a2f8df543270cf5157b11f6b9c65c74a6acb1cb55ad35b1"
+    },
+    {
+      "path": "bins-v7r3/install.test",
+      "bytes": 110187504,
+      "sha256": "9ef03d74e900e29729f71290eb9f1d151e2ed2f378b3c6602f85068744d135f7"
+    },
+    {
+      "path": "bins-v7r3/production/backup-gateway-node-observer",
+      "bytes": 45039742,
+      "sha256": "fb953c44f675d00712b0c3c0fa4bb1152a000f5d3a2a488c29d9a8f8633764a7",
+      "buildinfo_sha256": "37f2a4282d6c387a7b93466c0bf66d7dd69a15c2399702b50e8b1faba3e94423"
+    },
+    {
+      "path": "bins-v7r3/production/backup-node-observer",
+      "bytes": 45035646,
+      "sha256": "5c79637434f19db86520a6eb20faa9896122f7374cc393adf34c10962d05d349",
+      "buildinfo_sha256": "823ad4e0e09ce138cff60203a8dc39afb67ba367d30b301b51fb54b872059655"
+    },
+    {
+      "path": "bins-v7r3/production/backup-stopped-pro-node-observer",
+      "bytes": 45039742,
+      "sha256": "1e5b04db22268775c89e72646154b2ea0f2a6e3d1bfd546ae0d3cb10b0c4bf5d",
+      "buildinfo_sha256": "0f6d9905c4ea8c05692a03bc96f9df85fdfcb53fd80c0a6610b2e3696554d0d0"
+    },
+    {
+      "path": "bins-v7r3/production/backup-worker",
+      "bytes": 50786430,
+      "sha256": "252d861ac3ec5441642d43d2e2819d32e749990c1c50584b036109b542fd1318",
+      "buildinfo_sha256": "67dac56cd041013e917ce5ec72bcdd2a0332c5a9f00885c4b7e29102792608cc"
+    },
+    {
+      "path": "bins-v7r3/production/server",
+      "bytes": 77836414,
+      "sha256": "04817c26e85d0aea83a3d83e2450fd06fe612244580a58e9737bd02c0a41e512",
+      "buildinfo_sha256": "7bcee23ca2f11a54ba1b6b81477125d78ad1a0e0fc39969eb5485a4f86896659"
+    },
+    {
+      "path": "bins-v7r3/production/system-backup-original-maintenance",
+      "bytes": 59777150,
+      "sha256": "3eb890b34efae3850c0643e8794efeb537c84c64680391ec3af67859c7794f96",
+      "buildinfo_sha256": "3a5efd4d4ca7f2ddfb562e1cc89726cf82e9494531e3fe0ea6fe0ffa4965508c"
+    },
+    {
+      "path": "bins-v7r3/production/system-backup-original-observer-pki",
+      "bytes": 55296126,
+      "sha256": "35065f711f4d399f53ef5b9ba75d5cf47477db08271ce071bb61dc0b1739c18a",
+      "buildinfo_sha256": "a59b5ab3f4f1949962fb26520f76dc9794353fc1a3403bbb34594ff1a056d352"
+    },
+    {
+      "path": "bins-v7r3/production/system-backup-source-registries",
+      "bytes": 61689982,
+      "sha256": "9d2bc9c933c6a6ce1370cad3f55385ac66699a38c285e82cf833beb3556eeb68",
+      "buildinfo_sha256": "f75bff645c0b13519cb05fd7afd0e9bf8ab0260a7754ade2ebd203ef52d96a42"
+    },
+    {
+      "path": "bins-v7r3/production/system-backup-v2-controller",
+      "bytes": 66969726,
+      "sha256": "47d5b9b9765e50da140df22779f3dcb086c6a9b50c96db4c36b73652e842c6e7",
+      "buildinfo_sha256": "dea1de8b2eeec1c3138ccef3fffd8de688649f2c3b365a2749621d7110901a3d"
+    },
+    {
+      "path": "bins-v7r3/systembackup.test",
+      "bytes": 95694146,
+      "sha256": "3dcf2ba5af18322c9985659f7f6d7e0742921c616a90e4bbe1a29c6cba207760"
+    }
+  ],
+  "cleanup": {
+    "owned_containers": [],
+    "binaries": "13 completed Linux test/build binaries hashed and removed; all three owned output directories verified absent before commit",
+    "cache_tmp": "retained only for immediate actual consumer/first-install integration"
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
