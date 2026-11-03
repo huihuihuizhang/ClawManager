@@ -40,6 +40,10 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		return nil
 	}
 	for _, w := range s.deployments {
+		// Native Redis captures logical DUMP/absolute TTL, not live AOF files.
+		if w.redis != nil {
+			continue
+		}
 		for _, p := range w.pods {
 			addPod(p)
 			pod, err := s.owner.operator.installer.kube.CoreV1().Pods(w.namespace).Get(ctx, p.Name, metav1.GetOptions{})

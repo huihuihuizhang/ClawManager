@@ -1,0 +1,93 @@
+{
+  "schema_version": "supervisor-original-redis-readable-keeper-review.v1",
+  "accepted_base": "d43d4b15b2633f1e5a90510b21c94b20d765e605",
+  "selected_source_targets": 217,
+  "selection_sha256": "65ae74213218c04b60a2cee8f294606c57a5fac3dfa5ef46ff74fa4c45b0532f",
+  "intake": {
+    "previous_selection_sha256": "e549ac5e55579a3a8510b4e867a5fbd426f42e5ac55ca5495e2fca51559f179c",
+    "source_maps": [
+      {
+        "path": "backend/.d-native-redis-read-gate-v2-20261104/source-map.json",
+        "sha256": "1c69b6407d7bfb14f506eac374189b41f70a8c80d7e2accbed238ad25c95cc7d"
+      },
+      {
+        "path": "backend/.d-original-redis-read-keeper-20261104/source-map.json",
+        "sha256": "668d63d9ca597d4284ee0c3713ff2e4905b906fdac71a5931d704acfe4a74bfc"
+      },
+      {
+        "path": "backend/.d-original-redis-read-keeper-r2-20261104/source-map.json",
+        "sha256": "6fa0f0259353a010d667c39e2e755f9b76e6350b5f7b135ee9b86b3bb1e3dfa9"
+      }
+    ],
+    "input_entries": 18,
+    "unique_changes": 17,
+    "unique_selected_targets": 217,
+    "normalizations": []
+  },
+  "results": {
+    "v6-windows-targeted": {
+      "roots": 10,
+      "subcases": 32,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [
+        "clawreef/cmd/system-backup-original-maintenance"
+      ],
+      "log_sha256": "af39d9b770da4e3f59dd9c76ef403a97c33326e3749b44cb1da661421834aba6"
+    },
+    "v6-linux-install": {
+      "roots": 13,
+      "subcases": 73,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [],
+      "log_sha256": "e76e12e0ce2de678d5cd59476c412040b65a78cf257f3067b885415ea8826b32"
+    },
+    "v6-linux-systembackup": {
+      "roots": 5,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [],
+      "log_sha256": "bb0a38206d414705ac9f895898d43fbdafa0de10deafecc6b7e38860c7ff1c86"
+    }
+  },
+  "complete_Linux_package_compile": [
+    "systembackup",
+    "systembackupinstallationowner/install"
+  ],
+  "actual_callers": [
+    "PrepareOriginalWriterSet resolves one actual original selected Redis writer Deployment/Pod and existing pinned native credentials/CA/custody key, then runs real native preflight; complete source SQL/API inventories remain unfiltered.",
+    "Acquire journals redis_acl_gate_send_unknown before actual native ACL changes; original Redis actor preserves its Deployment/Pod instead of asserting a fake cold-process absence. Aggregate original hold includes a native-held opaque observation and original ACL checkpoint.",
+    "Fresh A-authorized recovery uses newly authenticated independent TLS streams, actual original ACL custody/native same runID/account/source identity, complete ACL restoration readback and a private native recovered observation. Source mutation journal, admission abort, partial restore and final original SQL gate release account for this actor.",
+    "Native RESP malformed-reply regression executes with net.Pipe and refuses reuse of the poisoned original ordered stream; final SQL uses only bounded private local opaque checks."
+  ],
+  "validation_boundary": [
+    "ACL semantics and source authority use models; actual Linux encrypted custody/fsync/readback/truncation and original journal closure primitives run. TLS Redis server, Kubernetes deployment, full original native hold, actual account ACL restoration and page task have not run.",
+    "The new RESP regression ran on Linux; Windows pattern exercised existing RedisReadGate tests and complete package compilation. Windows command/original-maintenance had no test functions and is recorded as compile-only, not a skipped test.",
+    "Existing source worker credential schema is consumed exactly: lowercase username and base64 JSON password byte slice. Reader policy must equal the original private selected policy.",
+    "A real original installer-set caller is now present. Formal page-task Redis keeper/source-recovery and its source-module consumption are still missing in this accepted increment.",
+    "Current source profile requires observed Redis7.2.x, standalone no replicas/modules, actual TLS1.3, independent restricted keeper/read-only reader and a persistent ACLfile PVC. No installation/provisioning or actual field compatibility is proved.",
+    "MinIO/NFS/Vault readable keeper, genuine complete SourceSet/privatePreparedCoverage/first-adoption commit, original database upgrade and same-version deployment remain unverified."
+  ],
+  "completed_test_binaries": [
+    {
+      "path": "bins-v6/install.test",
+      "bytes": 109917832,
+      "sha256": "d382e8226ddaab64a530c9459cc5fdd6c8161be02aac7fa64da1963d4c33d9c5"
+    },
+    {
+      "path": "bins-v6/systembackup.test",
+      "bytes": 95694098,
+      "sha256": "dceb8b1deaea24da2927610193d5f8c4c6966b397697cfd428501aacbff14de4"
+    }
+  ],
+  "cleanup": {
+    "owned_containers": [],
+    "binaries": "2 completed Linux test binaries hashed and removed; verified absent before commit",
+    "cache_tmp": "retained only for announced FS-only factory and formal Redis keeper integration"
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

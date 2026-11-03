@@ -32,6 +32,12 @@ func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, 
 			continue
 		}
 		writer.recovery = fence
+		if writer.redis != nil {
+			if e := writer.restore(ctx, fence); e != nil {
+				failures = append(failures, e)
+			}
+			continue
+		}
 		if fence.checkReleasing(ctx) != nil {
 			failures = append(failures, ErrInstall)
 			break
@@ -123,6 +129,9 @@ func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, 
 		}
 	}
 	for _, writer := range s.deployments {
+		if writer.redis != nil {
+			continue
+		}
 		for _, pod := range writer.pods {
 			if !covered[pod.UID] {
 				return ErrOriginalRecoveryNativeProof

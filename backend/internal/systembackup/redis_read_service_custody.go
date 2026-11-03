@@ -18,6 +18,7 @@ type redisReadGateOriginal struct {
 	Input      RedisReadGateInput
 	Users      []redisGateUser
 	OwnerValue string
+	ACLStorage *redisACLStoragePin
 }
 
 func redisGatePrivate(info os.FileInfo) bool {
@@ -62,7 +63,7 @@ func (g *RedisReadServiceGate) sealOriginal(ctx context.Context, key []byte) err
 		if e != nil {
 			return ErrRedisReadGate
 		}
-		plain, e := json.Marshal(redisReadGateOriginal{"original-redis-acl-custody.v1", g.in, g.original, g.ownerValue})
+		plain, e := json.Marshal(redisReadGateOriginal{"original-redis-acl-custody.v1", g.in, g.original, g.ownerValue, g.aclStorage})
 		if e != nil || len(plain) > 4<<20 {
 			f.Close()
 			return ErrRedisReadGate
@@ -127,7 +128,7 @@ func (g *RedisReadServiceGate) readOriginalCustody(ctx context.Context) error {
 	var original redisReadGateOriginal
 	d := json.NewDecoder(bytes.NewReader(plain.Bytes()))
 	d.DisallowUnknownFields()
-	if d.Decode(&original) != nil || d.Decode(new(any)) != io.EOF || original.Version != "original-redis-acl-custody.v1" || !reflect.DeepEqual(original.Input, g.in) || !reflect.DeepEqual(original.Users, g.original) || original.OwnerValue != g.ownerValue {
+	if d.Decode(&original) != nil || d.Decode(new(any)) != io.EOF || original.Version != "original-redis-acl-custody.v1" || !reflect.DeepEqual(original.Input, g.in) || !reflect.DeepEqual(original.Users, g.original) || original.OwnerValue != g.ownerValue || !reflect.DeepEqual(original.ACLStorage, g.aclStorage) {
 		return ErrRedisReadGate
 	}
 	return nil

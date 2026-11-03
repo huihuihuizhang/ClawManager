@@ -144,6 +144,13 @@ func (s *PreparedOriginalWriterSet) observeOriginalUnchangedSources(ctx context.
 	observations := []any{}
 	for _, w := range s.deployments {
 		w.recovery = fence
+		if w.redis != nil {
+			if w.redis.observeRecovered(ctx) != nil {
+				return nil, ErrInstall
+			}
+			observations = append(observations, w.redis.recovered.Data())
+			continue
+		}
 		actual, err := w.current(ctx)
 		if err != nil || *actual.Spec.Replicas != w.replicas || actual.Status.ObservedGeneration < actual.Generation || actual.Status.ReadyReplicas != w.replicas {
 			return nil, ErrInstall

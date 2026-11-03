@@ -138,7 +138,7 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		return nil, ErrInstall
 	}
 	var wg sync.WaitGroup
-	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped))
+	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped)+len(s.deployments))
 	run := func(fn func() error) {
 		wg.Add(1)
 		go func() {
@@ -147,6 +147,12 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 				failures <- err
 			}
 		}()
+	}
+	for _, w := range s.deployments {
+		if w.redis != nil {
+			r := w.redis
+			run(func() error { return r.observeHeld(ctx) })
+		}
 	}
 	for _, node := range s.nodes {
 		node := node
@@ -169,6 +175,11 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		return nil, ErrInstall
 	}
 	responses := []any{}
+	for _, w := range s.deployments {
+		if w.redis != nil {
+			responses = append(responses, w.redis.held.Data())
+		}
+	}
 	for _, node := range s.nodes {
 		responses = append(responses, node.current.Response())
 	}
@@ -198,6 +209,12 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 	}
 	writers := map[string]*originalDeploymentMaintenance{}
 	for _, w := range s.deployments {
+		if w.redis != nil {
+			if w.redis.check(ctx) != nil {
+				return ErrInstall
+			}
+			continue
+		}
 		writers[w.selection.Name] = w
 		d, e := w.current(ctx)
 		if e != nil || *d.Spec.Replicas != 0 || d.Status.Replicas != 0 || d.Status.ObservedGeneration < d.Generation {
@@ -230,6 +247,9 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 			return ErrInstall
 		}
 		for _, w := range s.deployments {
+			if w.redis != nil {
+				continue
+			}
 			for _, old := range w.pods {
 				if old.UID == string(pod.UID) {
 					return ErrInstall
@@ -324,6 +344,11 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 	}
 	if len(s.deployments)+len(s.proPods) == 0 || len(s.nodes) == 0 && len(s.stopped) == 0 {
 		return ErrInstall
+	}
+	for _, w := range s.deployments {
+		if w.redis != nil && (w.redis.held == nil || w.redis.held.Recheck(ctx, owner.operation, s.inventorySHA, "held", now) != nil) {
+			return ErrInstall
+		}
 	}
 	for _, node := range s.nodes {
 		if node.current == nil || node.current.Recheck(ctx, node.request.Binding, "stopped", node.boot, now) != nil {

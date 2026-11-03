@@ -21,6 +21,7 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	RedisReadKeepers                                         []OriginalRedisReadKeeperSelection `json:",omitempty"`
 	GatewayRecoveryMode                                      string
 	ApplicationScope                                         string
 	Participants                                             []OriginalMaintenanceParticipant
@@ -297,6 +298,13 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	if len(gateways)+len(stopped)+len(runningPro) != 0 {
 		return nil, ErrInstall
 	}
+	redisSelections := map[string]OriginalRedisReadKeeperSelection{}
+	for _, native := range selection.RedisReadKeepers {
+		if native.Deployment == "" || redisSelections[native.Deployment].Deployment != "" || selected[native.Deployment].Role != "writer" || selected[native.Deployment].UID != native.DeploymentUID {
+			return nil, ErrInstall
+		}
+		redisSelections[native.Deployment] = native
+	}
 	for _, dep := range selection.Deployments {
 		if dep.Role == "writer" {
 			w, e := p.prepareDeployment(ctx, dep, j)
@@ -304,9 +312,18 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 				return nil, e
 			}
 			set.deployments = append(set.deployments, w)
+			if native, ok := redisSelections[dep.Name]; ok {
+				if e := set.prepareRedisReadKeeper(ctx, w, native); e != nil {
+					return nil, OriginalWriterSourceFailure{Dependency: "redis_read_keeper_native_preflight_required"}
+				}
+				delete(redisSelections, dep.Name)
+			}
 		} else if dep.Role == "agent" && !agentUses[dep.Name] {
 			return nil, OriginalWriterSourceFailure{Dependency: "unreferenced_shared_agent_writer_requires_native_gate"}
 		}
+	}
+	if len(redisSelections) != 0 {
+		return nil, ErrInstall
 	}
 	if len(set.deployments) == 0 {
 		return nil, ErrInstall
@@ -379,6 +396,11 @@ func (s *PreparedOriginalWriterSet) closePrivate() {
 		clear(g.restart.Env)
 		clear(g.restart.Environment)
 		g.restart = services.RuntimeAgentCreateGatewayRequest{}
+	}
+	for _, w := range s.deployments {
+		if w.redis != nil && w.redis.gate != nil {
+			w.redis.gate.Close()
+		}
 	}
 	if s.journal != nil {
 		_ = s.journal.close()

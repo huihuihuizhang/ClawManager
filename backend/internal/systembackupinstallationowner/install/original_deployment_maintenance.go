@@ -20,6 +20,7 @@ import (
 
 type OriginalDeploymentSelection struct{ Name, UID, Role string }
 type originalDeploymentMaintenance struct {
+	redis          *originalRedisReadKeeper
 	owner          *OriginalWriterMaintenance
 	journal        *originalWriterJournal
 	selection      OriginalDeploymentSelection
@@ -193,6 +194,9 @@ func (w *originalDeploymentMaintenance) patch(ctx context.Context, d *appsv1.Dep
 // This is dispatch/readback, deliberately not a native stopped ACK. The full
 // owner stops ALL writers before B's complete FD/mmap/namespace observation.
 func (w *originalDeploymentMaintenance) stop(ctx context.Context) error {
+	if w.redis != nil {
+		return w.redis.acquire(ctx)
+	}
 	if w.owner.checkCurrentGate(ctx, c.GateAcquiring) != nil || w.stopDispatched {
 		return ErrInstall
 	}
@@ -241,6 +245,9 @@ func (w *originalDeploymentMaintenance) wait(ctx context.Context, recovery bool)
 }
 
 func (w *originalDeploymentMaintenance) restore(ctx context.Context, fence *originalWriterRecoveryFence) error {
+	if w.redis != nil {
+		return w.redis.restore(ctx, fence)
+	}
 	if fence == nil || fence.owner != w.owner || fence.journalSHA == "" || fence.checkReleasing(ctx) != nil {
 		return ErrInstall
 	}

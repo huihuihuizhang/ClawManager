@@ -122,6 +122,9 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 	recovered := map[string][]q.PodIdentity{}
 	for _, writer := range s.deployments {
 		writer.recovery = fence
+		if writer.redis != nil {
+			continue
+		}
 		current, err := writer.current(ctx)
 		if err != nil || *current.Spec.Replicas != writer.replicas || current.Status.ObservedGeneration < current.Generation || current.Status.ReadyReplicas != writer.replicas {
 			return nil, ErrOriginalRecoveryNativeProof
@@ -215,7 +218,7 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 	// outside this concurrent observation section and the final SQL lock prefix.
 	var wg sync.WaitGroup
 	var proofMu sync.Mutex
-	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped))
+	failures := make(chan error, len(s.nodes)+len(s.gateways)+len(s.stopped)+len(s.deployments))
 	run := func(fn func() error) {
 		wg.Add(1)
 		go func() {
@@ -262,6 +265,13 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 			return nil
 		})
 	}
+	for _, w := range s.deployments {
+		if w.redis != nil {
+			r := w.redis
+			r.writer.recovery = fence
+			run(func() error { return r.observeRecovered(ctx) })
+		}
+	}
 	for _, gateway := range s.gateways {
 		gateway := gateway
 		if !gateway.stopDispatched {
@@ -294,6 +304,11 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 		return nil, ErrOriginalRecoveryNativeProof
 	}
 	responses := []any{}
+	for _, w := range s.deployments {
+		if w.redis != nil {
+			responses = append(responses, w.redis.recovered.Data())
+		}
+	}
 	for _, node := range s.nodes {
 		responses = append(responses, proof.nodes[node].Response())
 	}
@@ -340,6 +355,12 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 	}
 	writers := map[string]*originalDeploymentMaintenance{}
 	for _, writer := range s.deployments {
+		if writer.redis != nil {
+			if writer.redis.check(ctx) != nil {
+				return ErrInstall
+			}
+			continue
+		}
 		writers[writer.selection.Name] = writer
 	}
 	for _, dep := range deps.Items {
@@ -396,6 +417,9 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 	}
 	originalWriterPods := map[string]bool{}
 	for _, writer := range s.deployments {
+		if writer.redis != nil {
+			continue
+		}
 		for _, pod := range writer.pods {
 			originalWriterPods[pod.UID] = true
 		}

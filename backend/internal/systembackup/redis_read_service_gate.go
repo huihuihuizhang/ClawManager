@@ -61,6 +61,8 @@ type RedisReadServiceGate struct {
 	custodyName                      string
 	ownerValue, marker, digest       string
 	ownerSent, mutated, held, closed bool
+	transportFailed                  bool
+	aclStorage                       *redisACLStoragePin
 }
 
 func (*RedisReadServiceGate) MarshalJSON() ([]byte, error) { return nil, ErrRedisReadGate }
@@ -169,7 +171,7 @@ func redisGateUserFrom(name string, v any) (redisGateUser, error) {
 }
 
 func (g *RedisReadServiceGate) users(ctx context.Context) ([]redisGateUser, error) {
-	v, e := g.admin.command(ctx, []byte("ACL"), []byte("USERS"))
+	v, e := g.command(ctx, []byte("ACL"), []byte("USERS"))
 	if e != nil {
 		return nil, ErrRedisReadGate
 	}
@@ -183,7 +185,7 @@ func (g *RedisReadServiceGate) users(ctx context.Context) ([]redisGateUser, erro
 		if !redisGateName(name) || n > 0 && names[n-1] == name {
 			return nil, ErrRedisReadGate
 		}
-		v, e = g.admin.command(ctx, []byte("ACL"), []byte("GETUSER"), []byte(name))
+		v, e = g.command(ctx, []byte("ACL"), []byte("GETUSER"), []byte(name))
 		if e != nil {
 			return nil, ErrRedisReadGate
 		}
@@ -196,34 +198,42 @@ func (g *RedisReadServiceGate) users(ctx context.Context) ([]redisGateUser, erro
 	return users, nil
 }
 func (g *RedisReadServiceGate) identity(ctx context.Context) error {
-	if g == nil || g.origin != g || ctx == nil || ctx.Err() != nil || g.check == nil || g.check(ctx) != nil {
+	if g == nil || g.origin != g || g.transportFailed || ctx == nil || ctx.Err() != nil || g.check == nil || g.check(ctx) != nil {
 		return ErrRedisReadGate
 	}
 	id, db, e := g.admin.Identity(ctx)
-	if e != nil || id != g.in.Policy.ServerID || db != 0 {
+	if e != nil {
+		g.poisonTransport()
 		return ErrRedisReadGate
 	}
-	info, e := g.admin.command(ctx, []byte("INFO"), []byte("server"))
+	if id != g.in.Policy.ServerID || db != 0 {
+		return ErrRedisReadGate
+	}
+	info, e := g.command(ctx, []byte("INFO"), []byte("server"))
 	raw, ok := info.([]byte)
 	if e != nil || !ok || !strings.Contains(string(raw), "\r\nredis_version:"+g.in.ServerVersion+"\r\n") {
 		return ErrRedisReadGate
 	}
-	v, e := g.admin.command(ctx, []byte("ROLE"))
+	v, e := g.command(ctx, []byte("ROLE"))
 	role, ok := v.([]any)
 	if e != nil || !ok || len(role) != 3 || stringBytes(role[0]) != "master" {
 		return ErrRedisReadGate
 	}
-	v, e = g.admin.command(ctx, []byte("INFO"), []byte("cluster"))
+	replicas, replicasOK := role[2].([]any)
+	if !replicasOK || len(replicas) != 0 {
+		return ErrRedisReadGate
+	}
+	v, e = g.command(ctx, []byte("INFO"), []byte("cluster"))
 	b, ok := v.([]byte)
 	if e != nil || !ok || !strings.Contains(string(b), "cluster_enabled:0\r\n") {
 		return ErrRedisReadGate
 	}
-	v, e = g.admin.command(ctx, []byte("MODULE"), []byte("LIST"))
+	v, e = g.command(ctx, []byte("MODULE"), []byte("LIST"))
 	modules, ok := v.([]any)
 	if e != nil || !ok || len(modules) != 0 {
 		return ErrRedisReadGate
 	}
-	v, e = g.admin.command(ctx, []byte("CONFIG"), []byte("GET"), []byte("aclfile"))
+	v, e = g.command(ctx, []byte("CONFIG"), []byte("GET"), []byte("aclfile"))
 	config, ok := v.([]any)
 	if e != nil || !ok || len(config) != 2 || stringBytes(config[0]) != "aclfile" || stringBytes(config[1]) != g.in.ACLFile {
 		return ErrRedisReadGate
@@ -285,7 +295,7 @@ func (g *RedisReadServiceGate) identity(ctx context.Context) error {
 				}
 			}
 		}
-		if !persistent {
+		if !persistent || g.checkACLStorage(ctx, pod, c) != nil {
 			return ErrRedisReadGate
 		}
 	}
@@ -384,6 +394,12 @@ func PrepareRedisReadServiceGate(ctx context.Context, admin, reader *RedisClient
 	}
 	g := &RedisReadServiceGate{admin: admin, reader: reader, kube: kube, in: in, check: check, changes: map[string][][]byte{}, expected: map[string]redisGateUser{}, marker: redisGateMarkerPrefix + in.Operation}
 	g.origin = g
+	prepared := false
+	defer func() {
+		if !prepared {
+			g.Close()
+		}
+	}()
 	if g.identity(ctx) != nil {
 		return nil, ErrRedisReadGate
 	}
@@ -525,6 +541,7 @@ func PrepareRedisReadServiceGate(ctx context.Context, admin, reader *RedisClient
 	if g.identity(ctx) != nil {
 		return nil, ErrRedisReadGate
 	}
+	prepared = true
 	return g, nil
 }
 
@@ -548,12 +565,12 @@ func (g *RedisReadServiceGate) Acquire(ctx context.Context) error {
 		return ErrRedisReadGate
 	}
 	g.ownerSent = true
-	v, e := g.admin.command(ctx, []byte("SET"), []byte(redisGateOwnerKey), []byte(g.ownerValue), []byte("NX"))
+	v, e := g.command(ctx, []byte("SET"), []byte(redisGateOwnerKey), []byte(g.ownerValue), []byte("NX"))
 	if e != nil || stringBytes(v) != "OK" {
 		return ErrRedisReadGate
 	}
 	g.mutated = true
-	if _, e = g.admin.command(ctx, []byte("ACL"), []byte("SETUSER"), []byte(g.marker), []byte("reset"), []byte("off")); e != nil {
+	if _, e = g.command(ctx, []byte("ACL"), []byte("SETUSER"), []byte(g.marker), []byte("reset"), []byte("off")); e != nil {
 		return ErrRedisReadGate
 	}
 	names := []string{}
@@ -565,11 +582,11 @@ func (g *RedisReadServiceGate) Acquire(ctx context.Context) error {
 		if g.identity(ctx) != nil || g.owner(ctx) != nil {
 			return ErrRedisReadGate
 		}
-		if _, e = g.admin.command(ctx, g.changes[name]...); e != nil {
+		if _, e = g.command(ctx, g.changes[name]...); e != nil {
 			return ErrRedisReadGate
 		}
 	}
-	if _, e = g.admin.command(ctx, []byte("ACL"), []byte("SAVE")); e != nil {
+	if _, e = g.command(ctx, []byte("ACL"), []byte("SAVE")); e != nil {
 		return ErrRedisReadGate
 	}
 	users, e = g.users(ctx)
@@ -647,7 +664,7 @@ func (g *RedisReadServiceGate) expectedUser(actual, want redisGateUser) error {
 	return nil
 }
 func (g *RedisReadServiceGate) owner(ctx context.Context) error {
-	v, e := g.admin.command(ctx, []byte("GET"), []byte(redisGateOwnerKey))
+	v, e := g.command(ctx, []byte("GET"), []byte(redisGateOwnerKey))
 	if e != nil || stringBytes(v) != g.ownerValue {
 		return ErrRedisReadGate
 	}
@@ -679,12 +696,19 @@ func (g *RedisReadServiceGate) Capture(ctx context.Context, dst io.Writer, sourc
 	if g == nil || sourceCheck == nil {
 		return ErrRedisReadGate
 	}
-	return CaptureSourceRedis(ctx, g.reader, dst, g.in.Policy, func(ctx context.Context) error {
+	err := CaptureSourceRedis(ctx, g.reader, dst, g.in.Policy, func(ctx context.Context) error {
 		if sourceCheck(ctx) != nil {
 			return ErrRedisReadGate
 		}
 		return g.Recheck(ctx)
 	})
+	if err != nil {
+		g.mu.Lock()
+		g.poisonTransport()
+		_ = g.reader.Close()
+		g.mu.Unlock()
+	}
+	return err
 }
 
 // Fresh recovery check is supplied by the genuine installation/task owner.
@@ -697,13 +721,31 @@ func (g *RedisReadServiceGate) Restore(ctx context.Context, freshRecoveryCheck T
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	if g.closed || !g.mutated || freshRecoveryCheck(ctx) != nil {
+	if g.closed || !g.ownerSent || freshRecoveryCheck(ctx) != nil {
 		return ErrRedisReadGate
 	}
 	oldCheck := g.check
 	g.check = freshRecoveryCheck
 	defer func() { g.check = oldCheck }()
-	if g.identity(ctx) != nil || g.owner(ctx) != nil || g.readOriginalCustody(ctx) != nil || g.compatibleCurrent(ctx) != nil {
+	if g.identity(ctx) != nil || g.readOriginalCustody(ctx) != nil {
+		return ErrRedisReadGate
+	}
+	owner, ownerErr := g.command(ctx, []byte("GET"), []byte(redisGateOwnerKey))
+	if ownerErr != nil {
+		return ErrRedisReadGate
+	}
+	if owner == nil {
+		// Reconcile only a genuine dispatched acquisition or an unknown final
+		// DEL on this same original native incarnation. No owner + exact full
+		// original ACLs is affirmative readback; absence alone is insufficient.
+		users, e := g.users(ctx)
+		if e != nil || !reflect.DeepEqual(users, g.original) || g.identity(ctx) != nil {
+			return ErrRedisReadGate
+		}
+		g.closed, g.held = true, false
+		return nil
+	}
+	if stringBytes(owner) != g.ownerValue || g.compatibleCurrent(ctx) != nil {
 		return ErrRedisReadGate
 	}
 	for _, user := range g.original {
@@ -713,24 +755,24 @@ func (g *RedisReadServiceGate) Restore(ctx context.Context, freshRecoveryCheck T
 		if user.Name == g.in.KeeperAccount {
 			continue
 		}
-		if _, e := g.admin.command(ctx, redisGateSetUser(user, user.redisGateSelector, user.Selectors)...); e != nil {
+		if _, e := g.command(ctx, redisGateSetUser(user, user.redisGateSelector, user.Selectors)...); e != nil {
 			return ErrRedisReadGate
 		}
 	}
-	if _, e := g.admin.command(ctx, []byte("ACL"), []byte("DELUSER"), []byte(g.marker)); e != nil {
+	if _, e := g.command(ctx, []byte("ACL"), []byte("DELUSER"), []byte(g.marker)); e != nil {
 		return ErrRedisReadGate
 	}
-	if _, e := g.admin.command(ctx, []byte("ACL"), []byte("SAVE")); e != nil {
+	if _, e := g.command(ctx, []byte("ACL"), []byte("SAVE")); e != nil {
 		return ErrRedisReadGate
 	}
 	users, e := g.users(ctx)
 	if e != nil || !reflect.DeepEqual(users, g.original) || freshRecoveryCheck(ctx) != nil || g.owner(ctx) != nil {
 		return ErrRedisReadGate
 	}
-	if _, e = g.admin.command(ctx, []byte("DEL"), []byte(redisGateOwnerKey)); e != nil {
+	if _, e = g.command(ctx, []byte("DEL"), []byte(redisGateOwnerKey)); e != nil {
 		return ErrRedisReadGate
 	}
-	v, e := g.admin.command(ctx, []byte("GET"), []byte(redisGateOwnerKey))
+	v, e := g.command(ctx, []byte("GET"), []byte(redisGateOwnerKey))
 	if e != nil || v != nil || g.identity(ctx) != nil {
 		return ErrRedisReadGate
 	}

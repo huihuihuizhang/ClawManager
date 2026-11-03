@@ -52,6 +52,9 @@ func (r *OriginalWriterRecoveryAuthorization) inspectOriginal(ctx context.Contex
 	}
 	for _, w := range s.deployments {
 		action := "scale_zero_send_unknown"
+		if w != nil && w.redis != nil {
+			action = "redis_acl_gate_send_unknown"
+		}
 		if w != nil && w.replicas == 0 {
 			action = ""
 		} // originally stopped: no scale RPC was necessary

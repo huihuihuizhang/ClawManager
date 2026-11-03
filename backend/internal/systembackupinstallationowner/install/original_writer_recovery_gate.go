@@ -161,6 +161,11 @@ func (s *PreparedOriginalWriterSet) finishOriginalRecovery(ctx context.Context, 
 			}
 		}
 	}
+	for _, w := range s.deployments {
+		if w.redis != nil && (w.redis.recovered == nil || w.redis.recovered.Recheck(ctx, s.owner.operation, s.inventorySHA, "recovered", now) != nil) {
+			return ErrOriginalRecoveryNativeProof
+		}
+	}
 	var outstanding uint64
 	if tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM system_backup_mutation_leases WHERE scope=? AND released_at IS NULL`, s.application.scope).Scan(&outstanding) != nil || outstanding != 0 {
 		return ErrInstall
