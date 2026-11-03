@@ -38,6 +38,7 @@ export function publicationMessages(locale: string) {
  return locale.startsWith('zh') ? {
   createCompleteBackup: '创建完整备份', completeBackupPurpose: '完整备份（非灾备验收）',
   completeBackupNotice: '完整采集六域并发布正式产物；本次不执行隔离还原，灾备资格标为未具备。',
+  submissionReadinessUnknown: '当前执行准备状态未知。可以提交请求，由服务端检查权限、当前配置和备份依赖；仅在服务端确认接受后显示任务。',
   catalog: '本安装的备份目录', catalogNote: '查询本安装已有的原始签名登记。列表为最终一致，不代表全局灾备目录或恢复资格。',
   readCatalog: '查询目录', refresh: '重新查询', more: '加载更多', loading: '正在读取…', failed: '读取失败，未确认本次结果。', empty: '未查询到登记记录。',
   readRecord: '读取原始记录', record: '原始签名登记', manifest: '原始 Manifest', readManifest: '读取 Manifest',
@@ -46,6 +47,7 @@ export function publicationMessages(locale: string) {
  } : {
   createCompleteBackup: 'Create complete backup', completeBackupPurpose: 'Complete backup (without DR qualification)',
   completeBackupNotice: 'Capture all six domains and publish the formal artifact. This run does not perform an isolated restore or establish disaster-recovery eligibility.',
+  submissionReadinessUnknown: 'Current execution readiness is unknown. You can submit a request; the server checks permissions, current configuration and backup prerequisites. A task is shown only after the server confirms acceptance.',
   catalog: 'This installation’s backup catalog', catalogNote: 'Read existing original signed registrations for this installation. The list is eventually consistent and does not establish a global recovery catalog or recovery eligibility.',
   readCatalog: 'Read catalog', refresh: 'Read again', more: 'Load more', loading: 'Reading…', failed: 'Read failed; this result is unconfirmed.', empty: 'No registrations found.',
   readRecord: 'Read original record', record: 'Original signed registration', manifest: 'Original manifest', readManifest: 'Read manifest',

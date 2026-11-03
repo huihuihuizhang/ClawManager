@@ -1,0 +1,26 @@
+{
+  "schema_version": "system-backup-d-app-readonly-preflight-source.v2",
+  "status": "FROZEN_AST_PASS_ROOT_RUNS_MOCKS_AND_FIELD_OBSERVE",
+  "source_pins": [
+    {
+      "path": "scripts/system-backup-app-readonly-preflight-20261103-v2.py",
+      "sha256": "8c2f8af5f5bb503e2ea454332097e9142f07d3ecb8bb7ecf38ab1b79900f7fdd"
+    },
+    {
+      "path": "scripts/system-backup-app-readonly-preflight-20261103-v2.test.py",
+      "sha256": "8d828833ee60ae4127c5c03d60506722e955878fb2e4bf080e95096cbf5325ce"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-app-upgrade-catalog-20261103.json",
+      "sha256": "19c41f6e801a75da527d56b5ca15e93aa2580a0ce3ac4237629e87d59a6c8d72"
+    }
+  ],
+  "supersedes": "docs/evidence/system-backup-d-app-readonly-preflight-source-20261103.json",
+  "only_increment": "Captures exact raw original Ready Pod container status.imageID + status.image; it does not turn mutable tag or containerd config ID into a registry manifest digest.",
+  "exact_observe_command": "python3 system-backup-app-readonly-preflight-20261103-v2.py --observe --catalog system-backup-d-app-upgrade-catalog-20261103.json > app-readonly-preflight-20261103.json",
+  "exact_root_mock_command": "py -3 -B scripts/system-backup-app-readonly-preflight-20261103-v2.test.py",
+  "scope": "Identical read-only original namespace/app/MySQL UID + Unix socket/SELECT-only/private credentials behavior to frozen v1. No known DB or UUID is needed for observe. No server start, migrations, rollout or task.",
+  "not_authority": "DB/UUID/imageID are observations only, not independent installation authorization, effective YAML validation, backup readiness or verified registry manifest references.",
+  "withheld": "Initial app-image-guard apply/rollback are NOT approved for execution; old_image mutable fix18 tag still needs actual digest binding.",
+  "validation": "D AST only; no mock/native/field command executed by D; no test/build artifacts created."
+}

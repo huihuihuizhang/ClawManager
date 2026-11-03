@@ -16,6 +16,7 @@ import BackupTaskTable from './BackupTaskTable.tsx';
 import LegacyTeamBackupHistory from './LegacyTeamBackupHistory';
 import BackupLiveCatalog from './BackupLiveCatalog';
 import { publicationMessages } from './messages';
+import { canSubmitCompleteBackup } from './backupCreateSubmission';
 
 const liveSource = createBackupLiveSource(systemBackupReadService);
 type TaskGroup = 'backups' | 'drills' | 'preflights' | 'verifications';
@@ -95,7 +96,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
   const overview = dataState.kind === 'ready' ? dataState.data.overview : null;
   const config = dataState.kind === 'ready' ? dataState.data.config : dataState.data.config.kind === 'ready' ? dataState.data.config.value : null;
   const installation = dataState.kind === 'ready' ? dataState.data.overview.origin_installation_id : dataState.data.origin_installation_id;
-  const canCreate = dataState.kind === 'ready' && overview?.effective_enabled === true && config?.effective_enabled === true;
+  const canCreate = canSubmitCompleteBackup(dataState);
   const createBackup = async () => {
     if (!canCreate || creating) return;
     const key = createKey.current ?? crypto.randomUUID();
@@ -140,6 +141,7 @@ export default function BackupLiveWorkspace({ fallback }: { fallback: ReactNode 
       <div className="flex flex-wrap gap-2"><button type="button" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" onClick={refresh}>{b('refresh')}</button>
         <button type="button" className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!canCreate || creating} onClick={() => void createBackup()}>{creating ? b('creatingBackup') : publicationText.createCompleteBackup}</button></div></div>
     <p className="text-sm text-slate-600">{publicationText.completeBackupNotice}</p>
+    {overview === null && canCreate && <p role="status" className="text-sm text-amber-900">{publicationText.submissionReadinessUnknown}</p>}
     {createError !== null && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{b('createBackupFailed', { code: createError })}</p>}
     {createdID !== null && <p role="status" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">{b('createBackupAccepted', { id: createdID })}</p>}
     {overview === null ? <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{b('recordsOverviewUnavailable')}</p>
