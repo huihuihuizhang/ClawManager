@@ -32,7 +32,6 @@ import (
 	api "clawreef/internal/systembackupdeployment"
 	d "clawreef/internal/systembackupdispatch"
 	a "clawreef/internal/systembackupkekadapter"
-	"github.com/go-sql-driver/mysql"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -206,30 +205,10 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 		}
 		s.tlsConfig = &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{cert}, ClientCAs: roots, ClientAuth: tls.RequireAndVerifyClientCert}
 		stage = "source-connection"
-		dsnRaw, e := readPrivate(cfg.SourceDSNFile, 16384)
+		s.Source, e = openDeploymentSource(cfg)
 		if e != nil {
 			return nil, e
 		}
-		defer clear(dsnRaw)
-		sqlCfg, e := mysql.ParseDSN(strings.TrimSpace(string(dsnRaw)))
-		if e != nil || sqlCfg.User != cfg.SourceUser || sqlCfg.DBName != cfg.SourceDatabase || sqlCfg.MultiStatements {
-			return nil, c.ErrExecutionAuthority
-		}
-		sqlCfg.ParseTime = true
-		sqlCfg.Loc = time.UTC
-		sqlCfg.Timeout = 5 * time.Second
-		sqlCfg.ReadTimeout = 10 * time.Second
-		sqlCfg.WriteTimeout = 10 * time.Second
-		if sqlCfg.Params == nil {
-			sqlCfg.Params = map[string]string{}
-		}
-		sqlCfg.Params["time_zone"] = "'+00:00'"
-		s.Source, e = sql.Open("mysql", sqlCfg.FormatDSN())
-		if e != nil {
-			return nil, c.ErrExecutionAuthority
-		}
-		s.Source.SetMaxOpenConns(4)
-		s.Source.SetMaxIdleConns(2)
 		if e = s.checkSource(ctx); e != nil {
 			return nil, e
 		}

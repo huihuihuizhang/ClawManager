@@ -1,0 +1,399 @@
+{
+  "schema_version": "supervisor-independent-mysql-tls-review.v1",
+  "observed_at": "2026-11-03T22:44:40.199924+08:00",
+  "base_commit": "437f01e4793da8e4250bad58c36d90cb5b710075",
+  "status": "THREE_POOL_TLS_SOURCE_ASSEMBLED_TESTS_PASS_NOT_FIELD_TLS",
+  "selection": {
+    "path": ".tmp-supervisor-tls13-integration-20261103/selection.json",
+    "bytes": 4830,
+    "sha256": "2496b4f8d6ee2ac05d3aa5fe74cda0c852c47eee36e1db3409c16c85a72e6cb8"
+  },
+  "source_pins": [
+    {
+      "target": "backend/internal/mysqltls/material.go",
+      "sha256": "2b64a06b6b02e4a4c937c0f2b99619934c078c78c00fa30f33cc6f727ee64ba9",
+      "bytes": 4145,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/db/mysql_business_tls.go",
+      "sha256": "2facb3301a3ab8bf03aab1a098228a87094e0678fe387858d273893b868fee85",
+      "bytes": 869,
+      "before_sha256": "8321fdb1b8a46ceaaa181fe316f0906c0a139149890e4234dad8aa98e5f17d94"
+    },
+    {
+      "target": "backend/internal/systembackup/control_connection.go",
+      "sha256": "da972885b8c9a0bb52e60cc98de5439119d5e1c0d5e3f56496abff7e91d69bcc",
+      "bytes": 2004,
+      "before_sha256": "d12a61f92d586ed6a7ee7ba66667fa36d5984f72caf2a292d9476580f2db9756"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_source_connection.go",
+      "sha256": "d45a06035be65bef38e7cab3e34ac3c96f7f1088ec685d407d7795a8468ba5f0",
+      "bytes": 1359,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_service.go",
+      "sha256": "3ab6b153917e89c6b1f77a3054e295f1f3261de03cac7228e32800217295b9f6",
+      "bytes": 27154,
+      "before_sha256": "ae3520c8ffa69cb1ed39462fe2a74c6c659b63022b30ff7ae0de6f72ccce2aa6"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_config.go",
+      "sha256": "4962fccc772e3a5bf935283b8e7d6204663141a78b4a2fb7a4a3ebb6d585073e",
+      "bytes": 10432,
+      "before_sha256": "363f00ae20790f29b077e8812f6450b9570736a185266708dc18b1749959904e"
+    },
+    {
+      "target": "backend/cmd/server/main.go",
+      "sha256": "b18cd964069b51090837102ba298dda717b94b80db97f4cba5007ec1bf78f22b",
+      "bytes": 65354,
+      "before_sha256": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc"
+    },
+    {
+      "target": "backend/internal/mysqltls/material_test.go",
+      "sha256": "b3aef37a59b6ffcada82f40a5af20a4399492c3c7c7e734e0a42e7500bd41887",
+      "bytes": 7879,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_source_tls_test.go",
+      "sha256": "71d5b37d0e1c3b8dde99af74c9227adea325a0fe950de443ace9979151c677a4",
+      "bytes": 8518,
+      "before_sha256": null
+    }
+  ],
+  "host_tests": {
+    "roots": [
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake"
+      },
+      {
+        "package": "clawreef/internal/config",
+        "test": "TestLoadDatabaseTLSDefaultYAMLAndEnvironment"
+      },
+      {
+        "package": "clawreef/internal/config",
+        "test": "TestLoadDatabaseTLSRejectsPartialSelection"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProActualMetadataAndMaterialConsumption"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProCurrentControllerAndCompleteLayout"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProKeepsLegacyMaterialEncoding"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSConfigBinding"
+      }
+    ],
+    "subtests": [
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/partial"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/wrong-pin"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/relative"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/wildcard"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/preferred"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/skip-verify"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/tls13"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/wrong-name"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/wrong-ca"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/tls12-only"
+      },
+      {
+        "package": "clawreef/internal/mysqltls",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/no-server-tls"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/partial"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/wrong-pin"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/relative"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/wildcard"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/preferred"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSSelectionPinsAndIsolation/skip-verify"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/tls13"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/wrong-name"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/wrong-ca"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/tls12-only"
+      },
+      {
+        "package": "clawreef/internal/db",
+        "test": "TestBusinessMySQLTLSActualDriverHandshake/no-server-tls"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata/missing-owner-layout"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata/actual-sql-disagrees"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata/two-hostpath-nodes"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata/new-pod-even-if-terminated"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProRefusesUnownedOrAmbiguousMetadata/volume-replacement"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/empty-pvc-root"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/explicit-dot-root"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/root-covers-current-nested-alias"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/exact-private-subpath"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/private-data-suffix"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/outside-private-subpath"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/broader-than-declared-private"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/wrong-pvc"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/parent-traversal"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/absolute-subpath"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestCurrentStoppedProTemplateRootAndSubPathBoundary/noncanonical-subpath"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/control/tls13"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/control/wrong-name"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/control/wrong-ca"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/control/tls12-only"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/control/no-server-tls"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/source/tls13"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/source/wrong-name"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/source/wrong-ca"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/source/tls12-only"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestIndependentMySQLTLSPools/source/no-server-tls"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/wrong-user"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/wrong-db"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/multi-statements"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/allow-files"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/preferred"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/partial"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentSourceTLSIdentityAndPartialSelection/empty"
+      }
+    ],
+    "fail": 0,
+    "skip": 0,
+    "exit": 0,
+    "default_vet_enabled": true,
+    "log": {
+      "path": ".tmp-supervisor-tls13-integration-20261103/tls13-combination.jsonl",
+      "bytes": 64286,
+      "sha256": "d411efe3bcad6eb5a034a98f9d3279a0d4f9e61c91c5ceebb0b6882fa25ea45d"
+    }
+  },
+  "linux_builds": [
+    {
+      "command": "server",
+      "path": ".tmp-supervisor-tls13-integration-20261103/bin/server",
+      "bytes": 109293600,
+      "sha256": "7b155ec8caf92c75357fa484ef24a02aafaad29f81a78ef33420120a8643355f"
+    },
+    {
+      "command": "backup-worker",
+      "path": ".tmp-supervisor-tls13-integration-20261103/bin/backup-worker",
+      "bytes": 72476978,
+      "sha256": "bebe461af00f3cd8ee0b168cbacce056ac880dd7c24a0f9d72c084206d3b8a83"
+    },
+    {
+      "command": "system-backup-v2-controller",
+      "path": ".tmp-supervisor-tls13-integration-20261103/bin/system-backup-v2-controller",
+      "bytes": 93640921,
+      "sha256": "e57bfb0101974abec748ae45dc6da32f4b4e5692b002e36ab7d3860da6c5209f"
+    },
+    {
+      "command": "system-backup-source-registries",
+      "path": ".tmp-supervisor-tls13-integration-20261103/bin/system-backup-source-registries",
+      "bytes": 85468226,
+      "sha256": "2e1d02f78ac2f40e94f0ffcfe972ce7bf2de3c02f2702fcdf03e3722c9b3ca7f"
+    }
+  ],
+  "actual_callers": [
+    "business db Initialize/Connect/OpenSystemBackupRead/ConnectPublicBackupMetadata via private mysqltls material",
+    "both server main independent control-pool opens use explicit OpenControlDatabaseWithTLS and retain original same-database checks",
+    "NewDeploymentService source connection uses administrator-pinned source_tls material and retains checkSource UUID/user/database/grants checks"
+  ],
+  "integration": "main/config/service merged as narrow C TLS deltas into reviewed root context, no full mutable D main overwrite; 0 textual conflicts",
+  "field_still_required": [
+    "real certificate/CA/SAN issuance and ordinary read-only CA file mount",
+    "CA/SAN/source_tls config digest and original Installer pins aligned",
+    "actual TLS1.3 sessions and original pool identities before require_secure_transport",
+    "original schema migration and genuine first installation/adoption",
+    "full source hold/recovery and real page successful task/report/catalog"
+  ],
+  "DR_qualified": false,
+  "cleanup": "pending owned test/build output cleanup; shared cache remains in use by connected D frozen-source validation"
+}

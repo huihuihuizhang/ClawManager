@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/mysqltls"
 	"clawreef/internal/systembackup/kube"
 	c "clawreef/internal/systembackupcontroller"
 )
@@ -22,6 +23,7 @@ import (
 // DeploymentConfig is an administrator-pinned input; public create requests
 // cannot supply paths, trusted roots, source identities or resource UIDs.
 type DeploymentConfig struct {
+	SourceTLS           *mysqltls.Material          `json:"source_tls,omitempty"`
 	Version             string                      `json:"schema_version"`
 	CaptureScope        string                      `json:"capture_scope"`
 	InstallationID      string                      `json:"installation_id"`
@@ -134,6 +136,9 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if cnf.SourceTLS != nil && (!cnf.SourceTLS.Selected() || cnf.SourceTLS.Validate() != nil) {
+		return c.ErrExecutionAuthority
+	}
 	if cnf.StagingLocation != nil && cnf.StagingLocation.validate(cnf) != nil {
 		return c.ErrExecutionAuthority
 	}

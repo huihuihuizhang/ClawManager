@@ -20,6 +20,7 @@ import (
 	"clawreef/internal/handlers"
 	"clawreef/internal/middleware"
 	"clawreef/internal/models"
+	"clawreef/internal/mysqltls"
 	"clawreef/internal/northbound"
 	"clawreef/internal/ownerrecords"
 	"clawreef/internal/repository"
@@ -507,7 +508,7 @@ func main() {
 	if db.SQLGateScope() != "" {
 		openCtx, openCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		var openErr error
-		backupHTTPPool, openErr = systembackup.OpenControlDatabase(openCtx, os.Getenv("SYSTEM_BACKUP_CONTROL_DSN_FILE"))
+		backupHTTPPool, openErr = systembackup.OpenControlDatabaseWithTLS(openCtx, os.Getenv("SYSTEM_BACKUP_CONTROL_DSN_FILE"), mysqltls.Material{CAFile: cfg.Database.TLSCAFile, CASHA256: cfg.Database.TLSCASHA256, ServerName: cfg.Database.TLSServerName})
 		if openErr == nil {
 			businessSQL, _ := database.Driver().(*sql.DB)
 			openErr = backupgate.RequireSameDatabase(openCtx, businessSQL, backupHTTPPool)
@@ -969,7 +970,7 @@ func main() {
 		backupSQL, _ := database.Driver().(*sql.DB)
 		if controlFile := strings.TrimSpace(os.Getenv("SYSTEM_BACKUP_CONTROL_DSN_FILE")); controlFile != "" {
 			controlContext, controlCancel := context.WithTimeout(context.Background(), 10*time.Second)
-			controlSQL, controlErr := systembackup.OpenControlDatabase(controlContext, controlFile)
+			controlSQL, controlErr := systembackup.OpenControlDatabaseWithTLS(controlContext, controlFile, mysqltls.Material{CAFile: cfg.Database.TLSCAFile, CASHA256: cfg.Database.TLSCASHA256, ServerName: cfg.Database.TLSServerName})
 			if controlErr == nil && db.SQLGateScope() != "" {
 				controlErr = backupgate.RequireSameDatabase(controlContext, backupSQL, controlSQL)
 			}

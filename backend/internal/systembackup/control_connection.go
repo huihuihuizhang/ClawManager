@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/mysqltls"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -16,6 +17,12 @@ import (
 // be separate from the gated application pool so cancellation and gate release
 // remain possible during maintenance. It never applies schema migrations.
 func OpenControlDatabase(ctx context.Context, path string) (*sql.DB, error) {
+	return OpenControlDatabaseWithTLS(ctx, path, mysqltls.Material{})
+}
+
+// OpenControlDatabaseWithTLS preserves the independent control credential and
+// pool while binding transport to administrator-selected CA and server identity.
+func OpenControlDatabaseWithTLS(ctx context.Context, path string, material mysqltls.Material) (*sql.DB, error) {
 	f, e := os.Open(path)
 	if e != nil {
 		return nil, errors.New("control credential unavailable")
@@ -38,10 +45,14 @@ func OpenControlDatabase(ctx context.Context, path string) (*sql.DB, error) {
 	c.Timeout = 5 * time.Second
 	c.ReadTimeout = 10 * time.Second
 	c.WriteTimeout = 10 * time.Second
-	pool, e := sql.Open("mysql", c.FormatDSN())
+	if e = material.Apply(c); e != nil {
+		return nil, errors.New("control database TLS configuration invalid")
+	}
+	connector, e := mysql.NewConnector(c)
 	if e != nil {
 		return nil, errors.New("control database unavailable")
 	}
+	pool := sql.OpenDB(connector)
 	pool.SetMaxOpenConns(4)
 	pool.SetMaxIdleConns(2)
 	if e = pool.PingContext(ctx); e != nil {
