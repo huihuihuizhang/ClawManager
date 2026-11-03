@@ -17,6 +17,7 @@ import (
 // Diagnostics cannot be supplied as authority to any capture/first-adoption
 // constructor. No token, endpoint, Pod env/args or business file is returned.
 type InstanceMountObservation struct {
+	CurrentStoppedPro                                                                        *CurrentStoppedProSourceMaterial `json:",omitempty"`
 	InstanceID, UserID, Generation                                                           int
 	Type, Status, Workspace                                                                  string
 	Namespace, RuntimePod, RuntimePodUID, PodSpecSHA256, Node, NodeUID, RuntimeBindingSHA256 string
@@ -70,6 +71,18 @@ func (s *DeploymentService) ObserveInstanceMountInputs(ctx context.Context) (Ins
 		for _, instance := range first.source.Instances {
 			if x.recheck(ctx) != nil {
 				return nil, d.ErrNotReady
+			}
+			if isCurrentStoppedPro(instance) {
+				material, err := currentStoppedProMaterialFor(s.captureMaterials.Discovery.PersistentMounts, instance)
+				if err != nil {
+					return nil, err
+				}
+				actual, err := observeCurrentStoppedPro(ctx, x.delegation.owner.Client, s.Config, instance, first.sql.metadata.CurrentStoppedProStorage[instance.ID])
+				if err != nil || !reflect.DeepEqual(actual, *material) {
+					return nil, mountInputError("current_stopped_pro_baseline_changed", instance.ID, "")
+				}
+				rows = append(rows, currentStoppedProDiagnostic(instance, actual))
+				continue
 			}
 			if instance.Status == "stopped" {
 				rows = append(rows, projectInstanceMountObservation(instance, b.RuntimeWriterSpec{}, nil, s.Config, s.captureMaterials.Discovery.PersistentMounts))

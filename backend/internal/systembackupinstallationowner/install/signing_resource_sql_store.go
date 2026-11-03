@@ -200,6 +200,9 @@ func readCommittedSigningResourceSQL(ctx context.Context, s *authenticatedOperat
 			return nil, ErrInstall
 		}
 	}
+	if tx.Rollback() != nil {
+		return nil, ErrInstall
+	}
 	return rows, nil
 }
 

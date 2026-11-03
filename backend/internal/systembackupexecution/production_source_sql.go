@@ -17,10 +17,11 @@ import (
 )
 
 type productionSQLSourceMetadata struct {
-	Schema    domain.BusinessCaptureSchema
-	Census    domain.BusinessSchemaCensusObjects
-	Images    map[int]string
-	WorkBuddy map[int]domain.WorkBuddyUIDIdentity
+	CurrentStoppedProStorage map[int]currentStoppedProSQLStorage `json:",omitempty"`
+	Schema                   domain.BusinessCaptureSchema
+	Census                   domain.BusinessSchemaCensusObjects
+	Images                   map[int]string
+	WorkBuddy                map[int]domain.WorkBuddyUIDIdentity
 }
 
 func (x *originalSourceMetadataAuthority) sqlMetadata(ctx context.Context, source b.SourceInventory) (productionSQLSourceMetadata, error) {
@@ -152,6 +153,10 @@ func readProductionSQLMetadata(ctx context.Context, s *DeploymentService, tx *sq
 				return zero, d.ErrNotReady
 			}
 		}
+	}
+	metadata.CurrentStoppedProStorage, err = readCurrentStoppedProSQLStorage(ctx, tx, instances)
+	if err != nil {
+		return zero, err
 	}
 	if s.checkSourceIdentity(ctx, tx) != nil || ctx.Err() != nil {
 		return zero, d.ErrNotReady

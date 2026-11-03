@@ -3,13 +3,19 @@
 package systembackupkekadapter
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
@@ -30,24 +36,40 @@ func censusOriginalMySQL(t *testing.T, ctx context.Context) (*sql.DB, reg.Databa
 	if pin == "" {
 		t.Fatal("independent local server UUID pin required")
 	}
+	info, err := os.Lstat(file)
+	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm() != 0600 || info.Size() < 2 || info.Size() > 16384 {
+		t.Fatal("private disposable credential file required")
+	}
 	raw, err := os.ReadFile(file)
-	if err != nil {
-		t.Fatal("local credential file unavailable")
+	if err != nil || len(raw) > 16384 {
+		t.Fatal("private disposable credential file unavailable")
 	}
 	defer clear(raw)
 	var credentials struct {
-		Host           string
-		Port           int
-		User, Password string
+		Host, User, Password, CAFile, TLSServerName, ServerUUID string
+		Port                                                    int
 	}
-	if json.Unmarshal(raw, &credentials) != nil || credentials.Host != "127.0.0.1" || credentials.Port != 59355 {
-		t.Fatal("unexpected local test target")
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&credentials)
+	if err != nil || decoder.Decode(new(any)) != io.EOF || credentials.Host != "127.0.0.1" || credentials.Port < 1024 || credentials.Port > 65535 || credentials.Port == 3306 || credentials.User == "" || credentials.Password == "" || credentials.TLSServerName == "" || !filepath.IsAbs(credentials.CAFile) || credentials.ServerUUID != pin || !regexp.MustCompile(`^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$`).MatchString(pin) {
+		t.Fatal("unexpected disposable SAN/TLS identity")
+	}
+	caInfo, err := os.Lstat(credentials.CAFile)
+	if err != nil || !caInfo.Mode().IsRegular() || caInfo.Size() < 1 || caInfo.Size() > 65536 {
+		t.Fatal("private disposable CA unavailable")
+	}
+	ca, err := os.ReadFile(credentials.CAFile)
+	roots := x509.NewCertPool()
+	if err != nil || len(ca) > 65536 || !roots.AppendCertsFromPEM(ca) {
+		t.Fatal("private disposable CA invalid")
 	}
 	cfg := mysql.NewConfig()
 	cfg.User = credentials.User
 	cfg.Passwd = credentials.Password
 	credentials.Password = ""
 	cfg.Net = "tcp"
+	cfg.TLS = &tls.Config{RootCAs: roots, ServerName: credentials.TLSServerName, MinVersion: tls.VersionTLS13}
 	cfg.Addr = net.JoinHostPort(credentials.Host, strconv.Itoa(credentials.Port))
 	cfg.ParseTime = true
 	cfg.Loc = time.UTC
@@ -55,14 +77,19 @@ func censusOriginalMySQL(t *testing.T, ctx context.Context) (*sql.DB, reg.Databa
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 90 * time.Second
 	cfg.WriteTimeout = 30 * time.Second
-	root, err := sql.Open("mysql", cfg.FormatDSN())
+	rootConnector, err := mysql.NewConnector(cfg)
 	if err != nil {
 		t.Fatal("local MySQL connection unavailable")
 	}
+	root := sql.OpenDB(rootConnector)
 	t.Cleanup(func() { root.Close() })
 	var actual string
 	if root.QueryRowContext(ctx, "SELECT @@server_uuid").Scan(&actual) != nil || actual != pin {
 		t.Fatal("local server UUID mismatch")
+	}
+	var actualTLS string
+	if root.QueryRowContext(ctx, "SELECT VARIABLE_VALUE FROM performance_schema.session_status WHERE VARIABLE_NAME='Ssl_version'").Scan(&actualTLS) != nil || actualTLS != "TLSv1.3" {
+		t.Fatal("disposable TLS1.3 identity mismatch before schema creation")
 	}
 	var random [12]byte
 	if _, err := rand.Read(random[:]); err != nil {
@@ -86,11 +113,12 @@ func censusOriginalMySQL(t *testing.T, ctx context.Context) (*sql.DB, reg.Databa
 		}
 	})
 	cfg.DBName = name
-	database, err := sql.Open("mysql", cfg.FormatDSN())
+	schemaConnector, err := mysql.NewConnector(cfg)
 	cfg.Passwd = ""
 	if err != nil {
 		t.Fatal("owned MySQL schema connection failed")
 	}
+	database := sql.OpenDB(schemaConnector)
 	t.Cleanup(func() { database.Close() })
 	if _, err = database.ExecContext(ctx, "CREATE TABLE ad_a_owner_marker(marker VARCHAR(64) PRIMARY KEY)"); err != nil {
 		t.Fatal(err)

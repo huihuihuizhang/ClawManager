@@ -63,6 +63,9 @@ func (s *DeploymentService) completeOriginalPublicationTerminal(ctx context.Cont
 	if err != nil {
 		return err
 	}
+	if _, err = s.persistOriginalBusinessContentReport(bounded, ready); err != nil {
+		return err
+	}
 	err = s.applyOriginalPublicationTerminal(bounded, claim, attempt, ready)
 	if err == nil {
 		progress.committed = true

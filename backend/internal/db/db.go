@@ -97,17 +97,22 @@ func connectWithGateOptions(cfg config.DatabaseConfig, extra map[string]string, 
 
 	var session db.Session
 	var err error
-	if scope := gateScope; scope != "" {
-		driverConfig, e := mysqldriver.ParseDSN(settings.String())
+	if scope := gateScope; scope != "" || businessMySQLTLSSelected(cfg) {
+		driverConfig, e := businessMySQLDriverConfig(cfg, settings.String())
 		if e != nil {
-			return nil, fmt.Errorf("invalid gated database configuration")
+			return nil, e
 		}
 		driverConfig.MultiStatements = false
 		connector, e := mysqldriver.NewConnector(driverConfig)
 		if e != nil {
 			return nil, e
 		}
-		pool, e := backupgate.Open(connector, scope)
+		var pool *sql.DB
+		if scope != "" {
+			pool, e = backupgate.Open(connector, scope)
+		} else {
+			pool = sql.OpenDB(connector)
+		}
 		if e != nil {
 			return nil, e
 		}

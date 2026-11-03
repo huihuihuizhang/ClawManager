@@ -33,7 +33,10 @@ func inspectOwnedBusinessPayloadCounts(ctx context.Context, i worker.Invocation,
 	return inspectOwnedBusinessPayloadRelations(ctx, i, candidate, plaintext, nil, out)
 }
 
-func inspectOwnedBusinessPayloadRelations(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, relations *publicationFinalTeamRelations, out *ownedPayloadCounts) (resultErr error) {
+func inspectOwnedBusinessPayloadRelations(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, relations *publicationFinalTeamRelations, out *ownedPayloadCounts) error {
+	return inspectOwnedBusinessPayloadFinalReports(ctx, i, candidate, plaintext, relations, nil, out)
+}
+func inspectOwnedBusinessPayloadFinalReports(ctx context.Context, i worker.Invocation, candidate worker.FormalCaptureResult, plaintext io.Reader, relations *publicationFinalTeamRelations, skills *publicationFinalSkillReport, out *ownedPayloadCounts) (resultErr error) {
 	defer func() {
 		if relations != nil && resultErr != nil {
 			relations.failed = true
@@ -130,7 +133,11 @@ func inspectOwnedBusinessPayloadRelations(ctx context.Context, i worker.Invocati
 		}
 	case r.SkillObjects != nil:
 		observed.Kind = "object_payload_bytes"
-		if inspectOwnedSkillObjects(ctx, i, limited, &observed) != nil {
+		if skills != nil {
+			if err = skills.read(ctx, i, limited, &observed); err != nil {
+				return err
+			}
+		} else if inspectOwnedSkillObjects(ctx, i, limited, &observed) != nil {
 			return d.ErrNotReady
 		}
 	case r.SkillWorkspace != nil:

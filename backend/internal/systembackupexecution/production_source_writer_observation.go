@@ -54,7 +54,7 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 	if err != nil {
 		return zero, err
 	}
-	native, err := x.observeNativeWriters(ctx, metadata.inventory.source, registry, api)
+	native, err := x.observeNativeWriters(ctx, metadata.inventory.source, registry, api, metadata.inventory.sql.metadata)
 	if err != nil {
 		return zero, err
 	}
@@ -66,7 +66,7 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 	if err != nil || lastRegistry.sha256 != registry.sha256 {
 		return zero, ErrSourceWriterObservationIncomplete
 	}
-	lastNative, err := x.observeNativeWriters(ctx, metadata.inventory.source, lastRegistry, lastAPI)
+	lastNative, err := x.observeNativeWriters(ctx, metadata.inventory.source, lastRegistry, lastAPI, metadata.inventory.sql.metadata)
 	if err != nil || native != lastNative {
 		return zero, ErrSourceWriterObservationIncomplete
 	}
@@ -88,22 +88,22 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 
 func requireRunningSourceMetadata(source b.SourceInventory) error {
 	for _, instance := range source.Instances {
-		if instance.Status == "stopped" {
+		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return c.ErrSourceRecoveryStoppedWitnessRequired
 		}
-		if instance.Status != "running" {
+		if instance.Status != "running" && !isCurrentStoppedPro(instance) {
 			return ErrSourceWriterObservationIncomplete
 		}
 	}
 	return nil
 }
 
-func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source b.SourceInventory, registry *observedSourceWriterRegistry, api *observedWriterAPI) (string, error) {
+func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source b.SourceInventory, registry *observedSourceWriterRegistry, api *observedWriterAPI, observedSQL ...productionSQLSourceMetadata) (string, error) {
 	if x == nil || x.delegation == nil {
 		return "", ErrSourceWriterObservationIncomplete
 	}
 	s := x.delegation.service
-	if x.recheck(ctx) != nil || s.RuntimeControl == nil || registry == nil || api == nil || requireRunningSourceMetadata(source) != nil {
+	if x.recheck(ctx) != nil || registry == nil || api == nil || requireRunningSourceMetadata(source) != nil {
 		return "", ErrSourceWriterObservationIncomplete
 	}
 	if err := checkObservedWriterGraph(s, source, api); err != nil {
@@ -128,9 +128,28 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 	for _, row := range registry.pods {
 		pods[row.ID] = row
 	}
+	var sqlMetadata productionSQLSourceMetadata
+	if len(observedSQL) > 1 {
+		return "", ErrSourceWriterObservationIncomplete
+	}
+	if len(observedSQL) == 1 {
+		sqlMetadata = observedSQL[0]
+	}
+	if checkCurrentStoppedProSQL(s.captureMaterials.Discovery.PersistentMounts, sqlMetadata, source.Instances) != nil {
+		return "", ErrSourceWriterObservationIncomplete
+	}
+	current := []CurrentStoppedProSourceMaterial{}
 	actual := []b.RuntimeWriterSpec{}
 	seen := map[int]bool{}
 	for _, instance := range source.Instances {
+		if isCurrentStoppedPro(instance) {
+			m, err := currentStoppedProMaterialFor(s.captureMaterials.Discovery.PersistentMounts, instance)
+			if err != nil || recheckCurrentStoppedProMaterial(ctx, x.delegation.owner.Client, s.Config, *m) != nil {
+				return "", ErrSourceWriterObservationIncomplete
+			}
+			current = append(current, *m)
+			continue
+		}
 		if instance.Mode != "lite" {
 			continue
 		}
@@ -140,6 +159,9 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 		// Existing read-only resolver authenticates actual SQL locator, Pod /
 		// ReplicaSet / Deployment and native agent capabilities. It writes no
 		// runtime reservation, key material or task journal.
+		if s.RuntimeControl == nil {
+			return "", ErrSourceWriterObservationIncomplete
+		}
 		spec, err := s.RuntimeControl.ResolveGatewaySource(ctx, instance)
 		if err != nil {
 			return "", err
@@ -180,6 +202,12 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 		return "", ErrSourceWriterObservationIncomplete
 	}
 	raw, err := json.Marshal(actual)
+	if len(current) > 0 {
+		raw, err = json.Marshal(struct {
+			Running           []b.RuntimeWriterSpec
+			CurrentStoppedPro []CurrentStoppedProSourceMaterial
+		}{actual, current})
+	}
 	if err != nil || len(raw) > 8<<20 {
 		return "", ErrSourceWriterObservationIncomplete
 	}
@@ -211,9 +239,13 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 			want[key] = ref.UID
 		}
 	}
+	stoppedRoots, err := currentStoppedProGraphRoots(s.Config, source, api, want)
+	if err != nil {
+		return err
+	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
-		if instance.Mode == "pro" {
+		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete
 			}
@@ -232,7 +264,7 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 		if !exists || object.UID != uid {
 			return ErrSourceWriterObservationIncomplete
 		}
-		if key != controller {
+		if key != controller && !stoppedRoots[key] {
 			if object.Replicas == 0 {
 				return c.ErrSourceRecoveryStoppedWitnessRequired
 			}
@@ -261,6 +293,9 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 				if _, raw := rawPods[key]; !raw {
 					return ErrSourceWriterObservationIncomplete
 				}
+			}
+			if stoppedRoots[root] && (object.Kind == "Pod" || object.Replicas != 0) {
+				return ErrSourceWriterObservationIncomplete
 			}
 			if object.Kind == "Pod" {
 				if root != controller && !object.Running {

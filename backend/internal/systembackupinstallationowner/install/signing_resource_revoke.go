@@ -48,6 +48,9 @@ func signingResourceOriginal(ctx context.Context, s *authenticatedOperator, p ow
 	if e != nil || after.Before(before) || after.Before(g.NotBefore) || !after.Before(g.Until) {
 		return c, ErrInstall
 	}
+	if tx.Rollback() != nil {
+		return c, ErrInstall
+	}
 	return c, nil
 }
 

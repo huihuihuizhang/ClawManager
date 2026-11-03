@@ -276,9 +276,10 @@ func recheckPublicationTerminalProjectionTx(ctx context.Context, tx *sql.Tx, fac
 // readback receipts, complete content verification and original physical source
 // recovery. Neither a DTO nor an eligibility boolean can mint this handle.
 type publicationTerminalReady struct {
-	decision *publicationDecisionEvidence
-	facts    publicationTerminalFacts
-	sha256   string
+	businessReport []byte
+	decision       *publicationDecisionEvidence
+	facts          publicationTerminalFacts
+	sha256         string
 }
 
 func (p *publicationTerminalReady) Facts() publicationTerminalFacts {
@@ -367,6 +368,16 @@ func (s *DeploymentService) completeOriginalPublicationReady(ctx context.Context
 	ready := &publicationTerminalReady{decision: decision, facts: facts, sha256: hash(raw)}
 	if err = ready.recheckTx(ctx, tx); err != nil {
 		return nil, err
+	}
+	if proof.contentSamples.skills != nil {
+		report, reportErr := ready.businessContentReport()
+		if reportErr != nil {
+			return nil, reportErr
+		}
+		ready.businessReport, reportErr = ce.Canonical(report)
+		if reportErr != nil {
+			return nil, reportErr
+		}
 	}
 	return ready, nil
 }

@@ -30,6 +30,8 @@ type RuntimeBackupCapabilities struct {
 	Supported                  bool   `json:"supported"`
 	DurableReservation         bool   `json:"durable_reservation"`
 	AgentRestartReconciliation bool   `json:"agent_restart_reconciliation"`
+	RecoveryScope              string `json:"recovery_scope"`
+	AgentRestartPolicy         string `json:"agent_restart_policy"`
 }
 
 type RuntimeBackupRequest struct {

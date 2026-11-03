@@ -24,6 +24,9 @@ type bootstrapSourcePartsRegistry struct {
 	Deployment, Secrets                  worker.ResourceCaptureSpec
 }
 type bootstrapSourceNativeWriter struct {
+	RecoveryScope, AgentRestartPolicy                                        string
+	DurableReservation, AgentRestartReconciliation                           bool
+	CurrentStoppedPro                                                        *CurrentStoppedProSourceMaterial `json:",omitempty"`
 	InstanceID, UserID, Generation, RuntimePodID, PID, Port                  int
 	Namespace, Pod, PodUID, Deployment, Gateway, Endpoint, AgentEpoch, State string
 	DeploymentUID, ReplicaSetUID, ServiceAccount, ServiceAccountUID, NodeUID string
@@ -84,7 +87,7 @@ func (x *bootstrapSourceRegistryReader) matchSourceRegistries(f *bootstrapSource
 	if !reflect.DeepEqual(parts.Parts, f.parts) || !reflect.DeepEqual(parts.Source, f.lastSQL.inventory) || !reflect.DeepEqual(parts.SQL, f.lastSQL.metadata) || !reflect.DeepEqual(parts.Redis, f.redis) || !reflect.DeepEqual(parts.Skills, f.skills) || !reflect.DeepEqual(parts.Deployment, f.deployment) || !reflect.DeepEqual(parts.Secrets, f.secrets) || !reflect.DeepEqual(writers.Participants, f.participants) || !reflect.DeepEqual(writers.API, f.lastAPI.objects) || !reflect.DeepEqual(writers.Bindings, f.lastSQL.bindings) || !reflect.DeepEqual(writers.Pods, f.lastSQL.pods) || !reflect.DeepEqual(writers.Native, f.native) {
 		return install.ErrInstall
 	}
-	if len(f.native) > 0 && x.association.Source.RuntimeAgent == nil {
+	if bootstrapNativeNeedsAgent(f.native) && x.association.Source.RuntimeAgent == nil {
 		return install.ErrInstall
 	}
 	return x.access.Check(x.ctx)

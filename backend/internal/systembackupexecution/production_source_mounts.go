@@ -22,8 +22,9 @@ import (
 // never public task parameters or a caller-supplied completeness/stop boolean.
 // A nil scope does not prove that a nonempty installation has no extra mounts.
 type productionPersistentMountScope struct {
-	Version string
-	Mounts  []productionPersistentMountBinding
+	CurrentStoppedPro []CurrentStoppedProSourceMaterial `json:",omitempty"`
+	Version           string
+	Mounts            []productionPersistentMountBinding
 }
 
 const persistentMountScopeVersion = "original-instance-persistent-mounts.v1"
@@ -42,11 +43,30 @@ func cleanMountRoot(value string) bool {
 }
 
 func (s *productionPersistentMountScope) validate() error {
-	if s == nil || s.Version != persistentMountScopeVersion || len(s.Mounts) > 9998 {
+	if s == nil || s.Version != persistentMountScopeVersion || len(s.Mounts) > 9998 || len(s.CurrentStoppedPro) > 9998 {
 		return d.ErrNotReady
+	}
+	currentSeen := map[int]bool{}
+	var currentRoots []CurrentStoppedProMount
+	for _, m := range s.CurrentStoppedPro {
+		if currentSeen[m.Source.ID] || m.validate() != nil {
+			return d.ErrNotReady
+		}
+		for _, mount := range m.Mounts {
+			for _, old := range currentRoots {
+				if old.NodeUID == mount.NodeUID && (old.HostPath == mount.HostPath || strings.HasPrefix(old.HostPath, mount.HostPath+"/") || strings.HasPrefix(mount.HostPath, old.HostPath+"/")) {
+					return d.ErrNotReady
+				}
+			}
+			currentRoots = append(currentRoots, mount)
+		}
+		currentSeen[m.Source.ID] = true
 	}
 	seen := map[string]bool{}
 	for _, m := range s.Mounts {
+		if currentSeen[m.InstanceID] {
+			return d.ErrNotReady
+		}
 		key := strconv.Itoa(m.InstanceID) + "/" + m.MountID
 		if m.InstanceID <= 0 || m.UserID <= 0 || m.Generation <= 0 || m.MountID == "workspace" || !persistentMountID.MatchString(m.MountID) || len("instance_"+strconv.Itoa(m.InstanceID)+"_"+m.MountID) > 64 || seen[key] ||
 			len(validation.IsDNS1123Label(m.Container)) != 0 || len(validation.IsDNS1123Label(m.Volume)) != 0 ||
@@ -156,6 +176,21 @@ func (x *originalSourceMetadataAuthority) additionalInstanceMounts(ctx context.C
 	identities := map[string]kube.MountIdentity{}
 	for _, instance := range source.Instances {
 		record := byInstance[instance.ID]
+		if isCurrentStoppedPro(instance) {
+			material, err := currentStoppedProMaterialFor(scope, instance)
+			if err != nil || record.Spec.Kind != "stopped" || record.Spec.Stopped != material.OriginalState() || !record.Stopped || recheckCurrentStoppedProMaterial(ctx, x.owner.Client, x.service.Config, *material) != nil {
+				return nil, nil, d.ErrNotReady
+			}
+			for _, decl := range material.Mounts {
+				if decl.Layout.MountID == "workspace" {
+					continue
+				}
+				mount := currentStoppedProCaptureMount(*material, decl, base[instance.ID])
+				out = append(out, mount)
+				identities["instance_"+strconv.Itoa(instance.ID)+"_"+decl.Layout.MountID] = decl.Identity
+			}
+			continue
+		}
 		// D currently stores {} for original stopped sources. Neither SQL stopped
 		// nor a missing Pod establishes its last complete persistent mount set.
 		// Do not invent this missing original snapshot or start the instance.

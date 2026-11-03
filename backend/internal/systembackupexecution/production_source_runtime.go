@@ -62,6 +62,13 @@ func (x *originalSourceMetadataAuthority) runtimeMetadata(ctx context.Context, s
 		delete(instances, instance.ID)
 		record.Digest = hash(raw)
 		record.Stopped = stopped.Valid && formalCandidateDigest(stopped.String)
+		if isCurrentStoppedPro(instance) {
+			material, err := currentStoppedProMaterialFor(x.service.captureMaterials.Discovery.PersistentMounts, instance)
+			if err != nil || record.Spec.Kind != "stopped" || !record.Stopped || record.Spec.Stopped != material.OriginalState() || originals[record.ID].Original != material.OriginalState() || record.ID != "stopped/"+strconv.Itoa(instance.ID) || recheckCurrentStoppedProMaterial(ctx, x.owner.Client, x.service.Config, *material) != nil {
+				rows.Close()
+				return nil, d.ErrNotReady
+			}
+		}
 		records = append(records, record)
 	}
 	err = rows.Err()
@@ -117,7 +124,14 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 	if err != nil {
 		return fail()
 	}
-	volume, identity, err := x.workspaceVolume(ctx)
+	if checkCurrentStoppedProSQL(x.service.captureMaterials.Discovery.PersistentMounts, sqlMetadata, source.Instances) != nil {
+		return fail()
+	}
+	var volume corev1.Volume
+	var identity *kube.MountIdentity
+	if hasRunningSourceInstances(source.Instances) {
+		volume, identity, err = x.workspaceVolume(ctx)
+	}
 	if err != nil {
 		return fail()
 	}
@@ -152,7 +166,13 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 		if !exists {
 			return fail()
 		}
-		subPath, err := productionInstanceSubPath(x.service, instance)
+		var subPath string
+		var current *CurrentStoppedProSourceMaterial
+		if isCurrentStoppedPro(instance) {
+			current, err = currentStoppedProMaterialFor(x.service.captureMaterials.Discovery.PersistentMounts, instance)
+		} else {
+			subPath, err = productionInstanceSubPath(x.service, instance)
+		}
 		if err != nil {
 			return fail()
 		}
@@ -208,9 +228,19 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 			}
 			mount.Skills = workspace
 		}
+		instanceIdentity := identity
+		if current != nil {
+			for _, decl := range current.Mounts {
+				if decl.Layout.MountID == "workspace" {
+					mount = currentStoppedProCaptureMount(*current, decl, mount)
+					id := decl.Identity
+					instanceIdentity = &id
+				}
+			}
+		}
 		mounts = append(mounts, mount)
-		if identity != nil {
-			identities["instance_"+strconv.Itoa(instance.ID)+"_workspace"] = *identity
+		if instanceIdentity != nil {
+			identities["instance_"+strconv.Itoa(instance.ID)+"_workspace"] = *instanceIdentity
 		}
 	}
 	if saved != nil && len(old) != len(mounts) {

@@ -59,6 +59,9 @@ type ServerConfig struct {
 
 // DatabaseConfig holds database-related configuration
 type DatabaseConfig struct {
+	TLSCAFile       string        `yaml:"tlsCAFile"`
+	TLSCASHA256     string        `yaml:"tlsCASHA256"`
+	TLSServerName   string        `yaml:"tlsServerName"`
 	Host            string        `yaml:"host"`
 	Port            int           `yaml:"port"`
 	User            string        `yaml:"user"`
@@ -525,6 +528,10 @@ func Load() (*Config, error) {
 	normalizeAuthConfig(config)
 	normalizeStorageConfig(config)
 
+	dbTLS := config.Database
+	if (dbTLS.TLSCAFile != "" || dbTLS.TLSCASHA256 != "" || dbTLS.TLSServerName != "") && (strings.TrimSpace(dbTLS.TLSCAFile) == "" || strings.TrimSpace(dbTLS.TLSCASHA256) == "" || strings.TrimSpace(dbTLS.TLSServerName) == "") {
+		return nil, fmt.Errorf("database TLS requires CA file, CA SHA256 and server name")
+	}
 	return config, nil
 }
 
@@ -539,6 +546,15 @@ func applyEnvOverrides(config *Config) {
 	}
 
 	// Database config
+	if value := os.Getenv("DB_TLS_CA_FILE"); value != "" {
+		config.Database.TLSCAFile = value
+	}
+	if value := os.Getenv("DB_TLS_CA_SHA256"); value != "" {
+		config.Database.TLSCASHA256 = value
+	}
+	if value := os.Getenv("DB_TLS_SERVER_NAME"); value != "" {
+		config.Database.TLSServerName = value
+	}
 	if host := os.Getenv("DB_HOST"); host != "" {
 		config.Database.Host = host
 	}

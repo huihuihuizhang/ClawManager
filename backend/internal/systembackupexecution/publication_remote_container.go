@@ -138,7 +138,11 @@ func (s *DeploymentService) inspectOriginalRemoteContainerMemberSamples(ctx cont
 	var observed ownedPayloadCounts
 	_, err = reader.InspectContainerCipher(bounded, object, member, location, envelope, bound, func(plain io.Reader) error {
 		if relations != nil {
-			return inspectOwnedBusinessPayloadRelations(bounded, record.Invocation, candidate, plain, relations, &observed)
+			var skills *publicationFinalSkillReport
+			if samples != nil {
+				skills = samples.skills
+			}
+			return inspectOwnedBusinessPayloadFinalReports(bounded, record.Invocation, candidate, plain, relations, skills, &observed)
 		}
 		return inspectOwnedBusinessPayload(bounded, record.Invocation, candidate, plain)
 	}, verifier.ValidUntil())
@@ -154,6 +158,11 @@ func (s *DeploymentService) inspectOriginalRemoteContainerMemberSamples(ctx cont
 		}
 	}
 	if samples != nil {
+		if record.Invocation.Request.SkillObjects != nil && samples.skills != nil {
+			if err = samples.skills.confirm(bounded); err != nil {
+				return zero, err
+			}
+		}
 		if err = samples.confirm(record.Invocation, object, member, location, observed); err != nil {
 			return zero, err
 		}

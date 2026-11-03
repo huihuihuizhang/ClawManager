@@ -32,9 +32,13 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 			want[key] = ref.UID
 		}
 	}
+	stoppedRoots, err := currentStoppedProGraphRoots(x.config, source, api, want)
+	if err != nil {
+		return err
+	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
-		if instance.Mode == "pro" {
+		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete
 			}
@@ -53,7 +57,7 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 		if !exists || object.UID != uid {
 			return ErrSourceWriterObservationIncomplete
 		}
-		if key != controller {
+		if key != controller && !stoppedRoots[key] {
 			if object.Replicas == 0 {
 				return c.ErrSourceRecoveryStoppedWitnessRequired
 			}
@@ -82,6 +86,9 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 				if _, raw := rawPods[key]; !raw {
 					return ErrSourceWriterObservationIncomplete
 				}
+			}
+			if stoppedRoots[root] && (object.Kind == "Pod" || object.Replicas != 0) {
+				return ErrSourceWriterObservationIncomplete
 			}
 			if object.Kind == "Pod" {
 				if root != controller && !object.Running {

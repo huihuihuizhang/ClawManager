@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	sh "clawreef/internal/systembackupskillhub"
 	"sort"
 
 	b "clawreef/internal/systembackup/publicadapter"
@@ -22,6 +23,7 @@ type publicationContentMemberSample struct {
 }
 
 type publicationContentSampleReport struct {
+	SkillsSelectionSHA256                       string `json:",omitempty"`
 	ArtifactReadIdentitySHA256                  string
 	Version, Installation, Backup, SourceSHA256 string
 	TeamsInventorySHA256, SkillsInventorySHA256 string
@@ -34,6 +36,7 @@ type publicationContentSampleReport struct {
 // the single semantic parser; these observations are confirmed only AFTER its
 // surrounding full authenticated remote stream and current recheck complete.
 type publicationContentSamples struct {
+	skills   *publicationFinalSkillReport
 	report   publicationContentSampleReport
 	expected map[string]publicationVerifiedPart
 	observed map[string]publicationContentMemberSample
@@ -45,6 +48,7 @@ func newPublicationContentSamples(capture publicationVerifiedCapture, source b.S
 		return nil, c.ErrExecutionRecord
 	}
 	p := &publicationContentSamples{report: publicationContentSampleReport{Version: "system-backup-final-content-observations.v1", Installation: capture.Input.InstallationID, Backup: capture.Input.TaskPublicID, Attempt: capture.Input.CaptureAttemptNo, SourceSHA256: capture.Input.SourceSHA256, TeamsInventorySHA256: source.Teams.SHA256(), SkillsInventorySHA256: source.Skills.SHA256(), Manifest: manifest}, expected: map[string]publicationVerifiedPart{}, observed: map[string]publicationContentMemberSample{}}
+	p.skills = newPublicationFinalSkillReport(source)
 	p.report.ArtifactReadIdentitySHA256 = target.ReadIdentityHash
 	for _, part := range capture.Parts {
 		if part.RequestedPart == "" {
@@ -63,6 +67,11 @@ func newPublicationContentSamples(capture publicationVerifiedCapture, source b.S
 
 func (p *publicationContentSamples) clear() {
 	if p != nil {
+		if p.skills != nil {
+			p.skills.failed = true
+			p.skills.input = sh.RestoreSampleInput{}
+			p.skills.report = SkillContentReport{}
+		}
 		p.report = publicationContentSampleReport{}
 		p.expected, p.observed, p.failed = nil, nil, true
 	}
@@ -111,6 +120,13 @@ func (p *publicationContentSamples) snapshot() (publicationContentSampleReport, 
 		report.Members = append(report.Members, observed)
 	}
 	sort.Slice(report.Members, func(i, j int) bool { return report.Members[i].Part < report.Members[j].Part })
+	if p.skills != nil {
+		_, digest, err := p.skills.snapshot()
+		if err != nil {
+			return publicationContentSampleReport{}, "", err
+		}
+		report.SkillsSelectionSHA256 = digest
+	}
 	raw, err := ce.Canonical(report)
 	if err != nil {
 		return publicationContentSampleReport{}, "", err

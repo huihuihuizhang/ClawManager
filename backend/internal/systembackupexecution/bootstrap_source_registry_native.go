@@ -114,6 +114,14 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 	out := []bootstrapSourceNativeWriter{}
 	seen := map[int]bool{}
 	for _, instance := range sqlFacts.inventory.Instances {
+		if isCurrentStoppedPro(instance) {
+			m, err := observeCurrentStoppedPro(x.physical, clients.API, x.config, instance, sqlFacts.metadata.CurrentStoppedProStorage[instance.ID])
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, State: "stopped", CurrentStoppedPro: &m})
+			continue
+		}
 		if instance.Mode != "lite" {
 			continue
 		}
@@ -165,7 +173,7 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 			return nil, install.ErrInstall
 		}
 		caps, err := capabilities.BackupCapabilities(x.physical, row.Endpoint, binding.Port)
-		if err != nil || caps == nil || caps.Protocol != services.RuntimeBackupProtocol || caps.Scope != services.RuntimeBackupStopScope || caps.Namespace != row.Namespace || caps.PodUID != string(pod.UID) || caps.GatewayPort != binding.Port || caps.AgentEpoch == "" || caps.Slot == "" || !caps.Supported || !caps.DurableReservation || !caps.AgentRestartReconciliation || x.checkPhysical(x.physical) != nil {
+		if err != nil || caps == nil || caps.Protocol != services.RuntimeBackupProtocol || caps.Scope != services.RuntimeBackupStopScope || caps.Namespace != row.Namespace || caps.PodUID != string(pod.UID) || caps.GatewayPort != binding.Port || caps.AgentEpoch == "" || caps.Slot == "" || !caps.Supported || !caps.DurableReservation || !services.RuntimeBackupSupportsOriginalOperationRecovery(caps) || x.checkPhysical(x.physical) != nil {
 			return nil, install.ErrInstall
 		}
 		state, err := agent.GatewayState(x.physical, row.Endpoint, binding.Gateway)
@@ -173,7 +181,7 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 			return nil, install.ErrInstall
 		}
 		seen[instance.ID] = true
-		out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, RuntimePodID: row.ID, PID: binding.PID, Port: binding.Port, Namespace: row.Namespace, Pod: row.Name, PodUID: string(pod.UID), Deployment: row.Deployment, Gateway: binding.Gateway, Endpoint: row.Endpoint, AgentEpoch: caps.AgentEpoch, State: state.State, DeploymentUID: string(dep.UID), ReplicaSetUID: string(rs.UID), ServiceAccount: sa.Name, ServiceAccountUID: string(sa.UID), NodeUID: string(node.UID)})
+		out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, RuntimePodID: row.ID, PID: binding.PID, Port: binding.Port, Namespace: row.Namespace, Pod: row.Name, PodUID: string(pod.UID), Deployment: row.Deployment, Gateway: binding.Gateway, Endpoint: row.Endpoint, AgentEpoch: caps.AgentEpoch, State: state.State, DeploymentUID: string(dep.UID), ReplicaSetUID: string(rs.UID), ServiceAccount: sa.Name, ServiceAccountUID: string(sa.UID), NodeUID: string(node.UID), RecoveryScope: caps.RecoveryScope, AgentRestartPolicy: caps.AgentRestartPolicy, DurableReservation: caps.DurableReservation, AgentRestartReconciliation: caps.AgentRestartReconciliation})
 	}
 	for _, binding := range sqlFacts.bindings {
 		if binding.State == "running" && !seen[binding.Instance] {

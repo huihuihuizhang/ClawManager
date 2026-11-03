@@ -128,10 +128,16 @@ func minioSQLRead(ctx context.Context, s *authenticatedOperator, p ma.SQLTrustPi
 		return nil, false, e
 	}
 	if absent {
+		if tx.Rollback() != nil {
+			return nil, false, ErrInstall
+		}
 		return nil, true, nil
 	}
 	snapshot, e := ma.ReadSQLCurrentForInstaller(ctx, tx, p)
 	if e != nil {
+		return nil, false, ErrInstall
+	}
+	if tx.Rollback() != nil {
 		return nil, false, ErrInstall
 	}
 	return snapshot, false, nil

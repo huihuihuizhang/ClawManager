@@ -39,6 +39,12 @@ func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Contex
 	if _, err := persistentMountsForInstances(scope, instances); err != nil {
 		return err
 	}
+	if checkCurrentStoppedProScopes(ctx, client, x.config, scope, instances) != nil {
+		return install.ErrInstall
+	}
+	if !hasRunningSourceInstances(instances) {
+		return x.checkPhysical(ctx)
+	}
 	if x.config.Workspace.NFS != nil {
 		return x.checkNFSRuntimeWorkspace(ctx, client, instances, native)
 	}

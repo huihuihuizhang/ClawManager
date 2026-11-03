@@ -67,6 +67,9 @@ func signingResourceAbsent(ctx context.Context, s *authenticatedOperator, p owne
 	if e != nil || after.Before(before) || after.Before(notBefore) || !after.Before(until) {
 		return ErrInstall
 	}
+	if tx.Rollback() != nil {
+		return ErrInstall
+	}
 	return nil
 }
 

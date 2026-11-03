@@ -32,18 +32,22 @@ type GatewayOriginalReference struct {
 	KeyRef       string             `json:"key_ref"`
 }
 type RuntimeSourceConfig struct {
-	Supported         []b.AgentKind              `json:"supported"`
-	Namespaces        []string                   `json:"namespaces"`
-	AgentTokenFile    string                     `json:"agent_token_file,omitempty"`
-	AgentCAFile       string                     `json:"agent_ca_file,omitempty"`
-	AgentCASHA256     string                     `json:"agent_ca_sha256,omitempty"`
-	Originals         []GatewayOriginalReference `json:"gateway_originals"`
-	LeaseParticipants []string                   `json:"lease_participants"`
-	Deployments       []PlatformDeployment       `json:"deployments"`
-	WorkspaceRoot     string                     `json:"workspace_root"`
+	CurrentStoppedProLayouts []CurrentStoppedProLayout  `json:"current_stopped_pro_layouts,omitempty"`
+	Supported                []b.AgentKind              `json:"supported"`
+	Namespaces               []string                   `json:"namespaces"`
+	AgentTokenFile           string                     `json:"agent_token_file,omitempty"`
+	AgentCAFile              string                     `json:"agent_ca_file,omitempty"`
+	AgentCASHA256            string                     `json:"agent_ca_sha256,omitempty"`
+	Originals                []GatewayOriginalReference `json:"gateway_originals"`
+	LeaseParticipants        []string                   `json:"lease_participants"`
+	Deployments              []PlatformDeployment       `json:"deployments"`
+	WorkspaceRoot            string                     `json:"workspace_root"`
 }
 
 func (r RuntimeSourceConfig) validate() error {
+	if validateCurrentStoppedProLayouts(r.CurrentStoppedProLayouts) != nil {
+		return d.ErrNotReady
+	}
 	if len(r.Supported) == 0 || len(r.Namespaces) != 1 || len(r.LeaseParticipants) == 0 || !path.IsAbs(r.WorkspaceRoot) || path.Clean(r.WorkspaceRoot) != r.WorkspaceRoot || r.WorkspaceRoot == "/" {
 		return d.ErrNotReady
 	}
@@ -389,6 +393,14 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 		if _, err := persistentMountsForInstances(s.captureMaterials.Discovery.PersistentMounts, instances); err != nil {
 			return err
 		}
+	}
+	if s.captureMaterials != nil && s.captureMaterials.Discovery != nil {
+		if err := checkCurrentStoppedProScopes(ctx, client, s.Config, s.captureMaterials.Discovery.PersistentMounts, instances); err != nil {
+			return err
+		}
+	}
+	if !hasRunningSourceInstances(instances) {
+		return nil
 	}
 	if s.Config.Workspace.NFS != nil {
 		return s.checkNFSRuntimeWorkspace(ctx, client, instances)

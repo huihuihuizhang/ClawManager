@@ -253,7 +253,7 @@ func (s *sourceProtocolScenario) serveNative(w http.ResponseWriter, r *http.Requ
 			http.Error(w, "wrong slot", http.StatusForbidden)
 			return
 		}
-		json.NewEncoder(w).Encode(services.RuntimeBackupCapabilities{Protocol: services.RuntimeBackupProtocol, Scope: services.RuntimeBackupStopScope, Namespace: "backup", PodUID: "source-agent-pod-uid", AgentEpoch: strings.Repeat("a", 32), Slot: "independent-protocol-slot", GatewayPort: 21007, Supported: true, DurableReservation: true, AgentRestartReconciliation: true})
+		json.NewEncoder(w).Encode(services.RuntimeBackupCapabilities{Protocol: services.RuntimeBackupProtocol, Scope: services.RuntimeBackupStopScope, Namespace: "backup", PodUID: "source-agent-pod-uid", AgentEpoch: strings.Repeat("a", 32), Slot: "independent-protocol-slot", GatewayPort: 21007, Supported: true, DurableReservation: true, AgentRestartReconciliation: false, RecoveryScope: services.RuntimeBackupOriginalRecoveryScope, AgentRestartPolicy: services.RuntimeBackupRestartQuarantinePolicy})
 	case "/v1/gateways/gw-107-5":
 		generation := 5
 		if s.fault == "native-generation" {

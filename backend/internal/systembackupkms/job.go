@@ -85,8 +85,9 @@ func (j *CaptureJob) Close() {
 // retained mapping and trusted expected request. It does not depend on a live
 // forward generator, forward credential, or the provider's current version.
 type RecoveryJob struct {
-	u *RecoveryUnwrapper
-	r w.KeyRequest
+	u        *RecoveryUnwrapper
+	r        w.KeyRequest
+	resolver *PinnedJobResolver
 }
 
 func NewRecoveryJob(ctx context.Context, c Config, m PermitMount, original OriginalJobAuthority, expected w.KeyRequest) (*RecoveryJob, error) {
@@ -105,7 +106,26 @@ func NewRecoveryJob(ctx context.Context, c Config, m PermitMount, original Origi
 	if e != nil {
 		return nil, e
 	}
-	return &RecoveryJob{u: u, r: expected}, nil
+	return &RecoveryJob{u: u, r: expected, resolver: r}, nil
+}
+
+// Recheck repeats CURRENT independent restore authority and the exact pinned
+// historical provider permit/credential. It never unwraps or renews a scope.
+func (j *RecoveryJob) Recheck(ctx context.Context) error {
+	if j == nil || j.u == nil || j.resolver == nil || ctx == nil || ctx.Err() != nil {
+		return ErrPermission
+	}
+	r := j.resolver
+	now := time.Now()
+	if now.Before(j.u.t.c.NotBefore) || !now.Before(j.u.t.c.NotAfter) {
+		return ErrPermission
+	}
+	a := Access{Request: j.r, Operation: Unwrap, Endpoint: j.u.t.c.Endpoint, KeyName: j.u.t.c.KeyName}
+	p, err := r.permit(ctx, a)
+	if err != nil || r.credentialCurrent(p) != nil || r.original.Recheck(ctx, a) != nil {
+		return ErrPermission
+	}
+	return ctx.Err()
 }
 func (j *RecoveryJob) WithDEK(ctx context.Context, wrapped w.WrappedKey, use w.WithDEK) error {
 	if j == nil || j.u == nil {

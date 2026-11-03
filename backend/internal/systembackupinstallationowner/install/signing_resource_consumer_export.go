@@ -41,6 +41,9 @@ func signingResourceExportSnapshot(ctx context.Context, s *authenticatedOperator
 			return nil, time.Time{}, ErrInstall
 		}
 	}
+	if tx.Rollback() != nil {
+		return nil, time.Time{}, ErrInstall
+	}
 	return rows, now, nil
 }
 

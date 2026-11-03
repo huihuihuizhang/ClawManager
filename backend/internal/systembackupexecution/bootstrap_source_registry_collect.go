@@ -144,6 +144,18 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 	if err != nil {
 		return nil, err
 	}
+	if checkCurrentStoppedProSQL(scope, f.metadata, f.inventory.Instances) != nil {
+		return nil, install.ErrInstall
+	}
+	if scope != nil {
+		for _, m := range scope.CurrentStoppedPro {
+			for _, mount := range m.Mounts {
+				if mount.Layout.MountID != "workspace" {
+					parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(m.Source.ID) + "_" + mount.Layout.MountID, "capture-workspace"})
+				}
+			}
+		}
+	}
 	for _, mounts := range additional {
 		for _, mount := range mounts {
 			parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID, "capture-workspace"})
