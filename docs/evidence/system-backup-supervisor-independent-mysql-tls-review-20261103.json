@@ -395,5 +395,5 @@
     "full source hold/recovery and real page successful task/report/catalog"
   ],
   "DR_qualified": false,
-  "cleanup": "pending owned test/build output cleanup; shared cache remains in use by connected D frozen-source validation"
+  "cleanup": "owned validation binaries/tmp and batch-private Go cache removed after tests; source/logs retained"
 }

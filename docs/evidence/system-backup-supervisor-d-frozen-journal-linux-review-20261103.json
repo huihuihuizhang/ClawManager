@@ -1,0 +1,64 @@
+{
+  "schema_version": "supervisor-d-frozen-journal-linux-review.v1",
+  "observed_at": "2026-11-03T23:38:50.086864+08:00",
+  "status": "EXACT_D16_LINUX_COMPILE_AND_FILESYSTEM_REOPEN_PASS_NOT_FULL_RESTORE",
+  "D_manifest_sha256": "92f3e58b6d1f0f5844bfe5bc763e7958a7aceb996a2bc46b1f6555b256e55a85",
+  "source_selection": {
+    "path": ".tmp-supervisor-d16-frozen-20261103/selection.json",
+    "bytes": 15530,
+    "sha256": "4af891f103ed45ae30497949ab1aeadf8c4129aad35c3dd277cecb7191e59ea7"
+  },
+  "D_targets": 16,
+  "context_checks": 24,
+  "linux_compile": {
+    "exit": 0,
+    "goos": "linux",
+    "goarch": "amd64",
+    "cgo_enabled": false,
+    "test_binary": {
+      "path": ".tmp-supervisor-d16-frozen-20261103/bin/install.test",
+      "bytes": 108228897,
+      "sha256": "63ea0e836f81281199efcc084dba4dd7f032b5047dce50ef5ae3bd819b129256"
+    }
+  },
+  "linux_test": {
+    "roots": [
+      "TestOriginalWriterJournalActualWriteCloseReopen"
+    ],
+    "subtests": [
+      "TestOriginalWriterJournalActualWriteCloseReopen/reordered",
+      "TestOriginalWriterJournalActualWriteCloseReopen/broken_chain",
+      "TestOriginalWriterJournalActualWriteCloseReopen/duplicate",
+      "TestOriginalWriterJournalActualWriteCloseReopen/unknown",
+      "TestOriginalWriterJournalActualWriteCloseReopen/truncated",
+      "TestOriginalWriterJournalActualWriteCloseReopen/missing_sequence_retains_unknown"
+    ],
+    "fail": 0,
+    "skip": 0,
+    "log": {
+      "path": ".tmp-supervisor-d16-frozen-20261103/logs-r2/journal.jsonl",
+      "bytes": 7222,
+      "sha256": "6f7a58cc4bf328835ec242feef0a36d0633e27c24754f416a980c079b9ffb6e1"
+    }
+  },
+  "actual_scope": "real Linux append/fsync/close/new handle/readback, with duplicate/unknown/truncated/reordered/broken-chain/missing-sequence rejection; same test process, not independent process restart recovery",
+  "independent_process_readback": false,
+  "initial_harness_failure": {
+    "scope": "go tool test2json executable was refused on default noexec tmpfs; zero test entry; rerun used isolated executable tmpfs",
+    "log": {
+      "path": ".tmp-supervisor-d16-frozen-20261103/logs/journal.stderr",
+      "bytes": 95,
+      "sha256": "19bfede0ec672bddac60058101eb8fdbc5e9df2e3f31da349feeaa8581c45312"
+    },
+    "tests_entered": 0
+  },
+  "not_proven": [
+    "real Installer authentication or full original writer factory execution",
+    "physical source stop/recovery or complete gate release",
+    "fresh recovery authorization or partial acquisition repair",
+    "first adoption real history constructor or committed field installation",
+    "real page backup task/publication"
+  ],
+  "D16_code_in_backup": false,
+  "cleanup": "owned test binary/tmp and batch-private Go cache removed; both owned runner containers absent; source and harness-failure/final logs retained; shared Go runner image untouched"
+}

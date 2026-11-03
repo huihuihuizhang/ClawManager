@@ -924,5 +924,5 @@
   ],
   "DR_qualified": false,
   "isolated_restore_in_acceptance": false,
-  "cleanup": "pending owned validation bins/tmp/cache cleanup after connected assembly batch; sources/logs/failure history retained"
+  "cleanup": "owned validation binaries/tmp and batch-private Go cache removed after tests; source/logs and failure history retained"
 }

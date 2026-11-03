@@ -480,5 +480,5 @@
     "fresh recovery authority and genuine full-source coverage constructor",
     "field original migration/install/deployment and real page backup task"
   ],
-  "cleanup": "pending owned binary/tmp/cache cleanup after connected batch; sources/logs kept"
+  "cleanup": "owned binary/tmp and batch-private Go cache removed; owned Linux container absence verified; source/logs retained"
 }

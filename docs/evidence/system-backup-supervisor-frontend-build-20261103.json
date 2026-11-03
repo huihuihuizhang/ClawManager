@@ -1,0 +1,56 @@
+{
+  "schema_version": "supervisor-frontend-build-review.v1",
+  "observed_at": "2026-11-03T23:01:43.235288+08:00",
+  "frontend_git_tree": "37d9566d9a654f3c7d51297a6f167262e1c745e0",
+  "status": "BUILT_STATIC_RELEASE_INPUT_PENDING_IMAGE_AND_FIELD_PAGE",
+  "live_read_build_flag": "1",
+  "typecheck_app": {
+    "path": ".tmp-supervisor-frontend-release-input-20261103/typecheck-app.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "typecheck_node": {
+    "path": ".tmp-supervisor-frontend-release-input-20261103/typecheck-node.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "production_build": {
+    "exit": 0,
+    "log": {
+      "path": ".tmp-supervisor-frontend-release-input-20261103/vite-build-r3.log",
+      "bytes": 15731,
+      "sha256": "f779a9beb112ae60140e9291fa4ee8d0ab84f5ee9365a4b1732fcadd3dcb123c"
+    }
+  },
+  "asset_count": 161,
+  "asset_inventory_sha256": "53c5346745112677a61e0fde88e73b180fc444edcfc73ee9e05c1b63b7fe252f",
+  "retained_pending_release_input": {
+    "path": ".tmp-supervisor-frontend-release-input-20261103/release-inputs/frontend-static-live-37d9566d9a65.tar.gz",
+    "bytes": 13500538,
+    "sha256": "3e0888a09390dbdf96e940a74528769eb395d295f871c4d901371687a6325a84"
+  },
+  "earlier_build_attempts": [
+    {
+      "log": {
+        "path": ".tmp-supervisor-frontend-release-input-20261103/vite-build.log",
+        "bytes": 788,
+        "sha256": "888d10949cba4cc1a79bf0584273e41616cc30226421ef34c7def293609df545"
+      },
+      "scope": "experimental config runner rejected a CommonJS dependency; no application source failure"
+    },
+    {
+      "log": {
+        "path": ".tmp-supervisor-frontend-release-input-20261103/vite-build-r2.log",
+        "bytes": 2740,
+        "sha256": "e586e6dd4da019cdf76280e30f79e942dd39dd4760803e21058c84f0c8200ef1"
+      },
+      "scope": "standard bundle config loader was blocked by Windows sandbox subprocess permissions; normal reviewed build rerun with escalation passed"
+    }
+  ],
+  "limits": [
+    "image not yet assembled or deployed",
+    "browser real backup task not yet accepted",
+    "field installation/materials/recovery still required"
+  ],
+  "cleanup": "owned raw dist/typecheck-cache removed; Vite temporary config files checked; original shared dependencies untouched; pending final package archive retained"
+}
