@@ -1,0 +1,460 @@
+=== RUN   TestBootstrapSourceRegistryFactsHaveNoFinalAuthorityDependency
+--- PASS: TestBootstrapSourceRegistryFactsHaveNoFinalAuthorityDependency (0.03s)
+=== RUN   TestBootstrapSourceFactOutputsAreStrictlyCreateOnly
+--- PASS: TestBootstrapSourceFactOutputsAreStrictlyCreateOnly (0.00s)
+=== RUN   TestBootstrapSourceFactProductionRequiresOriginalInstaller
+--- PASS: TestBootstrapSourceFactProductionRequiresOriginalInstaller (0.01s)
+=== RUN   TestBootstrapSourceRegistryTerminalComposition
+--- PASS: TestBootstrapSourceRegistryTerminalComposition (0.02s)
+=== RUN   TestBootstrapSourceRegistryTerminalCannotPromoteDeadlineData
+--- PASS: TestBootstrapSourceRegistryTerminalCannotPromoteDeadlineData (0.00s)
+=== RUN   TestOriginalCaptureInstallationRejectsFilledGrantBeforeIssuingComponent
+--- PASS: TestOriginalCaptureInstallationRejectsFilledGrantBeforeIssuingComponent (0.14s)
+=== RUN   TestOriginalCaptureInstallationUsesActualSequenceAndRetainsIssuedGrantsOnFailureComponent
+--- PASS: TestOriginalCaptureInstallationUsesActualSequenceAndRetainsIssuedGrantsOnFailureComponent (0.05s)
+=== RUN   TestOriginalCaptureMappingHandlesAllNineOriginalOperationsComponent
+--- PASS: TestOriginalCaptureMappingHandlesAllNineOriginalOperationsComponent (0.03s)
+=== RUN   TestOriginalCaptureMappingRejectsZeroKMSWindowBeforeConsumptionComponent
+--- PASS: TestOriginalCaptureMappingRejectsZeroKMSWindowBeforeConsumptionComponent (0.02s)
+=== RUN   TestOriginalCaptureMappingRejectsBuilderInvalidProjectionBeforeCreateComponent
+--- PASS: TestOriginalCaptureMappingRejectsBuilderInvalidProjectionBeforeCreateComponent (0.02s)
+=== RUN   TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent
+=== RUN   TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-database/zero-not-before
+=== RUN   TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-database/twenty-five-hour-window
+=== RUN   TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-team-objects/zero-not-before
+=== RUN   TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-team-objects/twenty-five-hour-window
+--- PASS: TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent (0.10s)
+    --- PASS: TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-database/zero-not-before (0.03s)
+    --- PASS: TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-database/twenty-five-hour-window (0.02s)
+    --- PASS: TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-team-objects/zero-not-before (0.02s)
+    --- PASS: TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent/capture-team-objects/twenty-five-hour-window (0.03s)
+=== RUN   TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift
+=== RUN   TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift/ConfigMap
+=== RUN   TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift/Secret
+--- PASS: TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift (0.01s)
+    --- PASS: TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift/ConfigMap (0.01s)
+    --- PASS: TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift/Secret (0.00s)
+=== RUN   TestOriginalCaptureMappingCannotBorrowAnotherOperationFiles
+--- PASS: TestOriginalCaptureMappingCannotBorrowAnotherOperationFiles (0.00s)
+=== RUN   TestOriginalCaptureMappingFailureLatchesRealOwnerSequenceComponent
+--- PASS: TestOriginalCaptureMappingFailureLatchesRealOwnerSequenceComponent (0.02s)
+=== RUN   TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices
+--- PASS: TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices (0.09s)
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-operation
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-primary
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/duplicate-mount
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/different-team
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-policy
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-control
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-control-scope
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-deployment-writer
+=== RUN   TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-deployment-uid
+--- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs (0.04s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-operation (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-primary (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/duplicate-mount (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/different-team (0.01s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-policy (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-control (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-control-scope (0.01s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/missing-deployment-writer (0.00s)
+    --- PASS: TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs/wrong-deployment-uid (0.01s)
+=== RUN   TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes
+--- PASS: TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes (1.21s)
+=== RUN   TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent
+--- PASS: TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent (0.04s)
+=== RUN   TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent
+--- PASS: TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent (0.02s)
+=== RUN   TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent
+--- PASS: TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent (0.02s)
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/scope
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/uid
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/mapping
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/template
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/definition-window
+=== RUN   TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/expired
+--- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent (0.11s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/scope (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/uid (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/mapping (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/template (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/definition-window (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/expired (0.02s)
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/nil
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/child
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/canceled-child
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/nil
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/child
+=== RUN   TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/canceled-child
+--- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent (0.11s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/nil (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/child (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/canceled-child (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/nil (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/child (0.02s)
+    --- PASS: TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/canceled-child (0.02s)
+=== RUN   TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent
+--- PASS: TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent (0.02s)
+=== RUN   TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificateScope
+    production_identity_mysql_test.go:39: requires disposable local MySQL
+--- SKIP: TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificateScope (0.01s)
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/none
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/pod-replaced
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/scope-rewrite
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/expired
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/definition-revoked
+=== RUN   TestOriginalInstanceMountAuthenticatedSequenceComponent/pre-materialize-drift
+--- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent (0.14s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/none (0.04s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/pod-replaced (0.02s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/scope-rewrite (0.02s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/expired (0.03s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/definition-revoked (0.02s)
+    --- PASS: TestOriginalInstanceMountAuthenticatedSequenceComponent/pre-materialize-drift (0.02s)
+=== RUN   TestOriginalInstanceMountBuilderDerivesPinsWithOnlyGET
+--- PASS: TestOriginalInstanceMountBuilderDerivesPinsWithOnlyGET (0.01s)
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/unbounded
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/expired
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/stopped
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/owner
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/generation
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/unknown-instance
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/duplicate-instance
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/duplicate-spec
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/foreign-layout
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/pro
+=== RUN   TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/windows
+--- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET (0.01s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/unbounded (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/expired (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/stopped (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/owner (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/generation (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/unknown-instance (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/duplicate-instance (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/duplicate-spec (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/foreign-layout (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/pro (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET/windows (0.00s)
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/missing-layout
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/duplicate-layout
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/unknown-volume
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pod-replaced
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pod-spec-drift
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/namespace-tail
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/missing-primary
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/empty-extra-spec-drift
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/node-replaced
+=== RUN   TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pvc-replaced
+--- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/missing-layout (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/duplicate-layout (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/unknown-volume (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pod-replaced (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pod-spec-drift (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/namespace-tail (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/missing-primary (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/empty-extra-spec-drift (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/node-replaced (0.00s)
+    --- PASS: TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage/pvc-replaced (0.00s)
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/owner
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/generation
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/foreign
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/duplicate
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/missing
+=== RUN   TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/stopped
+--- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/owner (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/generation (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/foreign (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/duplicate (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/missing (0.00s)
+    --- PASS: TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows/stopped (0.00s)
+=== RUN   TestBootstrapSourcePartsIncludesEveryDeclaredInstanceMount
+--- PASS: TestBootstrapSourcePartsIncludesEveryDeclaredInstanceMount (0.00s)
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/none
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/pod
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/source
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/node
+=== RUN   TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/owner
+--- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority (0.00s)
+    --- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/none (0.00s)
+    --- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/pod (0.00s)
+    --- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/source (0.00s)
+    --- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/node (0.00s)
+    --- PASS: TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority/owner (0.00s)
+=== RUN   TestOriginalMountInputDiagnosticAndEveryFieldChangesSignedScope
+--- PASS: TestOriginalMountInputDiagnosticAndEveryFieldChangesSignedScope (0.00s)
+=== RUN   TestOriginalInstanceMountBuilderSeparatesUsersOnSharedRuntime
+--- PASS: TestOriginalInstanceMountBuilderSeparatesUsersOnSharedRuntime (0.00s)
+=== RUN   TestOriginalInstanceMountObservationProjectionIsDiagnosticAndRedacted
+--- PASS: TestOriginalInstanceMountObservationProjectionIsDiagnosticAndRedacted (0.00s)
+=== RUN   TestOriginalInstanceMountObservationRequiresOriginalAuthority
+--- PASS: TestOriginalInstanceMountObservationRequiresOriginalAuthority (0.00s)
+=== RUN   TestOriginalInstanceMountSequenceRechecksSelectedPins
+--- PASS: TestOriginalInstanceMountSequenceRechecksSelectedPins (0.00s)
+=== RUN   TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob
+--- PASS: TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob (0.06s)
+=== RUN   TestProductionPersistentMappingsAreInOriginalSignedScope
+--- PASS: TestProductionPersistentMappingsAreInOriginalSignedScope (0.00s)
+=== RUN   TestPersistentMountMetadataResolvesOnlyExactPinnedSource
+=== RUN   TestPersistentMountMetadataResolvesOnlyExactPinnedSource/pvc
+=== RUN   TestPersistentMountMetadataResolvesOnlyExactPinnedSource/hostpath
+=== RUN   TestPersistentMountMetadataResolvesOnlyExactPinnedSource/nfs
+--- PASS: TestPersistentMountMetadataResolvesOnlyExactPinnedSource (0.00s)
+    --- PASS: TestPersistentMountMetadataResolvesOnlyExactPinnedSource/pvc (0.00s)
+    --- PASS: TestPersistentMountMetadataResolvesOnlyExactPinnedSource/hostpath (0.00s)
+    --- PASS: TestPersistentMountMetadataResolvesOnlyExactPinnedSource/nfs (0.00s)
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/namespace
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/instance
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/pod-uid
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/spec
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/node-uid
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/staging-node
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/non-linux
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/node-deleted
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-replaced
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-unbound
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/block-claim
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/pv-replaced
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-owner
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/missing-pin
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/source-hash
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/container
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/whole-volume
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/subpath-expr
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/nested-overlay
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/nested-ancestor
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/unsupported-volume
+=== RUN   TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/ambiguous-volume
+--- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots (0.01s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/namespace (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/instance (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/pod-uid (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/spec (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/node-uid (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/staging-node (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/non-linux (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/node-deleted (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-replaced (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-unbound (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/block-claim (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/pv-replaced (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/claim-owner (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/missing-pin (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/source-hash (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/container (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/whole-volume (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/subpath-expr (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/nested-overlay (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/nested-ancestor (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/unsupported-volume (0.00s)
+    --- PASS: TestPersistentMountMetadataRejectsDriftAndUnscopedRoots/ambiguous-volume (0.00s)
+=== RUN   TestPersistentMountNFSRetainsOriginalStagingPlacement
+--- PASS: TestPersistentMountNFSRetainsOriginalStagingPlacement (0.00s)
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/sidecar
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/init-writer
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/ephemeral
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/block
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/unknown-storage
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/temporary-overlay
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/stale-mapping
+=== RUN   TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/duplicate-path
+--- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings (0.01s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/sidecar (0.01s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/init-writer (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/ephemeral (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/block (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/unknown-storage (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/temporary-overlay (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/stale-mapping (0.00s)
+    --- PASS: TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings/duplicate-path (0.00s)
+=== RUN   TestPersistentMountOverlapRejectsPhysicalAliases
+--- PASS: TestPersistentMountOverlapRejectsPhysicalAliases (0.00s)
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/nil
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/version
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/primary
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/duplicate
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unknown-id
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/root
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/escape
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/foreign-subtree
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unbound-pod
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unbound-node
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/missing-source-hash
+=== RUN   TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/oversized-part
+--- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/nil (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/version (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/primary (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/duplicate (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unknown-id (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/root (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/escape (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/foreign-subtree (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unbound-pod (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/unbound-node (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/missing-source-hash (0.00s)
+    --- PASS: TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs/oversized-part (0.00s)
+=== RUN   TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions
+=== RUN   TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/missing-scope
+=== RUN   TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/stopped
+=== RUN   TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/pro
+--- PASS: TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions (0.01s)
+    --- PASS: TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/missing-scope (0.01s)
+    --- PASS: TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/stopped (0.00s)
+    --- PASS: TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions/pro (0.00s)
+=== RUN   TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision
+--- PASS: TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision (0.00s)
+=== RUN   TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary
+--- PASS: TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary (0.00s)
+=== RUN   TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels
+--- PASS: TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels (0.00s)
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/original
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/namespace
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/pod
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/pod-service-account
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/replicaset
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/deployment
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/controller-sa
+=== RUN   TestSourceObservationSharesOriginalControllerWorkloadChecks/source-sa
+--- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks (0.01s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/original (0.01s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/namespace (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/pod (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/pod-service-account (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/replicaset (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/deployment (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/controller-sa (0.00s)
+    --- PASS: TestSourceObservationSharesOriginalControllerWorkloadChecks/source-sa (0.00s)
+=== RUN   TestSourceObservationDoesNotCreateTasklessCaptureAuthority
+--- PASS: TestSourceObservationDoesNotCreateTasklessCaptureAuthority (0.00s)
+=== RUN   TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts
+=== RUN   TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts/acceptance
+=== RUN   TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts/functional_test
+--- PASS: TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts (0.24s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts/acceptance (0.12s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts/functional_test (0.12s)
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unbound
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/foreign-owner
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/foreign-installation
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/workspace-scope
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/not-backup
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/no-spec
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/partial
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/duplicate-part
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unknown-part
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unknown-purpose
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/wrong-runner
+=== RUN   TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/partial-acceptance
+--- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding (0.05s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unbound (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/foreign-owner (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/foreign-installation (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/workspace-scope (0.01s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/not-backup (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/no-spec (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/partial (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/duplicate-part (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unknown-part (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/unknown-purpose (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/wrong-runner (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding/partial-acceptance (0.00s)
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/purpose-drift
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/unknown-purpose
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/partial
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-installation
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-unit
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/invocation-bytes
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/job-bytes
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-operation
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-formal-name
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-formal-uid
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-pv-uid
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/purpose-drift
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/unknown-purpose
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/partial
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-installation
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-unit
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/invocation-bytes
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/job-bytes
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-operation
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-formal-name
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-formal-uid
+=== RUN   TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-pv-uid
+--- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift (0.29s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/purpose-drift (0.01s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/unknown-purpose (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/partial (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-installation (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-unit (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/invocation-bytes (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/job-bytes (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-operation (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/foreign-formal-name (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-formal-uid (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/functional_test/missing-pv-uid (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/purpose-drift (0.01s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/unknown-purpose (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/partial (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-installation (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-unit (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/invocation-bytes (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/job-bytes (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-operation (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/foreign-formal-name (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-formal-uid (0.00s)
+    --- PASS: TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift/acceptance/missing-pv-uid (0.00s)
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/original
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/unknown-deployment
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/statefulset
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/daemonset
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/job
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/cronjob
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/hpa
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/dangling-owner
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/foreign-owner-uid
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/missing-pod
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/pod-not-running
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/missing-claim
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/extra-pod
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/writer-zero
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/generation-drift
+=== RUN   TestSourceWriterGraphRequiresCompletePinnedControllerClosure/duplicate
+--- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/original (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/unknown-deployment (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/statefulset (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/daemonset (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/job (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/cronjob (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/hpa (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/dangling-owner (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/foreign-owner-uid (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/missing-pod (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/pod-not-running (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/missing-claim (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/extra-pod (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/writer-zero (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/generation-drift (0.00s)
+    --- PASS: TestSourceWriterGraphRequiresCompletePinnedControllerClosure/duplicate (0.00s)
+=== RUN   TestSourceWriterObservationDoesNotInferPhysicalStoppedFromSQL
+--- PASS: TestSourceWriterObservationDoesNotInferPhysicalStoppedFromSQL (0.00s)
+=== RUN   TestSourceWriterAPIProjectionRetainsActualProcessIdentity
+--- PASS: TestSourceWriterAPIProjectionRetainsActualProcessIdentity (0.00s)
+PASS

@@ -1,0 +1,12 @@
+{"Time":"2026-11-03T15:02:49.0030667+08:00","Action":"start","Package":"clawreef/internal/systembackupexecution"}
+{"Time":"2026-11-03T15:02:49.3394316+08:00","Action":"run","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob"}
+{"Time":"2026-11-03T15:02:49.3394316+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob","Output":"=== RUN   TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob\n"}
+{"Time":"2026-11-03T15:02:49.4095962+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob","Output":"--- PASS: TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob (0.07s)\n"}
+{"Time":"2026-11-03T15:02:49.4095962+08:00","Action":"pass","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob","Elapsed":0.07}
+{"Time":"2026-11-03T15:02:49.4095962+08:00","Action":"run","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMappingsAreInOriginalSignedScope"}
+{"Time":"2026-11-03T15:02:49.4095962+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMappingsAreInOriginalSignedScope","Output":"=== RUN   TestProductionPersistentMappingsAreInOriginalSignedScope\n"}
+{"Time":"2026-11-03T15:02:49.4101107+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMappingsAreInOriginalSignedScope","Output":"--- PASS: TestProductionPersistentMappingsAreInOriginalSignedScope (0.00s)\n"}
+{"Time":"2026-11-03T15:02:49.4101107+08:00","Action":"pass","Package":"clawreef/internal/systembackupexecution","Test":"TestProductionPersistentMappingsAreInOriginalSignedScope","Elapsed":0}
+{"Time":"2026-11-03T15:02:49.4101107+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Output":"PASS\n"}
+{"Time":"2026-11-03T15:02:49.4232871+08:00","Action":"output","Package":"clawreef/internal/systembackupexecution","Output":"ok  \tclawreef/internal/systembackupexecution\t0.420s\n"}
+{"Time":"2026-11-03T15:02:49.4232871+08:00","Action":"pass","Package":"clawreef/internal/systembackupexecution","Elapsed":0.42}

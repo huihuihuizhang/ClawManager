@@ -1,0 +1,540 @@
+{
+  "schema_version": "b-mount-inputs-review.v1",
+  "recorded_at": "2026-11-03T07:55:47.574979+00:00",
+  "base_commit": "71e2f3186a28ff150bc183b86ffdfe491678a5e9",
+  "remote_backup": "71e2f3186a28ff150bc183b86ffdfe491678a5e9",
+  "status": "local_uncommitted_unpushed",
+  "code_scope": [
+    "B readonly original SQL/runtime/mount diagnostic (positive field call awaiting legitimate D source inputs)",
+    "unsigned real-GET source mount scope builder with user/generation binding",
+    "original mapping/finalization pin rechecks and bootstrap additional mount parts",
+    "stopped source fails closed with original witness diagnostic; no historical producer invented"
+  ],
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/publicadapter/users_instances_module.go",
+      "sha256": "8549ccd827f7aba149aadcc2b3185f02da8de9bd3011d5f065c18813fa92a6c1"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/users_instances_module_test.go",
+      "sha256": "b9b844b58d0bb9335ebe8904ffaf17eaee5f6e5258dd8edb797977f75a02a9d1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+      "sha256": "cf772420816ad17821b92e8931d7e4e61e2fb49556f33e2eec9dadc03a33a787"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go",
+      "sha256": "9825a7a506b92c6211782fd28b3a121bf4f8c80db5d9e8d303b8951f4c747ba7"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "sha256": "b6ae7b4991593d3aac37417769cba0421fbdcba46aaa166116de2e2423424d17"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "sha256": "e2c3adf63d62d60c1e49102304a3dac437cb9baea1a77357a1d82e76d42acd40"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_modules.go",
+      "sha256": "d59ec67d0d154941387eaecc7a5d7499cc82e79eda76554afed835340f00224c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "47c4dd31cef7dbccc1f7472050a4afc2a6b5f8232f90892252268f82118db0ac"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mount_inputs.go",
+      "sha256": "3bece1778e4db3fab45a75b8d89f2b215dec33b3cf70ec9b49eac319abaec0df"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mount_inputs_component_test.go",
+      "sha256": "578c37c7686bf7604a59f2b02551a5e4a454fb200f26b6574eadac8b364f54e8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mount_inputs_test.go",
+      "sha256": "fb235173daefd85fd70ee1bf9325519ee112c36b3b66367b0959050074f6de8a"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mount_observation.go",
+      "sha256": "ad2c481b47a58c7857d13dd9d2f192e558a995923f89d2b1d710d8d2a0b3f850"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mounted_parts_test.go",
+      "sha256": "e9f78cc9ce02c5382b9219a30d2401d1ee3092864bc701dac418653abaaea12f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_authority.go",
+      "sha256": "6b70ca3549d098557ced73ee6446ee76ec720ef2e1afec3f3aa9dabece11b7d9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_inventory.go",
+      "sha256": "a6246975c66c520a7370c25ed0295f7f66662bb9eae8c5cf85cbc154eb8ac73d"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_mounts.go",
+      "sha256": "403f74a8b08cc1a928657b3f297494cfe75a88d56d9988248c94aff68fdeae0f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_mounts_test.go",
+      "sha256": "00958749a41a6bc90bf123c42247bf5e20d30f0ff3f10000b969f4f706c6d4ef"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_runtime.go",
+      "sha256": "609359bcfcea2d55cb9534484d41085500ed85cbab33a34f284cae946879bca8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_security.go",
+      "sha256": "3041860e700251e761150636ab3c6d5f5de106ee354896f16a88cb99381ee552"
+    },
+    {
+      "path": "scripts/system-backup-b-writer-inventory.py",
+      "sha256": "aabd9688c8713782329543e076dd7920e71e556fdf5c27fdd20b2cab34bcdf40"
+    },
+    {
+      "path": "scripts/system-backup-b-writer-inventory.test.py",
+      "sha256": "b3ca9a4abe49882b0fffd2baab55a7946966da52812159c8827374767a5ecd57"
+    }
+  ],
+  "module_pins": {
+    "backend/go.mod": "10345afd71ffedff5e12e02144b8067954b19ee3392388e0a266292f32415d75",
+    "backend/go.sum": "9801d162a0f76f5b4bfb083d9def3b06dc647cada86cb9d8e595868e71ae2150"
+  },
+  "windows_regression": {
+    "pass": [
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesConcreteRegistrationUsesAtomicDatabaseAndAllMounts"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesDataOnlyMountUsesExistingCaptureWithoutReplacingPrimary"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourceRegistryFactsHaveNoFinalAuthorityDependency"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesRegistrationRejectsMissingAndForeignMappings"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourceFactOutputsAreStrictlyCreateOnly"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesBuildRejectsDriftAndStaleTaskTemplatesAtomically"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourceFactProductionRequiresOriginalInstaller"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesZeroInstancesStillExportsUsersOnce"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourceRegistryTerminalComposition"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourceRegistryTerminalCannotPromoteDeadlineData"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesWorkBuddyRequiresMatchingAuthenticatedStorageIdentity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/publicadapter",
+        "test": "TestUsersInstancesRegistersAdditionalAdmittedPersistentMount"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionCaptureMaterialsBothStartupPaths"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionCaptureEnvironmentKeepsIncompletePins"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentRuntimeScopeAndRBACAreExplicit"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentRuntimeCannotExpandNamespaceScope"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentRuntimeChecksActualCapturedVolume"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentRuntimeChecksOwnedNFSSubtree"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestDeploymentRuntimeRegistersRelayBehindWorkloadIdentity"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionCapturePlanPreservesOriginalFactory"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionCapturePlanRejectsMissingInputsAndMutation"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountBuilderDerivesPinsWithOnlyGET"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestBootstrapSourcePartsIncludesEveryDeclaredInstanceMount"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalMountInputDiagnosticAndEveryFieldChangesSignedScope"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountBuilderSeparatesUsersOnSharedRuntime"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountObservationProjectionIsDiagnosticAndRedacted"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountObservationRequiresOriginalAuthority"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalInstanceMountSequenceRechecksSelectedPins"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionPersistentMappingsAreInOriginalSignedScope"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountMetadataResolvesOnlyExactPinnedSource"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountMetadataRejectsDriftAndUnscopedRoots"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountNFSRetainsOriginalStagingPlacement"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountOverlapRejectsPhysicalAliases"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift"
+      }
+    ],
+    "skip": [
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificateScope"
+      }
+    ],
+    "fail": []
+  },
+  "windows_authority_mapping": {
+    "pass": [
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingCannotBorrowAnotherOperationFiles"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceObservationSharesOriginalControllerWorkloadChecks"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceObservationDoesNotCreateTasklessCaptureAuthority"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceWriterGraphRequiresCompletePinnedControllerClosure"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceWriterObservationDoesNotInferPhysicalStoppedFromSQL"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestSourceWriterAPIProjectionRetainsActualProcessIdentity"
+      }
+    ],
+    "skip": [
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureInstallationRejectsFilledGrantBeforeIssuingComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureInstallationUsesActualSequenceAndRetainsIssuedGrantsOnFailureComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingHandlesAllNineOriginalOperationsComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingRejectsZeroKMSWindowBeforeConsumptionComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingRejectsBuilderInvalidProjectionBeforeCreateComponent"
+      },
+      {
+        "package": "clawreef/internal/systembackupexecution",
+        "test": "TestOriginalCaptureMappingFailureLatchesRealOwnerSequenceComponent"
+      }
+    ],
+    "fail": []
+  },
+  "linux_regression": {
+    "pass": [
+      "TestBootstrapSourceRegistryFactsHaveNoFinalAuthorityDependency",
+      "TestBootstrapSourceFactOutputsAreStrictlyCreateOnly",
+      "TestBootstrapSourceFactProductionRequiresOriginalInstaller",
+      "TestBootstrapSourceRegistryTerminalComposition",
+      "TestBootstrapSourceRegistryTerminalCannotPromoteDeadlineData",
+      "TestOriginalCaptureInstallationRejectsFilledGrantBeforeIssuingComponent",
+      "TestOriginalCaptureInstallationUsesActualSequenceAndRetainsIssuedGrantsOnFailureComponent",
+      "TestOriginalCaptureMappingHandlesAllNineOriginalOperationsComponent",
+      "TestOriginalCaptureMappingRejectsZeroKMSWindowBeforeConsumptionComponent",
+      "TestOriginalCaptureMappingRejectsBuilderInvalidProjectionBeforeCreateComponent",
+      "TestOriginalCaptureMappingRejectsWorkerInvalidIndependentSourceGrantWindowsComponent",
+      "TestOriginalCaptureMappingCreateAndIndependentGetRejectExistingDrift",
+      "TestOriginalCaptureMappingCannotBorrowAnotherOperationFiles",
+      "TestOriginalCaptureMappingFailureLatchesRealOwnerSequenceComponent",
+      "TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices",
+      "TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs",
+      "TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes",
+      "TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent",
+      "TestOriginalMaterialProducerRejectsOriginalSQLWindowTailAfterOutputComponent",
+      "TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent",
+      "TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent",
+      "TestOriginalInstanceMountAuthenticatedSequenceComponent",
+      "TestOriginalInstanceMountBuilderDerivesPinsWithOnlyGET",
+      "TestOriginalInstanceMountBuilderRejectsIncompleteAndStoppedInputsBeforeGET",
+      "TestOriginalInstanceMountBuilderDetectsDriftAndMissingCoverage",
+      "TestOriginalInstanceMountScopeRejectsOwnerGenerationAndForeignRows",
+      "TestBootstrapSourcePartsIncludesEveryDeclaredInstanceMount",
+      "TestOriginalInstanceMountPinChecksRejectDriftWithoutGrantingAuthority",
+      "TestOriginalMountInputDiagnosticAndEveryFieldChangesSignedScope",
+      "TestOriginalInstanceMountBuilderSeparatesUsersOnSharedRuntime",
+      "TestOriginalInstanceMountObservationProjectionIsDiagnosticAndRedacted",
+      "TestOriginalInstanceMountObservationRequiresOriginalAuthority",
+      "TestOriginalInstanceMountSequenceRechecksSelectedPins",
+      "TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob",
+      "TestProductionPersistentMappingsAreInOriginalSignedScope",
+      "TestPersistentMountMetadataResolvesOnlyExactPinnedSource",
+      "TestPersistentMountMetadataRejectsDriftAndUnscopedRoots",
+      "TestPersistentMountNFSRetainsOriginalStagingPlacement",
+      "TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings",
+      "TestPersistentMountOverlapRejectsPhysicalAliases",
+      "TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs",
+      "TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions",
+      "TestSourceObservationSQLClockPreservesRawDriverAndUTCPrecision",
+      "TestSourceObservationDetailDiagnosticsPreservePublicErrorAndClosedVocabulary",
+      "TestSourceObservationDiagnosticsKeepOriginalErrorAndFixedLabels",
+      "TestSourceObservationSharesOriginalControllerWorkloadChecks",
+      "TestSourceObservationDoesNotCreateTasklessCaptureAuthority",
+      "TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts",
+      "TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding",
+      "TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift",
+      "TestSourceWriterGraphRequiresCompletePinnedControllerClosure",
+      "TestSourceWriterObservationDoesNotInferPhysicalStoppedFromSQL",
+      "TestSourceWriterAPIProjectionRetainsActualProcessIdentity"
+    ],
+    "skip": [
+      "TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificateScope"
+    ],
+    "fail": []
+  },
+  "linux_exit_code": 0,
+  "linux_model_scope": "Actual Linux native file checks, real A Installer authentication/Ed25519/bcrypt and B sequence/consumer; SQL/API are isolated protocol models, not actual MySQL/storage/Agent/Kubernetes",
+  "linux_isolation": {
+    "image_id": "sha256:349727db7d6cce07ed6e0e0c273941fbc22f296a7d4079a52bb5127ac8dbd315",
+    "pull": "never",
+    "network": "none",
+    "rootfs": "read-only",
+    "repository_mount": "read-only",
+    "temp": "tmpfs",
+    "host_ports": false,
+    "dependency_installation": false
+  },
+  "field": {
+    "host": "10.130.14.23",
+    "context": "kubernetes-admin@kubernetes",
+    "namespace": "clawmanager-zhanghui08-system",
+    "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "counts": {
+      "deployments": 10,
+      "persistentvolumeclaims": 6,
+      "pods": 10,
+      "replicasets": 38
+    },
+    "changed_resources": [],
+    "sql_and_instance_runtime_correlated": false,
+    "physical_fence_proven": false,
+    "script_sha256": "aabd9688c8713782329543e076dd7920e71e556fdf5c27fdd20b2cab34bcdf40"
+  },
+  "gofmt": {
+    "exit_code": 0,
+    "unformatted_files": []
+  },
+  "diff_check_exit_code": 0,
+  "vet": {
+    "exit_code": 1,
+    "preexisting_issue": "backend/internal/systembackupexecution/deployment_publication_startup_test.go:213 copies DeploymentService containing atomic.Bool",
+    "source_modified_this_turn": false,
+    "analyzer_disabled": false
+  },
+  "missing_inputs": {
+    "D": [
+      "Original independently authorized SQL/user/instance inventory and native Runtime locator v2 / source reader construction",
+      "Owner selected per-instance side-volume directory layouts; original Node/PVC/PV pins before core SHA freezes",
+      "Production builder/definition/signing composition call under original context",
+      "Stopped original complete mount snapshot producer and genuine stopped/drain/late-request witness callback",
+      "Same-version isolated actual MySQL/Agent/Job/storage environment"
+    ],
+    "A": [
+      "Actual original issuer/enrollment/use/epoch/window/revocation materials for deployed call; no credentials in Git",
+      "Historical stopped snapshot and physical fence authenticated verification interface with replay/revocation rules"
+    ]
+  },
+  "not_verified": [
+    "Actual MySQL-backed instance diagnostic success with real source grants",
+    "Original stopped-instance full persistent mount collection",
+    "Physical stop/drain/recovery, native storage and Kubernetes Jobs",
+    "First-adoption / six-part backup and isolated restore end-to-end",
+    "Real migration"
+  ],
+  "cleanup": {
+    "result": "blocked_by_policy",
+    "command_executed": false,
+    "targets": [
+      "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mount-inputs-20261103\\systembackupexecution.test",
+      "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mount-inputs-20261103\\owner.txt"
+    ],
+    "test_binary_still_exists": true,
+    "alternative_deletion_attempted": false,
+    "previous_blocked_cache_cleanup_retried": false,
+    "reused_owned_cache": "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mounted-data-20261103\\cache",
+    "reused_tmp_empty": true,
+    "other_owner_paths_touched": false,
+    "container_name": "cm-b-mount-inputs-20261103-isolated",
+    "container_auto_removed": true,
+    "logs_retained": true
+  }
+}

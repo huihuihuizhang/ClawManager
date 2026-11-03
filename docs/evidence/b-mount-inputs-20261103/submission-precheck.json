@@ -1,0 +1,41 @@
+{
+  "schema_version": "b-backup-submission-precheck.v1",
+  "recorded_at": "2026-11-03T08:10:35.595600+00:00",
+  "tested_base": "71e2f3186a28ff150bc183b86ffdfe491678a5e9",
+  "integrated_parent": "21de0cf77c96801a84e89dc8aa7267233d7a90db",
+  "push_repository": "https://github.com/huihuihuizhang/ClawManager.git",
+  "push_ref": "refs/heads/backup",
+  "pull_request": false,
+  "upstream_changed_files": [
+    "docs/evidence/supervisor-app-preflight-delivery-20261103.json",
+    "docs/evidence/supervisor-app-update-field-preflight-20261103.json",
+    "docs/evidence/supervisor-records-submit-validation-20261103.json",
+    "docs/evidence/system-backup-d-app-readonly-preflight-source-v2-20261103.json",
+    "docs/evidence/system-backup-d-app-upgrade-catalog-20261103.json",
+    "frontend/src/pages/admin/backups/BackupLiveWorkspace.tsx",
+    "frontend/src/pages/admin/backups/backupCreateSubmission.test.mjs",
+    "frontend/src/pages/admin/backups/backupCreateSubmission.ts",
+    "frontend/src/pages/admin/backups/messages.ts",
+    "scripts/system-backup-app-readonly-preflight-20261103-v2.py",
+    "scripts/system-backup-app-readonly-preflight-20261103-v2.test.py"
+  ],
+  "source_hashes_match_existing_tests": true,
+  "source_files_verified": 21,
+  "dependencies_unchanged": true,
+  "tests_reused_reason": "No B source, dependency or backend runtime change in new upstream commit; prior original-window/Linux isolated tests retained without duplicate rerun",
+  "commit_message_characters": 265,
+  "limitations_unchanged": [
+    "D/A source and stopped historical/fence inputs missing",
+    "No real migration or field backup/restore chain",
+    "Disposable MySQL test skipped; preexisting vet copylocks warning retained"
+  ],
+  "temporary_binary_and_cache_excluded": true,
+  "local_git_evidence_byte_preservation": {
+    "scope": "local .git/info/attributes only",
+    "files": [
+      "docs/evidence/system-backup-d-app-readonly-preflight-source-v2-20261103.json",
+      "docs/evidence/system-backup-d-app-upgrade-catalog-20261103.json"
+    ],
+    "reason": "Upstream blobs contain CRLF despite text/eol=lf attributes; verified exact HEAD bytes and preserved them without content changes or staging D files"
+  }
+}

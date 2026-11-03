@@ -345,6 +345,12 @@ func (s *OriginalCaptureSequence) observeMappings(ctx context.Context, client ku
 	if err != nil || string(ns.UID) != s.core.NamespaceUID || ns.DeletionTimestamp != nil {
 		return c.ErrExecutionAuthority
 	}
+	if m.Discovery == nil {
+		return c.ErrExecutionAuthority
+	}
+	if err := checkOriginalPersistentMountPins(ctx, client, s.core, m.Discovery.PersistentMounts); err != nil {
+		return err
+	}
 	for operation, part := range m.Operations {
 		if !validProductionOperationMounts(part) {
 			return c.ErrExecutionAuthority

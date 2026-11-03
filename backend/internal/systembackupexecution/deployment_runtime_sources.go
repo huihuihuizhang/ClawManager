@@ -382,6 +382,14 @@ func (s *DeploymentService) checkRuntimeSources(ctx context.Context) error {
 // This profile supports the same PVC and matching subpath; other storage needs
 // an independently reviewed profile instead of silently claiming coverage.
 func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity) error {
+	if s.Config.CaptureScope == "six-part" && len(instances) != 0 {
+		if s.captureMaterials == nil || s.captureMaterials.Discovery == nil {
+			return mountInputError("original_mount_scope_required", 0, "")
+		}
+		if _, err := persistentMountsForInstances(s.captureMaterials.Discovery.PersistentMounts, instances); err != nil {
+			return err
+		}
+	}
 	if s.Config.Workspace.NFS != nil {
 		return s.checkNFSRuntimeWorkspace(ctx, client, instances)
 	}
@@ -425,6 +433,20 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 		}
 		if uid != "" && string(pod.UID) != uid {
 			return d.ErrNotReady
+		}
+		if s.Config.CaptureScope == "six-part" {
+			if s.captureMaterials == nil || s.captureMaterials.Discovery == nil || s.captureMaterials.Discovery.PersistentMounts.validate() != nil {
+				return d.ErrNotReady
+			}
+			var declarations []productionPersistentMountBinding
+			for _, declaration := range s.captureMaterials.Discovery.PersistentMounts.Mounts {
+				if declaration.InstanceID == source.ID {
+					declarations = append(declarations, declaration)
+				}
+			}
+			if checkPersistentMountCoverage(source, pod, declarations) != nil {
+				return d.ErrNotReady
+			}
 		}
 		found := false
 		expected := path.Join(s.Config.Workspace.SubPath, strings.TrimPrefix(source.Workspace, s.Config.RuntimeSources.WorkspaceRoot+"/"))
@@ -505,6 +527,20 @@ func (s *DeploymentService) checkNFSRuntimeWorkspace(ctx context.Context, client
 		pod, err := client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil || pod.DeletionTimestamp != nil || (uid != "" && string(pod.UID) != uid) {
 			return d.ErrNotReady
+		}
+		if s.Config.CaptureScope == "six-part" {
+			if s.captureMaterials == nil || s.captureMaterials.Discovery == nil || s.captureMaterials.Discovery.PersistentMounts.validate() != nil {
+				return d.ErrNotReady
+			}
+			var declarations []productionPersistentMountBinding
+			for _, declaration := range s.captureMaterials.Discovery.PersistentMounts.Mounts {
+				if declaration.InstanceID == source.ID {
+					declarations = append(declarations, declaration)
+				}
+			}
+			if checkPersistentMountCoverage(source, pod, declarations) != nil {
+				return d.ErrNotReady
+			}
 		}
 		found := false
 		for _, container := range pod.Spec.Containers {

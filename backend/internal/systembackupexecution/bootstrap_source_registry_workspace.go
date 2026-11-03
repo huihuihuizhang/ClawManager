@@ -7,9 +7,20 @@ import (
 
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackupinstallationowner/install"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
+
+func (x *bootstrapSourceRegistryReader) checkAdditionalRuntimeMounts(ctx context.Context, client kubernetes.Interface, source b.InstanceIdentity, pod *corev1.Pod) error {
+	if x.checkPhysical(ctx) != nil || x.materials.Discovery == nil {
+		return install.ErrInstall
+	}
+	if err := checkInstancePersistentMountPins(ctx, client, x.config, source, pod, x.materials.Discovery.PersistentMounts); err != nil {
+		return err
+	}
+	return x.checkPhysical(ctx)
+}
 
 func (x *bootstrapSourceRegistryReader) verifiedNativeWriter(id int, all []bootstrapSourceNativeWriter) (bootstrapSourceNativeWriter, error) {
 	for _, actual := range all {
@@ -21,6 +32,13 @@ func (x *bootstrapSourceRegistryReader) verifiedNativeWriter(id int, all []boots
 }
 
 func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity, native []bootstrapSourceNativeWriter) error {
+	var scope *productionPersistentMountScope
+	if x.materials.Discovery != nil {
+		scope = x.materials.Discovery.PersistentMounts
+	}
+	if _, err := persistentMountsForInstances(scope, instances); err != nil {
+		return err
+	}
 	if x.config.Workspace.NFS != nil {
 		return x.checkNFSRuntimeWorkspace(ctx, client, instances, native)
 	}
@@ -64,6 +82,9 @@ func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Contex
 		}
 		if uid != "" && string(pod.UID) != uid {
 			return install.ErrInstall
+		}
+		if err := x.checkAdditionalRuntimeMounts(ctx, client, source, pod); err != nil {
+			return err
 		}
 		found := false
 		expected := path.Join(x.config.Workspace.SubPath, strings.TrimPrefix(source.Workspace, x.config.RuntimeSources.WorkspaceRoot+"/"))
@@ -144,6 +165,9 @@ func (x *bootstrapSourceRegistryReader) checkNFSRuntimeWorkspace(ctx context.Con
 		pod, err := client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil || pod.DeletionTimestamp != nil || (uid != "" && string(pod.UID) != uid) {
 			return install.ErrInstall
+		}
+		if err := x.checkAdditionalRuntimeMounts(ctx, client, source, pod); err != nil {
+			return err
 		}
 		found := false
 		for _, container := range pod.Spec.Containers {

@@ -1,0 +1,239 @@
+{
+  "schema_version": "b-mounted-data-review.v1",
+  "recorded_date": "2026-11-03",
+  "base_commit": "71e2f3186a28ff150bc183b86ffdfe491678a5e9",
+  "status": "local_uncommitted",
+  "code_complete_scope": "Running Linux Lite Gateway source-owner declared additional mount metadata resolution, original module/Job/observer projection; not first-adoption physical fence or target restore",
+  "field_observation": {
+    "host": "10.130.14.23",
+    "namespace": "clawmanager-zhanghui08-system",
+    "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+    "ssh_strict_host_key_checking": true,
+    "resource_counts": {
+      "deployments": 10,
+      "persistentvolumeclaims": 6,
+      "pods": 10,
+      "replicasets": 38
+    },
+    "nodes": 2,
+    "pvs": 6,
+    "projection_drift": [],
+    "status": "observed",
+    "read_only": true,
+    "physical_fence_proven": false,
+    "instance_sql_or_runtime_process_trees_observed": false,
+    "source_script_sha256": "aabd9688c8713782329543e076dd7920e71e556fdf5c27fdd20b2cab34bcdf40"
+  },
+  "final_go_regression": {
+    "command": "go -C backend test -p=2 -json -count=1 -timeout=180s ./internal/systembackup/publicadapter ./internal/systembackupexecution -run '^(TestProduction|TestPersistentMount|TestUsersInstances|TestDeploymentRuntime|TestSourceRecovery|TestRecoveredInstanceMount|TestPlatformVolume|TestPublisherSourceRecovery)' -skip 'MySQL|Native'",
+    "exit_code": 0,
+    "passed_root_tests": [
+      "TestUsersInstancesConcreteRegistrationUsesAtomicDatabaseAndAllMounts",
+      "TestUsersInstancesDataOnlyMountUsesExistingCaptureWithoutReplacingPrimary",
+      "TestUsersInstancesRegistrationRejectsMissingAndForeignMappings",
+      "TestUsersInstancesBuildRejectsDriftAndStaleTaskTemplatesAtomically",
+      "TestUsersInstancesZeroInstancesStillExportsUsersOnce",
+      "TestUsersInstancesWorkBuddyRequiresMatchingAuthenticatedStorageIdentity",
+      "TestUsersInstancesRegistersAdditionalAdmittedPersistentMount",
+      "TestProductionCaptureMaterialsBothStartupPaths",
+      "TestProductionCaptureEnvironmentKeepsIncompletePins",
+      "TestDeploymentRuntimeScopeAndRBACAreExplicit",
+      "TestDeploymentRuntimeCannotExpandNamespaceScope",
+      "TestDeploymentRuntimeChecksActualCapturedVolume",
+      "TestDeploymentRuntimeChecksOwnedNFSSubtree",
+      "TestDeploymentRuntimeRegistersRelayBehindWorkloadIdentity",
+      "TestPlatformVolumeIsFrozenBeforeCaptureWithoutInstanceOrTeam",
+      "TestRecoveredInstanceMountRejectsSubpathAndShadowMountChanges",
+      "TestProductionSixPartFactoryUsesAllOriginalConstructorsAndGlobalIndices",
+      "TestProductionSixPartFactoryRejectsMissingOrMismatchedOriginalInputs",
+      "TestProductionFactoryReconstructionKeepsOriginalJobDurationAndBytes",
+      "TestProductionCapturePlanPreservesOriginalFactory",
+      "TestProductionCapturePlanRejectsMissingInputsAndMutation",
+      "TestProductionMaterialOriginalSourceScopeMatchesWorkerWire",
+      "TestProductionMaterialScopeRejectsWideningAndUnknownOperations",
+      "TestProductionMaterialProducerRejectsMissingAuthenticatedOwner",
+      "TestProductionControlApprovalMatchesExactCensusAndOriginalClassification",
+      "TestProductionFinalizationSeedUsesCompleteUnchangedSourceAndActualBusinessInvocations",
+      "TestProductionPersistentMountFactoryBuildsAdditionalOriginalJob",
+      "TestProductionPersistentMappingsAreInOriginalSignedScope",
+      "TestProductionSourceBindingCannotBeAttachedWithoutOriginalRuntime",
+      "TestProductionRuntimeImageUsesOriginalTypedNullableSource",
+      "TestPersistentMountMetadataResolvesOnlyExactPinnedSource",
+      "TestPersistentMountMetadataRejectsDriftAndUnscopedRoots",
+      "TestPersistentMountNFSRetainsOriginalStagingPlacement",
+      "TestPersistentMountCoverageIncludesSidecarsAndRejectsMissingMappings",
+      "TestPersistentMountOverlapRejectsPhysicalAliases",
+      "TestPersistentMountScopeRejectsAmbiguousOrUnsafeOwnerInputs",
+      "TestPersistentMountPreflightRefusesMissingAndStoppedSourceWithoutActions",
+      "TestProductionSixPartOrdinaryPurposeUsesOriginalInputModulesAndMounts",
+      "TestProductionSixPartOrdinaryPurposeRequiresCompleteOriginalBinding",
+      "TestProductionSixPartOrdinaryPurposeRejectsOriginalMountAndPurposeDrift",
+      "TestProductionMetadataPermissionsIncludeRealDefaultRulesAndRejectDataWrites",
+      "TestProductionOriginalPerOperationAndPartMountPins",
+      "TestProductionWorkBuddyProAndLiteUseTheirOwnIdentityScope"
+    ],
+    "passed_root_count": 43,
+    "skipped_roots": [
+      "TestProductionMaterialWriteRequiresPrivateDistinctExactFiles",
+      "TestProductionFactoryDistinctIdentitySecretsOriginalSQLJournalAndCertificateScope"
+    ],
+    "actual_mysql_native_jobs_selected": false
+  },
+  "python_inventory_tests": {
+    "command": "python -B scripts/system-backup-b-writer-inventory.test.py",
+    "passed_roots": 7,
+    "exit_code": 0,
+    "scope": "synthetic API only, actual remote observation separate"
+  },
+  "vet": {
+    "publicadapter_exit": 0,
+    "combined_exit": 1,
+    "preexisting_unchanged_warning": "deployment_publication_startup_test.go:213 copies DeploymentService containing sync/atomic.Bool/noCopy",
+    "analyzer_disabled": false
+  },
+  "initial_failures": "r1/r2 data-only test reused nested fixture pointers/Job references; corrected deep clone and unique original Job refs. First wider test had nil fixture mount pin map; corrected fixture complete original formal/source pins. Preserve initial failed logs; final counts only final-placement log.",
+  "additional_placement_review": "Final resolver refuses PVC/hostPath on a different node from original staging; installation-owned NFS preserves original staging placement, keeps actual runtime node identity.",
+  "missing_inputs": {
+    "D": [
+      "source-owner generation of Discovery.PersistentMounts and original signed scope/hash, PVC/PV/Node pins",
+      "authenticated original stopped-instance mount snapshot and physical stopped receipt",
+      "legal SQL instance/Runtime ownership projection",
+      "first-adoption original maintenance authority and retained native fence protocol"
+    ],
+    "A": [
+      "source-owner signing review for new mapping field",
+      "physical writer fence witness purpose/epoch/expiry/revocation contract"
+    ],
+    "C": [
+      "actual embedded Skills/Teams writer graph and exact workspace/object mappings",
+      "old external NFS/S3/SQL writers, accepted/unknown operations and retained immutable historical source facts"
+    ]
+  },
+  "dependencies_installed": false,
+  "offline_go": {
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOFLAGS": "-mod=readonly",
+    "owned_cache": ".codex-temp/b-mounted-data-20261103/cache",
+    "owned_tmp": ".codex-temp/b-mounted-data-20261103/tmp"
+  },
+  "source_stop_or_deployment_mutation": false,
+  "real_sql_read_or_write": false,
+  "real_migration_executed": false,
+  "full_backup_or_first_adoption_verified": false,
+  "committed": false,
+  "pushed": false,
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackup/publicadapter/users_instances_module.go",
+      "sha256": "8549ccd827f7aba149aadcc2b3185f02da8de9bd3011d5f065c18813fa92a6c1"
+    },
+    {
+      "path": "backend/internal/systembackup/publicadapter/users_instances_module_test.go",
+      "sha256": "b9b844b58d0bb9335ebe8904ffaf17eaee5f6e5258dd8edb797977f75a02a9d1"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "sha256": "bee8804815a57a6116f8cf86e09c79d34ea7cba1dbf7813e2bc5eda96e225771"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_modules.go",
+      "sha256": "d59ec67d0d154941387eaecc7a5d7499cc82e79eda76554afed835340f00224c"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_mounted_parts_test.go",
+      "sha256": "e9f78cc9ce02c5382b9219a30d2401d1ee3092864bc701dac418653abaaea12f"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_authority.go",
+      "sha256": "6b70ca3549d098557ced73ee6446ee76ec720ef2e1afec3f3aa9dabece11b7d9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_inventory.go",
+      "sha256": "a6246975c66c520a7370c25ed0295f7f66662bb9eae8c5cf85cbc154eb8ac73d"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_mounts.go",
+      "sha256": "027e0a9129c7fb3adeb5f2a6cb7fc78473145418e7e465d8f80de8f3e9106f48"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_mounts_test.go",
+      "sha256": "af4ecf01ac879d73b4d05beee63d31908cf903f2423bea8d56c161422e08e643"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_runtime.go",
+      "sha256": "609359bcfcea2d55cb9534484d41085500ed85cbab33a34f284cae946879bca8"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_security.go",
+      "sha256": "3041860e700251e761150636ab3c6d5f5de106ee354896f16a88cb99381ee552"
+    },
+    {
+      "path": "scripts/system-backup-b-writer-inventory.py",
+      "sha256": "aabd9688c8713782329543e076dd7920e71e556fdf5c27fdd20b2cab34bcdf40"
+    },
+    {
+      "path": "scripts/system-backup-b-writer-inventory.test.py",
+      "sha256": "b3ca9a4abe49882b0fffd2baab55a7946966da52812159c8827374767a5ecd57"
+    }
+  ],
+  "evidence_sha256": {
+    ".gitattributes": "308a40fa1d89ae5ea4390b4c9b46a0108b09f171f07898f25d451fa0c69c4e9f",
+    "adapter-vet.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "adapter-vet.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapter-vet.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cleanup.json": "7368fdad67d4ec3ec98ec2e6d49780ee45017898f627360679414684a93e42a5",
+    "field-writer-observation.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "field-writer-observation.json": "5bfb9f604f3e8aecc09f3d2813d8e12f05d63dd740a4612cb0e9b09e82b92445",
+    "field-writer-observation.stderr.txt": "d4d1f8fd1ca67d91d063ce14769eb5d1b7b6fa051dd6dc85881bb269c9c390aa",
+    "go-factory-r2-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-factory-r2-tests.jsonl": "45dd428f04f5bb01f660ad99e926a08f225d0f23d0ccf20bbbb1712fe9a41576",
+    "go-factory-r2-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-final-placement-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-final-placement-tests.jsonl": "972e1bcf408a07e859be8c9886ea7f40efba414838b79f3ec53c9a557a4573f9",
+    "go-final-placement-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-final-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-final-tests.jsonl": "c183683953cf3fabec4e45042784456b8e2ca992c0bab18825d763901f9f26fd",
+    "go-final-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-focused-r2-tests.exit.txt": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+    "go-focused-r2-tests.jsonl": "32d59af1a7a43f5bd11588321c168c1b05452825d5319c557d92e52081e20302",
+    "go-focused-r2-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-focused-r3-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-focused-r3-tests.jsonl": "22bf1b241b4b20339277eec354507f13a82565ee77a2ef4ff35e4359c75a2627",
+    "go-focused-r3-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-focused-tests.exit.txt": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+    "go-focused-tests.jsonl": "006bde8c0276aae8b5928a7af9e6b2eec112a245956cac5edfc97dd319f3f0d2",
+    "go-focused-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-placement-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-placement-tests.jsonl": "c61eae0fd7fbd3a5ecf4834f8933d4461cbb072812094241b3ca6f5116479330",
+    "go-placement-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-regression-r2-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "go-regression-r2-tests.jsonl": "e66a3e9bba1ab788f6521b528ddc56fcf5057d5a26a248a785a84219315f6f6b",
+    "go-regression-r2-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "go-regression-tests.exit.txt": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+    "go-regression-tests.jsonl": "f0ce032ce414003b28f047158e9c540948a12031e2c298f154a78cbcc991c346",
+    "go-regression-tests.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inventory-tests.exit.txt": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+    "inventory-tests.stderr.txt": "f83596722b49e12b0486ff8967a8b83fefd02d2df8faf8aeac9accb90eac0371",
+    "inventory-tests.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "README.md": "70240c97730f355184a8f6caffc9ebaac20320bf619910f8bd90c079379a2cc7",
+    "vet.exit.txt": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+    "vet.stderr.txt": "6af579f3826e4755adfaabd547b7e32aa185f71598c4ecc9f44c08134c6fdecf",
+    "vet.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "cleanup": {
+    "result": "blocked_by_policy",
+    "automatic_review": "exec_command rejected before execution; reason: blocked by policy",
+    "owned_root": "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-mounted-data-20261103",
+    "targets": [
+      "cache",
+      "tmp"
+    ],
+    "targets_still_exist": true,
+    "alternative_deletion_attempted": false,
+    "other_owner_paths_touched": false,
+    "logs_retained": true
+  },
+  "handoff_sha256": "267e944cc7020e838b0d4e6ae100aa1a9ff0269ad50eedb21994620606bd7dcb"
+}

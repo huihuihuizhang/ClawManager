@@ -43,6 +43,7 @@ type productionCaptureMetadata struct {
 }
 
 type productionInstanceMount struct {
+	DataOnly                               bool `json:",omitempty"`
 	InstanceID                             int
 	MountID, SubPath, NodeName             string
 	Source                                 corev1.Volume
@@ -173,10 +174,14 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 		part := "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID
 		if add("users_instances", part, "instances", "capture-workspace", func(r *b.CapturePartRequest) error {
 			r.Invocation.WorkspacePath = "/workspace"
-			r.Invocation.Request.RuntimePolicy = &mount.Policy
-			r.Invocation.Request.SkillWorkspace = mount.Skills
+			if !mount.DataOnly {
+				r.Invocation.Request.RuntimePolicy = &mount.Policy
+				r.Invocation.Request.SkillWorkspace = mount.Skills
+			} else if mount.MountID == "workspace" || mount.Skills != nil || mount.WorkBuddy != nil {
+				return d.ErrNotReady
+			}
 			r.Workload.Source, r.Workload.SourceSubPath, r.Workload.NodeName = mount.Source, mount.SubPath, mount.NodeName
-			if workBuddyUIDSource(instance) {
+			if workBuddyUIDSource(instance) && !mount.DataOnly {
 				if mount.WorkBuddy == nil || mount.WorkBuddy.Schema != 1 || mount.WorkBuddy.InstanceID != instance.ID || mount.WorkBuddy.UserID != instance.UserID || mount.WorkBuddy.UID < 10000 || mount.WorkBuddy.UID > 65533 || mount.WorkBuddy.GID != mount.WorkBuddy.UID {
 					return d.ErrNotReady
 				}
@@ -314,7 +319,7 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 	}
 	users := b.UsersInstancesModuleConfig{Revision: revision, Source: source, Database: byPart[b.UsersInstancesDatabasePart]}
 	for _, mount := range metadata.Mounts {
-		users.Workspaces = append(users.Workspaces, b.InstanceWorkspaceCapture{InstanceID: mount.InstanceID, MountID: mount.MountID, Request: byPart["instance_"+strconv.Itoa(mount.InstanceID)+"_"+mount.MountID]})
+		users.Workspaces = append(users.Workspaces, b.InstanceWorkspaceCapture{InstanceID: mount.InstanceID, MountID: mount.MountID, DataOnly: mount.DataOnly, Request: byPart["instance_"+strconv.Itoa(mount.InstanceID)+"_"+mount.MountID]})
 	}
 	teams := b.TeamsModuleConfig{Revision: revision, Source: source, SharedWorkspaces: map[string]b.CapturePartRequest{}, Redis: map[string]b.CapturePartRequest{}, SharedRedisPart: b.SourceRedisPart, SharedRedis: &metadata.Redis}
 	for _, mount := range source.Teams.Mounts {

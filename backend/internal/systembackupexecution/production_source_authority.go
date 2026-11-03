@@ -24,6 +24,7 @@ const sourceMetadataGrantDomain = "system-backup-controller-source-metadata.v1\x
 // An independently source-owner-signed controller delegation. It has no
 // Invocation, future Job, key-use nonce or permission to Generate/Unwrap.
 type productionSourceDiscovery struct {
+	PersistentMounts                                      *productionPersistentMountScope     `json:",omitempty"`
 	PublicationPolicy                                     *originalPublicationPolicyReference `json:",omitempty"`
 	GrantFile, GrantSHA256                                string
 	Issuer                                                ed25519.PublicKey
@@ -80,6 +81,9 @@ func sourceMetadataScope(materials productionCaptureMaterials) (string, error) {
 }
 
 func (x productionSourceDiscovery) validate() error {
+	if x.PersistentMounts != nil && x.PersistentMounts.validate() != nil {
+		return d.ErrNotReady
+	}
 	if len(x.Issuer) != ed25519.PublicKeySize || !filepath.IsAbs(x.GrantFile) || filepath.Clean(x.GrantFile) != x.GrantFile || !formalCandidateDigest(x.GrantSHA256) || x.ControllerDeployment == "" || x.ControllerDeploymentUID == "" || x.ControllerServiceAccount == "" || x.ControllerServiceAccountUID == "" || x.SourceAPIServiceAccount == "" || x.SourceAPIServiceAccountUID == "" || !formalCandidateDigest(x.SourceAPITokenSHA256) || x.Redis.Validate() != nil || len(x.RuntimePolicies) < 1 || len(x.RuntimePolicies) > 128 || len(x.ResourceActors) != 2 {
 		return d.ErrNotReady
 	}

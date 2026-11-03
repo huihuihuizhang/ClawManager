@@ -1,0 +1,17 @@
+{
+  "result": "blocked_by_policy",
+  "command_executed": false,
+  "targets": [
+    "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mount-inputs-20261103\\systembackupexecution.test",
+    "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mount-inputs-20261103\\owner.txt"
+  ],
+  "test_binary_still_exists": true,
+  "alternative_deletion_attempted": false,
+  "previous_blocked_cache_cleanup_retried": false,
+  "reused_owned_cache": "D:\\litiantian\\project\\github\\cm-backup\\ClawManager\\.codex-temp\\b-mounted-data-20261103\\cache",
+  "reused_tmp_empty": true,
+  "other_owner_paths_touched": false,
+  "container_name": "cm-b-mount-inputs-20261103-isolated",
+  "container_auto_removed": true,
+  "logs_retained": true
+}

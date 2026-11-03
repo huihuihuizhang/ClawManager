@@ -136,7 +136,10 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 	old := map[int]productionInstanceMount{}
 	if saved != nil {
 		for _, mount := range saved.Mounts {
-			if mount.MountID != "workspace" || old[mount.InstanceID].InstanceID != 0 {
+			if mount.DataOnly && mount.MountID != "workspace" {
+				continue
+			}
+			if mount.MountID != "workspace" || mount.DataOnly || old[mount.InstanceID].InstanceID != 0 {
 				return fail()
 			}
 			old[mount.InstanceID] = mount
@@ -211,6 +214,17 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 		}
 	}
 	if saved != nil && len(old) != len(mounts) {
+		return fail()
+	}
+	extra, extraIdentities, err := x.additionalInstanceMounts(ctx, source, runtime, mounts)
+	if err != nil {
+		return fail()
+	}
+	mounts = append(mounts, extra...)
+	for part, identity := range extraIdentities {
+		identities[part] = identity
+	}
+	if saved != nil && !reflect.DeepEqual(saved.Mounts, mounts) {
 		return fail()
 	}
 	if x.Recheck(ctx) != nil {

@@ -136,6 +136,19 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 	for _, instance := range f.inventory.Instances {
 		parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(instance.ID) + "_workspace", "capture-workspace"})
 	}
+	var scope *productionPersistentMountScope
+	if x.materials.Discovery != nil {
+		scope = x.materials.Discovery.PersistentMounts
+	}
+	additional, err := persistentMountsForInstances(scope, f.inventory.Instances)
+	if err != nil {
+		return nil, err
+	}
+	for _, mounts := range additional {
+		for _, mount := range mounts {
+			parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID, "capture-workspace"})
+		}
+	}
 	// Match the CURRENT concrete production consumer: SourceFacts identifies
 	// actual Team PVC sources; freezeProductionSource:81 selects Objects=[] and
 	// teams_module only selects teams_objects for an explicit ObjectRef inventory.

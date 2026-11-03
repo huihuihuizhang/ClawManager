@@ -74,6 +74,76 @@ func TestUsersInstancesConcreteRegistrationUsesAtomicDatabaseAndAllMounts(t *tes
 	}
 }
 
+func TestUsersInstancesDataOnlyMountUsesExistingCaptureWithoutReplacingPrimary(t *testing.T) {
+	f, cfg := usersInstancesModuleFixture(t)
+	var extra InstanceWorkspaceCapture
+	raw, _ := json.Marshal(cfg.Workspaces[0])
+	if json.Unmarshal(raw, &extra) != nil {
+		t.Fatal("fixture clone")
+	}
+	extra.MountID, extra.DataOnly = "data", true
+	extra.Request.Part = "instance_7_data"
+	extra.Request.JobUnitKey = extra.Request.Part
+	extra.Request.Workload.Identity.Name = "capture-instance-7-data"
+	extra.Request.Workload.WorkerControl.InvocationConfigMap = "invoke-instance-7-data"
+	extra.Request.Invocation.Request.Binding.Path = extra.Request.Part
+	extra.Request.Invocation.Request.RuntimePolicy = nil
+	extra.Request.Invocation.Request.ArtifactName = "instance-data.enc"
+	extra.Request.Workload.SourceSubPath = "users/1/instances/7/data"
+	if extra.Request.Invocation.ProviderKey != nil {
+		extra.Request.Invocation.ProviderKey.Request.Context.Part = extra.Request.Part
+	}
+	if extra.Request.Invocation.FormalCapture != nil {
+		extra.Request.Invocation.FormalCapture.EnvelopeName = "instance-data.envelope"
+	}
+	cfg.Workspaces = append(cfg.Workspaces, extra)
+	registration, err := NewUsersInstancesModule(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := NewCaptureModules([]CaptureModuleRegistration{registration}, moduleTestContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts, err := m.BuildParts(f.in, cfg.Source, f.x.HoldUntil)
+	if err != nil || len(parts) != 4 {
+		t.Fatal("extra mount not materialized", err)
+	}
+	var got worker.Invocation
+	found := false
+	for _, part := range parts {
+		if part.Part == "instance_7_data" {
+			found = true
+			if json.Unmarshal(part.InvocationJSON, &got) != nil || got.Request.RuntimePolicy != nil || got.Request.WorkBuddyIdentity != nil || got.Request.Operation != "capture-workspace" {
+				t.Fatal("extra mount changed protocol or runtime policy")
+			}
+		}
+	}
+	if !found {
+		t.Fatal("extra mount missing")
+	}
+	for _, fault := range []string{"primary", "policy", "whole-root"} {
+		_, invalid := usersInstancesModuleFixture(t)
+		var bad InstanceWorkspaceCapture
+		raw, _ := json.Marshal(extra)
+		if json.Unmarshal(raw, &bad) != nil {
+			t.Fatal("fixture clone")
+		}
+		switch fault {
+		case "primary":
+			bad.MountID = "workspace"
+		case "policy":
+			bad.Request.Invocation.Request.RuntimePolicy = invalid.Workspaces[0].Request.Invocation.Request.RuntimePolicy
+		case "whole-root":
+			bad.Request.Workload.SourceSubPath = "."
+		}
+		invalid.Workspaces = append(invalid.Workspaces, bad)
+		if _, err := NewUsersInstancesModule(invalid); err == nil {
+			t.Fatal("data-only bypass accepted", fault)
+		}
+	}
+}
+
 func TestUsersInstancesRegistrationRejectsMissingAndForeignMappings(t *testing.T) {
 	for _, which := range []string{"missing-mount", "extra-instance", "duplicate-mount", "wrong-part", "unknown-owner", "duplicate-user", "windows", "missing-policy", "foreign-policy", "foreign-database", "bad-revision", "transitional-state", "unsafe-workspace"} {
 		t.Run(which, func(t *testing.T) {

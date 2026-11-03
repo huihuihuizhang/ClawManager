@@ -65,6 +65,16 @@ func (s *OriginalCaptureSequence) MaterializeMappings(ctx context.Context, clien
 	if client == nil || s.authority == nil || s.authority.Recheck(ctx) != nil || !filepath.IsAbs(outputFile) || filepath.Clean(outputFile) != outputFile || filepath.Dir(outputFile) != filepath.Dir(s.core.CaptureModules.Path) {
 		return zero, c.ErrExecutionAuthority
 	}
+	// Reject stale original runtime/volume pins before creating any mapping
+	// resources. This read grants neither SQL ownership nor physical stop.
+	if s.materials.Discovery.PersistentMounts != nil {
+		if err := checkOriginalPersistentMountPins(ctx, client, s.core, s.materials.Discovery.PersistentMounts); err != nil {
+			return zero, err
+		}
+		if s.authority.Recheck(ctx) != nil {
+			return zero, c.ErrExecutionAuthority
+		}
+	}
 	for _, reserved := range []string{s.definition.CoreFile, s.definition.ConfigFile, s.core.ForwardGrant.Path, s.privateFile, s.materials.Redis.GrantFile, s.materials.Objects.GrantFile, s.materials.Discovery.GrantFile, s.core.CaptureModules.Path, componentsFile} {
 		if outputFile == reserved {
 			return zero, c.ErrExecutionAuthority

@@ -1,0 +1,3460 @@
+{
+  "changed_resources": [],
+  "complete_writer_inventory_proven": false,
+  "first_adoption_authorized": false,
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "nodes": [
+    {
+      "architecture": "amd64",
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "k8s-master",
+        "namespace": null,
+        "resourceVersion": "125315583",
+        "uid": "bc1fb478-0388-4f53-96b4-8d186301f6af"
+      },
+      "os": "linux"
+    },
+    {
+      "architecture": "amd64",
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "node1",
+        "namespace": null,
+        "resourceVersion": "125316425",
+        "uid": "fe1cc275-6fa1-484e-8bf6-7b21193daffd"
+      },
+      "os": "linux"
+    }
+  ],
+  "observed_at_utc": "2026-11-03T07:43:47.538278+00:00",
+  "persistent_volumes": [
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "claim_ref": {
+        "name": "minio-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "e7bc8d73-e8fb-4010-8751-d9a0c8bb2467"
+      },
+      "csi_driver": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-zhanghui08-minio-pv",
+        "namespace": null,
+        "resourceVersion": "33885129",
+        "uid": "b1d05395-a5f5-4421-ae52-d63f7ce03327"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "hostpath",
+        "path": "/data/clawmanager-zhanghui08/system/minio",
+        "type": "DirectoryOrCreate"
+      }
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "claim_ref": {
+        "name": "mysql-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "e3c297bd-a00a-4a60-bce7-7368a69e8fd2"
+      },
+      "csi_driver": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-zhanghui08-mysql-pv",
+        "namespace": null,
+        "resourceVersion": "33885128",
+        "uid": "2661bbff-e182-4189-9a09-3c23d5c71050"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "hostpath",
+        "path": "/data/clawmanager-zhanghui08/system/mysql",
+        "type": "DirectoryOrCreate"
+      }
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "claim_ref": {
+        "name": "redis-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "34941b96-4f87-4c08-a1c4-843c3d18fa2e"
+      },
+      "csi_driver": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-zhanghui08-redis-pv",
+        "namespace": null,
+        "resourceVersion": "33885134",
+        "uid": "074f1c17-d597-4e62-a9a5-63561cd8d565"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "hostpath",
+        "path": "/data/clawmanager-zhanghui08/system/redis",
+        "type": "DirectoryOrCreate"
+      }
+    },
+    {
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "claim_ref": {
+        "name": "clawmanager-workspaces",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "12354b07-dd21-4d40-ac9b-da5c97699109"
+      },
+      "csi_driver": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-zhanghui08-workspaces-pv",
+        "namespace": null,
+        "resourceVersion": "33885135",
+        "uid": "d57c7bc1-3d3c-45e8-a898-0d2e5e340810"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "hostpath",
+        "path": "/data/clawmanager-zhanghui08/system/workspaces",
+        "type": "DirectoryOrCreate"
+      }
+    },
+    {
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "claim_ref": {
+        "name": "system-backup-capacity-report",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "d9452769-2406-4437-8dab-775f2de7bf13"
+      },
+      "csi_driver": "driver.longhorn.io",
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "pvc-d9452769-2406-4437-8dab-775f2de7bf13",
+        "namespace": null,
+        "resourceVersion": "93184164",
+        "uid": "85c6c189-a646-4031-8e59-de26f8a45ed6"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "unsupported_or_unknown",
+        "requires_owner_review": true
+      }
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "claim_ref": {
+        "name": "sbk-transit-zh-977a1b9a-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "uid": "e710fd14-6b7f-434f-b423-4962a5f7bea6"
+      },
+      "csi_driver": "driver.longhorn.io",
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "pvc-e710fd14-6b7f-434f-b423-4962a5f7bea6",
+        "namespace": null,
+        "resourceVersion": "124411002",
+        "uid": "71589533-e966-4dcc-bdfe-351674dc859b"
+      },
+      "local_path": null,
+      "storage": {
+        "kind": "unsupported_or_unknown",
+        "requires_owner_review": true
+      }
+    }
+  ],
+  "physical_fence_proven": false,
+  "read_only": true,
+  "resources": [
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 96,
+        "name": "clawmanager-app",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "111489727",
+        "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 9,
+        "name": "clawmanager-secret-broker",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "111489725",
+        "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "clawmanager-team-redis",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57206056",
+        "uid": "f517ddaa-cac6-4841-812d-9a426c233618"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "redis",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "redis-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "hermes-runtime",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524116",
+        "uid": "1cb9ad8c-f269-4443-8310-90c649c4b299"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "minio",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57249374",
+        "uid": "9cd91bdc-2a9d-4f78-9cd7-413d611b2667"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "minio",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "minio-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 14,
+        "name": "mysql",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "119671203",
+        "uid": "27916932-fc61-432c-b515-081f18db34a8"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "mysql",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/run/system-backup-mysql-tls",
+              "name": "sbk-test-tls-runtime",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 7,
+        "name": "openclaw-runtime",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "121463398",
+        "uid": "0fd3bcb3-3388-4bba-a48c-13518af1ee9d"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "sbk-transit-zh-977a1b9a",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "124439294",
+        "uid": "0f25ad46-f258-4db0-9a15-bc5ef915e8c4"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "vault",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tls",
+              "name": "tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/config",
+              "name": "config",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tmp",
+              "name": "tmp",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 7,
+        "name": "skill-scanner",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524398",
+        "uid": "f9cfe50f-5d1b-475a-b116-4c267b64f161"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "skill-scanner",
+          "mounts": []
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "workspace-store",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "47440468",
+        "uid": "6346ad6d-21d2-46e4-9e19-1689201e9431"
+      },
+      "owners": [],
+      "ready_replicas": 1,
+      "resource": "deployments",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "nfs-server",
+          "mounts": [
+            {
+              "mountPath": "/exports/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-workspaces",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "32955216",
+        "uid": "12354b07-dd21-4d40-ac9b-da5c97699109"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "clawmanager-zhanghui08-workspaces-pv",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "manual",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "minio-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "32955207",
+        "uid": "e7bc8d73-e8fb-4010-8751-d9a0c8bb2467"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "clawmanager-zhanghui08-minio-pv",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "manual",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "mysql-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "32955213",
+        "uid": "e3c297bd-a00a-4a60-bce7-7368a69e8fd2"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "clawmanager-zhanghui08-mysql-pv",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "manual",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "redis-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33885187",
+        "uid": "34941b96-4f87-4c08-a1c4-843c3d18fa2e"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "clawmanager-zhanghui08-redis-pv",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "manual",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "access_modes": [
+        "ReadWriteOnce"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "sbk-transit-zh-977a1b9a-data",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "124411000",
+        "uid": "e710fd14-6b7f-434f-b423-4962a5f7bea6"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "pvc-e710fd14-6b7f-434f-b423-4962a5f7bea6",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "longhorn",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "system-backup-capacity-report",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "93184146",
+        "uid": "d9452769-2406-4437-8dab-775f2de7bf13"
+      },
+      "owners": [],
+      "phase": "Bound",
+      "pv": "pvc-d9452769-2406-4437-8dab-775f2de7bf13",
+      "resource": "persistentvolumeclaims",
+      "storage_class": "longhorn-rwx",
+      "volume_mode": "Filesystem"
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://1e921a33872a92c45b0634867673f95c02a6adbeb5695ec6c5afcb3a517377e5",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/clawmanager:backup-test-zh-fix18",
+          "image_id": "10.130.14.23:5000/clawmanager@sha256:c16f07c25c6dc8362aa09b7a1e81f5d1204f2812ae542bbcb21a3946975c6c9d",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "mountPropagation": null,
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "mountPropagation": null,
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "mountPropagation": null,
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "mountPropagation": null,
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-k2llp",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "clawmanager-app",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-10-16T00:49:02Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-app-788b97b78f-l8k5f",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "108482852",
+        "uid": "aabba383-5db9-48a7-a3b7-2b92624c2f3a"
+      },
+      "init_containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://4a6b9e4b48a4c705828d2960b4a3eabbc8e2a6ffcd2ded725e873f81a70555a3",
+          "exit_code": 0,
+          "finished_at": "2026-10-16T00:49:00Z",
+          "image": "10.130.14.23:5000/clawmanager@sha256:1ba8cc47f468610e6875117f75fe42ce9fdb15e1cd2e6f877ac8ff2f99e2baa0",
+          "image_id": "10.130.14.23:5000/clawmanager@sha256:1ba8cc47f468610e6875117f75fe42ce9fdb15e1cd2e6f877ac8ff2f99e2baa0",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "mountPropagation": null,
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-k2llp",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "wait-secret-broker",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-10-16T00:49:00Z",
+          "state": "terminated"
+        }
+      ],
+      "node": "node1",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "clawmanager-app-788b97b78f",
+          "uid": "1cf25790-66e9-423a-95ca-a991ca405101"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "clawmanager-app",
+      "volumes": [
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "secret-broker-token"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "configMap",
+          "name": "secret-broker-ca"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "secret",
+          "name": "tls-cert"
+        },
+        {
+          "kind": "nfs",
+          "name": "workspaces",
+          "path": "/",
+          "readOnly": null,
+          "server": "10.107.165.245"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-k2llp"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://913f9487c319e35a97371d50859241b08d5775980cb3dfc764e2f5fdd755e8e9",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/clawmanager@sha256:1ba8cc47f468610e6875117f75fe42ce9fdb15e1cd2e6f877ac8ff2f99e2baa0",
+          "image_id": "10.130.14.23:5000/clawmanager@sha256:1ba8cc47f468610e6875117f75fe42ce9fdb15e1cd2e6f877ac8ff2f99e2baa0",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "mountPropagation": null,
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-lqlfw",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "secret-broker",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-09-22T08:48:18Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-secret-broker-754797878-ncth6",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "107772117",
+        "uid": "5409179f-07a9-4acc-8fc9-eda31f259f47"
+      },
+      "init_containers": [],
+      "node": "node1",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "clawmanager-secret-broker-754797878",
+          "uid": "d348627c-815c-491f-9826-a4ae95759627"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "clawmanager-secret-broker",
+      "volumes": [
+        {
+          "instance_persistent_data": false,
+          "kind": "secret",
+          "name": "secret-broker-tls"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-lqlfw"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://d730a1746036fdcfbb0f411b882d335b0da427522f824da2ca9664e6181a3962",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "redis:7-alpine",
+          "image_id": "docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "mountPropagation": null,
+              "name": "redis-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-fllnz",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "redis",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-09-12T06:16:43Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "clawmanager-team-redis-6b99688494-m8fs6",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57249113",
+        "uid": "d4bd6cf8-9799-4100-a3ce-7cda5dea20d5"
+      },
+      "init_containers": [],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "clawmanager-team-redis-6b99688494",
+          "uid": "f03da718-ac71-44fc-be2b-759fc505ca3f"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "instance_persistent_data": false,
+          "kind": "emptyDir",
+          "name": "redis-data"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-fllnz"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://54c1176054e0fc7e9c3684ab9db62a150e040e375c1931455282daa072fcfdb2",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/hermes-lite:2026.7.1",
+          "image_id": "10.130.14.23:5000/hermes-lite@sha256:6688834a944161d8dada995cdffd90781533b24ab1e75bb2182c46eaee3fb52c",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "mountPropagation": null,
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-5jnvk",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "runtime",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-09-15T00:53:28Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "hermes-runtime-544c99ff7-7ghcw",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524113",
+        "uid": "39b187c9-dbb4-49c9-a305-e14503b82a2d"
+      },
+      "init_containers": [],
+      "node": "node1",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "hermes-runtime-544c99ff7",
+          "uid": "37397a4b-a20f-49d9-b72b-6b010464fde3"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "kind": "nfs",
+          "name": "workspaces",
+          "path": "/",
+          "readOnly": null,
+          "server": "10.107.165.245"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-5jnvk"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://c3a5836b312f972d3e6322a719a155b935ba031aae89aa78530ca0de4559e53d",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/minio:2026.6.5",
+          "image_id": "10.130.14.23:5000/minio@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "mountPropagation": null,
+              "name": "minio-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-cz6nl",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "minio",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-08-31T07:21:48Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "minio-788dfd959f-pgslj",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57249370",
+        "uid": "2b674b10-0360-4164-8055-022c46991d17"
+      },
+      "init_containers": [],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "minio-788dfd959f",
+          "uid": "341bb8c4-c941-4bf6-b458-7994d5260377"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "claim": "minio-data",
+          "kind": "pvc",
+          "name": "minio-data",
+          "read_only": false
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-cz6nl"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://d26d16c69af952564d2ba7e78f40d3bc1a74c0b8ca2e42ff2da71cdc5f2c0913",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/mysql:2026.6.5",
+          "image_id": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "mountPropagation": null,
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "mountPropagation": null,
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/run/system-backup-mysql-tls",
+              "mountPropagation": null,
+              "name": "sbk-test-tls-runtime",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-cbmgk",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "mysql",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-10-28T04:15:20Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "mysql-74bd777b8-j85z7",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "119671199",
+        "uid": "6d314752-86e1-41ce-9831-af03179dcf3b"
+      },
+      "init_containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://2dfdfa59cf91a71086d9dd6a903e39077f5d36b0584e3da3a250631f221d9b18",
+          "exit_code": 0,
+          "finished_at": "2026-10-28T04:15:20Z",
+          "image": "10.130.14.23:5000/mysql:2026.6.5",
+          "image_id": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+          "mounts": [
+            {
+              "mountPath": "/source",
+              "mountPropagation": null,
+              "name": "sbk-test-tls-source",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/runtime",
+              "mountPropagation": null,
+              "name": "sbk-test-tls-runtime",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-cbmgk",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "sbk-test-tls-prepare",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-10-28T04:15:20Z",
+          "state": "terminated"
+        }
+      ],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "mysql-74bd777b8",
+          "uid": "9f255d0a-027f-421a-8daa-dd4400960a36"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "claim": "mysql-data",
+          "kind": "pvc",
+          "name": "mysql-data",
+          "read_only": false
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "configMap",
+          "name": "mysql-init"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "secret",
+          "name": "sbk-test-tls-source"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "emptyDir",
+          "name": "sbk-test-tls-runtime"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-cbmgk"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://4a47f7898b7547de43727e54a1074a9de33ff9a50c28de0907f772ab1539b091",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/openclaw-lite@sha256:37c43ba05ff7fd4f0949f274fc67c3e9825f6d3d0f9124b5fc45dc8366c39cee",
+          "image_id": "10.130.14.23:5000/openclaw-lite@sha256:37c43ba05ff7fd4f0949f274fc67c3e9825f6d3d0f9124b5fc45dc8366c39cee",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "mountPropagation": null,
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-l7gn8",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "runtime",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-10-30T03:06:31Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "openclaw-runtime-bcc5bdc77-f9kbz",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "121463388",
+        "uid": "bd3a718c-0313-41bd-9a68-da650bfa5e7a"
+      },
+      "init_containers": [],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "openclaw-runtime-bcc5bdc77",
+          "uid": "3fa49b8b-d0c4-4436-9962-608dada4001a"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "kind": "nfs",
+          "name": "workspaces",
+          "path": "/",
+          "readOnly": null,
+          "server": "10.107.165.245"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-l7gn8"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://47296d731fcf426326efa3b64f86654cf4f046c062839a2cbb64ae8ba597d85f",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+          "image_id": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "mountPropagation": null,
+              "name": "data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tls",
+              "mountPropagation": null,
+              "name": "tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/config",
+              "mountPropagation": null,
+              "name": "config",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tmp",
+              "mountPropagation": null,
+              "name": "tmp",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "vault",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-11-02T08:50:03Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "sbk-transit-zh-977a1b9a-ff5b66574-5gwn4",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "124439289",
+        "uid": "a1a40fcb-a434-456f-bb7e-d93673618d90"
+      },
+      "init_containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://423a3f3e534fd4b6f6bcdbb624b02c57378cb8186fb763c7f4dcdd16e7a010fe",
+          "exit_code": 0,
+          "finished_at": "2026-11-02T08:50:02Z",
+          "image": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+          "image_id": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "mountPropagation": null,
+              "name": "data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "prepare-raft-directory",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-11-02T08:50:02Z",
+          "state": "terminated"
+        }
+      ],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "sbk-transit-zh-977a1b9a-ff5b66574",
+          "uid": "c0ab6868-ce41-48b1-951e-2736fe2d60d2"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "sbk-transit-zh-977a1b9a",
+      "volumes": [
+        {
+          "claim": "sbk-transit-zh-977a1b9a-data",
+          "kind": "pvc",
+          "name": "data",
+          "read_only": false
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "secret",
+          "name": "tls"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "configMap",
+          "name": "config"
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "emptyDir",
+          "name": "tmp"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://8cadb5f50c50d0bc72684c8b0ab840e6bd0462c76d77f2208162c4294e6e31c3",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/skill-scanner:2026.6.5",
+          "image_id": "10.130.14.23:5000/skill-scanner@sha256:07925a31ddcd38554bdd428f418a7622cf92341520e71e309d96d921f2c2e0f4",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-646gk",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "skill-scanner",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-09-15T00:53:27Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "skill-scanner-6cbf6887d4-2pv29",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524393",
+        "uid": "b4fc0585-c302-4fcc-97f6-66941e13cc06"
+      },
+      "init_containers": [],
+      "node": "node1",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "skill-scanner-6cbf6887d4",
+          "uid": "bcf3bff2-dd46-4970-8f74-34e2f549c1e7"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-646gk"
+        }
+      ]
+    },
+    {
+      "containers": [
+        {
+          "block_devices": [],
+          "container_id": "containerd://7f76746afe9c7cc54fd54d7a62c805b87dab6caeba23232d988899b1c5633a53",
+          "exit_code": null,
+          "finished_at": null,
+          "image": "10.130.14.23:5000/nfs-server-alpine:2026.6.9",
+          "image_id": "10.130.14.23:5000/nfs-server-alpine@sha256:7fa99ae65c23c5af87dd4300e543a86b119ed15ba61422444207efc7abd0ba20",
+          "mounts": [
+            {
+              "mountPath": "/exports/workspaces",
+              "mountPropagation": null,
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "mountPropagation": null,
+              "name": "kube-api-access-tdk2p",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ],
+          "name": "nfs-server",
+          "ready": true,
+          "restart_count": 0,
+          "started_at": "2026-08-31T07:21:49Z",
+          "state": "running"
+        }
+      ],
+      "ephemeral_container_names": [],
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": null,
+        "name": "workspace-store-5f6db46744-9z6g8",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "47440462",
+        "uid": "094b3f6f-5310-4a1c-9fc6-df254749cd39"
+      },
+      "init_containers": [],
+      "node": "k8s-master",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "workspace-store-5f6db46744",
+          "uid": "2662db74-df89-48de-9e93-f25549b017cc"
+        }
+      ],
+      "phase": "Running",
+      "resource": "pods",
+      "service_account": "default",
+      "volumes": [
+        {
+          "claim": "clawmanager-workspaces",
+          "kind": "pvc",
+          "name": "workspaces",
+          "read_only": false
+        },
+        {
+          "instance_persistent_data": false,
+          "kind": "projected",
+          "name": "kube-api-access-tdk2p"
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-574cdd96c5",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "94136945",
+        "uid": "dc040e24-71bf-4bdb-b597-2bdfa170b16e"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-5759994cb4",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "108483041",
+        "uid": "6d2e1d29-8681-4c67-a116-d508d6a08bca"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-5f59c84b94",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "87363603",
+        "uid": "67878052-4c83-449b-a763-15d5c72029cb"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-5fb97cd54",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86513335",
+        "uid": "9bd74a85-3f25-4bdf-90b1-38a0332f7d01"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-659c7f788d",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "93908167",
+        "uid": "65278c3d-95de-427d-9548-2dd557677741"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-674b6b9897",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86514716",
+        "uid": "0ea0b493-bc93-4d61-9b84-ef5992442b05"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-6999f996cd",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86737913",
+        "uid": "c428672a-dfa8-4e57-919d-e41c4ffe7037"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-6b7fdcfd86",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "94014999",
+        "uid": "50b0e35e-36ac-4cb0-ba2d-e6b457c40bcd"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "clawmanager-app-788b97b78f",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "111489724",
+        "uid": "1cf25790-66e9-423a-95ca-a991ca405101"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-7cfb5c48df",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86502983",
+        "uid": "11bf946f-d4df-41ca-a0a2-288b9721b0fb"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-app-85b7d6dd9c",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86513725",
+        "uid": "d4efa0fd-9ca8-4391-b318-81c9cb22594d"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-app",
+          "uid": "ed2c80de-9d24-4ca6-8f9c-877a990ac933"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "clawmanager-app",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker",
+              "name": "secret-broker-token",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-ca",
+              "name": "secret-broker-ca",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/var/run/clawreef-tls",
+              "name": "tls-cert",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-54c6d588c4",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86737467",
+        "uid": "adef6287-f168-4c15-98e3-4be3cdd8895a"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-596485f655",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "85876240",
+        "uid": "79a31953-90ba-471c-bfda-7549547dc3d2"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-5b45d9c787",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "85783364",
+        "uid": "d494c370-313d-462a-ba8e-1715e3bc9601"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-6d6dbfdc47",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "85877855",
+        "uid": "19fac46d-1daa-49f4-a865-d302d644ebf2"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "clawmanager-secret-broker-754797878",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "111489721",
+        "uid": "d348627c-815c-491f-9826-a4ae95759627"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-84487c44f9",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "86513478",
+        "uid": "7f031932-fcc1-4e1d-b1a9-dbda72971ef9"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": [
+            {
+              "mountPath": "/var/run/secrets/clawmanager-secret-broker-tls",
+              "name": "secret-broker-tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "clawmanager-secret-broker-86cbc6bbbb",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "85676069",
+        "uid": "62ea47c7-4dd0-4551-9b8a-8a423652fc3f"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": []
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "clawmanager-secret-broker-b657c4cff",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "85653382",
+        "uid": "0b25be08-a9d1-45aa-b2f4-ad371e0f8070"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-secret-broker",
+          "uid": "2e2a2959-8476-408d-af24-87ce3a69431a"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "secret-broker",
+          "mounts": []
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "clawmanager-team-redis-6669544f6c",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33892044",
+        "uid": "0b10a630-a69c-4129-b5a5-69dff5b5c229"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-team-redis",
+          "uid": "f517ddaa-cac6-4841-812d-9a426c233618"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "redis",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "redis-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "clawmanager-team-redis-6b99688494",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57206055",
+        "uid": "f03da718-ac71-44fc-be2b-759fc505ca3f"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "clawmanager-team-redis",
+          "uid": "f517ddaa-cac6-4841-812d-9a426c233618"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "redis",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "redis-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "hermes-runtime-544c99ff7",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524115",
+        "uid": "37397a4b-a20f-49d9-b72b-6b010464fde3"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "hermes-runtime",
+          "uid": "1cb9ad8c-f269-4443-8310-90c649c4b299"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "hermes-runtime-7b59c48fcd",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33891931",
+        "uid": "bd0e66cc-d959-440a-84ac-6f790ad11923"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "hermes-runtime",
+          "uid": "1cb9ad8c-f269-4443-8310-90c649c4b299"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "minio-77c7946c5c",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33892024",
+        "uid": "6dd1c43e-9914-4438-81e1-b0f259ead654"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "minio",
+          "uid": "9cd91bdc-2a9d-4f78-9cd7-413d611b2667"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "minio",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "minio-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "minio-788dfd959f",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "57249373",
+        "uid": "341bb8c4-c941-4bf6-b458-7994d5260377"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "minio",
+          "uid": "9cd91bdc-2a9d-4f78-9cd7-413d611b2667"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "minio",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "minio-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 6,
+        "name": "mysql-64f5995659",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "32963474",
+        "uid": "9a7c0b3e-57c6-46a8-b65a-051c334f80cf"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "mysql",
+          "uid": "27916932-fc61-432c-b515-081f18db34a8"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "mysql",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 5,
+        "name": "mysql-66496b8965",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "119670801",
+        "uid": "92681383-3575-49f4-8bb2-85217f334270"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "mysql",
+          "uid": "27916932-fc61-432c-b515-081f18db34a8"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "mysql",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 1,
+        "name": "mysql-74bd777b8",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "119671202",
+        "uid": "9f255d0a-027f-421a-8daa-dd4400960a36"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "mysql",
+          "uid": "27916932-fc61-432c-b515-081f18db34a8"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "mysql",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/run/system-backup-mysql-tls",
+              "name": "sbk-test-tls-runtime",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "mysql-864b6c6ff",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33891728",
+        "uid": "68149c9a-148c-4fd2-a260-4138417c59b6"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "mysql",
+          "uid": "27916932-fc61-432c-b515-081f18db34a8"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "mysql",
+          "mounts": [
+            {
+              "mountPath": "/var/lib/mysql",
+              "name": "mysql-data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/docker-entrypoint-initdb.d",
+              "name": "mysql-init",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 4,
+        "name": "openclaw-runtime-59c5549fd5",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "121450207",
+        "uid": "c4295679-915b-48c6-a82f-1321ebeacd8e"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "openclaw-runtime",
+          "uid": "0fd3bcb3-3388-4bba-a48c-13518af1ee9d"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "openclaw-runtime-68d579ff8d",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33891837",
+        "uid": "f07c9c8e-148d-4dd0-993f-36510e6aa763"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "openclaw-runtime",
+          "uid": "0fd3bcb3-3388-4bba-a48c-13518af1ee9d"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "openclaw-runtime-68fb6b794",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "121463397",
+        "uid": "e886c137-88a6-4123-846d-fd898e94a299"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "openclaw-runtime",
+          "uid": "0fd3bcb3-3388-4bba-a48c-13518af1ee9d"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 1,
+        "name": "openclaw-runtime-bcc5bdc77",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "121463389",
+        "uid": "3fa49b8b-d0c4-4436-9962-608dada4001a"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "openclaw-runtime",
+          "uid": "0fd3bcb3-3388-4bba-a48c-13518af1ee9d"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "runtime",
+          "mounts": [
+            {
+              "mountPath": "/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "sbk-transit-zh-977a1b9a-6459d96856",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "124428054",
+        "uid": "d5dca3c7-3f1d-491d-8148-4e390af39377"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "sbk-transit-zh-977a1b9a",
+          "uid": "0f25ad46-f258-4db0-9a15-bc5ef915e8c4"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "vault",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tls",
+              "name": "tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/config",
+              "name": "config",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tmp",
+              "name": "tmp",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "sbk-transit-zh-977a1b9a-ff5b66574",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "124439293",
+        "uid": "c0ab6868-ce41-48b1-951e-2736fe2d60d2"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "sbk-transit-zh-977a1b9a",
+          "uid": "0f25ad46-f258-4db0-9a15-bc5ef915e8c4"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "vault",
+          "mounts": [
+            {
+              "mountPath": "/data",
+              "name": "data",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tls",
+              "name": "tls",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/config",
+              "name": "config",
+              "readOnly": true,
+              "subPath": null,
+              "subPathExpr": null
+            },
+            {
+              "mountPath": "/tmp",
+              "name": "tmp",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": null,
+      "desired_replicas": 0,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 2,
+        "name": "skill-scanner-5c4c6fc466",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "33891907",
+        "uid": "c5781a5d-a09a-415c-adc5-38deb2d9065e"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "skill-scanner",
+          "uid": "f9cfe50f-5d1b-475a-b116-4c267b64f161"
+        }
+      ],
+      "ready_replicas": null,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "skill-scanner",
+          "mounts": []
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 7,
+        "name": "skill-scanner-6cbf6887d4",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "80524397",
+        "uid": "bcf3bff2-dd46-4970-8f74-34e2f549c1e7"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "skill-scanner",
+          "uid": "f9cfe50f-5d1b-475a-b116-4c267b64f161"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "skill-scanner",
+          "mounts": []
+        }
+      ]
+    },
+    {
+      "active": null,
+      "available_replicas": 1,
+      "desired_replicas": 1,
+      "desired_scheduled": null,
+      "failed": null,
+      "identity": {
+        "deletionTimestamp": null,
+        "generation": 3,
+        "name": "workspace-store-5f6db46744",
+        "namespace": "clawmanager-zhanghui08-system",
+        "resourceVersion": "47440466",
+        "uid": "2662db74-df89-48de-9e93-f25549b017cc"
+      },
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "controller": true,
+          "kind": "Deployment",
+          "name": "workspace-store",
+          "uid": "6346ad6d-21d2-46e4-9e19-1689201e9431"
+        }
+      ],
+      "ready_replicas": 1,
+      "resource": "replicasets",
+      "succeeded": null,
+      "suspend": null,
+      "template_mounts": [
+        {
+          "container": "nfs-server",
+          "mounts": [
+            {
+              "mountPath": "/exports/workspaces",
+              "name": "workspaces",
+              "readOnly": null,
+              "subPath": null,
+              "subPathExpr": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "schema_version": "b-writer-mount-observation.v1",
+  "status": "observed",
+  "unobserved": [
+    "SQL instance ownership and original stopped identities",
+    "Runtime Agent child/tool process trees",
+    "embedded skill-backfill/skill-materialize and Teams workers",
+    "external NFS/S3/SQL writers and accepted in-flight operations",
+    "stop/drain/current recovery capability"
+  ]
+}

@@ -23,6 +23,9 @@ type InstanceWorkspaceCapture struct {
 	InstanceID int
 	MountID    string
 	Request    CapturePartRequest
+	// Only an extra, separately frozen mount. The primary runtime-policy root
+	// remains mandatory; capture-only extra files do not claim target restore.
+	DataOnly bool `json:",omitempty"`
 }
 
 type UsersInstancesModuleConfig struct {
@@ -102,15 +105,24 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 		}
 		r := mount.Request
 		policy := r.Invocation.Request.RuntimePolicy
-		if policy == nil || policy.Validate() != nil || r.Invocation.Request.Operation != "capture-workspace" {
+		if r.Invocation.Request.Operation != "capture-workspace" {
 			return zero, d.ErrNotReady
 		}
-		actual, e := scope.PlanRuntime(policy.Runtime)
-		expected, _ := scope.PlanRuntime(scope.Runtime{Type: i.Type, Mode: i.Mode, Backend: i.Backend, Variant: i.Variant, OS: i.OS})
-		if e != nil || actual.Type != expected.Type || actual.Mode != expected.Mode {
-			return zero, d.ErrNotReady
+		if mount.DataOnly {
+			if mount.MountID == "workspace" || policy != nil || r.Invocation.Request.WorkBuddyIdentity != nil || r.Invocation.Request.SkillWorkspace != nil || r.Workload.SourceSubPath == "" || r.Workload.SourceSubPath == "." {
+				return zero, d.ErrNotReady
+			}
+		} else {
+			if policy == nil || policy.Validate() != nil {
+				return zero, d.ErrNotReady
+			}
+			actual, e := scope.PlanRuntime(policy.Runtime)
+			expected, _ := scope.PlanRuntime(scope.Runtime{Type: i.Type, Mode: i.Mode, Backend: i.Backend, Variant: i.Variant, OS: i.OS})
+			if e != nil || actual.Type != expected.Type || actual.Mode != expected.Mode {
+				return zero, d.ErrNotReady
+			}
 		}
-		if isWorkBuddySource(i) {
+		if isWorkBuddySource(i) && !mount.DataOnly {
 			identity := r.Invocation.Request.WorkBuddyIdentity
 			if identity == nil || identity.Schema != 1 || identity.UserID != i.UserID || identity.InstanceID != i.ID || identity.UID < 10000 || identity.UID > 65533 || identity.GID != identity.UID {
 				return zero, d.ErrNotReady

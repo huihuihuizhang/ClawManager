@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"clawreef/internal/systembackup/kube"
@@ -105,6 +106,18 @@ func productionPartMounts(metadata productionCaptureMetadata, part b.JobPart) ([
 				return nil, d.ErrNotReady
 			}
 			out = append(out, identity)
+		} else if volume.HostPath != nil {
+			// Exact source comes from the authenticated original part, not a
+			// global hostPath allowlist or a name-only current observation.
+			matched := false
+			for _, mount := range metadata.Mounts {
+				if part.Part == "instance_"+strconv.Itoa(mount.InstanceID)+"_"+mount.MountID && mount.DataOnly && mount.Source.HostPath != nil && reflect.DeepEqual(mount.Source.HostPath, volume.HostPath) {
+					matched = true
+				}
+			}
+			if !matched {
+				return nil, d.ErrNotReady
+			}
 		} else if volume.NFS == nil {
 			return nil, d.ErrNotReady
 		}
