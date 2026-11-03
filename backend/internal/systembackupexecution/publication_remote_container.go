@@ -97,7 +97,19 @@ func (s *DeploymentService) inspectOriginalRemoteContainerMemberRelations(ctx co
 	return s.inspectOriginalRemoteContainerMemberSamples(ctx, claim, attempt, reader, object, capture, part, member, location, relations, nil)
 }
 
-func (s *DeploymentService) inspectOriginalRemoteContainerMemberSamples(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, object ArtifactReadObject, capture publicationVerifiedCapture, part publicationVerifiedPart, member pc.Member, location pc.MemberLocation, relations *publicationFinalTeamRelations, samples *publicationContentSamples) (c.PublisherCaptureRecord, error) {
+func (s *DeploymentService) inspectOriginalRemoteContainerMemberSamples(ctx context.Context, claim c.ClaimToken, attempt uint64, reader *ArtifactReadOnlyS3, object ArtifactReadObject, capture publicationVerifiedCapture, part publicationVerifiedPart, member pc.Member, location pc.MemberLocation, relations *publicationFinalTeamRelations, samples *publicationContentSamples) (_ c.PublisherCaptureRecord, resultErr error) {
+	// Authentication/provider/recheck failures occur outside the inert parser.
+	// Invalidate this same round there too; a caller must not reuse prior facts.
+	defer func() {
+		if resultErr != nil {
+			if relations != nil {
+				relations.failed = true
+			}
+			if samples != nil {
+				samples.clear()
+			}
+		}
+	}()
 	var zero c.PublisherCaptureRecord
 	verifier, err := s.PublisherVerifierForPart(ctx, claim, attempt, part.Part)
 	if err != nil {

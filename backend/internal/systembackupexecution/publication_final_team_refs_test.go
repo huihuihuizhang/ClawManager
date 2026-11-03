@@ -15,6 +15,8 @@ import (
 	"clawreef/internal/systembackup/staging"
 	"clawreef/internal/systembackup/team"
 	"clawreef/internal/systembackup/worker"
+	c "clawreef/internal/systembackupcontroller"
+	pc "clawreef/internal/systembackuppartcontainer"
 )
 
 // Local inert SQL/manifest DATA, not a source grant or finalization receipt.
@@ -319,5 +321,42 @@ func TestPublicationFinalTeamRefsEmptyInventoryStillRequiresSQL(t *testing.T) {
 	r = finalTeamObservedSQL(t, source, snapshot, finalTeamSQLInvocation(source))
 	if err = r.complete(); err != nil {
 		t.Fatal("empty Teams added fabricated workspace requirement", err)
+	}
+}
+
+func TestPublicationFinalTeamObjectsRequireConfirmedSQL(t *testing.T) {
+	source, _ := finalTeamRelationsFixture(t)
+	source.Teams.Objects = []team.ObjectRef{{TeamID: 20, Bucket: "original", Key: "artifact", Version: "v1", SHA256: strings.Repeat("c", 64), Size: 3}}
+	r, err := newPublicationFinalTeamRelations(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	i := finalTeamSQLInvocation(source)
+	i.Request.Database = nil
+	i.Request.Operation, i.Request.Binding.Path = "capture-team-objects", "teams_objects"
+	i.Request.Teams = &worker.TeamCaptureSpec{InventorySHA256: source.Teams.SHA256(), Objects: source.Teams.Objects}
+	if err := r.begin(i); err == nil {
+		t.Fatal("Team objects accepted before original SQL authenticated confirmation")
+	}
+}
+
+func TestPublicationFinalTeamOuterFailureDiscardsRound(t *testing.T) {
+	source, snapshot := finalTeamRelationsFixture(t)
+	i := finalTeamSQLInvocation(source)
+	r := finalTeamObservedSQL(t, source, snapshot, i)
+	samples, _, _, _, _, _ := publicationContentSampleData()
+	var service *DeploymentService // The outer verifier cannot issue authority.
+	_, err := service.inspectOriginalRemoteContainerMemberSamples(context.Background(), c.ClaimToken{}, 1, nil, ArtifactReadObject{}, publicationVerifiedCapture{}, publicationVerifiedPart{}, pc.Member{}, pc.MemberLocation{}, r, samples)
+	if err == nil {
+		t.Fatal("missing independent verifier accepted")
+	}
+	if !r.failed || !samples.failed {
+		t.Fatal("outer read failure retained a reusable partial Team/report round")
+	}
+	i.Request.Database = nil
+	i.Request.Operation, i.Request.Binding.Path = "capture-workspace", "team_20_workspace"
+	i.WorkspacePath = "/workspace"
+	if r.begin(i) == nil {
+		t.Fatal("failed round continued into another member")
 	}
 }

@@ -88,6 +88,9 @@ func (r *publicationFinalTeamRelations) begin(i worker.Invocation) error {
 		return d.ErrNotReady
 	}
 	if q.Operation == "capture-team-objects" || binding.Path == "teams_objects" {
+		if r.confirmed[b.UsersInstancesDatabasePart] == "" {
+			return d.ErrNotReady
+		}
 		if binding.Path != "teams_objects" || q.Operation != "capture-team-objects" || len(r.inventory.Objects) == 0 || q.Teams == nil || q.Teams.Redis != nil || q.Database != nil || q.SourceRedis != nil || q.Resources != nil || q.SkillObjects != nil || q.SkillWorkspace != nil || q.CaptureDescription != nil || q.ControlEvidence != nil || q.TeamWorkspace != nil || q.Teams.InventorySHA256 != r.inventory.SHA256() || !reflect.DeepEqual(q.Teams.Objects, r.inventory.Objects) {
 			return d.ErrNotReady
 		}
