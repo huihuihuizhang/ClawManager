@@ -142,7 +142,7 @@ func validEnrollment(e Enrollment) bool {
 func validObject(v ObjectIdentity) bool { return idSyntax.MatchString(v.Name) && text(v.UID) }
 func validProvider(p Provider) bool {
 	u, e := url.Parse(p.Endpoint)
-	if e != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || strings.ContainsAny(p.Endpoint, "?#\r\n") || !validDigest(p.IdentityHash) || !versionSyntax.MatchString(p.IdentityProfile) || !versionSyntax.MatchString(p.Region) || !text(p.DeploymentID) || !validDigest(p.CASHA256) || !validDigest(p.SPKISHA256) || p.ServerVersion != "2025-04-22T22:12:26Z" || p.ServerCommit != "0d7408fc9969caf07de6a8c3a84f9fbb10a6739e" || !validDigest(p.ImageProvenanceSHA256) || !text(p.Container) || !text(p.ImageID) || !text(p.Node) || !text(p.NodeUID) {
+	if e != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || strings.ContainsAny(p.Endpoint, "?#\r\n") || !validDigest(p.IdentityHash) || !versionSyntax.MatchString(p.IdentityProfile) || !versionSyntax.MatchString(p.Region) || !text(p.DeploymentID) || !validDigest(p.CASHA256) || !validDigest(p.SPKISHA256) || !nativeProviderVersion(p) || !validDigest(p.ImageProvenanceSHA256) || !text(p.Container) || !text(p.ImageID) || !text(p.Node) || !text(p.NodeUID) {
 		return false
 	}
 	for _, o := range []ObjectIdentity{p.Deployment, p.ReplicaSet, p.Pod, p.Service, p.ServiceAccount} {
@@ -153,7 +153,7 @@ func validProvider(p Provider) bool {
 	return true
 }
 func validPermissionSource(p PermissionSource) bool {
-	return p.Profile == PermissionProfile && validObject(p.Grant) && validObject(p.Head) && p.Grant.Name != p.Head.Name && validDigest(p.GrantSHA256) && validDigest(p.InitialHeadSHA256) && validDigest(p.ObserverAccountSHA256) && validDigest(p.ObserverCredentialFileSHA256) && validDigest(p.ObserverLocatorSHA256) && idSyntax.MatchString(p.ObserverPolicyName) && validDigest(p.ObserverNormalizedPolicySHA256)
+	return (p.Profile == PermissionProfile || p.Profile == SeptemberPermissionProfile) && validObject(p.Grant) && validObject(p.Head) && p.Grant.Name != p.Head.Name && validDigest(p.GrantSHA256) && validDigest(p.InitialHeadSHA256) && validDigest(p.ObserverAccountSHA256) && validDigest(p.ObserverCredentialFileSHA256) && validDigest(p.ObserverLocatorSHA256) && idSyntax.MatchString(p.ObserverPolicyName) && validDigest(p.ObserverNormalizedPolicySHA256)
 }
 func validPrefix(v string) bool {
 	return v != "" && len(v) <= 512 && strings.HasSuffix(v, "/") && !strings.HasPrefix(v, "/") && !strings.ContainsAny(v, "*?[]\\\x00\r\n") && !strings.Contains(v, "../") && !strings.Contains(v, "//")
@@ -194,7 +194,7 @@ func EncodeSQLReference(r SQLReferenceRecord) ([]byte, error) {
 	return canonical(r)
 }
 func EncodeSQLGrant(g SQLGrant) ([]byte, error) {
-	if g.Version != SQLGrantVersion || !idSyntax.MatchString(g.AuthorityID) || !idSyntax.MatchString(g.GrantID) || g.RecordRevision != 1 || g.PermissionEpoch != 1 || !validTarget(g.Target) || !validEnrollment(g.Enrollment) || g.Actor.LocalAdminUserID < 1 || !text(g.Actor.LocalAdminUsername) || !text(g.Actor.InstallerDatabaseAccount) || g.Actor.InstallerDatabaseAccount == g.Target.ConsumerDatabaseAccount || !validDigest(g.ConfigSHA256) || !validDigest(g.BootstrapGrantSHA256) || !validDigest(g.ReferenceSetSHA256) || !validProvider(g.Provider) || !validPermissionSource(g.PermissionSource) || !window(g.NotBefore, g.Until) || g.Until.Sub(g.NotBefore) > 24*time.Hour || g.Observation.Profile != NativeObservationProfile || !validDigest(g.Observation.DefinitionSHA256) || !validDigest(g.Observation.CapabilityIntentSHA256) || g.Observation.MaximumAgeMicroseconds == 0 || g.Observation.MaximumAgeMicroseconds > MaximumObservationAgeMicroseconds || len(g.References) != 5 {
+	if g.Version != SQLGrantVersion || !idSyntax.MatchString(g.AuthorityID) || !idSyntax.MatchString(g.GrantID) || g.RecordRevision != 1 || g.PermissionEpoch != 1 || !validTarget(g.Target) || !validEnrollment(g.Enrollment) || g.Actor.LocalAdminUserID < 1 || !text(g.Actor.LocalAdminUsername) || !text(g.Actor.InstallerDatabaseAccount) || g.Actor.InstallerDatabaseAccount == g.Target.ConsumerDatabaseAccount || !validDigest(g.ConfigSHA256) || !validDigest(g.BootstrapGrantSHA256) || !validDigest(g.ReferenceSetSHA256) || !validProvider(g.Provider) || !validPermissionSource(g.PermissionSource) || !window(g.NotBefore, g.Until) || g.Until.Sub(g.NotBefore) > 24*time.Hour || !nativeGrantProfile(g) || !validDigest(g.Observation.DefinitionSHA256) || !validDigest(g.Observation.CapabilityIntentSHA256) || g.Observation.MaximumAgeMicroseconds == 0 || g.Observation.MaximumAgeMicroseconds > MaximumObservationAgeMicroseconds || len(g.References) != 5 {
 		return nil, ErrRecord
 	}
 	for n, p := range purposes() {
@@ -266,7 +266,7 @@ func VerifySQLRecordSet(pin SQLTrustPin, grant, grantSignature, head, headSignat
 			return nil, ErrRecord
 		}
 		vref := r.Reference
-		if r.Target != g.Target || r.Enrollment != g.Enrollment || r.AuthorityID != g.AuthorityID || r.GrantID != g.GrantID || r.RecordRevision != g.RecordRevision || r.PermissionEpoch != g.PermissionEpoch || r.ConfigSHA256 != g.ConfigSHA256 || vref.Purpose != purpose || vref.ProviderIdentityHash != g.Provider.IdentityHash || vref.NotBefore.After(g.NotBefore) || vref.Until.Before(g.Until) || seen[vref.AccountSHA256] {
+		if r.Target != g.Target || r.Enrollment != g.Enrollment || r.AuthorityID != g.AuthorityID || r.GrantID != g.GrantID || r.RecordRevision != g.RecordRevision || r.PermissionEpoch != g.PermissionEpoch || r.ConfigSHA256 != g.ConfigSHA256 || vref.Purpose != purpose || vref.ProviderIdentityHash != g.Provider.IdentityHash || vref.NotBefore.After(g.NotBefore) || vref.Until.Before(g.Until) || seen[vref.AccountSHA256] || !nativeReferenceProfile(g, vref) {
 			return nil, ErrRecord
 		}
 		seen[vref.AccountSHA256] = true

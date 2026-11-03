@@ -1,0 +1,60 @@
+{
+  "version":"system-backup-c-minio-first-install-flow-components-source.v1",
+  "date":"2026-11-03",
+  "status":"SOURCE_ONLY_FLOW_COMPONENTS_NOT_EXECUTED",
+  "root_baseline":"d04a644c9e210d82537f63503ecb4fa4f303b86b",
+  "new_files":[
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_first_install_sql_test.go","sha256":"db430aa8f7aaa8139b998fb14c5898bfd2959c7f2856754209bc7b66ea76371b","bytes":7740},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_first_install_fixture_test.go","sha256":"4ba47a06f7400324c0c5640307fc1f0d3d47640ef71cbb807c816ad5ecd6b27d","bytes":7246},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_first_install_component_test.go","sha256":"43d5e21c393dd755f8296021c5bc25fc3556643ab5eaab42cc3d0392b077f26a","bytes":5557}
+  ],
+  "required_unreviewed_entry_batch":{
+    "path":"docs/evidence/system-backup-c-minio-first-install-entry-source-20261103.json",
+    "sha256":"cbfc0cd1fe3ef91f8fe6f5be769d53154a65361eb91e9f0902a2f6156a63eef1",
+    "note":"The preceding seven-file first-install entry was not in root's new 59Go terminal/mapper snapshot. This three-file test supplement requires that exact additive entry batch; it does not promote its status or replace its six smaller regression roots."
+  },
+  "required_frozen_helpers":{
+    "concrete_fixture":"backend/internal/systembackupexecution/bootstrap_minio_terminal_component_fixture_test.go",
+    "concrete_fixture_sha256":"eadfaae85f7e8ce91892d1b34c3432e17739022eabac2993387b4f86cbe11b07",
+    "scope":"Reuse only the existing concrete source/TLS/SigV4 fixture and original SQL authentication transport helper. No changes to the now-root-verified concrete three-file batch, terminal owner/Region source, A20/host/classification/mapper source, prior SQL17 source, main, historical manifests or R8."
+  },
+  "construction":{
+    "actual_owner_chain":"Actual install.New and Enroll with real bcrypt comparison/actual original Kubernetes SDK enrollment flow execute against explicit SQL/Kube TRANSPORT MODELS. The retained original test issuer is enrolled by that actual operator flow. The helper's previous synthetic enrollment declarations are replaced by actual returned enrollment UID/document/plan/group hashes before issuing any new seven-record bundle.",
+    "actual_seven_record_issuer":"Build the original unsigned intent with shared ma.EncodeSQLReference/EncodeSQLGrant digest DAG, then call ACTUAL Installer.IssueMinIOSQLInstall and SaveMinIOSQLBundle. Do not synthesize the final signed bundle or insert rows during issuance.",
+    "actual_entry_functions":"Call PrepareOriginalMinIOTerminalInput -> ImportOriginalMinIOTerminalAuthority -> ExportOriginalMinIOTerminalInput. These create the actual compiled terminal, authenticate actual original Installer before native operations and perform real private qualification, rather than supplying Passed/Until/check callbacks or manual fresh deadline fields.",
+    "native_transport":"Existing real local TLS/CA/SPKI connections and independently HMAC-verified transmitted SigV4 requests measure the finite permission/protocol MODEL. Six accounts' native responses and Kubernetes topology remain explicit controlled fixtures, not live MinIO, real images, or field cluster proof.",
+    "SQL_transport":"New strict transactional database/sql MODEL delegates actual original authentication queries to the frozen auth helper, enforces same exact original head/grant/five-ref keys and admin prefix, clones working state, permits exactly seven initial INSERT statements and no other mutation, and retains exact frozen payload/signature/CAS data for the production current reader. Every unplanned mutation is an error. This is NOT native SQL, row-lock, role-GRANT, TLS database or wait-edge evidence.",
+    "scope_limits":"The tests assume the pre-existing signed Kube MinIO permission source and original narrow six credentials from the frozen source fixture. They do not provision native users/policies or run the full CLI TLS credential-file OpenConnections path, D's complete A20 assembly/private final bootstrap read view, controller task or real full publication."
+  },
+  "new_test_roots":[
+    {
+      "name":"TestMinIOFirstInstallOriginalOwnerQualifiedInputImportExportComponent",
+      "scope":[
+        "actual original Enroll and issuer produce frozen seven-record signed bundle, no issuance SQL writes",
+        "actual original preauthorization plus real TLS/SigV4 probes create only candidate input while all SQL rows remain absent",
+        "actual qualified import inserts exactly head/grant/five refs in one modeled transaction",
+        "actual current SQL/probe/pre-write/post-write source export tails return same original binding and retained catalog inventory",
+        "exported typed Input constructs the SAME concrete owner type used by D and one shared pointer under all five purposes",
+        "replaying original qualified import performs fresh qualification but causes no new signing/metadata mutation"
+      ]
+    },
+    {
+      "name":"TestMinIOFirstInstallOriginalOwnerRefusalAndUnknownResolveComponent",
+      "scope":[
+        "wrong actual local-operator password is refused before native requests or SQL writes",
+        "actual protocol bad-checksum acceptance closes input generation before any SQL insert",
+        "modeled loss AFTER successful seven-row metadata commit yields ErrCommitUnknown and zero receipt",
+        "actual original metadata Resolve reads same exact frozen bundle/current tuple without native requests or rewrite",
+        "new real private qualification after independent resolution exports the same binding without resigning or another metadata write"
+      ]
+    }
+  ],
+  "verification":{
+    "performed_by_C":["read new root report and verify first-install entry was excluded","static source/interface/lifecycle review","gofmt","source SHA256/bytes"],
+    "not_performed_by_C":["go test","go build","go vet","SQL execution","native MinIO/account mutation","Kubernetes/site operation","Docker","Git","remote mutation"],
+    "root_command":"go test ./internal/systembackupexecution -run '^TestMinIOFirstInstallOriginalOwner' -count=1 -v",
+    "required_compilation_scope":"Stage the preceding exact seven-file unreviewed entry batch plus these three additive tests over root baseline. Do not count root's previous fifty Linux component PASS roots or prior native SQL PASS as results for these new entry/flow roots.",
+    "artifacts":"C ran no tests/builds and created no test/build products. Root must delete its own test/build products after verification per user AGENTS.md."
+  },
+  "release":"SOURCE_INTEGRATION_ONLY / field-page NO_GO remains. No real MinIO accounts/policies or current candidate owner were installed, no complete first-install CLI was run against a real field source, and no complete owner/main path, ordinary full six-domain backup/publication/readback/catalog/same-task success, physical source recovery or DR eligibility is claimed."
+}

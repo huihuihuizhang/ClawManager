@@ -31,6 +31,7 @@ type minioTerminalProtocolFixture struct {
 	p       *minioPermissionProductionInputs
 	objects map[string]minioTerminalTestObject
 	roles   map[string]int
+	faults  map[string]int
 	intent  MinIOBootstrapCapabilityIntent
 }
 type minioTerminalTestObject struct {
@@ -42,6 +43,11 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 	t.Helper()
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	f := &minioTerminalProtocolFixture{objects: map[string]minioTerminalTestObject{}, roles: map[string]int{}, p: &minioPermissionProductionInputs{}, r: &MinIOBootstrapTerminalResource{grant: ma.SQLGrant{AuthorityID: "original-authority", GrantID: "original-grant", Target: ma.Target{InstallationID: "original-installation"}, NotBefore: now.Add(-time.Minute), Until: now.Add(time.Minute)}}}
+	// This unit fixture bypasses the real signed-bundle constructor. Supply its
+	// explicit original April selection so positive AND unsafe-provider cases
+	// reach the intended protocol checks. No production profile gate is relaxed.
+	f.r.grant.PermissionSource.Profile = ma.PermissionProfile
+	f.faults = map[string]int{}
 	f.intent = MinIOBootstrapCapabilityIntent{Version: minioTerminalProtocolProfile, InstallationID: f.r.grant.Target.InstallationID, AuthorityID: f.r.grant.AuthorityID, GrantID: f.r.grant.GrantID, Nonce: strings.Repeat("a", 64), NotBefore: now.Add(-time.Minute), Until: now.Add(time.Minute)}
 	f.p.target.Bucket = "artifacts"
 	f.p.target.RemoteStagingRoot = "original-installation_staging/"
@@ -105,6 +111,7 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 				region = ""
 			}
 			if scenario == "wrong-region-checksum" && code == "XAmzContentChecksumMismatch" || scenario == "wrong-region-condition" && code == "PreconditionFailed" || scenario == "wrong-region-absence" && code == "NoSuchKey" || scenario == "wrong-region-delete-absence" && code == "NoSuchVersion" {
+				f.faults[scenario]++
 				region = "<Region>eu-west-1</Region>"
 			}
 			w.Header().Set("Content-Type", "application/xml")
@@ -118,6 +125,7 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 			digest, _ := hex.DecodeString(hash(body))
 			if r.Header.Get("X-Amz-Checksum-Sha256") != base64.StdEncoding.EncodeToString(digest) {
 				if scenario == "checksum-accepted" {
+					f.faults[scenario]++
 					w.WriteHeader(200)
 				} else {
 					errorReply(400, "XAmzContentChecksumMismatch")
@@ -132,6 +140,9 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 			if exists && scenario != "overwrite" {
 				errorReply(412, "PreconditionFailed")
 				return
+			}
+			if exists && scenario == "overwrite" {
+				f.faults[scenario]++
 			}
 			serial++
 			obj = minioTerminalTestObject{append([]byte(nil), body...), fmt.Sprintf("original-version-%d", serial)}
@@ -149,6 +160,7 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 			}
 			v := obj.version
 			if scenario == "wrong-version" {
+				f.faults[scenario]++
 				v = "foreign-version"
 			}
 			w.Header().Set("X-Amz-Version-Id", v)
@@ -156,6 +168,7 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 				w.Header().Set("Content-Range", fmt.Sprintf("bytes 1-7/%d", len(obj.body)))
 				w.WriteHeader(206)
 				if scenario == "wrong-range" {
+					f.faults[scenario]++
 					w.Write([]byte("badbody"))
 				} else {
 					w.Write(obj.body[1:8])
@@ -163,6 +176,7 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 				return
 			}
 			if scenario == "truncated" {
+				f.faults[scenario]++
 				w.Header().Set("Content-Length", strconv.Itoa(len(obj.body)+10))
 			}
 			w.Write(obj.body)
@@ -174,6 +188,8 @@ func minioTerminalProtocolFixtureNew(t *testing.T, scenario string) *minioTermin
 			}
 			if scenario != "delete-ack-only" {
 				delete(f.objects, id)
+			} else {
+				f.faults[scenario]++
 			}
 			w.Header().Set("X-Amz-Version-Id", obj.version)
 			w.WriteHeader(204)
@@ -268,6 +284,23 @@ func TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe(t *testing.T) {
 		})
 	}
 }
+
+func TestMinIOBootstrapTerminalProtocolRequiresExplicitNativeProfile(t *testing.T) {
+	for _, profile := range []string{"", "unsupported-native-profile.v1", ma.SeptemberPermissionProfile} {
+		t.Run("profile="+profile, func(t *testing.T) {
+			f := minioTerminalProtocolFixtureNew(t, "with-region")
+			// The original pinned intent remains April. Even a known September
+			// profile cannot substitute for that original protocol selection.
+			f.r.grant.PermissionSource.Profile = profile
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			var inventory []MinIOBootstrapProbeObject
+			if err := f.r.probeTerminalProtocol(ctx, f.p, time.Now().Add(time.Second), &inventory); err == nil || len(f.roles) != 0 || len(f.objects) != 0 {
+				t.Fatal("missing, unknown or mixed native profile reached protocol operations")
+			}
+		})
+	}
+}
 func TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider(t *testing.T) {
 	for _, scenario := range []string{"checksum-accepted", "overwrite", "wrong-version", "wrong-range", "delete-ack-only", "truncated", "wrong-spki", "expired-role", "foreign-key", "wrong-region-checksum", "wrong-region-condition", "wrong-region-absence", "wrong-region-delete-absence"} {
 		t.Run(scenario, func(t *testing.T) {
@@ -283,8 +316,29 @@ func TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider(t *testing
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			var inventory []MinIOBootstrapProbeObject
-			if e := f.r.probeTerminalProtocol(ctx, f.p, time.Now().Add(8*time.Second), &inventory); e == nil {
+			e := f.r.probeTerminalProtocol(ctx, f.p, time.Now().Add(8*time.Second), &inventory)
+			if e == nil {
 				t.Fatal("unsafe/partial protocol admitted")
+			}
+			// Assert the intended failing boundary was actually exercised. A
+			// profile/intent refusal must not masquerade as a native fault test.
+			switch scenario {
+			case "wrong-spki":
+				if len(inventory) != 4 || len(f.roles) != 0 || !strings.Contains(e.Error(), "terminal-protocol-capability") {
+					t.Fatal("TLS pin fault did not reach the actual request boundary", e)
+				}
+			case "expired-role":
+				if len(inventory) != 4 || f.roles["artifact_write"] < 3 || f.roles["artifact_read"] < 5 || f.roles["artifact_delete"] != 0 || !strings.Contains(e.Error(), "terminal-protocol-exact-delete") {
+					t.Fatal("expired delete role did not follow complete artifact readback", e)
+				}
+			case "foreign-key":
+				if len(inventory) != 0 || len(f.roles) != 0 || !strings.Contains(e.Error(), "terminal-protocol-owned-keys") {
+					t.Fatal("foreign key did not fail at original owned-key boundary", e)
+				}
+			default:
+				if len(inventory) != 4 || f.faults[scenario] == 0 {
+					t.Fatal("intended native protocol fault was never emitted", e)
+				}
 			}
 		})
 	}

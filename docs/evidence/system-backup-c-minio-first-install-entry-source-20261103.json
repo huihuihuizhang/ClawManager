@@ -1,0 +1,107 @@
+{
+  "version":"system-backup-c-minio-first-install-entry-source.v1",
+  "date":"2026-11-03",
+  "status":"SOURCE_ONLY_INSTALLATION_ENTRY_NOT_EXECUTED",
+  "baseline_reported_by_root":"54f6222fc307e742712115e651a31ec01189022b",
+  "files":[
+    {"path":"backend/cmd/system-backup-minio-sql-owner/main.go","sha256":"cda9853e1d9c6e69378a445f41b975f31a4cf4dbb853271a7aa2e3c88e38bc26","bytes":7966},
+    {"path":"backend/cmd/system-backup-minio-sql-owner/main_test.go","sha256":"40a62b8a00d872c5f7a6180724d6fc2f9dcf7d0567726a6c3a0d2da6ce393ef4","bytes":1938},
+    {"path":"backend/internal/systembackupinstallationowner/install/minio_sql_bootstrap_preflight.go","sha256":"bcf42a56bb8bb047680bbf7d6923e49762d112b0442ad182b6f0aa6931125437","bytes":1772},
+    {"path":"backend/internal/systembackupinstallationowner/install/minio_sql_bootstrap_preflight_test.go","sha256":"b5cc6b4f8239052270d79e9eea312d2cfad7b472521bf65768285fcccd6590d5","bytes":2847},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_install.go","sha256":"3ab5aff4700f845900ca388143e48278e589e219f126c0b5f82eb3de208669ea","bytes":10274},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_prepare_input.go","sha256":"cb23a5ae8832d1e71e06c5a3d24284c00e424d63779df74fc3bfcc22d52d6b37","bytes":6902},
+    {"path":"backend/internal/systembackupexecution/bootstrap_minio_terminal_install_test.go","sha256":"a7959a193a9b9c82765a7722f835901586188dd370d37de02afb5301d006ac0a","bytes":2759}
+  ],
+  "scope":"Seven additive files only. Frozen existing SQL17 sources, concrete owner/Region files, three-file six-root component batch under B review, A/D main/composition/migrations, prior manifests, deployment docs, Git/remote and R8 remain untouched.",
+  "new_production_entry":"backend/cmd/system-backup-minio-sql-owner",
+  "common_original_flags":["--plan-file","--plan-sha256","--issuer-public-file","--issuer-public-sha256","--kubeconfig-file","--kubeconfig-sha256","--dsn-file","--database-ca-file","--local-admin-password-file","--enrollment-pin-file","--enrollment-pin-sha256"],
+  "actual_dependencies":{
+    "operator":"Existing actual Installer.New/OpenConnections and enrollment. Independent original plan/public-key/enrollment pins, actual local SQL admin/password and original Kubernetes subject are checked by existing authority code. The DSN is the installation owner TLS account, never publisher verifier/future task/runtime credential discovery.",
+    "schema":"Actual original migration135 three-table domain must already exist; no migration is hidden in this entry. Initial import inserts exactly original head + grant + five refs in one transaction; existing installer/consumer privilege separation, CAS/revoke and unknown-commit behavior are reused unchanged.",
+    "original_files":"Original disabled config, offline bootstrap-grant FILE, exact target/catalog materials, actual six private credential files, original HTTPS CA/SPKI and Kubernetes UIDs, existing image-provenance mapping, original closed five descriptor/scope records and owner-authorized dedicated capability intent. No generated backup task or active config supplies these.",
+    "original_intent":"The owner independently selects the original authority/grant IDs, target/enrollment, actor, config/bootstrap-file hash, original finite provider/reference profiles and windows in install.MinIOSQLInstallIntent. Use shared ma.EncodeSQLReference for exact signed-ref payload hashes; SHA256(JCS(sorted five SQLReferenceHash entries)) is ReferenceSetSHA256; ma.EncodeSQLGrant gives the exact grant bytes/GrantSHA256. The retained Pin carries that original enrolled issuer and original hashes. These are authorization inputs, not successful resource observations.",
+    "six_principals":"Five separate enabled builtin regular object principals plus a separate observer must actually be installed by the ORIGINAL MinIO administrator. No group/derived/root/account alias, unknown runtime release or widened role is accepted. Missing permissions make actual Prepare/probes fail; JSON policy rendering is not installation.",
+    "permission_source":"Existing system-backup-minio-permission-owner produce authenticates actual existing owner/enrollment, measures six native current permissions and creates original signed Kube permission grant/head plus v2 startup source. Its output UIDs/hashes/public pin bind the SQL original PermissionSource; it does not create native users/policies.",
+    "native_account_provisioning_gap":"Static search found no existing repository MinIO AddUser/AttachPolicy/SetPolicy production creator. This batch does NOT invent an administrative credential, create broad native privileges, or claim those accounts/policies were applied. Actual original MinIO administrator provisioning of the exact six policies/accounts remains an explicit installation prerequisite; no automated native-account creation or field installation is claimed."
+  },
+  "six_policy_dependencies":[
+    {"purpose":"artifact_read","actions":["s3:GetObject","s3:GetObjectVersion"],"scope":"original artifact formal root and separate original staging root"},
+    {"purpose":"artifact_write","actions":["s3:PutObject"],"scope":"same original artifact formal/staging roots; actual checksum/immutable condition behavior must be probed"},
+    {"purpose":"artifact_delete","actions":["s3:DeleteObject","s3:DeleteObjectVersion"],"scope":"original staging root ONLY; never formal artifact or catalog scope"},
+    {"purpose":"catalog_read","actions":["s3:GetObject","s3:GetObjectVersion"],"scope":"original catalog root in a DISTINCT bucket"},
+    {"purpose":"catalog_append","actions":["s3:PutObject"],"scope":"original catalog root only; dedicated bootstrap-probes object is retained/inventoried, no delete permission is added"},
+    {"purpose":"observer","actions":["admin:GetUser","admin:GetPolicy","admin:ServerInfo","s3:GetBucketPolicy","s3:GetBucketVersioning"],"scope":"exact six account/policy observations and exact two original buckets; observer policy must match compiled normalized finite profile"}
+  ],
+  "production_call_sequence":[
+    {
+      "step":1,
+      "entry":"system-backup-minio-permission-owner policies --definition-file ... --definition-sha256 ...",
+      "function":"execution.PlanOriginalMinIOPermissionPolicies",
+      "effect":"Local exact six policy plans only. Actual original MinIO administrator must provision those separate accounts/policies, both original distinct versioned buckets and actual private credentials outside this metadata tool."
+    },
+    {
+      "step":2,
+      "entry":"system-backup-minio-permission-owner produce <existing original common flags> --definition-file ... --definition-sha256 ... --issuer-private-file ... --output-directory ...",
+      "function":"execution.ProduceOriginalMinIOPermissionSource",
+      "effect":"Actual original operator/enrollment + finite current native permission/effective-owner/Kube observations; existing original key signs actual Kube grant/head, exports independent v2 startup input. Unknown/partial results are not success."
+    },
+    {
+      "step":3,
+      "entry":"system-backup-minio-sql-owner issue-install <common_original_flags> --intent-file ... --intent-sha256 ... --issuer-private-file ... --output-directory ...",
+      "function":"Installer.IssueMinIOSQLInstall -> SaveMinIOSQLBundle",
+      "effect":"Authenticate actual original operator/enrollment/current Kube source; sign existing original grant/head/five refs against retained original pin; exclusively save inert minio-sql-authority.bundle.json. No SQL rows or native accounts created; no native eligibility is inferred from signatures."
+    },
+    {
+      "step":4,
+      "entry":"system-backup-minio-sql-owner prepare-input <common_original_flags> --intent-file ... --intent-sha256 ... --bundle-file ... --bundle-sha256 ... --materials-file ... --materials-sha256 ... --output-directory ...",
+      "function":"execution.PrepareOriginalMinIOTerminalInput",
+      "effect":"Build actual typed taskless input from independent original intent pin + issued bundle + original material locators; shared codec requires exact grant/five payload agreement. Actual original Installer preauthorizes absent-or-same-active SQL domain BEFORE native operations. Real concrete owner Prepare performs permissions AND actual protocol probes. Original short private deadline bounds current-auth/file tails. Exclusively write candidate input and re-load its actual concrete binding; no seven-row import or runtime admission occurs."
+    },
+    {
+      "step":5,
+      "entry":"system-backup-minio-sql-owner import-qualified <common_original_flags> --terminal-input-file ... --terminal-input-sha256 ...",
+      "function":"execution.ImportOriginalMinIOTerminalAuthority",
+      "effect":"Again actual ORIGINAL preauthorization, fresh real concrete owner permission/protocol Prepare outside SQL, then existing actual Installer.ImportMinIOSQLAuthority under the SAME originally measured <=30s deadline; independent current tuple resolve tail. Exactly seven actual rows, or same frozen active tuple replay. No private key, candidate task, native Passed callback, metadata-as-readiness or new deadline after completion."
+    },
+    {
+      "step":6,
+      "entry":"system-backup-minio-sql-owner export-terminal <common_original_flags> --terminal-input-file ... --terminal-input-sha256 ... --output-directory ...",
+      "function":"execution.ExportOriginalMinIOTerminalInput",
+      "effect":"Require actual original current active SQL tuple before real fresh permission/protocol Prepare. Recheck actual SQL within the original private deadline; exclusive private source write; actual SQL post-write tail and exact typed source/concrete-binding reload. Receipt contains data hashes/binding/probe inventory only."
+    },
+    {
+      "step":7,
+      "entry":"Original owner creates/signs the existing A original mapping and independently pins the enrolled v3 composition",
+      "effect":"All five original ResourceBindings use the SAME exported BindingSHA256. Read exported Input using execution.ReadMinIOBootstrapTerminalInput(file,independentSHA) and place that exact value in enrolledComposition.MinIO. Keep all referenced paths stable at the same absolute read-only runtime mounts; changing a path changes its original binding. Original private issuer key remains OFF the controller."
+    },
+    {
+      "step":8,
+      "entry":"D formal system-backup-bootstrap-enrolled composition path",
+      "effect":"Existing other-owner completeness gate -> original controlled Kubernetes client -> execution.NewMinIOBootstrapTerminalResource(client,d.MinIO) -> same pointer under five purpose keys -> unchanged A20/KEK/native-host candidates. Every fresh attempt prepares its own actual resources; L2 same original controlled transaction rereads current SQL head/grant/five refs and authoritative SampleTime. Incomplete owner inventory still blocks. No parallel permission-only or future-task route is added."
+    }
+  ],
+  "materials_file_schema":{
+    "type":"execution.MinIOBootstrapTerminalMaterials",
+    "Version":"original-minio-bootstrap-terminal-materials.v1",
+    "fields":["Version","GrantFile","GrantSHA256","DefinitionFile","DefinitionSHA256","PermissionSource.File","PermissionSource.SHA256","CapabilityIntentFile","CapabilityIntentSHA256","ReferenceFiles[exact five ASCII purpose order].Purpose","ReferenceFiles[].File","ProvenanceFile"],
+    "pin_rule":"Materials include no issuer private key, copied observed success, ready bit, task ID or automatically selected current authority. Pin is copied from the independently retained ORIGINAL install intent and matched to the actual issued signed bundle/enrollment before probes.",
+    "output":"Private create-only minio-bootstrap-terminal.input.json contains EXACT execution.MinIOBootstrapTerminalInput, the same type D already uses. SHA256 and BindingSHA256 are inert mapping facts, not runtime capability tokens."
+  },
+  "recovery_and_revocation":{
+    "resolve":"system-backup-minio-sql-owner resolve <common_original_flags> --pin-file ... --pin-sha256 ... --bundle-file ... --bundle-sha256 ... invokes existing metadata-only ResolveMinIOSQLAuthority against exact original signatures/current tuple. No key, native probe, source export, resigning, mutation or window renewal. Use SAME frozen bytes after uncertainty.",
+    "issue_revocation":"system-backup-minio-sql-owner issue-revocation <common_original_flags> --pin-file ... --pin-sha256 ... --issuer-private-file ... --output-directory ... invokes existing terminal signed-head issuer. Native health and old physical freshness are not prerequisites.",
+    "import_revocation":"system-backup-minio-sql-owner import-revocation <common_original_flags> --pin-file ... --pin-sha256 ... --bundle-file ... --bundle-sha256 ... accepts ONLY shared-codec SQLActionRevoke, then existing seven-row CAS. It cannot act as an unqualified install alias and requires no private issuer key/native probe.",
+    "unknown":"Exit 4 means original commit/file/output may be partial or unknown. Preserve exact signed bundle/source and inspect independently; never re-sign, overwrite existing frozen files or silently reissue. Metadata resolve does not manufacture fresh source qualification.",
+    "deadlines":"Prepare obtains a real private observation; all subsequent SQL/write/read tails use its same fixed original deadline. No caller supplies Until/Passed/reader callbacks; input snapshots and export receipts cannot bypass fresh runtime Prepare/L2 or SQL revoke."
+  },
+  "verification":{
+    "performed_by_C":["static production call/dependency/interface review","gofmt","source SHA256/byte counts"],
+    "not_performed_by_C":["go test","go build","go vet","native SQL","live MinIO","Kubernetes/site action","Docker","Git","remote mutation"],
+    "new_test_roots":["TestOriginalMinIOSQLOwnerCLIRefusesImplicitOrForeignFlows","TestOriginalMinIOSQLOwnerCLIPinRequiresExactPrivateCanonicalBytes","TestOriginalMinIOSQLBootstrapPreflightAuthenticatesAbsentAndExactActive","TestOriginalMinIOSQLBootstrapPreflightRejectsForeignAndRevoked","TestMinIOBootstrapTerminalInstallInputIsExactInertOriginalData","TestMinIOBootstrapTerminalInstallEntrypointsRequireActualOriginalOwner"],
+    "test_scope":"CLI/strict metadata/private exclusive output fences plus actual original Installer preauthorization on the existing explicit SQL/Kube transport model. No test here is proof that the complete CLI happy path or real field MinIO was executed. The earlier frozen three-file concrete-owner six-root source remains separate and unchanged under B review.",
+    "root_commands":["go test ./cmd/system-backup-minio-sql-owner -count=1 -v","go test ./internal/systembackupinstallationowner/install -run '^TestOriginalMinIOSQLBootstrapPreflight' -count=1 -v","go test ./internal/systembackupexecution -run '^TestMinIOBootstrapTerminalInstall' -count=1 -v"],
+    "required_followup":"Review/typecheck additive batch, execute source components, then exercise actual original issue -> prepare-input -> qualified seven-row import -> export -> D/A20 same-path integration with authoritative original resources. Root's prior native SQL PASS evidence remains unchanged and does not imply actual native MinIO account installation or this new CLI flow passed.",
+    "artifacts":"C ran no tests/builds and produced no test/build products. Root must remove its test/build products after verification per user AGENTS.md."
+  },
+  "release":"NO_GO / SOURCE_INTEGRATION_ONLY remains. No current candidate owner was installed; no field/page acceptance, R8 operation, thirty-owner completion, ordinary full six-domain backup -> immutable publication -> full independent readback -> signed queryable catalog -> same task succeeded, isolated restore or DR eligibility is claimed."
+}

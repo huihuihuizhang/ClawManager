@@ -50,6 +50,10 @@ func readMinIOPermissionProductionInputs(file, sha string) (*minioPermissionProd
 	if err != nil || decodePublicationCanonical(g, &p.grant) != nil {
 		return nil, minioPermissionFailure("producer-original-grant")
 	}
+	profile, ok := minioNativeProfile(p.grant.Profile)
+	if !ok {
+		return nil, minioPermissionFailure("producer-native-profile")
+	}
 	raw, err = pinnedDeploymentFile(d.ConfigFile, d.ConfigSHA256, 262144)
 	if err != nil || len(raw) == 0 {
 		return nil, minioPermissionFailure("producer-original-config")
@@ -71,7 +75,7 @@ func readMinIOPermissionProductionInputs(file, sha string) (*minioPermissionProd
 	if provider.Endpoint != p.target.Endpoint || provider.Endpoint != p.catalog.Endpoint || provider.Region != p.target.Region || provider.Region != p.catalog.Region || provider.CASHA256 != p.target.CASHA256 || provider.CASHA256 != p.catalog.CASHA256 {
 		return nil, minioPermissionFailure("producer-original-provider")
 	}
-	p.configuration = minioPermissionConfiguration{Version: "minio-publication-effective-permission-source.v2", Installation: d.Grant.Installation, Namespace: d.Grant.Namespace, NamespaceUID: d.Grant.NamespaceUID, MinimumEpoch: 1, ObserverCredentialFile: d.ObserverCredentialFile, ObserverCredentialSHA256: d.ObserverCredentialSHA256, ObserverAccountSHA256: d.ObserverAccountSHA256, ObserverPolicyName: d.ObserverPolicyName, ObserverPolicySHA256: d.ObserverPolicySHA256}
+	p.configuration = minioPermissionConfiguration{Version: profile.Source, Installation: d.Grant.Installation, Namespace: d.Grant.Namespace, NamespaceUID: d.Grant.NamespaceUID, MinimumEpoch: 1, ObserverCredentialFile: d.ObserverCredentialFile, ObserverCredentialSHA256: d.ObserverCredentialSHA256, ObserverAccountSHA256: d.ObserverAccountSHA256, ObserverPolicyName: d.ObserverPolicyName, ObserverPolicySHA256: d.ObserverPolicySHA256}
 	if p.window.include(time.Now(), d.Grant.NotBefore, d.Grant.Until) != nil {
 		return nil, minioPermissionFailure("producer-original-window")
 	}
@@ -155,7 +159,11 @@ type MinIOOriginalPermissionObservation struct {
 
 func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interface, p *minioPermissionProductionInputs, sha string) (MinIOOriginalPermissionObservation, error) {
 	var zero MinIOOriginalPermissionObservation
-	if ctx == nil || ctx.Err() != nil || kube == nil {
+	if p == nil {
+		return zero, minioPermissionFailure("producer-native-profile")
+	}
+	profile, ok := minioNativeProfile(p.grant.Profile)
+	if !ok || ctx == nil || ctx.Err() != nil || kube == nil {
 		return zero, minioPermissionFailure("producer-original-context")
 	}
 	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
@@ -171,7 +179,7 @@ func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interf
 		return zero, err
 	}
 	defer native.close()
-	first, err := native.collectV2(ctx, p.configuration, p.uses)
+	first, err := native.collectNativeProfile(ctx, p.configuration, p.uses, p.grant.Profile)
 	if err != nil {
 		return zero, err
 	}
@@ -183,7 +191,7 @@ func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interf
 	if err != nil || tailGuard != guard {
 		return zero, minioPermissionFailure("producer-effective-tail-drift")
 	}
-	tail, err := native.collectV2(ctx, p.configuration, p.uses)
+	tail, err := native.collectNativeProfile(ctx, p.configuration, p.uses, p.grant.Profile)
 	if err != nil || tail != first {
 		return zero, minioPermissionFailure("producer-native-tail-drift")
 	}
@@ -191,7 +199,7 @@ func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interf
 	if err != nil || tailResource != resource || !time.Now().Before(p.window.until) || ctx.Err() != nil {
 		return zero, minioPermissionFailure("producer-resource-tail-drift")
 	}
-	return MinIOOriginalPermissionObservation{"original-minio-current-source-observation.v2", sha, minioPermissionProfileV2, minioPermissionVersion, minioPermissionCommit, time.Now().UTC(), p.window.notBefore, p.window.until, hash([]byte(first + "/" + guard)), resource}, nil
+	return MinIOOriginalPermissionObservation{"original-minio-current-source-observation.v2", sha, profile.Permission, profile.ServerVersion, profile.ServerCommit, time.Now().UTC(), p.window.notBefore, p.window.until, hash([]byte(first + "/" + guard)), resource}, nil
 }
 
 // Reads the six actual credentials, current named/effective policies, owner
@@ -272,17 +280,21 @@ func ProduceOriginalMinIOPermissionSource(ctx context.Context, owner *install.In
 		return zero, install.ErrCommitUnknown
 	}
 	d := p.definition
-	cfg := minioEffectivePermissionConfiguration{Version: "minio-publication-effective-permission-source.v2", Installation: d.Grant.Installation, Namespace: d.Grant.Namespace, NamespaceUID: d.Grant.NamespaceUID, Issuer: committed.Issuer, MinimumEpoch: committed.Epoch, Grant: minioPermissionObject{Name: committed.Grant.Name, UID: committed.Grant.UID}, Head: minioPermissionObject{Name: committed.Head.Name, UID: committed.Head.UID}, GrantSHA256: committed.GrantSHA256, ObserverCredentialFile: d.ObserverCredentialFile, ObserverCredentialSHA256: d.ObserverCredentialSHA256, ObserverAccountSHA256: d.ObserverAccountSHA256, ObserverPolicyName: d.ObserverPolicyName, ObserverPolicySHA256: d.ObserverPolicySHA256}
+	profile, ok := minioNativeProfile(p.grant.Profile)
+	if !ok {
+		return zero, install.ErrCommitUnknown
+	}
+	cfg := minioEffectivePermissionConfiguration{Version: profile.Source, Installation: d.Grant.Installation, Namespace: d.Grant.Namespace, NamespaceUID: d.Grant.NamespaceUID, Issuer: committed.Issuer, MinimumEpoch: committed.Epoch, Grant: minioPermissionObject{Name: committed.Grant.Name, UID: committed.Grant.UID}, Head: minioPermissionObject{Name: committed.Head.Name, UID: committed.Head.UID}, GrantSHA256: committed.GrantSHA256, ObserverCredentialFile: d.ObserverCredentialFile, ObserverCredentialSHA256: d.ObserverCredentialSHA256, ObserverAccountSHA256: d.ObserverAccountSHA256, ObserverPolicyName: d.ObserverPolicyName, ObserverPolicySHA256: d.ObserverPolicySHA256}
 	raw, err := ce.Canonical(cfg)
 	if err != nil || install.SaveMinIOPermissionStartup(directory, raw) != nil {
 		return zero, install.ErrCommitUnknown
 	}
 	path := filepath.Join(directory, "minio-permission.source.json")
-	r, err := NewMinIOEffectivePublicationPermissionV2Reader(MinIOPublicationPermissionInput{path, hash(raw)})
+	r, err := newMinIOProfilePermissionReader(MinIOPublicationPermissionInput{path, hash(raw)}, p.grant.Profile)
 	if err != nil {
 		return zero, install.ErrCommitUnknown
 	}
-	if _, err = r.effectiveOwnerV2(ctx, kube, time.Now()); err != nil {
+	if _, err = minioCurrentProfileOwner(r, p.grant.Profile, ctx, kube, time.Now()); err != nil {
 		return zero, install.ErrCommitUnknown
 	}
 	return MinIOPermissionProductionReceipt{"original-minio-permission-source-installed.v2", path, hash(raw), sha, committed.GrantSHA256, committed.HeadSHA256, committed.Grant.UID, committed.Head.UID, committed.Epoch}, nil

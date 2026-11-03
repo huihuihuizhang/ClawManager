@@ -30,8 +30,12 @@ type MinIOBootstrapCapabilityIntent struct {
 
 func (r *MinIOBootstrapTerminalResource) terminalIntent(p *minioPermissionProductionInputs, now time.Time) (MinIOBootstrapCapabilityIntent, error) {
 	var in MinIOBootstrapCapabilityIntent
+	profile, ok := minioNativeProfile(r.grant.PermissionSource.Profile)
+	if !ok {
+		return in, minioPermissionFailure("terminal-native-profile")
+	}
 	raw, e := pinnedDeploymentFile(r.input.CapabilityIntentFile, r.input.CapabilityIntentSHA256, 16384)
-	if e != nil || decodePublicationCanonical(raw, &in) != nil || in.Version != minioTerminalProtocolProfile || in.InstallationID != r.grant.Target.InstallationID || in.AuthorityID != r.grant.AuthorityID || in.GrantID != r.grant.GrantID || !formalCandidateDigest(in.Nonce) || now.Before(in.NotBefore) || !now.Before(in.Until) || in.NotBefore.After(r.grant.NotBefore) || in.Until.Before(r.grant.Until) {
+	if e != nil || decodePublicationCanonical(raw, &in) != nil || in.Version != profile.Protocol || in.InstallationID != r.grant.Target.InstallationID || in.AuthorityID != r.grant.AuthorityID || in.GrantID != r.grant.GrantID || !formalCandidateDigest(in.Nonce) || now.Before(in.NotBefore) || !now.Before(in.Until) || in.NotBefore.After(r.grant.NotBefore) || in.Until.Before(r.grant.Until) {
 		return in, minioPermissionFailure("terminal-protocol-original-intent")
 	}
 	staging := p.target.RemoteStagingRoot + "bootstrap-probes/" + in.Nonce + "/"
@@ -259,7 +263,7 @@ func (r *MinIOBootstrapTerminalResource) probeTerminalProtocol(ctx context.Conte
 		}
 		clients[u.principal.Purpose] = client
 	}
-	body, e := ce.Canonical(struct{ Version, InstallationID, AuthorityID, GrantID, Nonce, Kind string }{minioTerminalProtocolProfile, in.InstallationID, in.AuthorityID, in.GrantID, in.Nonce, "reserved-bootstrap-protocol-probe"})
+	body, e := ce.Canonical(struct{ Version, InstallationID, AuthorityID, GrantID, Nonce, Kind string }{in.Version, in.InstallationID, in.AuthorityID, in.GrantID, in.Nonce, "reserved-bootstrap-protocol-probe"})
 	if e != nil {
 		return minioPermissionFailure("terminal-protocol-body")
 	}

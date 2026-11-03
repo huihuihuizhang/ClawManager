@@ -1,0 +1,32 @@
+[
+  {
+    "target": "backend/internal/systembackupminioauthority/codec.go",
+    "before_sha256": "27d35b02dd8c5246a927ff4ab35d45488da4aa623ab5d46710be7c4c59a54667",
+    "before_bytes": 17546
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/minio_permission_issue.go",
+    "before_sha256": "18ceafc7279443bc13157c56c3d223c188f8bae6b93249e075f822934f681990",
+    "before_bytes": 11340
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/minio_sql_inputs.go",
+    "before_sha256": "dc47cc9686426f8b8bebad468d8adf7752864d7d1647930c2a36dc9a62d7723c",
+    "before_bytes": 11587
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_permission_producer.go",
+    "before_sha256": "c703997a8f6b786d335a75552b34b9025a7564045c653081d3be65ebba3826bf",
+    "before_bytes": 13193
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go",
+    "before_sha256": "7e2d50ce09cb8ef7379b4ffd1ce366eed9bea4b063a1d2b9085366695828184a",
+    "before_bytes": 10518
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go",
+    "before_sha256": "1ec1a94e499bcc856733e693d7f86df4df3a6dc59460a27ed08a07bb86bc61a6",
+    "before_bytes": 12688
+  }
+]

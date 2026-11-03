@@ -70,3 +70,9 @@ docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-pins-20261103.j
 docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-20261103.md -text whitespace=cr-at-eol
 docs/evidence/system-backup-d-r9-control-proposal-parity-supersede-pins-20261103.json -text whitespace=cr-at-eol
 docs/evidence/system-backup-d-r9-control-proposal-parity-supersede-20261103.md -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-first-install-entry-source-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-first-install-flow-components-source-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-september-supersede-source-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-c-minio-protocol-fixture-supersede-source-20261103.json -text whitespace=cr-at-eol
+docs/evidence/supervisor-minio-september-overlay-input-source-map-20261103.json -text whitespace=cr-at-eol
+docs/evidence/supervisor-minio-september-overlay-input-base-files-20261103.json -text whitespace=cr-at-eol

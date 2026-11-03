@@ -76,7 +76,7 @@ func (s *authenticatedOperator) minioSQLKubernetes(ctx context.Context, g ma.SQL
 	if read(p.Grant, minioGrantDomain, &original, p.GrantSHA256) != nil || read(p.Head, minioHeadDomain, &head, p.InitialHeadSHA256) != nil {
 		return ErrInstall
 	}
-	if original.Version != "minio-permission-grant.v1" || original.Installation != g.Target.InstallationID || original.Namespace != namespace || original.NamespaceUID != g.Target.NamespaceUID || original.ConfigSHA256 != string(g.ConfigSHA256) || original.Profile != MinIOPermissionProfileV2 || original.Epoch != g.PermissionEpoch || head.Version != "minio-permission-head.v1" || head.Installation != g.Target.InstallationID || head.State != "active" || head.Epoch != original.Epoch || head.GrantSHA256 != string(p.GrantSHA256) || head.EngineSHA256 != "" || len(original.Principals) != 5 {
+	if original.Version != "minio-permission-grant.v1" || original.Installation != g.Target.InstallationID || original.Namespace != namespace || original.NamespaceUID != g.Target.NamespaceUID || original.ConfigSHA256 != string(g.ConfigSHA256) || original.Profile != p.Profile || original.Epoch != g.PermissionEpoch || head.Version != "minio-permission-head.v1" || head.Installation != g.Target.InstallationID || head.State != "active" || head.Epoch != original.Epoch || head.GrantSHA256 != string(p.GrantSHA256) || head.EngineSHA256 != "" || len(original.Principals) != 5 {
 		return ErrInstall
 	}
 	for _, w := range [][2]time.Time{{original.NotBefore, original.Until}, {head.NotBefore, head.Until}} {

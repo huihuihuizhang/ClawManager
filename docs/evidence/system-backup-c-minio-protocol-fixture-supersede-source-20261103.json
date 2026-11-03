@@ -1,0 +1,55 @@
+{
+  "version": "system-backup-c-minio-protocol-fixture-supersede-source.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_FIXTURE_CORRECTION_NOT_EXECUTED",
+  "root_R1_report": {
+    "snapshot": "B7+C10+September18;35Go",
+    "compile": "SUCCESS_REPORTED_BY_ROOT",
+    "roots_pass": 34,
+    "roots_fail": 1,
+    "roots_skip": 0,
+    "failed_root": "TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe",
+    "failed_subcases": ["with-region", "no-region"],
+    "reported_error": "publication dependency unavailable: minio-terminal-native-profile",
+    "negative_coverage_limit": "Old unsafe-provider negative subcases also failed at the new missing-profile gate before their intended faults; their R1 PASS results do not establish intended native negative coverage. R1 is not an overall PASS. Root retains its original log."
+  },
+  "diagnosis": {
+    "classification": "INCOMPLETE_PRIVATE_UNIT_FIXTURE_NOT_A_PRODUCTION_APRIL_COMPATIBILITY_BYPASS",
+    "fixture": "minioTerminalProtocolFixtureNew directly constructs the private MinIOBootstrapTerminalResource with a partial SQLGrant and no PermissionSource.Profile. Its pinned capability intent is explicitly April.",
+    "new_gate": "The frozen18 terminalIntent uses minioNativeProfile(r.grant.PermissionSource.Profile) before reading/probing. Empty profile correctly rejects.",
+    "real_entry": "NewMinIOBootstrapTerminalResource first verifies the actual original seven-record bundle with ma.VerifySQLRecordSet/EncodeSQLGrant. A missing permission profile is already invalid there. Original C10 and the separately built September components include their original signed profiles.",
+    "scope": "No production parser, version tuple, native policy, original signed data, permission gate, protocol operation or native assertion is relaxed."
+  },
+  "files": [
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go",
+      "candidate": "backend/.c-minio-protocol-fixture-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol_test.go",
+      "before_sha256": "767c7e59aa4215ca9cf654803edbde5227aac8fbef66962233d2e1b561ec7646",
+      "before_bytes": 15467,
+      "sha256": "2959dfb0396a5ec68a7d547b4edbe134e0f33e848e390e3e24e8b8f6d96ddf3b",
+      "bytes": 17970
+    }
+  ],
+  "changes": [
+    "The shared old fixture sets its explicit original April PermissionSource.Profile=ma.PermissionProfile. This is common initialization for both positive region variants AND all13 unsafe-provider cases, not a positive-only override.",
+    "Existing positive assertions remain: two complete protocol passes; exact four-object inventory; staging exact version deleted; catalog reserved probe retained; all five native role credentials actually used.",
+    "The controlled TLS server records each emitted HTTP fault. Unsafe-provider tests now require their corresponding fault to have been emitted, with four-key inventory already set, rather than accepting any early failure.",
+    "Special boundary cases have explicit checks: wrong-SPKI must reach the actual TLS request with four-key inventory/no authenticated HTTP role; expired delete role must occur after complete artifact write/full-version/range readback with no DELETE request; foreign key must reject at the original owned-key check before any inventory or native operation.",
+    "New root TestMinIOBootstrapTerminalProtocolRequiresExplicitNativeProfile checks empty, unsupported and known-September-with-original-April-intent cases all reject before any native operation/object. This preserves the strict new production gate."
+  ],
+  "root_application": {
+    "required_original_overlay": "Frozen18 manifest1523dd83aea84738905b23e057c648371c0d80701eccc306c687b3ca94dd9f8e remains unchanged.",
+    "apply": "In root's SAME owned isolated snapshot/cache, first verify target before_sha256 and candidate sha256/bytes, then replace ONLY this test file. Reject a mismatched target. Do not overwrite original shared source or old manifests. No production file changes are supplied.",
+    "focused_command": "go test ./internal/systembackupexecution -run '^(TestMinIOBootstrapTerminalNativeProtocolAndRetainedProbe|TestMinIOBootstrapTerminalProtocolRejectsPartialOrUnsafeProvider|TestMinIOBootstrapTerminalProtocolRequiresExplicitNativeProfile|TestMinIOBootstrapTerminalNativeErrorRegionStrictness|TestMinIOSeptember.*)$' -count=1 -v",
+    "whole_batch": "Root requested rerun of its original35 correctness roots plus the new explicit-profile root. Preserve R1 and subsequent raw logs separately and report actual counts. Positive five-role/four-inventory and intended negative-fault assertions must all execute. No performance benchmark is needed for this correction.",
+    "cleanup": "Root removes its generated test/build products after correctness checks; no products were created by C."
+  },
+  "frozen_unchanged": [
+    "Original shared protocol test file at before_sha256",
+    "September18 overlay and manifest",
+    "September runtime5 supplement and manifest",
+    "C10 first-install batches",
+    "native2, B source, D/main and all historical manifests"
+  ],
+  "C_validation": "Source inspection confirms the missing fixture field and new gate. Candidate gofmt parsing/formatting and hash checks only; no Go/test/build/SQL/Git/Docker/remote or native measurement run. Corrected execution remains pending root."
+}

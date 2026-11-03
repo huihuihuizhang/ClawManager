@@ -1,0 +1,128 @@
+[
+  {
+    "target": "backend/internal/systembackupminioauthority/native_profile_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupminioauthority/native_profile_test.go",
+    "before_sha256": null,
+    "sha256": "02ce1131e7688bb8147f2ea2b118a1e18eba60e9add70da715ac33b542fe582a",
+    "bytes": 4489
+  },
+  {
+    "target": "backend/internal/systembackupminioauthority/native_profile.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupminioauthority/native_profile.go",
+    "before_sha256": null,
+    "sha256": "a876f071e8b650632abf54dca4b1532a97500bbeef0a4b4d194a363770f7d1a7",
+    "bytes": 3137
+  },
+  {
+    "target": "backend/internal/systembackupminioauthority/codec.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupminioauthority/codec.go",
+    "before_sha256": "27d35b02dd8c5246a927ff4ab35d45488da4aa623ab5d46710be7c4c59a54667",
+    "sha256": "fdc7b4fa6d26597c9e5636f0b959052d4fbbbafe70a0be43a6e9d5862f9f5828",
+    "bytes": 17520
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_september_component_fixture_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_september_component_fixture_test.go",
+    "before_sha256": null,
+    "sha256": "11d8326dd9d91cca68896f8ada1fcc426e8045257c934005dc29abcc0026cb3f",
+    "bytes": 23532
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_september_first_install_component_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_september_first_install_component_test.go",
+    "before_sha256": null,
+    "sha256": "8d618c8904a4b22a8bd62e1f0dd8f2968f536fb3e636ae25803cbebd4303e8c3",
+    "bytes": 5638
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_september_first_install_fixture_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_september_first_install_fixture_test.go",
+    "before_sha256": null,
+    "sha256": "dfe9cfbd8fed844c3ef384d84d4d651091b9fe0e50b2e5c740ef8c4175c699d5",
+    "bytes": 7363
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_terminal_observe.go",
+    "before_sha256": "7e2d50ce09cb8ef7379b4ffd1ce366eed9bea4b063a1d2b9085366695828184a",
+    "sha256": "ef6085352db6dd467c00c27965640fa9daef7947020018e01f7da8e70a7e2d07",
+    "bytes": 10668
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_september_source.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_september_source.go",
+    "before_sha256": null,
+    "sha256": "c8e720443b0be5d83a460cf71da899162b30a1a617620963cc07e53ccfd53f11",
+    "bytes": 5056
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_september_native_adapter_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_september_native_adapter_test.go",
+    "before_sha256": null,
+    "sha256": "0e47dd58efd05eb904407d583b1a1f83e695c34e59184bcade1149493a082101",
+    "bytes": 2536
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_september_contract_test.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_september_contract_test.go",
+    "before_sha256": null,
+    "sha256": "dba7f5cbee27ec0470fe9f34278c1088d48a266786aed222601b913012af4fa3",
+    "bytes": 1992
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_september_collect.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_september_collect.go",
+    "before_sha256": null,
+    "sha256": "42702420700e0b8a39b3be9d88ca105efe141eb6e2344354e73c3d1b63186fad",
+    "bytes": 1897
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_september_check.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_september_check.go",
+    "before_sha256": null,
+    "sha256": "40b22a004d9b00df9d8648166b07f65b66fd41d9096675bb56209cfa46ce14e3",
+    "bytes": 7322
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_permission_producer.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_permission_producer.go",
+    "before_sha256": "c703997a8f6b786d335a75552b34b9025a7564045c653081d3be65ebba3826bf",
+    "sha256": "32a33154923c9610405db792ef1376088d447c34f55b72857c999baee3e6f1f3",
+    "bytes": 13573
+  },
+  {
+    "target": "backend/internal/systembackupexecution/publication_minio_native_profile.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/publication_minio_native_profile.go",
+    "before_sha256": null,
+    "sha256": "2193b2907fbcff697dcc52dfc2af1b3c8384762d600fb4ddfa80b1ff0121fafc",
+    "bytes": 3800
+  },
+  {
+    "target": "backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupexecution/bootstrap_minio_terminal_protocol.go",
+    "before_sha256": "1ec1a94e499bcc856733e693d7f86df4df3a6dc59460a27ed08a07bb86bc61a6",
+    "sha256": "c7b221ff374f226c8080568ee26408e6cf09f35a1e5f614f6ea61267d5e53794",
+    "bytes": 12803
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/minio_sql_inputs.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupinstallationowner/install/minio_sql_inputs.go",
+    "before_sha256": "dc47cc9686426f8b8bebad468d8adf7752864d7d1647930c2a36dc9a62d7723c",
+    "sha256": "4eeac09f43baeca088184a0e1040090bbbaa2e6ee3ceccc76a748798a916878c",
+    "bytes": 11572
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/minio_september_profile.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupinstallationowner/install/minio_september_profile.go",
+    "before_sha256": null,
+    "sha256": "004b91ff03ef135d6a9f76ca2bb5c9f566a1c3dcfc533da7941b6298c3a084e1",
+    "bytes": 247
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/minio_permission_issue.go",
+    "candidate": "backend/.c-minio-september-supersede-20261103/backend/internal/systembackupinstallationowner/install/minio_permission_issue.go",
+    "before_sha256": "18ceafc7279443bc13157c56c3d223c188f8bae6b93249e075f822934f681990",
+    "sha256": "ca95ba8230873891078654b8825b3cbfad3bac4decf4df3e05ec746710ea0d7a",
+    "bytes": 11284
+  }
+]

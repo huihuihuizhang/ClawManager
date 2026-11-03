@@ -1,0 +1,104 @@
+{
+  "version": "system-backup-c-minio-september-supersede-source.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_ISOLATED_OVERLAY_NOT_APPLIED_COMPILED_OR_EXECUTED",
+  "root_updates_reported": {
+    "baseline_at_start": "af7b7b5e918ce9303cbf89ddf1354f786d036eea",
+    "latest_root_label": "43e2 R9 clean Linux build in progress; R8 census fix remotely backed up, as reported by root",
+    "B7_C10_windows": "16 roots / 12 subcases PASS; 0 fail / 0 skip; root report only",
+    "reported_log_sha256": "74725c9cd96ee163edc5e5d97e8f3e7e8e5adf64b1f1ff4306d6170ce020d66a",
+    "scope": "Reported Windows result covers original April finite protocol MODELS only. It does not test this overlay or qualify September/field."
+  },
+  "isolation": {
+    "directory": "backend/.c-minio-september-supersede-20261103",
+    "go_candidates": 18,
+    "existing_production_replacements": 6,
+    "new_target_files": 12,
+    "source_map": "backend/.c-minio-september-supersede-20261103/source-map.json",
+    "source_map_sha256": "0923eac4958e4e0010e2db75c13e910e24fc70c1f2e540614f785bb6c4cc0091",
+    "base_files": "backend/.c-minio-september-supersede-20261103/base-files.json",
+    "base_files_sha256": "9664c20cfc791ffd2374f554efdfe8372174c9a856732790879b964a90afa7a2",
+    "application": "Root must review and apply source-map.json ONLY to its separately owned isolated source snapshot. Check both manifest hashes, every candidate hash/byte count and every before_sha256 first. Non-null before_sha256 requires an exact original target match; null requires an absent target. Check every resolved target remains inside the intended snapshot. Abort on any mismatch. This is a complete replacement mapping, not instructions to overwrite the shared working tree or alter old frozen manifests.",
+    "unchanged": "All six original production targets, frozen C10 and its two manifests, and the preceding independently frozen native2 batch were rehashed unchanged. No A/D/main/schema/migration/deployment/R8 sources were edited."
+  },
+  "profile": {
+    "permission": "minio-2025-09-07-builtin-flat.v1",
+    "observation": "minio-2025-09-07-six-principal-current-source.v1",
+    "definition": "original-minio-september-permission-definition.v1",
+    "source": "minio-publication-september-effective-permission-source.v1",
+    "provider": "original-minio-september-terminal-provider.v1",
+    "reference": "original-minio-september-terminal-reference.v1",
+    "scope": "original-minio-september-terminal-scope.v1",
+    "protocol": "original-minio-september-terminal-s3-protocol.v1",
+    "server_version": "2025-09-07T16:13:09Z",
+    "server_commit": "07c3a429bfed433e49018cb0f78a52145d4bedeb",
+    "authority": "Closed structural source compatibility declaration only. No profile value is native evidence, a permission grant, Passed flag or binary attestation."
+  },
+  "implementation": [
+    "Shared codec binds the exact provider version/commit, signed permission-source profile and observation profile as one tuple. September also requires its own provider identity profile. Verified signed reference sets reject cross-profile reference/scope/protocol, different capability intent and missing artifact range capability even when all seven records are correctly resigned and independently repinned.",
+    "Existing April constants, canonical field layout, signature domains and native server function are retained. April providers cannot use the September provider profile, and April grants cannot carry the known September reference/scope/protocol profiles. No migration, rotate/reactivate path or broad native rule is added.",
+    "The actual permission issuer decoder requires an exact definition-version/profile pair. Actual SQL installation compares the original signed Kubernetes permission grant profile to the SQL permission-source profile. Existing operator authentication, original enrollment, seven-row issuer/import/revoke, windows, locks and unknown-commit paths remain unchanged.",
+    "Producer input loading selects an explicit closed profile from the original definition. September has a separate native server/collector and original source constructor/current-owner reader. The real six named policies, normalized exact rules, each self effective policy, denied owner discriminator, both versioned buckets, Kubernetes observations and before/after tails remain mandatory.",
+    "The concrete terminal selects the original signed profile from its verified SQL grant. Definition/source/provenance/provider/reference/scope/capability-intent bindings remain exact and distinct. The strict checksum/error/immutable-create/full EOF/version/range/exact-delete probes and retained four-key inventory keep their actual implementation; the original protocol intent and probe body carry the selected protocol profile.",
+    "Explicit public September runtime APIs are supplied: NewMinIOSeptemberEffectivePublicationPermissionReader, CheckCurrentEffectiveSeptember and CheckPublicationDependenciesWithMinIOEffectiveSeptember. Existing April v2 constructor/runtime APIs and C5/main wiring are unchanged. The composition owner must explicitly wire the new API for its separate September path; no main or D composition acceptance is claimed.",
+    "Original-owner model regression copies are separate additive test files. They build original September declarations before issuing anything; actual Installer.New/Enroll/Issue/PrepareInput/Import/Export execute over the existing strict SQL/Kube and finite TLS/SigV4 transport MODELS. They are not live MinIO or real MySQL evidence."
+  ],
+  "root_validation_commands_after_isolated_application_only": [
+    "go test ./internal/systembackupminioauthority -run '^TestMinIOSeptember' -count=1 -v",
+    "go test ./internal/systembackupexecution -run '^TestMinIOSeptember(NativeServerContract|SourceCannot|FirstInstallOriginalOwner)' -count=1 -v",
+    "Re-run the original frozen C10 eight roots and existing shared codec/terminal/Region regressions against the overlaid snapshot to check April history. C has executed none of these commands.",
+    "For actual native adapter coverage, also include the two exact Go files from native manifest9f2b... and build with tag systembackup_minio_september_native. After the two original native setup phases, run TestMinIOSeptemberNativeProductionAdapterCurrentPermissions in addition to the original three native roots. This new tagged root directly invokes the production September collector and six-user effective guard twice against the live pinned fixture."
+  ],
+  "original_native_batch": {
+    "manifest": "docs/evidence/system-backup-c-minio-september-native-source-20261103.json",
+    "sha256": "9f2bca7dc5b8c90a21e84c1149f16c403a29c7e1e790c4c5451e11f4e8347fb5",
+    "status": "Two Go files remain frozen and unexecuted by C. Its historical statement that production adaptation was not implemented describes that earlier batch; this separate overlay is a source candidate, not activation or execution evidence."
+  },
+  "native_fixture_minimum_dependencies": {
+    "server_image": {
+      "reported_field_image": "10.130.14.23:5000/minio@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+      "local_pull_inspect": "NOT DONE; root reports no local pull/inspect yet",
+      "alternative_image": "NONE NOMINATED. No official alternative digest or binary equality is claimed. A tag, source URL, registry label, April image or third-party mirror is not an accepted substitute.",
+      "root_required_evidence": "Independently record actual immutable reference/platform/image ID and inspect result. On that exact image, capture actual /usr/bin/minio --version release AND commit; the live fixture also checks signed Admin server-info through its generated CA/SPKI before mutation and on native checks. Release must be 2025-09-07T16:13:09Z and commit07c3a429bfed433e49018cb0f78a52145d4bedeb. If considering another digest, prove these binary facts independently before choosing it, and keep its distinction from the field digest."
+    },
+    "mc": {
+      "upstream_candidate_release": "RELEASE.2025-08-13T08-35-41Z",
+      "asset_name": "mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z",
+      "upstream_listed_asset_sha256": "01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891",
+      "sources": [
+        "https://github.com/minio/mc/releases/tag/RELEASE.2025-08-13T08-35-41Z",
+        "https://github.com/minio/mc/releases/expanded_assets/RELEASE.2025-08-13T08-35-41Z",
+        "https://raw.githubusercontent.com/minio/mc/RELEASE.2025-08-13T08-35-41Z/cmd/admin-policy-attach.go"
+      ],
+      "status": "UPSTREAM_METADATA_ONLY_NOT_DOWNLOADED_OR_EXECUTED. Root must download/extract and hash the actual selected Linux amd64 binary, inspect its --version and independently retain the original expected pins. No bundled mc version/hash is inferred from the server image. If the actual bundled binary differs from the official asset, it needs its own explicit independent selection/hash/version, never silently reuse this digest.",
+      "fixture_input": "Read-only binary at /incoming/mc, C_MINIO_NATIVE_MC_SHA256 and C_MINIO_NATIVE_MC_VERSION. The fixture copies only after matching the independent SHA and checks actual version before native provisioning. It does not download mc or use mc's success JSON as permission proof."
+    },
+    "other": [
+      "Root-owned Linux Go test binary from the exact reviewed snapshot/tag; no separate shell, Python, MySQL, Kubernetes cluster, issuer private key or production installation is required inside the native runner.",
+      "One new random32hex owner, one empty private fixture volume at /fixture, one distinct c-minio-native-<owner>-data volume, one owned internal network with minio-native alias. No host ports or external egress in native phases.",
+      "PrepareAssets generates private TLS CA/leaf/keys, root secret files, six independent narrow credentials/policies, and two distinct bucket names; ProvisionOwnedServer uses only fixture root to create them through the independently pinned mc. Runtime checks use the six principals. These are local experiment accounts, not original field administrator provisioning.",
+      "Actual inspect-derived private canonical image-proof.json with exact Owner/MinioImage/ImageID/ContainerID/DataVolume/NetworkID/InternalNetwork/NoPublishedPorts fields. This orchestration record is not an attestation; root retains independent inspect evidence."
+    ],
+    "native_roots_after_setup": [
+      "TestMinIOSeptemberNativeSixPrincipalCurrentPermissions",
+      "TestMinIOSeptemberNativeRootOwnerDiscriminatorControl",
+      "TestMinIOSeptemberNativeConditionalChecksumVersionRangeExactDelete",
+      "TestMinIOSeptemberNativeProductionAdapterCurrentPermissions"
+    ]
+  },
+  "failure_cleanup_constraints": [
+    "Do not provision until actual pinned server release/commit, mc bytes/version, owner token and inspect identity match. Stop on any mismatch; do not widen the six policies, parser vocabulary, version tuple or protocol expectation to manufacture PASS.",
+    "Every write key is persisted in probe-intent before native writes; deferred inventory retains unknown outcomes on assertion failure. The reserved catalog probe intentionally remains in the owned data volume because catalog append has no delete privilege. Capture bounded non-secret inventory before removing that whole owned volume.",
+    "All failure paths, including timeout, partial mc provisioning, unknown response and test-binary failure, require root's outer finally cleanup. Native Go roots do not own Docker lifecycle and cannot guarantee orchestration cleanup themselves. A partially provisioned fixture is never reused.",
+    "Before removal, reverify exact owner/labels/actual IDs/names for containers, fixture/data volumes and network. For files, resolve absolute paths and verify they remain under the owned isolated run directory. Remove only this run's resources. Do not delete preexisting image/cache/volume/container merely because a name resembles the fixture.",
+    "After evidence capture remove this run's containers/network/private fixture and data volumes, root credentials, CA private keys, extracted mc, test/build binaries, temporary snapshot/cache and images introduced solely by the run. Preserve reviewed source/manifests and bounded non-secret evidence. Verify residual[] and cleanup result even when tests fail. No root credentials or CA private keys go into review logs or remote backup.",
+    "C has started no Docker/CLI/native remote measurement, test, build, SQL or Git action and has created no test/build artifacts. Source candidates and manifests are review inputs, not generated build products."
+  ],
+  "remaining_boundaries": "This overlay has only passed gofmt parsing/static source/hash checks. No compile, model execution, live native execution, field image/TLS/principal qualification, D/main wiring, full publication/task/restore or readiness result is earned. Field admin_api_profile/TLS/six-principal state remains unknown; NO_GO and DRfalse remain.",
+  "static_checks": {
+    "candidate_gofmt": "All18 files gofmt-clean",
+    "original_six_targets": "All before_sha256 values rechecked unchanged",
+    "frozen_C10_and_native2": "All original source hashes rechecked unchanged",
+    "execution": "NONE BY C"
+  }
+}

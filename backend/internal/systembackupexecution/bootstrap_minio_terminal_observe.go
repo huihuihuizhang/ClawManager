@@ -35,10 +35,14 @@ type MinIOBootstrapImageProvenance struct{ Version, ImageID, ServerVersion, Serv
 
 func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionProductionInputs, reader *MinIOPublicationPermissionReader) error {
 	g := r.grant
+	profile, ok := ma.NativeProfile(g.PermissionSource.Profile)
+	if !ok {
+		return minioPermissionFailure("terminal-native-profile")
+	}
 	c := reader.configuration
 	d := p.definition
 	v := g.PermissionSource
-	if p.grant.Installation != g.Target.InstallationID || p.grant.Namespace != g.Target.Namespace || p.grant.NamespaceUID != g.Target.NamespaceUID || p.grant.ConfigSHA256 != string(g.ConfigSHA256) || p.grant.Profile != ma.PermissionProfile || p.grant.Epoch != g.PermissionEpoch || c.Installation != p.grant.Installation || c.Namespace != p.grant.Namespace || c.NamespaceUID != p.grant.NamespaceUID || !bytes.Equal(c.Issuer, r.input.Pin.IssuerPublic) || c.MinimumEpoch != g.PermissionEpoch || c.Grant.Name != v.Grant.Name || c.Grant.UID != v.Grant.UID || c.Head.Name != v.Head.Name || c.Head.UID != v.Head.UID || c.GrantSHA256 != string(v.GrantSHA256) || c.ObserverAccountSHA256 != string(v.ObserverAccountSHA256) || c.ObserverCredentialSHA256 != string(v.ObserverCredentialFileSHA256) || c.ObserverPolicyName != v.ObserverPolicyName || c.ObserverPolicySHA256 != string(v.ObserverNormalizedPolicySHA256) || c.ObserverCredentialFile != d.ObserverCredentialFile || c.ObserverCredentialSHA256 != d.ObserverCredentialSHA256 || c.ObserverAccountSHA256 != d.ObserverAccountSHA256 || c.ObserverPolicyName != d.ObserverPolicyName || c.ObserverPolicySHA256 != d.ObserverPolicySHA256 || hash([]byte(c.ObserverCredentialFile)) != string(v.ObserverLocatorSHA256) {
+	if p.grant.Installation != g.Target.InstallationID || p.grant.Namespace != g.Target.Namespace || p.grant.NamespaceUID != g.Target.NamespaceUID || p.grant.ConfigSHA256 != string(g.ConfigSHA256) || p.grant.Profile != profile.Permission || p.grant.Epoch != g.PermissionEpoch || c.Installation != p.grant.Installation || c.Namespace != p.grant.Namespace || c.NamespaceUID != p.grant.NamespaceUID || !bytes.Equal(c.Issuer, r.input.Pin.IssuerPublic) || c.MinimumEpoch != g.PermissionEpoch || c.Grant.Name != v.Grant.Name || c.Grant.UID != v.Grant.UID || c.Head.Name != v.Head.Name || c.Head.UID != v.Head.UID || c.GrantSHA256 != string(v.GrantSHA256) || c.ObserverAccountSHA256 != string(v.ObserverAccountSHA256) || c.ObserverCredentialSHA256 != string(v.ObserverCredentialFileSHA256) || c.ObserverPolicyName != v.ObserverPolicyName || c.ObserverPolicySHA256 != string(v.ObserverNormalizedPolicySHA256) || c.ObserverCredentialFile != d.ObserverCredentialFile || c.ObserverCredentialSHA256 != d.ObserverCredentialSHA256 || c.ObserverAccountSHA256 != d.ObserverAccountSHA256 || c.ObserverPolicyName != d.ObserverPolicyName || c.ObserverPolicySHA256 != d.ObserverPolicySHA256 || hash([]byte(c.ObserverCredentialFile)) != string(v.ObserverLocatorSHA256) {
 		return minioPermissionFailure("terminal-original-source-binding")
 	}
 	provider := p.grant.Provider
@@ -48,8 +52,8 @@ func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionPr
 	identityBytes, identityErr := ce.Canonical(struct {
 		Version  string
 		Provider ma.Provider
-	}{minioTerminalProviderProfile, providerIdentity})
-	if identityErr != nil || want.IdentityProfile != minioTerminalProviderProfile || ma.Digest(hash(identityBytes)) != want.IdentityHash {
+	}{profile.Provider, providerIdentity})
+	if identityErr != nil || want.IdentityProfile != profile.Provider || ma.Digest(hash(identityBytes)) != want.IdentityHash {
 		return minioPermissionFailure("terminal-original-provider-profile")
 	}
 	if provider.Endpoint != want.Endpoint || provider.Region != want.Region || provider.DeploymentID != want.DeploymentID || provider.CASHA256 != string(want.CASHA256) || provider.SPKISHA256 != string(want.SPKISHA256) || provider.Container != want.Container || provider.ImageID != want.ImageID || provider.Node != want.Node || provider.NodeUID != want.NodeUID || provider.Deployment.Name != want.Deployment.Name || provider.Deployment.UID != want.Deployment.UID || provider.ReplicaSet.Name != want.ReplicaSet.Name || provider.ReplicaSet.UID != want.ReplicaSet.UID || provider.Pod.Name != want.Pod.Name || provider.Pod.UID != want.Pod.UID || provider.Service.Name != want.Service.Name || provider.Service.UID != want.Service.UID || provider.ServiceAccount.Name != want.ServiceAccount.Name || provider.ServiceAccount.UID != want.ServiceAccount.UID || provider.CAFile != p.target.CAFile || provider.CAFile != p.catalog.CAFile {
@@ -60,7 +64,7 @@ func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionPr
 	// that registry provenance can be inferred from an arbitrary image label.
 	raw, e := pinnedDeploymentFile(r.input.ProvenanceFile, string(want.ImageProvenanceSHA256), 16384)
 	var provenance MinIOBootstrapImageProvenance
-	if e != nil || decodePublicationCanonical(raw, &provenance) != nil || provenance.Version != "original-minio-image-provenance.v1" || provenance.ImageID != want.ImageID || provenance.ServerVersion != minioPermissionVersion || provenance.ServerCommit != minioPermissionCommit {
+	if e != nil || decodePublicationCanonical(raw, &provenance) != nil || provenance.Version != "original-minio-image-provenance.v1" || provenance.ImageID != want.ImageID || provenance.ServerVersion != profile.ServerVersion || provenance.ServerCommit != profile.ServerCommit {
 		return minioPermissionFailure("terminal-original-image-provenance")
 	}
 	uses := map[string]minioPermissionUse{}
@@ -83,7 +87,7 @@ func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionPr
 		case ma.CatalogRead:
 			file, pin = p.catalog.ReadCredentialFile, p.catalog.ReadCredentialSHA256
 		}
-		if u.principal.Purpose != string(ref.Purpose) || u.principal.IdentityHash != string(ref.IdentityHash) || u.principal.RefVersion != ref.IdentityVersion || u.principal.AccountSHA256 != string(ref.AccountSHA256) || u.principal.PolicyName != ref.PolicyName || u.principal.PolicySHA256 != string(ref.NormalizedPolicySHA256) || u.bucket != ref.Bucket || u.root != ref.Root || u.staging != ref.StagingRoot || ma.Digest(pin) != ref.CredentialFileSHA256 || ma.Digest(hash([]byte(file))) != ref.CredentialLocatorSHA256 || ref.CapabilityIntentSHA256 != g.Observation.CapabilityIntentSHA256 || ref.IdentityProfile != minioTerminalReferenceProfile || ref.ScopeProfile != minioTerminalScopeProfile || ref.CapabilityProfile != minioTerminalProtocolProfile || ref.Purpose == ma.ArtifactRead && ref.Capability != "range_read" {
+		if u.principal.Purpose != string(ref.Purpose) || u.principal.IdentityHash != string(ref.IdentityHash) || u.principal.RefVersion != ref.IdentityVersion || u.principal.AccountSHA256 != string(ref.AccountSHA256) || u.principal.PolicyName != ref.PolicyName || u.principal.PolicySHA256 != string(ref.NormalizedPolicySHA256) || u.bucket != ref.Bucket || u.root != ref.Root || u.staging != ref.StagingRoot || ma.Digest(pin) != ref.CredentialFileSHA256 || ma.Digest(hash([]byte(file))) != ref.CredentialLocatorSHA256 || ref.CapabilityIntentSHA256 != g.Observation.CapabilityIntentSHA256 || ref.IdentityProfile != profile.Reference || ref.ScopeProfile != profile.Scope || ref.CapabilityProfile != profile.Protocol || ref.Purpose == ma.ArtifactRead && ref.Capability != "range_read" {
 			return minioPermissionFailure("terminal-original-reference-binding")
 		}
 		scope, _ := ce.Canonical(struct {
@@ -91,7 +95,7 @@ func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionPr
 			Purpose                   ma.Purpose
 			Provider                  ma.Digest
 			Bucket, Root, StagingRoot string
-		}{minioTerminalScopeProfile, ref.Purpose, g.Provider.IdentityHash, ref.Bucket, ref.Root, ref.StagingRoot})
+		}{profile.Scope, ref.Purpose, g.Provider.IdentityHash, ref.Bucket, ref.Root, ref.StagingRoot})
 		if ma.Digest(hash(scope)) != ref.ScopeSHA256 {
 			return minioPermissionFailure("terminal-original-reference-scope")
 		}
@@ -99,7 +103,7 @@ func (r *MinIOBootstrapTerminalResource) bindTerminalInputs(p *minioPermissionPr
 		var descriptor MinIOBootstrapReferenceDescriptor
 		withoutSelf := ref
 		withoutSelf.DescriptorSHA256 = ""
-		if e != nil || decodePublicationCanonical(raw, &descriptor) != nil || descriptor.Version != minioTerminalReferenceProfile || !reflect.DeepEqual(descriptor.Reference, withoutSelf) {
+		if e != nil || decodePublicationCanonical(raw, &descriptor) != nil || descriptor.Version != profile.Reference || !reflect.DeepEqual(descriptor.Reference, withoutSelf) {
 			return minioPermissionFailure("terminal-original-reference-descriptor")
 		}
 	}
@@ -113,14 +117,14 @@ func (r *MinIOBootstrapTerminalResource) observeTerminal(ctx context.Context, st
 		return zero, e
 	}
 	defer p.clear()
-	reader, e := NewMinIOEffectivePublicationPermissionV2Reader(r.input.PermissionSource)
+	reader, e := newMinIOProfilePermissionReader(r.input.PermissionSource, r.grant.PermissionSource.Profile)
 	if e != nil {
 		return zero, e
 	}
 	if e = r.bindTerminalInputs(p, reader); e != nil {
 		return zero, e
 	}
-	owner, e := reader.effectiveOwnerV2(ctx, r.kube, started)
+	owner, e := minioCurrentProfileOwner(reader, r.grant.PermissionSource.Profile, ctx, r.kube, started)
 	if e != nil || !reflect.DeepEqual(owner.grant, p.grant) {
 		return zero, minioPermissionFailure("terminal-current-permission-owner")
 	}
@@ -162,7 +166,7 @@ func (r *MinIOBootstrapTerminalResource) observeTerminal(ctx context.Context, st
 	if e != nil || before.NativeSourcesSHA256 != after.NativeSourcesSHA256 || before.ResourcesSHA256 != after.ResourcesSHA256 {
 		return zero, minioPermissionFailure("terminal-provider-tail")
 	}
-	tailOwner, e := reader.effectiveOwnerV2(bounded, r.kube, time.Now())
+	tailOwner, e := minioCurrentProfileOwner(reader, r.grant.PermissionSource.Profile, bounded, r.kube, time.Now())
 	if e != nil || tailOwner.stamp != owner.stamp || r.terminalInitialHead(bounded) != nil {
 		return zero, minioPermissionFailure("terminal-owner-tail")
 	}

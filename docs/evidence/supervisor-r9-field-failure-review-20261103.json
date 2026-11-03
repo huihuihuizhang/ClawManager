@@ -1,0 +1,67 @@
+{
+  "schema_version": "supervisor-r9-field-failure-review.v1",
+  "status": "FIELD_FAILED_PRECOLLECTOR_AUTHORITY_AND_QUIESCE",
+  "source_snapshot": "31ffbb36576c3119e21801421be07524db9eea2b",
+  "native_log_sha256": "6250dfbea9a586e2f315db4dbff9df0d9dc9d4a37fea7f2439ad128fb0ed34ef",
+  "attachment_sha256": "7d306a67676eb1cd1b403c857d8e81908daa90de2e0dbea00fc56a4660be7809",
+  "fixture": {
+    "scope": "isolated fixture DATA; not page or production acceptance",
+    "stage": "diagnostic-finished",
+    "mode": "native-diagnostic",
+    "native_started": true,
+    "namespace": "sbk-apermit-1c402e129977297ea50d",
+    "namespace_uid": "1f89cd86-60d5-4aae-a54c-8918e2697849",
+    "owner": "1c402e129977297ea50dc0ab1bdce93c",
+    "server_version": "8.4.8",
+    "observed_image_ids": {
+      "mysql": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "tls": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977"
+    },
+    "server_uuid": "eb96da6f-d725-11f1-9b3a-faa17e14a3a5",
+    "session_tls": {
+      "Ssl_cipher": "TLS_AES_128_GCM_SHA256",
+      "Ssl_version": "TLSv1.3"
+    },
+    "diagnostics_exit_code": 0,
+    "fixture_configuration": {
+      "innodb_use_native_aio": "OFF"
+    },
+    "observed_innodb_use_native_aio": "OFF",
+    "production_equivalent_performance": false,
+    "original_exit_code": 1,
+    "cleanup_exit_code": 0,
+    "residuals": [],
+    "full_acceptance": false
+  },
+  "tests": [
+    {
+      "name": "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+      "status": "FAIL",
+      "elapsed_seconds": 18.3
+    },
+    {
+      "name": "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL",
+      "status": "FAIL",
+      "elapsed_seconds": 111.46
+    }
+  ],
+  "remote_logs": "/tmp/clawmanager-native-31ffbb36-r9/clawmanager-native-logs-31ffbb36.SQvCeLN4",
+  "entry_exit": 1,
+  "delivery_cleanup_exit": 0,
+  "capture_window_result": "UNPROVEN; whole-test elapsed is not capture-stage timing",
+  "local_delivery_cleanup": "REMOVED_AFTER_COMPLETED_TEST",
+  "full_page_acceptance": false,
+  "disaster_recovery_qualified": false,
+  "failure_context": {
+    "source": "User supplied failure context for the same native_log_sha256",
+    "first": "original runtime guard: public execution authority unavailable",
+    "second": "original same-task reTake/acquiring epoch/frozen plan: original task terminal before collector work; status=failed category=quiesce_timeout",
+    "gate_observation": {
+      "reason": "admission-row-nowait",
+      "sql_number": 3572,
+      "sql_state": "HY000"
+    },
+    "capture_performance_measured": false
+  },
+  "priority": "Performance comparison deferred; close production wiring and perform first real page backup trial with original authorization/gates/restoration/publication checks intact"
+}
