@@ -138,3 +138,11 @@ docs/evidence/system-backup-d-installation-kek-materials-source-20261103.json -t
 docs/evidence/system-backup-d-main-v10-six-and-catalog-source-v4-20261103.json -text whitespace=cr-at-eol
 
 docs/evidence/system-backup-d-first-adoption-production-gap-v2-20261103.json -text whitespace=cr-at-eol
+
+scripts/system-backup-first-page-once.py -text whitespace=cr-at-eol
+
+scripts/system-backup-first-page-inputs.py -text whitespace=cr-at-eol
+
+docs/evidence/supervisor-first-page-public-collector-source-review-20261103.json -text whitespace=cr-at-eol
+
+scripts/system-backup-d-first-install-inputs.py -text whitespace=cr-at-eol

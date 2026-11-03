@@ -1,0 +1,13 @@
+{
+  "scope": "Readonly original public field collector source closure; no installation authority",
+  "source_files": {
+    "scripts/system-backup-first-page-once.py": "115e6689bd21570038c09a3863f64862382247c9b6369b3e6420e0d17381e8ec",
+    "scripts/system-backup-first-page-inputs.py": "af8600aa44dd2e9db3835779a0bb438c4b172db8041d1a68aab49ffb1278c42e",
+    "scripts/system-backup-d-first-install-inputs.py": "dbd5f6af63a29318f2106a64b12c5bdf0cbe564af9b3cccd07e5e17fd967b3be"
+  },
+  "AST": "passed",
+  "field_execution": "User ran the exact three scripts; observed_at2026-11-03T02:29:18Z, namespace UID337cfe30-2c17-4b8e-b32a-760778b8098e; public observations only, original authority not issued and page readiness not proved",
+  "source_dependency": "TLS installer export-mysql-ca uses exact sibling helper SHA; preserve exact reviewed bytes in Git and delivery",
+  "field_original_receipt_sha256": "2a410237fbef8559fc396ca52847916bc53eafc3820357533d9c1cf750561429",
+  "actual_backup_acceptance": false
+}
