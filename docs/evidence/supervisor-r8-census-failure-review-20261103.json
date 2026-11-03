@@ -44,5 +44,14 @@
   "rerun_old_delivery": false,
   "page_acceptance": false,
   "disaster_recovery_qualified": false,
-  "test_build_products_removed": true
+  "test_build_products_removed": true,
+  "followup_control_proposal_fix_snapshot": "31ffbb36576c3119e21801421be07524db9eea2b",
+  "final_clean_linux_regression": {
+    "roots": 2,
+    "subcases": 13,
+    "fail": 0,
+    "skip": 0,
+    "native_mysql_executed": false,
+    "review_file": "docs/evidence/supervisor-r9-fixture-parity-review-20261103.json"
+  }
 }

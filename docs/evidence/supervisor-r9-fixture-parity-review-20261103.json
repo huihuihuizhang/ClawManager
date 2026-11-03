@@ -1,0 +1,58 @@
+{
+  "schema_version": "supervisor-r9-fixture-parity-review.v1",
+  "source_snapshot": "31ffbb36576c3119e21801421be07524db9eea2b",
+  "source_state": "clean",
+  "source_file_count": 4058,
+  "scope": "Two fixture-only fixed-count assertion corrections; no production capture policy or permission-window modification.",
+  "original_key_window_seconds": 30,
+  "linux_pure_regression": {
+    "schema_version": "supervisor-r9-linux-pure-review.v1",
+    "snapshot": "31ffbb36576c3119e21801421be07524db9eea2b",
+    "status": "PASS",
+    "roots": 2,
+    "subcases": 13,
+    "fail": 0,
+    "skip": 0,
+    "elf_sha256": "0a89fc4026795ed3c8ce072fb4df4a7e52b0e29e528d07d29e8d25dfaf018516",
+    "elf_bytes": 125636840,
+    "log_sha256": "4ef8d695521e11de2f44c7978e3951354a53b72ffa2f7951db8ac457fdd901de",
+    "platform": "linux/amd64",
+    "cgo": false,
+    "native_mysql_executed": false,
+    "page_acceptance": false,
+    "prior_cli_refusal_retained": true
+  },
+  "native_mysql_status": "NOT_RUN_PENDING_USER_REMOTE_TEST",
+  "selected_native_tests": [
+    "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+    "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL"
+  ],
+  "delivery": {
+    "archive": "clawmanager-native-31ffbb36.tar.gz",
+    "archive_sha256": "3475af54bc2126a19192a18a401897a6259e8f6ad91446035128518abe30e5f4",
+    "archive_bytes": 49362788,
+    "entry": "run-native-31ffbb36.sh",
+    "entry_sha256": "f1d3d6e3a166a8c297a55c0bfb3ece87513677c01ac568079294057cfd4f8fbc",
+    "fixture": "system-backup-d-kube-mysql-fixture.py",
+    "fixture_sha256": "fb8218f18cba92057497038998f920bc30e127789df0562d2be350790aaab873",
+    "archive_members_verified": 125,
+    "archive_all_member_hashes_verified": true,
+    "entry_bash_syntax": "PASS",
+    "fixture_python_parse": "PASS"
+  },
+  "powershell_document_syntax": "PASS",
+  "bash_document_syntax": "PASS",
+  "compile_scratch_removed": true,
+  "pending_remote_delivery_retained": true,
+  "preliminary_local_cli_refusal": "No tests executed; retained; corrected using exact argv before successful regression.",
+  "withdrawn_candidate": "43e2f080 build withheld before delivery because a second stale count assertion remained.",
+  "full_page_acceptance": false,
+  "disaster_recovery_qualified": false,
+  "docker_cleanup": {
+    "owned_containers_remaining": [],
+    "images_pulled": false,
+    "volumes_created": false,
+    "docker_originally_stopped": true,
+    "docker_restored_stopped": true
+  }
+}
