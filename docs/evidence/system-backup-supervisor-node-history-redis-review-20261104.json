@@ -1,0 +1,116 @@
+{
+  "schema_version": "supervisor-node-history-and-redis-component-review.v1",
+  "accepted_base": "f1dcad1cb29a94f5f92814298ddcb7e9fedfb9d9",
+  "selected_source_targets": 208,
+  "selection_sha256": "55b0eb40d107653b9fab5ea43b36c808b5dde02fdb7a36fd19127f4cc1744f3d",
+  "source_maps": [
+    {
+      "owner": "C-original-node-history-directory",
+      "path": "backend/.c-original-node-history-directory-20261104/source-map.json",
+      "sha256": "ee034e6faae820c396c91b35851f05d064acadde35bb9896dacac6afae42f2f4"
+    },
+    {
+      "owner": "D-native-redis-read-gate",
+      "path": "backend/.d-native-redis-read-gate-20261104/source-map.json",
+      "sha256": "69dda5c21305d28f4381980bfacff1d2110d2dd3ac120d8cb3a7ebbfbcabfa55"
+    }
+  ],
+  "results": {
+    "v4-windows-targeted": {
+      "roots": 6,
+      "subcases": 13,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "f3ae3e15ca94c69eda5ddf6289605ed697ed21c2376a6eb501d59e592897edae"
+    },
+    "v4-linux-quiesce": {
+      "roots": 6,
+      "subcases": 24,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "d3766b32100505002265aebd13a1e7849d51e1ba3c4e6b1e9307bd0edbb37f52"
+    },
+    "v4-linux-systembackup": {
+      "roots": 4,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "6ab40d352e5ca0d5ff05b308ef97e1c173e0e9b6430d6b971fc405868a77bb66"
+    }
+  },
+  "linux_complete_package_compile": [
+    "quiesce",
+    "systembackup"
+  ],
+  "linux_production_entry_builds": [
+    "server",
+    "backup-worker",
+    "system-backup-v2-controller",
+    "system-backup-original-enroll",
+    "system-backup-original-maintenance",
+    "system-backup-source-registries"
+  ],
+  "reviewed_limits": [
+    "C directory reader accepts only a genuine original capture stopped opaque object, exact original anchor path/boot/mount/inode and capped original context; real directory pages and EOF, expiry/cancel close, drift and alias rejection tested.",
+    "The reader returns inert directory DATA only. Its consuming genuine holder, full history universe, classifier and final transaction authority must still be supplied.",
+    "D Redis tests cover ACL command intersection/readback models and real Linux encrypted original custody/fsync/readback/corruption rejection only. No real Redis server, TLS provisioning, new principal, persistent ACL file, source restoration or native full holder was executed.",
+    "Redis component supports a bounded reviewed native profile and is not yet called by the original installer set or formal task. Exact field Redis version/prerequisites still require observation and actual provisioning.",
+    "The six Linux entry builds are compile checks on the full selected combination, not release images or deployment artifacts."
+  ],
+  "completed_builds": [
+    {
+      "path": "bins-v4/production/backup-worker",
+      "bytes": 50786430,
+      "sha256": "f48e5b46998190dbef01dd93ad75e014cdaf99e84dfc29079afdb1bf9481f00c",
+      "buildinfo_sha256": "a1bb77ff3460f550b306b2d19ed33ef571fd4e53031a3f9e7363646b1ce3cc17"
+    },
+    {
+      "path": "bins-v4/production/server",
+      "bytes": 77836414,
+      "sha256": "542798b19bda4240d1b4fc746b2b44314595e5ab61aa34237597b61d4086ed9a",
+      "buildinfo_sha256": "d013995af1b85f9ec9933c511ca6d553a08e9698d622a508f1a222a44f1328cb"
+    },
+    {
+      "path": "bins-v4/production/system-backup-original-enroll",
+      "bytes": 55189630,
+      "sha256": "825f7f28319e091760af975757f6ba4b8cc1500a1852da2e13dcbf9762d3b2a9",
+      "buildinfo_sha256": "b6cbb95f26a15f604c5eeca11230724c0256a2ec35d85455b5a1f80dafa5232a"
+    },
+    {
+      "path": "bins-v4/production/system-backup-original-maintenance",
+      "bytes": 58790014,
+      "sha256": "baaafbaa068b7a0d5f78a15f034a05505cbd624aba5034a7f075974a48b9dc35",
+      "buildinfo_sha256": "00216d0c2e0b31963ba22c99ccf7cbff364a8aefa77bc491ac79a8463a53cfa8"
+    },
+    {
+      "path": "bins-v4/production/system-backup-source-registries",
+      "bytes": 61100158,
+      "sha256": "f86652854d6d49257f53b4136054a0ddf542b469241121cce6b538a285b83c19",
+      "buildinfo_sha256": "4c218bf4ccc34b0f526b70e9dd9cfd6e84cf54be26e8adeab8da7ab203ec3430"
+    },
+    {
+      "path": "bins-v4/production/system-backup-v2-controller",
+      "bytes": 66764926,
+      "sha256": "729b427e1a8cd24b9ec56402d89c7e2246c967977a44c64bd7e77c34829964bf",
+      "buildinfo_sha256": "0a4189986295a8e19bf28ba600038d1d81d500e98126c0ffb98ae41d8db0326f"
+    },
+    {
+      "path": "bins-v4/quiesce.test",
+      "bytes": 93040317,
+      "sha256": "c31527c9f748b0ffb43701a1bacaa298b16c12935b4b2b22beb2e42c421edf96"
+    },
+    {
+      "path": "bins-v4/systembackup.test",
+      "bytes": 95654248,
+      "sha256": "fd7146e498f296b7883193d25dc1563564aaa1d839c36742c4c55cc02770e9b0"
+    }
+  ],
+  "cleanup": {
+    "owned_containers": [],
+    "binaries": "8 completed builds (2 tests and 6 production entry compile checks) hashed and removed; verified absent before commit",
+    "cache_tmp": "warm cache retained only while the next announced D1/C/D integration sources are being prepared"
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
