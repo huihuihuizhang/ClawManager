@@ -1,0 +1,121 @@
+{
+  "schema_version": "supervisor-ac-isolated-integration-review.v1",
+  "observed_at": "2026-11-03T20:28:59.452701+08:00",
+  "deadline": "2026-11-04T10:00:00+08:00",
+  "base_commit": "745c1a2f098b23cfc8430de09751d42239b8da96",
+  "C_revision": 3,
+  "C_manifest_sha256": "d40db11c446073901aa26c35972903476526fb492719e75b028b740805a54eb6",
+  "selected_targets": 105,
+  "selection_manifest": {
+    "path": ".tmp-supervisor-ac-integration-20261103\\selection.json",
+    "bytes": 38449,
+    "sha256": "8ee229d31f63f23602827c8f20e5ba948a729f170aff00921f34b6c964faf23f"
+  },
+  "auth_required_context_assertions": 25,
+  "auth_context_mismatches": [],
+  "explicit_A_overrides_of_C": [
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_sql_cut.go",
+      "before": {
+        "owner": "C-rev3",
+        "source": "backend\\.c-production-composition-5bf8931f-20261103\\source\\backend\\internal\\systembackupinstallationowner\\install\\original_adoption_sql_cut.go",
+        "sha256": "2028821651cc1823b5eb617743d9aa8eaa277b9c085c4f8cf08557b74321a3bf"
+      },
+      "selected_owner": "FirstAdoptionAuthentication-v1",
+      "selected_sha256": "30e3327f8b3a5724c39fe0d3fd6ec8e3a04cd71391096adfd26b6e1a972fa8c3"
+    }
+  ],
+  "host_tests": {
+    "roots": 36,
+    "subtests": 85,
+    "failures": [],
+    "skips": [],
+    "packages": [
+      "clawreef/internal/services",
+      "clawreef/internal/systembackupkekadapter",
+      "clawreef/internal/systembackupcontroller",
+      "clawreef/internal/systembackupexecution",
+      "clawreef/internal/systembackupinstallationowner/install",
+      "clawreef/internal/systembackupsecurity"
+    ],
+    "exit_code": 0,
+    "default_go_test_vet_enabled": true,
+    "log": {
+      "path": ".tmp-supervisor-ac-integration-20261103\\host-tests.jsonl",
+      "bytes": 120671,
+      "sha256": "02f0100dc97fb97ac59bdc4d3ae16e009dbefff4bc469742a5d5d8dd338fda6f"
+    }
+  },
+  "root_test_fixture_fix": {
+    "source": {
+      "path": ".tmp-supervisor-ac-integration-20261103\\source\\backend\\internal\\systembackupexecution\\deployment_publication_startup_test.go",
+      "bytes": 17874,
+      "sha256": "af1412e40145af9f57f955d8739c660a993197a6b16344cc5c139d9fd76d59e9"
+    },
+    "change": "construct a fresh DeploymentService with the five file-binding inputs instead of copying a struct containing atomic state",
+    "regression": "TestPublicationSignerSharedProductionFileBootstrap including five rejected input cases passed"
+  },
+  "linux_build": {
+    "exit_code": 0,
+    "goos": "linux",
+    "goarch": "amd64",
+    "cgo_enabled": false,
+    "log": {
+      "path": ".tmp-supervisor-ac-integration-20261103\\linux-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "elfs": [
+      {
+        "path": ".tmp-supervisor-ac-integration-20261103\\linux-bin\\backup-worker",
+        "bytes": 72468189,
+        "sha256": "c522d6807ed90774f0bfdee267f5e19ce7062bb573a9d434bc9a376c3cd2e71c"
+      },
+      {
+        "path": ".tmp-supervisor-ac-integration-20261103\\linux-bin\\server",
+        "bytes": 109161082,
+        "sha256": "35fca7a7ee7f914a4083ce4a200935354704abbef9103b5fe3dc42419f44dce0"
+      },
+      {
+        "path": ".tmp-supervisor-ac-integration-20261103\\linux-bin\\system-backup-original-archive-reader",
+        "bytes": 51416178,
+        "sha256": "72c671b2b7615501be4eb08650b0bb3bc6448ebe980070c706d22f28c4d21a3f"
+      }
+    ],
+    "scope": "compile only; binaries not executed against field services or promoted to deployable images"
+  },
+  "C_regressions_rejected_then_corrected": [
+    "install/terminal_original.go must retain same-attempt cross-resource binding",
+    "install/cross_resource_relations.go must retain independently authorized optional producer SecretPolicy matching",
+    "security/config_mutation_resolver.go must retain original signer lock prefix",
+    "security/config_mutation_transaction.go must retain original response-evidence/KEK lock ordering"
+  ],
+  "A_delivery_byte_audit": {
+    "path": ".tmp-supervisor-c-composition-review-20261103\\a-package-audit.json",
+    "bytes": 5322,
+    "sha256": "0cf79bc1792235cc19b93c7891d6e13d34fc2a3ad00466b019ebbc00c1d4c545"
+  },
+  "runtime_build_inputs": {
+    "openclaw_last_observed_base_cached": true,
+    "hermes_last_observed_base_cached": false,
+    "hermes_base_digest": "sha256:6688834a944161d8dada995cdffd90781533b24ab1e75bb2182c46eaee3fb52c",
+    "hermes_docker_pull": "failed HTTPS HEAD EOF",
+    "hermes_readonly_http_manifest_probe": "20-second connection timeout",
+    "wrapper_git": "52f47fcaaaa52023b148043e0810d27d6f7f7ca0",
+    "wrapper_trees": "openclaw/hermes were clean in read-only Git comparison",
+    "fresh_field_base_identity_recheck_required": true
+  },
+  "not_proven": [
+    "D/B new stopped-Pro current baseline and complete physical hold/recovery implementation",
+    "original first-adoption producer commit/readback",
+    "real private BusinessContentReport sink call",
+    "field full original database upgrade and deployment",
+    "page-started complete backup publication",
+    "new application/worker/runtime deployable image digests"
+  ],
+  "worktree_production_files_mutated_by_this_review": false,
+  "cleanup": {
+    "completed": true,
+    "owned": "cache/tmp/linux-bin and extracted source archive only; selected source, hashes, logs and receipts retained"
+  }
+}

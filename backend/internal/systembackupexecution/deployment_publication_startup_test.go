@@ -210,8 +210,13 @@ func TestPublicationSignerSharedProductionFileBootstrap(t *testing.T) {
 	}
 	for _, fault := range []string{"missing", "extra", "wrong hash", "wrong path", "changed core"} {
 		t.Run(fault, func(t *testing.T) {
-			service := *x.service
-			service.publicationInput = nil
+			service := &DeploymentService{
+				ConfigPath:     x.service.ConfigPath,
+				ConfigDigest:   x.service.ConfigDigest,
+				Forward:        x.service.Forward,
+				Recovery:       x.service.Recovery,
+				ForwardEnabled: x.service.ForwardEnabled,
+			}
 			in := x.inputs
 			in.PublicationSigners = append([]PublicationSignerInput(nil), x.inputs.PublicationSigners...)
 			switch fault {
