@@ -1,0 +1,484 @@
+{
+  "schema_version": "supervisor-node-gateway-original-epoch-digest-review.v1",
+  "observed_at": "2026-11-03T23:26:31.077055+08:00",
+  "base_commit": "f79094c50c7cfa881e6d8e83eebfaf892c18c929",
+  "status": "BOUNDED_PROTOCOL_AND_DIGEST_TESTS_PASS_FULL_HOLDER_NOT_PROVEN",
+  "source_selection": {
+    "path": ".tmp-supervisor-b6-d16-integration-20261103/selection.json",
+    "bytes": 10367,
+    "sha256": "7e31e2f8d9e38e350dbedb25ba743ce2a27d2e7feef296aa9b71c04bd7d70441"
+  },
+  "selected_B_targets": 7,
+  "source_pins": [
+    {
+      "target": "backend/internal/systembackup/quiesce/node_observation.go",
+      "sha256": "3132b585946d679faf2a14c4eb8f6dbf0369c86e82fe758204e61217d04a6f79",
+      "bytes": 10599,
+      "before_sha256": "23db4396191fe5f28ed71a372ac7fd2076dad1e75c78bd621d084e2734e3c4f2"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_node_observation.go",
+      "sha256": "7ca344503e846ba02178fd6d6257f01268ded57380c66d488bb9a3c4cf721dd1",
+      "bytes": 14567,
+      "before_sha256": "09fcf19e8b68af37d7e1fabeb1e2df2454156e17250f7348ec9ebfe8abc9e424"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_node_observation_transport.go",
+      "sha256": "57fa59a67eccf6867d412af86d9a3aa17037742157df40433a8fb9bad813ad8f",
+      "bytes": 10669,
+      "before_sha256": "c7472524725dcfb4df3f4c394813b973aa539bf24d5acbd652a3bed782131766"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_original_restart_digest.go",
+      "sha256": "c2477136b10b9ccd989ceec8e114dc8c06eaafbda77a4924f6f67347e604cce6",
+      "bytes": 2431,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/node_gateway_epoch_zero_test.go",
+      "sha256": "d3280265581a9f669b1087831f7f07ddd0eaf45033c6858d43809531c4abd1db",
+      "bytes": 14562,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_original_restart_digest_test.go",
+      "sha256": "d85099ff3a6b4c0f90f9b84561b56ed2101b7498ab21b386a8364dcfa17e7ec6",
+      "bytes": 5306,
+      "before_sha256": null
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_node_observation_test.go",
+      "sha256": "ab34b153328c07ab557ef25137c6ac97642a4044ae3035e0dd3037928c991b50",
+      "bytes": 6253,
+      "before_sha256": null
+    }
+  ],
+  "host_validation": {
+    "roots": [
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeStoppedWireRetainsExactRawAndNoPID"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeStoppedCompletionNeedsBothActualRawBodies"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeExpiredStoppedCannotBecomeFreshObservation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeAnchorDomainAndSharedAgentScope"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataKeepsOriginalWireDigest"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProEpochZeroReachesNativeRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProEpochZeroClientDispatchesButNeverPromotesRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProCurrentBaselineNoHistoricalPodRequired"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProUniqueVolumeBindingRefusesAmbiguity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProNativeScopeHasNoReservationHashCycle"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProAnchorCannotBecomeWholePodOrGateway"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProExpiredFreshRequestRefusesBeforeNativeIO"
+      }
+    ],
+    "subtests": [
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/epoch-zero-is-not-one"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-operation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-reservation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-agent-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-original-state"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-original-request"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-slot"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-workspace-config"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-book-config"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-response-binding"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-boot"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/malformed-anchor"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/malformed-signature-shape"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/whole-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/gateway-running"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/gateway-originally-stopped"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-node-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-zero-generation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-expired-capture"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-foreign-kind"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-node-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-reservation-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-expired-capture"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-unknown-phase"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-original-state-missing"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/whole-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/gateway-running"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/gateway-originally-stopped"
+      }
+    ],
+    "fail": 0,
+    "skip": 0,
+    "log": {
+      "path": ".tmp-supervisor-b6-d16-integration-20261103/B6-D16-host.jsonl",
+      "bytes": 44211,
+      "sha256": "d58246058506723548b72fc8d44bc13ded737a771cc2c9e8b3361ce3b2258f8c"
+    }
+  },
+  "host_install_scope": "D16 exact frozen install package compiled with default vet; no complete holder/adoption/restore test executed",
+  "linux_validation": {
+    "roots": [
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeStoppedWireRetainsExactRawAndNoPID"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeStoppedCompletionNeedsBothActualRawBodies"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeExpiredStoppedCannotBecomeFreshObservation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayNodeAnchorDomainAndSharedAgentScope"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataKeepsOriginalWireDigest"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProEpochZeroReachesNativeRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProEpochZeroClientDispatchesButNeverPromotesRefusal"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProCRIEnumSemantics"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProNativeMountAliasIdentity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProCurrentBaselineNoHistoricalPodRequired"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProUniqueVolumeBindingRefusesAmbiguity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProNativeScopeHasNoReservationHashCycle"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProAnchorCannotBecomeWholePodOrGateway"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestStoppedProExpiredFreshRequestRefusesBeforeNativeIO"
+      }
+    ],
+    "subtests": [
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/epoch-zero-is-not-one"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-operation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-reservation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-agent-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-original-state"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-original-request"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-slot"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-workspace-config"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-book-config"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-response-binding"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/foreign-boot"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/malformed-anchor"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestGatewayOriginalRestartAnchorDataRefusesForeignContext/malformed-signature-shape"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/whole-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/gateway-running"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroReachesNativeRefusal/gateway-originally-stopped"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-node-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-zero-generation"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-expired-capture"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/whole-foreign-kind"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-node-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-reservation-identity"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-expired-capture"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-unknown-phase"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroRetainsIdentityExpiryAndPhaseRefusals/gateway-original-state-missing"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/whole-pod"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/gateway-running"
+      },
+      {
+        "package": "clawreef/internal/systembackup/quiesce",
+        "test": "TestNodeGatewayEpochZeroClientsDispatchButNeverPromoteRefusal/gateway-originally-stopped"
+      }
+    ],
+    "fail": 0,
+    "skip": 0,
+    "log": {
+      "path": ".tmp-supervisor-b6-d16-integration-20261103/logs-linux/quiesce.jsonl",
+      "bytes": 44287,
+      "sha256": "b920d7f1e4da6801c377f90afcebf9b91aa8b94ce3ded7a1755678703684ddf8"
+    }
+  },
+  "D16_sources_in_this_commit": false,
+  "B_context_resolution": [
+    {
+      "path": "backend/internal/systembackup/quiesce/gateway_node_observation_linux.go",
+      "sha256": "9368d081a9a7259e569e8d407c333308ce5cf3a958f3550a84d27d5ade2c1b35",
+      "actual_sha256": "ffaa53cd8cc9c8efa5b563cefcc34f9631b69c89c846a54397e6b7410381af07",
+      "match": "reviewed root omits only an unused os import from B context; all native code identical"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/node_observation_transport.go",
+      "sha256": "f86198160ad402faeeeaca9226bfed5ff30bfa89a6ace1db465a0ca2d62f1c0b",
+      "actual_sha256": "f86198160ad402faeeeaca9226bfed5ff30bfa89a6ace1db465a0ca2d62f1c0b",
+      "match": "exact or format-only"
+    },
+    {
+      "path": "backend/internal/systembackup/quiesce/gateway_node_observation_test.go",
+      "sha256": "290575fd98a6fd01a10adfe10a30110e1d5519eb0cf68b0fe4a12fd21d17ea05",
+      "actual_sha256": "ab34b153328c07ab557ef25137c6ac97642a4044ae3035e0dd3037928c991b50",
+      "match": "required prior B7 test dependency absent in base, explicitly selected now"
+    },
+    {
+      "path": "backend/internal/services/runtime_agent_backup.go",
+      "sha256": "b0672c5dfce677f2cc519f56fc072a57983de4c523d55ab4e2bd48ba5de418c1",
+      "actual_sha256": "bd598081198a73f6fa979b99bea2997ed14e62855e8285059678b315f6b7fd90",
+      "match": "explicit A recovery-capabilities-r1 supersede; original digest function exact",
+      "digest_function_sha256": "7c2c40f95791e3f447fea58564e4b562f0f5d97e505a9ac3e93da10be96ac1b8"
+    }
+  ],
+  "behavior": [
+    "legal original epoch zero is preserved, not replaced with a fabricated one; original identity/expiry/phase/native visibility guards remain",
+    "original restart digest accessor is populated only by the authenticated Node client from the original native anchor book digest, not successor RuntimeBackupRequest.RestartSHA256",
+    "native HTTP tests dispatch real TLS1.3 client/server requests but intentionally return native visibility refusal and mint no positive opaque proof; pure anchor tests verify DATA correlation only"
+  ],
+  "scope_limit": "client does not possess Node HMAC key and does not independently verify anchor HMAC; existing authenticated exact Node TLS transport and actual native producer remain the source",
+  "still_required": [
+    "whole-Pod recovery-stopped and actual original gate generation ABI separate next revision",
+    "complete kept reader/Agent proof and actual stop/restore/release caller",
+    "fresh recovery authority and genuine full-source coverage constructor",
+    "field original migration/install/deployment and real page backup task"
+  ],
+  "cleanup": "pending owned binary/tmp/cache cleanup after connected batch; sources/logs kept"
+}
