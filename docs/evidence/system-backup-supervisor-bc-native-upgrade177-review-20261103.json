@@ -1,0 +1,152 @@
+{
+  "schema_version": "supervisor-bc-native-upgrade177-review.v1",
+  "observed_at": "2026-11-03T19:14:56.551476+08:00",
+  "head": "5bf8931f441c4fb0cb38bf61fc3034976635adaf",
+  "bc_review": {
+    "status": "reviewed_fast_forward_complete",
+    "base": "21de0cf77c96801a84e89dc8aa7267233d7a90db",
+    "head": "5bf8931f441c4fb0cb38bf61fc3034976635adaf",
+    "files": 108,
+    "b_commit": "bb82e52e6a8e211e1e74ab333cb166cc13c9120e",
+    "team_commits": [
+      "877aeffd2612698cbe557af485f67372248f75da",
+      "5ac7a4dc42811ea07e82a71710db8aa6b01276fd"
+    ],
+    "tests": {
+      "go_windows_targeted_roots_pass": 45,
+      "failed": 0,
+      "skipped": 0,
+      "python_inventory_tests_pass": 7
+    },
+    "local_formatting_only_conflicts_resolved": [
+      "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+      "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go"
+    ],
+    "other_worktree_changes_untouched": true,
+    "field_backup_acceptance": false
+  },
+  "upgrade177": {
+    "scope": "source review, static byte-producer regressions and cross-compilation only",
+    "source": {
+      "base_commit": "5bf8931f441c4fb0cb38bf61fc3034976635adaf",
+      "base_source": "D:\\codex-backup-page-trial-release-fb7ad8eb50e946229b80f908b71aa6a9\\review-bb82e52e\\source\\backend",
+      "pins": [
+        {
+          "path": "backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+          "source": "backend/.d-legacy-upgrade177-20261103/backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+          "sha256": "e8467f7c0dc3b5f7e23543845156d2a64240760235f52bb30fce57bc86dfbb47",
+          "compile_overlay_target": "D:\\codex-backup-page-trial-release-fb7ad8eb50e946229b80f908b71aa6a9\\review-bb82e52e\\source\\backend\\cmd\\system-backup-legacy-preflight\\main.go"
+        },
+        {
+          "path": "backend/internal/db/backup_legacy_site_rows177.go",
+          "source": "backend/.d-legacy-upgrade177-20261103/backend/internal/db/backup_legacy_site_rows177.go",
+          "sha256": "ef8ece56962729c8ba02744845a529197e937b2d33def2e9bf11c91bea01ddfe",
+          "compile_overlay_target": "D:\\codex-backup-page-trial-release-fb7ad8eb50e946229b80f908b71aa6a9\\review-bb82e52e\\source\\backend\\internal\\db\\backup_legacy_site_rows177.go"
+        }
+      ],
+      "scope": "compile only; existing command main is replaced solely as an isolated build target"
+    },
+    "python_static_tests_pass": 2,
+    "linux_amd64_cgo_disabled_build_exit": 0,
+    "binary": {
+      "path": ".tmp-supervisor-upgrade177-review-20261103\\upgrade177-proof",
+      "bytes": 9585147,
+      "sha256": "e21465face0aca8ac17402d218df90155e7e379ea1dc3e8e1381b07efa47378b"
+    },
+    "shell": {
+      "path": "backend\\.d-legacy-upgrade177-v2-20261103\\scripts\\system-backup-d-legacy-copy-upgrade177-probe-remote.sh",
+      "bytes": 16858,
+      "sha256": "efec8cbcbbcb5b4fdfd24c1c4197dda4e1ec02dabcd58c6e197a5d82acb8aef9"
+    },
+    "bash_syntax_exit": 0,
+    "payloads": {
+      "counts-after.sql": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\counts-after.sql",
+        "bytes": 7453,
+        "sha256": "cab88ac5d3361323ea49ae8ddc84923cb670d61512ad1029ce17ea4407338d47"
+      },
+      "counts-before.sql": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\counts-before.sql",
+        "bytes": 7069,
+        "sha256": "178dcb814ad1cf9dc3a352620efd38ee0d220f1e1396602e130d0ad492d057cc"
+      },
+      "inventory.json": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\inventory.json",
+        "bytes": 511588,
+        "sha256": "71b22c009b3ad9bdeef324d2cafd2aa4c1a646110f2080d1b6f42746f8f7013f"
+      },
+      "profile.json": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\profile.json",
+        "bytes": 25346,
+        "sha256": "116440a8338858b7e43fbb06cdf9b0c3c04d34f668ec52629c5c08a3724e1c73"
+      },
+      "rename.sql": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\rename.sql",
+        "bytes": 5056,
+        "sha256": "b97754e940e7ce0267aecc0ae06e6afa75aa243e0698002238dd295f4eff7ab0"
+      },
+      "upgrade.sql": {
+        "path": ".tmp-supervisor-upgrade177-review-20261103\\payload\\upgrade.sql",
+        "bytes": 377354,
+        "sha256": "191f4326edd1ae0e7d949561cdcd3060cebaf18814fbac3db25bf15d9e97b897"
+      }
+    },
+    "pending_migrations": 101,
+    "final_ledger_union_rows": 198,
+    "remote_copy_experiment_executed": false,
+    "live_database_upgrade_authorized_by_this_receipt": false
+  },
+  "native_r1": {
+    "status": "withdrawn_failed_before_target_logic",
+    "installer_roots": 3,
+    "installer_error": "actual migration 134 source",
+    "adoption_roots": 1,
+    "adoption_error": "local server UUID mismatch",
+    "causes": [
+      "delivery omitted migration fixture inputs 134/135",
+      "test helper lost explicit TLS configuration through FormatDSN"
+    ],
+    "remote_fixture_cleanup_exit": 0,
+    "r2_status": "withdrawn_before_remote_delivery_due_to_invalid_FOR_SHARE_1792_assertion",
+    "no_native_success_claim": true
+  },
+  "mysql_mode_correction": {
+    "source": "owner A local isolated MySQL 8.4.8; supervisor inspected exact SQL and stdout/stderr",
+    "inputs": [
+      {
+        "path": ".a-independent-package-tests-20261103\\mode-probe.sql",
+        "bytes": 722,
+        "sha256": "3ee6151d7bc3b150e212e71c84eb5cdfaba0c14b0cb17afd6ccaa8c337307c3c"
+      },
+      {
+        "path": ".a-independent-package-tests-20261103\\logs\\mysql-mode-probe.stdout",
+        "bytes": 109,
+        "sha256": "d03d088206f7ffc4b5c83457bd44bc7bb2434366783c2001af7ef253ff2ab82a"
+      },
+      {
+        "path": ".a-independent-package-tests-20261103\\logs\\mysql-mode-probe.stderr",
+        "bytes": 85,
+        "sha256": "422cdb96cb1f24cdff123c767e6cba1508b7b03764e82e2801348072574993a3"
+      }
+    ],
+    "read_only_for_share": "succeeded and returned original id 7",
+    "read_only_for_update": "ERROR 1792 (25006)",
+    "read_write_for_share": "succeeded and returned original id 7",
+    "row_count": 1,
+    "consequence": "Do not remove read-only installer transactions solely to permit FOR SHARE; correct false model/native assertions. D final INSERT transaction still requires read-write.",
+    "not_proven": [
+      "concurrent row-lock behavior",
+      "complete first adoption",
+      "field acceptance"
+    ]
+  },
+  "field": {
+    "workload_updated_by_this_review": false,
+    "page_backup_acceptance": false,
+    "dr_qualified": false
+  },
+  "cleanup": {
+    "completed": true,
+    "scope": "this review owned build binary, cache, temporary directory and generated payloads; sources and receipts retained"
+  }
+}
