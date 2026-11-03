@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"path"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -27,6 +28,7 @@ type publicationFinalTeamRelations struct {
 	refs                             map[string][]string
 	parsed, confirmed                map[string]string
 	sqlObserved, failed              bool
+	observations                     *publicationTeamObservations
 }
 
 func newPublicationFinalTeamRelations(source b.SourceInventory) (*publicationFinalTeamRelations, error) {
@@ -48,6 +50,7 @@ func newPublicationFinalTeamRelations(source b.SourceInventory) (*publicationFin
 		return nil, d.ErrNotReady
 	}
 	r := &publicationFinalTeamRelations{inventory: inv, database: source.Database, server: source.ServerUUID, workspaces: map[string]int{}, refs: map[string][]string{}, parsed: map[string]string{}, confirmed: map[string]string{}}
+	r.observations = newPublicationTeamObservations(inv)
 	for _, mount := range inv.Mounts {
 		part := "team_" + strconv.Itoa(mount.TeamID) + "_workspace"
 		if _, exists := r.workspaces[part]; exists {
@@ -115,6 +118,7 @@ func (r *publicationFinalTeamRelations) observeSQL(snapshot domain.Snapshot) err
 		}
 		r.refs[part] = refs
 	}
+	r.observations.observeSQL(snapshot)
 	r.sqlObserved = true
 	return nil
 }
@@ -161,13 +165,19 @@ func (r *publicationFinalTeamRelations) complete() error {
 	return nil
 }
 
-type publicationFinalTeamWorkspaceRead struct{ required, observed map[string]byte }
+type publicationFinalTeamWorkspaceRead struct {
+	required, observed    map[string]byte
+	entries, files, bytes int64
+	samples               []TeamFileObservation
+	referenceSamples      []TeamFileObservation
+}
 
 func (r *publicationFinalTeamRelations) workspaceRead(i worker.Invocation) *publicationFinalTeamWorkspaceRead {
 	if _, expected := r.workspaces[i.Request.Binding.Path]; !expected {
 		return nil
 	}
 	read := &publicationFinalTeamWorkspaceRead{required: map[string]byte{}, observed: map[string]byte{}}
+	r.observations.workspaces[i.Request.Binding.Path] = read
 	require := func(name string, kind byte) {
 		if previous, exists := read.required[name]; exists && previous != kind {
 			read.required[name] = 0
@@ -188,6 +198,16 @@ func (r *publicationFinalTeamWorkspaceRead) observe(header *tar.Header) error {
 	if r == nil {
 		return nil
 	}
+	r.entries++
+	r.bytes += header.Size
+	if header.Typeflag == tar.TypeReg || header.Typeflag == tar.TypeRegA {
+		r.files++
+		r.samples = append(r.samples, TeamFileObservation{Path: header.Name, Bytes: header.Size})
+		sort.Slice(r.samples, func(i, j int) bool { return r.samples[i].Path < r.samples[j].Path })
+		if len(r.samples) > 3 {
+			r.samples = r.samples[:3]
+		}
+	}
 	if want, required := r.required[header.Name]; required {
 		kind := header.Typeflag
 		if kind == tar.TypeRegA {
@@ -197,6 +217,13 @@ func (r *publicationFinalTeamWorkspaceRead) observe(header *tar.Header) error {
 			return d.ErrNotReady
 		}
 		r.observed[header.Name] = kind
+		if kind == tar.TypeReg {
+			r.referenceSamples = append(r.referenceSamples, TeamFileObservation{Path: header.Name, Bytes: header.Size})
+			sort.Slice(r.referenceSamples, func(i, j int) bool { return r.referenceSamples[i].Path < r.referenceSamples[j].Path })
+			if len(r.referenceSamples) > 3 {
+				r.referenceSamples = r.referenceSamples[:3]
+			}
+		}
 	}
 	return nil
 }

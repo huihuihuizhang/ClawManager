@@ -101,11 +101,14 @@ func inspectOwnedBusinessPayloadRelations(ctx context.Context, i worker.Invocati
 		if err != nil {
 			return d.ErrNotReady
 		}
+		defer source.ClearSourceRedisSnapshot(snapshot)
+		if relations != nil && relations.observeSharedRedis(snapshot) != nil {
+			return d.ErrNotReady
+		}
 		observed.Items = int64(len(snapshot.Items))
 		for _, item := range snapshot.Items {
 			observed.ContentBytes += int64(len(item.Key) + len(item.Dump) + len(item.StreamGroups))
 		}
-		source.ClearSourceRedisSnapshot(snapshot)
 	case r.Resources != nil:
 		observed.Kind = "kubernetes_captured_json_bytes"
 		if r.Resources.SecretPolicy != nil {
