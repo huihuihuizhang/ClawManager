@@ -1,0 +1,38 @@
+{
+  "schema_version": "supervisor-agent-runtime-layer-review.v1",
+  "reviewed_source_manifest_sha256": "67a9b7735627e92e95aaeebb180beeb9776a595781b6e1956d9c6c923ce27f95",
+  "accepted_production_sha256": "0c116fcf135feec9e82000bf1984c2904040e33dad67196398e21367d248a3e7",
+  "review": [
+    "Only the fixed authorized registry origin and original repositories; redirects and external upload locations refused before credentials can be forwarded.",
+    "Pinned actual static Agent inputs; complete base manifest/config/layer compressed hashes, decompressed diffIDs and tar path state checked.",
+    "Original config and layer prefix retained; deterministic single-file Agent layer, config and immutable manifest independently read back.",
+    "No mutable tag PUT, workload execution, SSH, subprocess builder, or field acceptance claim."
+  ],
+  "independent_validation": {
+    "SSH": false,
+    "buildkit": false,
+    "docker": false,
+    "errors": 0,
+    "failed": 0,
+    "field_network": false,
+    "live": false,
+    "native": false,
+    "page": false,
+    "passed": true,
+    "roots": 12,
+    "scope": "offline-real-pinned-ELF-and-loopback-HTTP-registry-model-only",
+    "skipped": 0,
+    "subcases": 42
+  },
+  "validation_logs": {
+    ".tmp-supervisor-d4-combination-20261104/logs/agent-registry-layer.json": "a3405818c2f32b1681bdd36325aa828cce6dfdd8c2b659a90d86f96fdf9700cc",
+    ".tmp-supervisor-d4-combination-20261104/logs/agent-registry-layer.log": "5750dce613914e7cdf81e63d09f6f3e7c9a1f217669226a185b4b4f3acae00d1",
+    ".tmp-supervisor-d4-combination-20261104/logs/agent-registry-layer.exit": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  "cleanup": "Python -B; test temporary directories and loopback servers closed by suite; no test build binary/cache/image/container created.",
+  "current_field_base_identity_rechecked": false,
+  "runtime_startup_and_existing_integrity_checks_verified": false,
+  "field_push_or_deployment_done": false,
+  "page_backup_completed": false,
+  "operator_requirement": "Re-observe current Deployment/image identity; run helper with the separately pinned Agent bundle on the operator remote host; consume immutable_reference and verify actual runtime startup/protocol before original installation."
+}
