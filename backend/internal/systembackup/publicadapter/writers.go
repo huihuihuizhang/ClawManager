@@ -3,6 +3,8 @@ package publicadapter
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"sort"
 	"strconv"
 	"time"
 
@@ -29,6 +31,7 @@ type RuntimeWriterSpec struct {
 	RestartRef                 string
 	ResumeGeneration           int // original public reservation; never inferred +1
 	UIDNumber, GIDNumber, Port int
+	StoppedProBaseline         string `json:",omitempty"`
 	Stopped                    flow.State
 }
 
@@ -65,13 +68,14 @@ type RestartObservation struct {
 type WriterCallbacks struct {
 	// GatewayControl performs the native operation and persists its raw positive
 	// receipt under the same original task authority. bool is readiness, not ACK.
-	GatewayControl  func(context.Context, d.Authority, string, string, flow.State) (bool, error)
-	Guard           func(context.Context, d.Authority, string, string, flow.State) error
-	LoadGateway     func(context.Context, d.Authority, string, string) (services.RuntimeAgentCreateGatewayRequest, error)
-	LoadPod         func(context.Context, d.Authority, string, string) (*corev1.Pod, error)
-	ClaimRestart    func(context.Context, d.Authority, string, flow.State) (bool, error)
-	CompleteRestart func(context.Context, d.Authority, string, flow.State, RestartObservation) error
-	ConfirmStopped  func(context.Context, d.Authority, string, flow.State, []quiesce.PodIdentity) error
+	StoppedProControl func(context.Context, d.Authority, string, string, flow.State) error
+	GatewayControl    func(context.Context, d.Authority, string, string, flow.State) (bool, error)
+	Guard             func(context.Context, d.Authority, string, string, flow.State) error
+	LoadGateway       func(context.Context, d.Authority, string, string) (services.RuntimeAgentCreateGatewayRequest, error)
+	LoadPod           func(context.Context, d.Authority, string, string) (*corev1.Pod, error)
+	ClaimRestart      func(context.Context, d.Authority, string, flow.State) (bool, error)
+	CompleteRestart   func(context.Context, d.Authority, string, flow.State, RestartObservation) error
+	ConfirmStopped    func(context.Context, d.Authority, string, flow.State, []quiesce.PodIdentity) error
 	// Deployment completion must also reconcile its actual new source binding;
 	// readiness alone or a copied resume annotation is not ownership proof.
 	ConfirmResumed func(context.Context, d.Authority, string, flow.State) error
@@ -136,7 +140,9 @@ func NewRuntimeWriterBuilder(specs []RuntimeWriterSpec, deps RuntimeWriterDepend
 		for _, participant := range deps.Participants {
 			writers = append(writers, &participantWriter{participant, in.Authority, deps})
 		}
-		for _, spec := range specs {
+		ordered := append([]RuntimeWriterSpec(nil), specs...)
+		sort.SliceStable(ordered, func(i, j int) bool { return ordered[i].Kind != "stopped" && ordered[j].Kind == "stopped" })
+		for _, spec := range ordered {
 			if actual[spec.Source.ID] != spec.Source {
 				return nil, &Failure{"writer_registry_drift"}
 			}
@@ -184,6 +190,10 @@ func validateWriterSpec(s RuntimeWriterSpec, deps RuntimeWriterDependencies) err
 	}
 	switch s.Kind {
 	case "stopped":
+		var baseline quiesce.StoppedProBaseline
+		if s.Source.Mode != "pro" || c.StoppedProControl == nil || json.Unmarshal([]byte(s.StoppedProBaseline), &baseline) != nil || baseline.SourceKey != s.Stopped.UID || baseline.InstanceID != uint64(s.Source.ID) || baseline.UserID != uint64(s.Source.UserID) || baseline.InstanceGeneration != uint64(s.Source.Generation) || quiesce.StoppedProBaselineSHA256(baseline) != s.Stopped.Checkpoint {
+			return d.ErrNotReady
+		}
 		if s.Source.Status != "stopped" || !validParticipant(ParticipantSpec{"stopped/" + strconv.Itoa(s.Source.ID), s.Stopped}) || s.Stopped.Generation != int64(s.Source.Generation) {
 			return d.ErrNotReady
 		}
@@ -232,7 +242,7 @@ func constructRuntimeWriter(in d.Input, spec RuntimeWriterSpec, deps RuntimeWrit
 	source, a, c := spec.Source, in.Authority, deps.Callbacks
 	runtime := scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS}
 	if spec.Kind == "stopped" {
-		return &participantWriter{ParticipantSpec{"stopped/" + strconv.Itoa(source.ID), spec.Stopped}, a, deps}
+		return &stoppedProWriter{spec, a, deps}
 	}
 	var id string
 	guard := func(ctx context.Context, point string, s flow.State) error {

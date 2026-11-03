@@ -385,9 +385,10 @@ func TestRuntimeWriterFactoryBuildsRealPodAndDeploymentWithoutAPICalls(t *testin
 
 func TestRuntimeWriterFactoryRejectsMissingInputsAndInventoryDrift(t *testing.T) {
 	ports, deps := writerTestDeps(t)
-	source := writerTestSource()
-	source.Status = "stopped"
-	spec := RuntimeWriterSpec{Source: source, Kind: "stopped", Stopped: flow.State{UID: "registered-stopped-instance-7", Generation: 7, Checkpoint: "original-stopped-proof"}}
+	spec := stoppedProWriterSpecFixture()
+	source := spec.Source
+	// Model callback only; production callback performs concrete P7 I/O.
+	deps.Callbacks.StoppedProControl = func(context.Context, d.Authority, string, string, flow.State) error { return nil }
 	builder, err := NewRuntimeWriterBuilder([]RuntimeWriterSpec{spec}, deps)
 	if err != nil {
 		t.Fatal(err)

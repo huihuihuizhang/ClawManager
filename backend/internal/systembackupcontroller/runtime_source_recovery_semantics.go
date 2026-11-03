@@ -29,6 +29,7 @@ func (p *PreparedSourceRecovery) validateProducerLeaves() error {
 	var metadata struct {
 		Mounts []struct {
 			InstanceID                int
+			CurrentStoppedPro         json.RawMessage
 			MountID, SourceSpecSHA256 string
 		}
 		PlatformMounts []struct {
@@ -59,7 +60,20 @@ func (p *PreparedSourceRecovery) validateProducerLeaves() error {
 			continue
 		}
 		if !writer.Original.Running {
-			return ErrSourceRecoveryStoppedWitnessRequired
+			var stoppedFacts struct{ Runtime *SourceRecoveryRuntime }
+			if json.Unmarshal(leaf.Facts, &stoppedFacts) != nil || stoppedFacts.Runtime == nil {
+				return ErrSourceRecoveryStoppedWitnessRequired
+			}
+			materials := []json.RawMessage{}
+			for _, mount := range metadata.Mounts {
+				if mount.InstanceID == stoppedFacts.Runtime.Spec.Source.ID && mount.SourceSpecSHA256 == stoppedFacts.Runtime.SpecSHA256 && mount.MountID == "workspace" && len(mount.CurrentStoppedPro) > 0 {
+					materials = append(materials, mount.CurrentStoppedPro)
+				}
+			}
+			if p.validateStoppedProLeaf(writer, leaf, instances, materials) != nil {
+				return ErrSourceRecoveryStoppedWitnessRequired
+			}
+			continue
 		}
 		var facts sourceRecoverySemanticFacts
 		if json.Unmarshal(leaf.Facts, &facts) != nil || facts.Version != "source-recovery-physical-observation.v1" || len(facts.Recovered) == 0 {

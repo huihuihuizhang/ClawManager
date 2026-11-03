@@ -41,15 +41,23 @@ type ObservationBinding struct {
 
 type NodeObservationRequest struct {
 	Version, Action, Nonce string
-	Binding                ObservationBinding
-	Deadline               time.Time
-	Pods                   []PodIdentity
-	SourcePaths            []string
-	Anchor                 string
+	// For whole_pod_cold_cut, Binding.Generation is D's ORIGINAL SQL gate
+	// generation. It is not a Deployment, Pod or Agent successor generation.
+	Binding     ObservationBinding
+	Deadline    time.Time
+	Pods        []PodIdentity
+	SourcePaths []string
+	Anchor      string
 	// RecoveredPods are the actual replacement identities from D's original
 	// recovery ledger. Observing them does not authorize or perform a restart.
-	RecoveredPods       []PodIdentity
+	RecoveredPods []PodIdentity
+	// On recovered only, repeat the original SQL gate generation exactly.
+	// D separately authenticates the actual source recovery and journal.
 	RecoveredGeneration uint64
+	// Complete current API membership is explicit (including a proved empty
+	// collection) in the two scoped reconciliation phases.
+	RecoveryAffectedPods   []PodIdentity `json:",omitempty"`
+	RecoverySnapshotSHA256 string        `json:",omitempty"`
 }
 
 type NodeObservationResponse struct {
@@ -164,7 +172,10 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 	now := time.Now().UTC()
 	b := r.Binding
 	deadline, ok := ctx.Deadline()
-	if o == nil || len(o.key) != 32 || !ok || ctx.Err() != nil || b.Kind != NodeObservationWholePodColdCut || r.Version != "node-observation.v1" || !validObservationHash(r.Nonce) || b.Node != o.Node || b.NodeUID != o.NodeUID || b.InstallationID == "" || b.OperationID == "" || b.ReservationID == "" || b.Namespace == "" || b.NamespaceUID == "" || b.Generation == 0 || b.ExpiresAt.IsZero() || !validObservationHash(b.InventorySHA256) || !now.Before(r.Deadline) || r.Deadline.After(now.Add(15*time.Second)) || deadline.After(r.Deadline) || (r.Action != "recovered" && !r.Deadline.Before(b.ExpiresAt)) || !validObservationPods(r.Pods, o.Node) {
+	if o == nil || len(o.key) != 32 || !ok || ctx.Err() != nil || b.Kind != NodeObservationWholePodColdCut || r.Version != "node-observation.v1" || !validObservationHash(r.Nonce) || b.Node != o.Node || b.NodeUID != o.NodeUID || b.InstallationID == "" || b.OperationID == "" || b.ReservationID == "" || b.Namespace == "" || b.NamespaceUID == "" || b.Generation == 0 || b.ExpiresAt.IsZero() || !validObservationHash(b.InventorySHA256) || !now.Before(r.Deadline) || r.Deadline.After(now.Add(15*time.Second)) || deadline.After(r.Deadline) || (!nodeObservationRecoveryAction(r.Action) && !r.Deadline.Before(b.ExpiresAt)) || !validObservationPods(r.Pods, o.Node) {
+		return result, ErrNodeObservation
+	}
+	if !nodeObservationPhaseDataValid(r, o.Node) {
 		return result, ErrNodeObservation
 	}
 	if e := o.hostIdentity(ctx); e != nil {
@@ -205,12 +216,26 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 			return result, err
 		}
 		result.Facts = []string{"original_running_cri_processes_observed", "source_mount_identities_observed"}
-	case "stopped", "recovered":
+	case "recovery-source-stopped", "recovery-reconciled":
+		a, err = o.originalNodeObservationAnchor(r, now)
+		if err != nil {
+			return result, ErrNodeObservation
+		}
+		var reconciled originalRecoveryNativeResult
+		reconciled, err = o.reconcileOriginalRecovery(ctx, r, a)
+		if err != nil {
+			return NodeObservationResponse{}, err
+		}
+		result.Processes = reconciled.Processes
+		result.TasksChecked = reconciled.Tasks
+		result.Files = reconciled.Files
+		result.Facts = originalRecoveryFacts(r.Action)
+	case "stopped", "recovery-stopped", "recovered":
 		if len(r.SourcePaths) != 0 {
 			return result, ErrNodeObservation
 		}
-		a, err = o.open(r.Anchor)
-		if err != nil || observationDigest(a.Binding) != observationDigest(b) || !reflect.DeepEqual(a.Pods, r.Pods) || a.BootID != o.BootID || a.PreparedAt.After(now) || (r.Action != "recovered" && !now.Before(a.Binding.ExpiresAt)) {
+		a, err = o.originalNodeObservationAnchor(r, now)
+		if err != nil {
 			return result, ErrNodeObservation
 		}
 		p := make([]string, len(a.Paths))
@@ -224,14 +249,14 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 		if (CRIProver{Node: o.Node, Inspector: o.CRI}).Confirm(ctx, a.Pods) != nil {
 			return result, observationFailure("original_cri_exit")
 		}
-		if r.Action == "stopped" {
+		if r.Action == "stopped" || r.Action == "recovery-stopped" {
 			if len(r.RecoveredPods) != 0 || r.RecoveredGeneration != 0 {
 				return result, ErrNodeObservation
 			}
 			result.TasksChecked, result.Files, err = o.stopped(ctx, a)
 			result.Facts = []string{"original_cri_containers_exited", "original_process_scopes_absent", "no_observed_writable_source_fd_or_shared_mmap", "source_mount_identities_unchanged"}
 		} else {
-			if r.RecoveredGeneration <= b.Generation || !validObservationPods(r.RecoveredPods, o.Node) {
+			if r.RecoveredGeneration != b.Generation || !validObservationPods(r.RecoveredPods, o.Node) {
 				return result, ErrNodeObservation
 			}
 			for _, old := range a.Pods {

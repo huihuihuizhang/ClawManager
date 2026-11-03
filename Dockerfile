@@ -73,9 +73,14 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-bootstrap-enrolled \
       system-backup-installation-owner \
       system-backup-owner-enroll \
+      system-backup-original-enroll \
+      system-backup-original-maintenance \
       system-backup-owner-authority \
       system-backup-owner-consumer \
       system-backup-signing-resource-owner \
+      system-backup-minio-native-install \
+      system-backup-minio-catalog-initial \
+      system-backup-original-archive-reader \
       system-backup-minio-permission-owner \
       system-backup-minio-sql-owner \
       system-backup-source-materials \
@@ -90,10 +95,6 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-observer \
       system-backup-offline-security \
       system-backup-installation-kek-materials \
-      system-backup-minio-native-install \
-      system-backup-minio-catalog-initial \
-      system-backup-six-reference-owner \
-      system-backup-original-coverage-collect \
       system-backup-source-sql-observe; do \
       CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build \
         -trimpath -buildvcs=false -ldflags="-s -w -buildid=" \
@@ -140,6 +141,7 @@ COPY deployments/nginx/njs/desktop_auth.js /etc/nginx/njs/desktop_auth.js
 COPY deployments/container/start.sh /app/start.sh
 COPY deployments/container/system-backup-download-proxy.sh /app/system-backup-download-proxy.sh
 COPY deployments/container/system-backup-api-proxy.sh /app/system-backup-api-proxy.sh
+COPY deployments/container/system-backup-minio-catalog-initial.sh /app/system-backup-minio-catalog-initial.sh
 
 RUN chmod +x /app/start.sh \
     && mkdir -p /etc/nginx/tls /var/log/clawreef

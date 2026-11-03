@@ -40,6 +40,8 @@ type RuntimeControlConfig struct {
 	Keys                   ExecutionRecordKeys
 	Client                 kubernetes.Interface
 	Agent                  services.BackupGatewayAgent
+	StoppedProObserver     *quiesce.StoppedProNodeObservationClient
+	StoppedProBaseline     func(context.Context, d.Authority, b.InstanceIdentity) (quiesce.StoppedProBaseline, error)
 	StopProof              RuntimeStopProof
 	GatewayOriginal        func(context.Context, b.InstanceIdentity) (services.RuntimeAgentCreateGatewayRequest, error)
 	GatewayOriginalForTask func(context.Context, d.Authority, b.InstanceIdentity) (services.RuntimeAgentCreateGatewayRequest, error)
@@ -117,9 +119,19 @@ func (o *SQLRuntimeControl) Prepare(ctx context.Context, a d.Authority) ([]b.Run
 		var material []byte
 		switch {
 		case source.Status == "stopped":
-			spec.Kind = "stopped"
-			spec.Stopped = flow.State{UID: fmt.Sprintf("instance/%d", source.ID), Generation: int64(source.Generation), Checkpoint: recordHash([]byte(spec.RestartRef))}
-			material = []byte("{}")
+			if source.Mode != "pro" || o.cfg.StoppedProObserver == nil || o.cfg.StoppedProBaseline == nil {
+				return nil, d.ErrNotReady
+			}
+			baseline, err := o.cfg.StoppedProBaseline(ctx, a, source)
+			if err != nil || baseline.InstanceID != uint64(source.ID) || baseline.UserID != uint64(source.UserID) || baseline.InstanceGeneration != uint64(source.Generation) || baseline.SourceKey != fmt.Sprintf("stopped/%d", source.ID) {
+				return nil, ErrExecutionRecord
+			}
+			material, err = json.Marshal(baseline)
+			if err != nil {
+				return nil, err
+			}
+			spec.Kind, spec.StoppedProBaseline = "stopped", string(material)
+			spec.Stopped = flow.State{UID: baseline.SourceKey, Generation: int64(source.Generation), Checkpoint: quiesce.StoppedProBaselineSHA256(baseline)}
 		case source.Status == "running" && source.Mode == "lite":
 			if (o.cfg.GatewayOriginal == nil && o.cfg.GatewayOriginalForTask == nil) || absentExecutionDependency(o.cfg.Agent) || source.Generation >= 2147483647 {
 				return nil, d.ErrNotReady
@@ -484,10 +496,8 @@ func (o *SQLRuntimeControl) Guard(ctx context.Context, a d.Authority, id, point 
 		if point == "restart-dispatched" && !r.Claimed {
 			return ErrExecutionRecord
 		}
-		if r.Spec.Kind == "stopped" && point == "before-resume" && !r.Completed {
-			_, e = tx.ExecContext(ctx, `UPDATE system_backup_v2_runtime_controls SET restart_completed=TRUE,resumed_json='{}',row_version=row_version+1 WHERE task_public_id=? AND attempt_no=? AND writer_id=? AND restart_completed=FALSE`, a.TaskPublicID, a.AttemptNo, id)
-			return e
-		}
+		// Originally stopped completion is written ONLY by the concrete P7
+		// recovered-stopped consumer after an authenticated native observation.
 		return nil
 	})
 }
@@ -803,7 +813,7 @@ func (o *SQLRuntimeControl) CompleteRestart(ctx context.Context, a d.Authority, 
 	})
 }
 func (o *SQLRuntimeControl) Callbacks() b.WriterCallbacks {
-	return b.WriterCallbacks{GatewayControl: o.GatewayControl, Guard: o.Guard, ClaimRestart: o.ClaimRestart, CompleteRestart: o.CompleteRestart, ConfirmStopped: o.ConfirmStopped, ConfirmResumed: o.ConfirmResumed,
+	return b.WriterCallbacks{StoppedProControl: o.StoppedProControl, GatewayControl: o.GatewayControl, Guard: o.Guard, ClaimRestart: o.ClaimRestart, CompleteRestart: o.CompleteRestart, ConfirmStopped: o.ConfirmStopped, ConfirmResumed: o.ConfirmResumed,
 		LoadGateway: func(ctx context.Context, a d.Authority, id, ref string) (services.RuntimeAgentCreateGatewayRequest, error) {
 			var v services.RuntimeAgentCreateGatewayRequest
 			raw, e := o.load(ctx, a, id, ref)

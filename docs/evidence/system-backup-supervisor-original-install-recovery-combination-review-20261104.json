@@ -1,0 +1,93 @@
+{
+  "schema_version": "supervisor-original-install-and-recovery-combination-review.v2",
+  "base_commit": "7f90c658cd2aff2df6192bb4c4de09d2faafa262",
+  "accepted_remote_head_at_review": "84663e3850222f34b20228790ee1a54f76d97036",
+  "selected_targets": 178,
+  "selection_sha256": "b05351c66db8a9d6d96b3ffc54dbfda1fb02187e825b62f25da6521fa241c2d9",
+  "source_manifests": {
+    "D_flat_manifest_sha256": "36c8967e824eef5c3c1af0cdcc095280c2d4e0acb716fd209298e7c1e12c5f00",
+    "A_recovery_manifest_sha256": "d7d52d2053fdd42dd0d128e79b379f3400c8e82e090d40b82712a88371769507",
+    "B_recovery_manifest_sha256": "8fbdffe8c1fe40419651a6d897f1b98ba0d3cff6dc0a8d18584d3fc4c7165476",
+    "C_history_manifest_sha256": "17b32c5d9f86cb7c22d55d104254705424edf31290b30a4aad594bff3090aa13",
+    "C_filelimit_manifest_sha256": "9e47138df21fbec10ca3f33631b719ac4208ed586dbddb90c2288d2cc0ba1e1b",
+    "D1_mounted_manifest_sha256": "834f00b3c63ab809394a65229352ae878c1e4faa1ef82196f259a2dcc96746e8",
+    "A_installed_config_manifest_sha256": "1d0ae7b03cf8ee9a416a6ebbf7b8516744b58fa920a75fc733c805e90b4833e5",
+    "B_scoped_recovery_manifest_sha256": "779bac4413ca16274c574ce135c844f8e496589eed6aa1f3608111e3c7261784",
+    "C_mounted_reader_manifest_sha256": "62b41d54b434e7704993fd36d03383e15a10a14806038c4a901327f93ed6981a",
+    "B_scoped_recovery_r2_manifest_sha256": "8d37232219581d6d4b66fd3d67d87800ea59965586bf237f519ddb1e8ea96c5f"
+  },
+  "official_B_linux_sha256": "e1ae5c218e7c1a69648cd736cf15bc4950412b23ab0cc78f72def679e00a1a94",
+  "results": {
+    "v2-windows-targeted": {
+      "roots": 36,
+      "subcases": 140,
+      "failures": 0,
+      "skipped": 0,
+      "compile_only_packages": [
+        "clawreef/cmd/system-backup-original-enroll",
+        "clawreef/cmd/system-backup-original-maintenance",
+        "clawreef/cmd/backup-stopped-pro-node-observer"
+      ],
+      "log_sha256": "2da916229bf9a99e6b617933473440692cb6c48374169e3824ee69c3c631ceb6"
+    },
+    "v2-official-B-r2-linux-install": {
+      "roots": 26,
+      "subcases": 92,
+      "failures": 0,
+      "skipped": 0,
+      "compile_only_packages": [],
+      "log_sha256": "b2649a84b42bf9cc0dc87a4943b4c6dbf9713b0023b1e3114e8e227ca15bdf1a"
+    },
+    "v2-official-B-r2-linux-quiesce": {
+      "roots": 28,
+      "subcases": 79,
+      "failures": 0,
+      "skipped": 0,
+      "compile_only_packages": [],
+      "log_sha256": "cf029b47034302b3d926d910b5b232aba661e57f655b0f3df7f06653d9b8f2f4"
+    }
+  },
+  "source_scope": [
+    "A actual installation singleton/history source reader and stable enrollment slot integrated with real BootstrapOriginalEnrollment caller; SQL permission/schema protocols are MODEL tests, no actual field enrollment.",
+    "D1 current referenced ConfigMap/Secret bodies privately retained and associated with the complete original writer set before stopping sources; actual Kubernetes client/fake API and real TLS cancellation exercised.",
+    "C fixed API-material file reader consumes exact held preparation/set pointers and refuses missing/ambiguous/drift/expired sources; no complete installed-history or NoS3 authority is proved.",
+    "B mixed original/replacement reconciliation DATA/anchor partitioning, explicit empty wire, stable scope replay refusal, genuine TLS handler unavailable-host dispatch and real own-process FD/mmap/hardlink primitives tested. No successful real CRI/whole-Pod original physical hold or source restore claimed."
+  ],
+  "historical_failure": {
+    "initial_B9": "Linux compile failed due bool shadow at node_original_recovery_scope_linux.go:93; retained v2-linux-install-compile.log/exit1",
+    "local_isCurrent": "Diagnostic-only compile0, no runtime tests. Superseded by exact official present r2; not counted as official r2 test evidence."
+  },
+  "publication_report_boundary": {
+    "actual_frozen_source": "Ready -> immutable businessReport -> persistOriginalBusinessContentReport -> terminal CAS retained",
+    "terminal_sha256": "259a1ed6187910d51c9e27d6c71d53bc6541619aa1ad10b015b7bc21448ba601",
+    "ready_sha256": "39eabe95b549db4b60d0137eba29c63744133c33db8f4a8973047c266117c5e2",
+    "shared_dirty_source": "not the tested build source; historical owner changes preserved"
+  },
+  "remaining": [
+    "D1 genuine complete original-history authority and PreparedCoverage constructor plus actual first-adopter/commit/readback caller",
+    "D actual partial-recovery closed journal snapshots, complete current-owner mapping and scope-aware consumer rechecks",
+    "D real readable source-service keepers and formal stopped-Pro source recovery",
+    "Actual current field source census, original database migration, real installation materials and same-version deployment",
+    "A real nonempty page task with all requested collection, original business state restored, formal upload/readback/catalog and true success"
+  ],
+  "completed_test_binary_records": [
+    {
+      "path": "bins-v2/install.test",
+      "bytes": 109421079,
+      "sha256": "2435182eac8319ae543abdd7601418a8001c0f93b6a35e579abb06b7088c89fc"
+    },
+    {
+      "path": "bins-v2/quiesce.test",
+      "bytes": 92951070,
+      "sha256": "ed9a5cc739a0ffa4fd33e7e32382eb09080b7abdf83182ac826d900efaf4159f"
+    }
+  ],
+  "cleanup": {
+    "owned_container_residuals": [],
+    "old_completed_test_binaries_removed": 11,
+    "new_completed_test_binaries": "2 completed official-r2 test binaries hashed and removed; verified absent before commit",
+    "cache_tmp": "retained only for queued D caller/keeper integration validation in this ongoing batch"
+  },
+  "field_or_page_acceptance": false,
+  "dr_qualified": false
+}

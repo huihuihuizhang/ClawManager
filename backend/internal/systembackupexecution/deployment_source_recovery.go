@@ -214,6 +214,15 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 			delete(instances, instance.ID)
 			facts.Runtime, facts.Kind = &runtime, runtime.Spec.Kind
 			ob.References = append(ob.References, runtime.References...)
+			if runtime.Spec.Kind == "stopped" {
+				payload, err := s.observeFormalStoppedProRecovery(ctx, in, writer, runtime)
+				if err != nil {
+					return nil, err
+				}
+				ob.Scope, ob.Facts = "current_stopped_pro_native_baseline_and_volume_bindings", payload
+				out = append(out, ob)
+				continue
+			}
 			if runtime.Spec.Kind == "gateway" {
 				pod, err := o.Client.CoreV1().Pods(runtime.Spec.RuntimeNamespace()).Get(ctx, runtime.Spec.RuntimePod(), metav1.GetOptions{})
 				if err != nil || string(pod.UID) != runtime.Spec.UID {

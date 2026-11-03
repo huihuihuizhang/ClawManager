@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -34,6 +35,13 @@ func (g Gate) ForceReleaseExpired(ctx context.Context, scope string) (bool, erro
 	}
 	if owner == "" {
 		return false, errors.New("coordination_invalid")
+	}
+	// Original offline maintenance has no v2 task row. Only its genuine
+	// same-operation recovery caller can prove collector exit and the actual
+	// source state. Legacy participant rows (including an empty registry) are
+	// insufficient to reopen this admission after an original hold expires.
+	if strings.HasPrefix(owner, "adoption:") {
+		return false, tx.Commit()
 	}
 	// This historical fact survives a subsequent participant generation reset.
 	if _, err = tx.ExecContext(ctx, "UPDATE system_backup_capture_plans SET forced_resume_at=COALESCE(forced_resume_at,UTC_TIMESTAMP(6)) WHERE scope=? AND generation=?", scope, generation); err != nil {

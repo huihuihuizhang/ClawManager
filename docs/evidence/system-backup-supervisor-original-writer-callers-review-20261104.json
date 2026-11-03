@@ -1,0 +1,123 @@
+{
+  "schema_version": "supervisor-original-writer-callers-review.v3",
+  "base_commit": "7f90c658cd2aff2df6192bb4c4de09d2faafa262",
+  "accepted_head_before_commit": "84663e3850222f34b20228790ee1a54f76d97036",
+  "selected_source_targets": 198,
+  "selection_sha256": "f3448ae669af6f362dff9d032f75db9cc2cb88c418ee2b297d2b7bfb0386d8f5",
+  "new_intake": {
+    "previous_selection_sha256": "b05351c66db8a9d6d96b3ffc54dbfda1fb02187e825b62f25da6521fa241c2d9",
+    "maps": [
+      {
+        "path": "backend/.d-partial-recovery-consumer-v3-20261104/source-map.json",
+        "sha256": "686faecd3870d2c55a9e02d356e0cf3b355d0170e20bfe6299c2e902e186ca07"
+      },
+      {
+        "path": "backend/.d-formal-stopped-pro-keeper-20261104/source-map.json",
+        "sha256": "81bf9b9c3f8c8eb5112d0a97a09be579314439064d74564a701c1b77b414f320"
+      },
+      {
+        "path": "backend/.d-full-inventory-writer-composition-20261104/source-map.json",
+        "sha256": "2badf9277c109a36d0bab564b92ea4d65c447affdd657e03977a23dc92a14d96"
+      },
+      {
+        "path": "backend/.d-original-admission-abort-20261104/source-map.json",
+        "sha256": "f428fad43902e95890b884aced92d3589a5c67087f72bf0e30d09ac0104d30b7"
+      },
+      {
+        "path": "backend/.d-original-history-sql-metadata-20261104/source-map.json",
+        "sha256": "c44ddbada020f099077a15bac21b3bbe0491b015693652d0693221337ded9898"
+      }
+    ],
+    "input_entries": 30,
+    "unique_changes": 27,
+    "mismatches": [],
+    "three_way_merges": [
+      {
+        "target": "backend/internal/systembackupexecution/current_stopped_pro_material.go",
+        "manifest": "backend/.d-formal-stopped-pro-keeper-20261104/source-map.json",
+        "owner_before_sha256": "5e7b02f9171486069436a932b98df1ea8ae331c4147e78121297eaf334df14af",
+        "current_sha256": "afc986f46eb9a543e4c6d2221aa61cd171629e7daa47c5d7ebae1e5d7fdf03ed",
+        "merge_exit": 0
+      },
+      {
+        "target": "backend/internal/systembackupexecution/deployment_runtime_sources.go",
+        "manifest": "backend/.d-formal-stopped-pro-keeper-20261104/source-map.json",
+        "owner_before_sha256": "6a678dd978d62f6cacabfe9b1579f86b2d297f4e1d76e6e30899269a4c90276e",
+        "current_sha256": "b29f27edefa7a031eb0999258c45f1e3c349a9e338ee27fc5036f8d0f6ef0323",
+        "merge_exit": 0
+      }
+    ],
+    "applied": true
+  },
+  "results": {
+    "v3-windows-targeted": {
+      "roots": 15,
+      "subcases": 76,
+      "failures": 0,
+      "test_skips": 0,
+      "sha256": "0c0f335e40b8789daf8290f28a67e64dd6a198bf780fb73892d2c17513f50aad"
+    },
+    "v3-linux-install": {
+      "roots": 33,
+      "subcases": 126,
+      "failures": 0,
+      "test_skips": 0,
+      "sha256": "6be8370a1b5542936c2adfcb69b7012df0a31a3aec1e28d44d620d78649fca71"
+    },
+    "v3-linux-quiesce": {
+      "roots": 28,
+      "subcases": 79,
+      "failures": 0,
+      "test_skips": 0,
+      "sha256": "ead3bc786e5ca15dab87fe196e3e2b6bb9a17822efbf989d59a7957c6bc5c8a1"
+    },
+    "v3-linux-publicadapter": {
+      "roots": 5,
+      "subcases": 36,
+      "failures": 0,
+      "test_skips": 0,
+      "sha256": "276d2b4ae3db2b8ab6c94c56d104e103b01fbe4a7dcbe0338173ed5ea4373709"
+    }
+  },
+  "compile": {
+    "windows_seven_packages": "default vet and compile: PASS",
+    "linux_three_packages": "complete install, quiesce, publicadapter compile: PASS"
+  },
+  "reviewed_behaviors": [
+    "P7 native request minted only at original prepare and persisted in the real runtime control row; later phases reuse Request/Until/Binding/reservation hash and original prepare anchor; no current-Authority hash regeneration.",
+    "Full source inventory passed to platform writer leaf; standalone zero-instance platform capability remains guarded; actual original AttemptNo retained.",
+    "Actual original journal source dispatch facts and original API owner/current-process snapshots persisted before scoped native recovery RPC; final release closes further source dispatch and uses scope-aware private proof rechecks.",
+    "Distinct fresh-authorized admission abort sends no source mutation and does not claim native SourceRecovery or backup success; unknown/changed source retains admission.",
+    "Original installation singleton is classified only by exact complete original SQL schema and row values; no omitted table, NoS3 inference or PreparedCoverage minting."
+  ],
+  "validation_limits": [
+    "Tests use SQL/Kubernetes/native callback models plus actual local journal fsync/readback/encrypted files, bcrypt/Ed25519, real own-process FD/mmap/hardlink and genuine TLS unavailable-host rejection.",
+    "No successful real CRI cold hold, partial physical recovery, original MySQL installation/adoption, cross-AgentEpoch recovery, real full source-service keeper, deployment or page task is established.",
+    "Current Kubernetes API material reader does not prove the original process loaded config bytes or complete historical source universe.",
+    "Actual first-adoption SourceSet/PreparedCoverage factory and production caller, readable Redis/MinIO/NFS keepers, original database migration and same-version field installation remain incomplete."
+  ],
+  "completed_test_binaries": [
+    {
+      "path": "bins-v3/install.test",
+      "bytes": 109605544,
+      "sha256": "2351975fb8e0e73f67c8f3c0956d32694e078b45889876cdbe817e6d86e92fae"
+    },
+    {
+      "path": "bins-v3/quiesce.test",
+      "bytes": 92951070,
+      "sha256": "6200db1d7425921992556975aa866a682abf2e19a141c4b7ac925333f3511901"
+    },
+    {
+      "path": "bins-v3/publicadapter.test",
+      "bytes": 96078415,
+      "sha256": "419127480ce8239dbcc2415ad3b4f02d05c1bc8ded2cf4c350a5c471c32a5529"
+    }
+  ],
+  "cleanup": {
+    "owned_containers": [],
+    "binaries": "3 completed test binaries hashed and removed; verified absent before commit",
+    "cache_tmp": "retained for the immediately queued C node-directory and D Redis integration batch"
+  },
+  "field_or_page_acceptance": false,
+  "dr_qualified": false
+}

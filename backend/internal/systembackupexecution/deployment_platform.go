@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,63 +45,12 @@ func (s *DeploymentService) platformProfile(o *PublicJobOwner) (b.LinuxProfileCo
 	source.VerifySource = func(ctx context.Context, tx *sql.Tx) error {
 		return s.checkSourceIdentity(ctx, tx)
 	}
+	platform := s.platformWriterLeaf(o)
 	source.BuildWriters = func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
 		if len(inventory.Instances) != 0 {
 			return nil, d.ErrNotReady
 		}
-		out := make([]flow.Writer, 0, len(cfg.Writers))
-		for _, ref := range cfg.Writers {
-			ref := ref
-			id := "deployment/" + ref.Namespace + "/" + ref.Name
-			w := &quiesce.DeploymentWriter{Platform: true, Client: o.Client, Namespace: ref.Namespace, Name: ref.Name, UID: ref.UID, FenceID: in.Authority.TaskPublicID + "/attempt/1", PollInterval: 200 * time.Millisecond}
-			w.Guard = func(ctx context.Context, point string, state flow.State) error {
-				recovery := point == "before-resume" || point == "recovery-check-stopped" || point == "check-resumed"
-				if recovery {
-					return o.Gate.CheckRecovery(ctx, in.Authority, id, d.WriterState{UID: state.UID, Generation: state.Generation, Running: state.Running, Checkpoint: state.Checkpoint})
-				}
-				if e := o.Gate.Check(ctx, in.Authority); e != nil {
-					return e
-				}
-				return s.checkAutoscalers(ctx, ref)
-			}
-			w.PrepareStop = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
-				return o.StopWitnessIn(in.Authority, ref.Namespace).Arm(ctx, pods)
-			}
-			stopLogged := false
-			w.ConfirmStopped = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
-				if e := o.StopWitnessIn(in.Authority, ref.Namespace).Confirm(ctx, pods); e != nil {
-					if !stopLogged {
-						log.Printf("[system-backup-public] source-stop-proof=%s", closedExecutionCode(e))
-						stopLogged = true
-					}
-					return quiesce.ErrStopProofPending
-				}
-				return nil
-			}
-			w.ConfirmResumed = func(ctx context.Context, _ flow.State) error {
-				dep, e := o.Client.AppsV1().Deployments(ref.Namespace).Get(ctx, ref.Name, metav1.GetOptions{})
-				if e != nil || string(dep.UID) != ref.UID || dep.Spec.Replicas == nil || dep.Status.ObservedGeneration != dep.Generation || dep.Status.ReadyReplicas != *dep.Spec.Replicas {
-					return d.ErrNotReady
-				}
-				return nil
-			}
-			out = append(out, w)
-		}
-		if frozen != nil {
-			wanted := map[string]bool{}
-			for _, w := range frozen {
-				wanted[w.ID] = true
-			}
-			if len(wanted) != len(out) {
-				return nil, d.ErrNotReady
-			}
-			for _, w := range out {
-				if !wanted[w.ID()] {
-					return nil, d.ErrNotReady
-				}
-			}
-		}
-		return out, nil
+		return platform(ctx, in, inventory, frozen)
 	}
 	source.BuildParts = func(in d.Input, _ b.SourceInventory, until time.Time) ([]b.JobPart, error) {
 		token := strings.ReplaceAll(in.Authority.TaskPublicID, "_", "-")
@@ -174,4 +124,70 @@ func (s *DeploymentService) PublicCapability() json.RawMessage {
 	}
 	raw, _ := json.Marshal(map[string]any{"protocol": "public-v1", "scope": scope, "parts": parts, "acceptance_ready": false})
 	return raw
+}
+
+// This private leaf constructs only the configured physical platform actors.
+// It receives the COMPLETE original inventory. Only attachRuntimeSources pairs
+// it with the exact all-instance runtime factory; standalone platformProfile
+// keeps its original zero-instance guard.
+func (s *DeploymentService) platformWriterLeaf(o *PublicJobOwner) func(context.Context, d.Input, b.SourceInventory, []b.FrozenWriter) ([]flow.Writer, error) {
+	cfg := s.Config
+	return func(ctx context.Context, in d.Input, inventory b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
+		if o == nil || ctx == nil || ctx.Err() != nil || in.Authority.AttemptNo == 0 {
+			return nil, d.ErrNotReady
+		}
+		out := make([]flow.Writer, 0, len(cfg.Writers))
+		for _, ref := range cfg.Writers {
+			ref := ref
+			id := "deployment/" + ref.Namespace + "/" + ref.Name
+			w := &quiesce.DeploymentWriter{Platform: true, Client: o.Client, Namespace: ref.Namespace, Name: ref.Name, UID: ref.UID, FenceID: in.Authority.TaskPublicID + "/attempt/" + strconv.FormatUint(in.Authority.AttemptNo, 10), PollInterval: 200 * time.Millisecond}
+			w.Guard = func(ctx context.Context, point string, state flow.State) error {
+				recovery := point == "before-resume" || point == "recovery-check-stopped" || point == "check-resumed"
+				if recovery {
+					return o.Gate.CheckRecovery(ctx, in.Authority, id, d.WriterState{UID: state.UID, Generation: state.Generation, Running: state.Running, Checkpoint: state.Checkpoint})
+				}
+				if e := o.Gate.Check(ctx, in.Authority); e != nil {
+					return e
+				}
+				return s.checkAutoscalers(ctx, ref)
+			}
+			w.PrepareStop = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
+				return o.StopWitnessIn(in.Authority, ref.Namespace).Arm(ctx, pods)
+			}
+			stopLogged := false
+			w.ConfirmStopped = func(ctx context.Context, _ flow.State, pods []quiesce.PodIdentity) error {
+				if e := o.StopWitnessIn(in.Authority, ref.Namespace).Confirm(ctx, pods); e != nil {
+					if !stopLogged {
+						log.Printf("[system-backup-public] source-stop-proof=%s", closedExecutionCode(e))
+						stopLogged = true
+					}
+					return quiesce.ErrStopProofPending
+				}
+				return nil
+			}
+			w.ConfirmResumed = func(ctx context.Context, _ flow.State) error {
+				dep, e := o.Client.AppsV1().Deployments(ref.Namespace).Get(ctx, ref.Name, metav1.GetOptions{})
+				if e != nil || string(dep.UID) != ref.UID || dep.Spec.Replicas == nil || dep.Status.ObservedGeneration != dep.Generation || dep.Status.ReadyReplicas != *dep.Spec.Replicas {
+					return d.ErrNotReady
+				}
+				return nil
+			}
+			out = append(out, w)
+		}
+		if frozen != nil {
+			wanted := map[string]bool{}
+			for _, w := range frozen {
+				wanted[w.ID] = true
+			}
+			if len(wanted) != len(out) {
+				return nil, d.ErrNotReady
+			}
+			for _, w := range out {
+				if !wanted[w.ID()] {
+					return nil, d.ErrNotReady
+				}
+			}
+		}
+		return out, nil
+	}
 }

@@ -281,6 +281,18 @@ func validSourceRecoveryObservation(ob SourceRecoveryObservation) bool {
 	switch ob.Scope {
 	case "registered_application_mutation_lease_boundary":
 		return facts.Version == "source-recovery-lease-observation.v1" && len(ob.References) == 1 && ob.References[0].Kind == "lease_epoch" && ob.References[0].Identity == ob.WriterID && ob.References[0].SHA256 == recordHash(ob.Facts)
+	case "current_stopped_pro_native_baseline_and_volume_bindings":
+		if facts.Version != "source-recovery-current-stopped-pro.v1" || facts.Kind != "stopped" || len(facts.Runtime) < 2 || string(facts.Runtime) == "null" || len(facts.Recovered) != 0 || len(ob.References) != 2 {
+			return false
+		}
+		seen := map[string]bool{}
+		for _, ref := range ob.References {
+			if ref.Identity != ob.WriterID || !executionHash.MatchString(ref.SHA256) || seen[ref.Kind] || (ref.Kind != "runtime_control" && ref.Kind != "runtime_source") {
+				return false
+			}
+			seen[ref.Kind] = true
+		}
+		return seen["runtime_control"] && seen["runtime_source"]
 	case "native_instance_pid_namespace_and_mount_lifecycle_with_kubernetes_volume_bindings":
 		if facts.Kind != "gateway" || len(facts.Runtime) < 2 || string(facts.Runtime) == "null" {
 			return false
@@ -719,9 +731,16 @@ func (o *SQLRuntimeControl) ObserveSourceRecoveryRuntime(ctx context.Context, in
 	// instance. SQL status, an empty shared Pod, 404 or absent GatewayState cannot
 	// substitute for the separate positive originally-stopped native witness.
 	if row.Spec.Kind == "stopped" {
-		return out, ErrSourceRecoveryStoppedWitnessRequired
+		var record RuntimeStoppedProRecord
+		if row.Spec.Stopped != writer.Original || json.Unmarshal(row.Resumed, &record) != nil || !validStoppedProRecoveryRecord(record, row.Spec, a) {
+			return out, ErrSourceRecoveryStoppedWitnessRequired
+		}
+		body, err := json.Marshal(record.Stopped)
+		if err != nil || !row.Stopped.Valid || recordHash(body) != row.Stopped.String {
+			return out, ErrSourceRecoveryStoppedWitnessRequired
+		}
 	}
-	if !writer.Original.Running || !row.Stopped.Valid {
+	if row.Spec.Kind != "stopped" && !writer.Original.Running || !row.Stopped.Valid {
 		return out, ErrSourceRecoveryProofRequired
 	}
 	current, err := sourceRow(ctx, tx, row.Spec.Source.ID)

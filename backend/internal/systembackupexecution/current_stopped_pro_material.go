@@ -555,6 +555,7 @@ func currentStoppedProGraphRoots(cfg DeploymentConfig, source b.SourceInventory,
 }
 
 func currentStoppedProCaptureMount(m CurrentStoppedProSourceMaterial, mount CurrentStoppedProMount, base productionInstanceMount) productionInstanceMount {
+	base.CurrentStoppedPro = &m
 	relative := path.Join(mount.Layout.SubPath, strings.TrimPrefix(strings.TrimPrefix(mount.Layout.DataPath, mount.Layout.MountPath), "/"))
 	if relative == "." {
 		relative = ""

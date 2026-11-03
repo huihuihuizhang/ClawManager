@@ -43,7 +43,8 @@ type productionCaptureMetadata struct {
 }
 
 type productionInstanceMount struct {
-	DataOnly                               bool `json:",omitempty"`
+	CurrentStoppedPro                      *CurrentStoppedProSourceMaterial `json:",omitempty"`
+	DataOnly                               bool                             `json:",omitempty"`
 	InstanceID                             int
 	MountID, SubPath, NodeName             string
 	Source                                 corev1.Volume

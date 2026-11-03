@@ -32,16 +32,17 @@ type GatewayOriginalReference struct {
 	KeyRef       string             `json:"key_ref"`
 }
 type RuntimeSourceConfig struct {
-	CurrentStoppedProLayouts []CurrentStoppedProLayout  `json:"current_stopped_pro_layouts,omitempty"`
-	Supported                []b.AgentKind              `json:"supported"`
-	Namespaces               []string                   `json:"namespaces"`
-	AgentTokenFile           string                     `json:"agent_token_file,omitempty"`
-	AgentCAFile              string                     `json:"agent_ca_file,omitempty"`
-	AgentCASHA256            string                     `json:"agent_ca_sha256,omitempty"`
-	Originals                []GatewayOriginalReference `json:"gateway_originals"`
-	LeaseParticipants        []string                   `json:"lease_participants"`
-	Deployments              []PlatformDeployment       `json:"deployments"`
-	WorkspaceRoot            string                     `json:"workspace_root"`
+	StoppedProObserver       *FormalStoppedProObserverConfig `json:"stopped_pro_observer,omitempty"`
+	CurrentStoppedProLayouts []CurrentStoppedProLayout       `json:"current_stopped_pro_layouts,omitempty"`
+	Supported                []b.AgentKind                   `json:"supported"`
+	Namespaces               []string                        `json:"namespaces"`
+	AgentTokenFile           string                          `json:"agent_token_file,omitempty"`
+	AgentCAFile              string                          `json:"agent_ca_file,omitempty"`
+	AgentCASHA256            string                          `json:"agent_ca_sha256,omitempty"`
+	Originals                []GatewayOriginalReference      `json:"gateway_originals"`
+	LeaseParticipants        []string                        `json:"lease_participants"`
+	Deployments              []PlatformDeployment            `json:"deployments"`
+	WorkspaceRoot            string                          `json:"workspace_root"`
 }
 
 func (r RuntimeSourceConfig) validate() error {
@@ -216,12 +217,19 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 		}
 		controls.Agent = agent
 	}
+	if len(cfg.CurrentStoppedProLayouts) > 0 {
+		observer, err := s.formalStoppedProObserver()
+		if err != nil {
+			return profile, err
+		}
+		controls.StoppedProObserver, controls.StoppedProBaseline = observer, s.formalStoppedProBaseline
+	}
 	runtime, e := c.NewSQLRuntimeControl(controls)
 	if e != nil {
 		return profile, e
 	}
 	s.RuntimeControl = runtime
-	platformBuilder := profile.BuildWriters
+	platformBuilder := s.platformWriterLeaf(o)
 	profile.Supported = map[b.AgentKind]bool{}
 	for _, kind := range cfg.Supported {
 		profile.Supported[kind] = true
@@ -247,9 +255,7 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 				}
 			}
 		}
-		platformInv := inv
-		platformInv.Instances = nil
-		platform, e := platformBuilder(ctx, in, platformInv, platformFrozen)
+		platform, e := platformBuilder(ctx, in, inv, platformFrozen)
 		if e != nil {
 			return nil, e
 		}
