@@ -1,0 +1,125 @@
+{
+  "schema_version": "supervisor-first-source-tls-and-host-install-review.v1",
+  "accepted_base": "da36a6e38ee2c7a42ac782b9729b1d8a09e96f04",
+  "selected_source_targets": 262,
+  "selection_sha256": "f9fa638fb0392f71245c546ee7d611ac5ba21867a8ed710b433ac02d20356341",
+  "source_maps": [
+    {
+      "path": "backend/.d-source-tls-bootstrap-20261104/source-map.json",
+      "sha256": "9c59082b8696f03f37dd4bbacfbeeec87b6aa6d04cc2ba95f2c0fd3f611e02c5"
+    },
+    {
+      "path": "backend/.d-observer-host-deployment-20261104/source-map.json",
+      "sha256": "e49eddffc6a929ffa9050cdd995b330aa818829eb9ec73b7ee397bc6f54882ac"
+    }
+  ],
+  "official_fixes": [
+    {
+      "path": "backend/.d-source-tls-bootstrap-r2-20261104/source-map.json",
+      "sha256": "4581e61c1593c3cbd85859cd54dcbfb2f9d3f21f5263e1a2976cca7e3d56158d"
+    },
+    {
+      "path": "backend/.d-source-tls-bootstrap-r3-20261104/source-map.json",
+      "sha256": "11921da7303a38c95c0db45aeee7b01ae86c6a6b74d58029e1802b074db38d0c"
+    },
+    {
+      "path": "backend/.d-observer-host-deployment-r2-20261104/source-map.json",
+      "sha256": "76700d17c4ea24d42509f406f61796f93b3310688f2f329ce7ddad9850c589ab"
+    }
+  ],
+  "installed_tool_enumeration": {
+    "required": [
+      "system-backup-original-observer-pki",
+      "backup-node-observer",
+      "backup-gateway-node-observer",
+      "backup-stopped-pro-node-observer",
+      "system-backup-source-tls-bootstrap",
+      "system-backup-observer-deployment-materials"
+    ],
+    "resolved_command_count": 48,
+    "mapping_sha256": "b612eb05e8f915ed0308af5119297993a36feca0e7949c9413f54357d4df37bf"
+  },
+  "results": {
+    "v10r4-windows-targeted": {
+      "roots": 4,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [
+        "clawreef/cmd/system-backup-source-tls-bootstrap",
+        "clawreef/cmd/system-backup-observer-deployment-materials"
+      ],
+      "log_sha256": "7e5f771804233795925d76f9e98666fc76e3b26f04d9b23e35a2741355a28b75"
+    },
+    "v10r4-linux-install": {
+      "roots": 2,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [],
+      "log_sha256": "964b198fe754d8a76ccdd726e971ad4286b60508c2c98860cd508d7d44e3ca2f"
+    },
+    "v10r4-linux-sourcetls": {
+      "roots": 3,
+      "subcases": 0,
+      "failures": 0,
+      "test_skips": 0,
+      "compile_only_packages": [],
+      "log_sha256": "ca04086898aaf5a1d86c1662840caa5ecf87c6dc0e2d27ed2eb346c5caccff7f"
+    }
+  },
+  "actual_changes": [
+    "Source TLS CLI starts from existing TLS Kubernetes authorization and original local SQL/admin authentication, preserves original CA, signs the union of original and actual selected SANs, retains private original cert/key custody, performs native TLS reload and emits strict connection inputs. It does not require an already TLS-qualified Installer to bootstrap that TLS.",
+    "Official TLS r2 pins original CA in rollback journal and uses the same actual original root password/env-file precedence for Unix and TCP proof. Official r3 selects Linux-only private-file crypto fixture by filename; no production checks weakened or conditional test skips.",
+    "Actual installer/enrollment/PKI-derived host material producer and exact ServiceAccount setup create node-specific root systemd/install bundles. Original host namespaces and private anchors are preserved; controller private key is excluded. Optional pinned official crictl is included create-only and runtime RPC is checked before service installation.",
+    "Root adds both genuine CLI tools to Dockerfile/offline enumeration; all48 command directories exist. Actual final48 image build remains required."
+  ],
+  "validation_boundary": [
+    "Windows4 and Linux5 root tests cover actual certificate creation/x509 verification and original file preservation, root credential precedence and renderer models. No native MySQL reload, real Kubernetes exec/SA creation, private site PKI issuance, systemd deployment or real CRI endpoint ran.",
+    "The two Linux production entrypoints compile; their binaries are compile checks, not final release inputs.",
+    "Original Windows fixture failed strict Unix private mode. Final official Linux-only fixture runs on Linux; Windows compile/remaining cases pass. Previous disk-full and moved-cache sandbox failures remain logged and were never counted as test success.",
+    "Genuine original17 issuance/adoption, migration, Redis/MinIO provider/source wiring and full same-task page backup remain incomplete."
+  ],
+  "completed_build_binaries": [
+    {
+      "path": "bins-v10r4/install.test",
+      "bytes": 110655785,
+      "sha256": "129adf9641520f1c054a46da3a674e615d563de8d074a7addac5697d97fbdff1"
+    },
+    {
+      "path": "bins-v10r4/production/system-backup-observer-deployment-materials",
+      "bytes": 55332990,
+      "sha256": "613076a811a4f3bfae3fe1f6d86c8d0fb20eeab04713b0f438beca231388e4cc",
+      "buildinfo_sha256": "15c2f8223dba48eb6ecc828c7cfb82ca32a463710532e97fa27e6227fdca5f80"
+    },
+    {
+      "path": "bins-v10r4/production/system-backup-source-tls-bootstrap",
+      "bytes": 45117566,
+      "sha256": "07e3b18598b48e8e1c543deeec1ee03ce831e2930cb19468a46ac3e365ce7c81",
+      "buildinfo_sha256": "62c4d9ad4cfc85980b09cb6ce7dc47bb5da3685f82d03503a03171b005531274"
+    },
+    {
+      "path": "bins-v10r4/sourcetls.test",
+      "bytes": 50636246,
+      "sha256": "779f73a5cf8d8969fb71581818ca4f193c054aef9924768b51156cb9c88c0784"
+    }
+  ],
+  "storage_recovery": {
+    "retired_candidate_status": "46_ENTRYPOINTS_COMPILED_IMAGE_ASSEMBLY_FAILED_LOCAL_DISK_FULL_RETIRED",
+    "retired_binary_count": 46,
+    "retired_binary_bytes": 2039174820,
+    "retired_partial_overlay_bytes": 2026520064,
+    "retired_outputs": "hashed then deleted; exact source/logs/input manifests retained",
+    "go_cache": "D:/codex-backup-deployment-20261104-da36a6e3/go-cache",
+    "cache_owner": "supervisor-deployment-storage-20261104-da36a6e3",
+    "original_cache_path": "owned junction; future Go cache writes require the approved D path",
+    "future_package_assembly": "use owned D storage; do not rebuild obsolete714 candidate"
+  },
+  "cleanup": {
+    "binaries": "Four final Linux test/build checks hashed and removed; four earlier superseded checks also hashed/removed; both output directories absent",
+    "owned_containers": []
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

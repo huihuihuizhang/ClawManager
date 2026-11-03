@@ -75,6 +75,7 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-owner-enroll \
       system-backup-original-enroll \
       system-backup-original-observer-pki \
+      system-backup-observer-deployment-materials \
       system-backup-original-maintenance \
       backup-node-observer \
       backup-gateway-node-observer \
@@ -88,6 +89,7 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-minio-permission-owner \
       system-backup-minio-sql-owner \
       system-backup-source-materials \
+      system-backup-source-tls-bootstrap \
       system-backup-source-registries \
       system-backup-status-relay-owner \
       system-backup-first-install-materials \
