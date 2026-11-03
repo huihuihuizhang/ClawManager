@@ -1,0 +1,87 @@
+{
+  "schema_version": "supervisor-upgrade198-diagnostic-review.v1",
+  "observed_at": "2026-11-03T19:28:31.95213+08:00",
+  "head_at_review": "348f223bdee788213078d8753ffbfef4dbfac517",
+  "status": "LOCAL_INDEPENDENT_DIAGNOSTIC_CHECKS_PASSED_FIELD_RESULT_REQUIRED",
+  "selected_input_manifest": {
+    "path": ".tmp-supervisor-upgrade198-diag-review-20261103\\selected-inputs.json",
+    "sha256": "6bac54eb247cfe0d0c97a6fab6db3baefaafa73b1f7f88c30bb3d03a234c0d81"
+  },
+  "original_build_inputs_checked": 210,
+  "go_windows_diagnostic_tests": {
+    "passed": [
+      "TestSafeFailureDoesNotExposeDriverSecrets",
+      "TestSafeFailureDistinguishesSchemaAndBudget",
+      "TestSafeFailureUnknownAndDeadline",
+      "TestSafeFailureCopyInventoryRejectsOriginalDatabaseBeforeConnecting"
+    ],
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "log": {
+      "path": ".tmp-supervisor-upgrade198-diag-review-20261103\\go-tests.jsonl",
+      "sha256": "f2f579bb866161068695191ff7812ba56ea870cac471c85e45715ceae785c0ba"
+    }
+  },
+  "cleanup_regressions": {
+    "passed": 2,
+    "exit": 0,
+    "scope": "actual shell EXIT cleanup with local fake kubectl; no remote calls",
+    "log": {
+      "path": ".tmp-supervisor-upgrade198-diag-review-20261103\\cleanup-tests.log",
+      "sha256": "2e0343ee1003f6b900ebdcd2cb4d023c698cacb8147fae7cc63e0448a6222d6b"
+    }
+  },
+  "archive": {
+    "path": "artifacts\\system-backup-upgrade198-copy-diagnostic-v2-linux-amd64-20261103.tar.gz",
+    "sha256": "6b3cc93b9ad58858f6e128eb606ddb75d01e707b66845cffef1d9bb19ff5dcf6",
+    "bytes": 15131674,
+    "regular_members": 29,
+    "all_manifest_members_verified": 28,
+    "linux_amd64_elfs": [
+      {
+        "path": "legacy-source-selftest",
+        "bytes": 7551083,
+        "sha256": "88bbeb2e827e2f0060af5e206392b83e97375d45a5430785f973932e0fb05149"
+      },
+      {
+        "path": "proof-diagnostic-selftest",
+        "bytes": 10481324,
+        "sha256": "a58677b7eca848b50f1bf7c790129bff4995fc38c9020ab444f3d282928d100f"
+      },
+      {
+        "path": "system-backup-legacy-upgrade177-proof",
+        "bytes": 9647368,
+        "sha256": "fb3aafd30f4f40dce9c17ff009b00c5e74f4212db914d0b3285f841d0fd52fdf"
+      }
+    ]
+  },
+  "review": [
+    "The copy-inventory action rejects original/non-cm_import databases before connecting.",
+    "Original identity pins, original 99-table row proof and 101 migration SQL remain required.",
+    "Stable failure coordinates do not serialize raw SQL/DSN/row error messages.",
+    "Cleanup exports available diagnostics before deleting Pod temp, clears DSNs, and retains diagnostics when export fails; original failure exit remains failure.",
+    "Archive readback confirms all manifest entries, unique regular relative paths and three Linux amd64 executables."
+  ],
+  "previous_field_failure": {
+    "source": {
+      "path": "docs\\evidence\\system-backup-d-upgrade198-field-failure-20261103.json",
+      "sha256": "b8a196f9ed9e9c4ae569daf9394daeaf68d1cec180f8cc3b701953f8c8659d3f"
+    },
+    "reported_actual_migrations_executed": 0,
+    "reported_copy_cleanup": "COPY_ABSENT",
+    "reported_pod_temp_cleanup": "POD_TEMP_ABSENT",
+    "root_cause": "still undetermined; do not widen schema allowlist or manufacture ledger rows"
+  },
+  "not_proven": [
+    "fresh diagnostic-v2 remote copy outcome",
+    "original database upgrade",
+    "first adoption commit",
+    "production complete writer hold/recovery",
+    "page full backup acceptance"
+  ],
+  "cleanup": {
+    "owned_test_build_removed": true,
+    "distribution_archive_retained_for_pending_operator_execution": true
+  }
+}
