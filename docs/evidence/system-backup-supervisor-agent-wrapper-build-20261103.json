@@ -1,0 +1,85 @@
+{
+  "schema_version": "supervisor-agent-wrapper-build-review.v1",
+  "observed_at": "2026-11-03T21:45:51.584115+08:00",
+  "status": "BUILD_INPUT_ONLY_NOT_DEPLOYMENT_OR_LIVE_ACCEPTANCE",
+  "source_inputs": {
+    "path": ".tmp-supervisor-agent-build-20261103/recovery-capability-inputs.json",
+    "bytes": 5469,
+    "sha256": "061b974784268db5d67d14d2be2998052f62f30f617c8209b9cdf9c7d7f24905"
+  },
+  "manifest": {
+    "schema_version": "supervisor-agent-prebuilt-release-input.v1",
+    "status": "BUILD_INPUT_ONLY_NOT_DEPLOYMENT_OR_LIVE_ACCEPTANCE",
+    "agent_revision": "52f47fc-core-2408962c473d-sameepoch-r1",
+    "core_tree_sha256": "2408962c473de19637f6661713aaec07be2a581b246f426449fb4c88050dbd69",
+    "wrapper_git": "52f47fcaaaa52023b148043e0810d27d6f7f7ca0",
+    "go_version": "go1.26.1",
+    "goos": "linux",
+    "goarch": "amd64",
+    "cgo_enabled": false,
+    "original_module_files_unchanged": true,
+    "binaries": [
+      {
+        "kind": "openclaw",
+        "path": ".tmp-supervisor-agent-build-20261103/bin/openclaw/clawmanager-agent",
+        "bytes": 9994402,
+        "sha256": "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1",
+        "buildinfo": {
+          "path": ".tmp-supervisor-agent-build-20261103/openclaw-capability-buildinfo.txt",
+          "bytes": 596,
+          "sha256": "33fc0ccfc8a056819d4173290638e36893af0c46a4f1248ffa9043497722f0ac"
+        }
+      },
+      {
+        "kind": "hermes",
+        "path": ".tmp-supervisor-agent-build-20261103/bin/hermes/clawmanager-agent",
+        "bytes": 10072226,
+        "sha256": "851104a524ff26797c58c6a5a1e0e8172353ecdd31c31a07032a81073a225a42",
+        "buildinfo": {
+          "path": ".tmp-supervisor-agent-build-20261103/hermes-capability-buildinfo.txt",
+          "bytes": 541,
+          "sha256": "bf60f57707b917077d5c2b2876e57ef48ba1dfe1d0e0c81812a4188bab8b29ac"
+        }
+      }
+    ],
+    "source_manifest_sha256": "e0d1df6b932651b08a7ae72f87905cbfe14462db3391fd90a6ad3e889469e125",
+    "protocols": [
+      "isolated-backup.v1",
+      "isolated-stopped-backup.v2"
+    ],
+    "recovery_scope": "original_operation_same_agent_epoch",
+    "restart_policy": "quarantine_active_reservation",
+    "cross_incarnation_recovery": false,
+    "live_capabilities_verified": false,
+    "base_image_identity_verified_on_current_field": false,
+    "not_proven": [
+      "runtime overlay images pushed",
+      "same-version deployment",
+      "real field protocol calls",
+      "actual writer recovery",
+      "page full backup publication"
+    ],
+    "cleanup": "raw owned build outputs and caches removed after packaging; pending deployment input archive retained for final package assembly"
+  },
+  "retained_release_input": {
+    "path": ".tmp-supervisor-agent-build-20261103/release-inputs/agent-prebuilt-2408962c473d-linux-amd64.tar.gz",
+    "bytes": 8186388,
+    "sha256": "74257a0908591107fcfde27371e0799a593e02aab0e0d50c75890ccfc1191249"
+  },
+  "prior_failures": [
+    "Old OpenClaw module cache lacked x/sys v0.35.0; initial proxy.golang.org connection timed out; pinned dependency obtained in private cache without changing go.sum.",
+    "New Hermes private cache lacked existing yaml.v3; GOPROXY=off refused; network proxy unavailable; final build used existing immutable local file proxy and unchanged go.sum."
+  ],
+  "cleanup_status": "owned_raw_build_bins_cache_tmp_module_cache_removed; pending final deployment release input archive retained",
+  "backend_combination_check": {
+    "scope": "complete services package compiled with default go test vet; only original recovery capability wire test executed; no full execution-package or field test",
+    "roots": 1,
+    "subtests": 9,
+    "fail": 0,
+    "skip": 0,
+    "exit": 0,
+    "log": ".tmp-supervisor-recovery-capability-review-20261103/client-combination.jsonl",
+    "log_sha256": "be7a87f9fcb649c49214242811a6c06833ede91bd02b204f4339626ea396b282",
+    "cleanup": "owned cache and temporary build directory removed"
+  }
+}

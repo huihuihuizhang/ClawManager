@@ -1,0 +1,128 @@
+{
+  "schema_version": "supervisor-p7-private-sink-isolated-review.v1",
+  "observed_at": "2026-11-03T21:34:40.707808+08:00",
+  "status": "ISOLATED_TARGETED_LINUX_PASS_NOT_PAGE_ACCEPTANCE",
+  "base_review": "docs/evidence/system-backup-supervisor-ac-integration-20261103.json",
+  "inputs": {
+    "path": ".tmp-supervisor-p7-sink-review-20261103/selected-inputs.json",
+    "bytes": 4490,
+    "sha256": "e704dd6c7ccc660e1ab015bb8f7a85bda89f5ec5d7e80eaedda21a386ec1cf8e"
+  },
+  "fixture_supersede": {
+    "before_sha256": "69ac834b323387fa5a4810bd36dfcb1de66bbc70c4b409e5d70867054055e037",
+    "scope": "test-only private fixture mode and explicit nonprivate rejection",
+    "target": "backend/internal/systembackup/staging/private_report_test.go",
+    "sha256": "7bc526cf3dff6a36792bee30d01b5763455ab3afb4fa48bef2d59602da0a3e64",
+    "source": "backend/.c-private-report-fixture-fix-20261103/private_report_test.go"
+  },
+  "tests": [
+    {
+      "component": "quiesce",
+      "roots": [
+        "TestStoppedProEpochZeroReachesNativeRefusal",
+        "TestStoppedProEpochZeroClientDispatchesButNeverPromotesRefusal",
+        "TestStoppedProCRIEnumSemantics",
+        "TestStoppedProNativeMountAliasIdentity",
+        "TestStoppedProCurrentBaselineNoHistoricalPodRequired",
+        "TestStoppedProUniqueVolumeBindingRefusesAmbiguity",
+        "TestStoppedProNativeScopeHasNoReservationHashCycle",
+        "TestStoppedProAnchorCannotBecomeWholePodOrGateway",
+        "TestStoppedProExpiredFreshRequestRefusesBeforeNativeIO"
+      ],
+      "subtests": [],
+      "fail": 0,
+      "skip": 0,
+      "exit": 0,
+      "log": {
+        "path": ".tmp-supervisor-p7-sink-review-20261103/logs/quiesce.jsonl",
+        "bytes": 7845,
+        "sha256": "1b3920ddfb898306bd06921ea10fd25eae92d3601e6fc57221dcda7c5a4227c0"
+      }
+    },
+    {
+      "component": "adapter",
+      "roots": [
+        "TestOriginalEmptyHistoryLegalZeroWithoutInventedSample",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources"
+      ],
+      "subtests": [
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/missing-scope",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/missing-eof",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/truncated",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/unknown-write",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/delete-marker",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/sql-history",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/duplicate-root",
+        "TestOriginalEmptyHistoryRejectsPartialUnknownAndMissingSources/missing-page-hash"
+      ],
+      "fail": 0,
+      "skip": 0,
+      "exit": 0,
+      "log": {
+        "path": ".tmp-supervisor-p7-sink-review-20261103/logs/adapter.jsonl",
+        "bytes": 10272,
+        "sha256": "3cf584f7a5fd971ffa82ea5a7b9e45e70d33adbdfe8c32b7f44606ea64e72ca6"
+      }
+    },
+    {
+      "component": "staging",
+      "roots": [
+        "TestPrivateReportCustodyCreateReplayRefusesConflict",
+        "TestPrivateReportCountsUnknownFilesAndRejectsWritableExisting",
+        "TestPrivateReportRejectsNonPrivateCustodyRoot"
+      ],
+      "subtests": [],
+      "fail": 0,
+      "skip": 0,
+      "exit": 0,
+      "log": {
+        "path": ".tmp-supervisor-p7-sink-review-20261103/logs/staging.jsonl",
+        "bytes": 2956,
+        "sha256": "9a73413e1f3118ac03e4a25041911ddd9d6eed3a60d25e3e09055ec8bcf5ca61"
+      }
+    }
+  ],
+  "total_root_pass": 14,
+  "total_subtest_pass": 8,
+  "fail": 0,
+  "skip": 0,
+  "linux_server_build": {
+    "exit": 0,
+    "goos": "linux",
+    "goarch": "amd64",
+    "cgo_enabled": false,
+    "log": {
+      "path": ".tmp-supervisor-p7-sink-review-20261103/server-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "prior_failed_rounds": [
+    {
+      "path": ".tmp-supervisor-p7-sink-review-20261103\\logs-harness-r1",
+      "scope": "test2json harness could not write build cache in read-only root; zero test entry; fixed with owned /work/go-cache"
+    },
+    {
+      "path": ".tmp-supervisor-p7-sink-review-20261103\\logs-staging-fixture-r1",
+      "scope": "two private report tests supplied Go TempDir mode 0755; production correctly refused; superseded only fixture chmod0700 and added explicit nonprivate rejection test"
+    }
+  ],
+  "not_proven": [
+    "field CRI current-baseline positive observation",
+    "continuous writer hold and recovery",
+    "complete current source history census",
+    "PreparedCoverage issuance",
+    "actual same-task private report output",
+    "first installation/adoption or field migration",
+    "real page backup/publication success"
+  ],
+  "cleanup": {
+    "status": "owned_bins_cache_tmp_and_verified_unused_docker_volume_removed",
+    "preserve": [
+      "source",
+      "logs",
+      "input pins",
+      "failure history"
+    ]
+  }
+}
