@@ -1,0 +1,29 @@
+{
+  "schema": "system-backup-source-only-review.v1",
+  "date": "2026-11-03",
+  "owner": "B",
+  "status": "SOURCE_ONLY_FIXTURE_CORRECTION",
+  "supersedes": {
+    "manifest": "docs/evidence/system-backup-b-source-registry-authoring-noncyclic-supersede-20261103.json",
+    "sha256": "3f76be96dc0dd3022a53b7d7abbb1a4112bd49d3e91006cbb18d1f311b1b3248",
+    "scope": "Only these two fixture files. Preserve root Linux66/R1 failed evidence."
+  },
+  "files": {
+    "backend/cmd/system-backup-source-registries/main_test.go": "7877633ccbc074ffcc398e99c613b93d726102dd89371901ebcf66e22c7d29a4",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": "1c0adad3ff5aef70bff55919b037113d1a705f149baebd05e448ebfdee6940dc"
+  },
+  "changes": [
+    "Explicit chmod 0700 on test-owned output directory before private-output positive checks. Production permission checks unchanged.",
+    "Linux-only chmod 0755 negative proves public directory rejection; restore 0700 and require the baseline succeeds before alias/existing-output cases.",
+    "Unauthenticated producer negative now explicitly proves private output preflight succeeds, so it reaches the original Installer boundary rather than passing accidentally at directory mode rejection."
+  ],
+  "validation": {
+    "executed": false,
+    "reason": "Root owns gofmt/build/tests/SQL/Git; no test/build products created by B.",
+    "root_target_roots": [
+      "TestSourceRegistryCLIFrozenOutputPreflight",
+      "TestBootstrapSourceFactOutputsAreStrictlyCreateOnly",
+      "TestBootstrapSourceFactProductionRequiresOriginalInstaller"
+    ]
+  }
+}

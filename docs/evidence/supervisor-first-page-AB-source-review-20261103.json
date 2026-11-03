@@ -1,0 +1,251 @@
+{
+  "schema_version": "supervisor-first-page-AB-source-review.v1",
+  "status": "LINUX_COMBINED_SOURCE_CHECK_PASSED_NOT_INSTALLATION_OR_PAGE_ACCEPTANCE",
+  "baseline": "9a8ce5855a18b79312086949c11ba50ff13144e1",
+  "source_count": 66,
+  "roots": 37,
+  "passes_including_subtests": 88,
+  "failed": 0,
+  "skipped": 0,
+  "packages": [
+    "clawreef/internal/systembackupbootstrapmaterials",
+    "clawreef/internal/systembackupkekadapter",
+    "clawreef/internal/systembackup",
+    "clawreef/internal/systembackupinstallationowner/install",
+    "clawreef/cmd/system-backup-source-registries",
+    "clawreef/internal/systembackupexecution"
+  ],
+  "linux_image": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+  "scope": "Original installer pre-capture source authoring without final hash cycle, actual V2 8MiB material boundary, original KEK bridge/census, finite Redis metadata protocol; no native MySQL or performance/page test.",
+  "remaining": "Native source full capture and physical source recovery; complete bootstrap owners, lawful enable resource sources/router, actual TLS/MinIO installation, same-task publication/readback/catalog/success remain unproved.",
+  "r1_failures": "Linux test TempDir permissions in two fixture preflights; production 0700 restriction retained. Explicit fixture-only supersede applied before R2.",
+  "source_files": {
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation_test.go": "b8980651fbc65b4a3548abb6723799886a068680be050937e33776373ef2f2ea",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation.go": "a6153429fccc9883c80ed3ccf4fa11e587a2faee60b89861230179bbe753ca89",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_test.go": "3c82d2b8b681087b21c64dcb29cd0ce1cec0d6842cbd47c13d9967ff2c70f5ca",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek.go": "a34e7db2aa1d3db00b90a3aa9b3d42d7d73a8e71e63e271e95c5c8066b7701ee",
+    "backend/internal/systembackupbootstrapmaterials/original_window_kek_link_test.go": "ae6ab55063b3bdd5e25363c4607938428d066cf346cac904f680c66c9181957c",
+    "backend/internal/systembackupbootstrapmaterials/original_window_kek_link.go": "c8b572576606a520cc61df2d0a5c5965434bd92bd9e9e50937474c4e615f70f4",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authenticated_fixture_test.go": "bc2b680f7b929e4a385fcf44fe280411952e6ec0270bc37edefec8a6570e104e",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_clock_test.go": "3563ca0ce86ed5446ecf5b469b290f4302ac2e551fe17fbc4e9744f866098e33",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_window_test.go": "879b85eec5abebd07a15410db876bd97d046bbac148da928fac89b8239e63a5a",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer.go": "8465eebc585c2e9d922cd78ce8e7702067997d1789c46c3b49dac87c6c9df116",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_contract.go": "6390f729621dff8393ad0a9ef3eaff456504b3751ae0224a574b568f45e2d000",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_issue.go": "70bac48853a124f57989d4a37f740b2e01b4dc70564a6b5c68ef4e95aa63b70b",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_protocol_test.go": "24c7f2321f65b7663b1fdce78862572ee856bfac1c8f3f5903297ff478e90ed7",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_reader_access.go": "08eb761a33b14a4038bf2f0a2bc848c0ce245512ce804d468da5fcfe05683f82",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_consumer.go": "d592bd4f7136f69939724fbf7e70e1dabfa406c650b3170dd847703c3be5c385",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract_test.go": "da29aefcf6aa229bcb6df810031c9f804e2e49aa452535548a043d235a51aafd",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract.go": "14fc7521ee85b4d70908d1b4338abaaca79f8f87c870415c514d05b1ca06c93c",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_inputs.go": "d2da270705b45c9f278f43bdfb88833a3937eb6db7b7b210722eb7f066b16513",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_issue.go": "1f1cbfc775e59e6b7ad9ab5a21db0d2d64ce14cff56c1a868685ee5b78d5474f",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_materials_actual_test.go": "66079e92cd84dbd909ca3a313e0a73557054a359a1be8b123e332dd73ea5da00",
+    "backend/internal/systembackupinstallationowner/install/kek_window_check.go": "176b90fec2a6a00c32585c5f40de5054580871668196a70a47e921a393fa1c6a",
+    "backend/internal/systembackupinstallationowner/install/kek_window_composition.go": "ef950e35ac21a677ea016c447419cb2fa81f9cf54a5e71a484544442696d3145",
+    "backend/internal/systembackupinstallationowner/install/kek_window_contract.go": "655fe8544b59f408a381b0ff0f47b7e91950177b84c6bad4904de5d3b1ed4e0d",
+    "backend/internal/systembackupinstallationowner/install/kek_window_issue.go": "d6c6289548fff82547cd59dcb0d6388c2d891f10aa59a715cc1ab70b767120c7",
+    "backend/internal/systembackupinstallationowner/install/kek_window_owner.go": "94424ab444c5bdfd09c476493aeadaaf4ae238a20e993050f566e211a03783dc",
+    "backend/internal/systembackupinstallationowner/install/kek_window_test.go": "d48a7590bc008f55916403bf0f32385e40ab026b04fbbd2cff41d4ffc709b39b",
+    "backend/internal/systembackupkekadapter/bootstrap_source_description.go": "d4ed8320ab8b6a4c58d28de9f1cc02fe8e3d83736b6b21539e2486080fabf85c",
+    "backend/internal/systembackupkekadapter/bootstrap_source_factory.go": "4eccdc4add8b1585366c871573e7b06457a33a5f4e4b769817637c66945d9f6d",
+    "backend/internal/systembackupkekadapter/bootstrap_source_fence_mysql_test.go": "220b13c2648c1d89eff773d18a17982f7ab33b0f3b4bac85ac2a74ce817a1d06",
+    "backend/internal/systembackupkekadapter/bootstrap_source_sql.go": "d2337660260747624a3f921c1391614af83ebbde036430966846e003aba08115",
+    "backend/internal/systembackupkekadapter/bootstrap.go": "18542b32fb7c249a95fe90b11a08bbbb1abef81ba96b7b7a4f27fa9a1b51a123",
+    "backend/internal/systembackupkekadapter/coverage_owner_sql_test.go": "2a7067f836124b325430298286f3a5d6e9f67db8ac790ef821ffc70788cc29f5",
+    "backend/internal/systembackupkekadapter/coverage_owner_sql.go": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8",
+    "backend/internal/systembackupkekadapter/coverage_sql_witness.go": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb",
+    "backend/internal/systembackupkekadapter/mutation_resource.go": "d3b4d13d3d13591699cbdb001053d3346beec46408ab91587e63d918c54533cd",
+    "backend/internal/systembackupkekadapter/mutation_source_factory.go": "beace1f495c263b094c38aadc00110786f575079d4e262e0cdef9cc9d2f01f49",
+    "backend/internal/systembackupkekadapter/mutation_source_sql.go": "c5d357309f004a2eb2970e64c965b16eb64a11a08c535901af9644992eded2d1",
+    "backend/internal/systembackupkekadapter/sql_coverage_authority_135_136_test.go": "d9393429bc67fdbb2c0edbed7736b22708496d301dc1fbff0b5241efb94b9ad3",
+    "backend/internal/systembackupkekadapter/sql_coverage_census_mysql_test.go": "d375537d2e405673136124a7cae1376e2f428b9feb633cf671cb53bdb848fd15",
+    "backend/internal/systembackupkekadapter/sql_coverage_census_test.go": "6282f56a72733365b6ba27ff8738eca280262f2d0ec38a68980a4412c0fc884b",
+    "backend/internal/systembackupkekadapter/sql_coverage_census.go": "dc7a8b70844858ed02e0442cb9200095cc6e2981cf8c6e064cafcbc7bb83f29f",
+    "backend/cmd/system-backup-source-registries/main.go": "5264ae810bc1b3911c846716e989df8ae04c42fa70ea7f5c52c385027720225f",
+    "backend/cmd/system-backup-source-registries/main_test.go": "b80459cd5bb91f5bc4efd91ecb26cb1268651bc204a7881eae2039d32c41dfb4",
+    "backend/internal/systembackup/redis_source_metadata.go": "ac55235a09765063b87f7915e05d1ecff10c1096566f802eb8a323ff39da15d2",
+    "backend/internal/systembackup/redis_source_metadata_test.go": "b68bb4ff193bbb5d9e8a8d11774b3af5bc752a07ea2d5566bf5d2b4f026ba883",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go": "8038b2fb553c45105879f43965e0f015c90fe940d6bae68e1adf09ac692682db",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": "9cce0ea806282655bcd44dced73a7fd9b6a11c038e700cd45841c31e29cbd037",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_clients.go": "8fa1fc625199cf42f2fb6859469e4ab0c31dc319a19306cc47cee305687275f7",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go": "fc41fea18ef5df58d5870636a4f681a17b5eac155fb0198a3a140320ca56b8fd",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": "ad8c082fd57b479de26983ad6ec68b6a50e0d7715cafb636d13a6297a26f2a17",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_control_sql.go": "bb30c6d6a37a68a4d71c71f5ae0dd1d37750b9050707c9a82c90db6a3714ec61",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native.go": "651080437107570997e3d405cb00280c899dce6d40424d1e75faa0cd0a070d95",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_objects.go": "107d6bcee12eb7b3aa28340e1dd338102042734398b32875ca3c1c6eb153c23f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": "4f1531f24a6a451483352aa659b37107048faaf3cc8fe664cffc5dfd30311ee3",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_resources.go": "b7a6b6dd2dccb8cfc8abaeaec0bfa3e3e7ad94f6b9062fdbf0178d8dc8462d3d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_metadata.go": "6898520d5b8cfec760ab9f22dc40039388ea109da72a536720231a7d379e7b63",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go": "ed8e0d988dd6cf80bb031ed411d43425ef42c6a4d5dd630b5ea6ef336caea9ed",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go": "9014123e98218dc42a4f160933827b7d0284afe5aca3b723716af37e3b056c3c",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": "61b108c52d5d19e389ed9c776e1a0d13ea846dfac7af29e416768dfd9e274559",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal_test.go": "060d00b2105092a29f8f4b64bca6d32d289517a3f3e5881ffe69f9de2fd3287f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go": "04713e71ad7fe5c8e32968853c7208c7d5d4fb045c0350df024b987a5f820776",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_api.go": "d1e0ffce43d2de7f1c4c1dbe91b687137a732c3d8f598a27f5a6251ff721d7e7",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_graph.go": "7b8a27eff318680268fd76168684437a3c9f3bc65495442282518fa64ffa9d38",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go": "a6c1262b8d77be798ef3c778b695bce866c5d796a634513aef8ecbb036a604cf",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go": "b27d571418ff00f9197ce41e8b9ab6ec008f5878115e852777c25473c15f3cac",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_terminal_access.go": "2f3223476456e0fe7d0ac4d0c7c164e4315b34e0be50d48fb92befb5c6ae0fa3"
+  },
+  "original_source_files": {
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation_test.go": "b8980651fbc65b4a3548abb6723799886a068680be050937e33776373ef2f2ea",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation.go": "a6153429fccc9883c80ed3ccf4fa11e587a2faee60b89861230179bbe753ca89",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek_test.go": "3c82d2b8b681087b21c64dcb29cd0ce1cec0d6842cbd47c13d9967ff2c70f5ca",
+    "backend/internal/systembackupbootstrapmaterials/original_sql_kek.go": "a34e7db2aa1d3db00b90a3aa9b3d42d7d73a8e71e63e271e95c5c8066b7701ee",
+    "backend/internal/systembackupbootstrapmaterials/original_window_kek_link_test.go": "ae6ab55063b3bdd5e25363c4607938428d066cf346cac904f680c66c9181957c",
+    "backend/internal/systembackupbootstrapmaterials/original_window_kek_link.go": "c8b572576606a520cc61df2d0a5c5965434bd92bd9e9e50937474c4e615f70f4",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authenticated_fixture_test.go": "bc2b680f7b929e4a385fcf44fe280411952e6ec0270bc37edefec8a6570e104e",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_clock_test.go": "3563ca0ce86ed5446ecf5b469b290f4302ac2e551fe17fbc4e9744f866098e33",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_window_test.go": "879b85eec5abebd07a15410db876bd97d046bbac148da928fac89b8239e63a5a",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer.go": "8465eebc585c2e9d922cd78ce8e7702067997d1789c46c3b49dac87c6c9df116",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_contract.go": "6390f729621dff8393ad0a9ef3eaff456504b3751ae0224a574b568f45e2d000",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_issue.go": "70bac48853a124f57989d4a37f740b2e01b4dc70564a6b5c68ef4e95aa63b70b",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_protocol_test.go": "24c7f2321f65b7663b1fdce78862572ee856bfac1c8f3f5903297ff478e90ed7",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_reader_access.go": "08eb761a33b14a4038bf2f0a2bc848c0ce245512ce804d468da5fcfe05683f82",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_consumer.go": "d592bd4f7136f69939724fbf7e70e1dabfa406c650b3170dd847703c3be5c385",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract_test.go": "da29aefcf6aa229bcb6df810031c9f804e2e49aa452535548a043d235a51aafd",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract.go": "14fc7521ee85b4d70908d1b4338abaaca79f8f87c870415c514d05b1ca06c93c",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_inputs.go": "d2da270705b45c9f278f43bdfb88833a3937eb6db7b7b210722eb7f066b16513",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_issue.go": "1f1cbfc775e59e6b7ad9ab5a21db0d2d64ce14cff56c1a868685ee5b78d5474f",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_materials_actual_test.go": "66079e92cd84dbd909ca3a313e0a73557054a359a1be8b123e332dd73ea5da00",
+    "backend/internal/systembackupinstallationowner/install/kek_window_check.go": "176b90fec2a6a00c32585c5f40de5054580871668196a70a47e921a393fa1c6a",
+    "backend/internal/systembackupinstallationowner/install/kek_window_composition.go": "ef950e35ac21a677ea016c447419cb2fa81f9cf54a5e71a484544442696d3145",
+    "backend/internal/systembackupinstallationowner/install/kek_window_contract.go": "655fe8544b59f408a381b0ff0f47b7e91950177b84c6bad4904de5d3b1ed4e0d",
+    "backend/internal/systembackupinstallationowner/install/kek_window_issue.go": "d6c6289548fff82547cd59dcb0d6388c2d891f10aa59a715cc1ab70b767120c7",
+    "backend/internal/systembackupinstallationowner/install/kek_window_owner.go": "94424ab444c5bdfd09c476493aeadaaf4ae238a20e993050f566e211a03783dc",
+    "backend/internal/systembackupinstallationowner/install/kek_window_test.go": "d48a7590bc008f55916403bf0f32385e40ab026b04fbbd2cff41d4ffc709b39b",
+    "backend/internal/systembackupkekadapter/bootstrap_source_description.go": "d4ed8320ab8b6a4c58d28de9f1cc02fe8e3d83736b6b21539e2486080fabf85c",
+    "backend/internal/systembackupkekadapter/bootstrap_source_factory.go": "4eccdc4add8b1585366c871573e7b06457a33a5f4e4b769817637c66945d9f6d",
+    "backend/internal/systembackupkekadapter/bootstrap_source_fence_mysql_test.go": "220b13c2648c1d89eff773d18a17982f7ab33b0f3b4bac85ac2a74ce817a1d06",
+    "backend/internal/systembackupkekadapter/bootstrap_source_sql.go": "d2337660260747624a3f921c1391614af83ebbde036430966846e003aba08115",
+    "backend/internal/systembackupkekadapter/bootstrap.go": "18542b32fb7c249a95fe90b11a08bbbb1abef81ba96b7b7a4f27fa9a1b51a123",
+    "backend/internal/systembackupkekadapter/coverage_owner_sql_test.go": "2a7067f836124b325430298286f3a5d6e9f67db8ac790ef821ffc70788cc29f5",
+    "backend/internal/systembackupkekadapter/coverage_owner_sql.go": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8",
+    "backend/internal/systembackupkekadapter/coverage_sql_witness.go": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb",
+    "backend/internal/systembackupkekadapter/mutation_resource.go": "d3b4d13d3d13591699cbdb001053d3346beec46408ab91587e63d918c54533cd",
+    "backend/internal/systembackupkekadapter/mutation_source_factory.go": "beace1f495c263b094c38aadc00110786f575079d4e262e0cdef9cc9d2f01f49",
+    "backend/internal/systembackupkekadapter/mutation_source_sql.go": "c5d357309f004a2eb2970e64c965b16eb64a11a08c535901af9644992eded2d1",
+    "backend/internal/systembackupkekadapter/sql_coverage_authority_135_136_test.go": "d9393429bc67fdbb2c0edbed7736b22708496d301dc1fbff0b5241efb94b9ad3",
+    "backend/internal/systembackupkekadapter/sql_coverage_census_mysql_test.go": "d375537d2e405673136124a7cae1376e2f428b9feb633cf671cb53bdb848fd15",
+    "backend/internal/systembackupkekadapter/sql_coverage_census_test.go": "6282f56a72733365b6ba27ff8738eca280262f2d0ec38a68980a4412c0fc884b",
+    "backend/internal/systembackupkekadapter/sql_coverage_census.go": "dc7a8b70844858ed02e0442cb9200095cc6e2981cf8c6e064cafcbc7bb83f29f",
+    "backend/cmd/system-backup-source-registries/main.go": "0276b9d300c54db632e6ac05d2f5411bda3c146cddd2c05c3729495e8e6fe225",
+    "backend/cmd/system-backup-source-registries/main_test.go": "74ec7e34f7b3843e45f4bc286e88495852e2d085a078cca2d13fe0f7b4f8d643",
+    "backend/internal/systembackup/redis_source_metadata.go": "57be3d7d4e17666e18c6243abe4cfa5d5e5c687f1490dee619c8f80072bd234a",
+    "backend/internal/systembackup/redis_source_metadata_test.go": "f71cd035b3f78ffa4dd9fe218cbcc3a9c40a8c033b92e270a9f84e5af6e475ae",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go": "544c6d86991895a55bd7ff5ff0efcbcb6770f8bb75cbe66e41161c754397dd29",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": "ea4c0e0ba0ba1117695cb4ddee98850750daab58081bf04cac1f5c3d20136f04",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_clients.go": "d1932ded0469cea439a0d293e667d51f00a0d6733fc0c9fed0dae914c602277d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go": "4923d2f2d7ee9acb1c5ccc93b07aecb5d7215f13f719ce191c7c35e0c1d66867",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": "6b2b2c43a7b4ed3f623faa8deb2142a543f34a213bde6fdd7e69eac08f82cbd3",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_control_sql.go": "c07a7e45862cd9cc3f8ca3f57285d82ea96a713f485bf6137914a509dda0840f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native.go": "3688c5c3eb1f265a759e109c3e90d91bc964de53ead68c1db56ed6eab82f44dd",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_objects.go": "107d6bcee12eb7b3aa28340e1dd338102042734398b32875ca3c1c6eb153c23f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": "f7c67337d82c105d1e6ed4e607ab2b9eee8e31c610a91039f244893b9b11eb51",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_resources.go": "b7a6b6dd2dccb8cfc8abaeaec0bfa3e3e7ad94f6b9062fdbf0178d8dc8462d3d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_metadata.go": "6898520d5b8cfec760ab9f22dc40039388ea109da72a536720231a7d379e7b63",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go": "ed8e0d988dd6cf80bb031ed411d43425ef42c6a4d5dd630b5ea6ef336caea9ed",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go": "11f281d5d094d908ed5f72d5043f7a529fbbc955d2ed90150f1ec7aba67b3aa9",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": "32fa0cccf237bf3a2b1d7f15a26018c52be7dda04f74d97ccd41b6984eb17f4e",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal_test.go": "92c25fbeea9f9c5da208ebf43c09099fb8e04a79ac66a8888b2e25dd6ecc657b",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go": "99a259e466fcb49a60767d616b9a22ac9d7841584f0d0807e4090b3f8fcb2d56",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_api.go": "d1e0ffce43d2de7f1c4c1dbe91b687137a732c3d8f598a27f5a6251ff721d7e7",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_graph.go": "7b8a27eff318680268fd76168684437a3c9f3bc65495442282518fa64ffa9d38",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go": "e76829ed83bf40794acd5aebf92c686ca9293396f27a986d028e1378e4bac003",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go": "880fa45a039190502d676a1220274e7cee4be9b74c42bc030b9d8dfc28e1c0b9",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_terminal_access.go": "9a4feeb14d728ba60af4a802ceb313321b35e9cb5832ca47bf3bf0455bd140f9"
+  },
+  "formatting_supersede": {
+    "backend/cmd/system-backup-source-registries/main.go": {
+      "before": "0276b9d300c54db632e6ac05d2f5411bda3c146cddd2c05c3729495e8e6fe225",
+      "after": "5264ae810bc1b3911c846716e989df8ae04c42fa70ea7f5c52c385027720225f"
+    },
+    "backend/cmd/system-backup-source-registries/main_test.go": {
+      "before": "74ec7e34f7b3843e45f4bc286e88495852e2d085a078cca2d13fe0f7b4f8d643",
+      "after": "2f5bedb4657aedc27b90f839e617f6e288265d389e28130ddea714a94dc10311"
+    },
+    "backend/internal/systembackup/redis_source_metadata.go": {
+      "before": "57be3d7d4e17666e18c6243abe4cfa5d5e5c687f1490dee619c8f80072bd234a",
+      "after": "ac55235a09765063b87f7915e05d1ecff10c1096566f802eb8a323ff39da15d2"
+    },
+    "backend/internal/systembackup/redis_source_metadata_test.go": {
+      "before": "f71cd035b3f78ffa4dd9fe218cbcc3a9c40a8c033b92e270a9f84e5af6e475ae",
+      "after": "b68bb4ff193bbb5d9e8a8d11774b3af5bc752a07ea2d5566bf5d2b4f026ba883"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go": {
+      "before": "544c6d86991895a55bd7ff5ff0efcbcb6770f8bb75cbe66e41161c754397dd29",
+      "after": "8038b2fb553c45105879f43965e0f015c90fe940d6bae68e1adf09ac692682db"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": {
+      "before": "ea4c0e0ba0ba1117695cb4ddee98850750daab58081bf04cac1f5c3d20136f04",
+      "after": "030ee832f0fbfc27709bd61b7f9d0680ebaea3a190760faed7171118bf021bf4"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_clients.go": {
+      "before": "d1932ded0469cea439a0d293e667d51f00a0d6733fc0c9fed0dae914c602277d",
+      "after": "8fa1fc625199cf42f2fb6859469e4ab0c31dc319a19306cc47cee305687275f7"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go": {
+      "before": "4923d2f2d7ee9acb1c5ccc93b07aecb5d7215f13f719ce191c7c35e0c1d66867",
+      "after": "fc41fea18ef5df58d5870636a4f681a17b5eac155fb0198a3a140320ca56b8fd"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": {
+      "before": "6b2b2c43a7b4ed3f623faa8deb2142a543f34a213bde6fdd7e69eac08f82cbd3",
+      "after": "ad8c082fd57b479de26983ad6ec68b6a50e0d7715cafb636d13a6297a26f2a17"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_control_sql.go": {
+      "before": "c07a7e45862cd9cc3f8ca3f57285d82ea96a713f485bf6137914a509dda0840f",
+      "after": "bb30c6d6a37a68a4d71c71f5ae0dd1d37750b9050707c9a82c90db6a3714ec61"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native.go": {
+      "before": "3688c5c3eb1f265a759e109c3e90d91bc964de53ead68c1db56ed6eab82f44dd",
+      "after": "651080437107570997e3d405cb00280c899dce6d40424d1e75faa0cd0a070d95"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": {
+      "before": "f7c67337d82c105d1e6ed4e607ab2b9eee8e31c610a91039f244893b9b11eb51",
+      "after": "4f1531f24a6a451483352aa659b37107048faaf3cc8fe664cffc5dfd30311ee3"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go": {
+      "before": "11f281d5d094d908ed5f72d5043f7a529fbbc955d2ed90150f1ec7aba67b3aa9",
+      "after": "9014123e98218dc42a4f160933827b7d0284afe5aca3b723716af37e3b056c3c"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": {
+      "before": "32fa0cccf237bf3a2b1d7f15a26018c52be7dda04f74d97ccd41b6984eb17f4e",
+      "after": "61b108c52d5d19e389ed9c776e1a0d13ea846dfac7af29e416768dfd9e274559"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal_test.go": {
+      "before": "92c25fbeea9f9c5da208ebf43c09099fb8e04a79ac66a8888b2e25dd6ecc657b",
+      "after": "060d00b2105092a29f8f4b64bca6d32d289517a3f3e5881ffe69f9de2fd3287f"
+    },
+    "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go": {
+      "before": "99a259e466fcb49a60767d616b9a22ac9d7841584f0d0807e4090b3f8fcb2d56",
+      "after": "04713e71ad7fe5c8e32968853c7208c7d5d4fb045c0350df024b987a5f820776"
+    },
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go": {
+      "before": "e76829ed83bf40794acd5aebf92c686ca9293396f27a986d028e1378e4bac003",
+      "after": "a6c1262b8d77be798ef3c778b695bce866c5d796a634513aef8ecbb036a604cf"
+    },
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go": {
+      "before": "880fa45a039190502d676a1220274e7cee4be9b74c42bc030b9d8dfc28e1c0b9",
+      "after": "b27d571418ff00f9197ce41e8b9ab6ec008f5878115e852777c25473c15f3cac"
+    },
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_terminal_access.go": {
+      "before": "9a4feeb14d728ba60af4a802ceb313321b35e9cb5832ca47bf3bf0455bd140f9",
+      "after": "2f3223476456e0fe7d0ac4d0c7c164e4315b34e0be50d48fb92befb5c6ae0fa3"
+    }
+  },
+  "input_manifests": {
+    "docs\\drafts\\system-backup-a-root-combination-source-closure-20261103.json": "8f78bea5adb2d889b287007d8082e03fa7d3b690145681f80a99bbf7dbb994e9",
+    "docs\\evidence\\system-backup-b-source-registry-authoring-noncyclic-supersede-20261103.json": "3f76be96dc0dd3022a53b7d7abbb1a4112bd49d3e91006cbb18d1f311b1b3248"
+  },
+  "fixture_supersede": {
+    "path": "docs/evidence/system-backup-b-source-registry-output-fixture-permission-supersede-20261103.json",
+    "sha256": "9c3280a7925e867c4dfcf252b92aaa4b873e2f1e73a8d35c9fc2dafa974e5d23"
+  },
+  "evidence": {
+    "page-trial-AB-linux-r1.jsonl": "4c6da7afee5c16ece670b1c1f3621971d6dec13673787c27f16ed7cc8195cfd1",
+    "page-trial-AB-linux-r2.jsonl": "aa9eeef07a2f78141d66ab90cd9e771229234908958d75df2aa92f2c1e11c259"
+  },
+  "full_acceptance": false,
+  "dr_qualified": false,
+  "artifact_lifecycle": "Release source/build batch remains active. Test-only products removed when batch concludes; pending delivery retained."
+}

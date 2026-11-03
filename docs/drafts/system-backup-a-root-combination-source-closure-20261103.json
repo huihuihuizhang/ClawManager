@@ -1,0 +1,351 @@
+{
+  "schema": "a-root-combination-source-closure.v1",
+  "date": "2026-11-03",
+  "reported_root_baseline": "remote backup9a8ce585 (root-reported; A did not run Git)",
+  "status": "ALL_41_FROZEN_SOURCE_HASHES_MATCH_ROOT_COMPILE_AND_INTEGRATION_PENDING",
+  "C_precondition": "Root reports C10 plus Sept production adapters admitted with correctness regressions PASS; A does not wait for that earlier prerequisite. This is root-provided evidence, not an A remote/test verification.",
+  "groups": [
+    {
+      "name": "kek",
+      "source_count": 27,
+      "boundary": "Original bridge7 + prerequisites4 + exact-five census4 + actual source support3 + old source loader2 + same-bridge assembly2 + actual mutation source/resource/loader5"
+    },
+    {
+      "name": "b_v2_material_p0",
+      "source_count": 14,
+      "boundary": "B7 with ONLY issue/consumer explicitly superseded + unchanged V2 six + actual issuer-to-consumer material regression1"
+    }
+  ],
+  "source_count": 41,
+  "production_go": 26,
+  "test_go": 15,
+  "source_pins": [
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation_test.go",
+      "sha256": "b8980651fbc65b4a3548abb6723799886a068680be050937e33776373ef2f2ea",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_sql_kek_mutation.go",
+      "sha256": "a6153429fccc9883c80ed3ccf4fa11e587a2faee60b89861230179bbe753ca89",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_sql_kek_test.go",
+      "sha256": "3c82d2b8b681087b21c64dcb29cd0ce1cec0d6842cbd47c13d9967ff2c70f5ca",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_sql_kek.go",
+      "sha256": "a34e7db2aa1d3db00b90a3aa9b3d42d7d73a8e71e63e271e95c5c8066b7701ee",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_window_kek_link_test.go",
+      "sha256": "ae6ab55063b3bdd5e25363c4607938428d066cf346cac904f680c66c9181957c",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/original_window_kek_link.go",
+      "sha256": "c8b572576606a520cc61df2d0a5c5965434bd92bd9e9e50937474c4e615f70f4",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authenticated_fixture_test.go",
+      "sha256": "bc2b680f7b929e4a385fcf44fe280411952e6ec0270bc37edefec8a6570e104e",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_clock_test.go",
+      "sha256": "3563ca0ce86ed5446ecf5b469b290f4302ac2e551fe17fbc4e9744f866098e33",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer_window_test.go",
+      "sha256": "879b85eec5abebd07a15410db876bd97d046bbac148da928fac89b8239e63a5a",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_consumer.go",
+      "sha256": "8465eebc585c2e9d922cd78ce8e7702067997d1789c46c3b49dac87c6c9df116",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/drafts/system-backup-a-review-b-v2-material-reader-p0-supersede-20261103.pins.json",
+      "supersedes_sha256": "5458b92fe6bb25d4abafa5dab8ec55ab5c34a0290e24744719f4c3b3001f01fd"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_contract.go",
+      "sha256": "6390f729621dff8393ad0a9ef3eaff456504b3751ae0224a574b568f45e2d000",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_issue.go",
+      "sha256": "70bac48853a124f57989d4a37f740b2e01b4dc70564a6b5c68ef4e95aa63b70b",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/drafts/system-backup-a-review-b-v2-material-reader-p0-supersede-20261103.pins.json",
+      "supersedes_sha256": "3c18a4435b63c2ec781dbfd93a01ae5c42b26db410ea98d99baa566ce11f9d40"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_protocol_test.go",
+      "sha256": "24c7f2321f65b7663b1fdce78862572ee856bfac1c8f3f5903297ff478e90ed7",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_reader_access.go",
+      "sha256": "08eb761a33b14a4038bf2f0a2bc848c0ce245512ce804d468da5fcfe05683f82",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_consumer.go",
+      "sha256": "d592bd4f7136f69939724fbf7e70e1dabfa406c650b3170dd847703c3be5c385",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract_test.go",
+      "sha256": "da29aefcf6aa229bcb6df810031c9f804e2e49aa452535548a043d235a51aafd",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_contract.go",
+      "sha256": "14fc7521ee85b4d70908d1b4338abaaca79f8f87c870415c514d05b1ca06c93c",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_inputs.go",
+      "sha256": "d2da270705b45c9f278f43bdfb88833a3937eb6db7b7b210722eb7f066b16513",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_issue.go",
+      "sha256": "1f1cbfc775e59e6b7ad9ab5a21db0d2d64ce14cff56c1a868685ee5b78d5474f",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_materials_actual_test.go",
+      "sha256": "66079e92cd84dbd909ca3a313e0a73557054a359a1be8b123e332dd73ea5da00",
+      "group": "b_v2_material_p0",
+      "source_manifest": "docs/drafts/system-backup-a-review-b-v2-material-reader-p0-supersede-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_check.go",
+      "sha256": "176b90fec2a6a00c32585c5f40de5054580871668196a70a47e921a393fa1c6a",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_composition.go",
+      "sha256": "ef950e35ac21a677ea016c447419cb2fa81f9cf54a5e71a484544442696d3145",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_contract.go",
+      "sha256": "655fe8544b59f408a381b0ff0f47b7e91950177b84c6bad4904de5d3b1ed4e0d",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_issue.go",
+      "sha256": "d6c6289548fff82547cd59dcb0d6388c2d891f10aa59a715cc1ab70b767120c7",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_owner.go",
+      "sha256": "94424ab444c5bdfd09c476493aeadaaf4ae238a20e993050f566e211a03783dc",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/kek_window_test.go",
+      "sha256": "d48a7590bc008f55916403bf0f32385e40ab026b04fbbd2cff41d4ffc709b39b",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_description.go",
+      "sha256": "d4ed8320ab8b6a4c58d28de9f1cc02fe8e3d83736b6b21539e2486080fabf85c",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_factory.go",
+      "sha256": "4eccdc4add8b1585366c871573e7b06457a33a5f4e4b769817637c66945d9f6d",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-source-closure-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_fence_mysql_test.go",
+      "sha256": "220b13c2648c1d89eff773d18a17982f7ab33b0f3b4bac85ac2a74ce817a1d06",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": "eb6a298008f8f43d0945e156ce1e4aa8824a8f4ebab6911fa7a7a046b613ae67"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_sql.go",
+      "sha256": "d2337660260747624a3f921c1391614af83ebbde036430966846e003aba08115",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-source-closure-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap.go",
+      "sha256": "18542b32fb7c249a95fe90b11a08bbbb1abef81ba96b7b7a4f27fa9a1b51a123",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-source-closure-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_owner_sql_test.go",
+      "sha256": "2a7067f836124b325430298286f3a5d6e9f67db8ac790ef821ffc70788cc29f5",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_owner_sql.go",
+      "sha256": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-source-closure-20261103.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_sql_witness.go",
+      "sha256": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/mutation_resource.go",
+      "sha256": "d3b4d13d3d13591699cbdb001053d3346beec46408ab91587e63d918c54533cd",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/mutation_source_factory.go",
+      "sha256": "beace1f495c263b094c38aadc00110786f575079d4e262e0cdef9cc9d2f01f49",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/mutation_source_sql.go",
+      "sha256": "c5d357309f004a2eb2970e64c965b16eb64a11a08c535901af9644992eded2d1",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_authority_135_136_test.go",
+      "sha256": "d9393429bc67fdbb2c0edbed7736b22708496d301dc1fbff0b5241efb94b9ad3",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_census_mysql_test.go",
+      "sha256": "d375537d2e405673136124a7cae1376e2f428b9feb633cf671cb53bdb848fd15",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": "27379f4e6066a77bb5c071ab638c3898067c4d243a005bf8d872d2d522a53058"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_census_test.go",
+      "sha256": "6282f56a72733365b6ba27ff8738eca280262f2d0ec38a68980a4412c0fc884b",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": ""
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_census.go",
+      "sha256": "dc7a8b70844858ed02e0442cb9200095cc6e2981cf8c6e064cafcbc7bb83f29f",
+      "group": "kek",
+      "source_manifest": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "supersedes_sha256": "73a642b015496225f99fad35102fd4db64f48c57a07f3fa0681383adfb4c6c7f"
+    }
+  ],
+  "source_manifests": [
+    {
+      "path": "docs/drafts/system-backup-a-kek-original-window-source-20261103.pins.json",
+      "sha256": "52dfe48561f3ed755cb4c267a0a91bcf761e072ee75cb1dc9ac1c93a84ef23d5"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-kek-source-closure-20261103.json",
+      "sha256": "9d9e25f8f65a277e47b262c5f864add982b9e00ffc1d2e0f4dad217fe722b92c"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-kek-census-schema135-136-supersede-20261103.pins.json",
+      "sha256": "147e7757e349a4b09b0dc746b4ec36b08e77156d301e7c7dad7a52cfd7c23e3d"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json",
+      "sha256": "6f665a8a52e5f8d61bc6e2b2d644ddc723167e61e3c323227cff9d3a1427b34e"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json",
+      "sha256": "ae41c05fb88bda3e5219c4a1800b244887e1f6ccb9ef7f7b8828a69049a50e82"
+    },
+    {
+      "path": "docs/evidence/system-backup-b-source-registry-authenticated-fixture-supersede-20261103.json",
+      "sha256": "4aad110df329d7cc1f1072715c6b0b9862774c6a5dd99d212bc5706f225cdf87"
+    },
+    {
+      "path": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+      "sha256": "b5318ec1f5ff6202696f891133312718db91da897e4e102a6c90f15f21205ff6"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-review-b-v2-material-reader-p0-supersede-20261103.pins.json",
+      "sha256": "3bedb14a3a52df0759126c9a202e2a0cd8cefe25c084d5cc58593e26fe0488ec"
+    }
+  ],
+  "baseline_rule": "This is the exact candidate source allowlist. Root compares against 9a8ce585 and stages only actual deltas in its isolated checkout. Existing interfaces/fixtures/full177 migration catalog/contracts and required API read pins are specified in the manifests; do not auto-include B19/other unreviewed workspace files. A did not establish baseline blob equality.",
+  "supersede_rule": "Historical manifests remain unchanged. Current per-file hashes here take the explicit P0 issue/consumer replacements and exact-five census/native-test replacements; do not copy an older dependency hash from a historical manifest over these frozen files.",
+  "D_wiring": "Actual helpers/source/resource/loader are supplied, but D must wire main composition and the SAME mutation resource into resolver reference:kek and service.KEK, lock exact source evidence union before fence, invoke CompleteScan/StageAdmission/final recheck, and retain all original authority/readiness checks. No complete main/enabling/page success claimed by this allowlist.",
+  "physical_source_handoff": "docs/drafts/system-backup-a-kek-D-physical-source-type-handoff-20261103.json and latest mutation manifest assign actual SQL source/native signer code to A, actual immutable external inventory to C storage owner, and original writer maintenance/history/backfill/first adoption plus service integration to D, all field execution by root. Actual source facts cannot be supplied by passed DTO or new-index counts.",
+  "performance": "Deferred; no performance comparison PASS is made a deployment prerequisite. Original windows/revocation/coverage correctness unchanged.",
+  "validation": "Current file SHA256 and JSON/source checks only, gofmt performed in their originating source batches. No Go compile/test/build/list/vet, SQL/DDL, Git, provider/network/native/site execution by A. No test/build products created; root owns execution and cleanup."
+}

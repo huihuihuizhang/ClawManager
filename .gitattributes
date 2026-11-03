@@ -76,3 +76,9 @@ docs/evidence/system-backup-c-minio-september-supersede-source-20261103.json -te
 docs/evidence/system-backup-c-minio-protocol-fixture-supersede-source-20261103.json -text whitespace=cr-at-eol
 docs/evidence/supervisor-minio-september-overlay-input-source-map-20261103.json -text whitespace=cr-at-eol
 docs/evidence/supervisor-minio-september-overlay-input-base-files-20261103.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-root-combination-source-closure-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-b-source-registry-authoring-noncyclic-supersede-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-b-source-registry-output-fixture-permission-supersede-20261103.json -text whitespace=cr-at-eol

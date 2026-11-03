@@ -192,6 +192,15 @@ func sqlCensusSources() (map[string]reg.Partition, map[string]bool) {
 	// Keep exact names: new tables still require independent source review.
 	excluded["system_backup_installation_owner_heads"] = true
 	excluded["system_backup_installation_owner_grants"] = true
+	// Reviewed migrations135/136 add independently signed MinIO and signer
+	// authority control state, with the same secret/metadata-only/reference-only
+	// disposition. These exact five names are not artifact/key lifecycle sources;
+	// an unknown table, including a new table with the same prefix, still rejects.
+	excluded["system_backup_minio_owner_heads"] = true
+	excluded["system_backup_minio_owner_grants"] = true
+	excluded["system_backup_minio_owner_refs"] = true
+	excluded["system_backup_signing_resource_heads"] = true
+	excluded["system_backup_signing_resource_grants"] = true
 	return sources, excluded
 }
 

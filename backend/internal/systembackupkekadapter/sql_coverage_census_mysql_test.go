@@ -119,12 +119,13 @@ func TestSQLCoverageCensusOriginalSourcesMySQL(t *testing.T) {
 	}
 	facts := first.Facts()
 	var ownerTables int
-	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('system_backup_installation_owner_heads','system_backup_installation_owner_grants')`).Scan(&ownerTables); err != nil || ownerTables != 2 {
-		t.Fatal("actual migration134 authority tables unavailable", err)
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('system_backup_installation_owner_heads','system_backup_installation_owner_grants','system_backup_minio_owner_heads','system_backup_minio_owner_grants','system_backup_minio_owner_refs','system_backup_signing_resource_heads','system_backup_signing_resource_grants')`).Scan(&ownerTables); err != nil || ownerTables != 7 {
+		t.Fatal("actual migrations134/135/136 authority tables unavailable", err)
 	}
+	authorityTables := map[string]bool{"system_backup_installation_owner_heads": true, "system_backup_installation_owner_grants": true, "system_backup_minio_owner_heads": true, "system_backup_minio_owner_grants": true, "system_backup_minio_owner_refs": true, "system_backup_signing_resource_heads": true, "system_backup_signing_resource_grants": true}
 	for _, table := range facts.Tables {
-		if table.Table == "system_backup_installation_owner_heads" || table.Table == "system_backup_installation_owner_grants" {
-			t.Fatal("installation authorization rows entered lifecycle payload", table.Table)
+		if authorityTables[table.Table] {
+			t.Fatal("independent authorization rows entered lifecycle payload", table.Table)
 		}
 	}
 	if len(facts.Tables) < 45 {
@@ -278,7 +279,7 @@ func TestSQLCoverageCensusOriginalSourcesMySQL(t *testing.T) {
 	if _, err = db.ExecContext(ctx, `INSERT INTO system_backup_config_versions(version,config_json,actor_id) VALUES (3,'{}',1)`); err != nil {
 		t.Fatal("rollback leaked source locks", err)
 	}
-	for _, unknown := range []string{"system_backup_unreviewed_source", "system_backup_installation_owner_grants_history"} {
+	for _, unknown := range []string{"system_backup_unreviewed_source", "system_backup_installation_owner_grants_history", "system_backup_minio_owner_heads_history", "system_backup_minio_owner_grants_history", "system_backup_minio_owner_refs_history", "system_backup_signing_resource_heads_history", "system_backup_signing_resource_grants_history"} {
 		if _, err = db.ExecContext(ctx, "CREATE TABLE `"+unknown+"`(id BIGINT PRIMARY KEY)"); err != nil {
 			t.Fatal(err)
 		}

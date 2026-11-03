@@ -1,0 +1,81 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
+	"clawreef/internal/systembackupinstallationowner/install"
+)
+
+func TestSourceRegistryCLIRejectsMissingOrCrossActionInputs(t *testing.T) {
+	for _, args := range [][]string{nil, {"unknown"}, {"produce-facts"}, {"issue-v2"}, {"produce-facts", "--issuer-private-file", "not-accepted"}, {"issue-v2", "--source-selection-file", "not-accepted"}} {
+		var out bytes.Buffer
+		if code := run(context.Background(), args, &out); code != 2 || out.Len() != 0 {
+			t.Fatal("invalid command admitted or emitted authority", args, code)
+		}
+	}
+}
+
+func TestSourceRegistryCLIOwnerBindingsShareOriginalCapture(t *testing.T) {
+	dir := t.TempDir()
+	args := []string{"owner-bindings", "--capture-consumer-file", filepath.Join(dir, "capture.json"), "--capture-consumer-pin-file", filepath.Join(dir, "capture.sha256"), "--record-file", filepath.Join(dir, "source.record.json"), "--record-sha256", strings.Repeat("a", 64), "--signature-file", filepath.Join(dir, "source.signature")}
+	var out bytes.Buffer
+	if code := run(context.Background(), args, &out); code != 0 {
+		t.Fatal("composition-only binding refused", code)
+	}
+	var bindings []install.BootstrapOriginalOwnerBinding
+	if json.Unmarshal(out.Bytes(), &bindings) != nil || len(bindings) != 2 || bindings[0].Key != "registry:parts" || bindings[1].Key != "registry:source_writers" || bindings[0].SHA256 != bindings[1].SHA256 || len(bindings[0].SHA256) != 64 {
+		t.Fatal("different pointer composition bindings")
+	}
+	// No input files were read or created by the constructor-only action.
+	files, err := os.ReadDir(dir)
+	if err != nil || len(files) != 0 {
+		t.Fatal("binding computation performed file I/O")
+	}
+}
+
+func TestSourceRegistryCLIFrozenOutputPreflight(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Chmod(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if newV2Output(dir) != nil {
+		t.Fatal("new private output refused")
+	}
+	if runtime.GOOS == "linux" {
+		if err := os.Chmod(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if newV2Output(dir) == nil {
+			t.Fatal("public output directory accepted")
+		}
+		if err := os.Chmod(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		if newV2Output(dir) != nil {
+			t.Fatal("private baseline not restored before existing-file cases")
+		}
+	}
+	for _, name := range []string{"bootstrap-source-registries-v2.record.json", "bootstrap-source-registries-v2.signature", "bootstrap-source-registries-v2.sha256"} {
+		file := filepath.Join(dir, name)
+		if err := os.WriteFile(file, []byte("original"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		if newV2Output(dir) == nil {
+			t.Fatal("existing frozen output accepted", name)
+		}
+		raw, err := os.ReadFile(file)
+		if err != nil || string(raw) != "original" {
+			t.Fatal("preflight changed output")
+		}
+		if err := os.Remove(file); err != nil {
+			t.Fatal(err)
+		}
+	}
+}

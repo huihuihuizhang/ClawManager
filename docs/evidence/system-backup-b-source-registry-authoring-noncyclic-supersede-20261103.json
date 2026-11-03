@@ -1,0 +1,123 @@
+{
+  "schema": "system-backup-source-only-review.v1",
+  "date": "2026-11-03",
+  "owner": "B",
+  "status": "SOURCE_ONLY_CORRECTION_REVIEW_PENDING",
+  "supersedes": {
+    "manifest": "docs/evidence/system-backup-b-source-registry-reader-terminal-source-20261103.json",
+    "sha256": "29d96f89939307afc196cbc05e31bc745d40839822c249499c7e5dd506587e84",
+    "disposition": "REJECTED_P0_SHA_FIXED_POINT",
+    "reason": "Old fact documents embedded final metadata scope. Metadata scope depends on grant/config hashes selecting the same fact files, requiring a SHA fixed point. Old manifest bytes remain preserved; that batch is not installable or accepted."
+  },
+  "files": {
+    "backend/cmd/system-backup-source-registries/main.go": "0276b9d300c54db632e6ac05d2f5411bda3c146cddd2c05c3729495e8e6fe225",
+    "backend/cmd/system-backup-source-registries/main_test.go": "74ec7e34f7b3843e45f4bc286e88495852e2d085a078cca2d13fe0f7b4f8d643",
+    "backend/internal/systembackup/redis_source_metadata.go": "57be3d7d4e17666e18c6243abe4cfa5d5e5c687f1490dee619c8f80072bd234a",
+    "backend/internal/systembackup/redis_source_metadata_test.go": "f71cd035b3f78ffa4dd9fe218cbcc3a9c40a8c033b92e270a9f84e5af6e475ae",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go": "544c6d86991895a55bd7ff5ff0efcbcb6770f8bb75cbe66e41161c754397dd29",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": "ea4c0e0ba0ba1117695cb4ddee98850750daab58081bf04cac1f5c3d20136f04",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_clients.go": "d1932ded0469cea439a0d293e667d51f00a0d6733fc0c9fed0dae914c602277d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go": "4923d2f2d7ee9acb1c5ccc93b07aecb5d7215f13f719ce191c7c35e0c1d66867",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": "6b2b2c43a7b4ed3f623faa8deb2142a543f34a213bde6fdd7e69eac08f82cbd3",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_control_sql.go": "c07a7e45862cd9cc3f8ca3f57285d82ea96a713f485bf6137914a509dda0840f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native.go": "3688c5c3eb1f265a759e109c3e90d91bc964de53ead68c1db56ed6eab82f44dd",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_objects.go": "107d6bcee12eb7b3aa28340e1dd338102042734398b32875ca3c1c6eb153c23f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": "f7c67337d82c105d1e6ed4e607ab2b9eee8e31c610a91039f244893b9b11eb51",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_resources.go": "b7a6b6dd2dccb8cfc8abaeaec0bfa3e3e7ad94f6b9062fdbf0178d8dc8462d3d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_metadata.go": "6898520d5b8cfec760ab9f22dc40039388ea109da72a536720231a7d379e7b63",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go": "ed8e0d988dd6cf80bb031ed411d43425ef42c6a4d5dd630b5ea6ef336caea9ed",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go": "11f281d5d094d908ed5f72d5043f7a529fbbc955d2ed90150f1ec7aba67b3aa9",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": "32fa0cccf237bf3a2b1d7f15a26018c52be7dda04f74d97ccd41b6984eb17f4e",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal_test.go": "92c25fbeea9f9c5da208ebf43c09099fb8e04a79ac66a8888b2e25dd6ecc657b",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go": "99a259e466fcb49a60767d616b9a22ac9d7841584f0d0807e4090b3f8fcb2d56",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_api.go": "d1e0ffce43d2de7f1c4c1dbe91b687137a732c3d8f598a27f5a6251ff721d7e7",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_graph.go": "7b8a27eff318680268fd76168684437a3c9f3bc65495442282518fa64ffa9d38",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go": "e76829ed83bf40794acd5aebf92c686ca9293396f27a986d028e1378e4bac003",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go": "880fa45a039190502d676a1220274e7cee4be9b74c42bc030b9d8dfc28e1c0b9",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_terminal_access.go": "9a4feeb14d728ba60af4a802ceb313321b35e9cb5832ca47bf3bf0455bd140f9"
+  },
+  "source_file_count": 20,
+  "test_file_count": 5,
+  "changed_from_rejected_batch": [
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go"
+  ],
+  "new_files": [
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go",
+    "backend/cmd/system-backup-source-registries/main.go",
+    "backend/cmd/system-backup-source-registries/main_test.go"
+  ],
+  "unchanged_v2_six_manifest": {
+    "path": "docs/evidence/system-backup-b-source-registry-v2-protocol-source-20261103.json",
+    "sha256": "b5318ec1f5ff6202696f891133312718db91da897e4e102a6c90f15f21205ff6",
+    "all_six_match": true
+  },
+  "parallel_owner_dependency": "A/root separately supersede B7 readBootstrapSourcePin/base.local 8 MiB hard-refusal. B did not edit those files. Old V2 selected-material runtime is unusable until that explicit repair is integrated and validated.",
+  "correction": [
+    "Fact schemas are explicitly v2 and contain actual native DATA, installation/version/application scope. Final metadata/config/grant/self digests are absent; the closed codec rejects old MetadataScopeSHA256 instead of silently upgrading it.",
+    "Original V2 domain/signature/record remain unchanged and independently bind exact final fact file SHA plus metadata/grant/config/capture/complete selection/native roles/controller UIDs/original window. Consumer repeats every actual native read and retains private min-start freshness; no authoring receipt is accepted as fresh.",
+    "Installer.PrepareBootstrapSourceRegistryAuthoring reuses actual authenticate -> authority(enrollment) -> snapshot, with original Plan/EnrollmentPin/admin/current signed head CAS and declared finite source selection. It needs no capture/config/grant or issuer key. Opaque capability cannot serialize or survive foreign context/file drift/copied handle/revocation/expiry.",
+    "Authoring access permits only selected original file pins and native reads, with original 30-second physical cap and original context/session/selection window. Current original SQL/admin/enrollment/CAS/controller checks bracket both real observation rounds and every create-only export, with final SQL samples after API/file tails.",
+    "The reader private access interface is not a public injection point. Only the actual opaque Installer producer and enrolled V2 consumer constructors supply it. The private reader declaration is native read configuration, not a forged/provisional V2 record.",
+    "ProduceOriginalBootstrapSourceRegistries executes the shared real complete SQL/Redis/S3/resource/API/native/participants/workspace two-round collector, then derives/encodes every fact field and writes bounded private files with O_EXCL+fsync. There is no supplied-facts input or observation callback. Existing/aliased outputs reject before authentication; partial outputs are retained for exact owner inspection, never overwritten/reused."
+  ],
+  "pre_capture_inputs": {
+    "type": "install.BootstrapSourceAuthoringSelection",
+    "version": "original-source-registry-authoring-selection.v1",
+    "fields": [
+      "original Deployment core/MaterialsTemplate/ExecutionProfile exact pins",
+      "full original Controller namespace/deployment/RS/pod/service-account UIDs",
+      "original ApplicationScope and requested parts/writers versions + two private create-only absolute output paths",
+      "exact five ordered native roles: control_sql, source_api, source_objects, source_redis, source_sql; original endpoint/account/CA/credential/server UUID/database",
+      "optional exactly backup_capabilities_read/gateway_state_read RuntimeAgent CA/token",
+      "original NotBefore/Until"
+    ],
+    "no_final_authority_fields": "Connections.IdentitySHA256/ScopeSHA256 and RuntimeAgent.ScopeSHA256 must be empty. In the original typed material template CaptureGrantSHA256, Redis/Object.GrantSHA256 and Discovery.GrantSHA256 must be empty; DeploymentConfigSHA256 is the real independently selected core hash. All native policies, schema census, real controller read credentials, scope/limits, requested domains, resource actors and workspace selections must already be real."
+  },
+  "cli": {
+    "path": "backend/cmd/system-backup-source-registries",
+    "actions": {
+      "produce-facts": "Actual Installer authenticated PRE-config/PRE-capture native collection. Common original Plan/Enrollment/operator connection flags plus --source-selection-file/--source-selection-sha256; no issuer private key. Output exact file pins only.",
+      "issue-v2": "After original final disabled config/grants/capture are issued/imported: original Installer IssueBootstrapSourceRegistriesV2 + SaveFrozenBootstrapSourceRegistriesV2. Common original connection flags plus --definition-file/sha256 --consumption-file/sha256 --request-files-file/sha256 --bundle-file/sha256 --issuer-private-file --output-directory. No native success assertion.",
+      "owner-bindings": "Constructor-only DATA from exact final deployed --capture-consumer-file --capture-consumer-pin-file --record-file --record-sha256 --signature-file. Emits the same composition binding for registry:parts and registry:source_writers. No I/O/auth/readiness claim; original mapping issuer must sign it."
+    }
+  },
+  "installation_order": [
+    "Prepare/enroll real original owner and actual original controller/read-only source identities/CA/policies/resources with stable UIDs and exact requested finite scope.",
+    "Author selection and native material template with no final authority digests; produce-facts performs real double reads and exports actual files.",
+    "Freeze actual two file SHAs in final disabled config. Issue original Forward/source grants/materials/metadata and actual original capture bundle.",
+    "Issue/save actual independently signed V2 source association; create two same-owner bindings in original signed mapping using final deployed file/capture coordinates.",
+    "D constructs one BootstrapSourceRegistryTerminalResource with the SAME capture pointer from enrolled production.go:129 and adds the same pointer to base.Registries parts/source_writers BEFORE NewEnrolledTerminalInstallationOwners / missing gate; preserve it through signing/MinIO rebuilds and original candidates.",
+    "Consumer independently reads/matches all current native facts; only then may its private short dependency deadline exist. Preserve every required owner/relay slot and normal native backup/publication/restore gates."
+  ],
+  "remaining": [
+    "Root source review, explicit Go formatting supersede and compile/test execution; B ran none.",
+    "A original 8 MiB issuer/consumer repair and real V2 regression must be integrated.",
+    "A full actual native producer -> original final config/grants/capture/V2 -> same-pointer consumer -> controlled final SQL read-view positive fixture is still missing. Current new actual enrollment tests prove opaque producer provenance/read/window/latch only; RESP/API tests do not prove all TLS services or full owner admission.",
+    "D must prepare actual source authoring inputs and mount final coordinates. Any change to selected controller UID/RV/spec/processes or business data between production and consumption rejects. Do not make the pre-capture controller spec depend on the final config/fact digest or mutate its identity after authoring.",
+    "Team independent ObjectRefs remain unsupported unless current original requested scope supplies the original owner mapping/controller limited read selection; never infer whole-provider absence from empty Teams facts. Current production Objects=[] path is documented and explicit teams_objects mismatch rejects.",
+    "status_relay has no existing concrete bootstrap owner in scanned Go; the runtime /relay owner requires actual task/attempt/Job/IdentitySecret and cannot fill the bootstrap slot with a future peer. Root/D/A must close original bootstrap peer/trust/revocation source independently.",
+    "No complete page nonempty backup/publication or physical restore acceptance yet."
+  ],
+  "validation": {
+    "executed": "Node filesystem reads/hashes and authorized source/JSON edits only; no commands/gofmt/test/build/SQL/Git/Docker/site/remote execution.",
+    "new_test_roots": 12,
+    "named_subcases": 25,
+    "test_exit_code": null,
+    "products_created": [],
+    "root_command_powershell_from_backend": "go test ./cmd/system-backup-source-registries ./internal/systembackup ./internal/systembackupexecution ./internal/systembackupinstallationowner/install -run '^(TestSourceRedisMetadataCompleteScopedProtocol|TestBootstrapSourceRegistryTerminalComposition|TestBootstrapSourceRegistryTerminalCannotPromoteDeadlineData|TestBootstrapSourceNativeReadJoinsExactCensusObject|TestBootstrapSourceRegistryAuthoringUsesActualEnrollmentWithoutFinalDigests|TestBootstrapSourceRegistryAuthoringRefusalsAreSticky|TestBootstrapSourceRegistryFactsHaveNoFinalAuthorityDependency|TestBootstrapSourceFactOutputsAreStrictlyCreateOnly|TestBootstrapSourceFactProductionRequiresOriginalInstaller|TestSourceRegistryCLIRejectsMissingOrCrossActionInputs|TestSourceRegistryCLIFrozenOutputPreflight|TestSourceRegistryCLIOwnerBindingsShareOriginalCapture)$' -count=1",
+    "test_limits": "Actual Installer.New/Enroll/auth/admin/current head/enrollment against existing explicit SQL/Kube fixture; no forged active authoring handle. No claimed full native positive/fresh test. Formatting/compile/test may require explicitly pinned concurrent owner dependencies.",
+    "cleanup": "B generated no test/build products. Root removes only its own generated test/build products after validation."
+  },
+  "acceptance": {
+    "two_registry_slots": "NOT_YET_ACCEPTED",
+    "first_install": "SOURCE_INTEGRATION_ONLY",
+    "site": "NO_GO",
+    "disaster_recovery": false
+  }
+}

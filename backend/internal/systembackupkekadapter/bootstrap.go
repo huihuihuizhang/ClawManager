@@ -38,5 +38,12 @@ func (c BootstrapComposition) PrepareBootstrapKEK(ctx context.Context, db *sql.D
 	if err != nil || !reg.SameSnapshotFacts(in.Snapshot, snapshot) || !in.Snapshot.ObservedAt.Equal(snapshot.ObservedAt) {
 		return nil, sec.ErrRegistrationUnavailable
 	}
-	return c.Validator.PrepareBootstrapKEK(ctx, grant, config, in)
+	prepared, err := c.Validator.PrepareBootstrapKEK(ctx, grant, config, in)
+	if err != nil {
+		return nil, err
+	}
+	if coverage, ok := in.Coverage.(*SQLPreparedOriginalCoverage); ok {
+		return &bootstrapOriginalEvidenceAdmission{PreparedAdmission: prepared, coverage: coverage}, nil
+	}
+	return prepared, nil
 }
