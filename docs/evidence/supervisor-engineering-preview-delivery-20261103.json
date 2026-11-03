@@ -1,0 +1,48 @@
+{
+  "schema_version": "supervisor.engineering-preview-delivery.v1",
+  "status": "NOT_PAGE_READY_FIRST_ADOPTION_PRODUCER_MISSING",
+  "source_commit": "a2cc03be63d4903b98cd4a2fedd48d4fbc65fc04",
+  "requested_deadline_local": "2026-11-03T14:00:00+08:00",
+  "usable_page_package_delivered_by_deadline": false,
+  "archive": "clawmanager-engineering-preview-a2cc03be-20261103.tar.gz",
+  "archive_bytes": 767129095,
+  "archive_sha256": "94368bf3131ecb1a92dbd75b68f72752cd92fe0870d57fe74abe075b3536f4fb",
+  "validation": {
+    "linux_amd64_commands_built": 41,
+    "bundle_entries_independently_read_back": 9,
+    "actual_app_layer_files_hash_matched": 544,
+    "actual_worker_layer_files_hash_matched": 2,
+    "operator_python_ast_and_help": "passed",
+    "native_mysql_run": false,
+    "field_installation_run": false,
+    "real_page_backup_run": false
+  },
+  "images": {
+    "app": {
+      "local_docker_id": "sha256:d0ea69e9ec04ce451578d76517ce6ae4af9d4fd53e8184c10b16a05dcf8e25d1",
+      "exported_config_digest": "sha256:e315386eec3a4b4490acf4216cd1eee6dfc3f4f1006e6256ff3b14b57056379f"
+    },
+    "worker": {
+      "local_docker_id": "sha256:6cac8a630273456c956f32a12b946382c6b4fe2563f2b00fb71bc8579fe4a20f",
+      "exported_config_digest": "sha256:e0a4f5ba760a757492203a2160ebf2d885ea2d2bbff0cf52d6416a80a1b4351a"
+    }
+  },
+  "operator_scope": "Inspect fixed namespace identity and import/push images only. No deployment, business stop, database change or backup task creation.",
+  "blockers": [
+    "Original writer maintenance fence and complete immutable historical coverage/backfill production execution remain missing.",
+    "First AdoptCoverage production orchestration remains missing; no empty-index or invented receipt substitute is accepted.",
+    "Actual field migration, enrollment and original installation material issuance remain unexecuted.",
+    "Actual server source loading and pod identity freeze ordering remain unverified.",
+    "No same-task complete page backup/publication acceptance exists."
+  ],
+  "full_acceptance": false,
+  "dr_qualified": false,
+  "performance_optimization_required_for_this_delivery": false,
+  "kernel_bpf_or_whole_filesystem_freeze_required_by_existing_contract": false,
+  "cleanup": {
+    "test_binaries_intermediate_archives_and_owned_go_cache_volumes": "removed",
+    "owned_docker_delivery_image_cache": "removed_after_archive_readback",
+    "pending_delivery_bundle_and_nonsecret_evidence": "retained",
+    "modified_review_worktree_source": "retained; automatic review rejected force removal before changes were inspected"
+  }
+}

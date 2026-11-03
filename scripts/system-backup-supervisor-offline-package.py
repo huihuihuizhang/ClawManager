@@ -194,11 +194,12 @@ def main():
         run(["start", "--attach", cid], "static-clean")
         with layer.open("rb") as src:
             subprocess.run(dc + ["cp", "-", cid + ":/"], stdin=src, check=True)
-        app_id = capture(["commit", "--pause=false", "--change", 'ENTRYPOINT ["dumb-init","--"]',
+        capture(["commit", "--pause=false", "--change", 'ENTRYPOINT ["dumb-init","--"]',
                           "--change", 'CMD ["/app/start.sh"]', "--change", "LABEL " + label,
                           "--change", "LABEL org.opencontainers.image.revision=" + args.commit,
                           "--change", "LABEL io.clawmanager.source-sha256=" + receipt["backend_inputs_sha256"],
                           cid, app_tag])
+        app_id = json.loads(capture(["image", "inspect", app_tag]))[0]["Id"]
     finally:
         remove_owned(cid)
     worker_tar = out / "worker-rootfs.tar"
@@ -208,16 +209,27 @@ def main():
             info.mode, info.uid, info.gid = 0o555, 0, 0
             with (bins / alias).open("rb") as src:
                 tf.addfile(info, src)
-    worker_id = capture(["import", "--platform", "linux/amd64", "--change", "USER 65532:65532",
+    capture(["import", "--platform", "linux/amd64", "--change", "USER 65532:65532",
                          "--change", 'ENTRYPOINT ["/backup-worker"]', "--change", "LABEL " + label,
                          "--change", "LABEL org.opencontainers.image.revision=" + args.commit,
                          str(worker_tar), worker_tag])
+    worker_id = json.loads(capture(["image", "inspect", worker_tag]))[0]["Id"]
     receipt["images"] = {"app": {"tag": app_tag, "id": app_id},
                          "worker": {"tag": worker_tag, "id": worker_id}}
     for role, obj in receipt["images"].items():
         config = json.loads(capture(["image", "inspect", obj["id"]]))[0]
         (out / (role + "-image-inspect.json")).write_text(json.dumps(config, indent=2), encoding="utf-8")
     run(["save", "-o", str(out / "images.tar"), app_tag, worker_tag], "image-save")
+    # Docker's containerd store may report a manifest digest as image Id.
+    # Resolve the actual config digest from the exported bytes for registry checks.
+    with tarfile.open(out / "images.tar", "r") as archive:
+        manifests = json.load(archive.extractfile("manifest.json"))
+        for obj in receipt["images"].values():
+            entries = [x for x in manifests if obj["tag"] in x.get("RepoTags", [])]
+            if len(entries) != 1:
+                raise RuntimeError("exported image tag is ambiguous")
+            raw = archive.extractfile(entries[0]["Config"]).read()
+            obj["config_digest"] = "sha256:" + hashlib.sha256(raw).hexdigest()
     receipt["archive_sha256"] = digest(out / "images.tar")
     receipt["archive_bytes"] = (out / "images.tar").stat().st_size
     (out / "build-receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
