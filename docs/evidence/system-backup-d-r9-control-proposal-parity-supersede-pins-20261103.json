@@ -1,0 +1,28 @@
+{
+  "schema_version": "system-backup-d-r9-control-proposal-parity-supersede-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_COMPONENT_NATIVE",
+  "go_source_count": 2,
+  "new_go_count": 1,
+  "superseded_go_count": 1,
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_control_mysql_test.go",
+      "sha256": "f430a6d47a79c2415e9e79c6e722b40c5eb0233ccceb2d1f843e933cc3f32f74",
+      "previous_sha256": "020cf72b07ad84e2dbce01c50fe97a048a47f832c660c4d16bc3386cbbc765e9"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_fixture_control_proposal_parity_test.go",
+      "sha256": "aedd2464752d671a87754577092e3136153fb21d52600e8b17740c84428f99e8"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-r9-control-proposal-parity-supersede-20261103.md",
+      "sha256": "540e04f68e15663e34fb5e307fa2980b60bcdf6fad74744f1d4c8ef32ef59e18"
+    }
+  ],
+  "new_root": "TestOriginalControlProposalRequiresExactObservedControlNames",
+  "subcases": 6,
+  "required_unchanged_first_parity_manifest": "docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-pins-20261103.json",
+  "runtime_executed_by_d": false,
+  "production_policy_changed": false,
+  "original_window_changed": false
+}

@@ -56,7 +56,7 @@ func (f *dOriginalSixPartTask) installLocalOriginalControlApproval(ctx context.C
 		t.Fatal(err)
 	}
 	proposal, err := root.NewControlScopeProposal(f.server, f.database, catalog.Hash, schemas)
-	if err != nil || len(proposal.Tables) != 95 || proposal.Status != "draft_requires_independent_owner_review" {
+	if err != nil || checkOriginalControlProposalCensus(proposal, observed.Census.Control) != nil {
 		t.Fatal("finite original control proposal", err)
 	}
 	proposalRaw, _ := json.Marshal(proposal)
