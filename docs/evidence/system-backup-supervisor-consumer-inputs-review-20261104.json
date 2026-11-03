@@ -1,0 +1,61 @@
+{
+  "schema_version": "supervisor-finite-consumer-inputs-review.v1",
+  "accepted_base": "714c760382e6283cc7ec0c7c55a907e4f02d19af",
+  "selected_source_targets": 241,
+  "selection_sha256": "4e7558e4de957ee0a14bee79d393a8eecd1e4ebac51c1ac0f87cb6eabe2a592d",
+  "source_maps": [
+    {
+      "path": ".a-fix18-backup-consumer-profile-20261104/source-map.json",
+      "sha256": "b22dcd949d1dd35e3349f08d3765f90afc7050c92d088d5ae665e2f9bbd4b141"
+    },
+    {
+      "path": "backend/.c-original-history-controller-inventory-20261104/source-map.json",
+      "sha256": "102741ae22c9bbf3e981750c99a503cd097bd029cf459f0566c9664a6c8e57b4"
+    }
+  ],
+  "results": {
+    "v8-windows-consumer-inputs": {
+      "roots": 6,
+      "subcases": 24,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "7f3f393f184fe0a509af09fc6304300e0f15e1dcfc2c0751bd92917561eaf8bc"
+    },
+    "v8-linux-consumer-inputs": {
+      "roots": 6,
+      "subcases": 24,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "798512fa96f8bc160b8782a37c44027ab74629dd787debd2ace53abe0858cfe6"
+    }
+  },
+  "source_proof": {
+    "path": ".a-fix18-backup-consumer-profile-20261104\\source-proof.json",
+    "sha256": "401d0a09024e0ededd262049077ba2fbec8de38dc697fd33ab236c9b1f8ba89f",
+    "git_sources": 5,
+    "verified_anchors": 30,
+    "verified_observation_pins": 5
+  },
+  "actual_changes": [
+    "Private original fix18 Pod/container reader consumes retained original object bodies under real holder/admin checks and classifies the exact inspected fixed image/default entrypoint; specific unsafe launch overrides refuse.",
+    "Private all-controller inventory reads actual namespace and paginates ReplicaSets/StatefulSets/DaemonSets/Jobs/CronJobs to EOF twice, preserving complete raw member bytes/UID/RV and original cap. Unknown/partial/duplicate/changing inputs refuse."
+  ],
+  "validation_boundary": [
+    "Six model/parser tests exercised actual JSON streams and startup classification with Kubernetes DATA fixtures, not live API or actual source holds. Complete install package compiled for Windows and Linux.",
+    "Root independently checked all reported Git file hashes/line anchors and D cached-image observation file hashes. Cached-image provenance remains supporting identification evidence, not fresh field authority or universal clean-source equivalence.",
+    "D genuine full consumer constructor, all independent/retired consumers, same original metadata/native root EOF, real 17-source issuance and first-adoption commit/readback remain required. A single classified container or empty controller list never establishes NoS3/coverage.",
+    "New standalone live-preflight tool was syntax checked and --help executed only. It reads actual namespace/workload identities and version-only commands; no remote run or scheduler/installation acceptance is claimed."
+  ],
+  "completed_test_binary": {
+    "path": "bins-v8/install.test",
+    "bytes": 110292654,
+    "sha256": "e80ce9eeaed0d7cea598e4ca297c8bf625b9fa435a97fa8a29c2b4120e1619ff"
+  },
+  "cleanup": {
+    "binary": "One completed Linux test binary hashed and removed; output directory verified absent",
+    "owned_containers": []
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
