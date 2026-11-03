@@ -1,0 +1,48 @@
+{
+  "schema_version": "supervisor-r8-census-failure-review.v1",
+  "source_commit": "723f51bc9834d4f6f417828968576903de3f29dd",
+  "native_log_sha256": "f9370fbb579af2debc0b2df4983577775e7525c07cb95d67f2432db970c5d32f",
+  "status": "FAILED_BEFORE_CAPTURE_CENSUS_ASSERTION",
+  "tests": [
+    {
+      "name": "TestAPermitTimingOriginalThirtySecondNativeMySQL",
+      "status": "FAIL",
+      "elapsed_seconds": 15.82
+    },
+    {
+      "name": "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL",
+      "status": "FAIL",
+      "elapsed_seconds": 15.02
+    }
+  ],
+  "reported_census": {
+    "business_tables": 82,
+    "control_tables": 97,
+    "observation_error": null
+  },
+  "historical_assertion": {
+    "business_tables": 82,
+    "control_tables": 95
+  },
+  "root_cause": "The fixture checks a historical fixed control-table count and rejects the migrated catalog before capture. This failure provides no original capture-window performance result.",
+  "proposed_correction": "Compare exact business/control name partitions of the actual owned disposable schema catalog, retaining production source census, schema equality, image checks and original windows.",
+  "correction_verification": {
+    "status": "LOCAL_COMPONENT_PASS_NATIVE_RETEST_PENDING",
+    "baseline": "af7b7b5e918ce9303cbf89ddf1354f786d036eea",
+    "roots": 1,
+    "subcases": 7,
+    "fail": 0,
+    "skip": 0,
+    "native_mysql_executed": false,
+    "source_pins_sha256": "7361ac462caf093bf0a57655717173627cbacc8592ac601481796c65c0e9e52f",
+    "log_sha256": "0bab7edd071137c7da8d8451d2f1b6c71a11d4d74599c72f3465984120c5d95b",
+    "other_overlay_go_count": 17
+  },
+  "cleanup_exit": 0,
+  "residuals": [],
+  "completed_local_delivery_deleted": true,
+  "rerun_old_delivery": false,
+  "page_acceptance": false,
+  "disaster_recovery_qualified": false,
+  "test_build_products_removed": true
+}

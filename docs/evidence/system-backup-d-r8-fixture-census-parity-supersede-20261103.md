@@ -1,0 +1,11 @@
+# R8 fixture catalog parity correction
+
+SOURCE_ONLY; no test/build/SQL/Git/remote commands executed by D. No test/build products created. Do not rerun the old R8 package.
+
+Reported old R8 log SHA: `f9370fbb579af2debc0b2df4983577775e7525c07cb95d67f2432db970c5d32f`. Both roots failed during the pre-capture source metadata check, at the call reported as production_same_task_mysql_test.go:796, with `same-task original SQL source census/schema/images 82 97 <nil>`. It did not reach the original 30-second capture performance measurement. The current helper source expected business82/control95; this batch does not interpret that error as a permission-window failure.
+
+Explicit supersede: `production_same_task_sources_mysql_test.go`, old SHA `6e20094e153669794a71165f2852416c63bd7d90a16cb54869aac07d96dc5d0e`. Only the fixed-count assertion changes to the new fixture parity helper. Schema equality, image count, original source observation and every later original task/capture/window check remain mandatory. No production business table rule, census routine, source grant, control exclusion or migration is changed.
+
+New `production_fixture_census_parity_test.go` reads the ACTUAL complete information_schema TABLES for the already-owned disposable fixture schema through its privileged fixture pool, requires every row be a base InnoDB table, enforces bounds and real EOF, and checks exact name partitions. The existing `domain.BusinessCaptureTables` selects business objects, `schemaobjects.ExcludedControlTables` selects controls, and unknown/duplicate/overlapping names reject. The actual source census must equal those partitions, and capture schema tables must equal ONLY the business partition. Known compiled control exclusions absent from this particular catalog are not invented as existing objects.
+
+New source-only regression root `TestOriginalFixtureCensusParityTracksActualCatalogWithoutCapturingControl`, seven subcases: current actual-name partitions, omitted new control, control accidentally captured, missing business table, unknown table, duplicate table, missing business census member. No count is changed to97, and no business capture set is widened. Root owns compilation/native verification and cleanup. Pending R8 historical fixture/artifacts remain retained for original-cause review.

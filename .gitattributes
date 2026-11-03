@@ -66,3 +66,5 @@ docs/drafts/system-backup-a-signing-resource-original-source-20261103.pins.json 
 docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json -text whitespace=cr-at-eol
 docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json -text whitespace=cr-at-eol
 docs/drafts/system-backup-a-native-signer-actual-issuer-root-20261103.pins.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-pins-20261103.json -text whitespace=cr-at-eol
+docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-20261103.md -text whitespace=cr-at-eol

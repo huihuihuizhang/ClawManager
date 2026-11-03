@@ -1,0 +1,29 @@
+{
+  "schema_version": "system-backup-d-r8-fixture-census-parity-supersede-pins.v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILE_NATIVE",
+  "go_source_count": 2,
+  "new_go_count": 1,
+  "superseded_go_count": 1,
+  "files": [
+    {
+      "path": "backend/internal/systembackupexecution/production_same_task_sources_mysql_test.go",
+      "sha256": "4e366b7e317ee2802f26f538c67955e6f20cdc3c2192ab5aa7c7c797577142e3",
+      "previous_sha256": "6e20094e153669794a71165f2852416c63bd7d90a16cb54869aac07d96dc5d0e"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_fixture_census_parity_test.go",
+      "sha256": "0af75d67f77a5d4d2b0a0862103b31273057bf134174be55760a83903d808ab0"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-r8-fixture-census-parity-supersede-20261103.md",
+      "sha256": "09ae610fc11a1dc71a9e319e0a9a57991e87bc3213c19331bd46fc3d48a9cfc3"
+    }
+  ],
+  "new_root": "TestOriginalFixtureCensusParityTracksActualCatalogWithoutCapturingControl",
+  "subcases": 7,
+  "r8_log_sha256": "f9370fbb579af2debc0b2df4983577775e7525c07cb95d67f2432db970c5d32f",
+  "production_business_policy_modified": false,
+  "control_exclusions_modified": false,
+  "window_modified": false,
+  "runtime_executed_by_d": false
+}

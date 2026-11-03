@@ -258,7 +258,7 @@ func (f *dOriginalSixPartTask) checkOriginalMetadataSources(ctx context.Context,
 	t.Helper()
 	authority := f.installOriginalMetadataSources(ctx, t)
 	metadata, err := authority.sqlMetadata(ctx, f.sourceInventory)
-	if err != nil || len(metadata.Census.Business) != 82 || len(metadata.Census.Control) != 95 || !reflect.DeepEqual(metadata.Schema, *f.sourceSpec.CaptureSchema) || len(metadata.Images) != 2 {
+	if err != nil || checkOriginalFixtureCensusCatalog(ctx, f.db, metadata.Census, metadata.Schema.Tables) != nil || !reflect.DeepEqual(metadata.Schema, *f.sourceSpec.CaptureSchema) || len(metadata.Images) != 2 {
 		t.Fatal("same-task original SQL source census/schema/images", len(metadata.Census.Business), len(metadata.Census.Control), err)
 	}
 	clients, err := authority.openClients(ctx)
