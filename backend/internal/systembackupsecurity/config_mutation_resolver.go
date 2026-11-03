@@ -22,6 +22,14 @@ type ConfigMutationResourceObservation interface {
 	ValidUntil() time.Time
 	Recheck(context.Context, *sql.Tx, time.Time) error
 }
+
+// The concrete original signer observation owns this optional source-lock
+// prefix. Invoke once per prepared object on EACH readiness recheck, then keep
+// the complete ordinary resource/final-state checks. It is not write authority.
+type configMutationOriginalSignerPrefix interface {
+	RecheckOriginalSignerPrefix(context.Context, *sql.Tx, time.Time) error
+}
+
 type ConfigMutationDeploymentObservation interface {
 	Enabled() bool
 	ValidUntil() time.Time
@@ -277,6 +285,31 @@ func (p *preparedConfigMutationReadiness) Recheck(ctx context.Context, tx *sql.T
 	fail := func() (ConfigMutationRisk, error) { return ConfigMutationRisk{}, ErrRegistrationUnavailable }
 	if p == nil || ctx == nil || ctx.Err() != nil || tx == nil || now.IsZero() || !now.Before(p.until) || p.resolver.database.check(ctx, tx) != nil {
 		return fail()
+	}
+	// Three actual signer aliases share one prepared observation. Acquire its
+	// original capture -> acceptance -> catalog source prefix BEFORE any
+	// deployment/resource check can newly acquire MinIO or signer subdomains.
+	// The concrete C owner authenticates the sources in this same ctx/tx/window;
+	// this structural hook neither creates a grant nor skips ordinary rechecks.
+	seenSignerPrefixes := map[configMutationOriginalSignerPrefix]bool{}
+	for _, observed := range p.checks {
+		prefix, ok := observed.check.(configMutationOriginalSignerPrefix)
+		if !ok {
+			continue
+		}
+		// Original source observations have identity, context and failure state.
+		// Require a concrete pointer before using interface identity as a key;
+		// noncomparable or detached value-shaped implementations fail closed.
+		if nilConfigMutationBoundary(prefix) || reflect.TypeOf(prefix).Kind() != reflect.Pointer {
+			return fail()
+		}
+		if seenSignerPrefixes[prefix] {
+			continue
+		}
+		if ctx.Err() != nil || prefix.RecheckOriginalSignerPrefix(ctx, tx, now) != nil || ctx.Err() != nil {
+			return fail()
+		}
+		seenSignerPrefixes[prefix] = true
 	}
 	for _, kind := range bootstrapRegistryKinds {
 		pair := p.input.registries[kind]

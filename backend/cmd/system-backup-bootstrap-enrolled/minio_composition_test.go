@@ -25,7 +25,7 @@ func TestEnrolledProductionSelectsOriginalOwnersBeforeNativeCandidates(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	names := []string{"LinkFunctionalClassificationOwners", "NewEnrolledTerminalInstallationOwners", "LinkOriginalWindowSQLBootstrapKEK", "missingBeforeOriginalMinIO", "LinkSigningResourceConsumerOwners", "OpenTerminalKubernetes", "NewMinIOBootstrapTerminalResource", "addOriginalMinIOTerminal", "NativeHostDeploymentCandidates"}
+	names := []string{"LinkFunctionalClassificationOwners", "LinkOriginalSixReferenceOwners", "NewEnrolledTerminalInstallationOwners", "LinkOriginalWindowSQLBootstrapKEK", "missingBeforeOriginalSigningResources", "LinkSigningResourceConsumerOwners", "OpenTerminalKubernetes", "NewOriginalCatalogInitialInventory", "addOriginalCatalogTerminal", "NativeHostDeploymentCandidates"}
 	positions := map[string][]token.Pos{}
 	ast.Inspect(file, func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)

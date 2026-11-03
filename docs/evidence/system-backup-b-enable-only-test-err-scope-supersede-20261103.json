@@ -1,0 +1,38 @@
+{
+  "schema": "system-backup-source-only-review.v1",
+  "date": "2026-11-03",
+  "owner": "B",
+  "status": "TEST_ONLY_SCOPE_FIX_SOURCE_FROZEN",
+  "supersedes": {
+    "manifest": "docs/evidence/system-backup-b-four-registry-enable-only-mutation-source-20261103.json",
+    "sha256": "cbcdcfa61d749a79bb3ad1524cf299f446a83fd258694a61641fe17a8ccf375a",
+    "scope": "One test file only; original R8 compile failure remains preserved."
+  },
+  "files": {
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mutation_test.go": "d661a4e620c5d052b83c68bc50bf99b84166a479dca4bd614d4ffacfd2679e17"
+  },
+  "change": "Use if _, err := json.Marshal(o) instead of assignment to an out-of-scope err in TestSourceRegistryEnableOnlyObservationIsNotDeadlineData. No assertion/production behavior changed.",
+  "untouched_original_files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read.go",
+      "sha256": "cdf0c86b5ec4dae3c777ad3b71d45a3360d8da392b3c6c0e34fec11408f34b3a",
+      "match": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read_test.go",
+      "sha256": "66539c2214cdab83858b230d2d769506288070bf54c9e020ae15d5c3773de9a5",
+      "match": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_mutation.go",
+      "sha256": "7f8638c998c8df8fa623777b5dab220547fca8e40e6f823342977b9bbfc5a5f2",
+      "match": true
+    }
+  ],
+  "validation": {
+    "executed_by_B": false,
+    "root_target": "go test ./internal/systembackupexecution -run ^TestSourceRegistryEnableOnly -count=1",
+    "products_created": [],
+    "reason": "Root is sole Go/build/test/Git executor. No production file or original manifest modified."
+  }
+}

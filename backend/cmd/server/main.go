@@ -127,9 +127,19 @@ func main() {
 		defer backupDatabase.Close()
 	}
 	backupSessionSQL, _ := backupDatabase.Driver().(*sql.DB)
-	backupSessions, err := backupSessionRecorder(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
+	backupMutation, err := loadBackupConfigMutationProduction(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
 	if err != nil {
-		log.Fatal("system backup session enrollment configuration invalid")
+		log.Fatal("system backup configuration mutation composition unavailable")
+	}
+	var backupSessions *systembackupsecurity.SQLLoginSessions
+	if backupMutation != nil {
+		backupSessions = backupMutation.LoginSessions()
+		defer backupMutation.Close()
+	} else {
+		backupSessions, err = backupSessionRecorder(backupSessionSQL, cfg.Database.Database, cfg.JWT.Secret, os.Getenv)
+		if err != nil {
+			log.Fatal("system backup session enrollment configuration invalid")
+		}
 	}
 	authOptions := []services.AuthServiceOption{services.WithEnterpriseAuthPolicy(cfg.Auth.Enterprise), services.WithQuotaRepository(quotaRepo)}
 	if backupSessions != nil {
@@ -1005,6 +1015,7 @@ func main() {
 			versionedAdmin.Use(middleware.Auth(), middleware.SetUserInfo(userRepo), middleware.NewAdminAuth(userRepo))
 			registerBackupReadLive(versionedAdmin, live)
 			registerBackupTaskMutations(versionedAdmin, live.tasks)
+			registerBackupConfigMutationLive(versionedAdmin, backupMutation)
 		} else if readErr != nil {
 			log.Println("Versioned backup history disabled: invalid read switch")
 		}
@@ -1196,9 +1207,21 @@ func main() {
 		Handler: r,
 	}
 
-	srv.TLSConfig, err = loadSystemBackupAPITLS(os.Getenv)
+	backupTLSServer, err := newSystemBackupLoopbackTLS(r, os.Getenv)
 	if err != nil {
 		log.Fatal("system-backup API TLS configuration unavailable")
+	}
+	if backupTLSServer == nil {
+		srv.TLSConfig, err = loadSystemBackupAPITLS(os.Getenv)
+		if err != nil {
+			log.Fatal("system-backup API TLS configuration unavailable")
+		}
+	} else {
+		go func() {
+			if serveErr := backupTLSServer.ListenAndServeTLS("", ""); serveErr != nil && serveErr != http.ErrServerClosed {
+				log.Fatal("system-backup private TLS listener failed")
+			}
+		}()
 	}
 	go func() {
 		log.Printf("Server starting on %s", cfg.Server.Address)
@@ -1225,6 +1248,11 @@ func main() {
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("HTTP server forced to shutdown: %v", err)
+	}
+	if backupTLSServer != nil {
+		if err := backupTLSServer.Shutdown(ctx); err != nil {
+			log.Print("system-backup private TLS listener shutdown failed")
+		}
 	}
 	if northboundCoreServer != nil {
 		if err := northboundCoreServer.Shutdown(ctx); err != nil {

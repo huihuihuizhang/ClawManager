@@ -1,0 +1,137 @@
+{
+  "schema_version": "system-backup-d-enable-six-and-tls-increment.v2",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_LINUX_REVIEW",
+  "accepted_baseline": "a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e",
+  "applies_after": "Accepted D109 v8 once; do not reapply old unified arrays. This increment adds four files and three TLS files, replacing only server/main.go with explicit source overlay.",
+  "source_pins": [
+    {
+      "path": "backend/cmd/server/main.go",
+      "source": "backend/.d-backup-api-loopback-tls-20261103/backend/cmd/server/main.go",
+      "sha256": "5c0533e9f15b86e7680110e3e260aca009f0bcda39e8240317e5b47e3ed763cc",
+      "before_sha256": "7be411a46235d1c6fb7b92d1a250ac55b407d8dec975279bbc13fc0b93448fd8",
+      "group": "D actual same-router private TLS9002 listener",
+      "source_manifest": "backend/.d-backup-api-loopback-tls-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_api_loopback_tls.go",
+      "source": "backend/cmd/server/system_backup_api_loopback_tls.go",
+      "sha256": "3770f0e5ceac7268f2db2a17e1f23c37dfa5a8a82ba8d2584b3868997b053ca5",
+      "group": "D actual loopback TLS listener"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_api_loopback_tls_test.go",
+      "source": "backend/cmd/server/system_backup_api_loopback_tls_test.go",
+      "sha256": "18e4f7dad93dad2d6ac735f25f534e6c4527294eff55015c1a2c5d576acc2663",
+      "group": "D actual loopback TLS listener"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/enable_only_relations.go",
+      "source": "backend/internal/systembackupinstallationowner/install/enable_only_relations.go",
+      "sha256": "667c25dc7314797671c7f9f14204e40701d0cb74d177689a60dc36b1b593e09a",
+      "group": "D real six first-enable mutation sources"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/enable_only_relations_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/enable_only_relations_test.go",
+      "sha256": "bdee72d1b95d12798c95273c0011b3d28e7fa327d0ac0d581474a30a3db154cd",
+      "group": "D real six first-enable mutation sources"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_deployment_process.go",
+      "source": "backend/internal/systembackupsecurity/config_mutation_deployment_process.go",
+      "sha256": "5ee3ca4ad56620a07f2ffc933bcf13ed303617536c6b6cb3d38e6453152a5060",
+      "group": "D real six first-enable mutation sources"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_deployment_process_test.go",
+      "source": "backend/.d-deployment-observation-fixture-20261103/backend/internal/systembackupsecurity/config_mutation_deployment_process_test.go",
+      "sha256": "99432b37b18cd4d7759a81de664ff483694da8045b8966d10f08da42b42bb01b",
+      "group": "D real six first-enable mutation sources"
+    }
+  ],
+  "image_and_operator_asset_pins": [
+    {
+      "path": "deployments/container/start.sh",
+      "source": "backend/.d-backup-api-loopback-tls-20261103/deployments/container/start.sh",
+      "sha256": "0bd13fe367c907a1d24bceb0cc3b515b7157adadc2b87c86822c86cb8a2df5a2",
+      "before_sha256": "49295ce76b9d11b8972c6b4be681eb0f1e0e60ef733f71d9f9d865b512b21bf3"
+    },
+    {
+      "path": "deployments/nginx/nginx.conf",
+      "source": "backend/.d-backup-api-loopback-tls-20261103/deployments/nginx/nginx.conf",
+      "sha256": "dd7ab6e3743260bbeebc977d69ade744cbda3d17afe9854cbe5803c62e5cee0e",
+      "before_sha256": "dc360b9b501189d4ebda59081c3ebee5cfbd480908657130f74af46ce157fc55"
+    },
+    {
+      "path": "deployments/container/system-backup-api-proxy.sh",
+      "source": "deployments/container/system-backup-api-proxy.sh",
+      "sha256": "93dce1224d224b8f9c6676e6e9a68723f0b77f67eda535ae70457de4ed34d81b"
+    },
+    {
+      "path": "scripts/system-backup-first-page-tls-only.py",
+      "source": "scripts/system-backup-first-page-tls-only.py",
+      "sha256": "3c83146283440b73ec518c505d7e6bfbccb94c5651ba9c0e3e3d764767d14421"
+    },
+    {
+      "path": "scripts/system-backup-first-page-evidence-transit.py",
+      "source": "scripts/system-backup-first-page-evidence-transit.py",
+      "sha256": "f55f3bc146e7f19f9334598d59dac11de0397db936e135011ffb708d753adbc0"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-page-trial-transport-materials-20261103.md",
+      "source": "docs/evidence/system-backup-d-page-trial-transport-materials-20261103.md",
+      "sha256": "d83343a2e45c98e0b1d27b6cb01822741b07b87096dc1bc636eeddaecb739840"
+    }
+  ],
+  "dependency_pins": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/reference_current_identity.go",
+      "sha256": "e2f567ca0f963715c5b00af53c96cfe729c1ce60d7a1f5e81659d5e9f1b14616",
+      "application": "A-owned current reference identity/data-only enable restriction; compare accepted A source inventory, explicitly co-review if absent"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_enable_only.go",
+      "sha256": "d96329d27417e52017ab5ddf74985a6f9e73b5a6ce32fea0dd9704cf73e8881b",
+      "application": "A-owned current reference identity/data-only enable restriction; compare accepted A source inventory, explicitly co-review if absent"
+    }
+  ],
+  "cross_data_dependency": {
+    "path": "backend/internal/systembackupinstallationowner/install/cross_resource_relations.go",
+    "source": "backend/.d-cross-source-facts-shape-20261103/backend/internal/systembackupinstallationowner/install/cross_resource_relations.go",
+    "sha256": "499ce5c64ea54c62e0f87c5a18bfc538ff9064081b7f9a7dd04551d0ef26bb79",
+    "application": "Already selected by accepted D109 v8; do not replace with stale shared source."
+  },
+  "six_mutation_slots": [
+    "registry:failure_domains",
+    "registry:disaster_identity_mapping",
+    "registry:rbac_bindings",
+    "reference:status_relay",
+    "cross_resources",
+    "deployment_switch"
+  ],
+  "composition_contract": {
+    "five_constructor": "install.NewOriginalRelationEnableOnlyMutation(actualSameCapture, install.EnableOnlyRelationFiles{Classification: originalClassificationFiles,StatusRelay:originalStatusRelayFiles,Terminal:originalSignedMappingFiles})",
+    "five_aliases": "Copy Registries() three and References() one with duplicate-key rejection. CrossResources() returns that SAME object; never use bootstrap resource/check as mutation authority.",
+    "deployment": "sec.NewProcessDeploymentSwitch(actualInstallation,actualDatabase) then Resources.Deployment = actualSwitch.Observe; reads exact process public-v1/task-writer environment, no requested enabled inference.",
+    "request_context": "Use ONE request context with finite deadline throughout all preparations/rechecks; each actual native owner retains its first cap.",
+    "router": "TLS listener uses exact existing Gin router. Actual configuration mutation handler mount and same production factory login-session recorder are STILL NOT IN THIS INCREMENT.",
+    "tls_enable": "SYSTEM_BACKUP_API_PROXY_ENABLED=true invokes actual start.sh helper before main. Main receives SYSTEM_BACKUP_API_TLS_ADDRESS=127.0.0.1:9002 and generated cert/key paths; nginx verifies dedicated CA/SNI localhost. Preserve helper under /app/system-backup-api-proxy.sh."
+  },
+  "tests_authored": [
+    "TestEnableOnlyRelationsRejectDetachedAndUnboundSources",
+    "TestProcessDeploymentSwitchUsesActualWriterEnvironmentAndCannotRenew",
+    "TestBackupLoopbackTLSRequiresActualHandshakeAndClosedAddress"
+  ],
+  "d_validation": "gofmt parse/format plus source SHA256/static review only; NO build/test/list/vet/SQL/Docker/Git run. No test build artifacts created.",
+  "not_proven": [
+    "Five-source native+SQL positive mutation integration",
+    "Real configuration mutation server composition/routes and same login recorder",
+    "First historical coverage adoption/backfill producer",
+    "Field installation/page backup"
+  ],
+  "supersedes": {
+    "manifest": "docs/evidence/system-backup-d-enable-six-and-tls-increment-source-20261103.json",
+    "sha256": "ff03bbcdabf4ccce9b470278006b8598d49c7410c8ec891ef1fc76fe3124abd7",
+    "reason": "One test creates detached observation explicitly without copying sync.Mutex; production bytes unchanged."
+  }
+}

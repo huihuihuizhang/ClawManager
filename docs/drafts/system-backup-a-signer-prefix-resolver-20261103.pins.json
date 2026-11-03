@@ -1,0 +1,55 @@
+{
+  "version": "system-backup-a-signer-prefix-resolver-source.v1",
+  "status": "SOURCE_ONLY_FROZEN_PENDING_ROOT_OVERLAY_COMPILE_TEST",
+  "authored_at": "2026-11-03T12:35:00+08:00",
+  "ownership": "A alone owns this two-target candidate slice. Only isolated candidate files were written; shared production config_mutation_resolver.go and previously frozen A17/A10/CLI2 files are unchanged. D should not concurrently edit this resolver target; root overlays after before-SHA verification. No cross-chat tool messages sent; root relays integration ownership.",
+  "source_map": {
+    "path": "backend/.a-signer-prefix-20261103/source-map.json",
+    "sha256": "45fadecac910b11caccee723de99d281c74bae35cccb97321ba18515804376ff",
+    "files": 2,
+    "production_Go": 1,
+    "test_Go": 1
+  },
+  "files": [
+    {
+      "target": "backend/internal/systembackupsecurity/config_mutation_resolver.go",
+      "candidate": "backend/.a-signer-prefix-20261103/backend/internal/systembackupsecurity/config_mutation_resolver.go",
+      "before_sha256": "ac58d6c60bb7cabf4f28572d4f9abf0004a5cfea5f759d3437fc5aecff97684c",
+      "sha256": "80a17ae67e3ce239243978eb822b7f0254388fc269670407207c844679c122c4",
+      "bytes": 13726
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/config_mutation_signer_prefix_test.go",
+      "candidate": "backend/.a-signer-prefix-20261103/backend/internal/systembackupsecurity/config_mutation_signer_prefix_test.go",
+      "before_sha256": null,
+      "sha256": "41a66302bc6d1f114567558642d07b493a9a988ff14d079f303b47a5565c6e37",
+      "bytes": 8328
+    }
+  ],
+  "production_change": [
+    "Add private structural observation interface RecheckOriginalSignerPrefix(context.Context,*sql.Tx,time.Time) error matching exact actual C3 method. No C/package imports, callback fields, bootstrap grant or new write authorization.",
+    "In preparedConfigMutationReadiness.Recheck immediately after its existing input/window/actual database target check, BEFORE registry tail reads, deployment.Recheck and the ordinary resource loop: scan actual prepared checks for that interface. Require concrete nonnil pointer identity, deduplicate shared observations by pointer, call once per object using exact original ctx/tx/already-authoritative now. Prefix failure or cancellation returns generic readiness failure before any ordinary source/MinIO check.",
+    "Run this prefix scan on EACH readiness recheck; concrete C owner retains its own same-transaction idempotence, current source/failure latch and monotonic time checks. A does not cache prefix authorization, replace source SQL, resample a different clock, renew a deadline or reorder individual signer SQL reads.",
+    "Keep the existing complete nine-registry/twenty-reference/cross-resource Recheck loop, deployment check, exact registry-byte tails, and final frozen risk/deadline/context comparisons unchanged. Three signer aliases still each receive ordinary Recheck; only their shared prefix is deduplicated.",
+    "C concrete originalSignerMutationCheck owns capture->acceptance->catalog original SQL locks and current source signatures/revocation. This scan precedes any newly acquired ordinary MinIO/deployment/resource subdomain locks. Existing A/D global installation/admin/session/strong-auth/RBAC/nonce/capacity/KEK evidence/fence/final-clock logic stays unchanged."
+  ],
+  "C3_dependency": {
+    "manifest": "docs/evidence/system-backup-c-three-signer-first-enable-mutation-source-20261103.json",
+    "sha256": "0b0968a6e7cff81bc57da3bb3ac2fe33773d4ef8a683bfb777d6fd6750342368",
+    "source_map": "backend/.c-signer-mutation-refs-20261103/source-map.json",
+    "source_map_sha256": "53618b3bc98f278ea213ff734876fa3cf9061afcf8872a24781f3b7cec83ec78",
+    "C4_candidate_hashes_rechecked": true
+  },
+  "D_main_contract": "NewOriginalSignerConfigMutationReferences(actualDB, exact independently pinned original capture/signing source selections). Merge References() returned three same-pointer aliases; root overlays C4 and this A2. No bootstrap resource or PreparedCaptureSigning cast. Ordinary C3 Recheck refuses without the exact-tx prefix.",
+  "tests": [
+    "TestConfigMutationSignerPrefixBeforeResourcesAndDeduplicatesThreeAliases: prefix first before deployment and all30 ordinary resource checks; exact ctx/tx/now; same observation three aliases; repeated readiness calls perform exactly one prefix each and keep all ordinary checks.",
+    "TestConfigMutationSignerPrefixFailureAndFinalGuardsStayClosed: prefix error/cancel stops before registry/source work; deadline/risk drift, ordinary and deployment failure remain closed; no writes/commit.",
+    "TestConfigMutationSignerPrefixRejectsDetachedValueWithoutPanic: noncomparable value prefix rejected before using interface key or doing ordinary work.",
+    "TestConfigMutationSignerPrefixDedupUsesObservationIdentity: two distinct pointers of one type each run prefix before ordinary checks; they are not collapsed by type/purpose."
+  ],
+  "validation": "A ran only source reads/SHA/gofmt. No Go test/build/list/vet, SQL/native/network/Git. Parent source SHA remains ac58...7684c; candidate changes are only interface+prefix block. Root must run targeted A tests together with actual C3 source/model tests and existing resolver/transaction checks, then remove generated test/build products. Orchestration doubles are not actual native/SQL field evidence.",
+  "root_reported_prior_batch": "Root reported A10 five-security owners and D/TLS selected checks passing in r7; CLI private-directory fixture failure is root-owned isolated supersede (0700 positive +0755 negative). Original CLI production check and frozen A files are unchanged.",
+  "field_status": "Real first-adoption producer/executor is still missing. This prefix repair does not create physical writer fence, immutable external snapshot, historical backfill or17 sources; no14:00 usable promise.",
+  "DR": false,
+  "performance": "deferred"
+}

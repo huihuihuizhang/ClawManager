@@ -1,0 +1,91 @@
+{
+  "version": "system-backup-a-five-security-enable-only-owners.v1",
+  "status": "source_frozen_not_compiled_or_tested_by_A",
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping.go",
+      "sha256": "a1189368cda81d02c92de4271897f62582b5808926a0384a835d2470e1f834fb",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping_test.go",
+      "sha256": "46f8aa5c05fdc51851a1d3108636dfa7fb858965b5e4b7a7ddccdb9fa630f2e0",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupcatrust/enable_only_observation.go",
+      "sha256": "33b44fe37c2bb6afc2acc2c2d3953f5ca1b1a35cf4b1b06ee94974be38c8317a",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupcatrust/enable_only_observation_test.go",
+      "sha256": "22e8114315ce51e04f6dff3eb50e996a2d6e120dd3b76343afdc0c26167532f4",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupnoncebootstrap/enable_only_observation.go",
+      "sha256": "2c6108dd092cd70b83e58d78063b1d51ffb09d783d845280161bf0018b39cad8",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupnoncebootstrap/enable_only_observation_test.go",
+      "sha256": "61db967016a374f6abc09526947a0da2c27eb49da61792611ddb56e10866132a",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapsecurity/enable_only_issuers.go",
+      "sha256": "5e84436e67c5da533dc53475f1e7706f3c43e03922b90115584ee68d5ca58e8f",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapsecurity/enable_only_issuers_test.go",
+      "sha256": "9161b6ac41276fbb33c2a05aae041abd7fee16d623a26bfcd6a8ca0caf18373c",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners.go",
+      "sha256": "3bf71f8a5da6567827162fff6fdc6f584e3a15c59f716b48c5bb6fc732120bf2",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners_test.go",
+      "sha256": "b1a9ab6cb1aba2861d40f8499431dfce094ce640a8bda5be9f68fc453bdcd616",
+      "kind": "test"
+    }
+  ],
+  "exact_slots": [
+    "reference:artifact_ca",
+    "reference:evidence_ca",
+    "reference:nonce_hmac",
+    "registry:strong_auth_issuers",
+    "registry:provider_proof_issuers"
+  ],
+  "production_entry": "systembackupbootstrapmaterials.NewEnableOnlySecurityOwners(same original capture, SAME BootstrapTerminalFiles, actual artifact *catrust.Validator, evidence *catrust.Validator, *noncebootstrap.Validator, *bootstrapsecurity.Issuers). Merge group.References() and group.Registries() into real ConfigMutationProduction.Resources; all five slots intentionally share ONE pointer.",
+  "construction": "Use the same actual existing bootstrap resource instances returned by NewEnrolledTerminalInstallationOwners (type assertions on returned References/Registries), or reconstruct the exact same bindings/directory. Each BindingSHA256 must match complete original signed composition. Constructor performs no provider I/O or authorization.",
+  "authentication": [
+    "EnableOnlyOriginalMapping accepts actual opaque mutation input, requires exact false->true complete canonical configuration, same original capture config SHA, active source actor, exact original record hash and original enrollment/plan/public pin.",
+    "Actual complete signed original owner mapping is independently verified; current capture binding and each of all five exact concrete owner bindings must match. This is unchanged-resource association identity, never write authority, bootstrap admission or native readiness.",
+    "PreparedReferenceCurrentIdentity from admitted A17 performs real current original SQL head/grant/user/server/database/account checks with same caller tx, original scope/window/context, local source pins and final delivered SQL time. No OfflineBootstrapGrant is accepted or minted by the new API."
+  ],
+  "native_sources": [
+    "Artifact/evidence CA: existing exact public descriptor kind/purpose/provider/scope/ref, strict complete CA CERTIFICATE bundle, fixed original TargetIP + original hostname, real TLS certificate validation. Native observer is new explicit mutation-native path; no bootstrap Prepare or check cast. Thirty-second original max interval begins before TLS and intersects binding/certificate/context expiration. Local exact pins and SQL target/final clock only under tx.",
+    "Nonce: actual exact-version external_secret descriptors and 32-byte local material for all mapped active AND historical versions, with wiping. New direct observation, no bootstrap grant. Same original complete persisted global config identity + retained nonce ledger census, strict EOF/close/count bounds, identity/protected-until checks, complete mapped local-key recheck, same-tx final SQL clock and failure latch; no new nonce issue/consume.",
+    "Issuer registries: both exact current/proposed RegistryRef and byte pairs must be unchanged and equal actual existing RegistrationFiles bytes. Existing closed decoders, all historical public-key purpose separation, complete target/proof compatibility, active provider key and actual TOTP signer with five-minute runway. No signer login, provider execution or personnel MFA simulated.",
+    "Single grouped original/native observation per real request context; max64 pending, cancellation cleanup/latch, exact actor/current/proposed fingerprints, no duplicate-slot preparation, fixed minimum deadline and actual final transaction clock after all callbacks. Risk SecurityBoundary=true retains mandatory strong auth."
+  ],
+  "independent_write_authority": "Actual production JWT + recorded real login session + strong-auth/RBAC/nonce/capacity, independent deployment switch, all other native resource validators, KEK17 evidence/coverage/fence and actual D transaction stage/final checks stay mandatory. Native observation APIs do not implement ConfigMutationResourceValidator themselves; production group is mandatory.",
+  "root_required_checks": [
+    "Compile exact five packages and targeted new TestEnableOnly* roots; all old tests remain intact.",
+    "Real source/enrollment/original mapping->complete native resource group->actual mutation SQL/final revoke/deadline integration remains pending; no full positive field result is asserted.",
+    "Root deletes all test/build artifacts after its checks. A executed gofmt/source/SHA only, no Go test/build/list/vet, native/SQL/network/Git."
+  ],
+  "A17_dependency_manifest": "docs/drafts/system-backup-a-six-reference-native-enable-only-20261103.pins.json",
+  "A17_dependency_sha256": "2a52597b53982039d1c31b23bbeaeca6698e16689411177b074ee833ce6cc1d1",
+  "known_field_blocker": "Real first-adoption production path is absent. This batch does not adopt coverage, fence physical writers, prove native/history emptiness or create the17 original witnesses. No14:00 field-ready promise.",
+  "B4_review": "docs/drafts/system-backup-a-review-b-four-source-registry-authentication-20261103.json",
+  "B4_review_sha256": "59dd3f02201ce128e59ebbe3b769378df38910d59570fb8ad47df5c9f13b8bfe",
+  "six_cli_manifest": "docs/drafts/system-backup-a-six-reference-owner-cli-20261103.pins.json",
+  "six_cli_manifest_sha256": "779f76bfe42507556b116c96cec2304b454fd8bceadb42b99f0570c920fce597",
+  "performance": "deferred",
+  "DR": false
+}

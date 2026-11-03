@@ -1,0 +1,98 @@
+{
+  "schema_version": "system-backup-d-first-adoption-production-gap.v2",
+  "status": "HARD_BLOCK_NO_PRODUCTION_ENTRYPOINT",
+  "reviewed_at": "2026-11-03T12:24:00+08:00",
+  "existing_sources": [
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_census.go",
+      "sha256": "dc7a8b70844858ed02e0442cb9200095cc6e2981cf8c6e064cafcbc7bb83f29f"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_sql_witness.go",
+      "sha256": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/s3_coverage_census.go",
+      "sha256": "6dd50207b16634c16a35648d7fff16eb9eb101a278205082c525a690b2e83c0f"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_owner_sql.go",
+      "sha256": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/coverage.go",
+      "sha256": "9e08bfc4045084efbd5920a8261d989e69aaa6f86fcc60a500b7f153053fa432"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/types.go",
+      "sha256": "b13b5dbcc07ee24a935aa41ba9c208b21917e770c85992f4874c0da7260ee2f2"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/store.go",
+      "sha256": "fe8f177b476d5bfa19436788a7e8eda97fe005123324c1b58bed5558c945abd9"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/bootstrap_source_fence_mysql_test.go",
+      "sha256": "220b13c2648c1d89eff773d18a17982f7ab33b0f3b4bac85ac2a74ce817a1d06"
+    }
+  ],
+  "actual_available_chain": [
+    "NewSQLCoverageCensus(actualDB,actualIdentity,installation)",
+    "scanner.Observe(ctx) -> *UnadmittedSQLCoverageCensus (comparison data only)",
+    "scanner.BeginOriginalTransaction(ctx) -> *OriginalSQLCoverageTransaction; actual repeatable-read tx via Tx()",
+    "Original maintenance/session/admin/domain source locks must belong to actual same tx before source ranges",
+    "scanner.LockOriginalSources(ctx,originalTx,observed) -> *LockedSQLCoverageCensus; full exact source row ranges + recheck in same tx",
+    "reg.SQLStore{}.Bind(ctx,tx,installation) -> Bound + actual LockedSnapshot; contains no new coverage proof",
+    "observed.SignOriginalSQLWitness(...) produces ONLY original_sql_census for each of four partitions"
+  ],
+  "missing_production_components": [
+    {
+      "owner_dependency": "B/original writers",
+      "component": "Opaque native prepared physical writer fence",
+      "required_facts": "Every actual old/current writer and unknown/in-flight work scope, independent original authority, physical prevention of concurrent new writes for whole census/backfill/adoption interval; original locks and finite first observation cap; current disabled config alone is insufficient."
+    },
+    {
+      "owner_dependency": "C/original immutable external history",
+      "component": "Authenticated complete immutable snapshot of every fixed object version, delete marker, multipart/unknown write, catalog/hold/restore/prune origin",
+      "required_facts": "Complete canonical scope + every page/EOF + retained exact version payload authentication and lifecycle relationship. Existing S3 live LIST census is explicitly unadmitted and cannot become immutable snapshot by signing a DTO."
+    },
+    {
+      "owner_dependency": "A+C+B+D historical source integration",
+      "component": "Real old source to reg.Reference backfill",
+      "required_facts": "Each exact source ID/version, backup/attempt/envelope, KEK KeyBinding and mapping/request/lifecycle provenance; conservative unknown states; original lifecycle authority for released states; no schema-agnostic hash/count conversion."
+    },
+    {
+      "owner_dependency": "D original transaction + A admission",
+      "component": "First-adopter opaque reg.PreparedCoverage implementation and production command",
+      "required_facts": "Real above sources owned by opaque constructors; ExpectedEpoch bound before mutation; four exact CoverageSource + complete nonnil References; same originating context/tx; SQL current identity/local pins; physical source stability and temporal floor; no caller-provided Passed/Prepared DTO."
+    },
+    {
+      "owner_dependency": "A original evidence authority",
+      "component": "Atomic signed source evidence publication and first adoption",
+      "required_facts": "Four kinds x four partitions = 16 original witness records + one adoption record; correct original evidence/chunk row lock prefix before KEK fence; actual backfill and Bound.AdoptCoverage within ONE original authorized tx; exact epoch advancement, final rechecks and commit readback; failure rollback and retained ambiguous outcome."
+    }
+  ],
+  "existing_reader_is_not_first_adopter": "SQLCoverageOwnerPreparation.Prepare requires len(snapshot.Coverage)==4 and already committed authenticated adoption+witness evidence. Reusing it for first adoption is circular. CompleteScan and ConfigMutation KEK bridge likewise require already adopted coverage.",
+  "empty_case": "An actually empty fresh v2 KEK index or new bucket is not proof. True empty-reference adoption still requires full original SQL source scan, fixed external version proof, actual physical writer fence, historical backfill/absence proof, all16 witnesses+adoption and atomic original authorization. Do not use COUNT/MAX(new_index), four inserted receipts, or config disabled as substitutes.",
+  "repo_static_search": "Only definition of AdoptCoverage found in production sources; no production caller. Only production witness signer found is SignOriginalSQLWitness; other witness/adoption signing only in tests/DTOs. No Go execution/SQL/field execution performed.",
+  "rough_effort": "At least 1-2 complete engineering/integration days once writer and immutable source protocols are fixed, with material uncertainty. Not a delivery promise; not a request to extend current deadline.",
+  "not_delivered": [
+    "Executable first-adoption producer",
+    "Physical field writer fence",
+    "Immutable historical adoption proof",
+    "First-adoption transaction or field execution",
+    "Page-ready installation"
+  ],
+  "supersedes": {
+    "path": "docs/evidence/system-backup-d-first-adoption-production-gap-20261103.json",
+    "sha256": "a3451c1dcf449cd01db4439454104392db3d88fa7f36af1dbd95cc288c166395"
+  },
+  "additional_atomicity_issue": {
+    "original_scan": "sqlCensusSources includes system_backup_v2_evidence and chunks; scanTable hashes every exact row/column, locked Recheck expects whole facts unchanged.",
+    "receipt_reader": "readCoverageOwnerEvidence consumes new inline catalog_scan_receipt rows from that same evidence table.",
+    "failure_trigger": "Scanning source -> staging own16 witness+adoption -> calling unchanged LockedSQLCoverageCensus.Recheck fails because legitimate own receipt rows changed the source census. Staging placeholders before census and replacing signed payload has the same full-row hash change.",
+    "required_resolution": "Retain full original range locks and original complete pre-write facts. Original adopter must carry an opaque exact journal of its own actually staged, authenticated control evidence writes, verify each complete resulting row/chunk pin and compare every remaining original source row unchanged in final same-tx source scan. Alternatively a separately reviewed exact metadata-control disposition/storage protocol may be used. Neither a caller-provided skip-ID list nor excluding the entire evidence/chunks tables is sufficient.",
+    "proposed_not_implemented": "An original same-tx adoption/evidence writer can privately produce the allowed-write journal, keyed by exact owned generated record IDs and authenticated purpose/domain/issuer/payload/expiry/target/chunk values. SQL census then accounts only those legitimate writes explicitly while still consuming full EOF and holding original ranges. This avoids self-hashing without blessing caller DTOs. No such journal or exact reconciliation implementation currently delivered.",
+    "certainty": "This is a failure in the naive proposed producer chain, not a claim that all possible adoption protocols are impossible."
+  }
+}

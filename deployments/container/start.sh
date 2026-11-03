@@ -108,6 +108,12 @@ sed -i "s/__DNS_RESOLVER__/${DNS_RESOLVER}/g" /etc/nginx/nginx.conf
 # Reject invalid or incomplete download upstream settings before starting any
 # process. The default locations return unavailable without forwarding secrets.
 sh /app/system-backup-download-proxy.sh > /etc/nginx/system-backup-download.locations.conf
+sh /app/system-backup-api-proxy.sh > /etc/nginx/system-backup-api.locations.conf
+if [ "${SYSTEM_BACKUP_API_PROXY_ENABLED:-false}" = true ]; then
+  export SYSTEM_BACKUP_API_TLS_ADDRESS=127.0.0.1:9002
+  export SYSTEM_BACKUP_API_TLS_CERT_FILE=/run/system-backup-api-tls/server.pem
+  export SYSTEM_BACKUP_API_TLS_KEY_FILE=/run/system-backup-api-tls/server.key
+fi
 nginx -t
 
 /usr/local/bin/clawreef-server &

@@ -1,0 +1,507 @@
+{
+  "schema_version": "supervisor-first-page-preview-wiring-review.v1",
+  "status": "NOT_PAGE_READY_FIRST_ADOPTION_PRODUCER_MISSING",
+  "accepted_parent": "a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e",
+  "source_files": {
+    "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping.go": "a1189368cda81d02c92de4271897f62582b5808926a0384a835d2470e1f834fb",
+    "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping_test.go": "46f8aa5c05fdc51851a1d3108636dfa7fb858965b5e4b7a7ddccdb9fa630f2e0",
+    "backend/internal/systembackupcatrust/enable_only_observation.go": "33b44fe37c2bb6afc2acc2c2d3953f5ca1b1a35cf4b1b06ee94974be38c8317a",
+    "backend/internal/systembackupcatrust/enable_only_observation_test.go": "22e8114315ce51e04f6dff3eb50e996a2d6e120dd3b76343afdc0c26167532f4",
+    "backend/internal/systembackupnoncebootstrap/enable_only_observation.go": "2c6108dd092cd70b83e58d78063b1d51ffb09d783d845280161bf0018b39cad8",
+    "backend/internal/systembackupnoncebootstrap/enable_only_observation_test.go": "61db967016a374f6abc09526947a0da2c27eb49da61792611ddb56e10866132a",
+    "backend/internal/systembackupbootstrapsecurity/enable_only_issuers.go": "5e84436e67c5da533dc53475f1e7706f3c43e03922b90115584ee68d5ca58e8f",
+    "backend/internal/systembackupbootstrapsecurity/enable_only_issuers_test.go": "9161b6ac41276fbb33c2a05aae041abd7fee16d623a26bfcd6a8ca0caf18373c",
+    "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners.go": "3bf71f8a5da6567827162fff6fdc6f584e3a15c59f716b48c5bb6fc732120bf2",
+    "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners_test.go": "b1a9ab6cb1aba2861d40f8499431dfce094ce640a8bda5be9f68fc453bdcd616",
+    "backend/cmd/system-backup-six-reference-owner/main.go": "6a1ba15b2a136ffd312bcc366e887daf01f11ded80f925bb1b15c134c33bc3cf",
+    "backend/cmd/system-backup-six-reference-owner/main_test.go": "d9cdbfe22d5f6dc8128792224191472c320c0ff141c279eebbcc1988600e05c7",
+    "backend/cmd/server/main.go": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc",
+    "backend/cmd/server/system_backup_api_loopback_tls.go": "3770f0e5ceac7268f2db2a17e1f23c37dfa5a8a82ba8d2584b3868997b053ca5",
+    "backend/cmd/server/system_backup_api_loopback_tls_test.go": "18e4f7dad93dad2d6ac735f25f534e6c4527294eff55015c1a2c5d576acc2663",
+    "backend/internal/systembackupinstallationowner/install/enable_only_relations.go": "667c25dc7314797671c7f9f14204e40701d0cb74d177689a60dc36b1b593e09a",
+    "backend/internal/systembackupinstallationowner/install/enable_only_relations_test.go": "bdee72d1b95d12798c95273c0011b3d28e7fa327d0ac0d581474a30a3db154cd",
+    "backend/internal/systembackupsecurity/config_mutation_deployment_process.go": "5ee3ca4ad56620a07f2ffc933bcf13ed303617536c6b6cb3d38e6453152a5060",
+    "backend/internal/systembackupsecurity/config_mutation_deployment_process_test.go": "99432b37b18cd4d7759a81de664ff483694da8045b8966d10f08da42b42bb01b",
+    "deployments/container/start.sh": "0bd13fe367c907a1d24bceb0cc3b515b7157adadc2b87c86822c86cb8a2df5a2",
+    "deployments/nginx/nginx.conf": "0c8436fdcd945e928ef6afb0a451e13361939badadfe87305df6603a3096468d",
+    "deployments/container/system-backup-api-proxy.sh": "93dce1224d224b8f9c6676e6e9a68723f0b77f67eda535ae70457de4ed34d81b",
+    "scripts/system-backup-first-page-tls-only.py": "3c83146283440b73ec518c505d7e6bfbccb94c5651ba9c0e3e3d764767d14421",
+    "scripts/system-backup-first-page-evidence-transit.py": "f55f3bc146e7f19f9334598d59dac11de0397db936e135011ffb708d753adbc0",
+    "docs/evidence/system-backup-d-page-trial-transport-materials-20261103.md": "d83343a2e45c98e0b1d27b6cb01822741b07b87096dc1bc636eeddaecb739840",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read.go": "fc16f0e9f85d1d01ab7a5244539bda62c273fc3a9d0f224fde807740a276bb0e",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read_test.go": "f3896d3f6007143ed77a6e3803bafadd2697ee7e31bd87c798fcd48aa3c60235",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mutation.go": "4898e8a7951ad4df435f42f423275217b4496aac1a57f1302c2bbebc13d9f347",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mutation_test.go": "d661a4e620c5d052b83c68bc50bf99b84166a479dca4bd614d4ffacfd2679e17",
+    "backend/internal/systembackupinstallationowner/install/signer_config_mutation_references_test.go": "c28d97a61392e554334e528ad7a6d0eab077b91a026b379e07f0ea37ef961fe0",
+    "backend/internal/systembackupinstallationowner/install/signer_config_mutation_references.go": "95996830ffaf79b5df567923259725d183aab86f9e5fa95d0a00456c8a66f5fb",
+    "backend/internal/systembackupinstallationowner/signer_config_mutation_resources_test.go": "6d542c148177ddb4c10f3163ea0a7cda73da1ef00473828b867025ad433c00fb",
+    "backend/internal/systembackupinstallationowner/signer_config_mutation_resources.go": "f8c2907716a2eb20036eafbba6d8c56ec8c599a415ab5f52400b35cd342a5046",
+    "backend/internal/systembackupsecurity/config_mutation_resolver.go": "80a17ae67e3ce239243978eb822b7f0254388fc269670407207c844679c122c4",
+    "backend/internal/systembackupsecurity/config_mutation_signer_prefix_test.go": "41a66302bc6d1f114567558642d07b493a9a988ff14d079f303b47a5565c6e37",
+    "backend/cmd/server/system_backup_config_mutation_live.go": "7fdb14dae388526c625fc74ecedcb273a47e8c2fa91b0e49703f069074a98da8",
+    "backend/cmd/server/system_backup_config_mutation_live_test.go": "0349284ba417599382cbbfe569f187adf548e9b0f62da60278be2a76e8ebfca7",
+    "backend/cmd/system-backup-installation-kek-materials/main.go": "ede9dbe5344c088ab3d91f937bcc7688e51f35f03c51b0479a13efbf54bf22d3",
+    "backend/cmd/system-backup-installation-kek-materials/main_test.go": "6d71e8d772f502f7a1b066e7e01139f655591a368c93abebf0a4b8b057ba4004",
+    "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition.go": "e14d425773af4e78b7f3dc966c1b6e6523720b42bb3daf8ae2f1fffa74259a22",
+    "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition_test.go": "fc94fcafae56e0c2838e3da571e36c47502a89b0a81fe1a92c7b358ec2998806",
+    "backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go": "07be1fe3b90072b0859499736f160d21e33e174ab1109f96a67958c51e5d5fbe",
+    "backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go": "30959c1b0a8a6879a2c3386bbe968510f90d295df9033e93c99631080d5ff796",
+    "backend/cmd/system-backup-bootstrap-enrolled/production.go": "cfa35674ed32743bb1f5e124bcf9185cb43afe0715f4b62e2083caaf11d76eeb",
+    "backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go": "9e5250890aa46e00f95a500183107af465c95c3aaf8d2da20eb66fb8494221d9",
+    "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions.go": "b0f1d8b4794d910bdf5edcdb427719445c9f163b7454c07c2eaf2cbd646fd612",
+    "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions_test.go": "6b5fc685261aa93b4164a8158807bcf8c6df05c4aa85c34b7420a18760cf6831",
+    "backend/internal/systembackupkekadapter/native_installation_mapping.go": "620ee43759097e54dd8c0157c1fdd5df0679d43ebd7a6fd65bf01673f2af9565",
+    "backend/internal/systembackupkekadapter/native_installation_mapping_test.go": "69118da9f40047645f999e9333bdab1eeff4b7ae401f4ae66721ae1e0391dac5",
+    "backend/cmd/system-backup-original-coverage-collect/main_test.go": "3e3ef00eeaf61e7c793b9a67748071bbc962a95dab461387097552d1427d1577",
+    "backend/cmd/system-backup-original-coverage-collect/main.go": "44f77bfb8f99c40245c1618b9c83311d3d83b6c7a6e178fab53554d1377d0528",
+    "backend/internal/systembackupexecution/original_coverage_source_collection_test.go": "a200cd9a568b14e7f577b5b632038dd54e9684e2310d2ef167c7ebd8f4475c37",
+    "backend/internal/systembackupexecution/original_coverage_source_collection.go": "4254a46fe7af608f0800df0417defc3fac860450df3b2e659c1e4c199d2fd667",
+    "backend/internal/systembackupinstallationowner/install/original_coverage_census.go": "ba902c60cf7ad4c53630cd35827a5d3b668c1c344d8e9606748debd84d20f2c4",
+    "Dockerfile": "357d933de22c298768ad2f5601977f8198ce812bd02bb19d229103a2aa512815",
+    "scripts/system-backup-supervisor-offline-package.py": "5540a5397ef1c4e1b660fed6a3c20f4a90c09480c2f0a4f5814bb7cbe6e8a25e"
+  },
+  "lineage": [
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping.go",
+      "original_sha256": "a1189368cda81d02c92de4271897f62582b5808926a0384a835d2470e1f834fb",
+      "final_sha256": "a1189368cda81d02c92de4271897f62582b5808926a0384a835d2470e1f834fb"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupinstallationowner/install/original_enable_only_mapping_test.go",
+      "original_sha256": "46f8aa5c05fdc51851a1d3108636dfa7fb858965b5e4b7a7ddccdb9fa630f2e0",
+      "final_sha256": "46f8aa5c05fdc51851a1d3108636dfa7fb858965b5e4b7a7ddccdb9fa630f2e0"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupcatrust/enable_only_observation.go",
+      "original_sha256": "33b44fe37c2bb6afc2acc2c2d3953f5ca1b1a35cf4b1b06ee94974be38c8317a",
+      "final_sha256": "33b44fe37c2bb6afc2acc2c2d3953f5ca1b1a35cf4b1b06ee94974be38c8317a"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupcatrust/enable_only_observation_test.go",
+      "original_sha256": "22e8114315ce51e04f6dff3eb50e996a2d6e120dd3b76343afdc0c26167532f4",
+      "final_sha256": "22e8114315ce51e04f6dff3eb50e996a2d6e120dd3b76343afdc0c26167532f4"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupnoncebootstrap/enable_only_observation.go",
+      "original_sha256": "2c6108dd092cd70b83e58d78063b1d51ffb09d783d845280161bf0018b39cad8",
+      "final_sha256": "2c6108dd092cd70b83e58d78063b1d51ffb09d783d845280161bf0018b39cad8"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupnoncebootstrap/enable_only_observation_test.go",
+      "original_sha256": "61db967016a374f6abc09526947a0da2c27eb49da61792611ddb56e10866132a",
+      "final_sha256": "61db967016a374f6abc09526947a0da2c27eb49da61792611ddb56e10866132a"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupbootstrapsecurity/enable_only_issuers.go",
+      "original_sha256": "5e84436e67c5da533dc53475f1e7706f3c43e03922b90115584ee68d5ca58e8f",
+      "final_sha256": "5e84436e67c5da533dc53475f1e7706f3c43e03922b90115584ee68d5ca58e8f"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupbootstrapsecurity/enable_only_issuers_test.go",
+      "original_sha256": "9161b6ac41276fbb33c2a05aae041abd7fee16d623a26bfcd6a8ca0caf18373c",
+      "final_sha256": "9161b6ac41276fbb33c2a05aae041abd7fee16d623a26bfcd6a8ca0caf18373c"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners.go",
+      "original_sha256": "3bf71f8a5da6567827162fff6fdc6f584e3a15c59f716b48c5bb6fc732120bf2",
+      "final_sha256": "3bf71f8a5da6567827162fff6fdc6f584e3a15c59f716b48c5bb6fc732120bf2"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupbootstrapmaterials/enable_only_security_owners_test.go",
+      "original_sha256": "b1a9ab6cb1aba2861d40f8499431dfce094ce640a8bda5be9f68fc453bdcd616",
+      "final_sha256": "b1a9ab6cb1aba2861d40f8499431dfce094ce640a8bda5be9f68fc453bdcd616"
+    },
+    {
+      "batch": 7,
+      "path": "backend/cmd/system-backup-six-reference-owner/main.go",
+      "original_sha256": "6a1ba15b2a136ffd312bcc366e887daf01f11ded80f925bb1b15c134c33bc3cf",
+      "final_sha256": "6a1ba15b2a136ffd312bcc366e887daf01f11ded80f925bb1b15c134c33bc3cf"
+    },
+    {
+      "batch": 7,
+      "path": "backend/cmd/system-backup-six-reference-owner/main_test.go",
+      "original_sha256": "0eee6bb606510e0d2a1161dcd7f576fbe393fa8cbd67d68b7a9ab92c4e77dab4",
+      "final_sha256": "d9cdbfe22d5f6dc8128792224191472c320c0ff141c279eebbcc1988600e05c7"
+    },
+    {
+      "batch": 7,
+      "path": "backend/cmd/server/main.go",
+      "original_sha256": "5c0533e9f15b86e7680110e3e260aca009f0bcda39e8240317e5b47e3ed763cc",
+      "final_sha256": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc"
+    },
+    {
+      "batch": 7,
+      "path": "backend/cmd/server/system_backup_api_loopback_tls.go",
+      "original_sha256": "3770f0e5ceac7268f2db2a17e1f23c37dfa5a8a82ba8d2584b3868997b053ca5",
+      "final_sha256": "3770f0e5ceac7268f2db2a17e1f23c37dfa5a8a82ba8d2584b3868997b053ca5"
+    },
+    {
+      "batch": 7,
+      "path": "backend/cmd/server/system_backup_api_loopback_tls_test.go",
+      "original_sha256": "18e4f7dad93dad2d6ac735f25f534e6c4527294eff55015c1a2c5d576acc2663",
+      "final_sha256": "18e4f7dad93dad2d6ac735f25f534e6c4527294eff55015c1a2c5d576acc2663"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupinstallationowner/install/enable_only_relations.go",
+      "original_sha256": "667c25dc7314797671c7f9f14204e40701d0cb74d177689a60dc36b1b593e09a",
+      "final_sha256": "667c25dc7314797671c7f9f14204e40701d0cb74d177689a60dc36b1b593e09a"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupinstallationowner/install/enable_only_relations_test.go",
+      "original_sha256": "bdee72d1b95d12798c95273c0011b3d28e7fa327d0ac0d581474a30a3db154cd",
+      "final_sha256": "bdee72d1b95d12798c95273c0011b3d28e7fa327d0ac0d581474a30a3db154cd"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupsecurity/config_mutation_deployment_process.go",
+      "original_sha256": "5ee3ca4ad56620a07f2ffc933bcf13ed303617536c6b6cb3d38e6453152a5060",
+      "final_sha256": "5ee3ca4ad56620a07f2ffc933bcf13ed303617536c6b6cb3d38e6453152a5060"
+    },
+    {
+      "batch": 7,
+      "path": "backend/internal/systembackupsecurity/config_mutation_deployment_process_test.go",
+      "original_sha256": "2dba2049b5da1017c14d34194037196fbeef5dc56d1e27de98c4087ef2d6970d",
+      "final_sha256": "99432b37b18cd4d7759a81de664ff483694da8045b8966d10f08da42b42bb01b"
+    },
+    {
+      "batch": 7,
+      "path": "deployments/container/start.sh",
+      "original_sha256": "0bd13fe367c907a1d24bceb0cc3b515b7157adadc2b87c86822c86cb8a2df5a2",
+      "final_sha256": "0bd13fe367c907a1d24bceb0cc3b515b7157adadc2b87c86822c86cb8a2df5a2"
+    },
+    {
+      "batch": 7,
+      "path": "deployments/nginx/nginx.conf",
+      "original_sha256": "dd7ab6e3743260bbeebc977d69ade744cbda3d17afe9854cbe5803c62e5cee0e",
+      "final_sha256": "0c8436fdcd945e928ef6afb0a451e13361939badadfe87305df6603a3096468d"
+    },
+    {
+      "batch": 7,
+      "path": "deployments/container/system-backup-api-proxy.sh",
+      "original_sha256": "93dce1224d224b8f9c6676e6e9a68723f0b77f67eda535ae70457de4ed34d81b",
+      "final_sha256": "93dce1224d224b8f9c6676e6e9a68723f0b77f67eda535ae70457de4ed34d81b"
+    },
+    {
+      "batch": 7,
+      "path": "scripts/system-backup-first-page-tls-only.py",
+      "original_sha256": "3c83146283440b73ec518c505d7e6bfbccb94c5651ba9c0e3e3d764767d14421",
+      "final_sha256": "3c83146283440b73ec518c505d7e6bfbccb94c5651ba9c0e3e3d764767d14421"
+    },
+    {
+      "batch": 7,
+      "path": "scripts/system-backup-first-page-evidence-transit.py",
+      "original_sha256": "f55f3bc146e7f19f9334598d59dac11de0397db936e135011ffb708d753adbc0",
+      "final_sha256": "f55f3bc146e7f19f9334598d59dac11de0397db936e135011ffb708d753adbc0"
+    },
+    {
+      "batch": 7,
+      "path": "docs/evidence/system-backup-d-page-trial-transport-materials-20261103.md",
+      "original_sha256": "d83343a2e45c98e0b1d27b6cb01822741b07b87096dc1bc636eeddaecb739840",
+      "final_sha256": "d83343a2e45c98e0b1d27b6cb01822741b07b87096dc1bc636eeddaecb739840"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read.go",
+      "original_sha256": "cdf0c86b5ec4dae3c777ad3b71d45a3360d8da392b3c6c0e34fec11408f34b3a",
+      "final_sha256": "fc16f0e9f85d1d01ab7a5244539bda62c273fc3a9d0f224fde807740a276bb0e"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read_test.go",
+      "original_sha256": "66539c2214cdab83858b230d2d769506288070bf54c9e020ae15d5c3773de9a5",
+      "final_sha256": "f3896d3f6007143ed77a6e3803bafadd2697ee7e31bd87c798fcd48aa3c60235"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_mutation.go",
+      "original_sha256": "7f8638c998c8df8fa623777b5dab220547fca8e40e6f823342977b9bbfc5a5f2",
+      "final_sha256": "4898e8a7951ad4df435f42f423275217b4496aac1a57f1302c2bbebc13d9f347"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_mutation_test.go",
+      "original_sha256": "92887cbf6fac8ad2d0bd80529891515a4825262d3c70951bde7a6a756222dda8",
+      "final_sha256": "d661a4e620c5d052b83c68bc50bf99b84166a479dca4bd614d4ffacfd2679e17"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/install/signer_config_mutation_references_test.go",
+      "original_sha256": "c28d97a61392e554334e528ad7a6d0eab077b91a026b379e07f0ea37ef961fe0",
+      "final_sha256": "c28d97a61392e554334e528ad7a6d0eab077b91a026b379e07f0ea37ef961fe0"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/install/signer_config_mutation_references.go",
+      "original_sha256": "95996830ffaf79b5df567923259725d183aab86f9e5fa95d0a00456c8a66f5fb",
+      "final_sha256": "95996830ffaf79b5df567923259725d183aab86f9e5fa95d0a00456c8a66f5fb"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/signer_config_mutation_resources_test.go",
+      "original_sha256": "6d542c148177ddb4c10f3163ea0a7cda73da1ef00473828b867025ad433c00fb",
+      "final_sha256": "6d542c148177ddb4c10f3163ea0a7cda73da1ef00473828b867025ad433c00fb"
+    },
+    {
+      "batch": 8,
+      "path": "backend/internal/systembackupinstallationowner/signer_config_mutation_resources.go",
+      "original_sha256": "f8c2907716a2eb20036eafbba6d8c56ec8c599a415ab5f52400b35cd342a5046",
+      "final_sha256": "f8c2907716a2eb20036eafbba6d8c56ec8c599a415ab5f52400b35cd342a5046"
+    },
+    {
+      "batch": 8,
+      "path": "backend/cmd/system-backup-six-reference-owner/main_test.go",
+      "original_sha256": "d9cdbfe22d5f6dc8128792224191472c320c0ff141c279eebbcc1988600e05c7",
+      "final_sha256": "d9cdbfe22d5f6dc8128792224191472c320c0ff141c279eebbcc1988600e05c7"
+    },
+    {
+      "batch": 9,
+      "path": "backend/internal/systembackupexecution/bootstrap_source_registry_mutation_test.go",
+      "original_sha256": "d661a4e620c5d052b83c68bc50bf99b84166a479dca4bd614d4ffacfd2679e17",
+      "final_sha256": "d661a4e620c5d052b83c68bc50bf99b84166a479dca4bd614d4ffacfd2679e17"
+    },
+    {
+      "batch": 9,
+      "path": "backend/internal/systembackupsecurity/config_mutation_resolver.go",
+      "original_sha256": "80a17ae67e3ce239243978eb822b7f0254388fc269670407207c844679c122c4",
+      "final_sha256": "80a17ae67e3ce239243978eb822b7f0254388fc269670407207c844679c122c4"
+    },
+    {
+      "batch": 9,
+      "path": "backend/internal/systembackupsecurity/config_mutation_signer_prefix_test.go",
+      "original_sha256": "41a66302bc6d1f114567558642d07b493a9a988ff14d079f303b47a5565c6e37",
+      "final_sha256": "41a66302bc6d1f114567558642d07b493a9a988ff14d079f303b47a5565c6e37"
+    },
+    {
+      "batch": 9,
+      "path": "backend/internal/systembackupsecurity/config_mutation_deployment_process_test.go",
+      "original_sha256": "99432b37b18cd4d7759a81de664ff483694da8045b8966d10f08da42b42bb01b",
+      "final_sha256": "99432b37b18cd4d7759a81de664ff483694da8045b8966d10f08da42b42bb01b"
+    },
+    {
+      "batch": 9,
+      "path": "backend/cmd/server/main.go",
+      "original_sha256": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc",
+      "final_sha256": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc"
+    },
+    {
+      "batch": 9,
+      "path": "backend/cmd/server/system_backup_config_mutation_live.go",
+      "original_sha256": "7fdb14dae388526c625fc74ecedcb273a47e8c2fa91b0e49703f069074a98da8",
+      "final_sha256": "7fdb14dae388526c625fc74ecedcb273a47e8c2fa91b0e49703f069074a98da8"
+    },
+    {
+      "batch": 9,
+      "path": "backend/cmd/server/system_backup_config_mutation_live_test.go",
+      "original_sha256": "0349284ba417599382cbbfe569f187adf548e9b0f62da60278be2a76e8ebfca7",
+      "final_sha256": "0349284ba417599382cbbfe569f187adf548e9b0f62da60278be2a76e8ebfca7"
+    },
+    {
+      "batch": 9,
+      "path": "backend/cmd/system-backup-installation-kek-materials/main.go",
+      "original_sha256": "ede9dbe5344c088ab3d91f937bcc7688e51f35f03c51b0479a13efbf54bf22d3",
+      "final_sha256": "ede9dbe5344c088ab3d91f937bcc7688e51f35f03c51b0479a13efbf54bf22d3"
+    },
+    {
+      "batch": 9,
+      "path": "backend/cmd/system-backup-installation-kek-materials/main_test.go",
+      "original_sha256": "6d71e8d772f502f7a1b066e7e01139f655591a368c93abebf0a4b8b057ba4004",
+      "final_sha256": "6d71e8d772f502f7a1b066e7e01139f655591a368c93abebf0a4b8b057ba4004"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition.go",
+      "original_sha256": "e14d425773af4e78b7f3dc966c1b6e6523720b42bb3daf8ae2f1fffa74259a22",
+      "final_sha256": "e14d425773af4e78b7f3dc966c1b6e6523720b42bb3daf8ae2f1fffa74259a22"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition_test.go",
+      "original_sha256": "fc94fcafae56e0c2838e3da571e36c47502a89b0a81fe1a92c7b358ec2998806",
+      "final_sha256": "fc94fcafae56e0c2838e3da571e36c47502a89b0a81fe1a92c7b358ec2998806"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "original_sha256": "07be1fe3b90072b0859499736f160d21e33e174ab1109f96a67958c51e5d5fbe",
+      "final_sha256": "07be1fe3b90072b0859499736f160d21e33e174ab1109f96a67958c51e5d5fbe"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "original_sha256": "30959c1b0a8a6879a2c3386bbe968510f90d295df9033e93c99631080d5ff796",
+      "final_sha256": "30959c1b0a8a6879a2c3386bbe968510f90d295df9033e93c99631080d5ff796"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "original_sha256": "cfa35674ed32743bb1f5e124bcf9185cb43afe0715f4b62e2083caaf11d76eeb",
+      "final_sha256": "cfa35674ed32743bb1f5e124bcf9185cb43afe0715f4b62e2083caaf11d76eeb"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "original_sha256": "9e5250890aa46e00f95a500183107af465c95c3aaf8d2da20eb66fb8494221d9",
+      "final_sha256": "9e5250890aa46e00f95a500183107af465c95c3aaf8d2da20eb66fb8494221d9"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions.go",
+      "original_sha256": "811c431f859649b22488719572a74b11e1cc04c7a11107a6417377ed8986d04a",
+      "final_sha256": "b0f1d8b4794d910bdf5edcdb427719445c9f163b7454c07c2eaf2cbd646fd612"
+    },
+    {
+      "batch": 10,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions_test.go",
+      "original_sha256": "0ae01ed72d3f741ca35237aa589c35d5149695d15f9a23690b38243b8c0965de",
+      "final_sha256": "6b5fc685261aa93b4164a8158807bcf8c6df05c4aa85c34b7420a18760cf6831"
+    },
+    {
+      "batch": 11,
+      "path": "backend/internal/systembackupkekadapter/native_installation_mapping.go",
+      "original_sha256": "620ee43759097e54dd8c0157c1fdd5df0679d43ebd7a6fd65bf01673f2af9565",
+      "final_sha256": "620ee43759097e54dd8c0157c1fdd5df0679d43ebd7a6fd65bf01673f2af9565"
+    },
+    {
+      "batch": 11,
+      "path": "backend/internal/systembackupkekadapter/native_installation_mapping_test.go",
+      "original_sha256": "69118da9f40047645f999e9333bdab1eeff4b7ae401f4ae66721ae1e0391dac5",
+      "final_sha256": "69118da9f40047645f999e9333bdab1eeff4b7ae401f4ae66721ae1e0391dac5"
+    },
+    {
+      "batch": 12,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions.go",
+      "original_sha256": "b0f1d8b4794d910bdf5edcdb427719445c9f163b7454c07c2eaf2cbd646fd612",
+      "final_sha256": "b0f1d8b4794d910bdf5edcdb427719445c9f163b7454c07c2eaf2cbd646fd612"
+    },
+    {
+      "batch": 12,
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions_test.go",
+      "original_sha256": "6b5fc685261aa93b4164a8158807bcf8c6df05c4aa85c34b7420a18760cf6831",
+      "final_sha256": "6b5fc685261aa93b4164a8158807bcf8c6df05c4aa85c34b7420a18760cf6831"
+    },
+    {
+      "batch": 12,
+      "path": "backend/cmd/system-backup-original-coverage-collect/main_test.go",
+      "original_sha256": "3e3ef00eeaf61e7c793b9a67748071bbc962a95dab461387097552d1427d1577",
+      "final_sha256": "3e3ef00eeaf61e7c793b9a67748071bbc962a95dab461387097552d1427d1577"
+    },
+    {
+      "batch": 12,
+      "path": "backend/cmd/system-backup-original-coverage-collect/main.go",
+      "original_sha256": "44f77bfb8f99c40245c1618b9c83311d3d83b6c7a6e178fab53554d1377d0528",
+      "final_sha256": "44f77bfb8f99c40245c1618b9c83311d3d83b6c7a6e178fab53554d1377d0528"
+    },
+    {
+      "batch": 12,
+      "path": "backend/internal/systembackupexecution/original_coverage_source_collection_test.go",
+      "original_sha256": "a200cd9a568b14e7f577b5b632038dd54e9684e2310d2ef167c7ebd8f4475c37",
+      "final_sha256": "a200cd9a568b14e7f577b5b632038dd54e9684e2310d2ef167c7ebd8f4475c37"
+    },
+    {
+      "batch": 12,
+      "path": "backend/internal/systembackupexecution/original_coverage_source_collection.go",
+      "original_sha256": "4254a46fe7af608f0800df0417defc3fac860450df3b2e659c1e4c199d2fd667",
+      "final_sha256": "4254a46fe7af608f0800df0417defc3fac860450df3b2e659c1e4c199d2fd667"
+    },
+    {
+      "batch": 12,
+      "path": "backend/internal/systembackupinstallationowner/install/original_coverage_census.go",
+      "original_sha256": "ba902c60cf7ad4c53630cd35827a5d3b668c1c344d8e9606748debd84d20f2c4",
+      "final_sha256": "ba902c60cf7ad4c53630cd35827a5d3b668c1c344d8e9606748debd84d20f2c4"
+    }
+  ],
+  "distinct_targeted_pass_roots": 52,
+  "distinct_pass_test_items": 137,
+  "skip": 0,
+  "test_log_sha256": {
+    "page-trial-combined-linux-r7.jsonl": "ab897d7e3aced283ba581c4bbbe3716bf9e983c6c6a2315220bb8ff5080b98ee",
+    "page-trial-combined-linux-r8.jsonl": "5e4173456bcaaaf68891ff57afcbd8898417d4b33528ce35401a23d83bd58772",
+    "page-trial-combined-linux-r9.jsonl": "87f576a88b66271407124e54e40a0009dc6321dee122fafd66cd9ec9e38c156c",
+    "page-trial-combined-linux-r10.jsonl": "bf969c90a5a745108b8bf3631439ac9ee8f34771eed6f6421cf051711f4ecaa9",
+    "page-trial-combined-linux-r11.jsonl": "c23e2ae55816fd55e0609c5851ad07fb877a341e7878874e76e258f0e43e8e4c",
+    "page-trial-combined-linux-r12.jsonl": "8a1061f034b29d761925e0838f5ae44f4497e64c8ae6cad055de1ad03150ed0c"
+  },
+  "orchestration_history": "R10 material CLI repeated prior undefined-method error because root read files/source_pins rather than A allowlist; exact two sources admitted and checked in R11. Source defects and original failures retained separately.",
+  "transport": {
+    "scope": "Actual local nginx + production TLS listener functions with synthetic echo handler; no authorization/task acceptance",
+    "positive_exit": 0,
+    "wrong_backend_CA_rejected_502_exit": 0,
+    "temporary_binary_removed": true,
+    "fixture_initial_failure": "Root fixture omitted existing start.sh resolver substitution; corrected exact production fragment, no production change"
+  },
+  "image_plan": {
+    "base": "sha256:c16f07c25c6dc8362aa09b7a1e81f5d1204f2812ae542bbcb21a3946975c6c9d",
+    "go": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+    "commands": {
+      "clawreef-server": "server",
+      "clawreef-northbound-gateway": "northbound-gateway",
+      "system-backup-controller": "system-backup-controller",
+      "system-backup-artifact": "system-backup-artifact",
+      "clawmanager-secret-broker": "secret-broker",
+      "system-backup-import": "system-backup-import",
+      "system-backup-legacy-inventory": "system-backup-legacy-inventory",
+      "system-backup-legacy-preflight": "system-backup-legacy-preflight",
+      "system-backup-seal-custody": "system-backup-seal-custody",
+      "system-backup-migrate": "system-backup-migrate",
+      "system-backup-bootstrap": "system-backup-bootstrap",
+      "system-backup-registration": "system-backup-registration",
+      "system-backup-controller-grants": "system-backup-controller-grants",
+      "system-backup-v2-controller": "system-backup-v2-controller",
+      "backup-worker": "backup-worker",
+      "system-backup-audit-collect": "system-backup-audit-collect",
+      "system-backup-bootstrap-enrolled": "system-backup-bootstrap-enrolled",
+      "system-backup-installation-owner": "system-backup-installation-owner",
+      "system-backup-owner-enroll": "system-backup-owner-enroll",
+      "system-backup-owner-authority": "system-backup-owner-authority",
+      "system-backup-owner-consumer": "system-backup-owner-consumer",
+      "system-backup-signing-resource-owner": "system-backup-signing-resource-owner",
+      "system-backup-minio-permission-owner": "system-backup-minio-permission-owner",
+      "system-backup-minio-sql-owner": "system-backup-minio-sql-owner",
+      "system-backup-source-materials": "system-backup-source-materials",
+      "system-backup-source-registries": "system-backup-source-registries",
+      "system-backup-status-relay-owner": "system-backup-status-relay-owner",
+      "system-backup-first-install-materials": "system-backup-first-install-materials",
+      "system-backup-database-source-grant": "system-backup-database-source-grant",
+      "system-backup-kek-window-owner": "system-backup-kek-window-owner",
+      "system-backup-kek-authority": "system-backup-kek-authority",
+      "system-backup-provider-observe": "system-backup-provider-observe",
+      "system-backup-control-proposal": "system-backup-control-proposal",
+      "system-backup-observer": "system-backup-observer",
+      "system-backup-offline-security": "system-backup-offline-security",
+      "system-backup-installation-kek-materials": "system-backup-installation-kek-materials",
+      "system-backup-minio-native-install": "system-backup-minio-native-install",
+      "system-backup-minio-catalog-initial": "system-backup-minio-catalog-initial",
+      "system-backup-six-reference-owner": "system-backup-six-reference-owner",
+      "system-backup-original-coverage-collect": "system-backup-original-coverage-collect",
+      "system-backup-source-sql-observe": "system-backup-source-sql-observe"
+    },
+    "installer_count": 25,
+    "frontends": "Actual Node24 builds from9a8; all frontend/Hermes/presentation source trees unchanged in subsequent accepted commits",
+    "same_source_images_built": false
+  },
+  "blocking_dependencies": [
+    "No actual original writer/provider fence with full participant/process/volume proof",
+    "No complete immutable historical scope snapshot/unknown-call and retained/reference backfill",
+    "No real 16 witness + adoption producer/first atomic adoption; coverage consumer requires existing coverage and cannot self-bootstrap",
+    "Original source census includes staged evidence/control rows; exact known installation write reconciliation is not implemented",
+    "No actual field177 migration/original history/material issuance or original31-owner native enable transaction",
+    "Mutation factory startup files and exact same Pod/source-facts installation sequence remain field prerequisites",
+    "No real page nonempty task or physical source restoration/publication/fixed-version independent readback/catalog/success"
+  ],
+  "full_acceptance": false,
+  "dr_qualified": false,
+  "performance_gate": false,
+  "artifact_lifecycle": "Temporary transport binary deleted; final delivery build pending. Other owned caches removed after final build verification."
+}

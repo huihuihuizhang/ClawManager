@@ -1,0 +1,53 @@
+{
+  "version": "system-backup-c-three-signer-first-enable-mutation-source.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_FROZEN_PENDING_ROOT_COMPILE_TEST_A_PREFIX_AND_D_FACTORY_WIRING",
+  "source_map": {
+    "path": "backend/.c-signer-mutation-refs-20261103/source-map.json",
+    "sha256": "53618b3bc98f278ea213ff734876fa3cf9061afcf8872a24781f3b7cec83ec78",
+    "files": 4,
+    "Go": 4,
+    "production_Go": 2,
+    "test_Go": 2,
+    "all_targets": "additions"
+  },
+  "source_ownership": "Four NEW disjoint Go targets only, under systembackupinstallationowner and install. No existing D signing consumer/native/source/SQL/main/router file, A security service, frozen Cfinal18, compile-fix or accepted root bytes changed. Root accepted/pushed C18+compilefix at reported a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e is not reapplied by this slice. Root remains sole compiler/tester/native operator.",
+  "purpose": "Actual separate ConfigMutationResourceValidator/Observation for capture_signing, acceptance_signing, catalog_signing. This does NOT call or cast bootstrap Prepare/Authorize/LockReferences, issue/import a source, sign config/backup payloads or grant config write/enable authority. Existing actual A/D session/local-admin/RBAC/strong-auth/nonce/KEK/deployment and every other resource owner remain mandatory.",
+  "API": {
+    "constructor": "install.NewOriginalSignerConfigMutationReferences(actualApplicationDB, install.OriginalSignerMutationSourceFiles{CaptureSourceFile: ORIGINAL_CAPTURE_SOURCE, CaptureSourcePinFile: ORIGINAL_CAPTURE_PIN_FILE, CaptureSourceSHA256: INDEPENDENT_ORIGINAL_CAPTURE_SOURCE_SHA, SigningSourceFile: ORIGINAL_SIGNING_CONSUMER_SOURCE, SigningSourcePinFile: ORIGINAL_SIGNING_CONSUMER_PIN_FILE, SigningSourceSHA256: INDEPENDENT_ORIGINAL_SIGNING_CONSUMER_SOURCE_SHA})",
+    "aliases": "factory.References() returns SAME concrete factory pointer for capture_signing, acceptance_signing, catalog_signing (purpose keys, no reference: prefix). Merge these3 into the actual ConfigMutationResolverSources.References. Constructor reads no files/DB/native; actual Prepare opens and authenticates sources per exact original request context.",
+    "same_observation": "All3 aliases reuse ONE actual prepared observation per same comparable context + installation + actor/session + currentConfigSHA + proposedConfigSHA. Bounded32 pending contexts; ctx completion closes the actual capture observer and both signer consumer observers and drops the cache. No global cached approval, fresh retry, caller Passed bit or extra observation callback.",
+    "source_contract": "Uses existing real CaptureSigningConsumer.load with independently selected source SHA checked BEFORE nested reads, real immutable Kube enrollment and VerifyInstallationRequest; existing OpenPinnedSigningResourceConsumer with exact independent source/pin SHA, plan/public/enrollment/Kube checks and original2 distinct resource grants/material/native observers. The actual source tuple is read directly from the existing consumer private state; no replacement operator key/DSN/password/provider endpoint is decoded."
+  },
+  "A_required_SQL_prefix": {
+    "reason": "Existing first-enable reference iteration reaches artifact/MinIO slots before signer slots. Actual source importers use original capture head/grant before MinIO and signer subdomains. Do NOT acquire MinIO source locks and then newly acquire capture. The NEW signer observation provides an explicit prefix check; normal Recheck refuses if that exact transaction has not invoked the prefix.",
+    "observation_interface": "interface { RecheckOriginalSignerPrefix(context.Context, *sql.Tx, time.Time) error }",
+    "assembly": "In A preparedConfigMutationReadiness.Recheck, after actual global installation/admin authority and before the ordinary resource Recheck loop/MinIO source/fence acquisition, scan prepared observations for this concrete interface and call it using the SAME ctx/tx/already-authoritative now. Then run the UNCHANGED ordinary checks and final clock/current-state checks. All3 signer aliases point at one observation; repeated prefix calls on same tx are idempotent with deadline/context/local-pin/monotonic-time checks. No generic caller-supplied prefix success is accepted by the C factory.",
+    "pseudocode": "for _, o := range p.checks { if prefix, ok := o.check.(interface { RecheckOriginalSignerPrefix(context.Context, *sql.Tx, time.Time) error }); ok { if prefix.RecheckOriginalSignerPrefix(ctx, tx, now) != nil { return fail() } } }\\n// Then the original complete o.check.Recheck loop, fixed-risk/deadline comparisons and final original SQL clock checks.",
+    "lock_order": "Original active local admin -> capture installation-owner head/grant -> acceptance_record head/grant -> catalog_record head/grant. Existing signed source codecs/readOwnerLedger/ReadSigningResourceCandidate perform current revocation/signature/row-version checks, FOR SHARE only. Native HTTP/Kube work and separate DB transactions occur ONLY during Prepare outside the controlled SQL prefix.",
+    "no_unwired_pass": "Without this A prefix integration, ordinary C signer Recheck latches failure BEFORE reading signer/capture SQL rows; it cannot silently pass merely because the interfaces are registered. D/A must integrate and test this hook before claiming lawful first enabling."
+  },
+  "narrow_scope": {
+    "current": "Current ConfigValues SHA must equal the actual independently signed original capture source ConfigSHA. Current enabled=false, proposed enabled=true.",
+    "proposed": "Canonical proposed bytes must equal current bytes with ONLY enabled set true. All other numbers, registries, reference identities/versions and values stay identical. Three exact original signer pins are required. Different original config, changed reference/version, role/key/history/provider/namespace/actor or any other config edit refuses; no rotation/rebinding/default/latest/current fallback.",
+    "source_join": "Both independently signed signer grants must have same original target, actor, enrollment/revision, issuer and public pin as capture, same original offline grant SHA/configSHA, exact three-purpose histories and exact capture binding. Two signer grants also share the same original plan/enrollment document/material SHA+revision and complete distinct bindings/histories. Each source retains its own independent purpose signature domain, current SQL head/grant and actual installed material verification."
+  },
+  "actual_observation": {
+    "outside_SQL": "Read actual original current SQL source snapshot (capture then acceptance then catalog), release transaction; actual capture HTTPS/CA/provider metadata/Kube identity/JWT login/Transit probe; actual purpose-specific acceptance and catalog ObserveSigningResource with independent keys/roles/policies/material, random original native probes and before/after metadata; then read SAME original SQL tuple again and require equality. No successful provider HTTP request alone confers authority.",
+    "secret_drift": "Retain only hashes of actual private runtime JWT/observer-token bytes; compare unchanged before/after/local rechecks. Original consumer file, independent pin, config/grant, CA, enrolled public source, signature/material file pins remain actual checks. No secret is printed or passed on command line; no installer/private issuer credentials are opened.",
+    "original_window": "Capture retains ORIGINAL signed Probe.Until and source Until; acceptance/catalog retain ORIGINAL ObservedSigningResource.Window(), including batch-lease/provider/source expiry. The aggregate is min(original source heads/grants/material windows, native observation deadlines, context deadline, one25-second cap started before observation). It never refreshes signed probe challenge/expiry, key/version, CapturedAt or native window on SQL recheck. Missing/expired/unreachable/native-invalid source gives an error and NO usable fresh observation.",
+    "controlled_recheck": "Exact original ctx/tx, failure/copy latch and monotonic authoritative now. A supplies its ALREADY authoritative now; the adapter returns that same time to existing ReadSigningResourceCandidate without raw UTC_TIMESTAMP or nested SQL. Current capture+signer signatures/CAS/row versions/active revocation state are checked again in that same transaction; actual source/local token/material pins remain unchanged. Final host/context/deadline checks and A final SQL-clock checks remain mandatory."
+  },
+  "static_D_confirmation": {
+    "reviewed": "Existing install/signing_resource_consumer_load.go, signing_resource_consumer_owners.go, consumer_capture.go, consumer_capture_request.go and authority_inputs.go; existing owner/capture_signing_observe.go, ledger.go, signing_resource_observe.go, signing_resource_sql.go, signing_resource_material.go and signing_resource_contract.go. New source is disjoint from these actual D/native source implementations.",
+    "D_work": "Supply the actual original capture/signing consumer document FILE/pin-file/independentSHA selections to the new factory; merge only these3 returned references into the actual A first-enable sources; preserve lifetime through context and integrate A prefix scan above. Existing server/router and all remaining A/B/D owner integrations are outside this slice and must still be real. No bootstrap/mutation cast is accepted."
+  },
+  "root_pending_tests": [
+    "TestSignerMutationFirstEnableRequiresExactOriginalFlip",
+    "TestSignerMutationSourceScopeRejectsForeignOriginalAssociation",
+    "TestSignerMutationSQLClockRetainsAuthoritativeNowAndFailureFloor",
+    "TestOriginalSignerMutationFactoryRequiresIndependentPinsAndThreeAliases"
+  ],
+  "root_validation": "Root compiles these4 new Go against accepted C/D/A/B tree and runs the listed source/model contract tests (owner + owner/install). Also test A actual prefix-before-MinIO ordering, all3 same-observation aliases and unchanged full resource/final-time gates. Tests do NOT qualify actual Vault/Kube/MySQL/native field acceptance or lawful enabling by themselves.",
+  "C_validation": "Source reads/API/scope/import review, gofmt and exact local hashes/bytes only. No Go compile/test/list/vet, Git, SQL, Docker, native commands or field writes by C. No C test/build products. Root deletes its test/build products after verification; original installation sources/receipts remain retained."
+}

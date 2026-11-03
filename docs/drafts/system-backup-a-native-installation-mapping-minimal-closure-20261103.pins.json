@@ -1,0 +1,118 @@
+{
+  "version": "system-backup-a-native-installation-mapping-minimal-closure.v1",
+  "status": "EXACT_HISTORICAL_SOURCE_FROZEN_PENDING_ROOT_REVIEW_COMPILE",
+  "authored_at": "2026-11-03T12:45:00+08:00",
+  "allowlist": [
+    {
+      "path": "backend/internal/systembackupkekadapter/native_installation_mapping.go",
+      "source": "backend/internal/systembackupkekadapter/native_installation_mapping.go",
+      "sha256": "620ee43759097e54dd8c0157c1fdd5df0679d43ebd7a6fd65bf01673f2af9565",
+      "kind": "production",
+      "operation": "admit existing A-owned historical source, byte-identical; no edit/rename"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/native_installation_mapping_test.go",
+      "source": "backend/internal/systembackupkekadapter/native_installation_mapping_test.go",
+      "sha256": "69118da9f40047645f999e9333bdab1eeff4b7ae401f4ae66721ae1e0391dac5",
+      "kind": "test",
+      "operation": "admit existing A-owned historical source, byte-identical; no edit/rename"
+    }
+  ],
+  "file_count": 2,
+  "production_Go": 1,
+  "test_Go": 1,
+  "historical_provenance": {
+    "manifest": "docs/evidence/system-backup-a-installed-provider-observation-contract-20261102.json",
+    "sha256": "419837e4ff675e4c44d2909a859be8706f673fae31552bf85e3d92d172d200c1",
+    "exact_two_file_pins_match": true,
+    "scope_note": "Historical4-file handoff included these A2 plus D materials CLI2; A41/KEK7 minimum closure deliberately did NOT include this native producer because the seven-file reader bridge did not call it. D CLI now directly calls it, so this A2 is separately required. Keep historical receipts unchanged."
+  },
+  "direct_dependencies_existing_baseline_only": [
+    {
+      "path": "backend/internal/systembackupkekadapter/native_provider_observation.go",
+      "sha256": "85c71ae9e2e85b0a7bbcda7871d7d6605989d7fdee397e78f0d25654de5e82d6",
+      "symbols": "ObservedVaultPermissions/VaultPermissionObserver/VaultPermissionObserverConfig",
+      "purpose": "existing real Observe -> private actual complete provider permission observation; SignInstallationMapping only extends that same opaque object",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/capability_records.go",
+      "sha256": "3b39c75d9af39c420ee9dbb102bc5e7c51e9df590ae43bb8d37c0f83960c5e03",
+      "symbols": "ProviderCapabilityFacts and ProviderCapabilityDomain (test signature separation)",
+      "purpose": "existing distinct Generate/Unwrap capability contracts; no source change",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/authority_writer.go",
+      "sha256": "afa79fa831419613ef02be248eb94a2aa4cb98ba415ba987b312f065322562b7",
+      "symbols": "authorityExact/decodeOwnerRecord/authoritySource",
+      "purpose": "existing importer exact validation and existing original signing domain",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/original.go",
+      "sha256": "ea4c49b57cc754ee5b162488d0d27f98bacbb69c202aaa65ba1a60d55d6dadf3",
+      "symbols": "OriginalRecord",
+      "purpose": "existing installation owner binding/source/revision/window/revocation DTO",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/authority_writer_test.go",
+      "sha256": "f1ea84274bea54a15ca613d79aa3ebe2abc7530339036148608626e6d0a7de6e",
+      "symbols": "ownerRecordFixture",
+      "purpose": "existing package-local DATA fixture, test-only prerequisite",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/types.go",
+      "sha256": "b13b5dbcc07ee24a935aa41ba9c208b21917e770c85992f4874c0da7260ee2f2",
+      "symbols": "SourceRecord/Binding",
+      "purpose": "existing full immutable registry source/binding contracts",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    },
+    {
+      "path": "backend/internal/systembackupkms/transit.go",
+      "sha256": "71d3700d363fd668623be15a568b8e10936bf30b1d1dcede8e4760ed898bdea4",
+      "symbols": "Operation/Generate/Unwrap/ErrPermission",
+      "purpose": "existing purpose separation types/errors",
+      "admission": "reference pin only; NOT an authorization to import unreviewed changed bytes. Root compares accepted baseline; stop/review if any mismatch."
+    }
+  ],
+  "dependency_conclusion": "No additional NEW source file, module, generated artifact, SQL/DDL, constructor, permission path or renamed method is required by these2. New method uses only stdlib plus existing reg/kms and already compiled same-package original/provider types/helpers. Root R9 reported the materials CLI missing only this method; existing package dependencies must still be verified against accepted bytes, never copied implicitly from workspace.",
+  "actual_API": "(*ObservedVaultPermissions).SignInstallationMapping(source reg.SourceRecord, revision string, until time.Time, originalIssuer ed25519.PrivateKey) (SignedInstallationMapping,error)",
+  "same_observation": "D materials CLI calls actual NewVaultPermissionObserver(...).Observe(ctx), then this mapping method and existing observed.Sign(Generate)/Sign(Unwrap) on SAME private actual observation. No alternate observation, caller approval DTO, config/task/bootstrap/mutation grant or manual signature JSON path.",
+  "security_contract": [
+    "Independently selected full original installation binding must equal both observed Generate/Unwrap bindings and original observer config; exact purposes checked.",
+    "Observation must be actual private owner-bound result within original freshness, not future/stale; bounded original until and canonical64-byte Ed25519 owner key; exact source/revision.",
+    "Source.ContentSHA256 is recomputed from exact existing Binding JSON; existing OriginalRecord is signed using unchanged system-backup-original-kek.v1 NUL domain, then existing decodeOwnerRecord validates it before return.",
+    "Mapping is not a Generate/Unwrap capability. D command requires separate mapping/permission original issuers and distinct record IDs, then emits existing importer format. This method performs no SQL import/fence/CAS, no coverage/adoption/backfill and no task/key-use permission."
+  ],
+  "tests": [
+    "TestObservedInstallationMappingUsesExistingOriginalImporterContract",
+    "TestObservedInstallationMappingRejectsUnobservedStaleAndForeignInputs (11 negative subcases)"
+  ],
+  "test_scope": "Package-local DATA-only signature/importer compatibility and rejection cases; does not establish actual provider Observe, original permission, native SQL or installed coverage. Root executes meaningful native components separately.",
+  "D_integration_reference": {
+    "manifest": "docs/evidence/system-backup-d-installation-kek-materials-source-20261103.json",
+    "manifest_sha256": "2542cf88ecd5d48a822cf6cf8366f17db719e68f3c06549e1275167a87d513ab",
+    "CLI_path": "backend/cmd/system-backup-installation-kek-materials/main.go",
+    "CLI_sha256": "ede9dbe5344c088ab3d91f937bcc7688e51f35f03c51b0479a13efbf54bf22d3",
+    "CLI_is_not_part_of_this_A_allowlist": true
+  },
+  "A_checks": {
+    "historical_exact_pin_check": "PASS",
+    "gofmt_exit": 0,
+    "gofmt_unformatted": "",
+    "gofmt_errors": "",
+    "executed": "Source reads/SHA/gofmt -l only; no source changed, no Go compile/test/list/vet, SQL/native/network/Git.",
+    "products_generated": []
+  },
+  "root_checks": [
+    "Admit only these2 exact allowlist files, verifying dependency pins against already accepted baseline.",
+    "Compile systembackupkekadapter and actual D materials CLI; run TestObservedInstallationMapping roots and D CLI tests. Then package actual source-matched executable after review.",
+    "Remove only generated test/build products after checks; preserve original sources/receipts."
+  ],
+  "first_adoption": "Still separate missing production closure. This mapping method cannot provide original physical writer fence, immutable external snapshot, historical backfill,17 source witnesses or first-adopter.",
+  "DR": false,
+  "performance": "deferred"
+}

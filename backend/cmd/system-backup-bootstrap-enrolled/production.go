@@ -20,7 +20,7 @@ import (
 	sec "clawreef/internal/systembackupsecurity"
 )
 
-const enrolledCompositionVersion = "enrolled-bootstrap-production-composition.v9"
+const enrolledCompositionVersion = "enrolled-bootstrap-production-composition.v10"
 const enrolledCaptureSource = "/run/system-backup/installation-owner/capture-consumer.json"
 const enrolledCapturePin = enrolledCaptureSource + ".sha256"
 
@@ -47,6 +47,8 @@ type enrolledComposition struct {
 	KEKFile, KEKSHA256                                                 string
 	KEKWindow                                                          install.BootstrapKEKWindowFiles
 	StatusRelay                                                        install.StatusRelayReferenceFiles
+	SixReferences                                                      install.SixReferenceFiles
+	CatalogLocation                                                    install.BootstrapSourceFilePin
 	Nonce                                                              nonceBindingWire
 	ArtifactCA, EvidenceCA                                             caBindingWire
 	Selections                                                         []pd.BootstrapCandidateSelection
@@ -92,13 +94,13 @@ func loadEnrolledComposition(file, expectedSHA string) (enrolledComposition, err
 	if d.SourceNativeRegistries.RedisSources.File == d.SourceNativeRegistries.SecretAllowlist.File {
 		return enrolledComposition{}, sec.ErrRegistrationUnavailable
 	}
-	for _, pin := range [][2]string{{d.StatusRelay.RecordFile, d.StatusRelay.RecordSHA256}, {d.KEKWindow.RecordFile, d.KEKWindow.RecordSHA256}, {d.SourceRegistries.RecordFile, d.SourceRegistries.RecordSHA256}, {d.SigningConsumerFile, d.SigningConsumerSHA256}, {d.Classification.RecordFile, d.Classification.RecordSHA256}, {d.KEKFile, d.KEKSHA256}, {d.MinIO.BundleFile, d.MinIO.BundleSHA256}, {d.MinIO.GrantFile, d.MinIO.GrantSHA256}, {d.MinIO.DefinitionFile, d.MinIO.DefinitionSHA256}, {d.MinIO.PermissionSource.File, d.MinIO.PermissionSource.SHA256}, {d.MinIO.CapabilityIntentFile, d.MinIO.CapabilityIntentSHA256}} {
+	for _, pin := range [][2]string{{d.SixReferences.RecordFile, d.SixReferences.RecordSHA256}, {d.CatalogLocation.File, d.CatalogLocation.SHA256}, {d.StatusRelay.RecordFile, d.StatusRelay.RecordSHA256}, {d.KEKWindow.RecordFile, d.KEKWindow.RecordSHA256}, {d.SourceRegistries.RecordFile, d.SourceRegistries.RecordSHA256}, {d.SigningConsumerFile, d.SigningConsumerSHA256}, {d.Classification.RecordFile, d.Classification.RecordSHA256}, {d.KEKFile, d.KEKSHA256}, {d.MinIO.BundleFile, d.MinIO.BundleSHA256}, {d.MinIO.GrantFile, d.MinIO.GrantSHA256}, {d.MinIO.DefinitionFile, d.MinIO.DefinitionSHA256}, {d.MinIO.PermissionSource.File, d.MinIO.PermissionSource.SHA256}, {d.MinIO.CapabilityIntentFile, d.MinIO.CapabilityIntentSHA256}} {
 		digest, err := hex.DecodeString(pin[1])
 		if err != nil || len(digest) != 32 || hex.EncodeToString(digest) != pin[1] || !filepath.IsAbs(pin[0]) || filepath.Clean(pin[0]) != pin[0] {
 			return enrolledComposition{}, sec.ErrRegistrationUnavailable
 		}
 	}
-	paths := []string{d.StatusRelay.SignatureFile, d.KEKWindow.SignatureFile, d.SourceRegistries.SignatureFile, d.SigningConsumerPinFile, d.Classification.SignatureFile, d.Classification.RegistryDirectory, d.MinIO.ProvenanceFile}
+	paths := []string{d.SixReferences.SignatureFile, d.StatusRelay.SignatureFile, d.KEKWindow.SignatureFile, d.SourceRegistries.SignatureFile, d.SigningConsumerPinFile, d.Classification.SignatureFile, d.Classification.RegistryDirectory, d.MinIO.ProvenanceFile}
 	if len(d.MinIO.ReferenceFiles) != 5 {
 		return enrolledComposition{}, sec.ErrRegistrationUnavailable
 	}
@@ -116,6 +118,9 @@ func loadEnrolledComposition(file, expectedSHA string) (enrolledComposition, err
 func runEnrolled(ctx context.Context, args []string, out io.Writer) int {
 	if ctx == nil || out == nil {
 		return 1
+	}
+	if len(args) > 0 && (args[0] == "catalog-owner-bindings" || args[0] == "issue-original-mapping") {
+		return runOriginalMappingAction(ctx, args, out)
 	}
 	flags := flag.NewFlagSet("system-backup-bootstrap-enrolled", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
@@ -191,12 +196,16 @@ func runEnrolled(ctx context.Context, args []string, out io.Writer) int {
 	if err != nil {
 		return 1
 	}
+	base, sixReferences, err := install.LinkOriginalSixReferenceOwners(base, capture, d.SixReferences)
+	if err != nil {
+		return 1
+	}
 	owners, original, err := materials.NewEnrolledTerminalInstallationOwners(base, capture, d.Terminal, n, artifact, evidence)
-	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || !originalSourceRegistryAliases(owners, sourceRegistries) {
+	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || !originalSourceRegistryAliases(owners, sourceRegistries) || !originalSixReferenceAliases(owners, sixReferences) {
 		return 1
 	}
 	owners, original, err = materials.LinkOriginalWindowSQLBootstrapKEK(original, d.KEKFile, d.KEKSHA256, d.KEKWindow)
-	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || !originalSourceRegistryAliases(owners, sourceRegistries) {
+	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || !originalSourceRegistryAliases(owners, sourceRegistries) || !originalSixReferenceAliases(owners, sixReferences) {
 		return 1
 	}
 	originalKEK, ok := owners.KEK.(*install.OriginalWindowKEK)
@@ -204,10 +213,10 @@ func runEnrolled(ctx context.Context, args []string, out io.Writer) int {
 		return 1
 	}
 	// Do not open C's client credentials until every OTHER owner is concrete.
-	// The five pending C slots are still missing, never counted as installed.
+	// The six pending C slots are still missing, never counted as installed.
 	missing := sec.MissingBootstrapOwnerAdapters(owners)
 	terminalMissing := original.MissingTerminalResources()
-	remaining := missingBeforeOriginalMinIO(owners)
+	remaining := missingBeforeOriginalCatalog(owners)
 	remaining = missingBeforeOriginalSigningResources(remaining)
 	if len(remaining) != 0 {
 		if json.NewEncoder(out).Encode(map[string]any{"status": "blocked", "missing_adapters": missing, "missing_terminal_resources": terminalMissing, "missing_before_minio_construction": remaining, "minio_constructed": false, "kek_preparation_linked": false, "provider_admission": "not_run", "database_opened": false, "configuration_mutated": false}) != nil {
@@ -225,19 +234,19 @@ func runEnrolled(ctx context.Context, args []string, out io.Writer) int {
 		return 1
 	}
 	defer signingConsumer.Close()
-	if owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || owners.KEK != originalKEK || owners.References["kek"] != originalKEK || !originalSourceRegistryAliases(owners, sourceRegistries) || len(missingBeforeOriginalMinIOAfterSigning(owners)) != 0 {
+	if owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || owners.KEK != originalKEK || owners.References["kek"] != originalKEK || !originalSourceRegistryAliases(owners, sourceRegistries) || !originalSixReferenceAliases(owners, sixReferences) || len(missingBeforeOriginalCatalog(owners)) != 0 {
 		return 1
 	}
 	client, err := capture.OpenTerminalKubernetes(ctx)
 	if err != nil {
 		return 1
 	}
-	minio, err := execution.NewMinIOBootstrapTerminalResource(client, d.MinIO)
+	catalog, err := execution.NewOriginalCatalogInitialInventory(client, execution.CatalogInitialInventoryTerminalInput{MinIO: d.MinIO, LocationFile: d.CatalogLocation.File, LocationSHA256: d.CatalogLocation.SHA256})
 	if err != nil {
 		return 1
 	}
-	owners, original, err = addOriginalMinIOTerminal(owners, capture, d.Terminal, minio)
-	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || owners.KEK != originalKEK || owners.References["kek"] != originalKEK || !originalSourceRegistryAliases(owners, sourceRegistries) || len(sec.MissingBootstrapOwnerAdapters(owners)) != 0 || len(original.MissingTerminalResources()) != 0 {
+	owners, original, err = addOriginalCatalogTerminal(owners, capture, d.Terminal, catalog)
+	if err != nil || owners.CrossResources != cross || owners.References["status_relay"] != statusRelay || owners.KEK != originalKEK || owners.References["kek"] != originalKEK || !originalSourceRegistryAliases(owners, sourceRegistries) || !originalSixReferenceAliases(owners, sixReferences) || len(sec.MissingBootstrapOwnerAdapters(owners)) != 0 || len(original.MissingTerminalResources()) != 0 {
 		return 1
 	}
 	candidates, _, err := original.NativeHostDeploymentCandidates(d.Selections, d.NativeHost)

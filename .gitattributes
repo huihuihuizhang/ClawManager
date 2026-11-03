@@ -106,3 +106,35 @@ docs/evidence/supervisor-first-page-C-final-input-source-map-20261103.json -text
 docs/evidence/supervisor-first-page-C-compile-fix-source-map-20261103.json -text whitespace=cr-at-eol
 
 docs/evidence/supervisor-first-page-AB-source-review-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/supervisor-first-page-preview-wiring-review-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/supervisor-six-reference-cli-linux-fixture-repair-20261103.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-five-security-enable-only-20261103.pins.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-six-reference-owner-cli-20261103.pins.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-signer-prefix-resolver-20261103.pins.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-native-installation-mapping-minimal-closure-20261103.pins.json -text whitespace=cr-at-eol
+
+docs/drafts/system-backup-a-fresh-empty-first-adoption-review-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-b-four-registry-enable-only-mutation-source-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-b-enable-only-test-err-scope-supersede-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-c-three-signer-first-enable-mutation-source-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-c-original-coverage-source-collector-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-d-enable-six-and-tls-increment-source-v2-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-d-server-real-config-mutation-source-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-d-installation-kek-materials-source-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-d-main-v10-six-and-catalog-source-v4-20261103.json -text whitespace=cr-at-eol
+
+docs/evidence/system-backup-d-first-adoption-production-gap-v2-20261103.json -text whitespace=cr-at-eol

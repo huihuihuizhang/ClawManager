@@ -33,7 +33,7 @@ func TestEnrolledMainPreservesOriginalKEKBeforeSignerAndC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	names := []string{"LinkOriginalStatusRelayOwners", "NewEnrolledTerminalInstallationOwners", "LinkOriginalWindowSQLBootstrapKEK", "missingBeforeOriginalSigningResources", "LinkSigningResourceConsumerOwners", "missingBeforeOriginalMinIOAfterSigning", "OpenTerminalKubernetes", "NewMinIOBootstrapTerminalResource", "addOriginalMinIOTerminal", "NativeHostDeploymentCandidates"}
+	names := []string{"LinkOriginalStatusRelayOwners", "LinkOriginalSixReferenceOwners", "NewEnrolledTerminalInstallationOwners", "LinkOriginalWindowSQLBootstrapKEK", "missingBeforeOriginalSigningResources", "LinkSigningResourceConsumerOwners", "OpenTerminalKubernetes", "NewOriginalCatalogInitialInventory", "addOriginalCatalogTerminal", "NativeHostDeploymentCandidates"}
 	positions := map[string][]token.Pos{}
 	ast.Inspect(file, func(node ast.Node) bool {
 		if call, ok := node.(*ast.CallExpr); ok {

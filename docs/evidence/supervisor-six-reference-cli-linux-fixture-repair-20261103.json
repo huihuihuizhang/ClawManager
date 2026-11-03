@@ -1,0 +1,7 @@
+{
+  "path": "backend/cmd/system-backup-six-reference-owner/main_test.go",
+  "before_sha256": "0eee6bb606510e0d2a1161dcd7f576fbe393fa8cbd67d68b7a9ab92c4e77dab4",
+  "sha256": "d9cdbfe22d5f6dc8128792224191472c320c0ff141c279eebbcc1988600e05c7",
+  "reason": "Original CLI0700 production requirement; actual Linux0755 TempDir fixture corrected and negative0755 assertion added. No production change.",
+  "original_failure": "page-trial-combined-linux-r7.jsonl"
+}

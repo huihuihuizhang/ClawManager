@@ -1,0 +1,78 @@
+{
+  "version": "system-backup-c-original-coverage-source-collector.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_RAW_COLLECTOR_NOT_FIRST_ADOPTION_NOT_FENCED_NOT_IMMUTABLE_PENDING_ROOT_COMPILE",
+  "source_map": {
+    "path": "backend/.c-original-coverage-collector-20261103/source-map.json",
+    "sha256": "d25955fc1a0d3a1b8ce886c2907cae4ba1aa0050e73be52cd2c2f1546188de4d",
+    "files": 5,
+    "Go": 5,
+    "production_Go": 3,
+    "test_Go": 2,
+    "all_targets": "additions"
+  },
+  "baseline": "Additions over root accepted C18+compile-fix a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e, plus existing real SQLCoverageCensus/S3CoverageCensus/Installer APIs. No accepted source, old final18/map, signer slice or coverage consumer/registry contract changed. No weakening of unknown tables, EOF, versions, locks or first-adoption refusal.",
+  "executable": {
+    "binary": "system-backup-original-coverage-collect",
+    "package": "./cmd/system-backup-original-coverage-collect",
+    "actions": [
+      "sql",
+      "minio"
+    ],
+    "integration": "Optional actual operator diagnostic/raw-source tool. Root may add binary to operator installation-builder; it is NOT a new page-success gate or an adoption command. Each action uses original actual plan/public/kubeconfig/installer DSN/database CA/local-admin password/enrollment and independently pinned original definition FILE+SHA, one bounded2-minute context and a NEW empty0700 output directory. minio additionally requires private RAW original admin username/password file paths; sql refuses those unnecessary inputs. No issuer private key, sign/adopt/force-empty/insecure/delete/ignore-table mode exists."
+  },
+  "implemented": {
+    "auth": "Real Installer authenticate checks original local admin password/active local account, original SQL TLS/server/database/account and real Kubernetes subject; actual immutable enrollment/RBAC namespace scope and original definition namespaceUID/install match. Short original admin SQL row check releases its transaction BEFORE final Kubernetes recheck. This read-only collection permits already installed grant/head names; it does not use initial permission issue as a substitute for source collection authority.",
+    "sql": "Actual same original installer DB. First preserve information_schema TABLE_NAME/ENGINE rows to bounded EOF in original-sql-source-tables.json, explicitly unclassified/unadmitted. Then existing SQLCoverageCensus.Observe scans the full database-wide explicit source table set, schemas/PKs/ALL original rows to EOF, including legacy, failed/deleted tasks, unknown calls and expired leases. Counts/hashes only escape; no source payload/secret bytes. Unknown/missing/non-InnoDB/schema/limit/clock errors remain refusal; table-name diagnostics survive refusal. It does not claim original source range locks, historical refs, backfill or adoption.",
+    "minio": "Actual current original C definition/target/catalog selected, same namespace/Kube chain and provider profile. Actual root/native strict CA+SPKI September info before/after. Existing S3CoverageCensus performs actual HTTPS CA/hostname/protocol-bound version listing including legacy null versions/delete markers, complete multipart upload EOF, bucket versioning and object-lock/retention/legal-hold metadata where supported. Scopes are exactly original artifact root, original staging root and original catalog root; no caller-supplied URL/prefix list or new credentials/accounts. Each complete source scope is saved privately before the next scan, then an explicitly UNADMITTED collection record. S3 census itself uses its EXISTING CA/hostname transport profile, not a newly claimed SPKI check on every page.",
+    "secrets": "Private original raw admin files are read only after actual operator auth. A temporary0600 canonical closed3-field credential file adapts to existing S3 census; no values in argv/stdout/errors. Native/SQL facts are private0600 create-only files. Temporary credential is removed only when its own inode matches; completion requires successful removal. Original administrator files/accounts are never changed. No MC/Docker dependency or external native mutation occurs."
+  },
+  "outputs": [
+    "sql: original-sql-source-tables.json (actual names, not classified); original-sql-coverage.census.json only on strict full original census success",
+    "minio: minio-artifact.census.json, minio-staging_unknown.census.json, minio-catalog_holds.census.json; original-minio-coverage.collection.json only after all3 actual complete live censuses and final auth/Kube/native rechecks",
+    "stdout: only final private FILE+SHA. Error returns no completeness/adoption/empty-history claim; retain partial facts for original-source review. No source record is signed or inserted into evidence/KEK tables."
+  ],
+  "first_adoption_truth": {
+    "can_empty_be_valid": "YES IN PRINCIPLE, but only if original owners establish an exhaustive authorized original scope universe, ALL old SQL/DDL/native writers are actually fenced and pending/accepted external calls drained or retained as unknown refs; complete original SQL sources plus ALL external immutable version/multipart/hold/restore/prune scopes are proved empty at the same retained cut. Then an original backfill owner may attest ZERO historical references/no missing requests as a conclusion of those real sources, not a user empty array or empty new KEK index. The independent adopter must still validate16 witnesses, perform same-tx original source/evidence/fence checks and commit four partitions/refs/adoption atomically.",
+    "present_code": "SQLCoverageCensus and S3CoverageCensus remain Unadmitted. SQLCoverageOwnerPreparation.Prepare explicitly requires len(snapshot.Coverage)==4 and consumes ALREADY adopted sources. Therefore it cannot bootstrap the initial adoption, even if empty. A new privately constructed actual initial-adoption producer is required; do not bypass this consumer check or hand-implement PreparedCoverage with fixed true.",
+    "post_epoch": "reg.Bound.AdoptCoverage compares the current pre-adoption ExpectedEpoch and advances the fence epoch. The independent adoption record must describe the actual committed epoch after adoption; a new first-adopter must explicitly reconcile this order, unknown commit/replay and post-backfill binding. Current later-admission coverage reader expects adoption.Facts.AdoptedEpoch == current snapshot.Epoch.",
+    "initial_not_empty": "No backup is not all sources empty. Current SQL source set includes v2 configs/installation state/evidence as well as backup jobs. C initial signed catalog checkpoint and retained protocol probe are themselves real external versions once installed. They may be authenticated/classified as specific non-key-bearing controls by their original producer, but cannot be deleted/ignored or renamed into empty history to pass.",
+    "self_evidence_cut": "SQL census includes system_backup_v2_evidence. Inserting16 witnesses+1 adoption changes the same raw table hash. A first adopter must retain an explicit original historical cut and exact original row/range locks, then account for its OWN exact new17 non-key-bearing control rows separately. Blindly using LockedSQLCoverageCensus.Recheck after insertion would fail; excluding the entire evidence table or changing expected hashes without original classification would be invalid. Use original cut+owned typed control-delta validation, not a hash cycle.",
+    "current_snapshot": "Live LIST EOF/hash, double live scans, S3 versioning/per-object version IDs, a read-only local file, a new registry fence or a Kubernetes object existence/Ready flag alone do NOT establish a global immutable external snapshot or enforce old physical writers. A sealed inventory could become a snapshot ONLY under real retained native fence and independently authenticated immutable storage/version/protection/cut proof. No such actual producer is introduced here."
+  },
+  "minimal_production_path": [
+    "D + actual legacy/native owners define complete scope/writer inventory and obtain original maintenance authorization. Include old SQL/DDL writers, root/admin/service/STS/external S3 writers, workers, filesystem/PVC/evidence/restore/prune participants and accepted/in-flight calls. A new KEK SQL fence only coordinates participating new writers, not old direct S3 clients.",
+    "D/physical provider owners establish and retain actual fences with native epoch/revision/current proof. Stop/drain old writer/provider operations or enforce rejection of late writes; merely stopping controller scheduling or expiring a lease is insufficient. Unknown writes/MPU remain unknown references unless original native outcome proves absence. Keep original data and unowned resources.",
+    "Under those real fences, run actual original SQL census at original RR cut, acquire original source row/range locks using BeginOriginalTransaction+LockOriginalSources in the SAME caller transaction before KEK Bind. Freeze schema/migration participation too; no count/MAX/new-index scan substitutes. Obtain immutable provider/storage snapshot or physically fenced sealed manifest with independently bound native revision/fixed versions/EOF/protection proof for ALL external scopes.",
+    "Original source owners read fixed versions fully to EOF, authenticate exact manifest/catalog/capture/acceptance/envelope/expected-request/key-binding provenance, map every retained/planned/unknown/hold/restore/prune source to complete refs. For a truly zero historical set, validate all sources empty or exact known non-key controls and sign zero as that authenticated conclusion. Any unclassified old format/missing expected request/unknown external outcome blocks rather than synthesizing release.",
+    "Original witness owners issue four kinds for EACH of four partitions (16): original_sql_census, immutable_external_snapshot, original_writer_fence, historical_backfill. Independent adopter validates original issuer/scope/fence/snapshot/reference set, owns actual same-tx original evidence union before KEK fence, inserts authentic17 evidence rows with explicit own-control-delta cut handling and atomic original refs/coverage epoch, then performs actual readback/replay resolution before releasing physical fences.",
+    "Verify new writers always retain planned/unknown refs BEFORE key generation/external calls and participate in registry fence/current original permit. After actual adoption, existing SQLCoverageOwnerPreparation/CompleteScan becomes the later bootstrap/first-enable consumer. Preserve every existing native/current/time/revocation gate; then original page task still needs its own complete native terminal/readback."
+  ],
+  "ownership_and_issuance": {
+    "C_can_supply": "Current original C publication artifact/staging/catalog native censuses with real owner auth and native version/MPU EOF, exact fixed-version readers (ArtifactReadOnlyS3, ReadCatalogIndex, ResolveEntry, InspectPartContainer), known current publication schema/signature mechanisms and original C-owned task/protocol provenance. Collector below makes the raw native/SQL library path executable; nonempty historical ref/backfill classification is NOT completed.",
+    "D_owns": "Actual global maintenance/adoption transaction, original SQL source/evidence union/range locks and KEK Bind/epoch/refs/coverage atomic commit; concrete first-adopter producer with replay/unknown/readback; complete deployment/participant/old-writer stop/current state; physical provider snapshot/fence integration in coordination with actual storage/system administrators. D cannot replace a storage fence with self-signed JSON or infer it from a runtime switch.",
+    "physical_owners": "Original MinIO/storage administrators and each legacy/native writer owner must supply physical write rejection/drain/snapshot provenance. C six narrow accounts and original permission issuer do not revoke/fence old root/business/STS/service actors. Actual evidence store/legacy local artifact directories/PVC/restore/quarantine/prune sources belong to their original storage/runtime owners (D/A/B as selected), not automatically C current MinIO roots.",
+    "witness_keys": "Each witness kind/partition must use its independently deployed ORIGINAL owner issuer authorization. The independent adoption issuer is separately pinned. Existing C MinIO permission signer or actual SQLWitness signing method does not gain immutable_snapshot/writer_fence/backfill/adoption authority by changing Facts.Kind. Existing consumers authenticate bytes but do not create physical facts.",
+    "C_cannot_produce_now": [
+      "Real native provider/global legacy-writer fence and late-accepted-call drain proof",
+      "Provider/CSI/storage immutable whole-scope snapshot or object-locked fenced sealed-inventory producer",
+      "Complete evidence/old filesystem/PVC/other historical scope universe and native traversal",
+      "Authentication/normalization/ref backfill of every old retained/unknown/hold/restore/prune format and its original expected requests",
+      "Original authenticated16 witness producers and independently authorized first-adopter17 evidence atomic writer",
+      "Actual field empty/nonempty/native/fence/snapshot/first-adoption/backup/restore/DR receipt"
+    ]
+  },
+  "static_schema_warning": "Read-only source comparison found bundled backup_source_schema.json legacy names such as system_backups/system_backup_configs/system_backup_evidence/system_backup_prune_items not named in current SQLCoverageCensus reviewed source/exclusion map (21 static names). This is NOT a field schema result and must NOT be papered over with excludes. The new sql table-name output is actual evidence to guide original legacy source classification. Strict unknown-table refusal stays unchanged.",
+  "estimates": {
+    "delivered": "This raw source collector is now source-complete; root compile/model and actual original field source execution remain. It does not reduce the missing physical source contracts to a JSON task.",
+    "conditional_empty_path": "If D already supplies a verified native fence + immutable snapshot API + exhaustive original scope inventory, initial zero-history adopter/control-delta/epoch/unknown/replay implementation and integration is roughly0.5-1.5 engineer-days plus root tests/actual operator acceptance. This is a planning estimate, not a validated deployment promise.",
+    "missing_physical_protocol": "If the actual provider/writer fence or snapshot primitive is not yet selected/verified, its engineering and maintenance validation cannot be bounded to today. Nonempty/unknown legacy backfill across all4 partitions typically adds multiple source-owner days; exact estimate requires actual inventories and original expected-request provenance.",
+    "deadline": "No14:00 functional-package guarantee, no empty-history shortcut and no actual first-adoption PASS follows from this slice."
+  },
+  "root_tests": [
+    "TestOriginalCoverageCollectCommandRequiresExplicitReadOnlyScope",
+    "TestOriginalMinIOCoverageScopesPreserveAllThreePinnedRoots",
+    "Existing adapter SQLCoverageCensus/S3CoverageCensus protocol/EOF/bounds guards; root alone runs compile/tests/actual original collector"
+  ],
+  "C_validation": "Source/API reads, source editing, gofmt and SHA/size map only. No Go compile/test/list/vet, Git, SQL, Docker, native provider commands or field writes. No C test/build artifacts created. Root deletes test/build products after checking; actual original source observations/receipts are retained private installation records."
+}

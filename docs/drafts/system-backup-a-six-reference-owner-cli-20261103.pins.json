@@ -1,0 +1,51 @@
+{
+  "version": "system-backup-a-six-reference-owner-cli.v1",
+  "status": "source_only_frozen_not_executed",
+  "files": [
+    {
+      "path": "backend/cmd/system-backup-six-reference-owner/main.go",
+      "sha256": "6a1ba15b2a136ffd312bcc366e887daf01f11ded80f925bb1b15c134c33bc3cf"
+    },
+    {
+      "path": "backend/cmd/system-backup-six-reference-owner/main_test.go",
+      "sha256": "0eee6bb606510e0d2a1161dcd7f576fbe393fa8cbd67d68b7a9ab92c4e77dab4"
+    }
+  ],
+  "entry": "system-backup-six-reference-owner issue",
+  "required_flags": [
+    "plan-file",
+    "plan-sha256",
+    "issuer-public-file",
+    "issuer-public-sha256",
+    "kubeconfig-file",
+    "kubeconfig-sha256",
+    "dsn-file",
+    "database-ca-file",
+    "local-admin-password-file",
+    "enrollment-pin-file",
+    "enrollment-pin-sha256",
+    "bundle-file",
+    "bundle-sha256",
+    "request-files-file",
+    "request-files-sha256",
+    "consumption-file",
+    "consumption-sha256",
+    "issuer-private-file",
+    "output-directory",
+    "definition-file",
+    "definition-sha256"
+  ],
+  "actual_path": "Original plan/public pin -> OpenConnections actual TLS SQL/Kubernetes -> install.New -> Installer.IssueSixReference(original local-admin/enrollment/committed bundle, actual native permission observations and final original owner checks) -> SaveFrozenSixReference create-only -> emit public Files locator.",
+  "outputs": [
+    "six-provider-references.record.json",
+    "six-provider-references.signature",
+    "six-provider-references.sha256"
+  ],
+  "output_directory": "Existing private absolute clean directory; each output must not exist. No overwrite/force/manual signature path. Inspect exact outputs after ambiguous failure before retry.",
+  "owner_binding_command": "system-backup-six-reference-owner owner-binding --capture-consumer-file ABS --capture-consumer-pin-file ABS --record-file ABS --record-sha256 SHA --signature-file ABS",
+  "owner_binding_result": "Six BootstrapOriginalOwnerBinding entries with same concrete owner binding hash. DATA only, not native permission or original association authorization; D original mapping issuer must actually sign these exact bindings.",
+  "D_mounts": "Same source version image/operator bundle must carry this executable. Definition references actual mounted deployment/publication S3 material, exact CA/credential files and dedicated evidence Transit observer token/CA. Secrets enter via file paths only, never command-line values or logs. Keep issuer private/local-admin/DSN in isolated owner operator, not backend runtime.",
+  "validation": "A ran gofmt and SHA only. Root compile/tests/native field issuance pending. Root removes its generated test/build products. No products created by A.",
+  "A17_dependency_manifest": "docs/drafts/system-backup-a-six-reference-native-enable-only-20261103.pins.json",
+  "A17_dependency_sha256": "2a52597b53982039d1c31b23bbeaeca6698e16689411177b074ee833ce6cc1d1"
+}

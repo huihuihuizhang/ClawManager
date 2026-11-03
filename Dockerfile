@@ -66,6 +66,40 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/backup-worker ./cmd/backup-worker \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-audit-collect ./cmd/system-backup-audit-collect
 
+FROM backend-builder AS installation-builder
+# Installation tools share the exact application source and module lockfile.
+# Authentication, actual material issuance and ordinary guards stay in Go.
+RUN set -eu; mkdir -p /installation; for tool in \
+      system-backup-bootstrap-enrolled \
+      system-backup-installation-owner \
+      system-backup-owner-enroll \
+      system-backup-owner-authority \
+      system-backup-owner-consumer \
+      system-backup-signing-resource-owner \
+      system-backup-minio-permission-owner \
+      system-backup-minio-sql-owner \
+      system-backup-source-materials \
+      system-backup-source-registries \
+      system-backup-status-relay-owner \
+      system-backup-first-install-materials \
+      system-backup-database-source-grant \
+      system-backup-kek-window-owner \
+      system-backup-kek-authority \
+      system-backup-provider-observe \
+      system-backup-control-proposal \
+      system-backup-observer \
+      system-backup-offline-security \
+      system-backup-installation-kek-materials \
+      system-backup-minio-native-install \
+      system-backup-minio-catalog-initial \
+      system-backup-six-reference-owner \
+      system-backup-original-coverage-collect \
+      system-backup-source-sql-observe; do \
+      CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build \
+        -trimpath -buildvcs=false -ldflags="-s -w -buildid=" \
+        -o "/installation/${tool}" "./cmd/${tool}"; \
+    done
+
 # Explicit target: same source as app/controller, no server, shell or keys.
 FROM scratch AS backup-worker
 COPY --from=backend-builder --chmod=0555 /out/backup-worker /backup-worker
@@ -98,12 +132,14 @@ COPY --from=backend-builder /out/system-backup-registration /usr/local/bin/syste
 COPY --from=backend-builder /out/system-backup-controller-grants /usr/local/bin/system-backup-controller-grants
 COPY --from=backend-builder /out/system-backup-v2-controller /usr/local/bin/system-backup-v2-controller
 COPY --from=backend-builder /out/system-backup-audit-collect /usr/local/bin/system-backup-audit-collect
+COPY --from=installation-builder /installation/ /usr/local/bin/
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 COPY --from=hermes-desktop-builder /app/frontend/public/hermes-desktop-web /usr/share/nginx/html/hermes-desktop-web
 COPY deployments/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY deployments/nginx/njs/desktop_auth.js /etc/nginx/njs/desktop_auth.js
 COPY deployments/container/start.sh /app/start.sh
 COPY deployments/container/system-backup-download-proxy.sh /app/system-backup-download-proxy.sh
+COPY deployments/container/system-backup-api-proxy.sh /app/system-backup-api-proxy.sh
 
 RUN chmod +x /app/start.sh \
     && mkdir -p /etc/nginx/tls /var/log/clawreef

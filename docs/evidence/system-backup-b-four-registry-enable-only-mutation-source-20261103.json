@@ -1,0 +1,70 @@
+{
+  "schema": "system-backup-source-only-review.v1",
+  "date": "2026-11-03",
+  "owner": "B",
+  "status": "SOURCE_ONLY_ENABLE_ONLY_MUTATION_REVIEW_PENDING",
+  "files": {
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read.go": "cdf0c86b5ec4dae3c777ad3b71d45a3360d8da392b3c6c0e34fec11408f34b3a",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_mutation_read_test.go": "66539c2214cdab83858b230d2d769506288070bf54c9e020ae15d5c3773de9a5",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mutation.go": "7f8638c998c8df8fa623777b5dab220547fca8e40e6f823342977b9bbfc5a5f2",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mutation_test.go": "92887cbf6fac8ad2d0bd80529891515a4825262d3c70951bde7a6a756222dda8"
+  },
+  "source_file_count": 2,
+  "test_file_count": 2,
+  "unchanged_B28": {
+    "manifest": "docs/evidence/system-backup-b-four-source-registries-source-supersede-20261103.json",
+    "sha256": "341d617b747db4f647f9a3efcdbe59a00b338b164b00d6de928ca507269a0c97",
+    "all_28_unchanged": true,
+    "root_reported_validation": "B28 execution/CLI relevant r3 checks passed per coordinator. This is not native-positive mutation proof."
+  },
+  "direct_dependencies": {
+    "backend/internal/systembackupsecurity/config_mutation_enable_only.go": "d96329d27417e52017ab5ddf74985a6f9e73b5a6ce32fea0dd9704cf73e8881b",
+    "backend/internal/systembackupsecurity/config_mutation_resolver.go": "ac58d6c60bb7cabf4f28572d4f9abf0004a5cfea5f759d3437fc5aecff97684c",
+    "backend/internal/systembackupinstallationowner/reference_current_identity.go": "e2f567ca0f963715c5b00af53c96cfe729c1ce60d7a1f5e81659d5e9f1b14616",
+    "backend/internal/systembackupinstallationowner/install/terminal_original_public_source.go": "ef4a8df705a0e3d9cad202b6a65fa106721b4065e99b0573a6a87fff0de6712b",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_consumer.go": "d592bd4f7136f69939724fbf7e70e1dabfa406c650b3170dd847703c3be5c385",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": "d7dc3e6d51ca30ca05fc51b7502ed3fbe1f78260a1998221ef8e0c681d3e15b5",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native_registries.go": "b2bf096496f1eb439642f181c0151c7dc84478ca2999506b370082696915060f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": "f7c67337d82c105d1e6ed4e607ab2b9eee8e31c610a91039f244893b9b11eb51",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": "6b2b2c43a7b4ed3f623faa8deb2142a543f34a213bde6fdd7e69eac08f82cbd3"
+  },
+  "interfaces": {
+    "constructor": "execution.NewBootstrapSourceRegistryEnableOnlyMutation(actual *BootstrapSourceRegistryTerminalResource, original install.BootstrapTerminalFiles). Requires the explicit four-slot original source; legacy two-key source is rejected.",
+    "D_link": "Install the SAME returned ConfigMutationResourceValidator pointer into ConfigMutationResolverSources.Registries[parts/source_writers/redis_sources/secret_allowlist] bare keys. Preserve original mapping input and actual current source. Do not add it as mutation write authority.",
+    "original_read_source": "CaptureSigningConsumer.PrepareSourceRegistryEnableOnlyRead(ctx, actual opaque ConfigMutationResourceInput, original V2 files, original mapping files, exact four-slot composition binding)",
+    "current_identity": "A owner.NewReferenceCurrentIdentity.PrepareEnableOnly(in) with actual current SQL Recheck; no BootstrapSQL/AuthorizeCandidate adapter or bootstrap check cast."
+  },
+  "behavior": [
+    "Only security.ValidateEnableOnlyConfigMutation: complete typed canonical snapshots differ solely enabled false -> true. Every original and proposed four RegistryPair pin/version/exact JSON must be equal and match actual original deployed files.",
+    "Actual enrolled original capture is independently loaded. Its full ConfigHash/RegistrySetHash, actor/installation, enrollment, V2 complete selection and original signed mapping four composition bindings are authenticated. The same original capture source and deployed coordinates are retained.",
+    "Original OfflineBootstrapGrant is passed ONLY to existing real V2 native READ-source preparation, not to mutation authorization. The returned mutation observation uses independent actual ReferenceCurrentIdentity and never invokes/exports a bootstrap resource check or write grant.",
+    "A new complete actual native observation runs outside SQL: shared original SQL/Redis/S3/API/resource/native/participants/workspace double collection, exact parts/writers matches, complete Redis file data comparison and original fixed Secret policy against actual full metadata selections. No supplied Passed/count/facts callback or file-hash-only admission.",
+    "Private earliest start is captured BEFORE source preparation; original 30s cap is intersected with original source/mapping/head/context deadlines. Native request contexts are narrowed to that original cap, not the later reader construction. Physical absence/failure denies mutation, with no fresh or deadline DTO.",
+    "Four aliases cache one observation per exact original request ctx/current/proposed/actor/installation/exact pairs. Duplicated alias, changed inputs, copied handles, failure or context cancellation poison the original. A failed preparation is cached as failed too, preventing another alias retry from renewing native age.",
+    "Raw actual mutation SQL transaction is used only by explicit mutation Recheck contract and A original current ledger identity. Same context/transaction, input-time floor and delivered SQL-time floor are separate, allowing four aliases to recheck one actual observation with the same statement time while actual SQL time advances.",
+    "SQL rechecks current original actor/head/grant/account/revocation, immutable original source/mapping/credential files and four exact registry bytes. LAST actual same-tx UTC sample follows all local tails, enforces both floors and fixed native/source window. Original identity deadline may only shrink after current head checks. No native request, commit or direct enabled UPDATE in owner SQL.",
+    "Risk SecurityBoundary=true requires actual mutation session/RBAC/strongauth/nonce/capacity/deployment/KEK17 factory to authorize write. This observation supplies no JWT/session/nonce/KEK authority."
+  ],
+  "tests": {
+    "new_roots": [
+      "TestSourceRegistryEnableOnlyRequiresActualFourSlotSource",
+      "TestSourceRegistryEnableOnlyObservationIsNotDeadlineData",
+      "TestSourceRegistryMutationReadCannotConvertEmptyOrCopiedSource"
+    ],
+    "scope": "Constructor/interface/slot/empty-input rejection, non-serialization, no time-only admission, copied-origin poison. These do not fabricate a positive opaque mutation input or claim real mutation/native success.",
+    "full_positive_remaining": "Actual resolver/mutator with real login/session/strongauth/RBAC/nonce/KEK and all other required owners, real original source + complete native observation + current SQL tail + first enable write + page nonempty backup remain unexecuted/unproven."
+  },
+  "validation": {
+    "executed_by_B": false,
+    "root_target_powershell_from_backend": "go test ./internal/systembackupinstallationowner/install ./internal/systembackupexecution -run '^(TestSourceRegistryEnableOnly.*|TestSourceRegistryMutationRead.*)$' -count=1",
+    "required_root_validation": "Compile exact four new files plus recorded A enable-only/current-identity dependencies and the root accepted B28; format with explicit supersede pins. Then full integration, not only negative tests.",
+    "products_created": [],
+    "cleanup": "B ran no commands/gofmt/build/tests/SQL/Git. Root owns execution and cleanup of its own products."
+  },
+  "acceptance": {
+    "four_mutation_registry_owners": "IMPLEMENTED_SOURCE_ONLY_NOT_YET_ACCEPTED",
+    "deployment_ready": false,
+    "site": "NO_GO",
+    "disaster_recovery": false
+  }
+}

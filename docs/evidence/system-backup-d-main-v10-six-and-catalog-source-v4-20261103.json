@@ -1,0 +1,145 @@
+{
+  "schema_version": "system-backup-d-main-v10-six-and-catalog.v4",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_LINUX_CHECKS",
+  "accepted_baseline": "a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e",
+  "apply_after": "Accepted D109v8 selected sources once; this six-Go overlay replaces only listed bootstrap-enrolled files. Server3 increment remains independently last for server/main.go. Do not stack earlier main-v versions.",
+  "source_pins": [
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition.go",
+      "source": "backend/.d-main-v10-six-and-catalog-20261103/backend/cmd/system-backup-bootstrap-enrolled/catalog_composition.go",
+      "sha256": "e14d425773af4e78b7f3dc966c1b6e6523720b42bb3daf8ae2f1fffa74259a22"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/catalog_composition_test.go",
+      "source": "backend/.d-main-v10-six-and-catalog-20261103/backend/cmd/system-backup-bootstrap-enrolled/catalog_composition_test.go",
+      "sha256": "fc94fcafae56e0c2838e3da571e36c47502a89b0a81fe1a92c7b358ec2998806"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "source": "backend/.d-main-v10-six-and-catalog-20261103/backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "sha256": "07be1fe3b90072b0859499736f160d21e33e174ab1109f96a67958c51e5d5fbe"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "source": "backend/.d-main-v10-six-and-catalog-20261103/backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "sha256": "30959c1b0a8a6879a2c3386bbe968510f90d295df9033e93c99631080d5ff796"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "source": "backend/.d-main-v10-binding-actions-20261103/backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "sha256": "cfa35674ed32743bb1f5e124bcf9185cb43afe0715f4b62e2083caaf11d76eeb"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "source": "backend/.d-main-v10-six-and-catalog-20261103/backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "sha256": "9e5250890aa46e00f95a500183107af465c95c3aaf8d2da20eb66fb8494221d9"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions.go",
+      "source": "backend/.d-main-v10-complete-binding-20261103/backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions.go",
+      "sha256": "b0f1d8b4794d910bdf5edcdb427719445c9f163b7454c07c2eaf2cbd646fd612"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions_test.go",
+      "source": "backend/.d-main-v10-complete-binding-20261103/backend/cmd/system-backup-bootstrap-enrolled/original_mapping_actions_test.go",
+      "sha256": "6b5fc685261aa93b4164a8158807bcf8c6df05c4aa85c34b7420a18760cf6831"
+    }
+  ],
+  "source_map": {
+    "path": "backend/.d-main-v10-complete-binding-20261103/source-map.json",
+    "sha256": "6bddf9faa8080098c848c9e3a435dc83bd1444fba2a02df8aebcbd61778c6179"
+  },
+  "new_explicit_composition_version": "enrolled-bootstrap-production-composition.v10",
+  "new_fields": {
+    "SixReferences": "install.SixReferenceFiles original separately signed record+SHA+signature; actual LinkOriginalSixReferenceOwners before first terminal",
+    "CatalogLocation": "install.BootstrapSourceFilePin original signed initial inventory location file+SHA; joins existing MinIO input via CatalogInitialInventoryTerminalInput"
+  },
+  "actual_linkage": [
+    "A six original provider reference aliases constructed before original terminal/KEK and explicitly preserved through subsequent rebuilds",
+    "C NewOriginalCatalogInitialInventory supplies same actual owner pointer for artifact_write/read/delete,catalog_read/append/snapshot; replaces main five-role constructor",
+    "Preflight filter hides only six still-unconstructed C slots and separately two pending signers; full original30 owner gate and terminal missing gate remain mandatory after constructors",
+    "Actual current OriginalWindowKEK pointer retained in both KEK field and reference:kek; B four aliases, status_relay, cross actual pointers preserved",
+    "Original NativeHostDeploymentCandidates remains actual final candidate path"
+  ],
+  "dependencies": [
+    "Root accepted A17 six reference native/source/CLI closure, concrete API install.LinkOriginalSixReferenceOwners",
+    "Root accepted C final18 catalog initial inventory and exact C compile fix",
+    "All D109v8 prerequisites; no reapply stale shared cross_source facts or R1/R3 fixtures"
+  ],
+  "operator_tool_required": "system-backup-minio-catalog-initial from accepted C closure must be in image; D v4 Dockerfile does not yet list that C CLI, root reported adding two C tools to isolated Dockerfile. Keep it in final root tool list.",
+  "tests_updated": [
+    "TestEnrolledCompositionRequiresExplicitOriginalNativeHostPins adds previous-v9 and missing-six/catalog rejection cases with current positive source-load fixture",
+    "Two existing production-call ordering tests select actual six/catalog constructors and retained original KEK order"
+  ],
+  "tests_added": [
+    "TestOriginalCatalogPreflightKeepsSixUnconstructedOwnersMissing",
+    "TestOriginalMappingActionsRequirePinnedSourceAndDistinctIssuanceMode",
+    "TestOriginalMappingActionsKeepExactLargeOriginalMetadataReadBound",
+    "TestOriginalMappingIssuanceRequiresCompleteOriginalBindingSetBeforeAuthorityIO"
+  ],
+  "d_validation": "gofmt parse/format and SHA256/static API review only; no Go test/build/list/vet, SQL, Docker, Git or field actions. No test artifacts created.",
+  "not_proven": [
+    "Complete native enrollment->A6+C6+all30 owner bootstrap positive integration",
+    "First historical adoption/backfill; NOT implemented by initial catalog snapshot",
+    "Field installed or page complete backup"
+  ],
+  "supersedes": {
+    "manifest": "docs/evidence/system-backup-d-main-v10-six-and-catalog-source-v3-20261103.json",
+    "sha256": "1c85c19a178f793e7620896158be3c8b4eb24381b19a4b52283d90c34afb171b",
+    "reason": "First-install CLI now explicitly requires exact complete30 binding keys, or29 non-capture keys with actual capture hash added/verified by original library. Reject partial/duplicate/unknown/invalid-digest metadata before authority/DB IO. Does not alter original issuer library or add authority."
+  },
+  "actual_owner_binding_commands": {
+    "A_six": [
+      "system-backup-six-reference-owner",
+      "owner-binding",
+      "--capture-consumer-file",
+      "/run/system-backup/installation-owner/capture-consumer.json",
+      "--capture-consumer-pin-file",
+      "/run/system-backup/installation-owner/capture-consumer.json.sha256",
+      "--record-file",
+      "ACTUAL_SIX_RECORD_FILE",
+      "--record-sha256",
+      "ACTUAL_SIX_RECORD_SHA256",
+      "--signature-file",
+      "ACTUAL_SIX_SIGNATURE_FILE"
+    ],
+    "C_six": [
+      "system-backup-bootstrap-enrolled",
+      "catalog-owner-bindings",
+      "--source-file",
+      "ACTUAL_CANONICAL_CATALOG_TERMINAL_INPUT_FILE",
+      "--source-sha256",
+      "ACTUAL_CATALOG_TERMINAL_INPUT_SHA256"
+    ],
+    "C_six_input": "Canonical JCS exact execution.CatalogInitialInventoryTerminalInput {MinIO: same v10 composition.MinIO, LocationFile: same CatalogLocation.File, LocationSHA256: same CatalogLocation.SHA256}; no future top-mapping/native-host pins required, avoiding a binding cycle. Actual concrete C constructor supplies all six same SHA aliases. Source metadata only, no readiness/provider/write approval."
+  },
+  "actual_top_mapping_command": [
+    "system-backup-bootstrap-enrolled",
+    "issue-original-mapping",
+    "--source-file",
+    "ACTUAL_CANONICAL_ORIGINAL_MAPPING_INPUT_FILE",
+    "--source-sha256",
+    "ACTUAL_ORIGINAL_MAPPING_INPUT_SHA256",
+    "--output-directory",
+    "EXISTING_PRIVATE_NEW_OUTPUT_DIRECTORY"
+  ],
+  "actual_top_mapping_contract": {
+    "version": "original-bootstrap-native-mapping-input.v1",
+    "input_type": "originalMappingIssueFiles in original_mapping_actions.go; exact independently pinned Plan/PublicIssuer/Kubeconfig/Enrollment/Bundle/Consumption/OwnerBindings/NativeHostBindings file pins plus DSN/CA/password/issuer-private file locators and EvidenceSourceSHA256/CapacityReportFile",
+    "owner_bindings": "Canonical exact merged30 unique closed bindings, or29 excluding capture_signing (the original library inserts actual bundle capture-record SHA). New CLI verifies complete known shape before authority/DB I/O; the actual original issuer authenticates actor/enrollment/native/current source, and terminal later independently proves every readiness check. Six A and six C entries use actual compiled binding commands.",
+    "real_execution": "OpenConnections validates original Plan/TLS/credentials -> install.New validates independently pinned original issuer -> IssueBootstrapOriginalNativeMapping authenticates actual local admin, current enrollment/capture CAS and exact full consumption; actual native peers/image/mounts observed outside SQL -> final current authority/CAS recheck -> SaveFrozenBootstrapNativeHostBundle six create-only signed outputs",
+    "outputs": [
+      "bootstrap-original.record.json",
+      "bootstrap-original.signature",
+      "bootstrap-original.sha256",
+      "bootstrap-native-hosts.record.json",
+      "bootstrap-native-hosts.signature",
+      "bootstrap-native-hosts.sha256"
+    ],
+    "limitations": "This is original resource/host association issuance only, NOT original KEK mapping authority/capability issuance, first history adoption, bootstrap consumption or mutation execution. Those remain separate actual original actions. If output uncertain inspect existing private files; no overwrite/re-sign fallback."
+  },
+  "required_additional_tools": [
+    "system-backup-six-reference-owner (accepted A17 source)",
+    "system-backup-minio-catalog-initial (accepted C source)"
+  ]
+}

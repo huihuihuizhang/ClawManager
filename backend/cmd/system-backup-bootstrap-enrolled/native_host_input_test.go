@@ -16,13 +16,15 @@ import (
 func TestEnrolledCompositionRequiresExplicitOriginalNativeHostPins(t *testing.T) {
 	directory := t.TempDir()
 	file := filepath.Join(directory, "original-composition.json")
-	for _, fault := range []string{"current", "legacy-version", "previous-v3", "previous-v4", "previous-v5", "previous-v6", "previous-v7", "previous-v8", "missing-redis-source-pin", "relative-secret-policy-path", "missing-native-pin", "relative-native-path", "missing-signer-pin", "relative-signer-source", "missing-source-registry-pin", "relative-source-registry-signature", "missing-kek-window-pin", "relative-kek-window-signature", "missing-status-relay-pin", "relative-status-relay-signature"} {
+	for _, fault := range []string{"current", "legacy-version", "previous-v3", "previous-v4", "previous-v5", "previous-v6", "previous-v7", "previous-v8", "previous-v9", "missing-six-reference-pin", "relative-six-reference-signature", "missing-catalog-location-pin", "missing-redis-source-pin", "relative-secret-policy-path", "missing-native-pin", "relative-native-path", "missing-signer-pin", "relative-signer-source", "missing-source-registry-pin", "relative-source-registry-signature", "missing-kek-window-pin", "relative-kek-window-signature", "missing-status-relay-pin", "relative-status-relay-signature"} {
 		d := enrolledComposition{Version: enrolledCompositionVersion, NativeHost: install.BootstrapNativeHostFiles{RecordFile: filepath.Join(directory, "original-native-host.json"), RecordSHA256: strings.Repeat("a", 64), SignatureFile: filepath.Join(directory, "original-native-host.sig")}}
 		d.Classification = install.FunctionalClassificationFiles{RecordFile: filepath.Join(directory, "classification.json"), RecordSHA256: strings.Repeat("b", 64), SignatureFile: filepath.Join(directory, "classification.sig"), RegistryDirectory: directory}
 		d.SourceRegistries = install.BootstrapSourceRegistryFiles{RecordFile: filepath.Join(directory, "source-registries.json"), RecordSHA256: strings.Repeat("f", 64), SignatureFile: filepath.Join(directory, "source-registries.sig")}
 		d.KEKFile, d.KEKSHA256 = filepath.Join(directory, "original-kek.json"), strings.Repeat("c", 64)
 		d.KEKWindow = install.BootstrapKEKWindowFiles{RecordFile: filepath.Join(directory, "kek-window.json"), RecordSHA256: strings.Repeat("c", 64), SignatureFile: filepath.Join(directory, "kek-window.sig")}
 		d.StatusRelay = install.StatusRelayReferenceFiles{RecordFile: filepath.Join(directory, "status-relay-reference.record.json"), RecordSHA256: strings.Repeat("f", 64), SignatureFile: filepath.Join(directory, "status-relay-reference.signature")}
+		d.SixReferences = install.SixReferenceFiles{RecordFile: filepath.Join(directory, "six-reference.json"), RecordSHA256: strings.Repeat("a", 64), SignatureFile: filepath.Join(directory, "six-reference.sig")}
+		d.CatalogLocation = install.BootstrapSourceFilePin{File: filepath.Join(directory, "catalog-location.json"), SHA256: strings.Repeat("b", 64)}
 		d.SigningConsumerFile, d.SigningConsumerPinFile, d.SigningConsumerSHA256 = filepath.Join(directory, "signing-consumer.json"), filepath.Join(directory, "signing-consumer.sha256"), strings.Repeat("e", 64)
 		d.MinIO = execution.MinIOBootstrapTerminalInput{BundleFile: filepath.Join(directory, "minio-bundle.json"), BundleSHA256: strings.Repeat("d", 64), GrantFile: filepath.Join(directory, "minio-grant.json"), GrantSHA256: strings.Repeat("d", 64), DefinitionFile: filepath.Join(directory, "minio-definition.json"), DefinitionSHA256: strings.Repeat("d", 64), CapabilityIntentFile: filepath.Join(directory, "minio-intent.json"), CapabilityIntentSHA256: strings.Repeat("d", 64), ProvenanceFile: filepath.Join(directory, "minio-provenance.json")}
 		d.MinIO.PermissionSource.File, d.MinIO.PermissionSource.SHA256 = filepath.Join(directory, "minio-permission.json"), strings.Repeat("d", 64)
@@ -31,6 +33,14 @@ func TestEnrolledCompositionRequiresExplicitOriginalNativeHostPins(t *testing.T)
 			d.MinIO.ReferenceFiles = append(d.MinIO.ReferenceFiles, execution.MinIOBootstrapReferenceFile{File: filepath.Join(directory, "minio-reference.json")})
 		}
 		switch fault {
+		case "previous-v9":
+			d.Version = "enrolled-bootstrap-production-composition.v9"
+		case "missing-six-reference-pin":
+			d.SixReferences.RecordSHA256 = ""
+		case "relative-six-reference-signature":
+			d.SixReferences.SignatureFile = "relative.sig"
+		case "missing-catalog-location-pin":
+			d.CatalogLocation.SHA256 = ""
 		case "previous-v7":
 			d.Version = "enrolled-bootstrap-production-composition.v7"
 		case "previous-v8":

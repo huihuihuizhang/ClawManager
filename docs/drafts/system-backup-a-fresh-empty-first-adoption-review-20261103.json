@@ -1,0 +1,113 @@
+{
+  "version": "system-backup-a-fresh-empty-first-adoption-path-review.v1",
+  "reviewed_at": "2026-11-03T12:24:00+08:00",
+  "status": "NO_PRODUCTION_FIRST_ADOPTER_EXISTS_NO_FIELD_READY_PROMISE",
+  "scope": "Source review of a possible STRICT fresh-install / actual original-reference-empty adopter. No implementation, native scan, writer hold or evidence issuance was performed. This is not an approval or empty-source proof.",
+  "reviewed_sources": [
+    {
+      "path": "backend/internal/systembackupkekadapter/sql_coverage_census.go",
+      "sha256": "dc7a8b70844858ed02e0442cb9200095cc6e2981cf8c6e064cafcbc7bb83f29f"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/s3_coverage_census.go",
+      "sha256": "6dd50207b16634c16a35648d7fff16eb9eb101a278205082c525a690b2e83c0f"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_sql_witness.go",
+      "sha256": "94979f15d9a2e7302ef80845e7334347160f82985f98d2f3ad0c3d47c38374cb"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/coverage_owner_sql.go",
+      "sha256": "6c6d097f8869df88507fb4084b6c6f5e25f7880a47bc85dd410d5f9615892bf8"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/coverage.go",
+      "sha256": "9e08bfc4045084efbd5920a8261d989e69aaa6f86fcc60a500b7f153053fa432"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/store.go",
+      "sha256": "fe8f177b476d5bfa19436788a7e8eda97fe005123324c1b58bed5558c945abd9"
+    },
+    {
+      "path": "backend/internal/systembackupkekregistry/types.go",
+      "sha256": "b13b5dbcc07ee24a935aa41ba9c208b21917e770c85992f4874c0da7260ee2f2"
+    }
+  ],
+  "actual_findings": [
+    "Production search finds no Bound.AdoptCoverage call outside its store implementation. Current materials/window/authority CLIs do not hold original writers, create physical immutable snapshots, backfill history or first-adopt.",
+    "SQLCoverageOwnerPreparation.Prepare explicitly requires snapshot.Coverage length4 and authenticates already-adopted epoch plus17 original evidence sources. It cannot bootstrap itself, and must not be weakened to accept zero coverage.",
+    "SQLCoverageCensus.Observe produces unadmitted complete database-wide 49-source facts. BeginOriginalTransaction/LockOriginalSources/Recheck preserve original row/range locks before KEK fence and detect own changes; these do not stop external jobs, providers, Agents or old nonparticipating writers.",
+    "Only SignOriginalSQLWitness exists for a real SQL census. There is no production issuer for immutable_external_snapshot/original_writer_fence/historical_backfill or a first adoption prepared object.",
+    "S3CoverageCensus.Observe reads versioning, all object versions/delete markers/null versions/retention/legal holds and multipart upload EOF with bounded pagination, but deliberately returns UnadmittedS3CoverageCensus. It has no immutable snapshot/signing/adoption API. Two identical live LIST results are not an immutable provider snapshot.",
+    "Bound.AdoptCoverage requires real independently prepared Sources4 and exact nonnil References matching the current locked original snapshot, correct pre-adoption epoch and same transaction Recheck; then stores4 coverage rows and advances epoch once. CompleteScan only verifies already-adopted coverage."
+  ],
+  "strict_fresh_empty_eligibility": [
+    "Freshness must come from an independently authenticated installation/source plan, actual full original source inventory, physical writer fence and full history reconciliation. A request flag, enabled=false, new KEK tables/index empty or administrative approval is insufficient.",
+    "49 source table schemas/classifications remain unchanged (full177 schema admission and closed exact exclusions). Scan includes all installations conservatively, legacy/failed/deleted tasks, unknown calls, expired leases and restore/prune/hold history; no filtered active-only subset or new wildcard exclusion.",
+    "All original provider locations and historical roots from original configuration/catalog/history must be enumerated; current new bucket/root alone cannot prove all-original-source emptiness. Every known immutable version, marker, multipart/unknown provider call and original expected-request record needs EOF reconciliation.",
+    "Any unexplained historical source, reference, provider member, active/unknown call, retention/hold, unsupported schema/table/driver or missing owner proof REJECTS the strict fresh-empty path. Do not delete, normalize or fabricate such history to make it empty. General nonempty migration/backfill remains separate.",
+    "A no-op historical backfill result is legal ONLY after actual locked full source/history EOF proves there are no references to backfill. It still needs its own original source receipt for all4 partitions."
+  ],
+  "important_staging_circularity": [
+    "Literal all49 source ROW counts zero is not compatible with blindly staging17 system evidence rows first: system_backup_v2_evidence is itself one of the49 original lifecycle sources. system_backup_v2_configs and installation-state tables are also included, so a prior disabled config/install row already prevents a literal all-row-zero claim.",
+    "Consequently do not sign empty facts, stage own rows and then reuse the same census or exclude these rows/tables. An actual original maintenance producer must either authenticate exact known new-install control writes as an explicit complete expected delta with correct final census/reference reconciliation, or stage authoritative material before the final locked scan and prove original REFERENCE emptiness while fully classifying every nonempty row. This is additional real source work, not an empty-index shortcut.",
+    "The existing LockedSQLCoverageCensus.Recheck intentionally rejects its own subsequent row mutations; a production orchestration must account for evidence/backfill writes without bypassing this check. If this cannot be done with the original transaction protocol, the strict empty path is not yet implementable."
+  ],
+  "minimum_legal_sequence": [
+    {
+      "step": 1,
+      "owner": "D physical maintenance / original writer owners, with C provider owner",
+      "work": "Authenticated original maintenance authority acquires a real durable writer fence across every actual SQL/API/controller/worker/Agent/provider writer; drain or reconcile all original in-flight/unknown calls. Fence identity/generation/complete participants/current revocation/deadline is independently observable and retained until final commit/rollback. A config disabled bit or lease row alone does not do this."
+    },
+    {
+      "step": 2,
+      "owner": "C immutable external source owner; D original SQL/history owners",
+      "work": "With all physical writers held, obtain actual immutable snapshot authority for the complete external scope and consume complete native version/hold/multipart EOF plus original catalog/expected-request history. Perform real SQL49 census and original historical reconciliation. Produce exact independently signed original4part x4kind witness records. A contributes existing genuine SQL-only witness producer; it does not sign the other three kinds from DTOs."
+    },
+    {
+      "step": 3,
+      "owner": "A first-adopter consumer + D original transaction orchestration",
+      "work": "New private concrete first-adopter PreparedCoverage (separate from SQLCoverageOwnerPreparation) consumes only actual authenticated original source evidence and opaque native/maintenance proofs. Bind target/database/installation, original epoch, four exact partition revisions, complete reference sets and all17 records. No exported Passed/empty DTO or accept-all constructor."
+    },
+    {
+      "step": 4,
+      "owner": "D same original maintenance transaction",
+      "work": "Acquire original auth/domain/source rows and source ranges before shared KEK fence; prelock exact17 evidence records in reviewed original order. Resolve staging/known-new-row delta explicitly. Recheck full locked source facts, native snapshot/fence original pins/current revocation and immutable time windows with local/SQL reads only; no provider I/O after source locks."
+    },
+    {
+      "step": 5,
+      "owner": "Original adoption issuer + D store writer",
+      "work": "Read actual current fence epoch E from that actual locked snapshot; sign exact adoption facts for the actual post-adoption epoch, then call Bound.AdoptCoverage with ExpectedEpoch E and exact snapshot References. The unchanged store advances once E->E+1 when creating4 coverage rows. If another binding/reference stage changes epoch, resnapshot/reconcile under the real protocol; never hard-code E=0/1 or relabel old signed facts."
+    },
+    {
+      "step": 6,
+      "owner": "D original finalizer; root field verification",
+      "work": "Final original source/fence/evidence/retained-set/deadline checks; atomically commit only actual complete evidence/coverage state. Rollback on loss/expiry/uncertain history. Release physical fence under original owner protocol only after durable outcome is reconciled. Reload current existing SQLCoverageOwnerPreparation and demonstrate actual CompleteScan before bootstrap/first enable/backup. No proof export or permission extension after rollback."
+    }
+  ],
+  "root_relay_boundaries": {
+    "A": [
+      "Can supply existing real SQL49 census/range lock and SQL-only witness signer, exact source-consuming first-adopter validator/importer/CLI once actual external/fence/backfill proof APIs and evidence-staging contract are provided.",
+      "Cannot manufacture original physical maintenance/fence participation, immutable provider snapshot, Agent unknown-call resolution, original history EOF/backfill or independent source signatures from caller records."
+    ],
+    "C": [
+      "Must identify/implement a concrete immutable external snapshot authority and full original root/version/hold/multipart history source; current MinIO permission5/catalog snapshot/live S3 LIST are not automatically that coverage authority.",
+      "Must provide its exact typed proof/issuer/current revoke/window contract and whether an actual provider/cluster owner can hold all original mutations through adoption."
+    ],
+    "D": [
+      "Must identify/implement every actual physical writer stop/hold/drain path and original participant/unknown-call/history reconciliation, same-tx source-range/evidence/fence order, original no-op backfill producer and actual first-adopter executable.",
+      "Must resolve the self-staged17 evidence/current-config rows versus literal49-empty claim before declaring fresh-only workable. Evidence union and CompleteScan alone do not implement adoption."
+    ],
+    "root": [
+      "Obtain C/D explicit ownership/implementation estimates and actual operator credentials/targets. Do not relay14:00 as a supported ready time. No network or cross-chat messages were sent by A."
+    ]
+  },
+  "effort_forecast_not_commitment": {
+    "A_scoped_work": "After real C/D opaque proof APIs, original issuer permissions and staged-row protocol are available and reviewed: approximately1-2 working days for first-adopter consumer/importer/CLI plus meaningful integrated rollback/revoke/deadline tests. This is a source-review estimate, not field completion commitment.",
+    "C_D_critical_path": "No trustworthy total date can be given by A: actual immutable source/fence/history producer APIs and production executor are absent, and C/D availability/implementation effort has not been confirmed to A. Native integration may expose additional historical or authority gaps.",
+    "today_14": "Not a credible usable-first-backup promise on current evidence. Existing six refs/five mutation validators/CLI completion does not resolve this blocker."
+  },
+  "validation": "Read-only source/SHA/search only; no Go/SQL/native/Git calls and no generated test/build products. Root executes real checks and deletes its generated products.",
+  "DR": false,
+  "performance": "deferred"
+}

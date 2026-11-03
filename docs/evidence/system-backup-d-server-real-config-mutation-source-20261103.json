@@ -1,0 +1,128 @@
+{
+  "schema_version": "system-backup-d-server-real-config-mutation-composition.v1",
+  "status": "FROZEN_SOURCE_ONLY_REQUIRES_ROOT_COMPILATION_AND_INTEGRATION",
+  "accepted_baseline": "a1ce84c0a2e6d085fd1bac59e7c1344bed2d977e",
+  "source_pins": [
+    {
+      "path": "backend/cmd/server/main.go",
+      "source": "backend/.d-config-mutation-server-production-20261103/backend/cmd/server/main.go",
+      "sha256": "b3a4888a8840ecebd4414daf4336bad7f34545d5bf807781b1aa0edc5f790dbc",
+      "before_sha256": "5c0533e9f15b86e7680110e3e260aca009f0bcda39e8240317e5b47e3ed763cc"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_config_mutation_live.go",
+      "source": "backend/cmd/server/system_backup_config_mutation_live.go",
+      "sha256": "7fdb14dae388526c625fc74ecedcb273a47e8c2fa91b0e49703f069074a98da8"
+    },
+    {
+      "path": "backend/cmd/server/system_backup_config_mutation_live_test.go",
+      "source": "backend/cmd/server/system_backup_config_mutation_live_test.go",
+      "sha256": "0349284ba417599382cbbfe569f187adf548e9b0f62da60278be2a76e8ebfca7"
+    }
+  ],
+  "dependency_manifests": [
+    {
+      "path": "docs/evidence/system-backup-d-enable-six-and-tls-increment-source-v2-20261103.json",
+      "sha256": "99e3e22c9180cbd5859bde1b179029e3b7ec7be507560de983c9f8cdb0f1356a"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-five-security-enable-only-20261103.pins.json",
+      "sha256": "00c4b36f7a1f6725159709331823fc9005bc6b85192d487748c86378517693f8"
+    },
+    {
+      "path": "docs/drafts/system-backup-a-six-reference-native-enable-only-20261103.pins.json",
+      "sha256": "2a52597b53982039d1c31b23bbeaeca6698e16689411177b074ee833ce6cc1d1"
+    },
+    {
+      "path": "docs/evidence/system-backup-b-four-registry-enable-only-mutation-source-20261103.json",
+      "sha256": "cbcdcfa61d749a79bb3ad1524cf299f446a83fd258694a61641fe17a8ccf375a"
+    },
+    {
+      "path": "docs/evidence/system-backup-c-three-signer-first-enable-mutation-source-20261103.json",
+      "sha256": "0b0968a6e7cff81bc57da3bb3ac2fe33773d4ef8a683bfb777d6fd6750342368"
+    }
+  ],
+  "critical_additional_dependency": "A current resolver signer-prefix supersede must run each distinct observation RecheckOriginalSignerPrefix before all ordinary resource Rechecks; C3 otherwise refuses. Obtain exact A source map, do not patch frozen files.",
+  "apply_order": "Accepted D109v8 -> D6+TLS increment v2 -> this THREE file increment LAST. This main.go retains exact TLS9002 changes and adds actual factory/session/routes; do not later overwrite it with old D6/TLS main.go. No other A/B/C source overwritten.",
+  "actual_construction": {
+    "registries": {
+      "A5": [
+        "strong_auth_issuers",
+        "provider_proof_issuers"
+      ],
+      "B4": [
+        "parts",
+        "source_writers",
+        "redis_sources",
+        "secret_allowlist"
+      ],
+      "D5": [
+        "failure_domains",
+        "disaster_identity_mapping",
+        "rbac_bindings"
+      ]
+    },
+    "references": {
+      "A5": [
+        "artifact_ca",
+        "evidence_ca",
+        "nonce_hmac"
+      ],
+      "A6": [
+        "artifact_upload_issuer",
+        "evidence_delete",
+        "evidence_kek",
+        "evidence_read",
+        "evidence_store",
+        "evidence_write"
+      ],
+      "C6": [
+        "artifact_delete",
+        "artifact_read",
+        "artifact_write",
+        "catalog_append",
+        "catalog_read",
+        "catalog_snapshot"
+      ],
+      "C3": [
+        "capture_signing",
+        "acceptance_signing",
+        "catalog_signing"
+      ],
+      "D5": [
+        "status_relay"
+      ],
+      "KEK": [
+        "kek"
+      ]
+    },
+    "cross_resources": "D same actual relation owner",
+    "deployment_switch": "D actual process public-v1/task-writer environment observation",
+    "counts": "9 registries+20 references+cross+deployment =31; duplicate insertion, missing owner or wrong counts reject; no fallback validators."
+  },
+  "actual_server_wiring": [
+    "Factory constructed before AuthService; selected factory failure aborts server startup with fixed redacted log",
+    "factory.LoginSessions() is exact recorder passed to services.WithSystemBackupSessions, refresh/logout hooks, read/task application; old separate recorder built only when mutation factory disabled",
+    "Same Gin versionedAdmin authentication group registers PUT /system-backup-config and POST /system-backup-config/rollback",
+    "ONE bounded request context (90 seconds or earlier parent deadline) reused throughout attempt; native owner first caps remain",
+    "TLS uses actual existing same-router127.0.0.1:9002 listener/nginx verified private CA; no XFP-derived TLS"
+  ],
+  "deployment_configuration": {
+    "SYSTEM_BACKUP_CONFIG_MUTATION_ENABLED": "true only after actual original source files are installed; false/default leaves old behavior",
+    "SYSTEM_BACKUP_CONFIG_MUTATION_COMPOSITION_FILE": "Absolute private canonical JCS JSON original-first-enable-production-composition.v1; exact Go struct backupMutationComposition defines closed source locator/data fields, no authority interface/Passed/grant",
+    "SYSTEM_BACKUP_CONFIG_MUTATION_COMPOSITION_SHA256": "Exact independently supplied source SHA256",
+    "required_existing": "SYSTEM_BACKUP_READ_SESSIONS_ENABLED=true and SYSTEM_BACKUP_READ_LIVE_ENABLED=true plus actual server UUID/installation ID and original JWT session secret; existing exact execution protocol/independent deployment switch still checked per attempt",
+    "startup_order_limitation": "Actual original files required before selected factory starts. Startup/restart and original PodSpec/source facts must be reconciled by field installer; this source does not generate/rotate material or make the missing first-adoption producer."
+  },
+  "tests_authored": [
+    "TestConfigMutationProductionSelectionRequiresOriginalPinnedSourceBeforeComposition",
+    "TestConfigMutationLiveRouteMountRetainsClosedProduction"
+  ],
+  "d_validation": "gofmt parse/format and SHA256/static API inspection only. No Go tests/build/list/vet, SQL, Docker, Git or field actions. No build artifacts created.",
+  "remaining_hard_blocks": [
+    "Real first historical KEK adoption/backfill producer and original physical writer/immutable history sources",
+    "Bootstrap main still needs final A6/C catalog composition",
+    "Root Linux compiler/regression and actual native positive31-owner enable transaction",
+    "Field material issuance/installation/page complete backup; no page-ready claim"
+  ]
+}
