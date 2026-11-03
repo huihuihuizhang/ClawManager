@@ -1,0 +1,63 @@
+{
+  "schema": "a-kek-window-owner-cli.v1",
+  "date": "2026-11-03",
+  "status": "SEPARATE_TWO_FILE_SOURCE_EXTENSION_ROOT_BUILD_PACKAGE_INCLUSION_PENDING",
+  "files": {
+    "backend/cmd/system-backup-kek-window-owner/main.go": "9cdc37e94e989117b06817f456bdd036faf8b33e20ea7f79f536a632d2d151fa",
+    "backend/cmd/system-backup-kek-window-owner/main_test.go": "3fbf131c6ca93c0b5ad8d5bbde0ebfe0458b53e6496733426d0b2b7cb938fc46"
+  },
+  "production_go": 1,
+  "test_go": 1,
+  "frozen_combination_unchanged": {
+    "manifest": "docs/drafts/system-backup-a-root-combination-source-closure-20261103.json",
+    "sha256": "8f78bea5adb2d889b287007d8082e03fa7d3b690145681f80a99bbf7dbb994e9",
+    "all_41_current_file_hashes_match": true,
+    "root_combination": "Root reports its A41+B25 noncircular66 source snapshot and37 Linux correctness roots running. A did not edit those sources or their historical freezes, and did not independently verify root's execution. B snapshot-only gofmt remains root's explicit byte-accounted operation.",
+    "extension": "Only these two new command Go are proposed in addition to the frozen41/root66. No existing production/test/main/Dockerfile files were changed."
+  },
+  "practical_install_entry": {
+    "binary": "system-backup-kek-window-owner",
+    "issue_action": "issue",
+    "issue_required_flags": [
+      "plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256",
+      "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file",
+      "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256",
+      "bundle-file", "bundle-sha256", "request-files-file", "request-files-sha256",
+      "consumption-file", "consumption-sha256", "issuer-private-file", "output-directory",
+      "kek-source-file", "kek-source-sha256"
+    ],
+    "issue_actual_call": "The command loads exact independently pinned original source config via LoadOriginalSQLBootstrapKEKPreparation; selects the complete original consumption, request, committed capture bundle, plan/enrollment/public pins; opens actual TLS DB/Kubernetes connections; authenticates through Installer.New/IssueBootstrapKEKWindow; saves exact signed material with SaveFrozenBootstrapKEKWindow. It invokes the real methods, not a DTO signer or requirements/refusal-only stub.",
+    "issue_output": "Create-only bootstrap-kek-window.record.json, bootstrap-kek-window.signature, bootstrap-kek-window.sha256 in an existing private directory; JSON stdout includes only status and BootstrapKEKWindowFiles/record SHA. Actual mapping, separate purpose evidence and all real coverage/adoption must authenticate before signing.",
+    "output_guard": "Clean absolute existing private nonsymlink directory; all three fixed names must be absent before credential/network opening. Shared writer still creates exclusively. If a later write/output fails, preserve exact outputs for inspection; never auto-resign/repair/overwrite a partial result.",
+    "input_guards": "Exact SHA-pinned files, unchanged private-reader bounds, strict RequestFiles/Plan/Enrollment decoders, duplicate/unknown-field/EOF checks on pinned selection, canonical fixed public source loader, real issuer original admin/enrollment/CAS/selection/window checks. Unknown actions/flags, missing/foreign flags and canceled requests reject before opening inputs. Password/key buffers cleared, SQL closed; SQL-driver diagnostics suppressed to avoid credential disclosure."
+  },
+  "practical_owner_mapping_entry": {
+    "action": "owner-binding",
+    "required_flags": ["kek-source-file", "kek-source-sha256", "capture-consumer-file", "capture-consumer-pin-file", "record-file", "record-sha256", "signature-file"],
+    "output": "Existing BootstrapOriginalOwnerBinding {Key:reference:kek,SHA256:actual OriginalWindowKEK.BindingSHA256()} from actual source config/capture/window locators. Use final deployed absolute paths for the signed terminal mapping.",
+    "boundary": "This action is public comparison data only. It opens no credential/SQL/provider, accepts no signing key/task/approval/force flag, creates no observation/admission and grants no key use. Later actual original mapping issuer/window consumer must still authenticate real source/window bytes and current authority."
+  },
+  "D_package_and_install_script_hook": [
+    "Root/D adds this command executable to the same-version operator material-tools image/bundle and records its SHA with the final package. A did not change Dockerfile or run a build.",
+    "After actual independently authorized source mapping/capability import and genuine historical coverage/adoption, invoke issue using the current original installation's fixed plan/enrollment/capture/selection/source pins and original enrolled issuer key. Missing real source evidence remains an actual signing failure, not an invented placeholder.",
+    "Mount the resulting exact window record/signature and original source document at the final coordinates, retain independently installed SHA, and use owner-binding to supply reference:kek to the original terminal mapping issuer. Put BootstrapKEKWindowFiles into D's KEKWindow composition input.",
+    "D uses LinkOriginalWindowSQLBootstrapKEK for bootstrap; lawful config enabling uses the SAME actual SQLMutationKEKResource in resolver reference:kek and ConfigMutationService.KEK plus D's evidence-union/fence/CompleteScan/final-recheck integration. This CLI does not enable configs or create runtime task permits."
+  ],
+  "actual_production_sources_previously_delivered": {
+    "assembly": "docs/drafts/system-backup-a-kek-production-assembly-handoff-20261103.json SHA6f665a8a52e5f8d61bc6e2b2d644ddc723167e61e3c323227cff9d3a1427b34e",
+    "mutation_SQL_source_resource_loader": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json SHAae41c05fb88bda3e5219c4a1800b244887e1f6ccb9ef7f7b8828a69049a50e82",
+    "physical_source_types_and_ownership": "docs/drafts/system-backup-a-kek-D-physical-source-type-handoff-20261103.json SHAdf502984346916ddae6c91e520b6509617cc804a3d03ef2baa421bd3220de9d6"
+  },
+  "actual_source_holders_to_progress_now": {
+    "A_delivered": "Real full177/49-source SQL census/range-lock/witness production code, actual native original mapping/capability observer/signing source, original KEK window issuer/consumer/paired bootstrap bridge, concrete actual mutation source/preparation/paired resolver-service resource, strict source loader and this runnable material CLI source.",
+    "C_storage_owner": "Actual complete stable immutable external provider versions/snapshot/history EOF observation; signature/provenance for that real observation and retained/unknown/released object membership. Unadmitted live LIST or new-index counts cannot stand in.",
+    "D_original_writer_history_owner": "Actual old-writer maintenance/fence/source recovery; authentic complete historical binding/reference backfill; concrete private first-adopter PreparedCoverage; original atomic source/evidence/fence/adoption/epoch commit and lawful service/main wiring. Bound.AdoptCoverage alone performs none of the physical producer work.",
+    "root_field_operator": "Actual deployment/database/provider/Agent credentials and original authority, field execution and same-version package/build/env/mount/health/page/runback verification. A has not opened an actual provider session or minted physical receipts under its source-only restriction.",
+    "no_fabricated_agreement": "These are concrete required source ownership/entry assignments for root to relay, not acknowledgements or actual receipts from C/D. No cross-chat message tool used."
+  },
+  "root_validation_metadata_only": [
+    "go test ./cmd/system-backup-kek-window-owner -count=1 -v",
+    "Root compiles/packages ./cmd/system-backup-kek-window-owner against the frozen41/explicit root66 source closure and separately accounts for this two-file extension. Existing real KEK issuer/source integration still needs genuine producer evidence."
+  ],
+  "validation": "gofmt parse/format and SHA/source checks only. New command test covers refusal of foreign/missing authority flags before inputs; no fake positive source/admission. No Go compile/test/build/list/vet, SQL/DDL, Git, native/provider/network/site/remote execution by A. No test/build products. Root owns all execution and cleanup. No physical coverage/adoption, lawful enabling, full owner/main/page backup or deployment package readiness PASS asserted."
+}

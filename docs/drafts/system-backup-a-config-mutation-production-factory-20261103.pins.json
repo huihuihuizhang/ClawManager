@@ -1,0 +1,73 @@
+{
+  "schema": "a-config-mutation-production-factory.v1",
+  "date": "2026-11-03",
+  "reported_at_local": "11:12 Asia/Shanghai",
+  "status": "ACTUAL_FACTORY_AND_HTTP_CALL_POINT_IMPLEMENTED_COMPLETE_RESOURCE_OWNERS_NOT_IMPLEMENTED_ROOT_COMPILE_PENDING",
+  "files": {
+    "backend/internal/systembackupsecurity/config_mutation_production.go": "35351699adc3ab8656d04e6d48f0e3beeee5b6469e04d36308d179b2f206e560",
+    "backend/internal/systembackupsecurity/config_mutation_production_test.go": "dae7acaff1d56121f9c40c596d3f6097c3c9f39dd906797925fdba186744c830"
+  },
+  "production_go": 1,
+  "test_go": 1,
+  "actual_implemented_call_points": {
+    "constructor": "security.NewConfigMutationProduction(security.ConfigMutationProductionConfig{DB,Database,InstallationID,SessionSecret,RegistryDirectory,NonceDirectory,CapacityReportFile,LargeSmokeBytes,Resources})",
+    "request_call": "Returned *ConfigMutationProduction implements http.Handler via ServeHTTP; it calls the existing actual ConfigMutationHTTP -> ConfigMutationService.Mutate/ObserveCommitted path, not a requirements handler or direct SQL enabled write.",
+    "routes": "PUT /api/v1/admin/system-backup-config and POST /api/v1/admin/system-backup-config/rollback (existing ConfigMutationPath/ConfigRollbackPath). D mounts this handler in its actual server/router, for example gin.WrapH(production), under actual backend TLS. Do not synthesize r.TLS from caller headers.",
+    "login_integration": "production.LoginSessions() returns the real SQLLoginSessions recorder for the existing verified login/refresh token issuer callback. Same actual DB identity/installation and access-token HMAC secret are required. No session is created/enrolled/refreshed by the factory. Current recorded session/password/expiry/revocation is checked in the original mutation transaction.",
+    "lifecycle": "After draining request/login users, Close clears owned secret copies and closes the recorder without closing caller-owned DB."
+  },
+  "actual_security_components_constructed": [
+    "NewSQLLoginSessions + SQLLoginSessions.CheckConfigMutationSession, including current credential-bound login, revocation and expiry under original SQL locks.",
+    "NewConfigMutationSecurityFiles with fixed absolute registry/nonce directories; actual strong-auth issuer verification, purpose separation, current/retained nonce HMAC keys and SQL nonce consumption through the existing transaction service.",
+    "NewPinnedConfigMutationAuthority with the actual session checker, fixed actual RegistrationFiles.RegistryBytes, StrongAuth and ConfigMutationCapacity.Reserve. Existing VerifyConfigMutationRBAC retains current/proposed exact contents, privilege/strong-auth/self-grant/last-admin rules.",
+    "NewConfigMutationCapacity with actual capacity report and original measured metadata footprint; this is correctness capacity evidence, not a performance comparison PASS gate. No zero/estimate/default reservation supplied.",
+    "NewPinnedConfigMutationResolver with every actual provided resource/deployment owner. Its registry byte callback is supplied by the same real fixed file reader, not an arbitrary caller reader.",
+    "NewSQLOperationResponses with real SQL session/replay authority and closed canonical Operation response staging/readback; actual ConfigMutationService plus JWTRegistrationAuthenticator and ConfigMutationHTTP.",
+    "The SAME Resources.References[kek] object must implement ConfigMutationKEKPreparation. The factory installs that exact object into service.KEK itself; no independent raw preparation override. Use previously delivered LoadOriginalSQLMutationKEKResource for this actual source.",
+    "Optional submitted free-text change reason is entirely redacted to a fixed presence marker (or nil for absent/empty) before persistence. Original request hashing remains unchanged. This redacts audit content only and grants no permission or resource success."
+  ],
+  "explicit_current_unclosed_production_owners": {
+    "evidence": "Repository production references to ConfigMutationResourceObservation currently identify the resolver interface and A's actual SQLMutationKEKResource; other concrete mutation resource implementations were not found. BootstrapTerminalResource has a different authenticated input/authority contract and cannot be cast or wrapped as an automatic enabling permission. This is a source inventory finding, not a runtime receipt or statement about future D work.",
+    "registries": [
+      "parts", "redis_sources", "failure_domains", "disaster_identity_mapping",
+      "source_writers", "rbac_bindings", "secret_allowlist", "strong_auth_issuers", "provider_proof_issuers"
+    ],
+    "references_except_actual_kek": [
+      "artifact_write", "artifact_read", "artifact_delete", "artifact_upload_issuer", "artifact_ca",
+      "evidence_store", "evidence_write", "evidence_read", "evidence_delete", "evidence_ca", "evidence_kek",
+      "capture_signing", "acceptance_signing", "catalog_signing", "catalog_read", "catalog_append", "catalog_snapshot",
+      "nonce_hmac", "status_relay"
+    ],
+    "other": ["cross_resources", "deployment_switch"],
+    "count_after_real_kek_is_installed": 30,
+    "count_with_no_resource_owners": 31,
+    "registry_bytes": "Not an external missing owner: production factory supplies the actual fixed file reader itself.",
+    "factory_diagnostic": "MissingConfigMutationProductionOwners(resources) returns the exact missing names, preserving all real owner gates. It never installs default validators or hides missing source classes."
+  },
+  "D_concrete_integration_work": [
+    "Load the actual paired KEK mutation resource using materials.LoadOriginalSQLMutationKEKResource(actualDB,sourceFile,sourceSHA), place it into Resources.References[kek], then pass all actual mutation owner implementations into this new production constructor. The constructor derives service.KEK from that same object.",
+    "Mount returned handler on the existing two config mutation paths with real backend TLS and the real access-token/session recorder integration. The factory performs no route mutation or DB I/O at construction.",
+    "D still owns its config_mutation_transaction evidence union before KEK fence, CompleteScan/StageAdmission and original final time/current revocation checks for the actual seventeen-evidence admission. The actual KEK source intentionally refuses if these locks are absent; do not remove coverage.Recheck.",
+    "D/source owners must implement the exact missing mutation resource observation contracts above from their actual source authority/permissions/current schema/TLS/capabilities. A bootstrap permit, unchanged hash alone or generic Passed observation is not a replacement.",
+    "Actual capacity report/measured metadata footprint, current/retained nonce files, issuer registries, real login ledger and independently trusted enabled deployment switch are concrete runtime inputs. No false defaults have been supplied to reach enabled=true."
+  ],
+  "source_closure_and_freezes": {
+    "this_batch": "Only these two new security Go. No existing service/HTTP/authority/resolver/D main or transaction file edited.",
+    "frozen_41": "docs/drafts/system-backup-a-root-combination-source-closure-20261103.json SHA8f78bea5adb2d889b287007d8082e03fa7d3b690145681f80a99bbf7dbb994e9 remains unchanged.",
+    "actual_KEK_source": "docs/drafts/system-backup-a-kek-mutation-actual-source-20261103.pins.json SHAae41c05fb88bda3e5219c4a1800b244887e1f6ccb9ef7f7b8828a69049a50e82",
+    "separate_material_CLI": "docs/drafts/system-backup-a-kek-window-owner-cli-20261103.pins.json SHAa3471f5955dfd8f5d390539989686022235c22360e95c35999470c63784168f3",
+    "existing_required_security_API_files": [
+      "config_mutation_session.go", "login_sessions.go", "config_mutation_strongauth.go", "registration_files.go",
+      "config_mutation_authority.go", "config_mutation_rbac.go", "config_mutation_capacity.go",
+      "config_mutation_resolver.go", "config_operation_store.go", "config_mutation_transaction.go",
+      "config_mutation_http.go", "registration_api.go"
+    ],
+    "baseline": "Root owns exact baseline/API comparison and isolated compile. This new factory does not silently admit unrelated unreviewed sources or resolve absent actual resource owners."
+  },
+  "root_commands_metadata_only": [
+    "go test ./internal/systembackupsecurity -run '^TestConfigMutationProduction' -count=1 -v",
+    "Root compiles this factory with its real security/KEK/server source closure and tests actual route/session/strong-auth/config/enabling under genuine resource owners. New tests only verify exhaustive owner gating and reason redaction, with no fake positive authority or thirty-owner fixture."
+  ],
+  "deadline_truth": "Before11:15 the actual service/HTTP constructor/calling point and exhaustive remaining contracts are delivered. A cannot honestly claim lawful enabling or page backup is complete while these thirty actual resolver/deployment obligations remain. No direct SQL enable, fixed Passed, invented receipt or performance gate substituted.",
+  "validation": "gofmt and static source/API/SHA review only. No Go compile/test/build/list/vet, SQL/DDL, Git, provider/network/native/site/remote calls by A. No generated test/build products; root owns execution and cleanup."
+}

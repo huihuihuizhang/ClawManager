@@ -1,0 +1,14 @@
+{
+  "version": "system-backup-c-minio-native-install-compile-fix-source.v1",
+  "date": "2026-11-03",
+  "status": "SOURCE_ONLY_R4_COMPILER_REPAIR_PENDING_ROOT_RETEST",
+  "source_map": {
+    "path": "backend/.c-minio-native-install-compile-fix-20261103/source-map.json",
+    "sha256": "86284d1fbe084a9bad0c59436717e1253bba66dd14a6e3a834ee6b63dd9eb45e",
+    "files": 1
+  },
+  "base_final_manifest_sha256": "fd99346ba16b2dd69bff5f8ac071b8f7065cf58508c7ac05881b645e17adf11f",
+  "base_final_map_sha256": "8514b5eb074c80c307998a019c022cf964c6a91a12325d6a8c3f61ac88bb8ae7",
+  "change": "Remove unused net/http import. Declare raw/status/e locally with := in bucket and principal loop initial GET; subsequent assignments retain that same loop scope. No native request, policy, credential, auth, deadline, account mutation, error or retry behavior changed. Original final18 and all old frozen source hashes unchanged.",
+  "verification": "gofmt and source scope/import review only. No Go compile/test/native/SQL/Docker/Git execution by C; root owns actual R4 follow-up. No C test/build products."
+}

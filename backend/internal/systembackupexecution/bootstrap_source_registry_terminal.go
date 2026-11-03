@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	ce "clawreef/internal/systembackupcontrolevidence"
 	"clawreef/internal/systembackupinstallationowner/install"
 	pd "clawreef/internal/systembackupproducer"
 	sec "clawreef/internal/systembackupsecurity"
@@ -15,9 +16,51 @@ import (
 // capture consumer as A20. Its only inputs locate original signed material.
 // It accepts no enabled Forward, task, Job, observer callback or passed result.
 type BootstrapSourceRegistryTerminalResource struct {
-	capture *install.CaptureSigningConsumer
-	files   install.BootstrapSourceRegistryFiles
-	binding string
+	capture     *install.CaptureSigningConsumer
+	files       install.BootstrapSourceRegistryFiles
+	binding     string
+	nativeFiles *BootstrapSourceNativeRegistryFiles
+}
+
+// The additional files are authenticated by ORIGINAL config registry hashes
+// (inside the enrolled capture selection) and this original signed mapping
+// binding. Native READ authority remains the actual unchanged V2 delegation.
+func NewBootstrapSourceRegistryTerminalResourceWithNativeRegistries(capture *install.CaptureSigningConsumer, files install.BootstrapSourceRegistryFiles, native BootstrapSourceNativeRegistryFiles) (*BootstrapSourceRegistryTerminalResource, error) {
+	r, err := NewBootstrapSourceRegistryTerminalResource(capture, files)
+	if err != nil || !validBootstrapNativeFiles(native) {
+		return nil, sec.ErrRegistrationUnavailable
+	}
+	r.nativeFiles = &native
+	binding, err := r.compositionBinding()
+	if err != nil {
+		return nil, sec.ErrRegistrationUnavailable
+	}
+	r.binding = binding
+	return r, nil
+}
+
+func (r *BootstrapSourceRegistryTerminalResource) compositionBinding() (string, error) {
+	if r == nil || r.capture == nil {
+		return "", sec.ErrRegistrationUnavailable
+	}
+	base, err := r.capture.BootstrapSourceRegistryBindingSHA256(r.files)
+	if err != nil {
+		return "", sec.ErrRegistrationUnavailable
+	}
+	if r.nativeFiles == nil {
+		return base, nil
+	}
+	if !validBootstrapNativeFiles(*r.nativeFiles) {
+		return "", sec.ErrRegistrationUnavailable
+	}
+	raw, err := ce.Canonical(struct {
+		Version, OriginalSourceBinding string
+		Files                          BootstrapSourceNativeRegistryFiles
+	}{"original-source-native-registry-composition.v1", base, *r.nativeFiles})
+	if err != nil {
+		return "", sec.ErrRegistrationUnavailable
+	}
+	return hash(raw), nil
 }
 
 func NewBootstrapSourceRegistryTerminalResource(capture *install.CaptureSigningConsumer, files install.BootstrapSourceRegistryFiles) (*BootstrapSourceRegistryTerminalResource, error) {
@@ -37,7 +80,10 @@ func (*BootstrapSourceRegistryTerminalResource) GoString() string {
 func (*BootstrapSourceRegistryTerminalResource) MarshalJSON() ([]byte, error) {
 	return nil, sec.ErrRegistrationUnavailable
 }
-func (*BootstrapSourceRegistryTerminalResource) TerminalKeys() []string {
+func (r *BootstrapSourceRegistryTerminalResource) TerminalKeys() []string {
+	if r != nil && r.nativeFiles != nil {
+		return []string{"registry:parts", "registry:redis_sources", "registry:secret_allowlist", "registry:source_writers"}
+	}
 	return []string{"registry:parts", "registry:source_writers"}
 }
 
@@ -46,14 +92,18 @@ func (r *BootstrapSourceRegistryTerminalResource) TerminalResources() map[string
 	if r == nil {
 		return nil
 	}
-	return map[string]sec.BootstrapTerminalResource{"registry:parts": r, "registry:source_writers": r}
+	resources := map[string]sec.BootstrapTerminalResource{}
+	for _, key := range r.TerminalKeys() {
+		resources[key] = r
+	}
+	return resources
 }
 
 func (r *BootstrapSourceRegistryTerminalResource) BindingSHA256() (string, error) {
 	if r == nil || r.capture == nil || r.binding == "" {
 		return "", sec.ErrRegistrationUnavailable
 	}
-	binding, err := r.capture.BootstrapSourceRegistryBindingSHA256(r.files)
+	binding, err := r.compositionBinding()
 	if err != nil || binding != r.binding {
 		return "", sec.ErrRegistrationUnavailable
 	}
@@ -87,13 +137,26 @@ func (r *BootstrapSourceRegistryTerminalResource) PrepareTerminalResource(ctx co
 		return nil, sec.ErrRegistrationUnavailable
 	}
 	s := &bootstrapSourceRegistryTerminalCheck{ctx: ctx, identity: identity}
+	if r.nativeFiles != nil {
+		if _, _, err := bootstrapNativeRegistryRefs(config, *r.nativeFiles); err != nil {
+			return nil, sec.ErrRegistrationUnavailable
+		}
+		copyFiles := *r.nativeFiles
+		s.nativeFiles = &copyFiles
+	}
 	s.origin = s
 	// Only the actual closed reader can set these private freshness bounds. All
 	// real native work completes here, BEFORE the controlled SQL prefix. Missing
 	// or failed physical reads preserve current identity for exact history only.
 	reader, physicalErr := newBootstrapSourceRegistryReader(ctx, identity)
 	if physicalErr == nil {
-		start, until, observeErr := reader.observeRegistries()
+		var start, until time.Time
+		var observeErr error
+		if r.nativeFiles == nil {
+			start, until, observeErr = reader.observeRegistries()
+		} else {
+			start, until, observeErr = reader.observeRegistriesWithNative(config, *r.nativeFiles)
+		}
 		reader.Close()
 		if observeErr == nil && !start.IsZero() && start.Before(until) && time.Now().Before(until) {
 			s.dependencyStart, s.dependencyUntil = start, until
@@ -114,6 +177,8 @@ type bootstrapSourceRegistryTerminalCheck struct {
 	tx                               pd.BootstrapSQL
 	authorized, locked               bool
 	dependencyStart, dependencyUntil time.Time
+	identityUntil                    time.Time
+	nativeFiles                      *BootstrapSourceNativeRegistryFiles
 }
 
 func (*bootstrapSourceRegistryTerminalCheck) MarshalJSON() ([]byte, error) {
@@ -157,6 +222,10 @@ func (s *bootstrapSourceRegistryTerminalCheck) AuthorizeIdentity(ctx context.Con
 	if err != nil || until == nil {
 		return nil, s.fail()
 	}
+	s.identityUntil, err = until.Time()
+	if err != nil {
+		return nil, s.fail()
+	}
 	s.authorized = true
 	copyUntil := *until
 	return &copyUntil, nil
@@ -198,10 +267,23 @@ func (s *bootstrapSourceRegistryTerminalCheck) fresh(ctx context.Context, view p
 	if s.identityCurrent(ctx, view) != nil || s.dependencyStart.IsZero() || s.dependencyUntil.IsZero() || s.identity.RecheckPhysicalFiles(ctx, view) != nil {
 		return s.fail()
 	}
+	before, err := view.SampleTime(ctx)
+	if err != nil || before.Before(s.dependencyStart) || !before.Before(s.dependencyUntil) || !before.Before(s.identityUntil) {
+		return s.fail()
+	}
+	if s.nativeFiles != nil {
+		for _, pin := range []install.BootstrapSourceFilePin{s.nativeFiles.RedisSources, s.nativeFiles.SecretAllowlist} {
+			raw, err := readBootstrapNativeRegistryPin(pin)
+			clear(raw)
+			if err != nil {
+				return s.fail()
+			}
+		}
+	}
 	// LAST sample follows every original identity and selected-file tail. The
 	// caller's original transaction/final read view owns the clock floor latch.
 	now, err := view.SampleTime(ctx)
-	if err != nil || now.Before(s.dependencyStart) || !now.Before(s.dependencyUntil) || ctx.Err() != nil {
+	if err != nil || now.Before(before) || now.Before(s.dependencyStart) || !now.Before(s.dependencyUntil) || !now.Before(s.identityUntil) || ctx.Err() != nil {
 		return s.fail()
 	}
 	return nil

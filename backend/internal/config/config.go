@@ -279,6 +279,8 @@ type ObjectStorageConfig struct {
 	SecretKey      string `yaml:"secretKey"`
 	Bucket         string `yaml:"bucket"`
 	UseSSL         bool   `yaml:"useSSL"`
+	TLSCAFile      string `yaml:"tlsCAFile"`
+	TLSCASHA256    string `yaml:"tlsCASHA256"`
 	BasePath       string `yaml:"basePath"`
 	ForcePathStyle bool   `yaml:"forcePathStyle"`
 	LocalFallback  string `yaml:"localFallback"`
@@ -755,6 +757,12 @@ func applyEnvOverrides(config *Config) {
 	}
 	if useSSL := os.Getenv("OBJECT_STORAGE_USE_SSL"); useSSL != "" {
 		config.ObjectStorage.UseSSL = strings.EqualFold(useSSL, "true")
+	}
+	if caFile := os.Getenv("OBJECT_STORAGE_TLS_CA_FILE"); caFile != "" {
+		config.ObjectStorage.TLSCAFile = caFile
+	}
+	if caSHA := os.Getenv("OBJECT_STORAGE_TLS_CA_SHA256"); caSHA != "" {
+		config.ObjectStorage.TLSCASHA256 = caSHA
 	}
 	if basePath := os.Getenv("OBJECT_STORAGE_BASE_PATH"); basePath != "" {
 		config.ObjectStorage.BasePath = basePath

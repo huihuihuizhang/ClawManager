@@ -1,0 +1,92 @@
+{
+  "schema": "system-backup-source-only-review.v1",
+  "date": "2026-11-03",
+  "owner": "B",
+  "status": "SOURCE_ONLY_FOUR_REGISTRY_REVIEW_PENDING",
+  "supersedes": [
+    {
+      "manifest": "docs/evidence/system-backup-b-source-registry-authoring-noncyclic-supersede-20261103.json",
+      "sha256": "3f76be96dc0dd3022a53b7d7abbb1a4112bd49d3e91006cbb18d1f311b1b3248",
+      "scope": "Full original B25 plus necessary four-registry closure."
+    },
+    {
+      "manifest": "docs/evidence/system-backup-b-source-registry-output-fixture-permission-supersede-20261103.json",
+      "sha256": "9c3280a7925e867c4dfcf252b92aaa4b873e2f1e73a8d35c9fc2dafa974e5d23",
+      "scope": "Two fixture corrections preserved exactly; old R1 failed evidence retained."
+    }
+  ],
+  "files": {
+    "backend/cmd/system-backup-source-registries/main.go": "4e2a37279c46ce8fb3fb8f403292a654af3068b94aafe27ad8e7b91710312539",
+    "backend/cmd/system-backup-source-registries/main_native_registries_test.go": "3a66e6aef2f1f8c1767b70a4b52778bd514f4a65657801d2d0066ce2283ca36f",
+    "backend/cmd/system-backup-source-registries/main_test.go": "7877633ccbc074ffcc398e99c613b93d726102dd89371901ebcf66e22c7d29a4",
+    "backend/internal/systembackup/redis_source_metadata.go": "57be3d7d4e17666e18c6243abe4cfa5d5e5c687f1490dee619c8f80072bd234a",
+    "backend/internal/systembackup/redis_source_metadata_test.go": "f71cd035b3f78ffa4dd9fe218cbcc3a9c40a8c033b92e270a9f84e5af6e475ae",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author.go": "f967a623a8a9ea1faaa4e4e0f99ee0baeef375782580cb0fa303a1ab7746638d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_author_test.go": "1c0adad3ff5aef70bff55919b037113d1a705f149baebd05e448ebfdee6940dc",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_clients.go": "d1932ded0469cea439a0d293e667d51f00a0d6733fc0c9fed0dae914c602277d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go": "4923d2f2d7ee9acb1c5ccc93b07aecb5d7215f13f719ce191c7c35e0c1d66867",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go": "6b2b2c43a7b4ed3f623faa8deb2142a543f34a213bde6fdd7e69eac08f82cbd3",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_control_sql.go": "c07a7e45862cd9cc3f8ca3f57285d82ea96a713f485bf6137914a509dda0840f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native.go": "3688c5c3eb1f265a759e109c3e90d91bc964de53ead68c1db56ed6eab82f44dd",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native_registries.go": "b2bf096496f1eb439642f181c0151c7dc84478ca2999506b370082696915060f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_native_registries_test.go": "4ede7bd5521a520ea5a7237edb95c0a2009eaa47353c9b5edfab61437d9c8282",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_objects.go": "107d6bcee12eb7b3aa28340e1dd338102042734398b32875ca3c1c6eb153c23f",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_reader.go": "f7c67337d82c105d1e6ed4e607ab2b9eee8e31c610a91039f244893b9b11eb51",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_resources.go": "b7a6b6dd2dccb8cfc8abaeaec0bfa3e3e7ad94f6b9062fdbf0178d8dc8462d3d",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_metadata.go": "6898520d5b8cfec760ab9f22dc40039388ea109da72a536720231a7d379e7b63",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go": "ed8e0d988dd6cf80bb031ed411d43425ef42c6a4d5dd630b5ea6ef336caea9ed",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_sql_transport.go": "11f281d5d094d908ed5f72d5043f7a529fbbc955d2ed90150f1ec7aba67b3aa9",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal.go": "d7dc3e6d51ca30ca05fc51b7502ed3fbe1f78260a1998221ef8e0c681d3e15b5",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_terminal_test.go": "92c25fbeea9f9c5da208ebf43c09099fb8e04a79ac66a8888b2e25dd6ecc657b",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go": "99a259e466fcb49a60767d616b9a22ac9d7841584f0d0807e4090b3f8fcb2d56",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_api.go": "d1e0ffce43d2de7f1c4c1dbe91b687137a732c3d8f598a27f5a6251ff721d7e7",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_writer_graph.go": "7b8a27eff318680268fd76168684437a3c9f3bc65495442282518fa64ffa9d38",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring.go": "64c08b6e7f27dcec87c566c4395e41586e4032262eae86bec5d2c9b681817fce",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_authoring_test.go": "880fa45a039190502d676a1220274e7cee4be9b74c42bc030b9d8dfc28e1c0b9",
+    "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_terminal_access.go": "9a4feeb14d728ba60af4a802ceb313321b35e9cb5832ca47bf3bf0455bd140f9"
+  },
+  "source_file_count": 21,
+  "test_file_count": 7,
+  "production_changes": [
+    "Explicit NewBootstrapSourceRegistryTerminalResourceWithNativeRegistries(sameCapture,V2Files,BootstrapSourceNativeRegistryFiles{RedisSources,SecretAllowlist}) uses ONE pointer for parts/redis_sources/secret_allowlist/source_writers. Legacy constructor remains exactly two keys; it cannot silently admit four.",
+    "The two extra content SHAs must equal the original disabled config registry refs, authenticated through the full enrolled capture ConfigHash/RegistrySetHash. The original signed mapping binding additionally includes both exact deployed file coordinates/SHAs and same original capture/source binding. No V2 signature field is reinterpreted as a new native grant; the existing V2 Redis/resource read delegation is consumed unchanged.",
+    "Consumer independently performs the same complete actual two-round SQL/API/Redis/S3/native/participants/workspace collection, first matches original parts/writers, then exact-compares every Redis source/policy/native key/type/group field and validates original Secret policy against actual complete metadata selections before private original-start freshness is retained.",
+    "Current L2/capture SQL revoke, same ctx/tx/phase/copy/failure latches remain. Fresh SQL tail rereads all original files and the two extra exact local file pins, with original SampleTime before/after and original identity/fresh deadline checks after the LAST tail. No native request is made under caller SQL locks. Physical absence leaves identity-only history; no missing-set or hash-only success.",
+    "Redis registry DATA includes actual original endpoint/account/CA+credential refs/serverID/DB, all finite policy fields/prefixes/exclusions/limits and complete actual key/type/group metadata. It omits metadata/config/grant/self hashes and the pre-existing opaque Source.Reference digest, which remains independently bound by original V2 metadata, avoiding a second SHA fixed point.",
+    "Secret allowlist REUSES existing root.SecretCapturePolicy and runtime production_secret_policy.go format. It is original fixed owner INTENT, not regenerated from observed names/UIDs. DecodeSecretCapturePolicy + ValidateSelections enforce exact allowed/required observed metadata. No Secret plaintext GET or fabricated actual type proof; existing encrypted worker CheckCaptured independently enforces ExpectedType.",
+    "Pre-capture selection has optional RedisSourcesFile/RedisSourcesVersion (both required together). Actual producer creates a third Redis source file from the same native collector and returns NativeRegistries with that new pin plus the original material-template Discovery.SecretPolicy path/SHA. Policy is checked against actual selections and rehashed around each export before final original SQL authority samples. Existing/private/aliased outputs stay create-only and mode strict.",
+    "CLI produce-facts returns the third file and original policy pins when the explicit native option is selected. owner-bindings accepts four additional --redis-sources-file/--redis-sources-sha256/--secret-allowlist-file/--secret-allowlist-sha256 flags together and emits four equal mapping bindings. No private key is used in facts authoring or pure binding calculation."
+  ],
+  "d_wiring": [
+    "Populate original native policy files and actual read-only roles before facts; SecretPolicy is original predefined JCS policy with required entries, not a UID observation template. Set source selection RedisSourcesFile and RedisSourcesVersion for the four-slot route.",
+    "Use producer receipt.NativeRegistries in enrolled composition, mount exact returned paths/SHAs, and call the new explicit four-slot constructor with the SAME capture pointer. Add same returned pointer to base.Registries parts/redis_sources/secret_allowlist/source_writers before original terminal construction/missing gate.",
+    "Compute owner-bindings with all four additional file/SHA flags, include those four same composition hashes in original authenticated signed mapping, and preserve pointer through signing/MinIO rebuilds. Do not reuse the two-slot binding/mapping as a four-slot approval.",
+    "Final config redis_sources ref uses actual generated Redis registry SHA/version. secret_allowlist ref uses EXACT original policy SHA/RegistryVersion already selected by material Discovery.SecretPolicy. Then original capture/metadata/V2 are independently issued and consumed, without final hashes inside facts."
+  ],
+  "validation": {
+    "executed_by_B": false,
+    "root_reported_prior_R1": "Linux66 compiled; 37 roots ran with two private-directory fixture failures. Preserve as failed evidence; no PASS inferred.",
+    "fixture_correction": "Only fixture directories explicitly chmod0700; Linux0755 negatives and restored-positive checks prove target rejection paths. Production modes never relaxed. Both 9c fixture file hashes preserved unchanged in this full closure.",
+    "new_native_test_roots": [
+      "TestBootstrapSourceNativeRegistriesUseOneExplicitOriginalOwner",
+      "TestBootstrapRedisRegistryDoesNotEmbedFinalReferenceHash",
+      "TestBootstrapSecretAllowlistUsesOriginalFixedPolicy",
+      "TestBootstrapThirdFactOutputCannotAliasOrReuse",
+      "TestSourceRegistryCLIFourExplicitNativeBindings"
+    ],
+    "test_limits": "Constructor/binding/closed noncyclic DATA/original policy metadata validation/create-only tests are not full native-positive owner admission. Full actual producer->original grants/capture/V2->four-slot consumer->D controlled final view and live nonempty page run remain unproven.",
+    "root_command_powershell_from_backend": "go test ./cmd/system-backup-source-registries ./internal/systembackupexecution ./internal/systembackupinstallationowner/install -run '^(TestSourceRegistryCLI.*|TestBootstrapSourceRegistry.*|TestBootstrapSourceNative.*|TestBootstrapRedisRegistry.*|TestBootstrapSecretAllowlist.*|TestBootstrapThirdFactOutput.*|TestBootstrapSourceFact.*)$' -count=1",
+    "products_created": [],
+    "cleanup": "No commands/gofmt/build/tests/SQL/Git executed by B. Root owns execution and cleanup of its generated test/build products."
+  },
+  "external_dependencies": [
+    "A/root explicit B7 8MiB issuer/consumer repair and actual V2 regression, with V2 six and other original frozen files untouched by B.",
+    "D actual native materials/composition/mounts and original signed mapping.",
+    "status_relay remains separate actual bootstrap peer/trust/revocation owner work; no future Job peer admitted here."
+  ],
+  "acceptance": {
+    "four_registry_slots": "IMPLEMENTED_SOURCE_ONLY_NOT_YET_ACCEPTED",
+    "site": "NO_GO",
+    "disaster_recovery": false
+  }
+}

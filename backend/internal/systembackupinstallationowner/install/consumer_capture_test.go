@@ -52,6 +52,19 @@ func newCaptureConsumerFixture(t *testing.T, ctx context.Context) *captureConsum
 		}
 		base := "/api/v1/namespaces/" + plan.Target.Namespace
 		switch r.Method + " " + r.URL.Path {
+		case "POST /apis/authentication.k8s.io/v1/selfsubjectreviews":
+			var input authenticationv1.SelfSubjectReview
+			if decodeEnrollmentAPIRequest(r, &input, "authentication.k8s.io", "SelfSubjectReview") != nil {
+				w.WriteHeader(400)
+				return
+			}
+			v, e := kube.AuthenticationV1().SelfSubjectReviews().Create(r.Context(), &input, metav1.CreateOptions{})
+			if e != nil {
+				w.WriteHeader(403)
+				return
+			}
+			v.TypeMeta = metav1.TypeMeta{APIVersion: "authentication.k8s.io/v1", Kind: "SelfSubjectReview"}
+			send(v)
 		case "GET /api/v1/namespaces/kube-system", "GET /api/v1/namespaces/" + plan.Target.Namespace:
 			name := strings.TrimPrefix(r.URL.Path, "/api/v1/namespaces/")
 			v, e := kube.CoreV1().Namespaces().Get(r.Context(), name, metav1.GetOptions{})

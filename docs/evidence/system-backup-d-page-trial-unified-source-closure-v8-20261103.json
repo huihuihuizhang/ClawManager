@@ -1,0 +1,1819 @@
+{
+  "schema_version": "system-backup-d-page-trial-unified-source-closure.v8",
+  "status": "FROZEN_SOURCE_ONLY_NOT_COMPLETE_INSTALLATION",
+  "baseline_commit": "9a8ce5855a18b79312086949c11ba50ff13144e1",
+  "baseline_contract": "Keep all baseline sources; overlay these exact selected target bytes once. Shared unchanged entries may already equal baseline. D did not run Git or compare baseline object contents.",
+  "apply_order": "C9a8 -> root accepted A41+B25 (and explicit root-reviewed new A/B/C supersedes) -> this D105 selected target bytes once; do not overwrite later root-owned bindings",
+  "dependencies": [
+    {
+      "path": "docs/drafts/system-backup-a-root-combination-source-closure-20261103.json",
+      "sha256": "8f78bea5adb2d889b287007d8082e03fa7d3b690145681f80a99bbf7dbb994e9",
+      "boundary": "root-owned A41, including B7/V2 exact 8MiB repair; coapply exact accepted root bytes, D does not replace"
+    },
+    {
+      "path": "docs/evidence/system-backup-b-source-registry-authoring-noncyclic-supersede-20261103.json",
+      "sha256": "3f76be96dc0dd3022a53b7d7abbb1a4112bd49d3e91006cbb18d1f311b1b3248",
+      "boundary": "root-owned B25 corrected noncyclic authoring, replaces rejected B19"
+    },
+    {
+      "path": "docs/evidence/system-backup-c-minio-september-supersede-source-20261103.json",
+      "sha256": "1523dd83aea84738905b23e057c648371c0d80701eccc306c687b3ca94dd9f8e",
+      "boundary": "C September API integrated in root baseline 9a8ce5855a18b79312086949c11ba50ff13144e1; no second application"
+    }
+  ],
+  "source_count": 109,
+  "production_go": 53,
+  "test_go": 56,
+  "source_pins": [
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/cross_resource_composition_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/cross_resource_composition_test.go",
+      "sha256": "87f3cf31111da869d5427dd54e57dcef1d3bf1947fe252601f7cd9bd6c6a4d55",
+      "before_sha256": "87f3cf31111da869d5427dd54e57dcef1d3bf1947fe252601f7cd9bd6c6a4d55",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/main.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/main.go",
+      "sha256": "97e918e799378b5da5aa5d122d614c8f62ca41c257f30ea3d7d004dcaac59343",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "97e918e799378b5da5aa5d122d614c8f62ca41c257f30ea3d7d004dcaac59343"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition.go",
+      "sha256": "c354051a438bb412e6811c26e05d3ce210489a90b07e1500bc07f364bd1859b4",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-enrolled-concrete-terminal-composition-pins-20261103.json",
+          "declared_sha256": "c354051a438bb412e6811c26e05d3ce210489a90b07e1500bc07f364bd1859b4"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "source": "backend/.d-page-trial-fixture-repair-20261103/backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "sha256": "5f52c733806e55c1c9a868a980dcafe289202509ec5ef1188273f5d82b88442f",
+      "before_sha256": "904712645fd8e56e9f7eb9c941d47f4878d40e8eaa96e5e3c952608949653662",
+      "group": "D101 Linux R1 fixture-only repair; original failures retained",
+      "source_manifest": "backend/.d-page-trial-fixture-repair-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "sha256": "0e9cb2991d21382287476e52b2471132e8219b047543a03ca2daad80f407e912",
+      "before_sha256": "f9c7e9d984ee8b5332a091c6aea87c2313e73da60c193b1630f285ffafb6dfd5",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "sha256": "eda02da4ec23809701dca7f5a612bcbae2e92a3dec3b6ce2df03bf890321b244",
+      "before_sha256": "0ef0bba166c1d25924b37eb1181a8556e3c2464b4083fee33dc6b4f0e3ebd279",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "source": "backend/.d-requirements-fixture-20261103/backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "sha256": "cb925897cd79e9079a0331f5d65061754b67cab6ff9b364f65cf471e337b846e",
+      "before_sha256": "ea25fa38ed80d6d4b2604ca72693342383b540a98dcc058f8e252f577b0f619c",
+      "group": "D root R3 exact fixture contracts; production unchanged",
+      "source_manifest": "docs/evidence/system-backup-d-r3-fixture-contracts-20261103.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition.go",
+      "sha256": "9e304e725240c70cfb94128ef9757b6cb1fda840379ecc913f51737503259f61",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+          "declared_sha256": "9e304e725240c70cfb94128ef9757b6cb1fda840379ecc913f51737503259f61"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "sha256": "00e00ccf31e8232b773e02d0c7b31138346d8d643f555149a218dc339d74198c",
+      "before_sha256": "00e00ccf31e8232b773e02d0c7b31138346d8d643f555149a218dc339d74198c",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/source_registry_composition.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/source_registry_composition.go",
+      "sha256": "657e91d1236e3180f52754aa6ee67ba77e19dd8669ad351912df7a318b4e0625",
+      "before_sha256": "d69470a7ec35595c09f1681f723a23617a0a73b0e0f680a8587c556f9a9a1175",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/source_registry_composition_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/source_registry_composition_test.go",
+      "sha256": "4018bdd0ccb4d399cfe1c5664a8a9236bb21db264c80de19d6e46a5bd43e71f6",
+      "before_sha256": "e687ce11738cd40c872d262f7734b681488c6098da173be8545e9f1b22ec3784",
+      "group": "D main-v9 actual four source registry aliases",
+      "source_manifest": "backend/.d-main-v9-four-source-registry-20261103/source-map.json"
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/terminal_wiring_order_test.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/terminal_wiring_order_test.go",
+      "sha256": "0fd1bdf28f8f627c23468870a46144daeab154262a22862ff90755673f93ea56",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-terminal-direct-authority-supersede-pins-20261103.json",
+          "declared_sha256": "3b8b75f34b640b9c128d69f8b7ce3fd96ff4b6e95508f124e7433216a75b66f3"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-native-host-main-supersede-pins-20261103.json",
+          "declared_sha256": "0fd1bdf28f8f627c23468870a46144daeab154262a22862ff90755673f93ea56"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-database-source-grant/main.go",
+      "source": "backend/cmd/system-backup-database-source-grant/main.go",
+      "sha256": "0f15c57fcb92356f73f815becd61ee0e1d19c85a8790f0e287184f557f3e6e35",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "0f15c57fcb92356f73f815becd61ee0e1d19c85a8790f0e287184f557f3e6e35"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-database-source-grant/main_test.go",
+      "source": "backend/cmd/system-backup-database-source-grant/main_test.go",
+      "sha256": "39992ca5d562bd5cd63d165f149b2df52d997d6ed2b3f1367425c746b009af03",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "39992ca5d562bd5cd63d165f149b2df52d997d6ed2b3f1367425c746b009af03"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-first-install-materials/main.go",
+      "source": "backend/cmd/system-backup-first-install-materials/main.go",
+      "sha256": "76255e796b4123561ee4c122a19084cd5a27a8fa3d09e8e68601e1cce2b5c97b",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "46f8be54c5e8ffa86a440d27b33570c9c381e1daecd167de4950f9ebf22aa980"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "76255e796b4123561ee4c122a19084cd5a27a8fa3d09e8e68601e1cce2b5c97b"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-first-install-materials/main_test.go",
+      "source": "backend/cmd/system-backup-first-install-materials/main_test.go",
+      "sha256": "1c7fd7a262a1fefede0aa582d7053010d95e4903bfc32b86f3fab6c29dbdef4c",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "1c7fd7a262a1fefede0aa582d7053010d95e4903bfc32b86f3fab6c29dbdef4c"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-signing-resource-owner/main.go",
+      "source": "backend/cmd/system-backup-signing-resource-owner/main.go",
+      "sha256": "1e18487ca370286298549f7a3e64a63725d72e297c5f8ae50a7c4d5e2a370df7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "1e18487ca370286298549f7a3e64a63725d72e297c5f8ae50a7c4d5e2a370df7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-signing-resource-owner/main_test.go",
+      "source": "backend/cmd/system-backup-signing-resource-owner/main_test.go",
+      "sha256": "25252e9e63babc6c7fdc5ad22e9d6215a68502483124bb780822baf8c171a75e",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "25252e9e63babc6c7fdc5ad22e9d6215a68502483124bb780822baf8c171a75e"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-materials/main.go",
+      "source": "backend/cmd/system-backup-source-materials/main.go",
+      "sha256": "8272257fc3ebf1ef26597a148b71bc03ee3cc443d068cbe5ce1b5cd4d183a8d7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "8272257fc3ebf1ef26597a148b71bc03ee3cc443d068cbe5ce1b5cd4d183a8d7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-materials/main_test.go",
+      "source": "backend/cmd/system-backup-source-materials/main_test.go",
+      "sha256": "7a6d18f5735f9a4729c0b42dcc6ef86748774d595ad597a02c55f31a63c0e8bc",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "7a6d18f5735f9a4729c0b42dcc6ef86748774d595ad597a02c55f31a63c0e8bc"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/main.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/main.go",
+      "sha256": "7d7541e324ba85ab383eacc35842c6088fc25f8bfe71bda6857c00442305dc5f",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-inputs-review-20261103.json",
+          "declared_sha256": "7d7541e324ba85ab383eacc35842c6088fc25f8bfe71bda6857c00442305dc5f"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/main_test.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/main_test.go",
+      "sha256": "5f22a6180b1de5f85efd69fe32d380f1796d8bd5c4bba611715f11c191fd0781",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-inputs-review-20261103.json",
+          "declared_sha256": "5f22a6180b1de5f85efd69fe32d380f1796d8bd5c4bba611715f11c191fd0781"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/proposal.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/proposal.go",
+      "sha256": "ea28d4dcdf2f8ded0d89fb5403236ae8bb2ec7a9d1ddfd5c3e143e7838b689d3",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-inputs-review-20261103.json",
+          "declared_sha256": "ea28d4dcdf2f8ded0d89fb5403236ae8bb2ec7a9d1ddfd5c3e143e7838b689d3"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/cmd/system-backup-status-relay-owner/main.go",
+      "source": "backend/cmd/system-backup-status-relay-owner/main.go",
+      "sha256": "9e83cd0093b902eb09c5f9756a7a4d96cdd32969573d49533c066af37649406a",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/cmd/system-backup-v2-controller/public_capture.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/cmd/system-backup-v2-controller/public_capture.go",
+      "sha256": "1c27fed9e75752d2487ca4947b9f1ade0d245f76e72c687b66e487d83bb3c871",
+      "before_sha256": "fac21769e68103b3db3370de311df1b8d9898677c2f3bb27094ffcc0483df2e4",
+      "after_runtime9_sha256": "1c27fed9e75752d2487ca4947b9f1ade0d245f76e72c687b66e487d83bb3c871",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/config/config.go",
+      "source": "backend/.d-object-storage-original-ca-20261103/backend/internal/config/config.go",
+      "sha256": "de238382bc4e35e979d1307c65c882df5b446c3282481a31946cce846df39369",
+      "before_sha256": "7bceeeb88f34811f8e7546cc7061a9b6d1e3c86908a4a1cb2393ab3951304243",
+      "group": "object-storage original CA; two replacements and two new sources",
+      "source_manifest": "backend/.d-object-storage-original-ca-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/services/object_storage_original_ca.go",
+      "source": "backend/.d-object-storage-original-ca-20261103/backend/internal/services/object_storage_original_ca.go",
+      "sha256": "ba3152add3b55203c28eb6312e37bd9f09cf7890e3d6620acbeeb08e1f3fb187",
+      "before_sha256": null,
+      "group": "object-storage original CA; two replacements and two new sources",
+      "source_manifest": "backend/.d-object-storage-original-ca-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/services/object_storage_original_ca_test.go",
+      "source": "backend/.d-object-storage-original-ca-20261103/backend/internal/services/object_storage_original_ca_test.go",
+      "sha256": "2f2c33671991e50a93b8be7b72528c14b2bf57b7f2b7d413baa7a8d82218d79c",
+      "before_sha256": null,
+      "group": "object-storage original CA; two replacements and two new sources",
+      "source_manifest": "backend/.d-object-storage-original-ca-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/services/object_storage_service.go",
+      "source": "backend/.d-object-storage-original-ca-20261103/backend/internal/services/object_storage_service.go",
+      "sha256": "d2466e79a567e1661d84e0722a7fe854ba82d4725a3240610e65226aa006c0e6",
+      "before_sha256": "074bb17b2af48ed61360878851f10180b63c165238a540aee304fd62c7e32deb",
+      "group": "object-storage original CA; two replacements and two new sources",
+      "source_manifest": "backend/.d-object-storage-original-ca-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackup/kube/formal_materials_validation.go",
+      "source": "backend/internal/systembackup/kube/formal_materials_validation.go",
+      "sha256": "0c63e079ed3cbc3d0d2c7c9ddb5f8eb54d3141625d4a0988898fe99ec4899efc",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "0c63e079ed3cbc3d0d2c7c9ddb5f8eb54d3141625d4a0988898fe99ec4899efc"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackup/kube/formal_materials_validation_test.go",
+      "source": "backend/internal/systembackup/kube/formal_materials_validation_test.go",
+      "sha256": "fc51e76393b854157ca018a37d0e1d89a45318e15c4b4e014fc3bbcc1edf3f9d",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "fc51e76393b854157ca018a37d0e1d89a45318e15c4b4e014fc3bbcc1edf3f9d"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_team_objects_scope.go",
+      "source": "backend/internal/systembackup/worker/source_team_objects_scope.go",
+      "sha256": "d2b420126d6d0b57121f5177d1cba9b0f223270c08ab2c67169e786aa233d798",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "d2b420126d6d0b57121f5177d1cba9b0f223270c08ab2c67169e786aa233d798"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackup/worker/source_team_objects_scope_test.go",
+      "source": "backend/internal/systembackup/worker/source_team_objects_scope_test.go",
+      "sha256": "d23cc1b6aad7e6109f6f081b84c63585d0e688e7dfd5f5efdee73f44f2fcfeb8",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "d23cc1b6aad7e6109f6f081b84c63585d0e688e7dfd5f5efdee73f44f2fcfeb8"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/installation_terminal.go",
+      "source": "backend/internal/systembackupbootstrapmaterials/installation_terminal.go",
+      "sha256": "d633e3d472720b2d797afea844a3e8dbb25f67611301be25384cf761ab88e272",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "0289d9e5d96288c3db467acd1235252857526e653f9123a6c1a62183a2aae90b"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-terminal-direct-authority-supersede-pins-20261103.json",
+          "declared_sha256": "d633e3d472720b2d797afea844a3e8dbb25f67611301be25384cf761ab88e272"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupbootstrapmaterials/installation_terminal_test.go",
+      "source": "backend/internal/systembackupbootstrapmaterials/installation_terminal_test.go",
+      "sha256": "6b800143384f9a4d86aa43914c916894d7bcc460394224bce1f4d1a76dc60c55",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "d2eccbac5e7c43e602d1e759c08b1c5f44946ff1a492d31b699a442f5016f7a5"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-terminal-direct-authority-supersede-pins-20261103.json",
+          "declared_sha256": "6b800143384f9a4d86aa43914c916894d7bcc460394224bce1f4d1a76dc60c55"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_host.go",
+      "source": "backend/internal/systembackupevidence/bootstrap_original_host.go",
+      "sha256": "f04224dfb49c4e990308c70a2ca4a11e664f341b0835fd64483d8a6394d81dcb",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json",
+          "declared_sha256": "f04224dfb49c4e990308c70a2ca4a11e664f341b0835fd64483d8a6394d81dcb"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupevidence/bootstrap_original_host_test.go",
+      "source": "backend/internal/systembackupevidence/bootstrap_original_host_test.go",
+      "sha256": "40624965ecbc22cd377d9ff770c190fdf584cfb4ea54d391493c2a1cf4eb8917",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json",
+          "declared_sha256": "40624965ecbc22cd377d9ff770c190fdf584cfb4ea54d391493c2a1cf4eb8917"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_capture_capability.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/deployment_capture_capability.go",
+      "sha256": "4444d4f9719d61a9ec2f87be1890454e5d5eb7f4c3484e0e4af8b1c632909d17",
+      "before_sha256": "fb7f7ee717089d7c5d2971a395967df46ab866884bb3938878cab29725e667c6",
+      "after_runtime9_sha256": "4444d4f9719d61a9ec2f87be1890454e5d5eb7f4c3484e0e4af8b1c632909d17",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_platform.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/deployment_platform.go",
+      "sha256": "812d35b7da17de567a4eec09574b42448161a41690f8c9ddb900f603cbd7fdca",
+      "before_sha256": "5e394d6351cfd8dae2b80e5555e4f0a359442958f53b2e650e2f8d539ab159c6",
+      "after_runtime9_sha256": "812d35b7da17de567a4eec09574b42448161a41690f8c9ddb900f603cbd7fdca",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_publication_startup.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/deployment_publication_startup.go",
+      "sha256": "8cdd81c9d7973d8bb423ebb786d334e81226a5e239868cac7949d5264d18cadb",
+      "before_sha256": "19103b8a998135a1b7057817065ab5fad952bcbe515a29356ecfe7934ae38aac",
+      "after_runtime9_sha256": "886713d09704821fd722b1cc6089b59c52a34bda4b0c694f0d9e515501f1d0ca",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/deployment_service.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/deployment_service.go",
+      "sha256": "ae3520c8ffa69cb1ed39462fe2a74c6c659b63022b30ff7ae0de6f72ccce2aa6",
+      "before_sha256": "e38b524e0e75fe1570bd54253e3cc81753fddbcd503c20967062c4eff71c8c5c",
+      "after_runtime9_sha256": "7342db9deccf69cffd13d1b14ab9ab836fb78d73ab8bdb06700268e9b9d6d677",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "source": "backend/internal/systembackupexecution/production_capture_database_issue.go",
+      "sha256": "6f135dc14e4d01ef4a378ab6343b0b1be2d8c71fc15d41165a84f76e84b616fd",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "19877b0eae6dccc41afa79816d307034c74870c652bf71eeeaf0fa66cc0c18a7"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-database-output-reservation-supersede-pins-20261103.json",
+          "declared_sha256": "6f135dc14e4d01ef4a378ab6343b0b1be2d8c71fc15d41165a84f76e84b616fd"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_issue_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_database_issue_test.go",
+      "sha256": "0de4f3d7dd4e4f29eb8dfff3600230d935634668e36f09c664c03cb6dfb6aab5",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "0de4f3d7dd4e4f29eb8dfff3600230d935634668e36f09c664c03cb6dfb6aab5"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_database_output_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_database_output_test.go",
+      "sha256": "a1d9b6e2f946ddda260cde100477391fdb1ce602d6c8065c2733105076067fac",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-database-output-reservation-supersede-pins-20261103.json",
+          "declared_sha256": "a1d9b6e2f946ddda260cde100477391fdb1ce602d6c8065c2733105076067fac"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_installation.go",
+      "source": "backend/internal/systembackupexecution/production_capture_installation.go",
+      "sha256": "36a110f650e644218e983a508410f603ce06cf2eeba436e61a03b127cd6a0145",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "36a110f650e644218e983a508410f603ce06cf2eeba436e61a03b127cd6a0145"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_installation_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_installation_test.go",
+      "sha256": "cf13a27f64c62bf4df0116200c0c3df2c065b934e33cc49ae18fbe83d7d97072",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+          "declared_sha256": "cf13a27f64c62bf4df0116200c0c3df2c065b934e33cc49ae18fbe83d7d97072"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize.go",
+      "sha256": "a9b3c52d1ffb3f257dbf4d0647a74dfdc1b514c03d2fbdc395f77a8979fc87c5",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json",
+          "declared_sha256": "51c4bbabf640e232c8d3ee1c38063b3f1e690688e29132b5fc1396fbfda89049"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "4301a14d743b4f2c53d3eb983f0b391501f6b67bf64db9a9ddf28cfdc9fc90c7"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-source-grant-window-supersede-pins-20261103.json",
+          "declared_sha256": "a9b3c52d1ffb3f257dbf4d0647a74dfdc1b514c03d2fbdc395f77a8979fc87c5"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_complete_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize_complete_test.go",
+      "sha256": "7d59f2c8bc76bc2a6f7bfd49a15d1c6ab5f408a6e6e5e236531f3a44166bd0a7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "7d59f2c8bc76bc2a6f7bfd49a15d1c6ab5f408a6e6e5e236531f3a44166bd0a7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic.go",
+      "sha256": "b48b954711a56d86ffa62531a80c8e93e1bc17406fba53d6ce08080dccfb8bc7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "b48b954711a56d86ffa62531a80c8e93e1bc17406fba53d6ce08080dccfb8bc7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize_diagnostic_test.go",
+      "sha256": "7cb6f7b948a54778c468491178c7c5907a68655e5fb26b7c7b511f84da1e95f7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "7cb6f7b948a54778c468491178c7c5907a68655e5fb26b7c7b511f84da1e95f7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_grant_window_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize_grant_window_test.go",
+      "sha256": "b071f177e3888425afc8007df39cdda57e1a8f0af39f6798b27f8cf7461eda91",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-source-grant-window-supersede-pins-20261103.json",
+          "declared_sha256": "b071f177e3888425afc8007df39cdda57e1a8f0af39f6798b27f8cf7461eda91"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_materialize_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_materialize_test.go",
+      "sha256": "fdf27777892968d5746b92371aba249af2d1d4e7cb8704dd36160c4b7586a37a",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json",
+          "declared_sha256": "fdf27777892968d5746b92371aba249af2d1d4e7cb8704dd36160c4b7586a37a"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer.go",
+      "source": "backend/internal/systembackupexecution/production_capture_producer.go",
+      "sha256": "397f795933bcc388f4a0b225fc805ca7ca692376a4fc79ca3ce3cb92c196b6f8",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "397f795933bcc388f4a0b225fc805ca7ca692376a4fc79ca3ce3cb92c196b6f8"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_producer_component_fixture_test.go",
+      "sha256": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-material-producer-full-call-component-pins-20261103.json",
+          "declared_sha256": "9204f9cdcb619877d1bfa7d75574e886dda5b5bdb7a2652055a69b4dcd80d9f7"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_producer_component_sql_test.go",
+      "sha256": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-material-producer-full-call-component-pins-20261103.json",
+          "declared_sha256": "7f443cf66780c92e83139a45b3e60797390fa91bb47053b9cf3f2b225d4a7282"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_component_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_producer_component_test.go",
+      "sha256": "dcaa19c9562418a5e9cbfdae302c78c7120fb860da6d36584bfd93a5697d6a61",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-material-producer-full-call-component-pins-20261103.json",
+          "declared_sha256": "dcaa19c9562418a5e9cbfdae302c78c7120fb860da6d36584bfd93a5697d6a61"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_capture_producer_test.go",
+      "source": "backend/internal/systembackupexecution/production_capture_producer_test.go",
+      "sha256": "c08c1ca993881bddf49fdc9f1ab9884441302e49fbc3bab6e1fce22184b71890",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "c08c1ca993881bddf49fdc9f1ab9884441302e49fbc3bab6e1fce22184b71890"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation.go",
+      "sha256": "458b58bb80cdada31d2dc85432e76b9952a447e9b261ac3abbf2c342a138806b",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "27c6eba8c6bd573ffe2d85808a82a63027deeb7f69f08406351f8d0df8bd4082"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json",
+          "declared_sha256": "458b58bb80cdada31d2dc85432e76b9952a447e9b261ac3abbf2c342a138806b"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_clock.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation_clock.go",
+      "sha256": "75d9a7b7a3c2a54ba34aeab0c2510853d006120c1affc7094c03a8ca3d8edc38",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json",
+          "declared_sha256": "75d9a7b7a3c2a54ba34aeab0c2510853d006120c1affc7094c03a8ca3d8edc38"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_clock_test.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation_clock_test.go",
+      "sha256": "a196360f9fb2d83c542c4a6a3089429ce4747b37cc4c2d5d1b9eebd1318ee697",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json",
+          "declared_sha256": "a196360f9fb2d83c542c4a6a3089429ce4747b37cc4c2d5d1b9eebd1318ee697"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_diagnostics.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation_diagnostics.go",
+      "sha256": "29cb90e2cc4d81b139f06e52f96442f35c5aedfe7ab1f5f17fba74863d2fc694",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "29cb90e2cc4d81b139f06e52f96442f35c5aedfe7ab1f5f17fba74863d2fc694"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_diagnostics_test.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation_diagnostics_test.go",
+      "sha256": "9137b56fa3c0c870496bbb7f0deeda124bbe67ca42b09560289d96f18c93353d",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "9137b56fa3c0c870496bbb7f0deeda124bbe67ca42b09560289d96f18c93353d"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_observation_metadata.go",
+      "source": "backend/internal/systembackupexecution/production_source_observation_metadata.go",
+      "sha256": "7bc5cf1f3549234c38b71838c4a726437dc643ef1bc9af797d5163304a5e7252",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "7bc5cf1f3549234c38b71838c4a726437dc643ef1bc9af797d5163304a5e7252"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go",
+      "source": "backend/internal/systembackupexecution/production_source_protocol_scenario_mysql_test.go",
+      "sha256": "78eb14423f6c1020d7c452ec337d5a6e7920cac44d22c7eacdf44aa604047ab1",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "78eb14423f6c1020d7c452ec337d5a6e7920cac44d22c7eacdf44aa604047ab1"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/production_source_protocol_tls_test.go",
+      "source": "backend/internal/systembackupexecution/production_source_protocol_tls_test.go",
+      "sha256": "9bb6cb119e7d5b0e1eb2dbc6a94b0d04a77add558758b22f86cbc3b7e437be02",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+          "declared_sha256": "f008a584bc2a55cc2a2c13017dc2477d701463c6ab432f5b37d22093c6168066"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-source-tls-interface-supersede-pins-20261103.json",
+          "declared_sha256": "9bb6cb119e7d5b0e1eb2dbc6a94b0d04a77add558758b22f86cbc3b7e437be02"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupexecution/runtime_readiness_profile_test.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/runtime_readiness_profile_test.go",
+      "sha256": "8fc2358878c42db9022fcdca3b35eef05322406d027c0f4bc74793b918a0ce68",
+      "before_sha256": null,
+      "after_runtime9_sha256": null,
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/runtime_readiness_publication_observation.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/runtime_readiness_publication_observation.go",
+      "sha256": "7008886d0086a022bf77dd4a82c3a62b9daa4e563e01b52be79685278a508288",
+      "before_sha256": null,
+      "after_runtime9_sha256": "52de3c15c205e3dc6965d175cfbc3d7c62854f6dd4d4a66a483c77863ca977dd",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/runtime_readiness_publication_observation_test.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/runtime_readiness_publication_observation_test.go",
+      "sha256": "3af418d88a9692bfdd479088066e24c7dc6f680320e491884d36a513f862fbc7",
+      "before_sha256": null,
+      "after_runtime9_sha256": "b1f6379a20fc3287be1af207b7ab8843bad12490042f52ede9f0fd71c0ed27d8",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/runtime_six_part_readiness.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/runtime_six_part_readiness.go",
+      "sha256": "7cb28b16a679b0942e243a3a62e4870b8aa1e54ddb191e43d3a26e379abdab9e",
+      "before_sha256": null,
+      "after_runtime9_sha256": "cf95270c88aae2c12428eb35ddf87577fca5c1ed7011fdccb7c688ad243bbd17",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupexecution/runtime_six_part_readiness_test.go",
+      "source": "backend/.d-runtime-readiness-closed-profile-20261103/backend/internal/systembackupexecution/runtime_six_part_readiness_test.go",
+      "sha256": "12fb230c76f058502b83d00ceb41cb88756dbab74c92ce8ae6b04755c695de9b",
+      "before_sha256": null,
+      "after_runtime9_sha256": "12fb230c76f058502b83d00ceb41cb88756dbab74c92ce8ae6b04755c695de9b",
+      "group": "closed April/September runtime readiness + publication stamp final aggregate",
+      "source_manifest": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/consumer_capture_test.go",
+      "source": "backend/.d-page-trial-fixture-repair-20261103/backend/internal/systembackupinstallationowner/install/consumer_capture_test.go",
+      "sha256": "118af7e6504a6e2c256018836882afab7d3090c539e7af8036f25d0823bf6cf1",
+      "before_sha256": "a5d9b2ce5f7b32599f0d11294df4ba15d0a4d12755fbddadc8dc07cbc9bd11d0",
+      "group": "D101 Linux R1 fixture-only repair; original failures retained",
+      "source_manifest": "backend/.d-page-trial-fixture-repair-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/consumer_terminal_kubernetes.go",
+      "source": "backend/internal/systembackupinstallationowner/install/consumer_terminal_kubernetes.go",
+      "sha256": "ab607d8ca1a53f012bbb085a8f177d4d74eaebd57f59b7e537713c2753fdccc5",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-enrolled-concrete-terminal-composition-pins-20261103.json",
+          "declared_sha256": "ab607d8ca1a53f012bbb085a8f177d4d74eaebd57f59b7e537713c2753fdccc5"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/consumer_terminal_kubernetes_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/consumer_terminal_kubernetes_test.go",
+      "sha256": "e179980b960a4e6a595aa36c81417b55896fe445878a1cfac543b861c4364982",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-enrolled-concrete-terminal-composition-pins-20261103.json",
+          "declared_sha256": "e179980b960a4e6a595aa36c81417b55896fe445878a1cfac543b861c4364982"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/cross_resource_relations.go",
+      "source": "backend/.d-cross-source-facts-shape-20261103/backend/internal/systembackupinstallationowner/install/cross_resource_relations.go",
+      "sha256": "499ce5c64ea54c62e0f87c5a18bfc538ff9064081b7f9a7dd04551d0ef26bb79",
+      "before_sha256": "6059712a3c955ae5fcd2e06025bb6e9bd2c4a86f17faf0c6a3260defc0c6f62e",
+      "group": "D cross-resource join calibrated to actual B28 fact shape",
+      "source_manifest": "backend/.d-cross-source-facts-shape-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/cross_resource_relations_test.go",
+      "source": "backend/.d-r3-fixture-contracts-20261103/backend/internal/systembackupinstallationowner/install/cross_resource_relations_test.go",
+      "sha256": "229bfeef7f0755f96951f09900e5b18840d90bdfdf50f5d4e01b0686f89eaccc",
+      "before_sha256": "4aa1a9c602fd95add44c28f9be1b85794c36a9e3a0632b56eae1041378263f0c",
+      "group": "D root R3 exact fixture contracts; production unchanged",
+      "source_manifest": "docs/evidence/system-backup-d-r3-fixture-contracts-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "source": "backend/internal/systembackupinstallationowner/install/database_source_material_issue.go",
+      "sha256": "d34522d2343f505773c3127b3d3a2ca69824738bafd949c70bea5c7f4d7317d2",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "d34522d2343f505773c3127b3d3a2ca69824738bafd949c70bea5c7f4d7317d2"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_issue_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/database_source_material_issue_test.go",
+      "sha256": "cff3286f68eca64857d2d0c2595fca7025612f2ea57aa82cae183c2defbe1c1d",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "cff3286f68eca64857d2d0c2595fca7025612f2ea57aa82cae183c2defbe1c1d"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/database_source_material_native.go",
+      "source": "backend/internal/systembackupinstallationowner/install/database_source_material_native.go",
+      "sha256": "2aa6114042187467836ac8cddc3ca803c1301525566fb52e5c701e3a861d6c2a",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+          "declared_sha256": "2aa6114042187467836ac8cddc3ca803c1301525566fb52e5c701e3a861d6c2a"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_export.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_export.go",
+      "sha256": "242d87afaa62b30978053c2cdbf9e5e4fae9cbe3518fcd0ea8f7482f05c65f51",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "242d87afaa62b30978053c2cdbf9e5e4fae9cbe3518fcd0ea8f7482f05c65f51"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_files.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_files.go",
+      "sha256": "9cdf7d0a1db03e499126938ffbfdddd41517e316c01728507dcdb945768393f9",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "9cdf7d0a1db03e499126938ffbfdddd41517e316c01728507dcdb945768393f9"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_files_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_files_test.go",
+      "sha256": "7cebcad46c70cf559ca99784d8a7932383c6fac6cc2525788dba870a6d036b85",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "7cebcad46c70cf559ca99784d8a7932383c6fac6cc2525788dba870a6d036b85"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_load.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_load.go",
+      "sha256": "0f69729ea0514f4892b0460a4493cfbee1f8e9cc70ce785aad5171c4b10fc734",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+          "declared_sha256": "b46896bd9ca7fea0a7b71e236f97f2ac3e03396a52602f8f9f5cd3a21b048dc5"
+        },
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+          "declared_sha256": "0f69729ea0514f4892b0460a4493cfbee1f8e9cc70ce785aad5171c4b10fc734"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_owners.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_owners.go",
+      "sha256": "f0ce5063993fa90c83e17302e3957e129feccbb0ea253aaf48853ad0f5d696f2",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+          "declared_sha256": "f0ce5063993fa90c83e17302e3957e129feccbb0ea253aaf48853ad0f5d696f2"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_positive_fixture_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_positive_fixture_test.go",
+      "sha256": "84164339114e82b51f518f36218dbe9a9e1856796736a2d4b794930ee4163100",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+          "declared_sha256": "84164339114e82b51f518f36218dbe9a9e1856796736a2d4b794930ee4163100"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_positive_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_consumer_positive_test.go",
+      "sha256": "47079adea775e14651e5a336c79d2eafffdb7dfcbba2024e33f9edc938fddb4e",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+          "declared_sha256": "47079adea775e14651e5a336c79d2eafffdb7dfcbba2024e33f9edc938fddb4e"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_declaration_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_declaration_test.go",
+      "sha256": "66b0a1717fc013abbdd81ac3d3f93beaba051e61bb7fe3374c4c7f7c5c3c47dc",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json",
+          "declared_sha256": "66b0a1717fc013abbdd81ac3d3f93beaba051e61bb7fe3374c4c7f7c5c3c47dc"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_drift_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_drift_test.go",
+      "sha256": "e392eab7036c4f95abe9c18a68d7e345cc179160ac174b87a0f7bee359f76c0a",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "e392eab7036c4f95abe9c18a68d7e345cc179160ac174b87a0f7bee359f76c0a"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_fixture_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_fixture_test.go",
+      "sha256": "80b91a4b490ad3a9b5c9470a98b6dbc0a8f26fb2c1f439920dc7a1f0a00dfba3",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "80b91a4b490ad3a9b5c9470a98b6dbc0a8f26fb2c1f439920dc7a1f0a00dfba3"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_monitor_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_monitor_test.go",
+      "sha256": "9f6a7d947532062e0556f8c42e87a2ed0d48eeac6f4e5be03404349f1c74d2be",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "9f6a7d947532062e0556f8c42e87a2ed0d48eeac6f4e5be03404349f1c74d2be"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_readback_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_readback_test.go",
+      "sha256": "9b14819badeca3d52bfdb9a151adcd998f91c34d23ed7c6a0b46c5c8d9b97d4b",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "9b14819badeca3d52bfdb9a151adcd998f91c34d23ed7c6a0b46c5c8d9b97d4b"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_roots_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_roots_test.go",
+      "sha256": "44e30e94d03aface835b9d27b0876c9de2c8917fc16aded89a7c3bea9fcc32d4",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json",
+          "declared_sha256": "44e30e94d03aface835b9d27b0876c9de2c8917fc16aded89a7c3bea9fcc32d4"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_scenarios_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_scenarios_test.go",
+      "sha256": "49944153b5ad2349b69fec92ce15d8d929611b6aedf2e201d1980343f1d044cc",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "49944153b5ad2349b69fec92ce15d8d929611b6aedf2e201d1980343f1d044cc"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_native_schema_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_native_schema_test.go",
+      "sha256": "0ce00a1957007bc3439f3fa04bded5650a502788d0eaa8075d10d560aa676639",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+          "declared_sha256": "0ce00a1957007bc3439f3fa04bded5650a502788d0eaa8075d10d560aa676639"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_rows.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_rows.go",
+      "sha256": "2f43940195e6f526e1ac23082bed207166e9056a698983521561a810f99b8108",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json",
+          "declared_sha256": "2f43940195e6f526e1ac23082bed207166e9056a698983521561a810f99b8108"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store.go",
+      "sha256": "55c088109dacd0cc7e682e046ef6a30de30252f7bec67a37ff136dfe31a4cbe8",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json",
+          "declared_sha256": "55c088109dacd0cc7e682e046ef6a30de30252f7bec67a37ff136dfe31a4cbe8"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/signing_resource_sql_store_test.go",
+      "sha256": "32d57c79f3b58520e650a0cc24ba5e47b5e369b256c52a07f2d747129d8d2e6b",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json",
+          "declared_sha256": "32d57c79f3b58520e650a0cc24ba5e47b5e369b256c52a07f2d747129d8d2e6b"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/source_material_issue.go",
+      "source": "backend/internal/systembackupinstallationowner/install/source_material_issue.go",
+      "sha256": "f2655544f271b1c0359b78bb458d0c2275a09922a8ead93958ad55d06c622d94",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "f2655544f271b1c0359b78bb458d0c2275a09922a8ead93958ad55d06c622d94"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/source_material_issue_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/source_material_issue_test.go",
+      "sha256": "f644bd7769ee9b00a9842409103f03a055bf052ec8fd79f45d0e75e617f3de3e",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+          "declared_sha256": "f644bd7769ee9b00a9842409103f03a055bf052ec8fd79f45d0e75e617f3de3e"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/status_relay_reference.go",
+      "source": "backend/internal/systembackupinstallationowner/install/status_relay_reference.go",
+      "sha256": "7493c49a5f960f5310a01234c646708337ad4b00c70905776f1b9ac800a890dd",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/status_relay_reference_consumer.go",
+      "source": "backend/internal/systembackupinstallationowner/install/status_relay_reference_consumer.go",
+      "sha256": "1d61983046ad4d891b00e32caf68117d9e9c8b63461a8080286be38075b7e907",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/status_relay_reference_issuer_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/status_relay_reference_issuer_test.go",
+      "sha256": "15f63655c9989b68e078c7010713f8cd3479daca08862b88876a521fca6998c2",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/status_relay_reference_native.go",
+      "source": "backend/internal/systembackupinstallationowner/install/status_relay_reference_native.go",
+      "sha256": "6337298d138306f1607f00206f902a535e9d0b2d1be3b58fa8d7bfabcf410704",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/status_relay_reference_test.go",
+      "source": "backend/internal/systembackupinstallationowner/install/status_relay_reference_test.go",
+      "sha256": "63f08d96f325aaa1c1fe2d2915bf1b38ccc9afaf036b85aea4c2575dfd8ec96a",
+      "group": "original status_relay transport reference; no task/Job permission"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/terminal_original.go",
+      "source": "backend/.d-cross-resource-relations-v8-20261103/backend/internal/systembackupinstallationowner/install/terminal_original.go",
+      "sha256": "2460b1830576abb19be1348b87702eb53a9c2fe4e5205c0b850a97304d338459",
+      "before_sha256": "9ae51b9444d9c12a1301a1707cab0e4a8f1a7ca884d1444cd17bbc56166c487e",
+      "group": "D cross-resource actual private terminal graph + main-v8",
+      "source_manifest": "backend/.d-cross-resource-relations-v8-20261103/source-map.json"
+    },
+    {
+      "path": "backend/internal/systembackupkms/config_validation.go",
+      "source": "backend/internal/systembackupkms/config_validation.go",
+      "sha256": "f70e0ee37bdd2d935a8229d79a75dd50ea2578182ab3c5fe3dfb23468870721d",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "f70e0ee37bdd2d935a8229d79a75dd50ea2578182ab3c5fe3dfb23468870721d"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupkms/config_validation_test.go",
+      "source": "backend/internal/systembackupkms/config_validation_test.go",
+      "sha256": "0ef6d75e74f2d4d09d06b3a6eb77fb0b67a6e3a8136852d248713f74c3d18566",
+      "group": "D prerequisite shared source",
+      "source_manifests": [
+        {
+          "manifest": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+          "declared_sha256": "0ef6d75e74f2d4d09d06b3a6eb77fb0b67a6e3a8136852d248713f74c3d18566"
+        }
+      ],
+      "matches_listed_historical_pin": true
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_kek_evidence.go",
+      "source": "backend/internal/systembackupsecurity/config_mutation_kek_evidence.go",
+      "sha256": "4fa41fb08c3ab218774fcfdb9e60eb199725d8e86423df05b8de3503adb23437",
+      "group": "D actual mutation original evidence union"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_kek_evidence_test.go",
+      "source": "backend/.d-r3-fixture-contracts-20261103/backend/internal/systembackupsecurity/config_mutation_kek_evidence_test.go",
+      "sha256": "834951bb293f8526f5571e02b4278324790492b0c86306952e52677eeb375f0f",
+      "before_sha256": "0833b60ebe5b72be724075dd0e07963753dea980e43c001374986af847e4e840",
+      "group": "D root R3 exact fixture contracts; production unchanged",
+      "source_manifest": "docs/evidence/system-backup-d-r3-fixture-contracts-20261103.json"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_transaction.go",
+      "source": "backend/.d-mutation-original-evidence-20261103/backend/internal/systembackupsecurity/config_mutation_transaction.go",
+      "sha256": "a75b858782a4202eff3a8c8d03907f66883381500c95abcc55989a031037d2ab",
+      "before_sha256": "bf07f8c795e8fb93d69701aefe197d1e184092a946e674a42c0e9c717a07d723",
+      "group": "D actual mutation original KEK union and complete scan",
+      "source_manifest": "backend/.d-mutation-original-evidence-20261103/source-map.json"
+    }
+  ],
+  "source_manifests": [
+    {
+      "path": "docs/evidence/system-backup-d-authenticated-source-material-producer-pins-20261103.json",
+      "sha256": "da5b423b02b84688ab635950ea497d3394a098e9fef6fab7239637205b3f6045"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-material-producer-full-call-component-pins-20261103.json",
+      "sha256": "e836a8d4ec72d56ae9c8eead044aa52206c307731400c0afb2fdccfd1e092265"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-materializer-host-source-pins-20261103.json",
+      "sha256": "02224802da4fd0c3a8c135f509809b62d480119645c687e754463bb03d660a04"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-first-install-entrypoints-pins-20261103.json",
+      "sha256": "d6a4a43a01382aeb2058af4aa7d2bf10195a7352025990a8fff5aad8a9a4c06f"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-mapper-consumption-supersede-pins-20261103.json",
+      "sha256": "56da9cf92c25c83cb178cffda955acb0d49a2fc1f7289d307a81453bcdc4c7e8"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-mapper-source-grant-window-supersede-pins-20261103.json",
+      "sha256": "703d68f851e21661740da43e1ea1708b6d0e979eed29d9da57ded4c2c1f2d7ab"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-native-database-source-issuer-pins-20261103.json",
+      "sha256": "4089b451dd79b3a8510c425775c34a120ec473a6b969873fc22ec819064e088a"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-database-output-reservation-supersede-pins-20261103.json",
+      "sha256": "16eb5d290253cd5036ee42e3fdb2ee622ff00c532d5e8c63327a63c26821d257"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-terminal-direct-authority-supersede-pins-20261103.json",
+      "sha256": "094fbcdf6f7e7dd4cf54dfc451b1017045ce67115b7b485b24bc82403c5038c8"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-native-host-main-supersede-pins-20261103.json",
+      "sha256": "39077a36355778782b49d92d579f17dbfa6fa8c2ac6361b0dd766d558537df7f"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-enrolled-concrete-terminal-composition-pins-20261103.json",
+      "sha256": "26785f983cc3157f8d34c1a56a57784a6fcb604d4c77cfba6b38b1a7a7538f77"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-sql-lifecycle-pins-20261103.json",
+      "sha256": "6ae43be027d8387262aa3ecf8914082e8df640aabaec4e3bd1144a22c1e636a7"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-native-foundation-pins-20261103.json",
+      "sha256": "36d192bac4de14ceea2514ce3bd8f3defa5e500882e8e33a6bf091297bf79ec4"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-native-declaration-roots-pins-20261103.json",
+      "sha256": "ed732cdf36a34849626e1354c9655d3d269d1dda8711bd1390a0b488129b17f1"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-resource-consumer-cli-pins-20261103.json",
+      "sha256": "b714aaa122eb322616d6844d1af60c624778e09abf970e9a1f7b9d2b622e445a"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-signing-consumer-main-v4-supersede-pins-20261103.json",
+      "sha256": "1e70f47457c82acdebf064db722e67b119b7fafc1beea0ccc43d0dcdf0daa1a1"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-native-source-tls-boundary-fix-pins-20261103.json",
+      "sha256": "09e0da20de67d4032816798b681befde8580c25686ccf5876aadee51eee92771"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-source-tls-interface-supersede-pins-20261103.json",
+      "sha256": "8c6d8af145ea76abe235e65e3fdd1de754e668effce8ca64fee9359fbacb7f72"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-source-sql-clock-driver-supersede-pins-20261103.json",
+      "sha256": "44517fa60da472ee39e027ef73b223d563ec340c3b995a600988bdc6fa55c082"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-first-install-inputs-review-20261103.json",
+      "sha256": "d727279f99a4e9f964555bc1f547dab024c12a46a72881a7c6e130ae0c6f4c71"
+    },
+    {
+      "path": "backend/.d-enrolled-main-v7-status-relay-20261103/source-map.json",
+      "sha256": "6395d99a35e33b7be3e90bb061d256999c5046ceb8d11a84bc9cd662d6a60b9f"
+    },
+    {
+      "path": "backend/.d-object-storage-original-ca-20261103/source-map.json",
+      "sha256": "98918539b26cf63c08d7509c79596f4d4a72c8d23aab1da2c3966c6d81b91738"
+    },
+    {
+      "path": "backend/.d-runtime-readiness-closed-profile-20261103/source-map.json",
+      "sha256": "1b9270bfc65c0fe0caba61d61e707eb3912e59602e1019942bd3a6589b76822c"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-status-relay-reference-source-20261103.json",
+      "sha256": "55e635b6545d91e1be304c0cfebffd0e0f448d41a53eea1ecce8e25a1f4e8d61"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-cross-resource-relations-main-v8-20261103.json",
+      "sha256": "6769a26dc59948e5458fe557c64d444e5351571a01e34b0078cee021a74559f1"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-main-v9-four-source-registry-20261103.json",
+      "sha256": "31d8ca49fd339ff67287d08ed44f691d2e144c95fc29196c87137a23f4428a81"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-page-trial-fixture-repair-20261103.json",
+      "sha256": "94dc13fca38334702a7e781530e233746ced6adda59a195c240644b984f65831"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-mutation-original-evidence-20261103.json",
+      "sha256": "6150e12a14464b8a0fb8866539b7d2f274bdff3018b46c08644be1d88014d97a"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-cross-source-facts-shape-20261103.json",
+      "sha256": "4b02e6276fb859bb440a03873ea13562035ea107aef60f471a99c3ec5631e7f7"
+    },
+    {
+      "path": "docs/evidence/system-backup-d-r3-fixture-contracts-20261103.json",
+      "sha256": "b6f9ae868259934fa4713e1e35c594e3a42399d2c24ad4aef220196fde393807"
+    }
+  ],
+  "additional_image_tools": [
+    "system-backup-bootstrap-enrolled",
+    "system-backup-installation-owner",
+    "system-backup-owner-enroll",
+    "system-backup-owner-authority",
+    "system-backup-owner-consumer",
+    "system-backup-signing-resource-owner",
+    "system-backup-minio-permission-owner",
+    "system-backup-minio-sql-owner",
+    "system-backup-source-materials",
+    "system-backup-source-registries",
+    "system-backup-status-relay-owner",
+    "system-backup-first-install-materials",
+    "system-backup-database-source-grant",
+    "system-backup-installation-kek-materials",
+    "system-backup-source-sql-observe",
+    "system-backup-kek-window-owner",
+    "system-backup-kek-authority",
+    "system-backup-provider-observe",
+    "system-backup-control-proposal",
+    "system-backup-observer",
+    "system-backup-offline-security"
+  ],
+  "additional_image_tool_count": 21,
+  "cli_directory_snapshot": [
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/main.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/main.go",
+      "sha256": "97e918e799378b5da5aa5d122d614c8f62ca41c257f30ea3d7d004dcaac59343",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition.go",
+      "sha256": "c354051a438bb412e6811c26e05d3ce210489a90b07e1500bc07f364bd1859b4",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "source": "backend/.d-page-trial-fixture-repair-20261103/backend/cmd/system-backup-bootstrap-enrolled/minio_composition_test.go",
+      "sha256": "5f52c733806e55c1c9a868a980dcafe289202509ec5ef1188273f5d82b88442f",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/native_host_input_test.go",
+      "sha256": "0e9cb2991d21382287476e52b2471132e8219b047543a03ca2daad80f407e912",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "sha256": "eda02da4ec23809701dca7f5a612bcbae2e92a3dec3b6ce2df03bf890321b244",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "source": "backend/.d-requirements-fixture-20261103/backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "sha256": "cb925897cd79e9079a0331f5d65061754b67cab6ff9b364f65cf471e337b846e",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition.go",
+      "sha256": "9e304e725240c70cfb94128ef9757b6cb1fda840379ecc913f51737503259f61",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "source": "backend/.d-main-v9-four-source-registry-20261103/backend/cmd/system-backup-bootstrap-enrolled/signing_composition_test.go",
+      "sha256": "00e00ccf31e8232b773e02d0c7b31138346d8d643f555149a218dc339d74198c",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-bootstrap-enrolled/terminal_wiring_order_test.go",
+      "source": "backend/cmd/system-backup-bootstrap-enrolled/terminal_wiring_order_test.go",
+      "sha256": "0fd1bdf28f8f627c23468870a46144daeab154262a22862ff90755673f93ea56",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-installation-owner/main.go",
+      "source": "backend/cmd/system-backup-installation-owner/main.go",
+      "sha256": "00fd50778d709393f0a74a571a0a1954ba640bd94b02535d5424638cc92746a1",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-installation-owner/main_test.go",
+      "source": "backend/cmd/system-backup-installation-owner/main_test.go",
+      "sha256": "32d0b0e07278c038453092b462b0e094a02d29d5bd9afb9b0ebdcf2100d22105",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-enroll/main.go",
+      "source": "backend/cmd/system-backup-owner-enroll/main.go",
+      "sha256": "9a4abe91abbb7a200191a25965b72c8fe4292c41a4db033abaced52924ef3cf8",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-enroll/main_test.go",
+      "source": "backend/cmd/system-backup-owner-enroll/main_test.go",
+      "sha256": "2a121abcf7cdf57a59f9fcdc733bb3c6f5f3173be5804529b1e20c594d8ca8ac",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-authority/issuer.go",
+      "source": "backend/cmd/system-backup-owner-authority/issuer.go",
+      "sha256": "489788c7ad27752c6115c75b4b7db0402c8a79ecb6140df0982dcb8ae0294c6c",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-authority/issuer_test.go",
+      "source": "backend/cmd/system-backup-owner-authority/issuer_test.go",
+      "sha256": "64b159ebc77c8b36e49e7e96e9fa873366b28dcb70e8671780e7ffdcc3a77116",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-authority/main.go",
+      "source": "backend/cmd/system-backup-owner-authority/main.go",
+      "sha256": "4850db9efb7c0ec48b84ae59b90e5fe1aa5893d61fe54c35c812173dbd36e3f8",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-authority/main_test.go",
+      "source": "backend/cmd/system-backup-owner-authority/main_test.go",
+      "sha256": "203eba0339b68881845e5d8f787b2d0cb0bed5d90e9f1861440965ae703ebf80",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-consumer/main.go",
+      "source": "backend/cmd/system-backup-owner-consumer/main.go",
+      "sha256": "5fa21a32cd19f48c3a51ad29c275d58f07f9060d3fd9d6c5616709900f37007b",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-owner-consumer/main_test.go",
+      "source": "backend/cmd/system-backup-owner-consumer/main_test.go",
+      "sha256": "ac193050a753d04a3db9699080c1876b5613d43dc900969fe55c3ee9252ded43",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-signing-resource-owner/main.go",
+      "source": "backend/cmd/system-backup-signing-resource-owner/main.go",
+      "sha256": "1e18487ca370286298549f7a3e64a63725d72e297c5f8ae50a7c4d5e2a370df7",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-signing-resource-owner/main_test.go",
+      "source": "backend/cmd/system-backup-signing-resource-owner/main_test.go",
+      "sha256": "25252e9e63babc6c7fdc5ad22e9d6215a68502483124bb780822baf8c171a75e",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-minio-permission-owner/main.go",
+      "source": "backend/cmd/system-backup-minio-permission-owner/main.go",
+      "sha256": "da8c8e16a741a6a109cb07f2fb9c89890b85a5ecaa9d436950125e3c6f67cead",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-minio-sql-owner/main.go",
+      "source": "backend/cmd/system-backup-minio-sql-owner/main.go",
+      "sha256": "cda9853e1d9c6e69378a445f41b975f31a4cf4dbb853271a7aa2e3c88e38bc26",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-minio-sql-owner/main_test.go",
+      "source": "backend/cmd/system-backup-minio-sql-owner/main_test.go",
+      "sha256": "40a62b8a00d872c5f7a6180724d6fc2f9dcf7d0567726a6c3a0d2da6ce393ef4",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-source-materials/main.go",
+      "source": "backend/cmd/system-backup-source-materials/main.go",
+      "sha256": "8272257fc3ebf1ef26597a148b71bc03ee3cc443d068cbe5ce1b5cd4d183a8d7",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-materials/main_test.go",
+      "source": "backend/cmd/system-backup-source-materials/main_test.go",
+      "sha256": "7a6d18f5735f9a4729c0b42dcc6ef86748774d595ad597a02c55f31a63c0e8bc",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-registries/main.go",
+      "source": "backend/cmd/system-backup-source-registries/main.go",
+      "sha256": "4e2a37279c46ce8fb3fb8f403292a654af3068b94aafe27ad8e7b91710312539",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-source-registries/main_native_registries_test.go",
+      "source": "backend/cmd/system-backup-source-registries/main_native_registries_test.go",
+      "sha256": "3a66e6aef2f1f8c1767b70a4b52778bd514f4a65657801d2d0066ce2283ca36f",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-source-registries/main_test.go",
+      "source": "backend/cmd/system-backup-source-registries/main_test.go",
+      "sha256": "7877633ccbc074ffcc398e99c613b93d726102dd89371901ebcf66e22c7d29a4",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-status-relay-owner/main.go",
+      "source": "backend/cmd/system-backup-status-relay-owner/main.go",
+      "sha256": "9e83cd0093b902eb09c5f9756a7a4d96cdd32969573d49533c066af37649406a",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-first-install-materials/main.go",
+      "source": "backend/cmd/system-backup-first-install-materials/main.go",
+      "sha256": "76255e796b4123561ee4c122a19084cd5a27a8fa3d09e8e68601e1cce2b5c97b",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-first-install-materials/main_test.go",
+      "source": "backend/cmd/system-backup-first-install-materials/main_test.go",
+      "sha256": "1c7fd7a262a1fefede0aa582d7053010d95e4903bfc32b86f3fab6c29dbdef4c",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-database-source-grant/main.go",
+      "source": "backend/cmd/system-backup-database-source-grant/main.go",
+      "sha256": "0f15c57fcb92356f73f815becd61ee0e1d19c85a8790f0e287184f557f3e6e35",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-database-source-grant/main_test.go",
+      "source": "backend/cmd/system-backup-database-source-grant/main_test.go",
+      "sha256": "39992ca5d562bd5cd63d165f149b2df52d997d6ed2b3f1367425c746b009af03",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-installation-kek-materials/main.go",
+      "source": "backend/cmd/system-backup-installation-kek-materials/main.go",
+      "sha256": "ede9dbe5344c088ab3d91f937bcc7688e51f35f03c51b0479a13efbf54bf22d3",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-installation-kek-materials/main_test.go",
+      "source": "backend/cmd/system-backup-installation-kek-materials/main_test.go",
+      "sha256": "6d71e8d772f502f7a1b066e7e01139f655591a368c93abebf0a4b8b057ba4004",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/main.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/main.go",
+      "sha256": "7d7541e324ba85ab383eacc35842c6088fc25f8bfe71bda6857c00442305dc5f",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/main_test.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/main_test.go",
+      "sha256": "5f22a6180b1de5f85efd69fe32d380f1796d8bd5c4bba611715f11c191fd0781",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-source-sql-observe/proposal.go",
+      "source": "backend/cmd/system-backup-source-sql-observe/proposal.go",
+      "sha256": "ea28d4dcdf2f8ded0d89fb5403236ae8bb2ec7a9d1ddfd5c3e143e7838b689d3",
+      "D_source_entry": true
+    },
+    {
+      "path": "backend/cmd/system-backup-kek-window-owner/main.go",
+      "source": "backend/cmd/system-backup-kek-window-owner/main.go",
+      "sha256": "9cdc37e94e989117b06817f456bdd036faf8b33e20ea7f79f536a632d2d151fa",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-kek-window-owner/main_test.go",
+      "source": "backend/cmd/system-backup-kek-window-owner/main_test.go",
+      "sha256": "3fbf131c6ca93c0b5ad8d5bbde0ebfe0458b53e6496733426d0b2b7cb938fc46",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-kek-authority/main.go",
+      "source": "backend/cmd/system-backup-kek-authority/main.go",
+      "sha256": "3e4c1dd603699bb9d686c60a6f35770b6f0ff0e63b39d00ec6f9a7ff388eb781",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-kek-authority/main_test.go",
+      "source": "backend/cmd/system-backup-kek-authority/main_test.go",
+      "sha256": "ecdcafc327741a5adc75ac6044a0aa6ce64790a7df7e1d215ed4b3449d4e1feb",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-provider-observe/main.go",
+      "source": "backend/cmd/system-backup-provider-observe/main.go",
+      "sha256": "0c11c28ac25bf81a587d728e116e1df6930220907faafe8e633c4396d2536010",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-provider-observe/main_test.go",
+      "source": "backend/cmd/system-backup-provider-observe/main_test.go",
+      "sha256": "d7ae65f69b6a0c75acc9e12267e76919e4a8a8916d5990d90963a3b824c944fc",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-control-proposal/main.go",
+      "source": "backend/cmd/system-backup-control-proposal/main.go",
+      "sha256": "810b3cb724ed82d4856fa4ce704095fc46417a6a6035bc822ef17e43e3cd0334",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-observer/main.go",
+      "source": "backend/cmd/system-backup-observer/main.go",
+      "sha256": "193682a7e393847bedec3f82d098588a38c11f1a22465caa2b9f7f8943858c5a",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-observer/main_test.go",
+      "source": "backend/cmd/system-backup-observer/main_test.go",
+      "sha256": "04dca22495ae01a3261ff40912f01e54db55b7fb1c303f31f77565132c7384ac",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-offline-security/main.go",
+      "source": "backend/cmd/system-backup-offline-security/main.go",
+      "sha256": "4021bcb7f1a2707f9fa4c209149e006290c28a04d28cbef572b157e9f2e37b8b",
+      "D_source_entry": false
+    },
+    {
+      "path": "backend/cmd/system-backup-offline-security/main_test.go",
+      "source": "backend/cmd/system-backup-offline-security/main_test.go",
+      "sha256": "7916574cc4c49de6800d9edc4ac55209970ecc02f90d10d4ce1e7d1cee9b86c1",
+      "D_source_entry": false
+    }
+  ],
+  "dockerfile": {
+    "path": "backend/.d-page-trial-delivery-v3-20261103/Dockerfile",
+    "sha256": "ed9f40dda225da6283fa2c12c20a487791785fbef6838b3192dfad10400342f5",
+    "root_may_use_offline_packaging": true
+  },
+  "runtime": {
+    "minio_profile_env": "SYSTEM_BACKUP_READINESS_MINIO_PROFILE",
+    "september_profile": "minio-2025-09-07-builtin-flat.v1",
+    "source_file_env": "SYSTEM_BACKUP_READINESS_MINIO_SOURCE_FILE",
+    "source_sha_env": "SYSTEM_BACKUP_READINESS_MINIO_SOURCE_SHA256",
+    "combined_positive_not_verified": true
+  },
+  "remaining_bootstrap_keys_static": [
+    "reference:artifact_upload_issuer",
+    "reference:evidence_store",
+    "reference:evidence_write",
+    "reference:evidence_read",
+    "reference:evidence_delete",
+    "reference:evidence_kek",
+    "reference:catalog_snapshot"
+  ],
+  "legal_enabling": {
+    "implemented_D_entry": null,
+    "status": "A actual production security/HTTP factory now exists, but its 30 actual mutation resolver/deployment obligations and D route/resource composition remain incomplete",
+    "existing_disabled_bootstrap_is_not_enabling": true,
+    "no_direct_SQL_enable_or_fake_resource_adapters": true
+  },
+  "claims": {
+    "gofmt_performed": true,
+    "compiled_by_D": false,
+    "tests_run_by_D": false,
+    "field_execution_by_D": false,
+    "test_build_products_created": false,
+    "full_page_chain_complete": false,
+    "deployment_approved": false
+  },
+  "supersedes_selection": {
+    "path": "docs/evidence/system-backup-d-page-trial-unified-source-closure-v7-20261103.json",
+    "sha256": "d04d479a402ab57fbd8568a4e818167daeb2e83f2c16114da53b3a5feca447c2",
+    "old_bytes_unchanged": true
+  },
+  "main_version": "enrolled-bootstrap-production-composition.v9",
+  "cross_resource_binding_command": "system-backup-bootstrap-enrolled --cross-resource-binding",
+  "requires_B_additional_four_key_freeze": true,
+  "mutation_evidence_union_and_complete_scan_source_present": true,
+  "new_external_source_requirements": [
+    {
+      "path": "docs/evidence/system-backup-b-four-source-registries-source-supersede-20261103.json",
+      "sha256": "341d617b747db4f647f9a3efcdbe59a00b338b164b00d6de928ca507269a0c97",
+      "root_owns_review_freeze_coapplication": true
+    },
+    {
+      "path": "docs/drafts/system-backup-a-kek-window-owner-cli-20261103.pins.json",
+      "sha256": "a3471f5955dfd8f5d390539989686022235c22360e95c35999470c63784168f3",
+      "root_owns_review_freeze_coapplication": true
+    },
+    {
+      "path": "docs/drafts/system-backup-a-config-mutation-production-factory-20261103.pins.json",
+      "sha256": "0b376803b5ed2bcb041a03c1d50337b414bbed66148a6d6d8f1b6be1b7ad699d",
+      "root_owns_review_freeze_coapplication": true
+    }
+  ],
+  "current_root_reported_baseline_commit": "d5624d4cdd31151187190349c67cdf5500b7a821",
+  "additional_image_tools_are_operator_utilities_not_authority": true
+}

@@ -28,6 +28,10 @@ type objectStorageService struct {
 }
 
 func NewObjectStorageService(cfg config.ObjectStorageConfig) (ObjectStorageService, error) {
+	transport, err := objectStorageOriginalCATransport(cfg)
+	if err != nil {
+		return nil, err
+	}
 	service := &objectStorageService{
 		bucket:    strings.TrimSpace(cfg.Bucket),
 		basePath:  strings.Trim(strings.TrimSpace(cfg.BasePath), "/"),
@@ -41,6 +45,7 @@ func NewObjectStorageService(cfg config.ObjectStorageConfig) (ObjectStorageServi
 	}
 
 	client, err := minio.New(cfg.Endpoint, &minio.Options{
+		Transport:    transport,
 		Creds:        credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure:       cfg.UseSSL,
 		Region:       cfg.Region,

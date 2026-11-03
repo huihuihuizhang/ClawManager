@@ -23,6 +23,8 @@ type BootstrapSourceAuthoringSelection struct {
 	Controller                                           BootstrapSourceController
 	ApplicationScope, PartsVersion, SourceWritersVersion string
 	PartsFile, SourceWritersFile                         string
+	RedisSourcesFile                                     string `json:",omitempty"`
+	RedisSourcesVersion                                  string `json:",omitempty"`
 	Connections                                          []BootstrapSourceConnection
 	RuntimeAgent                                         *BootstrapSourceRuntimeAgentV2
 	NotBefore, Until                                     time.Time
@@ -114,6 +116,11 @@ func validateBootstrapSourceAuthoring(s BootstrapSourceAuthoringSelection, targe
 	if !filepath.IsAbs(s.PartsFile) || filepath.Clean(s.PartsFile) != s.PartsFile || !filepath.IsAbs(s.SourceWritersFile) || filepath.Clean(s.SourceWritersFile) != s.SourceWritersFile || s.PartsFile == s.SourceWritersFile {
 		return ErrInstall
 	}
+	if s.RedisSourcesFile != "" || s.RedisSourcesVersion != "" {
+		if !filepath.IsAbs(s.RedisSourcesFile) || filepath.Clean(s.RedisSourcesFile) != s.RedisSourcesFile || s.RedisSourcesFile == s.PartsFile || s.RedisSourcesFile == s.SourceWritersFile || s.RedisSourcesVersion == "" || len(s.RedisSourcesVersion) > 128 || strings.ContainsAny(s.RedisSourcesVersion, "\x00\r\n") {
+			return ErrInstall
+		}
+	}
 	return nil
 }
 
@@ -170,7 +177,7 @@ func (i *Installer) PrepareBootstrapSourceRegistryAuthoring(ctx context.Context,
 		p.files = append(p.files, consumerPinnedFile{a.CA.File, a.CA.SHA256, 262144}, consumerPinnedFile{a.Credential.File, a.Credential.SHA256, 65536})
 	}
 	for _, file := range p.files {
-		if file.path == selection.PartsFile || file.path == selection.SourceWritersFile {
+		if file.path == selection.PartsFile || file.path == selection.SourceWritersFile || file.path == selection.RedisSourcesFile {
 			cancel()
 			return nil, p.reject()
 		}

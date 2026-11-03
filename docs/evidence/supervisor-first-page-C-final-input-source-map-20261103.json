@@ -1,0 +1,128 @@
+[
+  {
+    "target": "backend/cmd/system-backup-minio-catalog-initial/main_test.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/cmd/system-backup-minio-catalog-initial/main_test.go",
+    "before_sha256": null,
+    "sha256": "062449ac8d87eeb6381be4745cb1d63b63da55e79c8e108dfc5f4b6ff7a872b1",
+    "bytes": 352
+  },
+  {
+    "target": "backend/cmd/system-backup-minio-catalog-initial/main.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/cmd/system-backup-minio-catalog-initial/main.go",
+    "before_sha256": null,
+    "sha256": "ca510d85a358900a5875d6921fb2269df89e1e207ab91c18c166f835cd70e6e0",
+    "bytes": 4168
+  },
+  {
+    "target": "backend/cmd/system-backup-minio-native-install/main_test.go",
+    "candidate": "backend/.c-minio-native-install-20261103/backend/cmd/system-backup-minio-native-install/main_test.go",
+    "before_sha256": null,
+    "sha256": "7913ad7b1cbd3d49b37701ca9e4ac10497ad4f3321704b9d72b4f4f73f938757",
+    "bytes": 437
+  },
+  {
+    "target": "backend/cmd/system-backup-minio-native-install/main.go",
+    "candidate": "backend/.c-d-minio-materials-bind-20261103/backend/cmd/system-backup-minio-native-install/main.go",
+    "before_sha256": null,
+    "sha256": "413d72fc4841aaebc167c11f84178192e4b0756eed8b0f8fadf0a2cb4c06c82f",
+    "bytes": 5288
+  },
+  {
+    "target": "backend/internal/systembackupexecution/catalog_initial_inventory_install.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/internal/systembackupexecution/catalog_initial_inventory_install.go",
+    "before_sha256": null,
+    "sha256": "f7b57af2e8391c4cd33234243f204041dc41df5964f6f77515408d09c2523c18",
+    "bytes": 12013
+  },
+  {
+    "target": "backend/internal/systembackupexecution/catalog_initial_inventory_terminal.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/internal/systembackupexecution/catalog_initial_inventory_terminal.go",
+    "before_sha256": null,
+    "sha256": "44b52dc503b44e47d81a27440b1880e67d88c9520ae9f39e160163bd2959ecbd",
+    "bytes": 11823
+  },
+  {
+    "target": "backend/internal/systembackupexecution/catalog_initial_inventory_test.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/internal/systembackupexecution/catalog_initial_inventory_test.go",
+    "before_sha256": null,
+    "sha256": "b80302fc7c9962729da8e99a9a6e9fa9091ce25cd3a7402d106470a3dabe7401",
+    "bytes": 1906
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_config_mutation_references_test.go",
+    "candidate": "backend/.c-minio-mutation-refs-20261103/backend/internal/systembackupexecution/minio_config_mutation_references_test.go",
+    "before_sha256": null,
+    "sha256": "d9b2254cf5aa17cfd42a7e615bca023f8e59667b41ec30b8dacd83792e8f5dbd",
+    "bytes": 1229
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_config_mutation_references.go",
+    "candidate": "backend/.c-minio-mutation-refs-20261103/backend/internal/systembackupexecution/minio_config_mutation_references.go",
+    "before_sha256": null,
+    "sha256": "adddb7cea09e66cd836e4ba021ce2e76b9682579bf47c0e7af327ec4b2b6dbf6",
+    "bytes": 9095
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_apply.go",
+    "candidate": "backend/.c-minio-native-install-stdin-20261103/backend/internal/systembackupexecution/minio_native_install_apply.go",
+    "before_sha256": null,
+    "sha256": "0fd4253e517c9980289e59b55581f1cb6ee1a85f982b7e6c8fe7d2d0368b8593",
+    "bytes": 18743
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_d_bind_test.go",
+    "candidate": "backend/.c-d-minio-materials-bind-20261103/backend/internal/systembackupexecution/minio_native_install_d_bind_test.go",
+    "before_sha256": null,
+    "sha256": "29846ca20f96ec7eb848227e839400379f5249b2724a0712a04072c7e3f91549",
+    "bytes": 2836
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_materials_test.go",
+    "candidate": "backend/.c-minio-native-install-20261103/backend/internal/systembackupexecution/minio_native_install_materials_test.go",
+    "before_sha256": null,
+    "sha256": "94cec5076fb77c0e5d260b76df1c418f32c11c98976b6dc869373ea6c6882163",
+    "bytes": 3150
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_materials.go",
+    "candidate": "backend/.c-d-minio-materials-bind-20261103/backend/internal/systembackupexecution/minio_native_install_materials.go",
+    "before_sha256": null,
+    "sha256": "257c33aa82005d08532e2d56f4ed494df41ab4eebd54e2f831880773d28b14b9",
+    "bytes": 14014
+  },
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_stdin_test.go",
+    "candidate": "backend/.c-minio-native-install-stdin-20261103/backend/internal/systembackupexecution/minio_native_install_stdin_test.go",
+    "before_sha256": null,
+    "sha256": "259ce69d1957d56f9abb1b6d53e5f81b1a163b635aeefe5aabf00b5b768f56ca",
+    "bytes": 1202
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/catalog_initial_inventory_test.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/internal/systembackupinstallationowner/install/catalog_initial_inventory_test.go",
+    "before_sha256": null,
+    "sha256": "7316d9d7e2274d8c6c0dc3853c0f896b1d9821920d37c1e4b3c3ae434777c157",
+    "bytes": 2343
+  },
+  {
+    "target": "backend/internal/systembackupinstallationowner/install/catalog_initial_inventory.go",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/backend/internal/systembackupinstallationowner/install/catalog_initial_inventory.go",
+    "before_sha256": null,
+    "sha256": "e64b3217f0185aba3fd089d81b42295e7956e8b7f689002b63e5d439ce428053",
+    "bytes": 4604
+  },
+  {
+    "target": "deployments/container/system-backup-minio-catalog-initial.sh",
+    "candidate": "backend/.c-catalog-initial-inventory-20261103/deployments/container/system-backup-minio-catalog-initial.sh",
+    "before_sha256": null,
+    "sha256": "44aa5f1d63ef8c5294dd85b593a75af84579d7f6a74c06e9bfb19c9a28bcfaab",
+    "bytes": 2374
+  },
+  {
+    "target": "scripts/system-backup-first-page-minio-tls.py",
+    "candidate": "backend/.c-d-minio-provision-bridge-20261103/scripts/system-backup-first-page-minio-tls.py",
+    "before_sha256": "9bee1e127425b6825345c0da9cb8f3ccce6a5a0e9defc01a6baee10e4a329b86",
+    "sha256": "a199c8f3960d03e03c3aad8d7f607b4cbf8dd86881779236a5ae27118fb73026",
+    "bytes": 26575
+  }
+]

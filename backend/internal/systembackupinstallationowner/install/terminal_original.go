@@ -105,6 +105,11 @@ func (a *BootstrapTerminalOriginal) PrepareBootstrapCandidates(ctx context.Conte
 		state.checks[key] = check
 	}
 	state.complete = len(state.checks)+1 == len(sec.MissingBootstrapOwnerAdapters(sec.BootstrapOwnerAdapters{}))
+	// Bind the actual same-attempt checks only after EVERY real owner has
+	// prepared under the authenticated original mapping. No caller graph/DTO.
+	if bindOriginalCrossResourceRelations(state) != nil {
+		return zero, ErrInstall
+	}
 	// Read the original capacity report last, after all potentially slow owner
 	// observations. Its original observation time is never refreshed here.
 	capacity, e := sec.NewBootstrapCandidateCapacity(sec.DatabaseIdentity{ServerUUID: grant.ServerUUID, Database: grant.Database}, loaded.mapping.CapacityReportFile)

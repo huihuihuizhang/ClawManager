@@ -19,6 +19,7 @@ import (
 type BootstrapSourceRegistryFactsReceipt struct {
 	Version, SelectionSHA256             string
 	PartsRegistry, SourceWritersRegistry install.BootstrapSourceFilePin
+	NativeRegistries                     *BootstrapSourceNativeRegistryFiles `json:",omitempty"`
 }
 
 // ProduceOriginalBootstrapSourceRegistries is the PRE-config/PRE-capture
@@ -34,6 +35,9 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	// Reject existing/aliased outputs BEFORE original authentication/SQL/native
 	// reads. Writes below remain create-only even after this nonauthorizing check.
 	if checkBootstrapSourceFactOutputs(selected.PartsFile, selected.SourceWritersFile) != nil {
+		return zero, install.ErrInstall
+	}
+	if selected.RedisSourcesFile != "" && checkBootstrapSourceRedisOutput(selected.PartsFile, selected.SourceWritersFile, selected.RedisSourcesFile) != nil {
 		return zero, install.ErrInstall
 	}
 	authority, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, selectionFile, selectionSHA)
@@ -63,22 +67,79 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	if err != nil || len(writersRaw) > 262144 {
 		return zero, install.ErrInstall
 	}
+	outputs := []struct {
+		path string
+		raw  []byte
+	}{{selection.PartsFile, partsRaw}, {selection.SourceWritersFile, writersRaw}}
+	var nativeFiles *BootstrapSourceNativeRegistryFiles
+	if selection.RedisSourcesFile != "" {
+		if x.materials.Discovery.SecretPolicy == nil {
+			return zero, install.ErrInstall
+		}
+		secretRef := x.materials.Discovery.SecretPolicy
+		secretPin := install.BootstrapSourceFilePin{File: secretRef.Path, SHA256: secretRef.SHA256}
+		if _, err := x.selectedSecretPolicy(secretPin, "", facts); err != nil {
+			return zero, install.ErrInstall
+		}
+		redis, err := x.redisSourceRegistry(selection.RedisSourcesVersion, facts)
+		if err != nil {
+			return zero, install.ErrInstall
+		}
+		redisRaw, err := ce.Canonical(redis)
+		if err != nil || len(redisRaw) > 8<<20 {
+			return zero, install.ErrInstall
+		}
+		outputs = append(outputs, struct {
+			path string
+			raw  []byte
+		}{selection.RedisSourcesFile, redisRaw})
+		nativeFiles = &BootstrapSourceNativeRegistryFiles{RedisSources: install.BootstrapSourceFilePin{File: selection.RedisSourcesFile, SHA256: hash(redisRaw)}, SecretAllowlist: secretPin}
+	}
 	// No final metadata/config/grant/scope/self digest appears inside either
 	// fact document. The dependency direction is facts -> final config/grants ->
 	// V2 signature; there is no SHA fixed-point and no provisional V2 grant.
-	for _, file := range []struct {
-		path string
-		raw  []byte
-	}{{selection.PartsFile, partsRaw}, {selection.SourceWritersFile, writersRaw}} {
+	for _, file := range outputs {
+		if nativeFiles != nil {
+			raw, err := x.nativeRegistryFile(nativeFiles.SecretAllowlist)
+			clear(raw)
+			if err != nil {
+				return zero, install.ErrInstall
+			}
+		}
 		if authority.RecheckAuthority(ctx) != nil || writeBootstrapSourceFactFile(file.path, file.raw) != nil {
 			return zero, install.ErrInstall
 		}
-		actual, err := install.ReadPrivateFile(file.path, 262144)
-		if err != nil || hash(actual) != hash(file.raw) || authority.RecheckAuthority(ctx) != nil {
+		actual, err := install.ReadSourceMaterialFile(file.path)
+		if err != nil || hash(actual) != hash(file.raw) {
+			return zero, install.ErrInstall
+		}
+		if nativeFiles != nil {
+			raw, err := x.nativeRegistryFile(nativeFiles.SecretAllowlist)
+			clear(raw)
+			if err != nil {
+				return zero, install.ErrInstall
+			}
+		}
+		if authority.RecheckAuthority(ctx) != nil {
 			return zero, install.ErrInstall
 		}
 	}
-	return BootstrapSourceRegistryFactsReceipt{Version: "original-source-registry-facts-receipt.v1", SelectionSHA256: selectionSHA, PartsRegistry: install.BootstrapSourceFilePin{File: selection.PartsFile, SHA256: hash(partsRaw)}, SourceWritersRegistry: install.BootstrapSourceFilePin{File: selection.SourceWritersFile, SHA256: hash(writersRaw)}}, nil
+	return BootstrapSourceRegistryFactsReceipt{Version: "original-source-registry-facts-receipt.v1", SelectionSHA256: selectionSHA, PartsRegistry: install.BootstrapSourceFilePin{File: selection.PartsFile, SHA256: hash(partsRaw)}, SourceWritersRegistry: install.BootstrapSourceFilePin{File: selection.SourceWritersFile, SHA256: hash(writersRaw)}, NativeRegistries: nativeFiles}, nil
+}
+
+func checkBootstrapSourceRedisOutput(parts, writers, redis string) error {
+	if redis == parts || redis == writers || filepath.Dir(redis) != filepath.Dir(parts) || !filepath.IsAbs(redis) || filepath.Clean(redis) != redis {
+		return install.ErrInstall
+	}
+	root, err := os.OpenRoot(filepath.Dir(parts))
+	if err != nil {
+		return install.ErrInstall
+	}
+	defer root.Close()
+	if _, err := root.Lstat(filepath.Base(redis)); !os.IsNotExist(err) {
+		return install.ErrInstall
+	}
+	return nil
 }
 
 func checkBootstrapSourceFactOutputs(parts, writers string) error {

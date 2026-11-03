@@ -1,0 +1,9 @@
+[
+  {
+    "target": "backend/internal/systembackupexecution/minio_native_install_apply.go",
+    "candidate": "backend/.c-minio-native-install-compile-fix-20261103/backend/internal/systembackupexecution/minio_native_install_apply.go",
+    "before_sha256": "0fd4253e517c9980289e59b55581f1cb6ee1a85f982b7e6c8fe7d2d0368b8593",
+    "sha256": "3497c7c4d88e04c90aba9f1c834fb5c83d9d2367be66d79a328a2ad0f0d6361c",
+    "bytes": 18733
+  }
+]

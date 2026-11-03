@@ -75,6 +75,10 @@ func ownerBindings(args []string, out io.Writer) int {
 	recordFile := flags.String("record-file", "", "")
 	recordSHA := flags.String("record-sha256", "", "")
 	signatureFile := flags.String("signature-file", "", "")
+	redisFile := flags.String("redis-sources-file", "", "")
+	redisSHA := flags.String("redis-sources-sha256", "", "")
+	secretFile := flags.String("secret-allowlist-file", "", "")
+	secretSHA := flags.String("secret-allowlist-sha256", "", "")
 	if flags.Parse(args) != nil || flags.NArg() != 0 {
 		return 2
 	}
@@ -84,7 +88,19 @@ func ownerBindings(args []string, out io.Writer) int {
 		}
 	}
 	capture := install.NewCaptureSigningConsumer(*captureFile, *capturePin)
-	resource, err := execution.NewBootstrapSourceRegistryTerminalResource(capture, install.BootstrapSourceRegistryFiles{RecordFile: *recordFile, RecordSHA256: *recordSHA, SignatureFile: *signatureFile})
+	files := install.BootstrapSourceRegistryFiles{RecordFile: *recordFile, RecordSHA256: *recordSHA, SignatureFile: *signatureFile}
+	var resource *execution.BootstrapSourceRegistryTerminalResource
+	var err error
+	if *redisFile != "" || *redisSHA != "" || *secretFile != "" || *secretSHA != "" {
+		for _, v := range []string{*redisFile, *redisSHA, *secretFile, *secretSHA} {
+			if v == "" {
+				return 2
+			}
+		}
+		resource, err = execution.NewBootstrapSourceRegistryTerminalResourceWithNativeRegistries(capture, files, execution.BootstrapSourceNativeRegistryFiles{RedisSources: install.BootstrapSourceFilePin{File: *redisFile, SHA256: *redisSHA}, SecretAllowlist: install.BootstrapSourceFilePin{File: *secretFile, SHA256: *secretSHA}})
+	} else {
+		resource, err = execution.NewBootstrapSourceRegistryTerminalResource(capture, files)
+	}
 	if err != nil {
 		return 1
 	}
@@ -92,7 +108,11 @@ func ownerBindings(args []string, out io.Writer) int {
 	if err != nil {
 		return 1
 	}
-	if json.NewEncoder(out).Encode([]install.BootstrapOriginalOwnerBinding{{Key: "registry:parts", SHA256: binding}, {Key: "registry:source_writers", SHA256: binding}}) != nil {
+	bindings := []install.BootstrapOriginalOwnerBinding{}
+	for _, key := range resource.TerminalKeys() {
+		bindings = append(bindings, install.BootstrapOriginalOwnerBinding{Key: key, SHA256: binding})
+	}
+	if json.NewEncoder(out).Encode(bindings) != nil {
 		return 4
 	}
 	return 0

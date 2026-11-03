@@ -606,6 +606,15 @@ func (s ConfigMutationService) Mutate(ctx context.Context, actor RegistrationAct
 	if err != nil || evidenceID < 1 {
 		return zero, ErrRegistrationUnavailable
 	}
+	if kekPrepared != nil {
+		// This newly inserted response is already owned by this transaction.
+		// Resolve its exact public ID and lock the complete source/response L8
+		// union before any KEK fence; do not discover source locks after Bind.
+		var responsePublicID string
+		if v.tx.QueryRowContext(ctx, "SELECT public_id FROM system_backup_v2_evidence WHERE id=? AND owner_target_type='system' AND owner_target_public_id=?", evidenceID, s.InstallationID).Scan(&responsePublicID) != nil || lockConfigMutationKEKOriginalEvidence(ctx, v.tx, kekPrepared, responsePublicID) != nil {
+			return zero, ErrRegistrationUnavailable
+		}
+	}
 	if err = checkConfigResponseEvidence(ctx, v.tx, s.InstallationID, evidenceID, responseHash, len(response), retention); err != nil {
 		return zero, err
 	}
@@ -619,8 +628,8 @@ func (s ConfigMutationService) Mutate(ctx context.Context, actor RegistrationAct
 	}
 	var kekBound *reg.Bound
 	if kekPrepared != nil {
-		kekBound, _, err = (reg.SQLStore{}).Bind(ctx, v.tx, s.InstallationID)
-		if err != nil || kekBound.StageAdmission(ctx, op, uint64(newVersion), kekPrepared) != nil {
+		kekBound, err = stageConfigMutationOriginalKEK(ctx, v.tx, s.InstallationID, op, uint64(newVersion), kekPrepared)
+		if err != nil {
 			return zero, ErrRegistrationUnavailable
 		}
 	}

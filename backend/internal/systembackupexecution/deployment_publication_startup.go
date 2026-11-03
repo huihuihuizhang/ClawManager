@@ -27,6 +27,7 @@ type DeploymentStartupInputs struct {
 	PublicationTarget  []PublicationTargetInput
 	ControllerPodName  string
 	CaptureModules     []ProductionCaptureInput
+	RuntimeReadiness   []RuntimeReadinessInput
 }
 
 func (r PublicationSignerReference) validate() error {

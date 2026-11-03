@@ -67,6 +67,8 @@ type DeploymentService struct {
 	publisherVerifierDB      *sql.DB
 	publicationTarget        *PublicationTargetMaterials
 	publicationTargetInput   *PublicationTargetInput
+	runtimeReadinessInput    *RuntimeReadinessInput
+	runtimeReadiness         atomic.Pointer[sixPartRuntimeReadiness]
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -117,6 +119,9 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 	}
 	stage = "file-bindings"
 	if e = s.bindDeploymentStartupInputs(inputs); e != nil {
+		return nil, e
+	}
+	if e = s.attachRuntimeReadiness(inputs.RuntimeReadiness); e != nil {
 		return nil, e
 	}
 	stage = "control-grants"
@@ -311,6 +316,15 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	if e := s.recoveryAdmit(ctx, in); e != nil {
 		return e
 	}
+	if s.Config.CaptureScope == "six-part" && s.runtimeReadinessInput != nil {
+		// A page-readiness lease is not task authority or a frozen source.
+		// The real task independently repeats current observation before its
+		// original dispatcher freezes/locks the source; no diagnostic cache is
+		// accepted here and no task deadline is extended.
+		if _, err := s.observeSixPartRuntimeReadiness(ctx); err != nil {
+			return err
+		}
+	}
 	if s.Config.PublisherVerifier != nil && s.CheckPublisherVerifierReadiness(ctx) != nil {
 		return c.ErrExecutionAuthority
 	}
@@ -474,13 +488,25 @@ func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *s
 }
 func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr error) {
 	stage := "capture-capability"
+	var complete *sixPartRuntimeReadiness
 	defer func() {
 		if resultErr != nil {
+			if s != nil {
+				s.runtimeReadiness.Store(nil)
+			}
 			resultErr = deploymentFailure{stage, resultErr}
 		}
 	}()
-	if e := s.checkCaptureCapability(); e != nil {
-		return e
+	if s != nil && s.Config.CaptureScope == "six-part" {
+		var err error
+		complete, err = s.observeSixPartRuntimeReadiness(ctx)
+		if err != nil {
+			return err
+		}
+	} else {
+		if e := s.checkCaptureCapability(); e != nil {
+			return e
+		}
 	}
 	stage = "forward-enabled"
 	if s.executionUnavailable.Load() {
@@ -564,6 +590,13 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	}
 	defer tx.Rollback()
 	var oldOwner string
+	if complete != nil {
+		// Preserve the task admission prefix: current config before readiness.
+		// The final read below reuses these same held rows, not a later lock.
+		if _, err := s.lockSixPartReadinessConfig(ctx, tx, version, complete); err != nil {
+			return err
+		}
+	}
 	var oldGeneration uint64
 	e = tx.QueryRowContext(ctx, "SELECT owner,generation FROM system_backup_v2_execution_readiness WHERE origin_installation_id=? AND task_type='backup' FOR UPDATE", s.Config.InstallationID).Scan(&oldOwner, &oldGeneration)
 	if e != nil && e != sql.ErrNoRows {
@@ -578,7 +611,11 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	} else if oldOwner != s.PublisherOwner || oldGeneration != generation {
 		return c.ErrClaimLost
 	}
-	_, e = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_execution_readiness(origin_installation_id,task_type,config_version,profile_sha256,owner,generation,ready,checked_at,expires_at,execution_protocol,supported_parts,acceptance_ready) VALUES(?,'backup',?,?,?,?,TRUE,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,5,UTC_TIMESTAMP(6)),'public-v1','workspace',FALSE) ON DUPLICATE KEY UPDATE config_version=VALUES(config_version),profile_sha256=VALUES(profile_sha256),owner=VALUES(owner),generation=VALUES(generation),ready=TRUE,checked_at=UTC_TIMESTAMP(6),expires_at=TIMESTAMPADD(SECOND,5,UTC_TIMESTAMP(6)),execution_protocol='public-v1',supported_parts='workspace',acceptance_ready=FALSE`, s.Config.InstallationID, version, s.profileHash, s.PublisherOwner, generation)
+	if complete != nil {
+		e = s.writeSixPartReadiness(ctx, tx, version, generation, complete)
+	} else {
+		_, e = tx.ExecContext(ctx, `INSERT INTO system_backup_v2_execution_readiness(origin_installation_id,task_type,config_version,profile_sha256,owner,generation,ready,checked_at,expires_at,execution_protocol,supported_parts,acceptance_ready) VALUES(?,'backup',?,?,?,?,TRUE,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,5,UTC_TIMESTAMP(6)),'public-v1','workspace',FALSE) ON DUPLICATE KEY UPDATE config_version=VALUES(config_version),profile_sha256=VALUES(profile_sha256),owner=VALUES(owner),generation=VALUES(generation),ready=TRUE,checked_at=UTC_TIMESTAMP(6),expires_at=TIMESTAMPADD(SECOND,5,UTC_TIMESTAMP(6)),execution_protocol='public-v1',supported_parts='workspace',acceptance_ready=FALSE`, s.Config.InstallationID, version, s.profileHash, s.PublisherOwner, generation)
+	}
 	if e != nil {
 		return e
 	}
@@ -586,6 +623,9 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 		return c.ErrExecutionCommitUnknown
 	}
 	s.publicationGeneration = generation
+	if complete != nil {
+		s.runtimeReadiness.Store(complete)
+	}
 	return nil
 }
 func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
@@ -642,7 +682,11 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 		case e := <-failures:
 			return e
 		case <-ticker.C:
-			probe, done := context.WithTimeout(active, 3*time.Second)
+			probeTimeout := 3 * time.Second
+			if s.Config.CaptureScope == "six-part" {
+				probeTimeout = 30 * time.Second
+			}
+			probe, done := context.WithTimeout(active, probeTimeout)
 			e := s.PublishReadiness(probe)
 			done()
 			code := "ready"

@@ -1,0 +1,178 @@
+{
+  "version": "system-backup-a-six-reference-native-and-enable-only.v1",
+  "authored_at": "2026-11-03T11:59:00+08:00",
+  "status": "source_frozen_not_compiled_or_native_tested_by_A",
+  "go_commands_by_A": [
+    "gofmt only"
+  ],
+  "files": [
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/six_reference.go",
+      "sha256": "f3616dc85a45bc60385fc738e95644d7be46039591f668b8f1b9a7578f0056fe",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/six_reference_consumer.go",
+      "sha256": "206e988e08442d778757eca37bd7c623d1a4c0196018ca1c31ae30bd8d19458d",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/six_reference_mutation.go",
+      "sha256": "1ab6767658b97326f6abfcbe8f4ab986185e3464360bcc1094509798b9af0882",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/install/six_reference_native.go",
+      "sha256": "b99ddfa2ef9a0e8f6d1a5e90501a2aceddf665ada1ddd8ee036fd93cfb689bf6",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupinstallationowner/reference_current_identity.go",
+      "sha256": "e2f567ca0f963715c5b00af53c96cfe729c1ce60d7a1f5e81659d5e9f1b14616",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/evidence_reference_observer.go",
+      "sha256": "e5582c51030792af01e6d85d091f854906d3a1b31438d01c72e7b242685f9425",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupkekadapter/evidence_reference_observer_test.go",
+      "sha256": "6f2283b94e56c344c553f745f4f2ff9cc47db8cf10fa3224ae0cd31ec06f3848",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_effective.go",
+      "sha256": "c6d0146e20b5faa36079ab49541bd08811aef169d59f3f6ec5fb463895b70a1e",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_guard.go",
+      "sha256": "ad12c03c0605b5062ae30d0a6ae80ac6d3322e970a8f7e2940ed1d20f13e4dca",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_kubernetes.go",
+      "sha256": "3383ecb97e5ebc4bae16d9ab53584253e6e20d315196b0c119925bd7bbf85f1a",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_native.go",
+      "sha256": "2ed0a89f15f796d82e44d4867b2c0b789a2d723a38091c437a40ead57cd3ba34",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_policy.go",
+      "sha256": "e50808e501bc5a7ccca374a1a2cce5d79bd696740a41f84b32f6ba4f705e907d",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/minio_september.go",
+      "sha256": "4c0030cf1c4cf4cd5df529d20599a34614004101f7b18765cf2dc9f6a8f9cb1c",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/profile.go",
+      "sha256": "3bb98e12893b18a9409929c9d5544cf7edebd899b8b43d92ab27a4030a4c2069",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupreferenceprobe/profile_test.go",
+      "sha256": "e9b9d8b8d5f5d1271b8995a4c506486d77219cc0d25d06ef6ee135fe4ba52509",
+      "kind": "test"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_enable_only.go",
+      "sha256": "d96329d27417e52017ab5ddf74985a6f9e73b5a6ce32fea0dd9704cf73e8881b",
+      "kind": "production"
+    },
+    {
+      "path": "backend/internal/systembackupsecurity/config_mutation_enable_only_test.go",
+      "sha256": "258669aa77c081233babeaf38714f307c5ef163272d5efbf967f82a0533de598",
+      "kind": "test"
+    }
+  ],
+  "bootstrap_purposes": [
+    "artifact_upload_issuer",
+    "evidence_store",
+    "evidence_write",
+    "evidence_read",
+    "evidence_delete",
+    "evidence_kek"
+  ],
+  "APIs": {
+    "selection_data": "install.SixReferenceIdentities(exact canonical definition, SHA)",
+    "real_issuer": "Installer.IssueSixReference: existing authenticated original installer + exact committed original bundle + concrete native S3/Vault observation + tail current authority",
+    "save": "SaveFrozenSixReference: create-only six-provider-references.record.json/.signature/.sha256",
+    "bootstrap_link": "LinkOriginalSixReferenceOwners(base,capture,files), then existing NewEnrolledTerminalInstallationOwners. One pointer occupies six terminal keys; BindingSHA256 must be selected in original signed composition.",
+    "mutation_link": "NewSixReferenceEnableOnlyMutation(actual *OriginalSixReference); install SAME returned pointer into all six bare-purpose Resources.References map entries.",
+    "narrow_transition": "security.ValidateEnableOnlyConfigMutation: complete typed canonical snapshot equality after changing only enabled false to true; data constraint, no grant.",
+    "current_identity": "owner.NewReferenceCurrentIdentity + PrepareEnableOnly + real SQL Recheck: no OfflineBootstrapGrant accepted or minted; own original record active head/grant/account checks, current config binding and original actor. Independent mutation JWT/session/RBAC/strong-auth/nonce/capacity remain mandatory."
+  },
+  "native_semantics": [
+    "Actual September MinIO native TLS/SPKI/version/commit/deployment, Kube owner chain and complete EndpointSlice pagination, observer user/policy, four separate actual credentials and exact named/effective-self policies with owner bypass discriminator; native bucket versioning and no bucket policy; two matching passes.",
+    "Upload source is exact existing publication materials WriteCredentialFile/SHA, finite original credential interval and exact PUT roots; no future upload request is invented.",
+    "Evidence store uses actual S3Config identity/version and installation root; separate GetObjectVersion, PutObject, DeleteObjectVersion policies. Artifact and evidence prefixes cannot overlap in one bucket.",
+    "Dedicated evidence TransitConfig/KeyRef, exact version, aes256-gcm96 derived key, current observer token/policy, separate narrow wrap(encrypt)/unwrap(decrypt) JWT roles, exact evidence context, actual role/JWT trust metadata; no datakey, key export/admin, fake wrap/decrypt, or future task.",
+    "Native deadline starts BEFORE all I/O; fixed maximum15s intersected with original source/definition/context/credential/token windows; native I/O only during Prepare. SQL tail samples and local pins retain same context/tx/failure latch; no renewal."
+  ],
+  "native_reuse": {
+    "source": "C accepted closed native MinIO policy/HTTP/effective-self/Kube/September primitives copied as private lower-layer helpers to avoid existing execution -> install dependency cycle. Original C files are unchanged.",
+    "sources": [
+      "publication_minio_permission_policy.go",
+      "publication_minio_permission_native.go",
+      "publication_minio_effective_v2_policy.go",
+      "publication_minio_effective_guard.go",
+      "publication_minio_permission_kube.go",
+      "publication_minio_native_profile.go"
+    ]
+  },
+  "remaining_24_mutation_owners_for_root_relay": {
+    "B": [
+      "registry:parts",
+      "registry:redis_sources",
+      "registry:failure_domains",
+      "registry:disaster_identity_mapping"
+    ],
+    "C": [
+      "reference:artifact_write",
+      "reference:artifact_read",
+      "reference:artifact_delete",
+      "reference:catalog_append",
+      "reference:catalog_read",
+      "reference:catalog_snapshot"
+    ],
+    "D": [
+      "registry:source_writers",
+      "registry:rbac_bindings",
+      "registry:secret_allowlist",
+      "registry:strong_auth_issuers",
+      "registry:provider_proof_issuers",
+      "reference:artifact_ca",
+      "reference:evidence_ca",
+      "reference:capture_signing",
+      "reference:acceptance_signing",
+      "reference:catalog_signing",
+      "reference:nonce_hmac",
+      "reference:status_relay",
+      "cross_resources",
+      "deployment_switch"
+    ]
+  },
+  "adaptation_contract": [
+    "Each owner implements explicit ConfigMutationResourceValidator.Prepare on actual opaque mutation input, accepts only ValidateEnableOnlyConfigMutation, binds original source to current complete config SHA and exact unchanged refs/registry contents, uses its OWN actual native/current authority source.",
+    "No old bootstrap check cast, synthetic capture grant or default Passed. Native observation once before SQL, private same-context/transaction/fixed-window observation, current SQL/local-source revoke checks and final delivered SQL sample. Shared grouped owners cache only one original observation per real request; do not multiply provider calls per slot.",
+    "D keeps real production factory, actual TLS HTTP, real login/refresh session recorder, full JWT/session/strong-auth/RBAC/nonce/capacity, actual independent deployment switch, actual KEK17 evidence union before fence/CompleteScan and final stage/commit. No SQL direct enabled update.",
+    "B four source registries additionally require each exact RegistryRef + original Capture RegistrySetSHA256/ConfigSHA256 + exact signed composition; source registry transport by itself is not reference authority.",
+    "C bootstrap-five source must bind original CURRENT config during enable-only; observation is not permission to change MinIO resources and SQL source/grant/head revocation stays in same actual mutation transaction."
+  ],
+  "limitations": [
+    "A did not run go test/build/list/vet, native SQL/provider/network, Git or artifact cleanup. No build artifacts generated by A.",
+    "Root must compile/test exact allowlist and remove test/build artifacts afterward. Source-only tests are not field physical proof.",
+    "No actual six-reference original issuer material has been generated or installed; native credentials/CA/key/grants/current source must come from real field installer.",
+    "A cannot honestly promise 14:00 usable first backup until remaining24 owner implementations, unified integration/build and actual original coverage/adoption/native installation are verified. No credible completion time for other owners has been received.",
+    "B new four-registry source artifact was not available in docs/drafts at 11:58; that new authentication-boundary review remains outstanding. Historical B V2/P0 reviews are unchanged."
+  ],
+  "performance": "deferred; not deployment prerequisite",
+  "DR": "false/not_provided"
+}

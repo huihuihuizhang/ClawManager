@@ -168,6 +168,8 @@ func (s *DeploymentService) PublicCapability() json.RawMessage {
 		// profiles. A six-part deployment cannot fall back to this declaration.
 		if scope == "platform-workspace" || scope == "runtime-workspace" {
 			parts = []string{"workspace"}
+		} else if scope == "six-part" && s.publishedSixPartCapability() {
+			parts = runtimeSixParts()
 		}
 	}
 	raw, _ := json.Marshal(map[string]any{"protocol": "public-v1", "scope": scope, "parts": parts, "acceptance_ready": false})

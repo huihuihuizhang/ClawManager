@@ -1,0 +1,46 @@
+{
+  "schema_version": "system-backup-d-r3-fixture-contracts.v1",
+  "status": "FROZEN_TEST_SOURCE_ONLY_PENDING_ROOT_FOCUSED_RERUN",
+  "source_map": [
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "candidate": "backend/.d-requirements-fixture-20261103/backend/cmd/system-backup-bootstrap-enrolled/production_test.go",
+      "sha256": "cb925897cd79e9079a0331f5d65061754b67cab6ff9b364f65cf471e337b846e",
+      "before_sha256": "ea25fa38ed80d6d4b2604ca72693342383b540a98dcc058f8e252f577b0f619c"
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/config_mutation_kek_evidence_test.go",
+      "candidate": "backend/.d-r3-fixture-contracts-20261103/backend/internal/systembackupsecurity/config_mutation_kek_evidence_test.go",
+      "sha256": "834951bb293f8526f5571e02b4278324790492b0c86306952e52677eeb375f0f",
+      "before_sha256": "0833b60ebe5b72be724075dd0e07963753dea980e43c001374986af847e4e840"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/cross_resource_relations_test.go",
+      "candidate": "backend/.d-r3-fixture-contracts-20261103/backend/internal/systembackupinstallationowner/install/cross_resource_relations_test.go",
+      "sha256": "229bfeef7f0755f96951f09900e5b18840d90bdfdf50f5d4e01b0686f89eaccc",
+      "before_sha256": "4aa1a9c602fd95add44c28f9be1b85794c36a9e3a0632b56eae1041378263f0c"
+    }
+  ],
+  "go_source_count": 3,
+  "production_go_changed": 0,
+  "root_original_log": ".tmp-native-evidence-c12ff7b907654ebc931c3bf29c733eab/page-trial-combined-linux-r3.jsonl",
+  "root_reported_R3": {
+    "compiled_packages": 18,
+    "pass_including_subcases": 241,
+    "skip": 0,
+    "failed_roots": 3
+  },
+  "fixes": [
+    "Requirements asserts exact 25 unprepared resource names; original actual cross/capture constructors remain linked but no provider/database preparation is claimed",
+    "Union SQL-model test uses actual mutation RepeatableRead contract; production isolation/lock checks unchanged",
+    "Typed positive disaster mapping and parts use actual canonical() JCS before config pins, matching original strict decodeExact; original positive remains required"
+  ],
+  "roots": [
+    "TestEnrolledBootstrapRequirementsReportsUnpreparedSources",
+    "TestConfigMutationKEKLocksOriginalAndResponseUnionBeforeFence",
+    "TestOriginalCrossResourceJoinsExactDisasterAndSecretSourcePins"
+  ],
+  "compiled_by_D": false,
+  "tests_run_by_D": false,
+  "test_build_products_created": false
+}

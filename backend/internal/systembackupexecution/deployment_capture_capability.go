@@ -2,10 +2,10 @@ package systembackupexecution
 
 import d "clawreef/internal/systembackupdispatch"
 
-// This first structural batch grants no six-part capability. An attached plan
-// proves only builder composition. Current taskless source observations and
-// ordinary publisher dependencies must still be wired. Future positive checks
-// must cover the complete actual writer set and its original observation window:
+// An attached plan proves only builder composition. Positive six-part state
+// must come from the acknowledged runtime-readiness transaction, after actual
+// taskless source/writer and ordinary provider dependency observations. Checks
+// cover the complete actual writer set and its original observation window:
 // a stopped observer is required only when that set contains stopped writers,
 // and incomplete observations cannot establish their absence. Task admission
 // and capture must independently reject later writer-set/state drift.
@@ -27,7 +27,11 @@ func (s *DeploymentService) checkCaptureCapability() error {
 		if binding == nil || binding.service != s || binding.owner != s.Runtime.Owner || !binding.matchesCapturePlan() {
 			return d.ErrNotReady
 		}
-		// No positive branch or caller-controlled passed flag is introduced.
+		// Only an acknowledged, still-current readiness transaction produced
+		// from the actual source/writer + provider dependencies can enable this.
+		if s.publishedSixPartCapability() {
+			return nil
+		}
 		return d.ErrNotReady
 	default:
 		return d.ErrNotReady
