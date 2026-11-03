@@ -229,7 +229,8 @@ func (s *SQLCoverageCensus) scan(ctx context.Context, tx *sql.Tx, locked bool) (
 		return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
 	}
 	sources, excluded := sqlCensusSources()
-	rows, err := tx.QueryContext(ctx, `SELECT TABLE_NAME,ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND (LEFT(TABLE_NAME,13)='system_backup' OR TABLE_NAME='system_team_data_backup_jobs') ORDER BY TABLE_NAME`)
+	legacySources := retainedOriginalLegacySources()
+	rows, err := tx.QueryContext(ctx, `SELECT TABLE_NAME,ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND (LEFT(TABLE_NAME,13)='system_backup' OR TABLE_NAME='system_team_data_backup_jobs' OR LEFT(TABLE_NAME,8)='dlegacy_') ORDER BY TABLE_NAME`)
 	if err != nil {
 		return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
 	}
@@ -237,11 +238,11 @@ func (s *SQLCoverageCensus) scan(ctx context.Context, tx *sql.Tx, locked bool) (
 	for rows.Next() {
 		var name string
 		var engine sql.NullString
-		if rows.Scan(&name, &engine) != nil || len(seen) >= 128 || seen[name] || !engine.Valid || engine.String != "InnoDB" {
+		if rows.Scan(&name, &engine) != nil || len(seen) >= len(sources)+len(excluded)+len(legacySources) || seen[name] || !engine.Valid || engine.String != "InnoDB" {
 			rows.Close()
 			return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
 		}
-		if _, ok := sources[name]; !ok && !excluded[name] {
+		if _, ok := sources[name]; !ok && !excluded[name] && legacySources[name] == "" {
 			rows.Close()
 			return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
 		}
@@ -251,6 +252,9 @@ func (s *SQLCoverageCensus) scan(ctx context.Context, tx *sql.Tx, locked bool) (
 	extra := rows.NextResultSet()
 	closeErr := rows.Close()
 	if err != nil || extra || closeErr != nil {
+		return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
+	}
+	if includeRetainedOriginalLegacySources(sources, seen) != nil {
 		return SQLCoverageCensusFacts{}, ErrSQLCoverageCensus
 	}
 	names := make([]string, 0, len(sources))

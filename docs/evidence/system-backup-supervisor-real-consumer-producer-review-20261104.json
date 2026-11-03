@@ -1,0 +1,82 @@
+{
+  "schema_version": "supervisor-real-original-consumer-producer-review.v1",
+  "accepted_base": "f97f4f468c5a20d8fc8316b739633761fa3000c6",
+  "selected_source_targets": 250,
+  "selection_sha256": "29d477cd9b5a4e24ad66af5c4343c8ab4eee687c425830d6aa43ab5a85448a35",
+  "source_maps": [
+    {
+      "path": "backend/.d-retained-legacy-sql-census-20261104/source-map.json",
+      "sha256": "4fcec0c169e155b0a07f2e635376465a732246ff3b8eccf5ee28a1ad3359c5c4"
+    },
+    {
+      "path": "backend/.d-finite-backup-consumer-source-20261104/source-map.json",
+      "sha256": "166acd089dd32d858d6efaeca116b08a0e721d61767cd35a13c1df3ebd6ef585"
+    },
+    {
+      "path": ".a-fix18-backup-consumer-bridge-20261104/source-map.json",
+      "sha256": "5838559fb024de8aa423fc0e6c92baba3987da01d7d05afd75c2bc4d55631d85"
+    },
+    {
+      "path": "backend/.c-original-backup-source-peer-20261104/source-map.json",
+      "sha256": "2f78aae5cfd5a295e9c0b0c580c3c24b8fb4d783f1f6ccca4d7c89cc6d506b76"
+    }
+  ],
+  "official_A_bridge_r2": {
+    "path": ".a-fix18-backup-consumer-bridge-r2-20261104/source-map.json",
+    "sha256": "d12588c0574142017651b6d1f436201866af11c46c625bf58cdb5454834f4f2f"
+  },
+  "results": {
+    "v9r2-windows-targeted": {
+      "roots": 17,
+      "subcases": 60,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "5444bf5161f925adc2142c42e6b7642c96c09e92365488cf7c588db1f389cfa9"
+    },
+    "v9r2-linux-install": {
+      "roots": 15,
+      "subcases": 53,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "8aa8ac91dbea0dcfaf87e43c722ff836e1848215872b939303f703ed7cf3fd29"
+    },
+    "v9r2-linux-kekadapter": {
+      "roots": 2,
+      "subcases": 7,
+      "failures": 0,
+      "test_skips": 0,
+      "log_sha256": "e4209b600bfa3d5d7c42730693bb4fde0ccc812f71fdf2b61323e271ee2e72b6"
+    }
+  },
+  "actual_changes": [
+    "Concrete original finite consumer constructor now reads original retained Pod/Deployment bodies, complete retained/current controller rosters and real supported startup classifications under original holder, context, metadata and shortest cap. Final SQL checks bind the same original resolved pointer/transaction/epoch.",
+    "Real SQL census includes exact35 preserved original dlegacy table aliases in its schema/PK/raw-row scan and original lock/recheck scope. A partial or unknown alias is refused; known fix18 branch requires all35 genuinely empty, not dropped-prefix absence.",
+    "Official A bridge r2 fixes the actual backup-test-zh-fix18 tag and avoids intercepting unrelated same-repository peer images. Two root regression tests cover actual site startup, immutable templates, unrelated peers and unsafe recognized launch refusals."
+  ],
+  "validation_boundary": [
+    "Complete install and KEK-adapter package compilation plus source/census/classifier/JSON DATA models passed on both platforms. Actual original SQL namespace, complete native hold, live API, actual source coverage and real17 signing/adoption have not run.",
+    "The exact retained35 source table rules are tested as code-owned data/models; no native MySQL scan or migrated original database proof is claimed.",
+    "A bridge r1 defects were found in code review, then corrected by immutable official r2. The new actual-site bridge regression was run only after r2.",
+    "One Linux runner preparation command failed before creating a script; a missing-file bind became an empty directory and ran no tests. Its empty log/terminal status was not accepted as success. The guarded runner was written correctly and both actual JSON test logs/exits were required.",
+    "Actual remaining MinIO/Vault/Agent/init/retired mutable-tag peer profiles, original17 source-owner issuance, actual first commit/readback, site migration and page success remain incomplete."
+  ],
+  "completed_test_binaries": [
+    {
+      "path": "bins-v9r2/install.test",
+      "bytes": 110460345,
+      "sha256": "e676121c2b43c82f8b758c487e1b248855b5171ac5c7fc294537bf26503fc337"
+    },
+    {
+      "path": "bins-v9r2/kekadapter.test",
+      "bytes": 96201304,
+      "sha256": "c0bbf580a991d2391125cfdac9c5e133e530d3f59c00182bd41669694575fa25"
+    }
+  ],
+  "cleanup": {
+    "binaries": "Two completed Linux test binaries hashed and removed; output directory absent",
+    "owned_containers": []
+  },
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
