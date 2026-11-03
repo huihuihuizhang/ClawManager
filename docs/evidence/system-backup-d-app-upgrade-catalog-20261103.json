@@ -1,0 +1,895 @@
+{
+  "schema_version": "system-backup-d-app-upgrade-catalog.v1",
+  "source_commit": "a2cc03be63d4903b98cd4a2fedd48d4fbc65fc04",
+  "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
+  "catalog_sha256": "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3",
+  "filenames": [
+    "001_init_schema.sql",
+    "002_add_webtop_instance_type.sql",
+    "003_add_system_image_settings.sql",
+    "004_fix_seeded_admin_password.sql",
+    "005_update_openclaw_default_image.sql",
+    "006_add_openclaw_config_center.sql",
+    "007_add_instance_agent_control_plane.sql",
+    "008_add_skill_management.sql",
+    "009_cpu_cores_decimal.sql",
+    "010_add_instance_environment_overrides.sql",
+    "011_add_hermes_instance_type.sql",
+    "012_update_agents_runtime_default_images.sql",
+    "013_normalize_agents_runtime_image_names.sql",
+    "014_add_team_mvp.sql",
+    "015_add_team_member_description.sql",
+    "016_release_deleted_team_names.sql",
+    "017_add_team_member_runtime_state.sql",
+    "018_add_team_member_runtime_type.sql",
+    "019_add_instance_runtime_type.sql",
+    "020_add_system_image_runtime_type.sql",
+    "021_add_openclaw_shell_runtime_image.sql",
+    "022_add_openclaw_config_bundle_skills.sql",
+    "023_add_runtime_pool_v2.sql",
+    "023_add_skill_hub.sql",
+    "023_normalize_runtime_config_mounts.sql",
+    "024_add_gateway_runtime_type.sql",
+    "025_add_instance_mode.sql",
+    "027_add_instance_external_access.sql",
+    "028_add_ai_gateway_runtime_attribution.sql",
+    "029_add_short_external_access_links.sql",
+    "030_add_external_access_password_value.sql",
+    "031_add_hermes_lite_runtime_image.sql",
+    "032_add_team_member_instance_mode.sql",
+    "033_system_image_gateway_runtime_type.sql",
+    "034_update_lite_default_images.sql",
+    "035_harden_team_event_protocol.sql",
+    "036_add_team_event_outbox.sql",
+    "037_add_team_workflow_ledger.sql",
+    "038_add_instance_gateway_token_aliases.sql",
+    "039_add_skill_package_materialize.sql",
+    "040_fix_injected_skill_provenance.sql",
+    "041_add_session_usage_indexes.sql",
+    "042_add_skill_summary_status.sql",
+    "042_add_team_review_contract.sql",
+    "043_add_external_access_workspace_scope.sql",
+    "043_drop_skill_summary_status.sql",
+    "044_add_egress_private_exceptions.sql",
+    "044_add_workbuddy_instance_type.sql",
+    "045_add_llm_model_reasoning_control.sql",
+    "045_add_northbound_api.sql",
+    "045_add_opencode_instance_type.sql",
+    "046_add_custom_team_templates.sql",
+    "046_add_enterprise_auth_identity.sql",
+    "046_add_opencode_lite_runtime.sql",
+    "047_add_deepseek_harness_runtime.sql",
+    "047_add_instance_owner.sql",
+    "048_add_workbuddy_instance_type.sql",
+    "048_fix_instance_type_enum.sql",
+    "049_add_ldap_login_alias.sql",
+    "049_add_llm_model_groups.sql",
+    "049_add_opencode_instance_type.sql",
+    "050_add_enterprise_auth_settings.sql",
+    "050_add_gateway_keys.sql",
+    "050_update_workbuddy_windows_runtime.sql",
+    "051_add_codex_and_claude_code_instance_types.sql",
+    "051_add_gateway_key_rate_limits.sql",
+    "052_add_gateway_key_budget_and_attribution.sql",
+    "052_add_instance_pvc_name.sql",
+    "053_add_instance_runtime_variant.sql",
+    "053_add_llm_model_context_window.sql",
+    "054_add_llm_model_quality_tier.sql",
+    "054_add_system_image_runtime_variant.sql",
+    "055_gateway_budget_currency_review.sql",
+    "055_reconcile_instance_type_enum.sql",
+    "056_add_gateway_deployment_routing.sql",
+    "056_add_llm_provider_models.sql",
+    "057_add_llm_model_capabilities.sql",
+    "057_add_northbound_admin_settings.sql",
+    "058_add_llm_model_tools_override.sql",
+    "058_add_openclaw_runtime_upgrade_safety.sql",
+    "058_enable_deepseek_harness_pro.sql",
+    "059_add_llm_reasoning_control_mode.sql",
+    "059_pin_openclaw_2026_8_1_images.sql",
+    "060_add_routing_classifier_settings.sql",
+    "060_allow_terminal_runtime_upgrade_instance_deletion.sql",
+    "061_add_routing_classifier_mode.sql",
+    "061_persist_runtime_upgrade_source_identity.sql",
+    "062_add_model_user_access.sql",
+    "062_follow_openclaw_latest_images.sql",
+    "063_add_gateway_runtime_tasks.sql",
+    "063_add_instance_alias.sql",
+    "063_unique_usernames.sql",
+    "064_add_instance_browser_workers.sql",
+    "064_add_instance_lifecycle_batches.sql",
+    "064_add_runtime_protocol.sql",
+    "065_add_lifecycle_batch_retry_policy.sql",
+    "065_add_runtime_maintenance.sql",
+    "066_add_northbound_api_keys.sql",
+    "066_add_runtime_upgrade_fence.sql",
+    "067_add_northbound_owner_records.sql",
+    "067_add_runtime_upgrade_stop.sql",
+    "068_add_runtime_rollout_checkpoints.sql",
+    "068_add_workspace_write_intents.sql",
+    "069_add_instance_runtime_error_code.sql",
+    "069_add_llm_model_vision_override.sql",
+    "070_add_llm_model_image_operations.sql",
+    "070_add_upgrade_restart_attempts.sql",
+    "071_add_image_budget_price.sql",
+    "071_add_team_member_icon.sql",
+    "072_add_gateway_image_artifacts.sql",
+    "072_add_team_workspace_file_audits.sql",
+    "073_add_gateway_image_jobs.sql",
+    "073_add_upgrade_operation_claims.sql",
+    "074_add_image_analytics_outbox.sql",
+    "074_add_upgrade_recovery_key.sql",
+    "075_add_upgrade_retry_diagnostics.sql",
+    "076_add_upgrade_item_isolation.sql",
+    "077_add_northbound_owner_teams.sql",
+    "078_move_repository_schema_to_migrations.sql",
+    "079_add_system_backup_control.sql",
+    "080_add_backup_dependency_health.sql",
+    "081_add_backup_controller_coordination.sql",
+    "082_add_backup_attempt_request.sql",
+    "083_add_backup_strong_auth_nonce.sql",
+    "084_add_backup_external_actions.sql",
+    "085_add_backup_capture_coordination.sql",
+    "086_add_backup_capture_abort.sql",
+    "087_add_backup_stage_resources.sql",
+    "088_add_backup_core_publication.sql",
+    "089_add_backup_gate_admission.sql",
+    "090_add_backup_restore_job_executions.sql",
+    "091_add_backup_job_send_intents.sql",
+    "092_allow_owned_backup_restore_workspaces.sql",
+    "093_add_team_data_backup_jobs.sql",
+    "094_add_team_data_backup_management_operations.sql",
+    "095_add_team_data_provisioning_receipts.sql",
+    "096_backup_v2_add_system_backup_control_metadata_core.sql",
+    "097_backup_v2_add_system_backup_config_and_operations.sql",
+    "098_backup_v2_add_system_backup_task_execution_core.sql",
+    "099_backup_v2_add_system_backup_coordination_observability.sql",
+    "100_backup_v2_add_system_backup_promotion_authority.sql",
+    "101_backup_v2_add_system_backup_prune_authority.sql",
+    "102_backup_v2_add_system_backup_external_action_authority.sql",
+    "103_backup_v2_add_system_backup_check_authority.sql",
+    "104_backup_v2_add_system_backup_staging_resources.sql",
+    "105_backup_v2_add_system_maintenance_participants.sql",
+    "106_backup_v2_add_system_backup_strong_auth_nonces.sql",
+    "107_backup_v2_add_system_backup_job_observations.sql",
+    "108_backup_v2_add_system_restore_drill_resources.sql",
+    "109_backup_v2_add_system_backup_registration_runtime.sql",
+    "110_backup_v2_fix_system_backup_prune_item_identity.sql",
+    "111_backup_engine_selection.sql",
+    "112_backup_v2_system-backup-d-config-canonical-081-proposal-20261014.sql",
+    "113_backup_v2_system-backup-d-config-maintenance-082-proposal-20261015.sql",
+    "114_backup_v2_system-backup-d-control-health-proposal-20261016.sql",
+    "115_backup_v2_producer-recovery-authority-candidate.sql",
+    "116_backup_v2_producer-recovery-revocation-candidate.sql",
+    "117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql",
+    "118_backup_v2_import_journal.sql",
+    "119_backup_v2_execution_admission.sql",
+    "120_backup_v2_execution_plans.sql",
+    "121_backup_v2_job_send_intents.sql",
+    "122_backup_v2_execution_records.sql",
+    "123_backup_v2_runtime_execution_journal.sql",
+    "124_backup_v2_runtime_control.sql",
+    "125_backup_v2_job_key_use.sql",
+    "126_backup_v2_gateway_proofs.sql",
+    "127_backup_v2_kek_registry.sql",
+    "128_backup_installation_kek_authority.sql",
+    "129_backup_v2_source_gate_wait.sql",
+    "130_backup_v2_capture_reconcile.sql",
+    "131_backup_v2_formal_job_candidates.sql",
+    "132_backup_v2_staging_backup_identity.sql",
+    "133_backup_v2_publish_original_plan_parent.sql",
+    "134_backup_v2_installation_owner_authority.sql",
+    "135_backup_v2_minio_owner_authority.sql",
+    "136_backup_v2_signing_resource_authority.sql"
+  ],
+  "source_pins": [
+    {
+      "filename": "001_init_schema.sql",
+      "sha256": "f08923b5e4dfab3b560a7736833cc53b8733f55cdae4c2990393d07770f9451b"
+    },
+    {
+      "filename": "002_add_webtop_instance_type.sql",
+      "sha256": "731332adb1b0cdb66f17d0b77f23197e3af524f1bffa6c3dced47272215f223a"
+    },
+    {
+      "filename": "003_add_system_image_settings.sql",
+      "sha256": "92a39bafaa69d01d16c2818228ec6345c8fa191c2eb8243e04c15abb3822ceb3"
+    },
+    {
+      "filename": "004_fix_seeded_admin_password.sql",
+      "sha256": "a20399a7b15f5c98b79dc1a7d674a00d34578b8fc40d1d2a315f03594a486bdb"
+    },
+    {
+      "filename": "005_update_openclaw_default_image.sql",
+      "sha256": "9dc76d6814f09b7b8bd9a04860c86b3d6545ccab2c64cf9071a9c34cf8ac976c"
+    },
+    {
+      "filename": "006_add_openclaw_config_center.sql",
+      "sha256": "aba38c416240d974624ee54e950ffcbc3d37ba500e8666b421bd81d081fc762c"
+    },
+    {
+      "filename": "007_add_instance_agent_control_plane.sql",
+      "sha256": "9210e07688ce271a7a91a74a2dca6f6315602327e5278327250fb904223991d0"
+    },
+    {
+      "filename": "008_add_skill_management.sql",
+      "sha256": "7b9d5714f9a614ca38169b764f11253fece0a2f6641aa2211f364f56cad6ab64"
+    },
+    {
+      "filename": "009_cpu_cores_decimal.sql",
+      "sha256": "751870e6f7794c653f9f2839177774a5ba35c104b3d32e710efe1551db3f144b"
+    },
+    {
+      "filename": "010_add_instance_environment_overrides.sql",
+      "sha256": "1a3810463faa9852e3db2584aca68e6d244f1c24dacb2ca72cfd1b3166b6b88a"
+    },
+    {
+      "filename": "011_add_hermes_instance_type.sql",
+      "sha256": "731332adb1b0cdb66f17d0b77f23197e3af524f1bffa6c3dced47272215f223a"
+    },
+    {
+      "filename": "012_update_agents_runtime_default_images.sql",
+      "sha256": "a39f5738746e91ec83aa777efb5afa56275acd6e946e197870b19da4f5beec63"
+    },
+    {
+      "filename": "013_normalize_agents_runtime_image_names.sql",
+      "sha256": "9ba14ba594560f043ce15078dd7230f41d27f1aa01833bf6c1e141a26c16096a"
+    },
+    {
+      "filename": "014_add_team_mvp.sql",
+      "sha256": "2f3299a5a6d34b45ab3e8c8b5e93f39ca1768aeb0a6ab61b4e869633378b3e16"
+    },
+    {
+      "filename": "015_add_team_member_description.sql",
+      "sha256": "6424ce25159e170280e7472389ade5c5194679cf4878715ea8d98413d46be06a"
+    },
+    {
+      "filename": "016_release_deleted_team_names.sql",
+      "sha256": "5890970995bc422c25d7fdba34eeea1b139a326e7b419e8d52544454e3e8b407"
+    },
+    {
+      "filename": "017_add_team_member_runtime_state.sql",
+      "sha256": "fedbdf008f103956e6eebca2af6587c8b3ef1bc49d1921ddac67315dd278c4c1"
+    },
+    {
+      "filename": "018_add_team_member_runtime_type.sql",
+      "sha256": "28fa24899c5a2ba6417cbd1ac87fed0f4f3e7fa95469d8aa2f002d8cf76e0931"
+    },
+    {
+      "filename": "019_add_instance_runtime_type.sql",
+      "sha256": "7c2ea3b4bcbcb3ba03a1da3b395d85b24354d8a1fb015caa130a57bdee8e1dd1"
+    },
+    {
+      "filename": "020_add_system_image_runtime_type.sql",
+      "sha256": "ffb3bba582c1eddb73bf69c4aed63fe89dcccceedf51323c6e7c3bddb77a5c58"
+    },
+    {
+      "filename": "021_add_openclaw_shell_runtime_image.sql",
+      "sha256": "b79c82941db040e47869b8a018cacf2e7b9fc89599b4d0697ef7611a8d10f5af"
+    },
+    {
+      "filename": "022_add_openclaw_config_bundle_skills.sql",
+      "sha256": "72a979cfb02187b41cedfc79d974f03cd5662127b5703818ed06268cc4ed6cc6"
+    },
+    {
+      "filename": "023_add_runtime_pool_v2.sql",
+      "sha256": "24d9d8884c9479fe7603fe35902c35e150fbf13992de7cd5212d3621008fa1cf"
+    },
+    {
+      "filename": "023_add_skill_hub.sql",
+      "sha256": "7d8151146dcc1b56570f8b9bfe3f158fd6aac0100cc5a6b0a13fbd90ed7a5ca7"
+    },
+    {
+      "filename": "023_normalize_runtime_config_mounts.sql",
+      "sha256": "a33809b48958d66ef2fd9d1cadc39ec3d8e6d80be4c862bb00e92275bec92996"
+    },
+    {
+      "filename": "024_add_gateway_runtime_type.sql",
+      "sha256": "1711b277a0ff0a3204bef6588f68fad16aae7c00f62d5fa4e9baed8c364c101c"
+    },
+    {
+      "filename": "025_add_instance_mode.sql",
+      "sha256": "7f0651b98206e1dce69e40e2157e28a20cbf8f026cdc9eec2af072c2f16874d0"
+    },
+    {
+      "filename": "027_add_instance_external_access.sql",
+      "sha256": "6e0894ba135f276df287fe49e23b9aad180183afbc0fc27cc62cb74bef686022"
+    },
+    {
+      "filename": "028_add_ai_gateway_runtime_attribution.sql",
+      "sha256": "20c53113bb7354c15715951db6159a6cd59ce23983e2092f1d01dcf4f4dfc9c8"
+    },
+    {
+      "filename": "029_add_short_external_access_links.sql",
+      "sha256": "df60185d3a5a16fd251ab829db4b245a90a49dd7c795ce88ba9f0a7f1c1e2517"
+    },
+    {
+      "filename": "030_add_external_access_password_value.sql",
+      "sha256": "cd946b9c40d507eb0b5c605809e57024e67b4d29ac292177c07aec36f43c5ddb"
+    },
+    {
+      "filename": "031_add_hermes_lite_runtime_image.sql",
+      "sha256": "ed7c0e8f916079040f7098b4a01e56cbb1f031c871f8cb1cc04a72ca1ba0d0ff"
+    },
+    {
+      "filename": "032_add_team_member_instance_mode.sql",
+      "sha256": "4c291a7670415464a9678d8d7ab2d6097b4c30498dde3b48a056e009eeb5554c"
+    },
+    {
+      "filename": "033_system_image_gateway_runtime_type.sql",
+      "sha256": "bbbde0fa069248b053ad56d039c76c2c6dfda7e52336d6fb830ce49bee53530b"
+    },
+    {
+      "filename": "034_update_lite_default_images.sql",
+      "sha256": "862dc6116bf8874e42a99f7f6dde6910469b6a0e5efb088ee53c4834233d90a5"
+    },
+    {
+      "filename": "035_harden_team_event_protocol.sql",
+      "sha256": "bdac4496ec7ce94f08ce24d3d470b9cf2f1cb13b1197be6516f4fbb135467fc5"
+    },
+    {
+      "filename": "036_add_team_event_outbox.sql",
+      "sha256": "2153109f20b6f8891db2b9f9e91520cb88aa2bed5b1a0929d713a9cdebbb0f2f"
+    },
+    {
+      "filename": "037_add_team_workflow_ledger.sql",
+      "sha256": "53aa172c55c73cbbfc494084e7e1865de77455f1faad847c17e97ea29592bb76"
+    },
+    {
+      "filename": "038_add_instance_gateway_token_aliases.sql",
+      "sha256": "f01fcffdcf9e53c39057a8486f3b7fca83296f314e63121758e2cfda66c03075"
+    },
+    {
+      "filename": "039_add_skill_package_materialize.sql",
+      "sha256": "af10f17d4800ece7e70e77cf2c692a9b4145d1d61570bb3b51024fb2ba95e04c"
+    },
+    {
+      "filename": "040_fix_injected_skill_provenance.sql",
+      "sha256": "96a7b3ec3060498de8f83d6fa8cf32452184bd02aecb9c7a4cb99213c18778b7"
+    },
+    {
+      "filename": "041_add_session_usage_indexes.sql",
+      "sha256": "06a4c9c220c003002846b4988a7fb8380fc9752b498318eae3ab115f759b5f07"
+    },
+    {
+      "filename": "042_add_skill_summary_status.sql",
+      "sha256": "df8b5475342be18c9f6782d64abbc71139716cc1c1e190b5c9f358d2388c7cf5"
+    },
+    {
+      "filename": "042_add_team_review_contract.sql",
+      "sha256": "2d77ca3a063c0e1ff521f57f2a9e8b33a9fc2f34e0de43750114245f549413f7"
+    },
+    {
+      "filename": "043_add_external_access_workspace_scope.sql",
+      "sha256": "0a4f227cae9468960d4d6b3b9a8639e820a49f0b2db6c8bf0f8465d2bff78920"
+    },
+    {
+      "filename": "043_drop_skill_summary_status.sql",
+      "sha256": "e65c091d8ea11dc3d3b2e1ddb99ef05fc3a5490607c9d18e6d2581be18e327c8"
+    },
+    {
+      "filename": "044_add_egress_private_exceptions.sql",
+      "sha256": "332ac91e14e2756283649a1cc8328e1e4965844c351d7de9f72123a611257eee"
+    },
+    {
+      "filename": "044_add_workbuddy_instance_type.sql",
+      "sha256": "106798feaa80b7bb6360b2918037c9ce883288dc0c5b48039469738c5586556e"
+    },
+    {
+      "filename": "045_add_llm_model_reasoning_control.sql",
+      "sha256": "633cfa857def74f28b13223eea40fe6c219a05079de3d16fd326c495327a4d53"
+    },
+    {
+      "filename": "045_add_northbound_api.sql",
+      "sha256": "b8bac300a0dc403944def3c3ac219f3da0f0398cab3f6245a053bf071c6f1f1d"
+    },
+    {
+      "filename": "045_add_opencode_instance_type.sql",
+      "sha256": "d761ae3d30ad193c2d392a57e91098dae005e775ad8847960b56172cfab5a0e0"
+    },
+    {
+      "filename": "046_add_custom_team_templates.sql",
+      "sha256": "75feba05b0b64fff64bbb69b1f744ce16dba8a79e5368f3d6b61b563377b2b8e"
+    },
+    {
+      "filename": "046_add_enterprise_auth_identity.sql",
+      "sha256": "a75625907b929e0ab70eaca239959ffb00819a494a83b4dbf7015a0e2f1635aa"
+    },
+    {
+      "filename": "046_add_opencode_lite_runtime.sql",
+      "sha256": "1db6c4b017af1e8e02a1e6c512c49de4077ed8888227b498691a463da695ce0b"
+    },
+    {
+      "filename": "047_add_deepseek_harness_runtime.sql",
+      "sha256": "10caa7e4806a416def22f06a62263de618b058eb0cec9b275533e0407e5b95b9"
+    },
+    {
+      "filename": "047_add_instance_owner.sql",
+      "sha256": "54324daaa36e374c8b59d9fa67122dda639327290a7fa70431b3a155465edf56"
+    },
+    {
+      "filename": "048_add_workbuddy_instance_type.sql",
+      "sha256": "106798feaa80b7bb6360b2918037c9ce883288dc0c5b48039469738c5586556e"
+    },
+    {
+      "filename": "048_fix_instance_type_enum.sql",
+      "sha256": "dda9fb86ae38efb7f11c04606ce4e5aedcf40779826865ca7fda0ad82b8b5773"
+    },
+    {
+      "filename": "049_add_ldap_login_alias.sql",
+      "sha256": "9744010b6bbc607672d7084be26d6d2e2e23fc5283f73dc72d2234f800244e01"
+    },
+    {
+      "filename": "049_add_llm_model_groups.sql",
+      "sha256": "8b390eff9707ee6246e7d001455393adcf7a800c2545bc146c05f8e70e38c620"
+    },
+    {
+      "filename": "049_add_opencode_instance_type.sql",
+      "sha256": "d761ae3d30ad193c2d392a57e91098dae005e775ad8847960b56172cfab5a0e0"
+    },
+    {
+      "filename": "050_add_enterprise_auth_settings.sql",
+      "sha256": "75ecbc91a40887de3caf6c49f52e364a42e43d28778fa7ed827ac7660a87dec2"
+    },
+    {
+      "filename": "050_add_gateway_keys.sql",
+      "sha256": "25fbe39d0063759d53fef4014d6e9c188e7b8a02380e94ff0c6a953458516b33"
+    },
+    {
+      "filename": "050_update_workbuddy_windows_runtime.sql",
+      "sha256": "58bc026e38fe2e4023e8317eff14285849ab451ce52fdad0999533bdeb63a350"
+    },
+    {
+      "filename": "051_add_codex_and_claude_code_instance_types.sql",
+      "sha256": "61ac412e5bf2f0da3546a25a9a69780a0b00e1ebd6573b823c0a6388b16af49a"
+    },
+    {
+      "filename": "051_add_gateway_key_rate_limits.sql",
+      "sha256": "cf5a4cc234abf293b3190164cc50e3275334e33856dabd10c34b80d2812d9cbc"
+    },
+    {
+      "filename": "052_add_gateway_key_budget_and_attribution.sql",
+      "sha256": "66b870b361605235be21ccc09fc1ccfd2f9b5117d9d6a0699fa162131b7c7592"
+    },
+    {
+      "filename": "052_add_instance_pvc_name.sql",
+      "sha256": "c1ee976bbb93faa6a68c3095765a2e4efcb90e406db2af482cb9735a8444cec1"
+    },
+    {
+      "filename": "053_add_instance_runtime_variant.sql",
+      "sha256": "8fac6d6b9ad83b033580304b5a71ccde6b3c009af4ad3e8704cc9bb15c397604"
+    },
+    {
+      "filename": "053_add_llm_model_context_window.sql",
+      "sha256": "a4580f8ddb50ad3eff5c8973a9f9bf3a9b2c228211b837fcf5848e5664a0f8b9"
+    },
+    {
+      "filename": "054_add_llm_model_quality_tier.sql",
+      "sha256": "01300991b4729ea5f66ceef235da26087044de59fd6c8974774964f768dcd05a"
+    },
+    {
+      "filename": "054_add_system_image_runtime_variant.sql",
+      "sha256": "6a54092b0cb0adef4ec3cb6716fff6bba0ad2970d5bcceb189171442354179f6"
+    },
+    {
+      "filename": "055_gateway_budget_currency_review.sql",
+      "sha256": "07e93cf93d562651a1b9c3f4cb2bcfd6aa56fd0c656c3d306aab203a2f1c8d5a"
+    },
+    {
+      "filename": "055_reconcile_instance_type_enum.sql",
+      "sha256": "dd942fd4617fd5de4ee7714db9bc6e9264be34e3e9b8d4711b95738874e115a2"
+    },
+    {
+      "filename": "056_add_gateway_deployment_routing.sql",
+      "sha256": "f6843f8ee4f8e4c33640d99474b74c3f5ede98a978fe8cdf7ae14bd4080ccb00"
+    },
+    {
+      "filename": "056_add_llm_provider_models.sql",
+      "sha256": "a2d733c353aca2edf4fe17bc617ec9251c4f9edd504f45214b5aeff1d6fdcea6"
+    },
+    {
+      "filename": "057_add_llm_model_capabilities.sql",
+      "sha256": "eafb46a6a8f90deb9f9da1f7f8aeda2ea72aadd3ec86dbda2d4e4440383ed33d"
+    },
+    {
+      "filename": "057_add_northbound_admin_settings.sql",
+      "sha256": "f39cc72244d6fd2fc301d10b530f9fe13397485b8b303fb98594ab60c653aad8"
+    },
+    {
+      "filename": "058_add_llm_model_tools_override.sql",
+      "sha256": "5fa4cf3184d3683ea31cda45624c9b64820f5fa6f8e44a54767dd54faf22754a"
+    },
+    {
+      "filename": "058_add_openclaw_runtime_upgrade_safety.sql",
+      "sha256": "1ccada1fa75b57a90fb4716a9e6ebf23d8393cbe0f7d8c0af38c911a1fc1bb69"
+    },
+    {
+      "filename": "058_enable_deepseek_harness_pro.sql",
+      "sha256": "b1541217cab1007c1701d2e234f604d28dd66ded1bb5a3d9a528807a4e0861d2"
+    },
+    {
+      "filename": "059_add_llm_reasoning_control_mode.sql",
+      "sha256": "d185a804011961167bd2e553b6322b0df0f700fdeee03cc924deccaf6ad0a66f"
+    },
+    {
+      "filename": "059_pin_openclaw_2026_8_1_images.sql",
+      "sha256": "066b64938507de2a881c134240cc82ea1a1a000af8f36608cc427721b362b3f2"
+    },
+    {
+      "filename": "060_add_routing_classifier_settings.sql",
+      "sha256": "61c15acab2b069f09b52c2453d901c0d8c4bbacdb9e2c2d6716a7b0664122e13"
+    },
+    {
+      "filename": "060_allow_terminal_runtime_upgrade_instance_deletion.sql",
+      "sha256": "739b5c6a448b1d0a4d3bc1fc661dc08c3e2a2bda66278817017be00bb33db500"
+    },
+    {
+      "filename": "061_add_routing_classifier_mode.sql",
+      "sha256": "b1b3ec348cd27f36eee90ec52d123e0c2c6de21192ac3cd8144c7b9570887701"
+    },
+    {
+      "filename": "061_persist_runtime_upgrade_source_identity.sql",
+      "sha256": "902c40943cd14fc5b703cf4f499ea9f366993d304e8c22f418ad921f1a9be939"
+    },
+    {
+      "filename": "062_add_model_user_access.sql",
+      "sha256": "c01262dacbb88a7f82282edc68ab2f38c6b77116e139ca3ab0902eebfbe1dd80"
+    },
+    {
+      "filename": "062_follow_openclaw_latest_images.sql",
+      "sha256": "9f7b6463f5c96ca6ced2d53b389ed8fdf7b958ff5d94c15a8a25693b99d922bc"
+    },
+    {
+      "filename": "063_add_gateway_runtime_tasks.sql",
+      "sha256": "5eb56b4bc7971029a99a3f1c80557e36be2c17032bdf93c3a3ef6864035dcdcd"
+    },
+    {
+      "filename": "063_add_instance_alias.sql",
+      "sha256": "efb089ab85ee2a5a48dc677dc8ccaeca2535e45a06a71202518f4ba7f85e84cb"
+    },
+    {
+      "filename": "063_unique_usernames.sql",
+      "sha256": "38b3ca9bdb5d4bd813b0c5cb447e563577df3e74fb4372bacde75f693a79f020"
+    },
+    {
+      "filename": "064_add_instance_browser_workers.sql",
+      "sha256": "1dd23f5fe4cd1878e3b3911ef3cbbabdaf27553c6b881acc22b9e6d99ecc5577"
+    },
+    {
+      "filename": "064_add_instance_lifecycle_batches.sql",
+      "sha256": "dc91136cfd002b5eb5216c68e1900c0a8d19267ac5e2b38afffe581560cecab2"
+    },
+    {
+      "filename": "064_add_runtime_protocol.sql",
+      "sha256": "604eecdfcbe6396ca0551d262160be2e25d978985fe4af08a9c3320bb3c1d2dd"
+    },
+    {
+      "filename": "065_add_lifecycle_batch_retry_policy.sql",
+      "sha256": "74394265ef79264e7db4e8ae0f8d9a88990e4d0568a31db6773159384153b27c"
+    },
+    {
+      "filename": "065_add_runtime_maintenance.sql",
+      "sha256": "bfcfe012c65702e1788287ceb8be860a05bd2e0ad556c610ab7fada437378a73"
+    },
+    {
+      "filename": "066_add_northbound_api_keys.sql",
+      "sha256": "63be38ddc84be49cf01789eda99f1d24a756f238c92805e00483eb2774cb56b3"
+    },
+    {
+      "filename": "066_add_runtime_upgrade_fence.sql",
+      "sha256": "2d3f622291139a932273eb9ba9138b6c0e99bb4b36b2337add6edb9f8e1fde9a"
+    },
+    {
+      "filename": "067_add_northbound_owner_records.sql",
+      "sha256": "bbbfeaa92296e43d3864c8be44248206e8fc0d308bb12a81d2b19bf57d57e041"
+    },
+    {
+      "filename": "067_add_runtime_upgrade_stop.sql",
+      "sha256": "8d4b6398e9f2e1837ab96311d5de7dcc3cb589349dbea419e45d93efc8042f92"
+    },
+    {
+      "filename": "068_add_runtime_rollout_checkpoints.sql",
+      "sha256": "1cdc95747f1900ac15938ffa98df3f6e441c6504d80fc1f08f722c87a59faa9a"
+    },
+    {
+      "filename": "068_add_workspace_write_intents.sql",
+      "sha256": "4f0f6bad6acb639d786359e45c79f4c1bab934be700eab6004d74ff442962df3"
+    },
+    {
+      "filename": "069_add_instance_runtime_error_code.sql",
+      "sha256": "21e16b4b3736ecdd02a2cc82531f9e18c7e6c4b447ab77b690c5a03285f1c916"
+    },
+    {
+      "filename": "069_add_llm_model_vision_override.sql",
+      "sha256": "49b8d5c8c0f6b27829af286464385977ef0dc755d8fdce09c88c91a28af03d76"
+    },
+    {
+      "filename": "070_add_llm_model_image_operations.sql",
+      "sha256": "e4c095c49214f44de2a01961d58a1493f59c15023946ab5e41f17fc3fe2e7d6b"
+    },
+    {
+      "filename": "070_add_upgrade_restart_attempts.sql",
+      "sha256": "1d32c4623c17075aa5407fd0e1d03361637e7f4ab98d8fb10174c787a706f0c0"
+    },
+    {
+      "filename": "071_add_image_budget_price.sql",
+      "sha256": "25b15a34dbddf7effe67d0adfe122864e1d20e77731665dcb38bacd42bef3788"
+    },
+    {
+      "filename": "071_add_team_member_icon.sql",
+      "sha256": "ecf150fb9441734666d131bfde90a02edb15decd14aba45b80f72b9722c85ba3"
+    },
+    {
+      "filename": "072_add_gateway_image_artifacts.sql",
+      "sha256": "055aaa9cafbc3690349f496a254dc4be73dda0d4a29b0e0ba4af1c335fe346cf"
+    },
+    {
+      "filename": "072_add_team_workspace_file_audits.sql",
+      "sha256": "369d5c42665dcae52495a0a149a0cd8548f30149318b40f94067505fbfec6839"
+    },
+    {
+      "filename": "073_add_gateway_image_jobs.sql",
+      "sha256": "d751644740772ba019bae8c41a10ffe9e01034bf889508dfc44f7f3f3e28e2a4"
+    },
+    {
+      "filename": "073_add_upgrade_operation_claims.sql",
+      "sha256": "56ef93b840287ab9d5a210f7629238e8d29c901575f923e35ce276f1efbbb7ee"
+    },
+    {
+      "filename": "074_add_image_analytics_outbox.sql",
+      "sha256": "685b525109ff7738fbfd9f199c76979e71c5118e7934d0e3bfded7b678a04cfc"
+    },
+    {
+      "filename": "074_add_upgrade_recovery_key.sql",
+      "sha256": "3a15e1efa7cc9b00cebdf56fb7b971feb53ecce307e2ca4340bb7af1001a0613"
+    },
+    {
+      "filename": "075_add_upgrade_retry_diagnostics.sql",
+      "sha256": "42fda6c0067810d4e74e342187cfff9190f650cce344d870f4aa81e9af9239bf"
+    },
+    {
+      "filename": "076_add_upgrade_item_isolation.sql",
+      "sha256": "b591ca8ff0303a3b0325c698489c2fcd3f8e03658ea8061747f2e19126ff3a77"
+    },
+    {
+      "filename": "077_add_northbound_owner_teams.sql",
+      "sha256": "a0309500067bbf1aff8bdb475b1e62992f1688f45c7ed7ebf68484d61d96a07d"
+    },
+    {
+      "filename": "078_move_repository_schema_to_migrations.sql",
+      "sha256": "d711b6f137f0d964f5d4a9d0f46015846175882127bcc9a0f54cd27d2b56944d"
+    },
+    {
+      "filename": "079_add_system_backup_control.sql",
+      "sha256": "1658327703c781a58158f1d25f88b1d37bde2ddedbb963cca5eb69c4cae24215"
+    },
+    {
+      "filename": "080_add_backup_dependency_health.sql",
+      "sha256": "7d471a96ab75a7e3e4800b124ae5cf94c203b1357dc1680be0e3abd28f1dce2f"
+    },
+    {
+      "filename": "081_add_backup_controller_coordination.sql",
+      "sha256": "f3e576052f0ebb9b9be202afb34c6a48226feb31a743bf73533950f16a875c83"
+    },
+    {
+      "filename": "082_add_backup_attempt_request.sql",
+      "sha256": "aef40ee7db7dcde0b2b5af309032434e4b79ed24f85702f177b015b02aeb7ab2"
+    },
+    {
+      "filename": "083_add_backup_strong_auth_nonce.sql",
+      "sha256": "27d2bfec7a5a04bc1e3a225e093e3f574af3bc125dfe64426395d50a542021b2"
+    },
+    {
+      "filename": "084_add_backup_external_actions.sql",
+      "sha256": "5de5866d6b9872229cec33a9a2b0279a03779159b03189f3554032e22bc2eed4"
+    },
+    {
+      "filename": "085_add_backup_capture_coordination.sql",
+      "sha256": "73967bb9eb856e42177a411a662b51c9add51a11bc8cf04c34e0df267a376366"
+    },
+    {
+      "filename": "086_add_backup_capture_abort.sql",
+      "sha256": "22c087ff36fef54d6a99bf2a62bfc6144b8e66cda670676d300f136beb3623f9"
+    },
+    {
+      "filename": "087_add_backup_stage_resources.sql",
+      "sha256": "76d73c20ce201b59341778dba0b821aa1488d704536d5930557e0ffa08076520"
+    },
+    {
+      "filename": "088_add_backup_core_publication.sql",
+      "sha256": "4010e46661a4b0fcddd772eab2d00c2dd1d031de381c41d978c149a883f01d8f"
+    },
+    {
+      "filename": "089_add_backup_gate_admission.sql",
+      "sha256": "d604efa3e89c8a4843ce863cd6266fc0fc3c2c440e3ba403028bbea8dd2284c3"
+    },
+    {
+      "filename": "090_add_backup_restore_job_executions.sql",
+      "sha256": "bff578bda14a3f6da634fdddfc759eea1856a2ff66708a32c962d3ed6d3f21ec"
+    },
+    {
+      "filename": "091_add_backup_job_send_intents.sql",
+      "sha256": "4ab8c1bc8cbe89ffb15eb7771b785665083c5c9172832114823cd4018b63abfd"
+    },
+    {
+      "filename": "092_allow_owned_backup_restore_workspaces.sql",
+      "sha256": "081611ed8755e0bc826b1b45b35576b0c157544017675a52b73fa278d48d4954"
+    },
+    {
+      "filename": "093_add_team_data_backup_jobs.sql",
+      "sha256": "f1b1e3f4ab3546f72e1dfdb2054e630fc9cffae386ca007b292385ece3a942b6"
+    },
+    {
+      "filename": "094_add_team_data_backup_management_operations.sql",
+      "sha256": "9dc02e1e542cf6b0b1c7de9623784f8ea1392f0086fd75c13295f710252b49dd"
+    },
+    {
+      "filename": "095_add_team_data_provisioning_receipts.sql",
+      "sha256": "101affc78e4ae6437ec92c87d8982aa7f7a77924fb3145a7c0cb41e626b5662d"
+    },
+    {
+      "filename": "096_backup_v2_add_system_backup_control_metadata_core.sql",
+      "sha256": "409c3c43f2c20066f2453dda651dbf5af3623761f207579e6f0415a508d86c03"
+    },
+    {
+      "filename": "097_backup_v2_add_system_backup_config_and_operations.sql",
+      "sha256": "d7eb73daddfe563372cd6ffcbb135e366b35ad3d0f64e32f2c9f4c3d75e51103"
+    },
+    {
+      "filename": "098_backup_v2_add_system_backup_task_execution_core.sql",
+      "sha256": "e73c1bb6ff770f3b83dbabd635117aa870a6a401bd729be4976f6f45a0883347"
+    },
+    {
+      "filename": "099_backup_v2_add_system_backup_coordination_observability.sql",
+      "sha256": "0896f140e2bff42090b70435542d540cee7c0df938287991cb7cfea2c136f57c"
+    },
+    {
+      "filename": "100_backup_v2_add_system_backup_promotion_authority.sql",
+      "sha256": "646a753b99991268915b928ed61200ae90e603fafbb1754abba9885cabd9dae8"
+    },
+    {
+      "filename": "101_backup_v2_add_system_backup_prune_authority.sql",
+      "sha256": "2170f92e9ce54bac5517cfc863d263ab1ed36927b5614a1283d3a284b2c40964"
+    },
+    {
+      "filename": "102_backup_v2_add_system_backup_external_action_authority.sql",
+      "sha256": "39eb6f315709558213c2ecd591a2c44279fd7f07fdc1c97c5e8556044874abe7"
+    },
+    {
+      "filename": "103_backup_v2_add_system_backup_check_authority.sql",
+      "sha256": "9ae51a509b63b25c46d9bf03adff78ab8b01f9afa2cf2eaa363de14cbdc5cb85"
+    },
+    {
+      "filename": "104_backup_v2_add_system_backup_staging_resources.sql",
+      "sha256": "a66509dbd94d99c7c180fa31ba2926b5c33ccad2acba93ba2362af39f7796bff"
+    },
+    {
+      "filename": "105_backup_v2_add_system_maintenance_participants.sql",
+      "sha256": "b111d3b38c24c807834da9ea3d33accd78dfea1bcc847bdd98a3355a9db62b94"
+    },
+    {
+      "filename": "106_backup_v2_add_system_backup_strong_auth_nonces.sql",
+      "sha256": "92c2085fc2c27066d0358746c9438aef83b379851e53bc644627c40fb1c41f15"
+    },
+    {
+      "filename": "107_backup_v2_add_system_backup_job_observations.sql",
+      "sha256": "e6b4b51e421d9dcf86987b027a2d8f0fda74eb848495da5014bc0922757aa2cf"
+    },
+    {
+      "filename": "108_backup_v2_add_system_restore_drill_resources.sql",
+      "sha256": "ce2a788dde3275fd4e5371b9176aeb871c8522c7315d792148ecf2c40403415d"
+    },
+    {
+      "filename": "109_backup_v2_add_system_backup_registration_runtime.sql",
+      "sha256": "3aa98f7b28fe2929f3e657512d2c342d41ff690d83dc91190761208411ca679a"
+    },
+    {
+      "filename": "110_backup_v2_fix_system_backup_prune_item_identity.sql",
+      "sha256": "c560babc171f66f94fe2de3a85335a58c6a1de6bcf543c8874774c38e4c091e8"
+    },
+    {
+      "filename": "111_backup_engine_selection.sql",
+      "sha256": "10e9e04d05e04faa193065c66ede2c2ba5649482ba9d1088f17e89d2ac6f545c"
+    },
+    {
+      "filename": "112_backup_v2_system-backup-d-config-canonical-081-proposal-20261014.sql",
+      "sha256": "35e5354bc78206b6d5b78d0ca066c6fece26d3421a2922472b9d7879ca1c363c"
+    },
+    {
+      "filename": "113_backup_v2_system-backup-d-config-maintenance-082-proposal-20261015.sql",
+      "sha256": "88bea920364e1a091e74ae56305c4221b4fb5e394ef63fafaaa026c2bc873c7f"
+    },
+    {
+      "filename": "114_backup_v2_system-backup-d-control-health-proposal-20261016.sql",
+      "sha256": "64776e8e76c938d0492ba10bd946f23ef6c272a9ecf969435d8365f1271c46b1"
+    },
+    {
+      "filename": "115_backup_v2_producer-recovery-authority-candidate.sql",
+      "sha256": "16dbbebaeee0b43769c43b4a9e3033e6e7d8b593082139c0411abb8bbadb43fe"
+    },
+    {
+      "filename": "116_backup_v2_producer-recovery-revocation-candidate.sql",
+      "sha256": "49f53f90b81a245c681f061d26ece07a911207127d663a3e96c88d803724a6d7"
+    },
+    {
+      "filename": "117_backup_v2_system-backup-d-download-admission-schema-proposal-20261019.sql",
+      "sha256": "01c9bc69079d4cb9648cf1eceec8465806b702d944d383121145031c520b50d8"
+    },
+    {
+      "filename": "118_backup_v2_import_journal.sql",
+      "sha256": "d2e5e8de5e9d4c6fad115eb0245143aa6da9b2f48ed3477f274ecfdf6cd140a2"
+    },
+    {
+      "filename": "119_backup_v2_execution_admission.sql",
+      "sha256": "464ee7089e7132db715268f6f0e3496dc70843b8a6e257b4d44540514ad6096d"
+    },
+    {
+      "filename": "120_backup_v2_execution_plans.sql",
+      "sha256": "bc6777ea2e1013aea41bfb33b0ebca03065004d5a1649562d1e616107bb63b2c"
+    },
+    {
+      "filename": "121_backup_v2_job_send_intents.sql",
+      "sha256": "9f34033cdf3a22a623397a92353f43b2b4caaa0e391e805b510b74dc7770c22d"
+    },
+    {
+      "filename": "122_backup_v2_execution_records.sql",
+      "sha256": "46cdace7f064c21f5b90b4468306580a53bfdc276228393b56deaf807314c0a7"
+    },
+    {
+      "filename": "123_backup_v2_runtime_execution_journal.sql",
+      "sha256": "2324eca7a914926cd3ea5cfc5e18244cfc74d47234fa48a8178da365d1690a58"
+    },
+    {
+      "filename": "124_backup_v2_runtime_control.sql",
+      "sha256": "f55dba68a18b6ea8508f99ff40903f4a4c6a9625a3011717b616d95029519e92"
+    },
+    {
+      "filename": "125_backup_v2_job_key_use.sql",
+      "sha256": "50b3b885271d6d09e56818f3244d3ce1dab46ddae42fb5cfca7c3e654c4258b9"
+    },
+    {
+      "filename": "126_backup_v2_gateway_proofs.sql",
+      "sha256": "9279edd571df4e07f11719a1f0e5679de86ab71b953664083355422aa27c0baf"
+    },
+    {
+      "filename": "127_backup_v2_kek_registry.sql",
+      "sha256": "9f95f6142299a968b30cc44ec93c64fd9626634830cc921a090b225b8345e100"
+    },
+    {
+      "filename": "128_backup_installation_kek_authority.sql",
+      "sha256": "4f85035331440877688d65445142b79ab6f92600a82ce29615e33f87e7b97fb6"
+    },
+    {
+      "filename": "129_backup_v2_source_gate_wait.sql",
+      "sha256": "66e446779509a8d2a9eb4bc81c64fab02a2b0097ce66bfe670b01f25bf2632f3"
+    },
+    {
+      "filename": "130_backup_v2_capture_reconcile.sql",
+      "sha256": "15d3a738a5b99ef591271334b9d943e0555646eab0e2e703870f0bec574730fe"
+    },
+    {
+      "filename": "131_backup_v2_formal_job_candidates.sql",
+      "sha256": "a2a4bd94fb37e66b62e304d6dca06a5b3443227e1c5d22984b19a06c129e4599"
+    },
+    {
+      "filename": "132_backup_v2_staging_backup_identity.sql",
+      "sha256": "5a98c72abef2e41b73bdf9cad9abbc7e3381e193b41531cb7505e3296cbbba78"
+    },
+    {
+      "filename": "133_backup_v2_publish_original_plan_parent.sql",
+      "sha256": "cfd478767e2bbea1df2a3dbb7010562034f37cd5291f590f76bf0e9a74d11d3e"
+    },
+    {
+      "filename": "134_backup_v2_installation_owner_authority.sql",
+      "sha256": "d0b8173fb91143dcde72453dabf26f749f1674da92488f833104baa53acc43e1"
+    },
+    {
+      "filename": "135_backup_v2_minio_owner_authority.sql",
+      "sha256": "b37bc2d94a2b508b36173b09cc00345200d6b0a5a787abb5ef7d0ee6f50d5583"
+    },
+    {
+      "filename": "136_backup_v2_signing_resource_authority.sql",
+      "sha256": "1471b28fe470f5fab5d0519a3c73f844629da31858416bf72c5d887ec290e1b5"
+    }
+  ]
+}

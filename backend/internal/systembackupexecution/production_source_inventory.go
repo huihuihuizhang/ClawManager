@@ -42,12 +42,17 @@ func (s *DeploymentService) productionInventory(ctx context.Context, in d.Input,
 	for _, instance := range source.Instances {
 		instances[instance.ID] = false
 	}
+	seenMounts := map[string]bool{}
 	for _, mount := range metadata.Mounts {
-		if _, exists := instances[mount.InstanceID]; !exists || instances[mount.InstanceID] || mount.MountID != "workspace" {
+		part := "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID
+		if _, exists := instances[mount.InstanceID]; !exists || mount.MountID == "" || seenMounts[part] || (mount.MountID == "workspace") == mount.DataOnly {
 			return d.ErrNotReady
 		}
-		instances[mount.InstanceID] = true
-		expected = append(expected, expectedPart{"users_instances", "instance_" + strconv.Itoa(mount.InstanceID) + "_workspace", "capture-workspace"})
+		seenMounts[part] = true
+		if mount.MountID == "workspace" {
+			instances[mount.InstanceID] = true
+		}
+		expected = append(expected, expectedPart{"users_instances", part, "capture-workspace"})
 	}
 	for _, covered := range instances {
 		if !covered {

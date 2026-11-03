@@ -1,0 +1,13 @@
+{
+  "result": "blocked_by_policy",
+  "automatic_review": "exec_command rejected before execution; reason: blocked by policy",
+  "owned_root": "D:/litiantian/project/github/cm-backup/ClawManager/.codex-temp/b-mounted-data-20261103",
+  "targets": [
+    "cache",
+    "tmp"
+  ],
+  "targets_still_exist": true,
+  "alternative_deletion_attempted": false,
+  "other_owner_paths_touched": false,
+  "logs_retained": true
+}

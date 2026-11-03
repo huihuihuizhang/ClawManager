@@ -1,0 +1,12 @@
+test_collects_read_only_projection_without_claiming_fence (__main__.InventoryTests) ... ok
+test_does_not_export_inline_credentials_args_or_projected_secret_refs (__main__.InventoryTests) ... ok
+test_incomplete_lists_and_invalid_identities_refuse (__main__.InventoryTests) ... ok
+test_pod_drift_is_not_stability_or_stop_proof (__main__.InventoryTests) ... ok
+test_storage_classes_are_not_guessed_from_unknown_volume (__main__.InventoryTests) ... ok
+test_tail_namespace_replacement_refuses (__main__.InventoryTests) ... ok
+test_wrong_namespace_stops_before_resource_reads (__main__.InventoryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.002s
+
+OK
