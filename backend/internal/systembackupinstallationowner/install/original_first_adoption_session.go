@@ -79,10 +79,16 @@ func (h *OriginalWriterHold) prepareOriginalFirstAdoptionSQL(ctx context.Context
 
 // This is the actual production source preparation used by the first-adoption
 // caller, distinct from CheckControls' always-rollback diagnostic route.
-func (h *OriginalWriterHold) PrepareOriginalFirstAdoption(ctx context.Context, password []byte, enrollment EnrollmentPin) (*PreparedOriginalFirstAdoption, error) {
+func (h *OriginalWriterHold) PrepareOriginalFirstAdoption(ctx context.Context, password []byte, enrollment EnrollmentPin, runtimeMetadata ...BootstrapSourceFilePin) (*PreparedOriginalFirstAdoption, error) {
 	p, err := h.prepareOriginalFirstAdoptionSQL(ctx, password, enrollment)
 	if err != nil {
 		return nil, err
+	}
+	if len(runtimeMetadata) > 1 {
+		return nil, ErrInstall
+	}
+	if len(runtimeMetadata) == 1 && p.AttachOriginalRuntimeInstalledSQLMetadata(ctx, runtimeMetadata[0]) != nil {
+		return nil, ErrInstall
 	}
 	producer, err := p.PrepareOriginalBackupConsumerHistorySource(ctx, h)
 	if err != nil {

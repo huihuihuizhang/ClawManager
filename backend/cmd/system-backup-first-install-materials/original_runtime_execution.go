@@ -116,11 +116,18 @@ func runOriginalRuntimeMaterials(ctx context.Context, args []string, out io.Writ
 					return 4
 				}
 				sum := sha256.Sum256(raw)
+				metadataFile := filepath.Join(get("output-directory"), "runtime-installed-metadata.receipt.json")
+				metadataRaw, metadataErr := install.ReadPrivateFile(metadataFile, 262144)
+				if metadataErr != nil {
+					return 4
+				}
+				metadataSum := sha256.Sum256(metadataRaw)
 				if json.NewEncoder(out).Encode(struct {
-					State        string
-					Pending      install.BootstrapSourceFilePin
-					RetryAllowed bool
-				}{"commit_unknown_verify_original_rows", install.BootstrapSourceFilePin{File: file, SHA256: hex.EncodeToString(sum[:])}, false}) != nil {
+					State              string
+					Pending            install.BootstrapSourceFilePin
+					SQLMetadataReceipt install.BootstrapSourceFilePin
+					RetryAllowed       bool
+				}{"commit_unknown_verify_original_rows", install.BootstrapSourceFilePin{File: file, SHA256: hex.EncodeToString(sum[:])}, install.BootstrapSourceFilePin{File: metadataFile, SHA256: hex.EncodeToString(metadataSum[:])}, false}) != nil {
 					return 3
 				}
 				return 4

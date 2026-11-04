@@ -1,0 +1,197 @@
+{
+  "schema_version": "supervisor-exact-runtime-installed-metadata-review.v1",
+  "base_commit": "24acdf2fdab2d4e0631c8ddd3ca7f411415b32c7",
+  "map": {
+    "path": ".a-runtime-installed-metadata-20261104/source-map.json",
+    "sha256": "17a212ef4c298f3fe40b561e724fced24238b4959aafe92839194873b5e8723e"
+  },
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-first-adoption/main.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-adoption/main.go",
+      "sha256": "751637e39dd9b38263864a5d13ada74c98b62f00d3217e7d78910b512ed29c77",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_runtime_execution.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_runtime_execution.go",
+      "sha256": "ff1478e1ab7f4069ca0157646f10cef43e24a3e80d60c3d9c5744e917acd0905",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_sql_cut.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_adoption_sql_cut.go",
+      "sha256": "c5b9a7d2a28e8b57ea142f274351625a2fc3aea0972cd97237711dbf38e4c6e6",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_first_adoption_session.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_first_adoption_session.go",
+      "sha256": "3173dc29d2ab42caceff0c4b9bafcd1d45c8dac28d89d8608387ab132afea84b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_history_sql_metadata.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_history_sql_metadata.go",
+      "sha256": "6f9a067171ed7e80eed7f2d32a6994f141c58a6dd5316d6b4ca0d5006ec6ee0b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "sha256": "13b1efe9bde131606bf31f723c449ea6c553386dfa9693e68127dc6fcd299d74",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_sql_metadata_source.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_sql_metadata_source.go",
+      "sha256": "62e7cdcea14313c3cd6e45b4b83bda54d8baf400467cfbefe41dd0c8b7d0f7e0",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_sql_metadata_source_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_sql_metadata_source_test.go",
+      "sha256": "d9700ad57597480be901f06c33f352d70f8108b84701feccac8ab5920d62be4d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_installation_gate_mysql_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_installation_gate_mysql_test.go",
+      "sha256": "7315507957dbc41c160271e7794474ec315db273e22f7623b4fe7ab7a273fc9d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_installation_snapshot.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_installation_snapshot.go",
+      "sha256": "7986cad5b5f191324df002a4024c9dc3ca2301c813d1438bfe44a3677bab2cb3",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_installation_snapshot_mysql_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_installation_snapshot_mysql_test.go",
+      "sha256": "52c4cc7fcd0ff391dc0ea9bd6d86697b97ff4541fce7e7970df460b5717441a3",
+      "mode": "100644"
+    }
+  ],
+  "status": "INSTALLATION_METADATA_PREREQUISITE_VALIDATED_NOT_FULL_ADOPTION",
+  "behavior": [
+    "Same original provider SQL transaction captures and signs complete actual 40-column/three-row capability state, original mapping and fence increment, with complete evidence/chunk EOF.",
+    "First adoption accepts an original signed receipt only after independent complete SQL readback and a new protected source census; unknown extra rows/default/hash/schema/chunk changes are rejected.",
+    "Final locked source accounting may remove only the genuine same-context same-transaction opaque cut own17 exact rows; it compares the remaining three original rows without a table/type/prefix exemption.",
+    "Provider lock order starts at original idle/absent installation gate; acquiring/held/releasing gates are rejected, and a real competing SQL prefix waits."
+  ],
+  "verification": {
+    "windows": {
+      "package_passes": 4,
+      "roots": 185,
+      "subcases": 556,
+      "exit": 0
+    },
+    "linux": {
+      "exit": 0,
+      "packages": {
+        "install": {
+          "roots": 164,
+          "subcases": 463,
+          "failures": [],
+          "skips": [
+            "TestSigningResourceSQLNativeActualOriginalIssuerInstallAndReadback"
+          ]
+        },
+        "adapter": {
+          "roots": 26,
+          "subcases": 129,
+          "failures": [],
+          "skips": []
+        },
+        "first-install": {
+          "roots": 5,
+          "subcases": 5,
+          "failures": [],
+          "skips": []
+        },
+        "first-adoption": {
+          "roots": 0,
+          "subcases": 0,
+          "failures": [],
+          "skips": []
+        }
+      },
+      "deleted_test_binaries": [
+        {
+          "name": "adapter.test",
+          "sha256": "73be4f3a4020f9011cdb7a3e9687b89e869afd6eb31b29e77d8720ab86c6fc93",
+          "bytes": 98815924
+        },
+        {
+          "name": "first-adoption.test",
+          "sha256": "bb2917cda14975f7bb619adbc8e7c23e9c1b9c4b86ded6001bcead29a496457c",
+          "bytes": 90730029
+        },
+        {
+          "name": "first-install.test",
+          "sha256": "0aebec09d7c1235fbeec1c1562b6392b1a6aae6a5e62b5383e86fe8363ed5f38",
+          "bytes": 82951895
+        },
+        {
+          "name": "install.test",
+          "sha256": "5016b01431c76363352ee7091824493de3a75359f9822c9bd8cd18a2ee4cd720",
+          "bytes": 116262892
+        }
+      ]
+    },
+    "native": {
+      "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "actual_version": "8.4.8",
+      "actual_tls": "SAN/TLSv1.3",
+      "root_tests": 2,
+      "subcases": 15,
+      "exit": 0,
+      "log_sha256": "7f44a720a91f5cdf7d63109b2e2e0b91189bdee694f593c828f74af4e6df4c70",
+      "checks": {
+        "owned_san_certificate_generated": true,
+        "actual_mysql84_san_tls_credentials_prepared": true,
+        "actual_native_test_exit_zero": true,
+        "tagged_native_root_executed": true,
+        "native_test_not_skipped": true,
+        "owned_schema_cleanup_complete": true
+      },
+      "cleanup": [
+        {
+          "kind": "container",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        }
+      ],
+      "private_fixture_material_removed": true,
+      "scope": "New owned MySQL8.4.8 with actual SAN/TLS1.3, compiled tagged exact complete installed metadata/default/EOF and original gate-lock tests and original complete migration helper. Provider signatures are explicit protocol fixtures; not native Vault/installer scope issuance or page acceptance.",
+      "production_performance_equivalent": false
+    },
+    "operator_r16_linux_models": {
+      "source_map": "backend/.d-linux-operator-r16-20261104/source-map.json",
+      "roots": 29,
+      "exit": 0,
+      "git_accepted_here": false,
+      "scope": "Controlled original receipt/pin/query/dispatch models; not actual provider issuance, installation or native shared runtime execution."
+    }
+  },
+  "remaining": [
+    "Actual shared Runtime protocol, native freeze/thaw and recovery for three running field Lite instances.",
+    "Original provider unknown-result query and real issuance/operator phase integration.",
+    "Actual protected first adoption with physical writer coverage and final COMMIT plus recovery.",
+    "Final v2 delivery/activation and one real page task through collection, formal artifact, independent readback, catalog and success."
+  ],
+  "original_database_contacted_by_tests": false,
+  "test_build_artifacts_deleted": true,
+  "full_adoption_verified": false,
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

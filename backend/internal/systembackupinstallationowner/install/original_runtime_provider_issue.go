@@ -28,6 +28,7 @@ type OriginalRuntimeProviderIssueInputs struct {
 	Until                                                                           time.Time
 }
 type OriginalRuntimeProviderIssueReceipt struct {
+	SQLMetadataReceipt                            BootstrapSourceFilePin
 	State                                         string
 	Version                                       string
 	Binding                                       reg.Binding
@@ -360,6 +361,9 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		return zero, ErrInstall
 	}
 	defer tx.Rollback()
+	if a.LockOriginalRuntimeInstallationGate(ctx, tx, target.InstallationID) != nil {
+		return zero, ErrInstall
+	}
 	locked, e := s.lockAdmin(ctx, tx)
 	if e != nil || locked.Before(floor) || !locked.Before(until) {
 		return zero, ErrInstall
@@ -369,7 +373,21 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		return zero, ErrInstall
 	}
 	imports := []a.OriginalRuntimeCapabilityImport{{Raw: files["generate.capability.json"], Pin: result.Generate, Operation: kms.Generate}, {Raw: files["unwrap.capability.json"], Pin: result.Unwrap, Operation: kms.Unwrap}, {Raw: files["publisher-unwrap.capability.json"], Pin: result.PublisherUnwrap, Operation: kms.Unwrap}}
-	if writer.StageInitialRuntimeAuthorities(ctx, tx, mapping.Record, mapping.Signature, imports, locked) != nil {
+	installedSnapshot, stageErr := writer.StageInitialRuntimeAuthoritiesWithSnapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked)
+	if stageErr != nil {
+		return zero, ErrInstall
+	}
+	metadataReceipt := originalRuntimeSQLMetadataReceipt{Version: "original-runtime-installed-sql-metadata.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Target: i.plan.Target, Issuers: in.Issuers, Snapshot: installedSnapshot, Until: until}
+	metadataRaw, e := canonical(metadataReceipt)
+	if e != nil {
+		return zero, ErrInstall
+	}
+	metadataSigned, e := canonical(signedOriginalRuntimeSQLMetadataReceipt{Record: metadataRaw, Signature: ed25519.Sign(keys["installation_mapping"], append([]byte(originalRuntimeSQLMetadataReceiptDomain), metadataRaw...))})
+	if e != nil {
+		return zero, ErrInstall
+	}
+	result.SQLMetadataReceipt = BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-installed-metadata.receipt.json"), SHA256: hash(metadataSigned)}
+	if writeNewFiles(in.OutputDirectory, map[string][]byte{"runtime-installed-metadata.receipt.json": metadataSigned}) != nil {
 		return zero, ErrInstall
 	}
 	tail, e := s.lockAdmin(ctx, tx)

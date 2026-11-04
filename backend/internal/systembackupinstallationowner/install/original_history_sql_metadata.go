@@ -77,12 +77,18 @@ func prepareOriginalHistorySQLMetadataLocked(ctx context.Context, p *PreparedOri
 	sourceCtx, cancel := context.WithDeadline(ctx, until)
 	r := &originalHistorySQLMetadata{ctx: ctx, sourceCtx: sourceCtx, cancel: cancel, prep: p, hold: h, until: until, original: p.observed.Facts()}
 	r.origin = r
+	if p.runtimeMetadata != nil {
+		if !p.runtimeMetadata.local(ctx) {
+			return nil, ErrInstall
+		}
+		r.until = minTime(r.until, p.runtimeMetadata.until)
+	}
 	defer func() {
 		if err != nil {
 			r.close()
 		}
 	}()
-	if !originalHistorySingletonOnly(r.original) {
+	if !r.classifiesTables(r.original) {
 		return nil, ErrInstall
 	}
 	r.installed, err = readOriginalInstalledBackupConfiguration(ctx, p.operator.installer.db, until)
@@ -100,6 +106,9 @@ func prepareOriginalHistorySQLMetadataLocked(ctx context.Context, p *PreparedOri
 		Tables       []a.SQLCoverageTable
 		Row          [][]byte
 	}{"original-unconfigured-singleton-classification.v1", r.original.Database, r.original.InstallationID, r.original.Tables, r.row.cells})
+	if p.runtimeMetadata != nil {
+		r.revision = originalObjectSHA(struct{ Version, Baseline, RuntimeReceipt string }{"original-singleton-runtime-control-metadata-classification.v1", r.revision, p.runtimeMetadata.pin.SHA256})
+	}
 	if r.recheckBeforeSQL(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -157,7 +166,7 @@ func sameOriginalHistorySQLFacts(want, actual a.SQLCoverageCensusFacts) bool {
 // against this classification. This predicate grants neither filesystem nor
 // S3 absence. It must not be used with synthesized facts or outside SourceSet.
 func (r *originalHistorySQLMetadata) classifiesOriginalSQL(ctx context.Context, actual a.SQLCoverageCensusFacts) bool {
-	return r.local(ctx, false) && originalHistorySingletonOnly(actual) && !actual.ObservedAt.IsZero() &&
+	return r.local(ctx, false) && r.classifiesTables(actual) && !actual.ObservedAt.IsZero() &&
 		!actual.ObservedAt.Before(r.original.ObservedAt) && actual.ObservedAt.Before(r.until) && sameOriginalHistorySQLFacts(r.original, actual)
 }
 
@@ -210,6 +219,9 @@ func (r *originalHistorySQLMetadata) recheckBeforeSQL(ctx context.Context) (err 
 	}
 	defer row.clear()
 	if now.Before(r.floor) || now.Before(fresh.checkedAt) || !reflect.DeepEqual(row.cells, r.row.cells) {
+		return ErrInstall
+	}
+	if r.prep.runtimeMetadata != nil && r.prep.runtimeMetadata.recheck(ctx, nil, 0) != nil {
 		return ErrInstall
 	}
 	tail, err := r.prep.scanner.Observe(r.sourceCtx)
@@ -274,6 +286,9 @@ func (r *originalHistorySQLMetadata) recheckLocked(ctx context.Context, tx *sql.
 	}
 	defer row.clear()
 	if !reflect.DeepEqual(row.cells, r.row.cells) || !r.local(ctx, true) {
+		return ErrInstall
+	}
+	if r.prep.runtimeMetadata != nil && r.prep.runtimeMetadata.recheck(ctx, tx, facts.Epoch, r.coverage.cut) != nil {
 		return ErrInstall
 	}
 	stamp, err := r.prep.operator.installer.database(r.sourceCtx, tx, r.until)
@@ -376,4 +391,14 @@ func readOriginalHistorySingletonRow(ctx context.Context, tx *sql.Tx, installati
 		return originalHistorySingletonRow{}, ErrInstall
 	}
 	return result, nil
+}
+
+func (r *originalHistorySQLMetadata) classifiesTables(f a.SQLCoverageCensusFacts) bool {
+	if r == nil || r.prep == nil {
+		return false
+	}
+	if r.prep.runtimeMetadata != nil {
+		return r.prep.runtimeMetadata.local(r.ctx) && r.prep.runtimeMetadata.classifiesTables(f)
+	}
+	return originalHistorySingletonOnly(f)
 }

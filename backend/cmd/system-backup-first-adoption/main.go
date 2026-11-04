@@ -44,6 +44,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	enrollmentSHA := flags.String("enrollment-pin-sha256", "", "original enrollment pin bytes")
 	selectionFile := flags.String("selection-file", "", "original complete writer/source selection")
 	selectionSHA := flags.String("selection-sha256", "", "original complete selection pin")
+	runtimeMetadataFile := flags.String("runtime-sql-metadata-receipt-file", "", "actual signed provider SQL-installation source receipt")
+	runtimeMetadataSHA := flags.String("runtime-sql-metadata-receipt-sha256", "", "exact original SQL installation receipt SHA")
 	recoveryPasswordFile := flags.String("recovery-admin-password-file", "", "existing private fresh recovery password; defaults to original selected file")
 	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 || *planFile == "" || *planSHA == "" || *publicFile == "" || *publicSHA == "" || *kubeFile == "" || *kubeSHA == "" || *dsnFile == "" || *dbCAFile == "" || *passwordFile == "" || *enrollmentFile == "" || *enrollmentSHA == "" {
 		return 2
@@ -55,6 +57,9 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 2
 	}
 	if *action == "query-original" && (*selectionFile == "" || *selectionSHA == "") {
+		return 2
+	}
+	if (*runtimeMetadataFile == "") != (*runtimeMetadataSHA == "") {
 		return 2
 	}
 	if *action == "adopt" && (*selectionFile == "" || *selectionSHA == "" || *issuerDefinitionFile == "" || *issuerDefinitionSHA == "") {
@@ -150,7 +155,11 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	adoptionStage := "source_acquisition"
 	if acquireErr == nil && hold != nil {
 		adoptionStage = "history_preparation"
-		source, prepareErr := hold.PrepareOriginalFirstAdoption(active, password, enrollment)
+		var runtimeMetadata []install.BootstrapSourceFilePin
+		if *runtimeMetadataFile != "" {
+			runtimeMetadata = append(runtimeMetadata, install.BootstrapSourceFilePin{File: *runtimeMetadataFile, SHA256: *runtimeMetadataSHA})
+		}
+		source, prepareErr := hold.PrepareOriginalFirstAdoption(active, password, enrollment, runtimeMetadata...)
 		adoptionErr = prepareErr
 		if prepareErr == nil {
 			adoptionAttempted = true

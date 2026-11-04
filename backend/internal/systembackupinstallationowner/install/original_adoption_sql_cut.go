@@ -20,17 +20,18 @@ type OriginalAdoptionSQLCutInspection struct {
 // private preparation is context-bound and has one ORIGINAL nonrenewing cap.
 // It is NOT a physical proof, PreparedCoverage, task grant or commit handle.
 type PreparedOriginalAdoptionSQLCut struct {
-	mu          sync.Mutex
-	origin      *PreparedOriginalAdoptionSQLCut
-	ctx         context.Context
-	operator    *authenticatedOperator
-	enrollment  EnrollmentPin
-	reservation controller.OriginalAdoptionReservation
-	database    controller.OriginalAdoptionDatabasePin
-	scanner     *adapter.SQLCoverageCensus
-	observed    *adapter.UnadmittedSQLCoverageCensus
-	until       time.Time
-	used        bool
+	mu              sync.Mutex
+	origin          *PreparedOriginalAdoptionSQLCut
+	ctx             context.Context
+	operator        *authenticatedOperator
+	enrollment      EnrollmentPin
+	reservation     controller.OriginalAdoptionReservation
+	database        controller.OriginalAdoptionDatabasePin
+	scanner         *adapter.SQLCoverageCensus
+	observed        *adapter.UnadmittedSQLCoverageCensus
+	runtimeMetadata *originalRuntimeInstalledSQLMetadata
+	until           time.Time
+	used            bool
 }
 
 func (*PreparedOriginalAdoptionSQLCut) MarshalJSON() ([]byte, error) { return nil, ErrInstall }

@@ -1,0 +1,24 @@
+{
+  "schema_version": "supervisor-user-reported-runtime-source-counts.v1",
+  "source": "User executed the SHA-verified read-only runtime-source-count-observation.v2 script and supplied its JSON in this chat.",
+  "script_sha256": "327b603b31a3e8a462296342c558388482a0d3ee579584091ce8ee7723c69897",
+  "observed_at_utc": "2026-11-04 07:38:56.220045",
+  "namespace": "clawmanager-zhanghui08-system",
+  "namespace_uid": "337cfe30-2c17-4b8e-b32a-760778b8098e",
+  "mysql_deployment_uid": "27916932-fc61-432c-b515-081f18db34a8",
+  "database": "clawmanager",
+  "server_uuid": "f1f5f76a-95f5-11f1-b08e-366835b4a029",
+  "instance_groups": [
+    {"instance_type": "openclaw", "instance_mode": "lite", "runtime_type": "gateway", "status": "running", "count": 3},
+    {"instance_type": "openclaw", "instance_mode": "pro", "runtime_type": "desktop", "status": "stopped", "count": 1},
+    {"instance_type": "opencode", "instance_mode": "lite", "runtime_type": "gateway", "status": "error", "count": 1},
+    {"instance_type": "deepseek-harness", "instance_mode": "lite", "runtime_type": "gateway", "status": "error", "count": 1}
+  ],
+  "read_only": true,
+  "observations_atomic": false,
+  "installation_authorization": false,
+  "interpretation": "The existing shared Lite cohort is nonempty. Stop/capture/recovery must cover the complete actual request; a stopped business status must remain stopped, and an error status alone is not proof that no process or volume writer exists.",
+  "physical_writer_coverage_verified": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}
