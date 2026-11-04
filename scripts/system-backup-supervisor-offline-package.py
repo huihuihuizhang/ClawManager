@@ -127,15 +127,28 @@ def main():
     bins = out / "bin"
     bins.mkdir()
     date = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    # One Go invocation per linker-flag group shares package loading and
+    # schedules link jobs under the existing -p=2 CPU/memory bound.
+    # Unique target basenames and collision-free aliases permit direct output.
+    if len(set(tools.values())) != len(tools) or any(
+            alias != target and target in tools for alias, target in tools.items()):
+        raise RuntimeError("review unique command basenames and output aliases")
     cmds = []
-    for alias, target in sorted(tools.items()):
+    for versioned in (False, True):
+        selected = [(alias, target) for alias, target in sorted(tools.items())
+                    if (alias in ("clawreef-server", "system-backup-v2-controller")) == versioned]
+        if not selected:
+            continue
         ld = "-s -w -buildid="
-        if alias in ("clawreef-server", "system-backup-v2-controller"):
+        if versioned:
             ld += " -X clawreef/internal/buildinfo.Version=" + args.version
             ld += " -X clawreef/internal/buildinfo.Commit=" + args.commit
             ld += " -X clawreef/internal/buildinfo.BuildTime=" + date
         cmds.append("go build -mod=readonly -trimpath -buildvcs=false -p=2 -ldflags '" + ld +
-                    "' -o /out/" + alias + " ./cmd/" + target)
+                    "' -o /out/ " + " ".join("./cmd/" + target for _, target in selected))
+    for alias, target in sorted(tools.items()):
+        if alias != target:
+            cmds.append("mv /out/" + target + " /out/" + alias)
     run(["run", "--rm", "--pull=never", "--network", "none", "--label", label,
          "--name", "sbk-page-final-go-" + label_value[:8], "--memory", "3g", "--cpus", "2",
          "-v", str(source) + ":/source:ro", "-v", str(args.module_cache) + ":/deps:ro",

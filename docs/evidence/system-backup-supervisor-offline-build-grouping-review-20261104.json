@@ -1,0 +1,120 @@
+{
+  "schema_version": "supervisor-offline-build-grouping-review.v1",
+  "before_sha256": "6bdd3d12c5165644ebee6782412a9b2e873cfc3e7bf4f119210f4849ef6897ae",
+  "after_sha256": "6c893a704e9211a248f83e7604e12349b261eda89f551a9dffccaaf5dddd0be4",
+  "reviewed_tool_map": {
+    "clawreef-server": "server",
+    "clawreef-northbound-gateway": "northbound-gateway",
+    "system-backup-controller": "system-backup-controller",
+    "system-backup-artifact": "system-backup-artifact",
+    "clawmanager-secret-broker": "secret-broker",
+    "system-backup-import": "system-backup-import",
+    "system-backup-legacy-inventory": "system-backup-legacy-inventory",
+    "system-backup-legacy-preflight": "system-backup-legacy-preflight",
+    "system-backup-seal-custody": "system-backup-seal-custody",
+    "system-backup-migrate": "system-backup-migrate",
+    "system-backup-bootstrap": "system-backup-bootstrap",
+    "system-backup-registration": "system-backup-registration",
+    "system-backup-controller-grants": "system-backup-controller-grants",
+    "system-backup-v2-controller": "system-backup-v2-controller",
+    "backup-worker": "backup-worker",
+    "system-backup-audit-collect": "system-backup-audit-collect",
+    "system-backup-bootstrap-enrolled": "system-backup-bootstrap-enrolled",
+    "system-backup-installation-owner": "system-backup-installation-owner",
+    "system-backup-owner-enroll": "system-backup-owner-enroll",
+    "system-backup-original-enroll": "system-backup-original-enroll",
+    "system-backup-original-observer-pki": "system-backup-original-observer-pki",
+    "system-backup-observer-deployment-materials": "system-backup-observer-deployment-materials",
+    "system-backup-original-maintenance": "system-backup-original-maintenance",
+    "backup-node-observer": "backup-node-observer",
+    "backup-gateway-node-observer": "backup-gateway-node-observer",
+    "backup-stopped-pro-node-observer": "backup-stopped-pro-node-observer",
+    "system-backup-owner-authority": "system-backup-owner-authority",
+    "system-backup-owner-consumer": "system-backup-owner-consumer",
+    "system-backup-signing-resource-owner": "system-backup-signing-resource-owner",
+    "system-backup-minio-native-install": "system-backup-minio-native-install",
+    "system-backup-minio-catalog-initial": "system-backup-minio-catalog-initial",
+    "system-backup-original-archive-reader": "system-backup-original-archive-reader",
+    "system-backup-minio-permission-owner": "system-backup-minio-permission-owner",
+    "system-backup-minio-sql-owner": "system-backup-minio-sql-owner",
+    "system-backup-source-materials": "system-backup-source-materials",
+    "system-backup-source-tls-bootstrap": "system-backup-source-tls-bootstrap",
+    "system-backup-source-registries": "system-backup-source-registries",
+    "system-backup-status-relay-owner": "system-backup-status-relay-owner",
+    "system-backup-first-install-materials": "system-backup-first-install-materials",
+    "system-backup-first-adoption": "system-backup-first-adoption",
+    "system-backup-database-source-grant": "system-backup-database-source-grant",
+    "system-backup-kek-window-owner": "system-backup-kek-window-owner",
+    "system-backup-kek-authority": "system-backup-kek-authority",
+    "system-backup-provider-observe": "system-backup-provider-observe",
+    "system-backup-control-proposal": "system-backup-control-proposal",
+    "system-backup-observer": "system-backup-observer",
+    "system-backup-offline-security": "system-backup-offline-security",
+    "system-backup-installation-kek-materials": "system-backup-installation-kek-materials",
+    "system-backup-source-sql-observe": "system-backup-source-sql-observe"
+  },
+  "unchanged_real_command_count": 49,
+  "grouped_go_invocations": 2,
+  "linker_flags": "Original common -s/-w/empty buildid retained; Version/Commit/BuildTime only on original server/controller aliases. -p2 and original memory/cpu/network isolation retained.",
+  "collision_handling": "Duplicate target basenames or an alias colliding with another target are rejected before build. No silent overwrite.",
+  "actual_Go_1261_linux_ELF_equivalence": {
+    "results": {
+      "individual": {
+        "elapsed_seconds": 5.782000000002881,
+        "go_invocations": 3,
+        "sha256": {
+          "clawreef-server": "2d7890e11ba2148f16f688927be30610b230faa01d9ac8c7937f367d6af5d900",
+          "system-backup-v2-controller": "63a75233f6f9ddefcdb2c8ed1009b369a04aebcd2db3442e2f3d244b9b7d1a03",
+          "utility": "8a922d062a894ddaf9e10bdfc2f07d24677c1ccfb3a2857a808ffbe73ac3a97b"
+        }
+      },
+      "grouped": {
+        "elapsed_seconds": 3.375,
+        "go_invocations": 2,
+        "sha256": {
+          "clawreef-server": "2d7890e11ba2148f16f688927be30610b230faa01d9ac8c7937f367d6af5d900",
+          "system-backup-v2-controller": "63a75233f6f9ddefcdb2c8ed1009b369a04aebcd2db3442e2f3d244b9b7d1a03",
+          "utility": "8a922d062a894ddaf9e10bdfc2f07d24677c1ccfb3a2857a808ffbe73ac3a97b"
+        }
+      }
+    },
+    "actual_ELF_bytes_equal": true,
+    "completed_builds_removed": [
+      {
+        "path": "individual/clawreef-server",
+        "bytes": 1585278,
+        "sha256": "2d7890e11ba2148f16f688927be30610b230faa01d9ac8c7937f367d6af5d900"
+      },
+      {
+        "path": "individual/system-backup-v2-controller",
+        "bytes": 1585278,
+        "sha256": "63a75233f6f9ddefcdb2c8ed1009b369a04aebcd2db3442e2f3d244b9b7d1a03"
+      },
+      {
+        "path": "individual/utility",
+        "bytes": 1585278,
+        "sha256": "8a922d062a894ddaf9e10bdfc2f07d24677c1ccfb3a2857a808ffbe73ac3a97b"
+      },
+      {
+        "path": "grouped/clawreef-server",
+        "bytes": 1585278,
+        "sha256": "2d7890e11ba2148f16f688927be30610b230faa01d9ac8c7937f367d6af5d900"
+      },
+      {
+        "path": "grouped/system-backup-v2-controller",
+        "bytes": 1585278,
+        "sha256": "63a75233f6f9ddefcdb2c8ed1009b369a04aebcd2db3442e2f3d244b9b7d1a03"
+      },
+      {
+        "path": "grouped/utility",
+        "bytes": 1585278,
+        "sha256": "8a922d062a894ddaf9e10bdfc2f07d24677c1ccfb3a2857a808ffbe73ac3a97b"
+      }
+    ],
+    "all_outputs_removed": true
+  },
+  "scope": "Three small real Go main packages test common/versioned linker groups and renamed output. This is build-command equivalence, not full49 package build, image readback or page acceptance.",
+  "full_image_validation_required": true,
+  "page_acceptance": false,
+  "source_line_endings": "Preserve existing Git LF. AST identical to byte-equivalence validation input."
+}
