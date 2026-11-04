@@ -1,0 +1,106 @@
+{
+  "schema_version": "supervisor-original-owner-input-assembly-review.v1",
+  "base_commit": "19eba23551cfb6e4fc19492282470197929975b1",
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "source": "backend/.d-owner-input-assembly-20261104/production.go",
+      "sha256": "2e78675fb6ba7cceff90001c26c33cbb035d4f8890ac0dc15d70b6f206223166",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/prepare_composition.go",
+      "source": "backend/.d-owner-input-assembly-20261104/prepare_composition.go",
+      "sha256": "5ae587f08b3bd21d578d3338a51b37deca610b18827501a217b7b3d91bc363dd",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/prepare_composition_test.go",
+      "source": "backend/.d-owner-input-assembly-20261104/prepare_composition_test.go",
+      "sha256": "6fe48cb37d71f544e93865c23fd815136dc04bdd5784cbbab26da5e0b86161e8",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-operator-deployment.py",
+      "source": "backend/.d-owner-input-assembly-20261104/system-backup-operator-deployment.py",
+      "sha256": "5dd77f68be02f5d14532b61fa8e2ff5cd5c238f7578b6012362f1148ff3cbd0d",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-operator-deployment.test.py",
+      "source": "backend/.d-operator-deployment-r2-20261104/system-backup-operator-deployment.test.py",
+      "sha256": "88d2153866dae68e1433d6822e40cbc121d688b8986f91f123b809893fdd2a17",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-publication-owner-assembly.py",
+      "source": "backend/.d-owner-input-assembly-20261104/system-backup-publication-owner-assembly.py",
+      "sha256": "6ba9e601a193418adce558009fb05bf93c43f8104e171083fa1551d0f89abe90",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-publication-owner-assembly.test.py",
+      "source": "backend/.d-owner-input-assembly-20261104/system-backup-publication-owner-assembly.test.py",
+      "sha256": "8c26e358bc597b956d20152d5b2aa53ea755a5aaf4c8114d479ccd92ee544847",
+      "mode": "100644"
+    }
+  ],
+  "scope": "Actual producer file/parameter orchestration and ordinary composition projection. These modules issue no replacement authority and prove no full native installation.",
+  "behavior": [
+    "Original immutable app/worker image bytes and layers are verified; native sends retain exact intent and no automatic resend. Actual staged host Pod/SA remains fixed while material patches are merged before UID-bound issuance.",
+    "Runtime source projection consumes actual original owner RuntimeOwnerInputs, original KEK mapping/capability outputs and actual bound TokenRequest/TokenReview before invoking the original Go material issuer.",
+    "prepare-composition reads exact original producer pins, complete v10 component locations and original selection. Outputs are create-only and parsed by the existing production loader; no SQL/config mutation or success receipt is fabricated."
+  ],
+  "verification": {
+    "windows_go_roots": 6,
+    "windows_go_log_sha256": "6ddefb1a627ae0f67fe1f242780eee3e9c1d1cc28077f30ec9f599238234b582",
+    "linux_go": {
+      "exit": 0,
+      "roots": 6,
+      "subcases": 0,
+      "failures": [],
+      "deleted_test_binary": {
+        "name": "bootstrap.test",
+        "sha256": "7b0995c52a0da5cfb6590c0b32b6841a5b0689acc99db03b5e4e79b5399d791f",
+        "bytes": 88579580
+      }
+    },
+    "python_models": {
+      "deployment-r3.stderr": {
+        "sha256": "6d2b8869f978587727627c052e337a3bf496f5f0e53292a98965052e0c29220a",
+        "tail": [
+          "----------------------------------------------------------------------",
+          "Ran 14 tests in 1.135s",
+          "",
+          "OK"
+        ]
+      },
+      "deployment-r3-linux.stderr": {
+        "sha256": "f7aab4c45d196fa5127d519b275adc3fefe2208fbf9699c15b092c98933f1925",
+        "tail": [
+          "----------------------------------------------------------------------",
+          "Ran 14 tests in 0.028s",
+          "",
+          "OK"
+        ]
+      },
+      "owner-assembly-r3.stderr": {
+        "sha256": "46a59d823d772c3809446eba836399e2612ba33924b6c71abe8e15b736b8f4b7",
+        "tail": [
+          "----------------------------------------------------------------------",
+          "Ran 5 tests in 0.001s",
+          "",
+          "OK"
+        ]
+      }
+    }
+  },
+  "remaining": [
+    "Merged operator main, full public runtime SQL profile, initial runtime purpose issuance and post-enable material pipeline remain separate active work.",
+    "Actual complete component exports and native owner admission/first disabled config/enable/controller/page execution have not run.",
+    "No deployment package or page-ready claim is made by accepting these modules."
+  ],
+  "page_ready": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}

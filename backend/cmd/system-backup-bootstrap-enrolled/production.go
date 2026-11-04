@@ -116,6 +116,9 @@ func loadEnrolledComposition(file, expectedSHA string) (enrolledComposition, err
 }
 
 func runEnrolled(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && args[0] == "prepare-composition" {
+		return runPrepareComposition(ctx, args[1:], out)
+	}
 	if len(args) > 0 && args[0] == "query-original" {
 		return runOriginalBootstrapQuery(ctx, args[1:], out)
 	}
