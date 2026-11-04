@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -174,8 +173,7 @@ func (o *SigningResourceObserver) ObserveSigningResource(ctx context.Context, ra
 		return nil, ErrOwner
 	}
 	message := append([]byte(SigningResourceProbeDomain), probe...)
-	version, _ := strconv.ParseUint(b.ProviderVersion, 10, 32)
-	request, _ := json.Marshal(map[string]any{"input": base64.StdEncoding.EncodeToString(message), "key_version": version})
+	request, _ := json.Marshal(map[string]string{"input": base64.StdEncoding.EncodeToString(message), "key_version": b.ProviderVersion})
 	defer clear(request)
 	signing, cancelSign := context.WithDeadline(active, limit)
 	defer cancelSign()

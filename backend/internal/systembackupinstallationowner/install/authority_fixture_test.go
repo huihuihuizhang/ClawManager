@@ -133,9 +133,9 @@ func newAuthorityFixture(t *testing.T) *authorityFixture {
 		case "/v1/transit/sign/" + b.KeyName:
 			var in struct {
 				Input   string `json:"input"`
-				Version uint32 `json:"key_version"`
+				Version string `json:"key_version"`
 			}
-			if req.Method != "POST" || req.Header.Get("X-Vault-Token") != "original-short-runtime-token" || json.NewDecoder(req.Body).Decode(&in) != nil || in.Version != 1 {
+			if req.Method != "POST" || req.Header.Get("X-Vault-Token") != "original-short-runtime-token" || json.NewDecoder(req.Body).Decode(&in) != nil || in.Version != "1" {
 				w.WriteHeader(403)
 				return
 			}

@@ -107,9 +107,9 @@ func signingObserverFixture(t *testing.T, mode string) (*CaptureSigningObserver,
 			}
 			var input struct {
 				Input      string `json:"input"`
-				KeyVersion int    `json:"key_version"`
+				KeyVersion string `json:"key_version"`
 			}
-			if json.NewDecoder(r.Body).Decode(&input) != nil || input.KeyVersion != 1 {
+			if json.NewDecoder(r.Body).Decode(&input) != nil || input.KeyVersion != "1" {
 				w.WriteHeader(400)
 				return
 			}

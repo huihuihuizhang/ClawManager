@@ -1,0 +1,158 @@
+{
+  "schema_version": "supervisor-vault-signing-version-compatibility-review.v1",
+  "base_commit": "8325068cc3ff61d0856be234bd5dee77fb3cf1f2",
+  "problem": "Actual deployed Vault2.2.1 with exact original signing ACL rejects JSON numeric key_version=1; string key_version=1 succeeds.",
+  "change": "Both original capture/resource observers send ProviderVersion as string. Four strict protocol fixtures retain string-only decoding; no ACL widening.",
+  "source_pins": [
+    {
+      "target": "backend/internal/systembackupinstallationowner/capture_signing_observe.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-capture_signing_observe.go.source",
+      "sha256": "69404c9ae433af870b7d8be5366688661a0dd5afebaed3e977ec419738b80e6c",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/signing_resource_observe.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-signing_resource_observe.go.source",
+      "sha256": "2e259b20e8dee0d83f012d34e5d3813557c001d4dd2b91e63fed3c4c45032309",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/capture_signing_observe_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-capture_signing_observe_test.go.source",
+      "sha256": "257fca4608907ba48dd12b8467464c1d0eca594b6edd61583e7ece81dd6455f2",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/signing_resource_observe_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-signing_resource_observe_test.go.source",
+      "sha256": "bc0d2f5f0f6884b13004f5c26d5a542a7b436389d3a2fa8881ea662ed9a09e2d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/signing_resource_native_issuer_helper_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-signing_resource_native_issuer_helper_test.go.source",
+      "sha256": "8a3fd063ab28e784af96e82fea5d70233d8145d51ec8cc62246597736c0662c8",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/authority_fixture_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/native-vault-version-string-authority_fixture_test.go.source",
+      "sha256": "055330d713ef2d6d18dbe102538369dfdbe82102d137a55645f9f18a455cd97f",
+      "mode": "100644"
+    }
+  ],
+  "native_fixture": {
+    "schema_version": "supervisor-vault221-native-signing-acl.v1",
+    "owner": "f68881a8adfd4bef8005967ecc057ee3",
+    "stage": "completed",
+    "image": "10.130.14.23:5000/clawmanager-backup-vault@sha256:2194d86d9ddbb17a6d017c3b2e555e1d4431195f18c3cb2827e3f61320fb6855",
+    "checks": {
+      "same_native_version_2_2_1": true,
+      "actual_exact_capture_signing_acl_loaded": true,
+      "string-v1": {
+        "sign_succeeded": true,
+        "native_verify_valid": true
+      },
+      "number-v1": {
+        "sign_succeeded": false,
+        "acl_403": true
+      },
+      "string-other-version": {
+        "sign_succeeded": false,
+        "acl_403": true
+      },
+      "omitted-version": {
+        "sign_succeeded": false,
+        "acl_403": true
+      },
+      "extra-field": {
+        "sign_succeeded": false,
+        "acl_403": true
+      }
+    },
+    "failure_class": null,
+    "safe_diagnostics": {},
+    "cleanup": [
+      {
+        "kind": "container",
+        "state": "removed"
+      }
+    ],
+    "private_tokens_removed": true,
+    "scope": "New isolated dev-mode in-memory Vault only. Native sign parameter ACL and native verify protocol. Not TLS/JWT/Kubernetes/installer grants/production provider or full backup acceptance.",
+    "token_ttl_scope": "New owned test child token2m solely for parameter comparison; not a production token/role TTL qualification.",
+    "raw_provider_logs_withheld": true,
+    "original_provider_contacted": false,
+    "page_acceptance": false
+  },
+  "native_report_sha256": "8a8d3d7153a4d47c032d24d9e2c553b0bea7a6900126efecb709be58065a4596",
+  "windows": {
+    "root_passes": 35,
+    "subcase_passes": 62,
+    "log_sha256": "6cdc82d57ec3154594d5c7080f9f913b446bb3f5bec64a6a7cbefadd0d27ad05"
+  },
+  "linux": {
+    "owner": {
+      "roots": 16,
+      "subcases": 41,
+      "failures": [],
+      "skips": []
+    },
+    "security": {
+      "roots": 1,
+      "subcases": 4,
+      "failures": [],
+      "skips": []
+    },
+    "bootstrap": {
+      "roots": 1,
+      "subcases": 0,
+      "failures": [],
+      "skips": []
+    },
+    "install_private_directory_recheck": {
+      "exit": 0,
+      "umask": "077",
+      "production_and_test_sources_changed_for_recheck": false,
+      "roots": 17,
+      "subcases": 17,
+      "failures": [],
+      "deleted_test_binary": {
+        "name": "install.test",
+        "sha256": "801d03d6322fb6a9f85ea4469245e83892dcbf6a62968ea427537f6ed0d3b947",
+        "bytes": 114594581
+      }
+    },
+    "initial_default_umask_run_retained": true,
+    "initial_failures": "Four pre-existing OwnerAuthority positive cases create testing.TempDir with mode0755 under default umask022. Identical install ELF passes with actual deployment umask077; no production or test source changed for recheck.",
+    "deleted_test_binaries": [
+      {
+        "name": "bootstrap.test",
+        "sha256": "d7cfda32036b84ff075670435f150de8807625c418089aa7c3b774311e549ff2",
+        "bytes": 88530853
+      },
+      {
+        "name": "install.test",
+        "sha256": "801d03d6322fb6a9f85ea4469245e83892dcbf6a62968ea427537f6ed0d3b947",
+        "bytes": 114594581
+      },
+      {
+        "name": "owner.test",
+        "sha256": "46edccf1e1a82cb9fbf89a10aa54810676417924c2d6d52a757b3bc527778e8c",
+        "bytes": 92811308
+      },
+      {
+        "name": "security.test",
+        "sha256": "68f13e03992b19c75cf3db40759b8850e57b7084f909f47830133925643ef121",
+        "bytes": 82391147
+      }
+    ]
+  },
+  "limitations": [
+    "Native ACL fixture uses owned in-memory dev Vault; not original provider/TLS/JWT/Kube or complete installer issuance.",
+    "systembackup_mysql helper protocol fixture updated but native tagged issuer test not executed here.",
+    "Bootstrap query model checks are not native SQL/installation/task acceptance."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false
+}

@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -471,9 +470,8 @@ func (o *CaptureSigningObserver) observe(ctx context.Context, aRecord *Authentic
 	if e != nil {
 		return nil, e
 	}
-	version, _ := strconv.ParseUint(b.ProviderVersion, 10, 32)
 	input := append([]byte(ProbeDomain), probe...)
-	request, _ := json.Marshal(map[string]any{"input": base64.StdEncoding.EncodeToString(input), "key_version": version})
+	request, _ := json.Marshal(map[string]string{"input": base64.StdEncoding.EncodeToString(input), "key_version": b.ProviderVersion})
 	defer clear(request)
 	signing, cancelSign := context.WithDeadline(active, started.Add(time.Duration(auth.LeaseDuration)*time.Second))
 	defer cancelSign()
