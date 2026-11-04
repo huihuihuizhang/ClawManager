@@ -1,0 +1,60 @@
+{
+  "version": "supervisor-shared-cgroup-native-primitive-r2.v1",
+  "status": "KERNEL_PRIMITIVE_VERIFIED_PRODUCTION_OWNER_AND_NATIVE_SOURCE_QUALIFIER_PENDING",
+  "source_pins": [
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_cgroup_native_linux.go",
+      "public_source": "docs/evidence/system-backup-shared-cgroup-native-r2-source-20261104/shared_cgroup_native_linux.go",
+      "sha256": "e2b358260ddad5f75e6f25b79c30b5b7030b4a93c6e5323178d6238ab1e93eeb"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_cgroup_native_linux_test.go",
+      "public_source": "docs/evidence/system-backup-shared-cgroup-native-r2-source-20261104/shared_cgroup_native_linux_test.go",
+      "sha256": "d352f5d3892c9553bb18b8a7a94f31a4a534231f0a2f00d465666d9523ff98dc"
+    }
+  ],
+  "production_unchanged_from_first_freeze": true,
+  "native": {
+    "image": "sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039",
+    "namespace": "private cgroup namespace, exact own root 0::/ verified",
+    "capabilities": "ALL dropped; SYS_ADMIN added for own mount remount only; no host PID or host mount",
+    "roots": 3,
+    "exit": 0,
+    "log_sha256": "53f9e3644fdd3282647af629d19a85897e246a02948ec51fefe9d3f47fe5b55d",
+    "assertions": [
+      "Actual original child writer stops while the real cgroup.events is frozen=1 and resumes with same PID/start/ns/cgroup.",
+      "Self/root cgroup, foreign pre-existing freeze and wrong original inode reject.",
+      "A second actor can remain in the old populated frozen scope while the original actor migrates out; original identity verification rejects this actual counterexample.",
+      "Thaw writes only original fd-pinned cgroup, returns recovery error if original incarnation/membership is lost, and does not touch replacement scope.",
+      "Dead original process is not declared restored; original orphan physical freeze is released."
+    ],
+    "binary": {
+      "name": "quiesce.test",
+      "sha256": "9d38aff26783e8b8d8e6ac298f1ba0fe4fbd9f3c4bf6936ec1764f32a2a037db",
+      "bytes": 93105581,
+      "deleted": true
+    },
+    "container": "--rm terminal exit0; actual test-created children/cgroups removed"
+  },
+  "setup_correction": {
+    "earlier_rename_trial": "fixture operation rejected EPERM before assertion; not a verified production failure",
+    "evidence": "Linux cgroup v2 disallows rename, confirmed by real kernel and primary source; no production change was made for the unsupported trial.",
+    "primary_source": "https://github.com/torvalds/linux/blob/master/kernel/cgroup/cgroup.c",
+    "completed_failed_trial_binary_deleted": true
+  },
+  "boundary": [
+    "This is an unexported actuator primitive, not authority or a writer hold. No production transport invokes it yet.",
+    "The lifecycle owner must authenticate original Agent journal/FLOCK/CRI/image and current original reservation, persist recovery obligations outside every target before mutation, then maintain complete SQL/object/volume/writer coverage.",
+    "NodeObserver existing read-only API is unchanged. Source flush, inflight IO, complete writer closure and continuous capture window are not proved by kernel frozen alone.",
+    "Cross-process reopening requires an authenticated original persisted pin; a DTO alone grants no authority."
+  ],
+  "remaining": [
+    "Actual Node native source qualifier and authenticated persistent lifecycle/recovery owner.",
+    "Original factory AND actual page task runtime callbacks, complete source hold intersection and reader-close ordering.",
+    "Same-version images/deployment and one real nonempty page task through formal publication/readback/catalog/success."
+  ],
+  "test_build_artifacts_deleted": true,
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
