@@ -63,6 +63,15 @@ func (w *InstallationAuthorityWriter) StageInitialRuntimeAuthoritiesWithSnapshot
 // Reread only the original known ranges (locked=true only after those source
 // ranges already belong to the caller). No table/prefix exemption is granted.
 func ReadRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport, locked bool, controls ...*OriginalAdoptionControlCut) (RuntimeInstalledSQLSnapshot, error) {
+	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, locked, false, controls...)
+}
+
+// Query ONLY original inert rows; expired original windows are reported by the
+// authenticated installer query, never renewed or promoted into permission.
+func QueryRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport) (RuntimeInstalledSQLSnapshot, error) {
+	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, true, true)
+}
+func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport, locked, historical bool, controls ...*OriginalAdoptionControlCut) (RuntimeInstalledSQLSnapshot, error) {
 	r := RuntimeInstalledSQLSnapshot{Database: database, InstallationID: installation, MappingRecord: bytes.Clone(mapping), MappingSignature: bytes.Clone(signature)}
 	bad := func() (RuntimeInstalledSQLSnapshot, error) { return RuntimeInstalledSQLSnapshot{}, ErrAuthorityWrite }
 	if tx == nil || ctx == nil || ctx.Err() != nil || len(caps) != 3 {
@@ -169,7 +178,7 @@ func ReadRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 		expires, exErr := runtimeInstalledSQLTime(text("expires_at"))
 		created, crErr := runtimeInstalledSQLTime(text("created_at"))
 		updated, upErr := runtimeInstalledSQLTime(text("updated_at"))
-		if exErr != nil || crErr != nil || upErr != nil || !r.ObservedAt.Before(expires) || created.After(r.ObservedAt) || !created.Equal(updated) || created.Before(mappingRecord.NotBefore) || (!expires.Equal(mappingRecord.Until.Truncate(time.Microsecond)) && !expires.Equal(mappingRecord.Until.Round(time.Microsecond))) {
+		if exErr != nil || crErr != nil || upErr != nil || !historical && !r.ObservedAt.Before(expires) || created.After(r.ObservedAt) || !created.Equal(updated) || created.Before(mappingRecord.NotBefore) || (!expires.Equal(mappingRecord.Until.Truncate(time.Microsecond)) && !expires.Equal(mappingRecord.Until.Round(time.Microsecond))) {
 			return bad()
 		}
 		row := RuntimeInstalledSQLRow{ID: id, PublicID: text("public_id")}
