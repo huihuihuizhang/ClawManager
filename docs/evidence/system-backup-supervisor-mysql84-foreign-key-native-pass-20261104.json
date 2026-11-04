@@ -1,0 +1,43 @@
+{
+  "schema_version": "supervisor-mysql84-maintenance-native-qualification.v1",
+  "owner": "32955e35c66b411a90b1b7b633b9ec01",
+  "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "scope": "New independent Docker MySQL data only. Native account locks/persistence/restart/credential fence and empty legacy-table escrow primitives; not Kube production authorization, complete original99 migration or page acceptance.",
+  "stage": "completed",
+  "checks": {
+    "actual_recovery_privileges": true,
+    "old_accounts_and_sessions_fenced": true,
+    "same_data_restart_barrier_and_recovery_login": true,
+    "old_immutable_password_cannot_reauthenticate": true,
+    "saved_business_dump_restored_legacy_inode_and_schema_preserved": true,
+    "cross_schema_foreign_key_and_exact_constraint_restored": true,
+    "original_accounts_authentication_locks_and_native_settings_restored": true
+  },
+  "failure_class": null,
+  "cleanup": [
+    {
+      "kind": "container",
+      "state": "removed"
+    },
+    {
+      "kind": "volume",
+      "state": "removed"
+    }
+  ],
+  "private_fixture_material_removed": true,
+  "performance_equivalent": false,
+  "source_tls_qualification": false,
+  "original_database_contacted": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "report_sha256": "507344f4d9ad1016bf88ba4c28a55a183fd874fbba5026b19ab380064468a29b",
+  "qualification_harness_sha256": "3a4f819674d38a55e47a3469f86b243ad0279ab4a90f423a362659fdcd61f7be",
+  "checked_server_version": "8.4.8",
+  "whole_original_orchestrator_verified": false,
+  "extension_of": "system-backup-supervisor-mysql84-maintenance-native-pass-20261104.json",
+  "notes": [
+    "The exact same saved empty InnoDB legacy TABLE_ID is preserved across cross-schema escrow and returned after saved SQL restore.",
+    "The owned native fixture additionally creates an actual foreign key to another table; FOREIGN_KEY_CHECKS scope, cross-schema RENAME, mysqldump reload and exact final SHOW CREATE are exercised.",
+    "This is a local disposable network-none fixture. The original database, Kubernetes state, TLS installation and full original99 orchestrator were not exercised."
+  ]
+}

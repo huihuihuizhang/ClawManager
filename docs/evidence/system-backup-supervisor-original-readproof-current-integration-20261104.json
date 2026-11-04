@@ -1,0 +1,89 @@
+{
+  "schema_version": "supervisor-original-readproof-current-integration.v1",
+  "git_before": "87371266e6dbb53b7cfc9ff64b72efd14a842a2a",
+  "new_sources": [
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/failure.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/cmd/system-backup-legacy-upgrade177-proof/failure.go",
+      "sha256": "15e161e45663c9c4c4f1bb8c21fe54db1d8034791f69cfa8e0823c831cafb4d4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/failure_budget_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/cmd/system-backup-legacy-upgrade177-proof/failure_budget_test.go",
+      "sha256": "b0b13686cbfff248f15326651577936836b6ca3bfc109560b70aebcd0d9547dc",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/failure_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/cmd/system-backup-legacy-upgrade177-proof/failure_test.go",
+      "sha256": "b16efd0a16f2ed09fbcfeeb40eeda659a02465f887b4dd64b02242307f11369f",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+      "sha256": "6974a03791100f3f72543255f6de43ba849c486be9dcbca1d157b142e3848f66",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/original_phase_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/cmd/system-backup-legacy-upgrade177-proof/original_phase_test.go",
+      "sha256": "de58151c42e8b4da6e2effd635c97415489533ffebd910d30624a574121fa419",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_hashsort177.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_hashsort177.go",
+      "sha256": "66777151835028f9e2faf5c7825d4333f6df9cdd09b90db55be43049f827fe74",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_hashsort177_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_hashsort177_test.go",
+      "sha256": "aee179ff1aa21924f609b3f36a96f153a87dced26d3c9fdfc7a612306488dad0",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_original_readproof_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_original_readproof_test.go",
+      "sha256": "1ca03adeaf42614d4ecbf8af1d43966b46894039b78e9161f164d3cde6da2e5b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_rows177.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_rows177.go",
+      "sha256": "e9b1e8010b20beeeaf9a82e0dfe68ca726bd6cca92796295d5c0f166b7abcb2d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_stream177.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_stream177.go",
+      "sha256": "8d491425c31a8ab942889b9a493ffddb28fe6031c340fe25f5bbc3394596470c",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_stream177_test.go",
+      "source": ".tmp-supervisor-original-readproof-20261104/source/backend/internal/db/backup_legacy_site_stream177_test.go",
+      "sha256": "d1927535124ba8b6cc3240db8131484d40e1f22649a9104846b7bf613787cd54",
+      "mode": "100644"
+    }
+  ],
+  "integration_tree_selected_sources": 389,
+  "windows_roots": 16,
+  "windows_subcases": 26,
+  "failures": 0,
+  "test_skips": 0,
+  "linux_current_integration_compile": true,
+  "completed_validation_binary_removed": {
+    "bytes": 9700163,
+    "sha256": "44bacc18485350934aad52a100904810d010100b9fabde681eee2dc58bf4efd7"
+  },
+  "release_archive": "artifacts/system-backup-original-readproof-linux-amd64-20261104.tar.gz",
+  "release_archive_sha256": "405da50564a64582b6c528dfe7599d10f607797b076e54ec2f03357bce2d8780",
+  "release_archive_scope": "Dedicated previously validated exact v3+r2 readproof inputs. Not a deployment package.",
+  "initial_integration_attempt": "Missing three existing Git public test fixtures in isolated source caused only TestLegacyInventorySiteLedgerPin/TestLegacySitePreflightPinsDirectSourceAndCopyDelta to fail. Their exact Git bytes were supplied and tests rerun; production source unchanged.",
+  "original_database_contacted": false,
+  "original_upgrade": false,
+  "page_acceptance": false
+}

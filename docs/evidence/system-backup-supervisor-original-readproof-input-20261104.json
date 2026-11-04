@@ -1,0 +1,38 @@
+{
+  "schema_version": "supervisor-original-readproof-release-input.v1",
+  "archive": "artifacts/system-backup-original-readproof-linux-amd64-20261104.tar.gz",
+  "archive_sha256": "405da50564a64582b6c528dfe7599d10f607797b076e54ec2f03357bce2d8780",
+  "archive_bytes": 5158706,
+  "binary": {
+    "name": "system-backup-legacy-upgrade177-proof",
+    "bytes": 9698126,
+    "sha256": "0f64c50c9f50375a4361ce2b34205266a0f28a5385d7ef16ebb2fbd4cca8ddac"
+  },
+  "source_inputs_sha256": "aae75c66d3d3126c818df0c987ac5043804422c39af95f3dd02e8596d5746fb3",
+  "windows_roots": 16,
+  "linux_roots": 16,
+  "subcases_each_os": 26,
+  "failures": 0,
+  "skips": 0,
+  "ended_test_builds_removed": [
+    {
+      "name": "legacy-source-selftest",
+      "bytes": 7696122,
+      "sha256": "b603597684142988f10e8c5f8d87b70b51927c02b526de027823c6ff5a899886"
+    },
+    {
+      "name": "proof-diagnostic-selftest",
+      "bytes": 10534953,
+      "sha256": "be68efbf1f4d6e0bbb455a309820fbe90e94a342f5c123f60c9f223e794a826a"
+    },
+    {
+      "name": "system-backup-legacy-upgrade177-proof",
+      "bytes": 9719016,
+      "sha256": "db9e199f2cb16e8d024c04465665e526f65016b71be3249f064cc4499894a911"
+    }
+  ],
+  "release_elf_duplicate_removed": true,
+  "installation_authorization": false,
+  "original_upgrade": false,
+  "page_acceptance": false
+}
