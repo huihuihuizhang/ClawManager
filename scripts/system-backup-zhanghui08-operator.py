@@ -155,7 +155,7 @@ def seal_release(a):
              "build-receipt.json", COPY_NAME, PROOF_NAME, "scripts/system-backup-d-enable.py",
              "scripts/system-backup-d-enable-readback.py", "scripts/system-backup-d-enable-resolve.py", "scripts/system-backup-operator-deployment.py"]
     names += ["scripts/system-backup-publication-owner-assembly.py", "scripts/system-backup-runtime-issuers.py", "scripts/system-backup-runtime-record-keys.py", "scripts/system-backup-initial-runtime.py", "scripts/system-backup-business-runtime.py", "scripts/system-backup-workspace-localization.py", "scripts/system-backup-workspace-native.py", "scripts/system-backup-workspace-source-preflight.py", "scripts/system-backup-agent-runtime-layer/agent_runtime_layer.py", "scripts/system-backup-runtime-startup-inputs.py", "agent-prebuilt-shared-native-236d56d85fea-linux-amd64.tar.gz"]
-    names += ["scripts/system-backup-operator-nonce.py"]
+    names += ["scripts/system-backup-operator-nonce.py", "scripts/system-backup-operator-c1-mysql-bridge.py", "scripts/system-backup-c1-host-mysql-bridge.py"]
     for name in names:
         files[name] = sha(regular(root / name))
     require(files[NATIVE] == NATIVE_SHA and files[COPY_QUALIFIER] == COPY_QUALIFIER_SHA and files[COPY_NAME] == COPY_SHA and files[PROOF_NAME] == PROOF_ARCHIVE_SHA,
@@ -323,6 +323,11 @@ class Operator:
 
     def verify_nonce_readable(self, stages, identity):
         return nonce_module().verify_readable(stages, identity)
+
+    def invoke_complete_adoption(self, actual_complete_cli_argv):
+        # The actual full17 branch calls this BEFORE constructing C1/context.
+        # One original ELF/Go process owns all real source pointers and ctx.
+        return c1_mysql_bridge_module().invoke_complete(self, actual_complete_cli_argv)
 
     def workspace_upgrade_released(self):
         # new-image has already restarted the application. The DB/TLS staging
@@ -1037,10 +1042,14 @@ def nonce_module():
     return exact_module("system-backup-operator-nonce.py", "82cc9588564b5c5ac11e67fbdb44be56f434cc2142679ee79f745b59bf2591e3")
 
 
+def c1_mysql_bridge_module():
+    return exact_module("system-backup-operator-c1-mysql-bridge.py", "78d089fe78151cb7bda322e269d00f642d879a2c9b00720663f4007202f99dbd")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     choices = ["seal-release", "init", "observe", "status", "sql-role-inputs", *["db-" + a for a in DB_ACTIONS],
-               "tls-inspect", "tls-apply", "tls-rollback", "materials-signing", "runtime-issuers", "runtime-issuers-query", "runtime-record-keys", "initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime", "writer-selection", "runtime-images", "runtime-rollout", "runtime-query", "deployment-query", "publication-materials", "prepare-composition", "post-adoption-facts", "adopt-prepare-issuers", "adopt-query", "composition-check", "composition-query", "enable-resolve", "enable-operation-export", "readiness", *["sql-" + a for a in ("inspect", "prepare", "apply", "query", "rollback", "enroll")], *IMPLEMENTED_STAGES, *WORKSPACE_ACTIONS, "nonce-issue", "nonce-resume", "nonce-bind", "composition-assemble", *BLOCKERS]
+               "tls-inspect", "tls-apply", "tls-rollback", "materials-signing", "runtime-issuers", "runtime-issuers-query", "runtime-record-keys", "initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime", "writer-selection", "runtime-images", "runtime-rollout", "runtime-query", "deployment-query", "publication-materials", "prepare-composition", "post-adoption-facts", "adopt-prepare-issuers", "adopt-query", "composition-check", "composition-query", "enable-resolve", "enable-operation-export", "readiness", *["sql-" + a for a in ("inspect", "prepare", "apply", "query", "rollback", "enroll")], *IMPLEMENTED_STAGES, *WORKSPACE_ACTIONS, "nonce-issue", "nonce-resume", "nonce-bind", "c1-mysql-mount-probe", "composition-assemble", *BLOCKERS]
     parser.add_argument("action", choices=choices)
     parser.add_argument("--release-directory", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--run-directory", type=Path, default=Path("/root/.clawmanager-backup-install/zhanghui08-original199-20261105"))
@@ -1088,7 +1097,9 @@ def main(argv=None):
             else:
                 with (a.run_directory / "operator-command.lock").open("a+b") as lock:
                     fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    if a.action in ("nonce-issue", "nonce-resume", "nonce-bind"):
+                    if a.action == "c1-mysql-mount-probe":
+                        result = c1_mysql_bridge_module().probe(tool)
+                    elif a.action in ("nonce-issue", "nonce-resume", "nonce-bind"):
                         result = nonce_module().dispatch(tool)
                     elif a.action in WORKSPACE_ACTIONS:
                         if a.action == "workspace-source-preflight": result = early_preflight_module().dispatch(tool)

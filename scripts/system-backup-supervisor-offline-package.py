@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import tarfile
 import time
@@ -31,6 +32,46 @@ def digest(path):
     return h.hexdigest()
 
 
+def shared_agent_inputs(path, expected_sha256):
+    if not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
+        raise RuntimeError("exact shared-agent build-input digest required")
+    path = path.resolve(strict=True)
+    if digest(path) != expected_sha256:
+        raise RuntimeError("shared-agent build-input changed")
+    raw = path.read_bytes()
+    build = json.loads(raw)
+    if (build.get("schema_version") != "shared-native-tls-agent-build-input.v1"
+            or not re.fullmatch(r"[a-f0-9]{64}", build.get("source_tree_sha256", ""))
+            or set(build.get("binaries", {})) != {"openclaw", "hermes"}):
+        raise RuntimeError("reviewed finite shared-agent build-input required")
+    bundle = build["bundle"]
+    archive = path.parent / Path(bundle["path"]).name
+    if (archive.resolve(strict=True).parent != path.parent
+            or digest(archive) != bundle["sha256"]):
+        raise RuntimeError("original shared-agent production bundle changed")
+    agents = {}
+    for runtime in ("openclaw", "hermes"):
+        alias = runtime + "-lite-agent"
+        binary = path.parent / alias
+        pin = build["binaries"][runtime]
+        if (binary.resolve(strict=True).parent != path.parent
+                or binary.stat().st_size != pin["bytes"]
+                or digest(binary) != pin["sha256"]):
+            raise RuntimeError("original shared-agent ELF changed")
+        with binary.open("rb") as source:
+            header = source.read(20)
+        if header[:6] != b"\x7fELF\x02\x01" or header[18:20] != b"\x3e\x00":
+            raise RuntimeError("shared agent is not Linux amd64 ELF")
+        agents[runtime] = {"alias": alias, "path": binary,
+                           "sha256": pin["sha256"], "bytes": pin["bytes"]}
+    if digest(path) != expected_sha256 or path.read_bytes() != raw:
+        raise RuntimeError("shared-agent build-input changed while reading")
+    return agents, {"build_input_sha256": expected_sha256,
+                    "revision": build["revision"],
+                    "source_tree_sha256": build["source_tree_sha256"],
+                    "bundle_sha256": bundle["sha256"]}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", required=True, type=Path)
@@ -44,7 +85,15 @@ def main():
     p.add_argument("--cache-volume", required=True)
     p.add_argument("--work-volume", required=True)
     p.add_argument("--extra-tool", action="append", default=[])
+    p.add_argument("--shared-agent-input", type=Path)
+    p.add_argument("--shared-agent-input-sha256")
     args = p.parse_args()
+    if (args.shared_agent_input is None) != (args.shared_agent_input_sha256 is None):
+        raise RuntimeError("shared-agent input and exact digest must be supplied together")
+    agents, agent_provenance = ({}, None)
+    if args.shared_agent_input is not None:
+        agents, agent_provenance = shared_agent_inputs(
+            args.shared_agent_input, args.shared_agent_input_sha256)
     root = args.work_root.resolve(strict=True)
     if (root / ".owner").read_text().strip() != OWNER:
         raise RuntimeError("wrong work-root owner")
@@ -166,6 +215,18 @@ def main():
         if header[:6] != b"\x7fELF\x02\x01" or header[18:20] != b"\x3e\x00":
             raise RuntimeError("not Linux amd64 ELF: " + alias)
         receipt["binaries"][alias] = digest(binary)
+    if agents:
+        receipt["shared_agent_binaries"] = {}
+        receipt["shared_agent_provenance"] = agent_provenance
+        for runtime, agent in agents.items():
+            alias = agent["alias"]
+            if alias in tools:
+                raise RuntimeError("shared-agent alias collides with original backend tool")
+            shutil.copyfile(agent["path"], bins / alias)
+            if digest(bins / alias) != agent["sha256"]:
+                raise RuntimeError("copied shared-agent ELF differs from original production input")
+            receipt["binaries"][alias] = agent["sha256"]
+            receipt["shared_agent_binaries"][runtime] = alias
     app_tag = "clawmanager-page-trial:" + args.version
     worker_tag = "clawmanager-backup-worker:" + args.version
     layer = out / "app-overlay.tar"

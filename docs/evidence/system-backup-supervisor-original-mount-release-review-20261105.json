@@ -1,0 +1,164 @@
+{
+  "schema_version": "supervisor-original-mount-and-release-agent-review.v1",
+  "base_commit": "7b7012ce6f85d62af9f15c79d6208890b781060a",
+  "files": [
+    {
+      "target": "scripts/system-backup-c1-host-mysql-bridge.py",
+      "source": ".tmp-sbk-bridge-release-20261105/source/scripts/system-backup-c1-host-mysql-bridge.py",
+      "sha256": "b617a6736a8fb8c1389eaf29729b0f6cc953f66ca9c100218232b270aea97f1f",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-operator-c1-mysql-bridge.py",
+      "source": ".tmp-sbk-bridge-release-20261105/source/scripts/system-backup-operator-c1-mysql-bridge.py",
+      "sha256": "78d089fe78151cb7bda322e269d00f642d879a2c9b00720663f4007202f99dbd",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "source": ".tmp-sbk-bridge-release-20261105/source/scripts/system-backup-zhanghui08-operator.py",
+      "sha256": "b709c9276f15b7ba643b3f623d1b73248ee838bf84dc8207d3302215d42cb626",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-supervisor-offline-package.py",
+      "source": ".tmp-sbk-bridge-release-20261105/source/scripts/system-backup-supervisor-offline-package.py",
+      "sha256": "6a703853bb55ce956151328169e1e81cd584b8380a60db990cb1c4aeb45fe376",
+      "mode": "100644"
+    }
+  ],
+  "native": {
+    "schema_version": "supervisor-c1-private-mount-and-dns-native.v1",
+    "owner": "95d54a1cfa17dfa5bd28c6a1",
+    "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+    "python_image": "sha256:8d9d0b8bcf6506481eae4907c18f5e3e7902e629f5f6d684f9e7c32e85e3ddf0",
+    "stage": "completed",
+    "checks": {
+      "actual_original_mysql_main_process_and_authenticated_identity": true,
+      "actual_native_three_cases_completed": true,
+      "actual_original_mysql_final_ping": true
+    },
+    "native_exit": 0,
+    "failure_class": null,
+    "cleanup": [
+      {
+        "kind": "container",
+        "state": "removed"
+      },
+      {
+        "kind": "container",
+        "state": "removed"
+      },
+      {
+        "kind": "volume",
+        "state": "removed"
+      }
+    ],
+    "log_sha256": "511fa7fc3aaddc76d65257cdb95d1a62117e6965961d43c48f23945d5ca14d1c",
+    "actual_kernel_results": {
+      "version": "focused-real-linux-private-bridge-kernel-regression.v1",
+      "bridge_sha256": "b617a6736a8fb8c1389eaf29729b0f6cc953f66ca9c100218232b270aea97f1f",
+      "native_helper_sha256": "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d",
+      "real_mysql_pid": 19,
+      "actual_mysql_container_id": "a4e32f88bcf190cc8fff7df278531d5871699842591efe62b6f88d8b3c6dbd07",
+      "actual_mysql_image_id": "sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "cases": [
+        {
+          "case": "positive",
+          "actual_helper_exit": 0,
+          "actual_private_namespace": "mnt:[4026532607]",
+          "actual_fixture_host_namespace": "mnt:[4026532456]",
+          "same_actual_mysql_inode": {
+            "device": 2096,
+            "inode": 572584
+          },
+          "actual_auto_cnf_sha256": "98356e2a65a0282c708d06fdf78c80a3d403599cbc5b9a2249935d1083298682",
+          "actual_statvfs": {
+            "block_size": 4096,
+            "blocks": 263940717,
+            "private_flags": 4111,
+            "original_flags": 4096
+          },
+          "actual_original_resolver_inode": {
+            "device": 2096,
+            "inode": 614983
+          },
+          "actual_original_resolver_sha256": "f1c6fa9b9ca81c1acb2d2f9c84890c9f66eaff836ae9e1b0665700beaf177c73",
+          "private_write_errno": 30,
+          "original_mount_actual_write_verified": true,
+          "actual_dns_answers": [
+            {
+              "actual_resolved_ips": [
+                "172.17.0.4"
+              ],
+              "original_fqdn": "mysql.clawmanager-zhanghui08-system.svc.fixture.test",
+              "service": {
+                "cluster_ips": [
+                  "172.17.0.4"
+                ],
+                "name": "mysql",
+                "uid": "MODEL-not-a-Kube-Service"
+              }
+            }
+          ],
+          "MODEL": "Kube/CRI labels+version/plan/site-path comparison data only; no native authorization/full17",
+          "actual_fixture_host_and_mysql_mount_tables_unchanged_after_worker_exit": true
+        },
+        {
+          "case": "unknown-pid",
+          "actual_helper_refused": true,
+          "real_kernel_error_errno": 2,
+          "no_private_mount_receipt": true,
+          "MODEL": "Kube/CRI labels+version/plan/site-path comparison data only; no native authorization/full17",
+          "actual_fixture_host_and_mysql_mount_tables_unchanged_after_worker_exit": true
+        },
+        {
+          "case": "inode-drift",
+          "actual_helper_refused": true,
+          "reason": "original_mysql_pvc_and_actual_container_must_be_same_directory_inode",
+          "no_private_mount_receipt": true,
+          "MODEL": "Kube/CRI labels+version/plan/site-path comparison data only; no native authorization/full17",
+          "actual_fixture_host_and_mysql_mount_tables_unchanged_after_worker_exit": true
+        }
+      ],
+      "native_kernel_cases": 3,
+      "MODEL_comparison_inputs_only": true,
+      "production_native_authorization": false,
+      "full17_executed": false,
+      "backup_ready": false,
+      "DR": false
+    },
+    "scope": "Exact D production mount/DNS code in owned Linux containers and actual MySQL initialized volume. Kube/CRI/signatures/site coordinates are explicit comparison MODELS. Actual mount namespaces/readonly binds/PIDs/inodes/resolver FD/DNS exchanges are native. No full17, production source authority or page acceptance. Windows Python orchestration adapts the original Bash fixture; no production function changes.",
+    "go_or_build_executed": false,
+    "page_acceptance": false,
+    "dr_qualified": false
+  },
+  "actual_kernel_cases": [
+    "positive",
+    "unknown-pid",
+    "inode-drift"
+  ],
+  "source_review": "D main readonly r3: original namespace clone only; restore held host namespace/root/cwd; original proc FD identity queries; no new concrete findings. Root verified exact native source digest and actual kernel cases.",
+  "shared_agent_input_validation": {
+    "actual_original_production_input": "722f36203857dcdaaa5c48819cb0a33ad8950684cff36bd8119cc1c611a0b640",
+    "actual_two_ELFs_and_bundle_rehashed": true,
+    "wrong_manifest_digest_rejected": true,
+    "built_any_image": false,
+    "source_provenance": {
+      "build_input_sha256": "722f36203857dcdaaa5c48819cb0a33ad8950684cff36bd8119cc1c611a0b640",
+      "revision": "shared-native-236d56d85fea0739-20261104",
+      "source_tree_sha256": "236d56d85fea073916cd0104883cdfcfff3b52554743cee91c77d638d4ac7d9f",
+      "bundle_sha256": "9875b8ef307c2b59250ca8659756f224882933639a6506a566357226a04cc9cf"
+    },
+    "temporary_test_artifacts_created": false
+  },
+  "limits": [
+    "Kube/CRI/unsigned site coordinates are explicit fixture comparison models. This is actual syscall/PID/inode/DNS/readonly isolation validation, not field native authority.",
+    "Single complete-caller hook added, but final production CLI route and first initialization are still pending; no page readiness.",
+    "No images built or field workload changed by these checks.",
+    "No full17 or page backup acceptance; DR false."
+  ],
+  "full_page_acceptance": false,
+  "dr_qualified": false,
+  "test_artifacts": "Owned two containers and volume removed; no ELF test artifacts created."
+}
