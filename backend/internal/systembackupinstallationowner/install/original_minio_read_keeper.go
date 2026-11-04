@@ -56,7 +56,7 @@ func (s *PreparedOriginalWriterSet) prepareMinIOReadKeeper(ctx context.Context, 
 		Version string
 		Native  sb.MinIOReadGateInput
 	}
-	if e != nil || json.Unmarshal(raw, &projection) != nil || projection.Version != "original-minio-source-read-materials.v1" || projection.Native.Namespace != w.namespace || projection.Native.NamespaceUID != s.initial.NamespaceUID || projection.Native.Pod != w.pods[0].Name || projection.Native.PodUID != w.pods[0].UID || projection.Native.Operation != "" || projection.Native.InventorySHA256 != "" {
+	if e != nil || json.Unmarshal(raw, &projection) != nil || projection.Version != "original-minio-source-read-materials.v1" && projection.Version != "original-minio-source-read-identities.v2" || projection.Native.Namespace != w.namespace || projection.Native.NamespaceUID != s.initial.NamespaceUID || projection.Native.Pod != w.pods[0].Name || projection.Native.PodUID != w.pods[0].UID || projection.Native.Operation != "" || projection.Native.InventorySHA256 != "" {
 		return ErrInstall
 	}
 	r := &originalMinIOReadKeeper{set: s, writer: w, selection: selection}

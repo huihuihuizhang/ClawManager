@@ -194,7 +194,7 @@ func cOnceNativeServer(ctx context.Context, n *minioPermissionHTTP) (string, str
 			CommitID       string `json:"commitID"`
 		}
 	}
-	if json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != n.provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "ok" || info.Servers[0].Version != "2025-09-07T16:13:09Z" || info.Servers[0].CommitID != "07c3a429bfed433e49018cb0f78a52145d4bedeb" {
+	if json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != n.provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || info.Servers[0].Version != "2025-09-07T16:13:09Z" || info.Servers[0].CommitID != "07c3a429bfed433e49018cb0f78a52145d4bedeb" {
 		// Test-only allowlisted diagnostics. Never print raw server info, an
 		// endpoint, deployment ID, credentials, disks, pools or configuration.
 		diagnostic := struct {

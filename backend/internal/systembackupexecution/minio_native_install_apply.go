@@ -76,7 +76,7 @@ func InspectOriginalMinIONativeProvider(ctx context.Context, templateFile, templ
 		} `json:"servers"`
 	}
 	profile, ok := minioNativeProfile(d.Grant.Profile)
-	if !ok || profile.ServerVersion != "2025-09-07T16:13:09Z" || d.Version != profile.Definition || e != nil || status != 200 || minioPermissionUniqueJSON(raw) != nil || json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "ok" || info.Servers[0].Version != profile.ServerVersion || info.Servers[0].Commit != profile.ServerCommit || provider.DeploymentID != "" && provider.DeploymentID != info.DeploymentID {
+	if !ok || profile.ServerVersion != "2025-09-07T16:13:09Z" || d.Version != profile.Definition || e != nil || status != 200 || minioPermissionUniqueJSON(raw) != nil || json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || info.Servers[0].Version != profile.ServerVersion || info.Servers[0].Commit != profile.ServerCommit || provider.DeploymentID != "" && provider.DeploymentID != info.DeploymentID {
 		return nil, install.ErrInstall
 	}
 	return map[string]string{"Version": "original-minio-authenticated-provider-observation.v1", "TemplateSHA256": templateSHA, "Endpoint": provider.Endpoint, "CASHA256": provider.CASHA256, "SPKISHA256": provider.SPKISHA256, "DeploymentID": info.DeploymentID, "ServerVersion": profile.ServerVersion, "ServerCommit": profile.ServerCommit}, nil

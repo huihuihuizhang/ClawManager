@@ -309,7 +309,7 @@ func (g *MinIOReadServiceGate) identity(ctx context.Context, initial bool) error
 			CommitID       string `json:"commitID"`
 		}
 	}
-	if json.Unmarshal(b, &info) != nil || info.DeploymentID != g.in.DeploymentID || info.Region != g.in.Region || len(info.Servers) != 1 || info.Servers[0].State != "ok" || info.Servers[0].Version != minioGateServerVersion || info.Servers[0].CommitID != minioGateServerCommit {
+	if json.Unmarshal(b, &info) != nil || info.DeploymentID != g.in.DeploymentID || info.Region != g.in.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || info.Servers[0].Version != minioGateServerVersion || info.Servers[0].CommitID != minioGateServerCommit {
 		return ErrMinIOReadGate
 	}
 	_, e = minioGateReadPin(g.in.CAFile, g.in.CASHA256, 65536)

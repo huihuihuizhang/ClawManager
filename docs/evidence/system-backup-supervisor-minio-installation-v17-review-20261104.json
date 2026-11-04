@@ -1,0 +1,105 @@
+{
+  "schema_version": "supervisor-minio-installation-combination-v17.v1",
+  "maps": [
+    {
+      "path": "backend/.c-minio-september-online-r10b-20261104/effective-source-map.json",
+      "sha256": "99c24698a5935fe9ffc9a1dfd29d5e2bfdda4aa759c0571179c4cbc8a42649c8"
+    },
+    {
+      "path": "backend/.d-minio-source-delivery-20261104/source-map.json",
+      "sha256": "4acb9912fa51cf6d8bf01247926a5991c1a66d7aa4c2825bd76fb4fc856eea98"
+    },
+    {
+      "path": "backend/.d-minio-source-delivery-r2-20261104/source-map.json",
+      "sha256": "df3ceb2a5923fa1538619d720c834bea27d52986f9f9c40ef8a381aede8ea6e3"
+    },
+    {
+      "path": "backend/.d-minio-static-identity-20261104/source-map.json",
+      "sha256": "95b6944c40f5da91339b45f6a39a23328de0240b4b3c1546dc7bf117190755f2"
+    },
+    {
+      "path": "backend/.d-minio-static-identity-r2-20261104/source-map.json",
+      "sha256": "ce91908860455321bfe1c84b99ef07019a89e43f7a45d66677524b03a721fa30"
+    },
+    {
+      "path": "backend/.d-minio-static-identity-r3-20261104/source-map.json",
+      "sha256": "dda90bdd2cf1057bdc404b1c7970c7ed8a8e3d05aef1648679be8dd81846947a"
+    },
+    {
+      "path": ".a-minio-app-tls-cutover-20261104/source-map.json",
+      "sha256": "e1885780bb0947afc96d77daa6439d03720920b1ffc5fe93a38a0135a5ecdf6b"
+    }
+  ],
+  "source_targets": 370,
+  "results": {
+    "windows-targeted": {
+      "roots": 20,
+      "subcases": 27,
+      "sha256": "dc01fae928ffcf0e0639b6c68a53ce0d963aa252acaf049a977cd1de2096a2c6",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-backup": {
+      "roots": 15,
+      "subcases": 5,
+      "sha256": "8da7808c4c6baea231d2bd4f24dec7ad18dc2899f68e6e10558ad93f392db4c8",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-execution": {
+      "roots": 6,
+      "subcases": 8,
+      "sha256": "9f56a7d2bac68b48b0f1ec07ec181cd8ad8540c69d75796c65fdd12e393723f6",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-install": {
+      "roots": 4,
+      "subcases": 16,
+      "sha256": "8f69153262e1391ef17b27cb79357472e4697343abe20e7457d6521a10f49762",
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "linux_unique_roots": 25,
+  "business_tls_python_models": {
+    "roots": 2,
+    "failures": 0,
+    "skips": 0,
+    "stderr_sha256": "aa14e19dc82b300a3afca286626d8d79fc2e01e6665e62023d894b126d8157fa"
+  },
+  "builds": [
+    {
+      "name": "backup.test",
+      "bytes": 96006224,
+      "sha256": "5fa845237d7c5d1d6c286169d5fa0eb84426dd8c2c8a88e2bf37617c5a2922e7"
+    },
+    {
+      "name": "execution.test",
+      "bytes": 133707645,
+      "sha256": "6af21de792d350eb7efd22a3fc260a16ce1a256b5a6d6dc9c8711d373421759c"
+    },
+    {
+      "name": "install.test",
+      "bytes": 113625470,
+      "sha256": "e5cac3ce80d56643e37b8073fcbc584782c94e99f5359bd980ba710ed30be439"
+    },
+    {
+      "name": "system-backup-source-registries",
+      "bytes": 89714111,
+      "sha256": "626cf27ebb869135f9085dfab8712691d3f4d93bf2cec2c6ba039689425c53d7"
+    }
+  ],
+  "actual_fixed_version_minio_protocol_pass": true,
+  "identity_scope": "Fixed native builtin credentials are identity-only material; current real owner and bounded transport are checked anew. Native IAM census before conversion is required; expired old v1 material is not renewed.",
+  "actual_field_upgrade": false,
+  "actual_installation": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "remaining": [
+    "original schema upgrade with sustained stop and recovery",
+    "same accepted image deployment and original install materials",
+    "post-rollout original source facts, first adoption, enable and actual page task"
+  ],
+  "cleanup": "four ended verification builds hashed then removed; native test cleanup in separate actual experiment receipt"
+}

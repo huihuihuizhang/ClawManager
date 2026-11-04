@@ -90,7 +90,7 @@ func newMinioSeptemberTerminalComponent(t *testing.T, scenario string) *minioTer
 	in.CatalogBadChecksumKey = p.catalog.Root + "bootstrap-probes/" + in.Nonce + "/reject-checksum.json"
 	f.input.CapabilityIntentFile, f.input.CapabilityIntentSHA256 = write("capability-intent.json", in)
 	native := minioPermissionFixture(t)
-	native.responses["server"] = map[string]any{"deploymentID": "deployment", "region": "us-east-1", "servers": []any{map[string]any{"state": "ok", "version": profile.ServerVersion, "commitID": profile.ServerCommit}}}
+	native.responses["server"] = map[string]any{"deploymentID": "deployment", "region": "us-east-1", "servers": []any{map[string]any{"state": "online", "version": profile.ServerVersion, "commitID": profile.ServerCommit}}}
 	for i := range p.uses {
 		u := &p.uses[i]
 		ref := byPurpose[u.principal.Purpose]
@@ -205,7 +205,7 @@ func newMinioSeptemberTerminalComponent(t *testing.T, scenario string) *minioTer
 			return
 		}
 		if f.scenario == "unknown-native-version" && responseKey == "server" {
-			response = map[string]any{"deploymentID": "deployment", "region": "us-east-1", "servers": []any{map[string]any{"state": "ok", "version": "unknown", "commitID": profile.ServerCommit}}}
+			response = map[string]any{"deploymentID": "deployment", "region": "us-east-1", "servers": []any{map[string]any{"state": "online", "version": "unknown", "commitID": profile.ServerCommit}}}
 		}
 		_ = json.NewEncoder(w).Encode(response)
 	}))

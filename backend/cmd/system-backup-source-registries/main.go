@@ -124,6 +124,18 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 2
 	}
 	action := args[0]
+	if action == "install-minio-files" {
+		flags := flag.NewFlagSet(action, flag.ContinueOnError)
+		flags.SetOutput(io.Discard)
+		pin := flags.String("manifest-sha256", "", "")
+		if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
+			return 2
+		}
+		if execution.InstallFormalMinIOFiles(ctx, *pin) != nil {
+			return 1
+		}
+		return 0
+	}
 	if action == "install-redis-files" {
 		flags := flag.NewFlagSet(action, flag.ContinueOnError)
 		flags.SetOutput(io.Discard)
@@ -154,6 +166,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	required := []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256"}
 	switch action {
+	case "prepare-minio-materials":
+		required = append(required, "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory", "definition-file", "definition-sha256")
 	case "produce-facts":
 		required = append(required, "source-selection-file", "source-selection-sha256")
 	case "prepare-redis-materials", "prepare-provider-materials", "prepare-observer-materials":
@@ -243,6 +257,20 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	if action == "prepare-minio-materials" {
+		var options execution.FormalMinIOMaterialDeliveryOptions
+		if pinnedJSON(get("definition-file"), get("definition-sha256"), &options) != nil {
+			return 1
+		}
+		receipt, e := execution.ProduceFormalMinIOMaterialDelivery(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"), options)
+		if e != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 4
+		}
+		return 0
+	}
 	if action == "prepare-redis-materials" {
 		receipt, e := execution.ProduceFormalRedisReadMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"))
 		if e != nil {

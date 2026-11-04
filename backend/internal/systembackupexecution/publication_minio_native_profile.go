@@ -83,7 +83,7 @@ func (r *minioPermissionHTTP) serverSeptember(ctx context.Context) (string, erro
 		return "", minioPermissionFailure("september-native-server-identity")
 	}
 	s := info.Servers[0]
-	if s.State != "ok" || s.Version != profile.ServerVersion || s.Commit != profile.ServerCommit {
+	if s.State != "online" || s.Version != profile.ServerVersion || s.Commit != profile.ServerCommit {
 		return "", minioPermissionFailure("september-native-release-contract")
 	}
 	stable, err := ce.Canonical(info)

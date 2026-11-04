@@ -1,0 +1,65 @@
+{
+  "schema_version": "supervisor-real-minio-single-send-protocol.v1",
+  "owner": "51c4ed37a300486090ee963ca84a718e",
+  "image": "10.130.14.23:5000/minio@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+  "codes": {
+    "TestMinIOOnceFixturePrepareAssets": 0,
+    "TestMinIOSeptemberNativeSingleSendInstallerWire": 0
+  },
+  "proof": {
+    "Owner": "51c4ed37a300486090ee963ca84a718e",
+    "MinioImage": "10.130.14.23:5000/minio@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+    "ImageID": "sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff",
+    "ContainerID": "54667e86938aff354394ca0ceb48b5ae5ea02ab19275040ded50cff46aac0545",
+    "DataVolume": "c-minio-native-51c4ed37a300486090ee963ca84a718e-data",
+    "NetworkID": "de095706ef10e8549fe9d55eacc5092775b3541b47bd3ce74b16910bcfb52841",
+    "InternalNetwork": true,
+    "NoPublishedPorts": true
+  },
+  "failure": null,
+  "cleanup": [
+    {
+      "kind": "container",
+      "name": "c-minio-native-51c4ed37a300486090ee963ca84a718e-server",
+      "state": "removed"
+    },
+    {
+      "kind": "network",
+      "name": "c-minio-native-51c4ed37a300486090ee963ca84a718e-net",
+      "state": "removed"
+    },
+    {
+      "kind": "volume",
+      "name": "c-minio-native-51c4ed37a300486090ee963ca84a718e-data",
+      "state": "removed"
+    },
+    {
+      "kind": "volume",
+      "name": "c-minio-native-51c4ed37a300486090ee963ca84a718e-fixture",
+      "state": "removed"
+    }
+  ],
+  "full_page_acceptance": false,
+  "field_workload_mutated": false,
+  "dr_qualified": false,
+  "test_binary": {
+    "bytes": 133754603,
+    "sha256": "43196680308a7c7570faabca6d94f4cf31f71e9bb909928502cfee3d6269dc70"
+  },
+  "test_binary_cleanup": "hash recorded then removed",
+  "actual_scope": "Independent disposable server with exact field MinIO image; genuine bucket creation/versioning/policy creation/user creation/policy attach plus server decryption of encrypted config write. Not an installation in field namespace, complete hold/recovery test, or backup acceptance.",
+  "logs": {
+    "TestMinIOOnceFixturePrepareAssets.stdout": {
+      "bytes": 101,
+      "sha256": "026a88be6655057e6378927d564d6ce0a0bd6931877ff4ee8d8c5410268cfabe"
+    },
+    "TestMinIOSeptemberNativeSingleSendInstallerWire.stdout": {
+      "bytes": 129,
+      "sha256": "58c580257ccc9ba8767085d3853cd50e3c1efc40eb52b3baa6c2cd5e042bf75a"
+    },
+    "REPORT.json": {
+      "bytes": 1777,
+      "sha256": "cb7894af2ceb2708c17c1ad90e6993660b0e65e42fb19edaf3bfd231335fbd13"
+    }
+  }
+}

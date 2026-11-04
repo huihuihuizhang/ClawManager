@@ -62,7 +62,11 @@ func readMinioGateMaterials(ctx context.Context, file, sha, operation, inventory
 		return fail()
 	}
 	raw, e := minioGateReadPin(file, sha, 262144)
-	if e != nil || minioGateDecode(raw, &mat) != nil || mat.Version != "original-minio-source-read-materials.v1" || !time.Now().Before(mat.Until) {
+	if e != nil || minioGateDecode(raw, &mat) != nil {
+		return fail()
+	}
+	static := mat.Version == "original-minio-source-read-identities.v2"
+	if static && !mat.Until.IsZero() || !static && (mat.Version != "original-minio-source-read-materials.v1" || !time.Now().Before(mat.Until)) {
 		return fail()
 	}
 	// Original producer intentionally leaves these two fields blank. Actual D
@@ -80,12 +84,28 @@ func readMinioGateMaterials(ctx context.Context, file, sha, operation, inventory
 	}
 	for i, pin := range []minioGateMaterialPin{mat.RootCredential, mat.KeeperCredential, mat.ReaderCredential} {
 		raw, e := minioGateReadPin(pin.File, pin.SHA256, 16384)
-		if e != nil || minioGateDecode(raw, &creds[i]) != nil {
+		if e != nil {
+			clear(raw)
+			return fail()
+		}
+		if static {
+			var identity MinIOBuiltinIdentity
+			if minioGateDecode(raw, &identity) != nil {
+				clear(raw)
+				return fail()
+			}
+			creds[i], e = resolveMinIOBuiltinIdentity(ctx, identity, check)
+			clear(identity.SecretKey)
+			if e != nil {
+				clear(raw)
+				return fail()
+			}
+		} else if minioGateDecode(raw, &creds[i]) != nil {
 			clear(raw)
 			return fail()
 		}
 		clear(raw)
-		if mat.Until.Before(creds[i].Until) {
+		if !static && mat.Until.Before(creds[i].Until) {
 			creds[i].Until = mat.Until
 		}
 		if !minioGateCredentialValid(creds[i], time.Now()) {
