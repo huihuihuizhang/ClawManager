@@ -1,0 +1,103 @@
+{
+  "schema_version": "supervisor-first-capture-draft-review.v1",
+  "base_commit": "4b5a2e7404c0f2a5c12086b5a37e7707a4be2623",
+  "map": {
+    "path": ".a-first-capture-draft-20261104/source-map.json",
+    "sha256": "27faa38dc0467d352734531d6f2aa2705e0605149a83103d7fe0b26d50e75c52"
+  },
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/main.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/main.go",
+      "sha256": "259f84b15b02d49ba729246eb9a42fda140d95aaa2a3c6a3f833b8a0a19a7a3b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_first_capture_draft.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_first_capture_draft.go",
+      "sha256": "8b64d94cae2dcad2821f7535ebf4c26ca02d7482d43cc3eb23788a0377763a83",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_first_capture_draft_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_first_capture_draft_test.go",
+      "sha256": "e41adc02271a3db5546b20e112ae5760208308fe6a3d3b7ae049394ea0e7f0e6",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_first_capture_draft.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_first_capture_draft.go",
+      "sha256": "7bc662f67fd20f5fd4544cc0953bc19df6434b5e07ea080fca3f18a0ef938e6d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_first_capture_draft_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_first_capture_draft_test.go",
+      "sha256": "c5a31d9aae88aa4a32220fbdcb97ecebba6ac09928340b1a60c757911191c855",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_first_capture_signing.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_first_capture_signing.go",
+      "sha256": "da42b9be48617dcaa4464e6b22d1b7689f2d6dafde1e7f0e795ea95d6ecb75c9",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_first_capture_sources_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_first_capture_sources_test.go",
+      "sha256": "586710354c662669f7f4b04d8c373ea79f7796b0cfead4eb82f1ceb876d3961d",
+      "mode": "100644"
+    }
+  ],
+  "status": "DRAFT_CONSTRUCTION_API_AND_MODELS_VALIDATED_NOT_ACTUAL_HEAD1",
+  "behavior": "Derive unsigned first capture draft from actual independently enrolled signing material, original full request, complete typed selection and current controller identity; preserve original IssueCapture/ImportCapture/CAS/unknown paths and publication head>0 rule.",
+  "verification": {
+    "windows": {
+      "roots": 4,
+      "subcases": 29,
+      "exit": 0
+    },
+    "linux": {
+      "exit": 0,
+      "packages": {
+        "install": {
+          "roots": 3,
+          "subcases": 24,
+          "failures": [],
+          "skips": []
+        },
+        "cli": {
+          "roots": 1,
+          "subcases": 5,
+          "failures": [],
+          "skips": []
+        }
+      },
+      "deleted_test_binaries": [
+        {
+          "name": "cli.test",
+          "sha256": "384b8c7d3a82c7366a3eb684c46d3cb6b63d183cf306990713e267ca721aab42",
+          "bytes": 83109175
+        },
+        {
+          "name": "install.test",
+          "sha256": "bb21108cd2f63bde89d7d8b16b082cd4a5ff84a21fdf3b23892bfa8623702e88",
+          "bytes": 115389060
+        }
+      ]
+    },
+    "scope": "SQL models, fake Kubernetes, real local TLS protocol fixture and actual source-file validation; not actual production MySQL/Vault/Kubernetes head1.",
+    "harness_corrections": "Earlier Linux wrapper attempts failed before intended assertions because of CRLF and missing source working directory/contracts; final run uses LF, pinned source read-only and exact package cwd. No production source modified to address harness failures."
+  },
+  "remaining": [
+    "Real complete C1 candidate/results/independent mapping production and immutable evidence publication/readback.",
+    "Actual original capture issuance/import/unknown resolution producing head1.",
+    "Exact authenticated C1 installation metadata closure combined with provider rows and fresh original source census; current singleton+three-cap rule alone is insufficient.",
+    "Full shared Node owner/factory/recovery and complete page backup/formal publication/independent readback/catalog/success."
+  ],
+  "test_build_artifacts_deleted": true,
+  "actual_head1_verified": false,
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
