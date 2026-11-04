@@ -1,0 +1,193 @@
+{
+  "schema_version": "supervisor-original-runtime-issuer-and-sql-profile-review.v1",
+  "base_commit": "6b58bb9d10a74c473290d17f76d9f7dff6c6fdd4",
+  "maps": [
+    {
+      "path": "backend/.d-runtime-issuer-material-20261104/source-map.json",
+      "sha256": "4ac1f43fcd8bae07ff15ba4a393c1c12f81c9400b08110e04fda4cdaeea1f32c"
+    },
+    {
+      "path": "backend/.d-public-runtime-sql-profile-20261104/source-map.json",
+      "sha256": "1bf26d419151c8635388ebe7d6a35113531a2cc5dcf747f8b1e8bfb3fce49de9"
+    }
+  ],
+  "source_pins": [
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material.go",
+      "source": "backend/.d-runtime-issuer-material-20261104/original_runtime_issuer_material.go",
+      "sha256": "3d97f887a3c7cfab61272dddb2f5bdd8580801678f0303430d40178c4170f19a",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material_test.go",
+      "source": "backend/.d-runtime-issuer-material-20261104/original_runtime_issuer_material_test.go",
+      "sha256": "8f625f9ee980d4efdcaf31d23ae30a438dec738faf044f3724a6d6cf4f8195f5",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-enroll/runtime_issuers.go",
+      "source": "backend/.d-runtime-issuer-material-20261104/runtime_issuers.go",
+      "sha256": "d5e013672d40b4f08d5d1086d67970c0a2015aa53c261e3ef62596d5495745a8",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-enroll/runtime_issuers_test.go",
+      "source": "backend/.d-runtime-issuer-material-20261104/runtime_issuers_test.go",
+      "sha256": "5ab8f1374f740ec60851a66d602d91c3f1ebedc6aab5bcd3847b85591ad06e41",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-enroll/main.go",
+      "source": "backend/.d-runtime-issuer-material-20261104/main.go",
+      "sha256": "11978d5e93a28ddb43efced7ddd72c355c0766c0f8bf3b1ebbd7042f761171fc",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-runtime-issuers.py",
+      "source": "backend/.d-runtime-issuer-material-20261104/system-backup-runtime-issuers.py",
+      "sha256": "e82703a3fea00aed588911d794e87409c0de9dc5ac8b2a7a089b3d1c942c830b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_accounts.go",
+      "source": "backend/.d-public-runtime-sql-profile-20261104/original_sql_accounts.go",
+      "sha256": "a4bb8b6d0322627baeb77c85cd9c13a490ce1c309b42f5eeb9662f93092393ae",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_runtime_profile.go",
+      "source": "backend/.d-public-runtime-sql-profile-20261104/original_sql_runtime_profile.go",
+      "sha256": "febcd36ded5d11867e2fc917c9571473127f0d39591d21f0b18f5702b297d7f4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_runtime_profile_test.go",
+      "source": "backend/.d-public-runtime-sql-profile-20261104/original_sql_runtime_profile_test.go",
+      "sha256": "bcc065b3062f28e210160a1b35e51a2bf9985c0af999767b02fc336f8713d21f",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-original-sql-accounts.py",
+      "source": "backend/.d-public-runtime-sql-profile-20261104/system-backup-original-sql-accounts.py",
+      "sha256": "542a3a386a9cde6a74c0581f057dd021605c81db866403389520a9c0a2d513b6",
+      "mode": "100644"
+    }
+  ],
+  "behavior": [
+    "Actual original enrolled installer creates six independent purpose keypairs and signs their exact owner-only manifest with the existing enrollment issuer. Existing Plan/enrollment/head/admin checks remain; this creates no runtime permission or task.",
+    "Exact complete manifest/key reading verifies native owner authentication, original issuer signature, Plan/enrollment, all six fixed purposes, exact files/private modes/key hashes and distinct public fingerprints. No adoption key is reused.",
+    "Fresh original SQL-account operation v2 selects the dedicated public-runtime profile using existing ControlEvidenceGrantSQL(runtime=true,providerPermits=true,publication=true), with an explicit frozen profile/version. Historical v1 plans keep their historical profile. Other five principals are unchanged."
+  ],
+  "validation": {
+    "windows_exit": 0,
+    "windows_log_sha256": "35364c27d1c1e1321114518e9529aea482f6b943fcbe5c8b0f6c069604f1c6bf",
+    "linux": {
+      "exit": 0,
+      "packages": {
+        "install": {
+          "roots": 20,
+          "subcases": 39,
+          "failures": [],
+          "skips": []
+        },
+        "execution": {
+          "roots": 6,
+          "subcases": 26,
+          "failures": [],
+          "skips": [
+            "TestOriginalPublicationContinuationMySQL/reentry-and-next-stage",
+            "TestOriginalPublicationContinuationMySQL/concurrent-claim",
+            "TestOriginalPublicationContinuationMySQL/next-readback-failure",
+            "TestOriginalPublicationContinuationMySQL/unknown-query-only",
+            "TestOriginalPublicationContinuationMySQL/confirmed-version-changed",
+            "TestOriginalPublicationContinuationMySQL/stage-hole",
+            "TestOriginalPublicationContinuationMySQL/finalization-required",
+            "TestOriginalPublicationContinuationMySQL/production-pass-needs-next-intent",
+            "TestOriginalPublicationContinuationMySQL/close-joins-next-stage"
+          ]
+        },
+        "enroll": {
+          "roots": 1,
+          "subcases": 0,
+          "failures": [],
+          "skips": []
+        },
+        "first-install": {
+          "roots": 3,
+          "subcases": 5,
+          "failures": [],
+          "skips": []
+        }
+      },
+      "deleted_test_binaries": [
+        {
+          "name": "enroll.test",
+          "sha256": "bcc5782bb8772ac45dc0d9bb0a5039d28d1b7698366f1a1a6e13174e9865131f",
+          "bytes": 80489090
+        },
+        {
+          "name": "execution.test",
+          "sha256": "e510c840f66110ae1fc15e578dc398691f80f8959674e53f6a7196c642eef29f",
+          "bytes": 134286936
+        },
+        {
+          "name": "first-install.test",
+          "sha256": "09fe6838276f0e4ba64193642cd0cb8e21d262a39dd416d62f376e607d83563f",
+          "bytes": 82442577
+        },
+        {
+          "name": "install.test",
+          "sha256": "ab3637b6d60a88bc244ce2c7c93b21aefd654fe7d37516162359b6890abb0eb9",
+          "bytes": 114843985
+        }
+      ]
+    },
+    "native_mysql84": {
+      "schema_version": "supervisor-public-runtime-grant-native-mysql84.v1",
+      "owner": "483457245f434ae19806a653c6afe59c",
+      "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "stage": "completed",
+      "checks": {
+        "actual_mysql_8_4_8": true,
+        "actual_exact_library_grants_applied": true,
+        "actual_same_library_probe_accepts_full_direct_matrix": true,
+        "native_unlisted_business_select_denied": true,
+        "extra_business_table_grant_rejected_then_exact_restore_accepted": true,
+        "missing_required_privilege_rejected_then_exact_restore_accepted": true,
+        "schema_ddl_grant_rejected_then_exact_restore_accepted": true,
+        "native_active_or_inherited_role_rejected_then_exact_restore_accepted": true
+      },
+      "failure_class": null,
+      "table_count": 48,
+      "generated_matrix_sha256": "0ca921490e2d3a9b3ea77e2c602888de5d442f1bbfe97fb255dfd8fc7a3232dd",
+      "cleanup": [
+        {
+          "kind": "container",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        }
+      ],
+      "private_fixture_material_removed": true,
+      "deleted_native_probe": {
+        "sha256": "2edd22a49529cf45654ecdff29a21aa241917528293bed4dbb32b17fdfbad9eb",
+        "bytes": 64318009
+      },
+      "scope": "Actual compiled ControlEvidenceGrantSQL(true,true,true) and SQLControlEvidenceGrantProbe execute against new owned MySQL8.4.8 dummy tables over local Unix socket. This is not TLS, six-principal authenticated installer execution, original business schema or page/backup acceptance.",
+      "original_database_contacted": false,
+      "page_acceptance": false,
+      "dr_qualified": false
+    },
+    "native_report_sha256": "ba819001426ee3919e2e4b038b0713b11ea7968dae32f42e640b5a0214354ee0"
+  },
+  "acceptance_boundary": [
+    "This batch accepts only D native key material producer/CLI/helper and D SQL profile, not A partial enabled signing API or unfinished operator main.",
+    "The combined tests included A enabled bridge input; its pure/negative model success is not native enable or account identity compatibility. A must fix business/runtime/source identity separation before that bridge is accepted.",
+    "Full six-principal installer TLS issuance, actual initial runtime grant signing, same-version runtime rollout, native loaded-environment/shared-runtime ownership, complete enabled material pipeline and page task remain unverified."
+  ],
+  "page_ready": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}

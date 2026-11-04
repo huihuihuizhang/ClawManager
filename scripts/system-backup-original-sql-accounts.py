@@ -65,6 +65,7 @@ def main():
     p.add_argument("--prepare-receipt-sha256")
     p.add_argument("--account-host")
     p.add_argument("--allow-wildcard-host", action="store_true")
+    p.add_argument("--runtime-profile", choices=("controller-historical14.v1", "public-runtime-publication-permits-control-evidence.v1"), default="controller-historical14.v1")
     p.add_argument("--pre-enroll-query-receipt-file")
     p.add_argument("--enrollment-output-directory")
     a = p.parse_args()
@@ -83,7 +84,7 @@ def main():
               "--kubeconfig-sha256", a.kubeconfig_sha256, "--namespace", a.namespace,
               "--namespace-uid", a.namespace_uid, "--cluster-uid", a.cluster_uid,
               "--expected-server-uuid", tls["ServerUUID"], "--database", tls["Result"]["Native"]["Database"],
-              "--local-admin-password-file", a.local_admin_password_file]
+              "--local-admin-password-file", a.local_admin_password_file, "--runtime-profile", a.runtime_profile]
     if a.local_admin_username:
         common += ["--local-admin-username", a.local_admin_username]
     if a.allow_wildcard_host:

@@ -68,6 +68,7 @@ type originalSQLPlan struct {
 type originalSQLInputs struct {
 	dsn, dsnSHA, tls, tlsSHA, kube, kubeSHA, namespace, nsUID, clusterUID, server, database, ledgerSHA, password, username, host, directory, operationFile, operationSHA string
 	allowAny                                                                                                                                                             bool
+	runtimeProfile                                                                                                                                                       string
 }
 type originalSQLSession struct {
 	db       *sql.DB
@@ -439,7 +440,7 @@ func (s *originalSQLSession) prepare(ctx context.Context) (originalSQLPlan, erro
 	if e != nil {
 		return p, e
 	}
-	p = originalSQLPlan{Version: "original198-sql-accounts-operation.v1", Operation: operation, ServerUUID: s.input.server, Database: s.input.database, Address: s.cfg.Addr, LedgerSHA256: ledger, KubeconfigSHA256: s.input.kubeSHA, AdminID: id, AdminUsername: name, Identity: s.identity, Secure: secure, PersistedSecure: persisted, OriginalUsers: users, Tables: tables, PartialRevokes: partial, TLS: s.material}
+	p = originalSQLPlan{Version: originalSQLProfileOperationVersion(s.input.runtimeProfile), Operation: operation, ServerUUID: s.input.server, Database: s.input.database, Address: s.cfg.Addr, LedgerSHA256: ledger, KubeconfigSHA256: s.input.kubeSHA, AdminID: id, AdminUsername: name, Identity: s.identity, Secure: secure, PersistedSecure: persisted, OriginalUsers: users, Tables: tables, PartialRevokes: partial, TLS: s.material}
 	present := map[string]bool{}
 	for _, t := range tables {
 		present[t] = true
@@ -474,7 +475,7 @@ func (s *originalSQLSession) prepare(ctx context.Context) (originalSQLPlan, erro
 		if role == "census" {
 			a.Host = "localhost"
 		}
-		privileges, err := originalSQLRolePrivileges(role, p.Database, a, present, s.input.allowAny)
+		privileges, err := originalSQLRolePrivilegesForProfile(role, p.Database, a, present, s.input.allowAny, s.input.runtimeProfile)
 		if err != nil {
 			return originalSQLPlan{}, err
 		}
@@ -493,6 +494,12 @@ func (s *originalSQLSession) prepare(ctx context.Context) (originalSQLPlan, erro
 }
 
 func originalSQLRolePrivileges(role, database string, a originalSQLAccount, present map[string]bool, allowAny bool) ([]originalSQLPrivilege, error) {
+	return originalSQLRolePrivilegesForProfile(role, database, a, present, allowAny, originalSQLHistoricalRuntimeProfile)
+}
+func originalSQLRolePrivilegesForProfile(role, database string, a originalSQLAccount, present map[string]bool, allowAny bool, profile string) ([]originalSQLPrivilege, error) {
+	if originalSQLProfileOperationVersion(profile) == "" {
+		return nil, errOriginalSQLAccounts
+	}
 	a.Privileges = nil
 	if role != "installer" && role != "business" && role != "source" && role != "runtime" && role != "control_sql" && role != "census" {
 		return nil, errOriginalSQLAccounts
@@ -538,6 +545,9 @@ func originalSQLRolePrivileges(role, database string, a originalSQLAccount, pres
 	}
 	if role == "runtime" {
 		stmts, e := controller.ControllerGrantSQL(database, a.User, a.Host, allowAny)
+		if profile == originalSQLPublicRuntimeProfile {
+			stmts, e = controller.ControlEvidenceGrantSQL(database, a.User, a.Host, allowAny, true, true, true)
+		}
 		if e != nil {
 			return nil, errOriginalSQLAccounts
 		}
@@ -563,7 +573,7 @@ func originalSQLRolePrivileges(role, database string, a originalSQLAccount, pres
 }
 
 func (s *originalSQLSession) checkPlan(ctx context.Context, p originalSQLPlan, unused bool) error {
-	if p.Version != "original198-sql-accounts-operation.v1" || !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(p.Operation) || p.ServerUUID != s.input.server || p.Database != s.input.database || p.Address != s.cfg.Addr || p.LedgerSHA256 != s.input.ledgerSHA || p.KubeconfigSHA256 != s.input.kubeSHA || !reflect.DeepEqual(p.Identity, s.identity) || p.TLS != s.material || len(p.Accounts) != 6 || p.Census.Validate() != nil {
+	if originalSQLProfileOperationVersion(s.input.runtimeProfile) == "" || p.Version != originalSQLProfileOperationVersion(s.input.runtimeProfile) || !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(p.Operation) || p.ServerUUID != s.input.server || p.Database != s.input.database || p.Address != s.cfg.Addr || p.LedgerSHA256 != s.input.ledgerSHA || p.KubeconfigSHA256 != s.input.kubeSHA || !reflect.DeepEqual(p.Identity, s.identity) || p.TLS != s.material || len(p.Accounts) != 6 || p.Census.Validate() != nil {
 		return errOriginalSQLAccounts
 	}
 	if s.identityCheck(ctx) != nil {
@@ -593,7 +603,7 @@ func (s *originalSQLSession) checkPlan(ctx context.Context, p originalSQLPlan, u
 		if a.Role != roles[index] || a.User != "sbk_"+a.Role+"_"+p.Operation[:12] || !originalSQLName.MatchString(a.User) || !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(a.Password) || a.Locked != (a.Role == "census") || (!originalSQLHost.MatchString(a.Host) && !(a.Host == "%" && s.input.allowAny)) || (a.Role == "census" && a.Host != "localhost") {
 			return errOriginalSQLAccounts
 		}
-		want, err := originalSQLRolePrivileges(a.Role, p.Database, a, present, s.input.allowAny)
+		want, err := originalSQLRolePrivilegesForProfile(a.Role, p.Database, a, present, s.input.allowAny, s.input.runtimeProfile)
 		if err != nil || !reflect.DeepEqual(want, a.Privileges) {
 			return errOriginalSQLAccounts
 		}
@@ -898,6 +908,9 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 				return errOriginalSQLAccounts
 			}
 			if a.Role == "runtime" {
+				if s.input.runtimeProfile == originalSQLPublicRuntimeProfile {
+					return (controller.SQLControlEvidenceGrantProbe{DB: db, Schema: p.Database, User: a.User, Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx)
+				}
 				return (controller.SQLControllerGrantProbe{DB: db, Schema: p.Database, User: a.User}).Check(ctx)
 			}
 			if a.Role == "source" {
@@ -979,7 +992,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 	if originalSQLDeliver(directory, "local-admin-username.txt", []byte(p.AdminUsername)) != nil {
 		return errOriginalSQLAccounts
 	}
-	materials := map[string]any{"version": "original198-sql-account-materials.v1", "server_uuid": p.ServerUUID, "database": p.Database, "local_admin_username": p.AdminUsername, "source_tls": p.TLS, "schema_census": p.Census, "configuration_enabled": false}
+	materials := map[string]any{"version": "original198-sql-account-materials.v1", "server_uuid": p.ServerUUID, "database": p.Database, "local_admin_username": p.AdminUsername, "source_tls": p.TLS, "schema_census": p.Census, "runtime_profile": originalSQLProfileName(s.input.runtimeProfile), "configuration_enabled": false}
 	files := map[string]BootstrapSourceFilePin{}
 	for _, a := range p.Accounts {
 		if a.Locked {
@@ -1112,8 +1125,9 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	}{{"admin-dsn-file", &in.dsn}, {"admin-dsn-sha256", &in.dsnSHA}, {"source-tls-file", &in.tls}, {"source-tls-sha256", &in.tlsSHA}, {"kubeconfig-file", &in.kube}, {"kubeconfig-sha256", &in.kubeSHA}, {"namespace", &in.namespace}, {"namespace-uid", &in.nsUID}, {"cluster-uid", &in.clusterUID}, {"expected-server-uuid", &in.server}, {"database", &in.database}, {"expected-ledger-sha256", &in.ledgerSHA}, {"local-admin-password-file", &in.password}, {"local-admin-username", &in.username}, {"account-host", &in.host}, {"output-directory", &in.directory}, {"operation-file", &in.operationFile}, {"operation-sha256", &in.operationSHA}} {
 		f.StringVar(entry.target, entry.name, "", "")
 	}
+	f.StringVar(&in.runtimeProfile, "runtime-profile", originalSQLHistoricalRuntimeProfile, "frozen controller profile; old operations retain original profile")
 	f.BoolVar(&in.allowAny, "allow-wildcard-host", false, "")
-	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || (*mode != "inspect" && *mode != "prepare" && *mode != "apply" && *mode != "query" && *mode != "rollback") {
+	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || originalSQLProfileOperationVersion(in.runtimeProfile) == "" || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || (*mode != "inspect" && *mode != "prepare" && *mode != "apply" && *mode != "query" && *mode != "rollback") {
 		return 2
 	}
 	if *mode != "inspect" && len(in.ledgerSHA) != 64 {
@@ -1184,7 +1198,7 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 			}
 			publicAccounts = append(publicAccounts, map[string]any{"role": a.Role, "user": a.User, "host": a.Host, "locked": a.Locked, "grants": grants})
 		}
-		if originalSQLWrite(in.directory, "account-plan.public.json", map[string]any{"version": "original198-sql-account-review.v1", "operation": p.Operation, "server_uuid": p.ServerUUID, "database": p.Database, "ledger_sha256": p.LedgerSHA256, "tables": p.Tables, "local_admin_username": p.AdminUsername, "tls_server_name": p.TLS.ServerName, "original_require_secure_transport": p.Secure, "original_persisted_require_secure_transport": p.PersistedSecure, "accounts": publicAccounts}) != nil {
+		if originalSQLWrite(in.directory, "account-plan.public.json", map[string]any{"version": "original198-sql-account-review.v1", "runtime_profile": originalSQLProfileName(in.runtimeProfile), "operation": p.Operation, "server_uuid": p.ServerUUID, "database": p.Database, "ledger_sha256": p.LedgerSHA256, "tables": p.Tables, "local_admin_username": p.AdminUsername, "tls_server_name": p.TLS.ServerName, "original_require_secure_transport": p.Secure, "original_persisted_require_secure_transport": p.PersistedSecure, "accounts": publicAccounts}) != nil {
 			return 3
 		}
 		raw, e := ReadPrivateFile(filepath.Join(in.directory, "operation.json"), 262144)
@@ -1193,7 +1207,7 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 		}
 		pin := hash(raw)
 		clear(raw)
-		if json.NewEncoder(out).Encode(map[string]any{"state": "original198_sql_accounts_prepared_no_sql_mutation", "operation_file": filepath.Join(in.directory, "operation.json"), "operation_sha256": pin, "local_admin_username": p.AdminUsername, "server_uuid": p.ServerUUID, "schema_census": p.Census, "account_count": len(p.Accounts)}) != nil {
+		if json.NewEncoder(out).Encode(map[string]any{"state": "original198_sql_accounts_prepared_no_sql_mutation", "operation_file": filepath.Join(in.directory, "operation.json"), "operation_sha256": pin, "local_admin_username": p.AdminUsername, "server_uuid": p.ServerUUID, "schema_census": p.Census, "account_count": len(p.Accounts), "runtime_profile": originalSQLProfileName(in.runtimeProfile)}) != nil {
 			return 3
 		}
 		return 0
@@ -1230,7 +1244,7 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	if *mode == "query" {
 		state = "original198_sql_accounts_query_" + queryState
 	}
-	if json.NewEncoder(out).Encode(map[string]any{"state": state, "operation": p.Operation, "local_admin_username": p.AdminUsername, "directory": in.directory, "configuration_enabled": false}) != nil {
+	if json.NewEncoder(out).Encode(map[string]any{"state": state, "operation": p.Operation, "local_admin_username": p.AdminUsername, "directory": in.directory, "runtime_profile": originalSQLProfileName(in.runtimeProfile), "configuration_enabled": false}) != nil {
 		return 3
 	}
 	return 0

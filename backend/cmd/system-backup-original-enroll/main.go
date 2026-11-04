@@ -23,6 +23,9 @@ import (
 // a claimed identity. No credential, DSN, certificate private key or password is
 // accepted through argv or printed by this command.
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && args[0] == "runtime-issuers" {
+		return runRuntimeIssuers(ctx, args[1:], out)
+	}
 	if len(args) > 0 && args[0] == "sql-accounts" {
 		return install.RunOriginalSQLAccounts(ctx, args[1:], out)
 	}
