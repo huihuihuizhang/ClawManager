@@ -1,0 +1,53 @@
+{
+  "schema_version": "supervisor-original-upgrade198-r3-source-review.v1",
+  "source_maps": [
+    {
+      "path": "backend/.d-original-upgrade198-native-20261104/source-map.json",
+      "sha256": "09cd596bc9b80d8d856bde967455878395370bd797c3a5bdc864c527c2a216a7"
+    },
+    {
+      "path": "backend/.d-original-upgrade198-native-r2-20261104/source-map.json",
+      "sha256": "db1214e23429a529023d9460edf2f38b67c07b498437ee87c28fd91b2b5704f2"
+    },
+    {
+      "path": "backend/.d-original-upgrade198-native-r3-20261104/source-map.json",
+      "sha256": "426115d584c214044ea91bacddc84968a8e9926897ba14a1148e2361a3593f99"
+    }
+  ],
+  "final_sources": [
+    {
+      "path": "scripts/system-backup-original-upgrade198.py",
+      "sha256": "7128259f3a41af63abfbee3f98f940bfc85e2e199e7b378fd729adf18eed8941"
+    },
+    {
+      "path": "scripts/system-backup-original-upgrade198.test.py",
+      "sha256": "a08ae20a8eb5088ce5b4c6905348cd5d88a59f6288e443317296e6fffab0a204"
+    }
+  ],
+  "independent_audit": "docs/evidence/system-backup-a-original-upgrade198-readonly-review-20261104.md",
+  "audit_sha256": "c91053f3cd8cd8233c6526a3413dcc52369b01442369fbebb178e56b186cfde4",
+  "p1_dispositions": {
+    "account_retirement_race": "Fixed: root ACCOUNT LOCK/readback, KILL, native EOF before DROP, absent-account+second native EOF before scratch/exclusion/cleanup-completed. Actual frozen method tested against new MySQL8.4.8 fixture.",
+    "failed_snapshot_retry_dead_end": "Fixed: create-only unique snapshot and attempt intent, native0/fsync/hash/bytes/barrier before unique seal; preserves old partial files and complete sealed original failure snapshot. Both interruption points covered by actual method models."
+  },
+  "windows_model_roots": 22,
+  "linux_model_roots": 22,
+  "failures": 0,
+  "skips": 0,
+  "linux_directory_fsync": "Actual native directory open/fsync; not Windows directory FD model.",
+  "native_receipts": [
+    "system-backup-supervisor-mysql84-maintenance-native-pass-20261104.json",
+    "system-backup-supervisor-mysql84-foreign-key-native-pass-20261104.json",
+    "system-backup-supervisor-original-upgrade198-retirement-native-20261104.json"
+  ],
+  "release_readproof_archive_sha256": "405da50564a64582b6c528dfe7599d10f607797b076e54ec2f03357bce2d8780",
+  "original_contacted": false,
+  "whole_original_kubernetes_entry_verified": false,
+  "limitations": [
+    "Kubernetes UID/RV exclusion, actual pod restart/rebind and complete original99 DDL/recovery have not run as this whole script. Models and native SQL submethods do not constitute that proof.",
+    "This is source intake for the deployment candidate, not authorization from a diagnostic JSON or proof of deployment/page readiness.",
+    "The original database has not been upgraded."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false
+}

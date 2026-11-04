@@ -1,0 +1,36 @@
+{
+  "schema_version": "supervisor-mysql84-maintenance-native-qualification.v1",
+  "owner": "9fc72d9bd2f14e06850e04c69529c141",
+  "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+  "scope": "Actual frozen r3 retire_recovery_principal method executes native MySQL8.4.8 account-lock, preexisting-session kill, DROP and double EOF. The Kubernetes transport and append durability are not exercised; no original database contact.",
+  "stage": "completed",
+  "checks": {
+    "actual_recovery_privileges": true,
+    "frozen_actual_method_source_pinned": true,
+    "actual_account_lock_refuses_late_login_before_peer_enumeration": true,
+    "preexisting_privileged_sleep_session_killed_no_queued_insert": true,
+    "temporary_user_removed_and_both_process_eof_checks_native": true,
+    "original_accounts_and_business_data_unchanged": true
+  },
+  "failure_class": null,
+  "cleanup": [
+    {
+      "kind": "container",
+      "state": "removed"
+    },
+    {
+      "kind": "volume",
+      "state": "removed"
+    }
+  ],
+  "private_fixture_material_removed": true,
+  "performance_equivalent": false,
+  "source_tls_qualification": false,
+  "original_database_contacted": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "report_sha256": "c7acf17c459e6c5ca1c004a91393762e4e2c71e7ffc4573d671c2245b43db435",
+  "qualification_harness_sha256": "2fde6ba8b6461d48185708b36273735e48978aa2f61c56ef4855f383b6b588bf",
+  "frozen_production_source_sha256": "7128259f3a41af63abfbee3f98f940bfc85e2e199e7b378fd729adf18eed8941",
+  "whole_original_orchestrator_verified": false
+}
