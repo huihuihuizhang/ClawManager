@@ -79,8 +79,13 @@ func finalTeamReportObjectsFixture(t *testing.T, objects []team.ObjectRef) (*pub
 	if err := r.confirmPart(i); err != nil {
 		t.Fatal(err)
 	}
-	a := publicationContentSampleReport{Version: "system-backup-final-content-observations.v1", Installation: "fixture-installation", Backup: sql.Request.Binding.BackupID, Attempt: 1, SourceSHA256: strings.Repeat("d", 64), TeamsInventorySHA256: s.Teams.SHA256(), ArtifactReadIdentitySHA256: strings.Repeat("e", 64), Manifest: ArtifactReadObject{Key: "original/manifest.json", Version: "original-manifest-version", SHA256: strings.Repeat("f", 64), Size: 100}}
-	return r, teamAuthReportMembers(r, a)
+	return r, finalTeamReportData(r)
+}
+
+// Inert report DATA for a specific relation round, never an authentication grant.
+func finalTeamReportData(r *publicationFinalTeamRelations) publicationContentSampleReport {
+	a := publicationContentSampleReport{Version: "system-backup-final-content-observations.v1", Installation: "fixture-installation", Backup: r.backup, Attempt: 1, SourceSHA256: strings.Repeat("d", 64), TeamsInventorySHA256: r.inventory.SHA256(), ArtifactReadIdentitySHA256: strings.Repeat("e", 64), Manifest: ArtifactReadObject{Key: "original/manifest.json", Version: "original-manifest-version", SHA256: strings.Repeat("f", 64), Size: 100}}
+	return teamAuthReportMembers(r, a)
 }
 
 func teamAuthReportMembers(r *publicationFinalTeamRelations, a publicationContentSampleReport) publicationContentSampleReport {
