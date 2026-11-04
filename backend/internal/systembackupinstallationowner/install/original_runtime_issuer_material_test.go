@@ -22,8 +22,9 @@ func runtimeIssuerReaderFixture(t *testing.T, mutate func(*OriginalRuntimeIssuer
 	}
 	defer clear(key)
 	i := &Installer{public: public, planHash: hash([]byte("original-plan"))}
+	i.plan.Target.InstallationID = "installation_original"
 	enrollment := EnrollmentPin{ConfigMapUID: "actual-enrollment-uid", DocumentSHA256: hash([]byte("original-enrollment"))}
-	m := OriginalRuntimeIssuerMaterial{Version: "original-runtime-purpose-issuers.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Issuers: map[string]OriginalRuntimeIssuerFiles{}}
+	m := OriginalRuntimeIssuerMaterial{Version: "original-runtime-purpose-issuers.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Target: i.plan.Target, Issuers: map[string]OriginalRuntimeIssuerFiles{}}
 	for _, purpose := range originalRuntimeIssuerPurposes {
 		pub, priv, e := ed25519.GenerateKey(rand.Reader)
 		if e != nil {
@@ -37,6 +38,24 @@ func runtimeIssuerReaderFixture(t *testing.T, mutate func(*OriginalRuntimeIssuer
 		}
 		m.Issuers[purpose] = OriginalRuntimeIssuerFiles{PrivateKey: BootstrapSourceFilePin{File: filepath.Join(dir, purpose+".private"), SHA256: hash(priv)}, PublicKey: BootstrapSourceFilePin{File: filepath.Join(dir, purpose+".public"), SHA256: hash(pub)}}
 		clear(priv)
+	}
+	for _, name := range []string{"execution-record.key", "capture-record.key"} {
+		raw := make([]byte, 32)
+		if _, err := rand.Read(raw); err != nil {
+			t.Fatal(err)
+		}
+		file := filepath.Join(dir, name)
+		if err := os.WriteFile(file, raw, 0600); err != nil {
+			clear(raw)
+			t.Fatal(err)
+		}
+		pin := BootstrapSourceFilePin{File: file, SHA256: hash(raw)}
+		clear(raw)
+		if name == "execution-record.key" {
+			m.RecordKey = pin
+		} else {
+			m.CaptureKey = pin
+		}
 	}
 	if mutate != nil {
 		mutate(&m)
@@ -139,5 +158,30 @@ func TestOriginalRuntimeIssuerWriterNeverReplacesRetainedMaterial(t *testing.T) 
 	}
 	if _, err := os.Stat(filepath.Join(dir, "another.private")); !os.IsNotExist(err) {
 		t.Fatal("failed preflight created additional key")
+	}
+}
+
+func TestOriginalRuntimeIssuerReaderRejectsForeignTargetOrRecordPurpose(t *testing.T) {
+	for _, foreignTarget := range []bool{true, false} {
+		i, enrollment, pin := runtimeIssuerReaderFixture(t, func(m *OriginalRuntimeIssuerMaterial) {
+			if foreignTarget {
+				m.Target.InstallationID = "installation_foreign"
+			} else {
+				m.CaptureKey.SHA256 = m.RecordKey.SHA256
+			}
+		}, false)
+		if _, err := i.readOriginalRuntimeIssuerMaterial(pin, enrollment); err == nil {
+			t.Fatal("foreign target or duplicate record purpose accepted")
+		}
+	}
+}
+
+func TestOriginalRuntimeIssuerReaderRejectsChangedRecordKey(t *testing.T) {
+	i, enrollment, pin := runtimeIssuerReaderFixture(t, nil, false)
+	if err := os.WriteFile(filepath.Join(filepath.Dir(pin.File), "execution-record.key"), make([]byte, 32), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := i.readOriginalRuntimeIssuerMaterial(pin, enrollment); err == nil {
+		t.Fatal("changed record key accepted")
 	}
 }

@@ -29,6 +29,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	kubeSHA := flags.String("kubeconfig-sha256", "", "original selected kubeconfig SHA256")
 	dsnFile := flags.String("dsn-file", "", "private installer SQL DSN")
 	dbCAFile := flags.String("database-ca-file", "", "original pinned database CA")
+	runtimeDSNFile := flags.String("runtime-dsn-file", "", "original dedicated public controller SQL DSN")
 	passwordFile := flags.String("local-admin-password-file", "", "private exact original local administrator password bytes")
 	enrollmentFile := flags.String("enrollment-pin-file", "", "original independently selected enrollment receipt pin")
 	enrollmentSHA := flags.String("enrollment-pin-sha256", "", "original enrollment pin file SHA256")
@@ -40,7 +41,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 {
 		return 2
 	}
-	for _, value := range []*string{planFile, planSHA, publicFile, publicSHA, kubeFile, kubeSHA, dsnFile, dbCAFile, passwordFile, enrollmentFile, enrollmentSHA, definitionFile, definitionSHA, privateFile, databaseIssueFile, databaseIssueSHA} {
+	for _, value := range []*string{planFile, planSHA, publicFile, publicSHA, kubeFile, kubeSHA, dsnFile, runtimeDSNFile, dbCAFile, passwordFile, enrollmentFile, enrollmentSHA, definitionFile, definitionSHA, privateFile, databaseIssueFile, databaseIssueSHA} {
 		if *value == "" {
 			return 2
 		}
@@ -79,9 +80,14 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if err != nil {
 		return 1
 	}
+	runtimeDB, _, err := install.OpenConnections(plan, *kubeFile, *kubeSHA, *runtimeDSNFile, *dbCAFile)
+	if err != nil {
+		return 1
+	}
+	defer runtimeDB.Close()
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	sequence, err := execution.BeginOriginalCaptureSequence(active, installer, password, pin, *definitionFile, *definitionSHA, *privateFile)
+	sequence, err := execution.BeginOriginalCaptureSequence(active, installer, password, pin, *definitionFile, *definitionSHA, *privateFile, runtimeDB)
 	if err != nil {
 		return 1
 	}

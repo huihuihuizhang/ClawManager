@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"os"
@@ -41,7 +42,7 @@ type ProductionMaterialReceipt struct {
 // ProduceOriginalCaptureMaterials issues one functional_test six-domain bundle
 // through A's concrete authenticated installation-owner source. It grants no
 // source permissions and performs no task/config/readiness/provider mutations.
-func ProduceOriginalCaptureMaterials(ctx context.Context, owner *install.Installer, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, issuerPrivateFile string) (ProductionMaterialReceipt, error) {
+func ProduceOriginalCaptureMaterials(ctx context.Context, owner *install.Installer, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, issuerPrivateFile string, runtimeDB ...*sql.DB) (ProductionMaterialReceipt, error) {
 	var zero ProductionMaterialReceipt
 	if ctx == nil || ctx.Err() != nil || owner == nil {
 		return zero, c.ErrExecutionAuthority
@@ -109,7 +110,7 @@ func ProduceOriginalCaptureMaterials(ctx context.Context, owner *install.Install
 		return zero, err
 	}
 	p := materials.Discovery
-	authority, err := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: definitionFile, DefinitionSHA256: definitionSHA, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: grant.ServerUUID, Database: grant.Database, DatabaseAccount: grant.DatabaseAccount, DeploymentConfigSHA256: definition.CoreSHA256, CaptureGrantSHA256: definition.ForwardGrantSHA256, ConfigSHA256: definition.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: p.ControllerDeployment, ControllerDeploymentUID: p.ControllerDeploymentUID, ControllerServiceAccount: p.ControllerServiceAccount, ControllerServiceAccountUID: p.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: p.SourceAPIServiceAccount, SourceServiceAccountUID: p.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: materials.Redis.CredentialSHA256, ObjectScopeSHA256: objectsScope, ObjectCredentialSHA256: materials.Objects.CredentialSHA256, NotBefore: definition.NotBefore, Until: definition.Until})
+	authority, err := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: definitionFile, DefinitionSHA256: definitionSHA, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: grant.ServerUUID, Database: grant.Database, DatabaseAccount: grant.DatabaseAccount, DeploymentConfigSHA256: definition.CoreSHA256, CaptureGrantSHA256: definition.ForwardGrantSHA256, ConfigSHA256: definition.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: p.ControllerDeployment, ControllerDeploymentUID: p.ControllerDeploymentUID, ControllerServiceAccount: p.ControllerServiceAccount, ControllerServiceAccountUID: p.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: p.SourceAPIServiceAccount, SourceServiceAccountUID: p.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: materials.Redis.CredentialSHA256, ObjectScopeSHA256: objectsScope, ObjectCredentialSHA256: materials.Objects.CredentialSHA256, NotBefore: definition.NotBefore, Until: definition.Until}, runtimeDB...)
 	if err != nil {
 		return zero, err
 	}

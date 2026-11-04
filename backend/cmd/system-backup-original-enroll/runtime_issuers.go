@@ -29,7 +29,7 @@ func runRuntimeIssuers(ctx context.Context, args []string, out io.Writer) int {
 	}
 	get := func(name string) string { return *values[name] }
 	mode, directory := get("mode"), get("output-directory")
-	if mode != "prepare" && mode != "query" || !filepath.IsAbs(directory) || filepath.Clean(directory) != directory {
+	if mode != "prepare" && mode != "query" && mode != "export-record-keys" || !filepath.IsAbs(directory) || filepath.Clean(directory) != directory {
 		return 2
 	}
 	read := func(file, expected string, limit int64) ([]byte, error) {
@@ -92,6 +92,33 @@ func runRuntimeIssuers(ctx context.Context, args []string, out io.Writer) int {
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	var pin install.BootstrapSourceFilePin
+	if mode == "export-record-keys" {
+		if get("material-file") == "" || len(get("material-sha256")) != 64 {
+			return 2
+		}
+		issuerKey, e := read(get("source-issuer-private-file"), "", 64)
+		if e != nil || len(issuerKey) != 64 {
+			clear(issuerKey)
+			return 1
+		}
+		defer clear(issuerKey)
+		parent := filepath.Dir(directory)
+		resolved, e := filepath.EvalSymlinks(parent)
+		if e != nil || resolved != parent || os.Mkdir(directory, 0700) != nil {
+			return 1
+		}
+		receipt, e := owner.ExportOriginalRuntimeRecordKeys(active, password, enrollment, install.BootstrapSourceFilePin{File: get("material-file"), SHA256: get("material-sha256")}, issuerKey, directory)
+		if errors.Is(e, install.ErrOriginalRuntimeIssuerMaterialUnconfirmed) {
+			return 3
+		}
+		if e != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 3
+		}
+		return 0
+	}
 	if mode == "prepare" {
 		if get("material-file") != "" || get("material-sha256") != "" {
 			return 2

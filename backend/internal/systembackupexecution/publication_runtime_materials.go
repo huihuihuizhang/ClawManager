@@ -65,6 +65,18 @@ type PublicationRuntimeMaterialReceipt struct {
 // It creates no task/claim, renews no deadline and issues no provider/business
 // permission. Failed outputs are retained; only a complete receipt is success.
 func ProducePublicationRuntimeMaterials(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs) (PublicationRuntimeMaterialReceipt, error) {
+	return producePublicationRuntimeMaterials(ctx, owner, runtimeDB, kube, password, enrollment, in, nil)
+}
+
+// Explicit enabled branch requires the same opaque, live committed-enable
+// proof. Callers still supply real independently issued provider capabilities.
+func ProduceEnabledPublicationRuntimeMaterials(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs, enabled *install.OriginalEnabledPublication) (PublicationRuntimeMaterialReceipt, error) {
+	if enabled == nil || enabled.Recheck(ctx) != nil {
+		return PublicationRuntimeMaterialReceipt{}, c.ErrExecutionAuthority
+	}
+	return producePublicationRuntimeMaterials(ctx, owner, runtimeDB, kube, password, enrollment, in, enabled)
+}
+func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs, enabled *install.OriginalEnabledPublication) (PublicationRuntimeMaterialReceipt, error) {
 	var zero PublicationRuntimeMaterialReceipt
 	if ctx == nil || ctx.Err() != nil || owner == nil || runtimeDB == nil || kube == nil {
 		return zero, c.ErrExecutionAuthority
@@ -87,7 +99,13 @@ func ProducePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	if decodeMetadataCanonical(raws[0], &def) != nil || def.Version != productionMaterialDefinitionVersion || decodeMetadataCanonical(raws[1], &components) != nil || components.Version != OriginalCaptureInstallationTemplateVersion || components.OriginalDefinitionSHA256 != in.SourceDefinition.SHA256 || decodeMetadataCanonical(raws[2], &sources) != nil || sources.Version != "original-publication-runtime-sources.v1" || len(def.PublisherVerifier) != 0 {
 		return zero, c.ErrExecutionAuthority
 	}
-	issued, e := owner.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.OwnerInputs)
+	readOwner := func() (install.OriginalPublicationRuntimeOwnerInputs, error) {
+		if enabled != nil {
+			return owner.ReadEnabledPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.OwnerInputs, enabled, runtimeDB)
+		}
+		return owner.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.OwnerInputs, runtimeDB)
+	}
+	issued, e := readOwner()
 	if e != nil {
 		return zero, e
 	}
@@ -147,7 +165,7 @@ func ProducePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 		return zero, e
 	}
 	d := m.Discovery
-	authority, e := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: in.SourceDefinition.File, DefinitionSHA256: in.SourceDefinition.SHA256, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: g.ServerUUID, Database: g.Database, DatabaseAccount: g.DatabaseAccount, DeploymentConfigSHA256: def.CoreSHA256, CaptureGrantSHA256: def.ForwardGrantSHA256, ConfigSHA256: def.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: d.ControllerDeployment, ControllerDeploymentUID: d.ControllerDeploymentUID, ControllerServiceAccount: d.ControllerServiceAccount, ControllerServiceAccountUID: d.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: d.SourceAPIServiceAccount, SourceServiceAccountUID: d.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: m.Redis.CredentialSHA256, ObjectScopeSHA256: objectScope, ObjectCredentialSHA256: m.Objects.CredentialSHA256, NotBefore: def.NotBefore, Until: def.Until})
+	authority, e := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: in.SourceDefinition.File, DefinitionSHA256: in.SourceDefinition.SHA256, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: g.ServerUUID, Database: g.Database, DatabaseAccount: g.DatabaseAccount, DeploymentConfigSHA256: def.CoreSHA256, CaptureGrantSHA256: def.ForwardGrantSHA256, ConfigSHA256: def.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: d.ControllerDeployment, ControllerDeploymentUID: d.ControllerDeploymentUID, ControllerServiceAccount: d.ControllerServiceAccount, ControllerServiceAccountUID: d.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: d.SourceAPIServiceAccount, SourceServiceAccountUID: d.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: m.Redis.CredentialSHA256, ObjectScopeSHA256: objectScope, ObjectCredentialSHA256: m.Objects.CredentialSHA256, NotBefore: def.NotBefore, Until: def.Until}, runtimeDB)
 	if e != nil {
 		return zero, e
 	}
@@ -297,7 +315,7 @@ func ProducePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 			return zero, c.ErrExecutionAuthority
 		}
 	}
-	lastOwner, e := owner.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.OwnerInputs)
+	lastOwner, e := readOwner()
 	if e != nil || !reflect.DeepEqual(lastOwner, issued) {
 		return zero, c.ErrExecutionAuthority
 	}

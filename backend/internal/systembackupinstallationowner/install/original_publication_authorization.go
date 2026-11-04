@@ -48,6 +48,15 @@ type OriginalPublicationAuthorizationReceipt struct {
 // First-install scope is the exact signed disabled bootstrap request and fixed
 // version one, not an assertion that an active config row already exists.
 func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalPublicationAuthorizationInputs, issuerPrivate []byte) (OriginalPublicationAuthorizationReceipt, error) {
+	return i.issueOriginalPublicationAuthorization(ctx, runtimeDB, password, enrollment, in, issuerPrivate, nil)
+}
+func (i *Installer) IssueEnabledPublicationAuthorization(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalPublicationAuthorizationInputs, issuerPrivate []byte, enabled *OriginalEnabledPublication) (OriginalPublicationAuthorizationReceipt, error) {
+	if enabled == nil || enabled.operator == nil || enabled.operator.installer != i || enabled.enrollment != enrollment || enabled.request.files != in.Request || enabled.Recheck(ctx) != nil {
+		return OriginalPublicationAuthorizationReceipt{}, ErrInstall
+	}
+	return i.issueOriginalPublicationAuthorization(ctx, runtimeDB, password, enrollment, in, issuerPrivate, enabled)
+}
+func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalPublicationAuthorizationInputs, issuerPrivate []byte, enabled *OriginalEnabledPublication) (OriginalPublicationAuthorizationReceipt, error) {
 	var zero OriginalPublicationAuthorizationReceipt
 	op, e := i.authenticate(ctx, password)
 	if e != nil || op.authority(ctx, enrollment) != nil || runtimeDB == nil || in.Forward == nil || privateDirectory(in.OutputDirectory) != nil {
@@ -57,8 +66,33 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 	if e != nil || before.cas.State != "active" || before.cas.HeadRevision == 0 || now.Before(before.head.NotBefore) || !now.Before(before.head.Until) {
 		return zero, ErrInstall
 	}
+	expectedVersion := uint64(1)
+	revision := uint64(2)
+	if enabled != nil {
+		expectedVersion = 2
+		revision = 3
+		if enabled.operator.userID != op.userID || before.cas != enabled.initial || enabled.Recheck(ctx) != nil {
+			return zero, ErrInstall
+		}
+	}
+	binding := func(r owner.Record, request *originalRequest) error {
+		if enabled == nil {
+			return originalPublicationBootstrapBinding(i.plan.Target, in.Forward.DeploymentBinding(), r, in.Config, request)
+		}
+		if enabled.Recheck(ctx) != nil || r.Target != i.plan.Target || !request.matchesDraft(r) || in.Config.SHA256 != enabled.configSHA || in.Forward.DeploymentBinding().ConfigSHA256 != enabled.configSHA {
+			return ErrInstall
+		}
+		raw, e := readBootstrapSourcePin(in.Config, 262144)
+		if e != nil || !bytes.Equal(raw, enabled.current) {
+			return ErrInstall
+		}
+		return nil
+	}
 	g := in.Forward.DeploymentBinding()
-	if g.InstallationID != i.plan.Target.InstallationID || g.Database != i.plan.Target.Database || g.ServerUUID != i.plan.Target.ServerUUID || g.DatabaseAccount != i.plan.Target.DatabaseAccount || g.ConfigVersion != 1 || g.ConfigSHA256 != in.Config.SHA256 || g.DeploymentConfigSHA256 != in.DeploymentCore.SHA256 || g.ProfileSHA256 != in.Profile.SHA256 || in.Forward.CheckDeployment(ctx, runtimeDB) != nil {
+	if g.InstallationID != i.plan.Target.InstallationID || g.Database != i.plan.Target.Database || g.ServerUUID != i.plan.Target.ServerUUID || g.ConfigVersion != expectedVersion || g.ConfigSHA256 != in.Config.SHA256 || g.DeploymentConfigSHA256 != in.DeploymentCore.SHA256 || g.ProfileSHA256 != in.Profile.SHA256 || in.Forward.CheckDeployment(ctx, runtimeDB) != nil {
+		return zero, ErrInstall
+	}
+	if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB, g.DatabaseAccount); e != nil {
 		return zero, ErrInstall
 	}
 	request, e := readRequest(i, in.Request)
@@ -66,7 +100,7 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 		return zero, ErrInstall
 	}
 	defer request.observer.Close()
-	if originalPublicationBootstrapBinding(i.plan.Target, g, before.record, in.Config, request) != nil || !requestWindow(before.record, request, now) {
+	if binding(before.record, request) != nil || !requestWindow(before.record, request, now) {
 		return zero, ErrInstall
 	}
 	for _, p := range []BootstrapSourceFilePin{in.DeploymentCore, in.Config} {
@@ -151,7 +185,7 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 	if e != nil || json.Unmarshal(observerACL, &policy) != nil || policy.Name != doc.ObserverPolicy || policy.Policy != wantedACL {
 		return zero, ErrInstall
 	}
-	record := sec.InstallationSigningRecord{InstallationID: g.InstallationID, Revision: 2, NotBefore: now, Until: until}
+	record := sec.InstallationSigningRecord{InstallationID: g.InstallationID, Revision: revision, NotBefore: now, Until: until}
 	result := OriginalPublicationRuntimeOwnerInputs{Version: "original-publication-runtime-owner-inputs.v1", PlanSHA256: i.planHash, EnrollmentDocumentSHA256: enrollment.DocumentSHA256}
 	probeUntil := until
 	for n, b := range material.Bindings {
@@ -222,7 +256,7 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 			return ErrInstall
 		}
 		current, t, e := originalAdoptionAuthoritySnapshot(ctx, op)
-		if e != nil || current.cas != before.cas || t.Before(floor) || originalPublicationBootstrapBinding(i.plan.Target, g, current.record, in.Config, request) != nil || !requestWindow(current.record, request, t) || !t.Before(until) || !t.Before(probeUntil) || !time.Now().Before(probeUntil) {
+		if e != nil || current.cas != before.cas || t.Before(floor) || binding(current.record, request) != nil || !requestWindow(current.record, request, t) || !t.Before(until) || !t.Before(probeUntil) || !time.Now().Before(probeUntil) {
 			return ErrInstall
 		}
 		actual, e := i.originalPublicationActor(ctx, in.ControllerDeployment, in.ControllerPodName)
@@ -260,10 +294,13 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 		if e != nil || !bytes.Equal(fresh, observerRaw) {
 			return ErrInstall
 		}
+		if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB, g.DatabaseAccount); e != nil {
+			return ErrInstall
+		}
 		// Final SQL sample follows every slow actor/file read; its original CAS,
 		// source request and monotonic floor remain mandatory through output.
 		tail, after, e := originalAdoptionAuthoritySnapshot(ctx, op)
-		if e != nil || tail.cas != before.cas || after.Before(t) || after.Before(floor) || originalPublicationBootstrapBinding(i.plan.Target, g, tail.record, in.Config, request) != nil || !requestWindow(tail.record, request, after) || !after.Before(until) || !after.Before(probeUntil) || !time.Now().Before(probeUntil) {
+		if e != nil || tail.cas != before.cas || after.Before(t) || after.Before(floor) || binding(tail.record, request) != nil || !requestWindow(tail.record, request, after) || !after.Before(until) || !after.Before(probeUntil) || !time.Now().Before(probeUntil) {
 			return ErrInstall
 		}
 		floor = after
@@ -297,7 +334,7 @@ func (i *Installer) IssueOriginalPublicationAuthorization(ctx context.Context, r
 // version ONE; later enabled/reconfigured versions require their own reviewed
 // actual-current-config authorization path, never this first-install branch.
 func originalPublicationBootstrapBinding(target owner.Target, g c.ExecutionGrant, r owner.Record, selected BootstrapSourceFilePin, request *originalRequest) error {
-	if request == nil || g.ConfigVersion != 1 || r.Target != target || g.InstallationID != target.InstallationID || g.ServerUUID != target.ServerUUID || g.Database != target.Database || g.DatabaseAccount != target.DatabaseAccount || r.ConfigSHA256 != g.ConfigSHA256 || selected.File != request.files.ConfigFile || selected.SHA256 != request.files.ConfigFileSHA256 || selected.SHA256 != request.config.SHA256() || selected.SHA256 != g.ConfigSHA256 || !request.matchesDraft(r) {
+	if request == nil || g.ConfigVersion != 1 || r.Target != target || g.InstallationID != target.InstallationID || g.ServerUUID != target.ServerUUID || g.Database != target.Database || r.ConfigSHA256 != g.ConfigSHA256 || selected.File != request.files.ConfigFile || selected.SHA256 != request.files.ConfigFileSHA256 || selected.SHA256 != request.config.SHA256() || selected.SHA256 != g.ConfigSHA256 || !request.matchesDraft(r) {
 		return ErrInstall
 	}
 	return nil
@@ -305,8 +342,20 @@ func originalPublicationBootstrapBinding(target owner.Target, g c.ExecutionGrant
 
 // Returns authenticated SOURCE DATA only, never a task/claim/readiness handle.
 // Signature trust is always the actual enrolled Plan issuer, not a key in JSON.
-func (i *Installer) ReadOriginalPublicationRuntimeOwnerInputs(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin) (OriginalPublicationRuntimeOwnerInputs, error) {
+func (i *Installer) ReadOriginalPublicationRuntimeOwnerInputs(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, runtimeDB ...*sql.DB) (OriginalPublicationRuntimeOwnerInputs, error) {
+	return i.readOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, pin, nil, runtimeDB...)
+}
+func (i *Installer) ReadEnabledPublicationRuntimeOwnerInputs(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, enabled *OriginalEnabledPublication, runtimeDB ...*sql.DB) (OriginalPublicationRuntimeOwnerInputs, error) {
+	if enabled == nil || enabled.operator == nil || enabled.operator.installer != i || enabled.enrollment != enrollment || enabled.Recheck(ctx) != nil {
+		return OriginalPublicationRuntimeOwnerInputs{}, ErrInstall
+	}
+	return i.readOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, pin, enabled, runtimeDB...)
+}
+func (i *Installer) readOriginalPublicationRuntimeOwnerInputs(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, enabled *OriginalEnabledPublication, runtimeDB ...*sql.DB) (OriginalPublicationRuntimeOwnerInputs, error) {
 	var zero OriginalPublicationRuntimeOwnerInputs
+	if len(runtimeDB) != 1 || runtimeDB[0] == nil {
+		return zero, ErrInstall
+	}
 	op, e := i.authenticate(ctx, password)
 	if e != nil || op.authority(ctx, enrollment) != nil {
 		return zero, ErrInstall
@@ -315,14 +364,25 @@ func (i *Installer) ReadOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	if e != nil || before.cas.State != "active" || before.record.Target != i.plan.Target || now.Before(before.head.NotBefore) || !now.Before(before.head.Until) {
 		return zero, ErrInstall
 	}
+	expectedVersion := uint64(1)
+	expectedRevision := uint64(2)
+	expectedSHA := before.record.ConfigSHA256
+	if enabled != nil {
+		if enabled.operator.userID != op.userID || before.cas != enabled.initial || enabled.Recheck(ctx) != nil {
+			return zero, ErrInstall
+		}
+		expectedVersion = 2
+		expectedRevision = 3
+		expectedSHA = enabled.configSHA
+	}
 	raw, e := readBootstrapSourcePin(pin, 262144)
 	var in OriginalPublicationRuntimeOwnerInputs
-	if e != nil || decodeExact(raw, &in) != nil || in.Version != "original-publication-runtime-owner-inputs.v1" || in.PlanSHA256 != i.planHash || in.EnrollmentDocumentSHA256 != enrollment.DocumentSHA256 || in.SigningPin.InstallationID != i.plan.Target.InstallationID || in.SigningPin.Revision != 2 || !bytes.Equal(in.SigningPin.Issuer, i.public) || !bytes.Equal(in.PublisherGrant.Issuer, i.public) || len(in.SigningMounts) != 3 {
+	if e != nil || decodeExact(raw, &in) != nil || in.Version != "original-publication-runtime-owner-inputs.v1" || in.PlanSHA256 != i.planHash || in.EnrollmentDocumentSHA256 != enrollment.DocumentSHA256 || in.SigningPin.InstallationID != i.plan.Target.InstallationID || in.SigningPin.Revision != expectedRevision || !bytes.Equal(in.SigningPin.Issuer, i.public) || !bytes.Equal(in.PublisherGrant.Issuer, i.public) || len(in.SigningMounts) != 3 {
 		return zero, ErrInstall
 	}
 	recordRaw, signature, e := in.SigningRecord.ReadSigningRecord(ctx)
 	var record sec.InstallationSigningRecord
-	if e != nil || hash(recordRaw) != in.SigningPin.RecordSHA256 || !ed25519.Verify(i.public, append([]byte(sec.InstallationSigningDomain), recordRaw...), signature) || decodeExact(recordRaw, &record) != nil || record.InstallationID != i.plan.Target.InstallationID || record.Revision != 2 || now.Before(record.NotBefore) || !now.Before(record.Until) {
+	if e != nil || hash(recordRaw) != in.SigningPin.RecordSHA256 || !ed25519.Verify(i.public, append([]byte(sec.InstallationSigningDomain), recordRaw...), signature) || decodeExact(recordRaw, &record) != nil || record.InstallationID != i.plan.Target.InstallationID || record.Revision != expectedRevision || now.Before(record.NotBefore) || !now.Before(record.Until) {
 		return zero, ErrInstall
 	}
 	if _, e = sec.LoadInstallationSigningHistory(ctx, in.SigningRecord, in.SigningPin); e != nil {
@@ -334,13 +394,16 @@ func (i *Installer) ReadOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	if e != nil || decodeExact(grantRaw, &signed) != nil || !ed25519.Verify(i.public, append([]byte(sec.PublisherCaptureGrantDomain), signed.Record...), signed.Signature) || decodeExact(signed.Record, &grant) != nil || grant.Version != sec.PublisherCaptureGrantVersion || grant.Deployment.InstallationID != i.plan.Target.InstallationID || grant.Revoked || now.Before(grant.NotBefore) || !now.Before(grant.Until) {
 		return zero, ErrInstall
 	}
-	if grant.Deployment.ConfigVersion != 1 || grant.Deployment.ConfigSHA256 != before.record.ConfigSHA256 || grant.Deployment.ServerUUID != i.plan.Target.ServerUUID || grant.Deployment.Database != i.plan.Target.Database || grant.Deployment.DatabaseAccount != i.plan.Target.DatabaseAccount || grant.Workload.Namespace != i.plan.Target.Namespace || grant.Workload.NamespaceUID != i.plan.Target.NamespaceUID || grant.Workload.PublisherOwner != "public:"+grant.Workload.PodUID || len(record.Permissions) != 3 {
+	if grant.Deployment.ConfigVersion != expectedVersion || grant.Deployment.ConfigSHA256 != expectedSHA || grant.Deployment.ServerUUID != i.plan.Target.ServerUUID || grant.Deployment.Database != i.plan.Target.Database || grant.Workload.Namespace != i.plan.Target.Namespace || grant.Workload.NamespaceUID != i.plan.Target.NamespaceUID || grant.Workload.PublisherOwner != "public:"+grant.Workload.PodUID || len(record.Permissions) != 3 {
+		return zero, ErrInstall
+	}
+	if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB[0], grant.Deployment.DatabaseAccount); e != nil {
 		return zero, ErrInstall
 	}
 	for n, p := range record.Permissions {
 		m := in.SigningMounts[n]
 		g := p.SQLOwner
-		if g == nil || g.ConfigVersion != 1 || g.ConfigSHA256 != grant.Deployment.ConfigSHA256 || g.ServerUUID != grant.Deployment.ServerUUID || g.Database != grant.Deployment.Database || g.DatabaseAccount != grant.Deployment.DatabaseAccount || g.ControllerOwner != grant.Workload.PublisherOwner || g.Workload != (sec.SigningWorkloadIdentity{Namespace: grant.Workload.Namespace, PodUID: grant.Workload.PodUID, ServiceAccountUID: grant.Workload.ServiceAccountUID}) || m.Binding != p.Binding || m.AuthMount != p.AuthMount || m.Role != p.Role || m.Policy != p.Policy || m.CASHA256 != p.CASHA256 {
+		if g == nil || g.ConfigVersion != expectedVersion || g.ConfigSHA256 != grant.Deployment.ConfigSHA256 || g.ServerUUID != grant.Deployment.ServerUUID || g.Database != grant.Deployment.Database || g.DatabaseAccount != grant.Deployment.DatabaseAccount || g.ControllerOwner != grant.Workload.PublisherOwner || g.Workload != (sec.SigningWorkloadIdentity{Namespace: grant.Workload.Namespace, PodUID: grant.Workload.PodUID, ServiceAccountUID: grant.Workload.ServiceAccountUID}) || m.Binding != p.Binding || m.AuthMount != p.AuthMount || m.Role != p.Role || m.Policy != p.Policy || m.CASHA256 != p.CASHA256 {
 			return zero, ErrInstall
 		}
 	}
@@ -361,6 +424,12 @@ func (i *Installer) ReadOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	}
 	g, e := readBootstrapSourcePin(BootstrapSourceFilePin{File: in.PublisherGrant.File, SHA256: in.PublisherGrant.SHA256}, 65536)
 	if e != nil || !bytes.Equal(g, grantRaw) {
+		return zero, ErrInstall
+	}
+	if enabled != nil && enabled.Recheck(ctx) != nil {
+		return zero, ErrInstall
+	}
+	if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimeDB[0], grant.Deployment.DatabaseAccount); e != nil {
 		return zero, ErrInstall
 	}
 	// All selected manifest/record/signature/grant reads precede this actual

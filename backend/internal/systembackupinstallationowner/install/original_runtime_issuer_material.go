@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	owner "clawreef/internal/systembackupinstallationowner"
 )
 
 const OriginalRuntimeIssuerMaterialDomain = "system-backup-original-runtime-issuer-material.v1\x00"
@@ -29,9 +31,11 @@ type OriginalRuntimeIssuerFiles struct {
 // Locator data only, never a provider permission, grant or successful task.
 // The exact canonical document is signed by the already enrolled owner.
 type OriginalRuntimeIssuerMaterial struct {
-	Version, PlanSHA256 string
-	Enrollment          EnrollmentPin
-	Issuers             map[string]OriginalRuntimeIssuerFiles
+	Version, PlanSHA256   string
+	Enrollment            EnrollmentPin
+	Target                owner.Target
+	Issuers               map[string]OriginalRuntimeIssuerFiles
+	RecordKey, CaptureKey BootstrapSourceFilePin
 }
 
 type signedOriginalRuntimeIssuerMaterial struct{ Record, Signature []byte }
@@ -60,7 +64,7 @@ func (i *Installer) PrepareOriginalRuntimeIssuerMaterial(ctx context.Context, pa
 		return zero, ErrInstall
 	}
 	defer clear(ownerKey)
-	m := OriginalRuntimeIssuerMaterial{Version: "original-runtime-purpose-issuers.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Issuers: map[string]OriginalRuntimeIssuerFiles{}}
+	m := OriginalRuntimeIssuerMaterial{Version: "original-runtime-purpose-issuers.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Target: i.plan.Target, Issuers: map[string]OriginalRuntimeIssuerFiles{}}
 	files := map[string][]byte{}
 	defer func() {
 		for _, raw := range files {
@@ -81,6 +85,20 @@ func (i *Installer) PrepareOriginalRuntimeIssuerMaterial(ctx context.Context, pa
 		m.Issuers[purpose] = OriginalRuntimeIssuerFiles{
 			PrivateKey: BootstrapSourceFilePin{File: filepath.Join(directory, purpose+".private"), SHA256: hash(private)},
 			PublicKey:  BootstrapSourceFilePin{File: filepath.Join(directory, purpose+".public"), SHA256: hash(public)},
+		}
+	}
+	for _, name := range []string{"execution-record.key", "capture-record.key"} {
+		key := make([]byte, 32)
+		files[name] = key
+		if _, err := rand.Read(key); err != nil || seen[hash(key)] {
+			return zero, ErrInstall
+		}
+		seen[hash(key)] = true
+		pin := BootstrapSourceFilePin{File: filepath.Join(directory, name), SHA256: hash(key)}
+		if name == "execution-record.key" {
+			m.RecordKey = pin
+		} else {
+			m.CaptureKey = pin
 		}
 	}
 	record, err := canonical(m)
@@ -169,7 +187,7 @@ func (i *Installer) readOriginalRuntimeIssuerMaterial(pin BootstrapSourceFilePin
 		return zero, ErrInstall
 	}
 	var m OriginalRuntimeIssuerMaterial
-	if decodeExact(signed.Record, &m) != nil || m.Version != "original-runtime-purpose-issuers.v1" || m.PlanSHA256 != i.planHash || m.Enrollment != enrollment || len(m.Issuers) != len(originalRuntimeIssuerPurposes) {
+	if decodeExact(signed.Record, &m) != nil || m.Version != "original-runtime-purpose-issuers.v1" || m.PlanSHA256 != i.planHash || m.Enrollment != enrollment || m.Target != i.plan.Target || len(m.Issuers) != len(originalRuntimeIssuerPurposes) {
 		return zero, ErrInstall
 	}
 	seen := map[string]bool{hash(i.public): true}
@@ -191,6 +209,18 @@ func (i *Installer) readOriginalRuntimeIssuerMaterial(pin BootstrapSourceFilePin
 			return zero, ErrInstall
 		}
 		seen[key.PublicKey.SHA256] = true
+	}
+	for name, pin := range map[string]BootstrapSourceFilePin{"execution-record.key": m.RecordKey, "capture-record.key": m.CaptureKey} {
+		if pin.File != filepath.Join(filepath.Dir(pin.File), name) || filepath.Dir(pin.File) != filepath.Dir(m.Issuers["forward_execution"].PrivateKey.File) || seen[pin.SHA256] {
+			return zero, ErrInstall
+		}
+		raw, err := readBootstrapSourcePin(pin, 32)
+		valid := err == nil && len(raw) == 32
+		clear(raw)
+		if !valid {
+			return zero, ErrInstall
+		}
+		seen[pin.SHA256] = true
 	}
 	return m, nil
 }
@@ -241,4 +271,28 @@ func (i *Installer) ReadOriginalRuntimeIssuerKey(ctx context.Context, password [
 		return nil, ErrInstall
 	}
 	return ed25519.PrivateKey(raw), nil
+}
+
+// Existing Forward record/capture file pins use separate random32 bytes;
+// neither is an Ed25519 signer, credential or permit root.
+func (i *Installer) ReadOriginalRuntimeRecordKey(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, purpose string) ([]byte, error) {
+	m, err := i.ReadOriginalRuntimeIssuerMaterial(ctx, password, enrollment, pin)
+	if err != nil {
+		return nil, err
+	}
+	var selected BootstrapSourceFilePin
+	switch purpose {
+	case "record":
+		selected = m.RecordKey
+	case "capture":
+		selected = m.CaptureKey
+	default:
+		return nil, ErrInstall
+	}
+	raw, err := readBootstrapSourcePin(selected, 32)
+	if err != nil || len(raw) != 32 {
+		clear(raw)
+		return nil, ErrInstall
+	}
+	return raw, nil
 }

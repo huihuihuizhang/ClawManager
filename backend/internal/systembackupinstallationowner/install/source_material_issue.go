@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"os"
@@ -50,6 +51,7 @@ type SourceMaterialIssuer struct {
 	enrollment EnrollmentPin
 	intent     SourceMaterialIntent
 	initial    HeadCAS
+	runtimeDB  *sql.DB
 }
 
 func (*SourceMaterialIssuer) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -58,9 +60,21 @@ func (*SourceMaterialIssuer) String() string               { return "Authenticat
 // PrepareSourceMaterialIssue uses the real original local administrator,
 // Kubernetes subject/namespace/enrollment and current owner ledger sources.
 // No capture-signing record is interpreted as a Redis/S3 capability.
-func (i *Installer) PrepareSourceMaterialIssue(ctx context.Context, password []byte, enrollment EnrollmentPin, intent SourceMaterialIntent) (*SourceMaterialIssuer, error) {
+func (i *Installer) PrepareSourceMaterialIssue(ctx context.Context, password []byte, enrollment EnrollmentPin, intent SourceMaterialIntent, runtimeDB ...*sql.DB) (*SourceMaterialIssuer, error) {
 	s, err := i.authenticate(ctx, password)
-	if err != nil || s.authority(ctx, enrollment) != nil || intent.Purpose != "functional_test" || intent.InstallationID != i.plan.Target.InstallationID || intent.ServerUUID != i.plan.Target.ServerUUID || intent.Database != i.plan.Target.Database || intent.DatabaseAccount != i.plan.Target.DatabaseAccount || intent.Namespace != i.plan.Target.Namespace || intent.NamespaceUID != i.plan.Target.NamespaceUID || intent.ControllerOwner == "" || intent.ControllerDeployment == "" || intent.ControllerDeploymentUID == "" || intent.ControllerServiceAccount == "" || intent.ControllerServiceAccountUID == "" || intent.WorkerServiceAccount == "" || intent.WorkerServiceAccountUID == "" || intent.SourceServiceAccount == "" || intent.SourceServiceAccountUID == "" || intent.NotBefore.IsZero() || !intent.NotBefore.Before(intent.Until) || intent.Until.Sub(intent.NotBefore) > 24*time.Hour {
+	if err != nil || s.authority(ctx, enrollment) != nil || intent.Purpose != "functional_test" || intent.InstallationID != i.plan.Target.InstallationID || intent.ServerUUID != i.plan.Target.ServerUUID || intent.Database != i.plan.Target.Database || intent.Namespace != i.plan.Target.Namespace || intent.NamespaceUID != i.plan.Target.NamespaceUID || intent.ControllerOwner == "" || intent.ControllerDeployment == "" || intent.ControllerDeploymentUID == "" || intent.ControllerServiceAccount == "" || intent.ControllerServiceAccountUID == "" || intent.WorkerServiceAccount == "" || intent.WorkerServiceAccountUID == "" || intent.SourceServiceAccount == "" || intent.SourceServiceAccountUID == "" || intent.NotBefore.IsZero() || !intent.NotBefore.Before(intent.Until) || intent.Until.Sub(intent.NotBefore) > 24*time.Hour {
+		return nil, ErrInstall
+	}
+	var runtimePool *sql.DB
+	if len(runtimeDB) > 1 {
+		return nil, ErrInstall
+	}
+	if len(runtimeDB) == 1 {
+		runtimePool = runtimeDB[0]
+		if _, e := i.checkOriginalRuntimeSQLPeer(ctx, runtimePool, intent.DatabaseAccount); e != nil {
+			return nil, ErrInstall
+		}
+	} else if intent.DatabaseAccount != i.plan.Target.DatabaseAccount {
 		return nil, ErrInstall
 	}
 	for _, hash := range []string{intent.DefinitionSHA256, intent.DeploymentConfigSHA256, intent.CaptureGrantSHA256, intent.ConfigSHA256, intent.RedisScopeSHA256, intent.RedisCredentialSHA256, intent.ObjectScopeSHA256, intent.ObjectCredentialSHA256} {
@@ -68,11 +82,11 @@ func (i *Installer) PrepareSourceMaterialIssue(ctx context.Context, password []b
 			return nil, ErrInstall
 		}
 	}
-	current, now, err := snapshot(ctx, s)
+	current, now, err := originalAdoptionAuthoritySnapshot(ctx, s)
 	if err != nil || now.Before(intent.NotBefore) || !now.Before(intent.Until) || current.cas.State == "revoked" || current.cas.HeadRevision > 0 && (now.Before(current.head.NotBefore) || !now.Before(current.head.Until) || intent.Until.After(current.head.Until)) {
 		return nil, ErrInstall
 	}
-	p := &SourceMaterialIssuer{operator: s, enrollment: enrollment, intent: intent, initial: current.cas}
+	p := &SourceMaterialIssuer{operator: s, enrollment: enrollment, intent: intent, initial: current.cas, runtimeDB: runtimePool}
 	if p.Recheck(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -87,11 +101,26 @@ func (p *SourceMaterialIssuer) Recheck(ctx context.Context) error {
 	if err != nil || hash(raw) != p.intent.DefinitionSHA256 {
 		return ErrInstall
 	}
-	current, now, err := snapshot(ctx, p.operator)
+	current, now, err := originalAdoptionAuthoritySnapshot(ctx, p.operator)
 	if err != nil || current.cas != p.initial || now.Before(p.intent.NotBefore) || !now.Before(p.intent.Until) || current.cas.State == "revoked" {
 		return ErrInstall
 	}
-	return p.checkActors(ctx)
+	if p.checkActors(ctx) != nil {
+		return ErrInstall
+	}
+	if p.runtimeDB != nil {
+		if _, e := p.operator.installer.checkOriginalRuntimeSQLPeer(ctx, p.runtimeDB, p.intent.DatabaseAccount); e != nil {
+			return ErrInstall
+		}
+		if p.operator.authority(ctx, p.enrollment) != nil {
+			return ErrInstall
+		}
+		tail, t, e := originalAdoptionAuthoritySnapshot(ctx, p.operator)
+		if e != nil || tail.cas != p.initial || t.Before(now) || t.Before(p.intent.NotBefore) || !t.Before(p.intent.Until) || !p.operator.live(ctx) {
+			return ErrInstall
+		}
+	}
+	return nil
 }
 
 // ReadSourceMaterialFile applies the same private regular-file identity checks

@@ -2,6 +2,7 @@ package systembackupexecution
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"path/filepath"
 
@@ -28,7 +29,7 @@ type OriginalCaptureInstallationInputs struct {
 // constructs a fake owner, UID, credential, permission, source observation or
 // enabled-v1/task prerequisite. Errors retain all original/partial files and
 // immutable objects for independent inspection; no rollback deletes them.
-func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installer, client kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, input OriginalCaptureInstallationInputs) (ProductionMaterialReceipt, error) {
+func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installer, client kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, input OriginalCaptureInstallationInputs, runtimeDB ...*sql.DB) (ProductionMaterialReceipt, error) {
 	var zero ProductionMaterialReceipt
 	if ctx == nil || ctx.Err() != nil || owner == nil || client == nil {
 		return zero, c.ErrExecutionAuthority
@@ -87,7 +88,7 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 			return zero, c.ErrExecutionAuthority
 		}
 	}
-	sequence, err := BeginOriginalCaptureSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile)
+	sequence, err := BeginOriginalCaptureSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile, runtimeDB...)
 	if err != nil {
 		return zero, err
 	}

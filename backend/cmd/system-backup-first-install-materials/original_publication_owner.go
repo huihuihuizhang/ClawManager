@@ -20,7 +20,9 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 	if ctx == nil || ctx.Err() != nil || out == nil || len(args) == 0 {
 		return 2
 	}
-	runtime := args[0] == "issue-publication-authorization"
+	enabledAction := args[0] == "issue-enabled-publication-authorization"
+	forwardAction := args[0] == "reissue-enabled-forward"
+	runtime := args[0] == "issue-publication-authorization" || enabledAction || forwardAction
 	if !runtime && args[0] != "issue-signing-material" {
 		return 2
 	}
@@ -29,8 +31,26 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 	names := []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "source-issuer-private-file", "controller-deployment", "controller-pod-name", "output-directory"}
 	if runtime {
 		names = append(names, "request-files-file", "request-files-sha256", "runtime-dsn-file", "core-file", "core-sha256", "config-file", "config-sha256", "forward-grant-sha256", "signing-material-file", "signing-material-sha256")
+		if enabledAction || forwardAction {
+			names = append(names, "enable-operation-file", "enable-operation-sha256")
+		}
+		if forwardAction {
+			names = append(names, "execution-issuer-private-file")
+		}
+		if enabledAction {
+			names = append(names, "enabled-forward-file")
+		}
 	} else {
 		names = append(names, "vault-endpoint", "vault-cluster-id", "vault-jwt-mount", "capture-key", "acceptance-key", "catalog-key", "vault-ca-file", "vault-ca-sha256", "vault-owner-material-file", "vault-owner-material-sha256", "until")
+	}
+	if forwardAction {
+		kept := names[:0]
+		for _, n := range names {
+			if n != "signing-material-file" && n != "signing-material-sha256" && n != "source-issuer-private-file" && n != "controller-deployment" && n != "controller-pod-name" && n != "config-file" && n != "config-sha256" {
+				kept = append(kept, n)
+			}
+		}
+		names = kept
 	}
 	values := map[string]*string{}
 	for _, name := range names {
@@ -66,7 +86,11 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 		return 1
 	}
 	defer clear(password)
-	key, e := install.ReadPrivateFile(get("source-issuer-private-file"), 64)
+	keyName := "source-issuer-private-file"
+	if forwardAction {
+		keyName = "execution-issuer-private-file"
+	}
+	key, e := install.ReadPrivateFile(get(keyName), 64)
 	if e != nil {
 		return 1
 	}
@@ -120,7 +144,11 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 	if e != nil {
 		return 1
 	}
-	forward, e := c.NewPinnedExecutionIdentity(core.ForwardGrant.Path, get("forward-grant-sha256"), core.KeyDirectory, public)
+	forwardFile := core.ForwardGrant.Path
+	if enabledAction {
+		forwardFile = get("enabled-forward-file")
+	}
+	forward, e := c.NewPinnedExecutionIdentity(forwardFile, get("forward-grant-sha256"), core.KeyDirectory, public)
 	if e != nil {
 		return 1
 	}
@@ -137,7 +165,31 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 		return 1
 	}
 	defer runtimeDB.Close()
-	receipt, e := installer.IssueOriginalPublicationAuthorization(active, runtimeDB, password, enrol, install.OriginalPublicationAuthorizationInputs{Request: request, Forward: forward, DeploymentCore: pin("core-file", "core-sha256"), Config: pin("config-file", "config-sha256"), Profile: install.BootstrapSourceFilePin{File: core.ProfileFile, SHA256: profileSHA}, SigningMaterial: pin("signing-material-file", "signing-material-sha256"), ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), OutputDirectory: get("output-directory")}, key)
+	var enabled *install.OriginalEnabledPublication
+	if enabledAction || forwardAction {
+		enabled, e = installer.PrepareOriginalEnabledPublication(active, password, enrol, pin("enable-operation-file", "enable-operation-sha256"), request)
+		if e != nil {
+			return 1
+		}
+		defer enabled.Close()
+	}
+	if forwardAction {
+		receipt, e := enabled.ReissueExecutionIdentity(active, runtimeDB, forward, install.BootstrapSourceFilePin{File: forwardFile, SHA256: get("forward-grant-sha256")}, core.KeyDirectory, get("output-directory"), key)
+		if e != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 3
+		}
+		return 0
+	}
+	inputs := install.OriginalPublicationAuthorizationInputs{Request: request, Forward: forward, DeploymentCore: pin("core-file", "core-sha256"), Config: pin("config-file", "config-sha256"), Profile: install.BootstrapSourceFilePin{File: core.ProfileFile, SHA256: profileSHA}, SigningMaterial: pin("signing-material-file", "signing-material-sha256"), ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), OutputDirectory: get("output-directory")}
+	var receipt install.OriginalPublicationAuthorizationReceipt
+	if enabledAction {
+		receipt, e = installer.IssueEnabledPublicationAuthorization(active, runtimeDB, password, enrol, inputs, key, enabled)
+	} else {
+		receipt, e = installer.IssueOriginalPublicationAuthorization(active, runtimeDB, password, enrol, inputs, key)
+	}
 	if e != nil {
 		return 1
 	}

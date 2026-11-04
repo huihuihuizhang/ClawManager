@@ -1,0 +1,319 @@
+{
+  "schema_version": "supervisor-original-runtime-authority-prerequisites-review.v1",
+  "base_commit": "e9284c208423897d54b1105d2e575e06d8d5740d",
+  "maps": [
+    {
+      "path": ".a-enabled-publication-bridge-20261104/source-map.json",
+      "sha256": "b46db87e3c875828611e88ca92eb2c11726e6f372e4aa2774cc64648ffa63481"
+    },
+    {
+      "path": "backend/.d-runtime-issuer-material-r2-20261104/source-map.json",
+      "sha256": "0af6500f4ce7fcfc010e9f070974d18e0f6bffeaf6e45db50b482588bfef2575"
+    },
+    {
+      "path": "backend/.d-runtime-record-export-20261104/source-map.json",
+      "sha256": "252b2ded1d0795585b92d56894ae027aeb7f1728d393f99919a3164bed8cfafe"
+    },
+    {
+      "path": ".a-runtime-purpose-issuers-20261104/source-map.json",
+      "sha256": "53b311ade4da402f55c737064fa9ed37374f00e4adb4c6a1fcc1c89885e3407b"
+    },
+    {
+      "path": ".a-runtime-record-export-bridge-20261104/source-map.json",
+      "sha256": "fcad39db4bef565817aef4738b55350f775bf87a45f370fb8add77d7e5e21655"
+    }
+  ],
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-database-source-grant/main.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-database-source-grant/main.go",
+      "sha256": "191eedc559da27e52df874b7ff8d84814a0f5929231a48f6397afae78170ab86",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/main.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/main.go",
+      "sha256": "cc404d3fb7d0a402fbe1f7950b5ed374e0a7a4cc1c6b7c5befb4fa6fd1cf4bd4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_publication_owner.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_publication_owner.go",
+      "sha256": "2c2fedb1fa2dc818166e06a0e26b564f2c266938f76a8e3df7d54f5641bdbf81",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_runtime_execution.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_runtime_execution.go",
+      "sha256": "47ff532538303ce5b660708e18aac837e67be4aec8b3e12282a428a02b22f10e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_runtime_execution_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-first-install-materials/original_runtime_execution_test.go",
+      "sha256": "8b4fabb8372246226c405cc8a22840e28dbd07cb0f38edb9feb91eef2021aa5e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-enroll/runtime_issuers.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/cmd/system-backup-original-enroll/runtime_issuers.go",
+      "sha256": "c8a8bfa8d6c1ad4c34cb30d2d78e642744c376a570f565104ad816f48499a8d0",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_capture_installation.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupexecution/production_capture_installation.go",
+      "sha256": "ba9bf88ee51d47402e4340fa3b3ad79888ecb278b8055d87cdcd1f4e0649aadf",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_capture_producer.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupexecution/production_capture_producer.go",
+      "sha256": "41d355aa4317971677ee88376cf8644dddc93a283d47ccfb3bc1aac52c79fe6e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_capture_sequence.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupexecution/production_capture_sequence.go",
+      "sha256": "ce692070eabc61c4a5ac35b42cda59df0d38b647237aebc72650c25894ed1ed2",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_runtime_materials.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupexecution/publication_runtime_materials.go",
+      "sha256": "eb5189df091ab90df38f8a186f75dcb31d954239565812e3c162bde766c72f43",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_enabled_forward.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_enabled_forward.go",
+      "sha256": "c83cb211ababaaa8c76bacc0566b330cc19805a7759902ffcbb475ffe88cc860",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_enabled_publication.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_enabled_publication.go",
+      "sha256": "79660daf6446016dec9f0e5b0061e8b48b9f12ce6444d32da1b4c62fbd69c203",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_enabled_publication_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_enabled_publication_test.go",
+      "sha256": "c9a2763e827f6c87f702e8bd3c27a20df601c4620072e599b6c481e815a9d360",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_authorization.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_publication_authorization.go",
+      "sha256": "473b0788fa3d9338b8bfad1b3f58519215a22eea49d891297da1b06928d13d1f",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_execution_issue.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_execution_issue.go",
+      "sha256": "df27f0906291f47a729e6f704617849f19719be6ca0934b2a8b1b3ddcf495e21",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material.go",
+      "sha256": "fc51cc29330ca044df12c873f10c12d56e5733eeb0f2ef15247b5a5bcb8b83b1",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_issuer_material_test.go",
+      "sha256": "6cf3286e48deee4f30dc3259458e768e59699ee9cb2989090ceefe1a5d50f88d",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "sha256": "ea824db34855a3ae7ff989d4f0d08a781758fce66d4f8766a0231fa44a74deb8",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_record_export.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_record_export.go",
+      "sha256": "0d507b688841d0b7bdb0b81ef92cb23a587f6bb87d08ac38d0a43cb590f12267",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_record_export_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_record_export_test.go",
+      "sha256": "2e238b6f5c9c4a17b5ccb478f65d6cc2f566cf1da8835e52db2bcfd49a50cfaf",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_sql_peer.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_sql_peer.go",
+      "sha256": "575867a20c72405020f3200dde2c51fa7b5c403a1c17b00843229cd6d0450480",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_sql_peer_mysql_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_sql_peer_mysql_test.go",
+      "sha256": "5b74554e46ea24e0a18740fc276aa7ac89785019027f263ffe0b5f2fa68bd2e4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/source_material_issue.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupinstallationowner/install/source_material_issue.go",
+      "sha256": "ca5efa833bca4b59ce04bba2f3f8111c5111f0472af6225781f4267338fb591e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_authority_stage.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_authority_stage.go",
+      "sha256": "aee9de13f4429e9fc1ec76fc0346bd7f7216b9a76bc1a802ee3d3cc951192047",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_authority_stage_mysql_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_authority_stage_mysql_test.go",
+      "sha256": "0a178ff3698a1cfcb161e7fba0e7779344edbe680bf4ffe71d8dfbbe3398d8bb",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_material_inspection.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/backend/internal/systembackupkekadapter/original_runtime_material_inspection.go",
+      "sha256": "618e0358e86ee69362b0a1037debd4b6d42ce68e8d0b3f89351131ab602b18c0",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-runtime-record-keys.py",
+      "source": ".tmp-supervisor-d4-combination-20261104/source/scripts/system-backup-runtime-record-keys.py",
+      "sha256": "1c5fdbd19932d1584694ed976ba3f2c048dbfbf0c7e9814d1224ac6dc300904a",
+      "mode": "100644"
+    }
+  ],
+  "status": "PREREQUISITES_VALIDATED_NOT_ADOPTION_OR_PAGE_READY",
+  "behavior": [
+    "Initial runtime authorities use independent original business, source, installer and dedicated full48 runtime SQL identities; original business Plan account is unchanged.",
+    "Actual enrolled issuer material has six independent purpose keys and distinct record/capture HMAC bytes; export delivers only the existing two HMAC bytes to the runtime key directory.",
+    "Initial provider capabilities are staged in the original installer-owned transaction and independently read back after commit; unknown result requires original query rather than blind reissue.",
+    "Enabled publication signing uses the committed enable revision and original-operation evidence; this is a partial signing API, not the final installation metadata pipeline."
+  ],
+  "verification": {
+    "windows_six_package_combination_exit": 0,
+    "linux_six_package_combination": {
+      "exit": 0,
+      "packages": {
+        "install": {
+          "roots": 31,
+          "subcases": 70,
+          "failures": [],
+          "skips": []
+        },
+        "execution": {
+          "roots": 11,
+          "subcases": 38,
+          "failures": [],
+          "skips": []
+        },
+        "adapter": {
+          "roots": 0,
+          "subcases": 0,
+          "failures": [],
+          "skips": []
+        },
+        "first-install": {
+          "roots": 4,
+          "subcases": 5,
+          "failures": [],
+          "skips": []
+        },
+        "enroll": {
+          "roots": 1,
+          "subcases": 0,
+          "failures": [],
+          "skips": []
+        },
+        "database-grant": {
+          "roots": 0,
+          "subcases": 0,
+          "failures": [],
+          "skips": []
+        }
+      },
+      "deleted_test_binaries": [
+        {
+          "name": "adapter.test",
+          "sha256": "0e4d640247567c81fd71b57514fb66e86d9608872241195959369653d58270cd",
+          "bytes": 98737138
+        },
+        {
+          "name": "database-grant.test",
+          "sha256": "da25f26c44114a6d54bbff1a0ebf5cb1c200d08dec43cfc5113fc8655736210c",
+          "bytes": 81132259
+        },
+        {
+          "name": "enroll.test",
+          "sha256": "05ce42495748a5d8aea86f038ba76596e65879477d82471793f0b40e711af67d",
+          "bytes": 80525568
+        },
+        {
+          "name": "execution.test",
+          "sha256": "f0b969f35a72ed83b3a970543364df691808c119406af21c4094ee95c21b94a3",
+          "bytes": 134500115
+        },
+        {
+          "name": "first-install.test",
+          "sha256": "d8ff228031b6743d200e651df0aec9237057d4a436eb898f764de75b6bcd5d52",
+          "bytes": 82845982
+        },
+        {
+          "name": "install.test",
+          "sha256": "1cb7f09676edf4580bf2716a08a790e77da46e9100d919d2374ffd8c9b62ffe7",
+          "bytes": 116183807
+        }
+      ]
+    },
+    "native_mysql": {
+      "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "actual_version": "8.4.8",
+      "actual_san_tls": "TLSv1.3",
+      "root_tests": 1,
+      "subcases": 8,
+      "exit": 0,
+      "native_log_sha256": "36b8ed333c69fa872671a776d06e49678fcc4da3cde0b47682dee79ea8bcf9be",
+      "checks": {
+        "owned_san_certificate_generated": true,
+        "actual_mysql84_san_tls_credentials_prepared": true,
+        "actual_native_test_exit_zero": true,
+        "tagged_native_root_executed": true,
+        "native_test_not_skipped": true,
+        "owned_schema_cleanup_complete": true
+      },
+      "fixture_cleanup": [
+        {
+          "kind": "container",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        }
+      ],
+      "private_fixture_material_removed": true,
+      "scope": "New owned MySQL8.4.8 with actual SAN/TLS1.3, compiled tagged StageInitialRuntimeAuthorities transaction tests and original complete migration helper. Provider signatures are explicit protocol fixtures; not native Vault/installer scope issuance or page acceptance.",
+      "original_database_contacted": false
+    },
+    "three_distinct_role_sources_native_test": "compiled, not executed in this review"
+  },
+  "remaining": [
+    "Three initial capability rows still require a frozen exact signed installation-metadata receipt/classifier before first adoption.",
+    "Enabled material reissue, final operator phase ordering and cross-process unknown-result continuation require complete integration.",
+    "Actual existing shared Lite runtime stop/capture/original-state recovery is not yet connected; image rollout or Secret references do not prove it.",
+    "No actual deployment, page backup, formal publication, catalog success or independent business readback has been executed."
+  ],
+  "test_build_artifacts_deleted": true,
+  "adoption_ready": false,
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}
