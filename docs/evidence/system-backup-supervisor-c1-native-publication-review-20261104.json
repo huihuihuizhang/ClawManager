@@ -1,0 +1,97 @@
+{
+  "schema_version": "supervisor-c1-native-publication-review.v1",
+  "date": "2026-11-04",
+  "source_map": ".a-c1-native-publication-verifier-20261104/source-map.json",
+  "source_map_sha256": "08f21b2ca0c1beb5c186c85d4e6eac43d653b77271cb7989bb18fd83085a8249",
+  "source_pins": [
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publication_native_d_integration_test.go",
+      "target": "backend/internal/systembackupevidence/system_publication_native_d_integration_test.go",
+      "sha256": "73d6f25fdb348e8fbd41629c67db6e970a00026d7084024596fbbb6676543fed",
+      "before_sha256": null
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publication_native_finish.go",
+      "target": "backend/internal/systembackupevidence/system_publication_native_finish.go",
+      "sha256": "ca2dd28f8df7d84b90f3cb7971396658ec5ce6be073d215ceeec3f7f54498db5",
+      "before_sha256": null
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publication_native_verifier.go",
+      "target": "backend/internal/systembackupevidence/system_publication_native_verifier.go",
+      "sha256": "90ac012e33661d9857ab621f2be164fb7b5fe77746ec5df9a1745b209775e713",
+      "before_sha256": null
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publication_native_verifier_test.go",
+      "target": "backend/internal/systembackupevidence/system_publication_native_verifier_test.go",
+      "sha256": "0241448b758504870c7b4deb724308c08a479dfac74bb89a0e01f1c381a0c11f",
+      "before_sha256": null
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publish_runtime.go",
+      "target": "backend/internal/systembackupevidence/system_publish_runtime.go",
+      "sha256": "53a735ac8418d7d6953377dc961ed3bd3e20b3384f2cade26803cdaa2aebbcac",
+      "before_sha256": "d72438277f5551e23bda2786c17ca40251ec80742d936ea4344f84618fb243c4",
+      "before_source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupevidence/system_publish_runtime.go.before"
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupproducer/transaction.go",
+      "target": "backend/internal/systembackupproducer/transaction.go",
+      "sha256": "c7c472458f50516c1e11c35cd94a5b071b4130300b9e6c28188088a72a35113a",
+      "before_sha256": "315def86b128974b4aaf8fb060a44581be04d0defc4f3b95ae4737d2c6cb12b7",
+      "before_source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupproducer/transaction.go.before"
+    },
+    {
+      "source": ".a-c1-native-publication-verifier-20261104/backend/internal/systembackupproducer/transaction_identity_test.go",
+      "target": "backend/internal/systembackupproducer/transaction_identity_test.go",
+      "sha256": "81c5179b692285bf7856276e4c6f86b000258d9aec4e7b5d05d28734805e3e06",
+      "before_sha256": null
+    }
+  ],
+  "review": "Root source review and Public C fixed-version read-only review; no definite C1 contract defect found",
+  "validation": [
+    {
+      "log": ".tmp-supervisor-d4-combination-20261104/logs/c1-native-verifier-windows-targeted.jsonl",
+      "sha256": "ef9cb3d8320d26d05de96eabfb2a1673c7f6ca5ea6b08523b6c84a8b8d7a50d5",
+      "pass_roots": 5,
+      "pass_subtests": 12,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "terminal": "pass"
+    },
+    {
+      "log": ".tmp-supervisor-d4-combination-20261104/logs/c1-native-verifier-linux-evidence-r2.jsonl",
+      "sha256": "ee0932cd676e49787f3a6c7ff6ba8894f6a39848cb2818ba930bfffddafd3c6f",
+      "pass_roots": 419,
+      "pass_subtests": 2964,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "terminal": "pass"
+    },
+    {
+      "log": ".tmp-supervisor-d4-combination-20261104/logs/c1-native-verifier-linux-systembackupproducer.jsonl",
+      "sha256": "aa37e04115288cee29f2d45adab062738a56869f0f15f5d2b0210aa8afc05a3f",
+      "pass_roots": 92,
+      "pass_subtests": 819,
+      "failed_tests": 0,
+      "skipped_tests": 0,
+      "terminal": "pass"
+    }
+  ],
+  "scope": "model SQL and local TLS SigV4/STS/HEAD protocol fixtures; Linux full packages pass; no actual installation or remote/native MySQL/Vault/S3 producer acceptance",
+  "earlier_attempts": [
+    "Windows first full attempt lacked two committed document fixtures; corrected from HEAD without production changes",
+    "Windows second full attempt had existing download-owner not_ready failures and 3-minute total timeout; Windows full suite is not claimed passing",
+    "Linux first full evidence package reached 3-minute total timeout; same test ELF with 8-minute budget passed all 419 roots and 2964 subtests"
+  ],
+  "actual_c1_producer_complete": false,
+  "ciphertext_mixed_source_composition_complete": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "limitations": [
+    "C1 exact immutable version HEAD proof is not formal backup GET/EOF/SHA/decrypt/business readback",
+    "D1 concrete Domain/Lifecycle/Execution/Results caller and A mixed ciphertext source remain in progress",
+    "Transaction guard clock initialization is exercised by original D claim -> native HEAD -> Finish -> independent CommitResult model"
+  ]
+}

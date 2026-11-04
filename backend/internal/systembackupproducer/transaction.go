@@ -23,6 +23,23 @@ type ReadSQL interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }
 
+// SameGuardedTransaction authenticates an original guarded write/read view
+// pair without exposing the sql.Tx or accepting connection IDs as proof. A
+// copied Transaction and a view from another transaction always fail.
+func SameGuardedTransaction(write SQL, read ReadSQL) bool {
+	w, ok := write.(*Transaction)
+	if !ok || w == nil || w.rejectCopy() {
+		return false
+	}
+	r, ok := read.(readSQL)
+	if !ok {
+		return false
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.identity == w && w.tx != nil && r.tx == w.tx && w.fault == nil
+}
+
 // GuardPlan contains already authenticated/locked facts. Its fields do NOT
 // establish authentication. Only the mandatory trusted Policy supplies it.
 // Every operation must include its identity, deployment, lease, observation and
@@ -317,7 +334,7 @@ func (r *Transactions) Run(ctx context.Context, work func(context.Context, *Tran
 	if e = tx.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6),TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),CURRENT_TIMESTAMP(6))").Scan(&server, &database, &now, &offset); e != nil || server != string(r.scope.ServerUUID) || database != string(r.scope.Database) || offset != 0 || !validDBTime(now) {
 		return empty, ErrUnavailable
 	}
-	session := &Transaction{tx: tx, open: true, scope: r.scope}
+	session := &Transaction{tx: tx, open: true, scope: r.scope, clockContext: ctx, clockFloor: now}
 	session.identity = session
 	defer session.close()
 	plan, e := r.policy.LockAndAuthorize(ctx, session, r.scope)

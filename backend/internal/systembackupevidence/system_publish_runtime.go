@@ -61,13 +61,14 @@ type systemPublicationFinalizer interface {
 // Close must follow draining Publish; returned FinishResult is not an evaluator
 // receipt. The host must separately invoke D CommitResult.
 type SystemPublisher struct {
-	sts          *SystemSTSCredentials
-	store        systemPublicationStore
-	finalizer    systemPublicationFinalizer
-	claim        *pd.PublicationClaim
-	verifier     SystemPublicationVerifier
-	absence      *systemPublicationAbsence
-	used, closed atomic.Bool
+	sts            *SystemSTSCredentials
+	store          systemPublicationStore
+	finalizer      systemPublicationFinalizer
+	claim          *pd.PublicationClaim
+	verifier       SystemPublicationVerifier
+	nativeVerifier *NativeSystemPublicationVerifier
+	absence        *systemPublicationAbsence
+	used, closed   atomic.Bool
 }
 
 // Preserve C's absence expiry through staging and the signed upload. S3Store
@@ -253,6 +254,9 @@ func (p *SystemPublisher) finish(ctx context.Context, info ObjectInfo, statErr e
 
 func (p *SystemPublisher) Close() {
 	if p != nil && !p.closed.Swap(true) {
+		if p.nativeVerifier != nil {
+			p.nativeVerifier.Close()
+		}
 		if p.sts != nil {
 			p.sts.Close()
 		}
