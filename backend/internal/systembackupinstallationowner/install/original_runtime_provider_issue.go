@@ -22,6 +22,7 @@ import (
 )
 
 type OriginalRuntimeProviderIssueInputs struct {
+	C1                                                                              *a.OriginalC1SQLClosure // In-process actual original C1 producer only; no DTO/CLI approval.
 	Issuers, Core, Forward, Provider, PublicationOwnerInputs                        BootstrapSourceFilePin
 	Request                                                                         RequestFiles
 	ControllerDeployment, ControllerPodName, WorkerJWTIdentityFile, OutputDirectory string
@@ -373,7 +374,13 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		return zero, ErrInstall
 	}
 	imports := []a.OriginalRuntimeCapabilityImport{{Raw: files["generate.capability.json"], Pin: result.Generate, Operation: kms.Generate}, {Raw: files["unwrap.capability.json"], Pin: result.Unwrap, Operation: kms.Unwrap}, {Raw: files["publisher-unwrap.capability.json"], Pin: result.PublisherUnwrap, Operation: kms.Unwrap}}
-	installedSnapshot, stageErr := writer.StageInitialRuntimeAuthoritiesWithSnapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked)
+	var installedSnapshot a.RuntimeInstalledSQLSnapshot
+	var stageErr error
+	if in.C1 != nil {
+		installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithC1Snapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked, in.C1)
+	} else {
+		installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithSnapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked)
+	}
 	if stageErr != nil {
 		return zero, ErrInstall
 	}
@@ -383,7 +390,7 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		return zero, ErrInstall
 	}
 	metadataSigned, e := canonical(signedOriginalRuntimeSQLMetadataReceipt{Record: metadataRaw, Signature: ed25519.Sign(keys["installation_mapping"], append([]byte(originalRuntimeSQLMetadataReceiptDomain), metadataRaw...))})
-	if e != nil {
+	if e != nil || len(metadataSigned) > originalRuntimeMetadataLimit {
 		return zero, ErrInstall
 	}
 	result.SQLMetadataReceipt = BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-installed-metadata.receipt.json"), SHA256: hash(metadataSigned)}

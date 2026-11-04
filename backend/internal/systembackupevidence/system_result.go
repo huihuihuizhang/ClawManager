@@ -32,6 +32,7 @@ type SystemResultEnvironment struct {
 	authority SystemResultAuthority
 	original  systemPublicationOriginal
 	channel   ProducerEvidenceChannel
+	source    *OriginalC1EvidenceSource
 }
 
 func NewSystemResultEnvironment(a SystemResultAuthority, p Prepared, c ProducerEvidenceChannel, h pd.HistoricalBindingRecord) (*SystemResultEnvironment, error) {
@@ -42,7 +43,7 @@ func NewSystemResultEnvironment(a SystemResultAuthority, p Prepared, c ProducerE
 	if err != nil {
 		return nil, err
 	}
-	return &SystemResultEnvironment{a, o, c}, nil
+	return &SystemResultEnvironment{authority: a, original: o, channel: c}, nil
 }
 
 func (e *SystemResultEnvironment) PrepareResult(ctx context.Context, b pd.ResultBinding) (pd.PreparedResult, error) {
@@ -73,7 +74,7 @@ func (e *SystemResultEnvironment) PrepareResult(ctx context.Context, b pd.Result
 	if err != nil || nilSystemAdapter(a) || ctx.Err() != nil {
 		return pd.PreparedResult{}, ErrDenied
 	}
-	return pd.PreparedResult{Session: &systemResultSession{SystemResultAuthoritySession: a, original: e.original, channel: e.channel, bindingHash: h, digests: digests, version: version}, CapacityObservedAt: copySystemPublicationSample(sample)}, nil
+	return pd.PreparedResult{Session: &systemResultSession{SystemResultAuthoritySession: a, original: e.original, channel: e.channel, bindingHash: h, digests: digests, version: version, source: e.source}, CapacityObservedAt: copySystemPublicationSample(sample)}, nil
 }
 
 type systemResultSession struct {
@@ -85,6 +86,8 @@ type systemResultSession struct {
 	version        string
 	locked, failed bool
 	stored         systemPendingStored
+	source         *OriginalC1EvidenceSource
+	sourceTx       *pd.Transaction
 }
 
 func (s *systemResultSession) matches(ctx context.Context, b pd.ResultBinding) bool {
@@ -114,6 +117,9 @@ func (s *systemResultSession) LockEvidence(ctx context.Context, tx pd.SQL, b pd.
 	if t, ok := tx.(*pd.Transaction); !ok || t == nil {
 		s.failed = true
 		return pd.ResultEvidence{}, ErrDenied
+	}
+	if s.source != nil {
+		s.sourceTx = tx.(*pd.Transaction)
 	}
 	row, found, err := loadSystemPublication(ctx, tx, s.original.record, s.version)
 	if err != nil {
@@ -156,6 +162,9 @@ func (s *systemResultSession) Recheck(ctx context.Context, tx pd.ReadSQL, b pd.R
 	}
 	if !found || !reflect.DeepEqual(row, s.stored) {
 		return ErrIntegrity
+	}
+	if s.source != nil {
+		return s.source.stageOriginalResult(ctx, s.sourceTx, tx, b, f, row, now)
 	}
 	return nil
 }

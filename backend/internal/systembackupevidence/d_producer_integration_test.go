@@ -97,6 +97,10 @@ func newDIntegrationFixture(t *testing.T) *dIntegrationFixture {
 	return newDIntegrationFixtureWithDB(t, nil)
 }
 func newDIntegrationFixtureWithDB(t *testing.T, database *sql.DB, advanceClock ...bool) *dIntegrationFixture {
+	return newDIntegrationFixtureInContext(t, context.Background(), database, advanceClock...)
+}
+
+func newDIntegrationFixtureInContext(t *testing.T, ctx context.Context, database *sql.DB, advanceClock ...bool) *dIntegrationFixture {
 	t.Helper()
 	prepared, channel, record, binding, ciphertext := producerBindingFixtureWithCiphertext(t)
 	now := time.Now().UTC().Truncate(time.Microsecond)
@@ -136,7 +140,7 @@ func newDIntegrationFixtureWithDB(t *testing.T, database *sql.DB, advanceClock .
 	// The remote harness has already verified and created this run-owned DB.
 	// Bind before seeding any canonical record or constructing a service: the
 	// contract vector's database identity cannot name a random MySQL test DB.
-	command.Scope, err = dIntegrationDatabaseScope(context.Background(), f.db, command.Scope)
+	command.Scope, err = dIntegrationDatabaseScope(ctx, f.db, command.Scope)
 	if err != nil {
 		t.Fatal("fixture database scope", err)
 	}
@@ -156,7 +160,7 @@ func newDIntegrationFixtureWithDB(t *testing.T, database *sql.DB, advanceClock .
 		t.Fatal(err)
 	}
 	f.lifecycle = lifecycle
-	acquired, err := lifecycle.Execute(context.Background(), command, nil)
+	acquired, err := lifecycle.Execute(ctx, command, nil)
 	if err != nil || acquired.Handle == nil {
 		t.Fatal("acquire", err)
 	}
@@ -167,14 +171,14 @@ func newDIntegrationFixtureWithDB(t *testing.T, database *sql.DB, advanceClock .
 	}
 	budget := systemExecutionStamp(now.Add(time.Minute))
 	f.probe = pd.CallRequest{Purpose: "probe", EvidenceID: binding.EvidenceID, RefIdentityHash: command.Target.IdentityHash, RefVersion: command.Target.RefVersion, PolicyHash: f.policy, BudgetUntil: budget}
-	probe, err := execution.BeginCall(context.Background(), f.handle, f.probe, nil)
+	probe, err := execution.BeginCall(ctx, f.handle, f.probe, nil)
 	if err != nil {
 		t.Fatal("probe", err)
 	}
 	// A real MySQL probe captures database time after fixture initialization.
 	// Bind the simulated evaluator observation to that committed snapshot.
 	f.observation = pd.ObservationRequest{ExpectedRunVersion: "1", ObservedAt: probe.View().CapturedAt, ExpiresAt: budget, AttestationHash: pd.Hash(strings.Repeat("d", 64))}
-	if _, err = execution.BindObservation(context.Background(), f.handle, probe, f.observation); err != nil {
+	if _, err = execution.BindObservation(ctx, f.handle, probe, f.observation); err != nil {
 		t.Fatal("observation", err)
 	}
 	var run pd.RunRecord

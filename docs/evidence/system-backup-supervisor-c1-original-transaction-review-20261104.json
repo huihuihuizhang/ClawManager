@@ -1,0 +1,142 @@
+{
+  "schema_version": "supervisor-c1-original-native-channel-and-retention-review.v1",
+  "base_commit": "73bd8424e21a135854686f6fdf2ffaf9aeea6018",
+  "selected_source_count": 60,
+  "parent_maps": [
+    {
+      "path": ".a-c1-committed-source-20261104/source-map.json",
+      "sha256": "2f836a9b2ec3bd3046db58df143e8d4e17d14badeaeb8a507966c6acc07f583f"
+    },
+    {
+      "path": ".a-c1-retention-registry-20261104/source-map.json",
+      "sha256": "d6b1c93f63369f55ebaf25c7373549bd8c1ff077e6156a683651cb608c332808"
+    },
+    {
+      "path": "backend/.d-c1-native-producer-20261104/source-map.json",
+      "sha256": "9585baa135b9c1a8b9eeaaf806f408d7f3aa4804d235ff3487ab691c7b134d04"
+    },
+    {
+      "path": ".a-c1-same-source-consumer-20261104/source-map.json",
+      "sha256": "f1fddc41d2649eec81228c2410b5a06ca1218b7390f8cf4ba6da1f31fbf44d0b"
+    },
+    {
+      "path": ".a-c1-nonempty-history-20261104/source-map.json",
+      "sha256": "e1c927279937c86f453734860d44f3992036fc11212440553ba11605ba66b797"
+    },
+    {
+      "path": ".a-c1-nonempty-history-r2-20261104/source-map.json",
+      "sha256": "7ea37de40977ad8ea9a0bd49e10579810de9aa364f20b84cc9f6f4792c06432a"
+    },
+    {
+      "path": ".a-c1-nonempty-history-r3-20261104/source-map.json",
+      "sha256": "1b744452d23e8453753a747ad399685954fc571410d8c532eeaf6089ea472e4a"
+    },
+    {
+      "path": ".a-c1-retention-adoption-mysql-20261104/source-map.json",
+      "sha256": "ecae94d61a8759385b1e230efd91258eb97177d5180116714945d9ddd8ce8507"
+    },
+    {
+      "path": "backend/.d-c1-schema137-formal-20261104/source-map.json",
+      "sha256": "83fb89098c9708fcc401c5d09a2847dc9b45c80ecb4ed5bb692ea2f96fb11107"
+    },
+    {
+      "path": "backend/.d-c1-evidence-materials-20261104/source-map.json",
+      "sha256": "884389c99ae539645a35e5b88504ffec885eae04ed40b163cda550c0f13210d0"
+    }
+  ],
+  "review": [
+    "Native same-service original handle/Prepared/key context remains required; no caller JSON or checksum alone produces a source.",
+    "Actual method-restricted TLS owner channel binds original SDK authorization and exact original owner deadline, retaining shorter real credential and current-call windows. HEAD never becomes GET or Range.",
+    "Committed eight-table source and producer evidence/chunk closure are separately re-read; rollback never certifies a committed source.",
+    "Retention-only evidence KEK bindings have no Generate/Unwrap authority, cannot enter normal admissions; each original hold/ref is preserved separately and backup native-key alias is refused.",
+    "Formal migration137 preserves the existing reviewed eight-table C1 contract body; exact generated178 catalog and control-table classification updated without editing historical SQL or policy approvals.",
+    "Dedicated evidence-key material issuance/query dispatch is reachable, but complete original first-adoption production caller and protected S3 history remain pending."
+  ],
+  "validation": {
+    "clean_head_plus_selected_windows": {
+      "packages_passed": 5,
+      "roots_passed": 14,
+      "subcases_passed": 16,
+      "skips": [],
+      "log_sha256": "3d158b7f2595e32cf7d4b92114883400d2b3f47765860c00ac5a853c4d597e9e"
+    },
+    "linux_current_combination": {
+      "c1-r8-linux-migrationcatalog": {
+        "roots_passed": 3,
+        "subcases_passed": 0,
+        "fails": [],
+        "skips": [],
+        "sha256": "22afc5b4b1a05da0aee55d51966d698f6b17d37cfd26ecffaf8db477c367d39b"
+      },
+      "c1-r8-linux-systembackupevidence": {
+        "roots_passed": 424,
+        "subcases_passed": 2972,
+        "fails": [],
+        "skips": [],
+        "sha256": "5172f67fecdb8354e2b4ad515ae74d2f5810c2a606afcb638f9f97a539a4c151"
+      },
+      "c1-r8-linux-systembackupinstallationowner-install": {
+        "roots_passed": 233,
+        "subcases_passed": 591,
+        "fails": [],
+        "skips": [],
+        "sha256": "d14d932df95ea4596d91de8eae20d8393b109464bca0d036c82e7882780ecde7"
+      }
+    },
+    "native_mysql": {
+      "schema_version": "supervisor-original-retained-adoption-native-mysql84.v1",
+      "owner": "c7b1bef7a1b14b0bb259fb59dc913e3a",
+      "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+      "server_uuid": "e81e502c-d860-11f1-9d49-f9ce1c215134",
+      "stage": "completed",
+      "checks": {
+        "owned_san_certificate_generated": true,
+        "actual_mysql84_san_tls_credentials_prepared": true,
+        "actual_native_test_exit_zero": true,
+        "tagged_native_root_executed": true,
+        "native_test_not_skipped": true,
+        "owned_schema_cleanup_complete": true
+      },
+      "native_exit": 0,
+      "failure_class": null,
+      "cleanup": [
+        {
+          "kind": "container",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        },
+        {
+          "kind": "volume",
+          "state": "removed"
+        }
+      ],
+      "private_fixture_material_removed": true,
+      "native_log_sha256": "990de4fcf9151d18acc71bb7fbbc633c39f780051c14c556ab16c17e8c0c944c",
+      "test_binary": "owned adapter.test deleted in final cleanup",
+      "scope": "Actual owned MySQL8.4.8 SAN/TLS1.3: one original RR transaction for retained binding/reference insert+readback, seventeen original controls and first adoption epoch one; six negative/rollback cases plus success. Physical/history/backfill sources and signatures are explicit TEST MODELS; no B/C full-source or page acceptance.",
+      "production_performance_equivalent": false,
+      "original_database_contacted": false,
+      "page_acceptance": false,
+      "dr_qualified": false
+    }
+  },
+  "earlier_failures_resolved": [
+    "Original same-source model key had to derive from the actual new Prepared content identity.",
+    "PUT original owner cutoff and shorter credential deadline are distinct; exact original OwnerDeadline comparison fixed the incompatible adapter.",
+    "Formal137 made the old reviewed177 migration pin stale; generated and independently checked exact178 catalog before actual MySQL run."
+  ],
+  "not_proven": [
+    "complete authenticated B/C physical and immutable nonempty history owner",
+    "complete final seventeen-stage production caller and original head1 commit",
+    "actual v3 SELECT-only business bootstrap consumption; separate fix and native test pending",
+    "field upgrade to ledger199; old198 copy receipt does not cover137",
+    "same-version field rollout, source-state recovery, full page publication",
+    "disaster recovery qualification"
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "cleanup": "All native test containers, volumes and private fixture files removed; all ended Linux test ELFs deleted. Final release inputs retained for required deployment packaging."
+}

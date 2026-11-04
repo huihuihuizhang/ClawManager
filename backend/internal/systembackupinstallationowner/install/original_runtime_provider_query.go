@@ -34,10 +34,10 @@ func (i *Installer) QueryOriginalRuntimeProviderInstallation(ctx context.Context
 	if e != nil || s.authority(ctx, enrollment) != nil {
 		return result, ErrInstall
 	}
-	raw, e := readBootstrapSourcePin(pin, 262144)
+	raw, e := readBootstrapSourcePin(pin, originalRuntimeMetadataLimit)
 	var signed signedOriginalRuntimeSQLMetadataReceipt
 	var receipt originalRuntimeSQLMetadataReceipt
-	if e != nil || decodeExact(raw, &signed) != nil || decodeExact(signed.Record, &receipt) != nil || receipt.Version != "original-runtime-installed-sql-metadata.v1" || receipt.PlanSHA256 != i.planHash || receipt.Target != i.plan.Target || receipt.Enrollment != enrollment {
+	if e != nil || decodeOriginalRuntimeMetadata(raw, &signed) != nil || decodeOriginalRuntimeMetadata(signed.Record, &receipt) != nil || receipt.Version != "original-runtime-installed-sql-metadata.v1" || receipt.PlanSHA256 != i.planHash || receipt.Target != i.plan.Target || receipt.Enrollment != enrollment {
 		return result, ErrInstall
 	}
 	material, e := i.readOriginalRuntimeIssuerMaterial(receipt.Issuers, enrollment)
@@ -97,7 +97,7 @@ func (i *Installer) QueryOriginalRuntimeProviderInstallation(ctx context.Context
 	if s.authority(ctx, enrollment) != nil {
 		return result, ErrInstall
 	}
-	again, e := readBootstrapSourcePin(pin, 262144)
+	again, e := readBootstrapSourcePin(pin, originalRuntimeMetadataLimit)
 	if e != nil || !bytes.Equal(again, raw) {
 		return result, ErrInstall
 	}
@@ -125,7 +125,11 @@ func (i *Installer) QueryOriginalRuntimeProviderInstallation(ctx context.Context
 	var actual a.RuntimeInstalledSQLSnapshot
 	readErr := a.ErrAuthorityWrite
 	if !missingFence {
-		actual, readErr = a.QueryRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities)
+		if want.C1 != nil {
+			actual, readErr = a.QueryMixedRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, want.C1)
+		} else {
+			actual, readErr = a.QueryRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities)
+		}
 	}
 	tail, e := s.lockAdmin(ctx, tx)
 	if e != nil || tail.Before(now) || !s.live(ctx) {
@@ -149,7 +153,7 @@ func (i *Installer) QueryOriginalRuntimeProviderInstallation(ctx context.Context
 	if result.State == "committed_original_rows_verified" && !result.OriginalAuthorizationExpired {
 		recovered, recoverErr := i.readOriginalRuntimeProviderResult(ctx, enrollment, pending, pin, receipt)
 		if recoverErr == nil {
-			currentReceipt, e := readBootstrapSourcePin(pin, 262144)
+			currentReceipt, e := readBootstrapSourcePin(pin, originalRuntimeMetadataLimit)
 			if e != nil || !bytes.Equal(currentReceipt, raw) {
 				return result, ErrInstall
 			}

@@ -39,7 +39,7 @@ func (s *SQLStore) ReadBindingTx(ctx context.Context, view SQLReadView, installa
 		return BindingFacts{}, ErrKEKFacts
 	}
 	facts, err := scanBindingRow(rows, installation)
-	if err != nil || facts.Binding.ConfigRef != pin || rows.Next() || rows.Err() != nil {
+	if err != nil || facts.Binding.Retention != nil || facts.Binding.ConfigRef != pin || rows.Next() || rows.Err() != nil {
 		return BindingFacts{}, ErrKEKFacts
 	}
 	return facts, nil

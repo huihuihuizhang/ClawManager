@@ -16,6 +16,9 @@ func (b *Bound) StageAdmission(ctx context.Context, operationID string, configVe
 		return ErrKEKFacts
 	}
 	binding := prepared.Binding()
+	if binding.Retention != nil {
+		return ErrKEKFacts
+	}
 	observation := prepared.Observation()
 	mapping := prepared.OriginalMapping()
 	if binding.InstallationID != b.installationID || observation.InstallationID != b.installationID || binding.ConfigRef.IdentityHash != binding.Key.IdentityHash || binding.ConfigRef.Version != binding.Key.RegistryVersion || !kekHash.MatchString(binding.Key.IdentityHash) || !kekHash.MatchString(observation.ConfigSHA256) ||
@@ -93,6 +96,9 @@ func (b *Bound) RetainPlanned(ctx context.Context, prepared PreparedReferenceCha
 		return ErrKEKFacts
 	}
 	r := prepared.Reference()
+	if b.retentionOnly(r.Key.IdentityHash, r.Key.RegistryVersion) {
+		return ErrKEKFacts
+	}
 	if r.State != ReferencePlanned || !validPartition(r.Partition) || r.SourceRecordID == "" || len(r.SourceRecordID) > 256 || r.SourceRecordVersion == "" || len(r.SourceRecordVersion) > 128 || !kekHash.MatchString(r.BindingSHA256) || prepared.Source().RecordID != r.SourceRecordID || prepared.Source().RecordVersion != r.SourceRecordVersion {
 		return ErrKEKFacts
 	}

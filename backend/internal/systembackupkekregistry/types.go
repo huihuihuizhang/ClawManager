@@ -40,12 +40,34 @@ type ProviderBinding struct {
 // A distinct config may reuse exactly the same binding. Never derive the
 // identity/version from a provider name, numeric version or observation hash.
 type Binding struct {
+	// Nil preserves the existing executable backup mapping wire. A nonnil
+	// value is STRICTLY retention-only evidence provenance, never key-use grant.
+	Retention      *RetainedEvidenceSource `json:",omitempty"`
 	InstallationID string
 	ConfigRef      ReferencePin
 	Key            wire.KeyBinding
 	Provider       ProviderBinding
 	GenerateRef    TypedReference
 	UnwrapRef      TypedReference
+}
+
+type RetainedEvidenceSource struct {
+	Purpose          string
+	Source           SourceRecord
+	KeyContextSHA256 string
+}
+
+// Supplied only by the independently authenticated original C1 history owner.
+// The actual installer entry accepts that owner's opaque concrete object;
+// neither DTO fields, hashes, healthy/Passed nor this interface mint authority.
+// Native work finishes before D's original transaction. Recheck is SQL-only
+// over the original prelocked source/hold ranges, never a callback to probe.
+type PreparedRetainedEvidenceBackfill interface {
+	Bindings() []Binding
+	References() []Reference
+	ExpectedSnapshot() Snapshot
+	ValidUntil() time.Time
+	RecheckOriginalRetained(context.Context, SQLReadView, LockedSnapshot, time.Time) error
 }
 
 // AdmissionObservation records provenance, not an authorization token. The two
@@ -224,6 +246,10 @@ type PreparedRevocation interface {
 }
 
 func cloneBinding(b Binding) Binding {
+	if b.Retention != nil {
+		r := *b.Retention
+		b.Retention = &r
+	}
 	b.GenerateRef.RawJSON = append([]byte(nil), b.GenerateRef.RawJSON...)
 	b.UnwrapRef.RawJSON = append([]byte(nil), b.UnwrapRef.RawJSON...)
 	return b

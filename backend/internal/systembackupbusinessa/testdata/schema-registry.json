@@ -6,8 +6,8 @@
   "plan_source": "docs/system-backup-restore-division-plan.md",
   "migration_catalog": {
     "algorithm": "sha256-length-prefixed-filename-normalized-content-v1",
-    "file_count": 177,
-    "hash": "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3"
+    "file_count": 178,
+    "hash": "1efd02dc8ee4038f53c58f17aeee39ba49ad1e6c06f56cdad3a1147d10992494"
   },
   "schema_hash": {
     "algorithm": "sha256-information-schema-canonical-v1",

@@ -16,6 +16,9 @@ func (b *Bound) MarkUnknown(ctx context.Context, prepared PreparedReferenceChang
 		return ErrKEKFacts
 	}
 	r := prepared.Reference()
+	if b.retentionOnly(r.Key.IdentityHash, r.Key.RegistryVersion) {
+		return ErrKEKFacts
+	}
 	if r.State != ReferenceUnknown || !validPartition(r.Partition) || r.SourceRecordID == "" || r.SourceRecordVersion == "" || prepared.Source() != r.LifecycleSource || prepared.Source().RecordID != r.SourceRecordID || prepared.Source().RecordVersion != r.SourceRecordVersion {
 		return ErrKEKFacts
 	}

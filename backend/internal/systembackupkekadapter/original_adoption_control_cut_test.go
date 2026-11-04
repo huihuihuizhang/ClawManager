@@ -17,6 +17,11 @@ import (
 // actual private SQL census producer. Physical/snapshot/backfill witness values
 // are signed test doubles; none is a genuine physical proof or PreparedCoverage.
 func originalControlBatchFixture(t *testing.T, observed *UnadmittedSQLCoverageCensus) (OriginalAdoptionControlPins, OriginalAdoptionControlRecords) {
+	return originalControlReferencesFixture(t, observed, []reg.Reference{}, 1, false)
+}
+
+// Test-only signed physical/backfill doubles; no production proof constructor.
+func originalControlReferencesFixture(t *testing.T, observed *UnadmittedSQLCoverageCensus, refs []reg.Reference, epoch uint64, revoked bool) (OriginalAdoptionControlPins, OriginalAdoptionControlRecords) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -34,7 +39,7 @@ func originalControlBatchFixture(t *testing.T, observed *UnadmittedSQLCoverageCe
 		keys[kind] = key
 	}
 	for _, partition := range []reg.Partition{reg.RetainedArtifacts, reg.InflightAndUnknownWrites, reg.HoldsAndCatalog, reg.RestoreAndPrune} {
-		count, digest, e := originalCoverageReferences([]reg.Reference{}, partition)
+		count, digest, e := originalCoverageReferences(refs, partition)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -51,7 +56,7 @@ func originalControlBatchFixture(t *testing.T, observed *UnadmittedSQLCoverageCe
 			} else {
 				w := CoverageWitnessFacts{Database: facts.Database, InstallationID: facts.InstallationID, Partition: partition, Kind: kind, ScopeSHA256: coverageFactsHash("TEST-DOUBLE-scope-" + kind + string(partition)), ObservationSHA256: coverageFactsHash("TEST-DOUBLE-not-native-" + kind), SnapshotRevision: part.SnapshotRevision, FenceRevision: part.FenceRevision}
 				source.ContentSHA256 = coverageFactsHash(w)
-				r := CoverageWitnessRecord{Facts: w, Source: source, Revision: "v1", NotBefore: facts.ObservedAt, Until: until}
+				r := CoverageWitnessRecord{Facts: w, Source: source, Revision: "v1", NotBefore: facts.ObservedAt, Until: until, Revoked: revoked && kind == "historical_backfill"}
 				raw, e := json.Marshal(r)
 				if e != nil {
 					t.Fatal(e)
@@ -74,7 +79,7 @@ func originalControlBatchFixture(t *testing.T, observed *UnadmittedSQLCoverageCe
 		}
 		parts = append(parts, part)
 	}
-	adoption := CoverageAdoptionFacts{Database: facts.Database, InstallationID: facts.InstallationID, AdoptedEpoch: 1, Partitions: parts}
+	adoption := CoverageAdoptionFacts{Database: facts.Database, InstallationID: facts.InstallationID, AdoptedEpoch: epoch, Partitions: parts}
 	source := reg.SourceRecord{SourceID: "fixture-original-adopter", RecordID: "sev_fixture_adoption", RecordVersion: "v1", ContentSHA256: coverageFactsHash(adoption)}
 	r := CoverageAdoptionRecord{Facts: adoption, Source: source, Revision: "v1", NotBefore: facts.ObservedAt, Until: until}
 	raw, e := json.Marshal(r)

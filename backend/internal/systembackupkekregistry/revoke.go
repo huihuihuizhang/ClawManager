@@ -23,6 +23,9 @@ func (b *Bound) Revoke(ctx context.Context, prepared PreparedRevocation) error {
 	var rowVersion uint64
 	for _, fact := range b.original.Bindings {
 		if fact.Binding.ConfigRef == pin {
+			if fact.Binding.Retention != nil {
+				return ErrKEKFacts
+			}
 			rowVersion = fact.RowVersion
 			if rev.Purpose == GenerateRevocation {
 				old = fact.GenerateRevoked
@@ -69,6 +72,9 @@ func (b *Bound) RequireUnrevoked(pin ReferencePin, purpose RevocationPurpose) er
 	}
 	for _, fact := range b.original.Bindings {
 		if fact.Binding.ConfigRef == pin {
+			if fact.Binding.Retention != nil {
+				return ErrKEKFacts
+			}
 			switch purpose {
 			case GenerateRevocation:
 				if fact.GenerateRevoked == nil {

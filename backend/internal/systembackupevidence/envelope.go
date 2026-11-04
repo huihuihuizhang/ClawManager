@@ -54,7 +54,11 @@ func aad(m Manifest, c Chunk) []byte {
 
 // Prepared can only be created after both input passes, framing and all hashes
 // succeed. A failed Prepare may leave CIPHERTEXT at dst; caller must discard it.
-type Prepared struct{ manifest Manifest }
+type Prepared struct {
+	manifest      Manifest
+	header        []byte // Original canonical ciphertext envelope; no plaintext DEK.
+	transitSource *originalSystemTransitPreparation
+}
 
 func (p Prepared) Manifest() Manifest {
 	m := p.manifest
@@ -207,7 +211,7 @@ func prepareExternal(ctx context.Context, i Identity, key KeyRef, source Source,
 	if ctx.Err() != nil {
 		return fail(ErrUnavailable)
 	}
-	return Prepared{m}, nil
+	return Prepared{manifest: m, header: append([]byte(nil), header...)}, nil
 }
 
 // Sources and staging writers are trusted synchronous adapters. Context checks

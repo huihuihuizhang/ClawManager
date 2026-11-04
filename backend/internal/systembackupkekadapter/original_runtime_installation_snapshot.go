@@ -23,6 +23,7 @@ type RuntimeInstalledSQLRow struct {
 	Cells    []RuntimeInstalledSQLCell
 }
 type RuntimeInstalledSQLSnapshot struct {
+	C1                              *OriginalC1SQLSnapshot `json:",omitempty"`
 	Database                        reg.DatabaseIdentity
 	InstallationID                  string
 	ObservedAt                      time.Time
@@ -63,19 +64,29 @@ func (w *InstallationAuthorityWriter) StageInitialRuntimeAuthoritiesWithSnapshot
 // Reread only the original known ranges (locked=true only after those source
 // ranges already belong to the caller). No table/prefix exemption is granted.
 func ReadRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport, locked bool, controls ...*OriginalAdoptionControlCut) (RuntimeInstalledSQLSnapshot, error) {
-	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, locked, false, controls...)
+	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, locked, false, nil, controls...)
 }
 
 // Query ONLY original inert rows; expired original windows are reported by the
 // authenticated installer query, never renewed or promoted into permission.
 func QueryRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport) (RuntimeInstalledSQLSnapshot, error) {
-	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, true, true)
+	return readRuntimeInstalledSQLSnapshotTx(ctx, tx, database, installation, mapping, signature, caps, true, true, nil)
 }
-func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport, locked, historical bool, controls ...*OriginalAdoptionControlCut) (RuntimeInstalledSQLSnapshot, error) {
+func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database reg.DatabaseIdentity, installation string, mapping, signature []byte, caps []OriginalRuntimeCapabilityImport, locked, historical bool, c1 *OriginalC1SQLSnapshot, controls ...*OriginalAdoptionControlCut) (RuntimeInstalledSQLSnapshot, error) {
 	r := RuntimeInstalledSQLSnapshot{Database: database, InstallationID: installation, MappingRecord: bytes.Clone(mapping), MappingSignature: bytes.Clone(signature)}
 	bad := func() (RuntimeInstalledSQLSnapshot, error) { return RuntimeInstalledSQLSnapshot{}, ErrAuthorityWrite }
 	if tx == nil || ctx == nil || ctx.Err() != nil || len(caps) != 3 {
 		return bad()
+	}
+	if c1 != nil {
+		if c1.Database != database || c1.InstallationID != installation {
+			return bad()
+		}
+		tables, _, err := scanOriginalC1ProtocolClosure(ctx, tx, *c1)
+		if err != nil || !reflect.DeepEqual(tables, c1.Tables) {
+			return bad()
+		}
+		r.C1 = c1
 	}
 	var cut *OriginalAdoptionControlCut
 	if len(controls) > 1 {
@@ -136,6 +147,7 @@ func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 		index[col] = n
 	}
 	seenControls := map[string]bool{}
+	seenC1 := map[string]bool{}
 	for rows.Next() {
 		if rows.Scan(dest...) != nil {
 			return bad()
@@ -148,6 +160,16 @@ func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 					return bad()
 				}
 				seenControls[owned.publicID] = true
+				continue
+			}
+		}
+		if c1 != nil {
+			owned, found := originalC1EvidenceRow(c1, text("id"), text("public_id"))
+			if found {
+				if seenC1[text("id")] || !reflect.DeepEqual(r.Columns, c1.EvidenceColumns) || !originalC1ExactCells(owned, values) {
+					return bad()
+				}
+				seenC1[text("id")] = true
 				continue
 			}
 		}
@@ -187,7 +209,7 @@ func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 		}
 		r.Rows = append(r.Rows, row)
 	}
-	if rows.Err() != nil || rows.NextResultSet() || rows.Close() != nil || len(r.Rows) != 3 || len(expected) != 0 || cut != nil && len(seenControls) != len(cut.rows) {
+	if rows.Err() != nil || rows.NextResultSet() || rows.Close() != nil || len(r.Rows) != 3 || len(expected) != 0 || cut != nil && len(seenControls) != len(cut.rows) || c1 != nil && len(seenC1) != len(c1.EvidenceRows) {
 		return bad()
 	}
 	var total uint64
@@ -196,11 +218,22 @@ func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 	} else {
 		r.Evidence, e = scanSQLCensusTable(ctx, tx, "system_backup_v2_evidence", reg.RetainedArtifacts, locked, &total)
 	}
-	if e != nil || r.Evidence.Rows != 3 {
+	wantRows := uint64(3)
+	if c1 != nil {
+		wantRows += uint64(len(c1.EvidenceRows))
+	}
+	if e != nil || r.Evidence.Rows != wantRows {
 		return bad()
 	}
 	r.Chunks, e = scanSQLCensusTable(ctx, tx, "system_backup_v2_evidence_chunks", reg.RetainedArtifacts, locked, &total)
-	if e != nil || r.Chunks.Rows != 0 || r.Chunks.Bytes != 0 {
+	if e != nil {
+		return bad()
+	}
+	if c1 != nil {
+		if r.Chunks.Rows != uint64(len(c1.ChunkRows)) || verifyOriginalC1ExactChunks(ctx, tx, *c1) != nil {
+			return bad()
+		}
+	} else if r.Chunks.Rows != 0 || r.Chunks.Bytes != 0 {
 		return bad()
 	}
 	var actual, actualSignature []byte
@@ -252,6 +285,25 @@ func RuntimeInstalledSnapshotUntil(snapshot RuntimeInstalledSQLSnapshot) (time.T
 		}
 		if until.IsZero() || expiry.Before(until) {
 			until = expiry
+		}
+	}
+	if snapshot.C1 != nil {
+		if len(snapshot.C1.Sources) == 0 {
+			return time.Time{}, ErrAuthorityWrite
+		}
+		for _, s := range snapshot.C1.Sources {
+			retention, e := s.Receipt.RetentionExpiresAt.Time()
+			if e != nil {
+				return time.Time{}, ErrAuthorityWrite
+			}
+			for _, cap := range []time.Time{s.Record.ExpiresAt, s.Record.ProtectedUntil, retention} {
+				if cap.IsZero() {
+					return time.Time{}, ErrAuthorityWrite
+				}
+				if cap.Before(until) {
+					until = cap
+				}
+			}
 		}
 	}
 	return until, nil

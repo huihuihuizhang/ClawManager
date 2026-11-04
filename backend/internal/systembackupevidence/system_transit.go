@@ -136,7 +136,15 @@ func (p *SystemTransitPreparer) Prepare(ctx context.Context, i Identity, src Sou
 	// Pointer identity is local to this preparer and call; external request
 	// fields/context strings cannot mint or reuse a Wrap capability.
 	ctx = context.WithValue(ctx, p, call)
-	return PrepareSystemCapability(ctx, i, p.c.Transit.Key, src, call, systemTransitKeys{call}, dst)
+	prepared, err := PrepareSystemCapability(ctx, i, p.c.Transit.Key, src, call, systemTransitKeys{call}, dst)
+	if err != nil {
+		return Prepared{}, err
+	}
+	source := &originalSystemTransitPreparation{preparer: p, manifestHash: hash(canonical(prepared.Manifest())), profile: p.profile, transit: p.c.Transit}
+	source.origin = source
+	source.transit.CAPEM = nil
+	prepared.transitSource = source
+	return prepared, nil
 }
 
 // Close after the host drains in-flight preparations. Repeated Close is safe.

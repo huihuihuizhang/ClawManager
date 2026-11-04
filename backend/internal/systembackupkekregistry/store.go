@@ -46,6 +46,13 @@ func hashJSON(v any) ([]byte, string, error) {
 // first admission and in each later admission observation. A change to a
 // security-bearing reference field still changes this digest.
 func semanticCoreHash(b Binding) (string, error) {
+	if b.Retention != nil {
+		if !validRetainedEvidenceBinding(b) {
+			return "", ErrKEKFacts
+		}
+		_, digest, err := hashJSON(b)
+		return digest, err
+	}
 	if !validTypedReference(b.GenerateRef) || !validTypedReference(b.UnwrapRef) {
 		return "", ErrKEKFacts
 	}

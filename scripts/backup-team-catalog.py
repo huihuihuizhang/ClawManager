@@ -82,6 +82,14 @@ def outputs():
                     "system_backup_minio_owner_refs",
                     "system_backup_signing_resource_heads",
                     "system_backup_signing_resource_grants",
+                    "system_backup_producer_domains",
+                    "system_backup_producer_grants",
+                    "system_backup_producer_runs",
+                    "system_backup_producer_targets",
+                    "system_backup_producer_command_receipts",
+                    "system_backup_producer_evidence_bindings",
+                    "system_backup_producer_evidence_refs",
+                    "system_backup_producer_result_receipts",
                 ]) + '\t)\n}\n')
     yield ROOT / "backend/internal/systembackup/v2_control_registry.go", registry
 

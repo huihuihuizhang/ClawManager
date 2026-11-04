@@ -201,6 +201,18 @@ func sqlCensusSources() (map[string]reg.Partition, map[string]bool) {
 	excluded["system_backup_minio_owner_refs"] = true
 	excluded["system_backup_signing_resource_heads"] = true
 	excluded["system_backup_signing_resource_grants"] = true
+	// C1 is an exact reviewed lifecycle source set, never a prefix exclusion.
+	// Historical bindings/results identify key-bearing immutable evidence;
+	// active grants/runs and unknown commands retain in-flight obligations;
+	// evidence_refs retain original protection/hold correspondence. Every row
+	// remains in the original locked census and requires producer provenance.
+	for _, name := range []string{"system_backup_producer_evidence_bindings", "system_backup_producer_result_receipts"} {
+		sources[name] = reg.RetainedArtifacts
+	}
+	for _, name := range []string{"system_backup_producer_domains", "system_backup_producer_grants", "system_backup_producer_runs", "system_backup_producer_targets", "system_backup_producer_command_receipts"} {
+		sources[name] = reg.InflightAndUnknownWrites
+	}
+	sources["system_backup_producer_evidence_refs"] = reg.HoldsAndCatalog
 	return sources, excluded
 }
 

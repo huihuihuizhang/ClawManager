@@ -39,6 +39,7 @@ type InstalledVaultDependencyConfig struct {
 	CAPEM                                                []byte
 	JWTMount                                             string
 	Trust                                                a.VaultJWTTrust
+	EvidenceWrap                                         *InstalledVaultEvidenceWrapProfile `json:",omitempty"`
 }
 
 type InstalledVaultKeyVersion struct{ Version, PublicKeySHA256 string }
@@ -73,6 +74,9 @@ func (*InstalledVaultDependencyObserver) MarshalJSON() ([]byte, error) { return 
 func NewInstalledVaultDependencyObserver(cfg InstalledVaultDependencyConfig, kube kubernetes.Interface, namespace, namespaceUID string) (*InstalledVaultDependencyObserver, error) {
 	u, e := url.Parse(cfg.Endpoint)
 	if e != nil || cfg.Version != "installed-vault-dependency-input.v1" || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawPath != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || u.ForceQuery || nilInterface(kube) || namespace == "" || namespaceUID == "" || cfg.ClusterID == "" || !safeName.MatchString(cfg.TransitMount) || !safeName.MatchString(cfg.JWTMount) || !safeName.MatchString(cfg.PinnedKeyName) || !numericVersion(cfg.PinnedKeyVersion) || len(cfg.CAPEM) == 0 || len(cfg.CAPEM) > 65536 || digest(cfg.CAPEM) != cfg.CASHA256 || !hashPattern.MatchString(cfg.TokenSHA256) || !filepath.IsAbs(cfg.TokenFile) || filepath.Clean(cfg.TokenFile) != cfg.TokenFile || cfg.Trust.JWKSURL != "" || cfg.Trust.JWKSCAPEM != "" || len(cfg.Trust.ValidationPublicKeys) == 0 || !reflect.DeepEqual(cfg.Trust.Algorithms, []string{"RS256"}) {
+		return nil, ErrOwner
+	}
+	if cfg.EvidenceWrap != nil && validateInstalledEvidenceWrap(cfg) != nil {
 		return nil, ErrOwner
 	}
 	if cfg.IdentityMode != "original-owner-readonly" && cfg.IdentityMode != "metadata-only" || cfg.IdentityMode == "metadata-only" && (!safeName.MatchString(cfg.ObserverPolicy) || cfg.ObserverPolicy == "root" || cfg.ObserverPolicy == "default") || cfg.IdentityMode == "original-owner-readonly" && cfg.ObserverPolicy != "" {
@@ -480,13 +484,16 @@ func (o *InstalledVaultDependencyObserver) installedRole(ctx context.Context, na
 			if key.Type == "ed25519" {
 				want := "path \"" + o.cfg.TransitMount + "/sign/" + key.Name + "\" {\n  capabilities = [\"update\"]\n  required_parameters = [\"input\", \"key_version\"]\n  allowed_parameters = {\n    \"input\" = []\n    \"key_version\" = [\"" + v + "\"]\n  }\n}\n"
 				matched = matched || policy.Policy == want
-			} else if o.cfg.TransitMount == "transit" {
+			} else if o.cfg.TransitMount == "transit" && (o.cfg.EvidenceWrap == nil || key.Name != o.cfg.EvidenceWrap.Transit.KeyName) {
 				for _, op := range []kms.Operation{kms.Generate, kms.Unwrap} {
 					want, e := a.VaultRuntimeACL(op, key.Name, v)
 					matched = matched || e == nil && policy.Policy == want
 				}
 			}
 		}
+	}
+	if o.cfg.EvidenceWrap != nil && installedEvidenceWrapMatches(o.cfg, name, raw, policy.Policy, keys) {
+		matched = true
 	}
 	if !matched {
 		return zero, ErrOwner

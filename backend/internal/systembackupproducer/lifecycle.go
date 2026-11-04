@@ -101,13 +101,14 @@ func nilEnvironment(v any) bool {
 // ExecutionHandle is service-local committed identity, never a bearer token.
 // It contains no provider credentials and must be reauthenticated on every use.
 type ExecutionHandle struct {
-	issuer     *Lifecycle
-	scope      Scope
-	subject    Hash
-	grant      ID
-	generation Counter
-	version    Counter
-	run        ID
+	issuer        *Lifecycle
+	scope         Scope
+	subject       Hash
+	grant         ID
+	generation    Counter
+	version       Counter
+	run           ID
+	commandSource *OriginalCommandSource
 }
 
 func (ExecutionHandle) MarshalJSON() ([]byte, error) { return nil, ErrInvalid }
@@ -180,6 +181,12 @@ func (s *Lifecycle) Execute(ctx context.Context, request CommandRequest, handle 
 	}
 	if !p.replayed && request.Command != "revoke" {
 		result.Handle = &ExecutionHandle{issuer: s, scope: s.scope, subject: request.ActorIdentityHash, grant: p.receipt.Outcome.GrantID, generation: p.receipt.Outcome.GrantGeneration, version: p.receipt.Outcome.GrantRowVersion, run: p.receipt.Outcome.RunID}
+		original := &OriginalCommandSource{issuer: s, receipt: detached(p.receipt)}
+		original.origin = original
+		if handle != nil && handle.commandSource != nil {
+			original.previous = handle.commandSource
+		}
+		result.Handle.commandSource = original
 	}
 	return result, nil
 }
