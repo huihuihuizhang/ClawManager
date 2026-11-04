@@ -1,0 +1,33 @@
+{
+  "schema_version": "supervisor-real-redis7411-native-qualification.v1",
+  "owner": "8390e30eb6574b90a512c3fec4787199",
+  "image": "docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+  "redis_binary_sha256": "67adb510c4c9db9585ad63404950694241c748ad6f34c3e1cc8fdc095268f1b6",
+  "exit_code": 0,
+  "network": "none",
+  "ports_published": false,
+  "field_endpoint_contacted": false,
+  "cleanup": "absent_after_rm",
+  "test_binary": {
+    "bytes": 96067413,
+    "sha256": "3066fc387bdae39bbc39242f5d7e583e7807500bcffe9f0ea76a8690187690ce",
+    "cleanup": "removed"
+  },
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "actual_scope": "Exact field Redis image in a new isolated loopback-only process: TLS/auth, GETUSER/selectors/catalogue, read-only ACL reduction and SAVE, existing client write denial, exact ACL restoration, AOF fsync and process restart. Not a host reboot, original source hold, actual installation or page backup.",
+  "logs": {
+    "native.stdout": {
+      "sha256": "bc21a070bb4f8c92bd588a815950fd9534d1c6555bb4ae615b6b5d0673afbe1f",
+      "bytes": 354
+    },
+    "native.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "REPORT.json": {
+      "sha256": "6d558c157347ddedfeb4f58b176c75708bda2e5e4b6c2688ce9cde93b950e7b3",
+      "bytes": 669
+    }
+  }
+}
