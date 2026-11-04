@@ -79,6 +79,14 @@ func BootstrapOriginalEnrollment(ctx context.Context, password []byte, input Ori
 	if installerID.ServerUUID != businessID.ServerUUID || installerID.Database != businessID.Database {
 		return zero, ErrInstall
 	}
+	// The same native scope serializes this original producer with SQL account
+	// rollback. Keep one session solely for the lock and one for real enrollment
+	// reads; no absent future owner/gate table is used as a bootstrap mutex.
+	releaseSQLScope, err := lockOriginalSQLAccountScope(ctx, installerDB, installerID.ServerUUID, installerID.Database)
+	if err != nil {
+		return zero, ErrInstall
+	}
+	defer releaseSQLScope()
 	// Authentication is performed before generating a signing key or creating a
 	// cluster enrollment. A SQL password alone does not supply the local admin.
 	var userID int64

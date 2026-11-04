@@ -1,0 +1,51 @@
+{
+  "schema_version": "supervisor-original-sql-production-v18-review.v1",
+  "source_map": {
+    "path": "backend/.d-sql-accounts-20261104/source-map.json",
+    "sha256": "435c1094ea2b669fc0b569979d23c25fba1d4a5018f984096432e568c11e8844"
+  },
+  "root_delta": {
+    "initial_failure": "source routine was mistakenly classified as a table by the unit test",
+    "production_permissions_changed": false,
+    "independent_input_sha256": "b97754e940e7ce0267aecc0ae06e6afa75aa243e0698002238dd295f4eff7ab0"
+  },
+  "windows": {
+    "roots": 5,
+    "failures": 0,
+    "skips": 0,
+    "log_sha256": "50061d842aee6d3ea4c0f805f82df97b3609a46e6fe36598e0f956805cdb6ec7"
+  },
+  "linux": {
+    "roots": 4,
+    "failures": 0,
+    "skips": 0,
+    "stdout_sha256": "4693c070c2b793820c56641ae18550d9dd1c7643eeda050444866251796646b8"
+  },
+  "builds": [
+    {
+      "name": "install.test",
+      "bytes": 113897540,
+      "sha256": "179555e81f6d00faa867d10bc18a3439c9805934d83c62ea8c2518f23186ed34"
+    },
+    {
+      "name": "system-backup-original-enroll",
+      "bytes": 79513497,
+      "sha256": "0b14d3cc5517a272e41842b40658ce4b93aa199a14a704c54fb8845112cd105b"
+    },
+    {
+      "name": "system-backup-source-tls-bootstrap",
+      "bytes": 64576761,
+      "sha256": "dd3306a000b652761c48a7bbce58f270b469eeabd83f05d1d01596bb69d2545e"
+    }
+  ],
+  "initial_unit_failure": "Test incorrectly treated exact schema census EXECUTE routine as control table rows. Test now distinguishes table/column from routine; production rights unchanged.",
+  "initial_linux_harness_failure": "PowerShell altered test flags before test execution; rerun with explicit subprocess argument array passed.",
+  "independent_alias_contract": "Exact field-passed v3 rename SQL SHA b97754e940e7ce0267aecc0ae06e6afa75aa243e0698002238dd295f4eff7ab0 verifies all35 target policies, preserves business tables, rejects unreviewed aliases.",
+  "native_sql_primitives_passed": true,
+  "actual_six_role_issuance_native_test": false,
+  "actual_installation": false,
+  "original_upgrade": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "cleanup": "three ended verification builds hashed then removed"
+}

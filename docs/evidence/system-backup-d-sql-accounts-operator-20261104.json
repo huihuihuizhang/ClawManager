@@ -1,0 +1,71 @@
+{
+  "version": "original198-sql-account-operator.v1",
+  "state": "SOURCE_ONLY_PENDING_ROOT_COMPILE_NATIVE_AND_FIELD_REVIEW",
+  "entry": "system-backup-original-enroll sql-accounts --mode inspect|prepare|apply|query|rollback",
+  "script": "scripts/system-backup-original-sql-accounts.py",
+  "new_binary_targets": 0,
+  "required_rebuilds": [
+    "Existing system-backup-original-enroll and system-backup-source-tls-bootstrap from this combined source.",
+    "The exact35 retained control census metadata additions must also reach app/worker/consumer images. Earlier64dc74ee images do not automatically contain this later source."
+  ],
+  "scope": [
+    "Original99/97 profile AFTER genuine original198 upgrade/recovery; it does not upgrade schema or replace D1 maintenance/backup/restore.",
+    "Initial Installer and A2 bootstrap business-consumer SQL role, business-source credential and exact14-table runtime-controller credential; two further distinct roles are control_sql participant-reader and login-locked census definer.",
+    "mysql-business.dsn is the A2 bootstrap consumer: it cannot read password_hash or update users. It must not be substituted for the primary application's full business/authentication connection or the registration/MFA password verifier. Existing A-specific authentication and later worker/recovery/source credentials still need their actual existing profiles and delivery.",
+    "No global/schema DML, DDL or delegation for those ordinary accounts. The locked definer alone has the exact four schema metadata-census prerequisites plus SHOW_ROUTINE and SELECT on mysql.global_grants/mysql.role_edges. Runtime never receives its login credential.",
+    "Actual table grants are intersected with original198's actual table set and checked against the finite compiled matrix. The original35 retained aliases must all exist and remain empty. Only Installer/business authority consumers get exact SELECT on those35; source never gets control-row SELECT."
+  ],
+  "username_before_any_plan": {
+    "producer": "system-backup-source-tls-bootstrap --mode inspect or --mode bootstrap may now OMIT --local-admin-username.",
+    "exact_functions": [
+      "systembackupsourcetlsbootstrap.readNative: original container-local root Unix IPC selects only existing active local/admin rows and compares the actual private password with bcrypt; exactly one match required.",
+      "Client.Inspect: writes that actual Native.AdminUsername into the create-only original TLS bootstrap plan and reuses it for same-operation apply.",
+      "system-backup-original-enroll sql-accounts inspect/prepare repeats genuine bcrypt discovery over pinned native TLS13, not a caller username claim."
+    ],
+    "password_path": "/root/.clawmanager-backup-install/admin-password",
+    "multiple_matching_admins": "Refused. Explicitly select an actual existing name after metadata-only original DBA inspection; never choose the first row or default admin."
+  },
+  "exact_required_native_flags": [
+    "--admin-dsn-file <TLS-bootstrap receipt.DSNFile> --admin-dsn-sha256 <receipt.DSNSHA256>",
+    "--source-tls-file <receipt.SourceTLSFile> --source-tls-sha256 <receipt.SourceTLSSHA256>",
+    "--kubeconfig-file <actual static private kubeconfig> --kubeconfig-sha256 <independent pin>",
+    "--namespace <actual> --namespace-uid <actual original UID> --cluster-uid <actual kube-system UID>",
+    "--expected-server-uuid <receipt.ServerUUID> --database <actual original database>",
+    "--local-admin-password-file /root/.clawmanager-backup-install/admin-password",
+    "--output-directory <new private directory for inspect/prepare; same retained operation directory otherwise>",
+    "For prepare/apply/query/rollback: --expected-ledger-sha256 <actual inspect ledger_sha256>",
+    "Prepare: --account-host <actual selected source host>; % requires explicit --allow-wildcard-host and the same acknowledgement on later commands.",
+    "Apply/query/rollback: --operation-file <exact operation directory/operation.json> --operation-sha256 <retained prepare output pin>"
+  ],
+  "ordered_commands": [
+    "0. Original TLS bootstrap can precede198 using the native bcrypt username discovery above. It produces the real SAN/CA/TLS13/root DSN receipt and does not enable global secure transport. Retain/pin the successful actual receipt.",
+    "1. D1 completes real original198 upgrade, failure recovery readiness and exact original schema/data proof. Old app stays under its actual reviewed deployment/recovery procedure; secure transport must not be enabled ahead of ready business TLS clients.",
+    "2. Run native sql-accounts --mode inspect with common required flags and NEW inventory directory; this does not require an initial expected-ledger pin. It saves inventory.json with exactly198 actual filenames, actual ledger SHA, table names, TLS13/SAN, global policy and actual bcrypt-selected username.",
+    "3. Run --mode prepare with that retained actual ledger pin, selected concrete account host, same original target and NEW operation directory. No SQL mutation occurs. Retain operation.json0600 and independent output pin. Review account-plan.public.json: actual six usernames/hosts and exact native GRANT statements, no passwords.",
+    "4. Run --mode apply with exact retained operation file/pin. Native per-server/database GET_LOCK serializes old late sends. apply.sent is fsynced before account SQL. Create locked attributed accounts, finite grants, exact new census, cleanup only native creator auto-grants, SET PERSIST require_secure_transport=ON, unlock the five intended logins, then fresh native TLS13/account/grants/source-census/controller checks. Nothing enables backup config.",
+    "5. On any unknown result run --mode query against the SAME operation. Actual presence/ownership/lock/TLS/privilege/routine/global state is recorded in native-query*.json. No SQL mutations are sent. A complete actual Apply may finish missing create-only file delivery using the SAME stored passwords. Already restored original state has a distinct query state. Partial/unconfirmed state is never success and apply cannot be resent.",
+    "6. On an unused failed/partial operation run --mode rollback against the SAME operation. It checks actual original identity, bcrypt admin and original grants, actual empty owner/config state and absence of ANY enrollment.json ConfigMap. It drops only operation-attributed accounts and the exact owned procedure, then conditionally restores original runtime and persisted global state and reads back all original accounts/grants. Foreign objects, actual enrollment/config or identity drift are refusals. Private operation and rollback records remain retained.",
+    "7. Run wrapper action enroll: it FIRST invokes native query and requires desired_actual_accounts_verified (original-state/no-change query cannot qualify). It reads native-produced sql-accounts-materials.public.json, verifies exact installer/business DSN pins, and passes the actual native-selected username plus existing private password path into the genuine original-enroll producer. That producer shares the native SQL account scope lock for its whole real enrollment path, closing account-rollback vs original-enrollment races. Unknown enrollment retains its exact keys/Plan; do not repeat with a new directory."
+  ],
+  "wrapper_command": "python3 -B scripts/system-backup-original-sql-accounts.py <inspect|prepare|apply|query|rollback|enroll> --tool-file <same-release actual original-enroll ELF> --tool-sha256 <actual ELF pin> --tls-receipt-file <actual successful TLS-bootstrap receipt> --tls-receipt-sha256 <independent receipt pin> --kubeconfig-file <actual private static file> --kubeconfig-sha256 <actual independent pin> --namespace <actual> --namespace-uid <actual> --cluster-uid <actual> --inventory-directory <selected private inventory directory> --operation-directory <selected private operation directory> --receipt-file <NEW private command output file>",
+  "wrapper_action_specific_flags": {
+    "inspect": "No invented username or ledger. Inventory directory must be new; wrapper prints actual inventory file and SHA after native success.",
+    "prepare": "--inventory-sha256 <retained actual inventory pin> --account-host <actual host> [--allow-wildcard-host only if explicitly selecting %]. Operation directory must be new. Wrapper prints prepare receipt pin and operation file pin.",
+    "apply_query_rollback": "--inventory-sha256 <same actual pin> --prepare-receipt-file <actual native prepare receipt output> --prepare-receipt-sha256 <its independently retained SHA> [same wildcard acknowledgement when applicable]. Each receipt-file must be new.",
+    "enroll": "Same actual inventory/prepare pins plus --pre-enroll-query-receipt-file <NEW private query output> --enrollment-output-directory <NEW private enrollment directory>. Username comes from fresh verified native material; no default.",
+    "optional_explicit_username": "--local-admin-username <actual existing selected name>; still genuine bcrypt verified."
+  },
+  "outputs_after_full_native_success": [
+    "mysql-installer.dsn, mysql-business.dsn, mysql-source.dsn, mysql-runtime.dsn, mysql-control_sql.dsn: private0600 credentials, not argv values.",
+    "Corresponding worker-compatible credential JSON files; mysql-source-schema-census.json; local-admin-username.txt; exact file pins in sql-accounts-materials.public.json.",
+    "Operation.json includes original authentication hashes and actual generated credentials and is SENSITIVE0600. Never print or package it into public image layers. Original hashes/grants/global state are retained for exact recovery; public plan excludes secrets.",
+    "No replacement issuer keys, backup Plan, passed native evidence or owner grants are hand-authored. Genuine original enrollment is a separate final action."
+  ],
+  "required_root_checks": [
+    "Compile and run TestOriginalSQLAccounts*; original-enroll and source-tls-bootstrap CLI tests; TestControlCensusRegistryMatchesOriginalPolicy plus domain/source registry related tests on both supported build targets.",
+    "Real disposable same-profile198 native exercise: original root/TLS13/SAN/Kube/local bcrypt authentication; inspect/prepare/no mutation; apply exact roles/source census/controller checks; same query; negative cross-role writes and user-password reads; deliberately lost/partial outcomes; rollback/query originals and persisted global value; no password in stdout/stderr.",
+    "Review finite Installer/business write matrix and actual command paths, including dynamic SQL admission. matrix-source-audit.json is a source-navigation aid, not a native sufficiency proof.",
+    "Root owns actual production changes, final image/CLI rebuild, actual credential mount ownership/modes and post-rollout source facts. Ordinary account startup/readiness is not physical hold or DR qualification.",
+    "Delete Root-owned test/build outputs after verification as required; retain actual production rollback data. D created no test/build artifacts and did not run Go, SQL, Git, Docker or field commands."
+  ]
+}

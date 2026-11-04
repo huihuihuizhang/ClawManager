@@ -195,10 +195,42 @@ func readNative(ctx context.Context, db *sql.DB, request MySQLHelperRequest) (My
 	if db.QueryRowContext(ctx, `SELECT VERSION(),@@server_uuid,DATABASE(),CURRENT_USER(),@@hostname,@@datadir,@@socket,@@ssl_ca,@@ssl_cert,@@ssl_key,@@port,UTC_TIMESTAMP(6)`).Scan(&out.Version, &out.ServerUUID, &out.Database, &out.SQLAccount, &out.Hostname, &out.DataDirectory, &out.Socket, &ca, &cert, &key, &out.Port, &out.Clock) != nil || out.Database != request.Database || out.ServerUUID == "" || out.SQLAccount != "root@localhost" || !filepath.IsAbs(out.DataDirectory) || ca == "" || cert == "" || key == "" {
 		return out, ErrBootstrap
 	}
-	var stored, role, provider string
-	var active bool
-	if db.QueryRowContext(ctx, `SELECT id,username,password_hash,role,is_active,auth_provider FROM users WHERE username=?`, request.AdminUsername).Scan(&out.AdminID, &out.AdminUsername, &stored, &role, &active, &provider) != nil || out.AdminID < 1 || out.AdminUsername != request.AdminUsername || role != "admin" || !active || provider != "local" || bcrypt.CompareHashAndPassword([]byte(stored), request.AdminPassword) != nil {
-		return out, ErrBootstrap
+	if request.AdminUsername == "" {
+		// Inspect only: select the existing username by actual bcrypt matching,
+		// never by a default name, user id, or an arbitrary first admin row.
+		if request.Mode != "inspect" {
+			return out, ErrBootstrap
+		}
+		rows, e := db.QueryContext(ctx, `SELECT id,username,password_hash FROM users WHERE role='admin' AND is_active=1 AND auth_provider='local' ORDER BY id`)
+		if e != nil {
+			return out, ErrBootstrap
+		}
+		count, matches := 0, 0
+		for rows.Next() {
+			var id int64
+			var username, stored string
+			count++
+			if count > 1000 || rows.Scan(&id, &username, &stored) != nil {
+				rows.Close()
+				return out, ErrBootstrap
+			}
+			if id > 0 && username != "" && bcrypt.CompareHashAndPassword([]byte(stored), request.AdminPassword) == nil {
+				matches++
+				out.AdminID = id
+				out.AdminUsername = username
+			}
+			stored = ""
+		}
+		if rows.Err() != nil || rows.Close() != nil || matches != 1 {
+			return out, ErrBootstrap
+		}
+	} else {
+		var stored, role, provider string
+		var active bool
+		if db.QueryRowContext(ctx, `SELECT id,username,password_hash,role,is_active,auth_provider FROM users WHERE username=?`, request.AdminUsername).Scan(&out.AdminID, &out.AdminUsername, &stored, &role, &active, &provider) != nil || out.AdminID < 1 || out.AdminUsername != request.AdminUsername || role != "admin" || !active || provider != "local" || bcrypt.CompareHashAndPassword([]byte(stored), request.AdminPassword) != nil {
+			return out, ErrBootstrap
+		}
+		stored = ""
 	}
 	var e error
 	out.DataDirectory = filepath.Clean(out.DataDirectory)
@@ -445,7 +477,7 @@ func probeTLS(ctx context.Context, native MySQLNativeTLS, request MySQLHelperReq
 // bcrypt row, before Installer/migrations/enrollment are needed.
 func RunMySQLHelper(ctx context.Context, request MySQLHelperRequest) (MySQLHelperResult, error) {
 	var zero MySQLHelperResult
-	if runtime.GOOS != "linux" || ctx == nil || ctx.Err() != nil || request.Version != "original-source-mysql-tls-request.v1" || !bootstrapOperation.MatchString(request.Operation) || !bootstrapDatabase.MatchString(request.Database) || request.AdminUsername == "" || len(request.AdminPassword) == 0 || len(request.AdminPassword) > 1024 || len(request.DNSNames) > 32 || len(request.IPAddresses) > 32 || request.Deadline.IsZero() || !time.Now().Before(request.Deadline) {
+	if runtime.GOOS != "linux" || ctx == nil || ctx.Err() != nil || request.Version != "original-source-mysql-tls-request.v1" || !bootstrapOperation.MatchString(request.Operation) || !bootstrapDatabase.MatchString(request.Database) || (request.AdminUsername == "" && request.Mode != "inspect") || len(request.AdminPassword) == 0 || len(request.AdminPassword) > 1024 || len(request.DNSNames) > 32 || len(request.IPAddresses) > 32 || request.Deadline.IsZero() || !time.Now().Before(request.Deadline) {
 		return zero, ErrBootstrap
 	}
 	until := time.Now().Add(90 * time.Second)

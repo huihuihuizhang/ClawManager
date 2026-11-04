@@ -1,0 +1,41 @@
+SET @copy_guard=IF(DATABASE() REGEXP '^cm_import_[0-9a-f]{32}$','SELECT 1','ORIGINAL_DATABASE_WRITE_FORBIDDEN');
+PREPARE copy_guard_stmt FROM @copy_guard; EXECUTE copy_guard_stmt; DEALLOCATE PREPARE copy_guard_stmt;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; START TRANSACTION WITH CONSISTENT SNAPSHOT;
+SET @nonempty=(SELECT COUNT(*) FROM `system_artifact_lease_states`)+(SELECT COUNT(*) FROM `system_artifact_leases`)+(SELECT COUNT(*) FROM `system_backup_admin_revocations`)+(SELECT COUNT(*) FROM `system_backup_admin_sessions`)+(SELECT COUNT(*) FROM `system_backup_alert_states`)+(SELECT COUNT(*) FROM `system_backup_artifact_verifications`)+(SELECT COUNT(*) FROM `system_backup_attempts`)+(SELECT COUNT(*) FROM `system_backup_check_results`)+(SELECT COUNT(*) FROM `system_backup_compact_tombstones`)+(SELECT COUNT(*) FROM `system_backup_configs`)+(SELECT COUNT(*) FROM `system_backup_dependency_health`)+(SELECT COUNT(*) FROM `system_backup_events`)+(SELECT COUNT(*) FROM `system_backup_evidence`)+(SELECT COUNT(*) FROM `system_backup_evidence_chunks`)+(SELECT COUNT(*) FROM `system_backup_external_actions`)+(SELECT COUNT(*) FROM `system_backup_installation_state`)+(SELECT COUNT(*) FROM `system_backup_job_observations`)+(SELECT COUNT(*) FROM `system_backup_log_chunks`)+(SELECT COUNT(*) FROM `system_backup_metadata_reservations`)+(SELECT COUNT(*) FROM `system_backup_operations`)+(SELECT COUNT(*) FROM `system_backup_preflights`)+(SELECT COUNT(*) FROM `system_backup_promotions`)+(SELECT COUNT(*) FROM `system_backup_provider_capabilities`)+(SELECT COUNT(*) FROM `system_backup_prune_items`)+(SELECT COUNT(*) FROM `system_backup_prune_runs`)+(SELECT COUNT(*) FROM `system_backup_source_writer_check_states`)+(SELECT COUNT(*) FROM `system_backup_staging_resources`)+(SELECT COUNT(*) FROM `system_backup_strong_auth_nonces`)+(SELECT COUNT(*) FROM `system_backup_totp_credentials`)+(SELECT COUNT(*) FROM `system_backups`)+(SELECT COUNT(*) FROM `system_maintenance_locks`)+(SELECT COUNT(*) FROM `system_maintenance_mutation_leases`)+(SELECT COUNT(*) FROM `system_maintenance_participants`)+(SELECT COUNT(*) FROM `system_restore_drill_resources`)+(SELECT COUNT(*) FROM `system_restore_drills`);
+SET @rename_sql=IF(@nonempty=0,'RENAME TABLE `system_artifact_lease_states` TO `dlegacy_01_system_artifact_lease_states`,
+`system_artifact_leases` TO `dlegacy_02_system_artifact_leases`,
+`system_backup_admin_revocations` TO `dlegacy_03_system_backup_admin_revocations`,
+`system_backup_admin_sessions` TO `dlegacy_04_system_backup_admin_sessions`,
+`system_backup_alert_states` TO `dlegacy_05_system_backup_alert_states`,
+`system_backup_artifact_verifications` TO `dlegacy_06_system_backup_artifact_verifications`,
+`system_backup_attempts` TO `dlegacy_07_system_backup_attempts`,
+`system_backup_check_results` TO `dlegacy_08_system_backup_check_results`,
+`system_backup_compact_tombstones` TO `dlegacy_09_system_backup_compact_tombstones`,
+`system_backup_configs` TO `dlegacy_10_system_backup_configs`,
+`system_backup_dependency_health` TO `dlegacy_11_system_backup_dependency_health`,
+`system_backup_events` TO `dlegacy_12_system_backup_events`,
+`system_backup_evidence` TO `dlegacy_13_system_backup_evidence`,
+`system_backup_evidence_chunks` TO `dlegacy_14_system_backup_evidence_chunks`,
+`system_backup_external_actions` TO `dlegacy_15_system_backup_external_actions`,
+`system_backup_installation_state` TO `dlegacy_16_system_backup_installation_state`,
+`system_backup_job_observations` TO `dlegacy_17_system_backup_job_observations`,
+`system_backup_log_chunks` TO `dlegacy_18_system_backup_log_chunks`,
+`system_backup_metadata_reservations` TO `dlegacy_19_system_backup_metadata_reservations`,
+`system_backup_operations` TO `dlegacy_20_system_backup_operations`,
+`system_backup_preflights` TO `dlegacy_21_system_backup_preflights`,
+`system_backup_promotions` TO `dlegacy_22_system_backup_promotions`,
+`system_backup_provider_capabilities` TO `dlegacy_23_system_backup_provider_capabilities`,
+`system_backup_prune_items` TO `dlegacy_24_system_backup_prune_items`,
+`system_backup_prune_runs` TO `dlegacy_25_system_backup_prune_runs`,
+`system_backup_source_writer_check_states` TO `dlegacy_26_system_backup_source_writer_check_state`,
+`system_backup_staging_resources` TO `dlegacy_27_system_backup_staging_resources`,
+`system_backup_strong_auth_nonces` TO `dlegacy_28_system_backup_strong_auth_nonces`,
+`system_backup_totp_credentials` TO `dlegacy_29_system_backup_totp_credentials`,
+`system_backups` TO `dlegacy_30_system_backups`,
+`system_maintenance_locks` TO `dlegacy_31_system_maintenance_locks`,
+`system_maintenance_mutation_leases` TO `dlegacy_32_system_maintenance_mutation_leases`,
+`system_maintenance_participants` TO `dlegacy_33_system_maintenance_participants`,
+`system_restore_drill_resources` TO `dlegacy_34_system_restore_drill_resources`,
+`system_restore_drills` TO `dlegacy_35_system_restore_drills`','LEGACY_CONTROL_HISTORY_NOT_EMPTY');
+PREPARE rename_stmt FROM @rename_sql; EXECUTE rename_stmt; DEALLOCATE PREPARE rename_stmt;
+COMMIT;

@@ -23,6 +23,9 @@ import (
 // a claimed identity. No credential, DSN, certificate private key or password is
 // accepted through argv or printed by this command.
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && args[0] == "sql-accounts" {
+		return install.RunOriginalSQLAccounts(ctx, args[1:], out)
+	}
 	flags := flag.NewFlagSet("system-backup-original-enroll", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	namespace := flags.String("namespace", "", "actual selected installation namespace")

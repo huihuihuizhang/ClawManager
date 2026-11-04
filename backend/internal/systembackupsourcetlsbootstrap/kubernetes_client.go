@@ -73,7 +73,7 @@ func sourceInput(file, pin string, max int64, private bool) ([]byte, error) {
 	return raw, nil
 }
 func NewClient(ctx context.Context, options ClientOptions) (*Client, error) {
-	if ctx == nil || ctx.Err() != nil || options.Namespace == "" || options.AdminUsername == "" {
+	if ctx == nil || ctx.Err() != nil || options.Namespace == "" {
 		return nil, ErrBootstrap
 	}
 	if _, ok := ctx.Deadline(); !ok {
@@ -341,7 +341,7 @@ func (c *Client) helperCall(ctx context.Context, plan BootstrapPlan, request MyS
 	decoder := json.NewDecoder(bytes.NewReader(result))
 	decoder.DisallowUnknownFields()
 	var out MySQLHelperResult
-	if decoder.Decode(&out) != nil || decoder.Decode(new(any)) != io.EOF || out.Version != "original-source-mysql-tls-result.v1" || out.Operation != request.Operation || out.Mode != request.Mode || out.Native.Database != plan.Database || out.Native.AdminUsername != c.options.AdminUsername {
+	if decoder.Decode(&out) != nil || decoder.Decode(new(any)) != io.EOF || out.Version != "original-source-mysql-tls-result.v1" || out.Operation != request.Operation || out.Mode != request.Mode || out.Native.Database != plan.Database || out.Native.AdminUsername == "" || (c.options.AdminUsername != "" && out.Native.AdminUsername != c.options.AdminUsername) {
 		return zero, ErrBootstrap
 	}
 	last, _, e := c.discover(ctx)
@@ -402,6 +402,9 @@ func (c *Client) Inspect(ctx context.Context) (BootstrapReceipt, error) {
 		return zero, e
 	}
 	plan.Native = result.Native
+	// Native bcrypt discovery must produce exactly one existing local admin.
+	plan.AdminUsername = result.Native.AdminUsername
+	c.options.AdminUsername = result.Native.AdminUsername
 	raw, e := json.Marshal(plan)
 	if e != nil {
 		return zero, ErrBootstrap

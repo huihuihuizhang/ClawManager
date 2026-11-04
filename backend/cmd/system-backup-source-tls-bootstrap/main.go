@@ -79,7 +79,7 @@ func run(ctx context.Context, args []string, in io.Reader, out io.Writer) int {
 	if ctx == nil || f.Parse(args) != nil || f.NArg() != 0 {
 		return 2
 	}
-	for _, v := range []*string{kubeFile, kubeSHA, namespace, admin, password, helper, helperSHA, directory} {
+	for _, v := range []*string{kubeFile, kubeSHA, namespace, password, helper, helperSHA, directory} {
 		if *v == "" {
 			return 2
 		}
@@ -91,7 +91,7 @@ func run(ctx context.Context, args []string, in io.Reader, out io.Writer) int {
 		if *plan != "" || *planSHA != "" || *operation != "" {
 			return 2
 		}
-	} else if *plan == "" || *planSHA == "" || *operation == "" {
+	} else if *admin == "" || *plan == "" || *planSHA == "" || *operation == "" {
 		return 2
 	}
 	bounded, cancel := context.WithTimeout(ctx, 2*time.Minute)
