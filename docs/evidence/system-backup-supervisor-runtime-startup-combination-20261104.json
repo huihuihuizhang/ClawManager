@@ -1,0 +1,150 @@
+{
+  "schema_version": "supervisor-original-runtime-startup-combination.v1",
+  "git_base": "e5bf2c249a87f49767f51ae61b42e0fd03b8be05",
+  "accepted_source_inputs": [
+    {
+      "target": "backend/cmd/system-backup-first-adoption/writer_selection.go",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/backend/cmd/system-backup-first-adoption/writer_selection.go",
+      "sha256": "aea684ab867902dd3b693732655205853a39066b30409f99b6af5a4fb6b03b47",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_original_agent_pod.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/runtime-B-portable-join.go.source",
+      "sha256": "0b0c98744b2b9137c9f67d2df6ec753eede112625064816e47ad6a8dfcd809fc",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/gateway_original_agent_pod_portable_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/runtime-B-portable-join-test.go.source",
+      "sha256": "03f32b045ea7874c1a23e46ef09ca7a650f5520504035a25c66aaf47b982dc58",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_backup_native_peers.go",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/backend/internal/systembackupinstallationowner/install/original_backup_native_peers.go",
+      "sha256": "7b98209f2a68125c2151da751b59a1789d151af8299e329b00fa8c561237ebb5",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_backup_runtime_peer.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/runtime-fixed-startup-mounts.go.source",
+      "sha256": "5dde52aa9a3de8167d82e6720cdaa34546037acc33a20b6dec2220ac0db37219",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_agent_identity_test.go",
+      "source": "backend/.d-runtime-startup-decoder-r2-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_agent_identity_test.go",
+      "sha256": "2400ca1a8cbb7def4b7dc06f09046561fc549984bf1eb955f38cb6deca436d20",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_image_artifacts_test.go",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_image_artifacts_test.go",
+      "sha256": "08bfbb242b2fc862183da48daedb6d4d90de6afe711049d34fd3730ea7c7597f",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_image_inputs.go",
+      "source": "backend/.d-runtime-startup-decoder-r2-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_image_inputs.go",
+      "sha256": "25b14c9f8d2c96b2ef3cb8ae7d619b3f9918b8136b772af42de11c4a4a5cc712",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_startup_mounts_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/runtime-fixed-startup-mounts-test.go.source",
+      "sha256": "43eeb453bd5a87ce7c06f9946f7cd669c709233379ffafabe555149681530ad7",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_startup_test.go",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/backend/internal/systembackupinstallationowner/install/original_runtime_startup_test.go",
+      "sha256": "c7cfbedf327a63d648708905d7e9a2cc0b5596d0f82e8aea4cc5723f767d203a",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_author.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/runtime-original-writer-selection-pointer.go.source",
+      "sha256": "ca5e72a0a86427e1d2ef69c8dd49244a15d2a6cb825e6919fed79bd48139010a",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_set.go",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/backend/internal/systembackupinstallationowner/install/original_writer_set.go",
+      "sha256": "367a6fe7525e2c3889a8b91c76594710affd39d44bd2e101a9de56b706f535f9",
+      "mode": "100644"
+    },
+    {
+      "target": "scripts/system-backup-runtime-startup-inputs.py",
+      "source": "backend/.d-runtime-startup-decoder-20261104/source/scripts/system-backup-runtime-startup-inputs.py",
+      "sha256": "0014156ccd9954f7f03dd54581c7049ad9639d8f37fefe8f061455140d47d151",
+      "mode": "100644"
+    }
+  ],
+  "scope": "Runtime original startup decoder, actual OCI comparison inputs and original opaque native join. No deployed process or business ownership/native hold/capture/recovery acceptance.",
+  "tests": {
+    "windows": {
+      "roots": 34,
+      "subcases": 100,
+      "failures": 0,
+      "skips": 0
+    },
+    "linux": {
+      "roots": 37,
+      "subcases": 100,
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "raw_input_qualification": [
+    {
+      "runtime": "openclaw",
+      "base_raw_registry_get": true,
+      "new_bytes": "Deterministic local reconstruction from actual approved bundle and original raw registry files; matches previously full-layer-qualified constructor output exactly. Not registry publication or a deployed Pod.",
+      "manifest_sha256": "sha256:749f578ff4799789aa301e2a11e1b5bf93639121031172231c823ef5c82646e7",
+      "config_sha256": "sha256:bf37fc197fb0e3f957c0ea12458c892591c749bca7f206d3bd58dfe89584cc81",
+      "layer_sha256": "sha256:d2d670ef51590cb510d1d6fe7e641a8e5e1c66c40d9d2a65a756bb7059551cb3",
+      "agent_sha256": "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1"
+    },
+    {
+      "runtime": "hermes",
+      "base_raw_registry_get": true,
+      "new_bytes": "Deterministic local reconstruction from actual approved bundle and original raw registry files; matches previously full-layer-qualified constructor output exactly. Not registry publication or a deployed Pod.",
+      "manifest_sha256": "sha256:cd81fe0f232e5d1e14d6488374c86e614f6a5fe8807dd64a757fceae31d11d0b",
+      "config_sha256": "sha256:37a62767ba6f2f8c28a313f5de163eed7c31ad4b21d4c1af94db19c882748eee",
+      "layer_sha256": "sha256:6f6d908194f8c717fce115d4ba5677765050917c3e8fb0667cf8af5a9c8becf8",
+      "agent_sha256": "851104a524ff26797c58c6a5a1e0e8172353ecdd31c31a07032a81073a225a42"
+    }
+  ],
+  "input_provenance": "Original resolved base manifest/config were GET-read by immutable digest; actual independently pinned production Agent bundle was used to deterministically reconstruct final managed layer/config/manifest, all matching the previously complete-layer-qualified constructor receipts. Candidate images were not published or deployed.",
+  "root_fixes": [
+    "Hermes uses its own851104/10072226B; OpenClaw63a68/9994402B. Cross-runtime mismatches reject.",
+    "B additive source path overlap uses a portable POSIX slash-boundary comparison instead of a Linux-only helper.",
+    "Original selection passes the actual saved Pod value by address.",
+    "Fixed s6 /docker-mods and each clean byte-authenticated original PATH directory cannot be overmounted, including actual /opt/node/bin and /lsiopy/bin."
+  ],
+  "ended_test_builds_removed": [
+    {
+      "name": "first-adoption.test",
+      "bytes": 89742579,
+      "sha256": "1e99b5a9be1fb6cf004be0d03e917f771df5216cb63d10e0dd733c7ce6f83ba5"
+    },
+    {
+      "name": "install.test",
+      "bytes": 114100016,
+      "sha256": "226d2f5b2d755ccdc9d7074d48b92588113500dbf8b42c7c4625c93872fa4059"
+    },
+    {
+      "name": "quiesce.test",
+      "bytes": 93046199,
+      "sha256": "589c37ff5a0775bcd99b600f172e2b5ed289df443074f796e7398f543abe0075"
+    }
+  ],
+  "clean_Git_base_excludes_pending_A_materials": true,
+  "unaccepted_A_combination_result": "Separate earlier5-package A/D/B tree had one existing Linux original-source-auth component failure. Unchanged exact test root repeated20 times passed; cause not proven. Retained as unresolved and not described as a fixed failure or accepted A/full-chain result.",
+  "python_exporter": "AST checked and read-only Registry API source reviewed; actual new-image export requires published candidate images and was not claimed performed.",
+  "native_original_hold": false,
+  "original_database_upgraded": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}

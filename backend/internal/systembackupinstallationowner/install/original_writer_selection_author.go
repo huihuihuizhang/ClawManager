@@ -21,6 +21,9 @@ import (
 // No caller supplies Deployment/Pod/Node UIDs, source rows, an observed native
 // result, permission JSON, a held flag, epoch, inventory hash or capture head.
 type OriginalWriterSelectionOptions struct {
+	RuntimeStartupImages                                  BootstrapSourceFilePin
+	runtimeStartupInputs                                  []OriginalRuntimeStartupImageInput
+	runtimeStartupProfiles                                map[string]*originalRuntimeStartupImage
 	DeploymentConfig, ObserverDefinition, ObserverReceipt BootstrapSourceFilePin
 	GatewayOriginalKey                                    BootstrapSourceFilePin
 	GatewayOriginalDirectory, JournalDirectory            string
@@ -79,6 +82,14 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 	if err != nil || json.Unmarshal(configRaw, &config) != nil || config.InstallationID != i.plan.Target.InstallationID || config.Namespace != i.plan.Target.Namespace || config.NamespaceUID != i.plan.Target.NamespaceUID || config.ApplicationScope == "" || len(config.ApplicationScope) > 128 {
 		return zero, ErrInstall
 	}
+	options.runtimeStartupInputs, err = loadOriginalRuntimeImageInputs(ctx, options.RuntimeStartupImages)
+	if err != nil {
+		return zero, OriginalWriterSourceFailure{Dependency: "runtime_authenticated_startup_image_inputs_required"}
+	}
+	options.runtimeStartupProfiles, err = readOriginalRuntimeImageSet(ctx, options.runtimeStartupInputs)
+	if err != nil {
+		return zero, err
+	}
 	first, firstCensus, firstVolumes, err := p.collectOriginalWriterSelection(ctx, options, config)
 	if err != nil {
 		return zero, err
@@ -113,7 +124,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 	files["original-writer-selection.json"] = raw
 	// Re-read all externally selected bytes immediately before writing. The
 	// receipt itself is DATA; it cannot extend this original authority/window.
-	if originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.check(ctx) != nil || p.checkInstances(ctx) != nil || writeNewFiles(directory, files) != nil {
+	if originalRuntimeInputDefinitionStill(options.RuntimeStartupImages, options.runtimeStartupInputs) != nil || originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.check(ctx) != nil || p.checkInstances(ctx) != nil || writeNewFiles(directory, files) != nil {
 		return zero, ErrInstall
 	}
 	for name, expected := range files {
@@ -151,7 +162,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	if len(census.StatefulSets)+len(census.DaemonSets)+len(census.Jobs)+len(census.CronJobs)+len(census.Autoscalers) != 0 {
 		return zero, census, nil, OriginalWriterSourceFailure{Dependency: "complete_non_deployment_reconciler_gate_required"}
 	}
-	s := OriginalWriterSetSelection{Version: OriginalWriterSetSelectionVersion, Policy: options.Policy, ApplicationScope: config.ApplicationScope, JournalDirectory: options.JournalDirectory, Deployments: []OriginalDeploymentSelection{}, Gateways: []OriginalGatewaySelection{}, RunningPro: []OriginalProPodSelection{}, StoppedPro: []OriginalStoppedProSelection{}, Participants: []OriginalMaintenanceParticipant{}}
+	s := OriginalWriterSetSelection{RuntimeStartupImages: append([]OriginalRuntimeStartupImageInput{}, options.runtimeStartupInputs...), Version: OriginalWriterSetSelectionVersion, Policy: options.Policy, ApplicationScope: config.ApplicationScope, JournalDirectory: options.JournalDirectory, Deployments: []OriginalDeploymentSelection{}, Gateways: []OriginalGatewaySelection{}, RunningPro: []OriginalProPodSelection{}, StoppedPro: []OriginalStoppedProSelection{}, Participants: []OriginalMaintenanceParticipant{}}
 	if err = p.originalSelectionObservers(ctx, options, &s); err != nil {
 		return zero, census, nil, err
 	}
@@ -235,7 +246,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 			if e != nil || workspace != config.RuntimeSources.WorkspaceRoot {
 				return zero, census, nil, OriginalWriterSourceFailure{source.ID, source.Mode, source.Status, "actual_agent_literal_workspace_root_required"}
 			}
-			data, e := originalSelectionLiteralDirectory(pod.Spec.Containers[0], "RUNTIME_AGENT_DATA_DIR")
+			data, e := originalSelectionRuntimeDataDirectory(options.runtimeStartupProfiles, &pod)
 			if e != nil {
 				return zero, census, nil, OriginalWriterSourceFailure{source.ID, source.Mode, source.Status, "actual_agent_literal_data_directory_required"}
 			}

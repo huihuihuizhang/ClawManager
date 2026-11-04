@@ -21,6 +21,7 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	RuntimeStartupImages                                     []OriginalRuntimeStartupImageInput    `json:",omitempty"`
 	MinIOReadKeepers                                         []OriginalMinIOReadKeeperSelection    `json:",omitempty"`
 	PreAdoptionVaultDependencies                             []PreAdoptionVaultDependencySelection `json:",omitempty"`
 	VaultProviderDependencies                                []OriginalVaultProviderSelection      `json:",omitempty"`
@@ -52,6 +53,7 @@ func (e OriginalWriterSourceFailure) Error() string {
 }
 
 type PreparedOriginalWriterSet struct {
+	runtimeStartups       map[string]*originalRuntimeStartupImage
 	preAdoptionProviders  []*preAdoptionVaultProvider
 	providerDependencies  []*originalVaultProviderDependency
 	historyMounted        *originalMountedHistoryInputs
@@ -169,6 +171,11 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		return nil, ErrInstall
 	}
 	set := &PreparedOriginalWriterSet{owner: p, selection: selection, selectionPin: selectionPin, initial: census}
+	// File-only authenticated OCI content is resolved BEFORE source stop/SQL locks.
+	set.runtimeStartups, err = readOriginalRuntimeImageSet(ctx, selection.RuntimeStartupImages)
+	if err != nil {
+		return nil, OriginalWriterSourceFailure{Dependency: "runtime_authenticated_startup_image_inputs_invalid"}
+	}
 	set.origin = set
 	success := false
 	defer func() {

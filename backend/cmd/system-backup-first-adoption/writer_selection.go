@@ -29,6 +29,7 @@ func (p *participantWriterFlags) Set(value string) error {
 }
 
 type writerSelectionFlags struct {
+	runtimeImageFile, runtimeImageSHA                                                                     *string
 	configFile, configSHA, observerDefinition, observerDefinitionSHA, observerReceipt, observerReceiptSHA *string
 	output, journal, custodyDirectory, custodyKey, custodyKeySHA                                          *string
 	lockTTL, acquire, hold                                                                                *time.Duration
@@ -37,6 +38,8 @@ type writerSelectionFlags struct {
 
 func registerWriterSelectionFlags(flags *flag.FlagSet) *writerSelectionFlags {
 	s := &writerSelectionFlags{}
+	s.runtimeImageFile = flags.String("runtime-startup-images-file", "", "actual pinned OCI base/candidate manifest/config and managed layer file inputs")
+	s.runtimeImageSHA = flags.String("runtime-startup-images-sha256", "", "exact input definition bytes; no passed/readiness claims")
 	s.configFile = flags.String("source-config-file", "", "existing independently pinned source configuration; not an enabled config or observation")
 	s.configSHA = flags.String("source-config-sha256", "", "exact source configuration bytes")
 	s.observerDefinition = flags.String("observer-definition-file", "", "actual PKI producer original definition")
@@ -58,6 +61,9 @@ func (s *writerSelectionFlags) valid() bool {
 	if s == nil || *s.configFile == "" || *s.configSHA == "" || *s.observerDefinition == "" || *s.observerDefinitionSHA == "" || *s.observerReceipt == "" || *s.observerReceiptSHA == "" || *s.output == "" || *s.journal == "" {
 		return false
 	}
+	if (*s.runtimeImageFile == "") != (*s.runtimeImageSHA == "") {
+		return false
+	}
 	if (*s.custodyDirectory == "") != (*s.custodyKey == "") || (*s.custodyKey == "") != (*s.custodyKeySHA == "") {
 		return false
 	}
@@ -68,6 +74,7 @@ func (s *writerSelectionFlags) produce(ctx context.Context, i *install.Installer
 		return install.OriginalWriterSelectionReceipt{}, install.ErrInstall
 	}
 	return i.ProduceOriginalWriterSelection(ctx, password, enrollment, install.OriginalWriterSelectionOptions{
+		RuntimeStartupImages:     install.BootstrapSourceFilePin{File: *s.runtimeImageFile, SHA256: *s.runtimeImageSHA},
 		DeploymentConfig:         install.BootstrapSourceFilePin{File: *s.configFile, SHA256: *s.configSHA},
 		ObserverDefinition:       install.BootstrapSourceFilePin{File: *s.observerDefinition, SHA256: *s.observerDefinitionSHA},
 		ObserverReceipt:          install.BootstrapSourceFilePin{File: *s.observerReceipt, SHA256: *s.observerReceiptSHA},

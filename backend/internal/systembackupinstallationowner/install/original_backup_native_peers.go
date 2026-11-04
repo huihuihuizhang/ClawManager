@@ -36,7 +36,7 @@ func classifyOriginalBackupNativePeer(ctx context.Context, p *PreparedOriginalAd
 		}
 		profile = "original-held-native-vault-server-startup.v1"
 	default:
-		return zero, errOriginalBackupConsumerUnclassified
+		return classifyOriginalBackupRuntimePeer(ctx, p, h, pod, spec, c, status, until)
 	}
 	if status.ImageID == originalPeerMinIOImage {
 		selected := false
