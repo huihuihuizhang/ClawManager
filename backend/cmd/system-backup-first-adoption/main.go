@@ -48,10 +48,13 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 || *planFile == "" || *planSHA == "" || *publicFile == "" || *publicSHA == "" || *kubeFile == "" || *kubeSHA == "" || *dsnFile == "" || *dbCAFile == "" || *passwordFile == "" || *enrollmentFile == "" || *enrollmentSHA == "" {
 		return 2
 	}
-	if *action != "adopt" && *action != "prepare-issuers" && *action != "prepare-selection" {
+	if *action != "adopt" && *action != "prepare-issuers" && *action != "prepare-selection" && *action != "query-original" {
 		return 2
 	}
 	if *action == "prepare-selection" && !writerSelection.valid() {
+		return 2
+	}
+	if *action == "query-original" && (*selectionFile == "" || *selectionSHA == "") {
 		return 2
 	}
 	if *action == "adopt" && (*selectionFile == "" || *selectionSHA == "" || *issuerDefinitionFile == "" || *issuerDefinitionSHA == "") {
@@ -121,6 +124,16 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return reportStageFailure(out, "original_issuer_material_refused_preserve_private_directory", "issuer_materials", err, install.OriginalAdoptionCommitInspection{}, 1)
 		}
 		if json.NewEncoder(out).Encode(pin) != nil {
+			return 3
+		}
+		return 0
+	}
+	if *action == "query-original" {
+		inspection, err := installer.InspectOriginalAdoptionJournalCommit(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA})
+		if err != nil {
+			return reportStageFailure(out, "original_adoption_journal_outcome_unknown_no_replay", "original_journal_query", err, inspection, 3)
+		}
+		if json.NewEncoder(out).Encode(adoptionReport{Version: "original-first-adoption-execution.v1", State: "original_adoption_commit_verified_only_source_recovery_not_claimed", Adoption: inspection}) != nil {
 			return 3
 		}
 		return 0

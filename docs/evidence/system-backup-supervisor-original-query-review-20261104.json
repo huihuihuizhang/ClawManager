@@ -1,0 +1,160 @@
+{
+  "schema_version": "supervisor-original-adoption-bootstrap-query-review.v1",
+  "base_commit": "53d5d87678a56eaca507aff19b94dff6c624c7f9",
+  "scope": "Authenticated rollback-only exact readback of an already-sent original adoption/bootstrap operation. Never starts/retries acquisition/adoption/bootstrap and never claims physical source restoration.",
+  "changes": [
+    "Adoption query authenticates original local admin/enrollment, bounded complete original journal and retained custody before exact original operation/selection/coverage/reference SQL readback.",
+    "Original journal coordinate reader uses original 2MiB protocol bound with rooted same-file/owner/mode/complete-EOF checks; generic 256KiB private reader is not widened.",
+    "Bootstrap query compares original actor/idempotency/requesthash/operation201/succeeded/version1 and full canonical disabled config/current matrix using SELECT-compatible FOR SHARE. Absence/unknown is never permission to resend."
+  ],
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-first-adoption/main.go",
+      "source": "backend/.d-adoption-journal-query-20261104/main.go",
+      "sha256": "59e3a4aaff1d2c196d0523e3d182ed686440bc96374362b79b05183f5682f2db",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_commit_readback.go",
+      "source": "backend/.d-adoption-journal-query-20261104/original_adoption_commit_readback.go",
+      "sha256": "007a6238bc2ee812567a4e18674abe53a49ce6592f43340ceb4820eba749d280",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_journal_query.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/adoption-journal-coordinates-native-bound.go.source",
+      "sha256": "1e1f2f3e56e5bb7df4cca6989fa1b1b45142253e4315fa7da639f70ef9fb3aba",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_journal_query_test.go",
+      "source": "backend/.d-adoption-journal-query-20261104/original_adoption_journal_query_test.go",
+      "sha256": "cfa494579ee3e3318ad28669123e3f9428262bb71100fe51cf1eb76e6d38e120",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_adoption_journal_query_bounds_test.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/adoption-journal-coordinates-native-bound-test.go.source",
+      "sha256": "9d9b442a1ee5fc8f834828fbb64d6c760be1440825cb698af1b1d5b18fa1ed2b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/production.go",
+      "source": "backend/.d-bootstrap-original-query-20261104/production.go",
+      "sha256": "0cdec0fd3eef4bb33cb092f91559b14b251f86e6f0e18893aba9d62e51efcf98",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/bootstrap_query.go",
+      "source": "backend/.d-bootstrap-original-query-20261104/bootstrap_query.go",
+      "sha256": "8b20712bd746317baab2cb6377e04395171856c5fcbcde1bc471edfebb33b106",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-bootstrap-enrolled/bootstrap_query_test.go",
+      "source": "backend/.d-bootstrap-original-query-20261104/bootstrap_query_test.go",
+      "sha256": "b88cd199054dc42526ddb057295d571294771c366c363473de629ddd7d495fc4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_bootstrap_query.go",
+      "source": "backend/.d-bootstrap-original-query-20261104/original_bootstrap_query.go",
+      "sha256": "f16dc2d4dcddb3f98bc31e78a287d83db43ed76d7ab23275058cce885be7ec72",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/bootstrap_original_readback.go",
+      "source": "backend/.d-bootstrap-original-query-r2-20261104/bootstrap_original_readback.go",
+      "sha256": "3c4412ce47e8db286fa3c561dbe645bf924ed0da92f86f4bf0148d57385fffb7",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/bootstrap_original_readback_test.go",
+      "source": "backend/.d-bootstrap-original-query-r2-20261104/bootstrap_original_readback_test.go",
+      "sha256": "19859e9154e0c5282db3839672314fe40529cbe45966a7f649d995b02630f579",
+      "mode": "100644"
+    }
+  ],
+  "validation": {
+    "original_adoption_selected_linux_summary_sha256": "d4636a1071c9f0179acc26635083e17e3bd605f2d0c52efb37d8ac4178b00e42",
+    "original_adoption_selected_linux_summary": {
+      "tests": {
+        "publication-owner-query-linux-execution": {
+          "roots_with_no_skipped_subcases": 11,
+          "passed_subcases": 38,
+          "optional_native_mysql_subcases_not_executed": [
+            "TestOriginalPublicationContinuationMySQL/reentry-and-next-stage",
+            "TestOriginalPublicationContinuationMySQL/concurrent-claim",
+            "TestOriginalPublicationContinuationMySQL/next-readback-failure",
+            "TestOriginalPublicationContinuationMySQL/unknown-query-only",
+            "TestOriginalPublicationContinuationMySQL/confirmed-version-changed",
+            "TestOriginalPublicationContinuationMySQL/stage-hole",
+            "TestOriginalPublicationContinuationMySQL/finalization-required",
+            "TestOriginalPublicationContinuationMySQL/production-pass-needs-next-intent",
+            "TestOriginalPublicationContinuationMySQL/close-joins-next-stage"
+          ]
+        },
+        "publication-owner-query-linux-first-adoption": {
+          "roots_with_no_skipped_subcases": 6,
+          "passed_subcases": 16,
+          "optional_native_mysql_subcases_not_executed": []
+        },
+        "publication-owner-query-linux-first-install": {
+          "roots_with_no_skipped_subcases": 3,
+          "passed_subcases": 5,
+          "optional_native_mysql_subcases_not_executed": []
+        },
+        "publication-owner-query-linux-install": {
+          "roots_with_no_skipped_subcases": 15,
+          "passed_subcases": 41,
+          "optional_native_mysql_subcases_not_executed": []
+        }
+      },
+      "ended_ELFs_removed": [
+        {
+          "name": "execution.test",
+          "bytes": 134081769,
+          "sha256": "29d892a0481c62a3abf4152288003fe209588b035b34ef29b5ae7804adeec9af"
+        },
+        {
+          "name": "first-adoption.test",
+          "bytes": 90145251,
+          "sha256": "a1bc32293927527ccbf13fd48738ba4ed974da56b41e3d529cc1a33dab8d6754"
+        },
+        {
+          "name": "first-install.test",
+          "bytes": 94672040,
+          "sha256": "cd63a963f876ba85807778e46e19a074033db2baae46ef0e25e2daaf18c6d017"
+        },
+        {
+          "name": "install.test",
+          "bytes": 114563122,
+          "sha256": "615df6cbd3987ebad6df019af0f31bb05c5737fa842257d8f165366021b8e46f"
+        }
+      ],
+      "all_removed": true,
+      "native_issuer_field_or_first_config_assembly": false
+    },
+    "bootstrap_security_model": {
+      "roots": 1,
+      "subcases": 4,
+      "failures": [],
+      "skips": []
+    },
+    "bootstrap_cli_model": {
+      "roots": 1,
+      "subcases": 0,
+      "failures": [],
+      "skips": []
+    },
+    "vault_bootstrap_windows_log_sha256": "6cdc82d57ec3154594d5c7080f9f913b446bb3f5bec64a6a7cbefadd0d27ad05",
+    "bootstrap_native_sql_execution": false
+  },
+  "limitations": [
+    "Original adoption query SQL/custody readback is not a new physical recovery capability.",
+    "Native MySQL bootstrap query and actual full installation are pending field testing.",
+    "No configuration enabled, source modified or backup task created by these checks."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false
+}

@@ -16,6 +16,12 @@ import (
 // Readback is exact original-operation comparison, never new admission or
 // source proof. Unknown/mixed derived rows retain the physical recovery hold.
 func readbackOriginalAdoptionCommit(ctx context.Context, db *sql.DB, expected originalAdoptionCommitExpected) error {
+	return readbackOriginalAdoptionCommitOutcome(ctx, db, expected, false)
+}
+
+// Journal-only inspection may observe an already released idle gate. It does
+// not authorize source recovery or weaken the held-set reconciliation path.
+func readbackOriginalAdoptionCommitOutcome(ctx context.Context, db *sql.DB, expected originalAdoptionCommitExpected, allowIdle bool) error {
 	if ctx == nil || db == nil || expected.Version != "original-adoption-commit-expectation.v1" || expected.Operation == "" || expected.NewEpoch != expected.OldEpoch+1 || len(expected.ControlRows) != 17 || len(expected.Sources) != 4 || expected.References == nil || expected.Bindings == nil {
 		return ErrCommitUnknown
 	}
@@ -27,7 +33,7 @@ func readbackOriginalAdoptionCommit(ctx context.Context, db *sql.DB, expected or
 	// Waiting for this exact original maintenance row settles any in-flight
 	// final transaction, which retained its shared gate lock through COMMIT.
 	gate, err := (c.SQLCoordinationTransaction{Tx: tx}).LockGate(ctx, c.GateKey{InstallationID: expected.InstallationID, Scope: c.CaptureGateScope})
-	if err != nil || gate.Owner != "adoption:"+expected.Operation || gate.State != c.GateHeld {
+	if err != nil || !(gate.Owner == "adoption:"+expected.Operation && gate.State == c.GateHeld || allowIdle && gate.Owner == "" && gate.State == c.GateIdle) {
 		return ErrCommitUnknown
 	}
 	var epoch uint64
