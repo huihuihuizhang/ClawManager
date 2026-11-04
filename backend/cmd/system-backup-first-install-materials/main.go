@@ -19,6 +19,15 @@ import (
 )
 
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && (args[0] == "issue-signing-material" || args[0] == "issue-publication-authorization") {
+		return runOriginalPublicationOwner(ctx, args, out)
+	}
+	if len(args) > 0 && args[0] == "issue-runtime-materials" {
+		return runPublicationRuntime(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "issue-functional-materials" {
+		return runFunctionalPublication(ctx, args[1:], out)
+	}
 	flags := flag.NewFlagSet("system-backup-first-install-materials", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	planFile := flags.String("plan-file", "", "original independently selected canonical installation plan")

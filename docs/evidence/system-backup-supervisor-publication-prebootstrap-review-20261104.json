@@ -1,0 +1,233 @@
+{
+  "schema_version": "supervisor-original-publication-prebootstrap-review.v1",
+  "base_commit": "ad650460f71e8d5b9992a7aeef16aaacc04474c0",
+  "maps": [
+    {
+      "path": ".a-functional-publication-materials-20261104/source-map.json",
+      "sha256": "5faf3e7ce749c90a10fbb3555e25f2cafa96f9257de6701db2ba77f7014fcfb4"
+    },
+    {
+      "path": ".a-publication-owner-issuance-20261104/source-map.json",
+      "sha256": "f79ae7ed6e7d05b657f539d371d88a699a5cbc2a68c56c597dac1a6fbb4676af"
+    },
+    {
+      "path": ".a-publication-owner-prebootstrap-r2-20261104/source-map.json",
+      "sha256": "b6508c0d06739ab3833587241dc66af3c0eaa36cf718dbd67ca7df5766aaec60"
+    },
+    {
+      "path": ".a-publication-owner-tail-r3-20261104/source-map.json",
+      "sha256": "413f62605a376948642dbd53ad885650159a67cedc66fce0a7c7be7c9feabb43"
+    }
+  ],
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/functional_publication.go",
+      "source": ".a-functional-publication-materials-20261104/backend/cmd/system-backup-first-install-materials/functional_publication.go",
+      "sha256": "f289fbea34dd9b5d2c9e238bd2e7c535cd01be1a6a3cb038c29fddc0e7641855",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/functional_publication_test.go",
+      "source": ".a-functional-publication-materials-20261104/backend/cmd/system-backup-first-install-materials/functional_publication_test.go",
+      "sha256": "cad427474a546834ef22b401eeadd3c8d95bc45b931196dbfbeda01e1d06b049",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/main.go",
+      "source": ".a-publication-owner-issuance-20261104/backend/cmd/system-backup-first-install-materials/main.go",
+      "sha256": "dd374a38c7e27cd9effbda4464ea4b0b63d65d9ac1727db62dbaef69258fe89a",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_publication_owner.go",
+      "source": ".a-publication-owner-prebootstrap-r2-20261104/backend/cmd/system-backup-first-install-materials/original_publication_owner.go",
+      "sha256": "2ebcde2dca90fd096e91512b3f4c6fd70735f6d831a7cdda5e4d23ba557e6fe9",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/original_publication_owner_test.go",
+      "source": ".a-publication-owner-issuance-20261104/backend/cmd/system-backup-first-install-materials/original_publication_owner_test.go",
+      "sha256": "8993873a92c1695d23d3c8010fa9155d3826cb0440a6f5e760daa7cfceee7396",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/publication_runtime.go",
+      "source": ".a-publication-owner-prebootstrap-r2-20261104/backend/cmd/system-backup-first-install-materials/publication_runtime.go",
+      "sha256": "ec3997dd5fde0a7e63650da1988872ba1794a35f0195c8b0336c0f9d7d4cc5eb",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/cmd/system-backup-first-install-materials/publication_runtime_test.go",
+      "source": ".a-functional-publication-materials-20261104/backend/cmd/system-backup-first-install-materials/publication_runtime_test.go",
+      "sha256": "e559e5670033c8a8c1f8842b28b7013aa6ff0751379bee5b3ecfd48cffd80f2e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/functional_publication_materials.go",
+      "source": ".a-publication-owner-issuance-20261104/backend/internal/systembackupexecution/functional_publication_materials.go",
+      "sha256": "00eadff570f77dbebd56d98d1ca713004ee3a09322fa9e7fb682a4849e050f08",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/functional_publication_materials_test.go",
+      "source": ".a-functional-publication-materials-20261104/backend/internal/systembackupexecution/functional_publication_materials_test.go",
+      "sha256": "309de20017a7b6a7754a53a16912acbff330177b487eeccbf84becd1a527a6a8",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_runtime_materials.go",
+      "source": ".a-publication-owner-prebootstrap-r2-20261104/backend/internal/systembackupexecution/publication_runtime_materials.go",
+      "sha256": "99a9310c8e4ccefcde94b447e7a7eecc28d4a6d8893f981006e6fc32b05b8449",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_runtime_materials_test.go",
+      "source": ".a-functional-publication-materials-20261104/backend/internal/systembackupexecution/publication_runtime_materials_test.go",
+      "sha256": "c752b623b8f9de00a18393842cb744709852e046a259d2f07a5d2cb7ad1e475c",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_authorization.go",
+      "source": ".a-publication-owner-tail-r3-20261104/backend/internal/systembackupinstallationowner/install/original_publication_authorization.go",
+      "sha256": "04c37f2b03f105b133288f3d9861f425cb3bd54bdd4f89adab5d4b695a30a74a",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_bootstrap_binding_test.go",
+      "source": ".a-publication-owner-prebootstrap-r2-20261104/backend/internal/systembackupinstallationowner/install/original_publication_bootstrap_binding_test.go",
+      "sha256": "ea27e9ecfa779e3a2a78dc5b55c2f5d284dc79b2a4a227105562263a8d601e25",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_owner_test.go",
+      "source": ".a-publication-owner-issuance-20261104/backend/internal/systembackupinstallationowner/install/original_publication_owner_test.go",
+      "sha256": "815a10dd575966f7097233a35031e63e1869840551c2c0816af63ed891c316e7",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_signing_material.go",
+      "source": ".tmp-supervisor-d4-combination-20261104/inputs/v11-files/publication-signing-unused-import.go.source",
+      "sha256": "a1b1bcaa54d6f0e3da7aa93799edc3347be0e202ff9406516db85432481b9cdc",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_publication_vault.go",
+      "source": ".a-publication-owner-issuance-20261104/backend/internal/systembackupinstallationowner/install/original_publication_vault.go",
+      "sha256": "3333abd4768d80bd1b90586c37ef2bd25a96d1ab8f412e3861d457b4dcba97e0",
+      "mode": "100644"
+    }
+  ],
+  "behavior": [
+    "Original enrolled installer/admin/Plan issuer plus actual final Pod/SA/Vault signers produce original public signing material and separate runtime signing/publisher owner grants.",
+    "Original fixed disabled v1 RequestFiles/head/Forward/config/profile replace circular dependency on the config row that A2 has not inserted yet.",
+    "Runtime material assembly consumes authenticated original owner output; pre-A2 grant/workload/provider capability checks run without demanding future installed KEK binding. Normal post-A2 startup/ForTask/ForPart installed binding/config/revocation checks stay mandatory.",
+    "Receipt explicitly reports installed binding check pending. Functional material assembly binds exact publication policy before metadata signing.",
+    "Final authentication/head/time checks occur after final file reads; profile digest is rechecked."
+  ],
+  "root_corrections": [
+    "Removed unused encoding/json import in original signing-material producer; frozen A source packages were not overwritten."
+  ],
+  "validation": {
+    "windows_exit": 0,
+    "windows_log_sha256": "01aed406946b4480cbf208a40612a9a2bc910c407f6abb1d4f9e3b2494ced919",
+    "windows_skips": [
+      "TestOriginalAdoptionJournalQueryRejectsLinkedFirstRecord",
+      "TestOriginalCaptureInstallationRejectsFilledGrantBeforeIssuingComponent",
+      "TestOriginalCaptureInstallationUsesActualSequenceAndRetainsIssuedGrantsOnFailureComponent",
+      "TestOriginalCaptureSequenceGrantsThenActualMappingsThenMetadataComponent",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/scope",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/uid",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/mapping",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/template",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/definition-window",
+      "TestOriginalCaptureSequenceRejectsWideningAndForgedObservedUIDComponent/expired",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/nil",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/child",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/mounts/canceled-child",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/nil",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/child",
+      "TestOriginalCaptureSequenceRejectsForeignContextPermanentlyComponent/finalize/canceled-child",
+      "TestOriginalCaptureSequencePostOutputFailureNeverResignsComponent",
+      "TestOriginalPublicationContinuationMySQL/reentry-and-next-stage",
+      "TestOriginalPublicationContinuationMySQL/concurrent-claim",
+      "TestOriginalPublicationContinuationMySQL/next-readback-failure",
+      "TestOriginalPublicationContinuationMySQL/unknown-query-only",
+      "TestOriginalPublicationContinuationMySQL/confirmed-version-changed",
+      "TestOriginalPublicationContinuationMySQL/stage-hole",
+      "TestOriginalPublicationContinuationMySQL/finalization-required",
+      "TestOriginalPublicationContinuationMySQL/production-pass-needs-next-intent",
+      "TestOriginalPublicationContinuationMySQL/close-joins-next-stage"
+    ],
+    "linux": {
+      "exit": 0,
+      "packages": {
+        "install": {
+          "roots": 16,
+          "subcases": 49,
+          "failures": [],
+          "skips": []
+        },
+        "execution": {
+          "roots": 12,
+          "subcases": 38,
+          "failures": [],
+          "skips": [
+            "TestOriginalPublicationContinuationMySQL/reentry-and-next-stage",
+            "TestOriginalPublicationContinuationMySQL/concurrent-claim",
+            "TestOriginalPublicationContinuationMySQL/next-readback-failure",
+            "TestOriginalPublicationContinuationMySQL/unknown-query-only",
+            "TestOriginalPublicationContinuationMySQL/confirmed-version-changed",
+            "TestOriginalPublicationContinuationMySQL/stage-hole",
+            "TestOriginalPublicationContinuationMySQL/finalization-required",
+            "TestOriginalPublicationContinuationMySQL/production-pass-needs-next-intent",
+            "TestOriginalPublicationContinuationMySQL/close-joins-next-stage"
+          ]
+        },
+        "first-adoption": {
+          "roots": 6,
+          "subcases": 16,
+          "failures": [],
+          "skips": []
+        },
+        "first-install": {
+          "roots": 3,
+          "subcases": 5,
+          "failures": [],
+          "skips": []
+        }
+      },
+      "deleted_test_binaries": [
+        {
+          "name": "execution.test",
+          "sha256": "2d77cb27509b7f0ad081ff1760ad549f1c861615adc5f190d61a7718803cd0f7",
+          "bytes": 134149625
+        },
+        {
+          "name": "first-adoption.test",
+          "sha256": "2ff4cf622aeabc580d5fc79f3bf619768b9a3272ccc4f1e8ccea825a6a34a8f6",
+          "bytes": 90205042
+        },
+        {
+          "name": "first-install.test",
+          "sha256": "b544ca2f2a471d7a664c5a549ea07b1d233b996896bbfce8baa89370f01ac68c",
+          "bytes": 82339166
+        },
+        {
+          "name": "install.test",
+          "sha256": "5ad9a6904b465c13502a688ab9645d2646e826506a4627f63effb5c11adaaaa7",
+          "bytes": 114635471
+        }
+      ]
+    },
+    "linux_summary_sha256": "c2197830125b702ed5d22ae232397eb98718c124fd2076219b8c52161870c0ed",
+    "independent_C_source_review": "Original issuer/owner/SQL peer/Pod->RS->Deployment/window chain retained; pending not promoted to ready."
+  },
+  "remaining": [
+    "Post-enable committed v2/newhash needs actual original-owner reauthorization, fresh metadata and policy; not provided by this first-version-only branch.",
+    "Initial Forward/provider permit/mapping+permission original issuer orchestration and complete runtime SQL role delivery remain.",
+    "Final actual composition exports, native first issuance/A2/installed startup and real page task remain unverified."
+  ],
+  "page_ready": false,
+  "page_acceptance": false,
+  "dr_qualified": false
+}
