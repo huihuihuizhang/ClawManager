@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+set -euo pipefail
+
+if [ -n "${RUNTIME_AGENT_CONTROL_TOKEN:-}" ] || [ -n "${RUNTIME_AGENT_REPORT_TOKEN:-}" ]; then
+    echo "Hermes global gateway disabled in shared Runtime Pod mode"
+    exec sleep infinity
+fi
+
+exec /usr/local/bin/start-hermes-gateway

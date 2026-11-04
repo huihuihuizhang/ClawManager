@@ -1,0 +1,3119 @@
+{
+  "schema_version": "supervisor-original-hermes-startup-read.v1",
+  "status": "ALL_PINNED_LAYERS_VERIFIED_STARTUP_DATA_ONLY",
+  "base": "sha256:6688834a944161d8dada995cdffd90781533b24ab1e75bb2182c46eaee3fb52c",
+  "selected_manifest": "sha256:5fe79507129002540c2fbc25fc49bbd10326cb65dbc752885cfc845b2860731d",
+  "config_digest": "sha256:4a36a2cda56406be6c4183eca5c58ac91dcceb36cb3342b7520b315c564a6c92",
+  "layer_count": 25,
+  "entrypoint": [
+    "/init"
+  ],
+  "cmd": null,
+  "user": null,
+  "env_keys": [
+    "CLAWMANAGER_RUNTIME_TYPE",
+    "DISABLE_DRI3",
+    "DISABLE_ZINK",
+    "DISPLAY",
+    "HERMES_HOME",
+    "HERMES_SKILL_DIRS",
+    "HOME",
+    "LANG",
+    "LANGUAGE",
+    "LSIO_FIRST_PARTY",
+    "NVIDIA_DRIVER_CAPABILITIES",
+    "PATH",
+    "PERL5LIB",
+    "PGID",
+    "PIXELFLUX_WAYLAND",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "PUID",
+    "PULSE_RUNTIME_PATH",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+    "S6_STAGE2_HOOK",
+    "S6_VERBOSITY",
+    "SELKIES_ENCODER",
+    "SELKIES_INTERPOSER",
+    "SHELL",
+    "START_DOCKER",
+    "SUBFOLDER",
+    "TERM",
+    "TITLE",
+    "VIRTUAL_ENV"
+  ],
+  "records": [
+    {
+      "path": "command/with-contenv",
+      "kind": "symlink",
+      "mode": "0o777",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+      "linkname": "../package/admin/s6-overlay/command/with-contenv"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/dependencies.d/legacy-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 25,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "4d0532d79e91499a54f0b574165ca91bc80ade362c23ad842ee5928e5872ca29"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 20,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "0d9566a96cc1ca90d3580966fadfc20f9f3e2c03866b7691975bfb64a085ba92"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 2318,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "0c6ae63ec571af73ba08ebc898af848665435ba5df2fb0102846451bf8796cb1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 20,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "0d9566a96cc1ca90d3580966fadfc20f9f3e2c03866b7691975bfb64a085ba92"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 281,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "c6493482d6948879f8b392d716ce9463af51ced861e748b552334192175ce437"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/branding",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 567,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "732a214ea31213919c5cb5fdd058d2e089fbf8c88b15a76753ad898135980dc8"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/dependencies.d/init-migrations",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1737,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "9ca913bfae40b00f1cc367ed8691080be78c6c603de20c939273bf164c0fe989"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 41,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "8c6ddc1c19464ff4a7e8af575d67a3d53b40947fc18a9b2b58c373b85e8f25eb"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/dependencies.d/init-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/dependencies.d/init-crontab-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 88,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "5fb714e1e8c77a0ac09036cbc0344fce161df2531100f705167117dc46c85a7b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/dependencies.d/init-os-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/dependencies.d/init-selkies-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 90,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "c006e4c2a1f29b1839abc2a64026914ce4cc9a8edce6c3484c74c486df14cc9d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/dependencies.d/init-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1278,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "a7be1af8f53d982cd1a48a4bacdef83405110c9d67ff2e7e596de89a7646adbd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 48,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "f65a1fc67658396d5a1831dd2b2318aaeb076ab5036ddef4d5c07aec5aa7881f"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/dependencies.d/init-mods-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 759,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "4e3ac65db3c4f97205977e1bb47284b6bf46b8e29d1fab3ad9a9f593e619b23a"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 46,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "8b1cfdcb840afde0ea6beeeffe3dc237d80c07a85588fc21616fc33d3b2b42e1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/dependencies.d/init-adduser",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1778,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "88bd7d10b2f83bac6ab9014e33b94e70bf68256d1a3f8fc9e824ef9d983874cb"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 7,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 45,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "28c206a45f646534b3fc0eb1aec7bd5926b57b5a987094711d0bcda0970adc7c"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 829,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "8b4e7fcbe05a517fa2a7a7e735f271cfa48a28207201bb855f97eb269a417e7a"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 41,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "c11d74e9162bd4fbf0bb51fb793ed369f20b91a4d22bc105056b09a822ae6000"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 993,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "b68baf12b700ea286ebfce0354146ce217432ed7dd1aad5b3e8be33816a85a5b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 44,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "6df72ac4204bd8727980eecae602195f8467c4ddcfdaa199e3b17371e3f84f36"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/dependencies.d/init-mods-package-install",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 75,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "93d5d786876b9c0a1c1c7053969705e0d4c1209c1dfa7961a5998df8527d747d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/dependencies.d/init-mods",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 4178,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "fd01c5894d533c2fed38fc908c98e32662948edc062ddb855d330c63cdce7fef"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 54,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "07ad4d4079be7d09ea16f1fa28819eac8225d75de0db06c96491b3a7e3876bc2"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/dependencies.d/init-config-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 77,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "52d5d90b03d3a78cd5b3087c635830661b6dde2a8d08cb534db5651c296e07a3"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/dependencies.d/init-selkies",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 2552,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "02e410597b1882c689ec475a25764e0cdb87b0d0614351542ca294eb7a34acd4"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 39,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "3248d81ded9e5f77ec81d18dfd431313abe32fb19a4cbb703fe11413dd6457e1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-adduser",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-device-perms",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-envfile",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 75,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "93d5d786876b9c0a1c1c7053969705e0d4c1209c1dfa7961a5998df8527d747d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/dependencies.d/init-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 11056,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "a7c17efdd99187eac164893a649108d13e86e6ae870a3f3b024017d99ee2e1c4"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 48,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "dc79c7917beddb2e7ee36df8219393d544afc7ebe889574db6720be2cdd08cb7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/dependencies.d/init-video",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 7,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 79,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "909dc5e1b4feb1d6a80d266b517e2addc60352d3701d0f48874df6152175ef59"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/dependencies.d/init-os-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 7,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 85,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "8909dd2a61af53fbc827d0724e0ffea2a31511f12b1571f05de708de0fa9690d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/dependencies.d/init-custom-files",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 73,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "8430c43c2f09dc9ff0b497c235cbb55566da62c15ddfef49e0c1d8bd94af2a8b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/dependencies.d/init-selkies-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 4673,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "6a1a5a78f7a24c7293488dfe783299478443f50044f57ffca76255830c96139e"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/up",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 39,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "011a55efbe92620a8dad137d5c61e71fb9eafe83c5870dd9db9afde73bc20fe8"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 568,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "f9e8a85c4747e88a8725cdc7994e1eb86e869e0fb5a2e7f23eac0b63da3c8780"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/dependencies.d/svc-xorg",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 206,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "850b2a14cfd4fcbe112a0de8cba9d1a0273f653fd06c4b57ec27fb74798e16b0"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-selkies",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-xorg",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/finish",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1211,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "ea9989721b19bd056db03d0cc741fc6634e7ec56a6a684bec89a9e52e5731b42"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1686,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "9a07834dd1f1e07f0aab4518cdb45f5e11979b86c0df2c78116f6b912a321c55"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 328,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "28b33e9f4a0667cb775913a357297182d22ef1670cec4205f490818057333622"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 377,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "45cca947b38d7f0449f254de9a7c0c21666e11807ce14e25ee0540410225940d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 165,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "cac7cf758bb0274bba125f8a75f740c876bbc4b58afcf9d127899799b53d6110"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-pulseaudio",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-xorg",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 3570,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d087e189b38b101d7e262effcde7658b903a6ff3a35a46e0f4711396514f1ced"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1115,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "9cce95f4225e4dc7f8189db252672e71c75bbce2f7abef0db38c304069df34db"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1356,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "9ea2f9a1e5a3fd0353ce26689f98b349e9a84dcac0cdf488da950acdebd6bb71"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/svc-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/svc-xorg",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/run",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 382,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "29cfed3cecaf142a3633dd53bd11846fc4de3b66c162e31f92ab0eb0f263c50c"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 8,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/hermes-agent",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 16,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "a34ab69081c6c42607022cfd58dd3f0f17a5b7279997be9e5b90c3d9fd1dc3b7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/hermes-gateway",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 16,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "a34ab69081c6c42607022cfd58dd3f0f17a5b7279997be9e5b90c3d9fd1dc3b7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-adduser",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-config-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-crontab-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-custom-files",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-device-perms",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-envfile",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-migrations",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods-package-install",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-os-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies-config",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies-end",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-services",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-video",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-cron",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-dbus",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-de",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-docker",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-nginx",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-pulseaudio",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-selkies",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-watchdog",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-xorg",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-xsettingsd",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 7,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "ef17b7d320f2acc023f2018dab381827ba22f9d01b6c4c97894e1bbfe4928313"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2/contents.d",
+      "kind": "directory",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2/contents.d/ci-service-check",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2/type",
+      "kind": "regular",
+      "mode": "0o644",
+      "uid": 0,
+      "gid": 0,
+      "size": 7,
+      "layer": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "sha256": "ef17b7d320f2acc023f2018dab381827ba22f9d01b6c4c97894e1bbfe4928313"
+    },
+    {
+      "path": "init",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1012,
+      "layer": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+      "sha256": "a694fa37f3b4a2a1cf6114bc5a5e1e357ef93d8b2ec1389874b612eb9890c8c6"
+    },
+    {
+      "path": "usr/bin/bash",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 1540520,
+      "layer": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+      "sha256": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd"
+    },
+    {
+      "path": "usr/bin/sleep",
+      "kind": "symlink",
+      "mode": "0o777",
+      "uid": 0,
+      "gid": 0,
+      "size": 0,
+      "layer": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+      "linkname": "../lib/cargo/bin/coreutils/sleep"
+    },
+    {
+      "path": "usr/bin/with-contenv",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 478,
+      "layer": "sha256:460ba522aeb956d9f0ed3d1db095ddf03e7f81967d23bad081393d3d064b3b18",
+      "sha256": "c6bf42eadb00cfb1028999534ad3da57a4d20908e3b67a0e529af4bf96cdde64"
+    },
+    {
+      "path": "usr/local/bin/clawmanager-agent",
+      "kind": "regular",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "size": 7422114,
+      "layer": "sha256:3a2de0738d005b520c2543297416105ba3825f1a49ad1439fd9b497fe663b365",
+      "sha256": "577ad51c55b5c9eacf5d4c5a2700c141d2acd3ba28b562cc170123a38364d722"
+    }
+  ],
+  "scope": "Read-only registry stream. Actual base image content only; no current Pod native census, runtime execution, source hold or legacy business handoff.",
+  "field_workload_mutated": false,
+  "page_acceptance": false,
+  "source_files": [
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/dependencies.d/legacy-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/ci-service-check/up",
+      "bytes": 25,
+      "sha256": "4d0532d79e91499a54f0b574165ca91bc80ade362c23ad842ee5928e5872ca29"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/dependencies.d/init-services",
+      "bytes": 20,
+      "sha256": "0d9566a96cc1ca90d3580966fadfc20f9f3e2c03866b7691975bfb64a085ba92"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/run",
+      "bytes": 2318,
+      "sha256": "0c6ae63ec571af73ba08ebc898af848665435ba5df2fb0102846451bf8796cb1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-agent/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/dependencies.d/init-services",
+      "bytes": 20,
+      "sha256": "0d9566a96cc1ca90d3580966fadfc20f9f3e2c03866b7691975bfb64a085ba92"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/run",
+      "bytes": 281,
+      "sha256": "c6493482d6948879f8b392d716ce9463af51ced861e748b552334192175ce437"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/hermes-gateway/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/branding",
+      "bytes": 567,
+      "sha256": "732a214ea31213919c5cb5fdd058d2e089fbf8c88b15a76753ad898135980dc8"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/dependencies.d/init-migrations",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/run",
+      "bytes": 1737,
+      "sha256": "9ca913bfae40b00f1cc367ed8691080be78c6c603de20c939273bf164c0fe989"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-adduser/up",
+      "bytes": 41,
+      "sha256": "8c6ddc1c19464ff4a7e8af575d67a3d53b40947fc18a9b2b58c373b85e8f25eb"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/dependencies.d/init-os-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/dependencies.d/init-selkies-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config/up",
+      "bytes": 90,
+      "sha256": "c006e4c2a1f29b1839abc2a64026914ce4cc9a8edce6c3484c74c486df14cc9d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/dependencies.d/init-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/dependencies.d/init-crontab-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-config-end/up",
+      "bytes": 88,
+      "sha256": "5fb714e1e8c77a0ac09036cbc0344fce161df2531100f705167117dc46c85a7b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/dependencies.d/init-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/run",
+      "bytes": 1278,
+      "sha256": "a7be1af8f53d982cd1a48a4bacdef83405110c9d67ff2e7e596de89a7646adbd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-crontab-config/up",
+      "bytes": 48,
+      "sha256": "f65a1fc67658396d5a1831dd2b2318aaeb076ab5036ddef4d5c07aec5aa7881f"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/dependencies.d/init-mods-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/run",
+      "bytes": 759,
+      "sha256": "4e3ac65db3c4f97205977e1bb47284b6bf46b8e29d1fab3ad9a9f593e619b23a"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-custom-files/up",
+      "bytes": 46,
+      "sha256": "8b1cfdcb840afde0ea6beeeffe3dc237d80c07a85588fc21616fc33d3b2b42e1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/dependencies.d/init-adduser",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/run",
+      "bytes": 1778,
+      "sha256": "88bd7d10b2f83bac6ab9014e33b94e70bf68256d1a3f8fc9e824ef9d983874cb"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/type",
+      "bytes": 7,
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-device-perms/up",
+      "bytes": 45,
+      "sha256": "28c206a45f646534b3fc0eb1aec7bd5926b57b5a987094711d0bcda0970adc7c"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/run",
+      "bytes": 829,
+      "sha256": "8b4e7fcbe05a517fa2a7a7e735f271cfa48a28207201bb855f97eb269a417e7a"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-envfile/up",
+      "bytes": 41,
+      "sha256": "c11d74e9162bd4fbf0bb51fb793ed369f20b91a4d22bc105056b09a822ae6000"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/run",
+      "bytes": 993,
+      "sha256": "b68baf12b700ea286ebfce0354146ce217432ed7dd1aad5b3e8be33816a85a5b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-migrations/up",
+      "bytes": 44,
+      "sha256": "6df72ac4204bd8727980eecae602195f8467c4ddcfdaa199e3b17371e3f84f36"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/dependencies.d/init-config-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods/up",
+      "bytes": 77,
+      "sha256": "52d5d90b03d3a78cd5b3087c635830661b6dde2a8d08cb534db5651c296e07a3"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/dependencies.d/init-mods-package-install",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-end/up",
+      "bytes": 75,
+      "sha256": "93d5d786876b9c0a1c1c7053969705e0d4c1209c1dfa7961a5998df8527d747d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/dependencies.d/init-mods",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+      "bytes": 4178,
+      "sha256": "fd01c5894d533c2fed38fc908c98e32662948edc062ddb855d330c63cdce7fef"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-mods-package-install/up",
+      "bytes": 54,
+      "sha256": "07ad4d4079be7d09ea16f1fa28819eac8225d75de0db06c96491b3a7e3876bc2"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/dependencies.d/init-selkies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/run",
+      "bytes": 2552,
+      "sha256": "02e410597b1882c689ec475a25764e0cdb87b0d0614351542ca294eb7a34acd4"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-nginx/up",
+      "bytes": 39,
+      "sha256": "3248d81ded9e5f77ec81d18dfd431313abe32fb19a4cbb703fe11413dd6457e1"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-adduser",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-device-perms",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/dependencies.d/init-envfile",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-os-end/up",
+      "bytes": 75,
+      "sha256": "93d5d786876b9c0a1c1c7053969705e0d4c1209c1dfa7961a5998df8527d747d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/dependencies.d/init-os-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/type",
+      "bytes": 7,
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies/up",
+      "bytes": 85,
+      "sha256": "8909dd2a61af53fbc827d0724e0ffea2a31511f12b1571f05de708de0fa9690d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/dependencies.d/init-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/run",
+      "bytes": 11056,
+      "sha256": "a7c17efdd99187eac164893a649108d13e86e6ae870a3f3b024017d99ee2e1c4"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-config/up",
+      "bytes": 48,
+      "sha256": "dc79c7917beddb2e7ee36df8219393d544afc7ebe889574db6720be2cdd08cb7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/dependencies.d/init-video",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/type",
+      "bytes": 7,
+      "sha256": "3b5d2e68df5da1354faeebefcced6631c0d8b579019fd6e32fcd078c36de12cd"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-selkies-end/up",
+      "bytes": 79,
+      "sha256": "909dc5e1b4feb1d6a80d266b517e2addc60352d3701d0f48874df6152175ef59"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/dependencies.d/init-custom-files",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-services/up",
+      "bytes": 73,
+      "sha256": "8430c43c2f09dc9ff0b497c235cbb55566da62c15ddfef49e0c1d8bd94af2a8b"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/dependencies.d/init-selkies-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/run",
+      "bytes": 4673,
+      "sha256": "6a1a5a78f7a24c7293488dfe783299478443f50044f57ffca76255830c96139e"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/type",
+      "bytes": 8,
+      "sha256": "aab38fd7998987a22d44fda7822afcfa69d039d3ba02b1f707f064df64352217"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/init-video/up",
+      "bytes": 39,
+      "sha256": "011a55efbe92620a8dad137d5c61e71fb9eafe83c5870dd9db9afde73bc20fe8"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/run",
+      "bytes": 568,
+      "sha256": "f9e8a85c4747e88a8725cdc7994e1eb86e869e0fb5a2e7f23eac0b63da3c8780"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-cron/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/dependencies.d/svc-xorg",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/run",
+      "bytes": 206,
+      "sha256": "850b2a14cfd4fcbe112a0de8cba9d1a0273f653fd06c4b57ec27fb74798e16b0"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-dbus/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-selkies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/dependencies.d/svc-xorg",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/finish",
+      "bytes": 1211,
+      "sha256": "ea9989721b19bd056db03d0cc741fc6634e7ec56a6a684bec89a9e52e5731b42"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/run",
+      "bytes": 1686,
+      "sha256": "9a07834dd1f1e07f0aab4518cdb45f5e11979b86c0df2c78116f6b912a321c55"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-de/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/run",
+      "bytes": 328,
+      "sha256": "28b33e9f4a0667cb775913a357297182d22ef1670cec4205f490818057333622"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-docker/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/run",
+      "bytes": 377,
+      "sha256": "45cca947b38d7f0449f254de9a7c0c21666e11807ce14e25ee0540410225940d"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-nginx/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/run",
+      "bytes": 165,
+      "sha256": "cac7cf758bb0274bba125f8a75f740c876bbc4b58afcf9d127899799b53d6110"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-pulseaudio/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-pulseaudio",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/dependencies.d/svc-xorg",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/run",
+      "bytes": 3570,
+      "sha256": "d087e189b38b101d7e262effcde7658b903a6ff3a35a46e0f4711396514f1ced"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-selkies/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/run",
+      "bytes": 1115,
+      "sha256": "9cce95f4225e4dc7f8189db252672e71c75bbce2f7abef0db38c304069df34db"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-watchdog/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/run",
+      "bytes": 1356,
+      "sha256": "9ea2f9a1e5a3fd0353ce26689f98b349e9a84dcac0cdf488da950acdebd6bb71"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xorg/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/svc-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/dependencies.d/svc-xorg",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/run",
+      "bytes": 382,
+      "sha256": "29cfed3cecaf142a3633dd53bd11846fc4de3b66c162e31f92ab0eb0f263c50c"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/svc-xsettingsd/type",
+      "bytes": 8,
+      "sha256": "d0001a150b83f68f09004c5059045cb76a3f064eed4d42ce072bc3722c118006"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/hermes-agent",
+      "bytes": 16,
+      "sha256": "a34ab69081c6c42607022cfd58dd3f0f17a5b7279997be9e5b90c3d9fd1dc3b7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/hermes-gateway",
+      "bytes": 16,
+      "sha256": "a34ab69081c6c42607022cfd58dd3f0f17a5b7279997be9e5b90c3d9fd1dc3b7"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-adduser",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-config-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-crontab-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-custom-files",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-device-perms",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-envfile",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-migrations",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-mods-package-install",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-os-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies-config",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-selkies-end",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-services",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/init-video",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-cron",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-dbus",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-de",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-docker",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-nginx",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-pulseaudio",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-selkies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-watchdog",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-xorg",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/contents.d/svc-xsettingsd",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user/type",
+      "bytes": 7,
+      "sha256": "ef17b7d320f2acc023f2018dab381827ba22f9d01b6c4c97894e1bbfe4928313"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2/contents.d/ci-service-check",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "etc/s6-overlay/s6-rc.d/user2/type",
+      "bytes": 7,
+      "sha256": "ef17b7d320f2acc023f2018dab381827ba22f9d01b6c4c97894e1bbfe4928313"
+    }
+  ],
+  "verified_layers": [
+    {
+      "digest": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+      "compressed_bytes": 42420842,
+      "plain_bytes": 110814720,
+      "diff_id": "sha256:efd9289efa80fa33ba25a5870deee04428ecb9d79bc30737f3517ffd3d0dc30f",
+      "members": 7444
+    },
+    {
+      "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+      "compressed_bytes": 6239,
+      "plain_bytes": 32768,
+      "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+      "members": 1
+    },
+    {
+      "digest": "sha256:696358c19f5f8782e1c73eec5c72255ca844c01681f405783027336e442786f4",
+      "compressed_bytes": 1362,
+      "plain_bytes": 8192,
+      "diff_id": "sha256:741b5152211a08917356697c9de21ae4b135111444f5b10506b5ba2644e4edd9",
+      "members": 5
+    },
+    {
+      "digest": "sha256:0f823ffe3c2c31aa588565d45cf2e3535bb5d72d90dd99a24dbbe5e8a4bc6fe6",
+      "compressed_bytes": 701,
+      "plain_bytes": 3584,
+      "diff_id": "sha256:34cf7a93ff2cd2b92b68a25d1229c175f00564dc87033f80e7b8d2ec0a3e7722",
+      "members": 3
+    },
+    {
+      "digest": "sha256:460ba522aeb956d9f0ed3d1db095ddf03e7f81967d23bad081393d3d064b3b18",
+      "compressed_bytes": 427,
+      "plain_bytes": 3072,
+      "diff_id": "sha256:fe0e413204087ba1b12ece8d050fab6bc8e42fa437b1b5f5713c4275132db94d",
+      "members": 3
+    },
+    {
+      "digest": "sha256:e13a627df9d36d0403050621ccce160ea17613cd976f008f60abac7d864337cb",
+      "compressed_bytes": 339,
+      "plain_bytes": 3584,
+      "diff_id": "sha256:70db2d5e6842b389c5070c58629d0ca537a7a68713d11e066228b9ff79b30e4a",
+      "members": 4
+    },
+    {
+      "digest": "sha256:93344328c44682fb9ea002e56410f689811fa1dd312fe89836b743089283a6e6",
+      "compressed_bytes": 19098893,
+      "plain_bytes": 53423616,
+      "diff_id": "sha256:96321abc24ea87436b2ea2c2c6ebf32dbcaa840637e1f311a579c30ee1f27be6",
+      "members": 3587
+    },
+    {
+      "digest": "sha256:c8737d173295ef7c45bd6c781dbfc64e483b5d4553cbfbe048c0fd238486127d",
+      "compressed_bytes": 4642,
+      "plain_bytes": 79360,
+      "diff_id": "sha256:0ff8ea8c8ae11fb0f9e42915cb3bbfc92bcd590934f189f8750a3b01a8134655",
+      "members": 103
+    },
+    {
+      "digest": "sha256:f903c35193f441953db4188a213cceabe6e7e35e6d0c1d1296515b503cf3e929",
+      "compressed_bytes": 922999891,
+      "plain_bytes": 2580901376,
+      "diff_id": "sha256:ba46734e3f0bd653101e0ca4f8bfb3496a69165b7de582e4043047b3832f18bc",
+      "members": 44332
+    },
+    {
+      "digest": "sha256:5affcd3600cfbfaa18949ab28711aaa5f931ed28cc890e2cbb91f6e55817ac29",
+      "compressed_bytes": 15435,
+      "plain_bytes": 122880,
+      "diff_id": "sha256:be67885b5fe7d6a11184b4657e9ebdd52f37e274114aeec36140c18f7148577c",
+      "members": 120
+    },
+    {
+      "digest": "sha256:143af78ca30f8cc5fae756862e6f50a8496bfb5a8b8c2f259531c7c021c3ac8a",
+      "compressed_bytes": 756770,
+      "plain_bytes": 6831616,
+      "diff_id": "sha256:9a001bdf06cb6a140ce353d33ce599df749bd967625cece88eee881e5f124247",
+      "members": 2492
+    },
+    {
+      "digest": "sha256:4961ba984c7bc2066301048f6ef03cbbfff12b9ea6d71d2b4bdb86bbece3232c",
+      "compressed_bytes": 1129797,
+      "plain_bytes": 2346496,
+      "diff_id": "sha256:3f3bb6764d7d907f2429608aca38e5bd95d7f2379efa39c873cd554a18de9321",
+      "members": 3
+    },
+    {
+      "digest": "sha256:f26e64b9d56aa1d93c1f6a12d43a95694c8f6e5ceebb54df58d4b1bb0cabee2c",
+      "compressed_bytes": 9078,
+      "plain_bytes": 30208,
+      "diff_id": "sha256:08d9d0097dc83406588ae82ca3ad13a59e52beb434ac60bcc3d0989af969cf9b",
+      "members": 3
+    },
+    {
+      "digest": "sha256:f04207715693fb0333d97006170fd2154e40a0253f302dd1b046b9bd23a04f8a",
+      "compressed_bytes": 74012,
+      "plain_bytes": 167936,
+      "diff_id": "sha256:2840477c6439436a9b941ee0fca00f244c297a05833bb315d9bdea8cb98442ce",
+      "members": 3
+    },
+    {
+      "digest": "sha256:3cdfa630737fadfd108621637cb056f6f95d936f0d25e0d00cb00d5d2f15f95c",
+      "compressed_bytes": 1004951,
+      "plain_bytes": 2268160,
+      "diff_id": "sha256:4d9f84d84ee2db727960180654e893259b2cd83ba7903c8669c95312cf3b9b9c",
+      "members": 3
+    },
+    {
+      "digest": "sha256:00c90dd3b72ab14b5618190408b9f9bc8e9040b8fd79d12f7b9dee5f058fa553",
+      "compressed_bytes": 1720733,
+      "plain_bytes": 4552192,
+      "diff_id": "sha256:e33b3d57d9b2387985b3bedc27525f37ac4f506639b5979d03aefa5f35e68b2d",
+      "members": 4
+    },
+    {
+      "digest": "sha256:96495de5870e50821572783d77eb91c071a1591d89af54384b16df99b6667e11",
+      "compressed_bytes": 659700551,
+      "plain_bytes": 1776464896,
+      "diff_id": "sha256:1489dfa63013c712cb1ac944956f3c3dec0ff2b06c68e6ec4b662fd0168762a1",
+      "members": 81266
+    },
+    {
+      "digest": "sha256:7c8b6c79689eb3e98dd4620142c26f6de19cd0f7805e6dc98023981ec69628ef",
+      "compressed_bytes": 2050,
+      "plain_bytes": 11776,
+      "diff_id": "sha256:3cadaa43bb296fec8f229e5dba8159cb05a2929996d5883fa2781d2501069dc1",
+      "members": 9
+    },
+    {
+      "digest": "sha256:43ee6ca5572d9448825de032e84fac3e3ef75646cc196be2ccc26820b6b7cf29",
+      "compressed_bytes": 14735967,
+      "plain_bytes": 48124416,
+      "diff_id": "sha256:8743e24e8310575b447679d9def068827cdc9a4f494ec1a44789838801d6370b",
+      "members": 1041
+    },
+    {
+      "digest": "sha256:c2d503d98b81a060690b993e523438cdc1b9d503673429d0872f74243f55df3b",
+      "compressed_bytes": 58642973,
+      "plain_bytes": 201316864,
+      "diff_id": "sha256:ca3d2a0c3d3a2f3023c6a612192b98631516f62c3a1b87a3836b744cc587654c",
+      "members": 5945
+    },
+    {
+      "digest": "sha256:f1c1574b6b45de89bc77e3371642f5b4548f7eb3199f7cb57e03460ee7d39af7",
+      "compressed_bytes": 755804797,
+      "plain_bytes": 2430789632,
+      "diff_id": "sha256:48a0fb79c3732ee735f05cfbdb04d8c714ecfe53bbed766d5fa5bb2cc9263519",
+      "members": 124547
+    },
+    {
+      "digest": "sha256:3a2de0738d005b520c2543297416105ba3825f1a49ad1439fd9b497fe663b365",
+      "compressed_bytes": 3141911,
+      "plain_bytes": 7425536,
+      "diff_id": "sha256:3ce410a00150838856accbcd3c51ef057217a0e62c63baca999a66179ce09a9d",
+      "members": 4
+    },
+    {
+      "digest": "sha256:c3b1c724565b26d188f2e7815f9845b1c4fc2f4104c791cd28cc1f720da43f86",
+      "compressed_bytes": 11948,
+      "plain_bytes": 61952,
+      "diff_id": "sha256:e275fa4c774658fe9c285836d3b2c29e2b442e68fb497e00e62ef5153a6856f4",
+      "members": 6
+    },
+    {
+      "digest": "sha256:9bc707fb96d5c980f43f0c0ec0b55765a03c0ee80a02633c36c323f48817dc7f",
+      "compressed_bytes": 22595,
+      "plain_bytes": 105472,
+      "diff_id": "sha256:831031c15e4c0ba9013cf6bf4b8b40d215bcdf3d9fec19850745bc5ba6019640",
+      "members": 34
+    },
+    {
+      "digest": "sha256:9656168790a4b570e1b0f9c8a1e51c475a8497d43398ad9ec5f6af820c5e59bf",
+      "compressed_bytes": 33138773,
+      "plain_bytes": 92296192,
+      "diff_id": "sha256:891b0f93b5e1b7ac42b97ddde434208f0d9d7e82eb18820675fb6f45836138bd",
+      "members": 5721
+    }
+  ],
+  "readback_method": "All25 exact immutable registry layers streamed, compressed SHA/size, complete gzip CRC/EOF, uncompressed diffID and ordered tar/whiteout verified. Only static selected scripts and metadata retained; no ELF retained or executed.",
+  "limits": [
+    "Selected startup paths only. No complete /usr/local/bin helper/default/config readback implied.",
+    "Current Pod spec, mounts, credentials, processes and native holder still require actual original census.",
+    "Original stopped business sources remain in full scope; token presence is not readiness or business ownership."
+  ],
+  "original_failure": {
+    "kind": "overstrict POSIX literal-backslash name rejection",
+    "verified_layers": 8,
+    "subsequently_restarted_full_read": true
+  }
+}
