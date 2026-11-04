@@ -1,0 +1,35 @@
+{
+  "schema_version": "supervisor-controller-candidate-runtime-pins-review.v1",
+  "source_map": "backend/.c-controller-candidate-runtime-pins-20261104/source-map.json",
+  "source_map_sha256": "193637416c1a8d2f7cb9849012f645ab35ad4e9103965f26f5d80fffd90db82c",
+  "reviewed_sources": [
+    {
+      "source": "backend/.c-controller-candidate-runtime-pins-20261104/scripts/system-backup-d-controller-candidate.py",
+      "target": "scripts/system-backup-d-controller-candidate.py",
+      "sha256": "8d36a35828758fc5f96e0a4407d16c71b190a8694bacc2f98d8fab6bbb35949a",
+      "before_sha256": "bc0604ce14e22b89a6def4b1f8239ce7a4716e4c8c7c1078a5542238d1a853b3",
+      "operation": "exact_before_supersede"
+    },
+    {
+      "source": "backend/.c-controller-candidate-runtime-pins-20261104/scripts/system-backup-d-controller-candidate.test.py",
+      "target": "scripts/system-backup-d-controller-candidate.test.py",
+      "sha256": "4be7b5a62155c1ec7bf9d9cf6d6a0e1b1ba4bc05715803fec866bc35ceb6ca55",
+      "before_sha256": "406520b215dd1aae9c91b89608badd948ce17738b8bbbf9c5598b7a54e8b2aff",
+      "operation": "exact_before_supersede"
+    }
+  ],
+  "windows_tests": 13,
+  "linux_tests": 13,
+  "failures": 0,
+  "skips": 0,
+  "checks": [
+    "Runtime MinIO file/hash/profile environment names and exact source versions compared with actual accepted Go consumers.",
+    "Missing or drifted profile/materials refuse before output. Nested policy must match actual mounted readonly Secret/ConfigMap source, path, SHA, and exact policy schema.",
+    "Existing paused replicas0/forwardfalse guard retained. This offline producer never issues policy, signer authority, credentials, or installation authorization."
+  ],
+  "generated_test_fixtures_removed": true,
+  "build_artifacts_created": false,
+  "cluster_contacted": false,
+  "authorization_verified": false,
+  "page_acceptance": false
+}

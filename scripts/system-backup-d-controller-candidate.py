@@ -21,6 +21,15 @@ PAIRS = (
     ("SYSTEM_BACKUP_CAPTURE_MATERIALS_FILE", "SYSTEM_BACKUP_CAPTURE_MATERIALS_SHA256"),
     ("SYSTEM_BACKUP_PUBLICATION_TARGET_FILE", "SYSTEM_BACKUP_PUBLICATION_TARGET_SHA256"),
 )
+READINESS_PAIR = ("SYSTEM_BACKUP_READINESS_MINIO_SOURCE_FILE", "SYSTEM_BACKUP_READINESS_MINIO_SOURCE_SHA256")
+READINESS_PROFILE_ENV = "SYSTEM_BACKUP_READINESS_MINIO_PROFILE"
+# Closed compatibility declarations from systembackupminioauthority.NativeProfile;
+# selecting one never proves native version, current permissions or readiness.
+READINESS_SOURCES = {
+    "minio-2025-04-22-builtin-flat.v1": "minio-publication-effective-permission-source.v2",
+    "minio-2025-09-07-builtin-flat.v1": "minio-publication-september-effective-permission-source.v1",
+}
+PUBLICATION_POLICY_PROTOCOL = "system-backup-original-publication-policy.v1"
 
 
 def require(value):
@@ -153,15 +162,40 @@ def prepare(plan_path):
         require(destination not in materials and item["kind"] in ("Secret", "ConfigMap") and item["name"] and item["key"])
         require(mounted_refs(pod, container, destination) == [(item["kind"], item["name"], item["key"])])
         materials[destination] = (item, local_bytes(root, item))
-    for file_env, hash_env in PAIRS:
+    # Runtime requires an explicit profile and independent permission-source
+    # pin even though this candidate remains paused/recovery-only. No default,
+    # envFrom or projected environment value is an independently reviewed pin.
+    for name in (*READINESS_PAIR, READINESS_PROFILE_ENV):
+        require(name in env and set(env[name]) == {"name", "value"})
+        require(isinstance(env[name]["value"], str) and env[name]["value"])
+    profile = env[READINESS_PROFILE_ENV]["value"]
+    require(profile in READINESS_SOURCES)
+    for file_env, hash_env in PAIRS + (READINESS_PAIR,):
         destination = env[file_env]["value"]
-        require(destination in materials and env[hash_env]["value"] == materials[destination][0]["sha256"])
+        absolute(destination)
+        require(pin(env[hash_env]["value"]) and destination in materials
+                and env[hash_env]["value"] == materials[destination][0]["sha256"])
+    readiness = decode(materials[env[READINESS_PAIR[0]]["value"]][1])
+    require(isinstance(readiness, dict) and readiness.get("Version") == READINESS_SOURCES[profile])
     config = decode(materials[env[PAIRS[0][0]]["value"]][1])
     require(config["schema_version"] == "system-backup-public-deployment.v1" and config["capture_scope"] == "six-part")
     require(config["namespace"] == plan["namespace"] and config["namespace_uid"] == plan["namespace_uid"])
     require(config["worker_image"] == plan["worker_image"])
     for field, pair in zip(("formal_verifier", "publication_signers", "publisher_verifier", "capture_modules", "publication_target"), PAIRS[1:]):
         require(config[field]["path"] == env[pair[0]]["value"])
+    capture = decode(materials[env[PAIRS[4][0]]["value"]][1])
+    require(isinstance(capture, dict) and capture.get("Version") == "original-six-part-capture-materials.v1")
+    discovery = capture.get("Discovery")
+    require(isinstance(discovery, dict))
+    policy = discovery.get("PublicationPolicy")
+    require(isinstance(policy, dict) and set(policy) == {"Protocol", "Path", "SHA256"})
+    require(policy["Protocol"] == PUBLICATION_POLICY_PROTOCOL and pin(policy["SHA256"]))
+    policy_path = absolute(policy["Path"])
+    # Every materials entry was already matched to exactly one actual readonly
+    # Secret/ConfigMap projection above, and its local bytes checked by SHA.
+    require(policy_path in materials and materials[policy_path][0]["sha256"] == policy["SHA256"])
+    policy_body = decode(materials[policy_path][1])
+    require(isinstance(policy_body, dict) and policy_body.get("schema_version") == PUBLICATION_POLICY_PROTOCOL)
     for field in ("profile_file", "capacity_file", "source_dsn_file", "server_certificate", "server_key", "issuer_certificate", "issuer_key"):
         require(config[field] in materials)
     for field, hash_env in (("forward_grant", "SYSTEM_BACKUP_FORWARD_GRANT_SHA256"), ("recovery_grant", "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256")):

@@ -3,6 +3,7 @@ import importlib.util
 import contextlib
 import io
 import json
+import copy
 from pathlib import Path
 import tempfile
 import unittest
@@ -34,6 +35,14 @@ class CandidateTest(unittest.TestCase):
             item = self.material("material" + str(index), b"LOCAL STRUCTURE DATA")
             paths.append(item["mount_path"])
             self.env.extend([{"name": file_env, "value": item["mount_path"]}, {"name": hash_env, "value": item["sha256"]}])
+        self.readiness = self.material("readiness", json.dumps({"Version": candidate.READINESS_SOURCES["minio-2025-09-07-builtin-flat.v1"]}).encode())
+        self.env.extend([{"name": candidate.READINESS_PAIR[0], "value": self.readiness["mount_path"]},
+                         {"name": candidate.READINESS_PAIR[1], "value": self.readiness["sha256"]},
+                         {"name": candidate.READINESS_PROFILE_ENV, "value": "minio-2025-09-07-builtin-flat.v1"}])
+        self.policy = self.material("policy", json.dumps({"schema_version": candidate.PUBLICATION_POLICY_PROTOCOL}).encode())
+        self.capture = {"Version": "original-six-part-capture-materials.v1", "Discovery": {"PublicationPolicy": {
+            "Protocol": candidate.PUBLICATION_POLICY_PROTOCOL, "Path": self.policy["mount_path"], "SHA256": self.policy["sha256"]}}}
+        self.repin("material4", self.capture, candidate.PAIRS[4][1])
         self.config = {"schema_version": "system-backup-public-deployment.v1", "capture_scope": "six-part",
                        "namespace": self.plan["namespace"], "namespace_uid": self.plan["namespace_uid"],
                        "worker_image": self.plan["worker_image"], "key_directory": "/run/private"}
@@ -66,6 +75,14 @@ class CandidateTest(unittest.TestCase):
                 "kind": "Secret", "name": "local-materials", "key": name}
         self.plan["files"].append(item)
         return item
+
+    def repin(self, name, value, hash_env=None):
+        raw = json.dumps(value).encode()
+        (self.root / name).write_bytes(raw)
+        item = next(x for x in self.plan["files"] if x["file"] == name)
+        item["sha256"] = candidate.sha(raw)
+        if hash_env is not None:
+            next(e for e in self.env if e["name"] == hash_env)["value"] = item["sha256"]
 
     def prepare(self):
         raw = json.dumps(self.manifest).encode()
@@ -136,6 +153,77 @@ class CandidateTest(unittest.TestCase):
         with self.assertRaises(ValueError): candidate.decode(b'{"x":1,"x":2}')
         self.plan["files"][0]["file"] = "../foreign"
         with self.assertRaises(ValueError): self.prepare()
+
+    def test_readiness_requires_all_explicit_values_and_closed_profile(self):
+        for name in (*candidate.READINESS_PAIR, candidate.READINESS_PROFILE_ENV):
+            with self.subTest(missing=name):
+                entry = next(e for e in self.env if e["name"] == name)
+                self.env.remove(entry)
+                try:
+                    with self.assertRaises(ValueError): self.prepare()
+                finally:
+                    self.env.append(entry)
+            with self.subTest(projected=name):
+                old = dict(entry)
+                entry.clear()
+                entry.update({"name": name, "valueFrom": {"secretKeyRef": {"name": "local-materials", "key": "pin"}}})
+                try:
+                    with self.assertRaises(ValueError): self.prepare()
+                finally:
+                    entry.clear()
+                    entry.update(old)
+        profile = next(e for e in self.env if e["name"] == candidate.READINESS_PROFILE_ENV)
+        for value in ("", "latest", "minio-unknown", "minio-2025-04-22-builtin-flat.v1"):
+            with self.subTest(profile=value):
+                profile["value"] = value
+                with self.assertRaises(ValueError): self.prepare()
+
+    def test_readiness_april_profile_pairs_with_original_april_source(self):
+        profile = "minio-2025-04-22-builtin-flat.v1"
+        next(e for e in self.env if e["name"] == candidate.READINESS_PROFILE_ENV)["value"] = profile
+        self.repin("readiness", {"Version": candidate.READINESS_SOURCES[profile]}, candidate.READINESS_PAIR[1])
+        _, report = self.prepare()
+        self.assertFalse(report["authorization_verified"])
+
+    def test_readiness_source_requires_actual_pin_and_mount(self):
+        checksum = next(e for e in self.env if e["name"] == candidate.READINESS_PAIR[1])
+        checksum["value"] = "d" * 64
+        with self.assertRaises(ValueError): self.prepare()
+        checksum["value"] = self.readiness["sha256"]
+        self.readiness["name"] = "foreign-secret"
+        with self.assertRaises(ValueError): self.prepare()
+        self.readiness["name"] = "local-materials"
+        (self.root / "readiness").write_bytes(b"CHANGED SOURCE")
+        with self.assertRaises(ValueError): self.prepare()
+
+    def test_nested_policy_requires_exact_reference_and_mounted_bytes(self):
+        original = copy.deepcopy(self.capture)
+        for bad in (None, {}, {"Protocol": candidate.PUBLICATION_POLICY_PROTOCOL, "Path": "/run/private/missing", "SHA256": "d" * 64},
+                    {"Protocol": "unknown", "Path": self.policy["mount_path"], "SHA256": self.policy["sha256"]},
+                    {"Protocol": candidate.PUBLICATION_POLICY_PROTOCOL, "Path": "relative-policy", "SHA256": self.policy["sha256"]},
+                    {"Protocol": candidate.PUBLICATION_POLICY_PROTOCOL, "Path": self.policy["mount_path"], "SHA256": "d" * 64}):
+            with self.subTest(reference=bad):
+                self.capture["Discovery"]["PublicationPolicy"] = bad
+                self.repin("material4", self.capture, candidate.PAIRS[4][1])
+                with self.assertRaises(ValueError): self.prepare()
+        self.capture = original
+        self.repin("material4", self.capture, candidate.PAIRS[4][1])
+        self.policy["name"] = "foreign-secret"
+        with self.assertRaises(ValueError): self.prepare()
+        self.policy["name"] = "local-materials"
+        self.plan["files"].remove(self.policy)
+        with self.assertRaises(ValueError): self.prepare()
+        self.plan["files"].append(self.policy)
+        (self.root / "policy").write_bytes(b"CHANGED POLICY")
+        with self.assertRaises(ValueError): self.prepare()
+
+    def test_rehashed_policy_wrong_protocol_and_duplicate_fields_refused(self):
+        for raw in (b'{"schema_version":"unknown"}', b'{"schema_version":"system-backup-original-publication-policy.v1","schema_version":"system-backup-original-publication-policy.v1"}'):
+            (self.root / "policy").write_bytes(raw)
+            self.policy["sha256"] = candidate.sha(raw)
+            self.capture["Discovery"]["PublicationPolicy"]["SHA256"] = self.policy["sha256"]
+            self.repin("material4", self.capture, candidate.PAIRS[4][1])
+            with self.assertRaises(ValueError): self.prepare()
 
 
 if __name__ == "__main__":
