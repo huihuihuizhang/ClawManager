@@ -48,6 +48,15 @@ func ProveLegacySiteOriginalRows198(ctx context.Context, pool *sql.DB, inventory
 }
 
 func proveLegacySiteRows198(ctx context.Context, pool *sql.DB, inventoryRaw []byte, phase string, original bool) (LegacySite177RowProof, error) {
+	return proveLegacySiteRowsReviewed(ctx, pool, inventoryRaw, phase, original, "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3", 177, 198)
+}
+
+// C1 profile is separately reviewed and content-addressed. It never changes
+// the old198 evidence or authorizes writing the original database.
+func ProveLegacySiteRowsC1(ctx context.Context, pool *sql.DB, inventoryRaw []byte, phase string, original bool) (LegacySite177RowProof, error) {
+	return proveLegacySiteRowsReviewed(ctx, pool, inventoryRaw, phase, original, "1efd02dc8ee4038f53c58f17aeee39ba49ad1e6c06f56cdad3a1147d10992494", 178, 199)
+}
+func proveLegacySiteRowsReviewed(ctx context.Context, pool *sql.DB, inventoryRaw []byte, phase string, original bool, reviewed string, fileCount, unionCount int) (LegacySite177RowProof, error) {
 	var report LegacySite177RowProof
 	if ctx == nil || pool == nil || ctx.Err() != nil || (phase != "before" && phase != "after") {
 		return report, errors.New("legacy copy row proof unavailable")
@@ -57,7 +66,7 @@ func proveLegacySiteRows198(ctx context.Context, pool *sql.DB, inventoryRaw []by
 		return report, err
 	}
 	catalog, err := EmbeddedMigrationCatalog()
-	if err != nil || catalog.Hash != "0031e3825416f419fb7308b6bd72c9616c6179eab376e0579f448965fbe7b4c3" || len(catalog.Filenames) != 177 {
+	if err != nil || catalog.Hash != reviewed || len(catalog.Filenames) != fileCount {
 		return report, errors.New("legacy177 exact embedded catalog mismatch")
 	}
 	expected := make(map[string]bool)
@@ -67,7 +76,7 @@ func proveLegacySiteRows198(ctx context.Context, pool *sql.DB, inventoryRaw []by
 	for _, name := range catalog.Filenames {
 		expected[name] = true
 	}
-	if len(expected) != 198 {
+	if len(expected) != unionCount {
 		return report, errors.New("legacy177 reviewed ledger union changed")
 	}
 	report.TargetCatalogSHA256, report.ExpectedLedgerRows = catalog.Hash, len(expected)

@@ -117,17 +117,25 @@ func (i *Installer) QueryOriginalRuntimeProviderInstallation(ctx context.Context
 	}
 	result.OriginalAuthorizationExpired = !now.Before(receipt.Until) || !now.Before(actualUntil)
 	var epoch uint64
-	e = tx.QueryRowContext(ctx, `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=? FOR SHARE`, want.InstallationID).Scan(&epoch)
-	missingFence := e == sql.ErrNoRows
-	if e != nil && !missingFence {
-		return result, ErrInstall
-	}
 	var actual a.RuntimeInstalledSQLSnapshot
 	readErr := a.ErrAuthorityWrite
-	if !missingFence {
-		if want.C1 != nil {
-			actual, readErr = a.QueryMixedRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, want.C1)
-		} else {
+	if want.C1 != nil {
+		// The actual mixed reader locks C1 protocol tables FIRST. Never take
+		// the later KEK fence before this prefix (install/consume use C1->KEK).
+		actual, readErr = a.QueryMixedRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, want.C1)
+		if readErr == nil {
+			e = tx.QueryRowContext(ctx, `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=? FOR SHARE`, want.InstallationID).Scan(&epoch)
+			if e != nil || actual.FenceAfter != epoch {
+				readErr = a.ErrAuthorityWrite
+			}
+		}
+	} else {
+		e = tx.QueryRowContext(ctx, `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=? FOR SHARE`, want.InstallationID).Scan(&epoch)
+		missingFence := e == sql.ErrNoRows
+		if e != nil && !missingFence {
+			return result, ErrInstall
+		}
+		if !missingFence {
 			actual, readErr = a.QueryRuntimeInstalledSQLSnapshotTx(ctx, tx, database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities)
 		}
 	}

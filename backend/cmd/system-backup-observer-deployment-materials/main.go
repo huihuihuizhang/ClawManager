@@ -21,7 +21,7 @@ import (
 func run(ctx context.Context, args []string, out io.Writer) int {
 	f := flag.NewFlagSet("system-backup-observer-deployment-materials", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
-	mode := f.String("mode", "", "service-account or host-materials")
+	mode := f.String("mode", "", "service-account, host-materials or shared-agent-tls")
 	planFile := f.String("plan-file", "", "original canonical installation plan")
 	planSHA := f.String("plan-sha256", "", "independently pinned original plan hash")
 	publicFile := f.String("issuer-public-file", "", "original enrolled Ed25519 public key")
@@ -78,7 +78,11 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if err != nil {
 		return 1
 	}
-	bounded, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	budget := 2 * time.Minute
+	if *mode == "workspace-runtime-readback" {
+		budget = 15 * time.Minute
+	}
+	bounded, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	var receipt any
 	switch *mode {
@@ -87,6 +91,21 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 2
 		}
 		receipt, err = i.PrepareOriginalObserverServiceAccount(bounded, password, pin, *definitionFile, *definitionSHA)
+	case "workspace-runtime-baseline", "workspace-runtime-readback":
+		if *directory == "" {
+			return 2
+		}
+		receipt, err = i.ProduceOriginalWorkspaceRuntimeMaterials(bounded, password, pin, *definitionFile, *definitionSHA, *directory, *mode == "workspace-runtime-readback")
+	case "workspace-runtime-stop":
+		if *directory == "" {
+			return 2
+		}
+		receipt, err = i.StopOriginalWorkspaceGateway(bounded, password, pin, *definitionFile, *definitionSHA, *directory)
+	case "shared-agent-tls":
+		if *directory == "" {
+			return 2
+		}
+		receipt, err = i.ProduceOriginalSharedAgentTLSMaterials(bounded, password, pin, *definitionFile, *definitionSHA, *directory)
 	case "host-materials":
 		if *directory == "" {
 			return 2

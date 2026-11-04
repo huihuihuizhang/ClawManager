@@ -111,7 +111,16 @@ func readRuntimeInstalledSQLSnapshotTx(ctx context.Context, tx *sql.Tx, database
 	if tx.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE(),UTC_TIMESTAMP(6)").Scan(&server, &name, &r.ObservedAt) != nil || database.ServerUUID != server || database.Database != name {
 		return bad()
 	}
-	if tx.QueryRowContext(ctx, `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=?`, installation).Scan(&r.FenceAfter) != nil {
+	fenceQuery := `SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=?`
+	if c1 != nil {
+		// Original source rereads hold their evidence/chunks before the KEK
+		// fence. Lock only those known C1 ranges here, never capability gaps.
+		if lockOriginalC1ComparisonRows(ctx, tx, c1) != nil {
+			return bad()
+		}
+		fenceQuery += " FOR SHARE"
+	}
+	if tx.QueryRowContext(ctx, fenceQuery, installation).Scan(&r.FenceAfter) != nil {
 		return bad()
 	}
 	expected := map[string]OriginalRuntimeCapabilityImport{}

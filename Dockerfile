@@ -78,6 +78,9 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-observer-deployment-materials \
       system-backup-original-maintenance \
       backup-node-observer \
+      backup-shared-runtime-node-owner \
+      system-backup-original-c1-signing \
+      system-backup-original-nonce-material \
       backup-gateway-node-observer \
       backup-stopped-pro-node-observer \
       system-backup-owner-authority \

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	c "clawreef/internal/systembackupcontroller"
+	ev "clawreef/internal/systembackupevidence"
 	a "clawreef/internal/systembackupkekadapter"
 	reg "clawreef/internal/systembackupkekregistry"
 	kms "clawreef/internal/systembackupkms"
@@ -22,6 +23,9 @@ import (
 )
 
 type OriginalRuntimeProviderIssueInputs struct {
+	preparation *originalRuntimeProviderPreparationSlot
+	// Only the actual same-process C1 producer wrapper can supply these sources.
+	originalC1Sources                                                               []*ev.OriginalC1EvidenceSource
 	C1                                                                              *a.OriginalC1SQLClosure // In-process actual original C1 producer only; no DTO/CLI approval.
 	Issuers, Core, Forward, Provider, PublicationOwnerInputs                        BootstrapSourceFilePin
 	Request                                                                         RequestFiles
@@ -51,6 +55,12 @@ type OriginalRuntimeProviderIssueReceipt struct {
 // facts; the original distinct purpose keys sign only their own domain.
 func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalRuntimeProviderIssueInputs) (OriginalRuntimeProviderIssueReceipt, error) {
 	var zero OriginalRuntimeProviderIssueReceipt
+	if in.preparation != nil && (in.C1 != nil || len(in.originalC1Sources) != 0) {
+		return zero, ErrInstall
+	}
+	if in.C1 != nil && len(in.originalC1Sources) != 0 {
+		return zero, ErrInstall
+	}
 	s, e := i.authenticate(ctx, password)
 	if e != nil || runtimeDB == nil || privateDirectory(in.OutputDirectory) != nil {
 		return zero, ErrInstall
@@ -64,7 +74,11 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		return zero, ErrInstall
 	}
 	keys := map[string]ed25519.PrivateKey{}
+	retainForOriginalContinuation := false
 	defer func() {
+		if retainForOriginalContinuation {
+			return
+		}
 		for _, key := range keys {
 			clear(key)
 		}
@@ -353,80 +367,114 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 	if recheck() != nil {
 		return zero, ErrInstall
 	}
-	writer, e := a.NewInstallationAuthorityWriter(i.db, target.InstallationID, database, result.InstallationIssuer)
-	if e != nil {
-		return zero, ErrInstall
+	stageOriginal := func(sources []*ev.OriginalC1EvidenceSource) (OriginalRuntimeProviderIssueReceipt, error) {
+		// A preparation can span real C1 native work. Reauthenticate original
+		// files, native actors and the unchanged authority BEFORE SQL locks.
+		if recheck() != nil {
+			return zero, ErrInstall
+		}
+		in.originalC1Sources = sources
+		writer, e := a.NewInstallationAuthorityWriter(i.db, target.InstallationID, database, result.InstallationIssuer)
+		if e != nil {
+			return zero, ErrInstall
+		}
+		tx, e := i.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+		if e != nil {
+			return zero, ErrInstall
+		}
+		defer tx.Rollback()
+		if a.LockOriginalRuntimeInstallationGate(ctx, tx, target.InstallationID) != nil {
+			return zero, ErrInstall
+		}
+		locked, e := s.lockAdmin(ctx, tx)
+		if e != nil || locked.Before(floor) || !locked.Before(until) {
+			return zero, ErrInstall
+		}
+		current, e := s.current(ctx, tx, false)
+		if e != nil || current.cas != before.cas {
+			return zero, ErrInstall
+		}
+		imports := []a.OriginalRuntimeCapabilityImport{{Raw: files["generate.capability.json"], Pin: result.Generate, Operation: kms.Generate}, {Raw: files["unwrap.capability.json"], Pin: result.Unwrap, Operation: kms.Unwrap}, {Raw: files["publisher-unwrap.capability.json"], Pin: result.PublisherUnwrap, Operation: kms.Unwrap}}
+		var installedSnapshot a.RuntimeInstalledSQLSnapshot
+		var stageErr error
+		if len(in.originalC1Sources) != 0 {
+			// Lock and reauthenticate the actual C1 prefix before original KEK writes.
+			closure, err := a.PrepareOriginalC1SQLClosure(ctx, tx, in.originalC1Sources)
+			if err != nil {
+				return zero, ErrInstall
+			}
+			installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithC1Snapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked, closure)
+		} else if in.C1 != nil {
+			installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithC1Snapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked, in.C1)
+		} else {
+			installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithSnapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked)
+		}
+		if stageErr != nil {
+			return zero, ErrInstall
+		}
+		if installedSnapshot.C1 != nil {
+			retainedUntil, err := a.RuntimeInstalledSnapshotUntil(installedSnapshot)
+			if err != nil || !locked.Before(retainedUntil) {
+				return zero, ErrInstall
+			}
+			until = minTime(until, retainedUntil)
+		}
+		metadataReceipt := originalRuntimeSQLMetadataReceipt{Version: "original-runtime-installed-sql-metadata.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Target: i.plan.Target, Issuers: in.Issuers, Snapshot: installedSnapshot, Until: until}
+		metadataRaw, e := canonical(metadataReceipt)
+		if e != nil {
+			return zero, ErrInstall
+		}
+		metadataSigned, e := canonical(signedOriginalRuntimeSQLMetadataReceipt{Record: metadataRaw, Signature: ed25519.Sign(keys["installation_mapping"], append([]byte(originalRuntimeSQLMetadataReceiptDomain), metadataRaw...))})
+		if e != nil || len(metadataSigned) > originalRuntimeMetadataLimit {
+			return zero, ErrInstall
+		}
+		result.SQLMetadataReceipt = BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-installed-metadata.receipt.json"), SHA256: hash(metadataSigned)}
+		if writeNewFiles(in.OutputDirectory, map[string][]byte{"runtime-installed-metadata.receipt.json": metadataSigned}) != nil {
+			return zero, ErrInstall
+		}
+		tail, e := s.lockAdmin(ctx, tx)
+		if e != nil || tail.Before(locked) || !tail.Before(until) || !s.live(ctx) {
+			return zero, ErrInstall
+		}
+		if tx.Commit() != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		originalRaw, originalSignature, e := (a.SQLOriginalReader{DB: i.db}).ReadOriginal(ctx, target.InstallationID, result.Binding.ConfigRef)
+		if e != nil || !bytes.Equal(originalRaw, mapping.Record) || !bytes.Equal(originalSignature, mapping.Signature) {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		if _, e = caps.PrepareCapabilities(ctx, result.Binding); e != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		publisherCaps, e := a.NewSQLProviderCapabilityPreparation(runtimeDB, database, target.InstallationID, result.Generate, result.PublisherUnwrap)
+		if e != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		if _, e = publisherCaps.PrepareCapabilities(ctx, result.Binding); e != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		if recheck() != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		result.State = "original_authority_and_capabilities_committed_readback_verified"
+		committed, e := canonical(result)
+		if e != nil || writeNewFiles(in.OutputDirectory, map[string][]byte{"runtime-provider-authorities-committed.json": committed}) != nil || recheck() != nil {
+			return zero, a.ErrAuthorityCommitUnknown
+		}
+		return result, nil
 	}
-	tx, e := i.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
-	if e != nil {
-		return zero, ErrInstall
+	if in.preparation != nil {
+		p := &OriginalRuntimeProviderPrepared{ctx: ctx, installer: i, enrollment: enrollment, request: in.Request, result: result, stage: stageOriginal, until: until, clear: func() {
+			for _, key := range keys {
+				clear(key)
+			}
+		}}
+		p.origin = p
+		in.preparation.prepared = p
+		retainForOriginalContinuation = true
+		return result, nil
 	}
-	defer tx.Rollback()
-	if a.LockOriginalRuntimeInstallationGate(ctx, tx, target.InstallationID) != nil {
-		return zero, ErrInstall
-	}
-	locked, e := s.lockAdmin(ctx, tx)
-	if e != nil || locked.Before(floor) || !locked.Before(until) {
-		return zero, ErrInstall
-	}
-	current, e := s.current(ctx, tx, false)
-	if e != nil || current.cas != before.cas {
-		return zero, ErrInstall
-	}
-	imports := []a.OriginalRuntimeCapabilityImport{{Raw: files["generate.capability.json"], Pin: result.Generate, Operation: kms.Generate}, {Raw: files["unwrap.capability.json"], Pin: result.Unwrap, Operation: kms.Unwrap}, {Raw: files["publisher-unwrap.capability.json"], Pin: result.PublisherUnwrap, Operation: kms.Unwrap}}
-	var installedSnapshot a.RuntimeInstalledSQLSnapshot
-	var stageErr error
-	if in.C1 != nil {
-		installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithC1Snapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked, in.C1)
-	} else {
-		installedSnapshot, stageErr = writer.StageInitialRuntimeAuthoritiesWithSnapshot(ctx, tx, mapping.Record, mapping.Signature, imports, locked)
-	}
-	if stageErr != nil {
-		return zero, ErrInstall
-	}
-	metadataReceipt := originalRuntimeSQLMetadataReceipt{Version: "original-runtime-installed-sql-metadata.v1", PlanSHA256: i.planHash, Enrollment: enrollment, Target: i.plan.Target, Issuers: in.Issuers, Snapshot: installedSnapshot, Until: until}
-	metadataRaw, e := canonical(metadataReceipt)
-	if e != nil {
-		return zero, ErrInstall
-	}
-	metadataSigned, e := canonical(signedOriginalRuntimeSQLMetadataReceipt{Record: metadataRaw, Signature: ed25519.Sign(keys["installation_mapping"], append([]byte(originalRuntimeSQLMetadataReceiptDomain), metadataRaw...))})
-	if e != nil || len(metadataSigned) > originalRuntimeMetadataLimit {
-		return zero, ErrInstall
-	}
-	result.SQLMetadataReceipt = BootstrapSourceFilePin{File: filepath.Join(in.OutputDirectory, "runtime-installed-metadata.receipt.json"), SHA256: hash(metadataSigned)}
-	if writeNewFiles(in.OutputDirectory, map[string][]byte{"runtime-installed-metadata.receipt.json": metadataSigned}) != nil {
-		return zero, ErrInstall
-	}
-	tail, e := s.lockAdmin(ctx, tx)
-	if e != nil || tail.Before(locked) || !tail.Before(until) || !s.live(ctx) {
-		return zero, ErrInstall
-	}
-	if tx.Commit() != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	originalRaw, originalSignature, e := (a.SQLOriginalReader{DB: i.db}).ReadOriginal(ctx, target.InstallationID, result.Binding.ConfigRef)
-	if e != nil || !bytes.Equal(originalRaw, mapping.Record) || !bytes.Equal(originalSignature, mapping.Signature) {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	if _, e = caps.PrepareCapabilities(ctx, result.Binding); e != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	publisherCaps, e := a.NewSQLProviderCapabilityPreparation(runtimeDB, database, target.InstallationID, result.Generate, result.PublisherUnwrap)
-	if e != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	if _, e = publisherCaps.PrepareCapabilities(ctx, result.Binding); e != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	if recheck() != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	result.State = "original_authority_and_capabilities_committed_readback_verified"
-	committed, e := canonical(result)
-	if e != nil || writeNewFiles(in.OutputDirectory, map[string][]byte{"runtime-provider-authorities-committed.json": committed}) != nil || recheck() != nil {
-		return zero, a.ErrAuthorityCommitUnknown
-	}
-	return result, nil
+	return stageOriginal(in.originalC1Sources)
 }
 
 func originalRuntimeEvidenceID() (string, error) {

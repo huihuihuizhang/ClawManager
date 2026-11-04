@@ -300,6 +300,14 @@ func (r *OriginalC1RetainedEvidence) lockOriginalRetainedPrefix(ctx context.Cont
 		r.failed = true
 		return ErrInstall
 	}
+	// This concrete owner will Bind/write on this SAME original transaction.
+	// Take its existing fence exclusively before any full mixed mapping read;
+	// a shared comparison lock followed by Bind would be an S-to-X upgrade.
+	var epoch uint64
+	if original.Tx().QueryRowContext(ctx, "SELECT epoch FROM system_backup_v2_kek_fences WHERE installation_id=? FOR UPDATE", r.before.InstallationID).Scan(&epoch) != nil || epoch != r.before.Epoch || !time.Now().Before(r.until) {
+		r.failed = true
+		return ErrInstall
+	}
 	if r.receipt.recheckLocked(ctx, original.Tx(), r.before.Epoch) != nil {
 		r.failed = true
 		return ErrInstall

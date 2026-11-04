@@ -1,0 +1,627 @@
+{
+  "schema_version": "supervisor-first-install-materials-and-deployment-prerequisites-review.v1",
+  "base_commit": "a2c41128913e9f9c37b28298eaf2d16d65320cfd",
+  "source_plan_sha256": "41715f8c5d30170bfe0b5fa6cc761273489388aaff0c3bd5cc6d517a4c933cff",
+  "accepted_source_count": 67,
+  "source_pins": [
+    {
+      "target": "backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/cmd/system-backup-legacy-upgrade177-proof/main.go",
+      "sha256": "ab3112be45ccba393238a2f1fd1f687e693c34315c88da46f82cea6a8d1e11bc",
+      "head_sha256": "6974a03791100f3f72543255f6de43ba849c486be9dcbca1d157b142e3848f66",
+      "review_owner": "root-reviewed-c1-upgrade199-intake.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-plan-20261104/backend/cmd/system-backup-legacy-upgrade177-proof/main.go"
+    },
+    {
+      "target": "backend/cmd/system-backup-observer-deployment-materials/main.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/cmd/system-backup-observer-deployment-materials/main.go",
+      "sha256": "3c36bd4d40a2545f929a4d38cb10b6f0685bcdb22b37a810b311841cffa71b02",
+      "head_sha256": "6476e2e8a816504d50ef837d38e8311ea341cef8898edf2a13971adfaf986a02",
+      "review_owner": "d-workspace-localization-driver-r5-source-map.v1-root-exact-before",
+      "review_frozen_source": "backend/.d-workspace-localization-driver-r5-20261105/observer-materials-main.go"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-c1-signing/main.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/cmd/system-backup-original-c1-signing/main.go",
+      "sha256": "6ec8e092ab3381f55b13bc2746aa021932d0d60613d15daeda978eeca3be8d00",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-production-chain.v1",
+      "review_frozen_source": "backend/.d-c1-production-chain-20261104/backend/cmd/system-backup-original-c1-signing/main.go"
+    },
+    {
+      "target": "backend/cmd/system-backup-original-nonce-material/main.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/cmd/system-backup-original-nonce-material/main.go",
+      "sha256": "b1af0ff3aa41539d5478b958416679e52aa981d914fa15f93a1a2fa841caf89b",
+      "head_sha256": null,
+      "review_owner": "d1-original-owner-controlled-nonce-first-material-and-native-mount.v1",
+      "review_frozen_source": "backend/.d-c1-nonce-owner-material-20261105/main.go"
+    },
+    {
+      "target": "backend/internal/db/backup_legacy_site_rows177.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/db/backup_legacy_site_rows177.go",
+      "sha256": "fc24abd6d7746f406205a480bcccbe246d11d47f4a429768c1dfe180b5ae73da",
+      "head_sha256": "47ef0c43716e026090416179ed339471176519820a710b5a96f2b4cbcfb9fc85",
+      "review_owner": "root-reviewed-c1-upgrade199-intake.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-plan-20261104/backend/internal/db/backup_legacy_site_rows177.go"
+    },
+    {
+      "target": "backend/internal/systembackupcatrust/original_current_observation.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupcatrust/original_current_observation.go",
+      "sha256": "2a9acd1ff6fc28a7990890748bce1e821e5b9c61ea62cd647ac48d9b7acfa5d0",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupcatrust/original_current_observation.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_backup_catalog_groups.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_backup_catalog_groups.go",
+      "sha256": "efc6f65b21ea641536c43ee2373243e75310e46a150d07e79f7178ac83b424a0",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_backup_catalog_groups.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_ca_native_target.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_ca_native_target.go",
+      "sha256": "af192e8f5e28bd0362e35f5c0ff8e2492885caa76e1616283af19259e4029621",
+      "head_sha256": null,
+      "review_owner": "d1-c1-evidence-ca-actual-original-kubernetes-target.v1",
+      "review_frozen_source": "backend/.d-c1-ca-native-target-20261105/original_c1_ca_native_target.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_channel_factory.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_channel_factory.go",
+      "sha256": "b93e5384581aa6d317d7c372e2a275f6183f9636c2b78eed5b0b83a35660da46",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-production-chain.v1",
+      "review_frozen_source": "backend/.d-c1-production-chain-20261104/backend/internal/systembackupinstallationowner/install/original_c1_channel_factory.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_command_execution.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_command_execution.go",
+      "sha256": "0d3e57689cca5a58ff1559f331ff2729dcaed24f97433bfea602d291cd24d745",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_command_execution.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_evidence_authorities.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_evidence_authorities.go",
+      "sha256": "1ec8d37d008333ef59a65a80083776a648b0d0353194e47eb1c1c88eb2a640c5",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_evidence_authorities.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_invocation.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_invocation.go",
+      "sha256": "e3185b6e5e4d3979946d66e712937881ad4ae4691c04b05773aa246d658f8a85",
+      "head_sha256": null,
+      "review_owner": "d1-actual-precold-head1-from-real20-selection.v1",
+      "review_frozen_source": "backend/.d-c1-precold-head1-20261105/original_c1_invocation.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_local_groups.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_local_groups.go",
+      "sha256": "6a5f583621d109864a76718cf69ae1e852c58a0870c4ec3836904e64e03528ac",
+      "head_sha256": null,
+      "review_owner": "d1-original-owner-controlled-nonce-first-material-and-native-mount.v1",
+      "review_frozen_source": "backend/.d-c1-nonce-owner-material-20261105/original_c1_local_groups.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_minio_group.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_minio_group.go",
+      "sha256": "2184eba8daa626ecf3e313a6a5fab5d49e9791f0756dd852c434d36981b1ca8e",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_minio_group.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_native_groups.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_native_groups.go",
+      "sha256": "72a7a6c740d73e9a042dfa65fcd94604f7f444eb69bb6c18916472f99a18d00f",
+      "head_sha256": null,
+      "review_owner": "supervisor-c1-native-group-exact-types.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-type-fix-source-20261105/original_c1_native_groups.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_original_sources.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_original_sources.go",
+      "sha256": "ac06790a77eed02b755ce1a5e51d98fbde8ff6e6e75899a9c6e67309c13e9c78",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_original_sources.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_pipeline.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_pipeline.go",
+      "sha256": "27111b75f7bed21828f73e8d219c596d04b37710497338306401d5005f0b971a",
+      "head_sha256": null,
+      "review_owner": "d1-actual-precold-head1-from-real20-selection.v1",
+      "review_frozen_source": "backend/.d-c1-precold-head1-20261105/original_c1_pipeline.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_run.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_run.go",
+      "sha256": "064734795d92d75b5d07a297ea08b3e2349e18943b21eef7cdc209f8e03fd983",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupinstallationowner/install/original_c1_run.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_runtime_install.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_runtime_install.go",
+      "sha256": "1c1932d232d36097d3a299c1dd18de495089c68cc38a42410239d8bef8abaf75",
+      "head_sha256": null,
+      "review_owner": "root-reviewed-c1-runtime-original-source-merge.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-runtime-merge-20261105/backend/internal/systembackupinstallationowner/install/original_c1_runtime_install.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_signing_observation.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_signing_observation.go",
+      "sha256": "d7ea722cefe45e5cf59e4496e9d9655a765df2a83a7f4d316196f1af7997d91b",
+      "head_sha256": null,
+      "review_owner": "d1-c1-all20-compile-and-signing-purpose-fix.v1",
+      "review_frozen_source": "backend/.d-c1-signing-purpose-fix-20261105/original_c1_signing_observation.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_nonce_owner_material.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_nonce_owner_material.go",
+      "sha256": "4d11407c397f8f6ff0e3d1c863b5758b8e9a031a7459cd12301532cc933d7f2d",
+      "head_sha256": null,
+      "review_owner": "d1-nonce-original-first-guard-ordered-durable-source-recovery-r2.v1",
+      "review_frozen_source": "backend/.d-c1-nonce-owner-recovery-r2-20261105/original_nonce_owner_material.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_nonce_owner_mount.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_nonce_owner_mount.go",
+      "sha256": "cc5eb57d10622da5f5ac9b0ebc3858a0dcd705dc3cfd29599d1fe882a4cf0018",
+      "head_sha256": null,
+      "review_owner": "d1-original-owner-controlled-nonce-first-material-and-native-mount.v1",
+      "review_frozen_source": "backend/.d-c1-nonce-owner-material-20261105/original_nonce_owner_mount.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_nonce_owner_mount_test.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_nonce_owner_mount_test.go",
+      "sha256": "23d2b81260e2981b8d2ce0ec04fb884672517309b136a5a6cd75cef26a931bb4",
+      "head_sha256": null,
+      "review_owner": "d1-original-owner-controlled-nonce-first-material-and-native-mount.v1",
+      "review_frozen_source": "backend/.d-c1-nonce-owner-material-20261105/original_nonce_owner_mount_test.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_runtime_provider_issue.go",
+      "sha256": "5873d314e9aa20c466bd81defb1d1c5a053b4818e5f34b938016e4f0233fc659",
+      "head_sha256": "1e03cc6f0d17f1943404d9b5d973e662f6d50167a04a8dce136fa9e26e400de7",
+      "review_owner": "d1-actual-runtime-native-preparation-c1-once-install.v1",
+      "review_frozen_source": "backend/.d-c1-runtime-pending-once-20261105/original_runtime_provider_issue.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_provider_query.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_runtime_provider_query.go",
+      "sha256": "66a2ce951185988fba9c3db4227f2cf2a4feeb5b35a24ae21a58c9e80148d096",
+      "head_sha256": "05bbc7a2d66a2741ed74c9d435c4b34a11410e3c71c9ffcbfcd63ad7e2094616",
+      "review_owner": "root-reviewed-c1-runtime-original-source-merge.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-runtime-merge-20261105/backend/internal/systembackupinstallationowner/install/original_runtime_provider_query.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_accounts.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_sql_accounts.go",
+      "sha256": "e23a1afd5d4d073592731f8cb4402614178f39f13771a636584f489e3093b05b",
+      "head_sha256": "a4bb8b6d0322627baeb77c85cd9c13a490ce1c309b42f5eeb9662f93092393ae",
+      "review_owner": "root-c1-late-merge-r1",
+      "review_frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/c1-late-merge-r1/backend/internal/systembackupinstallationowner/install/original_sql_accounts.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_c1_probe.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_sql_c1_probe.go",
+      "sha256": "c7fdb8b31e9773f8b953052ff219c5b60f23d5b35daa8752016f2c27e33b6109",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-business-audit-grants.v1",
+      "review_frozen_source": "backend/.d-c1-business-audit-grants-20261104/original_sql_c1_probe.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_c1_profile.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_sql_c1_profile.go",
+      "sha256": "9a7b8226bfdc7f37c3ab0f1317f65446e96dffbf8c28564d7508574bfc00b6e9",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-business-audit-grants.v1",
+      "review_frozen_source": "backend/.d-c1-business-audit-grants-20261104/original_sql_c1_profile.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_c1_profile_test.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_sql_c1_profile_test.go",
+      "sha256": "acd5a25e2a3683ade1657602c7806d84dcb35cc1ffadafc09463026f4d14443f",
+      "head_sha256": null,
+      "review_owner": "root-c1-late-merge-r1",
+      "review_frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/c1-late-merge-r1/backend/internal/systembackupinstallationowner/install/original_sql_c1_profile_test.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_sql_runtime_profile.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_sql_runtime_profile.go",
+      "sha256": "64551fc9989bbd282ec07393ab1df4c68b8f996ff92d57de04e01cd5e9896ee6",
+      "head_sha256": "febcd36ded5d11867e2fc917c9571473127f0d39591d21f0b18f5702b297d7f4",
+      "review_owner": "root-c1-late-merge-r1",
+      "review_frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/c1-late-merge-r1/backend/internal/systembackupinstallationowner/install/original_sql_runtime_profile.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_workspace_runtime_materials.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_workspace_runtime_materials.go",
+      "sha256": "ec3a29bc5ed45b1e988bb8ab741e42c883b8c5eda49219d10bfa96be47a20dc6",
+      "head_sha256": null,
+      "review_owner": "d-workspace-localization-driver-r5-source-map.v1-root-exact-before",
+      "review_frozen_source": "backend/.d-workspace-localization-driver-r5-20261105/original_workspace_runtime_materials.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_workspace_runtime_materials_test.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_workspace_runtime_materials_test.go",
+      "sha256": "5279280bb3579a97839a28ea217301d47b80028a8a8984a1dd875b9f055c524b",
+      "head_sha256": null,
+      "review_owner": "d-workspace-localization-driver-r5-source-map.v1-root-exact-before",
+      "review_frozen_source": "backend/.d-workspace-localization-driver-r5-20261105/original_workspace_runtime_materials_test.go"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_current_vault_observation.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupkekadapter/original_current_vault_observation.go",
+      "sha256": "19c5d02930ccfd6fc4103c06d7ed99c904550d88ed1ed1c8c079734690fc9dbb",
+      "head_sha256": null,
+      "review_owner": "d1-c1-all20-compile-and-signing-purpose-fix.v1",
+      "review_frozen_source": "backend/.d-c1-all20-compile-fix-20261105/original_current_vault_observation.go"
+    },
+    {
+      "target": "backend/internal/systembackupnoncebootstrap/original_current_observation.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupnoncebootstrap/original_current_observation.go",
+      "sha256": "2daa0cc0d041cfbeb3d34504f2c03ef2bb1b44444d92c28c1c48ece7b46b2b7e",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupnoncebootstrap/original_current_observation.go"
+    },
+    {
+      "target": "backend/internal/systembackupreferenceprobe/original_catalog_checkpoint.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupreferenceprobe/original_catalog_checkpoint.go",
+      "sha256": "578718c26fc2196aaae9c6874481a78d2ca659258daf26c520201ed3597b6b69",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupreferenceprobe/original_catalog_checkpoint.go"
+    },
+    {
+      "target": "backend/internal/systembackupreferenceprobe/original_five_bindings.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupreferenceprobe/original_five_bindings.go",
+      "sha256": "0f0876c2883949e93e77cac17a2a6c1a1bf7baa7056801a60baf0d5d6e54ceeb",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/backend/internal/systembackupreferenceprobe/original_five_bindings.go"
+    },
+    {
+      "target": "scripts/system-backup-d-c1-copy-plan.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-d-c1-copy-plan.py",
+      "sha256": "67d47c21d3acdf46cdefd32bdf114872cccd67b4e0306198a5dd7851a055eaa3",
+      "head_sha256": null,
+      "review_owner": "root-reviewed-c1-upgrade199-intake.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-plan-20261104/scripts/system-backup-d-c1-copy-plan.py"
+    },
+    {
+      "target": "scripts/system-backup-d-c1-copy-probe-remote.sh",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-d-c1-copy-probe-remote.sh",
+      "sha256": "168b4d37942ad2ac28afe2e1cdfb83139512831c8d01903e489dedd6e09230cf",
+      "head_sha256": null,
+      "review_owner": "d1-c1-upgrade199-additional-receipt-retention.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-receipts-20261104/system-backup-d-c1-copy-probe-remote.sh"
+    },
+    {
+      "target": "scripts/system-backup-operator-deployment.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-operator-deployment.py",
+      "sha256": "5087d2607147ee01626bc6195e206b7ea051f548d559cb14124dfddfa9ea3c96",
+      "head_sha256": "80d9a20bc7f35251df43d7335cd8c019c986cda27c3f330835e272829a401da0",
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-operator-deployment.py"
+    },
+    {
+      "target": "scripts/system-backup-original-c1-signing-input.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-original-c1-signing-input.py",
+      "sha256": "85a79f6ad2d684c12a18f52044ee1f27979009d7c3f27284090d2f7eeb3b40e4",
+      "head_sha256": null,
+      "review_owner": "d1-original-c1-all20-current-native-source-callers.v1-supervisor-preimage-reviewed",
+      "review_frozen_source": "backend/.d-c1-reference-groups-20261105/scripts/system-backup-original-c1-signing-input.py"
+    },
+    {
+      "target": "scripts/system-backup-original-sql-accounts.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-original-sql-accounts.py",
+      "sha256": "2ed9cf55bf81612e1a594c5bc5aede6fecabf7286d77b47dbca813edc5d9f4c9",
+      "head_sha256": "6dcfaffd488d5a940b41ca04fec8c25c3bdb4ef312f2eb6fa1333ac62153d2ec",
+      "review_owner": "root-c1-late-merge-r1",
+      "review_frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/c1-late-merge-r1/scripts/system-backup-original-sql-accounts.py"
+    },
+    {
+      "target": "scripts/system-backup-original-upgrade199.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-original-upgrade199.py",
+      "sha256": "f38c13d97dca4fc9e55837a879be0b2e1c45519ba8798202885584042e2abb8a",
+      "head_sha256": null,
+      "review_owner": "d1-copy199-r2-real-archive-exact-qualified-gate-pin-successor.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-qualified-gate-r2-20261105/system-backup-original-upgrade199.py"
+    },
+    {
+      "target": "scripts/system-backup-upgrade199-copy-qualification.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-upgrade199-copy-qualification.py",
+      "sha256": "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308",
+      "head_sha256": null,
+      "review_owner": "d1-copy199-r2-real-archive-exact-qualified-gate-pin-successor.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-qualified-gate-r2-20261105/system-backup-upgrade199-copy-qualification.py"
+    },
+    {
+      "target": "scripts/system-backup-upgrade199-copy-qualification.test.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-upgrade199-copy-qualification.test.py",
+      "sha256": "a28c6b84f6f8823e979b27e7d80e202fb90476ec2f3526b9c325de90ec287acf",
+      "head_sha256": null,
+      "review_owner": "d1-copy199-r2-real-archive-exact-qualified-gate-pin-successor.v1",
+      "review_frozen_source": "backend/.d-c1-upgrade199-qualified-gate-r2-20261105/system-backup-upgrade199-copy-qualification.test.py"
+    },
+    {
+      "target": "scripts/system-backup-workspace-localization.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-workspace-localization.py",
+      "sha256": "a788b3a2d39412d731f1245b6a6008a27513dd150c7557edd325a41408e11758",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-workspace-localization.py"
+    },
+    {
+      "target": "scripts/system-backup-workspace-native.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-workspace-native.py",
+      "sha256": "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d",
+      "head_sha256": null,
+      "review_owner": "supervisor-workspace-native-state-byte-safe.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-workspace-state-bytes-20261105/source/scripts/system-backup-workspace-native.py"
+    },
+    {
+      "target": "scripts/test_workspace_native_model.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/test_workspace_native_model.py",
+      "sha256": "c799b50a733b6a906c5547d0bc2272168e41b42a38f57c6435d554f939d43c51",
+      "head_sha256": null,
+      "review_owner": "supervisor-workspace-state-bytes-existing-eof-assertion.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-workspace-state-bytes-r2-20261105/test_workspace_native_model.py"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_runtime_installation_snapshot.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupkekadapter/original_runtime_installation_snapshot.go",
+      "sha256": "48a3f8542db31137769bb319bfcab8618750b998528a809d0aaa4bb606a40728",
+      "head_sha256": "205f8c851dd6ac6114f0ad39de813f23b07681dd62acda3c2d745bc626b4f5de",
+      "review_owner": "supervisor-original-mixed-query-complete-c1-point-prefix-r3.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-complete-prefix-r3-20261105/backend/internal/systembackupkekadapter/original_runtime_installation_snapshot.go"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_c1_query_prefix.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupkekadapter/original_c1_query_prefix.go",
+      "sha256": "fbd6daf63c0cdfbb3bcd917ca0608f6202f7e87fa5eccc9e017c174fee0c4e4e",
+      "head_sha256": null,
+      "review_owner": "supervisor-original-mixed-query-complete-c1-point-prefix-r3.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-complete-prefix-r3-20261105/backend/internal/systembackupkekadapter/original_c1_query_prefix.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_retained_evidence.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_retained_evidence.go",
+      "sha256": "178c759e828dbcf3e80cf820d2a7ebf15b6ec7ca28d1db38d7b8df99bb5f9672",
+      "head_sha256": "99ef1274da9433790d34b15bb706cabf21d9ec46eba7254a0fdd992278b2edf3",
+      "review_owner": "supervisor-original-c1-retained-existing-write-fence.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-c1-retained-write-fence-20261105/original_c1_retained_evidence.go"
+    },
+    {
+      "target": "Dockerfile",
+      "source": ".tmp-sbk-install-20261105/source/Dockerfile",
+      "sha256": "8de567a2d3baaa1529cf9ea3135876204bd939a3163a616379f782bc259d4154",
+      "head_sha256": "90e85edf42ce305c409c2716d3b2dc003bb1e08e5f55bcaa0adb1e375c43135a",
+      "review_owner": "supervisor-release199-exact-archive-proof-and-nonce-roster.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-release199-wiring-20261105/Dockerfile"
+    },
+    {
+      "target": "scripts/system-backup-workspace-source-preflight.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-workspace-source-preflight.py",
+      "sha256": "39a51caba7b646b1f4bf1ccd9ba643099bf91abb2eb0a6a251dc342cbdfaf8e1",
+      "head_sha256": null,
+      "review_owner": "d-workspace-early-source-preflight-r1-source-map.v1",
+      "review_frozen_source": "backend/.d-workspace-early-source-preflight-r1-20261105/system-backup-workspace-source-preflight.py"
+    },
+    {
+      "target": "scripts/test_workspace_source_preflight.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/test_workspace_source_preflight.py",
+      "sha256": "105d49906baa9082cfc20d9bfaa6599b548d75747b562ff622882016388963fe",
+      "head_sha256": null,
+      "review_owner": "d-workspace-early-source-preflight-r1-source-map.v1",
+      "review_frozen_source": "backend/.d-workspace-early-source-preflight-r1-20261105/test_workspace_source_preflight.py"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_c1_once.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_runtime_c1_once.go",
+      "sha256": "7d956e7d37b45d14a350a7be1edbfa324b0b562b01d2142903a8e8b7e333a0e1",
+      "head_sha256": null,
+      "review_owner": "d1-actual-runtime-native-preparation-c1-once-install.v1",
+      "review_frozen_source": "backend/.d-c1-runtime-pending-once-20261105/original_runtime_c1_once.go"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_provider_prepared.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_runtime_provider_prepared.go",
+      "sha256": "3bae73ce74e078dd170091d0def6f5cf49d916489201b2df39fa09a922322e4a",
+      "head_sha256": null,
+      "review_owner": "d1-actual-runtime-native-preparation-c1-once-install.v1",
+      "review_frozen_source": "backend/.d-c1-runtime-pending-once-20261105/original_runtime_provider_prepared.go"
+    },
+    {
+      "target": "scripts/system-backup-business-runtime.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-business-runtime.py",
+      "sha256": "b4b9685e834f09f9cc197e0eed50966f55660da17589e9056d93c034ce2f2109",
+      "head_sha256": "80122315b7f0d946ec512e0e789bcd45239b7ebd77830a199ec89a879ccdc1ff",
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-business-runtime.py"
+    },
+    {
+      "target": "scripts/system-backup-initial-runtime.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-initial-runtime.py",
+      "sha256": "2798d27771ba9695b5e0816e37af1dd98ac6f7f6bdbb8c7ee866d4faa65800f3",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-initial-runtime.py"
+    },
+    {
+      "target": "scripts/system-backup-operator-nonce.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-operator-nonce.py",
+      "sha256": "82cc9588564b5c5ac11e67fbdb44be56f434cc2142679ee79f745b59bf2591e3",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-operator-nonce.py"
+    },
+    {
+      "target": "scripts/system-backup-publication-owner-assembly.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-publication-owner-assembly.py",
+      "sha256": "9cac39b1a14aa8bd367de4700825523993af0e6157760bab9772eb68b039d369",
+      "head_sha256": "6ba9e601a193418adce558009fb05bf93c43f8104e171083fa1551d0f89abe90",
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-publication-owner-assembly.py"
+    },
+    {
+      "target": "scripts/system-backup-runtime-issuers.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-runtime-issuers.py",
+      "sha256": "a91b56bd6ed3ec83c0926f9a8adea5b4bc8c20ab6552b18e35c3143588143803",
+      "head_sha256": "9ae111fe1d53dad8af74c46feeca03672226483ca23aade4154bea8b2a78e3bc",
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-runtime-issuers.py"
+    },
+    {
+      "target": "scripts/system-backup-runtime-record-keys.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-runtime-record-keys.py",
+      "sha256": "d5c23ff23b4d867356e265946197241b3a504a9df206a6ebf8d404d0c5167cf9",
+      "head_sha256": "83ee52943357bb25dafd7a1addf7529d6ffc0cc07e5302ba17361491b8ca7689",
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-runtime-record-keys.py"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-zhanghui08-operator.py",
+      "sha256": "d351698ca823533bdeee898febf77e3648f4216e80e165fbce31ad98258ad290",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-r3-preserved-runtime-and-exact-hash-chain.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-r3-20261105/scripts/system-backup-zhanghui08-operator.py"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.test.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/system-backup-zhanghui08-operator.test.py",
+      "sha256": "5c43a84e8165a93e5bacd22cd754c7edb73040e6dffa32306dba0d387fc196ca",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-current-runtime-refusal-regressions.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-runtime-gate-models-20261105/system-backup-zhanghui08-operator.test.py"
+    },
+    {
+      "target": "scripts/test_final_operator_wiring.py",
+      "source": ".tmp-sbk-install-20261105/source/scripts/test_final_operator_wiring.py",
+      "sha256": "c7399a35317faef1ddb4e297cd54dbb3419630d88ad8764c345efc45455a181b",
+      "head_sha256": null,
+      "review_owner": "supervisor-final-operator-current-runtime-refusal-regressions.v1",
+      "review_frozen_source": "docs/evidence/system-backup-supervisor-final-operator-runtime-gate-models-20261105/test_final_operator_wiring.py"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_c1_precold_head1.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupinstallationowner/install/original_c1_precold_head1.go",
+      "sha256": "6b6273b3476c26b1036c8e65043b7e3b7e0f6133a6371293e597347a1060f080",
+      "head_sha256": null,
+      "review_owner": "d1-actual-precold-head1-from-real20-selection.v1",
+      "review_frozen_source": "backend/.d-c1-precold-head1-20261105/original_c1_precold_head1.go"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_fixture_test.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_fixture_test.go",
+      "sha256": "670cd693f1c492b5b6984aae19768e52c2c432780b81df192affc5a0abcb5ca3",
+      "head_sha256": null,
+      "review_owner": "a-c1-point-prefix-native-regression-entry.v1",
+      "review_frozen_source": "backend/.a-c1-point-prefix-native-20261105/backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_fixture_test.go"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_test.go",
+      "source": ".tmp-sbk-install-20261105/source/backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_test.go",
+      "sha256": "ac9f78ffbb48f1dfad85ca08ba43c783d90cdd14f2344c971c8bd6d37bb50532",
+      "head_sha256": null,
+      "review_owner": "a-c1-point-prefix-native-regression-entry.v1",
+      "review_frozen_source": "backend/.a-c1-point-prefix-native-20261105/backend/internal/systembackupkekadapter/original_c1_point_prefix_mysql_test.go"
+    }
+  ],
+  "validation_logs": [
+    {
+      "path": ".tmp-sbk-install-20261105/logs/clean-install-windows-r1.jsonl",
+      "sha256": "5f76dcd9c56a2a6477faf6b088fb419ea8936146e9d3526a8b7adc26a6ca2c27",
+      "root_pass": 13,
+      "subtest_pass": 37
+    },
+    {
+      "path": ".tmp-sbk-install-20261105/logs/clean-pending-runtime-windows-r2.jsonl",
+      "sha256": "d547f52e88cffc6a4aef56ab23ab94951afba78b92360e3480537654477f7c01",
+      "root_pass": 7,
+      "subtest_pass": 0
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/final-operator-existing-linux-r2.log",
+      "sha256": "78d6246f149c0fdb9b55e9b9bdceee555e2d736589b982726b970940a1e40e96"
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/final-operator-nonce-linux-r2.log",
+      "sha256": "f03efe9dbcf92e7c5a1b5835427c1f077197f15c90e789fa93c5f10092704445"
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/workspace-early-preflight-windows-r1.log",
+      "sha256": "db147cb6a9d4a07fa6279f3e36eb2717b1561eeda9c69dcbfc3fcb81e767bdd4"
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/workspace-native-r5-bytes-linux-models-r2.log",
+      "sha256": "50295609219f05b866097d5ed2fbc5c96fb05889f8ea16d4abcb473a78865561"
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/workspace-r5-windows-go.jsonl",
+      "sha256": "52e4101c3d30496151cddae41d692d15e4f1b33a299c0f5efa19b64ffd77e129",
+      "root_pass": 6,
+      "subtest_pass": 26
+    },
+    {
+      "path": ".tmp-supervisor-d4-combination-20261104/logs/upgrade199-qualified-gate-r2-linux-models.log",
+      "sha256": "35a2a8f441d263ba3be553977f3456a2030418c9179f83510e59c8278609d114"
+    }
+  ],
+  "actual_native": {
+    "report_path": ".tmp-sbk-install-20261105/logs/sbk-c1-point-prefix-bb2990e09afb40a9bc448be5e795cadb/REPORT.json",
+    "report_sha256": "4622584414904b2e05feccb16830eabffa452e8e5338d709b3df98872425e3ee",
+    "log_sha256": "9c0bba096cad5f1b1079e5dce50ac152f477886cf304171d6eac26bf6eda9163",
+    "root_pass": 1,
+    "subtest_pass": 8,
+    "skip": false,
+    "mysql": "8.4.8",
+    "transport": "original independently pinned SAN/TLS1.3",
+    "observed": "Actual mixed reader, parent/chunk primary point locks, P_S waits, authority Put, independent epoch readback, insertion gap independence and final unknown-chunk EOF rejection.",
+    "models": "Protocol/signature/source comparison facts are explicit TEST MODELS. No opaque original source/closure is fabricated; no native full17 ownership is claimed."
+  },
+  "changes": [
+    "Original native C1 all20 source adapters, controlled first nonce-file issuance and actual mount binding, actual source/mixed SQL closure bridge.",
+    "Same-process native materials preparation solves the material-before-C1/SQL-after-C1 ordering without issuing three capabilities twice; original context, authority and deadlines remain.",
+    "Mixed comparisons lock known C1 parent/chunk PRIMARY points before fence and mapping, leaving unknown full-EOF comparison intact. Concrete retained write owner locks existing fence X and expected epoch before first mixed read.",
+    "Original199r2 qualifier requires fresh actual copy receipts; source/row proof preserves the original99-column universe.",
+    "Same-PVC workspace localization and pre-DDL real NFS/SSH observation routes, byte-safe NFSD filename capture, original state/recovery guards.",
+    "Executable deployment entry inserts original nonce mount before host creation and verifies actual reads under both final container UIDs; normal TLS/strong-auth/unknown-operation routes retained."
+  ],
+  "limitations": [
+    "The final nonempty protected history/17-source same-process factory and executable once entry are still in progress. These prerequisites do not make the page deployable.",
+    "No field copy199r2 result, original field database DDL, field rollout, node/NFSD qualification, task, artifact publication or independent task readback was executed here.",
+    "Nonce first-issue/config-race/lost native create-response faults and retained full17 concurrent writable caller are not proven by mount models or the mixed query native test.",
+    "Actual collector same-datadir host mount/cluster DNS transport and source-independent archive actor remain pending integration/field validation.",
+    "Original observation windows, source coverage checks and DR qualification are not relaxed. DR=false is the agreed acceptance scope."
+  ],
+  "cleanup": {
+    "owned_native_container_and_two_volumes_removed": true,
+    "private_fixture_credentials_removed": true,
+    "ended_test_elf_and_output_directory_removed": true,
+    "go_tmp_empty": true,
+    "production_release_tools_retained": true
+  },
+  "status": "SOURCE_PREREQUISITES_ACCEPTED_FINAL_ONCE_ENTRY_AND_FIELD_ACCEPTANCE_PENDING",
+  "page_ready": false,
+  "full_page_acceptance": false,
+  "dr_qualified": false,
+  "pinned_byte_whitespace_exception": {
+    "file": "scripts/system-backup-d-c1-copy-probe-remote.sh",
+    "sha256": "168b4d37942ad2ac28afe2e1cdfb83139512831c8d01903e489dedd6e09230cf",
+    "reason": "Retain exact script bytes of actual built copy199r2 archive and qualifier pins, including its existing final blank space/EOF. No functional or shell syntax change is required."
+  }
+}

@@ -57,7 +57,7 @@ func runPhase(ctx context.Context, dsnFile, inventoryFile, phase string, output 
 	// Full99 row proofs are independently bounded by the CLI's <=10m context.
 	// Keep original source/preflight reads unchanged; a large snapshot MAX/COUNT
 	// query must not inherit the shorter unrelated socket timeout.
-	if phase == "before" || phase == "after" || phase == "original-before" || phase == "original-after" {
+	if phase == "before" || phase == "after" || phase == "original-before" || phase == "original-after" || strings.HasPrefix(phase, "c1-") {
 		config.ReadTimeout = 10 * time.Minute
 	}
 	config.WriteTimeout = 2 * time.Minute
@@ -99,7 +99,11 @@ func runPhase(ctx context.Context, dsnFile, inventoryFile, phase string, output 
 	if phase != "" {
 		var proof db.LegacySite177RowProof
 		var err error
-		if phase == "original-before" || phase == "original-after" {
+		if strings.HasPrefix(phase, "c1-") {
+			original := strings.HasPrefix(phase, "c1-original-")
+			stage := strings.TrimPrefix(strings.TrimPrefix(phase, "c1-"), "original-")
+			proof, err = db.ProveLegacySiteRowsC1(ctx, pool, inventory, stage, original)
+		} else if phase == "original-before" || phase == "original-after" {
 			if config.DBName != "clawmanager" {
 				return errors.New("legacy original readproof requires original database")
 			}
@@ -125,7 +129,7 @@ func main() {
 	budget := flag.Duration("timeout", 5*time.Minute, "read-only preflight deadline (maximum 10m)")
 	phase := flag.String("phase", "", "read-only phase: source, copy-inventory, before, after, original-before or original-after; never executes DDL")
 	flag.Parse()
-	if *dsn == "" || *inventory == "" || *budget <= 0 || *budget > 10*time.Minute || (*phase != "source" && *phase != "copy-inventory" && *phase != "before" && *phase != "after" && *phase != "original-before" && *phase != "original-after") {
+	if *dsn == "" || *inventory == "" || *budget <= 0 || *budget > 10*time.Minute || (*phase != "source" && *phase != "copy-inventory" && *phase != "before" && *phase != "after" && *phase != "original-before" && *phase != "original-after" && *phase != "c1-before" && *phase != "c1-after" && *phase != "c1-original-before" && *phase != "c1-original-after") {
 		fmt.Fprintln(os.Stderr, "dsn-file, source-inventory-file and bounded timeout are required")
 		os.Exit(2)
 	}

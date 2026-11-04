@@ -34,7 +34,7 @@ PRIVATE_MOUNT = "/run/installation-owner-private"
 PRIVATE = PRIVATE_MOUNT + "/installer"
 STAGING = "/var/lib/system-backup/staging"
 PASSWORD = Path("/root/.clawmanager-backup-install/admin-password")
-ROUTES = {"whole": (19443, "/observation/v1"), "gateway": (19444, "/gateway-observation/v1"), "stopped-pro": (19445, "/stopped-pro-observation/v1")}
+ROUTES = {"whole": (19443, "/observation/v1"), "gateway": (19444, "/gateway-observation/v1"), "stopped-pro": (19445, "/stopped-pro-observation/v1"), "shared": (19446, "/shared-runtime-lifecycle/v1")}
 
 
 class Refused(Exception):
@@ -519,9 +519,16 @@ printf '{\"machine_id\":\"%s\",\"boot_id\":\"%s\",\"cri_endpoint\":\"unix://%s\"
         pki, pki_receipt = self.call("observer-pki", [self.binary("system-backup-original-observer-pki"), *common,
             "--definition-file", definition["File"], "--definition-sha256", definition["SHA256"], "--output-directory", output_dir])
         need(pki["Status"] == "materialized_uninstalled_not_task_authority", "actual_original_pki_producer_result")
+        build = decode(read(self.root / "build-receipt.json", private=False))
+        agent_binaries = build.get("shared_agent_binaries", {})
+        need(set(agent_binaries) == {"openclaw", "hermes"}, "sealed_release_actual_shared_agent_elf_roster_required")
+        need(all(isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,80}", name) for name in agent_binaries.values()), "finite_sealed_release_agent_binary_name")
+        shared_agents = {runtime: pin(self.binary(name), private=False, limit=64 << 20) for runtime, name in sorted(agent_binaries.items())}
+        shared_owner_directory = "/var/lib/clawmanager-system-backup/" + self.prefix + "/shared-owner"
         host_definition = self.retain("observer-host.definition.json", {"Version": "original-observer-host-deployment.v1", "PKIDefinition": definition, "PKIReceipt": pki_receipt,
-            "Binaries": {kind: pin(self.binary(binary), private=False, limit=64 << 20) for kind, binary in {"whole": "backup-node-observer", "gateway": "backup-gateway-node-observer", "stopped-pro": "backup-stopped-pro-node-observer"}.items()},
+            "Binaries": {kind: pin(self.binary(binary), private=False, limit=64 << 20) for kind, binary in {"whole": "backup-node-observer", "gateway": "backup-gateway-node-observer", "stopped-pro": "backup-stopped-pro-node-observer", "shared": "backup-shared-runtime-node-owner"}.items()},
             "BinaryDirectory": "/usr/local/libexec/" + self.prefix, "MaterialDirectory": "/etc/clawmanager-system-backup/" + self.prefix,
+            "SharedRuntime": {"OwnerDirectory": shared_owner_directory, "CgroupMount": "/sys/fs/cgroup", "AgentExecutables": shared_agents},
             "CRI": [{"Node": name, "NodeUID": nodes[name]["metadata"]["uid"], "Binary": "/usr/local/libexec/" + self.prefix + "/crictl", "BinarySHA256": CRI_SHA, "Endpoint": probes[name]["cri_endpoint"], "ReleaseBinary": cri} for name in node_names]})
         bundles_dir = self.directory / "observer-host"
         bundles_dir.mkdir(mode=0o700, exist_ok=True)
@@ -579,18 +586,25 @@ exec /usr/local/bin/system-backup-v2-controller
                  "securityContext": {"allowPrivilegeEscalation": False, "capabilities": {"drop": ["ALL"]}},
                  "volumeMounts": [{"name": "inputs", "mountPath": RUNTIME_MOUNT}, {"name": "private", "mountPath": PRIVATE_MOUNT}]}],
             "volumes": [{"name": name, "persistentVolumeClaim": {"claimName": obj["metadata"]["name"]}} for name, obj in pvcs.items()]}
+        self.op.nonce_mount_profile(pod_spec)
         deployment = {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": host_name, "namespace": NS}, "spec": {"replicas": 1, "strategy": {"type": "Recreate"}, "selector": {"matchLabels": {"app.kubernetes.io/name": host_name}}, "template": {"metadata": {"labels": {"app.kubernetes.io/name": host_name}, "annotations": {MARKER: self.operation}}, "spec": pod_spec}}}
         actual = self.create_object("host-deployment-create", deployment)
         service = self.create_object("host-control-service-create", {"apiVersion": "v1", "kind": "Service", "metadata": {"name": host_name, "namespace": NS},
             "spec": {"type": "ClusterIP", "selector": {"app.kubernetes.io/name": host_name}, "ports": [{"name": "control-mtls", "port": 9443, "targetPort": 9443, "protocol": "TCP"}]}})
         identity = self.wait_host(actual, image_result["images"]["app"])
+        self.op.verify_nonce_readable(self, identity)
         need(identity["ServiceAccountUID"] == controller["UID"], "original_controller_account_replaced")
         credentials = {"plan.json": enrolled["Plan"], "issuer-public.key": enrolled["IssuerPublic"], "enrollment-pin.json": enrolled["Enrollment"],
                        "installer.dsn": sql["files"]["mysql-installer.dsn"], "database-ca.pem": pin(Path(sql["source_tls"]["ca_file"])), "operator.kubeconfig.json": pin(self.op.kube), "admin-password": pin(PASSWORD)}
         for name, source in credentials.items():
             self.host_file(identity, "private-" + name.replace(".", "-"), PRIVATE + "/" + name, pinned(source))
         mirror = self.runtime_mirror()
-        runtime_sources = {"observer-ca.pem": pki["CA"], "observer-client.pem": pki["ClientCertificate"], "observer-client-key.pem": pki["ClientKey"],
+        agent_tls_result = decode(read(self.directory / "runtime-agent-tls.result.json"))
+        need(agent_tls_result["version"] == "operator-shared-agent-tls.v1" and agent_tls_result["operation"] == self.operation, "actual_same_operation_agent_tls_materials_required")
+        agent_tls_material = decode(pinned(agent_tls_result["materials_receipt"]))
+        need(agent_tls_material["Version"] == "original-shared-agent-tls-materials.v1" and agent_tls_material["ServerName"] == "lite-agent.clawmanager.internal" and agent_tls_material["Namespace"] == NS, "actual_agent_tls_ca_source_required")
+        pinned(agent_tls_material["CA"])
+        runtime_sources = {"runtime-agent-ca.pem": agent_tls_material["CA"], "observer-ca.pem": pki["CA"], "observer-client.pem": pki["ClientCertificate"], "observer-client-key.pem": pki["ClientKey"],
                            "database-ca.pem": pin(Path(sql["source_tls"]["ca_file"]))}
         for name, source in sql["files"].items():
             if name.startswith(("mysql-source", "mysql-runtime", "mysql-control_sql", "mysql-business")):
@@ -607,7 +621,8 @@ exec /usr/local/bin/system-backup-v2-controller
             self.host_file(identity, "runtime-" + name.replace(".", "-"), str(target), raw)
         result = {"version": "operator-host-observer-result.v1", "state": "actual_final_host_waiting_and_native_observer_services_installed",
             "host": identity, "accounts": {"controller": controller, "worker": worker, "sources": sources}, "pvc_uids": {name: p["metadata"]["uid"] for name, p in pvcs.items()},
-            "pki_definition": definition, "pki_receipt": pki_receipt, "host_materials_receipt": host_materials_receipt, "actual_tls_handshakes": tls_checks,
+            "pki_definition": definition, "pki_receipt": pki_receipt, "host_materials_receipt": host_materials_receipt,
+            "shared_runtime": {"protocol": "shared-container-freeze.v1", "owner_directory": shared_owner_directory, "cgroup_mount": "/sys/fs/cgroup", "agent_executables": shared_agents, "host_definition": host_definition, "agent_tls_materials": agent_tls_result["materials_receipt"]}, "actual_tls_handshakes": tls_checks,
             "installer_common_args": ["--plan-file", PRIVATE + "/plan.json", "--plan-sha256", enrolled["Plan"]["SHA256"], "--issuer-public-file", PRIVATE + "/issuer-public.key", "--issuer-public-sha256", enrolled["IssuerPublic"]["SHA256"], "--enrollment-pin-file", PRIVATE + "/enrollment-pin.json", "--enrollment-pin-sha256", enrolled["Enrollment"]["SHA256"], "--kubeconfig-file", PRIVATE + "/operator.kubeconfig.json", "--kubeconfig-sha256", digest(read(self.op.kube)), "--dsn-file", PRIVATE + "/installer.dsn", "--database-ca-file", PRIVATE + "/database-ca.pem", "--local-admin-password-file", PRIVATE + "/admin-password"],
             "runtime_output_directory": RUNTIME, "controller_process_started": False, "native_writer_proof_issued": False, "backup_ready": False}
         result["runtime_input_pins"] = runtime_pins
