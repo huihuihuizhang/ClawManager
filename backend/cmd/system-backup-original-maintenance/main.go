@@ -18,11 +18,20 @@ import (
 	"syscall"
 	"time"
 
+	sb "clawreef/internal/systembackup"
 	"clawreef/internal/systembackupinstallationowner/install"
 	"github.com/go-sql-driver/mysql"
 )
 
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) == 1 && args[0] == "redis-native-helper" {
+		active, cancel := context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+		if sb.RunRedisBootstrapNative(active, os.Stdin, out) != nil {
+			return 1
+		}
+		return 0
+	}
 	flags := flag.NewFlagSet("system-backup-original-maintenance", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	planFile := flags.String("plan-file", "", "user-selected canonical public target plan")
@@ -34,6 +43,8 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	dsnFile := flags.String("dsn-file", "", "private installer SQL DSN")
 	dbCAFile := flags.String("database-ca-file", "", "pinned target database CA")
 	passwordFile := flags.String("local-admin-password-file", "", "private exact local admin password bytes")
+	redisFile := flags.String("redis-materials-file", "", "actual native Redis installer options")
+	redisSHA := flags.String("redis-materials-sha256", "", "exact options SHA256")
 	mode := flags.String("mode", "", "explicit preflight or round-trip")
 	enrollmentFile := flags.String("enrollment-pin-file", "", "original independently retained immutable enrollment pin")
 	enrollmentSHA := flags.String("enrollment-pin-sha256", "", "original enrollment pin bytes")
@@ -44,7 +55,14 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		providerValues[name] = flags.String(name, "", "actual existing provider installation input; no future binding")
 	}
 	recoveryPasswordFile := flags.String("recovery-admin-password-file", "", "existing private fresh recovery password; defaults to original selected file")
-	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 || *planFile == "" || *planSHA == "" || *publicFile == "" || *publicSHA == "" || *kubeFile == "" || *kubeSHA == "" || *dsnFile == "" || *dbCAFile == "" || *passwordFile == "" || *mode != "preflight" && *mode != "round-trip" && *mode != "provider-materials" || *enrollmentFile == "" || *enrollmentSHA == "" || *selectionFile == "" || *selectionSHA == "" {
+	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 || *planFile == "" || *planSHA == "" || *publicFile == "" || *publicSHA == "" || *kubeFile == "" || *kubeSHA == "" || *dsnFile == "" || *dbCAFile == "" || *passwordFile == "" || *mode != "preflight" && *mode != "round-trip" && *mode != "provider-materials" && *mode != "redis-materials" || *enrollmentFile == "" || *enrollmentSHA == "" || *selectionFile == "" || *selectionSHA == "" {
+		return 2
+	}
+	if *mode == "redis-materials" {
+		if *redisFile == "" || *redisSHA == "" {
+			return 2
+		}
+	} else if *redisFile != "" || *redisSHA != "" {
 		return 2
 	}
 	if *mode == "provider-materials" {
@@ -101,6 +119,31 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 1
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	if *mode == "redis-materials" {
+		defer cancel()
+		data, e := install.ReadPrivateFile(*redisFile, 262144)
+		if e != nil {
+			return 1
+		}
+		sum := sha256.Sum256(data)
+		if hex.EncodeToString(sum[:]) != *redisSHA {
+			return 1
+		}
+		var options install.RedisNativeMaterialOptions
+		dec := json.NewDecoder(bytes.NewReader(data))
+		dec.DisallowUnknownFields()
+		if dec.Decode(&options) != nil || dec.Decode(new(any)) != io.EOF {
+			return 1
+		}
+		receipt, e := installer.ProduceOriginalRedisNativeMaterials(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA}, install.BootstrapSourceFilePin{File: *kubeFile, SHA256: *kubeSHA}, options)
+		if e != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 3
+		}
+		return 0
+	}
 	if *mode == "provider-materials" {
 		defer cancel()
 		get := func(name string) string { return *providerValues[name] }

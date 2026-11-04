@@ -381,7 +381,7 @@ func redisGateSetUser(user redisGateUser, root redisGateSelector, selectors []re
 
 // Prepare performs ONLY native/Kubernetes reads. It accepts no observed ACK,
 // boolean, lease count, native response, caller-produced gated hash or TTL.
-// Version 7.2.x is the reviewed ACL SAVE/selector/script profile; other versions
+// Redis 7.2.x/7.4.x use the finite native ACL SAVE/selector profile; other versions
 // require explicit native compatibility validation, not a latest-tag guess.
 func PrepareRedisReadServiceGate(ctx context.Context, admin, reader *RedisClient, kube kubernetes.Interface, in RedisReadGateInput, check TeamSourceCheck, custodyKey []byte) (*RedisReadServiceGate, error) {
 	op, e1 := hex.DecodeString(in.Operation)
@@ -389,7 +389,7 @@ func PrepareRedisReadServiceGate(ctx context.Context, admin, reader *RedisClient
 	if e1 != nil || e2 != nil || len(op) != 16 || len(inventory) != 32 || hex.EncodeToString(op) != in.Operation || hex.EncodeToString(inventory) != in.InventorySHA256 {
 		return nil, ErrRedisReadGate
 	}
-	if admin == nil || reader == nil || admin == reader || kube == nil || check == nil || in.Policy.Validate() != nil || !strings.HasPrefix(in.ServerVersion, "7.2.") || !redisGateName(in.KeeperAccount) || !redisGateName(in.ReaderAccount) || in.KeeperAccount == in.ReaderAccount || len(in.Operation) != 32 || len(in.InventorySHA256) != 64 || !path.IsAbs(in.ACLFile) || path.Clean(in.ACLFile) != in.ACLFile || in.Policy.allows(redisGateOwnerKey) {
+	if admin == nil || reader == nil || admin == reader || kube == nil || check == nil || in.Policy.Validate() != nil || !RedisNativeReadGateVersion(in.ServerVersion) || !redisGateName(in.KeeperAccount) || !redisGateName(in.ReaderAccount) || in.KeeperAccount == in.ReaderAccount || len(in.Operation) != 32 || len(in.InventorySHA256) != 64 || !path.IsAbs(in.ACLFile) || path.Clean(in.ACLFile) != in.ACLFile || in.Policy.allows(redisGateOwnerKey) {
 		return nil, ErrRedisReadGate
 	}
 	g := &RedisReadServiceGate{admin: admin, reader: reader, kube: kube, in: in, check: check, changes: map[string][][]byte{}, expected: map[string]redisGateUser{}, marker: redisGateMarkerPrefix + in.Operation}

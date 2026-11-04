@@ -1,0 +1,16 @@
+{
+  "schema_version": "supervisor-remote-teamc-review.v1",
+  "commits": [
+    "41c9d9af",
+    "a3ca2a8a"
+  ],
+  "accepted_tip": "a3ca2a8a2727f41ae247d720c758ba3871e0607e",
+  "production_changes": false,
+  "files": 3,
+  "roots": 11,
+  "subcases": 13,
+  "log_sha256": "b1287e9bc2deec6256ac8d458d893ebdfc0e37a9b1b5a5875d9816b58ce7d5dd",
+  "scope": "Existing Teams report parser/relationship DATA tests plus compile-only private writer example; no real Ready or final-artifact acceptance minted.",
+  "local_backup_fast_forwarded": true,
+  "page_acceptance": false
+}

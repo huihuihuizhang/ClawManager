@@ -1,0 +1,39 @@
+{
+  "schema_version": "upgrade198-v3-actual-build-validation.v1",
+  "source_map_sha256": "f43ae44d283efbc44429781f4403cd1f2d93f462f6dd0c4775680a459cb22b69",
+  "effective_build_inputs_sha256": "cd6003cb234e20d5699eee4d103843710057341cc8bcd16b43ec2c969526a5cf",
+  "passed": {
+    "db_legacy177": true,
+    "db_legacy_source": true,
+    "safe_failure": true,
+    "linux_architecture": true,
+    "actual_cleanup": true
+  },
+  "binaries": {
+    "legacy-source-selftest": {
+      "sha256": "fa02c4cee562273103e7ecde518252696dd93c922cf1c6be23da3b2eea8058ba",
+      "bytes": 7686674
+    },
+    "proof-diagnostic-selftest": {
+      "sha256": "9407f4200ad546aff4c67d3cdfead2b6b7a16f8ad74d197ee95ab7d5453937e1",
+      "bytes": 10524579
+    },
+    "system-backup-legacy-upgrade177-proof": {
+      "sha256": "3c17dfadc3094871d89f9ba0509b6c6fa6778604a30378009c70b5f46096ebd9",
+      "bytes": 9717776
+    }
+  },
+  "windows_passed_roots": 13,
+  "windows_passed_subcases": 16,
+  "native_log_sha256": "4c796a6f9936720ee3fcae46149c4f05ba36a211d6a2aba9aff40ba8edddf221",
+  "cleanup_log_sha256": "495a9851ca140178b14b8db247448e709d7a9a118c0034f61b13ce52ad474cbb",
+  "field_copy198_accepted": false,
+  "original_database_upgraded": false,
+  "archive": {
+    "path": "C:\\Users\\zhanghui08\\Desktop\\clawmanager\\ClawManager\\artifacts\\system-backup-upgrade198-copy-diagnostic-v3-linux-amd64-20261104.tar.gz",
+    "sha256": "b0219f92ac0c3d38c2f13bcac3ebcc1535eb8e7f1f75890ecae1225d280e651a",
+    "bytes": 15299533,
+    "members": 39
+  },
+  "cleanup": "Three completed binaries hashed, checked in final archive, and removed from build directory; solely final archive retained."
+}

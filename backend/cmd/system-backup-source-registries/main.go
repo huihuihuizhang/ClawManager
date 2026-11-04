@@ -124,6 +124,18 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 2
 	}
 	action := args[0]
+	if action == "install-redis-files" {
+		flags := flag.NewFlagSet(action, flag.ContinueOnError)
+		flags.SetOutput(io.Discard)
+		pin := flags.String("manifest-sha256", "", "")
+		if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
+			return 2
+		}
+		if execution.InstallFormalRedisFiles(ctx, *pin) != nil {
+			return 1
+		}
+		return 0
+	}
 	if action == "install-provider-files" {
 		flags := flag.NewFlagSet(action, flag.ContinueOnError)
 		flags.SetOutput(io.Discard)
@@ -144,7 +156,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	switch action {
 	case "produce-facts":
 		required = append(required, "source-selection-file", "source-selection-sha256")
-	case "prepare-provider-materials", "prepare-observer-materials":
+	case "prepare-redis-materials", "prepare-provider-materials", "prepare-observer-materials":
 		required = append(required, "source-selection-file", "source-selection-sha256", "writer-selection-file", "writer-selection-sha256", "controller-container", "output-directory")
 	case "prepare-mount-materials":
 		required = append(required, "source-selection-file", "source-selection-sha256", "mount-layouts-file", "mount-layouts-sha256", "output-directory")
@@ -231,6 +243,16 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	if action == "prepare-redis-materials" {
+		receipt, e := execution.ProduceFormalRedisReadMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"))
+		if e != nil {
+			return 1
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 4
+		}
+		return 0
+	}
 	if action == "prepare-provider-materials" {
 		receipt, err := execution.ProduceFormalVaultDependencyMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("writer-selection-file"), get("writer-selection-sha256"), get("controller-container"), get("output-directory"))
 		if err != nil {

@@ -1,0 +1,101 @@
+{
+  "schema_version": "supervisor-redis-native-materials-combination.v1",
+  "source_map": {
+    "path": "backend/.d-redis-native-materials-20261104/source-map.json",
+    "sha256": "596b09bc6074d9cada8b4cd1a2267ef9369ef4d48f0dc132276fe5fcf0c292e6",
+    "actual_field_version": "7.4.11 observed by user2026-11-04T00:31:45Z; native install/gate still require real qualification"
+  },
+  "results": {
+    "windows-targeted": {
+      "roots": 19,
+      "subcases": 35,
+      "log_sha256": "ddf993fccdd58b062d7532788905e3d48792c7e29ff0d736f3396b19cd126dc6",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-backup": {
+      "roots": 12,
+      "subcases": 5,
+      "log_sha256": "3c8aed16dc8eb91c81c6477232c147e06ff2d28be19ee4cef9808cdae16baf2a",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-minionative": {
+      "roots": 2,
+      "subcases": 3,
+      "log_sha256": "a5aa2d1c6bf08942b27452ed289f7c4348bba23a54118be4d02c72f4a7825296",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-execution": {
+      "roots": 3,
+      "subcases": 2,
+      "log_sha256": "18f484b31160f9a776c893acc90df48e3e359d46cfe7aada623605f9353ca3e1",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-install": {
+      "roots": 3,
+      "subcases": 16,
+      "log_sha256": "7b078715fa630a885f1a0248bd64aef6d22f78e98fb6eef794423d567c1660a8",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-owner": {
+      "roots": 1,
+      "subcases": 7,
+      "log_sha256": "a7c66547da8ebc45a5d3ef289f35c63e60a3c5f47973c97342b14f5c781bac94",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-adoption": {
+      "roots": 1,
+      "subcases": 4,
+      "log_sha256": "30b805a483a36d82bc11cfa703e356ed37270763571589244aeaa3b6b2abe782",
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "binaries": [
+    {
+      "name": "adoption.test",
+      "sha256": "a15c01abe697bfb34590497f0c04d3adaaa665db70db4e9d6d11336f93082a2c",
+      "bytes": 87890169
+    },
+    {
+      "name": "backup.test",
+      "sha256": "29a251fc5cb7a575b9942b62a3e4ff607a85ae4ca36a48d10934d75b2e698987",
+      "bytes": 95959380
+    },
+    {
+      "name": "execution.test",
+      "sha256": "1173dad9b035ea18c56c37f64f9a8e8752892454c90838f676c3bdfd06f667ed",
+      "bytes": 133165306
+    },
+    {
+      "name": "install.test",
+      "sha256": "a27a726beaa6b0b2f0baf1bf8cad18bc19c2dc74fb82c37f7a43eb9fb0b40961",
+      "bytes": 111929621
+    },
+    {
+      "name": "minionative.test",
+      "sha256": "8f60ac494fd58d1e9004dbe75c94dc2edaea611826960c6f5fb79201f4ee0ba9",
+      "bytes": 10793574
+    },
+    {
+      "name": "owner.test",
+      "sha256": "c8622710cc3a82cd45e786b2e08491f87e9de503a9ca0111547a1ed4bd1f5510",
+      "bytes": 92803436
+    },
+    {
+      "name": "system-backup-kek-authority",
+      "sha256": "0e5082af06fb6e510aebee9b5d06468c2acc30c089b9c07adca6c8af777e5de1",
+      "bytes": 64565251
+    }
+  ],
+  "native_redis7411_qualification": false,
+  "actual_installation": false,
+  "page_acceptance": false,
+  "scope": "Version-specific native profile, original TLS/ACL/AOF bootstrap and formal material callers compile; actual Redis protocol/install/restart/readback must still execute.",
+  "cleanup": "seven ended check builds hashed then removed"
+}
