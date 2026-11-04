@@ -38,6 +38,7 @@ type OriginalObserverHostDefinition struct {
 	Binaries                           map[string]BootstrapSourceFilePin
 	BinaryDirectory, MaterialDirectory string
 	CRI                                []OriginalObserverHostCRI
+	SharedRuntime                      *OriginalObserverSharedRuntimeHostConfig `json:",omitempty"`
 }
 type OriginalObserverHostMaterialsReceipt struct {
 	Version, Status, PlanSHA256, DefinitionSHA256, PKIReceiptSHA256 string
@@ -45,7 +46,7 @@ type OriginalObserverHostMaterialsReceipt struct {
 	AuthorityHead                                                   HeadCAS
 }
 
-var originalObserverBinary = map[string]string{"whole": "backup-node-observer", "gateway": "backup-gateway-node-observer", "stopped-pro": "backup-stopped-pro-node-observer"}
+var originalObserverBinary = map[string]string{"whole": "backup-node-observer", "gateway": "backup-gateway-node-observer", "stopped-pro": "backup-stopped-pro-node-observer", "shared": "backup-shared-runtime-node-owner"}
 
 func observerHostPath(v string) bool {
 	return path.IsAbs(v) && path.Clean(v) == v && v != "/" && !strings.ContainsAny(v, "\x00\r\n\\")
@@ -87,7 +88,15 @@ func observerHostUnit(pki GeneratedOriginalObserverPKI, ep OriginalObserverPKIEn
 		return nil, ErrInstall
 	}
 	material := path.Join(def.MaterialDirectory, "node-"+hash([]byte(ep.NodeUID))[:24])
-	args := []string{path.Join(def.BinaryDirectory, originalObserverBinary[ep.Kind]), "--node", ep.Node, "--node-uid", ep.NodeUID, "--machine-id", ep.MachineID, "--boot-id", ep.BootID, "--host-root", "/", "--host-proc", "/proc", "--listen", u.Host, "--crictl", cri.Binary, "--runtime-endpoint", cri.Endpoint, "--client-ca", path.Join(material, "observer-ca.pem"), "--tls-cert", path.Join(material, ep.Kind+"-server.pem"), "--tls-key", path.Join(material, ep.Kind+"-server-key.pem"), "--anchor-key", path.Join(material, ep.Kind+"-anchor.key"), "--controller-uri", pki.ClientURI}
+	anchorKind := ep.Kind
+	if ep.Kind == "shared" {
+		anchorKind = "whole"
+	}
+	args := []string{path.Join(def.BinaryDirectory, originalObserverBinary[ep.Kind]), "--node", ep.Node, "--node-uid", ep.NodeUID, "--machine-id", ep.MachineID, "--boot-id", ep.BootID, "--host-root", "/", "--host-proc", "/proc", "--listen", u.Host, "--crictl", cri.Binary, "--runtime-endpoint", cri.Endpoint, "--client-ca", path.Join(material, "observer-ca.pem"), "--tls-cert", path.Join(material, ep.Kind+"-server.pem"), "--tls-key", path.Join(material, ep.Kind+"-server-key.pem"), "--anchor-key", path.Join(material, anchorKind+"-anchor.key"), "--controller-uri", pki.ClientURI}
+	args, e = sharedObserverHostArgs(args, ep, def)
+	if e != nil {
+		return nil, e
+	}
 	quoted := make([]string, len(args))
 	for n, arg := range args {
 		quoted[n] = observerUnitArg(arg)
@@ -101,13 +110,18 @@ func observerHostUnit(pki GeneratedOriginalObserverPKI, ep OriginalObserverPKIEn
 func observerHostInstallScript(ep OriginalObserverPKIEndpoint, def OriginalObserverHostDefinition, cri OriginalObserverHostCRI, kinds []string) []byte {
 	material := path.Join(def.MaterialDirectory, "node-"+hash([]byte(ep.NodeUID))[:24])
 	var script strings.Builder
-	script.WriteString("#!/usr/bin/env bash\nset -euo pipefail\numask 077\n[[ ${EUID} -eq 0 && $(uname -s) == Linux && $(uname -m) == x86_64 ]] || exit 21\ncd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\"\nfor tool in install sha256sum stat systemctl flock; do command -v \"$tool\" >/dev/null || exit 22; done\nsha256sum --strict -c payload.sha256 >/dev/null\n")
+	script.WriteString("#!/usr/bin/env bash\nset -euo pipefail\numask 077\n[[ ${EUID} -eq 0 && $(uname -s) == Linux && $(uname -m) == x86_64 ]] || exit 21\ncd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\"\nfor tool in install sha256sum stat systemctl flock sync; do command -v \"$tool\" >/dev/null || exit 22; done\nsha256sum --strict -c payload.sha256 >/dev/null\n")
 	script.WriteString("[[ $(cat /etc/machine-id) == " + observerShellArg(ep.MachineID) + " && $(cat /proc/sys/kernel/random/boot_id) == " + observerShellArg(ep.BootID) + " ]] || exit 23\n")
 	u, _ := url.Parse(cri.Endpoint)
 	script.WriteString("[[ -S " + observerShellArg(u.Path) + " && ! -L " + observerShellArg(u.Path) + " ]] || exit 24\n")
 	script.WriteString("safe_parent() { local item=$1 mode; while [[ $item != / ]]; do if [[ -e $item || -L $item ]]; then [[ -d $item && ! -L $item && $(stat -c %u -- \"$item\") == 0 ]] || exit 26; mode=$(stat -c %a -- \"$item\"); (( (8#$mode & 0022) == 0 )) || exit 26; fi; item=$(dirname -- \"$item\"); done; }\n")
 	for _, directory := range []string{material, def.BinaryDirectory, path.Dir(cri.Binary), path.Dir(u.Path), "/etc/systemd/system"} {
 		script.WriteString("safe_parent " + observerShellArg(directory) + "\n")
+	}
+	if def.SharedRuntime != nil {
+		store := sharedObserverHostDirectory(def.SharedRuntime, ep.NodeUID)
+		script.WriteString("safe_parent " + observerShellArg(store) + "\n")
+		script.WriteString("[[ -d /sys/fs/cgroup && ! -L /sys/fs/cgroup && $(stat -f -c %T -- /sys/fs/cgroup) == cgroup2fs ]] || exit 29\n")
 	}
 	// The preflight uses the bundled official executable only if its selected
 	// create-only destination is absent. Both paths are pinned before execution.
@@ -125,10 +139,20 @@ func observerHostInstallScript(ep OriginalObserverPKIEndpoint, def OriginalObser
 	if cri.ReleaseBinary.File != "" {
 		script.WriteString("if [[ ! -d " + observerShellArg(path.Dir(cri.Binary)) + " ]]; then install -d -o 0 -g 0 -m 0755 -- " + observerShellArg(path.Dir(cri.Binary)) + "; fi\ncopy_exact " + observerHostCRIBundleName + " " + observerShellArg(cri.Binary) + " 755\ncheck_crictl " + observerShellArg(cri.Binary) + "\n")
 	}
+	if def.SharedRuntime != nil {
+		store := observerShellArg(sharedObserverHostDirectory(def.SharedRuntime, ep.NodeUID))
+		script.WriteString("if [[ ! -e " + store + " && ! -L " + store + " ]]; then install -d -o 0 -g 0 -m 0700 -- " + store + "; fi\n")
+		script.WriteString("[[ -d " + store + " && ! -L " + store + " && $(stat -c %u:%g:%a -- " + store + ") == 0:0:700 ]] || exit 29\n")
+		script.WriteString("sync -f -- " + store + "\n")
+	}
 	script.WriteString("copy_exact observer-ca.pem " + observerShellArg(path.Join(material, "observer-ca.pem")) + " 600\n")
 	units := []string{}
 	for _, kind := range kinds {
-		for _, name := range []string{kind + "-server.pem", kind + "-server-key.pem", kind + "-anchor.key"} {
+		names := []string{kind + "-server.pem", kind + "-server-key.pem"}
+		if kind != "shared" {
+			names = append(names, kind+"-anchor.key")
+		}
+		for _, name := range names {
 			script.WriteString("copy_exact " + observerShellArg(name) + " " + observerShellArg(path.Join(material, name)) + " 600\n")
 		}
 		binary := originalObserverBinary[kind]
@@ -156,7 +180,7 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 	}
 	raw, e := readBootstrapSourcePin(BootstrapSourceFilePin{File: file, SHA256: digest}, 262144)
 	var def OriginalObserverHostDefinition
-	if e != nil || decodeExact(raw, &def) != nil || def.Version != "original-observer-host-deployment.v1" || !observerHostPath(def.BinaryDirectory) || !observerHostPath(def.MaterialDirectory) || len(def.Binaries) < 1 || len(def.Binaries) > 3 {
+	if e != nil || decodeExact(raw, &def) != nil || def.Version != "original-observer-host-deployment.v1" || !observerHostPath(def.BinaryDirectory) || !observerHostPath(def.MaterialDirectory) || len(def.Binaries) < 1 || len(def.Binaries) > 4 {
 		return zero, ErrInstall
 	}
 	definitionRaw, e := readBootstrapSourcePin(def.PKIDefinition, 262144)
@@ -167,6 +191,9 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 	pkiRaw, e := readBootstrapSourcePin(def.PKIReceipt, 262144)
 	var pki GeneratedOriginalObserverPKI
 	if e != nil || decodeExact(pkiRaw, &pki) != nil || pki.Version != "original-observer-pki-materials.v1" || pki.Status != "materialized_uninstalled_not_task_authority" || pki.PlanSHA256 != i.planHash || pki.DefinitionSHA256 != def.PKIDefinition.SHA256 || pki.Namespace != i.plan.Target.Namespace || pki.NamespaceUID != i.plan.Target.NamespaceUID || !reflect.DeepEqual(pki.Enrollment, pin) {
+		return zero, ErrInstall
+	}
+	if validateSharedObserverHostConfig(def, pki) != nil {
 		return zero, ErrInstall
 	}
 	s, e := i.authenticate(ctx, password)
@@ -188,6 +215,9 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 			if e != nil {
 				return ErrInstall
 			}
+		}
+		if validateSharedObserverHostConfig(def, pki) != nil {
+			return ErrInstall
 		}
 		for _, input := range def.Binaries {
 			actual, e := readObserverHostFile(input, 64<<20)
@@ -344,7 +374,12 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 			if e != nil {
 				return zero, e
 			}
-			files[ep.Kind+"-server.pem"], files[ep.Kind+"-server-key.pem"], files[ep.Kind+"-anchor.key"] = cert, key, anchor
+			files[ep.Kind+"-server.pem"], files[ep.Kind+"-server-key.pem"] = cert, key
+			if ep.Kind != "shared" {
+				files[ep.Kind+"-anchor.key"] = anchor
+			} else {
+				clear(anchor)
+			}
 			files[originalObserverBinary[ep.Kind]] = binaries[ep.Kind]
 			files["clawreef-"+originalObserverBinary[ep.Kind]+".service"] = unit
 		}

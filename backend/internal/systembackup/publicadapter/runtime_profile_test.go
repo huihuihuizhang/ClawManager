@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -16,6 +17,7 @@ import (
 
 	"clawreef/internal/services"
 	"clawreef/internal/systembackup/flow"
+	q "clawreef/internal/systembackup/quiesce"
 	d "clawreef/internal/systembackupdispatch"
 )
 
@@ -32,7 +34,7 @@ func (c *mixedProfileConn) QueryContext(ctx context.Context, q string, args []dr
 	if err == nil && strings.HasPrefix(q, "SELECT id,user_id,instance_mode,type,runtime_type,") {
 		r := rows.(*sourceRows)
 		stopped := append([]driver.Value(nil), r.values[0]...)
-		stopped[0], stopped[1], stopped[7], stopped[8], stopped[9], stopped[11] = int64(8), int64(1), "stopped", int64(2), "", "/workspace/stopped"
+		stopped[0], stopped[1], stopped[2], stopped[4], stopped[7], stopped[8], stopped[9], stopped[11] = int64(8), int64(1), "pro", "desktop", "stopped", int64(2), "", "/workspace/stopped"
 		r.values = append(r.values, stopped)
 	}
 	return rows, err
@@ -41,6 +43,42 @@ func (c *mixedProfileConn) QueryContext(ctx context.Context, q string, args []dr
 type runtimeProfilePorts struct {
 	*writerScopePorts
 	pausedChecks map[string]bool
+}
+
+// Callback/source model only: running Lite and originally stopped Pro.
+// This data is never claimed to be an actual native observation.
+func runtimeProfileStoppedProModel(t *testing.T, source InstanceIdentity) RuntimeWriterSpec {
+	t.Helper()
+	if source.Mode != "pro" || source.Status != "stopped" {
+		t.Fatal("invalid stopped Pro model source")
+	}
+	spec := stoppedProWriterSpecFixture()
+	var baseline q.StoppedProBaseline
+	if err := json.Unmarshal([]byte(spec.StoppedProBaseline), &baseline); err != nil {
+		t.Fatal(err)
+	}
+	baseline.SourceKey = "stopped/" + strconv.Itoa(source.ID)
+	baseline.RuntimeType = source.Type
+	baseline.InstanceID, baseline.UserID, baseline.InstanceGeneration = uint64(source.ID), uint64(source.UserID), uint64(source.Generation)
+	raw, err := json.Marshal(baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec.Source = source
+	spec.StoppedProBaseline = string(raw)
+	spec.Stopped = flow.State{UID: baseline.SourceKey, Generation: int64(source.Generation), Checkpoint: q.StoppedProBaselineSHA256(baseline)}
+	return spec
+}
+
+func runtimeProfileStoppedProModelControl(ctx context.Context, _ d.Authority, id, phase string, state flow.State) error {
+	if !strings.HasPrefix(id, "stopped/") || state.UID != id || state.Running || state.Generation <= 0 || !hexHash.MatchString(state.Checkpoint) {
+		return errors.New("invalid stopped Pro model custody")
+	}
+	switch phase {
+	case "prepare-stopped", "stopped", "recovery-stopped", "recovered-stopped":
+		return ctx.Err()
+	}
+	return errors.New("invalid stopped Pro model phase")
 }
 
 func (p *runtimeProfilePorts) BeforeResume(ctx context.Context, a d.Authority) error {
@@ -71,6 +109,7 @@ func TestRuntimeProfileMixedInventoryCallsConcreteBuildersAndPreservesStoppedIns
 	base.in.Backup = moduleTestInput(t).in.Backup
 	ports := &runtimeProfilePorts{writerScopePorts: base, pausedChecks: map[string]bool{}}
 	deps.Ports = ports
+	deps.Callbacks.StoppedProControl = runtimeProfileStoppedProModelControl
 	participants := deps.Participants
 	deps.Participants = nil
 	var mu sync.Mutex
@@ -169,7 +208,7 @@ func TestRuntimeProfileMixedInventoryCallsConcreteBuildersAndPreservesStoppedIns
 	defer db.Close()
 	var sourceTx *sql.Tx
 	authentications := 0
-	source := LinuxProfileConfig{Source: db, Database: "synthetic_source", ServerUUID: "source-uuid", Supported: map[AgentKind]bool{{"openclaw", "lite", "linux", "linux"}: true}, HoldLimit: 30 * time.Second, VerifySource: func(ctx context.Context, tx *sql.Tx) error {
+	source := LinuxProfileConfig{Source: db, Database: "synthetic_source", ServerUUID: "source-uuid", Supported: map[AgentKind]bool{{"openclaw", "lite", "linux", "linux"}: true, {"openclaw", "pro", "linux", "linux"}: true}, HoldLimit: 30 * time.Second, VerifySource: func(ctx context.Context, tx *sql.Tx) error {
 		authentications++
 		// Each discovery/check uses its own read-only snapshot. Both authority
 		// checks must bind THAT transaction, not the already-closed first one.
@@ -197,7 +236,7 @@ func TestRuntimeProfileMixedInventoryCallsConcreteBuildersAndPreservesStoppedIns
 		}
 		mapping := RuntimeWriterMapping{Participants: participants, Specs: []RuntimeWriterSpec{
 			{Source: inv.Instances[0], Kind: "gateway", UID: "runtime-pod-uid", Endpoint: server.URL, RestartRef: "original-encrypted-ref", ResumeGeneration: 19, UIDNumber: 50001, GIDNumber: 50001, Port: 20007},
-			{Source: inv.Instances[1], Kind: "stopped", Stopped: flow.State{UID: "stopped-instance-8", Generation: 2, Checkpoint: "original-stopped-proof"}},
+			runtimeProfileStoppedProModel(t, inv.Instances[1]),
 		}}
 		mapping.Specs[0].Runtime = RuntimeLocator{Version: "runtime-locator.v2", Namespace: inv.Instances[0].Namespace, Pod: inv.Instances[0].Pod, RegisteredPodUID: "runtime-pod-uid", Deployment: "runtime", RuntimePodID: 6, GatewayPID: 123, AgentEpoch: strings.Repeat("a", 32)}
 		mapping.Specs[0].Backup = RuntimeGatewayBackup{Protocol: services.RuntimeBackupProtocol, OperationID: strings.Repeat("b", 32), RestartSHA256: strings.Repeat("c", 64)}
@@ -380,9 +419,10 @@ func TestRuntimeProfileRetainsPlatformWritersAndChecksCombinedFrozenCoverage(t *
 			source.BuildParts, source.BuildWriters = nil, nil
 			m, _ := NewCaptureModules([]CaptureModuleRegistration{moduleTestRegistration(t, f, "instances", "B", "users")}, moduleTestContext)
 			instance := writerTestSource()
-			instance.Status = "stopped"
+			instance.Mode, instance.Backend, instance.Status = "pro", "desktop", "stopped"
+			deps.Callbacks.StoppedProControl = runtimeProfileStoppedProModelControl
 			inv := writerTestInventory(instance)
-			mapping := RuntimeWriterMapping{Specs: []RuntimeWriterSpec{{Source: instance, Kind: "stopped", Stopped: flow.State{UID: "stopped-original", Generation: 7, Checkpoint: "stopped-proof"}}}, Participants: participants, Platform: []flow.Writer{fixtureWriter{f}}}
+			mapping := RuntimeWriterMapping{Specs: []RuntimeWriterSpec{runtimeProfileStoppedProModel(t, instance)}, Participants: participants, Platform: []flow.Writer{fixtureWriter{f}}}
 			switch which {
 			case "missing-platform":
 				mapping.Platform = nil

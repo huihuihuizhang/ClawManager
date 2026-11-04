@@ -64,6 +64,9 @@ func runtimeStateMatches(spec b.RuntimeWriterSpec, s flow.State, point string) b
 // BuildWriters plugs directly into LinuxProfileConfig.BuildWriters. Recovery
 // loads custody only; it cannot rediscover sources or mint fresh reservations.
 func (o *SQLRuntimeControl) BuildWriters(ctx context.Context, in d.Input, inv b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
+	if o != nil && o.cfg.Shared != nil {
+		return o.buildSharedTaskWriters(ctx, in, inv, frozen)
+	}
 	if o == nil {
 		return nil, d.ErrNotReady
 	}

@@ -45,6 +45,7 @@ type originalWriterSourceConfig struct {
 	NamespaceUID     string `json:"namespace_uid"`
 	ApplicationScope string `json:"application_scope"`
 	RuntimeSources   *struct {
+		SharedRuntimeProtocol    string                        `json:"shared_runtime_protocol,omitempty"`
 		WorkspaceRoot            string                        `json:"workspace_root"`
 		AgentTokenFile           string                        `json:"agent_token_file"`
 		AgentCAFile              string                        `json:"agent_ca_file"`
@@ -200,7 +201,21 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	physical := &PreparedOriginalWriterSet{owner: p}
 	usedLayouts := map[int]bool{}
 	agentPinsRead := false
+	sharedAliases := map[string]string{}
+	if config.RuntimeSources != nil && config.RuntimeSources.SharedRuntimeProtocol != "" {
+		var sharedErr error
+		sharedAliases, sharedErr = p.collectOriginalSharedAgentSelection(ctx, options, config, &s, pods, roles, physical, database)
+		if sharedErr != nil {
+			return zero, census, nil, sharedErr
+		}
+		agentPinsRead = true
+	}
 	for _, source := range p.instances {
+		// Complete original lite rows are retained by p.instances and rechecked
+		// by the actual shared factory; no per-instance slot custody is authored.
+		if s.SharedRuntimeProtocol != "" && source.Mode == "lite" {
+			continue
+		}
 		plan, e := scope.PlanRuntime(scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS})
 		if e != nil {
 			return zero, census, nil, OriginalWriterSourceFailure{source.ID, source.Mode, source.Status, "unsupported_actual_runtime"}
@@ -333,7 +348,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	// Resolve every SQL participant against a physically stoppable ACTUAL writer.
 	// Arbitrary missing mappings are a concrete prerequisite, never guessed from
 	// participant naming, controller labels or a successful lease-only check.
-	if err = p.originalSelectionParticipants(ctx, options.ParticipantWriters, &s); err != nil {
+	if err = p.originalSelectionParticipants(ctx, options.ParticipantWriters, &s, sharedAliases); err != nil {
 		return zero, census, nil, err
 	}
 	if p.checkInstances(ctx) != nil || p.check(ctx) != nil {
@@ -361,8 +376,11 @@ func (p *OriginalWriterMaintenance) originalSelectionPodDeployment(ctx context.C
 	return root.Name, nil
 }
 
-func (p *OriginalWriterMaintenance) originalSelectionParticipants(ctx context.Context, mappings map[string]string, s *OriginalWriterSetSelection) error {
+func (p *OriginalWriterMaintenance) originalSelectionParticipants(ctx context.Context, mappings map[string]string, s *OriginalWriterSetSelection, sharedAliases ...map[string]string) error {
 	known := map[string]bool{}
+	for _, agent := range s.SharedRuntimeAgents {
+		known["shared-runtime/"+agent.PodUID] = true
+	}
 	for _, d := range s.Deployments {
 		if d.Role == "writer" {
 			known["deployment/"+p.operator.installer.plan.Target.Namespace+"/"+d.Name] = true
@@ -412,6 +430,13 @@ func (p *OriginalWriterMaintenance) originalSelectionParticipants(ctx context.Co
 		writer := mappings[id]
 		if writer == "" && known[id] {
 			writer = id
+		}
+		for _, aliases := range sharedAliases {
+			if writer == "" {
+				writer = aliases[id]
+			} else if actual := aliases[writer]; actual != "" {
+				writer = actual
+			}
 		}
 		if !known[writer] {
 			return OriginalWriterSourceFailure{Dependency: "actual_sql_participant_to_physical_writer_mapping_required"}

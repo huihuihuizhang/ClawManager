@@ -27,6 +27,9 @@ type originalScopedRecoveryObserver interface {
 // until the COMPLETE current source and native recovery proof succeeds.
 func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, fence *originalWriterRecoveryFence) error {
 	failures := []error{}
+	if err := s.restoreSharedRuntimeLifecycle(ctx, fence); err != nil {
+		failures = append(failures, err)
+	}
 	for _, writer := range s.deployments {
 		if !writer.stopDispatched {
 			continue

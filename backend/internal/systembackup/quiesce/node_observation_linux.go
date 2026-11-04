@@ -611,6 +611,9 @@ func observationWritableHandles(ctx context.Context, base, hostProc string, file
 	return ctx.Err()
 }
 func (o *NodeObserver) scan(ctx context.Context, a nodeObservationAnchor, files map[observationInode]observationFileState) (int, []observedProcess, error) {
+	return o.scanWithSharedFrozen(ctx, a, files, nil)
+}
+func (o *NodeObserver) scanWithSharedFrozen(ctx context.Context, a nodeObservationAnchor, files map[observationInode]observationFileState, frozen []*sharedCgroupHandle) (int, []observedProcess, error) {
 	seen := map[string]observedProcess{}
 	// Observe two actual host enumerations; unrelated creation/exit does not
 	// require identical host lists. Every enumerated live task is inspected;
@@ -631,8 +634,20 @@ func (o *NodeObserver) scan(ctx context.Context, a nodeObservationAnchor, files 
 					return observationFailure("original_process_present")
 				}
 				if files != nil {
-					if e := observationWritableHandles(ctx, p.base, o.HostProc, files, a.Paths); e != nil {
-						return e
+					inFrozen := false
+					for _, handle := range frozen {
+						if withinObservation(p.process.Cgroup, handle.pin.Path) {
+							if handle.checkFrozen(ctx) != nil {
+								return ErrNodeObservation
+							}
+							inFrozen = true
+							break
+						}
+					}
+					if !inFrozen {
+						if e := observationWritableHandles(ctx, p.base, o.HostProc, files, a.Paths); e != nil {
+							return e
+						}
 					}
 				}
 				after, e := observationProcess(ctx, p.base)

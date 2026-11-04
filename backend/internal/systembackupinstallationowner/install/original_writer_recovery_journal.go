@@ -32,6 +32,15 @@ func (r *OriginalWriterRecoveryAuthorization) inspectOriginal(ctx context.Contex
 		return zero, ErrInstall
 	}
 	states := map[string]any{}
+	for _, shared := range s.sharedRuntimes {
+		if shared == nil || shared.set != s {
+			return zero, ErrInstall
+		}
+		states[shared.ID()] = shared.capabilities
+	}
+	if s.selection.SharedRuntimeProtocol != "" {
+		states["shared-unbound-original-lite"] = s.sharedUnbound
+	}
 	for _, provider := range s.preAdoptionProviders {
 		if provider == nil || provider.origin != provider || provider.set != s {
 			return zero, ErrInstall
@@ -131,6 +140,9 @@ func (r *OriginalWriterRecoveryAuthorization) inspectOriginal(ctx context.Contex
 		if stopped && actions[id] != "" && !seen[id] {
 			return zero, ErrInstall
 		}
+	}
+	if s.inspectSharedOriginalRecords(out.Records) != nil {
+		return zero, ErrInstall
 	}
 	return out, nil
 }

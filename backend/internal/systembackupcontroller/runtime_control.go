@@ -35,6 +35,7 @@ type RuntimeArmedStopProof interface {
 // it before returning a writer spec. It must never be populated from HTTP input.
 // Each non-runtime registered participant requires its actual drain/health probe.
 type RuntimeControlConfig struct {
+	Shared                 *RuntimeSharedTaskConfig
 	Namespace              string // pinned installation namespace; no discovery expansion
 	Gate                   SQLCaptureGate
 	Keys                   ExecutionRecordKeys
@@ -79,6 +80,8 @@ func NewSQLRuntimeControl(c RuntimeControlConfig) (*SQLRuntimeControl, error) {
 }
 func runtimeWriterID(s b.RuntimeWriterSpec) string {
 	switch s.Kind {
+	case "shared":
+		return sharedRuntimeWriterID(s)
 	case "gateway":
 		return fmt.Sprintf("gateway/%s/%d", s.UID, s.Source.ID)
 	case "pod", "deployment":
@@ -110,6 +113,14 @@ func (o *SQLRuntimeControl) Prepare(ctx context.Context, a d.Authority) ([]b.Run
 	if e != nil {
 		return nil, e
 	}
+	if o.cfg.Shared != nil {
+		return o.prepareSharedTask(ctx, a, sources)
+	}
+	return o.prepareSources(ctx, a, sources)
+}
+
+func (o *SQLRuntimeControl) prepareSources(ctx context.Context, a d.Authority, sources []b.InstanceIdentity) ([]b.RuntimeWriterSpec, error) {
+	var e error
 	specs := make([]b.RuntimeWriterSpec, 0, len(sources))
 	for _, source := range sources {
 		if source.Namespace != "" && source.Namespace != o.cfg.Namespace {

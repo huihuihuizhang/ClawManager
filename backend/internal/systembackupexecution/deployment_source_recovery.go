@@ -204,6 +204,46 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 			out = append(out, participant)
 			continue
 		}
+		if s.Config.RuntimeSources.SharedRuntimeProtocol != "" && !platformHasWriter(platform, writer.ID) {
+			shared, handled, err := s.RuntimeControl.ObserveSharedTaskSourceRecovery(ctx, in, writer)
+			if err != nil {
+				return nil, err
+			}
+			if handled {
+				facts, loadErr := s.RuntimeControl.LoadSharedTaskRecoveryFacts(ctx, in.Authority, shared)
+				if loadErr != nil {
+					return nil, c.ErrSourceRecoveryProofRequired
+				}
+				if facts.Spec != nil {
+					instance, ok := instances[facts.Spec.Source.ID]
+					if !ok || instance != facts.Spec.Source {
+						return nil, c.ErrSourceRecoveryProofRequired
+					}
+					delete(instances, instance.ID)
+					if instance.Workspace != "" {
+						matched := false
+						for _, group := range facts.Definition.Groups {
+							if group.Key != facts.Spec.SharedCohort {
+								continue
+							}
+							pod, err := o.Client.CoreV1().Pods(group.Namespace).Get(ctx, group.Pod.Name, metav1.GetOptions{})
+							if err != nil || string(pod.UID) != group.Pod.UID {
+								return nil, c.ErrSourceRecoveryProofRequired
+							}
+							if x.checkRecoveredInstanceMount(pod, instance, hash(mustSharedRuntimeSpecJSON(*facts.Spec)), metadata) != nil {
+								return nil, c.ErrSourceRecoveryProofRequired
+							}
+							matched = true
+						}
+						if !matched {
+							return nil, c.ErrSourceRecoveryProofRequired
+						}
+					}
+				}
+				out = append(out, shared)
+				continue
+			}
+		}
 		facts := sourceRecoveryPhysicalFacts{Version: "source-recovery-physical-observation.v1"}
 		var cp sourceRecoveryCheckpoint
 		ref, isPlatform := platform[writer.ID]
@@ -596,4 +636,13 @@ func (x *productionSourceBinding) checkRecoveredInstanceMount(pod *corev1.Pod, i
 		return c.ErrSourceRecoveryProofRequired
 	}
 	return nil
+}
+
+func platformHasWriter(platform map[string]PlatformDeployment, id string) bool {
+	_, ok := platform[id]
+	return ok
+}
+func mustSharedRuntimeSpecJSON(value b.RuntimeWriterSpec) []byte {
+	raw, _ := json.Marshal(value)
+	return raw
 }

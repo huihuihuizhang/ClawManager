@@ -275,6 +275,10 @@ func validSourceRecoveryObservation(ob SourceRecoveryObservation) bool {
 	if ob.WriterID == "" || !executionHash.MatchString(ob.OriginalSHA256) {
 		return false
 	}
+	if ob.Scope == sharedTaskRecoveryScope {
+		var summary runtimeSharedRecoverySummary
+		return json.Unmarshal(ob.Facts, &summary) == nil && summary.Version == "source-recovery-shared-runtime-ref.v1" && summary.Original.ID == ob.WriterID && len(ob.References) == 1 && ob.References[0].Kind == "runtime_stop" && ob.References[0].SHA256 == summary.PayloadSHA256 && executionHash.MatchString(summary.DefinitionSHA256) && executionHash.MatchString(summary.PayloadSHA256)
+	}
 	var facts struct {
 		Version, Kind string
 		Runtime       json.RawMessage
@@ -627,6 +631,26 @@ func (p *PreparedSourceRecovery) referencesTx(ctx context.Context, tx *sql.Tx) e
 			}
 			if err != nil || !executionHash.MatchString(ref.SHA256) || ref.SHA256 != digest || recordHash(raw) != digest {
 				return ErrSourceRecoveryProofRequired
+			}
+			if leaf.SourceRecoveryObservation.Scope == sharedTaskRecoveryScope && ref.Kind == "runtime_stop" {
+				var originalSource b.SourceInventory
+				var summary runtimeSharedRecoverySummary
+				if json.Unmarshal(p.desc.Source, &originalSource) != nil || json.Unmarshal(leaf.Facts, &summary) != nil {
+					return ErrSourceRecoveryProofRequired
+				}
+				instances := map[int]b.InstanceIdentity{}
+				for _, source := range originalSource.Instances {
+					instances[source.ID] = source
+				}
+				var facts RuntimeSharedRecoveryFacts
+				if json.Unmarshal(raw, &facts) != nil || recordHash(mustSharedJSON(facts.Definition)) != summary.DefinitionSHA256 {
+					return ErrSourceRecoveryProofRequired
+				}
+				full := leaf
+				full.Facts = raw
+				if validateFullSharedTaskRecoveryLeaf(p.a, summary.Original, full, instances) != nil {
+					return ErrSourceRecoveryProofRequired
+				}
 			}
 		}
 	}

@@ -60,6 +60,9 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 		return nil, err
 	}
 	s.nodes = nodes
+	if err := s.prepareSharedRuntimeLifecycle(ctx); err != nil {
+		return nil, err
+	}
 	for _, g := range s.gateways {
 		if g.prepareNative(ctx) != nil {
 			return nil, ErrInstall
@@ -88,6 +91,9 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 		if g.dispatchStop(ctx) != nil {
 			return nil, ErrInstall
 		}
+	}
+	if err := s.freezeSharedRuntimeLifecycle(ctx); err != nil {
+		return nil, err
 	}
 	// A stopped-Pro prepare may run after genuine management writers have
 	// stopped; its original CURRENT SQL/API/volume baseline was read beforehand.
@@ -134,6 +140,9 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 // Every authority check still uses the SAME original context, never an invented
 // context/grant or an extended deadline.
 func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*originalHeldReadiness, error) {
+	if err := s.checkSharedRuntimeLifecycle(ctx); err != nil {
+		return nil, err
+	}
 	if s.recheckHeldAPI(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -206,6 +215,12 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 		if w.minio != nil {
 			responses = append(responses, w.minio.held.Data())
 		}
+	}
+	for _, shared := range s.sharedLifecycle {
+		if shared.current == nil {
+			return nil, ErrInstall
+		}
+		responses = append(responses, shared.current.Response())
 	}
 	for _, node := range s.nodes {
 		responses = append(responses, node.current.Response())
@@ -408,6 +423,9 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 		if w.minio != nil && (w.minio.held == nil || w.minio.held.Recheck(ctx, owner.operation, s.inventorySHA, "held", now) != nil) {
 			return ErrInstall
 		}
+	}
+	if s.recheckSharedRuntimeHeld(ctx, now) != nil {
+		return ErrInstall
 	}
 	for _, node := range s.nodes {
 		if node.current == nil || node.current.Recheck(ctx, node.request.Binding, "stopped", node.boot, now) != nil {

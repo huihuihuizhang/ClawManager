@@ -19,6 +19,7 @@ import (
 // physical writer paused. Only held authorizes collectors. Its journal is facts,
 // not another task state machine. Recovery uses an independently signed grant.
 type SQLCaptureGate struct {
+	sharedNative       *SQLRuntimeControl
 	Authority          SQLExecutionAuthority
 	Recovery           SQLRecoveryAuthority
 	Records            SQLExecutionRecords
@@ -278,6 +279,15 @@ func (g SQLCaptureGate) CheckRecovery(ctx context.Context, a d.Authority, id str
 	return nil
 }
 func (g SQLCaptureGate) PauseIntent(ctx context.Context, a d.Authority, id string, s d.WriterState) error {
+	if err := g.pauseIntentOriginal(ctx, a, id, s); err != nil {
+		return err
+	}
+	if g.sharedNative != nil {
+		return g.sharedNative.prepareSharedWholeNodes(ctx, a)
+	}
+	return nil
+}
+func (g SQLCaptureGate) pauseIntentOriginal(ctx context.Context, a d.Authority, id string, s d.WriterState) error {
 	if !g.ready() || id == "" || len(id) > 128 || s.UID == "" || s.Generation <= 0 {
 		return d.ErrNotReady
 	}
@@ -433,6 +443,14 @@ func (g SQLCaptureGate) FinalizeRecovery(ctx context.Context, a d.Authority) err
 }
 
 func (g SQLCaptureGate) finishRelease(ctx context.Context, a d.Authority, o app.GateOwnership) error {
+	var sharedRecovery *runtimeSharedHeldFrame
+	if g.sharedNative != nil {
+		var err error
+		sharedRecovery, err = g.sharedNative.sharedRecoveryFrame(ctx, a)
+		if err != nil {
+			return err
+		}
+	}
 	tx, e := g.Authority.DB.BeginTx(ctx, nil)
 	if e != nil {
 		return e
@@ -447,6 +465,11 @@ func (g SQLCaptureGate) finishRelease(ctx context.Context, a d.Authority, o app.
 	}
 	if _, e = recoveryInventoryTx(ctx, tx, a, o.Scope, true); e != nil {
 		return e
+	}
+	if sharedRecovery != nil {
+		if e = sharedRecovery.verifyRecoveryTx(ctx, tx); e != nil {
+			return e
+		}
 	}
 	if e = (app.Gate{DB: g.Authority.DB}).FinishReleaseTx(ctx, tx, o); e != nil {
 		return e
@@ -504,7 +527,7 @@ func (g SQLCaptureGate) Paused(ctx context.Context, a d.Authority, id string, ac
 	// Public claim was checked above; the original business gate repeats the
 	// claim check in its own held transition, after all physical ACKs exist.
 	claim := app.VersionedGateClaim{InstallationID: a.InstallationID, TaskID: a.TaskPublicID, ControllerOwner: a.ClaimOwner, RowVersion: a.ClaimRowVersion}
-	held, e := gate.HoldVersionedCapture(ctx, claim, o)
+	held, e := g.holdSharedNative(ctx, a, claim, o)
 	if e != nil {
 		return e
 	}

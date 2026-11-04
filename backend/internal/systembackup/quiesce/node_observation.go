@@ -56,8 +56,9 @@ type NodeObservationRequest struct {
 	RecoveredGeneration uint64
 	// Complete current API membership is explicit (including a proved empty
 	// collection) in the two scoped reconciliation phases.
-	RecoveryAffectedPods   []PodIdentity `json:",omitempty"`
-	RecoverySnapshotSHA256 string        `json:",omitempty"`
+	RecoveryAffectedPods   []PodIdentity              `json:",omitempty"`
+	RecoverySnapshotSHA256 string                     `json:",omitempty"`
+	SharedFrozenScopes     []SharedRuntimeFrozenScope `json:",omitempty"`
 }
 
 type NodeObservationResponse struct {
@@ -96,6 +97,7 @@ type NodeObserver struct {
 	HostRoot, HostProc               string
 	CRI                              CRICommand
 	key                              []byte
+	sharedFrozen                     *SharedRuntimeFrozenReaderConfig
 }
 
 func NewNodeObserver(node, uid, machine, boot, root, proc string, cri CRICommand, key []byte) (*NodeObserver, error) {
@@ -178,6 +180,9 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 	if !nodeObservationPhaseDataValid(r, o.Node) {
 		return result, ErrNodeObservation
 	}
+	if len(r.SharedFrozenScopes) != 0 && r.Action != "stopped" && r.Action != "recovery-stopped" {
+		return result, ErrNodeObservation
+	}
 	if e := o.hostIdentity(ctx); e != nil {
 		return result, observationFailure("host_visibility")
 	}
@@ -253,8 +258,11 @@ func (o *NodeObserver) Observe(ctx context.Context, r NodeObservationRequest) (N
 			if len(r.RecoveredPods) != 0 || r.RecoveredGeneration != 0 {
 				return result, ErrNodeObservation
 			}
-			result.TasksChecked, result.Files, err = o.stopped(ctx, a)
+			result.TasksChecked, result.Files, err = o.stoppedWithSharedScopes(ctx, a, r.SharedFrozenScopes)
 			result.Facts = []string{"original_cri_containers_exited", "original_process_scopes_absent", "no_observed_writable_source_fd_or_shared_mmap", "source_mount_identities_unchanged"}
+			if len(r.SharedFrozenScopes) != 0 {
+				result.Facts = sharedFrozenObservationFacts()
+			}
 		} else {
 			if r.RecoveredGeneration != b.Generation || !validObservationPods(r.RecoveredPods, o.Node) {
 				return result, ErrNodeObservation

@@ -21,7 +21,8 @@ import (
 // input. Source must match the frozen SQL projection exactly. RestartRef names
 // encrypted original material held by D; no Pod env/Secret enters the plan.
 type RuntimeWriterSpec struct {
-	Source InstanceIdentity
+	SharedCohort string `json:",omitempty"`
+	Source       InstanceIdentity
 	// Runtime is D's independent, versioned binding projection. It never
 	// overwrites nullable location fields in the frozen SQL Source inventory.
 	Runtime                    RuntimeLocator       `json:",omitzero"`

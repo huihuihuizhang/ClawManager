@@ -70,6 +70,9 @@ func validGatewayCapabilities(caps *services.RuntimeBackupCapabilities, uid, nam
 // exact row and raw Source are rechecked under the original authority when
 // custody is saved, and again by every control callback. It never backfills SQL.
 func (o *SQLRuntimeControl) ResolveGatewaySource(ctx context.Context, source b.InstanceIdentity) (b.RuntimeWriterSpec, error) {
+	if o != nil && o.cfg.Shared != nil {
+		return o.resolveSharedSource(ctx, source)
+	}
 	var zero b.RuntimeWriterSpec
 	if o == nil || o.cfg.Gate.Authority.DB == nil || source.Status != "running" || source.Mode != "lite" || source.ID <= 0 || source.UserID <= 0 || source.Generation <= 0 {
 		return zero, ErrExecutionRecord

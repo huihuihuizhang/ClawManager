@@ -143,6 +143,9 @@ func (s *PreparedOriginalWriterSet) finishOriginalRecovery(ctx context.Context, 
 				return ErrOriginalRecoveryNativeProof
 			}
 		}
+		if s.recheckSharedRuntimeRecovered(ctx, now) != nil {
+			return ErrOriginalRecoveryNativeProof
+		}
 		for _, gateway := range s.gateways {
 			if !gateway.stopDispatched {
 				continue

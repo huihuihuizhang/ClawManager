@@ -25,15 +25,15 @@ import urllib.request
 import zlib
 
 REGISTRY_ORIGIN = "http://10.130.14.23:5000"
-REVISION = "52f47fc-core-2408962c473d-sameepoch-r1"
-BUNDLE_SHA = "74257a0908591107fcfde27371e0799a593e02aab0e0d50c75890ccfc1191249"
+REVISION = "shared-native-236d56d85fea0739-20261104"
+BUNDLE_SHA = "9875b8ef307c2b59250ca8659756f224882933639a6506a566357226a04cc9cf"
 PROFILES = {
     "openclaw": {"repository": "openclaw-lite",
         "base": "sha256:37c43ba05ff7fd4f0949f274fc67c3e9825f6d3d0f9124b5fc45dc8366c39cee",
-        "agent_sha": "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1", "agent_size": 9994402},
+        "agent_sha": "bc1ef9abb276594f938cb27374b0ee05c50b6d9da1424b8fe87fb64940bd0158", "agent_size": 10076322},
     "hermes": {"repository": "hermes-lite",
         "base": "sha256:6688834a944161d8dada995cdffd90781533b24ab1e75bb2182c46eaee3fb52c",
-        "agent_sha": "851104a524ff26797c58c6a5a1e0e8172353ecdd31c31a07032a81073a225a42", "agent_size": 10072226},
+        "agent_sha": "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102", "agent_size": 10154146},
 }
 OCI_MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 DOCKER_MANIFEST = "application/vnd.docker.distribution.manifest.v2+json"
@@ -53,7 +53,7 @@ SERVICE_SHA = "f74cd95d355544d3f4bfe8a5d57959652ad1cbf39fa4b70e87a91bf19d88f60a"
 WRAPPER_SHA = "3649b6362025304a52897c042a3d6dc73361ee85929982d496176ce2fb424abb"
 WRAPPER = b'#!/usr/bin/with-contenv bash\nset -euo pipefail\n\n# Fixed OpenClaw shared-runtime service gate v1.\n# Match the original shared-Agent service raw-token activation contract.\n# A failed shared Agent must never reactivate the independent desktop writer.\nif [[ -n "${RUNTIME_AGENT_CONTROL_TOKEN:-}" || -n "${RUNTIME_AGENT_REPORT_TOKEN:-}" ]]; then\n  exec /bin/sleep infinity\nfi\n\nAGENT_USER="abc"\nAGENT_BIN="/usr/local/bin/openclaw-agent"\nAGENT_DATA_DIR="/var/lib/openclaw-agent"\nAGENT_LOG_DIR="/var/log/openclaw-agent"\nAGENT_CONFIG_DIR="/etc/openclaw-agent"\nAGENT_CONFIG_FILE="$AGENT_CONFIG_DIR/config.yaml"\n\nmkdir -p "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\n\nif [ ! -f "$AGENT_CONFIG_FILE" ]; then\n  cp /defaults/openclaw-agent/config.yaml "$AGENT_CONFIG_FILE"\nfi\n\nchown -R "$AGENT_USER:$AGENT_USER" "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\nchmod 0755 "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\nchmod 0644 "$AGENT_CONFIG_FILE"\n\nexec "$AGENT_BIN"\n'
 OPENCLAW_BASE = "sha256:37c43ba05ff7fd4f0949f274fc67c3e9825f6d3d0f9124b5fc45dc8366c39cee"
-OPENCLAW_AGENT_SHA = "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1"
+OPENCLAW_AGENT_SHA = "bc1ef9abb276594f938cb27374b0ee05c50b6d9da1424b8fe87fb64940bd0158"
 COREUTILS_SOURCE = "usr/bin/coreutils"
 SLEEP_TARGET = "usr/lib/cargo/bin/coreutils/sleep"
 SLEEP_SHA = "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
@@ -61,6 +61,8 @@ SLEEP_SIZE = 11352352
 SLEEP_PARENTS = ("usr/lib", "usr/lib/cargo", "usr/lib/cargo/bin", "usr/lib/cargo/bin/coreutils")
 GATE_PATHS = ("etc", "etc/services.d", "etc/services.d/openclaw-agent", SERVICE, "bin", "bin/sleep", "usr/bin", "usr/bin/sleep")
 TRACKED = ("usr", "usr/local", "usr/local/bin", TARGET)
+PRIVATE_AGENT_DIRS = {"openclaw": "var/lib/openclaw-agent", "hermes": "var/lib/clawmanager-agent"}
+PRIVATE_AGENT_PATHS = ("var", "var/lib", *PRIVATE_AGENT_DIRS.values())
 MAX_JSON = 4 << 20
 MAX_BINARY = 32 << 20
 MAX_LAYER = 8 << 30
@@ -174,7 +176,7 @@ def stored_gzip(raw):
     return bytes(output)
 
 
-def agent_layer(agent, service_gate=False):
+def agent_layer(agent, service_gate=False, private_runtime=None):
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
         member = tarfile.TarInfo(TARGET)
@@ -187,6 +189,13 @@ def agent_layer(agent, service_gate=False):
             member.size, member.mode, member.uid, member.gid, member.mtime = len(WRAPPER), 0o755, 0, 0, 0
             member.uname = member.gname = ""
             archive.addfile(member, io.BytesIO(WRAPPER))
+        if private_runtime is not None:
+            require(private_runtime in PRIVATE_AGENT_DIRS, "finite_private_agent_runtime_required")
+            member = tarfile.TarInfo(PRIVATE_AGENT_DIRS[private_runtime])
+            member.type = tarfile.DIRTYPE
+            member.size, member.mode, member.uid, member.gid, member.mtime = 0, 0o700, 0, 0, 0
+            member.uname = member.gname = ""
+            archive.addfile(member)
     plain = output.getvalue()
     return stored_gzip(plain), digest(plain)
 
@@ -334,10 +343,10 @@ class CountedReader:
         return raw
 
 
-def check_layer(registry, descriptor, diff_id, agent=None, service_gate=False, base_state=None):
+def check_layer(registry, descriptor, diff_id, agent=None, service_gate=False, base_state=None, private_runtime=None):
     require(descriptor.get("mediaType") in LAYER_TYPES and isinstance(diff_id, str) and SHA.fullmatch(diff_id), "layer_media_or_diffid")
     whiteouts, entries = [], []
-    tracked = TRACKED + GATE_PATHS + SLEEP_PARENTS + (SLEEP_TARGET, COREUTILS_SOURCE) if service_gate else TRACKED
+    tracked = (TRACKED + GATE_PATHS + SLEEP_PARENTS + (SLEEP_TARGET, COREUTILS_SOURCE) if service_gate else TRACKED) + PRIVATE_AGENT_PATHS
     link_state = dict(base_state or {})
     cargo_count = 0
     with registry.blob(descriptor) as response:
@@ -407,16 +416,22 @@ def check_layer(registry, descriptor, diff_id, agent=None, service_gate=False, b
                         expected = [(TARGET, agent, 0o555)]
                         if service_gate:
                             expected.append((SERVICE, WRAPPER, 0o755))
+                        if private_runtime is not None:
+                            require(private_runtime in PRIVATE_AGENT_DIRS, "finite_private_agent_runtime_required")
+                            expected.append((PRIVATE_AGENT_DIRS[private_runtime], None, 0o700))
                         require(count <= len(expected), "new_layer_members")
                         wanted, content, mode = expected[count-1]
-                        require(name == wanted and member.isfile() and member.mode == mode and
-                                member.uid == member.gid == member.mtime == 0 and member.size == len(content), "new_layer_members")
-                        with archive.extractfile(member) as source:
-                            value = hashlib.sha256()
-                            for chunk in iter(lambda: source.read(CHUNK), b""):
-                                value.update(chunk)
-                        require(value.hexdigest() == hashlib.sha256(content).hexdigest(), "new_layer_content")
-                require(agent is None or count == (2 if service_gate else 1), "new_layer_empty")
+                        require(name == wanted and member.mode == mode and member.uid == member.gid == member.mtime == 0, "new_layer_members")
+                        if content is None:
+                            require(member.isdir() and member.size == 0 and not member.linkname, "new_layer_private_directory")
+                        else:
+                            require(member.isfile() and member.size == len(content), "new_layer_members")
+                            with archive.extractfile(member) as source:
+                                value = hashlib.sha256()
+                                for chunk in iter(lambda: source.read(CHUNK), b""):
+                                    value.update(chunk)
+                            require(value.hexdigest() == hashlib.sha256(content).hexdigest(), "new_layer_content")
+                require(agent is None or count == (2 if service_gate else 1) + (1 if private_runtime is not None else 0), "new_layer_empty")
             for _ in iter(lambda: plain.read(CHUNK), b""):
                 pass
         except (tarfile.TarError, OSError, EOFError, zlib.error):
@@ -426,7 +441,7 @@ def check_layer(registry, descriptor, diff_id, agent=None, service_gate=False, b
     return whiteouts, entries
 
 
-def resolve_base(registry, reference, service_gate=False):
+def resolve_base(registry, reference, service_gate=False, private_runtime=None):
     raw, manifest = registry.manifest(reference)
     root_digest = digest(raw)
     if manifest["mediaType"] in (OCI_INDEX, DOCKER_INDEX):
@@ -468,6 +483,8 @@ def resolve_base(registry, reference, service_gate=False):
         state = {path: value[0] for path, value in state.items()}
     require(all(state.get(item) in (None, "directory") for item in TRACKED[:-1]) and
             state.get(TARGET) in (None, "regular"), "agent_parent_or_target_kind")
+    if private_runtime is not None:
+        require(private_runtime in PRIVATE_AGENT_DIRS and all(state.get(item) in (None, "directory") for item in ("var", "var/lib", PRIVATE_AGENT_DIRS[private_runtime])), "private_agent_parent_or_target_kind")
     return root_digest, digest(raw), manifest, config
 
 
@@ -506,14 +523,14 @@ def validate_service_state(state):
                 "sleep_not_original_executable")
 
 
-def build(registry, runtime, profile, agent, push=False, service_gate=False):
+def build(registry, runtime, profile, agent, push=False, service_gate=False, private_data_dir=False):
     validate_elf(agent, profile)
     if service_gate:
         require(runtime == "openclaw" and registry.repository == "openclaw-lite" and profile["base"] == OPENCLAW_BASE and
-                profile["agent_sha"] == OPENCLAW_AGENT_SHA and profile["agent_size"] == 9994402,
+                profile["agent_sha"] == OPENCLAW_AGENT_SHA and profile["agent_size"] == 10076322,
                 "fixed_openclaw_service_gate_profile")
-    root_digest, base_digest, original_manifest, original_config = resolve_base(registry, profile["base"], service_gate=service_gate)
-    layer, diff_id = agent_layer(agent, service_gate=service_gate)
+    root_digest, base_digest, original_manifest, original_config = resolve_base(registry, profile["base"], service_gate=service_gate, private_runtime=runtime if private_data_dir else None)
+    layer, diff_id = agent_layer(agent, service_gate=service_gate, private_runtime=runtime if private_data_dir else None)
     oci = original_manifest["mediaType"] == OCI_MANIFEST
     layer_descriptor = {"digest": digest(layer), "size": len(layer), "mediaType":
         "application/vnd.oci.image.layer.v1.tar+gzip" if oci else "application/vnd.docker.image.rootfs.diff.tar.gzip"}
@@ -540,7 +557,7 @@ def build(registry, runtime, profile, agent, push=False, service_gate=False):
         # Existing tags are NEVER PUT. Registry V2 lacks portable atomic create-
         # only tags; publish by the exact manifest digest to avoid overwrite races.
         registry.upload(layer_descriptor, layer)
-        check_layer(registry, layer_descriptor, diff_id, agent=agent, service_gate=service_gate)
+        check_layer(registry, layer_descriptor, diff_id, agent=agent, service_gate=service_gate, private_runtime=runtime if private_data_dir else None)
         registry.upload(config_descriptor, config_raw)
         present = registry.manifest(new_digest, missing=True)
         if present is None:
@@ -558,6 +575,7 @@ def build(registry, runtime, profile, agent, push=False, service_gate=False):
     prefix = registry.origin.split("://", 1)[1] + "/" + registry.repository
     return {"schema_version": "a-agent-runtime-registry-layer.v1", "status": "image-pushed" if push else "image-built",
         "openclaw_shared_service_gate": service_gate,
+        "shared_agent_data_directory": {"path": "/" + PRIVATE_AGENT_DIRS[runtime], "uid": 0, "gid": 0, "mode": "0700"} if private_data_dir else None,
         "original_service_sha256": SERVICE_SHA if service_gate else None,
         "service_wrapper_sha256": WRAPPER_SHA if service_gate else None,
         "legacy_state_migrated": False,
@@ -585,6 +603,7 @@ def credentials(path):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--openclaw-shared-service-gate", action="store_true", help="exact37c/f74/63a only; append fixed3649 wrapper; not state migration")
+    parser.add_argument("--shared-private-agent-data-dir", action="store_true", help="append only exact root0700 per-runtime private Agent directory metadata")
     parser.add_argument("--runtime", required=True, choices=sorted(PROFILES))
     parser.add_argument("--bundle", required=True, type=Path)
     parser.add_argument("--credentials-file", type=Path)
@@ -595,7 +614,7 @@ def main(argv=None):
     agent = agent_from_bundle(args.bundle, args.runtime)
     profile = PROFILES[args.runtime]
     registry = Registry(profile["repository"], authorization=credentials(args.credentials_file), seconds=args.max_seconds)
-    print(encode(build(registry, args.runtime, profile, agent, push=args.push, service_gate=args.openclaw_shared_service_gate)).decode("ascii"))
+    print(encode(build(registry, args.runtime, profile, agent, push=args.push, service_gate=args.openclaw_shared_service_gate, private_data_dir=args.shared_private_agent_data_dir)).decode("ascii"))
 
 
 if __name__ == "__main__":

@@ -55,6 +55,9 @@ func (s *PreparedOriginalWriterSet) RestoreOriginalSources(ctx context.Context, 
 	if s.observeOriginalRecoveryStopped(ctx, fence) != nil {
 		return ErrOriginalRecoveryNativeProof
 	}
+	if err := s.restoreSharedRuntimeLifecycle(ctx, fence); err != nil {
+		return err
+	}
 	// Deployment controllers are restored before their workload consumers.
 	// Each restore changes the exact RV, fencing a delayed original stop patch.
 	for _, writer := range s.deployments {
@@ -116,6 +119,9 @@ type originalRecoveredReadiness struct {
 }
 
 func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context, fence *originalWriterRecoveryFence) (*originalRecoveredReadiness, error) {
+	if s.refreshSharedRuntimeRecovered(ctx, fence) != nil {
+		return nil, ErrOriginalRecoveryNativeProof
+	}
 	if fence.check(ctx) != nil || s.recheckVolumePins(ctx) != nil {
 		return nil, ErrInstall
 	}
@@ -529,6 +535,13 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecoveryStopped(ctx context.C
 			request.Action = "recovery-stopped"
 			request.SourcePaths = nil
 			request.Anchor = node.prepare.Response().Anchor
+			if len(s.sharedLifecycle) > 0 {
+				scopes, err := s.sharedRecoveryFrozenScopes(request.Binding.Node)
+				if err != nil {
+					return err
+				}
+				request.SharedFrozenScopes = scopes
+			}
 			proof, err := s.wholePodClient.ObserveVerified(ctx, request)
 			if err != nil || proof.Recheck(ctx, request.Binding, "recovery-stopped", node.boot, time.Now()) != nil {
 				return ErrOriginalRecoveryNativeProof

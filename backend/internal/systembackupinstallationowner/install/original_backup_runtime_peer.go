@@ -187,6 +187,12 @@ func originalRuntimePathOverlap(a, b string) bool {
 // Called only by the REAL original finite backup-consumer source, after its
 // actual captured Pod/container match. No public DTO can construct h/g/proof.
 func classifyOriginalBackupRuntimePeer(ctx context.Context, p *PreparedOriginalAdoptionSQLCut, h *OriginalWriterHold, pod *corev1.Pod, spec *corev1.PodSpec, c *corev1.Container, status *corev1.ContainerStatus, until time.Time) (originalBackupStartupDisposition, error) {
+	if h != nil && h.set != nil && len(h.set.sharedRuntimes) > 0 {
+		value, err := classifyOriginalSharedRuntimePeer(ctx, p, h, pod, spec, c, status, until)
+		if err != errOriginalBackupConsumerUnclassified {
+			return value, err
+		}
+	}
 	zero := originalBackupStartupDisposition{}
 	if !originalEmptyHistoryOwner(ctx, p, h, false) || pod == nil || spec == nil || c == nil || status == nil || h.set == nil || !originalPeerContainerMatches(pod, spec, c, status, false) {
 		return zero, ErrInstall

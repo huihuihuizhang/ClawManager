@@ -38,7 +38,7 @@ type OriginalObserverPKIDefinition struct {
 type OriginalObserverPKINodeSelection struct {
 	Name      string            `json:"name"`
 	UID       string            `json:"uid"`
-	Endpoints map[string]string `json:"endpoints"` // whole, gateway, stopped-pro
+	Endpoints map[string]string `json:"endpoints"` // whole, gateway, stopped-pro, shared
 }
 
 type OriginalObserverPKIEndpoint struct {
@@ -65,7 +65,7 @@ type originalObserverPKIState struct {
 	Endpoints                         []OriginalObserverPKIEndpoint
 }
 
-var originalObserverRoute = map[string]string{"whole": "/observation/v1", "gateway": "/gateway-observation/v1", "stopped-pro": "/stopped-pro-observation/v1"}
+var originalObserverRoute = map[string]string{"whole": "/observation/v1", "gateway": "/gateway-observation/v1", "stopped-pro": "/stopped-pro-observation/v1", "shared": "/shared-runtime-lifecycle/v1"}
 
 func (s *authenticatedOperator) observerPKIAccess(ctx context.Context, resource, namespace, name string) error {
 	r, err := s.installer.kube.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &authorizationv1.SelfSubjectAccessReview{Spec: authorizationv1.SelfSubjectAccessReviewSpec{ResourceAttributes: &authorizationv1.ResourceAttributes{Verb: "get", Resource: resource, Namespace: namespace, Name: name}}}, metav1.CreateOptions{})
@@ -107,7 +107,10 @@ func (s *authenticatedOperator) readObserverPKIState(ctx context.Context, d Orig
 	out.ServiceAccount, out.ServiceAccountUID = sa.Name, string(sa.UID)
 	seenNodes, seenURLs := map[string]bool{}, map[string]bool{}
 	for _, selected := range d.Nodes {
-		if len(validation.IsDNS1123Subdomain(selected.Name)) != 0 || !namePattern.MatchString(selected.UID) || seenNodes[selected.Name] || len(selected.Endpoints) == 0 || len(selected.Endpoints) > 3 || s.observerPKIAccess(ctx, "nodes", "", selected.Name) != nil {
+		if len(validation.IsDNS1123Subdomain(selected.Name)) != 0 || !namePattern.MatchString(selected.UID) || seenNodes[selected.Name] || len(selected.Endpoints) == 0 || len(selected.Endpoints) > 4 || s.observerPKIAccess(ctx, "nodes", "", selected.Name) != nil {
+			return originalObserverPKIState{}, ErrInstall
+		}
+		if selected.Endpoints["shared"] != "" && selected.Endpoints["whole"] == "" {
 			return originalObserverPKIState{}, ErrInstall
 		}
 		seenNodes[selected.Name] = true
@@ -221,6 +224,21 @@ func (i *Installer) GenerateOriginalObserverPKI(ctx context.Context, password []
 		}
 		return checkedAt, nil
 	}
+	// One actual per-node observation key signs both the independent readonly
+	// whole-node anchor and its native shared owner records. Never retain a
+	// second shared key whose lineage the readonly reader cannot validate.
+	for _, ep := range before.Endpoints {
+		if ep.Kind != "shared" {
+			continue
+		}
+		wholePrefix := "node-" + hash([]byte(ep.NodeUID + "\x00whole"))[:24]
+		sharedPrefix := "node-" + hash([]byte(ep.NodeUID + "\x00shared"))[:24]
+		if len(files[wholePrefix+"-anchor.key"]) != 32 {
+			return zero, ErrInstall
+		}
+		clear(files[sharedPrefix+"-anchor.key"])
+		delete(files, sharedPrefix+"-anchor.key")
+	}
 	if _, err = check(); err != nil || writeNewFiles(directory, files) != nil {
 		return zero, ErrInstall
 	}
@@ -244,7 +262,11 @@ func (i *Installer) GenerateOriginalObserverPKI(ctx context.Context, password []
 	for n := range before.Endpoints {
 		ep := &before.Endpoints[n]
 		prefix := "node-" + hash([]byte(ep.NodeUID + "\x00" + ep.Kind))[:24]
-		ep.Certificate, ep.PrivateKey, ep.AnchorKey = pinned(prefix+".pem"), pinned(prefix+"-key.pem"), pinned(prefix+"-anchor.key")
+		anchorPrefix := prefix
+		if ep.Kind == "shared" {
+			anchorPrefix = "node-" + hash([]byte(ep.NodeUID + "\x00whole"))[:24]
+		}
+		ep.Certificate, ep.PrivateKey, ep.AnchorKey = pinned(prefix+".pem"), pinned(prefix+"-key.pem"), pinned(anchorPrefix+"-anchor.key")
 	}
 	return GeneratedOriginalObserverPKI{Version: "original-observer-pki-materials.v1", Status: "materialized_uninstalled_not_task_authority", PlanSHA256: i.planHash, DefinitionSHA256: definitionSHA, Enrollment: pin, AuthorityHead: originalAuthority.cas, Namespace: i.plan.Target.Namespace, NamespaceUID: i.plan.Target.NamespaceUID, ServiceAccount: before.ServiceAccount, ServiceAccountUID: before.ServiceAccountUID, ClientURI: clientURI, CA: pinned("observer-ca.pem"), ClientCertificate: pinned("observer-client.pem"), ClientKey: pinned("observer-client-key.pem"), Endpoints: before.Endpoints, NotBefore: issuedAt.Add(-time.Minute), NotAfter: until, AuthorityCheckedAt: checked}, nil
 }

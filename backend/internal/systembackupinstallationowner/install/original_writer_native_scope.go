@@ -87,6 +87,21 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 			}
 		}
 	}
+	// Shared Agents remain running/frozen and are NEVER cold Pods. Their
+	// actual captured volume roots must nevertheless be pinned by the same
+	// original readonly prepare anchor, before the first source mutation.
+	for _, shared := range s.sharedRuntimes {
+		paths, err := s.actualPodPersistentRoots(ctx, &shared.pod)
+		if err != nil || len(paths) == 0 {
+			return nil, ErrInstall
+		}
+		for _, root := range paths {
+			if addRoot(shared.pod.Spec.NodeName, root) != nil {
+				return nil, ErrInstall
+			}
+		}
+	}
+
 	for _, o := range s.stoppedObservations {
 		for _, v := range o.baseline.Volumes {
 			if addRoot(v.Node, v.SourcePath) != nil {
@@ -278,6 +293,13 @@ func (n *originalWholeNodeScope) observeStopped(ctx context.Context) error {
 	r.Action = "stopped"
 	r.SourcePaths = nil
 	r.Anchor = n.prepare.Response().Anchor
+	if len(n.set.sharedLifecycle) > 0 {
+		scopes, err := n.set.sharedRuntimeFrozenScopes(r.Binding.Node)
+		if err != nil {
+			return err
+		}
+		r.SharedFrozenScopes = scopes
+	}
 	proof, err := n.set.wholePodClient.ObserveVerified(ctx, r)
 	if err != nil || proof.Recheck(ctx, r.Binding, "stopped", n.boot, time.Now()) != nil {
 		return ErrInstall

@@ -21,6 +21,9 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	SharedRuntimeEndpoints                                   map[string]q.ProofEndpoint            `json:",omitempty"`
+	SharedRuntimeAgents                                      []OriginalSharedRuntimeAgentSelection `json:",omitempty"`
+	SharedRuntimeProtocol                                    string                                `json:",omitempty"`
 	RuntimeStartupImages                                     []OriginalRuntimeStartupImageInput    `json:",omitempty"`
 	MinIOReadKeepers                                         []OriginalMinIOReadKeeperSelection    `json:",omitempty"`
 	PreAdoptionVaultDependencies                             []PreAdoptionVaultDependencySelection `json:",omitempty"`
@@ -53,6 +56,10 @@ func (e OriginalWriterSourceFailure) Error() string {
 }
 
 type PreparedOriginalWriterSet struct {
+	sharedLifecycle       []*originalSharedRuntimeLifecycle
+	sharedRuntimes        []*OriginalSharedRuntimeReservation
+	sharedUnbound         []domain.SourceInstance
+	sharedSQL             originalSharedRuntimeSQL
 	runtimeStartups       map[string]*originalRuntimeStartupImage
 	preAdoptionProviders  []*preAdoptionVaultProvider
 	providerDependencies  []*originalVaultProviderDependency
@@ -102,6 +109,9 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		return nil, err
 	}
 	if len(selection.Gateways) > 0 && selection.GatewayRecoveryMode != OriginalGatewaySameIncarnationRecovery {
+		return nil, ErrInstall
+	}
+	if selection.SharedRuntimeProtocol != "" && (selection.SharedRuntimeProtocol != services.RuntimeSharedBackupProtocol || len(selection.Gateways) != 0) {
 		return nil, ErrInstall
 	}
 	p.gatewayRecoveryMode = selection.GatewayRecoveryMode
@@ -214,7 +224,7 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	if err != nil {
 		return nil, ErrInstall
 	}
-	if len(selection.Gateways) > 0 {
+	if len(selection.Gateways) > 0 || selection.SharedRuntimeProtocol != "" {
 		token, e := readBootstrapSourcePin(selection.AgentCredential, 262144)
 		if e != nil {
 			return nil, ErrInstall
@@ -228,9 +238,16 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		if e != nil {
 			return nil, ErrInstall
 		}
-		set.gatewayClient, e = q.NewGatewayNodeObservationClient(selection.GatewayEndpoints, selection.ObserverCA.File, selection.ObserverCertificate.File, selection.ObserverKey.File)
-		if e != nil {
-			return nil, ErrInstall
+		if len(selection.Gateways) > 0 {
+			set.gatewayClient, e = q.NewGatewayNodeObservationClient(selection.GatewayEndpoints, selection.ObserverCA.File, selection.ObserverCertificate.File, selection.ObserverKey.File)
+			if e != nil {
+				return nil, ErrInstall
+			}
+		}
+	}
+	if selection.SharedRuntimeProtocol != "" {
+		if err := set.prepareSharedRuntimeCallbacks(ctx, pods, selected); err != nil {
+			return nil, err
 		}
 	}
 	gateways := map[int]OriginalGatewaySelection{}
@@ -256,7 +273,15 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		runningPro[s.InstanceID] = s
 	}
 	agentUses := map[string]bool{}
+	for _, shared := range set.sharedRuntimes {
+		agentUses[shared.row.Deployment] = true
+	}
 	for _, source := range p.instances {
+		// The shared factory has retained every lite source, including unbound errors.
+		// Physical absence and complete writer proof remain mandatory at acquisition.
+		if selection.SharedRuntimeProtocol != "" && source.Mode == "lite" {
+			continue
+		}
 		plan, e := scope.PlanRuntime(scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS})
 		if e != nil {
 			sourceFailures = append(sourceFailures, OriginalWriterSourceFailure{source.ID, source.Mode, source.Status, "unsupported_actual_runtime"})
@@ -366,6 +391,12 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		return nil, ErrInstall
 	}
 	states := map[string]any{}
+	for _, shared := range set.sharedRuntimes {
+		states[shared.ID()] = shared.capabilities
+	}
+	if set.selection.SharedRuntimeProtocol != "" {
+		states["shared-unbound-original-lite"] = set.sharedUnbound
+	}
 	for _, provider := range set.preAdoptionProviders {
 		states["provider-dependency/"+provider.input.Workload.Deployment] = provider.originalState()
 	}
@@ -424,6 +455,9 @@ func (s *PreparedOriginalWriterSet) recheckPreflight(ctx context.Context) error 
 		if provider.observeNative(ctx) != nil {
 			return ErrInstall
 		}
+	}
+	if len(s.sharedRuntimes) > 0 && s.recheckSharedRuntimeCallbacks(ctx) != nil {
+		return ErrInstall
 	}
 	current, _, _, _, err := s.owner.readKubernetesCensus(ctx)
 	if err != nil || !reflect.DeepEqual(current, s.initial) {

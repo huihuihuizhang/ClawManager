@@ -1,0 +1,674 @@
+{
+  "schema_version": "supervisor-shared-runtime-prerequisites-review.v1",
+  "base_head": "c38b0fcbcccab9abb58357c974f0d0d6db97dc58",
+  "scope": "Accept source prerequisites for actual shared Runtime freezing, independent readonly node observations, original writer recovery and normal HTTPS enable/readback. This is not the final page deployment package or installation acceptance.",
+  "source_maps": [
+    {
+      "path": "docs/evidence/system-backup-shared-native-owner-r2-source-20261104/PUBLIC_SOURCE_PINS.json",
+      "sha256": "53f11171ed90438cc7bc7744e72a9fee9521fd50b9ecd0a31bed134a85489ad3"
+    },
+    {
+      "path": "docs/evidence/system-backup-shared-runtime-release-r1-source-20261104/PUBLIC_SOURCE_PINS.json",
+      "sha256": "12f9002208e938a020a7bbe11ee6150f5d2341b54de32154fae34276483fa595"
+    },
+    {
+      "path": "docs/evidence/system-backup-supervisor-runtime-state-corrections-20261105/source-map.json",
+      "sha256": "a5f784479b0e82c61a1684c29bb8fc52b9d885ad309cd10e9375bf247081a4ad"
+    },
+    {
+      "path": "docs/evidence/system-backup-supervisor-release-tool-roster-20261105/source-map.json",
+      "sha256": "76ee957b3f188cff96a7024afe93a8f52046335f8100aeb91dc94c90573474b5"
+    },
+    {
+      "path": "backend/.d-normal-enable-original-sources-20261104/source-map.json",
+      "sha256": "43e6a74dc452b44893b90d3d9f230ebce2c65309514df210280edc204de2070e"
+    },
+    {
+      "path": "backend/.d-enable-deferred-readiness-20261104/source-map.json",
+      "sha256": "6afce45688c07c4a1d86b43abb74cdef73e37f4eef6cbafdb0b35d6ab4bc9b69"
+    },
+    {
+      "path": "backend/.d-enable-original-operation-bytes-20261104/source-map.json",
+      "sha256": "32a51a2199fd4b36dd1db32bfba030440c4c5a12aeaca62fad1aa1ac92e02f5b"
+    }
+  ],
+  "runtime_dependency_closure": [
+    {
+      "target": "backend/internal/services/runtime_shared_backup_client.go",
+      "frozen_source": "backend/.d-shared-runtime-backup-20261104/source/backend/internal/services/runtime_shared_backup_client.go",
+      "sha256": "acf5f60811a451db1280a2dd4afeff83bf89273310262c3ae5380749929d1096",
+      "reviewed_owner": "supervisor-exact-D-shared-backend-only-intake.v1"
+    },
+    {
+      "target": "backend/internal/services/runtime_shared_backup_client_test.go",
+      "frozen_source": "backend/.d-shared-runtime-backup-20261104/source/backend/internal/services/runtime_shared_backup_client_test.go",
+      "sha256": "0d4efece82977a487fdc6c1421c750c4d40a2f3bf0e70b1324067038f8bc73b5",
+      "reviewed_owner": "supervisor-exact-D-shared-backend-only-intake.v1"
+    },
+    {
+      "target": "backend/internal/services/runtime_shared_backup_json.go",
+      "frozen_source": "backend/.d-shared-runtime-backup-20261104/source/backend/internal/services/runtime_shared_backup_json.go",
+      "sha256": "29538a288e9a4c4943d6e93cea69da59f7286a258e68da1cc66840e464db7dd5",
+      "reviewed_owner": "supervisor-exact-D-shared-backend-only-intake.v1"
+    },
+    {
+      "target": "backend/internal/systembackup/versioned_gate_admission.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackup/versioned_gate_admission.go",
+      "sha256": "79629754830ef45ad6c3999440a17fda0d1429cb1f9f333648995aa523aa0b7b",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackup/publicadapter/writers.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackup/publicadapter/writers.go",
+      "sha256": "bccb566f2a649cf21fd92cbd573180147a29ea1c98cbf6d1c17dbcf97ee7a455",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_client.go",
+      "frozen_source": "backend/.d-shared-runtime-node-client-20261104/source/backend/internal/systembackup/quiesce/shared_runtime_node_client.go",
+      "sha256": "f48abb56a3abb3f2cc965a1d585fe99ea60313a48e11f464c28db28db7e8dd71",
+      "reviewed_owner": "d-shared-node-authenticated-client-and-task-identity-correction.v1"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_client_test.go",
+      "frozen_source": "backend/.d-shared-runtime-node-client-20261104/source/backend/internal/systembackup/quiesce/shared_runtime_node_client_test.go",
+      "sha256": "73bbbcb9c2ff5f7c8babddfa7234cc8326cd9ba45b0bad20aa636d5c23915f72",
+      "reviewed_owner": "d-shared-node-authenticated-client-and-task-identity-correction.v1"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_contract.go",
+      "frozen_source": "backend/.d-shared-runtime-node-contract-20261104/source/backend/internal/systembackup/quiesce/shared_runtime_node_contract.go",
+      "sha256": "f9ce5c66ee213d93244966f0daf352a11213992ac66ff94fb60c813c8137f140",
+      "reviewed_owner": "d-shared-runtime-node-lifecycle-callpoint-contract.v1"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_scope.go",
+      "frozen_source": "backend/.d-shared-runtime-node-scope-20261104/source/backend/internal/systembackup/quiesce/shared_runtime_node_scope.go",
+      "sha256": "da80e3662c8c09c20d0e2cbb565e71c8a59aea02353150003f54f61581e1d930",
+      "reviewed_owner": "d-shared-runtime-readonly-whole-node-scope.v1"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_transcript.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackup/quiesce/shared_runtime_node_transcript.go",
+      "sha256": "83fca591355ea177ac8895cd1a9b5e55a7e62bc3aca906404d051db23afe9a24",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/execution_capture_gate.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/execution_capture_gate.go",
+      "sha256": "9773eb3ba25d2a62e86ccb57820183cecbe0464113ecfc7d2f0acc22c8b6fb9a",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_control.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_control.go",
+      "sha256": "1160c60005a83e60d7f30894908488ec4fa3157150f2b0ae1105fb9785fac554",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_control_build.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_control_build.go",
+      "sha256": "3b25d001f4c5a4682331842069fe33370185db433cb63de2600d2ba9ed60854f",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_locator.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_locator.go",
+      "sha256": "9dff13f3c106762e93179facd19a2afbf36f2415f5ac6bf94dd851172456a4bc",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_gate.go",
+      "frozen_source": "backend/.d-shared-page-runtime-r3-20261104/source/backend/internal/systembackupcontroller/runtime_shared_gate.go",
+      "sha256": "e5c3d10c3a761486b6ddb685e47dfda4457516f955663e357f03701973aaa1af",
+      "reviewed_owner": "d-real-page-shared-runtime-append-only-witness-r3.v1"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_lifecycle.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_shared_lifecycle.go",
+      "sha256": "a5dbc391bbe00e2caca6ee1ddabc162e419c7ee40a21b2dc918c7e6caed0f208",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_recovery.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_shared_recovery.go",
+      "sha256": "39f81ea2009ff1274bd1163390e29bf6bbb95d263992b8daa713c8d28b95c103",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_task.go",
+      "frozen_source": "backend/.d-shared-page-runtime-r3-20261104/source/backend/internal/systembackupcontroller/runtime_shared_task.go",
+      "sha256": "222618249dbaaf9850f56f97d2dd0fdb57dfd78bf49d2f098bae63aad64860af",
+      "reviewed_owner": "d-real-page-shared-runtime-append-only-witness-r3.v1"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_task_test.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_shared_task_test.go",
+      "sha256": "941d1cd56a92bb5dcc16b673597085526e87c5be65a5d2407738563040f7c4a2",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_whole_node.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_shared_whole_node.go",
+      "sha256": "a6ffc93891d5450d5eda5ca33b935f36bb2f07e01635cd5d4477f5a6002fbcbf",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_source_recovery.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_source_recovery.go",
+      "sha256": "cd7d6543ddd3ff50c61235bed737f15c9ad7b4228e69716058370d364fe25b23",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_source_recovery_semantics.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupcontroller/runtime_source_recovery_semantics.go",
+      "sha256": "d71e6906c458f09f52e19464821a5b1c5ab99fd9757c6610ea9b2f5b0e7692d3",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_shared_runtime.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupexecution/deployment_shared_runtime.go",
+      "sha256": "c26860da97ea7361793897fc3f256d5f3ed1b519240da4dec8897528d7d9a74b",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_source_recovery.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-page-merge-r1r2/backend/internal/systembackupexecution/deployment_source_recovery.go",
+      "sha256": "c0017de96f21371c1da739babd0d8c8a83288fd53a1634cae327c0bdd89d3da3",
+      "reviewed_owner": "Root narrow merge of D shared page r1+r2"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_backup_runtime_peer.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_backup_runtime_peer.go",
+      "sha256": "607192a05f839369f38b84f49f55eedb9ca10718a3d9090038decc80ef29c02b",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_host_materials.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/ecdf66a04a6f/backend/internal/systembackupinstallationowner/install/original_observer_host_materials.go",
+      "sha256": "cc854d945a17713598680aa1beea61e381229da19b82ff53f832b66ac1f9655f",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_pki.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/ecdf66a04a6f/backend/internal/systembackupinstallationowner/install/original_observer_pki.go",
+      "sha256": "a5464e97936e4f97780ea07bc8d64ce4a4bd55e8db2fda4b6087f6744c683ea1",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/ecdf66a04a6f/backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host.go",
+      "sha256": "cafed0edb43df1fdfb85240c76e60e4d03c0fc0aa1a23a48fbf0f6cae594ace9",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host_test.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/ecdf66a04a6f/backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host_test.go",
+      "sha256": "ab3619d86a0b81638f122c5776a9244ebe2eb560651b0d535e4cfbbc4e645d65",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_recovery_facts.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_recovery_facts.go",
+      "sha256": "f3ec26c07cf1f508bee8e31451b745e2e510ddf3bfe9dd311d0d67201d2ed1cf",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/18415d8bdf9a/backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials.go",
+      "sha256": "87d888f89a55a6919982e4e22f164070d30337c376c69b08d96f4b3be4a43dd9",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials_test.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-native-install-r1/18415d8bdf9a/backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials_test.go",
+      "sha256": "bb02120a86c44a5abd0bd99fc6aeef1cf58e26453a4a4c761ac40244c3b0f26e",
+      "reviewed_owner": "root-c1-late-merge-r1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_recovery_hooks.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_shared_recovery_hooks.go",
+      "sha256": "a06d0d0d83bfc13ade054f2828f3663c701ed4ef301759956cf0c5db9ad5db1c",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_callbacks.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-dependencies-r1/backend/internal/systembackupinstallationowner/install/original_shared_runtime_callbacks.go",
+      "sha256": "12e919847b57f2296b085959db702ef2603c8de9f7786a8db6315754370223a3",
+      "reviewed_owner": "Root shared factory dependency chain narrow merge"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_lifecycle.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_shared_runtime_lifecycle.go",
+      "sha256": "1fa84f7cee3f9d87bb80ae3da9bd711f4451bb9451d21e4e7f487850606a18e5",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_peer.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_shared_runtime_peer.go",
+      "sha256": "e8be9d425a8f10dafa6fd9d7f7cd324cce89cda912e87029ea8380531af276aa",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_selection_author.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-dependencies-r1/backend/internal/systembackupinstallationowner/install/original_shared_selection_author.go",
+      "sha256": "d48ae5497ec5470c9401e04e953f44bb8e6a0909ba28c5065cf40c484abbc84f",
+      "reviewed_owner": "Root shared factory dependency chain narrow merge"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_hold.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_hold.go",
+      "sha256": "bf65338e3ef17427061091c10295a4fdeaf6b84e72d3e46703e8ec1755e4b844",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_native_scope.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_native_scope.go",
+      "sha256": "ae7ff9d8165c45f7f92fad76ce02c2c5f5c1f420c7c87c42c40bfc873756b042",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_partial_restore.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_partial_restore.go",
+      "sha256": "77e38aa7821baab0dddcc3a248e3126d93ee2b585ee76f67360f887ba2f74219",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_recovery_gate.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_recovery_gate.go",
+      "sha256": "1c49570c19fa64631d9b6181d3c87dd5ce74d81249ea41b1ab76921a5785751a",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_restore.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_restore.go",
+      "sha256": "2a593976f766e988278bf04a22dbd9a859ac6e592a5a8f40b7bdfbe504b269b1",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_author.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-dependencies-r1/backend/internal/systembackupinstallationowner/install/original_writer_selection_author.go",
+      "sha256": "1610dff9769fc1df426119380153f81831a47e3f2fe6530e6296a8bbf08c47a3",
+      "reviewed_owner": "Root shared factory dependency chain narrow merge"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_inputs.go",
+      "frozen_source": ".tmp-supervisor-d4-combination-20261104/inputs/shared-factory-merge-r1/backend/internal/systembackupinstallationowner/install/original_writer_selection_inputs.go",
+      "sha256": "2f67e5baf4c28432521fcd40b99ea7955fcd4f0913e3ab4e334e3805e73b7cab",
+      "reviewed_owner": "Root narrow merge D original shared factory13"
+    }
+  ],
+  "sources": [
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_native_state_linux.go",
+      "sha256": "3d8aa4f567ee7442f3ac9524b90775ef78c6b04bcbebd24d683f8968befe816b"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_native_state_linux_test.go",
+      "sha256": "f10591807b8bde25bcc2436fe606cb0ce8b1c8626d8f734e402d6966a1d97960"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_config.go",
+      "sha256": "f53e5a54ef01b1d8c57d3dd3e651f684dca101a74157aea8cb7fa810be98e325"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_linux.go",
+      "sha256": "71ce5fe7ba32e93bf19620d3bc97bc336aa3f9185f794eafcd110cc02965e675"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_linux_test.go",
+      "sha256": "d6de5a849d7e330159d99501abfe1b600f7eee38c5240391b8a19dcc4ec0d21d"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_transport_linux.go",
+      "sha256": "7ac9a528ef8cb3b659cd9f004bf420eacbbc364f0346c01de7f5d027919d5e15"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_transport_linux_test.go",
+      "sha256": "7eb72a28120051ac5d9da757a73d1c3f1261d9e423546ea2c2a1e75d074395be"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_owner_transport_other.go",
+      "sha256": "65a0a5db46fb1abe9b249a36fa33b180e455b24ca31faf4479db6332154e8710"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_frozen_reader_linux.go",
+      "sha256": "209f670a034c6acfe9d241c42171b5e8eae3995df366f51d4892ccd0b7e6be45"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_frozen_reader_linux_test.go",
+      "sha256": "cd4315e5d0f0a9ad06e385e1a3313b5aff1057ea7d14cbf832c8853efd352c48"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/node_observation.go",
+      "sha256": "95582ad271fee17518b86aebf4f7889931c15d65f9b74d5f496968c2ae1417bd"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/node_observation_linux.go",
+      "sha256": "67ac84fdc98d74330dde148e74a3d1b65122b80dd5c504d6248ce25e5ea33a5d"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/node_observation_transport.go",
+      "sha256": "5a27cfba609dc218a78e52d9f231f53776072aa184c675150942904b3388de19"
+    },
+    {
+      "target": "backend/cmd/backup-node-observer/main.go",
+      "sha256": "45790a9a6ee46dc7ed332e201eb08f93a9b32a18720e8290efea9b933916fe0a"
+    },
+    {
+      "target": "backend/cmd/backup-shared-runtime-node-owner/main.go",
+      "sha256": "7096bee05495419a72c8b04facab35698508dfc04f0dfc3920d588347a6b1286"
+    },
+    {
+      "target": "scripts/system-backup-agent-runtime-layer/agent_runtime_layer.py",
+      "sha256": "f08a23b661afacff2634c151ba87f266a8697da8944a19e6c80a8f0f6a29100a"
+    },
+    {
+      "target": "scripts/system-backup-agent-runtime-layer/test_shared_private_directory_layer.py",
+      "sha256": "84483dbd11e1ee141b629aab5754e87ba99dae2a0bedb86c63564f0d8062dab4"
+    },
+    {
+      "target": "scripts/system-backup-business-runtime.py",
+      "sha256": "7855c2e191b260bcaafb784e2ba3a4d78c181874b00b46dac9f4c7903ddce623"
+    },
+    {
+      "target": "scripts/system-backup-business-runtime.test.py",
+      "sha256": "870e5ad7a64a87ed6f7531947b836219a475295f203c7c5be0ccd4a475f8deca"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_image_inputs.go",
+      "sha256": "063dc3543ef84a2d512b14dd16b861a9a74b8e2d73e56f631787488e947c7898"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_runtime_release_inputs_test.go",
+      "sha256": "64beb10708a6f502201e762bfd08c588f98c0d79e330ad0d1e1088c80fb1a715"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "sha256": "0305579d1e21f527c8bfdab86ee7589b5e13f3c7d15bf3f440cd6eacb0e93859"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_recovery_journal.go",
+      "sha256": "19cf8f08a4c32961b34cde911b40d404debb4bb4feca02024a3739f5465b6ccb"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_set.go",
+      "sha256": "836d797a2ba9c08f83637173c4c7c1a2a75a4598984c5a0fbc17d3c1829c1eed"
+    },
+    {
+      "target": "backend/internal/systembackup/publicadapter/runtime_profile_test.go",
+      "sha256": "5ec0c2b9898aa21b0f53923960c1db97702d1efb1e850cd725615ab6315c204f"
+    },
+    {
+      "target": "scripts/system-backup-supervisor-offline-package.py",
+      "sha256": "9c31373cc1fa68737a46e6abf14cc23b7a20ec1322e9823e5324d39b86a401a0"
+    },
+    {
+      "target": "scripts/system-backup-d-enable.py",
+      "sha256": "beb0ebd7e3da938a367736f8b1dc26d24874b203e789e2d9418693638d3e0572"
+    },
+    {
+      "target": "scripts/system-backup-d-enable.test.py",
+      "sha256": "96f44ae3d4f7cebe0f404cdbe6b2b8ec43933fb2f85404f1ff906322675578e5"
+    },
+    {
+      "target": "scripts/system-backup-d-enable-readback.py",
+      "sha256": "1976ad6da8eaf883b49393dd3910ee9666db467cc37153470a5fa9872870237c"
+    },
+    {
+      "target": "scripts/system-backup-d-enable-readback.test.py",
+      "sha256": "c3f8f488eb190b1cb97f71faf08332dbf0071fb473f80a417a509c0e2b394f2c"
+    },
+    {
+      "target": "scripts/system-backup-d-enable-resolve.py",
+      "sha256": "a06c067dad55e68dac20f8e90bc04282d9a527ce615fc13fdf14ae31b072a5e0"
+    },
+    {
+      "target": "scripts/system-backup-d-enable-resolve.test.py",
+      "sha256": "e7d94369a33eda5271781ad1d975b452e95f06e4b2e665bd317e69b78308ed90"
+    },
+    {
+      "target": "backend/internal/services/runtime_shared_backup_client.go",
+      "sha256": "acf5f60811a451db1280a2dd4afeff83bf89273310262c3ae5380749929d1096"
+    },
+    {
+      "target": "backend/internal/services/runtime_shared_backup_client_test.go",
+      "sha256": "0d4efece82977a487fdc6c1421c750c4d40a2f3bf0e70b1324067038f8bc73b5"
+    },
+    {
+      "target": "backend/internal/services/runtime_shared_backup_json.go",
+      "sha256": "29538a288e9a4c4943d6e93cea69da59f7286a258e68da1cc66840e464db7dd5"
+    },
+    {
+      "target": "backend/internal/systembackup/versioned_gate_admission.go",
+      "sha256": "79629754830ef45ad6c3999440a17fda0d1429cb1f9f333648995aa523aa0b7b"
+    },
+    {
+      "target": "backend/internal/systembackup/publicadapter/writers.go",
+      "sha256": "bccb566f2a649cf21fd92cbd573180147a29ea1c98cbf6d1c17dbcf97ee7a455"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_client.go",
+      "sha256": "f48abb56a3abb3f2cc965a1d585fe99ea60313a48e11f464c28db28db7e8dd71"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_client_test.go",
+      "sha256": "73bbbcb9c2ff5f7c8babddfa7234cc8326cd9ba45b0bad20aa636d5c23915f72"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_contract.go",
+      "sha256": "f9ce5c66ee213d93244966f0daf352a11213992ac66ff94fb60c813c8137f140"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_scope.go",
+      "sha256": "da80e3662c8c09c20d0e2cbb565e71c8a59aea02353150003f54f61581e1d930"
+    },
+    {
+      "target": "backend/internal/systembackup/quiesce/shared_runtime_node_transcript.go",
+      "sha256": "83fca591355ea177ac8895cd1a9b5e55a7e62bc3aca906404d051db23afe9a24"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/execution_capture_gate.go",
+      "sha256": "9773eb3ba25d2a62e86ccb57820183cecbe0464113ecfc7d2f0acc22c8b6fb9a"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_control.go",
+      "sha256": "1160c60005a83e60d7f30894908488ec4fa3157150f2b0ae1105fb9785fac554"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_control_build.go",
+      "sha256": "3b25d001f4c5a4682331842069fe33370185db433cb63de2600d2ba9ed60854f"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_locator.go",
+      "sha256": "9dff13f3c106762e93179facd19a2afbf36f2415f5ac6bf94dd851172456a4bc"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_gate.go",
+      "sha256": "e5c3d10c3a761486b6ddb685e47dfda4457516f955663e357f03701973aaa1af"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_lifecycle.go",
+      "sha256": "a5dbc391bbe00e2caca6ee1ddabc162e419c7ee40a21b2dc918c7e6caed0f208"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_recovery.go",
+      "sha256": "39f81ea2009ff1274bd1163390e29bf6bbb95d263992b8daa713c8d28b95c103"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_task.go",
+      "sha256": "222618249dbaaf9850f56f97d2dd0fdb57dfd78bf49d2f098bae63aad64860af"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_task_test.go",
+      "sha256": "941d1cd56a92bb5dcc16b673597085526e87c5be65a5d2407738563040f7c4a2"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_shared_whole_node.go",
+      "sha256": "a6ffc93891d5450d5eda5ca33b935f36bb2f07e01635cd5d4477f5a6002fbcbf"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_source_recovery.go",
+      "sha256": "cd7d6543ddd3ff50c61235bed737f15c9ad7b4228e69716058370d364fe25b23"
+    },
+    {
+      "target": "backend/internal/systembackupcontroller/runtime_source_recovery_semantics.go",
+      "sha256": "d71e6906c458f09f52e19464821a5b1c5ab99fd9757c6610ea9b2f5b0e7692d3"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_shared_runtime.go",
+      "sha256": "c26860da97ea7361793897fc3f256d5f3ed1b519240da4dec8897528d7d9a74b"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_source_recovery.go",
+      "sha256": "c0017de96f21371c1da739babd0d8c8a83288fd53a1634cae327c0bdd89d3da3"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_backup_runtime_peer.go",
+      "sha256": "607192a05f839369f38b84f49f55eedb9ca10718a3d9090038decc80ef29c02b"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_host_materials.go",
+      "sha256": "cc854d945a17713598680aa1beea61e381229da19b82ff53f832b66ac1f9655f"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_pki.go",
+      "sha256": "a5464e97936e4f97780ea07bc8d64ce4a4bd55e8db2fda4b6087f6744c683ea1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host.go",
+      "sha256": "cafed0edb43df1fdfb85240c76e60e4d03c0fc0aa1a23a48fbf0f6cae594ace9"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_observer_shared_runtime_host_test.go",
+      "sha256": "ab3619d86a0b81638f122c5776a9244ebe2eb560651b0d535e4cfbbc4e645d65"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_recovery_facts.go",
+      "sha256": "f3ec26c07cf1f508bee8e31451b745e2e510ddf3bfe9dd311d0d67201d2ed1cf"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials.go",
+      "sha256": "87d888f89a55a6919982e4e22f164070d30337c376c69b08d96f4b3be4a43dd9"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_agent_tls_materials_test.go",
+      "sha256": "bb02120a86c44a5abd0bd99fc6aeef1cf58e26453a4a4c761ac40244c3b0f26e"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_recovery_hooks.go",
+      "sha256": "a06d0d0d83bfc13ade054f2828f3663c701ed4ef301759956cf0c5db9ad5db1c"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_callbacks.go",
+      "sha256": "12e919847b57f2296b085959db702ef2603c8de9f7786a8db6315754370223a3"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_lifecycle.go",
+      "sha256": "1fa84f7cee3f9d87bb80ae3da9bd711f4451bb9451d21e4e7f487850606a18e5"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_peer.go",
+      "sha256": "e8be9d425a8f10dafa6fd9d7f7cd324cce89cda912e87029ea8380531af276aa"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_selection_author.go",
+      "sha256": "d48ae5497ec5470c9401e04e953f44bb8e6a0909ba28c5065cf40c484abbc84f"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_hold.go",
+      "sha256": "bf65338e3ef17427061091c10295a4fdeaf6b84e72d3e46703e8ec1755e4b844"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_native_scope.go",
+      "sha256": "ae7ff9d8165c45f7f92fad76ce02c2c5f5c1f420c7c87c42c40bfc873756b042"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_partial_restore.go",
+      "sha256": "77e38aa7821baab0dddcc3a248e3126d93ee2b585ee76f67360f887ba2f74219"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_recovery_gate.go",
+      "sha256": "1c49570c19fa64631d9b6181d3c87dd5ce74d81249ea41b1ab76921a5785751a"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_restore.go",
+      "sha256": "2a593976f766e988278bf04a22dbd9a859ac6e592a5a8f40b7bdfbe504b269b1"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_author.go",
+      "sha256": "1610dff9769fc1df426119380153f81831a47e3f2fe6530e6296a8bbf08c47a3"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_inputs.go",
+      "sha256": "2f67e5baf4c28432521fcd40b99ea7955fcd4f0913e3ab4e334e3805e73b7cab"
+    }
+  ],
+  "clean_head_regressions": [
+    {
+      "log": "clean-stable-runtime-windows-r2.jsonl",
+      "sha256": "764af45d423be183a31bf44eb2d2ebe45f3693e1494c284bfc3ffc111a88c7ee",
+      "roots_passed": 34,
+      "subtests_passed": 73,
+      "packages_passed": 6,
+      "packages_without_test_files": [
+        "clawreef/cmd/backup-shared-runtime-node-owner"
+      ],
+      "test_skips": 0,
+      "scope": "Selected complete original writer/state/runtime inputs and shared node/task/transport regressions on a clean HEAD source closure, not every repository test."
+    },
+    {
+      "log": "clean-stable-shared-task-node-windows.jsonl",
+      "sha256": "f1797bae0edd2666e17581637c93e9d1508db15b58ee8d1cc069087aa159cefc",
+      "roots_passed": 5,
+      "subtests_passed": 4,
+      "packages_passed": 2,
+      "packages_without_test_files": [],
+      "test_skips": 0,
+      "scope": "Selected complete original writer/state/runtime inputs and shared node/task/transport regressions on a clean HEAD source closure, not every repository test."
+    }
+  ],
+  "linux_native": {
+    "scope": "Actual native primitives on the clean runtime source closure in this isolated container cgroup namespace only; not complete deployed Agent/CRI/source hold or page acceptance.",
+    "owner": "c30380520fd0405fa72eff080fa8bcf6",
+    "binary_sha256": "4481135ad65de1d1e96df8420d654f6b6de20505bf37618314dfbde2d4dc3347",
+    "exit": 0,
+    "log_sha256": "5fb8ba2151026af521cf3b7889597c5abcdb7341903aff70fe5134bc0948828d",
+    "roots_passed": 19,
+    "subtests_passed": 7,
+    "skips": 0,
+    "ended_test_elf_removed": true
+  },
+  "production_linux_binaries": {
+    "backup-node-observer": {
+      "sha256": "59d021e4994b9c34846e1f64bcf11acc624afe2af6688ff133170a61d0ebc286",
+      "bytes": 45129854,
+      "scope": "Actual clean-source Linux/amd64 production build retained for delivery; full actual Agent+CRI workflow not yet qualified."
+    },
+    "backup-shared-runtime-node-owner": {
+      "sha256": "0098894d6ec75f5de52e1ddb8cd2524e62f553f00bab3696930baed007e227a7",
+      "bytes": 45211774,
+      "scope": "Actual clean-source Linux/amd64 production build retained for delivery; full actual Agent+CRI workflow not yet qualified."
+    }
+  },
+  "normal_https_client_regressions": {
+    "enable_linux_roots": 9,
+    "readback_windows_roots": 13,
+    "resolve_linux_roots": 8,
+    "scope": "Client orchestration and actual local TLS checks only; no field login or config mutation."
+  },
+  "preparation_corrections": [
+    "Initial clean subset omitted the required original shared client/contract/factory dependencies; the exact current reviewed dependency closure was added before acceptance.",
+    "Native runner initially omitted the explicit private cgroup switch and used /tmp, whose writable ancestor correctly fails original fixed private store checks. Corrected only fixture scope/environment; production guards unchanged. Ended failed and successful test ELFs were removed."
+  ],
+  "not_proven": [
+    "Full deployed production Agent+CRI+native owner/readonly source workflow.",
+    "Complete same-task capture, original source recovery, formal publication and independent artifact readback.",
+    "NFS migration r5 with actual field client census/physical recovery.",
+    "Final C1 all20+protected nonempty history+17/adoption+config consumption/head1/enable installation call chain."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "test_build_products_cleaned": true,
+  "pending_delivery_production_tools_retained": true
+}

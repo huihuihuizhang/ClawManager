@@ -39,6 +39,10 @@ func run(ctx context.Context, args []string) error {
 	key := f.String("tls-key", "", "node TLS private key")
 	controller := f.String("controller-uri", "", "exact authenticated controller SPIFFE URI")
 	anchorKey := f.String("anchor-key", "", "root-only node-local 32-byte random observation key file")
+	sharedDirectory := f.String("shared-owner-directory", "", "existing native owner ledger, read-only mount")
+	sharedCgroup := f.String("shared-cgroup-mount", "/sys/fs/cgroup", "native cgroup-v2 read-only mount")
+	sharedOpenclaw := f.String("shared-openclaw-agent-elf-sha256", "", "release-approved running Agent ELF")
+	sharedHermes := f.String("shared-hermes-agent-elf-sha256", "", "release-approved running Agent ELF")
 	if f.Parse(args) != nil || f.NArg() != 0 || runtime.GOOS != "linux" || *anchorKey == "" || *ca == "" || *cert == "" || *key == "" || *controller == "" {
 		return quiesce.ErrNodeObservation
 	}
@@ -52,6 +56,18 @@ func run(ctx context.Context, args []string) error {
 	}
 	if e != nil {
 		return e
+	}
+	if *sharedDirectory != "" || *sharedOpenclaw != "" || *sharedHermes != "" {
+		if *sharedDirectory == "" || *sharedOpenclaw == "" || *sharedHermes == "" {
+			return quiesce.ErrNodeObservation
+		}
+		observer, e = quiesce.NewSharedRuntimeFrozenObserver(observer, quiesce.SharedRuntimeFrozenReaderConfig{Directory: *sharedDirectory, CgroupMount: *sharedCgroup, Releases: map[string]quiesce.SharedRuntimeAgentRelease{
+			"openclaw": {ExecutableSHA256: *sharedOpenclaw, DataDir: "/var/lib/openclaw-agent"},
+			"hermes":   {ExecutableSHA256: *sharedHermes, DataDir: "/var/lib/clawmanager-agent"},
+		}})
+		if e != nil {
+			return e
+		}
 	}
 	listener, e := net.Listen("tcp", *listen)
 	if e != nil {

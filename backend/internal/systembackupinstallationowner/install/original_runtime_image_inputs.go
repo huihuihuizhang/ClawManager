@@ -45,6 +45,7 @@ const originalHermesSelectedManifest = "5fe79507129002540c2fbc25fc49bbd10326cb65
 const originalHermesBaseConfig = "4a36a2cda56406be6c4183eca5c58ac91dcceb36cb3342b7520b315c564a6c92"
 const originalOpenclawGatedServiceSHA = "3649b6362025304a52897c042a3d6dc73361ee85929982d496176ce2fb424abb"
 const originalOpenclawGatedManifest = "749f578ff4799789aa301e2a11e1b5bf93639121031172231c823ef5c82646e7"
+const originalOpenclawSharedNativeTLSManifest = "5d5f735bc8c0155d51841b574c98c6c02ca399085add0e3dc98b3d7e0ead3140"
 
 func originalRuntimeJSON(pin BootstrapSourceFilePin) (map[string]any, []byte, error) {
 	raw, e := readBootstrapSourcePin(pin, 262144)
@@ -112,13 +113,13 @@ func originalRuntimeDescriptor(v any) (map[string]any, string, int64, error) {
 }
 func originalRuntimeAgentSHA(kind, value string, size int64) bool {
 	// Exact independently audited per-runtime ELF identities in the same
-	// accepted74257a bundle. Neither runtime may borrow the other's executable.
+	// accepted legacy and shared-native TLS bundles. Neither runtime may borrow the other's executable.
 	// Identity remains comparison DATA, not current mode/cap/native authority.
 	switch kind {
 	case "openclaw":
-		return value == "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1" && size == 9994402
+		return value == "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1" && size == 9994402 || value == "bc1ef9abb276594f938cb27374b0ee05c50b6d9da1424b8fe87fb64940bd0158" && size == 10076322
 	case "hermes":
-		return value == "851104a524ff26797c58c6a5a1e0e8172353ecdd31c31a07032a81073a225a42" && size == 10072226
+		return value == "851104a524ff26797c58c6a5a1e0e8172353ecdd31c31a07032a81073a225a42" && size == 10072226 || value == "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102" && size == 10154146
 	default:
 		return false
 	}
@@ -158,6 +159,11 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 	body := io.TeeReader(limited, plain)
 	archive := tar.NewReader(body)
 	seen := map[string]bool{}
+	privateDirectorySeen := false
+	privateDirectory := "var/lib/openclaw-agent"
+	if kind == "hermes" {
+		privateDirectory = "var/lib/clawmanager-agent"
+	}
 	for {
 		if ctx.Err() != nil {
 			return "", "", "", ErrInstall
@@ -165,6 +171,13 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 		h, e := archive.Next()
 		if e == io.EOF {
 			break
+		}
+		if e == nil && h != nil && h.Typeflag == tar.TypeDir {
+			if privateDirectorySeen || h.Name != privateDirectory && h.Name != privateDirectory+"/" || h.Format != tar.FormatUSTAR || len(h.PAXRecords) != 0 || h.Linkname != "" || h.Size != 0 || h.Mode != 0700 || h.Uid != 0 || h.Gid != 0 || h.ModTime.Unix() != 0 || h.Uname != "" || h.Gname != "" {
+				return "", "", "", ErrInstall
+			}
+			privateDirectorySeen = true
+			continue
 		}
 		if e != nil || h == nil || h.Typeflag != tar.TypeReg || h.Format != tar.FormatUSTAR || len(h.PAXRecords) != 0 || h.Linkname != "" || h.Uid != 0 || h.Gid != 0 || h.Size < 1 || h.Size > 64<<20 || seen[h.Name] {
 			return "", "", "", ErrInstall
@@ -266,7 +279,7 @@ func readOriginalRuntimeImage(ctx context.Context, in OriginalRuntimeStartupImag
 	if hash(baseRaw) != in.BaseManifest.SHA256 || hash(baseConfigRaw) != in.BaseConfig.SHA256 || hash(nextRaw) != in.Manifest.SHA256 || hash(configRaw) != in.Config.SHA256 {
 		return nil, ErrInstall
 	}
-	if kind == "openclaw" && in.Manifest.SHA256 != originalOpenclawGatedManifest {
+	if kind == "openclaw" && in.Manifest.SHA256 != originalOpenclawGatedManifest && in.Manifest.SHA256 != originalOpenclawSharedNativeTLSManifest {
 		return nil, ErrInstall
 	}
 	_, baseDigest, baseSize, e := originalRuntimeDescriptor(base["config"])

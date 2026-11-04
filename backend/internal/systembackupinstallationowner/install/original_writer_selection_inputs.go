@@ -101,6 +101,7 @@ func (p *OriginalWriterMaintenance) originalSelectionObservers(ctx context.Conte
 		}
 	}
 	s.GatewayEndpoints = map[string]q.ProofEndpoint{}
+	s.SharedRuntimeEndpoints = map[string]q.ProofEndpoint{}
 	s.WholePodEndpoints = map[string]q.ProofEndpoint{}
 	s.StoppedProEndpoints = map[string]q.ProofEndpoint{}
 	for n, current := range actual.Endpoints {
@@ -115,6 +116,8 @@ func (p *OriginalWriterMaintenance) originalSelectionObservers(ctx context.Conte
 		switch current.Kind {
 		case "whole":
 			target = s.WholePodEndpoints
+		case "shared":
+			target = s.SharedRuntimeEndpoints
 		case "gateway":
 			target = s.GatewayEndpoints
 		case "stopped-pro":

@@ -32,20 +32,25 @@ type GatewayOriginalReference struct {
 	KeyRef       string             `json:"key_ref"`
 }
 type RuntimeSourceConfig struct {
-	StoppedProObserver       *FormalStoppedProObserverConfig `json:"stopped_pro_observer,omitempty"`
-	CurrentStoppedProLayouts []CurrentStoppedProLayout       `json:"current_stopped_pro_layouts,omitempty"`
-	Supported                []b.AgentKind                   `json:"supported"`
-	Namespaces               []string                        `json:"namespaces"`
-	AgentTokenFile           string                          `json:"agent_token_file,omitempty"`
-	AgentCAFile              string                          `json:"agent_ca_file,omitempty"`
-	AgentCASHA256            string                          `json:"agent_ca_sha256,omitempty"`
-	Originals                []GatewayOriginalReference      `json:"gateway_originals"`
-	LeaseParticipants        []string                        `json:"lease_participants"`
-	Deployments              []PlatformDeployment            `json:"deployments"`
-	WorkspaceRoot            string                          `json:"workspace_root"`
+	SharedRuntimeProtocol    string                             `json:"shared_runtime_protocol,omitempty"`
+	SharedObserver           *FormalSharedRuntimeObserverConfig `json:"shared_runtime_observer,omitempty"`
+	StoppedProObserver       *FormalStoppedProObserverConfig    `json:"stopped_pro_observer,omitempty"`
+	CurrentStoppedProLayouts []CurrentStoppedProLayout          `json:"current_stopped_pro_layouts,omitempty"`
+	Supported                []b.AgentKind                      `json:"supported"`
+	Namespaces               []string                           `json:"namespaces"`
+	AgentTokenFile           string                             `json:"agent_token_file,omitempty"`
+	AgentCAFile              string                             `json:"agent_ca_file,omitempty"`
+	AgentCASHA256            string                             `json:"agent_ca_sha256,omitempty"`
+	Originals                []GatewayOriginalReference         `json:"gateway_originals"`
+	LeaseParticipants        []string                           `json:"lease_participants"`
+	Deployments              []PlatformDeployment               `json:"deployments"`
+	WorkspaceRoot            string                             `json:"workspace_root"`
 }
 
 func (r RuntimeSourceConfig) validate() error {
+	if r.SharedRuntimeProtocol != "" && (r.SharedRuntimeProtocol != "shared-container-freeze.v1" || r.SharedObserver == nil) {
+		return d.ErrNotReady
+	}
 	if validateCurrentStoppedProLayouts(r.CurrentStoppedProLayouts) != nil {
 		return d.ErrNotReady
 	}
@@ -224,11 +229,21 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 		}
 		controls.StoppedProObserver, controls.StoppedProBaseline = observer, s.formalStoppedProBaseline
 	}
+	if cfg.SharedRuntimeProtocol != "" {
+		shared, err := s.sharedRuntimeControlConfig(controls.Agent)
+		if err != nil {
+			return profile, err
+		}
+		controls.Shared = shared
+	}
 	runtime, e := c.NewSQLRuntimeControl(controls)
 	if e != nil {
 		return profile, e
 	}
 	s.RuntimeControl = runtime
+	if controls.Shared != nil {
+		o.Gate = runtime.SharedCaptureGate()
+	}
 	platformBuilder := s.platformWriterLeaf(o)
 	profile.Supported = map[b.AgentKind]bool{}
 	for _, kind := range cfg.Supported {
@@ -282,6 +297,15 @@ func (s *DeploymentService) validateRuntimeInventory(inv b.SourceInventory) erro
 		kinds[k] = true
 	}
 	for _, source := range inv.Instances {
+		if cfg.SharedRuntimeProtocol != "" && source.Mode == "lite" {
+			if source.Namespace != "" && !allowed[source.Namespace] || source.Status != "running" && source.Status != "stopped" && source.Status != "error" {
+				return d.ErrNotReady
+			}
+			if source.Status == "running" && (source.Generation <= 0 || source.Workspace == "" || path.Clean(source.Workspace) != source.Workspace || !strings.HasPrefix(source.Workspace, cfg.WorkspaceRoot+"/")) {
+				return d.ErrNotReady
+			}
+			continue
+		}
 		// A null Lite locator is resolved by D from the actual binding before
 		// contacting the source. The raw inventory and its hash remain unchanged.
 		missingLiteLocator := source.Namespace == "" && source.Mode == "lite" && source.Status == "running"
@@ -340,6 +364,9 @@ func (s *DeploymentService) checkRuntimeSources(ctx context.Context) error {
 		return e
 	}
 	for _, source := range instances {
+		if s.Config.RuntimeSources.SharedRuntimeProtocol != "" && source.Mode == "lite" {
+			continue
+		}
 		if source.Mode != "lite" || source.Status != "running" {
 			continue
 		}
@@ -392,6 +419,9 @@ func (s *DeploymentService) checkRuntimeSources(ctx context.Context) error {
 // This profile supports the same PVC and matching subpath; other storage needs
 // an independently reviewed profile instead of silently claiming coverage.
 func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity) error {
+	if s.Config.RuntimeSources.SharedRuntimeProtocol != "" {
+		return s.checkSharedRuntimeWorkspace(ctx, instances)
+	}
 	if s.Config.CaptureScope == "six-part" && len(instances) != 0 {
 		if s.captureMaterials == nil || s.captureMaterials.Discovery == nil {
 			return mountInputError("original_mount_scope_required", 0, "")
@@ -405,11 +435,11 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 			return err
 		}
 	}
-	if !hasRunningSourceInstances(instances) {
-		return nil
-	}
 	if s.Config.Workspace.NFS != nil {
 		return s.checkNFSRuntimeWorkspace(ctx, client, instances)
+	}
+	if !hasRunningSourceInstances(instances) {
+		return nil
 	}
 	target, e := client.CoreV1().PersistentVolumeClaims(s.Config.Namespace).Get(ctx, s.Config.Workspace.Claim, metav1.GetOptions{})
 	if e != nil || target.Spec.VolumeName == "" || target.DeletionTimestamp != nil {

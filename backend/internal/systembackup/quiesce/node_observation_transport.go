@@ -140,6 +140,9 @@ func NewNodeObservationClient(endpoints map[string]ProofEndpoint, caFile, certFi
 	return &NodeObservationClient{proof: p}, nil
 }
 func (c *NodeObservationClient) Observe(ctx context.Context, in NodeObservationRequest) (NodeObservationResponse, error) {
+	if len(in.SharedFrozenScopes) != 0 && in.Action != "stopped" && in.Action != "recovery-stopped" {
+		return NodeObservationResponse{}, ErrNodeObservation
+	}
 	var out NodeObservationResponse
 	if c == nil || c.proof == nil || ctx.Err() != nil {
 		return out, ErrNodeObservation
@@ -215,6 +218,9 @@ func (c *NodeObservationClient) Observe(ctx context.Context, in NodeObservationR
 		}
 	case "stopped", "recovery-stopped":
 		facts = []string{"original_cri_containers_exited", "original_process_scopes_absent", "no_observed_writable_source_fd_or_shared_mmap", "source_mount_identities_unchanged"}
+		if len(in.SharedFrozenScopes) != 0 {
+			facts = sharedFrozenObservationFacts()
+		}
 		if out.Anchor != in.Anchor || out.TasksChecked <= 0 || out.Files <= 0 {
 			return NodeObservationResponse{}, ErrNodeObservation
 		}

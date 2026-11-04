@@ -130,3 +130,51 @@ func (g Gate) HoldVersionedCapture(ctx context.Context, claim VersionedGateClaim
 	}
 	return g.hold(ctx, ownership, func(ctx context.Context, q gateQuery) error { return claim.authorizePhase(ctx, q, true) })
 }
+
+// NativeCaptureHeldVerifier is implemented by the deployment's concrete
+// controller frame, containing actual opaque native observations. No network
+// I/O is permitted here. It augments the SAME original common gate transaction.
+type NativeCaptureHeldVerifier interface {
+	VerifyNativeCaptureHeld(context.Context, *sql.Tx) error
+}
+
+func (g Gate) HoldVersionedCaptureNative(ctx context.Context, claim VersionedGateClaim, ownership GateOwnership, verifier NativeCaptureHeldVerifier) (GateOwnership, error) {
+	if g.DB == nil || verifier == nil || claim.validate() != nil || ownership.Owner != claim.TaskID {
+		return ownership, ErrFence
+	}
+	tx, err := g.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return ownership, err
+	}
+	defer tx.Rollback()
+	var phase, owner string
+	var generation, token uint64
+	var timely bool
+	if err = tx.QueryRowContext(ctx, "SELECT phase,COALESCE(owner,''),generation,fencing_token,UTC_TIMESTAMP(6)<acquire_deadline AND UTC_TIMESTAMP(6)<hold_deadline FROM system_backup_gate WHERE scope=? FOR UPDATE", ownership.Scope).Scan(&phase, &owner, &generation, &token, &timely); err != nil {
+		return ownership, err
+	}
+	if phase != "acquiring" || owner != ownership.Owner || generation != ownership.Generation || token != ownership.Token || !timely {
+		return ownership, ErrFence
+	}
+	if err = claim.authorizePhase(ctx, tx, true); err != nil {
+		return ownership, err
+	}
+	var active int
+	if err = tx.QueryRowContext(ctx, "SELECT (SELECT COUNT(*) FROM system_backup_mutation_leases WHERE scope=? AND released_at IS NULL) + (SELECT COUNT(*) FROM system_backup_participants WHERE scope=? AND (generation<>? OR state<>'paused' OR resume_result<>'none'))", ownership.Scope, ownership.Scope, generation).Scan(&active); err != nil {
+		return ownership, err
+	}
+	if active != 0 {
+		return ownership, ErrMaintenance
+	}
+	if err = verifier.VerifyNativeCaptureHeld(ctx, tx); err != nil {
+		return ownership, err
+	}
+	if _, err = tx.ExecContext(ctx, "UPDATE system_backup_gate SET phase='held',fencing_token=fencing_token+1,updated_at=UTC_TIMESTAMP(6) WHERE scope=?", ownership.Scope); err != nil {
+		return ownership, err
+	}
+	if err = tx.Commit(); err != nil {
+		return ownership, err
+	}
+	ownership.Token = token + 1
+	return ownership, nil
+}
