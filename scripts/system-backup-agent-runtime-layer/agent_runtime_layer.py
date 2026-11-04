@@ -48,6 +48,18 @@ LAYER_TYPES = {
     "application/vnd.docker.image.rootfs.diff.tar.gzip": True,
 }
 TARGET = "usr/local/bin/clawmanager-agent"
+SERVICE = "etc/services.d/openclaw-agent/run"
+SERVICE_SHA = "f74cd95d355544d3f4bfe8a5d57959652ad1cbf39fa4b70e87a91bf19d88f60a"
+WRAPPER_SHA = "3649b6362025304a52897c042a3d6dc73361ee85929982d496176ce2fb424abb"
+WRAPPER = b'#!/usr/bin/with-contenv bash\nset -euo pipefail\n\n# Fixed OpenClaw shared-runtime service gate v1.\n# Match the original shared-Agent service raw-token activation contract.\n# A failed shared Agent must never reactivate the independent desktop writer.\nif [[ -n "${RUNTIME_AGENT_CONTROL_TOKEN:-}" || -n "${RUNTIME_AGENT_REPORT_TOKEN:-}" ]]; then\n  exec /bin/sleep infinity\nfi\n\nAGENT_USER="abc"\nAGENT_BIN="/usr/local/bin/openclaw-agent"\nAGENT_DATA_DIR="/var/lib/openclaw-agent"\nAGENT_LOG_DIR="/var/log/openclaw-agent"\nAGENT_CONFIG_DIR="/etc/openclaw-agent"\nAGENT_CONFIG_FILE="$AGENT_CONFIG_DIR/config.yaml"\n\nmkdir -p "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\n\nif [ ! -f "$AGENT_CONFIG_FILE" ]; then\n  cp /defaults/openclaw-agent/config.yaml "$AGENT_CONFIG_FILE"\nfi\n\nchown -R "$AGENT_USER:$AGENT_USER" "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\nchmod 0755 "$AGENT_DATA_DIR" "$AGENT_LOG_DIR" "$AGENT_CONFIG_DIR"\nchmod 0644 "$AGENT_CONFIG_FILE"\n\nexec "$AGENT_BIN"\n'
+OPENCLAW_BASE = "sha256:37c43ba05ff7fd4f0949f274fc67c3e9825f6d3d0f9124b5fc45dc8366c39cee"
+OPENCLAW_AGENT_SHA = "63a68c0a916a5d873c420c086f81a77d7d3c3f41bd5d798428b4608db0552cc1"
+COREUTILS_SOURCE = "usr/bin/coreutils"
+SLEEP_TARGET = "usr/lib/cargo/bin/coreutils/sleep"
+SLEEP_SHA = "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
+SLEEP_SIZE = 11352352
+SLEEP_PARENTS = ("usr/lib", "usr/lib/cargo", "usr/lib/cargo/bin", "usr/lib/cargo/bin/coreutils")
+GATE_PATHS = ("etc", "etc/services.d", "etc/services.d/openclaw-agent", SERVICE, "bin", "bin/sleep", "usr/bin", "usr/bin/sleep")
 TRACKED = ("usr", "usr/local", "usr/local/bin", TARGET)
 MAX_JSON = 4 << 20
 MAX_BINARY = 32 << 20
@@ -162,13 +174,19 @@ def stored_gzip(raw):
     return bytes(output)
 
 
-def agent_layer(agent):
+def agent_layer(agent, service_gate=False):
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
         member = tarfile.TarInfo(TARGET)
         member.size, member.mode, member.uid, member.gid, member.mtime = len(agent), 0o555, 0, 0, 0
         member.uname = member.gname = ""
         archive.addfile(member, io.BytesIO(agent))
+        if service_gate:
+            require(hashlib.sha256(WRAPPER).hexdigest() == WRAPPER_SHA, "fixed_wrapper_digest")
+            member = tarfile.TarInfo(SERVICE)
+            member.size, member.mode, member.uid, member.gid, member.mtime = len(WRAPPER), 0o755, 0, 0, 0
+            member.uname = member.gname = ""
+            archive.addfile(member, io.BytesIO(WRAPPER))
     plain = output.getvalue()
     return stored_gzip(plain), digest(plain)
 
@@ -316,9 +334,12 @@ class CountedReader:
         return raw
 
 
-def check_layer(registry, descriptor, diff_id, agent=None):
+def check_layer(registry, descriptor, diff_id, agent=None, service_gate=False, base_state=None):
     require(descriptor.get("mediaType") in LAYER_TYPES and isinstance(diff_id, str) and SHA.fullmatch(diff_id), "layer_media_or_diffid")
     whiteouts, entries = [], []
+    tracked = TRACKED + GATE_PATHS + SLEEP_PARENTS + (SLEEP_TARGET, COREUTILS_SOURCE) if service_gate else TRACKED
+    link_state = dict(base_state or {})
+    cargo_count = 0
     with registry.blob(descriptor) as response:
         compressed = CountedReader(response, descriptor["size"], registry)
         stream = gzip.GzipFile(fileobj=compressed, mode="rb") if LAYER_TYPES[descriptor["mediaType"]] else compressed
@@ -332,24 +353,70 @@ def check_layer(registry, descriptor, diff_id, agent=None):
                     name = member.name
                     while name.startswith("./"):
                         name = name[2:]
-                    require(not name.startswith("/") and ".." not in name.split("/") and "\\" not in name, "layer_path")
+                    # Linux tar paths use only slash as a separator. A literal POSIX
+                    # backslash stays in this exact filename, never a tracked-path alias.
+                    require(not name.startswith("/") and ".." not in name.split("/"), "layer_path")
                     name = name.rstrip("/")
                     parent, _, leaf = name.rpartition("/")
                     if leaf == ".wh..wh..opq":
                         whiteouts.append((parent, True))
                     elif leaf.startswith(".wh."):
                         whiteouts.append(((parent + "/" if parent else "") + leaf[4:], False))
-                    if name in TRACKED:
-                        entries.append((name, "directory" if member.isdir() else "regular" if member.isfile() else "other"))
+                    cargo = service_gate and name.startswith("usr/lib/cargo/bin/coreutils/")
+                    if service_gate and (leaf == ".wh..wh..opq" or leaf.startswith(".wh.")):
+                        removed, opaque = (parent, True) if leaf == ".wh..wh..opq" else ((parent + "/" if parent else "") + leaf[4:], False)
+                        for prior in list(link_state):
+                            if (not removed or prior.startswith(removed + "/")) or (not opaque and prior == removed):
+                                link_state.pop(prior)
+                    if cargo:
+                        cargo_count += 1
+                        require(cargo_count <= 4096, "fixed_sleep_source_member_limit")
+                    if name in tracked or cargo:
+                        kind = "directory" if member.isdir() else "regular" if member.isfile() else "symlink" if member.issym() else "hardlink" if member.islnk() else "other"
+                        entry = kind
+                        if service_gate:
+                            content_sha = ""
+                            size = member.size
+                            if (name == SERVICE or cargo or name == COREUTILS_SOURCE) and member.isfile() and agent is None:
+                                require(member.size <= (8192 if name == SERVICE else 64 << 20), "fixed_source_content_size")
+                                with archive.extractfile(member) as source:
+                                    content = hashlib.sha256()
+                                    for chunk in iter(lambda: source.read(CHUNK), b""):
+                                        content.update(chunk)
+                                    content_sha = content.hexdigest()
+                            if cargo and member.islnk():
+                                target = member.linkname
+                                while target.startswith("./"):
+                                    target = target[2:]
+                                # Tar hardlinks name an archive-root path. Do not
+                                # reinterpret relative symlinks or forward links.
+                                require((target.startswith("usr/lib/cargo/bin/coreutils/") or target == COREUTILS_SOURCE) and ".." not in target.split("/"),
+                                        "fixed_sleep_hardlink_target_required")
+                                original = link_state.get(target)
+                                require(original is not None and original[0] in ("regular", "resolved-hardlink") and original[2:4] == (0, 0),
+                                        "fixed_sleep_hardlink_source_readback_required")
+                                if target == COREUTILS_SOURCE:
+                                    require(original[0] == "regular" and original[1] == 0o755 and original[5] == SLEEP_SHA and original[6] == SLEEP_SIZE,
+                                            "fixed_canonical_coreutils_digest_or_metadata")
+                                kind, content_sha, size = "resolved-hardlink", original[5], original[6]
+                                require(member.mode == original[1] and (member.uid, member.gid) == original[2:4], "fixed_sleep_hardlink_metadata")
+                            entry = (kind, member.mode, member.uid, member.gid, member.linkname, content_sha, size)
+                            link_state[name] = entry
+                        entries.append((name, entry))
                     if agent is not None:
-                        require(count == 1 and name == TARGET and member.isfile() and member.mode == 0o555 and
-                                member.uid == member.gid == member.mtime == 0 and member.size == len(agent), "new_layer_members")
+                        expected = [(TARGET, agent, 0o555)]
+                        if service_gate:
+                            expected.append((SERVICE, WRAPPER, 0o755))
+                        require(count <= len(expected), "new_layer_members")
+                        wanted, content, mode = expected[count-1]
+                        require(name == wanted and member.isfile() and member.mode == mode and
+                                member.uid == member.gid == member.mtime == 0 and member.size == len(content), "new_layer_members")
                         with archive.extractfile(member) as source:
                             value = hashlib.sha256()
                             for chunk in iter(lambda: source.read(CHUNK), b""):
                                 value.update(chunk)
-                        require(value.hexdigest() == hashlib.sha256(agent).hexdigest(), "new_layer_agent")
-                require(agent is None or count == 1, "new_layer_empty")
+                        require(value.hexdigest() == hashlib.sha256(content).hexdigest(), "new_layer_content")
+                require(agent is None or count == (2 if service_gate else 1), "new_layer_empty")
             for _ in iter(lambda: plain.read(CHUNK), b""):
                 pass
         except (tarfile.TarError, OSError, EOFError, zlib.error):
@@ -359,7 +426,7 @@ def check_layer(registry, descriptor, diff_id, agent=None):
     return whiteouts, entries
 
 
-def resolve_base(registry, reference):
+def resolve_base(registry, reference, service_gate=False):
     raw, manifest = registry.manifest(reference)
     root_digest = digest(raw)
     if manifest["mediaType"] in (OCI_INDEX, DOCKER_INDEX):
@@ -389,22 +456,64 @@ def resolve_base(registry, reference):
     state = {}
     for descriptor, diff_id in zip(layers, rootfs["diff_ids"]):
         validate_descriptor(descriptor)
-        whiteouts, entries = check_layer(registry, descriptor, diff_id)
+        whiteouts, entries = check_layer(registry, descriptor, diff_id, service_gate=service_gate, base_state=state)
         for path, opaque in whiteouts:
             for item in list(state):
                 if (not path or item.startswith(path + "/")) or (not opaque and item == path):
                     state.pop(item)
         for path, kind in entries:
             state[path] = kind
+    if service_gate:
+        validate_service_state(state)
+        state = {path: value[0] for path, value in state.items()}
     require(all(state.get(item) in (None, "directory") for item in TRACKED[:-1]) and
             state.get(TARGET) in (None, "regular"), "agent_parent_or_target_kind")
     return root_digest, digest(raw), manifest, config
 
 
-def build(registry, runtime, profile, agent, push=False):
+def validate_service_state(state):
+    for parent in TRACKED[:-1] + GATE_PATHS[:3]:
+        entry = state.get(parent)
+        require(entry is not None and entry[0] == "directory" and entry[2:4] == (0, 0) and entry[1] & 0o022 == 0,
+                "gate_parent_kind_owner_mode")
+    old = state.get(SERVICE)
+    require(old is not None and old[0] == "regular" and old[1] == 0o755 and old[2:4] == (0, 0) and old[5] == SERVICE_SHA and old[6] == 656,
+            "original_service_digest_kind_owner_mode")
+    # The immutable Ubuntu base can use its exact merged-/usr alias. No
+    # arbitrary symlink parent or caller-selected inactive executable is used.
+    binary_parent = state.get("bin")
+    require(binary_parent is not None and binary_parent[2:4] == (0, 0), "sleep_parent")
+    if binary_parent[0] == "directory":
+        require(binary_parent[1] & 0o022 == 0, "sleep_parent_mode")
+        sleep = state.get("bin/sleep")
+    else:
+        require(binary_parent[0] == "symlink" and binary_parent[4] in ("usr/bin", "/usr/bin") and
+                state.get("usr/bin", (None,))[0] == "directory" and state["usr/bin"][2:4] == (0, 0) and state["usr/bin"][1] & 0o022 == 0,
+                "sleep_alias")
+        sleep = state.get("usr/bin/sleep")
+    if sleep is not None and sleep[0] == "symlink":
+        require(sleep[2:4] == (0, 0) and sleep[4] == "../lib/cargo/bin/coreutils/sleep", "fixed_sleep_symlink")
+        for parent in SLEEP_PARENTS:
+            entry = state.get(parent)
+            require(entry is not None and entry[0] == "directory" and entry[1] == 0o755 and entry[2:4] == (0, 0),
+                    "fixed_sleep_target_parent")
+        sleep = state.get(SLEEP_TARGET)
+        require(sleep is not None and sleep[0] in ("regular", "resolved-hardlink") and sleep[1] == 0o755 and
+                sleep[2:4] == (0, 0) and sleep[5] == SLEEP_SHA and sleep[6] == SLEEP_SIZE,
+                "fixed_sleep_target_digest_or_metadata")
+    else:
+        require(sleep is not None and sleep[0] == "regular" and sleep[2:4] == (0, 0) and sleep[1] & 0o111 != 0 and sleep[1] & 0o022 == 0,
+                "sleep_not_original_executable")
+
+
+def build(registry, runtime, profile, agent, push=False, service_gate=False):
     validate_elf(agent, profile)
-    root_digest, base_digest, original_manifest, original_config = resolve_base(registry, profile["base"])
-    layer, diff_id = agent_layer(agent)
+    if service_gate:
+        require(runtime == "openclaw" and registry.repository == "openclaw-lite" and profile["base"] == OPENCLAW_BASE and
+                profile["agent_sha"] == OPENCLAW_AGENT_SHA and profile["agent_size"] == 9994402,
+                "fixed_openclaw_service_gate_profile")
+    root_digest, base_digest, original_manifest, original_config = resolve_base(registry, profile["base"], service_gate=service_gate)
+    layer, diff_id = agent_layer(agent, service_gate=service_gate)
     oci = original_manifest["mediaType"] == OCI_MANIFEST
     layer_descriptor = {"digest": digest(layer), "size": len(layer), "mediaType":
         "application/vnd.oci.image.layer.v1.tar+gzip" if oci else "application/vnd.docker.image.rootfs.diff.tar.gzip"}
@@ -431,7 +540,7 @@ def build(registry, runtime, profile, agent, push=False):
         # Existing tags are NEVER PUT. Registry V2 lacks portable atomic create-
         # only tags; publish by the exact manifest digest to avoid overwrite races.
         registry.upload(layer_descriptor, layer)
-        check_layer(registry, layer_descriptor, diff_id, agent=agent)
+        check_layer(registry, layer_descriptor, diff_id, agent=agent, service_gate=service_gate)
         registry.upload(config_descriptor, config_raw)
         present = registry.manifest(new_digest, missing=True)
         if present is None:
@@ -448,6 +557,10 @@ def build(registry, runtime, profile, agent, push=False):
                 registry.manifest(base_digest)[1] == original_manifest, "base_readback")
     prefix = registry.origin.split("://", 1)[1] + "/" + registry.repository
     return {"schema_version": "a-agent-runtime-registry-layer.v1", "status": "image-pushed" if push else "image-built",
+        "openclaw_shared_service_gate": service_gate,
+        "original_service_sha256": SERVICE_SHA if service_gate else None,
+        "service_wrapper_sha256": WRAPPER_SHA if service_gate else None,
+        "legacy_state_migrated": False,
         "runtime": runtime, "agent_revision": REVISION, "agent_sha256": profile["agent_sha"],
         "base_reference": prefix + "@" + root_digest, "resolved_base_reference": prefix + "@" + base_digest,
         "base_config_digest": original_manifest["config"]["digest"], "base_layer_count": len(original_manifest["layers"]),
@@ -471,6 +584,7 @@ def credentials(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--openclaw-shared-service-gate", action="store_true", help="exact37c/f74/63a only; append fixed3649 wrapper; not state migration")
     parser.add_argument("--runtime", required=True, choices=sorted(PROFILES))
     parser.add_argument("--bundle", required=True, type=Path)
     parser.add_argument("--credentials-file", type=Path)
@@ -481,7 +595,7 @@ def main(argv=None):
     agent = agent_from_bundle(args.bundle, args.runtime)
     profile = PROFILES[args.runtime]
     registry = Registry(profile["repository"], authorization=credentials(args.credentials_file), seconds=args.max_seconds)
-    print(encode(build(registry, args.runtime, profile, agent, push=args.push)).decode("ascii"))
+    print(encode(build(registry, args.runtime, profile, agent, push=args.push, service_gate=args.openclaw_shared_service_gate)).decode("ascii"))
 
 
 if __name__ == "__main__":

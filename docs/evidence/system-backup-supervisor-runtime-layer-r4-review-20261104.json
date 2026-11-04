@@ -1,0 +1,66 @@
+{
+  "schema_version": "supervisor-fixed-runtime-layer-r4-review.v1",
+  "maps": [
+    {
+      "path": ".a-openclaw-service-layer-20261104/source-map.json",
+      "sha256": "1758faa3356f649bd978a30bc02f8a3cee44b530d421c569e9ed7c001d7a2890"
+    },
+    {
+      "path": ".a-agent-runtime-posix-path-r2-20261104/source-map.json",
+      "sha256": "d0235ab2947f1e79c7df9fb7d9245f8cab465080da1922ff1bda28111c9e1b82"
+    },
+    {
+      "path": ".a-openclaw-sleep-chain-r3-20261104/source-map.json",
+      "sha256": "a30263f0816aae29515839c9c459a9bc337f78565112f69c3e031daef742fa1a"
+    },
+    {
+      "path": ".a-openclaw-coreutils-hardlink-r4-20261104/source-map.json",
+      "sha256": "768ca5016beda755452803cc6a6080c33dadc9367a846bdcdaf67dd6e4e1f941"
+    }
+  ],
+  "model_batches": {
+    "original": {
+      "roots": 12,
+      "stderr_sha256": "1eb6f6a986c3f8880a90d6fc0ca1a9c1865c406462fcaf77ddf4a88247490dcf",
+      "failures": 0,
+      "skips": 0
+    },
+    "test_openclaw_service_layer": {
+      "roots": 3,
+      "stderr_sha256": "685d0fa9564db69ea548279b2db7c9b0ba26fe008343627bc09551f36271ae07",
+      "failures": 0,
+      "skips": 0
+    },
+    "test_agent_runtime_posix_path": {
+      "roots": 3,
+      "stderr_sha256": "434ca8ca3163922210f95a8b885394e0bac3ead866d1051d2f95e3d1c2adc853",
+      "failures": 0,
+      "skips": 0
+    },
+    "test_openclaw_coreutils_source": {
+      "roots": 4,
+      "stderr_sha256": "fd701fd84bb863fc4e4e15df7bc1ddb640b39caaf7a5f545b5af5e14ec5808c9",
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "model_roots": 22,
+  "actual_bundle_subcases": 42,
+  "additional_subcases": "not independently counted by Root direct unittest runners",
+  "actual_openclaw_full_base_layers_verified": 32,
+  "actual_hermes_full_base_layers_verified": 25,
+  "actual_gated_openclaw_candidate": "docs/evidence/system-backup-supervisor-openclaw-gated-candidate-20261104.json",
+  "scope": "Exact original base/Agent/service plus fixed wrapper and fixed native coreutils inode chain. POSIX literal backslash names are not Windows separators; complete digest/diffID/CRC and ordered hardlink/whiteout checks retained.",
+  "earlier_actual_failures": [
+    "overstrict unrelated literal-backslash member name",
+    "fixed base sleep symlink target was not a regular /usr/bin/sleep",
+    "cargo hardlink actually names exact earlier usr/bin/coreutils"
+  ],
+  "field_registry_written": false,
+  "field_workload_mutated": false,
+  "runtime_agent_executed": false,
+  "legacy_business_handoff_verified": false,
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "cleanup": "No ELF/test build retained by these Python models or registry readers. Two inspection containers and one stat-only container were removed; actual Agent delivery input remains a required final package input."
+}
