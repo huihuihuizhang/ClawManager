@@ -125,6 +125,9 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 		if writer.redis != nil {
 			continue
 		}
+		if writer.minio != nil {
+			continue
+		}
 		current, err := writer.current(ctx)
 		if err != nil || *current.Spec.Replicas != writer.replicas || current.Status.ObservedGeneration < current.Generation || current.Status.ReadyReplicas != writer.replicas {
 			return nil, ErrOriginalRecoveryNativeProof
@@ -271,6 +274,11 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 			r.writer.recovery = fence
 			run(func() error { return r.observeRecovered(ctx) })
 		}
+		if w.minio != nil {
+			r := w.minio
+			r.writer.recovery = fence
+			run(func() error { return r.observeRecovered(ctx) })
+		}
 	}
 	for _, gateway := range s.gateways {
 		gateway := gateway
@@ -307,6 +315,9 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 	for _, w := range s.deployments {
 		if w.redis != nil {
 			responses = append(responses, w.redis.recovered.Data())
+		}
+		if w.minio != nil {
+			responses = append(responses, w.minio.recovered.Data())
 		}
 	}
 	for _, node := range s.nodes {
@@ -374,6 +385,12 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 			}
 			continue
 		}
+		if writer.minio != nil {
+			if writer.minio.check(ctx) != nil {
+				return ErrInstall
+			}
+			continue
+		}
 		writers[writer.selection.Name] = writer
 	}
 	for _, dep := range deps.Items {
@@ -431,6 +448,9 @@ func (s *PreparedOriginalWriterSet) recheckOriginalRecoveredAPI(ctx context.Cont
 	originalWriterPods := map[string]bool{}
 	for _, writer := range s.deployments {
 		if writer.redis != nil {
+			continue
+		}
+		if writer.minio != nil {
 			continue
 		}
 		for _, pod := range writer.pods {

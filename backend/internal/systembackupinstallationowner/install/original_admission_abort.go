@@ -151,6 +151,13 @@ func (s *PreparedOriginalWriterSet) observeOriginalUnchangedSources(ctx context.
 			observations = append(observations, w.redis.recovered.Data())
 			continue
 		}
+		if w.minio != nil {
+			if w.minio.observeRecovered(ctx) != nil {
+				return nil, ErrInstall
+			}
+			observations = append(observations, w.minio.recovered.Data())
+			continue
+		}
 		actual, err := w.current(ctx)
 		if err != nil || *actual.Spec.Replicas != w.replicas || actual.Status.ObservedGeneration < actual.Generation || actual.Status.ReadyReplicas != w.replicas {
 			return nil, ErrInstall

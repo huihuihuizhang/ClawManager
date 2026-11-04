@@ -44,6 +44,9 @@ func (s *PreparedOriginalWriterSet) prepareNativeScopes(ctx context.Context) ([]
 		if w.redis != nil {
 			continue
 		}
+		if w.minio != nil {
+			continue
+		}
 		for _, p := range w.pods {
 			addPod(p)
 			pod, err := s.owner.operator.installer.kube.CoreV1().Pods(w.namespace).Get(ctx, p.Name, metav1.GetOptions{})

@@ -279,7 +279,7 @@ func redisBootstrapPrepare(ctx context.Context, c *RedisClient, in RedisBootstra
 		}
 	}
 	keeper := []string{"-@all", "+acl|list", "+acl|users", "+acl|getuser", "+acl|setuser", "+acl|deluser", "+acl|save", "+acl|whoami", "+acl|cat", "+config|get", "+module|list", "+command|list", "+command", "+info", "+role", "+select", "+ping", "+get", "+set", "+del", "~" + redisGateOwnerKey}
-	reader := []string{"-@all", "+@read", "+info", "+select", "+ping", "+acl|whoami"}
+	reader := []string{"-@all", "+@read", "+eval_ro", "+time", "+info", "+select", "+ping", "+acl|whoami"}
 	for _, p := range in.Prefixes {
 		reader = append(reader, "~"+p+"*")
 	}

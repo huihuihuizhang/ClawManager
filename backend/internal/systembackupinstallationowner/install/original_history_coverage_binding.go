@@ -51,6 +51,9 @@ func originalAdoptionNativeUntil(proof *originalHeldReadiness) (time.Time, error
 		if w.redis != nil && (w.redis.held == nil || !add(w.redis.held.Data().ValidUntil)) {
 			return time.Time{}, ErrInstall
 		}
+		if w.minio != nil && (w.minio.held == nil || !add(w.minio.held.Data().ValidUntil)) {
+			return time.Time{}, ErrInstall
+		}
 	}
 	for _, provider := range s.providerDependencies {
 		if provider == nil || !add(provider.nativeUntil) || !add(provider.sourceUntil) {

@@ -38,6 +38,12 @@ func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, 
 			}
 			continue
 		}
+		if writer.minio != nil {
+			if e := writer.restore(ctx, fence); e != nil {
+				failures = append(failures, e)
+			}
+			continue
+		}
 		if fence.checkReleasing(ctx) != nil {
 			failures = append(failures, ErrInstall)
 			break
@@ -130,6 +136,9 @@ func (s *PreparedOriginalWriterSet) restoreOriginalPartial(ctx context.Context, 
 	}
 	for _, writer := range s.deployments {
 		if writer.redis != nil {
+			continue
+		}
+		if writer.minio != nil {
 			continue
 		}
 		for _, pod := range writer.pods {

@@ -59,6 +59,12 @@ func (p *PreparedSourceRecovery) validateProducerLeaves() error {
 			}
 			continue
 		}
+		if leaf.SourceRecoveryObservation.Scope == MinIOReadServiceRecoveryScope {
+			if p.validateMinIOReadServiceLeaf(writer, leaf, source) != nil {
+				return ErrSourceRecoveryProofRequired
+			}
+			continue
+		}
 		if leaf.SourceRecoveryObservation.Scope == RedisReadServiceRecoveryScope {
 			if p.validateRedisReadServiceLeaf(writer, leaf, source) != nil {
 				return ErrSourceRecoveryProofRequired

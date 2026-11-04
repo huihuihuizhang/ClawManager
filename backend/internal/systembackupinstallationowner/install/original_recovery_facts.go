@@ -12,7 +12,7 @@ import (
 // counted as source mutations. New source operations must join this closed set.
 func originalSourceMutationIntent(action string) bool {
 	switch action {
-	case "redis_acl_gate_send_unknown", "redis_acl_restore_send_unknown", "scale_zero_send_unknown", "restore_replicas_send_unknown",
+	case "minio_native_gate_send_unknown", "minio_native_restore_send_unknown", "redis_acl_gate_send_unknown", "redis_acl_restore_send_unknown", "scale_zero_send_unknown", "restore_replicas_send_unknown",
 		"delete_original_pod_send_unknown", "create_original_pod_send_unknown",
 		"cancel_delayed_pod_delete_send_unknown", "stop_send_unknown",
 		"resume_send_unknown", "complete_send_unknown", "keep_stopped_complete_send_unknown",

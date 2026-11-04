@@ -29,6 +29,7 @@ var ErrSourceRecoveryStoppedWitnessRequired = errors.New("originally stopped sou
 // Each observation covers exactly one writer from the encrypted original plan.
 type SourceRecoveryObservation struct {
 	redisNative                     *sb.VerifiedRedisReadServiceObservation
+	minioNative                     *sb.VerifiedMinIOReadServiceObservation
 	WriterID, OriginalSHA256, Scope string
 	Facts                           json.RawMessage
 	References                      []SourceRecoverySQLReference
@@ -69,6 +70,7 @@ type sourceRecoveryLeaf struct {
 // alone grants nothing; current publisher history consumption is separate.
 type PreparedSourceRecovery struct {
 	redisNative map[string]*sb.VerifiedRedisReadServiceObservation
+	minioNative map[string]*sb.VerifiedMinIOReadServiceObservation
 	gate        SQLCaptureGate
 	a           d.Authority
 	desc        b.Discovery
@@ -282,6 +284,9 @@ func validSourceRecoveryObservation(ob SourceRecoveryObservation) bool {
 		return false
 	}
 	switch ob.Scope {
+	case MinIOReadServiceRecoveryScope:
+		_, e := minioReadServiceFacts(ob)
+		return e == nil
 	case RedisReadServiceRecoveryScope:
 		_, e := redisReadServiceFacts(ob)
 		return e == nil
@@ -483,6 +488,7 @@ func (g SQLCaptureGate) PrepareSourceRecovery(ctx context.Context, w ExecutionWo
 		return nil, ErrSourceRecoveryProofRequired
 	}
 	p.redisNative = map[string]*sb.VerifiedRedisReadServiceObservation{}
+	p.minioNative = map[string]*sb.VerifiedMinIOReadServiceObservation{}
 	byID := map[string]SourceRecoveryObservation{}
 	for _, ob := range observations {
 		if !validSourceRecoveryObservation(ob) || byID[ob.WriterID].WriterID != "" {
@@ -493,6 +499,12 @@ func (g SQLCaptureGate) PrepareSourceRecovery(ctx context.Context, w ExecutionWo
 				return nil, ErrSourceRecoveryProofRequired
 			}
 			p.redisNative[ob.WriterID] = ob.redisNative
+		}
+		if ob.Scope == MinIOReadServiceRecoveryScope {
+			if ob.minioNative == nil {
+				return nil, ErrSourceRecoveryProofRequired
+			}
+			p.minioNative[ob.WriterID] = ob.minioNative
 		}
 		byID[ob.WriterID] = ob
 	}
@@ -862,7 +874,7 @@ func (p *PreparedSourceRecovery) StageTx(ctx context.Context, tx *sql.Tx, w Exec
 	if count, err := sourceRecoveryFamilyCountTx(ctx, tx, p.root.Scope); err != nil || count != 0 {
 		return ErrSourceRecoveryProofRequired
 	}
-	if p.checkRedisReadServiceNative(ctx) != nil {
+	if p.checkRedisReadServiceNative(ctx) != nil || p.checkMinIOReadServiceNative(ctx) != nil {
 		return ErrSourceRecoveryProofRequired
 	}
 	var capacity, retention int64
@@ -882,7 +894,7 @@ func (p *PreparedSourceRecovery) StageTx(ctx context.Context, tx *sql.Tx, w Exec
 			return err
 		}
 	}
-	if p.checkRedisReadServiceNative(ctx) != nil {
+	if p.checkRedisReadServiceNative(ctx) != nil || p.checkMinIOReadServiceNative(ctx) != nil {
 		return ErrSourceRecoveryProofRequired
 	}
 	return p.gate.Recovery.CheckTx(ctx, tx, p.a)

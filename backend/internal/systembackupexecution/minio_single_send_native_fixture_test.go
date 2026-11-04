@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"net"
 	"net/url"
@@ -194,7 +195,40 @@ func cOnceNativeServer(ctx context.Context, n *minioPermissionHTTP) (string, str
 		}
 	}
 	if json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != n.provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "ok" || info.Servers[0].Version != "2025-09-07T16:13:09Z" || info.Servers[0].CommitID != "07c3a429bfed433e49018cb0f78a52145d4bedeb" {
-		return "", "", minioPermissionFailure("single-send-exact-september")
+		// Test-only allowlisted diagnostics. Never print raw server info, an
+		// endpoint, deployment ID, credentials, disks, pools or configuration.
+		diagnostic := struct {
+			Region              string                  `json:"region"`
+			ServerCount         int                     `json:"server_count"`
+			DeploymentIDPresent bool                    `json:"deployment_id_present"`
+			Servers             []cOnceSafeServerFields `json:"servers"`
+		}{Region: cOnceSafeField(info.Region, 64), ServerCount: len(info.Servers), DeploymentIDPresent: info.DeploymentID != "", Servers: []cOnceSafeServerFields{}}
+		for i, server := range info.Servers {
+			if i == 4 {
+				break
+			}
+			diagnostic.Servers = append(diagnostic.Servers, cOnceSafeServerFields{cOnceSafeField(server.State, 32), cOnceSafeField(server.Version, 128), cOnceSafeField(server.CommitID, 64)})
+		}
+		body, _ := json.Marshal(diagnostic)
+		return "", "", fmt.Errorf("%w; safe_server_info=%s", minioPermissionFailure("single-send-exact-september"), body)
 	}
 	return info.DeploymentID, hash(raw), nil
+}
+
+type cOnceSafeServerFields struct {
+	State   string `json:"state"`
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
+}
+
+func cOnceSafeField(value string, max int) string {
+	if len(value) > max {
+		return "<redacted-invalid>"
+	}
+	for _, ch := range value {
+		if !(ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '.' || ch == ':' || ch == '-' || ch == '_') {
+			return "<redacted-invalid>"
+		}
+	}
+	return value
 }

@@ -145,7 +145,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if b.ValidateTeamsWriters(source, writers) != nil {
 		return nil, nil, d.ErrNotReady
 	}
-	metadata := productionCaptureMetadata{Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
+	metadata := productionCaptureMetadata{MinIOReadKeepers: s.Config.MinIOReadKeepers, Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
 	stage = "platform_mounts"
 	if saved == nil {
 		metadata.PlatformMounts, err = s.freezePlatformSourceRecoveryMounts(ctx, owner, writers)

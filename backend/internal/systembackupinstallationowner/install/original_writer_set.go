@@ -21,6 +21,7 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	MinIOReadKeepers                                         []OriginalMinIOReadKeeperSelection    `json:",omitempty"`
 	PreAdoptionVaultDependencies                             []PreAdoptionVaultDependencySelection `json:",omitempty"`
 	VaultProviderDependencies                                []OriginalVaultProviderSelection      `json:",omitempty"`
 	RedisReadKeepers                                         []OriginalRedisReadKeeperSelection    `json:",omitempty"`
@@ -309,6 +310,13 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		}
 		redisSelections[native.Deployment] = native
 	}
+	minioSelections := map[string]OriginalMinIOReadKeeperSelection{}
+	for _, native := range selection.MinIOReadKeepers {
+		if native.Deployment == "" || minioSelections[native.Deployment].Deployment != "" || redisSelections[native.Deployment].Deployment != "" || selected[native.Deployment].Role != "writer" || selected[native.Deployment].UID != native.DeploymentUID {
+			return nil, ErrInstall
+		}
+		minioSelections[native.Deployment] = native
+	}
 	if set.prepareOriginalProviderDependencies(ctx) != nil {
 		return nil, OriginalWriterSourceFailure{Dependency: "original_vault_provider_dependency_preflight_required"}
 	}
@@ -322,6 +330,12 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 				return nil, e
 			}
 			set.deployments = append(set.deployments, w)
+			if native, ok := minioSelections[dep.Name]; ok {
+				if e := set.prepareMinIOReadKeeper(ctx, w, native); e != nil {
+					return nil, OriginalWriterSourceFailure{Dependency: "minio_read_keeper_native_preflight_required"}
+				}
+				delete(minioSelections, dep.Name)
+			}
 			if native, ok := redisSelections[dep.Name]; ok {
 				if e := set.prepareRedisReadKeeper(ctx, w, native); e != nil {
 					return nil, OriginalWriterSourceFailure{Dependency: "redis_read_keeper_native_preflight_required"}
@@ -332,7 +346,7 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 			return nil, OriginalWriterSourceFailure{Dependency: "unreferenced_shared_agent_writer_requires_native_gate"}
 		}
 	}
-	if len(redisSelections) != 0 {
+	if len(redisSelections) != 0 || len(minioSelections) != 0 {
 		return nil, ErrInstall
 	}
 	if len(set.deployments) == 0 {
@@ -432,6 +446,9 @@ func (s *PreparedOriginalWriterSet) closePrivate() {
 	for _, w := range s.deployments {
 		if w.redis != nil && w.redis.gate != nil {
 			w.redis.gate.Close()
+		}
+		if w.minio != nil && w.minio.gate != nil {
+			w.minio.gate.Close()
 		}
 	}
 	if s.journal != nil {

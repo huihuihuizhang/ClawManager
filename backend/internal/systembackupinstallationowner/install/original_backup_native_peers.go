@@ -38,6 +38,33 @@ func classifyOriginalBackupNativePeer(ctx context.Context, p *PreparedOriginalAd
 	default:
 		return zero, errOriginalBackupConsumerUnclassified
 	}
+	if status.ImageID == originalPeerMinIOImage {
+		selected := false
+		for _, w := range h.set.deployments {
+			if w.minio != nil {
+				for _, original := range w.pods {
+					selected = selected || original.UID == string(pod.UID)
+				}
+			}
+		}
+		if selected {
+			identity, cap, e := h.originalMinIOReadServicePeer(ctx, string(pod.UID), status.ContainerID, status.ImageID)
+			if e != nil {
+				return zero, e
+			}
+			if cap.Before(until) {
+				until = cap
+			}
+			if !time.Now().Before(until) {
+				return zero, ErrInstall
+			}
+			return originalBackupStartupDisposition{kind: "original_non_backup_consumer", version: "original-kept-native-minio-startup.v1", sourceSHA256: originalObjectSHA(struct {
+				Identity, PodUID, ContainerID, ImageID string
+				Spec                                   corev1.PodSpec
+				Container                              corev1.Container
+			}{identity, string(pod.UID), status.ContainerID, status.ImageID, *spec, *c}), until: until}, nil
+		}
+	}
 	if status.ImageID == originalPeerVaultImage {
 		if kept, selected, err := originalBackupKeptVaultPeer(ctx, h, pod, spec, c, status, until); selected || err != nil {
 			return kept, err

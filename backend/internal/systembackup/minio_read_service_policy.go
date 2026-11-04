@@ -39,6 +39,14 @@ func MinIOReadGatePolicies(buckets []string) (keeper, reader []byte, err error) 
 	k := minioGatePolicy{"2012-10-17", []minioGateStatement{{Effect: "Allow", Action: []string{"admin:*"}, Resource: []string{"*"}}, common, {Effect: "Allow", Action: []string{"s3:DeleteBucketPolicy", "s3:GetBucketLocation", "s3:GetBucketPolicy", "s3:GetBucketVersioning", "s3:GetLifecycleConfiguration", "s3:GetReplicationConfiguration", "s3:ListBucket", "s3:PutBucketPolicy"}, Resource: ba}}}
 	r := minioGatePolicy{"2012-10-17", []minioGateStatement{common, {Effect: "Allow", Action: []string{"s3:GetBucketLocation", "s3:GetBucketVersioning", "s3:ListBucket", "s3:ListBucketMultipartUploads", "s3:ListBucketVersions"}, Resource: ba}, {Effect: "Allow", Action: []string{"s3:GetObject", "s3:GetObjectTagging", "s3:GetObjectVersion", "s3:GetObjectVersionTagging", "s3:ListMultipartUploadParts"}, Resource: oa}}}
 	keeper, _ = json.Marshal(k)
+	// The actual historical census checks each fixed version's retention and
+	// legal hold plus bucket object-lock state. These are read operations;
+	// omitting them makes a valid historical source fail after writer fencing.
+	r.Statement[1].Action = append(r.Statement[1].Action, "s3:GetBucketObjectLockConfiguration")
+	r.Statement[2].Action = append(r.Statement[2].Action, "s3:GetObjectRetention", "s3:GetObjectLegalHold")
+	for i := range r.Statement {
+		sort.Strings(r.Statement[i].Action)
+	}
 	reader, _ = json.Marshal(r)
 	return keeper, reader, nil
 }
@@ -77,6 +85,9 @@ func minioGateOutputPolicy(raw []byte, business []string) bool {
 		source[b] = true
 	}
 	read := map[string]bool{}
+	for _, a := range []string{"s3:GetBucketObjectLockConfiguration", "s3:GetObjectRetention", "s3:GetObjectLegalHold"} {
+		read[a] = true
+	}
 	for _, a := range []string{"admin:GetUser", "admin:GetPolicy", "admin:ServerInfo"} {
 		read[a] = true
 	}

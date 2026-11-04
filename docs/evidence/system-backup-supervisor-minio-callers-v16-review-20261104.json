@@ -1,0 +1,155 @@
+{
+  "schema_version": "supervisor-original-formal-minio-callers-v16.v1",
+  "maps": [
+    {
+      "path": "backend/.d-redis-native-materials-r2-20261104/source-map.json",
+      "sha256": "cbd9f274b3263259a1b0745ac45f8b107371a16fc4a6a93384010708be02e23e"
+    },
+    {
+      "path": "backend/.d-redis-native-materials-r3-20261104/source-map.json",
+      "sha256": "862a007ead9c00ab2d1154918820b9e1d9913a03fc556c6135502e98b682fa05"
+    },
+    {
+      "path": "backend/.d-redis-7411-native-qualification-20261104/source-map.json",
+      "sha256": "68b87818a3db5f090a01dffe9c6302d41093fedd96d860dbfa9739c40f918f61"
+    },
+    {
+      "path": "backend/.d-redis-reader-r4-20261104/source-map.json",
+      "sha256": "727d8f3f4922697e8c46e6795695b93e6120b717b410225d48d809a247e37761"
+    },
+    {
+      "path": "backend/.c-minio-source-reader-binding-r6-20261104/source-map.json",
+      "sha256": "8ee91e28627af2485e5de5b013f18e7a0afc1dee76606c580ab0dcacafba8519"
+    },
+    {
+      "path": "backend/.c-minio-factory-material-r7-20261104/source-map.json",
+      "sha256": "2ad6ce9b3066ed8b17e3de48ba3cbfc08bedfee2363295b15e975b5618cdc1c2"
+    },
+    {
+      "path": "backend/.c-minio-material-restore-r8-20261104/source-map.json",
+      "sha256": "623fb73263d6035e90bc6e6fdd26dfb596c13f63a610057b4b053c8dc4232266"
+    },
+    {
+      "path": "backend/.d-minio-original-leaf-20261104/source-map.json",
+      "sha256": "a784b6a1fdbe5883f78221671167730469a4aeac1dcadcd983b4ecd69ab8e2b8"
+    },
+    {
+      "path": "backend/.d-minio-keeper-callers-20261104/source-map.json",
+      "sha256": "b711e197fde2b2b294fdadf52727b0b1e17a55688cd6748fc68a39781bc9ca91"
+    },
+    {
+      "path": "backend/.d-formal-minio-keeper-20261104/source-map.json",
+      "sha256": "5a820ce8c906d15d336d280c95e645e2efe7954ea2be1826f67408c4ea405121"
+    },
+    {
+      "path": "backend/.c-minio-safe-info-diagnostic-r9-20261104/source-map.json",
+      "sha256": "3f16020f7ccf28ff9fb4e45b8ccbeba45817adee8c10228a087b932b09c18eec"
+    }
+  ],
+  "results": {
+    "v16-windows-targeted": {
+      "roots": 21,
+      "subcases": 35,
+      "sha256": "70ecb8fe02e7005c588714559c7177d080c0acd7d62a0c2fd1de7b9d7155a390",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-backup": {
+      "roots": 12,
+      "subcases": 5,
+      "sha256": "9652d3a6503e5feba8f382811ae1c3e515bfc56daeb1a157a2f001df075c166b",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-minionative": {
+      "roots": 2,
+      "subcases": 3,
+      "sha256": "87256794e604721a2b9f79f84dd628c598b7fad02b1ce15d8e94d8c8008daf6c",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-execution": {
+      "roots": 3,
+      "subcases": 2,
+      "sha256": "2f8db60e6437c76aaf130d32ffe702d426042f40096f06ae5b33179f374c15fc",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-install": {
+      "roots": 4,
+      "subcases": 16,
+      "sha256": "52bd5e89cd781087ceae57ed884e7317096c1e3d586e73e6328ff2ae07389d6b",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-owner": {
+      "roots": 1,
+      "subcases": 7,
+      "sha256": "66912d38abafebf41a452fb1fdced66c584a58bd6172de8b64b6d50e0bff3812",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-adoption": {
+      "roots": 1,
+      "subcases": 4,
+      "sha256": "2cf06008a70c9cccb1c4815bfd2d368ddc1f5f565099bd4ba65f12a656b07ab2",
+      "failures": 0,
+      "skips": 0
+    },
+    "v16r3-linux-controller": {
+      "roots": 1,
+      "subcases": 0,
+      "sha256": "4adb211d1fb2e764bb95d3229fb7bd644f177ab63e76a5b3651f641d95f7c7ce",
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "builds": [
+    {
+      "name": "adoption.test",
+      "sha256": "f6e45e5ec0c2e9d35fbbd1a957ac431f95907bc747c261fc74fa592d6763eacc",
+      "bytes": 89568052
+    },
+    {
+      "name": "backup.test",
+      "sha256": "b529de1098b7ebd8d862a9c0164f4a26d29e5e68c9d0bf315b35038f9b758573",
+      "bytes": 95962780
+    },
+    {
+      "name": "controller.test",
+      "sha256": "73af259a270a4b69bffbdd0c9f64b32e958bac367d642d4f3ed952adff1aacfe",
+      "bytes": 97971901
+    },
+    {
+      "name": "execution.test",
+      "sha256": "dd074fdc837aec9c65a99d54ec8cfa1ebe9937fcd78ea1b0dd0bf170a0348e42",
+      "bytes": 133565833
+    },
+    {
+      "name": "install.test",
+      "sha256": "829c686d8a5107a9b53a9d6a7ab256e44a4c3701e7dea869fe91d0bcf57031ba",
+      "bytes": 113616403
+    },
+    {
+      "name": "minionative.test",
+      "sha256": "8f60ac494fd58d1e9004dbe75c94dc2edaea611826960c6f5fb79201f4ee0ba9",
+      "bytes": 10793574
+    },
+    {
+      "name": "owner.test",
+      "sha256": "9497ed095c19d9ebba420bae1f06075309d2545c2621b92428bae64cd023364a",
+      "bytes": 92808852
+    },
+    {
+      "name": "system-backup-kek-authority",
+      "sha256": "3512b7e3321c116d1dce774a3fa97521b319550d2d68866ff000227e65c83100",
+      "bytes": 64565883
+    }
+  ],
+  "first_attempts": "v16: readonly default Go cache; v16r2: noexec temporary cache. Neither ran tests. v16r3 corrected the harness and ran all selected roots.",
+  "actual_minio_native_pass": false,
+  "native_redis7411_qualification": false,
+  "actual_installation": false,
+  "page_acceptance": false,
+  "cleanup": "eight ended verification builds hashed and removed"
+}

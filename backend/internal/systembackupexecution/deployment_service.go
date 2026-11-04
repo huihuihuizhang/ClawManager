@@ -39,6 +39,8 @@ import (
 )
 
 type DeploymentService struct {
+	minioReadMu              sync.Mutex
+	minioRead                map[string]*formalMinIOReadWriter
 	redisReadMu              sync.Mutex
 	redisRead                map[string]*formalRedisReadWriter
 	PublisherOwner           string

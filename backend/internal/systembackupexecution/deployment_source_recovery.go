@@ -208,6 +208,18 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 		var cp sourceRecoveryCheckpoint
 		ref, isPlatform := platform[writer.ID]
 		if isPlatform {
+			minio, e := s.formalMinIOSelection(ref)
+			if e != nil {
+				return nil, e
+			}
+			if minio != nil {
+				ob, e := s.observeFormalMinIOReadRecovery(ctx, in, writer, source, metadata)
+				if e != nil {
+					return nil, e
+				}
+				out = append(out, ob)
+				continue
+			}
 			native, e := s.formalRedisSelection(ref)
 			if e != nil {
 				return nil, e

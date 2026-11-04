@@ -140,6 +140,12 @@ func (s *DeploymentService) platformWriterLeaf(o *PublicJobOwner) func(context.C
 		for _, ref := range cfg.Writers {
 			ref := ref
 			id := "deployment/" + ref.Namespace + "/" + ref.Name
+			if native, selected, e := s.buildFormalMinIOReadWriter(ctx, o, in, inventory, ref, frozen); e != nil {
+				return nil, e
+			} else if selected {
+				out = append(out, native)
+				continue
+			}
 			if native, selected, e := s.buildFormalRedisReadWriter(ctx, o, in, inventory, ref, frozen); e != nil {
 				return nil, e
 			} else if selected {

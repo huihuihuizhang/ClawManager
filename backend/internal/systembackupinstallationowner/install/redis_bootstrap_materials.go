@@ -39,13 +39,14 @@ type RedisNativeMaterialReceipt struct {
 	ServerVersion, RunID                                                                                 string
 }
 type redisNativeIntent struct {
-	Version, Operation, DeploymentUID, ServiceUID, Container string
-	BeforeDeployment, DesiredDeployment                      apps.DeploymentSpec
-	BeforeService, DesiredService                            core.ServiceSpec
-	Before                                                   sb.RedisBootstrapNativeFacts
-	Policy                                                   sb.RedisCapturePolicy
-	Selection                                                BootstrapSourceFilePin
-	Helper                                                   BootstrapSourceFilePin
+	BeforePodUID, BeforeContainerID, DataClaim, DataClaimUID, DataClaimSpecSHA256, DataPV, DataPVUID, DataPVSpecSHA256 string
+	Version, Operation, DeploymentUID, ServiceUID, Container                                                           string
+	BeforeDeployment, DesiredDeployment                                                                                apps.DeploymentSpec
+	BeforeService, DesiredService                                                                                      core.ServiceSpec
+	Before                                                                                                             sb.RedisBootstrapNativeFacts
+	Policy                                                                                                             sb.RedisCapturePolicy
+	Selection                                                                                                          BootstrapSourceFilePin
+	Helper                                                                                                             BootstrapSourceFilePin
 }
 
 func redisMaterialPin(directory, name string, raw []byte) BootstrapSourceFilePin {
@@ -110,6 +111,12 @@ func (i *Installer) redisNativePod(ctx context.Context, name, uid string) (*apps
 	}
 	parent = metav1.GetControllerOf(rs)
 	if parent == nil || parent.Kind != "Deployment" || parent.UID != d.UID {
+		return nil, nil, ErrInstall
+	}
+	actualContainer, desiredContainer := p.Spec.Containers[0], d.Spec.Template.Spec.Containers[0]
+	// Pod admission may add the ordinary SA mount. Pin the actual native
+	// executable/image/args here; the actual data PVC/PV/spec is checked separately.
+	if actualContainer.Name != desiredContainer.Name || actualContainer.Image != desiredContainer.Image || !reflect.DeepEqual(actualContainer.Command, desiredContainer.Command) || !reflect.DeepEqual(actualContainer.Args, desiredContainer.Args) {
 		return nil, nil, ErrInstall
 	}
 	status := p.Status.ContainerStatuses[0]
@@ -231,6 +238,8 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 			return zero, ErrInstall
 		}
 		persistent := false
+		var dataClaim *core.PersistentVolumeClaim
+		var dataPV *core.PersistentVolume
 		for _, m := range p.Spec.Containers[0].VolumeMounts {
 			if m.ReadOnly || m.SubPath != "" || m.SubPathExpr != "" || m.MountPath != before.DataDirectory {
 				continue
@@ -245,7 +254,12 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 					if e != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID {
 						return zero, ErrInstall
 					}
+					if persistent {
+						return zero, ErrInstall
+					}
 					persistent = true
+					dataClaim = claim
+					dataPV = pv
 				}
 			}
 		}
@@ -308,6 +322,14 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		port.TargetPort.IntVal = 6380
 		desiredService.Ports = append(desiredService.Ports, port)
 		intent = redisNativeIntent{Version: "original-redis-native-intent.v1", Operation: operation, DeploymentUID: string(d.UID), ServiceUID: string(service.UID), Container: p.Spec.Containers[0].Name, BeforeDeployment: d.Spec, DesiredDeployment: *desired, BeforeService: service.Spec, DesiredService: *desiredService, Before: before, Policy: policy, Selection: writerPin, Helper: opt.Helper}
+		intent.BeforePodUID = string(p.UID)
+		intent.BeforeContainerID = p.Status.ContainerStatuses[0].ContainerID
+		intent.DataClaim = dataClaim.Name
+		intent.DataClaimUID = string(dataClaim.UID)
+		intent.DataClaimSpecSHA256 = originalObjectSHA(dataClaim.Spec)
+		intent.DataPV = dataPV.Name
+		intent.DataPVUID = string(dataPV.UID)
+		intent.DataPVSpecSHA256 = originalObjectSHA(dataPV.Spec)
 		intentRaw, e := canonical(intent)
 		if e != nil {
 			return zero, ErrInstall
@@ -422,6 +444,28 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		receipt.State = "original_native_redis_restored_no_backup_claim"
 		return receipt, nil
 	case "finalize":
+		if intent.BeforePodUID == "" || intent.BeforeContainerID == "" || string(p.UID) == intent.BeforePodUID || p.Status.ContainerStatuses[0].ContainerID == intent.BeforeContainerID {
+			return zero, ErrInstall
+		}
+		claim, e := i.kube.CoreV1().PersistentVolumeClaims(d.Namespace).Get(ctx, intent.DataClaim, metav1.GetOptions{})
+		if e != nil || string(claim.UID) != intent.DataClaimUID || claim.Spec.VolumeName != intent.DataPV || originalObjectSHA(claim.Spec) != intent.DataClaimSpecSHA256 {
+			return zero, ErrInstall
+		}
+		pv, e := i.kube.CoreV1().PersistentVolumes().Get(ctx, intent.DataPV, metav1.GetOptions{})
+		if e != nil || string(pv.UID) != intent.DataPVUID || originalObjectSHA(pv.Spec) != intent.DataPVSpecSHA256 || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID {
+			return zero, ErrInstall
+		}
+		mounted := false
+		for _, volume := range p.Spec.Volumes {
+			if volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName == claim.Name {
+				for _, mount := range p.Spec.Containers[0].VolumeMounts {
+					mounted = mounted || mount.Name == volume.Name && mount.MountPath == intent.Before.DataDirectory && !mount.ReadOnly && mount.SubPath == "" && mount.SubPathExpr == ""
+				}
+			}
+		}
+		if !mounted {
+			return zero, ErrInstall
+		}
 		if !reflect.DeepEqual(d.Spec, intent.DesiredDeployment) || !reflect.DeepEqual(service.Spec, intent.DesiredService) {
 			return zero, ErrInstall
 		}
@@ -473,7 +517,7 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 			return zero, ErrInstall
 		}
 		result, e := i.originalRedisHelper(ctx, cfg, p.Name, intent.Container, intent.Helper, sb.RedisBootstrapNativeRequest{Mode: finishMode, Operation: intent.Operation, ExpectedRunID: intent.Before.RunID, DataDirectory: intent.Before.DataDirectory})
-		if e != nil || result.RunID != runID || guard() != nil {
+		if e != nil || result.RunID != runID || result.RunID == intent.Before.RunID || guard() != nil {
 			return zero, ErrOriginalObserverPKIUnconfirmed
 		}
 		custodyFile := filepath.Join(opt.OutputDirectory, "redis-custody.key")

@@ -161,6 +161,10 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 			r := w.redis
 			run(func() error { return r.observeHeld(ctx) })
 		}
+		if w.minio != nil {
+			r := w.minio
+			run(func() error { return r.observeHeld(ctx) })
+		}
 	}
 	for _, node := range s.nodes {
 		node := node
@@ -198,6 +202,9 @@ func (s *PreparedOriginalWriterSet) refreshNativeHold(ctx context.Context) (*ori
 	for _, w := range s.deployments {
 		if w.redis != nil {
 			responses = append(responses, w.redis.held.Data())
+		}
+		if w.minio != nil {
+			responses = append(responses, w.minio.held.Data())
 		}
 	}
 	for _, node := range s.nodes {
@@ -245,6 +252,12 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 			}
 			continue
 		}
+		if w.minio != nil {
+			if w.minio.check(ctx) != nil {
+				return ErrInstall
+			}
+			continue
+		}
 		writers[w.selection.Name] = w
 		d, e := w.current(ctx)
 		if e != nil || *d.Spec.Replicas != 0 || d.Status.Replicas != 0 || d.Status.ObservedGeneration < d.Generation {
@@ -278,6 +291,9 @@ func (s *PreparedOriginalWriterSet) recheckHeldAPI(ctx context.Context) error {
 		}
 		for _, w := range s.deployments {
 			if w.redis != nil {
+				continue
+			}
+			if w.minio != nil {
 				continue
 			}
 			for _, old := range w.pods {
@@ -387,6 +403,9 @@ func (p *originalHeldReadiness) VerifyParticipantsPaused(ctx context.Context, co
 	}
 	for _, w := range s.deployments {
 		if w.redis != nil && (w.redis.held == nil || w.redis.held.Recheck(ctx, owner.operation, s.inventorySHA, "held", now) != nil) {
+			return ErrInstall
+		}
+		if w.minio != nil && (w.minio.held == nil || w.minio.held.Recheck(ctx, owner.operation, s.inventorySHA, "held", now) != nil) {
 			return ErrInstall
 		}
 	}

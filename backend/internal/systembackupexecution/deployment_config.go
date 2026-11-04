@@ -24,6 +24,7 @@ import (
 // DeploymentConfig is an administrator-pinned input; public create requests
 // cannot supply paths, trusted roots, source identities or resource UIDs.
 type DeploymentConfig struct {
+	MinIOReadKeepers     []FormalMinIOReadKeeperSelection           `json:"minio_read_keepers,omitempty"`
 	ProviderDependencies []FormalVaultProviderDependency            `json:"provider_dependencies,omitempty"`
 	SourceTLS            *mysqltls.Material                         `json:"source_tls,omitempty"`
 	RedisReadKeepers     []install.OriginalRedisReadKeeperSelection `json:"redis_read_keepers,omitempty"`
@@ -139,6 +140,24 @@ func LoadDeploymentConfig(path, digest string) (DeploymentConfig, error) {
 	return cfg, nil
 }
 func (cnf DeploymentConfig) Validate() error {
+	if len(cnf.MinIOReadKeepers) > 1 {
+		return c.ErrExecutionAuthority
+	}
+	for _, selected := range cnf.MinIOReadKeepers {
+		matched := false
+		for _, w := range cnf.Writers {
+			matched = matched || w.Name == selected.Deployment && w.UID == selected.DeploymentUID && w.Namespace == selected.Native.Namespace
+		}
+		if !matched || selected.Native.NamespaceUID != cnf.NamespaceUID || selected.Native.Operation != "" || selected.Native.InventorySHA256 != "" || len(selected.Native.OutputAccounts) != 0 || !filepath.IsAbs(selected.Materials.File) || filepath.Clean(selected.Materials.File) != selected.Materials.File || len(selected.Materials.SHA256) != 64 || selected.ReaderAccount == "" || selected.ReaderCredential.File == "" || len(selected.ReaderCredential.SHA256) != 64 {
+			return c.ErrExecutionAuthority
+		}
+		for _, redis := range cnf.RedisReadKeepers {
+			if redis.Deployment == selected.Deployment {
+				return c.ErrExecutionAuthority
+			}
+		}
+	}
+
 	if validateFormalVaultDependencies(cnf) != nil {
 		return c.ErrExecutionAuthority
 	}
