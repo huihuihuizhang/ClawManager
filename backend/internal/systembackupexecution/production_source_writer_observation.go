@@ -211,6 +211,19 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 	if err != nil || len(raw) > 8<<20 {
 		return "", ErrSourceWriterObservationIncomplete
 	}
+	if len(s.Config.ProviderDependencies) != 0 {
+		dependencies, e := x.observeSourceVaultDependencies(ctx)
+		if e != nil {
+			return "", ErrSourceWriterObservationIncomplete
+		}
+		raw, err = json.Marshal(struct {
+			Native               json.RawMessage
+			ProviderDependencies []formalVaultProviderFacts
+		}{raw, dependencies})
+		if err != nil || x.recheck(ctx) != nil {
+			return "", ErrSourceWriterObservationIncomplete
+		}
+	}
 	return hash(raw), nil
 }
 
@@ -238,6 +251,14 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 			}
 			want[key] = ref.UID
 		}
+	}
+	for _, dependency := range s.Config.ProviderDependencies {
+		w := dependency.Workload
+		key := "Deployment/" + ns + "/" + w.Deployment
+		if key == controller || want[key] != "" || w.DeploymentUID == "" {
+			return ErrSourceWriterObservationIncomplete
+		}
+		want[key] = w.DeploymentUID
 	}
 	stoppedRoots, err := currentStoppedProGraphRoots(s.Config, source, api, want)
 	if err != nil {

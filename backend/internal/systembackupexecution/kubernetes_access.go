@@ -114,6 +114,19 @@ func RequiredCaptureAccess(cfg DeploymentConfig, controllerSA ...string) ([]Capt
 	add("", "", "namespaces", []string{"get"}, []string{cfg.Namespace})
 	add("", "", "nodes", []string{"get"}, sortedUnique(nodes))
 	add("", "", "persistentvolumes", []string{"get"}, sortedUnique(volumes))
+	if len(cfg.ProviderDependencies) != 0 {
+		add(cfg.Namespace, "apps", "deployments", []string{"get", "list"}, nil)
+		add(cfg.Namespace, "apps", "replicasets", []string{"get", "list"}, nil)
+		add(cfg.Namespace, "", "persistentvolumeclaims", []string{"get", "list"}, nil)
+		add(cfg.Namespace, "", "serviceaccounts", []string{"get"}, nil)
+		add(cfg.Namespace, "discovery.k8s.io", "endpointslices", []string{"list"}, nil)
+		for _, dependency := range cfg.ProviderDependencies {
+			add(cfg.Namespace, "", "services", []string{"get"}, []string{dependency.Workload.Service})
+		}
+		add("", "", "persistentvolumes", []string{"get", "list"}, nil)
+		add("", "storage.k8s.io", "volumeattachments", []string{"list"}, nil)
+		out = append(out, CaptureAccess{"", rbacv1.PolicyRule{NonResourceURLs: []string{"/.well-known/openid-configuration", "/openid/v1/jwks"}, Verbs: []string{"get"}}})
+	}
 	add("", "authentication.k8s.io", "tokenreviews", []string{"create"}, nil)
 	return out, nil
 }

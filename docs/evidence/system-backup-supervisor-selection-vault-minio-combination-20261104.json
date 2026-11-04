@@ -1,0 +1,139 @@
+{
+  "schema_version": "supervisor-original-selection-formal-provider-combination.v1",
+  "accepted_base": "0b3271aba38608a43ca0f93d96a0f9f89770c29f",
+  "selected_source_targets": 341,
+  "selection_sha256": "d709476188b3e99d492755af60f67e081b1b5f5ae4a382fefde9694da6852089",
+  "source_maps": [
+    {
+      "path": "backend/.c-minio-gate-plan-r3-20261104/source-map.json",
+      "sha256": "59af96c5d329f4b837d1338653364b963433513f05891bf8a1542462636b87d6"
+    },
+    {
+      "path": "backend/.c-minio-native-fixture-r4-20261104/source-map.json",
+      "sha256": "85bc5116c42e88664987ffeed8c2bb521186c4bd1f742171a0cf2c87f63eecc5"
+    },
+    {
+      "path": "backend/.d-formal-vault-dependency-20261104/source-map.json",
+      "sha256": "02f8146984c26c53aa1671a0c46bad454501a7f7e2b50fb263ac95e7db69b27a"
+    },
+    {
+      "path": "backend/.d-original-writer-selection-20261104/source-map.json",
+      "sha256": "38a6d4bcf13f79c92039dd9e2a2290f3a8b068f1f719008d12b9641df032013a"
+    },
+    {
+      "path": ".a-minio-first-hop-tls-20261104/source-map.json",
+      "sha256": "71eee1dbab6556de44e935b4c55ceacf67abd23a2ee431a3a577214746185d27"
+    }
+  ],
+  "results": {
+    "windows-targeted": {
+      "roots": 13,
+      "subcases": 35,
+      "log_sha256": "82852224a01f633fc4d5fd094a1c9d0de4a68d78dd6a52014150d7e5e5eb813c",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-backup": {
+      "roots": 5,
+      "subcases": 5,
+      "log_sha256": "15be890eb534d77cc6c2594a1b0cc59551f6d8738857e382007c0bf122b134ee",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-minionative": {
+      "roots": 2,
+      "subcases": 3,
+      "log_sha256": "20f864ec91d8849cfeaa4f1809e7a997a9758c9ab4c3187d400999e1bf31afe9",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-execution": {
+      "roots": 3,
+      "subcases": 2,
+      "log_sha256": "b1d58e1dec618fc5b90b198aa58a41e14ed4dc63616c32bf211bcab9d3072d8d",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-install": {
+      "roots": 3,
+      "subcases": 16,
+      "log_sha256": "7e2c09e20a9dbd97d4bbdb3ad86b0e0ff8bfce2e903fcb2b09bb74895f7711cd",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-owner": {
+      "roots": 1,
+      "subcases": 7,
+      "log_sha256": "53f847194c1200ca6274da31ac561d698e1ce61a6d8d6c176ac9cbbba6e44a48",
+      "failures": 0,
+      "skips": 0
+    },
+    "linux-adoption": {
+      "roots": 1,
+      "subcases": 4,
+      "log_sha256": "ef1155d90cbc5e9dcf4323ed5d8a6ef7663f30bb38768311c3057072f2e7a17b",
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "python_first_hop_tests": 4,
+  "native_minio_experiment": "Standalone fixed-server fixture and wire test compile with explicit native tag; no real MinIO server experiment executed.",
+  "test_fixture_fix": {
+    "target": "backend/internal/systembackupinstallationowner/install/original_writer_selection_author_test.go",
+    "before_sha256": "602c16675a348d018dc280b31b813477c8e8e27a24eff42a3ca86e57bf39c34d",
+    "after_sha256": "ad5817f20fa4b4152e30c0dbea0bfc7c3bb105cb15fe879e8b012cb6f70a6cf7",
+    "reason": "Actual Windows truncated-cipher test cannot write intentionally read-only Store.Save file. Only test fault injector clears readonly before truncation; production is unchanged."
+  },
+  "review": [
+    "Complete original writer selection is generated from repeated actual SQL/Kube census, pinned PKI receipt, real original custody AEAD and source configuration; consumer repeats checks, unknown layouts/reconcilers fail.",
+    "Formal Vault metadata observer and installer use separate metadata-only identity, guarded current task/recovery binding and actual native/Kube/provider reads. Original A1 empty-head path remains distinct; no root token is mounted to formal workload.",
+    "MinIO whole acquire+restore journal capacity is reserved before mutation. Single-send transport/unknown-outcome logic and independent-process encrypted original custody pass their models; neither models nor fixture compilation prove real source gate.",
+    "MinIO first-hop TLS operator starts from original pinned Kubernetes authority/Plan, records intent before mutations and CAS rollback; four Python models pass. Actual TLS installation and business app CA/scheme update remain required."
+  ],
+  "binaries": [
+    {
+      "path": "bins-v14r2/adoption.test",
+      "bytes": 87385092,
+      "sha256": "62fa47ba6f968b5e5e0f3887ccdad3b1b9406e83f7aaae758cd6a53ffcd98687"
+    },
+    {
+      "path": "bins-v14r2/backup.test",
+      "bytes": 95959178,
+      "sha256": "98d518cc3c690a3774b3d342bf61724ae700ed41c0297945283fc40448eb1b5b"
+    },
+    {
+      "path": "bins-v14r2/execution.test",
+      "bytes": 132645349,
+      "sha256": "003d386a00c17e88fdaf09b868fcbac64d0eda3c15080a128fb2de0c210bb666"
+    },
+    {
+      "path": "bins-v14r2/install.test",
+      "bytes": 111417752,
+      "sha256": "b518dc6df8f8395a0a1ccb2e8d93f5b77bdf65476828f96eaa4ed09fa019d223"
+    },
+    {
+      "path": "bins-v14r2/minionative.test",
+      "bytes": 10793574,
+      "sha256": "8f60ac494fd58d1e9004dbe75c94dc2edaea611826960c6f5fb79201f4ee0ba9"
+    },
+    {
+      "path": "bins-v14r2/native-minio.test",
+      "bytes": 132687738,
+      "sha256": "edc139b54faf7bbc874eedc61f923d8a0fcb4d3a8341171c5c1a76affc6142b6"
+    },
+    {
+      "path": "bins-v14r2/owner.test",
+      "bytes": 92803300,
+      "sha256": "99b749004d8185df6b3a48259811d0e775d5a3189697d0f2a439465b454c4139"
+    },
+    {
+      "path": "bins-v14r2/system-backup-kek-authority",
+      "bytes": 64565267,
+      "sha256": "e133bd1986e30ea5c6cc01baf47f8202c83d29313b065bd06ea1f04c11ce3053"
+    }
+  ],
+  "cleanup": "Eight completed test/build outputs hashed and removed; output directory absent. Failed Windows readonly-file injection log retained; only fixture setup changed.",
+  "page_backup_completed": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

@@ -4,8 +4,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -16,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/mysqltls"
 	adapter "clawreef/internal/systembackupkekadapter"
 	reg "clawreef/internal/systembackupkekregistry"
 	"github.com/go-sql-driver/mysql"
@@ -46,11 +50,13 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	server := flags.String("server-uuid", "", "deployment-pinned MySQL server UUID")
 	database := flags.String("database", "", "deployment-pinned MySQL database")
 	dsn := flags.String("dsn-file", "", "owner-writer MySQL credential file")
+	tlsFile := flags.String("source-tls-file", "", "pinned strict MySQL TLS material JSON")
+	tlsSHA := flags.String("source-tls-sha256", "", "exact TLS material SHA256")
 	key := flags.String("issuer-public-key-file", "", "deployment-pinned raw 32-byte Ed25519 public key")
 	record := flags.String("record-file", "", "original owner signed record bytes")
 	signature := flags.String("signature-file", "", "raw 64-byte original owner signature")
 	expected := flags.Uint64("expected-row-version", 0, "CAS row version; 0 creates a new mapping")
-	if flags.Parse(args) != nil || flags.NArg() != 0 || *installation == "" || *server == "" || *database == "" {
+	if flags.Parse(args) != nil || flags.NArg() != 0 || *installation == "" || *server == "" || *database == "" || *tlsFile == "" || len(*tlsSHA) != 64 {
 		return errInput
 	}
 	pub, err := bounded(*key, 32)
@@ -87,10 +93,26 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 		cfg.Params = map[string]string{}
 	}
 	cfg.Params["time_zone"] = "'+00:00'"
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+	tlsRaw, err := bounded(*tlsFile, 65536)
 	if err != nil {
 		return errInput
 	}
+	sum := sha256.Sum256(tlsRaw)
+	if hex.EncodeToString(sum[:]) != *tlsSHA {
+		return errInput
+	}
+	var material mysqltls.Material
+	dec := json.NewDecoder(bytes.NewReader(tlsRaw))
+	dec.DisallowUnknownFields()
+	if dec.Decode(&material) != nil || dec.Decode(new(any)) != io.EOF || !material.Selected() || material.Validate() != nil || material.Apply(cfg) != nil {
+		return errInput
+	}
+	// Keep the private TLS clone: FormatDSN cannot serialize Config.TLS.
+	connector, err := mysql.NewConnector(cfg)
+	if err != nil {
+		return errInput
+	}
+	db := sql.OpenDB(connector)
 	defer db.Close()
 	db.SetMaxOpenConns(1)
 	writer, err := adapter.NewInstallationAuthorityWriter(db, *installation, reg.DatabaseIdentity{ServerUUID: *server, Database: *database}, pub)

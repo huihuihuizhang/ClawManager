@@ -63,6 +63,10 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil {
 		return nil, err
 	}
+	dependencies, err := x.observeBootstrapVaultDependencies(clients)
+	if err != nil {
+		return nil, err
+	}
 	native, err := x.readNativeWriters(f.firstSQL, f.firstAPI, clients)
 	if err != nil {
 		return nil, err
@@ -101,6 +105,11 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil || !reflect.DeepEqual(f.firstAPI.objects, f.lastAPI.objects) {
 		return nil, install.ErrInstall
 	}
+	lastDependencies, err := x.observeBootstrapVaultDependencies(clients)
+	if err != nil || !reflect.DeepEqual(dependencies, lastDependencies) {
+		return nil, install.ErrInstall
+	}
+	f.dependencies = lastDependencies
 	lastNative, err := x.readNativeWriters(f.lastSQL, f.lastAPI, clients)
 	if err != nil || !reflect.DeepEqual(native, lastNative) {
 		return nil, install.ErrInstall

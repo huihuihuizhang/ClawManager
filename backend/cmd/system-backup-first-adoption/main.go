@@ -26,7 +26,8 @@ import (
 func run(ctx context.Context, args []string, out io.Writer) int {
 	flags := flag.NewFlagSet("system-backup-first-adoption", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
-	action := flags.String("action", "adopt", "explicit prepare-issuers or adopt")
+	action := flags.String("action", "adopt", "explicit prepare-selection, prepare-issuers or adopt")
+	writerSelection := registerWriterSelectionFlags(flags)
 	issuerDirectory := flags.String("issuer-output-directory", "", "existing private directory for actual authenticated five-role material authoring")
 	planFile := flags.String("plan-file", "", "user-selected canonical public target plan")
 	planSHA := flags.String("plan-sha256", "", "independently pinned plan bytes")
@@ -47,7 +48,10 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 || *planFile == "" || *planSHA == "" || *publicFile == "" || *publicSHA == "" || *kubeFile == "" || *kubeSHA == "" || *dsnFile == "" || *dbCAFile == "" || *passwordFile == "" || *enrollmentFile == "" || *enrollmentSHA == "" {
 		return 2
 	}
-	if *action != "adopt" && *action != "prepare-issuers" {
+	if *action != "adopt" && *action != "prepare-issuers" && *action != "prepare-selection" {
+		return 2
+	}
+	if *action == "prepare-selection" && !writerSelection.valid() {
 		return 2
 	}
 	if *action == "adopt" && (*selectionFile == "" || *selectionSHA == "" || *issuerDefinitionFile == "" || *issuerDefinitionSHA == "") {
@@ -98,6 +102,16 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	if *action == "prepare-selection" {
+		receipt, err := writerSelection.produce(active, installer, password, enrollment)
+		if err != nil {
+			return reportStageFailure(out, "original_selection_material_refused_no_source_stop_preserve_outputs", "selection_materials", err, install.OriginalAdoptionCommitInspection{}, 1)
+		}
+		if json.NewEncoder(out).Encode(receipt) != nil {
+			return 3
+		}
+		return 0
+	}
 	if *action == "prepare-issuers" {
 		pin, err := installer.PrepareOriginalAdoptionIssuerMaterial(active, password, enrollment, *issuerDirectory)
 		if errors.Is(err, install.ErrOriginalAdoptionIssuerMaterialUnconfirmed) {

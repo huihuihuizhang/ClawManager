@@ -200,6 +200,11 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if authority.Recheck(ctx) != nil {
 		return nil, nil, d.ErrNotReady
 	}
+	stage = "provider_dependencies"
+	metadata.ProviderDependencies, err = s.observeFormalVaultDependencies(ctx, owner, in, false)
+	if err != nil || saved != nil && !reflect.DeepEqual(metadata.ProviderDependencies, saved.ProviderDependencies) {
+		return nil, nil, d.ErrNotReady
+	}
 	stage = "metadata_encoding"
 	raw, err := json.Marshal(metadata)
 	if err != nil || len(raw) > 8<<20 {

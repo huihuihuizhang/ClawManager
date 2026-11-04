@@ -307,7 +307,7 @@ func (p *OriginalWriterMaintenance) openOriginalGateway(ctx context.Context, sou
 	var plain bytes.Buffer
 	defer func() { clear(plain.Bytes()) }()
 	binding := runtimecustody.Binding(p.operator.installer.plan.Target.InstallationID, runtimecustody.Identity{InstanceID: source.ID, UserID: source.UserID, Generation: source.Generation, WorkspacePath: source.Workspace}, s.OriginalPlainSHA256)
-	if staging.Open(ctx, bytes.NewReader(cipher), &plain, key, binding, 7<<20) != nil || hash(plain.Bytes()) != s.OriginalPlainSHA256 || decodeExact(plain.Bytes(), &original) != nil || original.InstanceID != source.ID || original.UserID != source.UserID || original.Generation != source.Generation || original.WorkspacePath != source.Workspace {
+	if staging.Open(ctx, bytes.NewReader(cipher), &plain, key, binding, 7<<20) != nil || hash(plain.Bytes()) != s.OriginalPlainSHA256 || decodeOriginalWriterMaterialData(plain.Bytes(), &original) != nil || original.InstanceID != source.ID || original.UserID != source.UserID || original.Generation != source.Generation || original.WorkspacePath != source.Workspace {
 		return services.RuntimeAgentCreateGatewayRequest{}, ErrInstall
 	}
 	return original, nil

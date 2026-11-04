@@ -118,7 +118,7 @@ func decodeBootstrapSourceCore(raw []byte) (bootstrapSourceCoreWire, error) {
 	if _, err := jsoncanonicalizer.Transform(raw); err != nil {
 		return out, ErrInstall
 	}
-	allowed := strings.Fields("source_tls redis_read_keepers schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
+	allowed := strings.Fields("provider_dependencies source_tls redis_read_keepers schema_version capture_scope installation_id controller_owner application_scope namespace namespace_uid trust_domain forward_grant recovery_grant key_directory profile_file capacity_file source_dsn_file source_user source_database source_server_uuid staging_directory seal_custody_max_bytes staging_claim staging_location worker_image worker_security control_url listen server_certificate server_key issuer_certificate issuer_certificate_sha256 issuer_key platform_writers workspace acquire_seconds hold_seconds runtime_sources formal_verifier publication_signers publisher_verifier capture_modules publication_target publication_worker")
 	known := map[string]bool{}
 	for _, name := range allowed {
 		known[name] = true

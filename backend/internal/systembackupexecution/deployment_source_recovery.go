@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"path"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -168,6 +169,10 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 	if hash(desc.Source) != desc.SourceSHA256 || decodeMetadataCanonical(desc.Source, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Version != productionCaptureMetadataVersion {
 		return nil, c.ErrSourceRecoveryProofRequired
 	}
+	dependencies, dependencyErr := s.observeFormalVaultDependencies(ctx, o, in, true)
+	if dependencyErr != nil || !reflect.DeepEqual(dependencies, metadata.ProviderDependencies) {
+		return nil, c.ErrSourceRecoveryProofRequired
+	}
 	instances := map[int]b.InstanceIdentity{}
 	for _, instance := range source.Instances {
 		if instance.ID <= 0 || instances[instance.ID].ID != 0 {
@@ -327,6 +332,10 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 		ob.Scope = "original_kubelet_exit_witness_and_recovered_ready_pod_container_volume_api_bindings"
 		ob.Facts, _ = json.Marshal(facts)
 		out = append(out, ob)
+	}
+	currentDependencies, dependencyErr := s.observeFormalVaultDependencies(ctx, o, in, true)
+	if dependencyErr != nil || !reflect.DeepEqual(currentDependencies, metadata.ProviderDependencies) {
+		return nil, c.ErrSourceRecoveryProofRequired
 	}
 	if len(instances) != 0 || o.Gate.Recovery.Check(ctx, in.Authority) != nil {
 		return nil, c.ErrSourceRecoveryProofRequired

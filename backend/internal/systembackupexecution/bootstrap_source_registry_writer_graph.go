@@ -32,6 +32,14 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 			want[key] = ref.UID
 		}
 	}
+	for _, dependency := range x.config.ProviderDependencies {
+		w := dependency.Workload
+		key := "Deployment/" + ns + "/" + w.Deployment
+		if key == controller || want[key] != "" || w.DeploymentUID == "" {
+			return ErrSourceWriterObservationIncomplete
+		}
+		want[key] = w.DeploymentUID
+	}
 	stoppedRoots, err := currentStoppedProGraphRoots(x.config, source, api, want)
 	if err != nil {
 		return err

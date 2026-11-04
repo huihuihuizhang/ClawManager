@@ -162,11 +162,10 @@ func nativeInstallMCCommand(ctx context.Context, dir string, n *minioPermissionH
 	return cmd
 }
 func nativeInstallMCInput(ctx context.Context, dir string, n *minioPermissionHTTP, files MinIONativeAdminFiles, input []byte, args ...string) error {
-	cmd := nativeInstallMCCommand(ctx, dir, n, files, input, args...)
-	if cmd.Run() != nil {
-		return install.ErrCommitUnknown
-	}
-	return nil
+	// One existing installer owns all mutations. Pinned mc remains useful for
+	// read-only discovery/version checks, but its embedded madmin automatically
+	// replays network failures and cannot enforce commit-unknown send-once.
+	return nativeInstallWriteOnce(ctx, dir, n, input, args...)
 }
 
 // Original MinIO ADMIN installation only. The actual enrolled application

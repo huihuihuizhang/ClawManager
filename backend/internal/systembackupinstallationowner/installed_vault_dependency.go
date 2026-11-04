@@ -524,8 +524,24 @@ func (o *InstalledVaultDependencyObserver) Observe(ctx context.Context) (*Observ
 	if e != nil || !bytes.Equal(current, token) || ctx.Err() != nil {
 		return nil, ErrOwner
 	}
+	// Bound the private observation by the native token's remaining lifetime.
+	// Do not put a changing TTL in immutable source metadata or extend it to 10s.
+	tokenUntil := deadline
+	if o.cfg.IdentityMode == "metadata-only" {
+		started := time.Now().UTC()
+		raw, err := o.transport.read(ctx, "/v1/auth/token/lookup-self", token)
+		var identity struct {
+			Policies         []string `json:"policies"`
+			IdentityPolicies []string `json:"identity_policies"`
+			TTL              int64    `json:"ttl"`
+		}
+		if err != nil || json.Unmarshal(raw, &identity) != nil || !reflect.DeepEqual(identity.Policies, []string{o.cfg.ObserverPolicy}) || len(identity.IdentityPolicies) != 0 || identity.TTL < 1 || identity.TTL > 86400 {
+			return nil, ErrOwner
+		}
+		tokenUntil = started.Add(time.Duration(identity.TTL) * time.Second)
+	}
 	now := time.Now().UTC()
-	p := &ObservedInstalledVaultDependency{owner: o, ctx: ctx, data: first, observed: now, until: minimum(deadline, now.Add(10*time.Second))}
+	p := &ObservedInstalledVaultDependency{owner: o, ctx: ctx, data: first, observed: now, until: minimum(minimum(deadline, tokenUntil), now.Add(10*time.Second))}
 	p.origin = p
 	if p.Recheck(ctx, now) != nil {
 		return nil, ErrOwner

@@ -1,0 +1,71 @@
+{
+  "schema_version": "supervisor-native-minio-original-state-single-send-check.v1",
+  "accepted_base": "0b3271aba38608a43ca0f93d96a0f9f89770c29f",
+  "selected_source_targets": 318,
+  "selection_sha256": "4b36998c616c84ebbf8adacd8d87b902eafb056708a5dce5d85e324e860ef86e",
+  "results": {
+    "windows-targeted": {
+      "roots": 5,
+      "subcases": 8,
+      "log_sha256": "a40c031053b5efbe86efd52e6ccd786da6703a17bff11976437a32798fe52ea7",
+      "failures": 0,
+      "test_skips": 0
+    },
+    "linux-backup": {
+      "roots": 4,
+      "subcases": 5,
+      "log_sha256": "9379f793aeb9f1e8d81552d40bb98cecc204307699de09bf7ee121777cb9959f",
+      "failures": 0,
+      "test_skips": 0
+    },
+    "linux-minionative": {
+      "roots": 2,
+      "subcases": 3,
+      "log_sha256": "d497ee6f137c0d643b1eaedd360ff467431d746279ea3e8090ab59ced9000446",
+      "failures": 0,
+      "test_skips": 0
+    },
+    "linux-execution": {
+      "roots": 1,
+      "subcases": 2,
+      "log_sha256": "56a1c9247c5bb821f201d249f6be48c63c541e414edf9cd9dda29280d6beb35b",
+      "failures": 0,
+      "test_skips": 0
+    }
+  },
+  "binaries": [
+    {
+      "path": "bins-v13/backup.test",
+      "bytes": 95947230,
+      "sha256": "6a27b978656caa23a9b1773071ab1f65e7fb0551c5978841668a4e5eeb5e4af1"
+    },
+    {
+      "path": "bins-v13/execution.test",
+      "bytes": 132451166,
+      "sha256": "fd368a1c6dcc6b2e9eb3fb00fc831e699872719c07c308f113f855579a53d9bd"
+    },
+    {
+      "path": "bins-v13/minionative.test",
+      "bytes": 10793574,
+      "sha256": "8f60ac494fd58d1e9004dbe75c94dc2edaea611826960c6f5fb79201f4ee0ba9"
+    },
+    {
+      "path": "bins-v13/system-backup-kek-authority",
+      "bytes": 64565267,
+      "sha256": "9b63e442d627bb4ae745c87dc76c2967fb0b3ec0a22f4cf6d41adcc51d85187c"
+    }
+  ],
+  "original_failure": "Linux v12 original custody exact JSON roundtrip failed; fixture and genuine absent-user-policy RawMessage normalization fixed in official r2; failed ELF hashed and removed.",
+  "native_server_protocol_experiment_passed": false,
+  "actual_native_source_hold_passed": false,
+  "field_installation_performed": false,
+  "page_backup_completed": false,
+  "dr_qualified": false,
+  "remaining": [
+    "Add official r3 journal recovery capacity reservation and r4 standalone native fixture dependency, then exact checks.",
+    "Actual fixed-version MinIO service-side encryption and native IAM/config execution remains unverified; transport/mock/local encryption custody do not replace it.",
+    "Original/formal MinIO and Redis factory/materials/config installation, original198 upgrade/adoption/enable and full page publication remain required."
+  ],
+  "interruption": "Host interruption lost execution handles and stopped Docker; no Go compiler or original build container survived. Local Docker explicitly restarted; completed test ELFs reused only after exact source checks. Missing final KEK TLS build executed once after recovery.",
+  "cleanup": "Four final Linux test/build outputs hashed and removed; failed v12 ELF and temporary objdump tool also previously hashed/removed. No field resource mutated."
+}
