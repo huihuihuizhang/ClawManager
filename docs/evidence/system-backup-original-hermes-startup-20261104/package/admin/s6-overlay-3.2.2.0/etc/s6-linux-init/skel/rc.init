@@ -1,0 +1,96 @@
+#!/bin/sh -e
+
+# This is stage 2, the part of the initialization that is run once
+# the s6 supervision tree has been set up. This is where all the
+# services are brought up, and the CMD, if any, is run.
+
+trap : INT  # guard against ^C as much as possible
+
+prog=/run/s6/basedir/scripts/rc.init
+top="$1" ; shift
+
+haltwith () {
+  echo "$1" > /run/s6-linux-init-container-results/exitcode
+  exec /run/s6/basedir/bin/halt
+}
+
+if test -d /run/s6/container_environment ; then
+  s6-chmod 0755 /run/s6/container_environment
+fi
+
+if v=`printcontenv S6_VERBOSITY` && eltest "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+cv=$((v - 1))
+if test "$cv" -lt 0 ; then
+  cv=0
+fi
+
+if b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && eltest "$b" =~ '^[[:digit:]]+$' ; then : ; else
+  b=0
+fi
+
+if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
+  set +e
+  $hook
+  r=$?
+  set -e
+  if test "$r" -gt 0 ; then
+    if test "$b" -ge 2 ; then
+      echo "$prog: fatal: hook $hook exited $r" 1>&2
+      haltwith "$r"
+    elif test "$v" -ge 1 ; then
+      echo "$prog: warning: hook $hook exited $r" 1>&2
+    fi
+  elif test "$v" -ge 2 ; then
+    echo "$prog: info: hook $hook exited $r" 1>&2
+  fi
+fi
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-3.2.2.0/etc/s6-rc/sources
+s6-rc-init -c /run/s6/db /run/service
+
+if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$timeout" =~ '^[[:digit:]]+$' ; then : ; else
+  timeout=0
+fi
+
+set +e
+s6-rc -v$v -u -t "$timeout" -- change "$top"
+r=$?
+set -e
+
+if test "$r" -gt 0 && test "$b" -gt 0 ; then
+  echo "$prog: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs/current if you have in-container logging) for more information." 1>&2
+  if test "$b" -ge 2 ; then
+    echo "$prog: fatal: stopping the container." 1>&2
+    haltwith "$r"
+  fi
+fi
+
+if test "$#" -gt 0 ; then
+  cd `s6-cat < /run/s6/workdir`
+  set +e
+  arg0=`printcontenv S6_CMD_ARG0`
+  if t=`printcontenv S6_CMD_USE_TERMINAL` && eltest "$t" =~ '^[[:digit:]]+$' -a "$t" -gt 0 && t=`tty` ; then
+    arg0="redirfd -w 1 $t fdmove -c 2 1 $arg0"
+  fi
+  if s=`printcontenv S6_CMD_RECEIVE_SIGNALS` && eltest "$s" =~ '^[[:digit:]]+$' -a "$s" -gt 0 ; then
+    $arg0 "$@" &
+    cmdpid="$!"
+    echo "$cmdpid" > /run/s6/cmdpid
+    wait "$cmdpid"
+    r="$?"
+    rm -f /run/s6/cmdpid
+  else
+    $arg0 "$@"
+    r="$?"
+  fi
+  set -e
+  haltwith "$r"
+fi

@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+if test "$#" -eq 0 ; then
+  echo 'printcontenv: fatal: too few arguments' 1>&2
+  exit 100
+fi
+
+if test "0$S6_KEEP_ENV" -ne 0 ; then
+  eval var=\"\$$1\"
+  if test -z "$var" ; then
+    exit 1
+  else
+    exec s6-echo -- "$var"
+  fi
+else
+  exec 2>/dev/null
+  s6-cat < "/run/s6/container_environment/$1" && echo
+fi

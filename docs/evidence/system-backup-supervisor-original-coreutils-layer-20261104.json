@@ -1,0 +1,48 @@
+{
+  "scope": "actual fixed common layer data; no process or native authority",
+  "layer": "sha256:edf77e2899be8fa8042fed36eb724adb2af5d8269843ad2308b384986d81a21f",
+  "compressed_bytes": 42420842,
+  "diff_id": "sha256:efd9289efa80fa33ba25a5870deee04428ecb9d79bc30737f3517ffd3d0dc30f",
+  "records_in_tar_order": [
+    {
+      "path": "usr/bin/coreutils",
+      "kind": "regular",
+      "linkname": "",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "bytes": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
+    },
+    {
+      "path": "usr/bin/sleep",
+      "kind": "symlink",
+      "linkname": "../lib/cargo/bin/coreutils/sleep",
+      "mode": "0o777",
+      "uid": 0,
+      "gid": 0,
+      "bytes": 0,
+      "sha256": null
+    },
+    {
+      "path": "usr/lib/cargo/bin/coreutils/[",
+      "kind": "hardlink",
+      "linkname": "usr/bin/coreutils",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "bytes": 0,
+      "sha256": null
+    },
+    {
+      "path": "usr/lib/cargo/bin/coreutils/sleep",
+      "kind": "hardlink",
+      "linkname": "usr/bin/coreutils",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "bytes": 0,
+      "sha256": null
+    }
+  ]
+}

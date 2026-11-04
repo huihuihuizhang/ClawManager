@@ -1,0 +1,83 @@
+#!/bin/sh -e
+
+# This script is run as pid 1 after preinit has exited.
+# It doesn't need privileges: it should run in all configurations.
+# It invokes s6-linux-init-maker with options depending on run-time
+# control variables, then execs into the init script created by
+# s6-linux-init-maker, which is stage 1.
+
+analyze_logging_script () {
+  val=0
+  t1=true
+  t2=true
+  set -- $S6_LOGGING_SCRIPT
+  while test "$#" -gt 0 ; do
+    if test "$1" = t && $t1 ; then
+      val=$((val + 1))
+      t1=false
+    elif test "$1" = T && $t2 ; then
+      val=$((val + 2))
+      t2=false
+    fi
+    shift
+  done
+  echo $val
+}
+
+basedir=/run/s6/basedir
+
+if test -n "S6_LOGGING_SCRIPT" ; then
+  options="-t `analyze_logging_script`"
+else
+  options="-t 2"
+fi
+
+if test "0$S6_KEEP_ENV" -eq 0 ; then
+  options="$options -s /run/s6/container_environment"
+fi
+
+if test "0$S6_LOGGING" -lt 2 ; then
+  if test "0$S6_LOGGING" -eq 1 ; then
+    options="$options -1"
+  else
+    options="$options -B"
+  fi
+fi
+
+if test -n "$S6_CATCHALL_USER" && test "0$CONTAINER_UID" -eq 0 ; then
+  options="$options -u $S6_CATCHALL_USER"
+fi
+
+if eltest "$S6_KILL_GRACETIME" =~ '^[[:digit:]]+$' ; then
+  options="$options -q $S6_KILL_GRACETIME"
+fi
+
+if test "0$S6_SYNC_DISKS" -ne 0 ; then
+  options="$options -S"
+fi
+
+if test "0$S6_WAIT_FOR_CLOSING_FD" -ge 3 ; then
+  options="$options -W $S6_WAIT_FOR_CLOSING_FD"
+fi
+
+s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-overlay-3.2.2.0/etc/s6-linux-init/skel $options -- "$basedir"
+
+if test "0$S6_KEEP_ENV" -ne 0 ; then
+  s6-rename "$basedir/env" "$basedir/env.orig"
+  s6-dumpenv -N "$basedir/env"
+  for file in `s6-ls "$basedir/env.orig"` ; do
+    s6-hiercopy "$basedir/env.orig/$file" "$basedir/env/$file"
+  done
+fi
+
+if test "0$S6_CMD_RECEIVE_SIGNALS" -ne 0 ; then
+  ctldir="$basedir/run-image/service/.s6-svscan"
+  for sig in TERM QUIT INT USR1 USR2 PWR WINCH ; do
+    s6-rename "$ctldir/SIG$sig" "$ctldir/SIG$sig".s6-linux-init
+    s6-hiercopy /package/admin/s6-overlay/etc/s6-linux-init/skel/CMDSIG "$ctldir/SIG$sig"
+  done
+fi
+
+pwd > /run/s6/workdir
+
+exec "$basedir/bin/init" "$@"

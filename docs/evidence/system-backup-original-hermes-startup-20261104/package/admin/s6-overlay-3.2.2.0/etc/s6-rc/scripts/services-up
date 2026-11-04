@@ -1,0 +1,74 @@
+#!/bin/sh -e
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+if v=`printcontenv S6_VERBOSITY` && eltest "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+
+dir=/run/s6/legacy-services
+
+s6-rmrf "$dir"
+s6-mkdir -p -m 0755 "$dir"
+list=
+notifno=
+notifyes=
+for i in `s6-ls "$etc/services.d" 2>/dev/null | s6-sort` ; do
+  if test -d "$etc/services.d/$i" ; then
+    list="$list $i"
+    if test $v -ge 2 ; then
+      s6-echo -n -- "services-up: info: copying legacy longrun $i" 1>&2
+    fi
+    s6-hiercopy "$etc/services.d/$i" "$dir/$i"
+    if test -r "$dir/$i/notification-fd" ; then
+      notifyes="$notifyes $dir/$i"
+      if test $v -ge 2 ; then
+        echo 1>&2
+      fi
+    else
+      notifno="$notifno $dir/$i"
+      if test $v -ge 2 ; then
+        echo ' (no readiness notification)' 1>&2
+      fi
+    fi
+  fi
+done
+
+for file in $list ; do
+  s6-ln -nsf "$dir/$file" "/run/service/$file"
+done
+
+s6-svscanctl -a /run/service
+
+if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && eltest "$dowait" =~ '^[[:digit:]]+$' -a "$dowait" -gt 0 ; then
+  if maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$maxtime" =~ '^[[:digit:]]+$' ; then : ; else
+    maxtime=0
+  fi
+
+  if rtime=`printcontenv S6_SERVICES_READYTIME` && eltest "$rtime" =~ '^[[:digit:]]+$' ; then : ; else
+    rtime=50
+  fi
+
+  # Increase if necessary. Unavoidable race condition, use s6-rc instead!
+  s6-sleep -m "$rtime"
+
+  r=false
+  if test -n "$notifno" && ! s6-svwait -u -t "$maxtime" -- $notifno ; then
+    r=true
+  fi
+  if test -n "$notifyes" && ! s6-svwait -U -t "$maxtime" -- $notifyes ; then
+    r=true
+  fi
+  if $r && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && eltest "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
+    if test $v -ge 1 ; then
+      echo 'services-up: warning: some legacy longruns failed to start' 1>&2
+    fi
+    if test "$b" -ge 2 ; then
+      exit 1
+    fi
+  fi
+fi

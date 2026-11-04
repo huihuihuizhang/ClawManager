@@ -1,0 +1,16 @@
+#!/command/execlineb
+
+elgetopt "f:"
+multisubstitute
+{
+  importas -u -D "" fifo ELGETOPT_f
+  elgetpositionals -P0
+}
+emptyenv -oP
+if { eltest ${#} -ge 1 }
+ifelse { eltest -n ${fifo} }
+{
+  redirfd -rnb 0 ${fifo}
+  /package/admin/s6-overlay-3.2.2.0/libexec/logutil-service-main ${1}
+}
+/package/admin/s6-overlay-3.2.2.0/libexec/logutil-service-main ${1}
