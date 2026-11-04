@@ -1,0 +1,144 @@
+{
+  "schema_version": "supervisor-disabled-unverified-initialization-review.v1",
+  "base_commit": "9e76a961cbb61c65e60681330894598cbe145128",
+  "source_maps": [
+    {
+      "map": "backend/.a-disabled-unverified-owner-20261105/source-map.json",
+      "sha256": "7e2f90da3b08951adf858140581c95d2a17ab5def082e7a5b46d0d6008271f9d"
+    },
+    {
+      "map": "backend/.a-disabled-unverified-model-domain-r1-20261105/source-map.json",
+      "sha256": "eaa52d997392767d1acfa867d4de0e90571168249b55fe8cb699465ee4b12326"
+    }
+  ],
+  "files": [
+    {
+      "target": "backend/internal/systembackupsecurity/config_disabled_initialization_plan.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupsecurity/config_disabled_initialization_plan.go",
+      "sha256": "94d2dd864492f28673886279f91b9489249514da7678805c0ff7adbb79c8bd1b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/config_disabled_initialization_plan_test.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupsecurity/config_disabled_initialization_plan_test.go",
+      "sha256": "be4764b693db6c7ff0de23468d3a0ba004191319123ed2ca26210b83d21649b7",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekregistry/existing_snapshot_read.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupkekregistry/existing_snapshot_read.go",
+      "sha256": "2557f52298a4bf946526391b890f1526aae1619c9bbd16cda8605107e931ac07",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/original_c1_history_read.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupkekadapter/original_c1_history_read.go",
+      "sha256": "d40d8b2b7912414ee215013e32125c99d3ce711fae71fee2fef510fa3723e9c3",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_disabled_initialization.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupinstallationowner/install/original_disabled_initialization.go",
+      "sha256": "5be9b1577fa4f512282a430a251326c082abdd0ce1012465ce27c86d6842c490",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_disabled_initialization_sources.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupinstallationowner/install/original_disabled_initialization_sources.go",
+      "sha256": "4d5043ae33f57f1c085f605bf77909640f5175161932d47a7917bf830183bd5b",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_disabled_initialization_rows.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupinstallationowner/install/original_disabled_initialization_rows.go",
+      "sha256": "4e046f706dabb39b4b1a3eb108cbfd9cad49835a7f0fb2321270e4e02d80ca68",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_disabled_initialization_query.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupinstallationowner/install/original_disabled_initialization_query.go",
+      "sha256": "2de8d593fc1cfce4537fd37f80ba26f29d49b226d31125958e52a6a542d5063e",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_disabled_initialization_test.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupinstallationowner/install/original_disabled_initialization_test.go",
+      "sha256": "adb1e5c57f3abf482b709b47ff18589091b651c0ff313643a1664353d70ecef4",
+      "mode": "100644"
+    },
+    {
+      "target": "backend/internal/systembackupkekadapter/disabled_initialization_snapshot_mysql_test.go",
+      "source": ".tmp-sbk-disabled-clean-20261105/source/backend/internal/systembackupkekadapter/disabled_initialization_snapshot_mysql_test.go",
+      "sha256": "6e1c08139b06775b194ba72ed6d4581c4b9c4730297e24f6d3269231e1ff403f",
+      "mode": "100644"
+    }
+  ],
+  "clean_accepted_base_checks": {
+    "root_test_passes": 7,
+    "subtest_passes": 17,
+    "test_skips": 0,
+    "failures": 0,
+    "roots": [
+      "TestDisabledInitializationPlanIsDisabledCanonicalDataOnly",
+      "TestOriginalDisabledRowsRollbackAndLostCommitQueryOnly",
+      "TestOriginalDisabledEntryRejectsMissingOriginalOwners",
+      "TestOriginalC1OpenDomainIsNotHead1WritePermission",
+      "TestOriginalDisabledMetadataRejectsForeignTransactionAndContext",
+      "TestOriginalDisabledAuthorityKeepsOriginalIdentityWindowAndRevocation",
+      "TestOriginalDisabledRequiresExactSeventeenCommittedJournalMembers"
+    ],
+    "log_sha256": "8fc34bf5d03b17c050bc497cb9873a5b0dd2b96f424aa56e300534bd7a26d234",
+    "scope": "Original owner method/Query compilation plus transaction-model rollback/lost reply/readback/source/authority/capacity boundary tests. No fabricated opaque full17 success."
+  },
+  "mysql_component": {
+    "schema_version": "supervisor-disabled-initialization-existing-snapshot-native.v1",
+    "owner": "0ea1360eda30467590ca66853e42d688",
+    "image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+    "server_uuid": "614affd4-d892-11f1-af68-d0295c51829a",
+    "stage": "completed",
+    "checks": {
+      "owned_san_certificate_generated": true,
+      "actual_mysql84_san_tls_credentials_prepared": true,
+      "actual_native_test_exit_zero": true,
+      "tagged_native_root_executed": true,
+      "native_test_not_skipped": true,
+      "owned_schema_cleanup_complete": true
+    },
+    "native_exit": 0,
+    "failure_class": null,
+    "cleanup": [
+      {
+        "kind": "container",
+        "state": "removed"
+      },
+      {
+        "kind": "volume",
+        "state": "removed"
+      },
+      {
+        "kind": "volume",
+        "state": "removed"
+      }
+    ],
+    "private_fixture_material_removed": true,
+    "native_log_sha256": "1f1d45b226332f5dc32223dfb5d04ceb2b29df96025b03afcd904030d3248733",
+    "test_binary": "owned adapter.test deleted in final cleanup",
+    "scope": "Actual owned MySQL8.4.8 SAN/TLS1.3: read existing F/index in actual READ ONLY RR transaction, require existing epoch7 unchanged; missing installation/fence rejected and never inserted. New source API component only; no opaque historical provenance/full17/initializer transaction or field/page acceptance.",
+    "production_performance_equivalent": false,
+    "original_database_contacted": false,
+    "page_acceptance": false,
+    "dr_qualified": false
+  },
+  "scope": "Explicit original installer-only disabled-unverified v1 initialization after actual original history/17 adoption and source recovery. Actual source/ctx/admin/enrollment/head1/grant/source and complete17 locks stay mandatory. Never StageAdmission, advance F, change domain, create task, or claim current healthy. Normal enable remains separate actual fresh native check.",
+  "review_findings_fixed": [
+    "The synthetic test Domain originally omitted required typed unconfigured admission fields; test-only exact roundtrip fixture corrected. Production strict Query unchanged."
+  ],
+  "remaining": [
+    "Complete production first-adoption CLI call and operator route are separately pending review.",
+    "MinIO original cold source cut/logical drain/business history classification and post-recovery native permission succession still block page-ready acceptance.",
+    "No actual full Initialize/17/protection chain/page task has executed in this receipt."
+  ],
+  "full_page_acceptance": false,
+  "dr_qualified": false,
+  "cleanup": "All native component test container/two volumes/private credentials/ELF removed; clean Go temporary directory empty."
+}
