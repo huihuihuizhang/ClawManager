@@ -72,6 +72,7 @@ type DeploymentService struct {
 	publicationTarget        *PublicationTargetMaterials
 	publicationTargetInput   *PublicationTargetInput
 	runtimeReadinessInput    *RuntimeReadinessInput
+	runtimeReadinessRecovery *MinIORecoveryProjectionInput
 	runtimeReadiness         atomic.Pointer[sixPartRuntimeReadiness]
 }
 

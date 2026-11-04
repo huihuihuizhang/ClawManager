@@ -162,7 +162,11 @@ func (s *DeploymentService) prepareFinalizedControlSource(ctx context.Context, i
 	// identity: the actual current controller/claim and per-part Unwrap above
 	// remain independent mandatory authorities.
 	sourceIdentity := k.JobIdentity{Namespace: o.Namespace, ServiceAccountUID: o.Security.ServiceAccountUID}
-	firstGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, seed.Expected, sourceIdentity, true)
+	sourceExpected, err := s.originalControllerControlSourceExpected(ctx, in, seed)
+	if err != nil {
+		return c.ErrExecutionAuthority
+	}
+	firstGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, sourceExpected, sourceIdentity, true)
 	if err != nil {
 		return c.ErrExecutionAuthority
 	}
@@ -182,7 +186,7 @@ func (s *DeploymentService) prepareFinalizedControlSource(ctx context.Context, i
 	if existingErr == nil {
 		clear(existing.SidecarJSON)
 		clear(existing.ProofsJSON)
-		finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, seed.Expected, sourceIdentity, true)
+		finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, sourceExpected, sourceIdentity, true)
 		err = guard.Recheck(ctx, tx)
 		if grantErr != nil || finalGrant != firstGrant {
 			err = c.ErrExecutionAuthority
@@ -260,7 +264,7 @@ func (s *DeploymentService) prepareFinalizedControlSource(ctx context.Context, i
 	if currentErr == nil {
 		clear(current.SidecarJSON)
 		clear(current.ProofsJSON)
-		finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, seed.Expected, sourceIdentity, true)
+		finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, sourceExpected, sourceIdentity, true)
 		if grantErr != nil || finalGrant != firstGrant || s.checkProductionCaptureMaterials() != nil {
 			return c.ErrExecutionAuthority
 		}
@@ -303,7 +307,7 @@ func (s *DeploymentService) prepareFinalizedControlSource(ctx context.Context, i
 	if readback.SidecarSHA256 != proposal.Prepared.SidecarSHA256 || readback.ProofsSHA256 != proposal.Prepared.ProofsSHA256 || s.checkProductionCaptureMaterials() != nil || guard.Recheck(ctx, tx) != nil {
 		return c.ErrExecutionAuthority
 	}
-	finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, seed.Expected, sourceIdentity, true)
+	finalGrant, grantErr := worker.ReadControlEvidenceSourceGrant(ctx, mount, sourceExpected, sourceIdentity, true)
 	if grantErr != nil || finalGrant != firstGrant {
 		return c.ErrExecutionAuthority
 	}
@@ -360,7 +364,7 @@ func (a deploymentControlAuthorizer) Authorize(ctx context.Context, peer string,
 		return worker.Lease{}, worker.ErrExecution
 	}
 	identity := k.JobIdentity{Namespace: pod.Namespace, PodUID: pod.UID, ServiceAccountUID: pod.ServiceAccountUID, JobUID: jobUID, InvocationSHA256: request.InvocationSHA256, ExecutionGrantSHA256: a.owner.Identity.GrantSHA256()}
-	firstGrant, err := worker.ReadControlEvidenceSourceGrant(bounded, mount, seed.Expected, identity, true)
+	firstGrant, err := worker.ReadControlEvidenceInvocationSourceGrant(bounded, mount, request.Invocation, identity, true)
 	if err != nil {
 		return worker.Lease{}, worker.ErrExecution
 	}
@@ -371,7 +375,7 @@ func (a deploymentControlAuthorizer) Authorize(ctx context.Context, peer string,
 	if err != nil || last.InvocationSHA256 != lease.InvocationSHA256 || a.owner.Gate.Check(bounded, authority) != nil {
 		return worker.Lease{}, worker.ErrExecution
 	}
-	finalGrant, err := worker.ReadControlEvidenceSourceGrant(bounded, mount, seed.Expected, identity, true)
+	finalGrant, err := worker.ReadControlEvidenceInvocationSourceGrant(bounded, mount, request.Invocation, identity, true)
 	if err != nil || finalGrant != firstGrant {
 		return worker.Lease{}, worker.ErrExecution
 	}

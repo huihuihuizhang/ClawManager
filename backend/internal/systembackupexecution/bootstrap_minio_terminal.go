@@ -20,6 +20,7 @@ import (
 // signatures are verified against the independently selected enrollment pin.
 // No observation, readiness bit, callback, private issuer key or DB is accepted.
 type MinIOBootstrapTerminalInput struct {
+	RecoverySource                               *MinIORecoveryProjectionInput `json:",omitempty"`
 	Pin                                          ma.SQLTrustPin
 	BundleFile, BundleSHA256                     string
 	GrantFile, GrantSHA256                       string
@@ -45,6 +46,15 @@ type MinIOBootstrapTerminalResource struct {
 }
 
 func NewMinIOBootstrapTerminalResource(kube kubernetes.Interface, input MinIOBootstrapTerminalInput) (*MinIOBootstrapTerminalResource, error) {
+	if input.RecoverySource != nil {
+		selected := *input.RecoverySource
+		input.RecoverySource = &selected
+		d, e := readMinIORecoveryDescriptor(selected)
+		if e != nil || !reflect.DeepEqual(d.Pin, input.Pin) || string(d.DefinitionSHA256) != input.DefinitionSHA256 || d.PermissionSourceFile != input.PermissionSource.File || string(d.PermissionSourceSHA256) != input.PermissionSource.SHA256 {
+			return nil, sec.ErrRegistrationUnavailable
+		}
+	}
+
 	if kube == nil || reflect.ValueOf(kube).Kind() == reflect.Pointer && reflect.ValueOf(kube).IsNil() {
 		return nil, sec.ErrRegistrationUnavailable
 	}
@@ -71,6 +81,12 @@ func NewMinIOBootstrapTerminalResource(kube kubernetes.Interface, input MinIOBoo
 	if e != nil || h.State != ma.StateActive || g.BootstrapGrantSHA256 != ma.Digest(input.GrantSHA256) || g.Observation.DefinitionSHA256 != ma.Digest(input.DefinitionSHA256) || g.Observation.CapabilityIntentSHA256 != ma.Digest(input.CapabilityIntentSHA256) {
 		return nil, sec.ErrRegistrationUnavailable
 	}
+	if input.RecoverySource != nil {
+		descriptor, e := readMinIORecoveryDescriptor(*input.RecoverySource)
+		if e != nil || descriptor.Actor != g.Actor || descriptor.PermissionProfile != g.PermissionSource.Profile {
+			return nil, sec.ErrRegistrationUnavailable
+		}
+	}
 	if len(input.ReferenceFiles) != 5 || !filepath.IsAbs(input.ProvenanceFile) || filepath.Clean(input.ProvenanceFile) != input.ProvenanceFile {
 		return nil, sec.ErrRegistrationUnavailable
 	}
@@ -79,10 +95,13 @@ func NewMinIOBootstrapTerminalResource(kube kubernetes.Interface, input MinIOBoo
 			return nil, sec.ErrRegistrationUnavailable
 		}
 	}
+	// Independent recovery locator never rewrites the original terminal binding.
+	bindingInput := input
+	bindingInput.RecoverySource = nil
 	wire, e := ce.Canonical(struct {
 		Version string
 		Input   MinIOBootstrapTerminalInput
-	}{"original-minio-bootstrap-terminal-binding.v1", input})
+	}{"original-minio-bootstrap-terminal-binding.v1", bindingInput})
 	if e != nil {
 		return nil, sec.ErrRegistrationUnavailable
 	}

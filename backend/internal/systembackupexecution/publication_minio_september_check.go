@@ -40,11 +40,25 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if err != nil {
 		return zero, err
 	}
+	recovery, err := prepareMinIORecoverySession(ctx, s.publisherVerifierDB, s.runtimeReadinessRecovery, r.input)
+	if err != nil {
+		return zero, err
+	}
+	lineage, err := s.readOriginalMinIOEnableLineage(ctx, recovery, owner.grant.ConfigSHA256, current.identity.version, current.identity.configSHA)
+	if err != nil {
+		return zero, err
+	}
 	p := owner.grant.Provider
-	if owner.grant.ConfigSHA256 != current.identity.configSHA || p.Endpoint != store.config.Endpoint || p.Endpoint != catalog.Endpoint || p.Region != store.config.Region || p.Region != catalog.Region || p.CASHA256 != store.config.CASHA256 || p.CASHA256 != catalog.CASHA256 {
+	if (owner.grant.ConfigSHA256 != current.identity.configSHA && lineage == "") || p.Endpoint != store.config.Endpoint || p.Endpoint != catalog.Endpoint || p.Region != store.config.Region || p.Region != catalog.Region || p.CASHA256 != store.config.CASHA256 || p.CASHA256 != catalog.CASHA256 {
 		return zero, minioPermissionFailure("effective-original-target-config")
 	}
 	window := owner.window
+	if recovery != nil {
+		record, e := recovery.proof.Record()
+		if e != nil || window.include(current.now, record.NotBefore, record.Until) != nil {
+			return zero, minioPermissionFailure("recovery-original-window")
+		}
+	}
 	if window.include(current.now, current.window.notBefore, current.window.until) != nil {
 		return zero, minioPermissionFailure("effective-original-window")
 	}
@@ -69,7 +83,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 		return zero, err
 	}
 	defer native.close()
-	resources, err := minioPermissionKubernetes(ctx, s.Runtime.Owner.Client, r.configuration, p)
+	resources, err := minioCurrentRecoveryResources(ctx, s.Runtime.Owner.Client, r.configuration, p, recovery)
 	if err != nil {
 		return zero, err
 	}
@@ -93,7 +107,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if err != nil || last != first {
 		return zero, minioPermissionFailure("effective-native-tail-drift")
 	}
-	lastResources, err := minioPermissionKubernetes(ctx, s.Runtime.Owner.Client, r.configuration, p)
+	lastResources, err := minioCurrentRecoveryResources(ctx, s.Runtime.Owner.Client, r.configuration, p, recovery)
 	if err != nil || lastResources != resources {
 		return zero, minioPermissionFailure("effective-process-resource-tail-drift")
 	}
@@ -107,6 +121,14 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	lastOwner, err := r.effectiveOwnerSeptember(ctx, s.Runtime.Owner.Client, tail.now)
 	if err != nil || lastOwner.stamp != owner.stamp {
 		return zero, minioPermissionFailure("effective-owner-tail-drift")
+	}
+	lastRecovery, err := prepareMinIORecoverySession(ctx, s.publisherVerifierDB, s.runtimeReadinessRecovery, r.input)
+	if err != nil || !sameMinIORecoverySession(recovery, lastRecovery) {
+		return zero, minioPermissionFailure("recovery-current-sql-tail")
+	}
+	lastLineage, err := s.readOriginalMinIOEnableLineage(ctx, lastRecovery, lastOwner.grant.ConfigSHA256, tail.identity.version, tail.identity.configSHA)
+	if err != nil || lastLineage != lineage {
+		return zero, minioPermissionFailure("recovery-lineage-tail")
 	}
 	tailUses, err := r.originalUses(tail.now, lastOwner.grant, store.config, catalog, &window)
 	for i := range tailUses {

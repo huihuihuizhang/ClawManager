@@ -90,7 +90,11 @@ func OpenControlEvidenceCaptureSources(ctx context.Context, i Invocation, job *C
 	if err != nil || invHash != job.original.lease.Identity.InvocationSHA256 {
 		return nil, ErrNotReady
 	}
-	scopeSHA, err := ControlEvidenceSourceScopeSHA256(frozen.Request.ControlEvidence.Expected, mount.Endpoint)
+	authorizationExpected, err := ControlEvidenceSourceAuthorizationExpected(frozen)
+	if err != nil {
+		return nil, err
+	}
+	scopeSHA, err := ControlEvidenceSourceScopeSHA256(authorizationExpected, mount.Endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +133,7 @@ func (s *ControlEvidenceCaptureSources) readGrant(ctx context.Context, bound boo
 	if s == nil || s.closed.Load() || ctx == nil || ctx.Err() != nil || s.job == nil || s.job.original == nil || !time.Now().Before(s.until) {
 		return zero, ErrNotReady
 	}
-	grant, err := ReadControlEvidenceSourceGrant(ctx, s.mount, s.invocation.Request.ControlEvidence.Expected, s.job.original.Identity(), false)
+	grant, err := ReadControlEvidenceInvocationSourceGrant(ctx, s.mount, s.invocation, s.job.original.Identity(), false)
 	if err != nil || bound && grant != s.grant {
 		return zero, ErrNotReady
 	}

@@ -51,7 +51,7 @@ func (s *DeploymentService) preparePublicationRecoveryFacts(ctx context.Context,
 		return zero, c.ErrExecutionAuthority
 	}
 	p := *capture.SourceFacts.PublicationPolicy
-	if p.validate() != nil || p.Policy.Installation != capture.Input.InstallationID || p.Policy.ConfigSHA256 != capture.Input.ConfigSHA256 {
+	if p.validate() != nil || p.Policy.Installation != capture.Input.InstallationID {
 		return zero, c.ErrExecutionRecord
 	}
 	access, err := s.publicationAccess(ctx, claim, attempt)
@@ -68,7 +68,11 @@ func (s *DeploymentService) preparePublicationRecoveryFacts(ctx context.Context,
 		return zero, err
 	}
 	facts := guard.Facts()
-	if facts.Status != "validating" || facts.ConfigSHA256 != p.Policy.ConfigSHA256 || facts.CaptureResultSHA256 != capture.CaptureResultSHA256 || facts.CaptureAttemptNo != attempt || s.checkPublicationTargetTx(ctx, tx, facts, target) != nil {
+	if facts.Status != "validating" || facts.ConfigVersion != capture.Input.ConfigVersion || facts.ConfigSHA256 != capture.Input.ConfigSHA256 || facts.CaptureResultSHA256 != capture.CaptureResultSHA256 || facts.CaptureAttemptNo != attempt || s.checkPublicationTargetTx(ctx, tx, facts, target) != nil {
+		return zero, c.ErrExecutionAuthority
+	}
+	originalConfig, err := readOriginalEnabledConfiguration(ctx, tx, facts.InstallationID, p.Policy.ConfigSHA256, facts.ConfigVersion, facts.ConfigSHA256, capture.Input.ConfigSnapshot)
+	if err != nil {
 		return zero, c.ErrExecutionAuthority
 	}
 	var now time.Time
@@ -106,7 +110,7 @@ func (s *DeploymentService) preparePublicationRecoveryFacts(ctx context.Context,
 		if err != nil {
 			return zero, err
 		}
-		zero, err = verifyPublicationRecoveryEvidence(capture.Input.ConfigSnapshot, p, trust, binding, s.publisherVerifier.InstallationIssuer, owner, sig, att, cap, publicationRecoveryTargetSHA(target), now)
+		zero, err = verifyPublicationRecoveryEvidence(originalConfig, p, trust, binding, s.publisherVerifier.InstallationIssuer, owner, sig, att, cap, publicationRecoveryTargetSHA(target), now)
 		if err != nil {
 			return publicationRecoveryFacts{}, err
 		}

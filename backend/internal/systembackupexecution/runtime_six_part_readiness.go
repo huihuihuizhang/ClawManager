@@ -68,6 +68,15 @@ func (s *DeploymentService) attachRuntimeReadiness(inputs []RuntimeReadinessInpu
 	if _, err := newRuntimeReadinessPermissionReader(inputs[0]); err != nil {
 		return err
 	}
+	file, sha := os.Getenv("SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_FILE"), os.Getenv("SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_SHA256")
+	if file != "" || sha != "" {
+		locator := MinIORecoveryProjectionInput{File: file, SHA256: sha}
+		descriptor, e := readMinIORecoveryDescriptor(locator)
+		if e != nil || descriptor.PermissionSourceFile != inputs[0].Source.File || string(descriptor.PermissionSourceSHA256) != inputs[0].Source.SHA256 || descriptor.PermissionProfile != inputs[0].Profile {
+			return d.ErrNotReady
+		}
+		s.runtimeReadinessRecovery = &locator
+	}
 	selected := inputs[0]
 	s.runtimeReadinessInput = &selected
 	return nil

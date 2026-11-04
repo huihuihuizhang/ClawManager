@@ -36,6 +36,11 @@ type FormalCaptureSpec struct {
 	MaxFrames          uint64               `json:"max_frames"`
 	PermitDelivery     *k.PermitDeliveryPin `json:"permit_delivery,omitempty"`
 	SourceConfigSHA256 string               `json:"source_config_sha256,omitempty"`
+	// SourceConfigSHA256 describes this actual capture. This separate pin selects
+	// an original signed source authorization only after the controller has
+	// authenticated exact enabled-only succession in SQL. BOTH pins are in the
+	// original frozen Invocation hash checked by the genuine CaptureKeyJob.
+	SourceAuthorizationConfigSHA256 string `json:"source_authorization_config_sha256,omitempty"`
 }
 
 type FormalCaptureEnvironment struct {
@@ -158,6 +163,9 @@ func validFormalInvocation(i Invocation) bool {
 		return false
 	}
 	if f.SourceConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceConfigSHA256) || (i.Request.CaptureDescription == nil && i.Request.ControlEvidence == nil && i.Request.SourceRedis == nil && i.Request.Database == nil && i.Request.Teams == nil && i.Request.SkillObjects == nil)) {
+		return false
+	}
+	if f.SourceAuthorizationConfigSHA256 != "" && (!keyUseHash.MatchString(f.SourceAuthorizationConfigSHA256) || !keyUseHash.MatchString(f.SourceConfigSHA256) || f.PermitDelivery == nil || (i.Request.ControlEvidence == nil && i.Request.SourceRedis == nil && i.Request.Database == nil && i.Request.Teams == nil && i.Request.SkillObjects == nil)) {
 		return false
 	}
 	return i.Request.Operation == "capture-workspace" || i.Request.Operation == "capture-database" || (captureDescriptionOperation(i.Request.Operation) && validCaptureDescriptionRequest(i.Request)) || (controlEvidenceOperation(i.Request.Operation) && validControlEvidenceRequest(i.Request)) || (sourceRedisOperation(i.Request.Operation) && validSourceRedisRequest(i.Request)) || (teamCaptureOperation(i.Request.Operation) && validTeamCapture(i.Request)) || (resourceCaptureOperation(i.Request.Operation) && validResourceCapture(i.Request)) || (skillObjectOperation(i.Request.Operation) && validSkillObjectRequest(i.Request))

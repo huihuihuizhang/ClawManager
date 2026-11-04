@@ -1,0 +1,104 @@
+{
+  "schema_version": "supervisor-enabled-source-consumer-review.v1",
+  "base_commit": "ccce611aaee5befb0fb45736aa92dadc7eaaeb8d",
+  "selected_source_targets": 35,
+  "clean_plan_sha256": "bb06eaddcff6dd5dfe4e681a9420d5ad37b405c31d3d1918b3a62aff81d71f58",
+  "source_maps": [
+    {
+      "map": "backend/.a-enabled-only-lineage-sql-20261105/source-map.json",
+      "sha256": "eb1d6a3c494338e5041230f0991213817f266c954169dc89f1650a6153153a74"
+    },
+    {
+      "map": "backend/.d-enabled-lineage-startup-20261105/source-map.json",
+      "sha256": "ce5ee22a3265df8f056a94b97f6e1a5cdd68edbb3316d186fd330a27920d348a"
+    },
+    {
+      "map": "backend/.d-original-forward-lineage-20261105/source-map.json",
+      "sha256": "6bf856f48620fc577a3e07f32fa9ffbc54fd3cca600eb5d46180ec2dae385c22"
+    },
+    {
+      "map": "backend/.d-source-delegation-forward-r1-20261105/source-map.json",
+      "sha256": "7387c72ad17de9bd1e3c9c22db68b8059146bb45a5fd739fb38f5196d2d8121d"
+    },
+    {
+      "map": "docs/evidence/system-backup-supervisor-worker-source-auth-scope-20261105/source-map.json",
+      "sha256": "32e27fd41a7446382a6eec90b6cccc9719ac9176b453cba6fe033dd9380135e6"
+    },
+    {
+      "map": "docs/evidence/system-backup-supervisor-source-factory-auth-20261105/source-map.json",
+      "sha256": "3579506f53354222f658db4d270a68376ee7d0c16c735342d0391e3c118e7d75"
+    },
+    {
+      "map": "backend/.a-minio-recovery-projection-20261105/source-map.json",
+      "sha256": "dcc262e8e11346d11832c4d864ddc17d86afd6de0571a072f0a39118cde89a23"
+    }
+  ],
+  "change": "Read original exact enabled-only SQL succession in the current task SQL view; bind old source authorization comparison to a private genuine freeze and original Invocation/Job hash while actual task/CE/CD stay current. Read actual independently pinned old/new Forward files, same issuer and all original fields/keys/actions/windows. Add MinIO-specific signed original whole-cold resource succession consumers without changing original SQL/ref/provider identities or generic Pod guards.",
+  "independent_clean_verification": {
+    "test_roots_passed": 30,
+    "subtests_passed": 91,
+    "test_skips": 0,
+    "failures": 0,
+    "packages_compiled": [
+      "clawreef/internal/systembackupsecurity",
+      "clawreef/internal/systembackup/worker",
+      "clawreef/internal/systembackupcontroller",
+      "clawreef/internal/systembackupminioauthority",
+      "clawreef/internal/systembackupinstallationowner/install",
+      "clawreef/internal/systembackupexecution"
+    ],
+    "log_sha256": "572b6f4214ae7c795c39e9a36b87c681ca4b06ce0ed87c42f47970106abed21f",
+    "scope": "SQL row/accessor and Kube API models, actual independent source signatures/TLS/nonempty framed source capture, original pure constructor/Invocation reconstruction and negative scope binding. Local control/key fixture does not qualify actual permit/SQL issuance."
+  },
+  "native_component": {
+    "report_sha256": "0cca26627fceaf663869f148ae0b108d90859c83e09ff464a5a8524b97887212",
+    "mysql_image": "10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977",
+    "server_uuid": "3319cf7b-d89b-11f1-9272-75bb4a41663d",
+    "read_only_for_share_exit": 0,
+    "locking_rr_for_share_exit": 0,
+    "cleanup": [
+      {
+        "kind": "container",
+        "state": "removed"
+      },
+      {
+        "kind": "volume",
+        "state": "removed"
+      },
+      {
+        "kind": "volume",
+        "state": "removed"
+      }
+    ],
+    "scope": "Actual MySQL8.4.8 READ ONLY vs lock-capable RR FOR SHARE on owned data. No normal-enable/source/lineage/full17/page acceptance."
+  },
+  "readonly_review": {
+    "worker_factory_13_sources": "Public C exact map/source and before hashes checked; no confirmed newly introduced bypass/leak/nested SQL deadlock. Finalization derives comparison before its final transaction; current artifact tuple unchanged.",
+    "forward_minio_remaining_review": "D/new Forward and A MinIO package has independent Root source review and clean compilation/models; Public C ongoing actual Task2 boundary audit."
+  },
+  "cleanup": {
+    "explicit_native_containers_removed": 1,
+    "native_data_and_tls_volumes_removed": 2,
+    "private_native_credentials_removed": true,
+    "git_export_tar_removed": true,
+    "go_test_temporary_binaries": "Go test automatic temporary workspace cleanup; no explicit test executable retained",
+    "intended_release_binaries": "not test products; retained separately"
+  },
+  "limitations": {
+    "actual_enabled_only_sql_positive": false,
+    "actual_whole_cold_projection_issue_query": false,
+    "actual_first_17_adoption": false,
+    "actual_enable_v2": false,
+    "actual_task_generate_unwrap_sign": false,
+    "actual_field_migration199": false,
+    "deployment_package_ready": false,
+    "page_acceptance": false,
+    "dr_qualified": false
+  },
+  "remaining_required_work": [
+    "Actual provider-permit issuer and SQL signer/publisher current-task-v2 guards: A now implementing narrow original-scope consumers; no claim that this review fixes Generate.",
+    "D actual normal-enable Forward2/publication revision3 issuance and startup/operator selection; original locators still require trusted deployment delivery.",
+    "D1 actual opaque whole-cold source, original baseline and stop/archive/readback/recovery handles into actual Issue+Query; business object versions and pinned CRI composition.",
+    "Field copy199 qualification, original upgrade, installation, same-version deployment and true nonempty page backup/publication/readback/catalog/source restoration acceptance."
+  ]
+}

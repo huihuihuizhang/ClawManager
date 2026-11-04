@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"path/filepath"
 	"reflect"
@@ -155,7 +156,24 @@ func (x *originalSourceMetadataAuthority) loadOriginalPublicationPolicy(ctx cont
 	if err != nil {
 		return zero, err
 	}
-	policy, err := decodeOriginalPublicationPolicy(raw, ref.SHA256, a.InstallationID, a.ConfigSHA256, pin, target)
+	configSHA := a.ConfigSHA256
+	var original originalPublicationPolicy
+	if decodeProviderDeploymentJSON(raw, &original) != nil || original.validate() != nil {
+		return zero, d.ErrNotReady
+	}
+	if original.ConfigSHA256 != configSHA {
+		view, err := x.owner.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+		if err != nil {
+			return zero, d.ErrNotReady
+		}
+		_, lineageErr := readOriginalEnabledConfiguration(ctx, view, a.InstallationID, original.ConfigSHA256, a.ConfigVersion, a.ConfigSHA256, x.input.ConfigSnapshot)
+		closed := view.Rollback()
+		if lineageErr != nil || closed != nil {
+			return zero, d.ErrNotReady
+		}
+		configSHA = original.ConfigSHA256
+	}
+	policy, err := decodeOriginalPublicationPolicy(raw, ref.SHA256, a.InstallationID, configSHA, pin, target)
 	if err != nil || x.Recheck(ctx) != nil {
 		return zero, d.ErrNotReady
 	}

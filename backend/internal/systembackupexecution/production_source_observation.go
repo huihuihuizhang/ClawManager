@@ -57,7 +57,7 @@ func (s *DeploymentService) newSourceSQLObservation(ctx context.Context) (*sourc
 			until = limit
 		}
 	}
-	x := &sourceSQLObservation{delegation: &sourceMetadataDelegation{service: s, owner: s.Runtime.Owner, grant: original, scope: scope, configSHA256: grant.ConfigSHA256, until: until}, control: s.Runtime.Owner.Gate.Authority.DB, source: s.Source, profileSHA256: s.profileHash}
+	x := &sourceSQLObservation{delegation: &sourceMetadataDelegation{service: s, owner: s.Runtime.Owner, grant: original, scope: scope, configSHA256: grant.ConfigSHA256, configVersion: grant.ConfigVersion, until: until}, control: s.Runtime.Owner.Gate.Authority.DB, source: s.Source, profileSHA256: s.profileHash}
 	if x.recheck(ctx) != nil {
 		return nil, d.ErrNotReady
 	}
@@ -94,8 +94,19 @@ func (x *sourceSQLObservation) checkDeployment(ctx context.Context) error {
 	var now time.Time
 	if tx.QueryRowContext(ctx, `SELECT s.active_config_version,s.last_effective_enabled,c.enabled,c.config_sha256,c.config_size_bytes,c.canonical_config_json,UTC_TIMESTAMP(6)
 FROM system_backup_v2_installation_state s JOIN system_backup_v2_configs c ON c.origin_installation_id=s.origin_installation_id AND c.version=s.active_config_version
-WHERE s.origin_installation_id=?`, s.Config.InstallationID).Scan(&version, &effective, &enabled, &sum, &size, &raw, &now) != nil || !effective || !enabled || version != g.ConfigVersion || sum != g.ConfigSHA256 || sum != y.configSHA256 || size != int64(len(raw)) || len(raw) < 2 || len(raw) > 262144 || hash(raw) != sum || now.Before(y.grant.NotBefore) || now.Before(g.NotBefore) || !now.Before(y.until) {
+WHERE s.origin_installation_id=?`, s.Config.InstallationID).Scan(&version, &effective, &enabled, &sum, &size, &raw, &now) != nil || !effective || !enabled || size != int64(len(raw)) || len(raw) < 2 || len(raw) > 262144 || hash(raw) != sum || now.Before(y.grant.NotBefore) || now.Before(g.NotBefore) || !now.Before(y.until) {
 		return sourceObservationRejected(sourceObserverConfigState)
+	}
+	if version != g.ConfigVersion || sum != g.ConfigSHA256 || sum != y.configSHA256 {
+		// These are actual CURRENT SQL vs original signed-owner bindings,
+		// unlike two original v1 material files. Only A's real first-enable
+		// lineage can admit this single immutable v1 -> enabled v2 change.
+		if g.ConfigVersion != 1 || (y.configSHA256 != g.ConfigSHA256 && y.configSHA256 != sum) {
+			return sourceObservationRejected(sourceObserverConfigState)
+		}
+		if _, err := readOriginalEnabledConfiguration(ctx, tx, s.Config.InstallationID, g.ConfigSHA256, version, sum, raw); err != nil {
+			return sourceObservationRejected(sourceObserverConfigState)
+		}
 	}
 	var canonical struct {
 		Enabled bool `json:"enabled"`
@@ -162,6 +173,9 @@ func (x *sourceSQLObservation) observe(ctx context.Context) (*observedSourceSQL,
 	if instances == nil {
 		instances = []b.InstanceIdentity{}
 	}
+	// These fields retain the original source-grant provenance. The active
+	// enabled configuration is independently rechecked in each SQL view above;
+	// neither this metadata nor a remembered lineage acts as current authority.
 	out := &observedSourceSQL{metadata: metadata, instances: instances, configVersion: s.Forward.DeploymentBinding().ConfigVersion, configSHA256: x.delegation.configSHA256, profileSHA256: x.profileSHA256, sourceScopeSHA256: x.delegation.scope, until: x.delegation.until}
 	var sqlClock any
 	if tx.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE(),CURRENT_USER(),UTC_TIMESTAMP(6)").Scan(&out.server, &out.database, &out.account, &sqlClock) != nil {

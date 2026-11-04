@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"sync"
 	"time"
 
 	b "clawreef/internal/systembackup/publicadapter"
@@ -12,10 +13,12 @@ import (
 )
 
 type productionSourceBinding struct {
-	service        *DeploymentService
-	owner          *PublicJobOwner
-	plan           *productionCapturePlan
-	materialSHA256 string
+	service         *DeploymentService
+	owner           *PublicJobOwner
+	plan            *productionCapturePlan
+	materialSHA256  string
+	authorizationMu sync.Mutex
+	authorizations  map[string]*originalFrozenSourceAuthorization
 }
 
 func (s *DeploymentService) attachProductionSources(owner *PublicJobOwner, profile b.LinuxProfileConfig) (b.LinuxProfileConfig, func(d.Input, b.SourceInventory, time.Time, []b.FrozenWriter) (*b.CaptureModules, error), error) {
@@ -98,7 +101,14 @@ func (x *productionSourceBinding) moduleFactory() func(d.Input, b.SourceInventor
 		if node == "" || node != cfg.Workspace.Node || cfg.Security.NodeUIDs[node] == "" {
 			return nil, d.ErrNotReady
 		}
-		return plan.build(in, source, hold, writers, node)
+		authorization, err := x.frozenSourceAuthorization(in, source)
+		if err != nil {
+			return nil, err
+		}
+		if authorization == nil {
+			return plan.build(in, source, hold, writers, node)
+		}
+		return plan.build(in, source, hold, writers, node, authorization)
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
 	d "clawreef/internal/systembackupdispatch"
+	reg "clawreef/internal/systembackupkekregistry"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -203,14 +204,21 @@ type sourceMetadataDelegation struct {
 	owner               *PublicJobOwner
 	grant               originalSourceMetadataGrant
 	scope, configSHA256 string
+	configVersion       uint64
 	until               time.Time
 }
 
 func (x *originalSourceMetadataAuthority) delegation() *sourceMetadataDelegation {
-	return &sourceMetadataDelegation{service: x.service, owner: x.owner, grant: x.grant, scope: x.scope, configSHA256: x.input.Authority.ConfigSHA256, until: x.until}
+	return &sourceMetadataDelegation{service: x.service, owner: x.owner, grant: x.grant, scope: x.scope, configSHA256: x.input.Authority.ConfigSHA256, configVersion: x.input.Authority.ConfigVersion, until: x.until}
 }
 
 func (x *sourceMetadataDelegation) checkLocal(ctx context.Context) error {
+	return x.checkLocalInView(ctx, nil)
+}
+
+// Actual caller views use this variant before they close. No independently
+// opened SQL connection is needed when the original guard already owns a view.
+func (x *sourceMetadataDelegation) checkLocalInView(ctx context.Context, view reg.SQLReadView) error {
 	if x == nil || ctx == nil || ctx.Err() != nil || x.service == nil || x.owner == nil || x.owner.Client == nil || !time.Now().Before(x.until) || x.service.checkProductionCaptureMaterials() != nil {
 		return d.ErrNotReady
 	}
@@ -250,7 +258,7 @@ func (x *sourceMetadataDelegation) checkLocal(ctx context.Context) error {
 		return d.ErrNotReady
 	}
 	observed, err := sourceMetadataScope(*m)
-	if err != nil || observed != x.scope || g.ScopeSHA256 != x.scope || g.Version != sourceMetadataGrantVersion || g.InstallationID != s.Config.InstallationID || g.ControllerOwner != s.Config.ControllerOwner || g.DeploymentConfigSHA256 != s.ConfigDigest || g.CaptureGrantSHA256 != s.Forward.GrantSHA256() || g.ConfigSHA256 != x.configSHA256 || g.Namespace != s.Config.Namespace || g.NamespaceUID != s.Config.NamespaceUID || g.ControllerDeployment != p.ControllerDeployment || g.ControllerDeploymentUID != p.ControllerDeploymentUID || g.ControllerServiceAccount != p.ControllerServiceAccount || g.ControllerServiceAccountUID != p.ControllerServiceAccountUID || g.Revoked || g.NotBefore.IsZero() || time.Now().Before(g.NotBefore) || g.Until.Sub(g.NotBefore) > 24*time.Hour {
+	if err != nil || observed != x.scope || g.ScopeSHA256 != x.scope || g.Version != sourceMetadataGrantVersion || g.InstallationID != s.Config.InstallationID || g.ControllerOwner != s.Config.ControllerOwner || g.DeploymentConfigSHA256 != s.ConfigDigest || g.Namespace != s.Config.Namespace || g.NamespaceUID != s.Config.NamespaceUID || g.ControllerDeployment != p.ControllerDeployment || g.ControllerDeploymentUID != p.ControllerDeploymentUID || g.ControllerServiceAccount != p.ControllerServiceAccount || g.ControllerServiceAccountUID != p.ControllerServiceAccountUID || g.Revoked || g.NotBefore.IsZero() || time.Now().Before(g.NotBefore) || g.Until.Sub(g.NotBefore) > 24*time.Hour {
 		return d.ErrNotReady
 	}
 	raw, err := pinnedDeploymentFile(p.GrantFile, p.GrantSHA256, 65536)
@@ -261,6 +269,25 @@ func (x *sourceMetadataDelegation) checkLocal(ctx context.Context) error {
 	var original originalSourceMetadataGrant
 	if decodeMetadataCanonical(raw, &signed) != nil || decodeMetadataCanonical(signed.Record, &original) != nil || original != g || !ed25519.Verify(p.Issuer, append([]byte(sourceMetadataGrantDomain), signed.Record...), signed.Signature) {
 		return d.ErrNotReady
+	}
+	if g.CaptureGrantSHA256 != s.Forward.GrantSHA256() || g.ConfigSHA256 != x.configSHA256 {
+		// Only these VERIFIED original signed fields select the old pin.
+		// Read the real original/new grants and actual SQL lineage; retain
+		// the metadata's original hash/signature and current task v2 scope.
+		var err error
+		if view == nil {
+			err = s.checkOriginalForwardConfiguration(ctx, g.CaptureGrantSHA256, g.ConfigSHA256, x.configVersion, x.configSHA256)
+		} else {
+			err = s.checkOriginalForwardConfigurationInView(ctx, view, g.CaptureGrantSHA256, g.ConfigSHA256, x.configVersion, x.configSHA256)
+		}
+		if err != nil {
+			return d.ErrNotReady
+		}
+		// Recheck original metadata bytes and source window after SQL waits.
+		again, err := pinnedDeploymentFile(p.GrantFile, p.GrantSHA256, 65536)
+		if err != nil || !bytes.Equal(again, raw) || !time.Now().Before(x.until) || ctx.Err() != nil {
+			return d.ErrNotReady
+		}
 	}
 	return nil
 }

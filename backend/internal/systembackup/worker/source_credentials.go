@@ -241,7 +241,8 @@ func (s *FormalCaptureSources) readGrant(ctx context.Context) (FormalSourceGrant
 	}
 	scope, err := FormalSourceScopeSHA256(s.invocation, s.mount)
 	now := time.Now()
-	if err != nil || grant.Version != FormalSourceGrantVersion || grant.InstallationID != s.invocation.ProviderKey.Request.Context.InstallationID || grant.ConfigSHA256 != s.invocation.FormalCapture.SourceConfigSHA256 || !keyUseHash.MatchString(grant.ConfigSHA256) || grant.WorkerNamespace != s.identity.Namespace || grant.WorkerServiceAccountUID != s.identity.ServiceAccountUID || grant.Operation != s.invocation.Request.Operation || grant.ScopeSHA256 != scope || grant.CredentialSHA256 != s.mount.CredentialSHA256 || grant.Revoked || grant.NotBefore.IsZero() || now.Before(grant.NotBefore) || !now.Before(grant.Until) || grant.Until.Sub(grant.NotBefore) > 24*time.Hour {
+	authorizationSHA, authorizationErr := formalSourceAuthorizationConfigSHA256(s.invocation)
+	if err != nil || authorizationErr != nil || grant.Version != FormalSourceGrantVersion || grant.InstallationID != s.invocation.ProviderKey.Request.Context.InstallationID || grant.ConfigSHA256 != authorizationSHA || !keyUseHash.MatchString(grant.ConfigSHA256) || grant.WorkerNamespace != s.identity.Namespace || grant.WorkerServiceAccountUID != s.identity.ServiceAccountUID || grant.Operation != s.invocation.Request.Operation || grant.ScopeSHA256 != scope || grant.CredentialSHA256 != s.mount.CredentialSHA256 || grant.Revoked || grant.NotBefore.IsZero() || now.Before(grant.NotBefore) || !now.Before(grant.Until) || grant.Until.Sub(grant.NotBefore) > 24*time.Hour {
 		return zero, ErrNotReady
 	}
 	return grant, nil

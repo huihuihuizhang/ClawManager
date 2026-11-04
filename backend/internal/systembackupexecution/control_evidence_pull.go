@@ -122,7 +122,7 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 		return
 	}
 	stage = "controller-pull-source-grant-before"
-	firstGrant, err := worker.ReadControlEvidenceSourceGrant(r.Context(), mount, locator.Expected, first.KeyUse.Identity, true)
+	firstGrant, err := worker.ReadControlEvidenceInvocationSourceGrant(r.Context(), mount, request.Invocation, first.KeyUse.Identity, true)
 	if err != nil {
 		deny()
 		return
@@ -158,7 +158,7 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 		return
 	}
 	stage = "controller-pull-source-grant-after"
-	lastGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, locator.Expected, first.KeyUse.Identity, true)
+	lastGrant, err := worker.ReadControlEvidenceInvocationSourceGrant(ctx, mount, request.Invocation, first.KeyUse.Identity, true)
 	if err != nil || lastGrant != firstGrant {
 		deny()
 		return
@@ -180,7 +180,7 @@ func (s *DeploymentService) serveControlEvidenceSource(w http.ResponseWriter, r 
 	// bounded local check follows SQL and cannot adopt a replacement grant or
 	// extend the original fixed source/key-use deadline. No network follows it.
 	stage = "controller-pull-source-grant-tail"
-	finalGrant, err := worker.ReadControlEvidenceSourceGrant(ctx, mount, locator.Expected, first.KeyUse.Identity, true)
+	finalGrant, err := worker.ReadControlEvidenceInvocationSourceGrant(ctx, mount, request.Invocation, first.KeyUse.Identity, true)
 	if err != nil || finalGrant != firstGrant {
 		deny()
 		return

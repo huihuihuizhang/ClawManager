@@ -32,6 +32,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, err
 	}
+	originalFreezeContext := ctx
 	ctx, cancel := context.WithDeadline(ctx, authority.until)
 	defer cancel()
 	stage = "sql_metadata"
@@ -208,6 +209,10 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	stage = "metadata_encoding"
 	raw, err := json.Marshal(metadata)
 	if err != nil || len(raw) > 8<<20 {
+		return nil, nil, d.ErrNotReady
+	}
+	binding := owner.productionSource
+	if binding == nil || binding.service != s || binding.owner != owner || binding.rememberOriginalSourceAuthorization(originalFreezeContext, in, raw, authority) != nil {
 		return nil, nil, d.ErrNotReady
 	}
 	return teams, raw, nil

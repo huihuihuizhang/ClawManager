@@ -158,6 +158,9 @@ type MinIOOriginalPermissionObservation struct {
 }
 
 func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interface, p *minioPermissionProductionInputs, sha string) (MinIOOriginalPermissionObservation, error) {
+	return observeOriginalMinIOPermissionsWithRecovery(ctx, kube, p, sha, nil)
+}
+func observeOriginalMinIOPermissionsWithRecovery(ctx context.Context, kube kubernetes.Interface, p *minioPermissionProductionInputs, sha string, recovery *minioRecoverySession) (MinIOOriginalPermissionObservation, error) {
 	var zero MinIOOriginalPermissionObservation
 	if p == nil {
 		return zero, minioPermissionFailure("producer-native-profile")
@@ -168,9 +171,14 @@ func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interf
 	}
 	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 	defer cancel()
+	if recovery != nil {
+		var bounded context.CancelFunc
+		ctx, bounded = context.WithDeadline(ctx, recovery.until)
+		defer bounded()
+	}
 	ctx, stop := context.WithDeadline(ctx, p.window.until)
 	defer stop()
-	resource, err := minioPermissionKubernetes(ctx, kube, p.configuration, p.grant.Provider)
+	resource, err := minioCurrentRecoveryResources(ctx, kube, p.configuration, p.grant.Provider, recovery)
 	if err != nil {
 		return zero, err
 	}
@@ -195,7 +203,7 @@ func observeOriginalMinIOPermissions(ctx context.Context, kube kubernetes.Interf
 	if err != nil || tail != first {
 		return zero, minioPermissionFailure("producer-native-tail-drift")
 	}
-	tailResource, err := minioPermissionKubernetes(ctx, kube, p.configuration, p.grant.Provider)
+	tailResource, err := minioCurrentRecoveryResources(ctx, kube, p.configuration, p.grant.Provider, recovery)
 	if err != nil || tailResource != resource || !time.Now().Before(p.window.until) || ctx.Err() != nil {
 		return zero, minioPermissionFailure("producer-resource-tail-drift")
 	}

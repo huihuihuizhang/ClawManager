@@ -160,8 +160,12 @@ func (r *OriginalMinIOConfigMutationReferences) Prepare(ctx context.Context, in 
 	}
 	active, cancel := context.WithDeadline(ctx, deadline)
 	defer cancel()
-	observed, e := ObserveOriginalMinIOPermissions(active, r.catalog.base.kube, r.catalog.base.input.DefinitionFile, r.catalog.base.input.DefinitionSHA256)
-	if e != nil || r.catalog.observe(active) != nil {
+	recovery, e := prepareMinIORecoverySession(active, r.db, r.catalog.base.input.RecoverySource, r.catalog.base.input.PermissionSource)
+	if e != nil {
+		return nil, check.fail()
+	}
+	observed, e := observeOriginalMinIOPermissionsRecovered(active, r.catalog.base.kube, r.catalog.base.input.DefinitionFile, r.catalog.base.input.DefinitionSHA256, recovery)
+	if e != nil || r.catalog.observeRecovery(active, recovery) != nil {
 		return nil, check.fail()
 	}
 	after, e := r.readBeforeLocks(active)
@@ -175,10 +179,18 @@ func (r *OriginalMinIOConfigMutationReferences) Prepare(ctx context.Context, in 
 		return nil, check.fail()
 	}
 	check.expected, check.until, check.prepared = after, deadline, true
+	check.recovery = recovery
+	if recovery != nil && recovery.until.Before(check.until) {
+		check.until = recovery.until
+	}
+	if !time.Now().Before(check.until) {
+		return nil, check.fail()
+	}
 	return check, nil
 }
 
 type minioConfigMutationObservation struct {
+	recovery                *minioRecoverySession
 	mu                      sync.Mutex
 	origin                  *minioConfigMutationObservation
 	owner                   *OriginalMinIOConfigMutationReferences
@@ -245,7 +257,7 @@ func (c *minioConfigMutationObservation) Recheck(ctx context.Context, tx *sql.Tx
 		return c.fail()
 	}
 	expected, checkedAt, e := snapshot.Comparison()
-	if e != nil || !checkedAt.Equal(now) || !reflect.DeepEqual(expected, c.expected) {
+	if e != nil || !checkedAt.Equal(now) || !reflect.DeepEqual(expected, c.expected) || c.recovery.recheck(snapshot, now) != nil {
 		return c.fail()
 	}
 	return nil

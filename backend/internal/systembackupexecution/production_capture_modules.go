@@ -73,7 +73,17 @@ func productionCaptureModules(in d.Input, source b.SourceInventory, until time.T
 
 // The compatibility wrapper and production's attached plan share this exact
 // original constructor path, including shared SQL/Redis and CE finalization.
-func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, operations map[string]productionCaptureOperation, revision string) (*b.CaptureModules, error) {
+func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory, until time.Time, writers []b.FrozenWriter, operations map[string]productionCaptureOperation, revision string, authorization ...*originalFrozenSourceAuthorization) (*b.CaptureModules, error) {
+	authorizationSHA := ""
+	if len(authorization) > 1 {
+		return nil, d.ErrNotReady
+	}
+	if len(authorization) == 1 {
+		if !authorization[0].matches(in, source) {
+			return nil, d.ErrNotReady
+		}
+		authorizationSHA = authorization[0].authorizationSHA
+	}
 	if source.Teams == nil || source.Skills == nil || source.TeamFacts == nil || !source.TeamFacts.MatchesInventory(*source.Teams) || len(source.CaptureMetadata) > 8<<20 || revision == "" || len(writers) == 0 {
 		return nil, d.ErrNotReady
 	}
@@ -286,8 +296,12 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 		}
 		r.Invocation.FormalCapture.EnvelopeName = name + ".envelope.json"
 		r.Invocation.FormalCapture.SourceConfigSHA256 = ""
+		r.Invocation.FormalCapture.SourceAuthorizationConfigSHA256 = ""
 		if draft.part == cd.Part || r.Invocation.Request.ControlEvidence != nil || r.Invocation.Request.SourceRedis != nil || r.Invocation.Request.Database != nil || r.Invocation.Request.Teams != nil || r.Invocation.Request.SkillObjects != nil {
 			r.Invocation.FormalCapture.SourceConfigSHA256 = in.Authority.ConfigSHA256
+		}
+		if authorizationSHA != "" && authorizationSHA != in.Authority.ConfigSHA256 && (r.Invocation.Request.ControlEvidence != nil || r.Invocation.Request.SourceRedis != nil || r.Invocation.Request.Database != nil || r.Invocation.Request.Teams != nil || r.Invocation.Request.SkillObjects != nil) {
+			r.Invocation.FormalCapture.SourceAuthorizationConfigSHA256 = authorizationSHA
 		}
 		r.Invocation.ProviderKey.Request.Context = w.KeyContext{InstallationID: in.Authority.InstallationID, BackupPublicID: binding.BackupID, AttemptNo: binding.Attempt, Phase: "capture", Part: binding.Path, PartIndex: strconv.Itoa(index), EnvelopeID: binding.EnvelopeID, CaptureContextHash: binding.CaptureContextHash}
 		r.Workload.Identity.Name, r.Workload.Identity.Owner = name, in.Authority.TaskPublicID

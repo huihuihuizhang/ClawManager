@@ -48,7 +48,7 @@ func (p *productionCapturePlan) matches(operations map[string]productionCaptureO
 	return err == nil && string(raw) == p.operationsJSON
 }
 
-func (p *productionCapturePlan) build(in d.Input, source b.SourceInventory, hold time.Time, writers []b.FrozenWriter, node string) (*b.CaptureModules, error) {
+func (p *productionCapturePlan) build(in d.Input, source b.SourceInventory, hold time.Time, writers []b.FrozenWriter, node string, authorization ...*originalFrozenSourceAuthorization) (*b.CaptureModules, error) {
 	if p == nil || p.revision == "" || p.operationsJSON == "" {
 		return nil, d.ErrNotReady
 	}
@@ -67,5 +67,5 @@ func (p *productionCapturePlan) build(in d.Input, source b.SourceInventory, hold
 			operations[name] = operation
 		}
 	}
-	return buildOriginalProductionCaptureModules(in, source, hold, writers, operations, p.revision)
+	return buildOriginalProductionCaptureModules(in, source, hold, writers, operations, p.revision, authorization...)
 }
