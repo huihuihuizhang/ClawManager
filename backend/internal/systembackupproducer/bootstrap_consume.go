@@ -166,6 +166,7 @@ type bootstrapConsumptionPolicy struct {
 	tx                *Transaction
 	domainLock        *LockedRecord
 	locks             []*LockedRecord
+	sharedLocks       []*bootstrapSharedRecord
 	closed            DomainRecord
 	snapshots         []bootstrapSQLSnapshot
 	plan              GuardPlan

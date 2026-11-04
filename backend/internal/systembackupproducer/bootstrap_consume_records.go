@@ -11,14 +11,11 @@ import (
 )
 
 func (p *bootstrapConsumptionPolicy) lock(ctx context.Context, key RecordKey, out any) error {
-	l, err := p.tx.LockRecord(ctx, key, out)
+	l, err := p.tx.lockBootstrapSharedRecord(ctx, key, out)
 	if err != nil {
 		return err
 	}
-	if !l.Found() {
-		return ErrGuardRequired
-	}
-	p.locks = append(p.locks, l)
+	p.sharedLocks = append(p.sharedLocks, l)
 	return nil
 }
 
@@ -332,6 +329,11 @@ func (p *bootstrapConsumptionPolicy) Recheck(ctx context.Context, read ReadSQL, 
 			return err
 		}
 	}
+	for _, lock := range p.sharedLocks {
+		if err = p.verifySharedRecord(ctx, read, lock); err != nil {
+			return err
+		}
+	}
 	if err = p.verifySnapshots(ctx, read); err != nil {
 		return err
 	}
@@ -408,7 +410,7 @@ func (p *bootstrapConsumptionPolicy) verifyBootstrap(ctx context.Context, read R
 	if err != nil {
 		return err
 	}
-	if err = read.QueryRowContext(ctx, "SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR UPDATE", actor).Scan(&username, &role, &active, &provider); err != nil {
+	if err = read.QueryRowContext(ctx, "SELECT username,role,is_active,auth_provider FROM users WHERE id=? FOR SHARE", actor).Scan(&username, &role, &active, &provider); err != nil {
 		return ErrUnavailable
 	}
 	if username != r.Username || role != "admin" || !active || provider != "local" {
@@ -421,7 +423,7 @@ func (p *bootstrapConsumptionPolicy) verifyBootstrap(ctx context.Context, read R
 		var user int64
 		var action, resource string
 		var raw []byte
-		if err = read.QueryRowContext(ctx, "SELECT user_id,action,resource_type,details FROM audit_logs WHERE id=? FOR UPDATE", id).Scan(&user, &action, &resource, &raw); err != nil {
+		if err = read.QueryRowContext(ctx, "SELECT user_id,action,resource_type,details FROM audit_logs WHERE id=? FOR SHARE", id).Scan(&user, &action, &resource, &raw); err != nil {
 			return ErrUnavailable
 		}
 		expectedAction := "system_backup.config_bootstrap.intent"

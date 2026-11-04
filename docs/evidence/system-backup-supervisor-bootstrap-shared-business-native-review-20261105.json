@@ -1,0 +1,123 @@
+{
+  "schema_version": "supervisor-bootstrap-shared-consumption-review.v1",
+  "base_head": "c064d460bd7c3a2adf787dcb591272c97b274c4b",
+  "change": "Bootstrap-only six child producer reads and metadata snapshots use shared locks under exact SELECT grants; original domain CAS, global/metadata exclusive locks, original deadlines and final guards remain. Cross-package synthetic test WHERE parser understands exact FOR SHARE suffix.",
+  "source_maps": [
+    {
+      "path": ".a-bootstrap-shared-consumption-20261104/source-map.json",
+      "sha256": "fc7d5f78884c29ecb59052ea605df2054b4e9356600dd2fdbc60e8a5c4933112"
+    },
+    {
+      "path": ".a-bootstrap-shared-consumption-r2-20261104/source-map.json",
+      "sha256": "926f4e21d5d58ba5b366c03d522fca90373f99556aab06d15cd1fd55eb1dd8ed"
+    },
+    {
+      "path": ".a-bootstrap-business-native-20261104/source-map.json",
+      "sha256": "3e5463eba5564cc88b5244d3cdf39c3b7eebd0bb9dd09e32b9c9304549b4b2ee"
+    },
+    {
+      "path": ".a-bootstrap-business-native-frame-r2-20261105/source-map.json",
+      "sha256": "40cf6c6ac7b9914bc504d5e6f8976532c2a19f72bbe7fc3558f04de54a017028"
+    },
+    {
+      "path": ".a-bootstrap-business-native-trace-r3-20261105/source-map.json",
+      "sha256": "dff39aae9d71af431b764c330d47f7046f21a6a6de8a860ba1d5e57a8d265d6a"
+    },
+    {
+      "path": ".a-bootstrap-business-native-evidence-grants-r4-20261105/source-map.json",
+      "sha256": "e473f23516321e9cd35f2b8f4df6cf4ee279537884c55021baeaaffeb81aa168"
+    },
+    {
+      "path": ".a-bootstrap-security-shared-parser-r1-20261105/source-map.json",
+      "sha256": "3e4b89e1a9e06411c0fff55debcddb1c09cf85b4769e928f1dd46865c3ba42b1"
+    }
+  ],
+  "reviewed_sources": [
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_consume.go",
+      "sha256": "15435dc6c08017a3371c15512582319e7f07eb13b334240676719b43eb881f19"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_consume_independent_test.go",
+      "sha256": "aceea49e12a1b7362bb5ee3d836da4ec7137e1eac15aad1824ac13d9bd6f85fc"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_consume_records.go",
+      "sha256": "526cbdc2df197abd24d8e4229d934ab25f1e963fbfbd197ba95d7c43ad1d33b5"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_shared_consumption_test.go",
+      "sha256": "41bfd97cb1b8f8ea49150b37011565f49f80fdf83f6dab4ef30b28ba39b336ef"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_shared_record.go",
+      "sha256": "9a801b150805fda88341a705fd37d4a477259587c11f097e612b59acb420a307"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_consume_snapshot.go",
+      "sha256": "8c14c8d4d7200c36d640f8bd54c9112b80c05d2232eef89252dd6372d14c1bf8"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_business_mysql_fixture_test.go",
+      "sha256": "66de6ffc7d4cad6a9449fb72dfb7e0b5d4126fd196fb4f715c7e56804858dc9b"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_business_mysql_records_test.go",
+      "sha256": "e4bad39f9ca7b90db5d3b04d2fb717a208474dd7195ab553f3d31e8576e3e43b"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_business_mysql_test.go",
+      "sha256": "112b9d33c406bc35f06c059f0c2a36f8639420b21a95a6d08cfd1d4541254ae8"
+    },
+    {
+      "target": "backend/internal/systembackupproducer/bootstrap_business_mysql_trace_test.go",
+      "sha256": "ef2bb509df822744027229e12705d8cdc969c96c125de6b53ecf04d0fd3d35e1"
+    },
+    {
+      "target": "backend/internal/systembackupsecurity/config_bootstrap_consumer_integration_test.go",
+      "sha256": "95f52bdffb6787ed327f8789cb6ce64af2ed6a5815ce3504c8719124b5f41fd2"
+    }
+  ],
+  "clean_head_verification": {
+    "platform": "windows/amd64",
+    "producer": {
+      "roots": 95,
+      "subtests": 825,
+      "skips": 0
+    },
+    "security": {
+      "roots": 363,
+      "subtests": 2259,
+      "skips": 0
+    },
+    "producer_log_sha256": "7d1bedb315f77c6cf1bdd1b66478ba8c20b407afe0b6a52d13e9909157436419",
+    "security_log_sha256": "c7f7480883cbed220be16ed937ceda7747154d041107ed053d2736513f2eb03c",
+    "four_consumer_regression_roots_passed": [
+      "TestBootstrapDeploymentCandidatesApplyConsumerAndHistoricalRetry",
+      "TestBootstrapKEKEvidenceLocksSelectedUnionBeforeOriginalCheckAndFence",
+      "TestBootstrapKEKSameKeyReplayDoesNotNeedExpiredMaterialOrNewBound",
+      "TestBootstrapCandidateServiceConsumerIntegration"
+    ]
+  },
+  "native_verification": {
+    "platform": "linux/amd64",
+    "server": "MySQL8.4.8",
+    "tls": "SAN verified TLS1.3",
+    "root": "TestBootstrapBusinessSelectOnlyOriginalConsumerNativeMySQL",
+    "passed_roots": 1,
+    "passed_subtests": 5,
+    "native_log_sha256": "97c84d7b2fac904306e6b15330d86c7468551176d3db7e69dd620fa13842033f",
+    "actual_metadata_drift_injected": true,
+    "actual_concurrent_child_writer_blocked": true,
+    "scope": "Actual owned MySQL8.4.8 SAN/TLS1.3: formal137 real C1 tables/CODEC, actual new SELECT-only child business account/domain UPDATE, production BootstrapCandidateConsumer and FinalGuard/commit/rollback/replay/child writer1205. Upper installation/metadata authority and minimal metadata DDL are explicitly TEST MODELS, not actual complete business matrix or page acceptance.",
+    "owned_fixture_and_test_elf_cleaned": true,
+    "full_production_account_matrix_verified": false
+  },
+  "preparation_corrections": [
+    "Initial private snapshot omitted committed contracts; restored exact required HEAD fixtures.",
+    "Existing synthetic cross-package SQL parser only stripped FOR UPDATE; test-only change preserves original SQL capture and production lock assertions."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false,
+  "remaining": "Actual deployment owner materials, full original C1/17/adoption/enable integration and page task publication/readback require separate acceptance."
+}

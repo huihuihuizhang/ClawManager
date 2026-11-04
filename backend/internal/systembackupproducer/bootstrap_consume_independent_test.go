@@ -148,6 +148,9 @@ func (e *independentBootstrapSession) query(q string, args []driver.NamedValue) 
 		return &fakeRows{values: []driver.Value{int64(1), action, "system_backup", raw}}, nil
 	default:
 		q = strings.ReplaceAll(strings.ReplaceAll(q, ", ", ","), ",", ", ")
+		// Existing memory SQL interpreter models both locking modes identically;
+		// dedicated tests observe the REAL incoming query before this translation.
+		q = strings.TrimSuffix(q, " FOR SHARE") + map[bool]string{true: " FOR UPDATE", false: ""}[strings.HasSuffix(q, " FOR SHARE")]
 		return e.m.query(q, args)
 	}
 }

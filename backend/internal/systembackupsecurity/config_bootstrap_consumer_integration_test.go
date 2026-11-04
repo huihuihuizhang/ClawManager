@@ -166,7 +166,9 @@ func consumerIntegrationSelect(q string, args []driver.NamedValue, rows map[stri
 	table := rest[0]
 	selected := rows[table]
 	if len(rest) == 2 {
-		where := strings.Split(strings.TrimSuffix(rest[1], " FOR UPDATE"), " ORDER BY ")[0]
+		// Interpret both native locking-read forms without rewriting the SQL
+		// captured in state.queries; this synthetic driver proves no lock mode.
+		where := strings.Split(strings.TrimSuffix(strings.TrimSuffix(rest[1], " FOR UPDATE"), " FOR SHARE"), " ORDER BY ")[0]
 		conditions := strings.Split(where, " AND ")
 		filtered := []map[string]driver.Value{}
 		for _, row := range selected {
