@@ -29,6 +29,7 @@ const productionCaptureMetadataVersion = "original-six-part-source-metadata.v1"
 // These are independently observed SOURCE coordinates, never prepared Job
 // requests. They cannot contain a task claim, provider permit or bearer key.
 type productionCaptureMetadata struct {
+	TeamObjects           *productionTeamZeroCensus        `json:",omitempty"`
 	MinIOReadKeepers      []FormalMinIOReadKeeperSelection `json:",omitempty"`
 	ProviderDependencies  []formalVaultProviderFacts       `json:",omitempty"`
 	Version               string

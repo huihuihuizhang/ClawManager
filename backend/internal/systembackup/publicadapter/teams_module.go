@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	c "clawreef/internal/systembackup"
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/team"
 	d "clawreef/internal/systembackupdispatch"
 )
@@ -192,7 +193,15 @@ func WithTeamsSourceFacts(source LinuxProfileConfig) LinuxProfileConfig {
 		for _, instance := range inv.Instances {
 			owners[instance.ID] = instance.UserID
 		}
-		return team.ReadSourceFacts(ctx, tx, users, owners)
+		facts, err := team.ReadSourceFacts(ctx, tx, users, owners)
+		if err != nil {
+			return nil, err
+		}
+		facts.SharedFiles, err = domain.ReadTeamFileSource(ctx, tx)
+		if err != nil {
+			return nil, err
+		}
+		return facts, nil
 	}
 	return source
 }

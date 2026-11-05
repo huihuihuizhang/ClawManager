@@ -82,7 +82,19 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if err != nil {
 		return nil, nil, err
 	}
-	mapping := team.AutomaticStorageMapping{RedisID: s.captureMaterials.Discovery.Redis.Policy.Source.ID, RedisServerID: s.captureMaterials.Discovery.Redis.ServerID, RedisDatabase: s.captureMaterials.Discovery.Redis.Policy.DB, Claims: []team.SharedClaimIdentity{}, Objects: []team.ObjectRef{}, Writers: []team.WriterBinding{}}
+	stage = "team_object_census"
+	var previousTeamCensus *productionTeamZeroCensus
+	if saved != nil {
+		previousTeamCensus = saved.TeamObjects
+	}
+	teamCensus, err := authority.teamZeroCensus(ctx, source.TeamFacts.SharedFiles, clients, previousTeamCensus)
+	if err != nil {
+		return nil, nil, err
+	}
+	if saved != nil && !reflect.DeepEqual(saved.TeamObjects, teamCensus) {
+		return nil, nil, d.ErrNotReady
+	}
+	mapping := team.AutomaticStorageMapping{RedisID: s.captureMaterials.Discovery.Redis.Policy.Source.ID, RedisServerID: s.captureMaterials.Discovery.Redis.ServerID, RedisDatabase: s.captureMaterials.Discovery.Redis.Policy.DB, Claims: []team.SharedClaimIdentity{}, Objects: teamCensus.objects(), Writers: []team.WriterBinding{}}
 	stage = "team_storage"
 	for _, fact := range source.TeamFacts.Teams {
 		if fact.PVC == "" {
@@ -149,7 +161,7 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	if b.ValidateTeamsWriters(source, writers) != nil {
 		return nil, nil, d.ErrNotReady
 	}
-	metadata := productionCaptureMetadata{MinIOReadKeepers: s.Config.MinIOReadKeepers, Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
+	metadata := productionCaptureMetadata{TeamObjects: teamCensus, MinIOReadKeepers: s.Config.MinIOReadKeepers, Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
 	stage = "platform_mounts"
 	if saved == nil {
 		metadata.PlatformMounts, err = s.freezePlatformSourceRecoveryMounts(ctx, owner, writers)

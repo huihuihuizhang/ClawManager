@@ -38,6 +38,7 @@ type productionSourceDiscovery struct {
 	RuntimePolicies                                       []worker.RuntimePolicy
 	ResourceActors                                        map[string]productionSourceActor
 	TeamPlatformUnits                                     map[string][]string
+	TeamWriterImages                                      map[string][]productionTeamWriterImage `json:",omitempty"`
 	RuntimeImageReferences                                map[string]string
 	SecretPolicy                                          *originalSecretPolicyReference `json:",omitempty"`
 }
@@ -227,7 +228,14 @@ func (x *sourceMetadataDelegation) checkLocalInView(ctx context.Context, view re
 		return d.ErrNotReady
 	}
 	p := m.Discovery
-	for _, mount := range []worker.FormalSourceMount{m.Redis, m.Objects} {
+	if validateTeamObjectsSource(*m) != nil {
+		return d.ErrNotReady
+	}
+	teamMounts := []worker.FormalSourceMount{m.Redis, m.Objects}
+	if m.TeamObjects != nil {
+		teamMounts = append(teamMounts, m.TeamObjects.Source)
+	}
+	for _, mount := range teamMounts {
 		raw, err := readPrivate(mount.CredentialFile, 64<<10)
 		if err != nil || hash(raw) != mount.CredentialSHA256 {
 			clear(raw)

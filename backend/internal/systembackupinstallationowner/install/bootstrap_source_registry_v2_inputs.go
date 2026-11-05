@@ -46,6 +46,7 @@ type bootstrapSourceDiscoveryWire struct {
 	RuntimePolicies                                       []json.RawMessage
 	ResourceActors                                        map[string]struct{ Name, UID string }
 	TeamPlatformUnits                                     map[string][]string
+	TeamWriterImages                                      map[string][]struct{ Container, Image, ConfigDigest, BuildCommit string } `json:",omitempty"`
 	RuntimeImageReferences                                map[string]string
 	SecretPolicy                                          json.RawMessage `json:",omitempty"`
 }

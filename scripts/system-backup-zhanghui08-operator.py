@@ -49,7 +49,7 @@ SQL = "scripts/system-backup-original-sql-accounts.py"
 DEPLOYMENT_MODULE_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
 BUSINESS_RUNTIME_SHA = "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
 RECORD_EXPORT_SHA = "868c66ae0dddd7e5b25dd503a7b6309699ddc7831f8f1f74b5f53b5f940a0af4"
-INITIAL_RUNTIME_SHA = "28e7cf35ae3294c85380ed0f2c4e51fbcd0b325f047d879dc4739104af791c5f"
+INITIAL_RUNTIME_SHA = "db7ef179c984bb4911bbce90f4c8b603d2756ecc5a063fc82db47882735fc6f8"
 RUNTIME_ISSUER_SHA = "6e3fe96bf1bb2cc4bd2b8383763f440d775b6b867dfcfe7549249fbdd71629d2"
 OWNER_ASSEMBLY_SHA = "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
 WORKSPACE_SHA = "bd7149e99b15db2fedadc062b1cf1d559ad441bf4fa1f067874647147c7d85a6"
@@ -1160,7 +1160,7 @@ def minio_consent_module():
 
 
 def capture_mapping_module():
-    return exact_module("system-backup-operator-capture-mapping.py", "2e2d8524d7a28f39427e8d39219369512658588568f11566a6eafa6a874363c0")
+    return exact_module("system-backup-operator-capture-mapping.py", "f892a79fd93637f733417840033ec7ec9c2b7fe72e84199b9324f718651987b9")
 
 
 def enabled_publication_module():

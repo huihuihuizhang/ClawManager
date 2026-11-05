@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/kube"
+	"clawreef/internal/systembackup/team"
 	"clawreef/internal/systembackup/worker"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	c "clawreef/internal/systembackupcontroller"
@@ -81,6 +83,7 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 	if e != nil || json.Unmarshal(raw, &material) != nil || material.Version != productionCaptureMaterialsVersion || material.Discovery == nil || material.Redis.GrantSHA256 != "" || material.Objects.GrantSHA256 != "" {
 		return zero, install.ErrInstall
 	}
+	originalMaterialTemplate := append(json.RawMessage(nil), raw...)
 	raw, e = read(in.ProviderResult, 262144)
 	var provider install.OriginalRuntimeProviderIssueReceipt
 	if e != nil || json.Unmarshal(raw, &provider) != nil || provider.Version != "original-runtime-provider-authorities-result.v1" || provider.State != "original_authority_and_capabilities_committed_readback_verified" {
@@ -173,8 +176,42 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 	if len(parts.Source.Teams.Objects) > 0 {
 		wantTeamParts = 1
 	}
-	if partCount != wantTeamParts || install.ValidateTeamsSourceInventory(teams, parts.Source.Teams) != nil || teams.GrantFile == "" || !originalCaptureInputKeyEqual(teams.Issuer, issuer) || teams.GrantFile == material.Objects.GrantFile || teams.GrantFile == material.Redis.GrantFile || teams.GrantFile == databaseSource.GrantFile || teams.GrantFile == material.ControlEvidenceSource.GrantFile {
-		return zero, install.ErrTeamsSourceUnavailable
+	teamObjectScopeSelected := !reflect.DeepEqual(teams, worker.FormalSourceMount{})
+	if teamObjectScopeSelected {
+		// Keep C's already selected original provider scope. No root/credential
+		// is synthesized or copied from Skills during DATA authoring.
+		if material.TeamObjects == nil || !reflect.DeepEqual(material.TeamObjects.Source, teams) {
+			return zero, install.ErrTeamsSourceUnavailable
+		}
+		if partCount != wantTeamParts || install.ValidateTeamsSourceInventory(teams, parts.Source.Teams) != nil || teams.GrantFile == "" || !originalCaptureInputKeyEqual(teams.Issuer, issuer) || teams.GrantFile == material.Objects.GrantFile || teams.GrantFile == material.Redis.GrantFile || teams.GrantFile == databaseSource.GrantFile || teams.GrantFile == material.ControlEvidenceSource.GrantFile {
+			return zero, install.ErrTeamsSourceUnavailable
+		}
+	} else {
+		// Pure unsigned DATA candidate only. Neither nil nor these selected
+		// facts authorize skipping an object source. C's actual authenticated
+		// resolver must independently establish files-only before factory I/O.
+		facts := parts.Source.TeamFacts
+		if partCount != 0 || parts.Source.Teams.Objects == nil || len(parts.Source.Teams.Objects) != 0 || len(in.TeamsFiles) != 0 || originalHasTeamObjectMaterial(originalMaterialTemplate) || facts == nil || facts.SharedFiles == nil || facts.SharedFiles.Codec != team.SharedFileSourceVersion || facts.SharedFiles.SchemaSHA256 != team.SchemaSHA256() || facts.SharedFiles.References == nil || facts.SharedFiles.Rows < 0 {
+			return zero, install.ErrTeamsSourceUnavailable
+		}
+		for _, refs := range facts.SharedFiles.References {
+			if refs.TeamID <= 0 {
+				return zero, install.ErrTeamsSourceUnavailable
+			}
+			for _, ref := range refs.Paths {
+				if _, e := domain.TeamArtifactPath(ref); e != nil {
+					return zero, install.ErrTeamsSourceUnavailable
+				}
+			}
+		}
+		if operation, exists := material.Operations["capture-team-objects"]; exists {
+			// Only an unused generic template may be omitted. An original
+			// Teams request, signed mapping or observed mount cannot disappear.
+			if operation.Request.Teams != nil || operation.Formal.ConfigSHA256 != "" || len(operation.MountIdentities) != 0 {
+				return zero, install.ErrTeamsSourceUnavailable
+			}
+			delete(material.Operations, "capture-team-objects")
+		}
 	}
 	kms := map[string]k.Config{}
 	files := map[string]OriginalCaptureMappingFile{}
@@ -208,7 +245,7 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 		}
 		return true
 	}
-	if !sourceFiles(material.Redis, true) || !sourceFiles(material.Objects, true) || !sourceFiles(databaseSource, true) || !sourceFiles(teams, teams.GrantSHA256 == "") || !add(material.ControlEvidenceSource.GrantFile, "", "") {
+	if !sourceFiles(material.Redis, true) || !sourceFiles(material.Objects, true) || !sourceFiles(databaseSource, true) || teamObjectScopeSelected && !sourceFiles(teams, teams.GrantSHA256 == "") || !add(material.ControlEvidenceSource.GrantFile, "", "") {
 		return zero, install.ErrInstall
 	}
 	api := material.Discovery.SourceAPI
@@ -300,7 +337,10 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 		return zero, e
 	}
 	definitionFile := filepath.Join(directory, "capture-source-definition.json")
-	template := OriginalCaptureMappingDefinition{Version: OriginalCaptureInstallationTemplateVersion, OriginalDefinitionSHA256: hash(definitionRaw), KMS: kms, DatabaseSource: databaseSource, TeamsSource: &teams}
+	template := OriginalCaptureMappingDefinition{Version: OriginalCaptureInstallationTemplateVersion, OriginalDefinitionSHA256: hash(definitionRaw), KMS: kms, DatabaseSource: databaseSource}
+	if teamObjectScopeSelected {
+		template.TeamsSource = &teams
+	}
 	keys := make([]string, 0, len(files))
 	for key := range files {
 		keys = append(keys, key)

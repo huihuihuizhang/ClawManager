@@ -1,0 +1,231 @@
+{
+  "schema_version": "supervisor-teams-three-state-integration-review.v1",
+  "base_commit": "fae47dea3c2b54c8c321205e6643022846b6a9ac",
+  "source_map_sha256": "92c53e809370679156542cb940086e51313b06a8144c07e9fcc8cbaf7cdedb90",
+  "owner_maps": [
+    {
+      "path": "backend/.a-teams-conditional-gate-r2-20261105/source-map.json",
+      "sha256": "64e1932a4b6894c653ad029165ae7975800c73d6eaafe170f224fbf82162492f"
+    },
+    {
+      "path": "backend/.c-teams-source-mode-r2-b6622310-20261105/source-map.json",
+      "sha256": "31e00cdc2640ea38f7b2335286d4081a900f0f264b3b108885379aa171b8309a"
+    },
+    {
+      "path": "backend/.c-teams-writer-image-r3-20261105/source-map.json",
+      "sha256": "04da0358f08d6aba637fecf2d8e7ce2b9a57ef3c5bbd31756bd5256d29c0cddd"
+    }
+  ],
+  "scope": "Choose files-only from original full SQL double reads, pinned codec/schema/config and actual business writer identity. Any selected or historical Teams object scope still requires its independent object grant and native census.",
+  "business_and_worker_images_independent": true,
+  "business_writer_release_source": "Existing original new-image plan/result and actual immutable container image/config/commit readback; never use WorkerImage as business App image.",
+  "typed_bootstrap_metadata_mirror_and_existing_signed_scope_updated": true,
+  "python_producer_scope": "Existing native release tool single-app-container shape; Go consumer supports individually pinned multi-container images. No general multi-container producer claim.",
+  "preserved_nfs_producer_functions": [
+    "inline_nfs_workspace",
+    "workspace",
+    "source_core"
+  ],
+  "preserved_database_maintenance_and_runtime_gate_functions": [
+    "Operator.db",
+    "Operator.require_current_runtime_qualification"
+  ],
+  "python_loader_edges_verified": 45,
+  "validation": {
+    "linux_go": {
+      "exit": 0,
+      "source_unchanged": true,
+      "root_tests_passed": 52,
+      "subtests_passed": 235,
+      "failures": [],
+      "skips": [
+        "TestSourceMetadataTasklessOriginalTransportsAndInventoryMySQL"
+      ],
+      "log_sha256": "6de343080d9153a162cf867422a21917990cfd018f7d0f69445c99b02d972d7a",
+      "scope": "Actual offline Linux compile of all commands and Teams three-state, immutable business writer image, strict metadata scope and preserved NFS/source regressions; not native MySQL/NFS or page acceptance.",
+      "native_source_qualified": false,
+      "field_mutated": false,
+      "test_products": "Normal go test cleans temporary executables; --rm container; no persistent test binary requested.",
+      "packages_without_test_files": 30
+    },
+    "linux_python_tests": 21,
+    "python_log_sha256": "12071bd0b0012622c361066421b76ba685df919be05dc046c9a3dc31fe0dfb02",
+    "test_build_products": "No persistent test executable; temporary go test products and --rm containers cleaned."
+  },
+  "independent_source_review": "01a1a931-2662-7d23-8679-8af7373fbc64: A r2 + C r2 + C r3 no P1, exact seven r3 pins/typed wire reviewed; not a native proof.",
+  "source_pins": [
+    {
+      "target": "backend/internal/systembackup/domain/team_file_source.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackup/domain/team_file_source.go",
+      "before_sha256": null,
+      "sha256": "2b6ec1b8feb98cfeb1a2b2366c814438e991561edecfb63bb73365c592018043"
+    },
+    {
+      "target": "backend/internal/systembackup/publicadapter/teams_module.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackup/publicadapter/teams_module.go",
+      "before_sha256": "5bd13976ee3474fede5962db8379d37bf511005409af42ab571cb5548b837651",
+      "sha256": "8fce022f67cc172eb5c474fa92af12248e51b4128ef35de4973d2fcfec933057"
+    },
+    {
+      "target": "backend/internal/systembackup/team/shared_file_source.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackup/team/shared_file_source.go",
+      "before_sha256": null,
+      "sha256": "6edac0c05504f129ab15af2043a75cd2a3f7a4f4f4d5d1ad72773d477cdc24e1"
+    },
+    {
+      "target": "backend/internal/systembackup/team/source_facts.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackup/team/source_facts.go",
+      "before_sha256": "9baaa8e9871d2f1eef4faa5a7df060acf840049facb24d1531288cc9fd20ef91",
+      "sha256": "cae4535556b365e539c1dfe0357ecec6967565cef7adbe5c5fac58612937ce4d"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_source_registry_author.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/bootstrap_source_registry_author.go",
+      "before_sha256": "3828576ade51ec345ee9ebfe6dedf9625fbde6dc64642d8bb21747dd74c44f07",
+      "sha256": "349826e3e3411d6b08da4c7728183fc6397e5db1bf74bc7ced3013c80ff4eb9c"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_source_registry_codec.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/bootstrap_source_registry_codec.go",
+      "before_sha256": "fec6279db72a0eab424024c8372b3ba14def109d6513283ecd629c2a5d8f53d3",
+      "sha256": "5c8d36677f073147b4375857aec0b65c839676c71bec0a91a148a7f23562fe0e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+      "before_sha256": "8a1af54d333f0df40724f1189050e77cc23ee3579a6b8c7fc4a6cb4f996cd73c",
+      "sha256": "8d3cfa1d9deea954c2b64dc0d54d611c19a5d856bd9c7b69b512892009d1a07e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go",
+      "before_sha256": "4bc79686bcd73371c0cad538d59fe7bb12c5b3830f379f3c096304c730cfca3a",
+      "sha256": "aa4b4dd32bbb030b862e6e724f8ea418ae347c44f3a0439723ece74ae303ab5e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_capture_materials.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/deployment_capture_materials.go",
+      "before_sha256": "00963adc04e31f4b0471cdeccc9ce7b6d9d8dadb3d62c7d13093d5682209dccf",
+      "sha256": "4f1740cd3b952d923c48bc7fb76b7dd64e00b15156124f92d327519ad9852ad4"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_capture_input_author.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_capture_input_author.go",
+      "before_sha256": "77ac0899e914b914499e68156521ab8128b62987258649654228559e7217f69d",
+      "sha256": "0dbe43b37a03f8735d204626be31253ff91f6bd18b1b79002c685e3c350f1843"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_team_object_mode.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_team_object_mode.go",
+      "before_sha256": null,
+      "sha256": "228b007be8b0150ab377cdb669b88aa0608bf510104932bb23a837a91940e3b2"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_team_object_mode_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_team_object_mode_test.go",
+      "before_sha256": null,
+      "sha256": "c2b4371e9a4084b975c11485bf05f80102e4ae3e21c6507372533e5d595d9b09"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_capture_installation.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_capture_installation.go",
+      "before_sha256": "4b2105462c79b5ce665fed6627f6e842a02bda06ac25a6373332b983962bb27b",
+      "sha256": "653970160b19c607a26171b2853e5cac4b8b69780af3941fd8bebc9569ffe373"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_capture_modules.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_capture_modules.go",
+      "before_sha256": "ea493797188b31107332e65b9a79490a4dbf3a6223309cff5911ac2d2e03c465",
+      "sha256": "ad37e28e80ec781682944cefa0fbee3fa4865a756443fd26898021ef7e8bca2e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_source_authority.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_source_authority.go",
+      "before_sha256": "98d3baf13ac324dc34c0fc55f1ddaed73ad6385734ab64edeb814c44d4a4f29c",
+      "sha256": "157f3677d2ff5120098f1f31bcb293d37e2839290754bc373611d2e7a86e3d74"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_source_freeze.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_source_freeze.go",
+      "before_sha256": "a1b006839339bff3194ab3f565386fa34a888ecf1771c8c13056443dc7293eee",
+      "sha256": "465056af5d157222e63c099b4c4d1eabc31fec3bf7248ce92283bd05db8c20a6"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_mode_resolve.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_mode_resolve.go",
+      "before_sha256": null,
+      "sha256": "a057bebc4a38dc9ba207d9d85160a73a4148a949a193e322eb9ad5f1af379350"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_mode_resolve_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_mode_resolve_test.go",
+      "before_sha256": null,
+      "sha256": "167b2741481166f07f45b544e8eb47dc887b877261b7eeeed0b2f32653c6dc6a"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_writer_build.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_writer_build.go",
+      "before_sha256": null,
+      "sha256": "6bec41a15005ff9c8c18404694e0b133fff3d3c13b6940f76763c64abfa60565"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_writer_build_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_writer_build_test.go",
+      "before_sha256": null,
+      "sha256": "53461476ffe381c5a9c2bde617a5a2f313dc03d14cd43384d4ee04945c95ac1d"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_zero_census.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_zero_census.go",
+      "before_sha256": null,
+      "sha256": "7789661909927609bcb9d191ec422f7052bb185f28c08317afc26e2f5a81ea24"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_team_zero_census_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_team_zero_census_test.go",
+      "before_sha256": null,
+      "sha256": "313c7f9b5fd73309087fe9c30b8072540e6efe08d1b085a80feac27c5898bfce"
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_inputs.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupinstallationowner/install/bootstrap_source_registry_v2_inputs.go",
+      "before_sha256": "0f6b680c090a815096fae9fb616b92b2e7c31b81dab5aa5d63e0ccdc767b1b1b",
+      "sha256": "6e1516e4f9d05b3f3e697e54cf3bf667c4aa89fc0f4087e5017ebb046164bb84"
+    },
+    {
+      "target": "scripts/system-backup-initial-complete-inputs.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-initial-complete-inputs.py",
+      "before_sha256": "2848c1494ea69f85daf15827d080d1ba32ec6c498f08431bc2dde2f06cb1a325",
+      "sha256": "064763abdd4ebbe84fe361b9285b0916510e2b680ce02be774cb43054a7d1d65"
+    },
+    {
+      "target": "scripts/system-backup-initial-runtime.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-initial-runtime.py",
+      "before_sha256": "28e7cf35ae3294c85380ed0f2c4e51fbcd0b325f047d879dc4739104af791c5f",
+      "sha256": "db7ef179c984bb4911bbce90f4c8b603d2756ecc5a063fc82db47882735fc6f8"
+    },
+    {
+      "target": "scripts/system-backup-operator-capture-mapping.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-operator-capture-mapping.py",
+      "before_sha256": "2e2d8524d7a28f39427e8d39219369512658588568f11566a6eafa6a874363c0",
+      "sha256": "f892a79fd93637f733417840033ec7ec9c2b7fe72e84199b9324f718651987b9"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-zhanghui08-operator.py",
+      "before_sha256": "7492c5f9525bacfc0127c6cc627b3d35565d454ec9eeb4e3a7c0739bf394e054",
+      "sha256": "b949f88d1d5fd9bb26e021d9a1c32e83030db426f8946bd83e0dc91ddd3e876f"
+    },
+    {
+      "target": "scripts/test_team_writer_image_inputs.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/test_team_writer_image_inputs.py",
+      "before_sha256": null,
+      "sha256": "6855dd1bf7f3c39601374d368ed65357124b03f32b8bbfefd49011ef8d1c8f24"
+    }
+  ],
+  "field_mutated": false,
+  "native_mysql_qualified": false,
+  "native_nfs_qualified": false,
+  "page_acceptance": false,
+  "DR": false
+}

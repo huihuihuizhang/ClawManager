@@ -47,6 +47,7 @@ type productionCaptureOperation struct {
 }
 
 type productionCaptureMaterials struct {
+	TeamObjects                                                                 *productionTeamObjectsSource `json:",omitempty"`
 	Version, Revision                                                           string
 	InstallationID, ControllerOwner, DeploymentConfigSHA256, CaptureGrantSHA256 string
 	Operations                                                                  map[string]productionCaptureOperation

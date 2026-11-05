@@ -140,17 +140,23 @@ def finalize_mappings(op, production, initial_runtime, publication=None):
         "bind-published-capture-database-inputs", "--inputs-file", bridge["File"], "--inputs-sha256", bridge["SHA256"]])
     op.pin_value(database)
     components = data(op, publication["ComponentsTemplate"])
-    # Only the connected original native factory may fill this independent
-    # pending grant. Its no-write owner/native preflight runs before Begin.
-    # A nonempty caller hash is never accepted as proof of Teams authority.
+    # Pure structure only. The Go factory resolves the authenticated live
+    # file-only / selected-object-scope / unknown branch before any grant I/O.
     definition = data(op, publication["SourceDefinition"])
     teams = definition.get("TeamsSource")
-    m.require(isinstance(teams, dict) and teams.get("Version") == "original-teams-object-source-issue.v1" and
-              teams.get("PartsRegistry") and components.get("TeamsSource"),
-              "original_independent_Teams_source_and_complete_inventory_required")
-    selected_source = dict(teams["Source"])
-    selected_source["GrantSHA256"] = components["TeamsSource"].get("GrantSHA256", "")
-    m.require(selected_source == components["TeamsSource"], "same_original_Teams_source_mount_required")
+    m.require(isinstance(teams, dict) and teams.get("PartsRegistry") and
+              isinstance(teams.get("Source"), dict), "original_complete_Teams_selection_required")
+    source = teams["Source"]
+    selected = any(bool(value) for value in source.values())
+    if selected:
+        m.require(components.get("TeamsSource"), "original_selected_Teams_object_mount_required")
+        exact = dict(source)
+        exact["GrantSHA256"] = components["TeamsSource"].get("GrantSHA256", "")
+        m.require(exact == components["TeamsSource"], "same_original_Teams_object_mount_required")
+    else:
+        m.require(components.get("TeamsSource") is None and
+                  "capture-team-objects" not in components.get("KMS", {}),
+                  "file_only_candidate_must_not_keep_object_grant_or_mapping")
     output = Path(runtime.core["capture_modules"]["path"]).parent
     args = [stages.binary("system-backup-first-install-materials"), *op.owner_common(),
             "--runtime-dsn-file", runtime.runtime_dsn["File"],

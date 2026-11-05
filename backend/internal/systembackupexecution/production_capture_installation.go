@@ -71,22 +71,26 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 		}
 		protected[file] = true
 	}
-	// Teams is independently owner-selected in the ORIGINAL definition. A
-	// template may fill only its exact issued GrantSHA, never swap a mount.
-	if definition.TeamsSource == nil || template.TeamsSource == nil {
+	// C owns the actual same-context SQL/app/schema/config/scope read. This
+	// branch is never selected by nil mounts, static [] or a caller flag.
+	preflight, err := PrepareOriginalCaptureSourceSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile, runtimeDB...)
+	if err != nil {
+		return zero, err
+	}
+	teamMode, err := preflight.resolveOriginalTeamObjectMode(ctx)
+	if err != nil || validateOriginalTeamObjectSelection(teamMode, definition, template, material) != nil {
 		return zero, install.ErrTeamsSourceUnavailable
 	}
-	pendingTeams := template.TeamsSource.GrantSHA256 == ""
-	teamsExpected := definition.TeamsSource.Source
-	teamsExpected.GrantSHA256 = template.TeamsSource.GrantSHA256
-	if !reflect.DeepEqual(teamsExpected, *template.TeamsSource) || teamsExpected.GrantFile == template.DatabaseSource.GrantFile || teamsExpected.GrantFile == input.ResolvedComponentsFile || teamsExpected.GrantFile == input.IntermediateFile {
-		return zero, c.ErrExecutionAuthority
-	}
-	if pendingTeams {
-		if _, e := os.Lstat(teamsExpected.GrantFile); !os.IsNotExist(e) {
-			// Unknown/partial/existing output: require explicit query and exact
-			// retained-byte selection; never retry issue or overwrite it.
+	selectedTeamObjectScope := teamMode == originalTeamObjectScopeSelected
+	pendingTeams := selectedTeamObjectScope && template.TeamsSource.GrantSHA256 == ""
+	if selectedTeamObjectScope {
+		if template.TeamsSource.GrantFile == template.DatabaseSource.GrantFile || template.TeamsSource.GrantFile == input.ResolvedComponentsFile || template.TeamsSource.GrantFile == input.IntermediateFile {
 			return zero, c.ErrExecutionAuthority
+		}
+		if pendingTeams {
+			if _, e := os.Lstat(template.TeamsSource.GrantFile); !os.IsNotExist(e) {
+				return zero, c.ErrExecutionAuthority
+			}
 		}
 	}
 	// Template placeholders must name ONLY the two original grant paths, once
@@ -133,15 +137,11 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 	}
 	// Authenticate + observe Teams BEFORE any other grant is emitted. Missing
 	// inventory or denied native reads must not create a half source bundle.
-	preflight, err := PrepareOriginalCaptureSourceSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile, runtimeDB...)
-	if err != nil {
-		return zero, err
-	}
 	if pendingTeams {
 		if err = preflight.ValidateTeamsSource(ctx); err != nil {
 			return zero, err
 		}
-	} else {
+	} else if selectedTeamObjectScope {
 		checked, e := preflight.QueryTeamsSourceGrant(ctx)
 		if e != nil || !reflect.DeepEqual(checked.Source, *template.TeamsSource) {
 			return zero, c.ErrExecutionAuthority
@@ -158,6 +158,19 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 			return zero, err
 		}
 		template.TeamsSource = &teamsResult.Source
+	}
+	if selectedTeamObjectScope {
+		// C's runtime material retains the SAME independent object mount.
+		// Fill only its actually issued/query-verified grant SHA.
+		if sequence.materials.TeamObjects == nil || template.TeamsSource == nil {
+			return zero, install.ErrTeamsSourceUnavailable
+		}
+		expected := sequence.materials.TeamObjects.Source
+		expected.GrantSHA256 = template.TeamsSource.GrantSHA256
+		if !reflect.DeepEqual(expected, *template.TeamsSource) {
+			return zero, install.ErrTeamsSourceUnavailable
+		}
+		sequence.materials.TeamObjects.Source = *template.TeamsSource
 	}
 	var controlResult install.ControlEvidenceSourceIssueResult
 	if pendingControl {

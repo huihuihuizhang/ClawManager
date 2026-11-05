@@ -376,6 +376,44 @@ def runtime_policies(m, stages, data):
     return policies, references
 
 
+def team_writer_images(m, stages, app, namespace):
+    """Expectations come from the retained native release, never current drift."""
+    result_pin = m.pin(stages.directory / "new-image.result.json")
+    result = m.decode(m.pinned(result_pin))
+    images_pin = m.pin(stages.directory / "images.actual.json")
+    images = m.decode(m.pinned(images_pin))
+    plan = m.decode(m.pinned(result["plan"]))
+    m.need(result["version"] == "operator-new-image-result.v1" and
+        result["state"] == "actual_full_business_mysql_tls_template_and_same_release_rollout_verified" and
+        result["images"] == images == plan["images"], "original_business_release_receipts_required")
+    m.need(app["metadata"]["name"] == result["app"]["Name"] and app["metadata"]["namespace"] == namespace and
+        app["metadata"]["uid"] == result["app"]["UID"] == plan["original_uid"] and
+        m.digest(m.encoded(app["spec"])) == result["app"]["SpecSHA256"] and
+        app["spec"]["template"] == plan["desired_spec"]["template"], "original_business_release_template_required")
+    pod = plan["desired_spec"]["template"]["spec"]
+    # The current native release producer attests one app container. Future
+    # sidecars need their own native release receipt; the Go consumer supports
+    # distinct images/builds per ordinary/init container without worker reuse.
+    m.need(len(pod["containers"]) == 1 and not pod.get("initContainers") and not pod.get("ephemeralContainers"),
+        "each_business_container_needs_original_release_receipt")
+    image = images["app"]; container = pod["containers"][0]
+    m.need(re.fullmatch(r"[0-9a-f]{64}", image["manifest_sha256"]) and
+        re.fullmatch(r"sha256:[0-9a-f]{64}", image["config_digest"]) and
+        re.fullmatch(r"[0-9a-f]{40}", image["commit"]) and
+        image["reference"].endswith("@sha256:" + image["manifest_sha256"]) and
+        container["image"] == image["reference"] and container["name"], "original_business_immutable_image_required")
+    observed = result["business_pods"]
+    m.need(0 < len(observed) <= 16 and len({p["PodUID"] for p in observed}) == len(observed) and
+        all(p["PodUID"] and p["ReplicaSetUID"] and p["ContainerID"] and
+            m.image_id(p["ImageID"]) in ("sha256:" + image["manifest_sha256"], image["config_digest"]) for p in observed),
+        "original_business_pod_release_readback_required")
+    # Pin reads again before returning; no network/mutation or new signer here.
+    m.pinned(result_pin); m.pinned(images_pin); m.pinned(result["plan"])
+    return {"deployment/" + namespace + "/" + app["metadata"]["name"]: [{
+        "Container": container["name"], "Image": image["reference"],
+        "ConfigDigest": image["config_digest"], "BuildCommit": image["commit"]}]}
+
+
 def material_template(m, stages, assembly, core, directory, host, app, data, redis, minio, source_api, source_public, sql_operation):
     policies, image_references = runtime_policies(m, stages, data)
     bucket, prefix = object_scope(m, stages, assembly, app)
@@ -391,7 +429,8 @@ def material_template(m, stages, assembly, core, directory, host, app, data, red
         "SourceAPI": {"Server": api["Endpoint"], "CAFile": api["CA"]["File"], "CASHA256": api["CA"]["SHA256"], "TokenFile": api["Credential"]["File"]},
         "SourceAPITokenSHA256": api["Credential"]["SHA256"], "SourceAPIServiceAccount": source_api["scope"]["ServiceAccount"], "SourceAPIServiceAccountUID": api["Account"],
         "Redis": redis["capture_policy"], "RuntimePolicies": policies, "RuntimeImageReferences": image_references, "ResourceActors": actors,
-        "TeamPlatformUnits": {"deployment/" + data["Namespace"] + "/" + app["metadata"]["name"]: team_units}}
+        "TeamPlatformUnits": {"deployment/" + data["Namespace"] + "/" + app["metadata"]["name"]: team_units},
+        "TeamWriterImages": team_writer_images(m, stages, app, data["Namespace"])}
     operations = {}
     names = ("capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle")
     for name in names:

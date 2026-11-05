@@ -147,6 +147,10 @@ func (x *bootstrapSourceRegistryReader) readSourceSQL() (*bootstrapSourceSQLFact
 	if err != nil || out.inventory.TeamFacts == nil || out.inventory.TeamFacts.Validate(users, owners) != nil {
 		return nil, install.ErrInstall
 	}
+	out.inventory.TeamFacts.SharedFiles, err = domain.ReadTeamFileSource(x.physical, tx)
+	if err != nil {
+		return nil, err
+	}
 	skills, err := domain.ReadSkillCaptureInventory(x.physical, tx, users, owners)
 	if err != nil {
 		return nil, install.ErrInstall

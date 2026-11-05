@@ -57,7 +57,7 @@ func ProduceOriginalBootstrapSourceRegistries(ctx context.Context, installer *in
 	if err != nil {
 		return zero, install.ErrInstall
 	}
-	parts := bootstrapSourcePartsRegistry{SchemaVersion: bootstrapSourcePartsVersion, Installation: target.InstallationID, Version: selection.PartsVersion, Parts: facts.parts, Source: facts.lastSQL.inventory, SQL: facts.lastSQL.metadata, Redis: facts.redis, Skills: facts.skills, Deployment: facts.deployment, Secrets: facts.secrets}
+	parts := bootstrapSourcePartsRegistry{TeamObjects: facts.teamObjects, SchemaVersion: bootstrapSourcePartsVersion, Installation: target.InstallationID, Version: selection.PartsVersion, Parts: facts.parts, Source: facts.lastSQL.inventory, SQL: facts.lastSQL.metadata, Redis: facts.redis, Skills: facts.skills, Deployment: facts.deployment, Secrets: facts.secrets}
 	writers := bootstrapSourceWritersRegistry{RuntimeTestScope: configuredRuntimeTestScope(x.config).Clone(), SchemaVersion: bootstrapSourceWritersVersion, Installation: target.InstallationID, Version: selection.SourceWritersVersion, ApplicationScope: selection.ApplicationScope, Participants: facts.participants, API: facts.lastAPI.objects, Bindings: facts.lastSQL.bindings, Pods: facts.lastSQL.pods, Native: facts.native, ProviderDependencies: facts.dependencies}
 	partsRaw, err := ce.Canonical(parts)
 	if err != nil || len(partsRaw) > 262144 {

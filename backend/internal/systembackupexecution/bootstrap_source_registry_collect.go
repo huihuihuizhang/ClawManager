@@ -43,6 +43,10 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 		return nil, err
 	}
 	defer clients.Close()
+	teamFirst, err := readTeamZeroCensus(x.physical, x.materials, f.firstSQL.inventory.TeamFacts.SharedFiles, bootstrapTeamSourceAuthority{x}, x.config, clients, nil)
+	if err != nil {
+		return nil, err
+	}
 	skills, err := x.readSkillObjectMetadata(x.physical, clients, f.firstSQL.inventory.Skills)
 	if err != nil {
 		return nil, err
@@ -89,6 +93,11 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil || !sameBootstrapSourceSQL(f.firstSQL, f.lastSQL) {
 		return nil, install.ErrInstall
 	}
+	teamLast, err := readTeamZeroCensus(x.physical, x.materials, f.lastSQL.inventory.TeamFacts.SharedFiles, bootstrapTeamSourceAuthority{x}, x.config, clients, nil)
+	if err != nil || !reflect.DeepEqual(teamFirst, teamLast) {
+		return nil, install.ErrInstall
+	}
+	f.teamObjects = teamLast
 	lastSkills, err := x.readSkillObjectMetadata(x.physical, clients, f.lastSQL.inventory.Skills)
 	if err != nil || !reflect.DeepEqual(skills, lastSkills) {
 		return nil, install.ErrInstall
@@ -125,6 +134,15 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	wantParticipants := append([]string{}, x.config.RuntimeSources.LeaseParticipants...)
 	sort.Strings(wantParticipants)
 	if !reflect.DeepEqual(lastParticipants, wantParticipants) {
+		return nil, install.ErrInstall
+	}
+	if err := x.bindObservedTeamSource(f.firstSQL, clients, teamFirst); err != nil {
+		return nil, err
+	}
+	if err := x.bindObservedTeamSource(f.lastSQL, clients, teamLast); err != nil {
+		return nil, err
+	}
+	if !sameBootstrapSourceSQL(f.firstSQL, f.lastSQL) {
 		return nil, install.ErrInstall
 	}
 	f.parts, f.native, f.participants, f.redis, f.skills, f.deployment, f.secrets = lastParts, lastNative, lastParticipants, lastRedis, lastSkills, lastDeployment, lastSecrets
@@ -173,11 +191,11 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 			parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(mount.InstanceID) + "_" + mount.MountID, "capture-workspace"})
 		}
 	}
-	// Match the CURRENT concrete production consumer: SourceFacts identifies
-	// actual Team PVC sources; freezeProductionSource:81 selects Objects=[] and
-	// teams_module only selects teams_objects for an explicit ObjectRef inventory.
-	// Do not infer provider-wide absence or borrow an optional worker template.
-	// An explicit teams_objects entry in the signed registry will fail exact match.
+	// A real independently observed object inventory adds exactly one part.
+	// The first-party files-only producer yields zero only after native census.
+	if f.inventory.Teams != nil && len(f.inventory.Teams.Objects) > 0 {
+		parts = append(parts, bootstrapSourceRegistryPart{"teams", "teams_objects", "capture-team-objects"})
+	}
 	for _, team := range f.inventory.TeamFacts.Teams {
 		if team.PVC == "" {
 			continue

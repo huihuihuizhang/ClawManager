@@ -11,6 +11,7 @@ const SourceFactsVersion = "teams-original-sql-facts.v1"
 // identity, stop proof or source permission is invented while the RR is open.
 // D can bind independently observed storage after closing that transaction.
 type SourceFacts struct {
+	SharedFiles           *SharedFileSource `json:",omitempty"`
 	Version, SchemaSHA256 string
 	Teams                 []TeamSQLFacts
 	Members               []MemberSQLFacts
@@ -29,6 +30,7 @@ func CloneSourceFacts(f *SourceFacts) *SourceFacts {
 		return nil
 	}
 	copy := *f
+	copy.SharedFiles = CloneSharedFileSource(f.SharedFiles)
 	copy.Teams = append([]TeamSQLFacts{}, f.Teams...)
 	copy.Members = append([]MemberSQLFacts{}, f.Members...)
 	return &copy
