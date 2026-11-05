@@ -287,6 +287,13 @@ func (s *OriginalCaptureSequence) mappingComponents(name string, operation produ
 				return zero, c.ErrExecutionAuthority
 			}
 			mount = *d.TeamsSource
+			if s.definition.TeamsSource != nil {
+				expected := s.definition.TeamsSource.Source
+				expected.GrantSHA256 = mount.GrantSHA256
+				if !reflect.DeepEqual(expected, mount) {
+					return zero, c.ErrExecutionAuthority
+				}
+			}
 		}
 		request := operation.Request
 		if request.Operation != "" && request.Operation != name {

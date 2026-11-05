@@ -86,6 +86,17 @@ func (s *OriginalCaptureSequence) WorkerSourceMounts(ctx context.Context) (_ wor
 // worker-source grants. Actual immutable formal mappings may now be created
 // from those bytes before metadata scope is signed. No enabled-v1/task is used.
 func BeginOriginalCaptureSequence(ctx context.Context, owner *install.Installer, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, issuerPrivateFile string, runtimeDB ...*sql.DB) (*OriginalCaptureSequence, error) {
+	return prepareOriginalCaptureSequence(ctx, owner, password, enrollment, definitionFile, definitionSHA, issuerPrivateFile, true, runtimeDB...)
+}
+
+// PrepareOriginalCaptureSourceSequence authenticates the same original factory
+// without emitting any grant. It is used for native preflight and read-only
+// recovery, never as task admission or a replacement source authority.
+func PrepareOriginalCaptureSourceSequence(ctx context.Context, owner *install.Installer, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, issuerPrivateFile string, runtimeDB ...*sql.DB) (*OriginalCaptureSequence, error) {
+	return prepareOriginalCaptureSequence(ctx, owner, password, enrollment, definitionFile, definitionSHA, issuerPrivateFile, false, runtimeDB...)
+}
+
+func prepareOriginalCaptureSequence(ctx context.Context, owner *install.Installer, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, issuerPrivateFile string, publish bool, runtimeDB ...*sql.DB) (*OriginalCaptureSequence, error) {
 	var zero *OriginalCaptureSequence
 	if ctx == nil || !reflect.TypeOf(ctx).Comparable() || ctx.Err() != nil || owner == nil {
 		return zero, c.ErrExecutionAuthority
@@ -134,14 +145,17 @@ func BeginOriginalCaptureSequence(ctx context.Context, owner *install.Installer,
 	if _, exists := materials.Operations[ce.Operation]; !exists {
 		return zero, c.ErrExecutionAuthority
 	}
-	key, err := install.ReadPrivateFile(issuerPrivateFile, ed25519.PrivateKeySize)
-	if err != nil || len(key) != ed25519.PrivateKeySize {
-		clear(key)
-		return zero, c.ErrExecutionAuthority
+	var key []byte
+	if publish {
+		key, err = install.ReadPrivateFile(issuerPrivateFile, ed25519.PrivateKeySize)
+		if err != nil || len(key) != ed25519.PrivateKeySize {
+			clear(key)
+			return zero, c.ErrExecutionAuthority
+		}
+		defer clear(key)
 	}
-	defer clear(key)
-	issuer := ed25519.PrivateKey(key).Public().(ed25519.PublicKey)
-	if !bytes.Equal(materials.Discovery.Issuer, issuer) || !bytes.Equal(materials.Redis.Issuer, issuer) || !bytes.Equal(materials.Objects.Issuer, issuer) {
+	issuer := materials.Discovery.Issuer
+	if len(issuer) != ed25519.PublicKeySize || !bytes.Equal(materials.Redis.Issuer, issuer) || !bytes.Equal(materials.Objects.Issuer, issuer) || publish && !bytes.Equal(ed25519.PrivateKey(key).Public().(ed25519.PublicKey), issuer) {
 		return zero, c.ErrExecutionAuthority
 	}
 	redisScope, err := producerWorkerScope(materials, "capture-source-redis")
@@ -156,6 +170,9 @@ func BeginOriginalCaptureSequence(ctx context.Context, owner *install.Installer,
 	authority, err := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: definitionFile, DefinitionSHA256: definitionSHA, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: grant.ServerUUID, Database: grant.Database, DatabaseAccount: grant.DatabaseAccount, DeploymentConfigSHA256: definition.CoreSHA256, CaptureGrantSHA256: definition.ForwardGrantSHA256, ConfigSHA256: definition.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: p.ControllerDeployment, ControllerDeploymentUID: p.ControllerDeploymentUID, ControllerServiceAccount: p.ControllerServiceAccount, ControllerServiceAccountUID: p.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: p.SourceAPIServiceAccount, SourceServiceAccountUID: p.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: materials.Redis.CredentialSHA256, ObjectScopeSHA256: objectsScope, ObjectCredentialSHA256: materials.Objects.CredentialSHA256, NotBefore: definition.NotBefore, Until: definition.Until}, runtimeDB...)
 	if err != nil {
 		return zero, err
+	}
+	if !publish {
+		return &OriginalCaptureSequence{ctx: ctx, definition: definition, core: core, forward: forward, authority: authority, materials: materials, privateFile: issuerPrivateFile}, nil
 	}
 	files := map[string][]byte{}
 	for _, object := range []bool{false, true} {
@@ -409,6 +426,16 @@ func (s *OriginalCaptureSequence) observeMappings(ctx context.Context, client ku
 				}
 				if operation == "capture-skill-objects" && (formal.Sources == nil || !reflect.DeepEqual(*formal.Sources, m.Objects)) {
 					return c.ErrExecutionAuthority
+				}
+				if operation == "capture-team-objects" && s.definition.TeamsSource != nil {
+					if formal.Sources == nil || !formalCandidateDigest(formal.Sources.GrantSHA256) {
+						return c.ErrExecutionAuthority
+					}
+					expected := s.definition.TeamsSource.Source
+					expected.GrantSHA256 = formal.Sources.GrantSHA256
+					if !reflect.DeepEqual(*formal.Sources, expected) {
+						return c.ErrExecutionAuthority
+					}
 				}
 			}
 		}

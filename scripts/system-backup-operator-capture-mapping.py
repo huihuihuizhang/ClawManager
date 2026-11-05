@@ -140,10 +140,17 @@ def finalize_mappings(op, production, initial_runtime, publication=None):
         "bind-published-capture-database-inputs", "--inputs-file", bridge["File"], "--inputs-sha256", bridge["SHA256"]])
     op.pin_value(database)
     components = data(op, publication["ComponentsTemplate"])
-    # Never send a partially implemented factory which would create original
-    # Redis/Objects files and fail later at an absent Teams native owner.
-    m.require(components.get("TeamsSource") and components["TeamsSource"].get("GrantSHA256"),
-              "actual_native_Teams_source_grant_owner_must_be_connected_before_factory_send")
+    # Only the connected original native factory may fill this independent
+    # pending grant. Its no-write owner/native preflight runs before Begin.
+    # A nonempty caller hash is never accepted as proof of Teams authority.
+    definition = data(op, publication["SourceDefinition"])
+    teams = definition.get("TeamsSource")
+    m.require(isinstance(teams, dict) and teams.get("Version") == "original-teams-object-source-issue.v1" and
+              teams.get("PartsRegistry") and components.get("TeamsSource"),
+              "original_independent_Teams_source_and_complete_inventory_required")
+    selected_source = dict(teams["Source"])
+    selected_source["GrantSHA256"] = components["TeamsSource"].get("GrantSHA256", "")
+    m.require(selected_source == components["TeamsSource"], "same_original_Teams_source_mount_required")
     output = Path(runtime.core["capture_modules"]["path"]).parent
     args = [stages.binary("system-backup-first-install-materials"), *op.owner_common(),
             "--runtime-dsn-file", runtime.runtime_dsn["File"],

@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
-	"path"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -153,47 +152,29 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 		return zero, e
 	}
 	teams := in.TeamsSource
-	if teams.GrantFile == "" {
-		// DATA from the real complete native original Parts registry. The
-		// distinct actual Teams issuer MUST independently reobserve this scope.
-		partsRaw, partsErr := read(in.PartsRegistry, 8<<20)
-		var parts bootstrapSourcePartsRegistry
-		if partsErr != nil || json.Unmarshal(partsRaw, &parts) != nil || parts.SchemaVersion != bootstrapSourcePartsVersion || parts.Installation != core.InstallationID || parts.Source.ServerUUID != core.SourceServerUUID || parts.Source.Database != core.SourceDatabase || parts.Source.Teams == nil {
-			return zero, install.ErrInstall
-		}
-		teams = material.Objects
-		teams.GrantFile = filepath.Join(directory, "teams-source.grant.json")
-		teams.GrantSHA256 = ""
-		teams.ObjectPrefixes = nil
-		prefixes := map[string]worker.ObjectSourcePrefix{}
-		for _, object := range parts.Source.Teams.Objects {
-			if object.Validate() != nil {
-				return zero, install.ErrInstall
+	// No Skills credential/root fallback. An original independently selected
+	// Teams source and complete Teams object part are required DATA inputs;
+	// the authenticated native issuer independently reobserves them later.
+	partsRaw, partsErr := read(in.PartsRegistry, 8<<20)
+	var parts bootstrapSourcePartsRegistry
+	if partsErr != nil || strictBootstrapSourceJSON(partsRaw, &parts) != nil || parts.SchemaVersion != bootstrapSourcePartsVersion || parts.Installation != core.InstallationID || parts.Source.ServerUUID != core.SourceServerUUID || parts.Source.Database != core.SourceDatabase || parts.Source.Teams == nil {
+		return zero, install.ErrTeamsSourceUnavailable
+	}
+	partCount := 0
+	for _, part := range parts.Parts {
+		if part.Part == "teams_objects" || part.Operation == "capture-team-objects" {
+			if part.Module != "teams" || part.Part != "teams_objects" || part.Operation != "capture-team-objects" {
+				return zero, install.ErrTeamsSourceUnavailable
 			}
-			prefix := path.Dir(object.Key)
-			if prefix == "." || prefix == "/" {
-				return zero, install.ErrInstall
-			}
-			prefix += "/"
-			prefixes[object.Bucket+"\x00"+prefix] = worker.ObjectSourcePrefix{Bucket: object.Bucket, Prefix: prefix}
-		}
-		if len(prefixes) == 0 {
-			// Empty actual original Team object inventory: retain the existing
-			// native finite source boundary, never synthesize a bucket wildcard.
-			teams.ObjectPrefixes = append([]worker.ObjectSourcePrefix(nil), material.Objects.ObjectPrefixes...)
-		} else {
-			keys := make([]string, 0, len(prefixes))
-			for key := range prefixes {
-				keys = append(keys, key)
-			}
-			sort.Strings(keys)
-			for _, key := range keys {
-				teams.ObjectPrefixes = append(teams.ObjectPrefixes, prefixes[key])
-			}
+			partCount++
 		}
 	}
-	if teams.GrantFile == "" || !originalCaptureInputKeyEqual(teams.Issuer, issuer) || teams.Objects == nil {
-		return zero, install.ErrInstall
+	wantTeamParts := 0
+	if len(parts.Source.Teams.Objects) > 0 {
+		wantTeamParts = 1
+	}
+	if partCount != wantTeamParts || install.ValidateTeamsSourceInventory(teams, parts.Source.Teams) != nil || teams.GrantFile == "" || !originalCaptureInputKeyEqual(teams.Issuer, issuer) || teams.GrantFile == material.Objects.GrantFile || teams.GrantFile == material.Redis.GrantFile || teams.GrantFile == databaseSource.GrantFile || teams.GrantFile == material.ControlEvidenceSource.GrantFile {
+		return zero, install.ErrTeamsSourceUnavailable
 	}
 	kms := map[string]k.Config{}
 	files := map[string]OriginalCaptureMappingFile{}
@@ -313,7 +294,7 @@ func AuthorOriginalCaptureOperationalInputs(in OriginalCaptureInputAuthorInputs)
 	if e != nil {
 		return zero, e
 	}
-	definition := ProductionMaterialDefinition{Version: productionMaterialDefinitionVersion, CoreFile: in.Core.File, CoreSHA256: in.Core.SHA256, ConfigFile: request.ConfigFile, ConfigSHA256: request.ConfigFileSHA256, ForwardGrantSHA256: in.Forward.SHA256, NotBefore: notBefore, Until: until, Materials: materialRaw}
+	definition := ProductionMaterialDefinition{Version: productionMaterialDefinitionVersion, CoreFile: in.Core.File, CoreSHA256: in.Core.SHA256, ConfigFile: request.ConfigFile, ConfigSHA256: request.ConfigFileSHA256, ForwardGrantSHA256: in.Forward.SHA256, NotBefore: notBefore, Until: until, Materials: materialRaw, TeamsSource: &install.TeamsSourceIssueDefinition{Version: install.TeamsSourceIssueVersion, DatabaseAccount: in.DatabaseAccount, DatabaseService: in.DatabaseService, DatabaseServiceUID: in.DatabaseServiceUID, DatabasePort: in.DatabasePort, DatabaseCredential: in.DatabaseCredential, PartsRegistry: in.PartsRegistry, Source: teams}}
 	definitionRaw, e := json.Marshal(definition)
 	if e != nil {
 		return zero, e

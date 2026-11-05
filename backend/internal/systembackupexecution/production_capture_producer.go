@@ -32,6 +32,7 @@ type ProductionMaterialDefinition struct {
 	NotBefore, Until                             time.Time
 	PublisherVerifier                            []PublisherVerifierInput
 	Materials                                    json.RawMessage
+	TeamsSource                                  *install.TeamsSourceIssueDefinition `json:",omitempty"`
 }
 
 type ProductionMaterialReceipt struct {

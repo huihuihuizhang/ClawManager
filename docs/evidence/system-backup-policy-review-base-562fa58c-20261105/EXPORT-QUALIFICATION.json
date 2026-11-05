@@ -1,0 +1,11 @@
+{
+  "schema_version": "supervisor-review-export-qualification.v1",
+  "source_commit": "562fa58c6f926ede6725622eec5733f606419773",
+  "original_source_map_sha256": "db3ac13a1c9307195a8b0ce3cd31e6e76d6da84d58adfe6d8d974b460eeb5a21",
+  "correction": "The original review source was exported with Git archive under Windows EOL conversion. Original map hashes identify the exported bytes, not universally the raw Git blobs.",
+  "verified_comparison": "Supervisor compared the 5139 source files with raw Git blobs in the separate integration preparation: 1485 files differed only by CRLF versus LF; normalized text matched. Existing review maps and frozen copies remain unchanged.",
+  "review_scope": "Semantic source review may use the mapped export; executable loader pins, native protocol hashes and release build input hashes must use and verify exact raw Git blobs.",
+  "schema_registry_raw_git_sha256": "e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36",
+  "raw_git_evidence_locator": ".tmp-supervisor-post-delivery-20261105-r1/RAW_GIT_BLOB_VALIDATION.json",
+  "approval_or_native_success_added": false
+}

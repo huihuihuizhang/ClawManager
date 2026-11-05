@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -70,6 +71,24 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 		}
 		protected[file] = true
 	}
+	// Teams is independently owner-selected in the ORIGINAL definition. A
+	// template may fill only its exact issued GrantSHA, never swap a mount.
+	if definition.TeamsSource == nil || template.TeamsSource == nil {
+		return zero, install.ErrTeamsSourceUnavailable
+	}
+	pendingTeams := template.TeamsSource.GrantSHA256 == ""
+	teamsExpected := definition.TeamsSource.Source
+	teamsExpected.GrantSHA256 = template.TeamsSource.GrantSHA256
+	if !reflect.DeepEqual(teamsExpected, *template.TeamsSource) || teamsExpected.GrantFile == template.DatabaseSource.GrantFile || teamsExpected.GrantFile == input.ResolvedComponentsFile || teamsExpected.GrantFile == input.IntermediateFile {
+		return zero, c.ErrExecutionAuthority
+	}
+	if pendingTeams {
+		if _, e := os.Lstat(teamsExpected.GrantFile); !os.IsNotExist(e) {
+			// Unknown/partial/existing output: require explicit query and exact
+			// retained-byte selection; never retry issue or overwrite it.
+			return zero, c.ErrExecutionAuthority
+		}
+	}
 	// Template placeholders must name ONLY the two original grant paths, once
 	// each. Do not repair caller-provided hashes or silently add undeclared files.
 	pendingDatabase := input.DatabaseIssueDefinition != (install.BootstrapSourceFilePin{})
@@ -83,6 +102,9 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 	pendingControl := material.ControlEvidenceSource != nil && material.ControlEvidenceSource.GrantSHA256 == ""
 	if pendingControl {
 		pendingGrants = append(pendingGrants, material.ControlEvidenceSource.GrantFile)
+	}
+	if pendingTeams {
+		pendingGrants = append(pendingGrants, template.TeamsSource.GrantFile)
 	}
 	pending := map[string]bool{}
 	for _, file := range pendingGrants {
@@ -109,9 +131,33 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 			return zero, c.ErrExecutionAuthority
 		}
 	}
+	// Authenticate + observe Teams BEFORE any other grant is emitted. Missing
+	// inventory or denied native reads must not create a half source bundle.
+	preflight, err := PrepareOriginalCaptureSourceSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile, runtimeDB...)
+	if err != nil {
+		return zero, err
+	}
+	if pendingTeams {
+		if err = preflight.ValidateTeamsSource(ctx); err != nil {
+			return zero, err
+		}
+	} else {
+		checked, e := preflight.QueryTeamsSourceGrant(ctx)
+		if e != nil || !reflect.DeepEqual(checked.Source, *template.TeamsSource) {
+			return zero, c.ErrExecutionAuthority
+		}
+	}
 	sequence, err := BeginOriginalCaptureSequence(ctx, owner, password, enrollment, input.DefinitionFile, input.DefinitionSHA256, input.IssuerPrivateFile, runtimeDB...)
 	if err != nil {
 		return zero, err
+	}
+	var teamsResult install.TeamsSourceIssueResult
+	if pendingTeams {
+		teamsResult, err = sequence.IssueTeamsSourceGrant(ctx)
+		if err != nil {
+			return zero, err
+		}
+		template.TeamsSource = &teamsResult.Source
 	}
 	var controlResult install.ControlEvidenceSourceIssueResult
 	if pendingControl {
@@ -140,6 +186,9 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 		return zero, err
 	}
 	for index, file := range template.Files {
+		if pendingTeams && file.WorkerPath == teamsResult.Source.GrantFile {
+			template.Files[index].File, template.Files[index].SHA256 = teamsResult.Grant.File, teamsResult.Grant.SHA256
+		}
 		if pendingDatabase && file.WorkerPath == databaseResult.Source.GrantFile {
 			template.Files[index].File, template.Files[index].SHA256 = databaseResult.Source.GrantFile, databaseResult.Source.GrantSHA256
 		}
