@@ -1137,7 +1137,7 @@ def minio_consent_module():
 
 
 def capture_mapping_module():
-    return exact_module("system-backup-operator-capture-mapping.py", "6e04f2fe0b6fa9771d82c900bb2105e02a53f66f4ceaf78746a242fea1e0e61e")
+    return exact_module("system-backup-operator-capture-mapping.py", "2e2d8524d7a28f39427e8d39219369512658588568f11566a6eafa6a874363c0")
 
 
 def enabled_publication_module():

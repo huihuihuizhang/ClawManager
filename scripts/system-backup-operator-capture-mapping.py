@@ -5,7 +5,7 @@ import urllib.parse
 
 ACTIONS = ("initial-capture-inputs", "initial-capture-mappings")
 SCHEMA = "contracts/system-backup/v12/schema-registry.json"
-SCHEMA_SHA = "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e"
+SCHEMA_SHA = "e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36"
 
 
 def pin(path):

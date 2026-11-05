@@ -1,0 +1,258 @@
+{
+  "schema_version": "supervisor-reviewed-schema-pin-merge.v1",
+  "base_commit": "ffc9600d90a4a5da13735a1c9a601db685008954",
+  "owner_candidate_sha256": "7a43bceea77e52531962362af181f4ae1b5a568b73e235e06a4382d6cb8d0b46",
+  "changes": "Only capture SCHEMA_SHA and the corresponding main loader literal; preserve current Teams wiring and workspace argv fix.",
+  "schema_asset": {
+    "path": "contracts/system-backup/v12/schema-registry.json",
+    "sha256": "e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36",
+    "raw_git_matches_integration": true,
+    "modified": false
+  },
+  "python_loader_edges_verified": [
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-original-upgrade199.py",
+      "sha256": "f38c13d97dca4fc9e55837a879be0b2e1c45519ba8798202885584042e2abb8a"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-upgrade199-copy-qualification.py",
+      "sha256": "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308"
+    },
+    {
+      "parent": "system-backup-c1-host-mysql-bridge.py",
+      "child": "system-backup-workspace-native.py",
+      "sha256": "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
+    },
+    {
+      "parent": "system-backup-operator-c1-mysql-bridge.py",
+      "child": "system-backup-workspace-native.py",
+      "sha256": "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
+    },
+    {
+      "parent": "system-backup-operator-c1-mysql-bridge.py",
+      "child": "system-backup-c1-host-mysql-bridge.py",
+      "sha256": "957e98bf08796a6743f93dde3cd00485c79c9a115d331b168008c44318777e71"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-workspace-localization.py",
+      "sha256": "bd7149e99b15db2fedadc062b1cf1d559ad441bf4fa1f067874647147c7d85a6"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-workspace-source-preflight.py",
+      "sha256": "39a51caba7b646b1f4bf1ccd9ba643099bf91abb2eb0a6a251dc342cbdfaf8e1"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-nonce.py",
+      "sha256": "82cc9588564b5c5ac11e67fbdb44be56f434cc2142679ee79f745b59bf2591e3"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-c1-mysql-bridge.py",
+      "sha256": "9c11524728cda9bfa07333ff1e36aae1c364b7f08e8c9827320bad313672e985"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-c1-native.py",
+      "sha256": "4ea935ba88ea47af46283e4c03cc3707b5b748ca5d09258bc6b0e6b0490a9766"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-live-capacity.py",
+      "sha256": "16063a272ee080c10b1748e089f59821e8b2c2c573c643fc488020e0d66ec0e1"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-c1-authors.py",
+      "sha256": "20512097e2e24011389694fc2c2b51a92b24f5bf8682dc5b1e251bd116ab6460"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-relay-bootstrap.py",
+      "sha256": "0f94b8b520756df24fdc5722209708259a8b4d436c38fb26412f38ea88976247"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-first-adoption-production.py",
+      "sha256": "9dab99390a92de35eac4c45033e37d616b7b85736cbabf2592a0ed19f4781225"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-adoption-locations.py",
+      "sha256": "ba0d8be54933807210e2a5d41d933d3721ba3e65aa0c2246d8ac94509d71cf0f"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-minio-recovery.py",
+      "sha256": "f77f0ff3e7abefb24e257716dfde892f822580b1e4ca7e6a265f9f521245d552"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-c1-inputs.py",
+      "sha256": "655258e7de58aa90600cec2e4695c7eda84621448cca7606e085c01057edc693"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-archive-inputs.py",
+      "sha256": "39bc5ac510f4c979541f9b41f448309d15e43fc5789e9c4421a91d11ddf7dbc0"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-minio-consent.py",
+      "sha256": "2285d0a5c31adf8ed3a774c39b2302c6e87d61b449431fe4a8e4d645475f2a97"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-capture-mapping.py",
+      "sha256": "2e2d8524d7a28f39427e8d39219369512658588568f11566a6eafa6a874363c0"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-enabled-publication.py",
+      "sha256": "36547ca5ac5c3a0a5499f9494037dda5054a0f2e2d86e55afcb2d8071d73576a"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-publication-owner-assembly.py",
+      "sha256": "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-runtime-issuers.py",
+      "sha256": "6e3fe96bf1bb2cc4bd2b8383763f440d775b6b867dfcfe7549249fbdd71629d2"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-business-runtime.py",
+      "sha256": "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-runtime-record-keys.py",
+      "sha256": "868c66ae0dddd7e5b25dd503a7b6309699ddc7831f8f1f74b5f53b5f940a0af4"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-initial-runtime.py",
+      "sha256": "f44c248a803679b0706101836afb1136ae496aab460a32bca4291899c396afbc"
+    },
+    {
+      "parent": "system-backup-first-page-once.py",
+      "child": "system-backup-first-page-inputs.py",
+      "sha256": "af8600aa44dd2e9db3835779a0bb438c4b172db8041d1a68aab49ffb1278c42e"
+    },
+    {
+      "parent": "system-backup-first-page-once.py",
+      "child": "system-backup-d-first-install-inputs.py",
+      "sha256": "dbd5f6af63a29318f2106a64b12c5bdf0cbe564af9b3cccd07e5e17fd967b3be"
+    },
+    {
+      "parent": "system-backup-first-page-inputs.py",
+      "child": "system-backup-d-first-install-inputs.py",
+      "sha256": "dbd5f6af63a29318f2106a64b12c5bdf0cbe564af9b3cccd07e5e17fd967b3be"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-initial-input-assembly.py",
+      "sha256": "956d8d4cde985fe10f62dc2d7c10b6cbfa1153e08b6d03fa634b10c1eba07bd1"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-initial-source-data.py",
+      "sha256": "210db9cdb4d054ddc21d6bdabfd34e765a011ce9856ee498de86f10646aed9bb"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-initial-redis-sources.py",
+      "sha256": "6642a08eb7a78b64413b1864584d2fbd3f6cf950ee3378c476b219833b53b248"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-initial-complete-inputs.py",
+      "sha256": "8d29dc899c237f424f05b127fcbce93fa6307a6d8d29847ac3f53f39d2e2681f"
+    },
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-publication-owner-assembly.py",
+      "sha256": "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
+    },
+    {
+      "parent": "system-backup-publication-owner-assembly.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-runtime-issuers.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-runtime-record-keys.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-business-runtime.py",
+      "child": "system-backup-operator-deployment.py",
+      "sha256": "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+    },
+    {
+      "parent": "system-backup-business-runtime.py",
+      "child": "system-backup-agent-runtime-layer/agent_runtime_layer.py",
+      "sha256": "f08a23b661afacff2634c151ba87f266a8697da8944a19e6c80a8f0f6a29100a"
+    },
+    {
+      "parent": "system-backup-business-runtime.py",
+      "child": "system-backup-runtime-startup-inputs.py",
+      "sha256": "0014156ccd9954f7f03dd54581c7049ad9639d8f37fefe8f061455140d47d151"
+    },
+    {
+      "parent": "system-backup-workspace-localization.py",
+      "child": "system-backup-business-runtime.py",
+      "sha256": "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
+    },
+    {
+      "parent": "system-backup-workspace-localization.py",
+      "child": "system-backup-workspace-native.py",
+      "sha256": "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
+    },
+    {
+      "parent": "system-backup-original-upgrade199.py",
+      "child": "system-backup-upgrade199-copy-qualification.py",
+      "sha256": "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308"
+    }
+  ],
+  "syntax_verified": true,
+  "only_intended_literals_changed": true,
+  "registry_status": "Existing draft/pending-live-evidence and policy review statuses remain unchanged; a correct byte pin is not schema qualification.",
+  "native_schema_qualified": false,
+  "field_deployed": false,
+  "page_acceptance": false,
+  "DR": false,
+  "sources": [
+    {
+      "target": "scripts/system-backup-operator-capture-mapping.py",
+      "before_sha256": "6e04f2fe0b6fa9771d82c900bb2105e02a53f66f4ceaf78746a242fea1e0e61e",
+      "sha256": "2e2d8524d7a28f39427e8d39219369512658588568f11566a6eafa6a874363c0"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "before_sha256": "07e0151bbca2c4ba92c39ca4a2c5d6d1fb0223f0b3a792c4ec09086c64a38fc2",
+      "sha256": "a3f5c1de21a53fc0739986265e92777260f8eab863cf2a45d080f4dcb623d7e0"
+    }
+  ]
+}
