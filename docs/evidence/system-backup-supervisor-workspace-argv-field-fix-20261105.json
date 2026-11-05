@@ -1,0 +1,51 @@
+{
+  "schema_version": "supervisor-workspace-argv-field-fix.v1",
+  "image_source_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
+  "parent_commit": "562fa58c6f926ede6725622eec5733f606419773",
+  "field_original_operation": "e0b32ccf99cce441949398c346810096",
+  "field_failure": {
+    "state": "STOP_BEFORE_DATABASE_DDL_OR_DEPLOYMENT",
+    "diagnostic_resource": "pods",
+    "scope": "all_namespaces",
+    "returncode": 1,
+    "stdout_bytes": 0,
+    "native_read_count": 9,
+    "no_sql_or_business_deployment_mutation": true
+  },
+  "corrected_field_query": {
+    "user_executed": true,
+    "pod_count": 227,
+    "stdout_bytes": 3854358,
+    "within_original_4MiB_limit": true
+  },
+  "change": "Move get/resource before -A or -n scope flags. Preserve complete cross-namespace roster, exact per-read cap and all other workspace methods. Only main loader hash also changes.",
+  "verification": {
+    "actual_argv_model_cases_passed": 7,
+    "other_methods_ast_identical": true,
+    "python_closure_files": 50,
+    "hash_edges": 45,
+    "actual_loader_calls": 33,
+    "loader_map_sha256": "af449f05a389ea04c74af1d1559d713af3163c2c55284f1fb1f1fb18eb24887c",
+    "source_pins": [
+      {
+        "target": "scripts/system-backup-workspace-localization.py",
+        "source": ".tmp-supervisor-post-delivery-20261105-r1/source/scripts/system-backup-workspace-localization.py",
+        "sha256": "bd7149e99b15db2fedadc062b1cf1d559ad441bf4fa1f067874647147c7d85a6",
+        "mode": "100644"
+      },
+      {
+        "target": "scripts/system-backup-zhanghui08-operator.py",
+        "source": ".tmp-supervisor-post-delivery-20261105-r1/source/scripts/system-backup-zhanghui08-operator.py",
+        "sha256": "a5a8741dd6ac0e098495e81e77707827d2f7a6e4277c281ae4f8dbdfec022ae1",
+        "mode": "100644"
+      }
+    ]
+  },
+  "old_release_or_run_or_pins_modified": false,
+  "images_rebuilt_or_receipts_relabelled": false,
+  "requires": "Verified lightweight successor, new sealed release and new initialized operation only after fail-before-mutation handoff. No rewrite of original operation release_sha256.",
+  "page_acceptance": false,
+  "full_acceptance": false,
+  "dr_qualified": false,
+  "test_build_products": []
+}

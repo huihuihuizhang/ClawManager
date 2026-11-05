@@ -205,7 +205,7 @@ class WorkspaceLocalization:
 
     def list(self, resource, namespace=True):
         args = ["-n", self.m.NS] if namespace else ["-A"]
-        return self.m.decode(self.op.k(*args, "get", resource, "-o", "json"))["items"]
+        return self.m.decode(self.op.k("get", resource, *args, "-o", "json"))["items"]
 
     def deployment_for(self, pod):
         owner = self.m.only_controller(pod, "ReplicaSet")
