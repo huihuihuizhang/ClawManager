@@ -158,7 +158,7 @@ func (s *PreparedOriginalWriterSet) checkApplicationGate(ctx context.Context, ph
 	if !allowed {
 		return ErrInstall
 	}
-	tx, err := s.owner.operator.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.owner.operator.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return ErrInstall
 	}

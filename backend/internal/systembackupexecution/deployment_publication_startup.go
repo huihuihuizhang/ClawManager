@@ -21,6 +21,7 @@ type PublicationSignerReference struct {
 	Path     string `json:"path"`
 }
 type DeploymentStartupInputs struct {
+	EnabledPublication *EnabledPublicationStartupFiles
 	FormalVerifier     []FormalVerifierInput
 	PublicationSigners []PublicationSignerInput
 	PublisherVerifier  []PublisherVerifierInput
@@ -56,6 +57,14 @@ func (d *DeploymentService) publicationBinding() error {
 // tests. It does not create/claim a task or perform provider/Kubernetes I/O.
 func (d *DeploymentService) loadPublicationSignerInput(inputs []PublicationSignerInput) error {
 	ref := d.Config.PublicationSigners
+	if d.enabledPublicationFiles != nil {
+		if ref == nil || len(inputs) != 1 || inputs[0] != d.enabledPublicationFiles.Signers {
+			return c.ErrExecutionAuthority
+		}
+		copyRef := *ref
+		copyRef.Path = d.enabledPublicationFiles.Signers.File
+		ref = &copyRef
+	}
 	if ref == nil {
 		if len(inputs) != 0 {
 			return c.ErrExecutionAuthority

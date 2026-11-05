@@ -46,7 +46,7 @@ func (i *Installer) PrepareOriginalWriterMaintenance(ctx context.Context, passwo
 	if err != nil || policy.Validate() != nil || s.authority(ctx, enrollment) != nil {
 		return nil, ErrInstall
 	}
-	tx, err := i.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := i.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, ErrInstall
 	}
@@ -207,7 +207,7 @@ func (p *OriginalWriterMaintenance) ReconcileAcquisition(ctx context.Context) (c
 	if !p.commitUnknown || p.check(ctx) != nil || p.checkInstances(ctx) != nil {
 		return c.GateToken{}, ErrInstall
 	}
-	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return c.GateToken{}, ErrCommitUnknown
 	}
@@ -240,7 +240,7 @@ func (p *OriginalWriterMaintenance) checkCurrentGate(ctx context.Context, phases
 	if !allowed {
 		return ErrInstall
 	}
-	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return ErrInstall
 	}

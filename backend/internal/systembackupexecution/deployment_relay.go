@@ -31,6 +31,7 @@ func (s *DeploymentService) controlHandler() http.Handler {
 		mux.Handle(worker.CaptureDescriptionPullPath, s.captureDescriptionHandler())
 	}
 	mux.Handle("/", control)
+	mux.Handle("/relay/handover", s.originalRelayHandoverStatusHandler())
 	if s.Config.PublicationWorker != nil {
 		o := s.Runtime.Owner
 		identity := s.Config.PublicationWorker

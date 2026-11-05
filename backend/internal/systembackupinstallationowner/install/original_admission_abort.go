@@ -41,6 +41,9 @@ func (s *PreparedOriginalWriterSet) noOriginalSourceDispatch() error {
 	if s == nil || s.origin != s || s.actualHold != nil {
 		return ErrOriginalSourceDispatchPresent
 	}
+	if s.minioHistory != nil && s.minioHistory.captureStarted {
+		return ErrOriginalSourceDispatchPresent
+	}
 	for _, w := range s.deployments {
 		if w.stopDispatched {
 			return ErrOriginalSourceDispatchPresent

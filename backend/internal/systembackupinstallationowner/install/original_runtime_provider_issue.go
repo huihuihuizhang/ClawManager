@@ -144,7 +144,13 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 	if e != nil || decodeExact(raw, &cfg) != nil || cfg.Binding.InstallationID != target.InstallationID || cfg.Worker.Namespace != target.Namespace || cfg.Worker.ServiceAccountName != worker.Name || cfg.Worker.ServiceAccountUID != string(worker.UID) || cfg.Publisher.Namespace != target.Namespace || cfg.Publisher.ServiceAccountName != actor.ServiceAccountName || cfg.Publisher.ServiceAccountUID != actor.ServiceAccountUID || cfg.Publisher.PodUID != actor.PodUID {
 		return zero, ErrInstall
 	}
-	issued, e := i.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.PublicationOwnerInputs, runtimeDB)
+	readPublicationOwner := func() (OriginalPublicationRuntimeOwnerInputs, error) {
+		if before.cas == (HeadCAS{}) {
+			return i.ReadInitialPublicationRuntimeOwnerInputsForMinIOMetadata(ctx, password, enrollment, in.PublicationOwnerInputs, in.Request, runtimeDB)
+		}
+		return i.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.PublicationOwnerInputs, runtimeDB)
+	}
+	issued, e := readPublicationOwner()
 	if e != nil {
 		return zero, ErrInstall
 	}
@@ -318,7 +324,7 @@ func (i *Installer) IssueOriginalRuntimeProviderAuthorities(ctx context.Context,
 		if _, e := i.readOriginalRuntimeIssuerMaterial(in.Issuers, enrollment); e != nil {
 			return ErrInstall
 		}
-		freshOwner, e := i.ReadOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, in.PublicationOwnerInputs, runtimeDB)
+		freshOwner, e := readPublicationOwner()
 		if e != nil || !reflect.DeepEqual(freshOwner, issued) {
 			return ErrInstall
 		}

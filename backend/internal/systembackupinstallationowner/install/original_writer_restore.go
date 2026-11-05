@@ -125,6 +125,13 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 	if fence.check(ctx) != nil || s.recheckVolumePins(ctx) != nil {
 		return nil, ErrInstall
 	}
+	// Native permission restores are source mutations. Complete them BEFORE
+	// closing the original mutation barrier/final native proof, including
+	// partial acquisition. The preliminary observation is DATA, not final
+	// recovery authority and never permits an admission release.
+	if s.prepareOriginalMinIOHistoryRecovery(ctx, fence) != nil {
+		return nil, ErrOriginalRecoveryNativeProof
+	}
 	recovered := map[string][]q.PodIdentity{}
 	for _, writer := range s.deployments {
 		writer.recovery = fence
@@ -270,6 +277,7 @@ func (s *PreparedOriginalWriterSet) observeOriginalRecovered(ctx context.Context
 			}
 			proofMu.Lock()
 			proof.nodes[node] = native
+			proof.requests[node] = request
 			proofMu.Unlock()
 			return nil
 		})

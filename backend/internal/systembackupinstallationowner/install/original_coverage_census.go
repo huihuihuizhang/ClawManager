@@ -74,7 +74,7 @@ func (i *Installer) AuthenticateOriginalCoverageCensus(ctx context.Context, pass
 	if e != nil || operator.authority(ctx, enrollment) != nil {
 		return ErrInstall
 	}
-	tx, e := i.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, e := i.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if e != nil {
 		return ErrInstall
 	}

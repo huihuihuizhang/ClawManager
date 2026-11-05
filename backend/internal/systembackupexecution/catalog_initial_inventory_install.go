@@ -139,10 +139,6 @@ func CaptureOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 	if ctx == nil || ctx.Err() != nil || owner == nil || kube == nil || nativeInstallEmptyDirectory(directory) != nil {
 		return zero, install.ErrInstall
 	}
-	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
-	if e != nil {
-		return zero, e
-	}
 	p, e := readMinIOPermissionProductionInputs(definitionFile, definitionSHA)
 	if e != nil {
 		return zero, e
@@ -150,6 +146,11 @@ func CaptureOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 	defer p.clear()
 	ctx, cancel := context.WithDeadline(ctx, p.window.until)
 	defer cancel()
+	// Authority stores this exact context; every sign/recheck uses it.
+	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
+	if e != nil {
+		return zero, e
+	}
 	ref, e := catalogInitialReference(p)
 	if e != nil {
 		return zero, e
@@ -211,13 +212,19 @@ func CaptureOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 // It uses the original independent catalog append and read identities. A
 // conflicting same key/version is never overwritten, re-signed or deleted.
 func PublishOriginalCatalogInitialInventory(ctx context.Context, owner *install.Installer, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, envelopeFile, envelopeSHA string, public []byte, directory string) (CatalogInitialInventoryOutput, error) {
+	return originalCatalogInitialInventoryPublished(ctx, owner, kube, password, enrollment, definitionFile, definitionSHA, envelopeFile, envelopeSHA, public, directory, true)
+}
+
+// Query never creates an object, signs an envelope, recaptures emptiness or
+// retries PUT. A lost publish reply recovers only the same native version.
+func QueryOriginalCatalogInitialInventory(ctx context.Context, owner *install.Installer, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, envelopeFile, envelopeSHA string, public []byte, directory string) (CatalogInitialInventoryOutput, error) {
+	return originalCatalogInitialInventoryPublished(ctx, owner, kube, password, enrollment, definitionFile, definitionSHA, envelopeFile, envelopeSHA, public, directory, false)
+}
+
+func originalCatalogInitialInventoryPublished(ctx context.Context, owner *install.Installer, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, definitionFile, definitionSHA, envelopeFile, envelopeSHA string, public []byte, directory string, allowWrite bool) (CatalogInitialInventoryOutput, error) {
 	zero := CatalogInitialInventoryOutput{}
 	if ctx == nil || ctx.Err() != nil || owner == nil || kube == nil || nativeInstallEmptyDirectory(directory) != nil {
 		return zero, install.ErrInstall
-	}
-	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
-	if e != nil {
-		return zero, e
 	}
 	p, e := readMinIOPermissionProductionInputs(definitionFile, definitionSHA)
 	if e != nil {
@@ -226,6 +233,11 @@ func PublishOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 	defer p.clear()
 	ctx, cancel := context.WithDeadline(ctx, p.window.until)
 	defer cancel()
+	// Authority stores this exact context; every sign/recheck uses it.
+	issuer, e := owner.PrepareMinIOPermissionIssue(ctx, password, enrollment, definitionFile, definitionSHA)
+	if e != nil {
+		return zero, e
+	}
 	raw, e := pinnedDeploymentFile(envelopeFile, envelopeSHA, 4096)
 	var signed install.SignedCatalogInitialInventory
 	if e != nil || decodePublicationCanonical(raw, &signed) != nil {
@@ -260,6 +272,9 @@ func PublishOriginalCatalogInitialInventory(ctx context.Context, owner *install.
 		return zero, e
 	}
 	if minioTerminalError(current, 404, "NoSuchKey", record.Key, p.grant.Provider.Region) {
+		if !allowWrite {
+			return zero, install.ErrInstall
+		}
 		reply, e := minioTerminalProbeRequest(ctx, writer, record.Bucket, record.Key, "", http.MethodPut, raw, false, "")
 		if e != nil {
 			return zero, install.ErrCommitUnknown

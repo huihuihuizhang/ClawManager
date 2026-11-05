@@ -16,10 +16,13 @@ func DecodeOriginalC1PendingRuntimeInvocation(raw []byte, digest string) (Origin
 	if hash(raw) != digest || decodeExact(raw, &in) != nil || in.Version != "original-c1-pending-runtime-invocation.v3" || in.Groups == nil || in.PreColdHead1Directory != "" || in.Groups.BackupKEK != (BootstrapSourceFilePin{}) || in.CapacityTLS.Validate() != nil || !in.CapacityTLS.Selected() || in.Signing.Capacity.Validate() != nil {
 		return in, ErrInstall
 	}
-	for _, pin := range []BootstrapSourceFilePin{in.Groups.Six, in.Groups.MinIO, in.Groups.StatusRelay, in.Groups.Nonce, in.Groups.EvidenceCA, in.Groups.CatalogCheckpoint} {
+	for _, pin := range []BootstrapSourceFilePin{in.Groups.Six, in.Groups.MinIO, in.Groups.StatusRelay, in.Groups.Nonce, in.Groups.CatalogCheckpoint} {
 		if !bootstrapSourcePinValid(pin) {
 			return in, ErrInstall
 		}
+	}
+	if in.Groups.EvidenceCA != (BootstrapSourceFilePin{}) && !bootstrapSourcePinValid(in.Groups.EvidenceCA) {
+		return in, ErrInstall
 	}
 	for _, directory := range []string{in.Groups.SixOutputDirectory, in.Groups.MinIOOutputDirectory, in.Groups.StatusRelayOutputDirectory, in.Groups.NonceOutputDirectory, in.Groups.EvidenceCAOutputDirectory, in.Groups.BackupKEKOutputDirectory, in.Groups.CatalogCheckpointOutputDirectory} {
 		if privateDirectory(directory) != nil {
@@ -88,6 +91,12 @@ func (i *Installer) PrepareRunAndInstallOriginalRuntimeC1(ctx context.Context, r
 		return nil, ErrInstall
 	}
 	groups := *in.Groups
+	if groups.EvidenceCA == (BootstrapSourceFilePin{}) {
+		groups.EvidenceCA, err = i.prepareOriginalC1EvidenceCAInputs(ctx, password, enrollment, provider.Request, groups.Six, groups.EvidenceCAOutputDirectory)
+		if err != nil {
+			return nil, err
+		}
+	}
 	groups.BackupKEK = BootstrapSourceFilePin{File: filepath.Join(groups.BackupKEKOutputDirectory, name), SHA256: hash(raw)}
 	in.Groups = &groups
 	in.Version = "original-c1-current-references-invocation.v2"

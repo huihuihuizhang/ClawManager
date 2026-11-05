@@ -40,7 +40,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if err != nil {
 		return zero, err
 	}
-	recovery, err := prepareMinIORecoverySession(ctx, s.publisherVerifierDB, s.runtimeReadinessRecovery, r.input)
+	recovery, err := prepareMinIORuntimeRecoverySession(ctx, s, s.runtimeReadinessRecovery, r.input)
 	if err != nil {
 		return zero, err
 	}
@@ -122,7 +122,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if err != nil || lastOwner.stamp != owner.stamp {
 		return zero, minioPermissionFailure("effective-owner-tail-drift")
 	}
-	lastRecovery, err := prepareMinIORecoverySession(ctx, s.publisherVerifierDB, s.runtimeReadinessRecovery, r.input)
+	lastRecovery, err := prepareMinIORuntimeRecoverySession(ctx, s, s.runtimeReadinessRecovery, r.input)
 	if err != nil || !sameMinIORecoverySession(recovery, lastRecovery) {
 		return zero, minioPermissionFailure("recovery-current-sql-tail")
 	}

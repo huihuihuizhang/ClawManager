@@ -120,6 +120,19 @@ func (i *Installer) PrepareOriginalAdoptionArchiveProvider(ctx context.Context, 
 	if _, err = p.currentSQL(true); err != nil {
 		return nil, ErrInstall
 	}
+	// Narrow the original interval to the actual retained Pod JWT expirations.
+	// Their signature, audience and real Pod/SA are still independently checked
+	// below; decoding a deadline can only shorten, never authorize this source.
+	for _, source := range []OriginalArchiveJWTSource{d.WrapJWT, d.UnwrapJWT} {
+		end, e := originalArchiveMaterialJWTUntil(source)
+		if e != nil {
+			return nil, ErrInstall
+		}
+		p.until = minTime(p.until, end)
+	}
+	if !time.Now().Before(p.until) {
+		return nil, ErrInstall
+	}
 	// Transfer this private authenticated IO session to a strictly SHORTER
 	// child deadline after the real gate read. No SQL locks survive this point;
 	// this child context is never D's final evidence/adoption tx context.
@@ -174,7 +187,7 @@ func (p *OriginalAdoptionArchiveProvider) currentSQL(initial bool) (time.Time, e
 		return time.Time{}, p.fail()
 	}
 	s, i := p.operator, p.operator.installer
-	tx, err := i.db.BeginTx(p.ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := i.db.BeginTx(p.ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return time.Time{}, p.fail()
 	}

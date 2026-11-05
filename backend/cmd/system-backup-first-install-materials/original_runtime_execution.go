@@ -21,7 +21,15 @@ func runOriginalRuntimeExecution(ctx context.Context, args []string, out io.Writ
 func runOriginalRuntimeProvider(ctx context.Context, args []string, out io.Writer) int {
 	return runOriginalRuntimeMaterials(ctx, args, out, true)
 }
+func runOriginalRuntimeExecutionForMinIOMetadata(ctx context.Context, args []string, out io.Writer) int {
+	return runOriginalRuntimeMaterialsForSQLProfile(ctx, args, out, false, true)
+}
+
 func runOriginalRuntimeMaterials(ctx context.Context, args []string, out io.Writer, provider bool) int {
+	return runOriginalRuntimeMaterialsForSQLProfile(ctx, args, out, provider, false)
+}
+
+func runOriginalRuntimeMaterialsForSQLProfile(ctx context.Context, args []string, out io.Writer, provider, metadata bool) int {
 	if ctx == nil || ctx.Err() != nil || out == nil {
 		return 2
 	}
@@ -139,7 +147,11 @@ func runOriginalRuntimeMaterials(ctx context.Context, args []string, out io.Writ
 		}
 		return 0
 	}
-	result, e := owner.IssueOriginalRuntimeExecution(active, runtimeDB, password, enrollment, install.OriginalRuntimeExecutionIssueInputs{Issuers: pin("runtime-issuers-file", "runtime-issuers-sha256"), Core: pin("core-file", "core-sha256"), Profile: pin("profile-file", "profile-sha256"), RecordExport: pin("record-export-file", "record-export-sha256"), Request: request, ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), Until: until, OutputDirectory: get("output-directory")})
+	issue := owner.IssueOriginalRuntimeExecution
+	if metadata {
+		issue = owner.IssueOriginalRuntimeExecutionForMinIOMetadata
+	}
+	result, e := issue(active, runtimeDB, password, enrollment, install.OriginalRuntimeExecutionIssueInputs{Issuers: pin("runtime-issuers-file", "runtime-issuers-sha256"), Core: pin("core-file", "core-sha256"), Profile: pin("profile-file", "profile-sha256"), RecordExport: pin("record-export-file", "record-export-sha256"), Request: request, ControllerDeployment: get("controller-deployment"), ControllerPodName: get("controller-pod-name"), Until: until, OutputDirectory: get("output-directory")})
 	if e != nil {
 		return 1
 	}

@@ -44,7 +44,18 @@ type OriginalMinIOSourceSetupReceipt struct {
 // coordinates from D's genuine original authoring reader, not an arbitrary
 // bucket DTO. Mutations additionally require the actual maintenance owner.
 // All mc operations reuse C's one pinned native installer command channel.
-func ProduceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install.OriginalWriterMaintenance, read *install.BootstrapSourceRegistryAuthoring, kube kubernetes.Interface, providerFile, providerSHA, directory string, admin MinIONativeAdminFiles) (receipt OriginalMinIOSourceSetupReceipt, resultErr error) {
+func ProduceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install.OriginalWriterMaintenance, read *install.BootstrapSourceRegistryAuthoring, kube kubernetes.Interface, providerFile, providerSHA, directory string, admin MinIONativeAdminFiles) (OriginalMinIOSourceSetupReceipt, error) {
+	return produceOriginalMinIOSourceReadMaterials(ctx, write, read, kube, providerFile, providerSHA, directory, admin, false)
+}
+
+// A separate native first-history source owner. It derives ALL bucket names
+// from authenticated native ListBuckets, including the existing C1 output
+// bucket. No requested bucket list/prefix or operator no-history flag enters.
+func ProduceOriginalMinIOWholeHistoryReadMaterials(ctx context.Context, write *install.OriginalWriterMaintenance, read *install.BootstrapSourceRegistryAuthoring, kube kubernetes.Interface, providerFile, providerSHA, directory string, admin MinIONativeAdminFiles) (OriginalMinIOSourceSetupReceipt, error) {
+	return produceOriginalMinIOSourceReadMaterials(ctx, write, read, kube, providerFile, providerSHA, directory, admin, true)
+}
+
+func produceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install.OriginalWriterMaintenance, read *install.BootstrapSourceRegistryAuthoring, kube kubernetes.Interface, providerFile, providerSHA, directory string, admin MinIONativeAdminFiles, wholeHistory bool) (receipt OriginalMinIOSourceSetupReceipt, resultErr error) {
 	receipt = OriginalMinIOSourceSetupReceipt{Version: "original-minio-source-setup-receipt.v1", Stage: "source_authority", State: "failed"}
 	// kube is obtained from the already authenticated reader's actual client,
 	// below; no replacement transport/source-observer callback is accepted.
@@ -125,6 +136,12 @@ func ProduceOriginalMinIOSourceReadMaterials(ctx context.Context, write *install
 	defer n.close()
 	if _, e = n.collectNativeInstallServer(ctx, ma.SeptemberPermissionProfile); e != nil {
 		return receipt, e
+	}
+	if wholeHistory {
+		names, e = collectOriginalWholeHistoryBuckets(ctx, n, names)
+		if e != nil {
+			return receipt, e
+		}
 	}
 	mcBytes, e := os.ReadFile(admin.MCFile)
 	if e == nil && (len(mcBytes) > 128<<20 || hash(mcBytes) != admin.MCSHA256) {

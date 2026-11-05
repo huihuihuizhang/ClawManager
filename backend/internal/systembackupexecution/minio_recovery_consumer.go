@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"os"
 	"reflect"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 type MinIORecoveryProjectionInput struct{ File, SHA256 string }
 
 type minioRecoverySession struct {
+	metadata   *ma.VerifiedRuntimeMetadataRead
 	input      MinIORecoveryProjectionInput
 	descriptor ma.MinIORecoveryDescriptor
 	wire       []byte
@@ -52,6 +54,15 @@ func lockMinIORecoveryActor(ctx context.Context, tx *sql.Tx, actor ma.Actor) err
 }
 
 func prepareMinIORecoverySession(ctx context.Context, db *sql.DB, in *MinIORecoveryProjectionInput, permission MinIOPublicationPermissionInput) (*minioRecoverySession, error) {
+	return prepareMinIORecoverySessionSelected(ctx, db, in, permission, nil)
+}
+func prepareMinIORuntimeRecoverySession(ctx context.Context, s *DeploymentService, in *MinIORecoveryProjectionInput, permission MinIOPublicationPermissionInput) (*minioRecoverySession, error) {
+	if s == nil {
+		return nil, minioPermissionFailure("runtime-metadata-service")
+	}
+	return prepareMinIORecoverySessionSelected(ctx, s.publisherVerifierDB, in, permission, s)
+}
+func prepareMinIORecoverySessionSelected(ctx context.Context, db *sql.DB, in *MinIORecoveryProjectionInput, permission MinIOPublicationPermissionInput, runtime *DeploymentService) (*minioRecoverySession, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -66,15 +77,31 @@ func prepareMinIORecoverySession(ctx context.Context, db *sql.DB, in *MinIORecov
 	if e != nil {
 		return nil, minioPermissionFailure("recovery-source-missing")
 	}
+	var metadata *ma.VerifiedRuntimeMetadataRead
+	if runtime != nil {
+		if runtime.Forward == nil || runtime.Runtime == nil || runtime.Runtime.Owner == nil {
+			return nil, minioPermissionFailure("runtime-metadata-original-composition")
+		}
+		source := ma.RuntimeMetadataConsentSource{File: os.Getenv("SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_SHA256"), OriginalForwardFile: os.Getenv("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_FILE"), OriginalForwardSHA256: os.Getenv("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_SHA256")}
+		metadata, e = ma.PrepareRuntimeMetadataRead(ctx, runtime.Runtime.Owner.Client, d, ma.Digest(in.SHA256), source, runtime.Forward)
+		if e != nil {
+			return nil, e
+		}
+	}
 	tx, e := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if e != nil {
 		return nil, e
 	}
 	defer tx.Rollback()
-	if lockMinIORecoveryActor(ctx, tx, d.Actor) != nil {
-		return nil, minioPermissionFailure("recovery-original-admin-prefix")
+	var current *ma.SQLCurrentSnapshot
+	if metadata == nil {
+		if lockMinIORecoveryActor(ctx, tx, d.Actor) != nil {
+			return nil, minioPermissionFailure("recovery-original-admin-prefix")
+		}
+		current, e = ma.ReadSQLCurrent(ctx, tx, d.Pin)
+	} else {
+		current, _, e = ma.ReadSQLCurrentForOriginalRuntimeMetadata(ctx, tx, d.Pin, metadata)
 	}
-	current, e := ma.ReadSQLCurrent(ctx, tx, d.Pin)
 	if e != nil {
 		return nil, e
 	}
@@ -90,7 +117,7 @@ func prepareMinIORecoverySession(ctx context.Context, db *sql.DB, in *MinIORecov
 	if e != nil || tx.Rollback() != nil {
 		return nil, minioPermissionFailure("recovery-original-readback")
 	}
-	s := &minioRecoverySession{input: *in, descriptor: d, wire: bytes.Clone(wire), proof: proof, expected: expected, until: record.Until}
+	s := &minioRecoverySession{metadata: metadata, input: *in, descriptor: d, wire: bytes.Clone(wire), proof: proof, expected: expected, until: record.Until}
 	if s.local() != nil {
 		return nil, minioPermissionFailure("recovery-source-tail")
 	}
@@ -100,6 +127,9 @@ func prepareMinIORecoverySession(ctx context.Context, db *sql.DB, in *MinIORecov
 func (s *minioRecoverySession) local() error {
 	if s == nil {
 		return nil
+	}
+	if s.metadata != nil && s.metadata.CheckLocal() != nil {
+		return minioPermissionFailure("runtime-metadata-original-local")
 	}
 	if !time.Now().Before(s.until) {
 		return minioPermissionFailure("recovery-original-until")
@@ -119,6 +149,16 @@ func sameMinIORecoverySession(a, b *minioRecoverySession) bool {
 	if a == nil || b == nil {
 		return a == nil && b == nil
 	}
+	if (a.metadata == nil) != (b.metadata == nil) {
+		return false
+	}
+	if a.metadata != nil {
+		left, e := a.metadata.Fingerprint()
+		right, re := b.metadata.Fingerprint()
+		if e != nil || re != nil || left != right {
+			return false
+		}
+	}
 	return a.input == b.input && reflect.DeepEqual(a.descriptor, b.descriptor) && reflect.DeepEqual(a.expected, b.expected) && bytes.Equal(a.wire, b.wire) && a.until.Equal(b.until)
 }
 
@@ -134,6 +174,22 @@ func (s *DeploymentService) readOriginalMinIOEnableLineage(ctx context.Context, 
 		return "", e
 	}
 	defer tx.Rollback()
+	if recovery.metadata != nil {
+		actual, fingerprint, e := ma.ReadSQLCurrentForOriginalRuntimeMetadata(ctx, tx, recovery.descriptor.Pin, recovery.metadata)
+		if e != nil {
+			return "", e
+		}
+		g, _, _, e := actual.Declarations()
+		current := s.Forward.DeploymentBinding()
+		_, now, ce := actual.Comparison()
+		if e != nil || ce != nil || g.ConfigSHA256 != ma.Digest(oldSHA) || current.ConfigVersion != version || current.ConfigSHA256 != currentSHA || fingerprint == "" || recovery.recheck(actual, now) != nil {
+			return "", minioPermissionFailure("runtime-metadata-lineage")
+		}
+		if tx.Rollback() != nil {
+			return "", minioPermissionFailure("runtime-metadata-view-close")
+		}
+		return fingerprint, nil
+	}
 	if lockMinIORecoveryActor(ctx, tx, recovery.descriptor.Actor) != nil {
 		return "", minioPermissionFailure("original-lineage-admin-prefix")
 	}

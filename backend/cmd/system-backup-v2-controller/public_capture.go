@@ -158,6 +158,19 @@ func configuredPublicStartupInputs() execution.DeploymentStartupInputs {
 	if inputs.ControllerPodName == "" {
 		inputs.ControllerPodName, _ = os.Hostname()
 	}
+	if os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_FILE") != "" {
+		files := execution.EnabledPublicationStartupFiles{Forward: execution.OriginalEnabledSourcePin{File: os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_FORWARD_GRANT_SHA256")}, OriginalForward: execution.OriginalEnabledSourcePin{File: os.Getenv("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_FILE"), SHA256: os.Getenv("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_SHA256")}}
+		if len(inputs.FormalVerifier) == 1 {
+			files.Formal = inputs.FormalVerifier[0]
+		}
+		if len(inputs.PublicationSigners) == 1 {
+			files.Signers = inputs.PublicationSigners[0]
+		}
+		if len(inputs.PublisherVerifier) == 1 {
+			files.Verifier = inputs.PublisherVerifier[0]
+		}
+		inputs.EnabledPublication = &files
+	}
 	return inputs
 }
 

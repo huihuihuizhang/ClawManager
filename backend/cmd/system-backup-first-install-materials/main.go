@@ -19,6 +19,30 @@ import (
 )
 
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && args[0] == "issue-enabled-runtime-materials" {
+		return runEnabledPublicationRuntime(ctx, args[1:], out)
+	}
+	if len(args) > 0 && (args[0] == "issue-publication-authorization-minio-metadata" || args[0] == "issue-initial-publication-authorization-minio-metadata") {
+		return runOriginalPublicationOwner(ctx, args, out)
+	}
+	if len(args) > 0 && args[0] == "refresh-initial-source-api" {
+		return runOriginalSourceAPIRefresh(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "author-initial-source-inputs" {
+		return runOriginalInitialSourceAuthor(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "author-initial-source-coordinates" {
+		return runOriginalInitialSourceCoordinates(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "author-initial-minio-options" {
+		return runOriginalInitialMinIOOptions(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "author-disabled-config" {
+		return runOriginalDisabledConfigAuthor(args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "prepare-initial-request" {
+		return runOriginalInitialRequestAuthor(ctx, args[1:], out)
+	}
 	if len(args) > 0 && (args[0] == "issue-initial-c1-evidence-material" || args[0] == "query-initial-c1-evidence-material") {
 		return runOriginalC1EvidenceMaterial(ctx, args[0], args[1:], out)
 	}
@@ -42,6 +66,9 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	if len(args) > 0 && args[0] == "issue-functional-materials" {
 		return runFunctionalPublication(ctx, args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "issue-initial-forward-minio-metadata" {
+		return runOriginalRuntimeExecutionForMinIOMetadata(ctx, args[1:], out)
 	}
 	flags := flag.NewFlagSet("system-backup-first-install-materials", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)

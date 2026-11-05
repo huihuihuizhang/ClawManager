@@ -1,0 +1,389 @@
+package install
+
+import (
+	"context"
+	"encoding/json"
+	"path/filepath"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+
+	"clawreef/internal/systembackup/domain"
+	"clawreef/internal/systembackup/scope"
+	c "clawreef/internal/systembackupcontroller"
+	apps "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+type OriginalInitialInstanceStorage struct {
+	InstanceID                              int
+	Claim, MountPath, RuntimeImageReference string
+	OSVersion, ImageRegistry, ImageTag      *string
+	Additional                              []OriginalInitialAdditionalMount
+}
+type OriginalInitialAdditionalMount struct {
+	ID                          int
+	Claim, Namespace, MountPath string
+}
+type OriginalInitialSourceDependency struct {
+	InstanceID               int
+	Mode, Status, Dependency string
+}
+type OriginalInitialMountCoordinates struct {
+	Volume   core.Volume
+	Mount    core.VolumeMount
+	DataPath string
+}
+type OriginalInitialSourceLayout struct {
+	Source                                                   domain.SourceInstance
+	Storage                                                  OriginalInitialInstanceStorage
+	CurrentPod, CurrentPodUID, CurrentNamespace, CurrentNode string
+	Binding                                                  *originalSharedRuntimeBinding
+	RuntimePod                                               *originalSharedRuntimePodRow
+	Mounts                                                   []OriginalInitialMountCoordinates
+	Dependency                                               string
+}
+type OriginalInitialSourceDataReceipt struct {
+	Version                         string
+	Coordinates, KubernetesSnapshot BootstrapSourceFilePin
+	InstanceCount                   int
+	WriterQualified, BackupReady    bool
+}
+
+func (p *OriginalWriterMaintenance) initialInstanceStorage(ctx context.Context) ([]OriginalInitialInstanceStorage, error) {
+	out := []OriginalInitialInstanceStorage{}
+	for _, source := range p.instances {
+		s := OriginalInitialInstanceStorage{InstanceID: source.ID, Additional: []OriginalInitialAdditionalMount{}}
+		if p.operator.installer.db.QueryRowContext(ctx, `SELECT COALESCE(pvc_name,''),COALESCE(mount_path,''),os_version,image_registry,image_tag FROM instances WHERE id=?`, source.ID).Scan(&s.Claim, &s.MountPath, &s.OSVersion, &s.ImageRegistry, &s.ImageTag) != nil {
+			return nil, ErrInstall
+		}
+		imageRef, err := json.Marshal(struct {
+			Version                  string
+			Runtime                  scope.Runtime
+			OSVersion, Registry, Tag *string
+		}{
+			"original-runtime-image-source.v1", scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS}, s.OSVersion, s.ImageRegistry, s.ImageTag})
+		if err != nil {
+			return nil, ErrInstall
+		}
+		s.RuntimeImageReference = string(imageRef)
+		rows, err := p.operator.installer.db.QueryContext(ctx, `SELECT id,pvc_name,pvc_namespace,COALESCE(mount_path,'') FROM persistent_volumes WHERE instance_id=? ORDER BY id`, source.ID)
+		if err != nil {
+			return nil, ErrInstall
+		}
+		for rows.Next() {
+			var extra OriginalInitialAdditionalMount
+			if rows.Scan(&extra.ID, &extra.Claim, &extra.Namespace, &extra.MountPath) != nil || len(s.Additional) >= 128 {
+				rows.Close()
+				return nil, ErrInstall
+			}
+			s.Additional = append(s.Additional, extra)
+		}
+		if err = rows.Err(); rows.Close() != nil || err != nil {
+			return nil, ErrInstall
+		}
+		out = append(out, s)
+	}
+	return out, nil
+}
+
+// Infer CURRENT source layout only from original SQL storage and a current
+// controller, when present. No historical Pod, guessed per-instance claim name,
+// copied witness, exclusion of stopped sources or absence proof is created.
+func initialStoppedLayouts(instances []domain.SourceInstance, storage []OriginalInitialInstanceStorage, deployments []apps.Deployment, namespace string) ([]OriginalStoppedProSelection, error) {
+	out := []OriginalStoppedProSelection{}
+	for _, source := range instances {
+		if source.Status != "stopped" {
+			continue
+		}
+		plan, err := scope.PlanRuntime(scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS})
+		if err != nil || plan.Mode != "pro" {
+			continue
+		} // Full native reader still rejects unsupported stopped modes.
+		var record *OriginalInitialInstanceStorage
+		for n := range storage {
+			if storage[n].InstanceID == source.ID {
+				record = &storage[n]
+			}
+		}
+		if record == nil || record.Claim == "" || !originalStoppedCleanRoot(record.MountPath) || !originalStoppedCleanRoot(source.Workspace) {
+			return nil, ErrInstall
+		}
+		selected := OriginalStoppedProSelection{InstanceID: source.ID, Mounts: []OriginalStoppedProMountSelection{}}
+		var current *apps.Deployment
+		for n := range deployments {
+			dep := &deployments[n]
+			if dep.Labels["instance-id"] == strconv.Itoa(source.ID) {
+				if current != nil || dep.Labels["user-id"] != strconv.Itoa(source.UserID) {
+					return nil, ErrInstall
+				}
+				current = dep
+			}
+		}
+		if current == nil {
+			selected.Mounts = append(selected.Mounts, OriginalStoppedProMountSelection{MountID: "workspace", Claim: record.Claim, MountPath: record.MountPath, DataPath: source.Workspace})
+			for _, mount := range record.Additional {
+				if mount.Namespace != namespace || mount.Claim == "" || !originalStoppedCleanRoot(mount.MountPath) {
+					return nil, ErrInstall
+				}
+				if mount.Claim == record.Claim && mount.MountPath == record.MountPath {
+					continue
+				}
+				selected.Mounts = append(selected.Mounts, OriginalStoppedProMountSelection{MountID: "volume-" + strconv.Itoa(mount.ID), Claim: mount.Claim, MountPath: mount.MountPath, DataPath: mount.MountPath})
+			}
+		} else {
+			if current.Spec.Replicas == nil || *current.Spec.Replicas != 0 || current.DeletionTimestamp != nil {
+				return nil, ErrInstall
+			}
+			selected.ControllerName = current.Name
+			volumes := map[string]core.Volume{}
+			for _, volume := range current.Spec.Template.Spec.Volumes {
+				volumes[volume.Name] = volume
+			}
+			seen := map[string]bool{}
+			containers := append(append([]core.Container(nil), current.Spec.Template.Spec.InitContainers...), current.Spec.Template.Spec.Containers...)
+			workspace := false
+			for _, container := range containers {
+				for _, mount := range container.VolumeMounts {
+					volume, ok := volumes[mount.Name]
+					if !ok || mount.SubPathExpr != "" {
+						return nil, ErrInstall
+					}
+					if volume.PersistentVolumeClaim == nil {
+						if volume.EmptyDir != nil || volume.Secret != nil || volume.ConfigMap != nil || volume.Projected != nil || volume.DownwardAPI != nil {
+							continue
+						}
+						return nil, ErrInstall
+					}
+					key := volume.PersistentVolumeClaim.ClaimName + "\x00" + mount.MountPath + "\x00" + mount.SubPath
+					if seen[key] {
+						continue
+					}
+					seen[key] = true
+					id, dataPath := "volume-"+volume.Name, mount.MountPath
+					if volume.PersistentVolumeClaim.ClaimName == record.Claim && mount.MountPath == record.MountPath {
+						if workspace {
+							return nil, ErrInstall
+						}
+						workspace = true
+						id, dataPath = "workspace", source.Workspace
+					}
+					selected.Mounts = append(selected.Mounts, OriginalStoppedProMountSelection{MountID: id, Claim: volume.PersistentVolumeClaim.ClaimName, MountPath: mount.MountPath, DataPath: dataPath, SubPath: mount.SubPath})
+				}
+			}
+			if !workspace {
+				return nil, ErrInstall
+			}
+		}
+		sort.Slice(selected.Mounts, func(i, j int) bool { return selected.Mounts[i].MountID < selected.Mounts[j].MountID })
+		if !originalStoppedLayoutValid(selected) {
+			return nil, ErrInstall
+		}
+		out = append(out, selected)
+	}
+	return out, nil
+}
+
+// This is the earliest authenticated DATA author: no writer source config,
+// full DeploymentConfig, native observer certificate, grant or selection is
+// needed to read the original complete SQL/Kube coordinates. The original
+// prepare-selection/facts owners independently authenticate them later.
+func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context, password []byte, enrollment EnrollmentPin, directory string) (OriginalInitialSourceDataReceipt, error) {
+	var zero OriginalInitialSourceDataReceipt
+	if i == nil || privateDirectory(directory) != nil {
+		return zero, ErrInstall
+	}
+	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, c.GatePolicy{LockTTL: c.DefaultMaintenanceLockTTL, AcquisitionTimeout: c.DefaultGateAcquisitionTime, MaxHold: c.DefaultQuiesceMaxHold})
+	if err != nil {
+		return zero, err
+	}
+	first, pods, deployments, claims, err := p.readKubernetesCensus(ctx)
+	if err != nil {
+		return zero, err
+	}
+	storage, err := p.initialInstanceStorage(ctx)
+	if err != nil {
+		return zero, err
+	}
+	shared, err := p.readSharedRuntimeSQL(ctx)
+	if err != nil {
+		return zero, err
+	}
+	rows, err := i.db.QueryContext(ctx, `SELECT DISTINCT scope FROM system_backup_gate ORDER BY scope`)
+	if err != nil {
+		return zero, err
+	}
+	scopes := []string{}
+	for rows.Next() {
+		var scope string
+		if rows.Scan(&scope) != nil || scope == "" || len(scope) > 128 || len(scopes) >= 128 {
+			rows.Close()
+			return zero, ErrInstall
+		}
+		scopes = append(scopes, scope)
+	}
+	if err = rows.Err(); rows.Close() != nil || err != nil {
+		return zero, ErrInstall
+	}
+	applicationScope := ""
+	if len(scopes) == 1 {
+		applicationScope = scopes[0]
+	}
+	layouts := []OriginalStoppedProSelection{}
+	dependencies := []OriginalInitialSourceDependency{}
+	allLayouts := []OriginalInitialSourceLayout{}
+	for _, source := range p.instances {
+		layout := OriginalInitialSourceLayout{Source: source, Mounts: []OriginalInitialMountCoordinates{}}
+		for _, record := range storage {
+			if record.InstanceID == source.ID {
+				layout.Storage = record
+			}
+		}
+		podName, podNamespace := source.Pod, source.Namespace
+		if source.Mode == "lite" {
+			for n := range shared.Bindings {
+				binding := &shared.Bindings[n]
+				if binding.InstanceID != source.ID {
+					continue
+				}
+				if layout.Binding != nil {
+					layout.Dependency = "multiple_current_runtime_bindings_require_native_resolution"
+					continue
+				}
+				copy := *binding
+				layout.Binding = &copy
+				for _, runtime := range shared.Pods {
+					if runtime.ID == binding.RuntimePodID {
+						copy := runtime
+						layout.RuntimePod = &copy
+						podName, podNamespace = runtime.Pod, runtime.Namespace
+					}
+				}
+			}
+		}
+		for _, pod := range pods {
+			if pod.Name != podName || pod.Namespace != podNamespace || podName == "" {
+				continue
+			}
+			if layout.CurrentPodUID != "" {
+				layout.Dependency = "duplicate_current_pod_coordinates"
+				continue
+			}
+			layout.CurrentPod, layout.CurrentPodUID, layout.CurrentNamespace, layout.CurrentNode = pod.Name, string(pod.UID), pod.Namespace, pod.Spec.NodeName
+			volumes := map[string]core.Volume{}
+			for _, v := range pod.Spec.Volumes {
+				volumes[v.Name] = v
+			}
+			seen := map[string]bool{}
+			containers := append(append([]core.Container(nil), pod.Spec.InitContainers...), pod.Spec.Containers...)
+			for _, container := range containers {
+				for _, mount := range container.VolumeMounts {
+					volume, ok := volumes[mount.Name]
+					if !ok {
+						layout.Dependency = "current_mount_volume_missing"
+						continue
+					}
+					key := mount.Name + "\x00" + mount.MountPath + "\x00" + mount.SubPath + "\x00" + mount.SubPathExpr
+					if seen[key] {
+						continue
+					}
+					seen[key] = true
+					dataPath := mount.MountPath
+					if source.Workspace == mount.MountPath || strings.HasPrefix(source.Workspace, mount.MountPath+"/") {
+						dataPath = source.Workspace
+					}
+					layout.Mounts = append(layout.Mounts, OriginalInitialMountCoordinates{Volume: volume, Mount: mount, DataPath: dataPath})
+					if mount.SubPathExpr != "" {
+						layout.Dependency = "subpath_expression_requires_native_loaded_environment"
+					}
+				}
+			}
+		}
+		if source.Status == "stopped" {
+			one, e := initialStoppedLayouts([]domain.SourceInstance{source}, storage, deployments, i.plan.Target.Namespace)
+			if e != nil {
+				layout.Dependency = "current_stopped_source_layout_requires_native_resolution"
+			} else if len(one) != 1 {
+				layout.Dependency = "stopped_shared_source_requires_native_nonrunning_owner"
+			} else {
+				layouts = append(layouts, one...)
+			}
+		}
+		if source.Status == "running" && layout.CurrentPodUID == "" {
+			layout.Dependency = "running_source_current_pod_or_binding_missing"
+		}
+		if source.Status != "running" && source.Status != "stopped" {
+			layout.Dependency = "original_state_requires_native_nonrunning_source_owner:" + source.Status
+		}
+		if layout.Dependency != "" {
+			dependencies = append(dependencies, OriginalInitialSourceDependency{source.ID, source.Mode, source.Status, layout.Dependency})
+		}
+		allLayouts = append(allLayouts, layout)
+	}
+	nodes := map[string]string{}
+	for _, pod := range pods {
+		if pod.Spec.NodeName == "" {
+			continue
+		}
+		if _, ok := nodes[pod.Spec.NodeName]; ok {
+			continue
+		}
+		node, e := i.kube.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{})
+		if e != nil || node.UID == "" || node.DeletionTimestamp != nil {
+			return zero, ErrInstall
+		}
+		nodes[node.Name] = string(node.UID)
+	}
+	volumes := []originalPhysicalVolumePin{}
+	for _, claim := range claims {
+		if claim.Spec.VolumeName == "" || claim.DeletionTimestamp != nil {
+			return zero, ErrInstall
+		}
+		pv, e := i.kube.CoreV1().PersistentVolumes().Get(ctx, claim.Spec.VolumeName, metav1.GetOptions{})
+		if e != nil || pv.UID == "" || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID {
+			return zero, ErrInstall
+		}
+		volumes = append(volumes, originalPhysicalVolumePin{Namespace: claim.Namespace, ClaimName: claim.Name, ClaimUID: string(claim.UID), ClaimSpecSHA256: originalObjectSHA(claim.Spec), PVName: pv.Name, PVUID: string(pv.UID), PVSpecSHA256: originalObjectSHA(pv.Spec)})
+	}
+	result := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID, Namespace: i.plan.Target.Namespace,
+		NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: applicationScope, ApplicationScopes: scopes, Instances: append([]domain.SourceInstance(nil), p.instances...),
+		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, Layouts: allLayouts, Dependencies: dependencies}
+	coordinatesRaw, err := canonical(result)
+	if err != nil || len(coordinatesRaw) > 8<<20 {
+		return zero, ErrInstall
+	}
+	snapshotRaw, err := canonical(struct {
+		Pods        []core.Pod
+		Deployments []apps.Deployment
+		Claims      []core.PersistentVolumeClaim
+	}{pods, deployments, claims})
+	if err != nil || len(snapshotRaw) > 8<<20 {
+		return zero, ErrInstall
+	}
+	second, _, _, _, err := p.readKubernetesCensus(ctx)
+	again, e := p.initialInstanceStorage(ctx)
+	sharedAgain, sharedErr := p.readSharedRuntimeSQL(ctx)
+	if err != nil || e != nil || sharedErr != nil || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+		return zero, ErrInstall
+	}
+	files := map[string][]byte{"initial-source-coordinates.json": coordinatesRaw, "initial-source-kubernetes.private.json": snapshotRaw}
+	if writeNewFiles(directory, files) != nil {
+		return zero, ErrInstall
+	}
+	for name, expected := range files {
+		actual, e := ReadSourceMaterialFile(filepath.Join(directory, name))
+		if e != nil || string(actual) != string(expected) {
+			clear(actual)
+			return zero, ErrInstall
+		}
+		clear(actual)
+	}
+	final, _, _, _, err := p.readKubernetesCensus(ctx)
+	if err != nil || !reflect.DeepEqual(first, final) || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+		return zero, ErrInstall
+	}
+	return OriginalInitialSourceDataReceipt{Version: "original-initial-source-data-authored.v1", Coordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "initial-source-coordinates.json"), SHA256: hash(coordinatesRaw)},
+		KubernetesSnapshot: BootstrapSourceFilePin{File: filepath.Join(directory, "initial-source-kubernetes.private.json"), SHA256: hash(snapshotRaw)}, InstanceCount: len(p.instances)}, nil
+}

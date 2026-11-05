@@ -57,7 +57,7 @@ func (p *OriginalWriterMaintenance) readSharedRuntimeSQL(ctx context.Context) (o
 	if p == nil || p.check(ctx) != nil {
 		return out, ErrInstall
 	}
-	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := p.operator.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return out, ErrInstall
 	}

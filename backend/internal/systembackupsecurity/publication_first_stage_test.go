@@ -119,9 +119,11 @@ func firstStageHistoryRows(t *testing.T, a *SQLArtifactSigningAuthority, purpose
 	}
 	id := signingInputEvidenceID(task, binding.InstallationID, purpose)
 	rows := make(map[string][]driver.Value)
+	// Production inserts every original chunk and its root with one expiry.
+	expiry := time.Now().UTC().Add(time.Hour)
 	store := func(key string, body []byte) {
 		h := sha256.Sum256(body)
-		rows[key] = []driver.Value{body, hex.EncodeToString(h[:]), int64(len(body)), "backup", task.BackupPublicID, "diagnostic", "inline", "healthy", "none", time.Now().UTC().Add(time.Hour)}
+		rows[key] = []driver.Value{body, hex.EncodeToString(h[:]), int64(len(body)), "backup", task.BackupPublicID, "diagnostic", "inline", "healthy", "none", expiry}
 	}
 	if !chunked {
 		store(id, raw)
@@ -166,6 +168,9 @@ func TestPublicationStageFirstHistory(t *testing.T) {
 		{name: "malformed-root", purpose: "capture_certificate", change: func(id string, rows map[string][]driver.Value) { rows[id][0] = []byte(`{}`) }},
 		{name: "normal-capture", purpose: "capture_certificate", allow: true},
 		{name: "normal-chunked-capture", purpose: "capture_certificate", chunked: true, allow: true},
+		{name: "chunk-expiry-drift", purpose: "capture_certificate", chunked: true, change: func(id string, rows map[string][]driver.Value) {
+			rows[id][9] = rows[id][9].(time.Time).Add(time.Second)
+		}},
 		{name: "expired-complete-other-purpose", purpose: "capture_certificate", allow: true, change: func(id string, rows map[string][]driver.Value) { rows[id][9] = time.Now().Add(-time.Hour) }},
 		{name: "other-attempt", purpose: "acceptance_record", attempt: true, allow: true},
 	} {

@@ -73,8 +73,19 @@ func (p PublisherVerifierMaterials) validate(cfg DeploymentConfig) error {
 	}
 	return nil
 }
-func loadPublisherVerifierMaterials(cfg DeploymentConfig, inputs []PublisherVerifierInput) (*PublisherVerifierMaterials, error) {
+func loadPublisherVerifierMaterials(cfg DeploymentConfig, inputs []PublisherVerifierInput, selected ...*EnabledPublicationStartupFiles) (*PublisherVerifierMaterials, error) {
 	ref := cfg.PublisherVerifier
+	if len(selected) > 1 {
+		return nil, c.ErrExecutionAuthority
+	}
+	if len(selected) == 1 && selected[0] != nil {
+		if ref == nil || len(inputs) != 1 || inputs[0] != selected[0].Verifier {
+			return nil, c.ErrExecutionAuthority
+		}
+		copyRef := *ref
+		copyRef.Path = selected[0].Verifier.File
+		ref = &copyRef
+	}
 	if ref == nil {
 		if len(inputs) != 0 {
 			return nil, c.ErrExecutionAuthority
@@ -98,7 +109,7 @@ func loadPublisherVerifierMaterials(cfg DeploymentConfig, inputs []PublisherVeri
 	return &p, nil
 }
 func (d *DeploymentService) loadPublisherVerifierInput(inputs []PublisherVerifierInput) error {
-	p, err := loadPublisherVerifierMaterials(d.Config, inputs)
+	p, err := loadPublisherVerifierMaterials(d.Config, inputs, d.enabledPublicationFiles)
 	if err != nil {
 		return err
 	}
@@ -219,7 +230,7 @@ func (d *DeploymentService) checkPublisherVerifierBinding(ctx context.Context) e
 	if d.publisherVerifierInput == nil || d.publisherVerifier == nil || d.publicationBinding() != nil {
 		return c.ErrExecutionAuthority
 	}
-	p, err := loadPublisherVerifierMaterials(d.Config, []PublisherVerifierInput{*d.publisherVerifierInput})
+	p, err := loadPublisherVerifierMaterials(d.Config, []PublisherVerifierInput{*d.publisherVerifierInput}, d.enabledPublicationFiles)
 	if err != nil || !reflect.DeepEqual(p, d.publisherVerifier) {
 		return c.ErrExecutionAuthority
 	}

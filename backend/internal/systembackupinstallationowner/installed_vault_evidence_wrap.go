@@ -9,10 +9,12 @@ import (
 // Exact original installed evidence metadata profile. Its presence is DATA,
 // not producer execution/retention permission. Native roles, policies, key
 // metadata and current workload are still independently read and verified.
-// Only encrypt is recognized. KMS Generate/Unwrap is forbidden for this key.
+// Optional original archive unwrap is exact-role evidence decrypt only.
+// KMS Generate/Unwrap remains forbidden for this evidence key.
 type InstalledVaultEvidenceWrapProfile struct {
-	Transit ev.TransitConfig
-	Role    a.VaultPermissionRole
+	Transit       ev.TransitConfig
+	Role          a.VaultPermissionRole
+	ArchiveUnwrap *a.VaultPermissionRole `json:",omitempty"`
 }
 
 func validateInstalledEvidenceWrap(c InstalledVaultDependencyConfig) error {
@@ -26,11 +28,26 @@ func validateInstalledEvidenceWrap(c InstalledVaultDependencyConfig) error {
 	if _, err := a.VaultJWTAuthRole(p.Role); err != nil {
 		return ErrOwner
 	}
+	if r := p.ArchiveUnwrap; r != nil {
+		if r.AuthMount != c.JWTMount || r.PodUID == "" || r.Workload != nil || r.Role == p.Role.Role || r.Policy == p.Role.Policy || r.Audience == p.Role.Audience || r.Namespace != p.Role.Namespace {
+			return ErrOwner
+		}
+		if _, e := a.VaultJWTAuthRole(*r); e != nil {
+			return ErrOwner
+		}
+	}
 	return nil
 }
 func installedEvidenceWrapMatches(c InstalledVaultDependencyConfig, name string, raw []byte, policy string, keys []InstalledVaultKey) bool {
-	if validateInstalledEvidenceWrap(c) != nil || name != c.EvidenceWrap.Role.Role {
+	if validateInstalledEvidenceWrap(c) != nil {
 		return false
+	}
+	role, op := c.EvidenceWrap.Role, ev.TransitWrap
+	if name != role.Role {
+		if c.EvidenceWrap.ArchiveUnwrap == nil || name != c.EvidenceWrap.ArchiveUnwrap.Role {
+			return false
+		}
+		role, op = *c.EvidenceWrap.ArchiveUnwrap, ev.TransitUnwrap
 	}
 	found := false
 	for _, key := range keys {
@@ -41,10 +58,10 @@ func installedEvidenceWrapMatches(c InstalledVaultDependencyConfig, name string,
 	if !found {
 		return false
 	}
-	expected, err := a.VaultJWTAuthRole(c.EvidenceWrap.Role)
+	expected, err := a.VaultJWTAuthRole(role)
 	if err != nil || !jsonSubset(raw, expected) {
 		return false
 	}
-	acl, err := a.EvidenceVaultRuntimeACL(c.EvidenceWrap.Transit, ev.TransitWrap)
+	acl, err := a.EvidenceVaultRuntimeACL(c.EvidenceWrap.Transit, op)
 	return err == nil && policy == acl
 }

@@ -52,6 +52,15 @@ func (v FormalVerifierReference) validate(DeploymentConfig) error {
 
 func (s *DeploymentService) loadFormalVerifier(inputs []FormalVerifierInput) error {
 	ref := s.Config.FormalVerifier
+	if s.enabledPublicationFiles != nil {
+		selected := s.enabledPublicationFiles.Formal
+		if ref == nil || selected == (FormalVerifierInput{}) || len(inputs) != 1 || inputs[0] != selected || selected.File == ref.Path {
+			return c.ErrExecutionAuthority
+		}
+		copyRef := *ref
+		copyRef.Path = selected.File
+		ref = &copyRef
+	}
 	if ref == nil {
 		if len(inputs) != 0 {
 			return c.ErrExecutionAuthority
@@ -74,6 +83,17 @@ func (s *DeploymentService) loadFormalVerifier(inputs []FormalVerifierInput) err
 	if decoder.Decode(&materials) != nil || decoder.Decode(new(any)) != io.EOF || materials.validate(s.Config) != nil {
 		return c.ErrExecutionAuthority
 	}
+	if s.enabledPublicationFiles != nil {
+		if s.Forward == nil {
+			return c.ErrExecutionAuthority
+		}
+		current := s.Forward.DeploymentBinding()
+		if materials.Workload.ConfigVersion != current.ConfigVersion || materials.Workload.ConfigSHA256 != current.ConfigSHA256 {
+			return c.ErrExecutionAuthority
+		}
+	}
+	// Native factory/ForCandidate still verify exact current signed grants,
+	// real SQL capabilities, provider permit and actual controller workload.
 	s.formalVerifier = &materials
 	return nil
 }

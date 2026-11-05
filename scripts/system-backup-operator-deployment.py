@@ -382,6 +382,46 @@ class DeploymentStages:
         common, _, _, _ = self.common()
         return self.call(stage, [self.binary(binary), *common, *flags])
 
+    def preinstall_api_runtime_mount(self, desired):
+        # Same ORIGINAL input PVC as controller, no owner-private PVC. Mount
+        # the directory so the later signed projection appears without a roll.
+        pod = desired["template"]["spec"]
+        need(len(pod["containers"]) == 1, "one_original_api_container_required")
+        container = pod["containers"][0]
+        volume = {"name": "sbk-original-runtime-inputs", "persistentVolumeClaim": {"claimName": self.prefix + "-inputs", "readOnly": True}}
+        mount = {"name": volume["name"], "mountPath": RUNTIME_MOUNT, "readOnly": True}
+        volumes = [v for v in pod.get("volumes", []) if v["name"] == volume["name"]]
+        mounts = [v for v in container.get("volumeMounts", []) if overlap(v["mountPath"], RUNTIME_MOUNT)]
+        need((not volumes and not mounts) or volumes == [volume] and mounts == [mount], "original_api_runtime_mount_collision")
+        if not volumes:
+            pod.setdefault("volumes", []).append(volume)
+            container.setdefault("volumeMounts", []).append(mount)
+
+    def verify_api_minio_recovery_file(self, selected):
+        pinned(selected)
+        app = self.get("deployment", "clawmanager-app")
+        need(app["metadata"]["uid"] == self.scope["app_deployment_uid"] and app["spec"].get("replicas") == 1, "same_original_running_api_required")
+        expected = copy.deepcopy(app["spec"])
+        self.preinstall_api_runtime_mount(expected)
+        need(expected == app["spec"], "api_runtime_mount_not_preinstalled_before_original_source_signing")
+        host = self.host_result()
+        claim = self.get("pvc", self.prefix + "-inputs")
+        need(claim["metadata"]["uid"] == host["pvc_uids"]["inputs"], "api_and_controller_must_mount_same_original_input_pvc")
+        labels = app["spec"]["selector"]["matchLabels"]
+        pods = decode(self.op.k("-n", NS, "get", "pods", "-l", ",".join(k+"="+v for k,v in sorted(labels.items())), "-o", "json"))["items"]
+        need(len(pods) == 1 and not pods[0]["metadata"].get("deletionTimestamp"), "one_actual_api_pod_required")
+        pod = pods[0]
+        owner = [v for v in pod["metadata"]["ownerReferences"] if v.get("controller") and v["kind"] == "ReplicaSet"]
+        need(len(owner) == 1, "actual_api_replica_owner_required")
+        replica = self.get("replicaset", owner[0]["name"])
+        need(replica["metadata"]["uid"] == owner[0]["uid"] and any(v.get("controller") and v["uid"] == app["metadata"]["uid"] for v in replica["metadata"]["ownerReferences"]), "same_original_api_controller_graph_required")
+        container = app["spec"]["template"]["spec"]["containers"][0]["name"]
+        result = self.op.k("-n", NS, "exec", pod["metadata"]["name"], "-c", container, "--", "/bin/sh", "-ec", 'test ! -w "$1"; sha256sum -- "$1"', "sh", selected["File"])
+        need(result.decode("ascii").split() == [selected["SHA256"], selected["File"]], "actual_api_uid_cannot_read_original_readonly_recovery_file")
+        again = self.get("pod", pod["metadata"]["name"])
+        need(again["metadata"]["uid"] == pod["metadata"]["uid"] and again["spec"] == pod["spec"] and again["status"]["containerStatuses"] == pod["status"]["containerStatuses"], "api_actor_changed_during_recovery_file_readback")
+        return {"PodUID": pod["metadata"]["uid"], "File": selected, "PVCUID": claim["metadata"]["uid"], "ReadOnly": True}
+
     def new_image(self):
         if (self.directory / "new-image.result.json").exists():
             result = decode(read(self.directory / "new-image.result.json"))
@@ -426,6 +466,7 @@ class DeploymentStages:
         # A subPath file is a regular bind mount inside the container. Mounting
         # the projection directory would expose symlinks to the strict reader.
         container.setdefault("volumeMounts", []).append({"name": "sbk-business-mysql-ca", "mountPath": "/etc/clawmanager-business-mysql-ca/ca.crt", "subPath": "ca.crt", "readOnly": True})
+        self.preinstall_api_runtime_mount(desired)
         desired.setdefault("template", {}).setdefault("metadata", {}).setdefault("annotations", {})[MARKER] = self.operation
         self.retain("new-image.plan.json", {"version": "original-app-complete-tls-template.v1", "operation": self.operation,
                      "original_uid": original["metadata"]["uid"], "original_resource_version": original["metadata"]["resourceVersion"],
@@ -716,6 +757,14 @@ exec /usr/local/bin/system-backup-v2-controller
             need(not source.is_symlink(), "runtime_delivery_link_refused")
             if source.is_dir():
                 continue
+            if source == directory/"registration-capacity.current.json":
+                # This continuously sampled native report is atomically
+                # transported by its original process, never sealed/replayed
+                # by the immutable runtime material delivery pass.
+                info = source.stat()
+                need(info.st_uid == os.geteuid() and info.st_nlink == 1 and info.st_mode & 0o077 == 0 and
+                     (self.run/"production-adoption/actual-capacity-collector-process.json").is_file(), "original_dynamic_capacity_report_owner_required")
+                continue
             raw = read(source, limit=64 << 20)
             destination = str(source)
             relative = source.relative_to(directory)
@@ -819,13 +868,87 @@ exec /usr/local/bin/system-backup-v2-controller
         host = self.host_result()["host"]
         self.check_host(host)
         need(isinstance(environment, dict) and environment and isinstance(producer_pins, list) and producer_pins, "actual_controller_environment_and_producer_pins_required")
+        # Independently trusted ORIGINAL locator for the actual old/new
+        # Forward reader. Never obtain this path or hash from metadata/task
+        # JSON, the recovery projection or the newly issued v2 grant.
+        forward = decode(read(self.directory / "initial-forward.result.json"))
+        need(forward["version"] == "operator-initial-forward.v1" and forward["host"] == host, "same_original_forward_producer_and_host_required")
+        original_forward = forward["grant"]
+        native = decode(pinned(forward["native_receipt"]))
+        need(native["Version"] == "original-runtime-execution-result.v1" and native["Grant"] == original_forward and native["ControllerPodUID"] == host["PodUID"], "actual_original_forward_native_receipt_required")
+        pinned(original_forward, limit=65536)
+        need(Path(original_forward["File"]).is_relative_to(self.runtime_mirror()), "original_forward_must_use_existing_readonly_runtime_mount")
+        environment, producer_pins = dict(environment), list(producer_pins)
+        for name, value in (("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_FILE", original_forward["File"]), ("SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_SHA256", original_forward["SHA256"])):
+            need(name not in environment or environment[name] == value, "original_forward_trusted_locator_changed")
+            environment[name] = value
+        old_pins = [p for p in producer_pins if p["File"] == original_forward["File"]]
+        need(len(old_pins) <= 1 and (not old_pins or old_pins[0]["SHA256"] == original_forward["SHA256"]), "original_forward_producer_pin_changed")
+        if not old_pins:
+            producer_pins.append(original_forward)
+        # This descriptor was owner-authored and delivered BEFORE the actual
+        # whole-cold dispatch. Its future file is now the original A-signed
+        # projection, not an operator-created current-health statement.
+        recovery = decode(read(self.op.run / "production-adoption/minio-recovery-preinstalled.json"))
+        need(recovery["Version"] == "operator-original-minio-recovery-preinstall.v1" and recovery["Host"] == host and recovery["BackupReady"] is False, "same_original_pre_cold_recovery_descriptor_required")
+        original_descriptor = recovery["Descriptor"]
+        descriptor = decode(pinned(original_descriptor))
+        descriptor_receipt = decode(pinned(recovery["NativeDescriptorReceipt"]))
+        need(descriptor_receipt["Version"] == "original-minio-whole-cold-resource-locator.v1" and descriptor_receipt["State"] == "actual_original_sql_actor_pinned_future_projection_not_issued" and descriptor_receipt["Descriptor"] == original_descriptor, "actual_original_descriptor_native_receipt_required")
+        terminal = decode(pinned(recovery["Terminal"]))
+        need(terminal["RecoverySource"] == original_descriptor, "enable_terminal_and_controller_must_select_same_descriptor")
+        dispatched = self.op.completed("adopt")
+        actual_adoption = decode(read(Path(dispatched["stdout"]), dispatched["stdout_sha256"]))
+        projection_receipt = actual_adoption["MinIORecoveryProjection"]
+        need(actual_adoption["Version"] == "original-first-adoption-production.v1" and actual_adoption["State"] == "original_adoption_committed_sources_recovered_disabled_v1_dependencies_unverified" and projection_receipt["Version"] == "original-minio-whole-cold-resource-succession.v1" and projection_receipt["State"] == "original_whole_cold_history_projection_exact_readback_not_current_health", "actual_completed_original_whole_cold_recovery_required")
+        projection = projection_receipt["Projection"]
+        pinned(projection)
+        need(descriptor["Version"] == "original-minio-whole-cold-resource-locator.v1" and descriptor["ProjectionFile"] == recovery["ProjectionFile"] == projection["File"] and Path(original_descriptor["File"]).is_relative_to(self.runtime_mirror()) and Path(projection["File"]).is_relative_to(self.runtime_mirror()), "same_preinstalled_projection_path_on_original_runtime_mount_required")
+        for name, value in (("SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_FILE", original_descriptor["File"]), ("SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_SHA256", original_descriptor["SHA256"])):
+            need(name not in environment or environment[name] == value, "original_minio_recovery_trusted_locator_changed")
+            environment[name] = value
+        for selected in (original_descriptor, projection):
+            old = [p for p in producer_pins if p["File"] == selected["File"]]
+            need(len(old) <= 1 and (not old or old[0] == selected), "original_minio_recovery_producer_pin_changed")
+            if not old:
+                producer_pins.append(selected)
+        metadata = decode(read(self.op.run / "production-adoption/actual-minio-runtime-consent-selection.json"))
+        need(metadata["Host"] == host and metadata["Descriptor"] == original_descriptor, "same_original_runtime_metadata_consent_source_required")
+        actual_metadata = decode(pinned(metadata["NativeReceipt"]))
+        consent = metadata["Consent"]
+        need(actual_metadata["State"] == "original_runtime_metadata_consent_exact_readback_sql_enrollment_not_proven" and actual_metadata["Consent"] == consent, "actual_owner_runtime_metadata_consent_receipt_required")
+        pinned(consent)
+        need(Path(consent["File"]).is_relative_to(self.runtime_mirror()), "runtime_metadata_consent_original_readonly_mount_required")
+        for name, value in (("SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_FILE",consent["File"]),("SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_SHA256",consent["SHA256"])):
+            need(name not in environment or environment[name] == value, "original_runtime_metadata_consent_locator_changed")
+            environment[name] = value
+        selected_metadata = [v for v in producer_pins if v["File"] == consent["File"]]
+        need(len(selected_metadata) <= 1 and (not selected_metadata or selected_metadata[0] == consent), "runtime_metadata_consent_producer_pin_changed")
+        if not selected_metadata:
+            producer_pins.append(consent)
+        enabled = decode(read(self.op.run / "production-adoption/actual-enabled-publication-runtime-selection.json"))
+        need(enabled["Host"] == host and enabled["OriginalForward"] == original_forward, "same_original_controller_and_forward_enabled_sources_required")
+        native_enabled = decode(pinned(enabled["NativeReceipt"]))
+        need(native_enabled["State"] == "enabled_owner_publication_materials_generated_original_sources_preserved" and native_enabled["Signers"] == enabled["Signers"] and native_enabled["Verifier"] == enabled["Verifier"], "actual_native_enabled_material_producer_required")
+        for prefix, selected in (("SYSTEM_BACKUP_FORWARD_GRANT",enabled["Forward"]),("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS",enabled["Signers"]),("SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS",enabled["Verifier"])):
+            pinned(selected)
+            need(Path(selected["File"]).is_relative_to(self.runtime_mirror()), "actual_enabled_sources_original_readonly_runtime_mount_required")
+            environment[prefix+"_FILE"] = selected["File"]
+            environment[prefix+"_SHA256"] = selected["SHA256"]
+            matching = [v for v in producer_pins if v["File"] == selected["File"]]
+            need(len(matching)<=1 and (not matching or matching[0]==selected), "enabled_source_pin_changed")
+            if not matching:
+                producer_pins.append(selected)
         needed = {"SYSTEM_BACKUP_PUBLIC_CONFIG_FILE", "SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256", "SYSTEM_BACKUP_FORWARD_GRANT_SHA256",
                   "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256", "SYSTEM_BACKUP_CAPTURE_MATERIALS_FILE", "SYSTEM_BACKUP_CAPTURE_MATERIALS_SHA256",
                   "SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE", "SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256", "SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE",
                   "SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_SHA256", "SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_FILE", "SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS_SHA256",
                   "SYSTEM_BACKUP_PUBLICATION_TARGET_FILE", "SYSTEM_BACKUP_PUBLICATION_TARGET_SHA256", "SYSTEM_BACKUP_READINESS_MINIO_SOURCE_FILE",
                   "SYSTEM_BACKUP_READINESS_MINIO_SOURCE_SHA256", "SYSTEM_BACKUP_READINESS_MINIO_PROFILE", "SYSTEM_BACKUP_ENABLED", "DB_USER", "DB_PASSWORD",
-                  "DB_HOST", "DB_PORT", "DB_NAME", "DB_TLS_CA_FILE", "DB_TLS_CA_SHA256", "DB_TLS_SERVER_NAME"}
+                  "DB_HOST", "DB_PORT", "DB_NAME", "DB_TLS_CA_FILE", "DB_TLS_CA_SHA256", "DB_TLS_SERVER_NAME",
+                  "SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_FILE", "SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_SHA256",
+                  "SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_FILE", "SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_SHA256",
+                  "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_FILE", "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_SHA256", "SYSTEM_BACKUP_FORWARD_GRANT_FILE"}
         need(needed.issubset(environment) and all(environment[n] for n in needed), "complete_public_controller_environment_required")
         need(environment["SYSTEM_BACKUP_ENABLED"] == "true" and environment["SYSTEM_BACKUP_READINESS_MINIO_PROFILE"] in
              ("minio-2025-04-22-builtin-flat.v1", "minio-2025-09-07-builtin-flat.v1"), "exact_controller_and_readiness_profile_required")
@@ -924,7 +1047,9 @@ exec /usr/local/bin/system-backup-v2-controller
         output = self.runtime_mirror() / "publication-authorization"
         output.mkdir(mode=0o700, exist_ok=True)
         common, _, _, _ = self.common()
-        value, output_pin = self.call("publication-authorization", [self.binary("system-backup-first-install-materials"), "issue-publication-authorization", *common,
+        _, _, _, sql_materials = self.common()
+        action = "issue-initial-publication-authorization-minio-metadata" if sql_materials.get("runtime_profile") == "public-runtime-c1-minio-metadata-read.v1" else "issue-publication-authorization"
+        value, output_pin = self.call("publication-authorization", [self.binary("system-backup-first-install-materials"), action, *common,
             "--source-issuer-private-file", self.issuer_private(), "--controller-deployment", identity["Deployment"], "--controller-pod-name", identity["Pod"],
             "--output-directory", output, "--runtime-dsn-file", runtime_dsn["File"], "--core-file", core["File"], "--core-sha256", core["SHA256"],
             "--request-files-file", request_files["File"], "--request-files-sha256", request_files["SHA256"],

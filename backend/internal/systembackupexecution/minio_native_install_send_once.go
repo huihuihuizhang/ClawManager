@@ -199,7 +199,7 @@ func nativeInstallOncePlan(n *minioPermissionHTTP, input []byte, args []string) 
 				Policy                 json.RawMessage
 				CreateDate, UpdateDate time.Time
 			}
-			if status != 200 || minioPermissionDecode(raw, &p) != nil || p.PolicyName != name || !sourceGatePolicySame(p.Policy, plain) {
+			if status != 200 || minioPermissionDecode(raw, &p) != nil || p.PolicyName != name || !nativeInstallSeptemberMetadataPolicySame(ctx, n, p.Policy, plain) {
 				return false, install.ErrInstall
 			}
 			return true, nil

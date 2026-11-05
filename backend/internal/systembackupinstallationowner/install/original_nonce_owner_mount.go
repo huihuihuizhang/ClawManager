@@ -5,7 +5,6 @@ import (
 	nonce "clawreef/internal/systembackupnoncebootstrap"
 	"context"
 	"crypto/ed25519"
-	"encoding/json"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path/filepath"
@@ -111,7 +110,7 @@ func (i *Installer) BindOriginalNonceMaterial(ctx context.Context, password []by
 		NotBefore, ExpiresAt                               time.Time
 		Keys                                               []keyWire
 	}{ownerPin, i.plan.Target.InstallationID, i.plan.Target.ServerUUID, i.plan.Target.Database, request.config.SHA256(), now, source.Until, []keyWire{keyWire(nonce.Key{IdentityHash: source.Reference.IdentityHash, Version: source.Reference.Version, ProviderIdentityHash: source.ProviderIdentityHash, ScopeHash: source.ScopeHash, DescriptorFile: source.Descriptor.File, DescriptorSHA256: source.Descriptor.SHA256, MaterialFile: source.Material.File, MaterialSHA256: source.Material.SHA256, ProtectedUntil: source.Until})}}
-	bindingRaw, err := json.Marshal(binding)
+	bindingRaw, err := canonical(binding)
 	if err != nil {
 		return zero, ErrInstall
 	}

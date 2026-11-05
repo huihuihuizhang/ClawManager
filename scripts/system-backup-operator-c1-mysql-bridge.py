@@ -23,7 +23,7 @@ PV_UID = "2661bbff-e182-4189-9a09-3c23d5c71050"
 HOST_SOURCE = "/data/clawmanager-zhanghui08/system/mysql"
 DATADIR = "/var/lib/mysql"
 NATIVE_SHA = "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
-BRIDGE_HELPER_SHA = "b617a6736a8fb8c1389eaf29729b0f6cc953f66ca9c100218232b270aea97f1f"
+BRIDGE_HELPER_SHA = "957e98bf08796a6743f93dde3cd00485c79c9a115d331b168008c44318777e71"
 CRI_SHA = "d9f541aa6a3a1fce15392d4366da5f97b47683aa55a825909ad8c0a624c7f4f3"
 
 
@@ -117,8 +117,9 @@ def original_nonce_files(operator):
     return pins
 
 
-def prepare(operator, argv=None):
+def prepare(operator, argv=None, capacity=False, collector=False):
     operator.open()
+    need(not (capacity and collector), "choose_one_fixed_native_capacity_transport")
     need(os.geteuid() == 0 and sys.platform == "linux", "original_linux_root_mysql_node_transport_required")
     actual = snapshot(operator)
     need(Path("/etc/machine-id").read_text().strip() == actual["node"]["machine_id"] and Path("/proc/sys/kernel/random/boot_id").read_text().strip() == actual["node"]["boot_id"], "run_complete_caller_on_actual_original_mysql_node_not_a_different_host")
@@ -130,7 +131,11 @@ def prepare(operator, argv=None):
     need(operator.pins["files"].get("scripts/system-backup-workspace-native.py") == NATIVE_SHA and sha(native.read_bytes()) == NATIVE_SHA, "selected_actual_native_identity_helper_required")
     helper = operator.root/"scripts/system-backup-c1-host-mysql-bridge.py"
     need(operator.pins["files"].get("scripts/system-backup-c1-host-mysql-bridge.py") == BRIDGE_HELPER_SHA == sha(helper.read_bytes()), "sealed_actual_mysql_mount_bridge_helper_required")
-    caller = operator.root/"bin/system-backup-first-adoption"
+    caller = operator.root/("bin/system-backup-c1-native-inputs" if capacity or collector else "bin/system-backup-first-adoption-production")
+    if collector:
+        need(isinstance(argv, (list, tuple)) and len(argv) == 6 and str(argv[1]) == "capacity-collect" and str(argv[2]) == "--inputs-file" and str(argv[4]) == "--inputs-sha256", "fixed_capacity_collector_only")
+    if capacity:
+        need(isinstance(argv, (list, tuple)) and len(argv) > 4 and str(argv[1]) == "capacity" and argv.count("--mode") == 1 and str(argv[argv.index("--mode")+1]) in ("issue", "query", "rollback"), "fixed_capacity_owner_subcommand_required")
     need(argv is None or isinstance(argv, (list, tuple)) and argv and str(argv[0]) == str(caller), "one_actual_full_adoption_cli_only_no_arbitrary_command")
     receipt = json.loads((operator.root/"build-receipt.json").read_bytes())
     digest = receipt["binaries"][caller.name]
@@ -141,8 +146,8 @@ def prepare(operator, argv=None):
     suffix = secrets.token_hex(8)
     output = operator.run/("c1-mysql-mount-bridge-"+suffix)
     output.mkdir(mode=0o700)
-    record = {"version": "original-c1-host-mysql-private-mount.v1", "operation": original["operation"], "action": "probe" if argv is None else "invoke-complete", "receipt_directory": str(output), "host_source": HOST_SOURCE, "datadir": DATADIR, "server_uuid": plan["Target"]["ServerUUID"], **actual,
-              "original_nonce_files": original_nonce_files(operator), "cri": {"File": str(cri), "SHA256": CRI_SHA, "Endpoint": "unix://"+str(sockets[0])}, "native_helper": {"File": str(native), "SHA256": NATIVE_SHA}, "caller": {"File": str(caller), "SHA256": digest}, "argv": [] if argv is None else [str(arg) for arg in argv]}
+    record = {"version": "original-c1-host-mysql-private-mount.v1", "operation": original["operation"], "action": "invoke-capacity-collector" if collector else ("invoke-capacity" if capacity else ("probe" if argv is None else "invoke-complete")), "receipt_directory": str(output), "host_source": HOST_SOURCE, "datadir": DATADIR, "server_uuid": plan["Target"]["ServerUUID"], **actual,
+              "original_nonce_files": [] if capacity or collector else original_nonce_files(operator), "cri": {"File": str(cri), "SHA256": CRI_SHA, "Endpoint": "unix://"+str(sockets[0])}, "native_helper": {"File": str(native), "SHA256": NATIVE_SHA}, "caller": {"File": str(caller), "SHA256": digest}, "argv": [] if argv is None else [str(arg) for arg in argv]}
     need(snapshot(operator) == actual, "original_mysql_kubernetes_graph_changed_before_single_caller")
     module = operator.source_helpers()
     plan_file = operator.run/("c1-mysql-mount-bridge-"+suffix+".plan.json")
@@ -169,3 +174,10 @@ def invoke_complete(operator, actual_complete_cli_argv):
     # Preserve the existing original adopt.send-unknown.json custody contract.
     # A repeated unknown adopt still refuses; original query/recovery is next.
     return operator.invoke("adopt", argv)
+
+
+def invoke_capacity(operator, stage, actual_capacity_cli_argv, repeat=False):
+    """Real capacity owner on the same readonly MySQL inode; no C1 nonce use."""
+    need(stage in ("adopt-prepare-capacity", "adopt-query-capacity", "adopt-rollback-capacity"), "fixed_capacity_owner_dispatch_required")
+    argv = prepare(operator, actual_capacity_cli_argv, capacity=True)
+    return operator.invoke(stage, argv, repeat=repeat)

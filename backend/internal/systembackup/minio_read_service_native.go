@@ -277,8 +277,15 @@ func (g *MinIOReadServiceGate) identity(ctx context.Context, initial bool) error
 	if e != nil || string(ns.UID) != g.in.NamespaceUID || ns.DeletionTimestamp != nil {
 		return ErrMinIOReadGate
 	}
-	p, e := g.kube.CoreV1().Pods(g.in.Namespace).Get(ctx, g.in.Pod, metav1.GetOptions{})
-	if e != nil || string(p.UID) != g.in.PodUID || p.DeletionTimestamp != nil {
+	podName, podUID := g.in.Pod, g.in.PodUID
+	if g.coldRecovery != nil {
+		if !g.recovering || !time.Now().Before(g.coldRecovery.until) {
+			return ErrMinIOReadGate
+		}
+		podName, podUID = g.coldRecovery.pod, g.coldRecovery.podUID
+	}
+	p, e := g.kube.CoreV1().Pods(g.in.Namespace).Get(ctx, podName, metav1.GetOptions{})
+	if e != nil || string(p.UID) != podUID || p.DeletionTimestamp != nil {
 		return ErrMinIOReadGate
 	}
 	found := false

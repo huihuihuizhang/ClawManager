@@ -21,7 +21,7 @@ import urllib.parse
 import urllib.request
 
 NATIVE_SHA = "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
-BUSINESS_SHA = "b4b9685e834f09f9cc197e0eed50966f55660da17589e9056d93c034ce2f2109"
+BUSINESS_SHA = "d1b3d1514576a9cf41a724a0acd54f3127938fce7ddb3b566e257c3d85997596"
 PROFILE = "backup.clawreef.io/shared-runtime-source-profile"
 CLAIM = "clawmanager-workspaces"
 ROOT = "/data/clawmanager-zhanghui08/system/workspaces"
@@ -366,6 +366,7 @@ class WorkspaceLocalization:
 
     def app_tls_trust(self, desired, tls_material):
         m, stages = self.m, self.stages
+        stages.preinstall_api_runtime_mount(desired)
         body = m.pinned(tls_material["CA"])
         name = stages.prefix + "-runtime-agent-ca"
         cm = stages.create_object("workspace-app-agent-ca", {"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": name, "namespace": m.NS}, "immutable": True, "data": {"ca.crt": body.decode("ascii")}})

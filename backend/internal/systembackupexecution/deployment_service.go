@@ -39,41 +39,45 @@ import (
 )
 
 type DeploymentService struct {
-	minioReadMu              sync.Mutex
-	minioRead                map[string]*formalMinIOReadWriter
-	redisReadMu              sync.Mutex
-	redisRead                map[string]*formalRedisReadWriter
-	PublisherOwner           string
-	publicationGeneration    uint64
-	executionUnavailable     atomic.Bool
-	ForwardEnabled           bool
-	Config                   DeploymentConfig
-	Runtime                  *PublicCapture
-	RuntimeControl           *c.SQLRuntimeControl
-	Source                   *sql.DB
-	ConfigPath, ConfigDigest string
-	Forward, Recovery        *c.PinnedExecutionIdentity
-	profile                  api.ExecutionProfile
-	profileHash              string
-	tlsConfig                *tls.Config
-	staging                  *os.Root
-	formalVerifier           *FormalVerifierDeploymentConfig
-	captureMaterials         *productionCaptureMaterials
-	captureInput             *ProductionCaptureInput
-	publicationInput         *PublicationSignerInput
-	publicationFactory       *DeploymentPublicationSignerFactory
-	publicationDB            *sql.DB
-	publicationRuntime       PublicationSignerRuntime
-	controllerActor          controllerObservedActor
-	publisherVerifier        *PublisherVerifierMaterials
-	publisherVerifierInput   *PublisherVerifierInput
-	publisherVerifierFactory *a.PublisherVerifierFactory
-	publisherVerifierDB      *sql.DB
-	publicationTarget        *PublicationTargetMaterials
-	publicationTargetInput   *PublicationTargetInput
-	runtimeReadinessInput    *RuntimeReadinessInput
-	runtimeReadinessRecovery *MinIORecoveryProjectionInput
-	runtimeReadiness         atomic.Pointer[sixPartRuntimeReadiness]
+	originalSourceForward     *c.PinnedExecutionIdentity
+	enabledPublicationFiles   *EnabledPublicationStartupFiles
+	originalRelayHandover     atomic.Pointer[originalRelayRuntimeHandoverReceipt]
+	metadataControllerPodName string
+	minioReadMu               sync.Mutex
+	minioRead                 map[string]*formalMinIOReadWriter
+	redisReadMu               sync.Mutex
+	redisRead                 map[string]*formalRedisReadWriter
+	PublisherOwner            string
+	publicationGeneration     uint64
+	executionUnavailable      atomic.Bool
+	ForwardEnabled            bool
+	Config                    DeploymentConfig
+	Runtime                   *PublicCapture
+	RuntimeControl            *c.SQLRuntimeControl
+	Source                    *sql.DB
+	ConfigPath, ConfigDigest  string
+	Forward, Recovery         *c.PinnedExecutionIdentity
+	profile                   api.ExecutionProfile
+	profileHash               string
+	tlsConfig                 *tls.Config
+	staging                   *os.Root
+	formalVerifier            *FormalVerifierDeploymentConfig
+	captureMaterials          *productionCaptureMaterials
+	captureInput              *ProductionCaptureInput
+	publicationInput          *PublicationSignerInput
+	publicationFactory        *DeploymentPublicationSignerFactory
+	publicationDB             *sql.DB
+	publicationRuntime        PublicationSignerRuntime
+	controllerActor           controllerObservedActor
+	publisherVerifier         *PublisherVerifierMaterials
+	publisherVerifierInput    *PublisherVerifierInput
+	publisherVerifierFactory  *a.PublisherVerifierFactory
+	publisherVerifierDB       *sql.DB
+	publicationTarget         *PublicationTargetMaterials
+	publicationTargetInput    *PublicationTargetInput
+	runtimeReadinessInput     *RuntimeReadinessInput
+	runtimeReadinessRecovery  *MinIORecoveryProjectionInput
+	runtimeReadiness          atomic.Pointer[sixPartRuntimeReadiness]
 }
 
 func readPrivate(path string, max int64) ([]byte, error) {
@@ -112,14 +116,14 @@ func NewDeploymentServiceWithInputs(ctx context.Context, db *sql.DB, client kube
 		return nil, e
 	}
 	stage := "grant-binding"
-	s := &DeploymentService{Config: cfg, ConfigPath: path, ConfigDigest: digest, ForwardEnabled: forwardEnabled}
+	s := &DeploymentService{Config: cfg, ConfigPath: path, ConfigDigest: digest, ForwardEnabled: forwardEnabled, metadataControllerPodName: inputs.ControllerPodName}
 	defer func() {
 		if resultErr != nil {
 			resultErr = deploymentFailure{stage, resultErr}
 			s.Close()
 		}
 	}()
-	if e = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest); e != nil {
+	if e = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest, inputs.EnabledPublication); e != nil {
 		return nil, e
 	}
 	stage = "file-bindings"
@@ -451,6 +455,13 @@ func checkDeploymentGrantMode(ctx context.Context, forward bool, recovery, captu
 
 func (s *DeploymentService) checkCaptureControlGrants(ctx context.Context, db *sql.DB) error {
 	g := s.Forward.DeploymentBinding()
+	selected, e := s.checkRuntimeMetadataGrantProfile(ctx, db)
+	if e != nil {
+		return e
+	}
+	if selected {
+		return nil
+	}
 	if s.captureMaterials != nil && s.captureMaterials.ControlEvidence != nil {
 		return (c.SQLControlEvidenceGrantProbe{DB: db, Schema: g.Database, User: strings.Split(g.DatabaseAccount, "@")[0], Runtime: s.Config.RuntimeSources != nil, ProviderPermits: s.formalVerifier != nil && s.formalVerifier.ProviderPermits != nil, Publication: s.Config.PublicationTarget != nil}).Check(ctx)
 	}
@@ -635,6 +646,15 @@ func (s *DeploymentService) Run(ctx context.Context) (resultErr error) {
 				failures <- d.ErrNotReady
 			}
 		}()
+		handover, e := s.verifyOriginalRelayRuntimeHandover(ctx)
+		if e != nil {
+			server.Close()
+			cancel()
+			return d.ErrNotReady
+		}
+		if handover != nil {
+			s.originalRelayHandover.Store(handover)
+		}
 	} else {
 		log.Printf("[system-backup-public] mode=recovery-only")
 	}

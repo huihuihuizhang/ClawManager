@@ -20,7 +20,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		return 2
 	}
 	action := args[0]
-	if action != "capture" && action != "publish" {
+	if action != "capture" && action != "publish" && action != "query" {
 		return 2
 	}
 	f := flag.NewFlagSet(action, flag.ContinueOnError)
@@ -109,7 +109,11 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 			return 1
 		}
 	} else {
-		value, e = execution.PublishOriginalCatalogInitialInventory(active, owner, kube, password, enrollment, *definition, *definitionSHA, *envelope, *envelopeSHA, public, *output)
+		if action == "query" {
+			value, e = execution.QueryOriginalCatalogInitialInventory(active, owner, kube, password, enrollment, *definition, *definitionSHA, *envelope, *envelopeSHA, public, *output)
+		} else {
+			value, e = execution.PublishOriginalCatalogInitialInventory(active, owner, kube, password, enrollment, *definition, *definitionSHA, *envelope, *envelopeSHA, public, *output)
+		}
 	}
 	if json.NewEncoder(out).Encode(value) != nil || errors.Is(e, install.ErrCommitUnknown) {
 		return 4

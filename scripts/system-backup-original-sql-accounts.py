@@ -65,11 +65,11 @@ def main():
     p.add_argument("--prepare-receipt-sha256")
     p.add_argument("--account-host")
     p.add_argument("--allow-wildcard-host", action="store_true")
-    p.add_argument("--runtime-profile", choices=("controller-historical14.v1", "public-runtime-publication-permits-control-evidence.v1", "public-runtime-c1-installer-bootstrap.v1"), default="controller-historical14.v1")
+    p.add_argument("--runtime-profile", choices=("controller-historical14.v1", "public-runtime-publication-permits-control-evidence.v1", "public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1"), default="controller-historical14.v1")
     p.add_argument("--pre-enroll-query-receipt-file")
     p.add_argument("--enrollment-output-directory")
     a = p.parse_args()
-    state_prefix = "original_c1_sql_accounts" if a.runtime_profile == "public-runtime-c1-installer-bootstrap.v1" else "original198_sql_accounts"
+    state_prefix = "original_c1_sql_accounts" if a.runtime_profile in ("public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1") else "original198_sql_accounts"
     # A same-release existing binary; this is NOT a new build target.
     read_file(a.tool_file, a.tool_sha256, 256 << 20, private=False)
     read_file(a.kubeconfig_file, a.kubeconfig_sha256)
@@ -95,7 +95,7 @@ def main():
     else:
         require(a.inventory_sha256)
         inventory = json_file(Path(a.inventory_directory) / "inventory.json", a.inventory_sha256)
-        require(inventory["server_uuid"] == tls["ServerUUID"] and (inventory["ledger_rows"] == 198 if a.runtime_profile != "public-runtime-c1-installer-bootstrap.v1" else isinstance(inventory["ledger_rows"], int) and inventory["ledger_rows"] > 198 and "137_backup_producer_authority.sql" in inventory["ledger"]))
+        require(inventory["server_uuid"] == tls["ServerUUID"] and (inventory["ledger_rows"] == 198 if a.runtime_profile not in ("public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1") else isinstance(inventory["ledger_rows"], int) and inventory["ledger_rows"] > 198 and "137_backup_producer_authority.sql" in inventory["ledger"]))
         args = common + ["--expected-ledger-sha256", inventory["ledger_sha256"],
                          "--output-directory", a.operation_directory]
         if a.action == "prepare":

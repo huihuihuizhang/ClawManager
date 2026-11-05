@@ -112,7 +112,19 @@ class OperatorEntryTests(unittest.TestCase):
         t,password=self.fixture(path)
         self.recorded(t,"tls-apply",{"OperatorSQLTLSVerified":True})
         self.recorded(t,"sql-inspect",{"inventory_sha256":"c"*64})
-        self.recorded(t,"sql-prepare",{"receipt_file":str(t.run/"native-prepare.json"),"receipt_sha256":"d"*64})
+        # Model the retained v4/199 operation-file contract with real private
+        # bytes and hashes. Native SQL/account validation stays in its suite.
+        operation_directory = t.run/"sql-accounts"; operation_directory.mkdir(mode=0o700)
+        operation = operation_directory/"operation.json"
+        m.save(operation,{"Version":"original-c1-minio-metadata-sql-accounts-operation.v4",
+            "Operation":"0123456789abcdef0123456789abcdef",
+            "ServerUUID":"11111111-2222-3333-4444-555555555555","Database":"clawmanager",
+            "LedgerSHA256":"c"*64,"KubeconfigSHA256":m.sha(t.kube)})
+        operation_pin = {"operation_file":str(operation),"operation_sha256":m.sha(operation)}
+        native_prepare = operation_directory/"prepare.native.private.json"
+        m.save(native_prepare,{"state":"original_c1_sql_accounts_prepared_no_sql_mutation",**operation_pin})
+        self.recorded(t,"sql-prepare",{"state":"original_c1_sql_accounts_prepared_no_sql_mutation",
+            "receipt_file":str(native_prepare),"receipt_sha256":m.sha(native_prepare),**operation_pin})
         return t,password
 
     def test_sql_inspect_uses_actual_scope_and_tls_output_hash(self):
@@ -143,17 +155,21 @@ class OperatorEntryTests(unittest.TestCase):
             t.invoke=lambda stage,argv,**kw:calls.append(argv) or ({"state":"enrolled"},t.run/"receipt")
             with patch.object(m,"PASSWORD",password):t.sql("enroll")
             argv=calls[0]
-            self.assertEqual(argv[argv.index("--prepare-receipt-sha256")+1],"d"*64)
+            self.assertEqual(argv[argv.index("--prepare-receipt-sha256")+1],m.sha(t.run/"sql-accounts/prepare.native.private.json"))
+            self.assertEqual(argv[argv.index("--prepare-receipt-file")+1],str(t.run/"sql-accounts/prepare.native.private.json"))
+            self.assertEqual(argv[argv.index("--runtime-profile")+1],"public-runtime-c1-minio-metadata-read.v1")
             self.assertEqual(argv[argv.index("--enrollment-output-directory")+1],t.run/"original-enrollment")
             self.assertEqual(argv[argv.index("--pre-enroll-query-receipt-file")+1],t.run/"enrollment-pre-query.private.json")
             self.assertNotIn("--local-admin-username",argv)
 
     def test_sql_rollback_intent_blocks_later_apply_and_enrollment(self):
         with tempfile.TemporaryDirectory() as temp:
-            t,password=self.sql_fixture(Path(temp));m.save(t.run/"sql-rollback-123.send-unknown.json",{})
+            t,password=self.sql_fixture(Path(temp));m.save(t.run/"sql-rollback-123.send-unknown.json",{});calls=[]
+            t.invoke=lambda *a,**kw:calls.append((a,kw))
             with patch.object(m,"PASSWORD",password):
                 for action in ("apply","enroll"):
                     with self.subTest(action=action),self.assertRaisesRegex(m.Stop,"rollback_started"):t.sql(action)
+            self.assertEqual(calls,[])
 
 
 
@@ -169,16 +185,33 @@ class OperatorDownstreamTests(OperatorEntryTests):
         t.check_final_identity=lambda b:None
         return t,password,binding
 
-    def test_adopt_query_uses_journal_query_never_new_adopt_or_issuer(self):
+    def test_adopt_query_uses_original_disabled_owner_query_never_new_adopt_or_issuer(self):
         with tempfile.TemporaryDirectory() as temp:
             t,_,binding=self.downstream_fixture(Path(temp));calls=[]
             m.save(t.run/"adopt.send-unknown.json",{})
-            t.invoke=lambda stage,argv,**kw:calls.append((stage,argv,kw)) or ({"State":"commit_only"},t.run/"receipt")
+            binary=t.root/"production-entry-fixture";m.create(binary,b"explicit model, not an executable")
+            t.pins["files"]["bin/system-backup-first-adoption-production"]=m.sha(binary)
+            t.deployment_stages=lambda:types.SimpleNamespace(binary=lambda name:binary)
+            source=t.run/"owner-query-input.json";m.save(source,{"fixture":"original typed input locations"})
+            self.recorded(t,"adopt-prepare-inputs",{"Version":"original-first-adoption-input-receipt.v1","DisabledInitializationQuery":{"File":str(source),"SHA256":m.sha(source)}})
+            value={"State":"disabled_v1_committed_exact_readback_dependencies_unverified","CurrentHealth":"unknown","KEKAdmission":"absent","Result":{"version":1,"operation_public_id":"op_original_fixture"}}
+            t.invoke=lambda stage,argv,**kw:calls.append((stage,argv,kw)) or (value,t.run/"receipt")
             result=t.adoption("adopt-query")
-            self.assertEqual(calls[0][1][2],"query-original")
-            self.assertNotIn("adopt",calls[0][1]);self.assertNotIn("-issuer-definition-file",calls[0][1])
+            self.assertEqual(calls[0][1][:3],[binary,"--action","query-disabled-initialization"])
+            self.assertEqual(calls[0][1][calls[0][1].index("--inputs-file")+1],str(source))
+            self.assertEqual(calls[0][1][calls[0][1].index("--inputs-sha256")+1],m.sha(source))
+            self.assertNotIn("run",calls[0][1]);self.assertNotIn("-issuer-definition-file",calls[0][1])
             self.assertTrue(calls[0][2]["repeat"])
             self.assertFalse(result["source_recovery_verified"]);self.assertFalse(result["resubmit_allowed"])
+            self.assertFalse(result["backup_ready"])
+
+    def test_adopt_query_without_original_dispatch_never_creates_or_runs(self):
+        with tempfile.TemporaryDirectory() as temp:
+            t,_,_=self.downstream_fixture(Path(temp));calls=[]
+            t.invoke=lambda *a,**kw:calls.append((a,kw))
+            with self.assertRaisesRegex(m.Stop,"no_original_adoption_dispatch_to_query"):
+                t.adoption("adopt-query")
+            self.assertEqual(calls,[])
 
     def test_adopt_identity_drift_blocks_before_any_native_dispatch(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -192,7 +225,7 @@ class OperatorDownstreamTests(OperatorEntryTests):
         with tempfile.TemporaryDirectory() as temp:
             t,_,_=self.downstream_fixture(Path(temp))
             self.recorded(t,"adopt",{"State":"original_adoption_commit_verified_only_source_recovery_not_claimed","SourceRecoveryVerified":False})
-            with self.assertRaisesRegex(m.Stop,"native_source_recovery"):t.require_adopted()
+            with self.assertRaisesRegex(m.Stop,"actual_same_process_production_adoption_and_source_recovery_required"):t.require_adopted()
 
     def test_composition_calls_actual_enrolled_check_then_same_pinned_apply(self):
         with tempfile.TemporaryDirectory() as temp:

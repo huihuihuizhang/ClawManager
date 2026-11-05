@@ -49,7 +49,7 @@ type OriginalWorkspaceRuntimeReceipt struct {
 
 func (s *authenticatedOperator) readWorkspaceRuntimeSQL(ctx context.Context) ([]domain.SourceInstance, originalSharedRuntimeSQL, error) {
 	var projection originalSharedRuntimeSQL
-	tx, err := s.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, projection, ErrInstall
 	}

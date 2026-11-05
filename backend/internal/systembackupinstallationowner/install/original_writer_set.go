@@ -56,6 +56,7 @@ func (e OriginalWriterSourceFailure) Error() string {
 }
 
 type PreparedOriginalWriterSet struct {
+	minioHistory          *originalMinIOHistoryLifecycle
 	sharedLifecycle       []*originalSharedRuntimeLifecycle
 	sharedRuntimes        []*OriginalSharedRuntimeReservation
 	sharedUnbound         []domain.SourceInstance
@@ -470,6 +471,10 @@ func (s *PreparedOriginalWriterSet) closePrivate() {
 	if s == nil {
 		return
 	}
+	if s.minioHistory != nil && s.minioHistory.gate != nil {
+		s.minioHistory.gate.Close()
+	}
+
 	for _, provider := range s.preAdoptionProviders {
 		provider.close()
 	}

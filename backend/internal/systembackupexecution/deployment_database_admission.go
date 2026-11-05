@@ -19,8 +19,8 @@ func CheckDeploymentDatabaseWithInputs(ctx context.Context, db *sql.DB, path, di
 	if err != nil {
 		return err
 	}
-	s := &DeploymentService{Config: cfg, ConfigPath: path, ConfigDigest: digest, ForwardEnabled: forwardEnabled}
-	if err = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest); err != nil {
+	s := &DeploymentService{Config: cfg, ConfigPath: path, ConfigDigest: digest, ForwardEnabled: forwardEnabled, metadataControllerPodName: inputs.ControllerPodName}
+	if err = s.loadDeploymentIdentities(ctx, db, forwardDigest, recoveryDigest, inputs.EnabledPublication); err != nil {
 		return err
 	}
 	if s.ForwardEnabled {
@@ -46,7 +46,7 @@ func CheckDeploymentDatabaseWithInputs(ctx context.Context, db *sql.DB, path, di
 	return s.checkControlGrants(ctx, db)
 }
 
-func (s *DeploymentService) loadDeploymentIdentities(ctx context.Context, db *sql.DB, forwardDigest, recoveryDigest string) error {
+func (s *DeploymentService) loadDeploymentIdentities(ctx context.Context, db *sql.DB, forwardDigest, recoveryDigest string, selected ...*EnabledPublicationStartupFiles) error {
 	cfg := s.Config
 	var err error
 	s.Recovery, err = deploymentIdentity(cfg.RecoveryGrant, recoveryDigest, cfg.KeyDirectory)
@@ -60,11 +60,29 @@ func (s *DeploymentService) loadDeploymentIdentities(ctx context.Context, db *sq
 	if len(g.Actions) != 1 || g.Actions[0] != "recover" || g.DeploymentConfigSHA256 != s.ConfigDigest || g.InstallationID != cfg.InstallationID || g.ControllerOwner != cfg.ControllerOwner {
 		return c.ErrExecutionAuthority
 	}
-	s.Forward, err = deploymentIdentity(cfg.ForwardGrant, forwardDigest, cfg.KeyDirectory)
+	if len(selected) > 1 {
+		return c.ErrExecutionAuthority
+	}
+	forwardReference := cfg.ForwardGrant
+	if len(selected) == 1 && selected[0] != nil {
+		if !s.ForwardEnabled || selected[0].OriginalForward.File != cfg.ForwardGrant.Path || selected[0].Forward.SHA256 != forwardDigest {
+			return c.ErrExecutionAuthority
+		}
+		forwardReference.Path = selected[0].Forward.File
+	}
+	s.Forward, err = deploymentIdentity(forwardReference, forwardDigest, cfg.KeyDirectory)
 	if err != nil {
+		if len(selected) == 1 && selected[0] != nil {
+			return err
+		}
 		s.Forward = s.Recovery
 		s.ForwardEnabled = false
 		return nil
+	}
+	if len(selected) == 1 && selected[0] != nil {
+		if err = s.bindOriginalEnabledPublicationSources(ctx, db, *selected[0]); err != nil {
+			return err
+		}
 	}
 	if err = s.Forward.CheckDeployment(ctx, db); err != nil || !forwardCaptureActions(s.Forward.DeploymentBinding()) || !s.ForwardEnabled {
 		s.ForwardEnabled = false

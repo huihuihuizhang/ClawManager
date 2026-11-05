@@ -198,7 +198,7 @@ func (r *OriginalWriterRecoveryAuthorization) readAuthority(ctx context.Context)
 		s.application.phase != "acquiring" && s.application.phase != "held" && s.application.phase != "releasing" {
 		return ErrInstall
 	}
-	tx, err := r.operator.installer.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := r.operator.installer.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return ErrInstall
 	}

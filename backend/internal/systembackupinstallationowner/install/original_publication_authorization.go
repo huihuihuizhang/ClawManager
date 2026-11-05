@@ -57,14 +57,29 @@ func (i *Installer) IssueEnabledPublicationAuthorization(ctx context.Context, ru
 	return i.issueOriginalPublicationAuthorization(ctx, runtimeDB, password, enrollment, in, issuerPrivate, enabled)
 }
 func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalPublicationAuthorizationInputs, issuerPrivate []byte, enabled *OriginalEnabledPublication) (OriginalPublicationAuthorizationReceipt, error) {
+	return i.issueOriginalPublicationAuthorizationAtHead(ctx, runtimeDB, password, enrollment, in, issuerPrivate, enabled, false)
+}
+func (i *Installer) issueOriginalPublicationAuthorizationAtHead(ctx context.Context, runtimeDB *sql.DB, password []byte, enrollment EnrollmentPin, in OriginalPublicationAuthorizationInputs, issuerPrivate []byte, enabled *OriginalEnabledPublication, initial bool) (OriginalPublicationAuthorizationReceipt, error) {
 	var zero OriginalPublicationAuthorizationReceipt
 	op, e := i.authenticate(ctx, password)
 	if e != nil || op.authority(ctx, enrollment) != nil || runtimeDB == nil || in.Forward == nil || privateDirectory(in.OutputDirectory) != nil {
 		return zero, ErrInstall
 	}
-	before, now, e := originalAdoptionAuthoritySnapshot(ctx, op)
-	if e != nil || before.cas.State != "active" || before.cas.HeadRevision == 0 || now.Before(before.head.NotBefore) || !now.Before(before.head.Until) {
+	readSnapshot := func() (currentAuthority, time.Time, error) {
+		if initial {
+			return originalRuntimeAuthoritySnapshot(ctx, op, enrollment)
+		}
+		return originalAdoptionAuthoritySnapshot(ctx, op)
+	}
+	before, now, e := readSnapshot()
+	if e != nil || initial && (enabled != nil || before.cas != (HeadCAS{})) || !initial && (before.cas.State != "active" || before.cas.HeadRevision == 0 || now.Before(before.head.NotBefore) || !now.Before(before.head.Until)) {
 		return zero, ErrInstall
+	}
+	window := func(record owner.Record, request *originalRequest, at time.Time) bool {
+		if initial {
+			return originalInitialPublicationRequest(i, op, request, at)
+		}
+		return requestWindow(record, request, at)
 	}
 	expectedVersion := uint64(1)
 	revision := uint64(2)
@@ -76,6 +91,9 @@ func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, r
 		}
 	}
 	binding := func(r owner.Record, request *originalRequest) error {
+		if initial {
+			return originalInitialPublicationBinding(i, op, in.Forward.DeploymentBinding(), r, in.Config, request, now)
+		}
 		if enabled == nil {
 			return originalPublicationBootstrapBinding(i.plan.Target, in.Forward.DeploymentBinding(), r, in.Config, request)
 		}
@@ -100,7 +118,7 @@ func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, r
 		return zero, ErrInstall
 	}
 	defer request.observer.Close()
-	if binding(before.record, request) != nil || !requestWindow(before.record, request, now) {
+	if binding(before.record, request) != nil || !window(before.record, request, now) {
 		return zero, ErrInstall
 	}
 	for _, p := range []BootstrapSourceFilePin{in.DeploymentCore, in.Config} {
@@ -132,7 +150,12 @@ func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, r
 	if e != nil {
 		return zero, e
 	}
-	until := minTime(g.ExpiresAt, minTime(original.Until, minTime(before.head.Until, minTime(before.record.Until, request.end))))
+	until := minTime(g.ExpiresAt, minTime(original.Until, request.end))
+	if initial {
+		until = minTime(until, op.until)
+	} else {
+		until = minTime(until, minTime(before.head.Until, before.record.Until))
+	}
 	if now.Before(g.NotBefore) || now.Before(original.NotBefore) || !now.Before(until) || until.Sub(now) > 24*time.Hour {
 		return zero, ErrInstall
 	}
@@ -255,8 +278,8 @@ func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, r
 		if request.recheck(i) != nil || op.authority(ctx, enrollment) != nil || in.Forward.CheckDeployment(ctx, runtimeDB) != nil {
 			return ErrInstall
 		}
-		current, t, e := originalAdoptionAuthoritySnapshot(ctx, op)
-		if e != nil || current.cas != before.cas || t.Before(floor) || binding(current.record, request) != nil || !requestWindow(current.record, request, t) || !t.Before(until) || !t.Before(probeUntil) || !time.Now().Before(probeUntil) {
+		current, t, e := readSnapshot()
+		if e != nil || current.cas != before.cas || t.Before(floor) || binding(current.record, request) != nil || !window(current.record, request, t) || !t.Before(until) || !t.Before(probeUntil) || !time.Now().Before(probeUntil) {
 			return ErrInstall
 		}
 		actual, e := i.originalPublicationActor(ctx, in.ControllerDeployment, in.ControllerPodName)
@@ -299,8 +322,8 @@ func (i *Installer) issueOriginalPublicationAuthorization(ctx context.Context, r
 		}
 		// Final SQL sample follows every slow actor/file read; its original CAS,
 		// source request and monotonic floor remain mandatory through output.
-		tail, after, e := originalAdoptionAuthoritySnapshot(ctx, op)
-		if e != nil || tail.cas != before.cas || after.Before(t) || after.Before(floor) || binding(tail.record, request) != nil || !requestWindow(tail.record, request, after) || !after.Before(until) || !after.Before(probeUntil) || !time.Now().Before(probeUntil) {
+		tail, after, e := readSnapshot()
+		if e != nil || tail.cas != before.cas || after.Before(t) || after.Before(floor) || binding(tail.record, request) != nil || !window(tail.record, request, after) || !after.Before(until) || !after.Before(probeUntil) || !time.Now().Before(probeUntil) {
 			return ErrInstall
 		}
 		floor = after
@@ -352,6 +375,9 @@ func (i *Installer) ReadEnabledPublicationRuntimeOwnerInputs(ctx context.Context
 	return i.readOriginalPublicationRuntimeOwnerInputs(ctx, password, enrollment, pin, enabled, runtimeDB...)
 }
 func (i *Installer) readOriginalPublicationRuntimeOwnerInputs(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, enabled *OriginalEnabledPublication, runtimeDB ...*sql.DB) (OriginalPublicationRuntimeOwnerInputs, error) {
+	return i.readOriginalPublicationRuntimeOwnerInputsAtHead(ctx, password, enrollment, pin, enabled, nil, runtimeDB...)
+}
+func (i *Installer) readOriginalPublicationRuntimeOwnerInputsAtHead(ctx context.Context, password []byte, enrollment EnrollmentPin, pin BootstrapSourceFilePin, enabled *OriginalEnabledPublication, initialRequest *originalRequest, runtimeDB ...*sql.DB) (OriginalPublicationRuntimeOwnerInputs, error) {
 	var zero OriginalPublicationRuntimeOwnerInputs
 	if len(runtimeDB) != 1 || runtimeDB[0] == nil {
 		return zero, ErrInstall
@@ -360,13 +386,22 @@ func (i *Installer) readOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	if e != nil || op.authority(ctx, enrollment) != nil {
 		return zero, ErrInstall
 	}
-	before, now, e := originalAdoptionAuthoritySnapshot(ctx, op)
-	if e != nil || before.cas.State != "active" || before.record.Target != i.plan.Target || now.Before(before.head.NotBefore) || !now.Before(before.head.Until) {
+	readSnapshot := func() (currentAuthority, time.Time, error) {
+		if initialRequest != nil {
+			return originalRuntimeAuthoritySnapshot(ctx, op, enrollment)
+		}
+		return originalAdoptionAuthoritySnapshot(ctx, op)
+	}
+	before, now, e := readSnapshot()
+	if e != nil || initialRequest != nil && (enabled != nil || before.cas != (HeadCAS{}) || !originalInitialPublicationRequest(i, op, initialRequest, now) || initialRequest.recheck(i) != nil) || initialRequest == nil && (before.cas.State != "active" || before.record.Target != i.plan.Target || now.Before(before.head.NotBefore) || !now.Before(before.head.Until)) {
 		return zero, ErrInstall
 	}
 	expectedVersion := uint64(1)
 	expectedRevision := uint64(2)
 	expectedSHA := before.record.ConfigSHA256
+	if initialRequest != nil {
+		expectedSHA = initialRequest.config.SHA256()
+	}
 	if enabled != nil {
 		if enabled.operator.userID != op.userID || before.cas != enabled.initial || enabled.Recheck(ctx) != nil {
 			return zero, ErrInstall
@@ -410,7 +445,7 @@ func (i *Installer) readOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	if op.authority(ctx, enrollment) != nil {
 		return zero, ErrInstall
 	}
-	again, tail, e := originalAdoptionAuthoritySnapshot(ctx, op)
+	again, tail, e := readSnapshot()
 	if e != nil || again.cas != before.cas || tail.Before(now) || !tail.Before(record.Until) || !tail.Before(grant.Until) {
 		return zero, ErrInstall
 	}
@@ -437,8 +472,11 @@ func (i *Installer) readOriginalPublicationRuntimeOwnerInputs(ctx context.Contex
 	if op.authority(ctx, enrollment) != nil || !op.live(ctx) {
 		return zero, ErrInstall
 	}
-	final, finished, e := originalAdoptionAuthoritySnapshot(ctx, op)
-	if e != nil || final.cas != before.cas || finished.Before(tail) || finished.Before(now) || finished.Before(final.head.NotBefore) || !finished.Before(final.head.Until) || finished.Before(final.record.NotBefore) || !finished.Before(final.record.Until) || finished.Before(record.NotBefore) || !finished.Before(record.Until) || finished.Before(grant.NotBefore) || !finished.Before(grant.Until) || ctx.Err() != nil || !op.live(ctx) {
+	if initialRequest != nil && initialRequest.recheck(i) != nil {
+		return zero, ErrInstall
+	}
+	final, finished, e := readSnapshot()
+	if e != nil || final.cas != before.cas || finished.Before(tail) || finished.Before(now) || initialRequest == nil && (finished.Before(final.head.NotBefore) || !finished.Before(final.head.Until) || finished.Before(final.record.NotBefore) || !finished.Before(final.record.Until)) || initialRequest != nil && !originalInitialPublicationRequest(i, op, initialRequest, finished) || finished.Before(record.NotBefore) || !finished.Before(record.Until) || finished.Before(grant.NotBefore) || !finished.Before(grant.Until) || ctx.Err() != nil || !op.live(ctx) {
 		return zero, ErrInstall
 	}
 	return in, nil

@@ -77,6 +77,9 @@ func (s *PreparedOriginalWriterSet) Acquire(ctx context.Context) (*OriginalWrite
 	}
 	// Journal and permission/recovery preflight for every actor finished above.
 	// Application admission is already closed before the first source mutation.
+	if s.minioHistory != nil && s.minioHistory.acquireOriginalHistory(ctx) != nil {
+		return nil, ErrInstall
+	}
 	for _, w := range s.deployments {
 		if w.stop(ctx) != nil {
 			return nil, ErrInstall

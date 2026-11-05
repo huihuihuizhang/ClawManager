@@ -72,6 +72,29 @@ def shared_agent_inputs(path, expected_sha256):
                     "bundle_sha256": bundle["sha256"]}
 
 
+
+NATIVE_TOOL_PINS = {
+    "mc": ("01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891", 30535864),
+    "crictl": ("d9f541aa6a3a1fce15392d4366da5f97b47683aa55a825909ad8c0a624c7f4f3", 38693345),
+}
+
+
+def native_tool_input(name, path, expected_sha256):
+    pin, size = NATIVE_TOOL_PINS[name]
+    if expected_sha256 != pin:
+        raise RuntimeError("reviewed native-tool digest required: " + name)
+    if path.is_symlink() or not path.is_file():
+        raise RuntimeError("regular original native-tool input required: " + name)
+    path = path.resolve(strict=True)
+    if path.stat().st_size != size or digest(path) != pin:
+        raise RuntimeError("original native-tool bytes changed: " + name)
+    with path.open("rb") as src:
+        header = src.read(20)
+    if header[:6] != b"\x7fELF\x02\x01" or header[18:20] != b"\x3e\x00":
+        raise RuntimeError("native tool is not Linux amd64 ELF: " + name)
+    return {"path": path, "sha256": pin, "bytes": size}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", required=True, type=Path)
@@ -87,7 +110,12 @@ def main():
     p.add_argument("--extra-tool", action="append", default=[])
     p.add_argument("--shared-agent-input", type=Path)
     p.add_argument("--shared-agent-input-sha256")
+    for name in NATIVE_TOOL_PINS:
+        p.add_argument("--" + name, required=True, type=Path)
+        p.add_argument("--" + name + "-sha256", required=True)
     args = p.parse_args()
+    native_inputs = {name: native_tool_input(name, getattr(args, name),
+                     getattr(args, name + "_sha256")) for name in NATIVE_TOOL_PINS}
     if (args.shared_agent_input is None) != (args.shared_agent_input_sha256 is None):
         raise RuntimeError("shared-agent input and exact digest must be supplied together")
     agents, agent_provenance = ({}, None)
@@ -156,7 +184,11 @@ def main():
     for command in tools.values():
         if not (source / "backend" / "cmd" / command).is_dir():
             raise RuntimeError("missing reviewed tool: " + command)
+    if set(tools) & (set(NATIVE_TOOL_PINS) | {"openclaw-lite-agent", "hermes-lite-agent"}):
+        raise RuntimeError("external ELF alias collides with backend tool")
     receipt["tools"] = tools
+    receipt["native_tool_inputs"] = {name: {"sha256": pin["sha256"], "bytes": pin["bytes"]}
+                                     for name, pin in native_inputs.items()}
     # Pin every backend build input, including embedded migrations and templates.
     inputs = {}
     for path in sorted((source / "backend").rglob("*")):
@@ -227,6 +259,27 @@ def main():
                 raise RuntimeError("copied shared-agent ELF differs from original production input")
             receipt["binaries"][alias] = agent["sha256"]
             receipt["shared_agent_binaries"][runtime] = alias
+    # Retain exact executable bytes for both the image and final offline delivery.
+    external = {agent["alias"]: agent for agent in agents.values()}
+    external.update(native_inputs)
+    delivery_tools = out / "tools"
+    delivery_tools.mkdir()
+    receipt["delivery_tools"] = {}
+    for alias, pin in sorted(external.items()):
+        binary = bins / alias
+        if alias in native_inputs:
+            shutil.copyfile(pin["path"], binary)
+        shutil.copyfile(binary, delivery_tools / alias)
+        for copied in (binary, delivery_tools / alias):
+            if copied.stat().st_size != pin["bytes"] or digest(copied) != pin["sha256"]:
+                raise RuntimeError("copied production ELF differs: " + alias)
+            with copied.open("rb") as src:
+                header = src.read(20)
+            if header[:6] != b"\x7fELF\x02\x01" or header[18:20] != b"\x3e\x00":
+                raise RuntimeError("copied production ELF platform differs: " + alias)
+            copied.chmod(0o755)
+        receipt["binaries"][alias] = pin["sha256"]
+        receipt["delivery_tools"]["tools/" + alias] = {"sha256": pin["sha256"], "bytes": pin["bytes"]}
     app_tag = "clawmanager-page-trial:" + args.version
     worker_tag = "clawmanager-backup-worker:" + args.version
     layer = out / "app-overlay.tar"
@@ -239,6 +292,8 @@ def main():
                 return info
             tf.add(path, arcname=name, filter=metadata)
         for alias in tools:
+            add(bins / alias, "usr/local/bin/" + alias, True)
+        for alias in sorted(external):
             add(bins / alias, "usr/local/bin/" + alias, True)
         add(bins / "clawmanager-secret-broker", "usr/local/bin/clawreef-secret-broker", True)
         add(web / "frontend/dist", "usr/share/nginx/html")
@@ -262,6 +317,15 @@ def main():
                 raise RuntimeError("runtime COPY path outside reviewed source")
             add(original, dst.lstrip("/"), original.suffix == ".sh")
             receipt["runtime_files"][src] = {"target": dst, "sha256": digest(original)}
+    with tarfile.open(layer, "r") as tf:
+        receipt["external_overlay_files"] = {}
+        for alias, pin in sorted(external.items()):
+            member = tf.getmember("usr/local/bin/" + alias)
+            if not member.isfile() or member.mode != 0o755 or member.size != pin["bytes"]:
+                raise RuntimeError("external ELF overlay metadata changed: " + alias)
+            if hashlib.sha256(tf.extractfile(member).read()).hexdigest() != pin["sha256"]:
+                raise RuntimeError("external ELF overlay bytes changed: " + alias)
+            receipt["external_overlay_files"][member.name] = pin["sha256"]
     cid = capture(["create", "--network", "none", "--label", label, "--entrypoint", "/bin/sh", BASE,
                    "-ec", "rm -rf -- /usr/share/nginx/html; mkdir -p /usr/share/nginx/html"])
     try:

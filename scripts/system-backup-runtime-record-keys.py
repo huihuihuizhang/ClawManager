@@ -3,7 +3,7 @@ import hashlib
 import importlib.util
 from pathlib import Path
 
-DEPLOYMENT_SHA = "5087d2607147ee01626bc6195e206b7ea051f548d559cb14124dfddfa9ea3c96"
+DEPLOYMENT_SHA = "7c55efc86b43496eaafb1ae1112905ccd2b6788264f9c1bcdca8e8e6f121cea4"
 
 
 def prepare(operator):

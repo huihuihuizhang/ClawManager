@@ -47,10 +47,10 @@ func (p *PreparedOriginalAdoptionSQLCut) AttachOriginalRuntimeInstalledSQLMetada
 	if p.origin != p || p.used || p.runtimeMetadata != nil || !consumerSameContext(ctx, p.ctx) || !p.operator.live(ctx) || p.operator.authority(ctx, p.enrollment) != nil {
 		return ErrInstall
 	}
-	raw, e := readBootstrapSourcePin(pin, 262144)
+	raw, e := readBootstrapSourcePin(pin, originalRuntimeMetadataLimit)
 	var signed signedOriginalRuntimeSQLMetadataReceipt
 	var receipt originalRuntimeSQLMetadataReceipt
-	if e != nil || decodeExact(raw, &signed) != nil || decodeExact(signed.Record, &receipt) != nil || receipt.Version != "original-runtime-installed-sql-metadata.v1" || receipt.PlanSHA256 != p.operator.installer.planHash || receipt.Target != p.operator.installer.plan.Target || receipt.Enrollment != p.enrollment {
+	if e != nil || decodeOriginalRuntimeMetadata(raw, &signed) != nil || decodeOriginalRuntimeMetadata(signed.Record, &receipt) != nil || receipt.Version != "original-runtime-installed-sql-metadata.v1" || receipt.PlanSHA256 != p.operator.installer.planHash || receipt.Target != p.operator.installer.plan.Target || receipt.Enrollment != p.enrollment {
 		return ErrInstall
 	}
 	material, e := p.operator.installer.readOriginalRuntimeIssuerMaterial(receipt.Issuers, p.enrollment)
@@ -63,7 +63,14 @@ func (p *PreparedOriginalAdoptionSQLCut) AttachOriginalRuntimeInstalledSQLMetada
 	}
 	snapshot := receipt.Snapshot
 	facts := p.observed.Facts()
-	if snapshot.Database != facts.Database || snapshot.InstallationID != facts.InstallationID || snapshot.FenceBefore == ^uint64(0) || snapshot.FenceAfter != snapshot.FenceBefore+1 || len(snapshot.Rows) != 3 || snapshot.Evidence.Rows != 3 || snapshot.Chunks.Rows != 0 || snapshot.Chunks.Bytes != 0 || snapshot.ObservedAt.IsZero() || snapshot.ObservedAt.After(facts.ObservedAt) || receipt.Until.IsZero() {
+	if snapshot.Database != facts.Database || snapshot.InstallationID != facts.InstallationID || snapshot.FenceBefore == ^uint64(0) || snapshot.FenceAfter != snapshot.FenceBefore+1 || len(snapshot.Rows) != 3 || snapshot.ObservedAt.IsZero() || snapshot.ObservedAt.After(facts.ObservedAt) || receipt.Until.IsZero() {
+		return ErrInstall
+	}
+	if snapshot.C1 == nil {
+		if snapshot.Evidence.Rows != 3 || snapshot.Chunks.Rows != 0 || snapshot.Chunks.Bytes != 0 {
+			return ErrInstall
+		}
+	} else if snapshot.C1.Database != facts.Database || snapshot.C1.InstallationID != facts.InstallationID || len(snapshot.C1.Sources) == 0 || len(snapshot.C1.Sources) > 20 || len(snapshot.C1.Tables) != 8 || snapshot.Evidence.Rows != uint64(3+len(snapshot.C1.EvidenceRows)) || snapshot.Chunks.Rows != uint64(len(snapshot.C1.ChunkRows)) {
 		return ErrInstall
 	}
 	var mapping a.OriginalRecord
@@ -121,7 +128,34 @@ func (r *originalRuntimeInstalledSQLMetadata) classifiesTables(f a.SQLCoverageCe
 	copy := f
 	copy.Tables = append([]a.SQLCoverageTable(nil), f.Tables...)
 	found := 0
+	c1Tables := map[string]a.SQLCoverageTable{}
+	if r.receipt.Snapshot.C1 != nil {
+		allowed := map[string]bool{}
+		for _, suffix := range []string{"domains", "grants", "runs", "evidence_bindings", "targets", "result_receipts", "command_receipts", "evidence_refs"} {
+			allowed["system_backup_producer_"+suffix] = true
+		}
+		for _, table := range r.receipt.Snapshot.C1.Tables {
+			if !allowed[table.Table] {
+				return false
+			}
+			if _, duplicate := c1Tables[table.Table]; duplicate {
+				return false
+			}
+			c1Tables[table.Table] = table
+		}
+		if len(c1Tables) != 8 {
+			return false
+		}
+	}
 	for n, table := range copy.Tables {
+		if expected, ok := c1Tables[table.Table]; ok {
+			if table != expected {
+				return false
+			}
+			copy.Tables[n].Rows, copy.Tables[n].Bytes = 0, 0
+			delete(c1Tables, table.Table)
+			continue
+		}
 		switch table.Table {
 		case "system_backup_v2_evidence":
 			if table != r.receipt.Snapshot.Evidence {
@@ -133,10 +167,11 @@ func (r *originalRuntimeInstalledSQLMetadata) classifiesTables(f a.SQLCoverageCe
 			if table != r.receipt.Snapshot.Chunks {
 				return false
 			}
+			copy.Tables[n].Rows, copy.Tables[n].Bytes = 0, 0
 			found++
 		}
 	}
-	return found == 2 && originalHistorySingletonOnly(copy)
+	return found == 2 && len(c1Tables) == 0 && originalHistorySingletonOnly(copy)
 }
 
 // Before SQL: reauthenticate selected bytes/issuer source, then actual full
@@ -152,7 +187,7 @@ func (r *originalRuntimeInstalledSQLMetadata) recheck(ctx context.Context, locke
 		if p.operator.authority(ctx, p.enrollment) != nil {
 			return ErrInstall
 		}
-		raw, e := readBootstrapSourcePin(r.pin, 262144)
+		raw, e := readBootstrapSourcePin(r.pin, originalRuntimeMetadataLimit)
 		if e != nil || !bytes.Equal(raw, r.raw) {
 			return ErrInstall
 		}
@@ -163,14 +198,20 @@ func (r *originalRuntimeInstalledSQLMetadata) recheck(ctx context.Context, locke
 	tx := lockedTx
 	if tx == nil {
 		var e error
-		tx, e = i.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+		tx, e = i.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: r.receipt.Snapshot.C1 == nil, Isolation: sql.LevelRepeatableRead})
 		if e != nil {
 			return ErrInstall
 		}
 		defer tx.Rollback()
 	}
 	want := r.receipt.Snapshot
-	actual, e := a.ReadRuntimeInstalledSQLSnapshotTx(ctx, tx, want.Database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, lockedTx != nil, controls...)
+	var actual a.RuntimeInstalledSQLSnapshot
+	var e error
+	if want.C1 == nil {
+		actual, e = a.ReadRuntimeInstalledSQLSnapshotTx(ctx, tx, want.Database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, lockedTx != nil, controls...)
+	} else {
+		actual, e = a.ReadMixedRuntimeInstalledSQLSnapshotTx(ctx, tx, want.Database, want.InstallationID, want.MappingRecord, want.MappingSignature, want.Capabilities, lockedTx != nil, want.C1, controls...)
+	}
 	epoch := want.FenceAfter
 	if lockedTx != nil {
 		epoch = expectedEpoch

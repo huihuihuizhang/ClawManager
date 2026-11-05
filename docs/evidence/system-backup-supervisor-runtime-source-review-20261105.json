@@ -1,0 +1,53 @@
+{
+  "schema_version": "supervisor-reviewed-runtime-source-candidate.v1",
+  "parent_commit": "7ad490f8ffcdfbcc42196adf30cf61232de634b8",
+  "code_targets": 172,
+  "linux_regressions": {
+    "r7": {
+      "report_sha256": "b6840313a4938e95c419e6462cbe3327e3a8f30bcf816d4fb8b391f3d272bb22",
+      "log_sha256": "1053c18d9bbec2f3c00e09940386a1e2690a27da2beaa8bdd7f3226b3a911f4b",
+      "roots": 23,
+      "subs": 55,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    },
+    "r8": {
+      "report_sha256": "09d0ee9824bc361ca6b0a0ad1717b806260175cdda584235a768e2c2239686b6",
+      "log_sha256": "4b7e03173b815d193c7619bb430af681f634f326e3b05006cb0f77094dbcc1a3",
+      "roots": 24,
+      "subs": 67,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    },
+    "r9": {
+      "report_sha256": "e7b5e489eae6e9bc01b8eabcfd6a531b2dc214947a466004fa83e231a4e9f599",
+      "log_sha256": "78698a08027c65ded166cf0e21689ff9743e129e9c1110b9d627eb767ee783f3",
+      "roots": 24,
+      "subs": 67,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    },
+    "r10": {
+      "report_sha256": "be790bd37fead5d4fdf0dfcfcaa0ac8ca8c37d0c83d6eae5cb748400a35a55bd",
+      "log_sha256": "2918409efe71b0933f46af4d30d2e3256ea3eadf30ceacecbba71670ef87be6e",
+      "roots": 25,
+      "subs": 82,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    }
+  },
+  "python_operator_models": {
+    "report_sha256": "5ca973ea9030df61de8a853cf839333c5654e8eb25f4ef06ef2fa09cf73f929e",
+    "tests": 19,
+    "exit": 0
+  },
+  "actual_native_s3_helper_receipt_sha256": "5d9add8006dff37a1a16ecee050daa6f07779613e1a99b2924666ec8df7b56ae",
+  "selection_snapshot_sha256": "bfe35be2c41fa8aa5c3ab261ea70817e9e68590b237b60a2a675da18dd8ddc9d",
+  "working_tree_existing_files_overwritten": false,
+  "test_build_products": "temporary test ELF and owned fixture containers/networks/volumes removed; production inputs retained",
+  "remaining": [
+    "Complete initial source/material/control/worker owner integration is still in progress.",
+    "Real nonrunning lite native inventory producer and consumer, new same-version shared agents remain required.",
+    "Final normal runtime activation and independent full page backup/publication/readback acceptance remain unproven.",
+    "Native S3 ACL qualification is still running independently."
+  ],
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

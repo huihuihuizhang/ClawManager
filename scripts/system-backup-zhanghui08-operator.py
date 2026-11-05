@@ -46,13 +46,13 @@ COPY_QUALIFIER = "scripts/system-backup-upgrade199-copy-qualification.py"
 COPY_QUALIFIER_SHA = "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308"
 
 SQL = "scripts/system-backup-original-sql-accounts.py"
-DEPLOYMENT_MODULE_SHA = "5087d2607147ee01626bc6195e206b7ea051f548d559cb14124dfddfa9ea3c96"
-BUSINESS_RUNTIME_SHA = "b4b9685e834f09f9cc197e0eed50966f55660da17589e9056d93c034ce2f2109"
-RECORD_EXPORT_SHA = "d5c23ff23b4d867356e265946197241b3a504a9df206a6ebf8d404d0c5167cf9"
-INITIAL_RUNTIME_SHA = "2798d27771ba9695b5e0816e37af1dd98ac6f7f6bdbb8c7ee866d4faa65800f3"
-RUNTIME_ISSUER_SHA = "a91b56bd6ed3ec83c0926f9a8adea5b4bc8c20ab6552b18e35c3143588143803"
-OWNER_ASSEMBLY_SHA = "9cac39b1a14aa8bd367de4700825523993af0e6157760bab9772eb68b039d369"
-WORKSPACE_SHA = "a788b3a2d39412d731f1245b6a6008a27513dd150c7557edd325a41408e11758"
+DEPLOYMENT_MODULE_SHA = "7c55efc86b43496eaafb1ae1112905ccd2b6788264f9c1bcdca8e8e6f121cea4"
+BUSINESS_RUNTIME_SHA = "d1b3d1514576a9cf41a724a0acd54f3127938fce7ddb3b566e257c3d85997596"
+RECORD_EXPORT_SHA = "0cb16133ca0f176706b8ac917447fc2b7d413ff9d00f7f05169c0955c813ae7a"
+INITIAL_RUNTIME_SHA = "b5b1e9b19b06d61801e011471a3d46bbd8eee6e22764079fbb9b1320bfc7a580"
+RUNTIME_ISSUER_SHA = "c702d106cf476a3e4dbd9e81515d7f3294b6316c71256df66fc4300dc0ea9f47"
+OWNER_ASSEMBLY_SHA = "e1bd9437d12efd43d2d97579fe4d7e7c13577777bc107a044a0dd42dbaa81585"
+WORKSPACE_SHA = "3876f68222254735713f4179c4792eebf3cb77c030d2e3c933a3fe6de0750a93"
 EARLY_PREFLIGHT_SHA = "39a51caba7b646b1f4bf1ccd9ba643099bf91abb2eb0a6a251dc342cbdfaf8e1"
 WORKSPACE_ACTIONS = ("workspace-source-preflight", "workspace-source-preflight-cleanup", "workspace-localization-probe", "workspace-localize", "workspace-query", "workspace-abort-probe", "workspace-restore-nfs")
 DB_ACTIONS = ("prepare", "backup", "apply", "query", "recover", "recover-controller",
@@ -122,7 +122,7 @@ def capture(argv, limit=4 << 20):
 
 
 REQUIRED_BUILT_BINARIES = (
-    "system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-source-registries", "system-backup-bootstrap-enrolled",
+    "system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-first-adoption-production", "system-backup-original-archive-reader", "system-backup-source-registries", "system-backup-bootstrap-enrolled",
     "system-backup-first-install-materials", "system-backup-original-observer-pki", "system-backup-observer-deployment-materials",
     "backup-node-observer", "backup-gateway-node-observer", "backup-stopped-pro-node-observer",
 )
@@ -155,9 +155,17 @@ def seal_release(a):
              "build-receipt.json", COPY_NAME, PROOF_NAME, "scripts/system-backup-d-enable.py",
              "scripts/system-backup-d-enable-readback.py", "scripts/system-backup-d-enable-resolve.py", "scripts/system-backup-operator-deployment.py"]
     names += ["scripts/system-backup-publication-owner-assembly.py", "scripts/system-backup-runtime-issuers.py", "scripts/system-backup-runtime-record-keys.py", "scripts/system-backup-initial-runtime.py", "scripts/system-backup-business-runtime.py", "scripts/system-backup-workspace-localization.py", "scripts/system-backup-workspace-native.py", "scripts/system-backup-workspace-source-preflight.py", "scripts/system-backup-agent-runtime-layer/agent_runtime_layer.py", "scripts/system-backup-runtime-startup-inputs.py", "agent-prebuilt-shared-native-236d56d85fea-linux-amd64.tar.gz"]
-    names += ["scripts/system-backup-operator-nonce.py", "scripts/system-backup-operator-c1-mysql-bridge.py", "scripts/system-backup-c1-host-mysql-bridge.py"]
+    names += ["scripts/system-backup-operator-nonce.py", "scripts/system-backup-operator-c1-mysql-bridge.py", "scripts/system-backup-c1-host-mysql-bridge.py", "scripts/system-backup-operator-first-adoption-production.py"]
+    names += ["scripts/system-backup-operator-adoption-locations.py", "tools/mc"]
+    names += ["scripts/system-backup-operator-minio-recovery.py"]
+    names += ["scripts/system-backup-initial-input-assembly.py"]
+    names += ["scripts/system-backup-initial-source-data.py", "scripts/system-backup-initial-redis-sources.py"]
+    names += ["scripts/system-backup-operator-c1-inputs.py", "scripts/system-backup-original-c1-pending-input.py", "scripts/system-backup-operator-c1-native.py", "scripts/system-backup-operator-c1-authors.py", "scripts/system-backup-operator-relay-bootstrap.py", "scripts/system-backup-operator-live-capacity.py", "scripts/system-backup-capacity-report-transport.py"]
+    names += ["scripts/system-backup-operator-minio-consent.py", "scripts/system-backup-operator-enabled-publication.py"]
+    names += ["scripts/system-backup-operator-archive-inputs.py", "scripts/system-backup-minio-hostpath-cold-source.py"]
     for name in names:
         files[name] = sha(regular(root / name))
+    require(files["tools/mc"] == adoption_locations_module().MC_SHA, "exact_original_mc_release_required")
     require(files[NATIVE] == NATIVE_SHA and files[COPY_QUALIFIER] == COPY_QUALIFIER_SHA and files[COPY_NAME] == COPY_SHA and files[PROOF_NAME] == PROOF_ARCHIVE_SHA,
             "reviewed_native_or_archives_changed")
     # Extract one exact ELF, never tar paths/links or an archive-provided script.
@@ -174,7 +182,7 @@ def seal_release(a):
         os.chmod(proof, 0o700)
     files["bin/system-backup-legacy-upgrade177-proof"] = PROOF_SHA
     require(all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,100}", name) for name in receipt["binaries"]), "finite_actual_release_binary_roster_required")
-    require({"system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-source-registries", "system-backup-bootstrap-enrolled", "system-backup-original-nonce-material"} <= set(receipt["binaries"]), "final_installation_binary_roster_incomplete")
+    require({"system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-first-adoption-production", "system-backup-original-archive-reader", "system-backup-source-registries", "system-backup-bootstrap-enrolled", "system-backup-original-nonce-material", "system-backup-c1-native-inputs", "system-backup-c1-s3-materials", "system-backup-minio-catalog-initial", "system-backup-enabled-provider-materials"} <= set(receipt["binaries"]), "final_installation_binary_roster_incomplete")
     for name in sorted(receipt["binaries"]):
         binary = regular(root / "bin" / name)
         require(sha(binary) == receipt["binaries"][name], "built_binary_pin_changed")
@@ -315,6 +323,21 @@ class Operator:
     def source_helpers(self):
         return types_namespace(load=load, require=require, NS=NS, sync_dir=sync_dir)
 
+    def adoption_locations_module(self):
+        return adoption_locations_module()
+
+    def minio_recovery_module(self):
+        return minio_recovery_module()
+
+    def c1_authors_module(self):
+        return c1_authors_module()
+
+    def c1_inputs_module(self):
+        return c1_inputs_module()
+
+    def archive_inputs_module(self):
+        return archive_inputs_module()
+
     def deployment_stages(self):
         return deployment_module().DeploymentStages(self)
 
@@ -365,6 +388,14 @@ class Operator:
 
     def sql(self, action):
         scope = self.upgraded_released()
+        runtime_profile = "public-runtime-c1-minio-metadata-read.v1"
+        if action not in ("inspect", "prepare"):
+            original_prepare = load(Path(self.completed("sql-prepare")["stdout"]))
+            original_operation = load(self.pin_value({"File":original_prepare["operation_file"],"SHA256":original_prepare["operation_sha256"]}))
+            profiles = {"original198-sql-accounts-operation.v1":"controller-historical14.v1", "original198-sql-accounts-operation.v2":"public-runtime-publication-permits-control-evidence.v1", "original-c1-sql-accounts-operation.v3":"public-runtime-c1-installer-bootstrap.v1", "original-c1-minio-metadata-sql-accounts-operation.v4":"public-runtime-c1-minio-metadata-read.v1"}
+            require(original_operation["Version"] in profiles,"retained_original_sql_operation_version_required")
+            runtime_profile = profiles[original_operation["Version"]]
+            require(original_prepare.get("runtime_profile",runtime_profile)==runtime_profile,"retained_sql_profile_mismatch")
         if action in ("apply", "enroll"):
             require(not list(self.run.glob("sql-rollback*.send-unknown.json")), "sql_rollback_started_query_original_only")
         regular(PASSWORD, private=True)
@@ -376,7 +407,7 @@ class Operator:
                   "--kubeconfig-file", self.kube, "--kubeconfig-sha256", sha(self.kube),
                   "--namespace", NS, "--namespace-uid", NS_UID, "--cluster-uid", scope["cluster_uid"],
                   "--inventory-directory", self.run / "sql-inventory", "--operation-directory", self.run / "sql-accounts",
-                  "--runtime-profile", "public-runtime-publication-permits-control-evidence.v1"]
+                  "--runtime-profile", runtime_profile]
         stem = "sql-" + action + ("-" + secrets.token_hex(8) if action in ("query", "rollback") else "")
         common += ["--receipt-file", self.run / (stem + ".native.private.json")]
         if action != "inspect":
@@ -436,7 +467,7 @@ class Operator:
         self.open()
         produced = self.enrollment()
         accounts = load(self.run / "sql-accounts/sql-accounts-materials.public.json")
-        require(accounts["version"] == "original198-sql-account-materials.v1", "native_sql_account_materials_required")
+        require((accounts["version"],accounts.get("runtime_profile")) in (("original198-sql-account-materials.v1","public-runtime-publication-permits-control-evidence.v1"),("original-c1-sql-account-materials.v3","public-runtime-c1-minio-metadata-read.v1")), "native_sql_account_materials_required")
         dsn = self.pin_value(accounts["files"]["mysql-installer.dsn"])
         tls = accounts["source_tls"]
         ca = regular(Path(tls["ca_file"]), private=True)
@@ -455,9 +486,9 @@ class Operator:
         prepared = load(Path(self.completed("sql-prepare")["stdout"]))
         operation = load(self.pin_value({"File": prepared["operation_file"], "SHA256": prepared["operation_sha256"]}))
         materials = load(self.run / "sql-accounts/sql-accounts-materials.public.json")
-        require(operation["Version"] == "original198-sql-accounts-operation.v2" and
-                materials["version"] == "original198-sql-account-materials.v1" and
-                materials.get("runtime_profile") == "public-runtime-publication-permits-control-evidence.v1" and
+        profiles = {"original198-sql-accounts-operation.v2":("original198-sql-account-materials.v1","public-runtime-publication-permits-control-evidence.v1"),"original-c1-minio-metadata-sql-accounts-operation.v4":("original-c1-sql-account-materials.v3","public-runtime-c1-minio-metadata-read.v1")}
+        require(operation["Version"] in profiles and
+                (materials["version"],materials.get("runtime_profile")) == profiles[operation["Version"]] and
                 operation["ServerUUID"] == materials["server_uuid"] == plan["Target"]["ServerUUID"] and
                 operation["Database"] == materials["database"] == plan["Target"]["Database"],
                 "actual_original_public_runtime_sql_profile_required")
@@ -517,6 +548,10 @@ class Operator:
             self.pin_value(host[name])
         source_file = getattr(self.a, "writer_source_config_file", None)
         source_sha = getattr(self.a, "writer_source_config_sha256", None)
+        if source_file is None and getattr(self.a, "deployment_source_selection_file", None) is None:
+            initial_runtime_module().prepare_writer_source_arguments(self)
+            source_file = self.a.writer_source_config_file
+            source_sha = self.a.writer_source_config_sha256
         if source_file is None:
             selected_file = getattr(self.a, "deployment_source_selection_file", None)
             selected_sha = getattr(self.a, "deployment_source_selection_sha256", None)
@@ -610,7 +645,10 @@ class Operator:
         if post_adoption:
             self.require_adopted()
             original = load(self.run / "final-rollout-binding.json")
-        delivered_path = self.a.delivery_receipt_file or self.run / "deployment/materials.result.json"
+        successor = self.run / "deployment/materials.source-api-successor.result.json"
+        if self.a.delivery_receipt_file is None and (self.run / "deployment/initial-source-api-inputs.result.json").exists() and not successor.exists():
+            initial_runtime_module().prepare_source_api_successor_arguments(self)
+        delivered_path = self.a.delivery_receipt_file or (successor if successor.exists() else self.run / "deployment/materials.result.json")
         require(delivered_path.is_file(), "actual_final_Dmain_delivery_receipt_missing_input")
         receipt_file = regular(delivered_path, private=True)
         delivered = load(receipt_file)
@@ -666,6 +704,9 @@ class Operator:
         require(self.with_original_kube(lambda: e.r.identity(args)) == expected, "final_pod_identity_changed_stop_reissue_bound_materials")
         return args
 
+    def prepare_relay_runtime_trust(self):
+        return c1_authors_module().prepare_relay_runtime_trust(self, production_adoption_module(), relay_bootstrap_module())
+
     def initial_runtime(self, action):
         require(action in ("initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime") and self.a.action == action,
                 "initial_issuer_action_changed")
@@ -674,7 +715,12 @@ class Operator:
         module = initial_runtime_module()
         if action == "initial-provider-query":
             module.restore_query_arguments(self)
+        relay_trust = self.prepare_relay_runtime_trust()
+        module.prepare_core_arguments(self)
+        c1_authors_module().validate_core_relay_trust(self, relay_trust)
         self.bind_sql_role_arguments("publication-materials")
+        if action == "initial-runtime" and (self.run / "adopt.readback.json").exists():
+            production_adoption_module().runtime_continuation(self, module)
         value = module.dispatch(self)
         require(value.get("backup_ready") is False, "initial_material_action_cannot_claim_backup_ready")
         return value
@@ -736,41 +782,17 @@ class Operator:
             value, out = self.invoke(action, [*argv, "prepare-issuers", *common, "-issuer-output-directory", directory])
             self.pin_value(value)
         elif action == "adopt-query":
-            require((self.run / "adopt.send-unknown.json").exists(), "no_original_adoption_dispatch_to_query")
-            # No native writer set Acquire/coverage call. The new existing CLI
-            # action derives old operation/expectations from its private chain.
-            value, out = self.invoke(action, [*argv, "query-original", *common,
-                "-selection-file", binding["writer_selection"]["File"], "-selection-sha256", binding["writer_selection"]["SHA256"]], repeat=True)
-            return {"state": value["State"], "source_recovery_verified": False, "resubmit_allowed": False, "private_receipt": str(out)}
+            # Actual owner query only. It cannot substitute for the full
+            # source-recovery receipt or authorize another adoption dispatch.
+            return production_adoption_module().query(self)
         else:
             self.check_final_identity(binding)
-            installed = self.original_runtime_sql_metadata()
-            # Actual provider COMMIT+readback precedes the new Go process and
-            # its new writer hold/SQL census. No old census object is imported.
-            save(self.run / "adopt-source-metadata-inputs.json", installed)
-            issuer = load(Path(self.completed("adopt-prepare-issuers")["stdout"]))
-            self.pin_value(issuer)
-            value, out = self.invoke("adopt", [*argv, "adopt", *common,
-                "-selection-file", binding["writer_selection"]["File"], "-selection-sha256", binding["writer_selection"]["SHA256"],
-                "-issuer-definition-file", issuer["File"], "-issuer-definition-sha256", issuer["SHA256"],
-                "-runtime-sql-metadata-receipt-file", installed["metadata"]["File"],
-                "-runtime-sql-metadata-receipt-sha256", installed["metadata"]["SHA256"]])
-            require(value.get("State") == "original_adoption_committed_exact_readback_sources_recovered" and value.get("HoldVerified") is True
-                    and value.get("SourceRecoveryVerified") is True and value.get("Adoption", {}).get("Operation"), "actual_adoption_commit_and_source_recovery_required")
-            # Native source recovery may legitimately recreate business Pods.
-            # Observe the current graph; never rewrite signed source facts.
-            # Controller-bound grants must retain their original full identity.
-            e, _ = self.web_modules()
-            args = self.actual_pods(load(Path(binding["source_selection"]["File"])))
-            after = self.with_original_kube(lambda: e.r.identity(args))
-            require(after["controller"] == binding["identity"]["controller"], "controller_changed_reissue_uid_bound_grants")
-            save(self.run / "post-adoption-pod-comparison.json", after)
+            return production_adoption_module().adopt(self)
         return {"state": value.get("State", "actual_issuer_material_file_pinned"), "private_receipt": str(out), "page_backup_completed": False}
 
     def require_adopted(self):
         value = load(Path(self.completed("adopt")["stdout"]))
-        require(value.get("State") == "original_adoption_committed_exact_readback_sources_recovered" and value.get("SourceRecoveryVerified") is True and value.get("HoldVerified") is True,
-                "original_adoption_and_native_source_recovery_required_not_query_only")
+        production_adoption_module().validate_adoption(self, value)
 
     def composition(self, action):
         if action == "composition":
@@ -889,6 +911,10 @@ class Operator:
 
 
     def require_configuration(self):
+        if (self.run / "adopt.readback.json").exists():
+            value = load(Path(self.completed("adopt")["stdout"]))
+            production_adoption_module().validate_adoption(self, value)
+            return
         completed = self.run / "composition.readback.json"
         if completed.exists():
             value = load(Path(self.completed("composition")["stdout"]))
@@ -1043,13 +1069,66 @@ def nonce_module():
 
 
 def c1_mysql_bridge_module():
-    return exact_module("system-backup-operator-c1-mysql-bridge.py", "78d089fe78151cb7bda322e269d00f642d879a2c9b00720663f4007202f99dbd")
+    return exact_module("system-backup-operator-c1-mysql-bridge.py", "9c11524728cda9bfa07333ff1e36aae1c364b7f08e8c9827320bad313672e985")
+
+
+def c1_native_module():
+    return exact_module("system-backup-operator-c1-native.py", "4ea935ba88ea47af46283e4c03cc3707b5b748ca5d09258bc6b0e6b0490a9766")
+
+
+def live_capacity_module():
+    return exact_module("system-backup-operator-live-capacity.py", "16063a272ee080c10b1748e089f59821e8b2c2c573c643fc488020e0d66ec0e1")
+
+
+def c1_authors_module():
+    return exact_module("system-backup-operator-c1-authors.py", "ebe1da8bf925120a217618bb34379619dcbc334911793eb7e95710812808f3cc")
+
+
+def relay_bootstrap_module():
+    return exact_module("system-backup-operator-relay-bootstrap.py", "ce7dcd3117507ce75a1856cf746cce846e8d0712fc47ddac60204e4fc87ae316")
+
+
+def production_adoption_module():
+    return exact_module("system-backup-operator-first-adoption-production.py", "9dab99390a92de35eac4c45033e37d616b7b85736cbabf2592a0ed19f4781225")
+
+
+def adoption_locations_module():
+    return exact_module("system-backup-operator-adoption-locations.py", "ba0d8be54933807210e2a5d41d933d3721ba3e65aa0c2246d8ac94509d71cf0f")
+
+
+def minio_recovery_module():
+    return exact_module("system-backup-operator-minio-recovery.py", "f77f0ff3e7abefb24e257716dfde892f822580b1e4ca7e6a265f9f521245d552")
+
+
+def c1_inputs_module():
+    return exact_module("system-backup-operator-c1-inputs.py", "655258e7de58aa90600cec2e4695c7eda84621448cca7606e085c01057edc693")
+
+
+def archive_inputs_module():
+    return exact_module("system-backup-operator-archive-inputs.py", "39bc5ac510f4c979541f9b41f448309d15e43fc5789e9c4421a91d11ddf7dbc0")
+
+
+def minio_consent_module():
+    return exact_module("system-backup-operator-minio-consent.py", "2285d0a5c31adf8ed3a774c39b2302c6e87d61b449431fe4a8e4d645475f2a97")
+
+
+def enabled_publication_module():
+    return exact_module("system-backup-operator-enabled-publication.py", "d24af741706a1c063c00c2cd60567c811c37a1be19ab4aa83b561671c171cc46")
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     choices = ["seal-release", "init", "observe", "status", "sql-role-inputs", *["db-" + a for a in DB_ACTIONS],
-               "tls-inspect", "tls-apply", "tls-rollback", "materials-signing", "runtime-issuers", "runtime-issuers-query", "runtime-record-keys", "initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime", "writer-selection", "runtime-images", "runtime-rollout", "runtime-query", "deployment-query", "publication-materials", "prepare-composition", "post-adoption-facts", "adopt-prepare-issuers", "adopt-query", "composition-check", "composition-query", "enable-resolve", "enable-operation-export", "readiness", *["sql-" + a for a in ("inspect", "prepare", "apply", "query", "rollback", "enroll")], *IMPLEMENTED_STAGES, *WORKSPACE_ACTIONS, "nonce-issue", "nonce-resume", "nonce-bind", "c1-mysql-mount-probe", "composition-assemble", *BLOCKERS]
+               "tls-inspect", "tls-apply", "tls-rollback", "materials-signing", "runtime-issuers", "runtime-issuers-query", "runtime-record-keys", "initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime", "writer-selection", "runtime-images", "runtime-rollout", "runtime-query", "deployment-query", "publication-materials", "prepare-composition", "post-adoption-facts", "adopt-prepare-issuers", "adopt-query", *production_adoption_module().PREPARE, "composition-check", "composition-query", "enable-resolve", "enable-operation-export", "readiness", *["sql-" + a for a in ("inspect", "prepare", "apply", "query", "rollback", "enroll")], *IMPLEMENTED_STAGES, *WORKSPACE_ACTIONS, "nonce-issue", "nonce-resume", "nonce-bind", "c1-mysql-mount-probe", "composition-assemble", *BLOCKERS]
+    choices += list(minio_recovery_module().ACTIONS)
+    choices += list(c1_inputs_module().ACTIONS)
+    choices += list(c1_native_module().ACTIONS)
+    choices += list(c1_authors_module().ACTIONS)
+    choices += list(live_capacity_module().ACTIONS)
+    choices += list(archive_inputs_module().ACTIONS)
+    choices += list(minio_consent_module().ACTIONS)
+    choices += list(enabled_publication_module().ACTIONS)
+    choices += ["initial-source-coordinates", "initial-source-api-inputs", "initial-source-api-finalize", "initial-redis-source", "initial-redis-query", "initial-redis-recover", "initial-redis-recover-finalize"]
     parser.add_argument("action", choices=choices)
     parser.add_argument("--release-directory", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--run-directory", type=Path, default=Path("/root/.clawmanager-backup-install/zhanghui08-original199-20261105"))
@@ -1079,6 +1158,11 @@ def main(argv=None):
         initial_runtime_module().register_arguments(parser)
         early_preflight = early_preflight_module()
         nonce_module().register_arguments(parser)
+        production_adoption_module().register_arguments(parser)
+        adoption_locations_module().register_arguments(parser)
+        minio_recovery_module().register_arguments(parser)
+        c1_inputs_module().register_arguments(parser)
+        archive_inputs_module().register_arguments(parser)
     except Exception:
         print(json.dumps({"state": "STOP_REVIEWED_DEPLOYMENT_MODULE_MISSING_OR_CHANGED"}))
         return 3
@@ -1115,10 +1199,26 @@ def main(argv=None):
                         if a.action in ("host-observer", "materials", "materials-signing"):
                             business_runtime_module().verify_current(tool)
                         if a.action == "materials":
+                            tool.prepare_relay_runtime_trust()
                             tool.bind_writer_selection_argument()
                         if a.action in ("host-observer", "materials", "materials-signing"):
                             tool.require_current_runtime_qualification()
+                        if a.action == "materials":
+                            initial_runtime_module().prepare_minio_options_arguments(tool)
                         result = deployment.dispatch(tool, a.action)
+                        if a.action == "materials" and (tool.run / "deployment/initial-source-api-inputs.result.json").exists():
+                            result = initial_runtime_module().prepare_source_api_successor_arguments(tool)
+                    elif a.action in ("initial-redis-source", "initial-redis-query", "initial-redis-recover", "initial-redis-recover-finalize"):
+                        if a.action == "initial-redis-source":
+                            tool.require_current_runtime_qualification()
+                        mode = "prepare" if a.action == "initial-redis-source" else a.action.removeprefix("initial-redis-")
+                        result = initial_runtime_module().prepare_redis_source_arguments(tool, mode)
+                    elif a.action == "initial-source-api-inputs":
+                        result = initial_runtime_module().prepare_source_api_arguments(tool)
+                    elif a.action == "initial-source-coordinates":
+                        result = initial_runtime_module().prepare_source_coordinates_arguments(tool)
+                    elif a.action == "initial-source-api-finalize":
+                        result = initial_runtime_module().prepare_source_api_successor_arguments(tool)
                     elif a.action in ("initial-forward", "initial-publication", "initial-provider", "initial-provider-query", "initial-runtime"):
                         result = tool.initial_runtime(a.action)
                     elif a.action == "runtime-record-keys":
@@ -1129,8 +1229,19 @@ def main(argv=None):
                         result = runtime_issuer_module().prepare(tool, query=a.action.endswith("-query"))
                     elif a.action in ("publication-materials", "prepare-composition"):
                         tool.bind_sql_role_arguments(a.action)
+                        if a.action == "prepare-composition":
+                            minio_recovery_module().bind_terminal_argument(tool)
                         result = owner_inputs.dispatch(tool)
                     elif a.action in ("rollout-refresh", "post-adoption-facts"): result = tool.rollout_refresh()
+                    elif a.action in production_adoption_module().PREPARE: result = production_adoption_module().prepare(tool, a.action, initial_runtime_module())
+                    elif a.action in minio_recovery_module().ACTIONS: result = minio_recovery_module().dispatch(tool, a.action, production_adoption_module())
+                    elif a.action in live_capacity_module().ACTIONS: result = live_capacity_module().dispatch(tool, production_adoption_module(), c1_mysql_bridge_module(), c1_native_module())
+                    elif a.action in c1_authors_module().ACTIONS: result = c1_authors_module().dispatch(tool, production_adoption_module(), relay_bootstrap_module(), c1_native_module())
+                    elif a.action in c1_native_module().ACTIONS: result = c1_native_module().prepare_capacity(tool, production_adoption_module(), c1_mysql_bridge_module(), {"adopt-prepare-capacity":"issue", "adopt-query-capacity":"query", "adopt-rollback-capacity":"rollback"}[a.action])
+                    elif a.action in c1_inputs_module().ACTIONS: result = c1_inputs_module().prepare(tool, production_adoption_module(), query=a.action == "adopt-query-c1-evidence-material")
+                    elif a.action in archive_inputs_module().ACTIONS: result = archive_inputs_module().prepare(tool, production_adoption_module(), query=a.action == "adopt-query-archive-materials")
+                    elif a.action in minio_consent_module().ACTIONS: result = minio_consent_module().prepare(tool, production_adoption_module(), initial_runtime_module(), query=a.action == "minio-runtime-consent-query")
+                    elif a.action in enabled_publication_module().ACTIONS: result = enabled_publication_module().dispatch(tool, production_adoption_module(), initial_runtime_module())
                     elif a.action in ("adopt-prepare-issuers", "adopt", "adopt-query"): result = tool.adoption(a.action)
                     elif a.action == "composition-assemble": result = tool.assemble_composition()
                     elif a.action == "composition-query": result = tool.composition_query()

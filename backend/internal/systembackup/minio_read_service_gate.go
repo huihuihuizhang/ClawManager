@@ -61,6 +61,7 @@ type minioGateOriginal struct {
 type minioGateMutation struct{ Kind, Key, Target string }
 
 type MinIOReadServiceGate struct {
+	coldRecovery                                  *minioGateColdRecoveryTarget
 	mu                                            sync.Mutex
 	origin                                        *MinIOReadServiceGate
 	in                                            MinIOReadGateInput
@@ -293,14 +294,19 @@ func (g *MinIOReadServiceGate) ResolvePending(ctx context.Context) error {
 // for restoring this SAME original operation and stored source identities.
 // They never renew a capture observation or establish a new held gate.
 func (g *MinIOReadServiceGate) RestoreWithFreshAuthority(ctx context.Context, root, keeper, reader MinIOGateCredential, fresh TeamSourceCheck) error {
+	return g.restoreWithOriginalRecovery(ctx, root, keeper, reader, fresh, false)
+}
+
+func (g *MinIOReadServiceGate) restoreWithOriginalRecovery(ctx context.Context, root, keeper, reader MinIOGateCredential, fresh TeamSourceCheck, verifiedSameColdRecovery bool) error {
 	if g == nil || fresh == nil || fresh(ctx) != nil {
 		return ErrMinIOReadGate
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	if g.origin != g || g.custody == nil || ctx == nil || ctx.Err() != nil || g.restored {
+	if g.origin != g || g.custody == nil || ctx == nil || ctx.Err() != nil || g.restored && !verifiedSameColdRecovery {
 		return ErrMinIOReadGate
 	}
+	wasRestored := g.restored
 	newCreds := [3]MinIOGateCredential{root, keeper, reader}
 	until, bounded := ctx.Deadline()
 	if !bounded {
@@ -333,6 +339,14 @@ func (g *MinIOReadServiceGate) RestoreWithFreshAuthority(ctx context.Context, ro
 	}
 	if e = g.guard(ctx); e != nil {
 		return e
+	}
+	if wasRestored {
+		// Called only by the actual authenticated cold-recovery projection.
+		// Actual native readback is refreshed; no restoration is resent.
+		if !verifiedSameColdRecovery || g.coldRecovery == nil {
+			return ErrMinIOReadGate
+		}
+		return g.recheckState(ctx, false)
 	}
 	if e = g.resolvePending(ctx); e != nil {
 		return e
@@ -433,7 +447,11 @@ func (v *VerifiedMinIOReadServiceObservation) Data() MinIOReadServiceObservation
 		return MinIOReadServiceObservationData{}
 	}
 	g := v.gate
-	return MinIOReadServiceObservationData{"minio-native-read-service-observation.v1", v.operation, v.inventory, g.in.PodUID, g.in.DeploymentID, v.source, v.phase, v.started, v.until}
+	podUID := g.in.PodUID
+	if v.phase == "recovered" && g.coldRecovery != nil {
+		podUID = g.coldRecovery.podUID
+	}
+	return MinIOReadServiceObservationData{"minio-native-read-service-observation.v1", v.operation, v.inventory, podUID, g.in.DeploymentID, v.source, v.phase, v.started, v.until}
 }
 func (v *VerifiedMinIOReadServiceObservation) Recheck(ctx context.Context, operation, inventory, phase string, now time.Time) error {
 	if v == nil || v.origin != v || v.gate == nil || ctx == nil || ctx.Err() != nil || v.operation != operation || v.inventory != inventory || v.phase != phase || now.Before(v.started) || !now.Before(v.until) || !time.Now().Before(v.until) {

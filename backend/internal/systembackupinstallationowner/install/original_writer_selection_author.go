@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"sort"
 
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/scope"
 	c "clawreef/internal/systembackupcontroller"
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +35,29 @@ type OriginalWriterSelectionOptions struct {
 type OriginalWriterSelectionReceipt struct {
 	Version, State                                 string
 	Selection                                      BootstrapSourceFilePin
+	SourceCoordinates                              BootstrapSourceFilePin
 	SourceCount, DeploymentCount, ParticipantCount int
+}
+
+// Operational coordinates derived from the same complete original owner
+// reads. These are not a held writer, freshness proof, source grant, or native
+// completion DTO. Downstream owners must authenticate and re-read every source.
+type OriginalInitialSourceCoordinates struct {
+	Version, InstallationID, Namespace, NamespaceUID, ApplicationScope string
+	WriterSelection                                                    BootstrapSourceFilePin
+	Instances                                                          []domain.SourceInstance
+	Deployments                                                        []OriginalDeploymentSelection
+	Participants                                                       []OriginalMaintenanceParticipant
+	RuntimeStartupImages                                               []OriginalRuntimeStartupImageInput
+	Volumes                                                            []originalPhysicalVolumePin
+	Census                                                             originalMaintenanceKubernetesCensus
+	Storage                                                            []OriginalInitialInstanceStorage `json:",omitempty"`
+	StoppedProLayouts                                                  []OriginalStoppedProSelection    `json:",omitempty"`
+	NodeUIDs                                                           map[string]string                `json:",omitempty"`
+	ApplicationScopes                                                  []string                         `json:",omitempty"`
+	SharedRuntime                                                      originalSharedRuntimeSQL
+	Layouts                                                            []OriginalInitialSourceLayout     `json:",omitempty"`
+	Dependencies                                                       []OriginalInitialSourceDependency `json:",omitempty"`
 }
 
 // This finite projection is ordinary SOURCE configuration, not a final Forward
@@ -123,13 +146,29 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 		return zero, ErrInstall
 	}
 	files["original-writer-selection.json"] = raw
+	coordinates := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID,
+		Namespace: i.plan.Target.Namespace, NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: last.ApplicationScope,
+		WriterSelection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)},
+		Instances:       append([]domain.SourceInstance(nil), p.instances...), Deployments: last.Deployments, Participants: last.Participants,
+		RuntimeStartupImages: options.runtimeStartupInputs, Volumes: lastVolumes, Census: lastCensus}
+	coordinateRaw, err := canonical(coordinates)
+	if err != nil || len(coordinateRaw) > 8<<20 {
+		return zero, ErrInstall
+	}
+	files["original-source-coordinates.json"] = coordinateRaw
 	// Re-read all externally selected bytes immediately before writing. The
 	// receipt itself is DATA; it cannot extend this original authority/window.
 	if originalRuntimeInputDefinitionStill(options.RuntimeStartupImages, options.runtimeStartupInputs) != nil || originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.check(ctx) != nil || p.checkInstances(ctx) != nil || writeNewFiles(directory, files) != nil {
 		return zero, ErrInstall
 	}
 	for name, expected := range files {
-		actual, e := ReadPrivateFile(filepath.Join(directory, name), int64(len(expected)+1))
+		var actual []byte
+		var e error
+		if name == "original-source-coordinates.json" {
+			actual, e = ReadSourceMaterialFile(filepath.Join(directory, name))
+		} else {
+			actual, e = ReadPrivateFile(filepath.Join(directory, name), int64(len(expected)+1))
+		}
 		same := e == nil && bytes.Equal(actual, expected)
 		clear(actual)
 		if !same {
@@ -142,7 +181,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 	if err != nil || !reflect.DeepEqual(first, after) || !reflect.DeepEqual(firstCensus, afterCensus) || !reflect.DeepEqual(firstVolumes, afterVolumes) || originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
-	return OriginalWriterSelectionReceipt{Version: "original-writer-selection-materials.v1", State: "actual_original_complete_base_selection_materialized_no_hold", Selection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)}, SourceCount: len(p.instances), DeploymentCount: len(last.Deployments), ParticipantCount: len(last.Participants)}, nil
+	return OriginalWriterSelectionReceipt{Version: "original-writer-selection-materials.v1", State: "actual_original_complete_base_selection_materialized_no_hold", Selection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)}, SourceCoordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "original-source-coordinates.json"), SHA256: hash(coordinateRaw)}, SourceCount: len(p.instances), DeploymentCount: len(last.Deployments), ParticipantCount: len(last.Participants)}, nil
 }
 
 func originalSelectionPinStill(pin BootstrapSourceFilePin, expected []byte) error {

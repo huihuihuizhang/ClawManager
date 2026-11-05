@@ -8,7 +8,7 @@ Its archive contains EVERY reachable file, including .minio.sys; logical history
 unknown operations, retention, all scope discovery and SQL adoption remain absent.
 Linux x86_64/aarch64, one xl-single drive only. Raw-copy supports shared-filesystem
 hostPath subdirectories; it never claims an immutable cut or B hold by itself.
-Only prepare and pipe-only stream exist. No plaintext archive file is created.
+prepare, DATA-only full inventory and pipe-only stream create no plaintext archive file.
 """
 import argparse
 import base64
@@ -104,13 +104,50 @@ def node_identity():
             "hostname": platform.node()}
 
 
-def inspect(endpoint, container):
+CRI_SHA256 = "d9f541aa6a3a1fce15392d4366da5f97b47683aa55a825909ad8c0a624c7f4f3"
+CRI_VERSION = b"crictl version v1.31.1\n"
+
+
+def inspect(endpoint, container, crictl_file, crictl_sha256):
     check(re.fullmatch(r"[a-f0-9]{64}", container) is not None and
-          endpoint.startswith("unix:///"), "explicit original native CRI identity required")
-    result = subprocess.run(["crictl", "--runtime-endpoint", endpoint,
-                             "inspect", "--output", "json", container],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            timeout=15, check=False)
+          endpoint.startswith("unix:///") and crictl_sha256 == CRI_SHA256,
+          "explicit original native CRI identity/release pin required")
+    path = Path(crictl_file)
+    check(path.is_absolute() and str(path) == os.path.realpath(path),
+          "canonical original release CRI file required")
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NOATIME)
+    try:
+        before = os.fstat(fd)
+        check(stat.S_ISREG(before.st_mode) and before.st_uid == os.geteuid() and
+              before.st_nlink == 1 and before.st_mode & 0o022 == 0 and
+              before.st_mode & 0o111 != 0 and 0 < before.st_size <= 128 * 1024 * 1024,
+              "original release CRI file owner/type/mode/size changed")
+        with os.fdopen(os.dup(fd), "rb") as stream:
+            raw = stream.read(128 * 1024 * 1024 + 1)
+        check(sha(raw) == CRI_SHA256, "original release CRI bytes changed")
+        # Execute the SAME checked inode, never a global PATH command or a
+        # pathname that could be replaced between hash verification and exec.
+        command = f"/proc/self/fd/{fd}"
+        version = subprocess.run([command, "--version"], pass_fds=(fd,),
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 timeout=15, check=False)
+        check(version.returncode == 0 and version.stdout == CRI_VERSION,
+              "original release CRI version changed")
+        result = subprocess.run([command, "--runtime-endpoint", endpoint,
+                                 "inspect", "--output", "json", container],
+                                pass_fds=(fd,), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, timeout=15, check=False)
+        after = os.fstat(fd)
+        identity = lambda v: (v.st_dev, v.st_ino, v.st_mode, v.st_uid, v.st_gid,
+                              v.st_nlink, v.st_size, v.st_mtime_ns, v.st_ctime_ns)
+        os.lseek(fd, 0, os.SEEK_SET)
+        with os.fdopen(os.dup(fd), "rb") as stream:
+            again = stream.read(128 * 1024 * 1024 + 1)
+        check(identity(before) == identity(after) and sha(again) == CRI_SHA256 and
+              identity(os.stat(path, follow_symlinks=False)) == identity(after),
+              "original release CRI file changed during inspection")
+    finally:
+        os.close(fd)
     check(result.returncode == 0 and len(result.stdout) <= 4 * 1024 * 1024,
           "original CRI inspection failed; missing/GC is not stopped proof")
     value = json.loads(result.stdout)
@@ -147,7 +184,7 @@ def format_identity(root):
 def native_plan(args):
     root = Path(args.root)
     mount = source_mount(root)
-    native = inspect(args.cri_endpoint, args.container_id)
+    native = inspect(args.cri_endpoint, args.container_id, args.crictl_file, args.crictl_sha256)
     status = native["status"]
     pid = native.get("info", {}).get("pid", 0)
     check(status["state"] == "CONTAINER_RUNNING" and isinstance(pid, int) and pid > 1,
@@ -159,6 +196,7 @@ def native_plan(args):
     return {"profile": PROFILE, "authority": "UNBOUND_NATIVE_OBSERVATION_NOT_B_HOLD",
             "root": str(root), "mount": mount, "node": node_identity(), "cut_mode": "raw-copy",
             "container_id": args.container_id, "cri_endpoint": args.cri_endpoint,
+            "crictl_file": args.crictl_file, "crictl_sha256": args.crictl_sha256,
             "pod_uid": args.pod_uid, "container_name": args.container_name,
             "pid": pid, "pid_start": pid_start(pid), "format": format_identity(root),
             "observed_unix_ns": time.time_ns()}
@@ -166,7 +204,7 @@ def native_plan(args):
 
 def stopped(plan):
     check(node_identity() == plan["node"], "original native node/boot changed")
-    native = inspect(plan["cri_endpoint"], plan["container_id"])
+    native = inspect(plan["cri_endpoint"], plan["container_id"], plan["crictl_file"], plan["crictl_sha256"])
     status = native["status"]
     finished = status.get("finishedAt", "")
     # crictl's native JSON presents RFC3339Nano, not an integer nanosecond field.
@@ -309,6 +347,12 @@ def stream_raw(args):
                 archive_tree(second, fd, "", os.fstat(fd).st_dev, verified,
                              [args.max_files, args.max_bytes], deadline)
             check(rows == verified, "original second full tree/EOF differs")
+            expected_tree = plan.get("original_history_tree_sha256")
+            if expected_tree is not None:
+                check(plan.get("original_history_cut_phase") == "cold" and
+                      isinstance(expected_tree, str) and re.fullmatch(r"[0-9a-f]{64}", expected_tree) and
+                      sha(canonical(rows)) == expected_tree,
+                      "actual archive tree differs from original fully stopped cold cut")
             after = stopped(plan)
             check(source_mount(root) == plan["mount"] and format_identity(root) == plan["format"],
                   "original final stream source identity changed")
@@ -330,20 +374,78 @@ def stream_raw(args):
             signal.signal(sig, handler)
 
 
+
+def running_original(plan):
+    check(node_identity() == plan["node"], "original warm node/boot changed")
+    native = inspect(plan["cri_endpoint"], plan["container_id"], plan["crictl_file"], plan["crictl_sha256"])
+    status = native["status"]
+    labels = status.get("labels", {})
+    check(status["state"] == "CONTAINER_RUNNING" and native.get("info", {}).get("pid") == plan["pid"] and
+          pid_start(plan["pid"]) == plan["pid_start"] and
+          labels.get("io.kubernetes.pod.uid") == plan["pod_uid"] and
+          labels.get("io.kubernetes.container.name") == plan["container_name"],
+          "original warm running PID/container identity changed")
+    return {"id": status["id"], "state": status["state"], "pid": plan["pid"], "pid_start": plan["pid_start"]}
+
+
+def inventory_raw(args):
+    # DATA only: warm reading does not prove stop/immutability. The actual
+    # installer owns original S3 write fencing and the later B cold proof.
+    raw = read_private(args.plan_file, args.plan_sha256)
+    plan = json.loads(raw)
+    check(plan["profile"] == PROFILE and plan["cut_mode"] == "raw-copy", "original raw inventory plan required")
+    root = Path(plan["root"])
+    check(source_mount(root) == plan["mount"] and format_identity(root) == plan["format"], "original inventory source identity changed")
+    actor = running_original if args.phase == "warm" else stopped
+    before = actor(plan)
+    check(args.max_files > 0 and args.max_bytes > 0 and 0 < args.max_seconds <= 600, "finite original inventory limits required")
+    deadline = time.monotonic() + args.max_seconds
+    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NOATIME)
+    try:
+        rows, second = [], []
+        with tarfile.open(fileobj=Discard(), mode="w|") as sink:
+            archive_tree(sink, fd, "", os.fstat(fd).st_dev, rows, [args.max_files, args.max_bytes], deadline)
+        with tarfile.open(fileobj=Discard(), mode="w|") as sink:
+            archive_tree(sink, fd, "", os.fstat(fd).st_dev, second, [args.max_files, args.max_bytes], deadline)
+        check(rows == second and source_mount(root) == plan["mount"] and format_identity(root) == plan["format"], "original full inventory/EOF changed")
+        after = actor(plan)
+        check(time.monotonic() < deadline, "original full inventory deadline exceeded")
+        value = {"profile": PROFILE, "phase": args.phase, "plan_sha256": sha(raw),
+                 "node": plan["node"], "root": plan["root"], "mount": plan["mount"],
+                 "format": plan["format"], "before": before, "after": after,
+                 "complete_reachable_tree": rows, "tree_sha256": sha(canonical(rows)),
+                 "excluded_paths": []}
+        output = canonical(value)
+        check(len(output) <= 32 * 1024 * 1024, "original inventory metadata limit exceeded")
+        sys.stdout.buffer.write(output)
+        sys.stdout.buffer.flush()
+    finally:
+        os.close(fd)
+
+
 def main():
     check(sys.platform == "linux" and platform.machine() in ("x86_64", "aarch64") and
           os.geteuid() == 0, "original Linux host native operator required")
     parser = argparse.ArgumentParser(description=__doc__)
     actions = parser.add_subparsers(dest="action", required=True)
     prepare = actions.add_parser("prepare")
-    for name in ("root", "cri-endpoint", "container-id", "pod-uid", "container-name"):
+    for name in ("root", "cri-endpoint", "crictl-file", "crictl-sha256", "container-id", "pod-uid", "container-name"):
         prepare.add_argument("--" + name, required=True)
     stream = actions.add_parser("stream")
     for name in ("plan-file", "plan-sha256"):
         stream.add_argument("--" + name, required=True)
     for name in ("max-files", "max-bytes", "max-seconds"):
         stream.add_argument("--" + name, type=int, required=True)
+    inventory = actions.add_parser("inventory")
+    inventory.add_argument("--phase", choices=("warm", "cold"), required=True)
+    for name in ("plan-file", "plan-sha256"):
+        inventory.add_argument("--" + name, required=True)
+    for name in ("max-files", "max-bytes", "max-seconds"):
+        inventory.add_argument("--" + name, type=int, required=True)
     args = parser.parse_args()
+    if args.action == "inventory":
+        inventory_raw(args)
+        return
     if args.action == "stream":
         stream_raw(args)
         return

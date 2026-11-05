@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/minio/minio-go/v7"
@@ -388,6 +389,12 @@ func (g *MinIOReadServiceGate) recheckState(ctx context.Context, held bool) erro
 		return e
 	}
 	expected := g.original
+	if g.coldRecovery != nil {
+		if !g.recovering || !time.Now().Before(g.coldRecovery.until) || g.containerID != g.coldRecovery.containerID {
+			return ErrMinIOReadGate
+		}
+		expected.ContainerID = g.coldRecovery.containerID
+	}
 	expected.Users = append([]minioGateUser(nil), g.original.Users...)
 	expected.BucketPolicies = map[string]string{}
 	for b, p := range g.original.BucketPolicies {

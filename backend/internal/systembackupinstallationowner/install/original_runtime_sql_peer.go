@@ -29,6 +29,20 @@ func (i *Installer) checkOriginalRuntimeSQLPeer(ctx context.Context, db *sql.DB,
 	if db.QueryRowContext(ctx, "SHOW SESSION STATUS LIKE 'Ssl_version'").Scan(&name, &tlsVersion) != nil || name != "Ssl_version" || tlsVersion != "TLSv1.3" {
 		return "", ErrInstall
 	}
+	ownerSelected, ownerErr := i.originalMetadataOwnerProfile(ctx, db, account)
+	if ownerErr != nil {
+		return "", ErrInstall
+	}
+	if ownerSelected {
+		return account, nil
+	}
+	selected, e := i.originalRuntimeMetadataProfile(ctx, db, account)
+	if e != nil {
+		return "", ErrInstall
+	}
+	if selected {
+		return account, nil
+	}
 	if (c.SQLControlEvidenceGrantProbe{DB: db, Schema: database, User: parts[0], Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx) != nil || ctx.Err() != nil {
 		return "", ErrInstall
 	}

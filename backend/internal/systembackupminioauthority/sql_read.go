@@ -78,6 +78,9 @@ func ReadSQLCurrentForInstaller(ctx context.Context, q SQLReader, pin SQLTrustPi
 }
 
 func readSQLCurrent(ctx context.Context, q SQLReader, pin SQLTrustPin, installer bool) (*SQLCurrentSnapshot, error) {
+	return readSQLCurrentRuntime(ctx, q, pin, installer, nil)
+}
+func readSQLCurrentRuntime(ctx context.Context, q SQLReader, pin SQLTrustPin, installer bool, use *runtimeMetadataSQLUse) (*SQLCurrentSnapshot, error) {
 	if !validPin(pin) {
 		return nil, ErrRecord
 	}
@@ -85,7 +88,14 @@ func readSQLCurrent(ctx context.Context, q SQLReader, pin SQLTrustPin, installer
 	if e != nil || server != pin.Target.ServerUUID || database != pin.Target.Database {
 		return nil, ErrRecord
 	}
-	if !installer && account != pin.Target.ConsumerDatabaseAccount {
+	expectedAccount := pin.Target.ConsumerDatabaseAccount
+	if use != nil {
+		if installer || use.ctx != ctx || use.view != q || use.authority == nil || use.authority.CheckLocal() != nil || !reflect.DeepEqual(use.authority.descriptor.Pin, pin) {
+			return nil, ErrRecord
+		}
+		expectedAccount = use.authority.record.RuntimeDatabaseAccount
+	}
+	if !installer && account != expectedAccount {
 		return nil, ErrRecord
 	}
 	var revision, epoch, selectedRevision, headRow uint64

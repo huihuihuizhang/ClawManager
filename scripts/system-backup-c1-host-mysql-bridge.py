@@ -107,6 +107,22 @@ def recheck(actor, record, native):
     need(selected == [record["mount"]] and "rw" in selected[0]["options"], "original_mysql_mount_changed_or_was_remounted")
 
 
+def recheck_live_mysql(plan, record, native):
+    """Bounded real CRI/process/mount read while the collector stays alive."""
+    item = plan["mysql"]["native_container"]
+    cid = item["container_id"].split("://", 1)[1]
+    file_bytes(plan["cri"]["File"], CRI_SHA, private=False, limit=64 << 20)
+    result = subprocess.run([plan["cri"]["File"], "--runtime-endpoint", plan["cri"]["Endpoint"], "--timeout", "2s", "inspect", "--output", "json", cid], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=3)
+    need(result.returncode == 0 and len(result.stdout) <= 4 << 20, "original_mysql_live_cri_check_unconfirmed")
+    current = json.loads(result.stdout)
+    status = current["status"]
+    labels = status["labels"]
+    need(status["id"] == cid and status["state"] in ("CONTAINER_RUNNING", 1) and all(labels.get(key) == value for key, value in {"io.kubernetes.pod.uid": item["pod_uid"], "io.kubernetes.pod.namespace": item["namespace"], "io.kubernetes.pod.name": item["pod"]}.items()), "original_mysql_live_pod_container_drift")
+    need(status.get("imageRef", "").rsplit("@", 1)[-1] == item["image_digest"] and int(current["info"]["pid"]) == record["pid"]["pid"] and native.same_process(record["pid"], native.process(record["pid"]["pid"])), "original_mysql_live_process_or_image_drift")
+    selected = [m for m in native.mounts(record["pid"]["pid"]) if m["path"] == DATADIR]
+    need(selected == [record["mount"]] and "rw" in selected[0]["options"], "original_mysql_live_mount_drift")
+
+
 def resolver_bytes(fd):
     before = os.fstat(fd)
     need(stat.S_ISREG(before.st_mode) and 0 < before.st_size <= 65536, "actual_original_container_resolver_regular_file_required")
@@ -338,15 +354,24 @@ def run(plan_file, plan_sha):
         recheck(actor, record, native)
         for pin in plan["original_nonce_files"]:
             file_bytes(pin["File"], pin["SHA256"], limit=4 << 20)
-        observation = {"version": "original-c1-host-mysql-private-bind-observed.v1", "operation": plan["operation"], "node": plan["node"], "mysql": plan["mysql"], "actual_cri_process": record["pid"], "actual_mysql_mount": record["mount"], "private_mount": entries[0], "same_original_inode": inode(mounted_fd), "host_namespace": before_namespace, "private_namespace": os.readlink("/proc/self/ns/mnt"), "original_nonce_files": plan["original_nonce_files"], "original_nonce_paths_preserved": True, "mysql_original_mount_still_writable": True, "sql_capacity_must_still_be_collected_by_real_caller": True, "backup_ready": False, "DR": False}
+        observation = {"version": "original-c1-host-mysql-private-bind-observed.v1", "operation": plan["operation"], "node": plan["node"], "mysql": plan["mysql"], "actual_cri_process": record["pid"], "actual_mysql_mount": record["mount"], "private_mount": entries[0], "same_original_inode": inode(mounted_fd), "host_namespace": before_namespace, "private_namespace": os.readlink("/proc/self/ns/mnt"), "original_nonce_files": plan["original_nonce_files"], "original_nonce_paths_preserved": bool(plan["original_nonce_files"]), "capacity_only_transport": plan["action"] in ("invoke-capacity", "invoke-capacity-collector"), "mysql_original_mount_still_writable": True, "sql_capacity_must_still_be_collected_by_real_caller": True, "backup_ready": False, "DR": False}
         observation["actual_original_cluster_dns_bridge"] = dns
         save(directory/"actual-private-mount-before-caller.json", observation)
         if plan["action"] == "probe":
             print(json.dumps({"state": "actual_original_mysql_private_readonly_mount_cluster_dns_and_nonce_paths_observed_not_sql_capacity_or_backup_authority", "private_receipt_directory": str(directory), "backup_ready": False}))
             return 0
-        need(plan["action"] == "invoke-complete" and isinstance(plan["argv"], list) and plan["argv"] and all(isinstance(a, str) and "\x00" not in a for a in plan["argv"]), "actual_single_complete_caller_argv_required")
+        need(plan["action"] in ("invoke-complete", "invoke-capacity", "invoke-capacity-collector") and isinstance(plan["argv"], list) and plan["argv"] and all(isinstance(a, str) and "\x00" not in a for a in plan["argv"]), "actual_single_complete_caller_argv_required")
         caller = Path(plan["caller"]["File"])
-        need(caller.name == "system-backup-first-adoption" and plan["argv"][0] == str(caller), "only_original_complete_adoption_elf_may_run")
+        allowed = {"invoke-complete": "system-backup-first-adoption-production", "invoke-capacity": "system-backup-c1-native-inputs", "invoke-capacity-collector": "system-backup-c1-native-inputs"}
+        need(caller.name == allowed[plan["action"]] and plan["argv"][0] == str(caller), "only_fixed_original_native_owner_elf_may_run")
+        if plan["action"] == "invoke-capacity":
+            args = plan["argv"]
+            need(len(args) > 4 and args[1] == "capacity" and args.count("--mode") == 1 and args[args.index("--mode")+1] in ("issue", "query", "rollback") and not plan["original_nonce_files"], "fixed_capacity_owner_subcommand_required")
+        elif plan["action"] == "invoke-capacity-collector":
+            args = plan["argv"]
+            need(len(args) == 6 and args[1] == "capacity-collect" and args[2] == "--inputs-file" and args[4] == "--inputs-sha256" and not plan["original_nonce_files"], "fixed_readonly_capacity_collector_only")
+        else:
+            need(bool(plan["original_nonce_files"]), "complete_adoption_requires_original_nonce_bindings")
         raw = file_bytes(caller, plan["caller"]["SHA256"], private=False, limit=128 << 20)
         need(raw[:6] == b"\x7fELF\x02\x01" and raw[18:20] == b"\x3e\x00", "actual_root_built_same_release_linux_amd64_caller_required")
         child = subprocess.Popen(plan["argv"], stdin=subprocess.DEVNULL, env=caller_environment())
@@ -355,7 +380,28 @@ def run(plan_file, plan_sha):
                 child.send_signal(number)
         previous = {number: signal.signal(number, forward_signal) for number in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)}
         try:
-            code = child.wait()
+            if plan["action"] == "invoke-capacity-collector":
+                try:
+                    while True:
+                        try:
+                            code = child.wait(timeout=1)
+                            break
+                        except subprocess.TimeoutExpired:
+                            original_node(plan)
+                            recheck_live_mysql(plan, record, native)
+                            recheck_resolver(record, resolver, native)
+                            need(inode(mounted_fd) == inode(record["fd"]) and os.fstatvfs(mounted_fd).f_flag & os.ST_RDONLY, "original_mysql_live_readonly_inode_drift")
+                except BaseException:
+                    if child.poll() is None:
+                        child.terminate()
+                    try:
+                        child.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        child.kill()
+                        child.wait()
+                    raise
+            else:
+                code = child.wait()
         finally:
             for number, handler in previous.items():
                 signal.signal(number, handler)

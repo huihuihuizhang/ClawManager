@@ -210,7 +210,11 @@ func (r *OriginalC1RetainedEvidence) verifyOriginalWrappedDEK(ctx context.Contex
 	if err != nil || len(wrapped) == 0 || len(wrapped) > 4096 || base64.StdEncoding.EncodeToString(wrapped) != env.Wrapped {
 		return ErrInstall
 	}
-	dek, err := r.provider.keys.Unwrap(r.provider.ctx, m.Key, wrapped)
+	keys, err := ev.NewTransitKeys(r.provider.definition.Vault.Transit, &originalRetainedC1ReadCredential{provider: r.provider, key: m.Key})
+	if err != nil {
+		return ErrInstall
+	}
+	dek, err := keys.Unwrap(r.provider.ctx, m.Key, wrapped)
 	defer clear(dek)
 	if err != nil || len(dek) != 32 || ctx.Err() != nil || r.provider.current() != nil {
 		return ErrInstall

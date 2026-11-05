@@ -76,8 +76,25 @@ func ProduceEnabledPublicationRuntimeMaterials(ctx context.Context, owner *insta
 	}
 	return producePublicationRuntimeMaterials(ctx, owner, runtimeDB, kube, password, enrollment, in, enabled)
 }
-func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs, enabled *install.OriginalEnabledPublication) (PublicationRuntimeMaterialReceipt, error) {
+
+// Explicit new file locations for revision3 publication only. Original
+// capture/formal/source grants, parent core and their fixed files are retained.
+func ProduceEnabledPublicationRuntimeMaterialsAtSources(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs, enabled *install.OriginalEnabledPublication, files EnabledPublicationStartupFiles) (PublicationRuntimeMaterialReceipt, error) {
+	if enabled == nil || enabled.Recheck(ctx) != nil {
+		return PublicationRuntimeMaterialReceipt{}, c.ErrExecutionAuthority
+	}
+	return producePublicationRuntimeMaterials(ctx, owner, runtimeDB, kube, password, enrollment, in, enabled, &files)
+}
+
+func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Installer, runtimeDB *sql.DB, kube kubernetes.Interface, password []byte, enrollment install.EnrollmentPin, in PublicationRuntimeMaterialInputs, enabled *install.OriginalEnabledPublication, selected ...*EnabledPublicationStartupFiles) (PublicationRuntimeMaterialReceipt, error) {
 	var zero PublicationRuntimeMaterialReceipt
+	if len(selected) > 1 || len(selected) == 1 && (selected[0] == nil || enabled == nil) {
+		return zero, c.ErrExecutionAuthority
+	}
+	var enabledFiles *EnabledPublicationStartupFiles
+	if len(selected) == 1 {
+		enabledFiles = selected[0]
+	}
 	if ctx == nil || ctx.Err() != nil || owner == nil || runtimeDB == nil || kube == nil {
 		return zero, c.ErrExecutionAuthority
 	}
@@ -96,7 +113,7 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	var def ProductionMaterialDefinition
 	var components OriginalCaptureMappingDefinition
 	var sources PublicationRuntimeSources
-	if decodeMetadataCanonical(raws[0], &def) != nil || def.Version != productionMaterialDefinitionVersion || decodeMetadataCanonical(raws[1], &components) != nil || components.Version != OriginalCaptureInstallationTemplateVersion || components.OriginalDefinitionSHA256 != in.SourceDefinition.SHA256 || decodeMetadataCanonical(raws[2], &sources) != nil || sources.Version != "original-publication-runtime-sources.v1" || len(def.PublisherVerifier) != 0 {
+	if decodeMetadataCanonical(raws[0], &def) != nil || def.Version != productionMaterialDefinitionVersion || decodeMetadataCanonical(raws[1], &components) != nil || components.Version != OriginalCaptureInstallationTemplateVersion || components.OriginalDefinitionSHA256 != in.SourceDefinition.SHA256 || decodeMetadataCanonical(raws[2], &sources) != nil || sources.Version != "original-publication-runtime-sources.v1" || enabledFiles == nil && len(def.PublisherVerifier) != 0 || enabledFiles != nil && len(def.PublisherVerifier) != 1 {
 		return zero, c.ErrExecutionAuthority
 	}
 	readOwner := func() (install.OriginalPublicationRuntimeOwnerInputs, error) {
@@ -128,6 +145,15 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	core, e := LoadDeploymentConfig(def.CoreFile, def.CoreSHA256)
 	if e != nil || core.CaptureScope != "six-part" || core.CaptureModules == nil || core.PublicationSigners == nil || core.PublisherVerifier == nil {
 		return zero, c.ErrExecutionAuthority
+	}
+	if enabledFiles != nil {
+		// This explicit continuation consumes the already published original
+		// definition/components pair. Its original verifier remains on the
+		// immutable core path; it is never replaced with the new revision3 file.
+		originalVerifier, err := loadPublisherVerifierMaterials(core, def.PublisherVerifier)
+		if err != nil || originalVerifier == nil || enabledFiles.Signers.File == core.PublicationSigners.Path || enabledFiles.Verifier.File == core.PublisherVerifier.Path {
+			return zero, c.ErrExecutionAuthority
+		}
 	}
 	pub, e := base64.StdEncoding.DecodeString(core.ForwardGrant.PublicKey)
 	if e != nil {
@@ -168,6 +194,25 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	authority, e := owner.PrepareSourceMaterialIssue(ctx, password, enrollment, install.SourceMaterialIntent{DefinitionFile: in.SourceDefinition.File, DefinitionSHA256: in.SourceDefinition.SHA256, InstallationID: core.InstallationID, Namespace: core.Namespace, NamespaceUID: core.NamespaceUID, Purpose: "functional_test", ServerUUID: g.ServerUUID, Database: g.Database, DatabaseAccount: g.DatabaseAccount, DeploymentConfigSHA256: def.CoreSHA256, CaptureGrantSHA256: def.ForwardGrantSHA256, ConfigSHA256: def.ConfigSHA256, ControllerOwner: core.ControllerOwner, ControllerDeployment: d.ControllerDeployment, ControllerDeploymentUID: d.ControllerDeploymentUID, ControllerServiceAccount: d.ControllerServiceAccount, ControllerServiceAccountUID: d.ControllerServiceAccountUID, WorkerServiceAccount: core.Security.ServiceAccountName, WorkerServiceAccountUID: core.Security.ServiceAccountUID, SourceServiceAccount: d.SourceAPIServiceAccount, SourceServiceAccountUID: d.SourceAPIServiceAccountUID, RedisScopeSHA256: redisScope, RedisCredentialSHA256: m.Redis.CredentialSHA256, ObjectScopeSHA256: objectScope, ObjectCredentialSHA256: m.Objects.CredentialSHA256, NotBefore: def.NotBefore, Until: def.Until}, runtimeDB)
 	if e != nil {
 		return zero, e
+	}
+	if enabledFiles != nil {
+		reference := core.ForwardGrant
+		reference.Path = enabledFiles.Forward.File
+		fresh, err := deploymentIdentity(reference, enabledFiles.Forward.SHA256, core.KeyDirectory)
+		if err != nil {
+			return zero, err
+		}
+		old, err := fresh.OpenOriginalEnabledOnlyPredecessor(enabledFiles.OriginalForward.File, enabledFiles.OriginalForward.SHA256)
+		if err != nil || enabledFiles.OriginalForward.File != core.ForwardGrant.Path || old.GrantSHA256() != forward.GrantSHA256() {
+			return zero, c.ErrExecutionAuthority
+		}
+		_, version, configSHA, err := enabled.Configuration(ctx)
+		current := fresh.DeploymentBinding()
+		if err != nil || current.ConfigVersion != version || current.ConfigSHA256 != configSHA || fresh.CheckDeployment(ctx, runtimeDB) != nil {
+			return zero, c.ErrExecutionAuthority
+		}
+		forward = fresh
+		g = current
 	}
 	// Observe the actual Pod -> ReplicaSet -> declared original Deployment chain.
 	pod, e := kube.CoreV1().Pods(core.Namespace).Get(ctx, sources.ControllerPodName, metav1.GetOptions{})
@@ -237,6 +282,11 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	if _, e = caps.PrepareCapabilities(ctx, sources.Binding); e != nil {
 		return zero, e
 	}
+	if enabledFiles != nil && checkPrebootstrapPublisherCapability(ctx, runtimeDB, verifier) != nil {
+		// Reject a stale workload1 capability BEFORE publishing any revision3
+		// output file. A genuine newly observed/signed workload2 is mandatory.
+		return zero, c.ErrExecutionAuthority
+	}
 	protected := map[string]bool{}
 	for _, p := range pins {
 		protected[p.File] = true
@@ -248,7 +298,14 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 		protected[f.JWTFile] = true
 		protected[f.CAFile] = true
 	}
+	if enabledFiles != nil {
+		protected[core.PublicationSigners.Path] = true
+		protected[core.PublisherVerifier.Path] = true
+	}
 	outputs := []string{core.PublicationSigners.Path, core.PublisherVerifier.Path, in.OutputDefinitionFile, in.OutputComponentsFile}
+	if enabledFiles != nil {
+		outputs = []string{enabledFiles.Signers.File, enabledFiles.Verifier.File}
+	}
 	for _, f := range outputs {
 		if !filepath.IsAbs(f) || filepath.Clean(f) != f || protected[f] {
 			return zero, c.ErrExecutionAuthority
@@ -259,6 +316,9 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 		}
 	}
 	for _, f := range []string{core.CaptureModules.Path, d.GrantFile, m.Redis.GrantFile, m.Objects.GrantFile} {
+		if enabledFiles != nil {
+			continue
+		}
 		if _, e := os.Lstat(f); !os.IsNotExist(e) {
 			return zero, c.ErrExecutionAuthority
 		}
@@ -273,12 +333,49 @@ func producePublicationRuntimeMaterials(ctx context.Context, owner *install.Inst
 	}
 	signerPin := PublicationSignerInput{File: core.PublicationSigners.Path, SHA256: hash(signerRaw)}
 	verifierPin := PublisherVerifierInput{File: core.PublisherVerifier.Path, SHA256: hash(verifierRaw)}
+	if enabledFiles != nil {
+		signerPin.File = enabledFiles.Signers.File
+		verifierPin.File = enabledFiles.Verifier.File
+	}
 	if authority.Recheck(ctx) != nil || writeOriginalMaterialFile(signerPin.File, signerRaw) != nil || writeOriginalMaterialFile(verifierPin.File, verifierRaw) != nil {
 		return zero, c.ErrExecutionAuthority
 	}
 	service := &DeploymentService{Config: core, ConfigPath: def.CoreFile, ConfigDigest: def.CoreSHA256, ForwardEnabled: true, Forward: forward, profileHash: profileSHA}
+	if enabledFiles != nil {
+		files := *enabledFiles
+		files.Signers = signerPin
+		files.Verifier = verifierPin
+		if service.bindOriginalEnabledPublicationSources(ctx, runtimeDB, files) != nil {
+			return zero, c.ErrExecutionAuthority
+		}
+	}
+
 	if service.loadPublicationSignerInput([]PublicationSignerInput{signerPin}) != nil || service.loadPublisherVerifierInput([]PublisherVerifierInput{verifierPin}) != nil || service.validateDescriptionMemoryStartup(m) != nil || service.attachPublicationSigners(ctx, runtimeDB, kube, pod.Name) != nil || checkPrebootstrapPublisherOwner(ctx, runtimeDB, kube, service, verifier) != nil || checkPrebootstrapPublisherCapability(ctx, runtimeDB, verifier) != nil {
 		return zero, c.ErrExecutionAuthority
+	}
+	if enabledFiles != nil {
+		if authority.Recheck(ctx) != nil || enabled.Recheck(ctx) != nil {
+			return zero, c.ErrExecutionAuthority
+		}
+		lastOwner, err := readOwner()
+		if err != nil || !reflect.DeepEqual(lastOwner, issued) {
+			return zero, c.ErrExecutionAuthority
+		}
+		for n, p := range pins {
+			again, err := install.ReadSourceMaterialFile(p.File)
+			if err != nil || hash(again) != hash(raws[n]) {
+				return zero, c.ErrExecutionAuthority
+			}
+		}
+		if originalVerifier, err := loadPublisherVerifierMaterials(core, def.PublisherVerifier); err != nil || originalVerifier == nil {
+			return zero, c.ErrExecutionAuthority
+		}
+		for _, p := range []install.BootstrapSourceFilePin{{File: signerPin.File, SHA256: signerPin.SHA256}, {File: verifierPin.File, SHA256: verifierPin.SHA256}} {
+			if _, err := pinnedDeploymentFile(p.File, p.SHA256, 1<<20); err != nil {
+				return zero, err
+			}
+		}
+		return PublicationRuntimeMaterialReceipt{State: "enabled_owner_publication_materials_generated_original_sources_preserved", Version: "original-publication-runtime-materials-result.v1", Signers: signerPin, Verifier: verifierPin, SourceDefinition: in.SourceDefinition, ComponentsTemplate: in.ComponentsTemplate}, nil
 	}
 	// Independently delivered bundle digests never enter the parent core/Forward
 	// hash. Only the still-unsigned source declaration receives its verifier pin.

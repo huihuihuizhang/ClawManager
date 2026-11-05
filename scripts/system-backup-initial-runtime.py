@@ -5,8 +5,13 @@ import importlib.util
 from pathlib import Path
 import re
 
-DEPLOYMENT_SHA = "5087d2607147ee01626bc6195e206b7ea051f548d559cb14124dfddfa9ea3c96"
-OWNER_ASSEMBLY_SHA = "9cac39b1a14aa8bd367de4700825523993af0e6157760bab9772eb68b039d369"
+DEPLOYMENT_SHA = "1634456a58697d23eb999eb31618ec4d77667b02e91260d814e2fe7351f515bb"
+OWNER_ASSEMBLY_SHA = "05140777a87dbd8f7098a0e9aa9b02b6c1464e50d52eb55267fce7b240fe4083"
+REDIS_SOURCE_SHA = "3c7d28ebfe7922d65542a96b978fc1eb729fd27a84747ffcb6b2d18f789743a5"
+SOURCE_DATA_SHA = "210db9cdb4d054ddc21d6bdabfd34e765a011ce9856ee498de86f10646aed9bb"
+DEPLOYMENT_SHA = "7c55efc86b43496eaafb1ae1112905ccd2b6788264f9c1bcdca8e8e6f121cea4"
+OWNER_ASSEMBLY_SHA = "e1bd9437d12efd43d2d97579fe4d7e7c13577777bc107a044a0dd42dbaa81585"
+INPUT_ASSEMBLY_SHA = "956d8d4cde985fe10f62dc2d7c10b6cbfa1153e08b6d03fa634b10c1eba07bd1"
 
 
 def load(name, expected):
@@ -23,6 +28,61 @@ def register_arguments(parser):
     parser.add_argument("--initial-provider-file", type=Path)
     parser.add_argument("--initial-provider-sha256")
     parser.add_argument("--initial-worker-jwt-identity-file")
+
+
+def prepare_core_arguments(operator):
+    """Resolve the original core before the main SQL-role/source gate."""
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    inputs.prepare_core_input(m, m.DeploymentStages(operator))
+
+
+def prepare_source_api_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    selected = inputs.source_api_inputs(m, m.DeploymentStages(operator))
+    return m.decode(m.pinned(selected))
+
+
+def prepare_source_api_successor_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    return inputs.source_api_successor(m, m.DeploymentStages(operator))
+
+
+def prepare_source_coordinates_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    stages = m.DeploymentStages(operator)
+    inputs.coordinates(m, stages)
+    return m.decode(m.read(stages.directory / "initial-source-coordinates.result.json"))
+
+
+def prepare_writer_source_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    sources = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    return sources.writer_source_inputs(m, m.DeploymentStages(operator), inputs)
+
+
+def prepare_redis_source_arguments(operator, mode="prepare"):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    sources = load("system-backup-initial-redis-sources.py", REDIS_SOURCE_SHA)
+    assembly = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    stages = m.DeploymentStages(operator)
+    if mode == "prepare":
+        operator.bind_writer_selection_argument()
+        return sources.prepare(m, stages, assembly)
+    m.need(mode in ("query", "recover", "recover-finalize"), "original_redis_native_mode_required")
+    if mode == "query":
+        return sources.resume(m, stages)
+    return sources.recover(m, stages, mode)
+
+
+def prepare_minio_options_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    inputs = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    return inputs.prepare_initial_minio_options(m, m.DeploymentStages(operator))
 
 
 def native_runtime_dsn(m, materials, args):
@@ -139,6 +199,8 @@ class InitialRuntimeStages:
         self.material = self.export["material"]
         self.m.pinned(self.material)
         self.m.pinned(self.export["export"])
+        inputs = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+        inputs.prepare_initial_runtime_inputs(self.m, self.stages)
         self.core_pin, self.core = self.input("core")
         self.request_pin, _ = self.input("request_files")
         self.m.need(self.core["key_directory"] == self.export["key_directory"], "core_runtime_key_directory_must_use_original_export")
@@ -165,7 +227,11 @@ class InitialRuntimeStages:
         output = Path(self.core["forward_grant"]["path"]).parent
         m.need(output.is_relative_to(stages.runtime_mirror()), "first_forward_output_must_use_actual_runtime_mount")
         output.mkdir(mode=0o700, exist_ok=True)
-        value, receipt = stages.call("initial-forward", [stages.binary("system-backup-first-install-materials"), "issue-initial-forward", *self.flags(),
+        _, _, _, sql_materials = stages.common()
+        action = "issue-initial-forward-minio-metadata" if sql_materials.get("runtime_profile") == "public-runtime-c1-minio-metadata-read.v1" else "issue-initial-forward"
+        # Routing selects an explicit authenticated owner; its live exact SQL
+        # probe supplies verification, never this operational profile string.
+        value, receipt = stages.call("initial-forward", [stages.binary("system-backup-first-install-materials"), action, *self.flags(),
             "--profile-file", profile["File"], "--profile-sha256", profile["SHA256"],
             "--record-export-file", self.export["export"]["File"], "--record-export-sha256", self.export["export"]["SHA256"],
             "--output-directory", output])

@@ -18,7 +18,7 @@ func originalSourceMutationIntent(action string) bool {
 		"delete_original_pod_send_unknown", "create_original_pod_send_unknown",
 		"cancel_delayed_pod_delete_send_unknown", "stop_send_unknown",
 		"resume_send_unknown", "complete_send_unknown", "keep_stopped_complete_send_unknown",
-		"source_binding_commit_unknown":
+		"source_binding_commit_unknown", "minio_whole_history_gate_send_unknown", "minio_whole_history_restore_send_unknown":
 		return true
 	}
 	return false

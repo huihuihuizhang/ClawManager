@@ -321,7 +321,7 @@ func (s *originalSQLSession) ledger(ctx context.Context) ([]string, string, erro
 		}
 		names = append(names, n)
 	}
-	if errors.Join(rows.Err(), rows.Close()) != nil || (s.input.runtimeProfile != originalSQLC1Profile && len(names) != 198) || (s.input.runtimeProfile == originalSQLC1Profile && !originalSQLC1LedgerMatches(names)) {
+	if errors.Join(rows.Err(), rows.Close()) != nil || (!originalSQLC1Selected(s.input.runtimeProfile) && len(names) != 198) || (originalSQLC1Selected(s.input.runtimeProfile) && !originalSQLC1LedgerMatches(names)) {
 		return nil, "", errOriginalSQLAccounts
 	}
 	raw, _ := json.Marshal(names)
@@ -545,7 +545,7 @@ func originalSQLRolePrivilegesForProfile(role, database string, a originalSQLAcc
 	}
 	if role == "runtime" {
 		stmts, e := controller.ControllerGrantSQL(database, a.User, a.Host, allowAny)
-		if profile == originalSQLPublicRuntimeProfile || profile == originalSQLC1Profile {
+		if profile == originalSQLPublicRuntimeProfile || originalSQLC1Selected(profile) {
 			stmts, e = controller.ControlEvidenceGrantSQL(database, a.User, a.Host, allowAny, true, true, true)
 		}
 		if e != nil {
@@ -562,13 +562,28 @@ func originalSQLRolePrivilegesForProfile(role, database string, a originalSQLAcc
 			}
 		}
 	}
+	if role == "runtime" && profile == originalSQLMinIOMetadataProfile {
+		for _, table := range []string{"system_backup_minio_owner_heads", "system_backup_minio_owner_grants", "system_backup_minio_owner_refs"} {
+			if !present[table] {
+				return nil, errOriginalSQLAccounts
+			}
+			a.Privileges = append(a.Privileges, originalSQLPriv(table, "SELECT"))
+		}
+		if !present["users"] {
+			return nil, errOriginalSQLAccounts
+		}
+		for _, column := range []string{"id", "username", "role", "is_active", "auth_provider"} {
+			a.Privileges = append(a.Privileges, originalSQLPrivilege{Kind: "column", Object: "users", Column: column, Verb: "SELECT"})
+		}
+	}
+
 	if role == "census" {
 		for _, verb := range []string{"SELECT", "SHOW VIEW", "TRIGGER", "EVENT"} {
 			a.Privileges = append(a.Privileges, originalSQLPrivilege{Kind: "schema", Verb: verb})
 		}
 		a.Privileges = append(a.Privileges, originalSQLPrivilege{Kind: "global", Verb: "SHOW_ROUTINE"}, originalSQLPrivilege{Kind: "table", Database: "mysql", Object: "global_grants", Verb: "SELECT"}, originalSQLPrivilege{Kind: "table", Database: "mysql", Object: "role_edges", Verb: "SELECT"})
 	}
-	if profile == originalSQLC1Profile {
+	if originalSQLC1Selected(profile) {
 		var err error
 		a.Privileges, err = originalSQLC1RoleDelta(role, present, a.Privileges)
 		if err != nil {
@@ -914,13 +929,16 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 			if db.QueryRowContext(ctx, "SHOW SESSION STATUS LIKE 'Ssl_version'").Scan(&name, &version) != nil || version != "TLSv1.3" {
 				return errOriginalSQLAccounts
 			}
-			if s.input.runtimeProfile == originalSQLC1Profile {
+			if originalSQLC1Selected(s.input.runtimeProfile) {
 				if err := originalSQLC1OwnGrantProbe(ctx, db, p, a); err != nil {
 					return err
 				}
 			}
 			if a.Role == "runtime" {
-				if s.input.runtimeProfile == originalSQLPublicRuntimeProfile || s.input.runtimeProfile == originalSQLC1Profile {
+				if s.input.runtimeProfile == originalSQLMinIOMetadataProfile {
+					return (controller.SQLMinIOMetadataReadGrantProbe{DB: db, Schema: p.Database, User: a.User, Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx)
+				}
+				if s.input.runtimeProfile == originalSQLPublicRuntimeProfile || originalSQLC1Selected(s.input.runtimeProfile) {
 					return (controller.SQLControlEvidenceGrantProbe{DB: db, Schema: p.Database, User: a.User, Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx)
 				}
 				return (controller.SQLControllerGrantProbe{DB: db, Schema: p.Database, User: a.User}).Check(ctx)

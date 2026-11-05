@@ -74,7 +74,7 @@ func (r *minioPermissionHTTP) effectiveSelfPolicyV2(ctx context.Context, account
 	if json.Unmarshal(raw, &fields) != nil || len(fields) != 4 || fields["AccountName"] == nil || fields["Server"] == nil || fields["Policy"] == nil || fields["Buckets"] == nil || minioPermissionDecode(raw, &reply) != nil || reply.AccountName != account || len(reply.Server) == 0 {
 		return "", minioPermissionFailure("effective-original-current-policy")
 	}
-	normalized, err := minioPermissionNormalizedPolicyV2(reply.Policy, policySHA, rules)
+	normalized, err := r.normalizedSeptemberMetadataPolicy(ctx, reply.Policy, policySHA, rules)
 	if err != nil {
 		return "", err
 	}
@@ -124,7 +124,7 @@ func (r *minioPermissionHTTP) userAndPolicyV2(ctx context.Context, account, poli
 	if minioPermissionDecode(policyRaw, &policy) != nil || policy.PolicyName != policyName || policy.UpdateDate.IsZero() {
 		return "", minioPermissionFailure("native-exact-policy")
 	}
-	normalized, err := minioPermissionNormalizedPolicyV2(policy.Policy, policySHA, rules)
+	normalized, err := r.normalizedSeptemberMetadataPolicy(ctx, policy.Policy, policySHA, rules)
 	if err != nil {
 		return "", err
 	}

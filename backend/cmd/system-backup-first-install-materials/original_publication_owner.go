@@ -22,7 +22,9 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 	}
 	enabledAction := args[0] == "issue-enabled-publication-authorization"
 	forwardAction := args[0] == "reissue-enabled-forward"
-	runtime := args[0] == "issue-publication-authorization" || enabledAction || forwardAction
+	initialMetadataAction := args[0] == "issue-initial-publication-authorization-minio-metadata"
+	metadataAction := args[0] == "issue-publication-authorization-minio-metadata"
+	runtime := args[0] == "issue-publication-authorization" || metadataAction || initialMetadataAction || enabledAction || forwardAction
 	if !runtime && args[0] != "issue-signing-material" {
 		return 2
 	}
@@ -188,7 +190,14 @@ func runOriginalPublicationOwner(ctx context.Context, args []string, out io.Writ
 	if enabledAction {
 		receipt, e = installer.IssueEnabledPublicationAuthorization(active, runtimeDB, password, enrol, inputs, key, enabled)
 	} else {
-		receipt, e = installer.IssueOriginalPublicationAuthorization(active, runtimeDB, password, enrol, inputs, key)
+		issue := installer.IssueOriginalPublicationAuthorization
+		if metadataAction {
+			issue = installer.IssueOriginalPublicationAuthorizationForMinIOMetadata
+		}
+		if initialMetadataAction {
+			issue = installer.IssueInitialPublicationAuthorizationForMinIOMetadata
+		}
+		receipt, e = issue(active, runtimeDB, password, enrol, inputs, key)
 	}
 	if e != nil {
 		return 1

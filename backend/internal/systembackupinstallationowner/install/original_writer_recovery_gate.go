@@ -101,6 +101,13 @@ func (s *PreparedOriginalWriterSet) beginOriginalRecovery(ctx context.Context, f
 }
 
 func (s *PreparedOriginalWriterSet) finishOriginalRecovery(ctx context.Context, fence *originalWriterRecoveryFence, proof *originalRecoveredReadiness) error {
+	// Complete actual native permission restoration/readback BEFORE final SQL
+	// and admission release. The original custody source itself stays frozen.
+	var historyErr error
+	proof, historyErr = s.refreshOriginalMinIOHistoryAfterFinalProof(ctx, fence, proof)
+	if historyErr != nil {
+		return historyErr
+	}
 	if proof == nil || proof.set != s || proof.digest == "" || fence.check(ctx) != nil {
 		return ErrInstall
 	}
@@ -115,6 +122,9 @@ func (s *PreparedOriginalWriterSet) finishOriginalRecovery(ctx context.Context, 
 	var now time.Time
 	if tx.QueryRowContext(ctx, `SELECT UTC_TIMESTAMP(6)`).Scan(&now) != nil {
 		return ErrInstall
+	}
+	if s.checkOriginalMinIOHistoryRecoveryLocked(ctx, now) != nil {
+		return ErrOriginalRecoveryNativeProof
 	}
 	actual, err := domain.ReadSourceInstances(ctx, tx)
 	if err != nil || !reflect.DeepEqual(actual, proof.expected) {

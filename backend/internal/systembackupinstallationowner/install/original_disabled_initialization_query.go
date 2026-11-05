@@ -33,7 +33,7 @@ func (i *Installer) QueryOriginalDisabledUnverified(ctx context.Context, passwor
 	if e != nil {
 		return zero, ErrInstall
 	}
-	tx, e := i.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
+	tx, e := i.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if e != nil {
 		return zero, ErrCommitUnknown
 	}
