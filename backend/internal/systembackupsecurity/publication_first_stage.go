@@ -38,6 +38,11 @@ func (s *SQLInstallationArtifactSigners) stageFirstSigningInput(ctx context.Cont
 	if validateFrozenSigningInput(input, a.task, a.binding) != nil {
 		return ErrRegistrationUnavailable
 	}
+	// Config mutation takes installation state before task/evidence. Acquire
+	// the original owner prefix before this first-use exclusive task lock.
+	if err := s.LockSigningStatePrefix(ctx, tx); err != nil {
+		return err
+	}
 	// All production Stage paths take a shared task lock in current(). Taking
 	// the original task's exclusive lock FIRST serializes history plus insertion
 	// with both legacy Stage and StageFirst, including another live workload.

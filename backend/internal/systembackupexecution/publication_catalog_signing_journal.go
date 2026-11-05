@@ -139,6 +139,10 @@ func (p *preparedPublicationCatalog) recheckTx(ctx context.Context, tx *sql.Tx) 
 }
 
 func (p *preparedPublicationCatalog) transaction(ctx context.Context, body func(*sql.Tx, publicationRecoveryFacts, time.Time) error) error {
+	return p.transactionWithSigningStatePrefix(ctx, false, body)
+}
+
+func (p *preparedPublicationCatalog) transactionWithSigningStatePrefix(ctx context.Context, firstSigning bool, body func(*sql.Tx, publicationRecoveryFacts, time.Time) error) error {
 	if !p.ready() || ctx == nil || ctx.Err() != nil || p.proof.access.Check(ctx) != nil {
 		return c.ErrExecutionAuthority
 	}
@@ -149,6 +153,20 @@ func (p *preparedPublicationCatalog) transaction(ctx context.Context, body func(
 		return err
 	}
 	defer tx.Rollback()
+	// Only the fresh signing-input transaction needs current signer authority.
+	// Historical result queries retain their original TTL and recovery rules.
+	if firstSigning {
+		if p.record == nil {
+			return c.ErrExecutionAuthority
+		}
+		installation, e := p.record.SigningInstallationID()
+		if e != nil || installation != s.Config.InstallationID || installation != p.proof.target.InstallationID {
+			return c.ErrExecutionAuthority
+		}
+		if e = p.record.LockSigningStatePrefix(ctx, tx); e != nil {
+			return e
+		}
+	}
 	var version uint64
 	if tx.QueryRowContext(ctx, `SELECT row_version FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? AND controller_owner=? AND row_version=? AND status='publishing' AND controller_lease_expires_at>UTC_TIMESTAMP(6) AND deadline_at>UTC_TIMESTAMP(6) FOR UPDATE`, s.Config.InstallationID, claim.Target.PublicID, claim.Owner, claim.RowVersion).Scan(&version) != nil || version != claim.RowVersion {
 		return c.ErrClaimLost
@@ -300,7 +318,7 @@ func (s *DeploymentService) prepareOriginalPublicationCatalog(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	err = p.transaction(ctx, func(tx *sql.Tx, current publicationRecoveryFacts, at time.Time) error {
+	err = p.transactionWithSigningStatePrefix(ctx, true, func(tx *sql.Tx, current publicationRecoveryFacts, at time.Time) error {
 		if !at.Before(p.intent.SignUntil) || p.intent.SignUntil.After(current.until) {
 			return c.ErrExecutionAuthority
 		}

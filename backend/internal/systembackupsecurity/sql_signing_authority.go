@@ -151,7 +151,13 @@ func (a *SQLArtifactSigningAuthority) current(ctx context.Context, view signingS
 	var version, configVersion uint64
 	var facts signingSQLFacts
 	if view.QueryRowContext(ctx, `SELECT origin_installation_id,request_id,status,controller_owner,row_version,controller_lease_expires_at,deadline_at,config_version,config_snapshot_sha256,task_purpose,requested_parts FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=?`+suffix, a.binding.InstallationID, a.task.BackupPublicID).Scan(&origin, &request, &status, &owner, &version, &facts.Lease, &facts.Deadline, &configVersion, &configHash, &facts.TaskPurpose, &parts) != nil ||
-		origin != a.binding.InstallationID || request != a.task.OperationID || owner != a.claim.ControllerOwner || version != a.claim.RowVersion || configVersion != a.grant.ConfigVersion || configHash != a.grant.ConfigSHA256 || (facts.TaskPurpose != "acceptance" && facts.TaskPurpose != "functional_test") || parts != "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle" || !now.Before(facts.Lease) || !now.Before(facts.Deadline) {
+		origin != a.binding.InstallationID || request != a.task.OperationID || owner != a.claim.ControllerOwner || version != a.claim.RowVersion || (facts.TaskPurpose != "acceptance" && facts.TaskPurpose != "functional_test") || parts != "mysql,redis,object_storage,workspace,deployment_resources,secret_bundle" || !now.Before(facts.Lease) || !now.Before(facts.Deadline) {
+		return bad()
+	}
+	// Grant bytes and Task2 facts stay unchanged. The sole inherited case is
+	// the actual first enabled-only SQL transition, read in this SAME tx/view.
+	enabledUntil, e := signingOwnerEnabledOnlyScope(ctx, view, a.binding.InstallationID, a.grant.ConfigVersion, a.grant.ConfigSHA256, configVersion, configHash)
+	if e != nil {
 		return bad()
 	}
 	if a.binding.Purpose == "capture_certificate" {
@@ -183,6 +189,12 @@ func (a *SQLArtifactSigningAuthority) current(ctx context.Context, view signingS
 		if bound.Before(until) {
 			until = bound
 		}
+	}
+	if !enabledUntil.IsZero() && enabledUntil.Before(until) {
+		until = enabledUntil
+	}
+	if !time.Now().Before(until) {
+		return bad()
 	}
 	return facts, until, nil
 }
@@ -254,6 +266,9 @@ func (s *SQLInstallationArtifactSigners) StageSigningInput(ctx context.Context, 
 	a := s.owners[purpose]
 	input = bytes.Clone(input)
 	if validateFrozenSigningInput(input, a.task, a.binding) != nil {
+		return ErrRegistrationUnavailable
+	}
+	if a.lockSigningStatePrefix(ctx, tx) != nil {
 		return ErrRegistrationUnavailable
 	}
 	facts, until, err := a.current(ctx, tx, true)

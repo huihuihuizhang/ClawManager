@@ -20,6 +20,18 @@ func originalCaptureCertificatePreparedID(capture publicationVerifiedCapture) st
 }
 
 func lockOriginalCertificateTask(ctx context.Context, tx *sql.Tx, prepared *preparedPublicationCaptureCertificate) error {
+	if prepared == nil || prepared.record == nil || tx == nil || ctx == nil || ctx.Err() != nil || !prepared.capture.checked() {
+		return c.ErrExecutionAuthority
+	}
+	installation, err := prepared.record.SigningInstallationID()
+	if err != nil || installation != prepared.facts.InstallationID || installation != prepared.capture.Input.InstallationID {
+		return c.ErrExecutionAuthority
+	}
+	// Both Stage and original dispatch reach this shared entry before task X
+	// and immutable evidence locks. This is synchronization, never authority.
+	if err = prepared.record.LockSigningStatePrefix(ctx, tx); err != nil {
+		return err
+	}
 	var version uint64
 	if prepared == nil || tx == nil || tx.QueryRowContext(ctx, `SELECT row_version FROM system_backup_v2_backups WHERE origin_installation_id=? AND public_id=? AND controller_owner=? AND row_version=? AND status='validating' AND controller_lease_expires_at>UTC_TIMESTAMP(6) AND deadline_at>UTC_TIMESTAMP(6) FOR UPDATE`, prepared.facts.InstallationID, prepared.facts.BackupPublicID, prepared.claim.Owner, prepared.claim.RowVersion).Scan(&version) != nil || version != prepared.claim.RowVersion {
 		return c.ErrExecutionAuthority

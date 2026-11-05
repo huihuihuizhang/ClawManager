@@ -45,7 +45,10 @@ type ProviderPermitIssueScope struct {
 	WorkerPodName  string
 }
 
-type ProviderPermitIssuer struct{ cfg ProviderPermitIssuerConfig }
+type ProviderPermitIssuer struct {
+	cfg             ProviderPermitIssuerConfig
+	originalForward *c.PinnedExecutionIdentity
+}
 
 func NewProviderPermitIssuer(cfg ProviderPermitIssuerConfig) (*ProviderPermitIssuer, error) {
 	keys, ok := cfg.Records.Keys.(*c.PinnedExecutionIdentity)
@@ -66,7 +69,11 @@ func NewProviderPermitIssuer(cfg ProviderPermitIssuerConfig) (*ProviderPermitIss
 	if err != nil {
 		return nil, err
 	}
-	return &ProviderPermitIssuer{cfg: cfg}, nil
+	issuer := &ProviderPermitIssuer{cfg: cfg}
+	if issuer.attachOriginalEnabledOnlyForward(g) != nil {
+		return nil, kms.ErrPermission
+	}
+	return issuer, nil
 }
 
 type PreparedProviderPermitIssue struct {
@@ -84,6 +91,7 @@ type PreparedProviderPermitIssue struct {
 	id                 string
 	lease              *worker.KeyUseLease
 	original           *c.OriginalCapturePlan
+	enabledFingerprint string
 }
 
 // Prepare authenticates original frozen source/real controller and worker on
@@ -125,7 +133,7 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 	a, identity := scope.Input.Authority, scope.WorkerIdentity
 	invocationHash, err := scope.Invocation.Hash()
 	access := *scope.Invocation.ProviderKey
-	if err != nil || a.InstallationID != i.cfg.Binding.InstallationID || a.TaskType != "backup" || a.Phase != "capture" || a.ClaimOwner != g.Workload.ControllerOwner || a.ConfigVersion != g.Workload.ConfigVersion || a.ConfigSHA256 != g.Workload.ConfigSHA256 || identity.InvocationSHA256 != invocationHash || identity.ExecutionGrantSHA256 != i.cfg.CaptureGrantSHA256 || identity.Namespace != g.WorkerNamespace || identity.Namespace != scope.Job.Namespace || identity.JobUID != scope.Job.UID || identity.ServiceAccountUID != g.WorkerServiceAccountUID || identity.PodUID == "" || scope.WorkerPodName == "" || access.Operation != kms.Generate || access.Endpoint != i.cfg.Binding.Provider.Endpoint || access.KeyName != i.cfg.Binding.Provider.KeyName || access.Request.Key != i.cfg.Binding.Key || access.Request.Context.InstallationID != a.InstallationID || access.Request.Context.BackupPublicID != a.TaskPublicID || access.Request.Context.AttemptNo != strconv.FormatUint(a.AttemptNo, 10) {
+	if err != nil || a.InstallationID != i.cfg.Binding.InstallationID || a.TaskType != "backup" || a.Phase != "capture" || a.ClaimOwner != g.Workload.ControllerOwner || identity.InvocationSHA256 != invocationHash || identity.ExecutionGrantSHA256 != i.cfg.CaptureGrantSHA256 || identity.Namespace != g.WorkerNamespace || identity.Namespace != scope.Job.Namespace || identity.JobUID != scope.Job.UID || identity.ServiceAccountUID != g.WorkerServiceAccountUID || identity.PodUID == "" || scope.WorkerPodName == "" || access.Operation != kms.Generate || access.Endpoint != i.cfg.Binding.Provider.Endpoint || access.KeyName != i.cfg.Binding.Provider.KeyName || access.Request.Key != i.cfg.Binding.Key || access.Request.Context.InstallationID != a.InstallationID || access.Request.Context.BackupPublicID != a.TaskPublicID || access.Request.Context.AttemptNo != strconv.FormatUint(a.AttemptNo, 10) {
 		return nil, kms.ErrPermission
 	}
 	if _, err = kms.TransitContext(access.Request); err != nil {
@@ -156,6 +164,27 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 	if err != nil {
 		return nil, err
 	}
+	var enabledFingerprint string
+	var enabledUntil time.Time
+	if a.ConfigVersion != g.Workload.ConfigVersion || a.ConfigSHA256 != g.Workload.ConfigSHA256 {
+		// Only the actual authenticated original part can enter the old-owner scope.
+		if original == nil {
+			return nil, kms.ErrPermission
+		}
+		view, e := i.cfg.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+		if e != nil {
+			return nil, kms.ErrPermission
+		}
+		lineage, e := i.bindEnabledOnlyScope(ctx, view, g, a)
+		if e != nil {
+			_ = view.Rollback()
+			return nil, kms.ErrPermission
+		}
+		enabledFingerprint, enabledUntil = lineage.fingerprint, lineage.until
+		if view.Rollback() != nil {
+			return nil, kms.ErrPermission
+		}
+	}
 	capability, err := i.cfg.Capabilities.prepareOperation(ctx, i.cfg.Binding, kms.Generate)
 	if err != nil || !reflect.DeepEqual(capability.record.Facts.Permission, g.GeneratePermission) {
 		return nil, kms.ErrPermission
@@ -175,8 +204,11 @@ func (i *ProviderPermitIssuer) prepare(ctx context.Context, scope ProviderPermit
 			until = end
 		}
 	}
+	if !enabledUntil.IsZero() && enabledUntil.Before(until) {
+		until = enabledUntil
+	}
 	until = until.UTC().Truncate(time.Microsecond)
-	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, grantProof: grantProof, capability: capability, mapping: mapping, mappingRaw: bytes.Clone(mappingRaw), mappingSignature: bytes.Clone(mappingSig), mappingIssuer: bytes.Clone(i.cfg.InstallationIssuer), planHash: planHash, specHash: specHash, until: until, original: original}, nil
+	return &PreparedProviderPermitIssue{issuer: i, scope: scope, grant: g, grantProof: grantProof, capability: capability, mapping: mapping, mappingRaw: bytes.Clone(mappingRaw), mappingSignature: bytes.Clone(mappingSig), mappingIssuer: bytes.Clone(i.cfg.InstallationIssuer), planHash: planHash, specHash: specHash, until: until, original: original, enabledFingerprint: enabledFingerprint}, nil
 }
 
 func (p *PreparedProviderPermitIssue) ValidUntil() time.Time {
@@ -259,6 +291,12 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		err = guard.RecheckOriginal(ctx, tx, cfg.Authority, a)
 	}
 	if err != nil || lease.Until.After(guard.ValidUntil()) {
+		return kms.ErrPermission
+	}
+	// Acquire the actual state/config lineage before the KEK fence. Rechecks
+	// below retain ONLY this ctx/tx proof and never reacquire an earlier lock.
+	enabledLineage, e := p.bindEnabledOnlyOriginal(ctx, tx)
+	if e != nil {
 		return kms.ErrPermission
 	}
 	next("Stage.OriginalRows")
@@ -356,7 +394,7 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		return kms.ErrPermission
 	}
 	next("Stage.RegistryRecheck")
-	if p.recheck(ctx, tx, guard, bound, locked, now) != nil {
+	if p.recheckRowsEnabled(ctx, tx, guard, bound, locked, now, nil, enabledLineage) != nil {
 		return kms.ErrPermission
 	}
 	// The first full recheck above acquired both exact provider rows in the
@@ -397,7 +435,7 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 			break
 		}
 	}
-	change := &issuedPermitReferenceChange{issue: p, tx: tx, guard: guard, bound: bound, locked: locked, reference: r, until: lease.Until, providerRows: providerRows}
+	change := &issuedPermitReferenceChange{issue: p, tx: tx, guard: guard, bound: bound, locked: locked, reference: r, until: lease.Until, providerRows: providerRows, enabledLineage: enabledLineage}
 	if state == reg.ReferencePlanned {
 		err = bound.RetainPlanned(ctx, change)
 	} else {
@@ -415,7 +453,7 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 		}
 	}
 	next("Stage.RegistryTail")
-	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheckRows(ctx, tx, guard, bound, locked, now, providerRows) != nil {
+	if tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheckRowsEnabled(ctx, tx, guard, bound, locked, now, providerRows, enabledLineage) != nil {
 		return kms.ErrPermission
 	}
 	p.id = id
@@ -425,14 +463,15 @@ func (p *PreparedProviderPermitIssue) stage(ctx context.Context, tx *sql.Tx, lea
 }
 
 type issuedPermitReferenceChange struct {
-	issue        *PreparedProviderPermitIssue
-	tx           *sql.Tx
-	guard        *c.ExecutionAuthorityGuard
-	bound        *reg.Bound
-	locked       reg.LockedSnapshot
-	reference    reg.Reference
-	until        time.Time
-	providerRows *heldProviderPermitRows
+	issue          *PreparedProviderPermitIssue
+	tx             *sql.Tx
+	guard          *c.ExecutionAuthorityGuard
+	bound          *reg.Bound
+	locked         reg.LockedSnapshot
+	reference      reg.Reference
+	until          time.Time
+	providerRows   *heldProviderPermitRows
+	enabledLineage *permitEnabledOnlyLineage
 }
 
 func (p *issuedPermitReferenceChange) Reference() reg.Reference { return p.reference }
@@ -443,14 +482,17 @@ func (p *issuedPermitReferenceChange) Recheck(ctx context.Context, view reg.SQLR
 	if view != p.tx || !reg.SameSnapshotFacts(locked.Facts(), p.locked.Facts()) || !now.Before(p.until) {
 		return kms.ErrPermission
 	}
-	return p.issue.recheckRows(ctx, p.tx, p.guard, p.bound, locked, now, p.providerRows)
+	return p.issue.recheckRowsEnabled(ctx, p.tx, p.guard, p.bound, locked, now, p.providerRows, p.enabledLineage)
 }
 
 func (p *PreparedProviderPermitIssue) recheck(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time) error {
 	return p.recheckRows(ctx, tx, guard, bound, locked, now, nil)
 }
 
-func (p *PreparedProviderPermitIssue) recheckRows(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time, rows *heldProviderPermitRows) (resultErr error) {
+func (p *PreparedProviderPermitIssue) recheckRows(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time, rows *heldProviderPermitRows) error {
+	return p.recheckRowsEnabled(ctx, tx, guard, bound, locked, now, rows, nil)
+}
+func (p *PreparedProviderPermitIssue) recheckRowsEnabled(ctx context.Context, tx *sql.Tx, guard *c.ExecutionAuthorityGuard, bound *reg.Bound, locked reg.LockedSnapshot, now time.Time, rows *heldProviderPermitRows, enabledLineage *permitEnabledOnlyLineage) (resultErr error) {
 	cost := startProviderPermitTimer(ctx, "Recheck")
 	defer func() { cost.finish(resultErr != nil) }()
 	segment := startProviderPermitTimer(ctx, "Recheck.GuardAndRevocation")
@@ -460,6 +502,9 @@ func (p *PreparedProviderPermitIssue) recheckRows(ctx context.Context, tx *sql.T
 		segment = startProviderPermitTimer(ctx, label)
 	}
 	if !now.Before(p.until) || guard.RecheckAfter(ctx, tx, now) != nil || bound.RequireUnrevoked(p.issuer.cfg.Binding.ConfigRef, reg.GenerateRevocation) != nil {
+		return kms.ErrPermission
+	}
+	if enabledLineage.recheck(ctx, tx, p.issuer, p.grant, p.scope.Input.Authority) != nil {
 		return kms.ErrPermission
 	}
 	next("Recheck.Capability")
@@ -583,9 +628,13 @@ func (p *PreparedProviderPermitIssue) ReadCommitted(ctx context.Context) (kms.De
 	if !reflect.DeepEqual(want, got) || (current.State != "reserved" && current.State != "using" && current.State != "finished") {
 		return bad()
 	}
+	enabledLineage, e := p.bindEnabledOnlyOriginal(ctx, tx)
+	if e != nil {
+		return bad()
+	}
 	bound, locked, err := (reg.SQLStore{}).Bind(ctx, tx, a.InstallationID)
 	var now time.Time
-	if err != nil || tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheck(ctx, tx, guard, bound, locked, now) != nil {
+	if err != nil || tx.QueryRowContext(ctx, "SELECT UTC_TIMESTAMP(6)").Scan(&now) != nil || p.recheckRowsEnabled(ctx, tx, guard, bound, locked, now, nil, enabledLineage) != nil {
 		return bad()
 	}
 	delivery, err := p.authenticateDelivery(raw, checksum, size, expires, current, now)

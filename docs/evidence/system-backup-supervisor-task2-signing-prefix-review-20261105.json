@@ -1,0 +1,75 @@
+{
+  "schema_version": "supervisor-task2-signing-prefix-review.v1",
+  "parent": "aafd0acbc7b8c74d3e14b95b6bcc9dc96ab1bc8c",
+  "source_maps": [
+    {
+      "path": "backend/.a-task2-owner-consumers-20261105/source-map.json",
+      "sha256": "8987a4c45cbc088297024d5a7e116a717163d9c883ea2c74468231a349703755"
+    },
+    {
+      "path": "backend/.a-enabled-lineage-native-reader-20261105/source-map.json",
+      "sha256": "5029e1662155d65c7cd4f53c80474a898be82111b239a71efcda2b3e0d7b32d6"
+    },
+    {
+      "path": "backend/.a-signing-state-prefix-r1-20261105/source-map.json",
+      "sha256": "9c87c52942e2e286b9cab1ae6fe91755c670e08e71cc6520115cc5f1e0dba29b"
+    },
+    {
+      "path": "docs/evidence/system-backup-supervisor-signing-owner-prefix-20261105/source-map.json",
+      "sha256": "ac6649fcc4e409d067df806516a4b5a3dad6d55d0b775b6fe3667a90792e8d17"
+    },
+    {
+      "path": "backend/.d-lineage-select-grants-20261105/source-map.json",
+      "sha256": "50e2ebac2669bb7f249b61897eeac9b778206c7c08bf9c97949e90bae183e566"
+    },
+    {
+      "path": "docs/evidence/system-backup-supervisor-publication-outer-prefix-20261105/source-map.json",
+      "sha256": "a7cf6b4b31a4dc9b0fa6c5a068a19528b3f86484b5947c4048cadc9d83e6de8f"
+    },
+    {
+      "path": "docs/evidence/system-backup-supervisor-publication-outer-prefix-r2-20261105/source-map.json",
+      "sha256": "34a43fa94354db4c479447fdfbd730c252006e1ca3b6a48f0cb4044cbf94b2fd"
+    }
+  ],
+  "independent_overlay_sha256": "6367044b590aef8a6481b3b1c8f8b5a1d6e8ce5b255686a3bcdbf3e8bff5c737",
+  "validation": {
+    "exit": 0,
+    "roots": 33,
+    "subs": 153,
+    "fails": [],
+    "skips": [
+      "TestOriginalHeldControlPrefixCurrentMySQL",
+      "TestOriginalHeldControlPrefixLocksBeforeBlockedSuffixMySQL",
+      "TestOriginalHeldPrefixSameRPCControlDifferentialMySQL",
+      "TestOriginalMaterialProducerFullSigningAndLocalConsumerComponent"
+    ],
+    "log_sha256": "e15764e20e5237632d928f56a1fad2cb4f4b7ff5399af910ae3e89d10c89ebbb",
+    "scope": "Independent accepted baseline with exact18-file overlay; SQL and provider protocol models, not native concurrency or page acceptance."
+  },
+  "changes": [
+    "Actual Task2 permit and artifact-signing consumers accept original enabled-only lineage in the same original SQL view; complete old/new Forward scope remains bound.",
+    "Original owner v1 signing state is locked before original backup/evidence at prepared Stage, certificate task boundary, and fresh acceptance/catalog outer transactions.",
+    "Known and unknown signing journal result queries retain historical verification and original expiry semantics; fresh-stage prefix is not imposed on query/result persistence.",
+    "Exact SELECT additions cover original admission and evidence-chunk lineage reads; immutable original grants and bindings remain immutable."
+  ],
+  "native_component": {
+    "log_sha256": "8db3c7cf25ef69d69ba77dfc0260d9177f54bd8357a51e81f58426ee84cda49c",
+    "server_uuid": "f584157a-d8a1-11f1-a27a-35bb0b06fcdf",
+    "mysql": "8.4.8",
+    "tls": "TLSv1.3",
+    "roots": 1,
+    "subtests": 5,
+    "scope": "Actual SELECT-only seven-table SQL transport and historical row fixture, not genuine normal-enable/admission production issuance.",
+    "all_owned_containers_volumes_credentials_and_test_elf_removed": true
+  },
+  "review": {
+    "public_c": "Final R2 outer-prefix source reviewed; original known-result query semantics retained.",
+    "new_order_model": "Authenticated original owner v1/task1 actual prepared StageFirst positive and rejected-prefix-before-task/write negative; protocol model only."
+  },
+  "remaining": [
+    "New MinIO dedicated runtime metadata owner/profile/CLI integration is outside this accepted subset.",
+    "Actual normal enable, original Task2 Generate, full retained17 adoption, native original physical source recovery, field deployment and same-task page backup/publication remain unqualified."
+  ],
+  "page_acceptance": false,
+  "dr_qualified": false
+}

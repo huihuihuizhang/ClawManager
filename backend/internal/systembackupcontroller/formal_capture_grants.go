@@ -20,6 +20,11 @@ func formalCaptureTableGrants(runtime bool) map[string][]string {
 	for _, table := range []string{"system_backup_installation_kek_authority", "system_backup_v2_kek_bindings", "system_backup_v2_kek_coverage", "system_backup_v2_kek_references"} {
 		out[table] = []string{"SELECT"}
 	}
+	// Enabled-only lineage reads the original admission and verifies that the
+	// original inline enable evidence has no chunks in this same SQL view.
+	// Publication independently adds its existing chunk INSERT below this role.
+	out["system_backup_v2_kek_admissions"] = []string{"SELECT"}
+	out["system_backup_v2_evidence_chunks"] = []string{"SELECT"}
 	out["system_backup_v2_kek_fences"] = []string{"SELECT", "INSERT", "UPDATE"}
 	return out
 }
