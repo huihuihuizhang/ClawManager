@@ -1,0 +1,67 @@
+--- parent-5631/assemble.py
++++ external-asset-fix/assemble.py
+@@ -183,6 +183,17 @@
+     main_raw = main_path.read_bytes()
+     values = constants(main_raw)
+     names = seal_names(main_raw, values)
++    # The sealed operator roster also requires a finite non-Python contract.
++    # Package the actual accepted commit bytes, never memory or a fallback.
++    contract_assets = {n for n in names if n.startswith('contracts/')}
++    require(contract_assets == {'contracts/system-backup/v12/schema-registry.json'}, 'review changed finite contract asset roster before packaging')
++    for target in sorted(contract_assets):
++        expected = 'e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36'
++        asset = regular(source / target)
++        require(sha(asset) == expected, 'accepted contract asset digest differs')
++        committed_asset = subprocess.check_output(['git', '-C', str(a.source_repository), 'show', a.commit + ':' + target])
++        require(hash_bytes(committed_asset) == expected and committed_asset == asset.read_bytes(), 'contract asset differs from actual source commit')
++        add(target, asset, expected)
+     todo = {'scripts/system-backup-zhanghui08-operator.py', 'scripts/system-backup-preview-import.py'} | {n for n in names if n.endswith('.py')}
+     python_files = {}
+     snapshot = {x['target']: x['sealed_sha256'] for x in loader['input_snapshot']}
+@@ -227,6 +238,21 @@
+     add('provenance/python-loader-map.json', a.loader_map, a.loader_map_sha256)
+     add('provenance/shared-agent-BUILD_INPUT.json', a.shared_agent_input, a.shared_agent_input_sha256)
+     add('provenance/exact-native-s3-version-delete-blocker-R14.json', a.source_repository / '.tmp-native-s3-r14-threat-boundary-blocker-20261105.json', 'f8fb2fc70fab2df76757aff76725d8986501d5e617f4f28bbff25ace65053d0c')
++    # External packaging-tool correction; image/source/receipt provenance stays
++    # the original accepted commit and is not relabelled as this tool revision.
++    parent_tool = regular(source / 'scripts/system-backup-supervisor-final-bundle.py')
++    require(sha(parent_tool) == '5631f5f6577ddf4d5bad8cdf12bb00df998109ec90cb5ac3615d921937b22269', 'external assembler original parent differs')
++    outer_provenance = {
++        'schema_version': 'external-outer-assembler-provenance.v1',
++        'tool_file': 'provenance/assemble.py',
++        'tool_sha256': sha(regular(Path(__file__))),
++        'parent_source_file': 'scripts/system-backup-supervisor-final-bundle.py',
++        'parent_sha256': '5631f5f6577ddf4d5bad8cdf12bb00df998109ec90cb5ac3615d921937b22269',
++        'image_source_commit': a.commit,
++        'image_source_receipt_rebuilt_or_modified': False,
++        'purpose': 'Package the sealed required finite contract asset omitted by the original outer tool; preserve actual source bytes and all existing verification',
++    }
++    memory['provenance/outer-assembler-provenance.json'] = packed(outer_provenance)
+     add('provenance/assemble.py', Path(__file__))
+     if a.runbook:
+         add('INSTALL-RUNBOOK.zh-CN.md', a.runbook, a.runbook_sha256)
+@@ -249,6 +275,16 @@
+         'full_runtime_coverage_claimed': False,
+         'exact_native_exclusion_verified_by_packager': False,
+         'authorized_scope_backup_success_verified': False,
++    }
++    config['outer_assembler_provenance'] = outer_provenance
++    config['capture_schema_registry_pin_mismatch'] = True
++    config['capture_schema_registry_blocker'] = {
++        'expected_runtime_sha256': 'eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e',
++        'actual_source_and_packaged_sha256': 'e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36',
++        'fail_closed': True,
++        'capture_author_usable': False,
++        'runtime_pin_modified_by_outer_tool': False,
++        'phase': 'later capture mapping; not required for the new-image upgrade phase',
+     }
+     config['scope'] = scope
+     config['page_ready'] = False
+@@ -346,6 +382,7 @@
+ 随后操作使用 operator-release-pins.json 和 D 的最终 Runbook。OPERATOR-CALLS.txt 是接口提示，不是安装步骤。
+ 尚需现场绑定：真实原 copy199r2 收据、存储类/容量、节点 SSH key/known-hosts、source/writer selection、MinIO options，以及原 producer 的 issuers/nonce/C1/archive/adoption/composition 收据。不得补造缺失材料。
+ admin 密码仍从 /root/.clawmanager-backup-install/admin-password 读取；Vault 原材料仍在 /root/sbk-vault-owner-20261102-01/init-material.json。本包不含这些秘密。
++后续 capture-mapping 的 registry 硬pin eded… 与实际源码及本包 e867… 不同，capture_schema_registry_pin_mismatch=true；原作者保持 fail-closed，不能声称该作者可用。本外层工具不修改运行时硬pin，不重建或改标源码/镜像。
+ 本包不代表 ready、页面验收或灾备资格。验收必须看到真实非空页面备份、完整采集、源状态恢复、正式发布、独立读回、catalog 和 true success。copy199r2 通过不能替代原库升级及页面验收。
+ 测试结束后删除测试构建产物；现场持久卷、原 Vault 状态和原私有材料按实际恢复 Runbook 保留。
+ '''

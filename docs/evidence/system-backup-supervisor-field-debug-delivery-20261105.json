@@ -1,0 +1,89 @@
+{
+  "archive": "D:\\codex-backup-page-trial-release-.tmp-supervisor-page-release-20261104-714c7603\\clawmanager-page-20261105-03fa0a461930-release.tar.gz",
+  "sha256": "b5b7da4aa4f3fba0b0bdcd3bcce6dae0a39647e73f05562deb20a6f319e54276",
+  "bytes": 2119430112,
+  "source_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
+  "remote_target": "root@10.130.14.23",
+  "page_acceptance": false,
+  "full_acceptance": false,
+  "dr_qualified": false,
+  "scope": "Field image upgrade and installation debugging; exact two known error Lite runtime sources deferred, all original SQL rows preserved. Native MinIO version-delete and Teams source grant remain blockers.",
+  "assembly_tool_sha256": "01a19277e89eb2549b5ff6e7aa55d9e087af1ae1d63d378bacfd49b7c17a49ed",
+  "known_blockers": {
+    "native_minio_version_delete_403": true,
+    "teams_static_grant_pending": true,
+    "capture_schema_registry_pin_mismatch": true
+  },
+  "schema_version": "supervisor-actual-field-debug-delivery.v1",
+  "head_when_assembled": "03fa0a461930642f1f0561ab872f35be0402468d",
+  "verified_archive_files": 138,
+  "acceptance_state": {
+    "c1_accepted": false,
+    "capture_schema_registry_blocker": {
+      "actual_source_and_packaged_sha256": "e8670002f637508955e0eb19350fa17abee0976153e6ca8c2c02055808b83a36",
+      "capture_author_usable": false,
+      "expected_runtime_sha256": "eded642d87c91936f6c5119b2f92e52e90203a4bc439ef8d8f91fe1bce918f9e",
+      "fail_closed": true,
+      "phase": "later capture mapping; not required for the new-image upgrade phase",
+      "runtime_pin_modified_by_outer_tool": false
+    },
+    "capture_schema_registry_pin_mismatch": true,
+    "delivery_purpose": "field-upgrade-and-page-install-debug",
+    "dr_qualified": false,
+    "exact_native_s3_version_delete_blocker": {
+      "conditional_policy_workaround_accepted": false,
+      "formal_native_exact_version_delete_http_status": 403,
+      "formal_policy_changed_by_packager": false,
+      "r14_evidence_file": "provenance/exact-native-s3-version-delete-blocker-R14.json",
+      "r14_evidence_scope": "isolated fixed-native-MinIO threat-boundary test; not field acceptance",
+      "r14_evidence_sha256": "f8fb2fc70fab2df76757aff76725d8986501d5e617f4f28bbff25ace65053d0c",
+      "reason": "Formal native DeleteObjectVersion returns 403; R14 rejects the conditional-policy workaround because it permits unintended deletions"
+    },
+    "exactnativeS3VersionDeleteBlocked": true,
+    "full_acceptance": false,
+    "installation_runbook_included": true,
+    "installation_runbook_runnable": false,
+    "new_image_field_verified": false,
+    "outer_assembler_provenance": {
+      "image_source_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
+      "image_source_receipt_rebuilt_or_modified": false,
+      "parent_sha256": "5631f5f6577ddf4d5bad8cdf12bb00df998109ec90cb5ac3615d921937b22269",
+      "parent_source_file": "scripts/system-backup-supervisor-final-bundle.py",
+      "purpose": "Package the sealed required finite contract asset omitted by the original outer tool; preserve actual source bytes and all existing verification",
+      "schema_version": "external-outer-assembler-provenance.v1",
+      "tool_file": "provenance/assemble.py",
+      "tool_sha256": "01a19277e89eb2549b5ff6e7aa55d9e087af1ae1d63d378bacfd49b7c17a49ed"
+    },
+    "page_acceptance": false,
+    "page_ready": false,
+    "scope": {
+      "authorized_scope_backup_success_verified": false,
+      "basis": "User explicitly prioritized deployment and authorized excluding the two observed errorLite runtimes data",
+      "exact_native_exclusion_verified_by_packager": false,
+      "excluded_runtime_count": 2,
+      "excluded_runtime_data": "two observed errorLite runtime instances",
+      "full_runtime_coverage_claimed": false,
+      "remaining_expected_normal_runtime_count": 4,
+      "remaining_requested_scope": "all four normal runtime instances, Teams, Skills and every other requested backup module",
+      "sql_retention_requirement": "preserve original SQL states and all original rows; no SQL filtering or deletion"
+    },
+    "source_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
+    "status": "FIELD_UPGRADE_PAGE_INSTALL_DEBUG_C1_BLOCKED",
+    "supported_initial_stop_phase": "new-image",
+    "teams_static_grant_wiring_pending": true,
+    "version": "page-20261105-03fa0a461930-release"
+  },
+  "checks": {
+    "linux_test_roots": 34,
+    "linux_test_subs": 95,
+    "operator_models": 19,
+    "input_pvc_models": 4,
+    "linux_log_sha256": "3caeb870a1a106cfc04b6cc2bf78ddf7e964477e3926489a846b936b03f1541c",
+    "python_loader_files": 50,
+    "python_loader_edges": 45,
+    "actual_loader_calls": 33
+  },
+  "field_executed": false,
+  "source_and_image_receipts_relabelled": false,
+  "temporary_test_products": "Owned test containers and transient ELF cleaned; production package and original build inputs retained"
+}
