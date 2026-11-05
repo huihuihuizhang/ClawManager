@@ -130,6 +130,68 @@ def object_scope(m, stages, assembly, app):
     return bucket, prefix
 
 
+def inline_nfs_workspace(m, stages, coordinates, root, subpath, source, worker_node):
+    """Populate the EXISTING signed Core; no source proof or storage mutation."""
+    def get(kind, name, namespace=None):
+        args = (["-n", namespace] if namespace else []) + ["get", kind, name, "-o", "json"]
+        return m.decode(stages.op.k(*args))
+    services = m.decode(stages.op.k("get", "services", "-A", "-o", "json"))["items"]
+    selected = [s for s in services if s["spec"].get("clusterIP") == source["server"]]
+    m.need(len(selected) == 1, "original_inline_NFS_Service_must_be_unique")
+    service = selected[0]
+    ns, name = service["metadata"]["namespace"], service["metadata"]["name"]
+    namespace = get("namespace", ns)
+    endpoints = get("endpoints", name, ns)
+    addresses = [a for s in endpoints.get("subsets", []) for a in s.get("addresses", [])]
+    m.need(not any(s.get("notReadyAddresses") for s in endpoints.get("subsets", [])) and len(addresses) == 1,
+           "one_actual_inline_NFS_backend_required")
+    ref = addresses[0].get("targetRef", {})
+    m.need(ref.get("kind") == "Pod" and ref.get("namespace") == ns and ref.get("uid"), "actual_inline_NFS_endpoint_Pod_UID_required")
+    pod = get("pod", ref["name"], ns)
+    m.need(pod["metadata"]["uid"] == ref["uid"] and pod["status"].get("podIP") == addresses[0]["ip"] and
+           not pod["metadata"].get("deletionTimestamp") and service["spec"].get("selector") and
+           all(pod["metadata"].get("labels", {}).get(k) == v for k,v in service["spec"]["selector"].items()),
+           "original_inline_NFS_Service_backend_changed")
+    candidates = [(v, mount) for v in pod["spec"].get("volumes", []) if "persistentVolumeClaim" in v
+                  for c in pod["spec"]["containers"] for mount in c.get("volumeMounts", []) if mount["name"] == v["name"]]
+    m.need(len(candidates) == 1 and not candidates[0][1].get("subPath") and not candidates[0][1].get("subPathExpr"),
+           "one_actual_provider_PVC_mount_locator_required_no_export_proof_created")
+    volume, export_mount = candidates[0]
+    claim = get("pvc", volume["persistentVolumeClaim"]["claimName"], ns)
+    pv = get("pv", claim["spec"]["volumeName"])
+    m.need(claim["status"]["phase"] == "Bound" and pv["spec"]["claimRef"]["uid"] == claim["metadata"]["uid"] and
+           pv["spec"]["claimRef"]["namespace"] == ns and pv["spec"]["claimRef"]["name"] == claim["metadata"]["name"],
+           "original_inline_NFS_provider_PVC_PV_UID_binding_required")
+    node = get("node", pod["spec"]["nodeName"])
+    scope = coordinates.get("RuntimeTestScope")
+    deferred = {r["ID"] for r in scope["Deferred"]} if scope is not None else set()
+    paths = []
+    for row in coordinates["Instances"]:
+        if row["ID"] in deferred:
+            continue
+        data_path = row["Workspace"]
+        m.need(row["ID"] > 0 and row["UserID"] > 0 and row["Generation"] > 0 and data_path.startswith(root + "/") and
+               str(PurePosixPath(data_path)) == data_path and ".." not in PurePosixPath(data_path).parts,
+               "original_SQL_instance_workspace_path_required_for_inline_NFS")
+        relative = "/".join(v for v in (subpath, data_path[len(root)+1:]) if v)
+        m.need(relative and not relative.startswith("/") and ".." not in PurePosixPath(relative).parts,
+               "whole_shared_NFS_root_is_not_an_instance_source")
+        paths.append({"InstanceID": row["ID"], "UserID": row["UserID"], "Generation": row["Generation"], "SubPath": relative})
+    paths.sort(key=lambda v: v["InstanceID"])
+    m.need(paths and len({v["InstanceID"] for v in paths}) == len(paths), "complete_original_SQL_NFS_path_set_required")
+    provider = {"Namespace": ns, "NamespaceUID": namespace["metadata"]["uid"], "Service": name, "ServiceUID": service["metadata"]["uid"],
+                "EndpointsUID": endpoints["metadata"]["uid"], "Pod": pod["metadata"]["name"], "PodUID": pod["metadata"]["uid"],
+                "Claim": claim["metadata"]["name"], "ClaimUID": claim["metadata"]["uid"], "PV": pv["metadata"]["name"], "PVUID": pv["metadata"]["uid"],
+                "PVSpec": pv["spec"], "Node": node["metadata"]["name"], "NodeUID": node["metadata"]["uid"], "ExportMountPath": export_mount["mountPath"]}
+    stages.retain("initial-original-inline-NFS-selection.json", {"version": "original-inline-NFS-input-selection.v1", "provider": provider,
+                  "original_paths": paths, "physical_export_mapping_proven": False, "writers_fenced": False, "backup_ready": False})
+    # Only staging is a consumer-namespace PVC. Never replace the actual source
+    # with an unused same-name claim, copy files or stop the shared provider.
+    return {"claim": "", "nfs": {"server": source["server"], "export": source["path"], "original_paths": paths, "provider": provider},
+            "sub_path": subpath, "node": worker_node, "max_files": 1000000, "max_file_bytes": 1 << 30,
+            "max_archive_bytes": 8 << 30, "max_compressed_bytes": 8 << 30}
+
+
 def workspace(m, stages, assembly, app, host, coordinates):
     root = assembly.original_app_environment(m, stages, app, "RUNTIME_WORKSPACE_ROOT").decode()
     container = app["spec"]["template"]["spec"]["containers"][0]
@@ -137,11 +199,8 @@ def workspace(m, stages, assembly, app, host, coordinates):
     m.need(len(mounts) == 1 and not mounts[0].get("subPathExpr"), "one_actual_original_workspace_mount_required")
     mount = mounts[0]
     volumes = [v for v in app["spec"]["template"]["spec"]["volumes"] if v["name"] == mount["name"]]
-    m.need(len(volumes) == 1 and "persistentVolumeClaim" in volumes[0], "actual_PVC_workspace_producer_required")
-    claim_name = volumes[0]["persistentVolumeClaim"]["claimName"]
-    actual = stages.get("pvc", claim_name)
-    pins = [v for v in coordinates["Volumes"] if v["ClaimName"] == claim_name and v["ClaimUID"] == actual["metadata"]["uid"]]
-    m.need(len(pins) == 1 and actual["status"]["phase"] == "Bound", "same_original_workspace_PVC_identity_required")
+    m.need(len(volumes) == 1 and sum(k in volumes[0] for k in ("persistentVolumeClaim", "nfs", "hostPath")) == 1,
+           "one_actual_original_workspace_volume_source_required")
     selector = app["spec"]["selector"]
     m.need(selector.get("matchLabels") and not selector.get("matchExpressions"), "finite_original_app_selector_required")
     pods = m.decode(stages.op.k("-n", coordinates["Namespace"], "get", "pods", "-l", ",".join(k+"="+v for k,v in sorted(selector["matchLabels"].items())), "-o", "json"))["items"]
@@ -150,6 +209,19 @@ def workspace(m, stages, assembly, app, host, coordinates):
     suffix = root[len(mount["mountPath"]):].lstrip("/")
     subpath = "/".join(x for x in (mount.get("subPath", ""), suffix) if x)
     m.need(not subpath or not subpath.startswith("/") and ".." not in PurePosixPath(subpath).parts, "finite_original_workspace_subpath_required")
+    if "nfs" in volumes[0]:
+        # Worker placement is the original signed staging node; the actual
+        # runtime Pod may be elsewhere when reading a shared NFS source.
+        host_pod = stages.get("pod", host["Pod"])
+        m.need(host_pod["metadata"]["uid"] == host["PodUID"], "same_original_staging_controller_Pod_UID_required")
+        worker_node = host_pod["spec"]["nodeName"]
+        m.need(worker_node in coordinates["NodeUIDs"], "original_staging_node_UID_required")
+        return root, inline_nfs_workspace(m, stages, coordinates, root, subpath, volumes[0]["nfs"], worker_node), None
+    m.need("persistentVolumeClaim" in volumes[0], "unsupported_original_workspace_source_requires_actual_adapter")
+    claim_name = volumes[0]["persistentVolumeClaim"]["claimName"]
+    actual = stages.get("pvc", claim_name)
+    pins = [v for v in coordinates["Volumes"] if v["ClaimName"] == claim_name and v["ClaimUID"] == actual["metadata"]["uid"]]
+    m.need(len(pins) == 1 and actual["status"]["phase"] == "Bound", "same_original_workspace_PVC_identity_required")
     return root, {"claim": claim_name, "sub_path": subpath, "node": pods[0]["spec"]["nodeName"],
         "max_files": 1000000, "max_file_bytes": 1 << 30, "max_archive_bytes": 8 << 30, "max_compressed_bytes": 8 << 30}, pins[0]
 
@@ -205,7 +277,7 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
         "key_directory": str(mirror / "execution-keys"), "profile_file": str(directory / "execution-profile.json"), "capacity_file": str(mirror / "registration-capacity.current.json"),
         "source_dsn_file": source_dsn["File"], "source_user": source["username"], "source_database": target["Database"], "source_server_uuid": target["ServerUUID"], "source_tls": sql["source_tls"],
         "staging_directory": m.STAGING, "seal_custody_max_bytes": 1 << 30, "staging_claim": stage_claim["metadata"]["name"], "worker_image": images["worker"]["reference"],
-        "worker_security": {"node_uids": data["NodeUIDs"], "volumes": [volume_pin(workspace_pin, "workspace"), volume_pin(staging_pins[0], "staging")], "ServiceAccountName": worker["Name"], "ServiceAccountUID": worker["UID"]},
+        "worker_security": {"node_uids": data["NodeUIDs"], "volumes": ([volume_pin(workspace_pin, "workspace")] if workspace_pin is not None else []) + [volume_pin(staging_pins[0], "staging")], "ServiceAccountName": worker["Name"], "ServiceAccountUID": worker["UID"]},
         "control_url": host_result["control_service"]["SelectedURL"], "listen": ":9443", "server_certificate": relay["ServerCertificate"]["File"], "server_key": relay["ServerKey"]["File"],
         "issuer_certificate": relay["CA"]["File"], "issuer_certificate_sha256": relay["CA"]["SHA256"], "issuer_key": relay["IssuerKey"]["File"],
         "platform_writers": [{"namespace": target["Namespace"], "name": d["Name"], "uid": d["UID"]} for d in writer["Deployments"] if d["Role"] == "writer"], "workspace": work,
@@ -336,7 +408,8 @@ def material_template(m, stages, assembly, core, directory, host, app, data, red
         # ConfigSHA256, task identity, observed source or fake grant is inserted.
         operations[name] = {"Request": request, "Formal": {"schema_version": "public-c-stream-job.v1alpha1", "envelope_name": name + ".envelope", "max_frames": 65536},
             "Workload": {"Identity": {"Namespace": data["Namespace"]}, "Image": core["worker_image"], "ServiceAccount": core["worker_security"]["ServiceAccountName"],
-                "Source": {"name": "source", "persistentVolumeClaim": {"claimName": core["workspace"]["claim"], "readOnly": True}}, "SourceSubPath": core["workspace"]["sub_path"],
+                "Source": ({"name": "source", "nfs": {"server": core["workspace"]["nfs"]["server"], "path": core["workspace"]["nfs"]["export"], "readOnly": True}}
+                           if core["workspace"].get("nfs") else {"name": "source", "persistentVolumeClaim": {"claimName": core["workspace"]["claim"], "readOnly": True}}), "SourceSubPath": core["workspace"]["sub_path"],
                 "StagingClaim": core["staging_claim"], "NodeName": core["workspace"]["node"], "DeadlineSeconds": 300,
                 "WorkerControl": {"URL": core["control_url"], "BoundPodIdentity": True}}}
     resources = [{"Part": "deployment_resources", "Group": group, "Version": version, "Resource": resource, "LabelSelector": ""}

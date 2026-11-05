@@ -91,8 +91,10 @@ type WorkspaceCapture struct {
 	MaxCompressedBytes int64         `json:"max_compressed_bytes"`
 }
 type NFSWorkspace struct {
-	Server string `json:"server"`
-	Export string `json:"export"`
+	Server        string                    `json:"server"`
+	Export        string                    `json:"export"`
+	OriginalPaths []OriginalNFSInstancePath `json:"original_paths,omitempty"`
+	Provider      *OriginalNFSProvider      `json:"provider,omitempty"`
 }
 
 // The NFS capture mount is restricted to one installation tree. A shared
@@ -102,6 +104,12 @@ func (w WorkspaceCapture) validSource(installation string) bool {
 		return w.Claim != ""
 	}
 	if w.Claim != "" || net.ParseIP(w.NFS.Server) == nil || !path.IsAbs(w.NFS.Export) || path.Clean(w.NFS.Export) != w.NFS.Export || strings.ContainsAny(w.NFS.Export, "\\\x00\r\n:") {
+		return false
+	}
+	if len(w.NFS.OriginalPaths) > 0 {
+		return (w.SubPath == "" || nfsCleanRelative(w.SubPath)) && w.NFS.originalPathsValid()
+	}
+	if w.NFS.Provider != nil {
 		return false
 	}
 	h := sha256.Sum256([]byte(installation))

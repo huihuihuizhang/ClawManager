@@ -339,7 +339,14 @@ func resolvePersistentMount(ctx context.Context, client kubernetes.Interface, cf
 		}
 	case volume.NFS != nil:
 		nfs := cfg.Workspace.NFS
-		if nfs == nil || volume.NFS.Server != nfs.Server || volume.NFS.Path != nfs.Export || !strings.HasPrefix(relative, cfg.Workspace.SubPath+"/") {
+		allowed := false
+		if nfs != nil && len(nfs.OriginalPaths) > 0 && cfg.RuntimeSources != nil {
+			primary, err := originalNFSInstanceSubPath(cfg.Workspace, cfg.RuntimeSources.WorkspaceRoot, instance)
+			allowed = err == nil && (relative == primary || strings.HasPrefix(relative, primary+"/")) && nfs.recheckOriginalProvider(ctx, client) == nil
+		} else {
+			allowed = strings.HasPrefix(relative, cfg.Workspace.SubPath+"/")
+		}
+		if nfs == nil || volume.NFS.Server != nfs.Server || volume.NFS.Path != nfs.Export || !allowed {
 			return zero, nil, d.ErrNotReady
 		}
 		volume.NFS.ReadOnly = true

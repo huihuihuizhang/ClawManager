@@ -49,7 +49,7 @@ SQL = "scripts/system-backup-original-sql-accounts.py"
 DEPLOYMENT_MODULE_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
 BUSINESS_RUNTIME_SHA = "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
 RECORD_EXPORT_SHA = "868c66ae0dddd7e5b25dd503a7b6309699ddc7831f8f1f74b5f53b5f940a0af4"
-INITIAL_RUNTIME_SHA = "f44c248a803679b0706101836afb1136ae496aab460a32bca4291899c396afbc"
+INITIAL_RUNTIME_SHA = "28e7cf35ae3294c85380ed0f2c4e51fbcd0b325f047d879dc4739104af791c5f"
 RUNTIME_ISSUER_SHA = "6e3fe96bf1bb2cc4bd2b8383763f440d775b6b867dfcfe7549249fbdd71629d2"
 OWNER_ASSEMBLY_SHA = "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
 WORKSPACE_SHA = "bd7149e99b15db2fedadc062b1cf1d559ad441bf4fa1f067874647147c7d85a6"
@@ -785,9 +785,28 @@ class Operator:
                 "metadata": metadata_pin}
 
     def require_current_runtime_qualification(self):
-        # Fresh real same-PVC/Pod/CRI/TLS readback. Genuine backup authority
-        # still comes only from the original factory's actual prepare/hold.
-        workspace_module().verify_localized(self)
+        # Deployment/runtime readback only. Genuine source ownership, native
+        # physical writer proof and prepare/hold remain the original factory's
+        # mandatory boundary; an inline-NFS locator is never that proof.
+        binding = self.final_binding()
+        core = load(self.pin_value(binding["deployment"]))
+        work = core.get("workspace", {})
+        nfs = work.get("nfs")
+        if nfs is not None:
+            require(work.get("claim", "") == "" and nfs.get("original_paths") and nfs.get("provider"),
+                    "original_scoped_inline_NFS_input_and_provider_binding_required")
+            scope = self.open()
+            app = scope["app"]
+            require(app["metadata"]["uid"] == scope["app_deployment_uid"] and core["namespace_uid"] == scope["namespace_uid"],
+                    "original_application_UID_changed_before_NFS_capture")
+            volumes = [v for v in app["spec"]["template"]["spec"].get("volumes", [])
+                       if v.get("nfs", {}).get("server") == nfs["server"] and v["nfs"].get("path") == nfs["export"]]
+            require(len(volumes) == 1, "actual_application_must_keep_original_inline_NFS_source")
+            # The same signed Core is consumed by the Go NFS provider/SQL-path
+            # checks and mandatory native source factory. No migration receipt
+            # is manufactured and no shared server/foreign writer is stopped.
+        else:
+            workspace_module().verify_localized(self)
         return business_runtime_module().verify_current(self)
 
     def adoption(self, action):

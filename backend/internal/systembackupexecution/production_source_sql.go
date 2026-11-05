@@ -198,6 +198,9 @@ func productionInstanceSubPath(s *DeploymentService, instance b.InstanceIdentity
 	// This original installation profile already verifies all live PVC/NFS
 	// aliases and nested mounts. It never substitutes a guessed source volume.
 	root := s.Config.RuntimeSources.WorkspaceRoot
+	if s.Config.Workspace.NFS != nil && len(s.Config.Workspace.NFS.OriginalPaths) > 0 {
+		return originalNFSInstanceSubPath(s.Config.Workspace, root, instance)
+	}
 	if s.Config.Workspace.NFS != nil {
 		root = path.Join(root, s.Config.Workspace.SubPath)
 	}

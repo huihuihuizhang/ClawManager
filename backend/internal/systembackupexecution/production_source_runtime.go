@@ -91,6 +91,9 @@ func (x *originalSourceMetadataAuthority) workspaceVolume(ctx context.Context) (
 	volume := corev1.Volume{Name: "source"}
 	if s.Config.Workspace.NFS != nil {
 		n := s.Config.Workspace.NFS
+		if err := n.recheckOriginalProvider(ctx, x.owner.Client); err != nil {
+			return volume, nil, err
+		}
 		volume.NFS = &corev1.NFSVolumeSource{Server: n.Server, Path: n.Export, ReadOnly: true}
 		return volume, nil, nil
 	}

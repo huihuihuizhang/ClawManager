@@ -1,0 +1,133 @@
+{
+  "schema_version": "supervisor-direct-nfs-consumer-reviewed-integration.v1",
+  "base_commit": "7cdbaf5d885acfadccef530b818f5599a2f571b1",
+  "owner_map_sha256": "f063001ef0ffb2e0f79b64e40068d19deac042e777943e795f258fd2675f2cfb",
+  "sources": [
+    {
+      "target": "backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go",
+      "before_sha256": "234bde361e9e307c84f975187bd719dcb831622b2a186cd55e3b4592b82b50bd",
+      "sha256": "fe10c3208323781e889fe5a8bd1951c2eb0ad3b3fc758707bcaec19543fa1c1e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_config.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/deployment_config.go",
+      "before_sha256": "f142922fed916022e43c4219028e7083ecb974b70684614bd6f08e52186dc822",
+      "sha256": "9829b7218e12b6ef109869564c95aa19794bf260c7287b140c01dd381101b2c8"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "before_sha256": "e935416bead6e5b24133e80c32a02c9c5ea926bc4703e2b636598d6ce17f5a6f",
+      "sha256": "ad1c4ea4c99d50e49cbe134c245c12e2f21b90f1c8a72d17d66df7963173616e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_inline_nfs_source.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_inline_nfs_source.go",
+      "before_sha256": null,
+      "sha256": "9228d648f8d8f3dc68c8d6d42016c1a7eb8faf63989ed2f5d3dd9a11dc97ab7f"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_inline_nfs_source_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_inline_nfs_source_test.go",
+      "before_sha256": null,
+      "sha256": "6ab7354bcc50545fbf3597cfb382dd0d298841c1b18ff712ee87b1c65f0cfba7"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_source_mounts.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_source_mounts.go",
+      "before_sha256": "776e7819806528d51692ab955802c08fd3b2017f764a068a8e7c95d5dddd5b2a",
+      "sha256": "38d4814142142e68aaf1d2cf71e098e593d3c2701844f875139b4485a1df3769"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_source_runtime.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_source_runtime.go",
+      "before_sha256": "6c8ad32761b2387035a07c75991fdb2a9b4f31b9432a29dd9786687e4a15a602",
+      "sha256": "9312ba7a736bc683d494fe2f6bc8104fe2917788d7f1948cd8327b4211f5f2bc"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_source_sql.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_source_sql.go",
+      "before_sha256": "7ed29c6369ce7724eaa72fefc8677b2d17de73398457c75ecfe4d7d6db4c4ab5",
+      "sha256": "890ee0faa21b84cd4fe77206050c12919fb9cc159f20d1da809b7d6e2aff3baa"
+    },
+    {
+      "target": "scripts/system-backup-initial-complete-inputs.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-initial-complete-inputs.py",
+      "before_sha256": "8d29dc899c237f424f05b127fcbce93fa6307a6d8d29847ac3f53f39d2e2681f",
+      "sha256": "2848c1494ea69f85daf15827d080d1ba32ec6c498f08431bc2dde2f06cb1a325"
+    },
+    {
+      "target": "scripts/system-backup-initial-runtime.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-initial-runtime.py",
+      "before_sha256": "f44c248a803679b0706101836afb1136ae496aab460a32bca4291899c396afbc",
+      "sha256": "28e7cf35ae3294c85380ed0f2c4e51fbcd0b325f047d879dc4739104af791c5f"
+    },
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-zhanghui08-operator.py",
+      "before_sha256": "a3f5c1de21a53fc0739986265e92777260f8eab863cf2a45d080f4dcb623d7e0",
+      "sha256": "6a8ffc4dfce806b9d9b24bafc9782c4e3aad86e4ad029fcb95211a27d5355487"
+    },
+    {
+      "target": "scripts/test_initial_inline_nfs_input.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/test_initial_inline_nfs_input.py",
+      "before_sha256": null,
+      "sha256": "5ad9f27c3985881faf7c1108008b76a3361a18392d1189f9662416321f631ab6"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_inline_nfs_deferred_consumers_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_inline_nfs_deferred_consumers_test.go",
+      "before_sha256": null,
+      "sha256": "dc6ba9d9224ea388975969d1cc3ce847a6f3a1638af05675808b23ba3b48c8c8"
+    }
+  ],
+  "python_loader_edges_verified": 45,
+  "loader_updates": [
+    {
+      "parent": "system-backup-initial-runtime.py",
+      "child": "system-backup-initial-complete-inputs.py",
+      "before": "8d29dc899c237f424f05b127fcbce93fa6307a6d8d29847ac3f53f39d2e2681f",
+      "after": "2848c1494ea69f85daf15827d080d1ba32ec6c498f08431bc2dde2f06cb1a325"
+    },
+    {
+      "parent": "system-backup-zhanghui08-operator.py",
+      "child": "system-backup-initial-runtime.py",
+      "before": "f44c248a803679b0706101836afb1136ae496aab460a32bca4291899c396afbc",
+      "after": "28e7cf35ae3294c85380ed0f2c4e51fbcd0b325f047d879dc4739104af791c5f"
+    }
+  ],
+  "native_nfs_capability_verified": false,
+  "field_deployed": false,
+  "page_acceptance": false,
+  "p1_exact_deferred_followup": {
+    "owner_map_sha256": "7a8c9d3d95945abc0857be11403b242510f34d97417d356a7b6531a7e3de7d8c",
+    "change": "Move existing exact approved deferred check before missing-path lookup in both actual consumers; keep complete SQL inventory and scope unchanged. Add actual consumer combination regression."
+  },
+  "linux_verification": {
+    "exit": 0,
+    "source_unchanged": true,
+    "root_tests_passed": 48,
+    "subtests_passed": 202,
+    "failures": [],
+    "skips": [],
+    "log_sha256": "87f7b7c23521e6442c8e58391dbd4621530f372288dbd0cde62738f44ac4be1e",
+    "scope": "Actual offline Linux execution/kube/controller compilation and scoped NFS mount/source component regressions; no native NFS writer/physical source or page acceptance.",
+    "test_products": "go test temporary executables cleaned on exit; Docker --rm; no persistent executable requested"
+  },
+  "python_component_verification": {
+    "command": "py -3 -I -B source/scripts/test_initial_inline_nfs_input.py",
+    "tests_passed": 3,
+    "exit": 0,
+    "scope": "Actual producer and operator branch models, randomized namespace/provider names; no native qualification."
+  },
+  "independent_review": "Original D r22 found a P1 caused by path validation preceding exact deferred selection. The integrated successor moves only the existing precise scope check and adds both actual consumers with all 3 SQL rows retained and 22 positive/negative cases.",
+  "production_boundary": "Existing inline-NFS worker mount and source consumers now receive actual provider identity and original SQL-authorized instance paths without whole-root migration. Original native prepare/hold/writer and source-recovery checks remain required.",
+  "remaining": [
+    "Native observer still lacks qualified NFS/provider-backed writer fence and physical export mapping proof",
+    "Original DB maintenance entry remains to be safely decoupled from the obsolete whole-root localizer precondition",
+    "Real source owner authorization/path overlap and runtime readiness must be obtained before page capture"
+  ],
+  "DR": false,
+  "test_products_removed": "Owned Docker --rm compilation/test container exited; go test temporaries cleaned; Python used -B and created no test executable."
+}

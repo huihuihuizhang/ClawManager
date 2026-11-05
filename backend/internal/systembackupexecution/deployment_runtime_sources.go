@@ -553,18 +553,32 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 	return nil
 }
 
-// The NFS worker mounts only the installation-owned subpath. Every live source
-// must resolve to that exact export and a descendant of that subpath; a nested
-// or aliased mount cannot silently add content outside the capture tree.
+// NFS workers mount only original-owner SQL instance paths, or the existing
+// installation subtree profile. Exact runtime mounts/export/subpaths must agree;
+// nested or aliased mounts cannot silently widen the capture tree.
 func (s *DeploymentService) checkNFSRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity) error {
 	cfg := s.Config.Workspace
 	if cfg.NFS == nil || !cfg.validSource(s.Config.InstallationID) {
 		return d.ErrNotReady
 	}
+	if err := cfg.NFS.recheckOriginalProvider(ctx, client); err != nil {
+		return err
+	}
 	ownedRoot := path.Join(s.Config.RuntimeSources.WorkspaceRoot, cfg.SubPath)
+	if len(cfg.NFS.OriginalPaths) > 0 {
+		ownedRoot = s.Config.RuntimeSources.WorkspaceRoot
+	}
 	for _, source := range instances {
 		if deferredRuntimeTestInstance(s.Config, source) {
 			continue
+		}
+		declaredPath := ""
+		if len(cfg.NFS.OriginalPaths) > 0 {
+			var err error
+			declaredPath, err = originalNFSInstanceSubPath(cfg, s.Config.RuntimeSources.WorkspaceRoot, source)
+			if err != nil {
+				return err
+			}
 		}
 		if !strings.HasPrefix(source.Workspace, ownedRoot+"/") {
 			return d.ErrNotReady
@@ -619,7 +633,7 @@ func (s *DeploymentService) checkNFSRuntimeWorkspace(ctx context.Context, client
 				relative := strings.TrimPrefix(source.Workspace, mount.MountPath)
 				relative = strings.TrimPrefix(relative, "/")
 				physical := path.Join(mount.SubPath, relative)
-				if physical != cfg.SubPath && !strings.HasPrefix(physical, cfg.SubPath+"/") {
+				if (declaredPath != "" && physical != declaredPath) || (declaredPath == "" && physical != cfg.SubPath && !strings.HasPrefix(physical, cfg.SubPath+"/")) {
 					return d.ErrNotReady
 				}
 				matched := false

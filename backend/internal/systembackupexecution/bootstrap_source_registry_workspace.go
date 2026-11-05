@@ -141,18 +141,32 @@ func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Contex
 	return nil
 }
 
-// The NFS worker mounts only the installation-owned subpath. Every live source
-// must resolve to that exact export and a descendant of that subpath; a nested
-// or aliased mount cannot silently add content outside the capture tree.
+// NFS workers mount only original-owner SQL instance paths, or the existing
+// installation subtree profile. Exact runtime mounts/export/subpaths must agree;
+// nested or aliased mounts cannot silently widen the capture tree.
 func (x *bootstrapSourceRegistryReader) checkNFSRuntimeWorkspace(ctx context.Context, client kubernetes.Interface, instances []b.InstanceIdentity, native []bootstrapSourceNativeWriter) error {
 	cfg := x.config.Workspace
 	if cfg.NFS == nil || !cfg.validSource(x.config.InstallationID) {
 		return install.ErrInstall
 	}
+	if err := cfg.NFS.recheckOriginalProvider(ctx, client); err != nil {
+		return err
+	}
 	ownedRoot := path.Join(x.config.RuntimeSources.WorkspaceRoot, cfg.SubPath)
+	if len(cfg.NFS.OriginalPaths) > 0 {
+		ownedRoot = x.config.RuntimeSources.WorkspaceRoot
+	}
 	for _, source := range instances {
 		if deferredRuntimeTestInstance(x.config, source) {
 			continue
+		}
+		declaredPath := ""
+		if len(cfg.NFS.OriginalPaths) > 0 {
+			var err error
+			declaredPath, err = originalNFSInstanceSubPath(cfg, x.config.RuntimeSources.WorkspaceRoot, source)
+			if err != nil {
+				return err
+			}
 		}
 		if !strings.HasPrefix(source.Workspace, ownedRoot+"/") {
 			return install.ErrInstall
@@ -196,7 +210,7 @@ func (x *bootstrapSourceRegistryReader) checkNFSRuntimeWorkspace(ctx context.Con
 				relative := strings.TrimPrefix(source.Workspace, mount.MountPath)
 				relative = strings.TrimPrefix(relative, "/")
 				physical := path.Join(mount.SubPath, relative)
-				if physical != cfg.SubPath && !strings.HasPrefix(physical, cfg.SubPath+"/") {
+				if (declaredPath != "" && physical != declaredPath) || (declaredPath == "" && physical != cfg.SubPath && !strings.HasPrefix(physical, cfg.SubPath+"/")) {
 					return install.ErrInstall
 				}
 				matched := false
