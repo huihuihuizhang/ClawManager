@@ -304,8 +304,10 @@ class Operator:
 
     def db(self, action):
         self.open()
-        if action == "prepare":
-            early_preflight_module().require_early_shapes(self)
+        # This entry maintains ONLY the original database. Its native tool
+        # independently owns admin/SQL exclusion, original app stop, verified
+        # dump/restore/readproof and rollback. NFS shape/localization is NOT a
+        # database precondition and this action grants no source readiness.
         env = dict(os.environ)
         env["KUBECONFIG"] = str(self.kube)
         argv = [sys.executable, "-B", self.root / NATIVE, action, "--operation-directory", self.run / "original199"]
@@ -314,7 +316,9 @@ class Operator:
             argv += ["--copy-receipts-directory", self.a.copy_receipts_directory]
             argv += ["--v3-archive", self.root / COPY_NAME, "--original-proof", self.root / "bin/system-backup-legacy-upgrade177-proof", "--original-proof-sha256", PROOF_SHA]
         value, out = self.invoke("db-" + action, argv, repeat=action in REPEATABLE, env=env)
-        return {"state": value.get("state"), "private_receipt": str(out), "original_database_upgraded": value.get("original_database_upgraded", False)}
+        return {"state": value.get("state"), "private_receipt": str(out), "original_database_upgraded": value.get("original_database_upgraded", False),
+                "action_scope": "original_database_maintenance_only", "workspace_native_proof_produced": False,
+                "backup_readiness_proven": False, "page_backup_completed": False}
 
     def upgraded_released(self):
         scope = self.open()

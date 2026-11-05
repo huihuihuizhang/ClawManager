@@ -1,0 +1,51 @@
+{
+  "schema_version": "supervisor-database-maintenance-decoupling-review.v1",
+  "base_commit": "f633d0f8f26fd8f25c5f1aa51bee60aed25051c5",
+  "owner_source_map_sha256": "a88030135747b9047b4f89c782f3b987a44dbb102a333184ecb5bd725241c22d",
+  "selected_source_map_sha256": "d148df416e1e8fd1b16d34af575debdaca59c219f98b7c6b4da48d448b267b99",
+  "source_pins": [
+    {
+      "target": "scripts/system-backup-zhanghui08-operator.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-zhanghui08-operator.py",
+      "before_sha256": "6a8ffc4dfce806b9d9b24bafc9782c4e3aad86e4ad029fcb95211a27d5355487",
+      "sha256": "7492c5f9525bacfc0127c6cc627b3d35565d454ec9eeb4e3a7c0739bf394e054",
+      "owner_sha256": "809ce42cbb5e7b1b556c63d7e5e0ee1b938f5a779cd303df1b222d90773828e8"
+    },
+    {
+      "target": "scripts/test_final_operator_wiring.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/test_final_operator_wiring.py",
+      "before_sha256": "c7399a35317faef1ddb4e297cd54dbb3419630d88ad8764c345efc45455a181b",
+      "sha256": "66c5b2027f228048a3e0ea9f9e00c86ff285cf8e74075476a1f151aaf5284f83",
+      "owner_sha256": "66c5b2027f228048a3e0ea9f9e00c86ff285cf8e74075476a1f151aaf5284f83"
+    },
+    {
+      "target": "scripts/system-backup-original-database-maintenance.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/system-backup-original-database-maintenance.py",
+      "before_sha256": null,
+      "sha256": "12d2c1e4643ffdabbca964d827bf3d8da268346d69a19f51f0f15e4b42727f43",
+      "owner_sha256": "4318509dbe2ed53cd9f7528f8c534bb84ae67119c3213056a315bbdce27b76c5"
+    },
+    {
+      "target": "scripts/test_original_database_maintenance.py",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/scripts/test_original_database_maintenance.py",
+      "before_sha256": null,
+      "sha256": "b93e6b42c5d2b14fd86e125593d5eeedcd334de57ef29cb1fa54c5a9c0b85c5b",
+      "owner_sha256": "22eeb3f4ddf6ab7ad4a4869751f2128f809f10fa5a8ee83ad623331023f52a24"
+    }
+  ],
+  "scope": "Database maintenance prepare no longer depends on unrelated workspace/NFS qualification. Original sealed operation, release, Kubernetes/DB identities, native maintenance tools, single-send journal, backup/restore proof and rollback remain required.",
+  "preserved_operator_ast_except_db": true,
+  "independent_source_review": "01a1a931-2662-7d23-8679-8af7373fbc64: no P1; root requirement followup applied with regression.",
+  "validation": {
+    "runtime": "Actual isolated Linux Python container, read-only source, network none",
+    "passed_tests": 15,
+    "log_sha256": "359d41100fbfed0b8e7d43380ab9a955a1cfbba34b420beac44185696495871d",
+    "test_executables_created": false
+  },
+  "site_ddl_executed": false,
+  "field_mutated": false,
+  "workspace_native_qualified": false,
+  "backup_ready": false,
+  "page_acceptance": false,
+  "DR": false
+}

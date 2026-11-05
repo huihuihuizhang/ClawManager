@@ -32,33 +32,66 @@ class OperatorWiring(unittest.TestCase):
         op.kube = run / 'original.kubeconfig'
         return op
 
-    def test_fresh_observation_precedes_db_prepare_send(self):
+    def test_database_prepare_keeps_original_native_scope_and_never_calls_workspace(self):
         with tempfile.TemporaryDirectory() as directory:
             op = self.operator(Path(directory))
             events = []
             def invoke(stage, argv, **kwargs):
-                events.append(('send', stage, argv))
-                return {'state': 'actual-native-state'}, op.run/'receipt'
+                events.append((stage, argv, kwargs))
+                return {'state': 'actual-native-state', 'original_database_upgraded': False}, op.run/'receipt'
             op.invoke = invoke
-            early = SimpleNamespace(require_early_shapes=lambda actual: events.append(('fresh', actual)))
-            with patch.object(m, 'early_preflight_module', return_value=early):
-                op.db('prepare')
-            self.assertEqual(events[0], ('fresh', op))
-            self.assertEqual(events[1][1], 'db-prepare')
-            argv = events[1][2]
+            def forbidden(*args, **kwargs):
+                raise AssertionError('SQL maintenance must not contact/migrate NFS or claim a native source proof')
+            with patch.object(m, 'early_preflight_module', side_effect=forbidden), patch.object(m, 'workspace_module', side_effect=forbidden):
+                result = op.db('prepare')
+            self.assertEqual(len(events), 1)
+            stage, argv, options = events[0]
+            self.assertEqual(stage, 'db-prepare')
             self.assertEqual(argv[argv.index('--copy-receipts-directory')+1], op.a.copy_receipts_directory)
             self.assertEqual(argv[argv.index('--operation-directory')+1], op.run/'original199')
+            self.assertEqual(argv[argv.index('--v3-archive')+1], op.root/m.COPY_NAME)
+            self.assertEqual(argv[argv.index('--original-proof')+1], op.root/'bin/system-backup-legacy-upgrade177-proof')
+            self.assertEqual(argv[argv.index('--original-proof-sha256')+1], m.PROOF_SHA)
+            self.assertFalse(options['repeat'])
+            self.assertEqual(options['env']['KUBECONFIG'], str(op.kube))
+            self.assertEqual(result['action_scope'], 'original_database_maintenance_only')
+            self.assertFalse(result['workspace_native_proof_produced'])
+            self.assertFalse(result['backup_readiness_proven'])
+            self.assertFalse(result['page_backup_completed'])
 
-    def test_refused_fresh_observation_never_sends_database_action(self):
+    def test_missing_actual_copy_receipts_never_sends_database_prepare(self):
+        with tempfile.TemporaryDirectory() as directory:
+            op = self.operator(Path(directory))
+            op.a.copy_receipts_directory = None
+            sent = []
+            op.invoke = lambda *args, **kwargs: sent.append(args)
+            with self.assertRaisesRegex(m.Stop, 'fresh_copy199_native_receipts_directory_required'):
+                op.db('prepare')
+            self.assertEqual(sent, [])
+
+    def test_native_database_refusal_or_unknown_is_not_success(self):
         with tempfile.TemporaryDirectory() as directory:
             op = self.operator(Path(directory))
             sent = []
+            def refused(stage, argv, **kwargs):
+                sent.append((stage, argv))
+                raise m.Stop('native-original-database-guard-unconfirmed')
+            op.invoke = refused
+            with self.assertRaisesRegex(m.Stop, 'native-original-database-guard-unconfirmed'):
+                op.db('prepare')
+            self.assertEqual(len(sent), 1)
+            self.assertEqual(sent[0][0], 'db-prepare')
+
+    def test_original_operation_identity_refusal_prevents_all_database_dispatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            op = self.operator(Path(directory))
+            sent = []
+            def refused():
+                raise m.Stop('original-operation-identity-changed')
+            op.open = refused
             op.invoke = lambda *args, **kwargs: sent.append(args)
-            def refuse(actual):
-                raise RuntimeError('actual-readonly-observation-refused')
-            with patch.object(m, 'early_preflight_module', return_value=SimpleNamespace(require_early_shapes=refuse)):
-                with self.assertRaisesRegex(RuntimeError, 'observation-refused'):
-                    op.db('prepare')
+            with self.assertRaisesRegex(m.Stop, 'original-operation-identity-changed'):
+                op.db('prepare')
             self.assertEqual(sent, [])
 
     def test_workspace_guard_accepts_started_new_image_but_requires_original_release(self):
@@ -86,7 +119,7 @@ class OperatorWiring(unittest.TestCase):
                 self.assertIs(actual, op)
                 events.append('runtime-refused')
                 raise m.Stop('actual-runtime-profile-refused')
-            with patch.object(m, 'workspace_module', return_value=SimpleNamespace(verify_localized=refused)):
+            with patch.object(m.Operator, 'require_current_runtime_qualification', new=refused):
                 with self.assertRaisesRegex(m.Stop, 'actual-runtime-profile-refused'):
                     (op.adoption if action == 'adopt' else op.composition)(action)
             self.assertEqual(events, ['runtime-refused'])
