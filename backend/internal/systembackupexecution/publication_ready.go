@@ -348,7 +348,7 @@ func (s *DeploymentService) completeOriginalPublicationReady(ctx context.Context
 	if err := proof.access.Check(ctx); err != nil {
 		return nil, err
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, err
 	}

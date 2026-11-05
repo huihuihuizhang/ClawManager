@@ -606,7 +606,7 @@ func (s *DeploymentService) verifyOriginalPublicationFinalization(ctx context.Co
 		return nil, err
 	}
 	p.verifiedSHA256 = stamp
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, err
 	}

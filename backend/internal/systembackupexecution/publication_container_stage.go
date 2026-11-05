@@ -67,7 +67,7 @@ func (s *DeploymentService) publicationStageForContainers(ctx context.Context, g
 	if guard == nil || guard.service != s || !capture.checked() || guard.current(ctx, true) != nil {
 		return zero, c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, err
 	}
@@ -90,7 +90,7 @@ func (s *DeploymentService) publicationStageForContainers(ctx context.Context, g
 	}
 	// Native key/marker reads are outside SQL; authenticate the same original
 	// row again afterwards, without changing its lifecycle or source facts.
-	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, err
 	}

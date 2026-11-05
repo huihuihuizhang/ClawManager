@@ -216,7 +216,7 @@ func (s *DeploymentService) cleanupOriginalPublicationCandidate(ctx context.Cont
 	if err = exit.checkNativeStopped(ctx); err != nil {
 		return nil, err
 	}
-	preflight, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	preflight, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false})
 	if err != nil {
 		return nil, errPublicationUnavailable
 	}

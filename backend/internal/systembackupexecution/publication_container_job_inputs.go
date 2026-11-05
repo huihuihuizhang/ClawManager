@@ -33,7 +33,7 @@ func (s *DeploymentService) loadPublicationContainerJobInputs(ctx context.Contex
 	if err != nil || access.Check(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (s *DeploymentService) loadPublicationContainerJobInputs(ctx context.Contex
 	}
 	// The same immutable SQL descriptor/104 row is checked after native marker
 	// and key reads. Only exact per-file metadata reaches the Job constructor.
-	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nil, err
 	}

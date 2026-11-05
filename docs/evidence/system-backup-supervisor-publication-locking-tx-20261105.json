@@ -1,0 +1,329 @@
+{
+  "schema_version": "supervisor-publication-locking-tx-fix.v1",
+  "base_commit": "34ef56a6a1c2efdb5abf52b357b234e13d0567e0",
+  "problem": "READ ONLY transactions cannot perform persistent-table locking reads; selected paths directly use FOR SHARE or enter the existing publisher guard/lineage locking reads.",
+  "official_reference": "https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_locking_read",
+  "independent_review_thread": "01a1a931-2662-7d23-8679-8af7373fbc64",
+  "scope": "Only 24 ReadOnly true->false transaction mode literals in 19 reviewed control-metadata files; retain RR where specified, existing SQL locks/guards/identity checks/privileges and rollback boundaries.",
+  "unchanged": "Business capture snapshot read-only transactions and publication terminal UNKNOWN history read-only observer.",
+  "edits": [
+    {
+      "target": "backend/internal/systembackupexecution/publication_dependencies_sql.go",
+      "function": "readPublicationDependencySQL",
+      "original_line": 46
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_pass.go",
+      "function": "RunPublicationPass",
+      "original_line": 76
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_candidate_cleanup.go",
+      "function": "cleanupOriginalPublicationCandidate",
+      "original_line": 219
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container.go",
+      "function": "publicationContainerLimits",
+      "original_line": 244
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_job_inputs.go",
+      "function": "loadPublicationContainerJobInputs",
+      "original_line": 36
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_job_inputs.go",
+      "function": "loadPublicationContainerJobInputs",
+      "original_line": 65
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_stage.go",
+      "function": "publicationStageForContainers",
+      "original_line": 70
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_stage.go",
+      "function": "publicationStageForContainers",
+      "original_line": 93
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_decision.go",
+      "function": "queryPublicationDecision",
+      "original_line": 416
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_final_verification.go",
+      "function": "verifyOriginalPublicationFinalization",
+      "original_line": 609
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "function": "cleanupOriginalPublicationNativeResources",
+      "original_line": 344
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_payload.go",
+      "function": "publicationPayloadVersion",
+      "original_line": 72
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_policy_startup.go",
+      "function": "checkOriginalPublicationPolicyCurrent",
+      "original_line": 42
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "function": "snapshotOriginalPostCUpload",
+      "original_line": 77
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "function": "publishOriginalManifestAfterRemoteCapture",
+      "original_line": 372
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_ready.go",
+      "function": "completeOriginalPublicationReady",
+      "original_line": 351
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_receipt.go",
+      "function": "publicationReceipt",
+      "original_line": 35
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_remote_capture.go",
+      "function": "originalPublishedPayload",
+      "original_line": 24
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "function": "remoteContainerReadScope",
+      "original_line": 59
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "function": "Load",
+      "original_line": 172
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "function": "observeOriginalPublicationUploadExit",
+      "original_line": 285
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "function": "observeOriginalPublicationUploadExit",
+      "original_line": 356
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_forward_configuration.go",
+      "function": "checkOriginalForwardConfiguration",
+      "original_line": 29
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_publication_policy.go",
+      "function": "loadOriginalPublicationPolicy",
+      "original_line": 165
+    }
+  ],
+  "sources": [
+    {
+      "target": "backend/internal/systembackupexecution/publication_dependencies_sql.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_dependencies_sql.go",
+      "before_sha256": "e1d86016578e26e6a8cce61c62f72732d5dfd53ad5a1ee3aded8dbc3f13cf4b0",
+      "sha256": "2485e7e3f9d2c38cbd898540cf74b3706e0e4578002a02c1a43c08200163cb47"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_pass.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_pass.go",
+      "before_sha256": "1223220c1567745da0772cfb54e7c327eb58ae3e4dd1084b07f2c28fb0ed3780",
+      "sha256": "928495473d585b6a7b03d01950042ecc69a07ca910f7ef71489da71d89852cd1"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_candidate_cleanup.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_candidate_cleanup.go",
+      "before_sha256": "cbd0fe2ccb382633695b722cf1e088977caa8a9686794337a7764378a4c05a17",
+      "sha256": "09ed6c5d724d9ef5611e2a2321a8494b6dd44213f79c5ef6cf016ca2b1ae021b"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_container.go",
+      "before_sha256": "55634d57db8c087202cde6797bc20356cd93a01ccc93b5c110c70f6916b9f674",
+      "sha256": "e4ccf2f93eeaba339d92e7d161258a40fad3b228dc022ef8b1d60719e16f769f"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_job_inputs.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_container_job_inputs.go",
+      "before_sha256": "4ee8cc9029dddf9c89860ade0fa7af253f5fd0516e0df645758520806b9891c2",
+      "sha256": "4badd19e1d6341470273c4f692061acc51af40919afb035848bd40dfdb53783e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_container_stage.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_container_stage.go",
+      "before_sha256": "f576dd35c092f42af2003d7ac83dfef7c57069a0112fbec990717783bf97f13b",
+      "sha256": "3d82139deb69d768c7bfba0a4dfa0f88543b388e8dc9929b6202819d30eea206"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_decision.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_decision.go",
+      "before_sha256": "1c64520acab111430449dba7f59b2ec803b82f5d0949458dc0ca40899140f038",
+      "sha256": "22974af0d9280bd99ce64a73f6da9bce21390cdd8d74ecad3ba54e90cba69cc1"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_final_verification.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_final_verification.go",
+      "before_sha256": "2c3595e32a96a929ff19acf0be405b1be7da8a20a7005158ea24014f2fe92f25",
+      "sha256": "c0fca53bab74f612af177174119956919408b33e69e84e98f09ed43256850a4d"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_native_cleanup.go",
+      "before_sha256": "20745589541a9800be8ee0e492158d945660a2e6b6733bdfb14e3518c3260bcf",
+      "sha256": "8e5b024cff747bd8a8cb428420afcd1c8cf320371668448d0b3173290d83309e"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_payload.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_payload.go",
+      "before_sha256": "7effafd51f721e88cf9a623b2141ec8bd413558d8afb2538353dba68df611678",
+      "sha256": "535764383626aec944d29b13ef577b2dd0f93bb573b066c19fbabe6bc6b521e5"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_policy_startup.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_policy_startup.go",
+      "before_sha256": "32e3bf9cc2ae8a90ce6393d644b8a3aa4fb599e68d516a6fd5c3d21a95ef014f",
+      "sha256": "ea668abf0a35114e68581c432b49b5df691a93fc7a983a45d35f9d197b3f2e61"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_post_c_manifest.go",
+      "before_sha256": "c906393f9e1bf658ee333f1f83dc31b12913dd1f22c3ff6f3e9d9262f50453c6",
+      "sha256": "e957791a3afff7befb8a06f19e0293ec8f91809e5b554cb1b936322925f00433"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_ready.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_ready.go",
+      "before_sha256": "39eabe95b549db4b60d0137eba29c63744133c33db8f4a8973047c266117c5e2",
+      "sha256": "7d095caf44df27ba998cc32dd884bfdf71a2a8c5e25efe105921288036b5272d"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_receipt.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_receipt.go",
+      "before_sha256": "dbbda172914b504c85f947d8a5806c69d6a9284f0706b8581b39fbe74258bf7a",
+      "sha256": "3bf804a5393dafed57ecfdc82fb14ff452bf9ede06703df10fed48b56ccb6c0d"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_remote_capture.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_remote_capture.go",
+      "before_sha256": "b48dbf949f282009609271aa94deec4070da2a7da754e1a592c9549c7ddb4080",
+      "sha256": "e74db803db03500f12802eb1fc6bf505fb1edb181cfad8cc0d53dce5fb6956a3"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_remote_container.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_remote_container.go",
+      "before_sha256": "5fa2bf3e5157db7ff123e5eec42e5eeac5d422ec89d0812019a95649251d8154",
+      "sha256": "f418615e3f5aad54c479a3566b5da03d34cca4009cfc3cb09f3910de3f838a7a"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/publication_upload_exit.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/publication_upload_exit.go",
+      "before_sha256": "6a1b9c840e1c7db8eb2acef74645170c9031a7fff72ace90840b2249788d3f94",
+      "sha256": "b8c486e88ceb9aae19bc20d3c77c5025c425fb83397e79108a01a28853ad8e91"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/original_forward_configuration.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/original_forward_configuration.go",
+      "before_sha256": "7576ea5d2d5e0b0880312999a0f71b53620a9ed3f55063b4ee7cdb9edfd64209",
+      "sha256": "bae593057395c4a1fc0472a5cc9c121e447c8c6806e31b160e62b74750a3df35"
+    },
+    {
+      "target": "backend/internal/systembackupexecution/production_publication_policy.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupexecution/production_publication_policy.go",
+      "before_sha256": "2b5264ce61f714ea41378a77adb1e7b93900cf770c536edf6b947ab1eff31dba",
+      "sha256": "ffb4d90f50b59beb80b55aca7929b6ed05b6c1c8c89929d94a9a599609c1c1df"
+    }
+  ],
+  "native_mysql_verified": false,
+  "linux_verified": true,
+  "field_deployed": false,
+  "page_acceptance": false,
+  "linux_verification": {
+    "exit": 0,
+    "source_unchanged": true,
+    "root_tests_passed": 126,
+    "subtests_passed": 549,
+    "failures": [],
+    "skips": [
+      "TestPublicationAcceptanceOriginalHappyPathAndUnknownMySQL",
+      "TestPublicationAcceptanceCurrentUnwrapRevocationMySQL/prepared",
+      "TestPublicationAcceptanceCurrentUnwrapRevocationMySQL/signed",
+      "TestPublicationAcceptanceCurrentUnwrapRevocationMySQL/published",
+      "TestPublicationOriginal107BeforeNativeStartAndUnknownReopenMySQL",
+      "TestPublicationStartedJobActualProcessReopenMySQL",
+      "TestPublicationCandidateUsesOriginal104BeforeOwnerKeyMySQL",
+      "TestPublicationInitialCapacityCannotAdoptMaterializedDriftMySQL",
+      "TestPublicationCapacityUsesCurrentOriginalConfigMySQL",
+      "TestPublicationCatalogOriginalHappyPathAndUnknownMySQL",
+      "TestPublicationArtifactPurposeSnapshotAndCurrentSQLMySQL",
+      "TestPublicationCatalogPurposeSnapshotAndCurrentSQLMySQL",
+      "TestPublicationCatalogUnknownUsesDedicatedReadOnlyRecoveryMySQL",
+      "TestPublicationCertificateCurrentComplete104RowsFull175MySQL",
+      "TestOriginalPublicationContinuationMySQL/reentry-and-next-stage",
+      "TestOriginalPublicationContinuationMySQL/concurrent-claim",
+      "TestOriginalPublicationContinuationMySQL/next-readback-failure",
+      "TestOriginalPublicationContinuationMySQL/unknown-query-only",
+      "TestOriginalPublicationContinuationMySQL/confirmed-version-changed",
+      "TestOriginalPublicationContinuationMySQL/stage-hole",
+      "TestOriginalPublicationContinuationMySQL/finalization-required",
+      "TestOriginalPublicationContinuationMySQL/production-pass-needs-next-intent",
+      "TestOriginalPublicationContinuationMySQL/close-joins-next-stage",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/current",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/query-only-missing",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/bad-before-first",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/orphan-before-first",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/unhealthy",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/expired",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/orphan",
+      "TestPublicationDecisionOriginalImmutableEvidenceMySQL/missing",
+      "TestPublicationDecisionCommitUnknownQueryOnlyMySQL/committed",
+      "TestPublicationDecisionCommitUnknownQueryOnlyMySQL/original-row-lost",
+      "TestPublicationFinalVerificationAfterDeletedStageMySQL",
+      "TestPublicationFreshPreparationActualRenewMySQL/fresh",
+      "TestPublicationFreshPreparationActualRenewMySQL/assembly-fresh",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-104-without-capsule",
+      "TestPublicationFreshPreparationActualRenewMySQL/assembly-old-104-without-capsule",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-material",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-activation",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-owner",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-upload",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-121-planned",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-121-sending",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-107-sequence-zero",
+      "TestPublicationFreshPreparationActualRenewMySQL/old-102-without-capsule",
+      "TestPublicationFreshPreparationActualRenewMySQL/policy-change",
+      "TestPublicationFreshPreparationActualRenewMySQL/stale-claim",
+      "TestPublicationFreshPreparationActualRenewMySQL/canceled",
+      "TestPublicationFreshPreparationActualRenewMySQL/renew-commit-ack-lost",
+      "TestPublicationFreshPreparationActualTaskLockRaceMySQL/104-first",
+      "TestPublicationFreshPreparationActualTaskLockRaceMySQL/renew-first",
+      "TestPublicationContainerRenewalModeActualJobMySQL/fresh-old104",
+      "TestPublicationContainerRenewalModeActualJobMySQL/ordinary-activated-upload",
+      "TestPublicationJobOriginal121SingleSendSuspendedMySQL",
+      "TestPublicationJournalRejectsStaleCapacityBeforeDispatchMySQL",
+      "TestPublicationOriginalLocalCleanupSameTaskMySQL",
+      "TestPublicationMaterialReopenProcessChild",
+      "TestPublicationMaterialsDurableBefore121AndActualProcessReopenMySQL",
+      "TestPublicationMaterialsUnknownAndOwnershipFailClosedMySQL",
+      "TestPublicationMaterialsRefusePostCommitCreationMySQL",
+      "TestPublicationAuthenticatedResultOriginal107CursorAndRefusalMySQL",
+      "TestPublicationWorkerIdentityUsesCurrentPublisherAndExplicitIssuerActionMySQL"
+    ],
+    "log_sha256": "1943b6d957eac5750bdb5c4741e17c530e8f147d35742f69d4e4427565eeaa02",
+    "scope": "Actual offline Linux compilation of execution/controller/server and selected publication/lineage/component regressions; native MySQL tests require their original fixture and are reported as skipped when unavailable. No page acceptance.",
+    "test_products": "go test temporary executables cleaned on exit; Docker --rm; no persistent executable requested"
+  },
+  "independent_patch_review": "All 19 files independently compared byte-for-byte against raw base commit plus exactly the 24 selected literal replacements. No new database grants or DML; original locks/isolation/rollback and business snapshots preserved.",
+  "native_test_limit": "Native MySQL cases listed as skipped in the actual run require their original TLS fixture; component PASS is not a real MySQL or page PASS.",
+  "test_products_removed": "Owned --rm test container exited; go test temporary executables removed; no persistent test executable requested."
+}

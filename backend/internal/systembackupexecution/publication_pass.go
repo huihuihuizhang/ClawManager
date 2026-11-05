@@ -73,7 +73,7 @@ func (d *DeploymentService) RunPublicationPass(ctx context.Context) (resultErr e
 	if err != nil {
 		return err
 	}
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return errPublicationUnavailable
 	}

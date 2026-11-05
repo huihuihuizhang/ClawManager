@@ -341,7 +341,7 @@ func (s *DeploymentService) cleanupOriginalPublicationNativeResources(ctx contex
 	if p.candidate.exit.marker.receipt.access.Check(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false})
 	if err != nil {
 		return nil, errPublicationUnavailable
 	}

@@ -26,7 +26,7 @@ func (s *DeploymentService) checkOriginalForwardConfiguration(ctx context.Contex
 	if s == nil || ctx == nil || ctx.Err() != nil || s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner.Gate.Authority.DB == nil {
 		return c.ErrExecutionAuthority
 	}
-	view, err := s.Runtime.Owner.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	view, err := s.Runtime.Owner.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return c.ErrExecutionAuthority
 	}

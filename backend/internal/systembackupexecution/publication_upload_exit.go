@@ -169,7 +169,7 @@ func (s publicationUploadExitStore) Load(ctx context.Context, uid string) (quies
 	if _, ok := s.exit.pods[uid]; !ok {
 		return p, c.ErrExecutionRecord
 	}
-	tx, err := s.exit.service.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := s.exit.service.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false})
 	if err != nil {
 		return p, errPublicationUnavailable
 	}
@@ -282,7 +282,7 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 	if parent.service != s || parent.claim != claim || parent.attempt != attempt || parent.completion == nil || marker.receipt.access.Check(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false})
 	if err != nil {
 		return nil, errPublicationUnavailable
 	}
@@ -353,7 +353,7 @@ func (s *DeploymentService) observeOriginalPublicationUploadExit(ctx context.Con
 	if marker.receipt.access.Check(ctx) != nil {
 		return nil, c.ErrExecutionAuthority
 	}
-	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	final, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false})
 	if err != nil {
 		return nil, errPublicationUnavailable
 	}

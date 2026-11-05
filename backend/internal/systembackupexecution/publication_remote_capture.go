@@ -21,7 +21,7 @@ func (s *DeploymentService) originalPublishedPayload(ctx context.Context, claim 
 	if err != nil || access.Check(ctx) != nil {
 		return publicationPayloadIntent{}, "", c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return publicationPayloadIntent{}, "", err
 	}

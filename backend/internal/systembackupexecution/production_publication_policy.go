@@ -162,7 +162,7 @@ func (x *originalSourceMetadataAuthority) loadOriginalPublicationPolicy(ctx cont
 		return zero, d.ErrNotReady
 	}
 	if original.ConfigSHA256 != configSHA {
-		view, err := x.owner.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+		view, err := x.owner.Gate.Authority.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 		if err != nil {
 			return zero, d.ErrNotReady
 		}

@@ -32,7 +32,7 @@ func (d *DeploymentService) publicationReceipt(ctx context.Context, claim c.Clai
 	if access.Check(ctx) != nil {
 		return nativePublicationObject{}, c.ErrExecutionAuthority
 	}
-	tx, err := d.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := d.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return nativePublicationObject{}, errPublicationUnavailable
 	}

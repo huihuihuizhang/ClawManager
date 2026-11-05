@@ -74,7 +74,7 @@ func (s *DeploymentService) snapshotOriginalPostCUpload(ctx context.Context, cla
 	if err != nil || access.Check(ctx) != nil {
 		return zero, c.ErrExecutionAuthority
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, err
 	}
@@ -369,7 +369,7 @@ func (s *DeploymentService) publishOriginalManifestAfterRemoteCapture(ctx contex
 		return zero, err
 	}
 	p := &publicationPostCManifest{service: s, claim: claim, attempt: attempt, target: store.config, capture: capture, objects: selected, receipt: receipt, uploaded: owned, materialSHA256: snapshot.materialSHA256, uploadSnapshot: snapshot, certificate: certificate, intent: publicationJSONIntent{Kind: "manifest_put", Key: store.config.Root + claim.Target.PublicID + "/" + strconv.FormatUint(attempt, 10) + "/manifest.json", Payload: bytes.Clone(owned.Manifest), Deadline: until}}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return zero, err
 	}

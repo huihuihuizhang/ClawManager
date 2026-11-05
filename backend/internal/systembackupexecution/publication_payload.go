@@ -69,7 +69,7 @@ func (s *DeploymentService) publicationPayloadVersion(ctx context.Context, claim
 	if err != nil {
 		return "", err
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return "", err
 	}

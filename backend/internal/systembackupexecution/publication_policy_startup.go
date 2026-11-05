@@ -39,7 +39,7 @@ func (s *DeploymentService) checkOriginalPublicationPolicyCurrent(ctx context.Co
 		return bad()
 	}
 	g := s.Forward.DeploymentBinding()
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return bad()
 	}

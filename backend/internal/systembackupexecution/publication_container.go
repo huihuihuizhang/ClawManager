@@ -241,7 +241,7 @@ func (s *DeploymentService) publicationContainerLimits(ctx context.Context, clai
 	if err != nil {
 		return ArtifactReadLimits{}, err
 	}
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return ArtifactReadLimits{}, err
 	}

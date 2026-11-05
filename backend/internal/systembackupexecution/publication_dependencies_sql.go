@@ -43,7 +43,7 @@ func (s *DeploymentService) readPublicationDependencySQL(ctx context.Context, ta
 		return publicationDependencySQL{}, publicationDependencyFailure(stage, err)
 	}
 	g := s.Forward.DeploymentBinding()
-	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
+	tx, err := s.publisherVerifierDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: false, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return fail("current-sql-view", err)
 	}
