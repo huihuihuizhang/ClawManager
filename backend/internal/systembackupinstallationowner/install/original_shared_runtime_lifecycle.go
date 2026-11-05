@@ -252,7 +252,12 @@ func (a *originalSharedRuntimeLifecycle) restore(ctx context.Context, fence *ori
 		a.agentResumeDispatched = true
 		resumeAction = "resume"
 	}
-	state, raw, err := a.source.callbacks.Transition(ctx, a.source.row.Endpoint, resumeAction, a.source.identity)
+	state, raw, err := reconcileOriginalSharedResume(ctx, a.source.callbacks, a.source.row.Endpoint, resumeAction, a.source.identity, a.request.Original.OriginalSHA256, func() error {
+		if fence.checkReleasing(ctx) != nil {
+			return ErrInstall
+		}
+		return a.source.set.journal.append(ctx, a.source.ID(), "shared_agent_resume_send_unknown", nil, a.source.identity)
+	})
 	if err != nil || (state.Phase != "resumed" && state.Phase != "completed") || state.OriginalSHA256 != a.request.Original.OriginalSHA256 {
 		return ErrOriginalRecoveryNativeProof
 	}

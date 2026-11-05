@@ -1,0 +1,55 @@
+{
+  "schema_version": "supervisor-original-shared-resume-reconcile-integration.v1",
+  "base_commit": "b6622310cc7795f35fada70c68d582520ee57fef",
+  "owner_map_sha256": "b4a384b6f1f35a01ced156d105c7ef2e41c33e38ff185ad2fd97253133785d64",
+  "problem": "An original resume dispatch marked unknown may never arrive, leaving the Agent reserved while later recovery only queried its state.",
+  "change": "After original same-incarnation physical thaw, validate original state and, only when still reserved, recheck the recovery fence and persist an original journal send boundary before one idempotent resume of the same identity. Preserve all final recovered/complete checks.",
+  "linux_verification": {
+    "exit": 0,
+    "source_unchanged": true,
+    "root_tests_passed": 16,
+    "subtests_passed": 69,
+    "failures": [],
+    "skips": [],
+    "log_sha256": "0c7b4e78f21bedca2228e27c60cf7e2d3b127ab15ba79a438c42ac61b3b413a3",
+    "scope": "Actual offline Linux compilation/tests of internal/services and internal/systembackupinstallationowner/install: shared resume reconciliation, callback, durable journal, recovery closure and Teams component regression. No native physical source/page acceptance.",
+    "test_products": "go test temporary executables cleaned on exit; Docker --rm; no persistent executable requested",
+    "packages": [
+      "./internal/services",
+      "./internal/systembackupinstallationowner/install"
+    ]
+  },
+  "selected_sources": [
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_runtime_lifecycle.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupinstallationowner/install/original_shared_runtime_lifecycle.go",
+      "before_sha256": "1fa84f7cee3f9d87bb80ae3da9bd711f4451bb9451d21e4e7f487850606a18e5",
+      "owner_sha256": "37d509364f01e12b6a48d5b53a1de73c55d52a5e04ae6970e82719c66426196e",
+      "sha256": "37d509364f01e12b6a48d5b53a1de73c55d52a5e04ae6970e82719c66426196e",
+      "formatting_only_after_owner": true
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_resume_reconcile.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupinstallationowner/install/original_shared_resume_reconcile.go",
+      "before_sha256": null,
+      "owner_sha256": "1ba8b22f693f412f6020837d6d88e7445eb03821ea45b00b7c3a06ee0dc0caaf",
+      "sha256": "1ba8b22f693f412f6020837d6d88e7445eb03821ea45b00b7c3a06ee0dc0caaf",
+      "formatting_only_after_owner": true
+    },
+    {
+      "target": "backend/internal/systembackupinstallationowner/install/original_shared_resume_reconcile_test.go",
+      "source": ".tmp-supervisor-full-backup-integration-20261105-r2/source/backend/internal/systembackupinstallationowner/install/original_shared_resume_reconcile_test.go",
+      "before_sha256": null,
+      "owner_sha256": "91cefc80927eb878edd0891294a1ebe4a911f4d588ce42ab2b46d5adb0fb06c5",
+      "sha256": "d27d8bc059468c31deb6cb19c24efff7ddc789ff513c9561e7b0527910ecab94",
+      "formatting_only_after_owner": true
+    }
+  ],
+  "test_products_removed": "Owned Docker --rm test container exited; go test temporary executables cleaned; no persistent test binary requested.",
+  "original_agent_or_node_rebuilt": false,
+  "new_native_operation_created": false,
+  "native_physical_recovery_verified": false,
+  "field_deployed": false,
+  "page_acceptance": false,
+  "DR": false
+}
