@@ -36,6 +36,9 @@ import (
 )
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "--system-backup-source-config-data" {
+		os.Exit(runOriginalSourceConfigData(os.Stdout))
+	}
 	build := buildinfo.Current()
 	log.Printf("Starting ClawManager version=%s commit=%s build_time=%s", build.Version, build.Commit, build.BuildTime)
 

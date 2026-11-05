@@ -43,7 +43,7 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 	if err != nil {
 		return zero, err
 	}
-	if err = requireRunningSourceMetadata(metadata.inventory.source); err != nil {
+	if err = requireScopedRunningSourceMetadata(s.Config, metadata.inventory.source); err != nil {
 		return zero, err
 	}
 	registry, err := x.observeWriterRegistry(ctx)
@@ -103,7 +103,7 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 		return "", ErrSourceWriterObservationIncomplete
 	}
 	s := x.delegation.service
-	if x.recheck(ctx) != nil || registry == nil || api == nil || requireRunningSourceMetadata(source) != nil {
+	if x.recheck(ctx) != nil || registry == nil || api == nil || requireScopedRunningSourceMetadata(s.Config, source) != nil {
 		return "", ErrSourceWriterObservationIncomplete
 	}
 	if err := checkObservedWriterGraph(s, source, api); err != nil {
@@ -142,6 +142,10 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 	actual := []b.RuntimeWriterSpec{}
 	seen := map[int]bool{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(s.Config, instance) {
+			seen[instance.ID] = true
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			m, err := currentStoppedProMaterialFor(s.captureMaterials.Discovery.PersistentMounts, instance)
 			if err != nil || recheckCurrentStoppedProMaterial(ctx, x.delegation.owner.Client, s.Config, *m) != nil {
@@ -228,7 +232,7 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 }
 
 func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, api *observedWriterAPI) error {
-	if s == nil || s.Config.RuntimeSources == nil || s.captureMaterials == nil || s.captureMaterials.Discovery == nil || api == nil || requireRunningSourceMetadata(source) != nil {
+	if s == nil || s.Config.RuntimeSources == nil || s.captureMaterials == nil || s.captureMaterials.Discovery == nil || api == nil || requireScopedRunningSourceMetadata(s.Config, source) != nil {
 		return ErrSourceWriterObservationIncomplete
 	}
 	ns, p := s.Config.Namespace, s.captureMaterials.Discovery

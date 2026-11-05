@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import json
 import os
+import secrets
 import time
 import urllib.error
 import shlex
@@ -171,7 +172,7 @@ def stop_for_normal_runtime(op, production, pki, enable_response, request_files,
     # host_exec defaults place common flags before this CLI subcommand.
     # Preserve the bound original flags, after relay-handover as required.
     common = stages.host_result()["installer_common_args"]
-    value, dispatch = stages.host_exec("query-original-relay-handover" if query else "stop-original-readonly-relay", "system-backup-c1-native-inputs", [args[0], *common, *args[1:]], common=False)
+    value, dispatch = stages.host_exec(("query-original-relay-handover-"+secrets.token_hex(8)) if query else "stop-original-readonly-relay", "system-backup-c1-native-inputs", [args[0], *common, *args[1:]], common=False)
     m.require(value["State"] == "original_readonly_listener_absent_normal_runtime_not_started" and value["OriginalListenerAbsent"] is True and value["RuntimeStarted"] is False, "actual_original_listener_absence_required_before_normal_start")
     return value, dispatch
 
@@ -204,7 +205,7 @@ def prepare_normal_runtime_trust(op, production, pki):
         m.require(destination.read_bytes() == raw, "original_enrolled_runtime_trust_changed")
         check = op.k("-n", "clawmanager-zhanghui08-system", "exec", host["Pod"], "-c", "installation-owner", "--", "/bin/sh", "-eu", "-c", 'if test -e "$1"; then test ! -L "$1"; test "$(stat -c %u:%a "$1")" = 65532:600; sha256sum -- "$1"; else printf ABSENT; fi', "sh", str(destination)).decode().split()
         if check == ["ABSENT"]:
-            stages.host_file(host, "original-relay-trust-"+key.lower(), str(destination), raw)
+            stages.host_file(host, "original-relay-trust-"+key.lower()+"-"+hashlib.sha256(host["PodUID"].encode()).hexdigest()[:16], str(destination), raw)
         else:
             m.require(check and check[0] == enrolled[key]["SHA256"], "original_enrolled_runtime_trust_native_changed")
         refs[key] = {"File": str(destination), "SHA256": enrolled[key]["SHA256"]}

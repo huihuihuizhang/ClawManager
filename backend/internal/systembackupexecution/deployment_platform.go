@@ -42,6 +42,9 @@ func (s *DeploymentService) PlatformWriterGroup(o *PublicJobOwner) (*b.PlatformW
 func (s *DeploymentService) platformProfile(o *PublicJobOwner) (b.LinuxProfileConfig, error) {
 	cfg := s.Config
 	source := b.LinuxProfileConfig{Source: s.Source, RecoveryOnly: !s.ForwardEnabled, Database: cfg.SourceDatabase, ServerUUID: cfg.SourceServerUUID, Supported: map[b.AgentKind]bool{{Type: "openclaw", Mode: "pro", Variant: "linux", OS: "linux"}: true}, HoldLimit: time.Duration(cfg.HoldSeconds) * time.Second}
+	if cfg.RuntimeSources != nil {
+		source.RuntimeTestScope = cfg.RuntimeSources.RuntimeTestScope.Clone()
+	}
 	source.VerifySource = func(ctx context.Context, tx *sql.Tx) error {
 		return s.checkSourceIdentity(ctx, tx)
 	}

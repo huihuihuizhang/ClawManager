@@ -62,6 +62,9 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 	if _, bounded := ctx.Deadline(); !bounded {
 		return nil, mountInputError("bounded_original_context_required", 0, "")
 	}
+	if bindRuntimeTestScope(cfg, &b.SourceInventory{Database: cfg.SourceDatabase, ServerUUID: cfg.SourceServerUUID, Instances: instances}) != nil {
+		return nil, mountInputError("runtime_test_scope_drift", 0, "")
+	}
 	byID := map[int]b.RuntimeWriterSpec{}
 	for _, spec := range specs {
 		if byID[spec.Source.ID].Source.ID != 0 {
@@ -71,6 +74,14 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 	}
 	owners := map[int]b.InstanceIdentity{}
 	for _, instance := range instances {
+		if deferredRuntimeTestInstance(cfg, instance) {
+			spec := byID[instance.ID]
+			if owners[instance.ID].ID != 0 || spec.Source != instance || spec.Kind != "runtime-test-deferred" {
+				return nil, mountInputError("runtime_test_scope_spec_mismatch", instance.ID, "")
+			}
+			owners[instance.ID] = instance
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			spec := byID[instance.ID]
 			if owners[instance.ID].ID != 0 || spec.Source != instance || spec.Kind != "stopped" || spec.Stopped.Running {
@@ -92,7 +103,7 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 		owners[instance.ID] = instance
 	}
 	for _, layout := range layouts {
-		if owners[layout.InstanceID].ID == 0 || isCurrentStoppedPro(owners[layout.InstanceID]) {
+		if owners[layout.InstanceID].ID == 0 || deferredRuntimeTestInstance(cfg, owners[layout.InstanceID]) || isCurrentStoppedPro(owners[layout.InstanceID]) {
 			return nil, mountInputError("foreign_instance_layout", layout.InstanceID, layout.MountID)
 		}
 	}
@@ -102,9 +113,12 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 		if err != nil || string(ns.UID) != cfg.NamespaceUID || ns.DeletionTimestamp != nil {
 			return nil, mountInputError("namespace_identity_changed", 0, "")
 		}
-		scope := &productionPersistentMountScope{Version: persistentMountScopeVersion, Mounts: []productionPersistentMountBinding{}}
+		scope := &productionPersistentMountScope{RuntimeTestScope: configuredRuntimeTestScope(cfg).Clone(), Version: persistentMountScopeVersion, Mounts: []productionPersistentMountBinding{}}
 		observedPods := map[int]string{}
 		for _, instance := range instances {
+			if deferredRuntimeTestInstance(cfg, instance) {
+				continue
+			}
 			spec := byID[instance.ID]
 			if isCurrentStoppedPro(instance) {
 				storage, err := currentStoppedProConfiguredStorage(cfg, instance.ID)
@@ -250,6 +264,9 @@ func checkOriginalPersistentMountPins(ctx context.Context, client kubernetes.Int
 }
 
 func persistentMountsForInstances(scope *productionPersistentMountScope, instances []b.InstanceIdentity) (map[int][]productionPersistentMountBinding, error) {
+	if scope != nil && scope.RuntimeTestScope != nil && scope.RuntimeTestScope.Validate(instances) != nil {
+		return nil, mountInputError("runtime_test_scope_drift", 0, "")
+	}
 	out := map[int][]productionPersistentMountBinding{}
 	if len(instances) == 0 && scope == nil {
 		return out, nil
@@ -259,6 +276,14 @@ func persistentMountsForInstances(scope *productionPersistentMountScope, instanc
 	}
 	owners := map[int]b.InstanceIdentity{}
 	for _, instance := range instances {
+		if scope.RuntimeTestScope.IsDeferred(instance) {
+			if owners[instance.ID].ID != 0 {
+				return nil, d.ErrNotReady
+			}
+			owners[instance.ID] = instance
+			out[instance.ID] = []productionPersistentMountBinding{}
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			if owners[instance.ID].ID != 0 {
 				return nil, d.ErrNotReady

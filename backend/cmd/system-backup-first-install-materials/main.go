@@ -19,6 +19,21 @@ import (
 )
 
 func run(ctx context.Context, args []string, out io.Writer) int {
+	if len(args) > 0 && args[0] == "encode-publication-runtime-sources" {
+		return runOriginalRuntimeSourcesEncoder(args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "runtime-database-environment" {
+		return runOriginalRuntimeDatabaseEnvironment(args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "bind-published-capture-database-inputs" {
+		return runOriginalPublishedCaptureDatabaseInput(args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "author-capture-operational-inputs" {
+		return runOriginalCaptureInputAuthor(args[1:], out)
+	}
+	if len(args) > 0 && args[0] == "runtime-database-environment" {
+		return runOriginalRuntimeDatabaseEnvironment(args[1:], out)
+	}
 	if len(args) > 0 && args[0] == "issue-enabled-runtime-materials" {
 		return runEnabledPublicationRuntime(ctx, args[1:], out)
 	}
@@ -72,6 +87,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	flags := flag.NewFlagSet("system-backup-first-install-materials", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
+	metadataProfile := flags.Bool("minio-metadata-profile", false, "explicit authenticated original owner SQL profile for actual source factory")
 	planFile := flags.String("plan-file", "", "original independently selected canonical installation plan")
 	planSHA := flags.String("plan-sha256", "", "original selected plan SHA256")
 	publicFile := flags.String("issuer-public-file", "", "original selected raw Ed25519 public key")
@@ -91,7 +107,12 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	templateSHA := flags.String("components-template-sha256", "", "independent original component template SHA256")
 	resolvedFile := flags.String("resolved-components-file", "", "create-only private resolved component output beside original bundle")
 	intermediateFile := flags.String("intermediate-file", "", "create-only private materialized declaration output beside original bundle")
+	databaseIssueFile := flags.String("database-source-definition-file", "", "actual native original database source DATA definition")
+	databaseIssueSHA := flags.String("database-source-definition-sha256", "", "actual original DATA definition pin")
 	if ctx == nil || out == nil || flags.Parse(args) != nil || flags.NArg() != 0 {
+		return 2
+	}
+	if (*databaseIssueFile == "") != (*databaseIssueSHA == "") {
 		return 2
 	}
 	for _, value := range []*string{planFile, planSHA, publicFile, publicSHA, kubeFile, kubeSHA, dsnFile, runtimeDSNFile, dbCAFile, passwordFile, enrollmentFile, enrollmentSHA, definitionFile, definitionSHA, privateFile, templateFile, templateSHA, resolvedFile, intermediateFile} {
@@ -140,7 +161,17 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	defer runtimeDB.Close()
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	receipt, err := execution.InstallOriginalCaptureMappings(active, installer, kube, password, pin, execution.OriginalCaptureInstallationInputs{DefinitionFile: *definitionFile, DefinitionSHA256: *definitionSHA, IssuerPrivateFile: *privateFile, TemplateFile: *templateFile, TemplateSHA256: *templateSHA, ResolvedComponentsFile: *resolvedFile, IntermediateFile: *intermediateFile}, runtimeDB)
+	var receipt execution.ProductionMaterialReceipt
+	installMappings := func(actual context.Context) error {
+		var issueErr error
+		receipt, issueErr = execution.InstallOriginalCaptureMappings(actual, installer, kube, password, pin, execution.OriginalCaptureInstallationInputs{DatabaseIssueDefinition: install.BootstrapSourceFilePin{File: *databaseIssueFile, SHA256: *databaseIssueSHA}, DefinitionFile: *definitionFile, DefinitionSHA256: *definitionSHA, IssuerPrivateFile: *privateFile, TemplateFile: *templateFile, TemplateSHA256: *templateSHA, ResolvedComponentsFile: *resolvedFile, IntermediateFile: *intermediateFile}, runtimeDB)
+		return issueErr
+	}
+	if *metadataProfile {
+		err = installer.RunOriginalMinIOMetadataSourceFactory(active, runtimeDB, password, pin, installMappings)
+	} else {
+		err = installMappings(active)
+	}
 	if err != nil {
 		if diagnostic, ok := execution.MaterializationDiagnosticForError(err); ok {
 			_ = json.NewEncoder(out).Encode(diagnostic)

@@ -27,6 +27,21 @@ def native_mode(m, stages, common, writer_pin, base, prepared, mode, stage):
     return value, receipt
 
 
+def finalize_once(m, stages, common, writer_pin, base, prepared):
+    original = "initial-redis-finalize"
+    intent_path = stages.directory / (original + ".send-unknown.json")
+    completed = stages.directory / (original + ".readback.json")
+    if intent_path.exists() and not completed.exists():
+        # The native owner MUST find the original matching finalize.sent and
+        # use verify-finished. Missing native send evidence is a refusal, never
+        # permission to retry finish/apply. Local receipt materialization remains
+        # create-only and follows genuine live TLS/account/native readback.
+        prefix = "initial-redis-finalize-readback-"
+        index = sum(1 for _ in stages.directory.glob(prefix + "*.send-unknown.json"))
+        return native_mode(m, stages, common, writer_pin, base, prepared, "query-finalize", prefix + str(index))
+    return native_mode(m, stages, common, writer_pin, base, prepared, "finalize", original)
+
+
 def query_once(m, stages, common, writer_pin, base, prepared):
     # A rollout may make native query exit nonzero before its Pod becomes ready.
     # Each retry is a NEW read-only observation of the SAME original intent.
@@ -60,7 +75,7 @@ def resume(m, stages):
     observed = query_once(m, stages, common, writer_pin, lineage["base_options"], prepared)
     if observed is None or observed["State"] != "desired_specs_ready_requires_native_finalize":
         return {"version": "operator-initial-redis-query.v1", "state": "same_original_rollout_not_confirmed_query_again_or_recover", "original_intent": prepared["Intent"], "backup_ready": False}
-    final, receipt = native_mode(m, stages, common, writer_pin, lineage["base_options"], prepared, "finalize", "initial-redis-finalize")
+    final, receipt = finalize_once(m, stages, common, writer_pin, lineage["base_options"], prepared)
     m.need(final["State"] == "native_tls_and_accounts_read_back_not_a_hold", "actual_original_redis_native_finalize_required")
     writer_pin = final["WriterSelection"]; writer = m.decode(m.pinned(writer_pin))
     keeper = m.decode(m.pinned(final["KeeperSelection"])); policy = m.decode(m.pinned(final["Policy"]))
@@ -159,7 +174,7 @@ def prepare(m, stages, assembly):
                 break
             time.sleep(2)
         m.need(ready, "original_redis_rollout_unconfirmed_query_or_recover_original_intent")
-        final, native_receipt = native_mode(m, stages, common, writer_pin, base, prepared, "finalize", "initial-redis-finalize")
+        final, native_receipt = finalize_once(m, stages, common, writer_pin, base, prepared)
         m.need(final["State"] == "native_tls_and_accounts_read_back_not_a_hold", "actual_original_redis_native_finalize_required")
         writer_pin = final["WriterSelection"]
         writer = m.decode(m.pinned(writer_pin))

@@ -160,7 +160,13 @@ func (x *sourceSQLObservation) observe(ctx context.Context) (*observedSourceSQL,
 	if err != nil {
 		return nil, sourceObservationDetailRejected(sourceSQLInstancesRead)
 	}
+	if bindRuntimeTestScope(s.Config, &b.SourceInventory{Database: s.Config.SourceDatabase, ServerUUID: s.Config.SourceServerUUID, Instances: instances}) != nil {
+		return nil, sourceObservationDetailRejected(sourceSQLInstancesShape)
+	}
 	for index, instance := range instances {
+		if deferredRuntimeTestInstance(s.Config, instance) {
+			continue
+		}
 		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || (index > 0 && instances[index-1].ID >= instance.ID) || (instance.Status != "running" && instance.Status != "stopped") {
 			return nil, sourceObservationDetailRejected(sourceSQLInstancesShape)
 		}

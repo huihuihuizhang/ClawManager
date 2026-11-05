@@ -16,6 +16,7 @@ import (
 
 type InstanceIdentity = domain.SourceInstance
 type SourceInventory struct {
+	RuntimeTestScope     *domain.RuntimeTestScope `json:"RuntimeTestScope,omitempty"`
 	Database, ServerUUID string
 	Users                []int
 	Instances            []InstanceIdentity
@@ -26,6 +27,7 @@ type SourceInventory struct {
 }
 
 func cloneSourceInventory(in SourceInventory) SourceInventory {
+	in.RuntimeTestScope = in.RuntimeTestScope.Clone()
 	in.Users = append([]int(nil), in.Users...)
 	in.Instances = append([]InstanceIdentity(nil), in.Instances...)
 	in.Teams = team.CloneInventory(in.Teams)
@@ -43,6 +45,7 @@ type AgentKind struct{ Type, Mode, Variant, OS string }
 // Runtime Agent, kubernetes/dynamic clients and CRI/NFS Proof clients belong to
 // these explicit builders; no private Driver, SQLStore or Vault is accepted.
 type LinuxProfileConfig struct {
+	RuntimeTestScope *domain.RuntimeTestScope
 	// VerifySource checks the actual discovery transaction before and after
 	// reading inventory. It must not commit or roll back the transaction.
 	VerifySource func(context.Context, *sql.Tx) error
@@ -79,6 +82,10 @@ type LinuxProfileConfig struct {
 type LinuxProfile struct{ cfg LinuxProfileConfig }
 
 func NewLinuxProfile(cfg LinuxProfileConfig) (*LinuxProfile, error) {
+	if cfg.RuntimeTestScope != nil && (!cfg.RuntimeTestScope.ShapeValid() || cfg.RuntimeTestScope.Database != cfg.Database || cfg.RuntimeTestScope.ServerUUID != cfg.ServerUUID) {
+		return nil, d.ErrNotReady
+	}
+	cfg.RuntimeTestScope = cfg.RuntimeTestScope.Clone()
 	if cfg.CheckFrozenSources != nil && (cfg.FreezeSourcesWithWriters == nil || cfg.ReadTeamFacts == nil) {
 		return nil, d.ErrNotReady
 	}
@@ -141,9 +148,13 @@ func (p *LinuxProfile) inventory(ctx context.Context) (SourceInventory, error) {
 	if err != nil {
 		return out, d.ErrNotReady
 	}
+	out.RuntimeTestScope = p.cfg.RuntimeTestScope.Clone()
+	if out.RuntimeTestScope != nil && (out.RuntimeTestScope.Database != out.Database || out.RuntimeTestScope.ServerUUID != out.ServerUUID || out.RuntimeTestScope.Validate(instances) != nil) {
+		return out, d.ErrNotReady
+	}
 	seen := map[int]bool{}
 	for _, i := range instances {
-		if i.ID <= 0 || seen[i.ID] || !users[i.UserID] || len(seen) >= 9998 || !p.cfg.Supported[AgentKind{i.Type, i.Mode, i.Variant, i.OS}] {
+		if i.ID <= 0 || seen[i.ID] || !users[i.UserID] || len(seen) >= 9998 || (!out.RuntimeTestScope.IsDeferred(i) && !p.cfg.Supported[AgentKind{i.Type, i.Mode, i.Variant, i.OS}]) {
 			return out, d.ErrNotReady
 		}
 		seen[i.ID] = true

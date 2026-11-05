@@ -336,6 +336,36 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		}
 		nodes[node.Name] = string(node.UID)
 	}
+	// The existing original DATA derivation authenticates the PVC/PV/node
+	// relationship. It performs no gate/hold or observer mutation, exactly as
+	// collectOriginalWriterSelection's preflight. CSI without a native fence is
+	// still a concrete dependency; no guessed kubelet path is exported.
+	physical := &PreparedOriginalWriterSet{owner: p}
+	sharedRoots := map[string][]string{}
+	for _, runtime := range shared.Pods {
+		for n := range pods {
+			pod := &pods[n]
+			if pod.Name != runtime.Pod || pod.Namespace != runtime.Namespace {
+				continue
+			}
+			if runtime.UID != "" && runtime.UID != string(pod.UID) {
+				return zero, ErrInstall
+			}
+			roots, e := physical.actualPodPersistentRoots(ctx, pod)
+			if e != nil {
+				return zero, e
+			}
+			sharedRoots[pod.Spec.NodeName] = append(sharedRoots[pod.Spec.NodeName], roots...)
+		}
+	}
+	sharedNodes := []c.RuntimeSharedNodeSources{}
+	for node, roots := range sharedRoots {
+		if node == "" || nodes[node] == "" {
+			return zero, ErrInstall
+		}
+		sharedNodes = append(sharedNodes, c.RuntimeSharedNodeSources{Name: node, UID: nodes[node], Paths: originalNonOverlappingRoots(roots)})
+	}
+	sort.Slice(sharedNodes, func(i, j int) bool { return sharedNodes[i].Name < sharedNodes[j].Name })
 	volumes := []originalPhysicalVolumePin{}
 	for _, claim := range claims {
 		if claim.Spec.VolumeName == "" || claim.DeletionTimestamp != nil {
@@ -349,7 +379,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	}
 	result := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID, Namespace: i.plan.Target.Namespace,
 		NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: applicationScope, ApplicationScopes: scopes, Instances: append([]domain.SourceInstance(nil), p.instances...),
-		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, Layouts: allLayouts, Dependencies: dependencies}
+		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes, Layouts: allLayouts, Dependencies: dependencies}
 	coordinatesRaw, err := canonical(result)
 	if err != nil || len(coordinatesRaw) > 8<<20 {
 		return zero, ErrInstall
@@ -365,7 +395,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	second, _, _, _, err := p.readKubernetesCensus(ctx)
 	again, e := p.initialInstanceStorage(ctx)
 	sharedAgain, sharedErr := p.readSharedRuntimeSQL(ctx)
-	if err != nil || e != nil || sharedErr != nil || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+	if err != nil || e != nil || sharedErr != nil || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || physical.recheckVolumePins(ctx) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
 	files := map[string][]byte{"initial-source-coordinates.json": coordinatesRaw, "initial-source-kubernetes.private.json": snapshotRaw}
@@ -381,7 +411,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		clear(actual)
 	}
 	final, _, _, _, err := p.readKubernetesCensus(ctx)
-	if err != nil || !reflect.DeepEqual(first, final) || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+	if err != nil || !reflect.DeepEqual(first, final) || physical.recheckVolumePins(ctx) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
 	return OriginalInitialSourceDataReceipt{Version: "original-initial-source-data-authored.v1", Coordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "initial-source-coordinates.json"), SHA256: hash(coordinatesRaw)},

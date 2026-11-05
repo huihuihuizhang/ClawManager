@@ -17,6 +17,8 @@ func main() {
 		os.Exit(2)
 	}
 	switch args[0] {
+	case "runtime-test-scope":
+		os.Exit(install.RunOriginalRuntimeTestScopeCommand(context.Background(), args[1:], os.Stdout))
 	case "capacity-collect":
 		os.Exit(install.RunOriginalCapacityCollector(context.Background(), args[1:], os.Stdout))
 	case "capacity":

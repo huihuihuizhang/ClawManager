@@ -273,6 +273,13 @@ def dispatch(op, production, relay, native):
     if action == "adopt-query-readonly-relay":
         return relay.query_readonly(op, production, actual_pki(op))
     if action == "adopt-prepare-c1-definitions":
+        if (op.run/"production-adoption/readonly-relay-start-intent.json").exists():
+            result = relay.query_readonly(op, production, actual_pki(op))
+        else:
+            result = relay.start_readonly(op, production, actual_pki(op), native.capacity(op))
+        marker = op.run/"production-adoption/actual-readonly-relay-start-result.json"
+        if not marker.exists():
+            production.save_selection(op, marker.name, result)
         return prepare_definitions(op, production)
     return assemble(op, production, native)
 

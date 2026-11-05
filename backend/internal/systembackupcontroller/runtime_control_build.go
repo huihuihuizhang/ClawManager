@@ -11,6 +11,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	"strconv"
 )
 
@@ -64,6 +65,17 @@ func runtimeStateMatches(spec b.RuntimeWriterSpec, s flow.State, point string) b
 // BuildWriters plugs directly into LinuxProfileConfig.BuildWriters. Recovery
 // loads custody only; it cannot rediscover sources or mint fresh reservations.
 func (o *SQLRuntimeControl) BuildWriters(ctx context.Context, in d.Input, inv b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
+	if o != nil {
+		if !reflect.DeepEqual(inv.RuntimeTestScope, o.cfg.RuntimeTestScope) {
+			return nil, ErrExecutionRecord
+		}
+		var scopeErr error
+		inv.Instances, scopeErr = o.cfg.RuntimeTestScope.RuntimeInstances(inv.Instances)
+		if scopeErr != nil {
+			return nil, ErrExecutionRecord
+		}
+		inv.RuntimeTestScope = nil
+	}
 	if o != nil && o.cfg.Shared != nil {
 		return o.buildSharedTaskWriters(ctx, in, inv, frozen)
 	}

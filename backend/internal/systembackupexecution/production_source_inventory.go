@@ -29,6 +29,9 @@ func (s *DeploymentService) productionInventory(ctx context.Context, in d.Input,
 		}
 		return s.validateRuntimeInventory(source)
 	}
+	if bindRuntimeTestScope(s.Config, &source) != nil {
+		return d.ErrNotReady
+	}
 	var metadata productionCaptureMetadata
 	if decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Version != productionCaptureMetadataVersion || metadata.SQLSchema.Validate() != nil || metadata.SQLSchema.PolicySHA256 != domain.BusinessCapturePolicySHA256() || metadata.ControlEvidence.Validate() != nil || source.Teams == nil || !source.TeamFacts.MatchesInventory(*source.Teams) || b.ValidateTeamsWriters(source, discovery.Writers) != nil {
 		return d.ErrNotReady
@@ -40,6 +43,9 @@ func (s *DeploymentService) productionInventory(ctx context.Context, in d.Input,
 	}
 	instances := map[int]bool{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(s.Config, instance) {
+			continue
+		}
 		instances[instance.ID] = false
 	}
 	seenMounts := map[string]bool{}

@@ -172,6 +172,9 @@ func (o *SQLRuntimeControl) discoverSharedTask(ctx context.Context, a d.Authorit
 		return out, err
 	}
 	actual, err := domain.ReadSourceInstances(ctx, tx)
+	if err == nil {
+		actual, err = o.cfg.RuntimeTestScope.RuntimeInstances(actual)
+	}
 	if err != nil || !bytes.Equal(mustSharedJSON(actual), mustSharedJSON(sources)) {
 		tx.Rollback()
 		return out, ErrExecutionRecord

@@ -35,6 +35,7 @@ type RuntimeArmedStopProof interface {
 // it before returning a writer spec. It must never be populated from HTTP input.
 // Each non-runtime registered participant requires its actual drain/health probe.
 type RuntimeControlConfig struct {
+	RuntimeTestScope       *domain.RuntimeTestScope
 	Shared                 *RuntimeSharedTaskConfig
 	Namespace              string // pinned installation namespace; no discovery expansion
 	Gate                   SQLCaptureGate
@@ -56,6 +57,10 @@ type RuntimeControlConfig struct {
 type SQLRuntimeControl struct{ cfg RuntimeControlConfig }
 
 func NewSQLRuntimeControl(c RuntimeControlConfig) (*SQLRuntimeControl, error) {
+	if c.RuntimeTestScope != nil && (!c.RuntimeTestScope.ShapeValid() || c.RuntimeTestScope.InstallationID != c.Gate.Authority.InstallationID) {
+		return nil, d.ErrNotReady
+	}
+	c.RuntimeTestScope = c.RuntimeTestScope.Clone()
 	if c.Namespace == "" || !c.Gate.ready() || absentExecutionDependency(c.Keys) || absentExecutionDependency(c.Client) || (absentExecutionDependency(c.StopProof) && c.StopProofForTask == nil) || len(c.ParticipantChecks) == 0 || c.PollInterval <= 0 || c.PollInterval > time.Second {
 		return nil, d.ErrNotReady
 	}
@@ -112,6 +117,10 @@ func (o *SQLRuntimeControl) Prepare(ctx context.Context, a d.Authority) ([]b.Run
 	tx.Rollback()
 	if e != nil {
 		return nil, e
+	}
+	sources, e = o.cfg.RuntimeTestScope.RuntimeInstances(sources)
+	if e != nil {
+		return nil, ErrExecutionRecord
 	}
 	if o.cfg.Shared != nil {
 		return o.prepareSharedTask(ctx, a, sources)

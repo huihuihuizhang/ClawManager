@@ -17,6 +17,7 @@ import (
 // Diagnostics cannot be supplied as authority to any capture/first-adoption
 // constructor. No token, endpoint, Pod env/args or business file is returned.
 type InstanceMountObservation struct {
+	RuntimeCaptureDeferred                                                                   bool                             `json:",omitempty"`
 	CurrentStoppedPro                                                                        *CurrentStoppedProSourceMaterial `json:",omitempty"`
 	InstanceID, UserID, Generation                                                           int
 	Type, Status, Workspace                                                                  string
@@ -69,6 +70,10 @@ func (s *DeploymentService) ObserveInstanceMountInputs(ctx context.Context) (Ins
 	read := func() ([]InstanceMountObservation, error) {
 		rows := []InstanceMountObservation{}
 		for _, instance := range first.source.Instances {
+			if deferredRuntimeTestInstance(s.Config, instance) {
+				rows = append(rows, InstanceMountObservation{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, Type: instance.Type, Status: instance.Status, Workspace: instance.Workspace, Namespace: instance.Namespace, RuntimeCaptureDeferred: true, Mounts: []InstanceMountObservationEntry{}, Issues: []InstanceMountInputIssue{}})
+				continue
+			}
 			if x.recheck(ctx) != nil {
 				return nil, d.ErrNotReady
 			}

@@ -7,10 +7,11 @@ import re
 
 DEPLOYMENT_SHA = "1634456a58697d23eb999eb31618ec4d77667b02e91260d814e2fe7351f515bb"
 OWNER_ASSEMBLY_SHA = "05140777a87dbd8f7098a0e9aa9b02b6c1464e50d52eb55267fce7b240fe4083"
-REDIS_SOURCE_SHA = "3c7d28ebfe7922d65542a96b978fc1eb729fd27a84747ffcb6b2d18f789743a5"
+REDIS_SOURCE_SHA = "6642a08eb7a78b64413b1864584d2fbd3f6cf950ee3378c476b219833b53b248"
+COMPLETE_INPUTS_SHA = "8d29dc899c237f424f05b127fcbce93fa6307a6d8d29847ac3f53f39d2e2681f"
 SOURCE_DATA_SHA = "210db9cdb4d054ddc21d6bdabfd34e765a011ce9856ee498de86f10646aed9bb"
-DEPLOYMENT_SHA = "7c55efc86b43496eaafb1ae1112905ccd2b6788264f9c1bcdca8e8e6f121cea4"
-OWNER_ASSEMBLY_SHA = "e1bd9437d12efd43d2d97579fe4d7e7c13577777bc107a044a0dd42dbaa81585"
+DEPLOYMENT_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+OWNER_ASSEMBLY_SHA = "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
 INPUT_ASSEMBLY_SHA = "956d8d4cde985fe10f62dc2d7c10b6cbfa1153e08b6d03fa634b10c1eba07bd1"
 
 
@@ -28,6 +29,7 @@ def register_arguments(parser):
     parser.add_argument("--initial-provider-file", type=Path)
     parser.add_argument("--initial-provider-sha256")
     parser.add_argument("--initial-worker-jwt-identity-file")
+    parser.add_argument("--defer-known-error-runtime", action="store_true", help="Explicit functional test scope for exact original two error Lite runtime rows; preserve all business SQL")
 
 
 def prepare_core_arguments(operator):
@@ -77,6 +79,38 @@ def prepare_redis_source_arguments(operator, mode="prepare"):
     if mode == "query":
         return sources.resume(m, stages)
     return sources.recover(m, stages, mode)
+
+
+def prepare_complete_source_arguments(operator, action="prepare"):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    assembly = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    complete = load("system-backup-initial-complete-inputs.py", COMPLETE_INPUTS_SHA)
+    stages = m.DeploymentStages(operator)
+    if action == "prepare":
+        return complete.prepare(m, stages, assembly)
+    return complete.provider_action(m, stages, assembly, action)
+
+
+def prepare_runtime_test_scope_arguments(operator, query_only=False):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    complete = load("system-backup-initial-complete-inputs.py", COMPLETE_INPUTS_SHA)
+    sources = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    return complete.runtime_test_scope_action(m, m.DeploymentStages(operator), sources, query_only)
+
+
+
+def bind_complete_source_arguments(operator):
+    m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
+    assembly = load("system-backup-initial-input-assembly.py", INPUT_ASSEMBLY_SHA)
+    stages = m.DeploymentStages(operator)
+    path = stages.directory / "initial-complete-source.result.json"
+    if not path.exists():
+        return
+    value = m.decode(m.read(path))
+    m.need(value["version"] == "operator-initial-complete-source-data.v1" and value["BackupReady"] is False and value["GrantsIssued"] is False, "original_initial_source_DATA_result_required")
+    for field, key in (("deployment_source_selection", "SourceSelection"), ("deployment_writer_selection", "WriterSelection")):
+        assembly.bind(m, stages.a, field, value[key])
+    m.pinned(value["actual_native_receipt"])
 
 
 def prepare_minio_options_arguments(operator):
@@ -401,7 +435,7 @@ class InitialRuntimeStages:
         jwt, review = self.owner.token_request(m, stages, provider["Publisher"], self.host)
         owner_inputs = m.decode(m.pinned(publication["owner_inputs"]))
         sources = self.owner.assemble_sources(m, owner_inputs, {"Binding": actual["Binding"], "Source": actual["MappingSource"]}, pins, jwt["File"], ca_pin["File"], self.host["Pod"])
-        source_pin = retain_bytes(m, stages.runtime_mirror() / "publication-runtime-sources.json", m.encoded(sources))
+        source_pin = self.op.capture_mapping_module().encode_runtime_sources(self.op, sources, "initial")
         # Typed consumer will independently authenticate the formal grant and
         # formal capability, and the distinct permit/business/delegate pair.
         formal = {"schema_version": "controller-verifier-materials.v1", "database": actual["Database"], "binding": actual["Binding"],

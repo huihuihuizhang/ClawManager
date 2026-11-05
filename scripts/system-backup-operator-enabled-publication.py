@@ -3,9 +3,11 @@ import base64
 import hashlib
 import json
 import os
+import time
+import urllib.error
 from pathlib import Path
 
-ACTIONS=("enabled-forward","enabled-publication","enabled-runtime-materials","enabled-provider-materials","enabled-provider-query")
+ACTIONS=("enabled-forward","enabled-publication","enabled-runtime-materials","enabled-provider-materials","enabled-provider-query","enabled-activate","enabled-query-relay-stop","enabled-query-runtime")
 
 
 def pin(path):
@@ -96,7 +98,13 @@ def provider_materials(op, production, initial_runtime, query=False):
         forward = m.load(op.pin_value({"File": issued["stdout"], "SHA256": issued["stdout_sha256"]}))
         issued = op.completed("enabled-publication")
         publication = m.load(op.pin_value({"File": issued["stdout"], "SHA256": issued["stdout_sha256"]}))
-        worker = op.a.initial_worker_jwt_identity_file
+        original_provider = initial_runtime.read_provider_result(runtime.m, previous)
+        old_permit = original_provider["PermitGrant"]
+        old_envelope = m.load(op.pin_value({"File": old_permit["File"], "SHA256": old_permit["SHA256"]}))
+        old_record = json.loads(base64.b64decode(old_envelope["Record"], validate=True))
+        worker = old_record["WorkerJWTIdentityFile"]
+        m.require(op.a.initial_worker_jwt_identity_file is None or op.a.initial_worker_jwt_identity_file == worker,
+                  "enabled_worker_identity_location_must_preserve_original_signed_locator")
         m.require(isinstance(worker, str) and worker.startswith("/") and ".." not in Path(worker).parts,
                   "actual_original_worker_projected_jwt_location_required")
         directory = production.ensure_directory(op, stages.runtime_mirror()/"enabled-provider-authorities")
@@ -182,7 +190,7 @@ def runtime_materials(op,production,initial_runtime):
     sources["SigningRecord"],sources["SigningPin"]=owner["SigningRecord"],owner["SigningPin"]
     sources["SigningFiles"]=[{"Purpose":v["binding"]["Purpose"],"JWTFile":v["jwt_file"],"CAFile":v["ca_file"]} for v in owner["SigningMounts"]]
     sources["VerifierGrant"]=owner["PublisherGrant"]
-    source=production.save_selection(op,"actual-enabled-publication-runtime-sources.json",sources)
+    source=op.capture_mapping_module().encode_runtime_sources(op,sources,"enabled")
     output=production.ensure_directory(op,stages.runtime_mirror()/"enabled-publication-runtime")
     args=[stages.binary("system-backup-first-install-materials"),"issue-enabled-runtime-materials",*op.owner_common(),"--runtime-dsn-file",runtime.runtime_dsn["File"],"--source-definition-file",base["SourceDefinition"]["File"],"--source-definition-sha256",base["SourceDefinition"]["SHA256"],"--components-template-file",base["ComponentsTemplate"]["File"],"--components-template-sha256",base["ComponentsTemplate"]["SHA256"],"--runtime-sources-file",source["File"],"--runtime-sources-sha256",source["SHA256"],"--runtime-owner-inputs-file",publication["RuntimeOwnerInputs"]["File"],"--runtime-owner-inputs-sha256",publication["RuntimeOwnerInputs"]["SHA256"],"--enable-operation-file",operation["File"],"--enable-operation-sha256",operation["SHA256"],"--request-files-file",runtime.request_pin["File"],"--request-files-sha256",runtime.request_pin["SHA256"],"--enabled-forward-file",forward["Grant"]["File"],"--enabled-forward-sha256",forward["Grant"]["SHA256"],"--original-forward-file",old["grant"]["File"],"--original-forward-sha256",old["grant"]["SHA256"],"--output-signers-file",output/"publication-signers.json","--output-verifier-file",output/"publisher-verifier.json","--output-definition-file",output/"unused-source-definition.json","--output-components-file",output/"unused-source-components.json"]
     value,out=op.invoke(ACTIONS[2],args,env=trusted_environment(op))
@@ -232,7 +240,185 @@ def prepare(op,production,initial_runtime,publication=False):
     return {"state":"actual_enabled_publication_owner_issued_runtime_not_activated" if publication else "actual_enabled_forward_owner_issued_runtime_not_activated","private_receipt":str(out),"backup_ready":False,"page_backup_completed":False}
 
 
+def stop_inputs(op, production, initial_runtime, runtime, operation):
+    stages = runtime.stages
+    production.ensure_directory(op, stages.runtime_mirror()/"normal-runtime-inputs")
+    request = runtime.m.decode(runtime.m.pinned(runtime.request_pin))
+    for key in ("ConfigFile", "GrantFile", "ObserverFile"):
+        selected = {"File": request[key], "SHA256": request[key+"SHA256"]}
+        target = initial_runtime.retain_bytes(runtime.m, stages.runtime_mirror()/"normal-runtime-inputs"/(key+".json"),
+                                             Path(op.pin_value(selected)).read_bytes())
+        request[key] = target["File"]
+    response = initial_runtime.retain_bytes(runtime.m, stages.runtime_mirror()/"normal-runtime-inputs/enable-response.json",
+                                            Path(op.pin_value(operation)).read_bytes())
+    stages.deliver_runtime_tree(runtime.host)
+    return request, response
+
+
+def retain_native_stop(op, production, initial_runtime, runtime, value):
+    m = op.source_helpers()
+    m.require(value.get("Version") == "original-readonly-relay-handover-result.v1" and
+              value.get("State") == "original_readonly_listener_absent_normal_runtime_not_started" and
+              value.get("OriginalListenerAbsent") is True and value.get("RuntimeStarted") is False,
+              "actual_native_readonly_listener_absence_required")
+    for key in ("Result", "Signature"):
+        selected = value[key]
+        path = Path(selected["File"])
+        m.require(path.is_relative_to(runtime.stages.runtime_mirror()), "actual_stop_receipt_runtime_location_required")
+        production.ensure_directory(op, path.parent)
+        runtime.stages.remote_pin(runtime.host, selected)
+        raw = op.k("-n", "clawmanager-zhanghui08-system", "exec", runtime.host["Pod"], "-c", "installation-owner", "--", "/bin/cat", selected["File"])
+        m.require(hashlib.sha256(raw).hexdigest() == selected["SHA256"], "native_stop_receipt_bytes_changed")
+        saved = initial_runtime.retain_bytes(runtime.m, path, raw)
+        m.require(saved == selected, "same_native_signed_stop_material_required")
+    return production.save_selection(op, "actual-normal-relay-stop-selection.json", value)
+
+
+def stop_readonly_for_runtime(op, production, initial_runtime, query=False):
+    runtime, _, _, operation = original(op, initial_runtime)
+    m = op.source_helpers()
+    selected = op.run/"production-adoption/actual-normal-relay-stop-selection.json"
+    if selected.exists() and not query:
+        return m.load(op.pin_value(pin(selected)))
+    request, response = stop_inputs(op, production, initial_runtime, runtime, operation)
+    # D1 authenticates actual enabled owner/KEK admission and original process;
+    # query verifies absence and never emits another signal.
+    relay = op.relay_bootstrap_module()
+    pki = op.c1_authors_module().actual_pki(op)
+    value, _ = relay.stop_for_normal_runtime(op, production, pki, response, request, query=query)
+    retain_native_stop(op, production, initial_runtime, runtime, value)
+    runtime.stages.check_host(runtime.host)
+    return value
+
+
+def database_environment(op, production, initial_runtime, runtime):
+    m = op.source_helpers()
+    selected = op.run/"production-adoption/actual-controller-database-environment-selection.json"
+    if selected.exists():
+        result = m.load(op.pin_value(pin(selected)))
+    else:
+        _, enrolled, _, sql = runtime.stages.common()
+        tls = dict(sql["source_tls"])
+        ca = {"File": tls["ca_file"], "SHA256": tls["ca_sha256"]}
+        target = initial_runtime.retain_bytes(runtime.m, runtime.stages.runtime_mirror()/"normal-runtime-database-ca.pem",
+                                             Path(op.pin_value(ca)).read_bytes())
+        tls["ca_file"] = target["File"]
+        tls_pin = production.save_selection(op, "actual-controller-database-tls.json", tls)
+        output = op.run/"production-adoption/controller-database.environment.private.json"
+        result, _ = op.invoke("controller-database-environment", [runtime.stages.binary("system-backup-first-install-materials"),
+                        "runtime-database-environment", "--plan-file", enrolled["Plan"]["File"], "--plan-sha256", enrolled["Plan"]["SHA256"],
+                        "--runtime-dsn-file", runtime.runtime_dsn["File"], "--runtime-dsn-sha256", runtime.runtime_dsn["SHA256"],
+                        "--tls-file", tls_pin["File"], "--tls-sha256", tls_pin["SHA256"], "--output-file", output])
+        op.pin_value(result)
+        production.save_selection(op, selected.name, result)
+    value = m.load(op.pin_value(result))
+    m.require(value.get("Version") == "original-runtime-database-environment.v1", "actual_driver_decoded_runtime_database_environment_required")
+    return value["Environment"]
+
+
+def activation_environment(op, production, initial_runtime, runtime):
+    m = op.source_helpers()
+    selected = m.load(op.pin_value(pin(op.run/"production-adoption/actual-enabled-publication-runtime-selection.json")))
+    formal = m.load(op.pin_value(pin(op.run/"production-adoption/actual-enabled-formal-selection.json")))
+    m.require(selected["Host"] == runtime.host and formal["Host"] == runtime.host and selected["Formal"] == formal["Formal"] and
+              selected["ProviderMaterial"] == formal["ProviderMaterial"], "same_actual_enabled_native_formal_and_publication_sources_required")
+    enabled_provider_receipt(op)
+    base = m.load(Path(runtime.stages.directory)/"publication-runtime.result.json")
+    recovery = m.load(op.pin_value(pin(op.run/"production-adoption/minio-recovery-preinstalled.json")))
+    descriptor = m.load(op.pin_value(recovery["Descriptor"]))
+    permission = {"File": descriptor["PermissionSourceFile"], "SHA256": descriptor["PermissionSourceSHA256"]}
+    terminal = m.load(op.pin_value(recovery["Terminal"]))
+    definition = m.load(op.pin_value({"File": terminal["DefinitionFile"], "SHA256": terminal["DefinitionSHA256"]}))
+    target = {"File": definition["TargetFile"], "SHA256": definition["TargetSHA256"]}
+    m.require(target["File"] == runtime.core["publication_target"]["path"], "actual_original_formal_publication_target_required")
+    environment = database_environment(op, production, initial_runtime, runtime)
+    environment.update({"SYSTEM_BACKUP_ENABLED": "true", "SYSTEM_BACKUP_V2_CONTROL_PLANE_ENABLED": "true",
+                        "SYSTEM_BACKUP_EXECUTION_PROTOCOL": "public-v1", "SYSTEM_BACKUP_CONTROLLER_ENABLED": "true",
+                        "CLAWMANAGER_LEADER_ELECTION": "true", "SYSTEM_BACKUP_ORIGIN_INSTALLATION_ID": runtime.core["installation_id"],
+                        "SYSTEM_BACKUP_READINESS_MINIO_PROFILE": descriptor["PermissionProfile"],
+                        "SYSTEM_BACKUP_CAPACITY_REPORT_FILE": "/run/system-backup/runtime/registration-capacity.current.json"})
+    m.require(runtime.core["capacity_file"] == environment["SYSTEM_BACKUP_CAPACITY_REPORT_FILE"], "original_core_must_select_live_capacity_report")
+    files = {}
+    def add(source):
+        op.pin_value(source)
+        m.require(source["File"] not in files or files[source["File"]] == source, "actual_producer_path_hash_conflict")
+        files[source["File"]] = source
+    def pair(prefix, source):
+        add(source)
+        environment[prefix+"_FILE"], environment[prefix+"_SHA256"] = source["File"], source["SHA256"]
+    pair("SYSTEM_BACKUP_PUBLIC_CONFIG", runtime.core_pin)
+    pair("SYSTEM_BACKUP_FORWARD_GRANT", selected["Forward"])
+    pair("SYSTEM_BACKUP_VERIFIER_MATERIALS", selected["Formal"])
+    pair("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS", selected["Signers"])
+    pair("SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS", selected["Verifier"])
+    pair("SYSTEM_BACKUP_PUBLICATION_TARGET", target)
+    pair("SYSTEM_BACKUP_READINESS_MINIO_SOURCE", permission)
+    # Core fixes these original paths. Native startup validates the actual
+    # immutable producer bytes/signatures; these are independent startup pins.
+    pair("SYSTEM_BACKUP_CAPTURE_MATERIALS", pin(Path(runtime.core["capture_modules"]["path"])))
+    environment["SYSTEM_BACKUP_RECOVERY_GRANT_SHA256"] = pin(Path(runtime.core["recovery_grant"]["path"]))["SHA256"]
+    add(pin(Path(runtime.core["recovery_grant"]["path"])))
+    add({"File": environment["DB_TLS_CA_FILE"], "SHA256": environment["DB_TLS_CA_SHA256"]})
+    return environment, files
+
+
+def activate_controller(op, production, initial_runtime):
+    m = op.source_helpers()
+    runtime, _, _, _ = original(op, initial_runtime)
+    intent = op.run/"production-adoption/controller-normal-activation-intent.json"
+    m.require(not intent.exists(), "normal_activation_already_sent_query_original_runtime_only")
+    environment, files = activation_environment(op, production, initial_runtime, runtime)
+    # Actual capacity collector remains live throughout real page capture.
+    op.live_capacity_module().query(op)
+    stopped = stop_readonly_for_runtime(op, production, initial_runtime)
+    pki = op.c1_authors_module().actual_pki(op)
+    binding = op.relay_bootstrap_module().runtime_handover_binding(op, production, pki, stopped)
+    m.require(all(runtime.core.get(key) == value for key, value in binding["tls"].items()), "normal_receiver_TLS_must_equal_original_core")
+    # The native handover descriptor is delivered by its actual owner helper.
+    native_handover = {"File": binding["env"]["SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_FILE"],
+                       "SHA256": binding["env"]["SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_SHA256"]}
+    production.ensure_directory(op, Path(native_handover["File"]).parent)
+    initial_runtime.retain_bytes(runtime.m, Path(native_handover["File"]), Path(op.pin_value(binding["Inputs"])).read_bytes())
+    files[native_handover["File"]] = native_handover
+    environment.update(binding["env"])
+    production.save_selection(op, intent.name, {"Host": runtime.host, "Stop": stopped["Result"],
+                              "Handover": native_handover, "Core": runtime.core_pin, "BackupReady": False})
+    # Real existing controller Pod launcher watches this exact env + ready file.
+    # This is the actual start call; no new Pod/UID and no task is created here.
+    started = runtime.stages.publish_controller_environment(environment, list(files.values()))
+    result = query_controller_runtime(op, production, initial_runtime)
+    return {"state": result["state"], "activation": started, "normal_handover": result,
+            "backup_ready": False, "page_backup_completed": False}
+
+
+def query_controller_runtime(op, production, initial_runtime):
+    m = op.source_helpers()
+    runtime, _, _, _ = original(op, initial_runtime)
+    intent = m.load(op.pin_value(pin(op.run/"production-adoption/controller-normal-activation-intent.json")))
+    m.require(intent["Host"] == runtime.host and intent["Core"] == runtime.core_pin, "same_original_normal_controller_required")
+    stopped = m.load(op.pin_value(pin(op.run/"production-adoption/actual-normal-relay-stop-selection.json")))
+    pki = op.c1_authors_module().actual_pki(op)
+    deadline = time.monotonic()+30
+    while True:
+        try:
+            result = op.relay_bootstrap_module().query_normal_runtime_handover(op, pki, stopped, runtime.host)
+            break
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            m.require(time.monotonic() < deadline, "normal_runtime_start_unconfirmed_query_same_identity_only")
+            runtime.stages.check_host(runtime.host)
+            time.sleep(0.25)
+    runtime.stages.check_host(runtime.host)
+    return result
+
+
 def dispatch(op, production, initial_runtime):
+    if op.a.action == "enabled-activate":
+        return activate_controller(op, production, initial_runtime)
+    if op.a.action == "enabled-query-runtime":
+        return query_controller_runtime(op, production, initial_runtime)
+    if op.a.action == "enabled-query-relay-stop":
+        stopped = stop_readonly_for_runtime(op, production, initial_runtime, query=True)
+        return {"state": stopped["State"], "backup_ready": False, "page_backup_completed": False}
     if op.a.action in ("enabled-provider-materials", "enabled-provider-query"):
         return provider_materials(op, production, initial_runtime, query=op.a.action == "enabled-provider-query")
     if op.a.action == "enabled-runtime-materials":

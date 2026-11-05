@@ -127,6 +127,7 @@ def register_arguments(parser):
     parser.add_argument("--deployment-app-image")
     parser.add_argument("--deployment-worker-image")
     parser.add_argument("--deployment-storage-class")
+    parser.add_argument("--deployment-inputs-storage-class", default="longhorn-rwx")
     parser.add_argument("--deployment-staging-size")
     parser.add_argument("--deployment-ssh-key-file", type=Path)
     parser.add_argument("--deployment-known-hosts-file", type=Path)
@@ -425,11 +426,14 @@ class DeploymentStages:
     def new_image(self):
         if (self.directory / "new-image.result.json").exists():
             result = decode(read(self.directory / "new-image.result.json"))
+            inputs_pvc = self.prepare_inputs_pvc()
+            need(not result.get("inputs_pvc") or result["inputs_pvc"]["UID"] == inputs_pvc["metadata"]["uid"], "installed_input_pvc_uid_drift")
             actual = self.get("deployment", result["app"]["Name"])
             need(actual["metadata"]["uid"] == result["app"]["UID"] and digest(encoded(actual["spec"])) == result["app"]["SpecSHA256"], "installed_app_template_drift")
             return result
         self.op.upgraded_released()
         self.common()
+        inputs_pvc = self.prepare_inputs_pvc()
         tls = self.completed("tls-apply")
         need(tls["OperatorSQLTLSVerified"] is True, "actual_tls_producer_required")
         tls_plan = decode(read(tls["PlanFile"], tls["PlanSHA256"]))
@@ -471,7 +475,7 @@ class DeploymentStages:
         self.retain("new-image.plan.json", {"version": "original-app-complete-tls-template.v1", "operation": self.operation,
                      "original_uid": original["metadata"]["uid"], "original_resource_version": original["metadata"]["resourceVersion"],
                      "original_spec": original["spec"], "desired_spec": desired, "images": images, "ca_uid": cm_actual["metadata"]["uid"],
-                     "preserved_business_inputs_sha256": digest(encoded(original_db)), "configuration_enabled": False})
+                     "preserved_business_inputs_sha256": digest(encoded(original_db)), "inputs_pvc_uid": inputs_pvc["metadata"]["uid"], "configuration_enabled": False})
         patch = [{"op": "test", "path": "/metadata/uid", "value": original["metadata"]["uid"]},
                  {"op": "test", "path": "/metadata/resourceVersion", "value": original["metadata"]["resourceVersion"]},
                  {"op": "test", "path": "/spec", "value": original["spec"]}, {"op": "replace", "path": "/spec", "value": desired}]
@@ -480,7 +484,8 @@ class DeploymentStages:
         app, business_pods = self.business_rollout(images)
         result = {"version": "operator-new-image-result.v1", "state": "actual_full_business_mysql_tls_template_and_same_release_rollout_verified",
                   "app": {"Name": "clawmanager-app", "UID": changed["metadata"]["uid"], "SpecSHA256": digest(encoded(app["spec"]))}, "business_pods": business_pods,
-                  "images": images, "plan": pin(self.directory / "new-image.plan.json"), "configuration_enabled": False}
+                  "images": images, "inputs_pvc": {"Name": inputs_pvc["metadata"]["name"], "UID": inputs_pvc["metadata"]["uid"]},
+                  "plan": pin(self.directory / "new-image.plan.json"), "configuration_enabled": False}
         self.retain("new-image.result.json", result)
         return result
 
@@ -524,10 +529,46 @@ printf '{\"machine_id\":\"%s\",\"boot_id\":\"%s\",\"cri_endpoint\":\"unix://%s\"
         need(value["Namespace"] == NS and value["Name"] == self.prefix + "-" + suffix and value["Created"] is True, "actual_created_service_account_required")
         return value, output
 
-    def provision(self, name, size, storage_class):
+    def pvc_definition(self, name, size, storage_class):
         obj = {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": self.prefix + "-" + name, "namespace": NS},
                "spec": {"storageClassName": storage_class, "accessModes": ["ReadWriteOnce"], "volumeMode": "Filesystem", "resources": {"requests": {"storage": size}}}}
-        return self.create_object("host-pvc-" + name, obj)
+        return obj
+
+    def provision(self, name, size, storage_class):
+        return self.create_object("host-pvc-" + name, self.pvc_definition(name, size, storage_class))
+
+    def prepare_inputs_pvc(self):
+        # new-image consumes this SAME original create-only PVC before any
+        # app Pod references it. Pending is valid for WaitForFirstConsumer;
+        # actual business_rollout still owns Pod Ready/TLS/image verification.
+        need(self.a.deployment_inputs_storage_class, "select_actual_shared_inputs_storage_class")
+        storage = decode(self.op.k("get", "storageclass", self.a.deployment_inputs_storage_class, "-o", "json"))
+        need(storage["metadata"]["name"] == self.a.deployment_inputs_storage_class and
+             not storage["metadata"].get("deletionTimestamp") and storage["provisioner"] == "driver.longhorn.io",
+             "actual_longhorn_shared_inputs_storage_class_required")
+        need(storage["metadata"].get("uid"), "actual_inputs_storage_class_uid_required")
+        fields = ("provisioner", "parameters", "volumeBindingMode", "reclaimPolicy", "allowVolumeExpansion", "mountOptions", "allowedTopologies")
+        self.retain("inputs-storage-class.selection.json", {"Name": storage["metadata"]["name"], "UID": storage["metadata"]["uid"],
+                    "Configuration": {key: storage[key] for key in fields if key in storage}})
+        obj = self.pvc_definition("inputs", "1Gi", storage["metadata"]["name"])
+        obj["spec"]["accessModes"] = ["ReadWriteMany"]
+        obj["metadata"].setdefault("annotations", {})[MARKER] = self.operation
+        # SAME historic host-pvc-inputs stage/receipt, not a second create.
+        # call() refuses unknown sends and reuses only its exact recorded reply.
+        retained = self.kubectl("host-pvc-inputs", ["create", "-f", "-", "-o", "json"], obj)[0]
+        current = self.get("pvc", obj["metadata"]["name"])
+        for actual in (retained, current):
+            configured = {k: v for k, v in actual["spec"].items() if k != "volumeName"}
+            need(actual["metadata"]["name"] == obj["metadata"]["name"] and actual["metadata"]["namespace"] == NS and
+                 actual["metadata"].get("uid") and not actual["metadata"].get("deletionTimestamp") and
+                 actual["metadata"].get("annotations", {}).get(MARKER) == self.operation and configured == obj["spec"] and
+                 actual.get("status", {}).get("phase") in (None, "Pending", "Bound"), "original_inputs_pvc_spec_or_owner_drift")
+        need(current["metadata"]["uid"] == retained["metadata"]["uid"] and
+             (not retained["spec"].get("volumeName") or current["spec"].get("volumeName") == retained["spec"]["volumeName"]),
+             "original_inputs_pvc_uid_or_binding_drift")
+        if current["spec"].get("volumeName"):
+            self.retain("inputs-pvc-native-binding.json", {"UID": current["metadata"]["uid"], "VolumeName": current["spec"]["volumeName"]})
+        return current
 
     def host_observer(self):
         image_result = decode(read(self.directory / "new-image.result.json"))
@@ -599,7 +640,9 @@ printf '{\"machine_id\":\"%s\",\"boot_id\":\"%s\",\"cri_endpoint\":\"unix://%s\"
                     uris = [v for kind, v in tls_socket.getpeercert().get("subjectAltName", ()) if kind == "URI"]
                     need(uris == [endpoint["Endpoint"]["ServerURI"]] and tls_socket.version() == "TLSv1.3", "actual_observer_tls_identity")
                     tls_checks.append({"node": endpoint["Node"], "kind": endpoint["Kind"], "server_uri": uris[0], "server_certificate_sha256": digest(tls_socket.getpeercert(binary_form=True))})
-        pvcs = {name: self.provision(name, size, storage["metadata"]["name"]) for name, size in (("inputs", "1Gi"), ("staging", self.a.deployment_staging_size), ("private", "1Gi"))}
+        inputs_pvc = self.prepare_inputs_pvc()
+        need(not image_result.get("inputs_pvc") or image_result["inputs_pvc"]["UID"] == inputs_pvc["metadata"]["uid"], "api_controller_original_inputs_pvc_uid_mismatch")
+        pvcs = {"inputs": inputs_pvc, **{name: self.provision(name, size, storage["metadata"]["name"]) for name, size in (("staging", self.a.deployment_staging_size), ("private", "1Gi"))}}
         # The controller's final image, account, node and ALL producer mounts
         # exist before UID-bound issuance. Startup imports only private literal
         # environment lines; never eval/source shell code or patch PodTemplate.
@@ -775,8 +818,15 @@ exec /usr/local/bin/system-backup-v2-controller
                 # Every selected path is a fixed descendant of the actual
                 # private mirror; no caller command text is interpolated.
                 self.op.k("-n", NS, "exec", identity["Pod"], "-c", "installation-owner", "--", "/bin/sh", "-ec", "umask 077; mkdir -p -- \"$1\"; test ! -L \"$1\"; test \"$(stat -c %u:%a \"$1\")\" = 65532:700", "sh", parent)
-            stage = "runtime-copy-" + digest(relative.as_posix().encode())[:24]
-            delivered.append(self.host_file(identity, stage, destination, raw))
+            stage = "runtime-copy-" + digest((identity["PodUID"]+"/"+relative.as_posix()).encode())[:24]
+            current = self.op.k("-n", NS, "exec", identity["Pod"], "-c", "installation-owner", "--", "/bin/sh", "-eu", "-c",
+                                'if test -e "$1"; then test -f "$1"; test ! -L "$1"; test "$(stat -c %u:%a "$1")" = 65532:600; sha256sum -- "$1"; else printf ABSENT; fi', "sh", destination).decode().split()
+            if current == ["ABSENT"]:
+                delivered.append(self.host_file(identity, stage, destination, raw))
+            else:
+                need(current and current[0] == digest(raw), "existing_original_runtime_file_changed_no_overwrite")
+                self.check_host(identity)
+                delivered.append({"File": destination, "SHA256": digest(raw)})
         return delivered
 
     def materials(self):
@@ -930,7 +980,7 @@ exec /usr/local/bin/system-backup-v2-controller
         need(enabled["Host"] == host and enabled["OriginalForward"] == original_forward, "same_original_controller_and_forward_enabled_sources_required")
         native_enabled = decode(pinned(enabled["NativeReceipt"]))
         need(native_enabled["State"] == "enabled_owner_publication_materials_generated_original_sources_preserved" and native_enabled["Signers"] == enabled["Signers"] and native_enabled["Verifier"] == enabled["Verifier"], "actual_native_enabled_material_producer_required")
-        for prefix, selected in (("SYSTEM_BACKUP_FORWARD_GRANT",enabled["Forward"]),("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS",enabled["Signers"]),("SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS",enabled["Verifier"])):
+        for prefix, selected in (("SYSTEM_BACKUP_FORWARD_GRANT",enabled["Forward"]),("SYSTEM_BACKUP_VERIFIER_MATERIALS",enabled["Formal"]),("SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS",enabled["Signers"]),("SYSTEM_BACKUP_PUBLISHER_VERIFIER_MATERIALS",enabled["Verifier"])):
             pinned(selected)
             need(Path(selected["File"]).is_relative_to(self.runtime_mirror()), "actual_enabled_sources_original_readonly_runtime_mount_required")
             environment[prefix+"_FILE"] = selected["File"]
@@ -939,6 +989,7 @@ exec /usr/local/bin/system-backup-v2-controller
             need(len(matching)<=1 and (not matching or matching[0]==selected), "enabled_source_pin_changed")
             if not matching:
                 producer_pins.append(selected)
+        need(environment.get("SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_FILE") and environment.get("SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_SHA256"), "actual_native_normal_relay_handover_binding_required")
         needed = {"SYSTEM_BACKUP_PUBLIC_CONFIG_FILE", "SYSTEM_BACKUP_PUBLIC_CONFIG_SHA256", "SYSTEM_BACKUP_FORWARD_GRANT_SHA256",
                   "SYSTEM_BACKUP_RECOVERY_GRANT_SHA256", "SYSTEM_BACKUP_CAPTURE_MATERIALS_FILE", "SYSTEM_BACKUP_CAPTURE_MATERIALS_SHA256",
                   "SYSTEM_BACKUP_VERIFIER_MATERIALS_FILE", "SYSTEM_BACKUP_VERIFIER_MATERIALS_SHA256", "SYSTEM_BACKUP_PUBLICATION_SIGNER_MATERIALS_FILE",
@@ -948,7 +999,8 @@ exec /usr/local/bin/system-backup-v2-controller
                   "DB_HOST", "DB_PORT", "DB_NAME", "DB_TLS_CA_FILE", "DB_TLS_CA_SHA256", "DB_TLS_SERVER_NAME",
                   "SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_FILE", "SYSTEM_BACKUP_ORIGINAL_FORWARD_GRANT_SHA256",
                   "SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_FILE", "SYSTEM_BACKUP_MINIO_RECOVERY_SOURCE_SHA256",
-                  "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_FILE", "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_SHA256", "SYSTEM_BACKUP_FORWARD_GRANT_FILE"}
+                  "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_FILE", "SYSTEM_BACKUP_MINIO_RUNTIME_METADATA_SOURCE_SHA256", "SYSTEM_BACKUP_FORWARD_GRANT_FILE",
+                  "SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_FILE", "SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_SHA256"}
         need(needed.issubset(environment) and all(environment[n] for n in needed), "complete_public_controller_environment_required")
         need(environment["SYSTEM_BACKUP_ENABLED"] == "true" and environment["SYSTEM_BACKUP_READINESS_MINIO_PROFILE"] in
              ("minio-2025-04-22-builtin-flat.v1", "minio-2025-09-07-builtin-flat.v1"), "exact_controller_and_readiness_profile_required")

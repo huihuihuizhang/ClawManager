@@ -226,6 +226,7 @@ def main():
     add('provenance/source-selection.json', a.selection, a.selection_sha256)
     add('provenance/python-loader-map.json', a.loader_map, a.loader_map_sha256)
     add('provenance/shared-agent-BUILD_INPUT.json', a.shared_agent_input, a.shared_agent_input_sha256)
+    add('provenance/exact-native-s3-version-delete-blocker-R14.json', a.source_repository / '.tmp-native-s3-r14-threat-boundary-blocker-20261105.json', 'f8fb2fc70fab2df76757aff76725d8986501d5e617f4f28bbff25ace65053d0c')
     add('provenance/assemble.py', Path(__file__))
     if a.runbook:
         add('INSTALL-RUNBOOK.zh-CN.md', a.runbook, a.runbook_sha256)
@@ -236,7 +237,40 @@ def main():
     pins['bin/system-backup-legacy-upgrade177-proof'] = values['PROOF_SHA']
     memory['operator-release-pins.json'] = packed({'version': 'zhanghui08-operator-release-files.v1', 'commit': a.commit, 'page_fix_ancestor': values['PAGE_FIX'], 'files': pins, 'production_authority': False})
     config = {'source_commit': a.commit, 'version': receipt['version'], 'installation_runbook_included': bool(a.runbook), 'installation_runbook_runnable': False, 'full_acceptance': False, 'page_acceptance': False, 'dr_qualified': False}
+    # User-authorized requested scope only. Actual native exact exclusions and
+    # real backup success still require the original owner/field evidence.
+    scope = {
+        'basis': 'User explicitly prioritized deployment and authorized excluding the two observed errorLite runtimes data',
+        'excluded_runtime_data': 'two observed errorLite runtime instances',
+        'excluded_runtime_count': 2,
+        'remaining_expected_normal_runtime_count': 4,
+        'remaining_requested_scope': 'all four normal runtime instances, Teams, Skills and every other requested backup module',
+        'sql_retention_requirement': 'preserve original SQL states and all original rows; no SQL filtering or deletion',
+        'full_runtime_coverage_claimed': False,
+        'exact_native_exclusion_verified_by_packager': False,
+        'authorized_scope_backup_success_verified': False,
+    }
+    config['scope'] = scope
+    config['page_ready'] = False
+    config.update({
+        'delivery_purpose': 'field-upgrade-and-page-install-debug',
+        'supported_initial_stop_phase': 'new-image',
+        'new_image_field_verified': False,
+        'c1_accepted': False,
+        'teams_static_grant_wiring_pending': True,
+        'exactnativeS3VersionDeleteBlocked': True,
+        'exact_native_s3_version_delete_blocker': {
+            'formal_native_exact_version_delete_http_status': 403,
+            'formal_policy_changed_by_packager': False,
+            'conditional_policy_workaround_accepted': False,
+            'r14_evidence_file': 'provenance/exact-native-s3-version-delete-blocker-R14.json',
+            'r14_evidence_sha256': 'f8fb2fc70fab2df76757aff76725d8986501d5e617f4f28bbff25ace65053d0c',
+            'r14_evidence_scope': 'isolated fixed-native-MinIO threat-boundary test; not field acceptance',
+            'reason': 'Formal native DeleteObjectVersion returns 403; R14 rejects the conditional-policy workaround because it permits unintended deletions',
+        },
+    })
     memory['release-state.json'] = packed(config)
+    memory['READY_STATE.json'] = packed({**config, 'status': 'FIELD_UPGRADE_PAGE_INSTALL_DEBUG_C1_BLOCKED'})
     memory['ENTRY.sh'] = b'''#!/usr/bin/env bash
 set -euo pipefail
 umask 077
@@ -276,12 +310,22 @@ esac
                             actions.add(value)
     commands = ['python3 -B ./scripts/system-backup-zhanghui08-operator.py ' + shlex.quote(action) + ' --release-directory "$PWD" [actual pinned inputs]' for action in sorted(actions)]
     memory['OPERATOR-CALLS.txt'] = ('Actual operator actions, alphabetical; NOT execution order or a runnable installation script.\nEvery action requires actual pinned inputs and original-operation recovery rules.\n' + '\n'.join(commands) + '\nUse final D runbook for ordering, exact arguments, prerequisites and recovery.\n').encode()
-    readme = f'''# 离线交付包：镜像与实际文件已校验，现场安装及验收待执行
+    readme = f'''# 现场升级与页面安装调试包：镜像与实际文件已校验，C1 仍阻断
 
 源码提交：{a.commit}。版本：{receipt['version']}。Linux amd64。
+本包供现场沿原 operator 升级到 new-image 并验证原副本数、Ready、业务 MySQL TLS 和实际镜像 digest；现场尚未执行，new_image_field_verified=false。
+升级新镜像与 C1/页面完整备份验收是不同阶段。正式原生 S3 DeleteObjectVersion 仍返回 403，exactnativeS3VersionDeleteBlocked=true；C1 必须继续拒绝，不能强制置 ready 或完整备份通过。
+R14 原证据及 SHA 已随包固定在 provenance/exact-native-s3-version-delete-blocker-R14.json；隔离威胁测试证明条件策略可产生越界删除，不采用该绕行策略。此证据不是现场验收。
+Teams static grant 接线仍待完成；授权排除两条 errorLite Runtime 数据的实际现场效果仍未验证。
+后续安装调试按 Runbook 原操作推进；所有完整安装/页面/灾备验收标记仍为 false。
 本包实际包含 {len(tools)} 个 Go 工具、4 个外部 ELF、{len(python_files)} 个 Python 文件，以及同源应用和 worker 镜像。
 bin/ 另含从真实 copy199r2 归档独立校验提取的旧库证明工具，不计入构建工具数。
-安装 Runbook：{'已包含 INSTALL-RUNBOOK.zh-CN.md 供集成核对；当前 runnable=false，不能作为完整安装命令执行' if a.runbook else '尚未接入；本包仅提供核验和镜像导入入口，不能据此执行完整安装'}。
+本次用户授权范围：排除已观察到的两条 errorLite 的 Runtime 数据；其余正常四实例、Teams/Skills 等所有其余请求模块仍完整保留在请求范围内。
+SQL 原状态和完整原行必须保留，不因 Runtime 排除而过滤或删除 SQL 数据。本包不冒充六实例 Runtime 全量覆盖。
+D1/初始作者的 exact2 原身份排除须实际生效并由原 native owner验证；打包器不把范围声明作为排除已验证证明。
+原 722f… 已测 shared agents 输入继续使用；本包不声称旧 agent 具有新增 readonlyinventory API。
+当前没有本授权范围下的真实页面备份 success 证明，必须后续同 task/attempt 完整采集、源恢复、正式发布、独立读回、catalog 和 true success 验证。
+安装 Runbook：{'已包含 INSTALL-RUNBOOK.zh-CN.md，含到 new-image 的命令与现场验证；整条安装仍 runnable=false，后续 C1 阻断必须保留' if a.runbook else '尚未接入；本包仅提供核验和镜像导入入口，不能据此执行完整安装'}。
 
 上传前核对外层 .tar.gz.sha256。现场用户自行执行：
 

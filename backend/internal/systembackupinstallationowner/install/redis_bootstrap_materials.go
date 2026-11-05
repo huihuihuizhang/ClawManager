@@ -443,7 +443,7 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		}
 		receipt.State = "original_native_redis_restored_no_backup_claim"
 		return receipt, nil
-	case "finalize":
+	case "finalize", "query-finalize":
 		if intent.BeforePodUID == "" || intent.BeforeContainerID == "" || string(p.UID) == intent.BeforePodUID || p.Status.ContainerStatuses[0].ContainerID == intent.BeforeContainerID {
 			return zero, ErrInstall
 		}
@@ -510,12 +510,17 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		}
 		finishMode := "finish"
 		if _, e := os.Lstat(filepath.Join(opt.OutputDirectory, "finalize.sent")); e == nil {
+			sent, readErr := ReadPrivateFile(filepath.Join(opt.OutputDirectory, "finalize.sent"), 32)
+			if readErr != nil || string(sent) != intent.Operation { return zero, ErrInstall }
 			finishMode = "verify-finished"
-		} else if !os.IsNotExist(e) {
+		} else if opt.Mode == "query-finalize" || !os.IsNotExist(e) {
 			return zero, ErrInstall
 		} else if writeNewFiles(opt.OutputDirectory, map[string][]byte{"finalize.sent": []byte(intent.Operation)}) != nil {
 			return zero, ErrInstall
 		}
+		// query-finalize is a new authenticated READ of the same original send.
+		// It cannot create finalize.sent, call finish, apply, cancel or rollback.
+		if opt.Mode == "query-finalize" && finishMode != "verify-finished" { return zero, ErrInstall }
 		result, e := i.originalRedisHelper(ctx, cfg, p.Name, intent.Container, intent.Helper, sb.RedisBootstrapNativeRequest{Mode: finishMode, Operation: intent.Operation, ExpectedRunID: intent.Before.RunID, DataDirectory: intent.Before.DataDirectory})
 		if e != nil || result.RunID != runID || result.RunID == intent.Before.RunID || guard() != nil {
 			return zero, ErrOriginalObserverPKIUnconfirmed

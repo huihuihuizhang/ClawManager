@@ -32,6 +32,7 @@ type GatewayOriginalReference struct {
 	KeyRef       string             `json:"key_ref"`
 }
 type RuntimeSourceConfig struct {
+	RuntimeTestScope         *domain.RuntimeTestScope           `json:"runtime_test_scope,omitempty"`
 	SharedRuntimeProtocol    string                             `json:"shared_runtime_protocol,omitempty"`
 	SharedObserver           *FormalSharedRuntimeObserverConfig `json:"shared_runtime_observer,omitempty"`
 	StoppedProObserver       *FormalStoppedProObserverConfig    `json:"stopped_pro_observer,omitempty"`
@@ -48,6 +49,9 @@ type RuntimeSourceConfig struct {
 }
 
 func (r RuntimeSourceConfig) validate() error {
+	if r.RuntimeTestScope != nil && !r.RuntimeTestScope.ShapeValid() {
+		return d.ErrNotReady
+	}
 	if r.SharedRuntimeProtocol != "" && (r.SharedRuntimeProtocol != "shared-container-freeze.v1" || r.SharedObserver == nil) {
 		return d.ErrNotReady
 	}
@@ -236,6 +240,7 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 		}
 		controls.Shared = shared
 	}
+	controls.RuntimeTestScope = cfg.RuntimeTestScope.Clone()
 	runtime, e := c.NewSQLRuntimeControl(controls)
 	if e != nil {
 		return profile, e
@@ -296,7 +301,13 @@ func (s *DeploymentService) validateRuntimeInventory(inv b.SourceInventory) erro
 	for _, k := range cfg.Supported {
 		kinds[k] = true
 	}
+	if bindRuntimeTestScope(s.Config, &inv) != nil {
+		return d.ErrNotReady
+	}
 	for _, source := range inv.Instances {
+		if inv.RuntimeTestScope.IsDeferred(source) {
+			continue
+		}
 		if cfg.SharedRuntimeProtocol != "" && source.Mode == "lite" {
 			if source.Namespace != "" && !allowed[source.Namespace] || source.Status != "running" && source.Status != "stopped" && source.Status != "error" {
 				return d.ErrNotReady
@@ -552,6 +563,9 @@ func (s *DeploymentService) checkNFSRuntimeWorkspace(ctx context.Context, client
 	}
 	ownedRoot := path.Join(s.Config.RuntimeSources.WorkspaceRoot, cfg.SubPath)
 	for _, source := range instances {
+		if deferredRuntimeTestInstance(s.Config, source) {
+			continue
+		}
 		if !strings.HasPrefix(source.Workspace, ownedRoot+"/") {
 			return d.ErrNotReady
 		}

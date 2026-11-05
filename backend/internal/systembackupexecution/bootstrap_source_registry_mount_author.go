@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	"clawreef/internal/systembackupinstallationowner/install"
@@ -35,12 +36,26 @@ func readOriginalMountLayouts(file, digest string) ([]InstancePersistentMountLay
 	return selection.Layouts, nil
 }
 
-func originalMountRunningInventory(instances []b.InstanceIdentity) error {
+func originalMountRunningInventory(instances []b.InstanceIdentity, scopes ...*domain.RuntimeTestScope) error {
+	var testScope *domain.RuntimeTestScope
+	if len(scopes) > 1 {
+		return mountInputError("invalid_runtime_test_scope", 0, "")
+	}
+	if len(scopes) == 1 {
+		testScope = scopes[0]
+	}
+	if testScope != nil && testScope.Validate(instances) != nil {
+		return mountInputError("runtime_test_scope_drift", 0, "")
+	}
 	if len(instances) > 9998 {
 		return mountInputError("invalid_original_inventory", 0, "")
 	}
 	seen := map[int]bool{}
 	for _, instance := range instances {
+		if testScope.IsDeferred(instance) {
+			seen[instance.ID] = true
+			continue
+		}
 		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
@@ -54,8 +69,15 @@ func originalMountRunningInventory(instances []b.InstanceIdentity) error {
 
 // Private comparison projection only: no restart reservation, stop capability,
 // admitted writer or PreparedCoverage can be obtained from these values.
-func originalMountNativeSpecs(instances []b.InstanceIdentity, native []bootstrapSourceNativeWriter) ([]b.RuntimeWriterSpec, error) {
-	if err := originalMountRunningInventory(instances); err != nil {
+func originalMountNativeSpecs(instances []b.InstanceIdentity, native []bootstrapSourceNativeWriter, scopes ...*domain.RuntimeTestScope) ([]b.RuntimeWriterSpec, error) {
+	var testScope *domain.RuntimeTestScope
+	if len(scopes) > 1 {
+		return nil, mountInputError("invalid_runtime_test_scope", 0, "")
+	}
+	if len(scopes) == 1 {
+		testScope = scopes[0]
+	}
+	if err := originalMountRunningInventory(instances, testScope); err != nil {
 		return nil, err
 	}
 	if len(instances) != len(native) {
@@ -71,6 +93,13 @@ func originalMountNativeSpecs(instances []b.InstanceIdentity, native []bootstrap
 	out := make([]b.RuntimeWriterSpec, 0, len(instances))
 	for _, instance := range instances {
 		n := byID[instance.ID]
+		if testScope.IsDeferred(instance) {
+			if n.RuntimeCaptureDeferred == nil || *n.RuntimeCaptureDeferred != instance || n.State != "runtime_capture_deferred_by_original_test_scope" {
+				return nil, mountInputError("runtime_test_scope_native_marker_mismatch", instance.ID, "")
+			}
+			out = append(out, b.RuntimeWriterSpec{Source: instance, Kind: "runtime-test-deferred"})
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			if n.CurrentStoppedPro == nil || n.CurrentStoppedPro.Source != instance || n.CurrentStoppedPro.validate() != nil {
 				return nil, mountInputError("current_stopped_pro_material_required", instance.ID, "")
@@ -149,7 +178,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, err
 	}
-	if err = originalMountRunningInventory(firstSQL.inventory.Instances); err != nil {
+	if err = originalMountRunningInventory(firstSQL.inventory.Instances, configuredRuntimeTestScope(x.config)); err != nil {
 		return zero, err
 	}
 	clients, err := x.openMetadataClients()
@@ -165,7 +194,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, err
 	}
-	specs, err := originalMountNativeSpecs(firstSQL.inventory.Instances, firstNative)
+	specs, err := originalMountNativeSpecs(firstSQL.inventory.Instances, firstNative, configuredRuntimeTestScope(x.config))
 	if err != nil {
 		return zero, err
 	}

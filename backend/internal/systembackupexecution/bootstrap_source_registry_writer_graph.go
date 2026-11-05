@@ -8,7 +8,7 @@ import (
 )
 
 func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventory, api *observedWriterAPI) error {
-	if x == nil || x.config.RuntimeSources == nil || x.materials.Discovery == nil || api == nil || requireRunningSourceMetadata(source) != nil {
+	if x == nil || x.config.RuntimeSources == nil || x.materials.Discovery == nil || api == nil || requireScopedRunningSourceMetadata(x.config, source) != nil {
 		return ErrSourceWriterObservationIncomplete
 	}
 	ns, p := x.config.Namespace, x.materials.Discovery

@@ -55,6 +55,7 @@ type OriginalInitialSourceCoordinates struct {
 	StoppedProLayouts                                                  []OriginalStoppedProSelection    `json:",omitempty"`
 	NodeUIDs                                                           map[string]string                `json:",omitempty"`
 	ApplicationScopes                                                  []string                         `json:",omitempty"`
+	SharedNodes                                                        []c.RuntimeSharedNodeSources     `json:",omitempty"`
 	SharedRuntime                                                      originalSharedRuntimeSQL
 	Layouts                                                            []OriginalInitialSourceLayout     `json:",omitempty"`
 	Dependencies                                                       []OriginalInitialSourceDependency `json:",omitempty"`

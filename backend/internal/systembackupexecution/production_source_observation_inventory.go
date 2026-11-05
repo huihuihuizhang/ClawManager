@@ -67,7 +67,7 @@ func (x *sourceSQLObservation) observeInventory(ctx context.Context) (*observedS
 	if !reflect.DeepEqual(source.Instances, baseline.instances) {
 		return nil, sourceObservationDetailRejected(sourceInventoryInstancesDrift)
 	}
-	if s.validateRuntimeInventory(source) != nil {
+	if bindRuntimeTestScope(s.Config, &source) != nil || s.validateRuntimeInventory(source) != nil {
 		return nil, sourceObservationDetailRejected(sourceInventoryRuntime)
 	}
 	for _, instance := range source.Instances {

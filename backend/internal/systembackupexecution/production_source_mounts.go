@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	d "clawreef/internal/systembackupdispatch"
@@ -22,6 +23,7 @@ import (
 // never public task parameters or a caller-supplied completeness/stop boolean.
 // A nil scope does not prove that a nonempty installation has no extra mounts.
 type productionPersistentMountScope struct {
+	RuntimeTestScope  *domain.RuntimeTestScope          `json:",omitempty"`
 	CurrentStoppedPro []CurrentStoppedProSourceMaterial `json:",omitempty"`
 	Version           string
 	Mounts            []productionPersistentMountBinding
@@ -43,6 +45,9 @@ func cleanMountRoot(value string) bool {
 }
 
 func (s *productionPersistentMountScope) validate() error {
+	if s != nil && s.RuntimeTestScope != nil && !s.RuntimeTestScope.ShapeValid() {
+		return d.ErrNotReady
+	}
 	if s == nil || s.Version != persistentMountScopeVersion || len(s.Mounts) > 9998 || len(s.CurrentStoppedPro) > 9998 {
 		return d.ErrNotReady
 	}
@@ -64,6 +69,13 @@ func (s *productionPersistentMountScope) validate() error {
 	}
 	seen := map[string]bool{}
 	for _, m := range s.Mounts {
+		if s.RuntimeTestScope != nil {
+			for _, deferred := range s.RuntimeTestScope.Deferred {
+				if m.InstanceID == deferred.ID {
+					return d.ErrNotReady
+				}
+			}
+		}
 		if currentSeen[m.InstanceID] {
 			return d.ErrNotReady
 		}
@@ -175,6 +187,9 @@ func (x *originalSourceMetadataAuthority) additionalInstanceMounts(ctx context.C
 	out := []productionInstanceMount{}
 	identities := map[string]kube.MountIdentity{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(x.service.Config, instance) {
+			continue
+		}
 		record := byInstance[instance.ID]
 		if isCurrentStoppedPro(instance) {
 			material, err := currentStoppedProMaterialFor(scope, instance)

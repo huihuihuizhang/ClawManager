@@ -162,7 +162,10 @@ func (s *OriginalCaptureSequence) MaterializeMappings(ctx context.Context, clien
 				return zero, c.ErrExecutionAuthority
 			}
 			for _, item := range input.Items {
-				workerPath := path.Join(input.Directory, item.Path)
+				workerPath, projectionErr := kube.FormalInputDataPath(operation.Workload.FormalMaterials, input, item)
+				if projectionErr != nil {
+					return zero, c.ErrExecutionAuthority
+				}
 				file, exists := files[workerPath]
 				if !exists || operationFiles[workerPath].File != "" || item.Path == "" || path.Base(item.Path) != item.Path || item.Path == "." || item.Path == ".." || strings.ContainsAny(item.Path, "\\\x00\r\n:") || item.Mode != nil {
 					return zero, c.ErrExecutionAuthority

@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	"reflect"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -18,7 +19,9 @@ import (
 // value is added. Build provenance remains unchanged, including a dev version;
 // the public contract's git commit syntax is checked by the consumer below.
 type productionPublicationSourceFacts struct {
-	Version                                       string `json:"schema_version"`
+	RuntimeTestScope                              *domain.RuntimeTestScope `json:",omitempty"`
+	FullRuntimeCoverage                           *bool                    `json:",omitempty"`
+	Version                                       string                   `json:"schema_version"`
 	AppVersion, GitCommit, MigrationCatalogSHA256 string
 	SchemaSHA256                                  string
 	SchemaRegistry                                ce.RegistryPin
@@ -49,6 +52,9 @@ func observePublicationSourceFacts(schema domain.BusinessCaptureSchema, census d
 }
 
 func (facts productionPublicationSourceFacts) validate() error {
+	if facts.RuntimeTestScope != nil && (!facts.RuntimeTestScope.ShapeValid() || facts.FullRuntimeCoverage == nil || *facts.FullRuntimeCoverage) || facts.RuntimeTestScope == nil && facts.FullRuntimeCoverage != nil {
+		return c.ErrExecutionRecord
+	}
 	if facts.PublicationPolicy != nil && facts.PublicationPolicy.validate() != nil {
 		return c.ErrExecutionRecord
 	}
@@ -66,6 +72,9 @@ func publicationSourceFacts(input c.HistoricalCaptureInput, control ce.CaptureLo
 	var source b.SourceInventory
 	var metadata productionCaptureMetadata
 	if len(input.SourceSnapshot) == 0 || hash(input.SourceSnapshot) != input.SourceSHA256 || decodeMetadataCanonical(input.SourceSnapshot, &source) != nil || decodeMetadataCanonical(source.CaptureMetadata, &metadata) != nil || metadata.Version != productionCaptureMetadataVersion || metadata.PublicationFacts == nil || metadata.PublicationFacts.validate() != nil || metadata.SQLSchema.Validate() != nil || metadata.PublicationFacts.SchemaSHA256 != metadata.SQLSchema.SchemaSHA256 || metadata.PublicationFacts.CoveredObjects != len(metadata.SQLSchema.Tables) || metadata.PublicationFacts.SchemaRegistry != control.Expected.SchemaRegistry || metadata.ControlEvidence.Expected != control.Expected {
+		return zero, c.ErrExecutionRecord
+	}
+	if !reflect.DeepEqual(metadata.PublicationFacts.RuntimeTestScope, source.RuntimeTestScope) || source.RuntimeTestScope != nil && source.RuntimeTestScope.Validate(source.Instances) != nil {
 		return zero, c.ErrExecutionRecord
 	}
 	if policy := metadata.PublicationFacts.PublicationPolicy; policy != nil {

@@ -34,6 +34,9 @@ func (v *runtimeSharedHoldVerifier) VerifyNativeCaptureHeld(ctx context.Context,
 		return err
 	}
 	sources, err := domain.ReadSourceInstances(ctx, tx)
+	if err == nil {
+		sources, err = v.owner.cfg.RuntimeTestScope.RuntimeInstances(sources)
+	}
 	if err != nil || !bytes.Equal(mustSharedJSON(sources), mustSharedJSON(v.frame.book.Definition.Sources)) {
 		return ErrExecutionRecord
 	}

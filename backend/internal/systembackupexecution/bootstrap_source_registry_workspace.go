@@ -65,6 +65,9 @@ func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Contex
 		return install.ErrInstall
 	}
 	for _, source := range instances {
+		if deferredRuntimeTestInstance(x.config, source) {
+			continue
+		}
 		if source.Status != "running" {
 			continue
 		}
@@ -148,6 +151,9 @@ func (x *bootstrapSourceRegistryReader) checkNFSRuntimeWorkspace(ctx context.Con
 	}
 	ownedRoot := path.Join(x.config.RuntimeSources.WorkspaceRoot, cfg.SubPath)
 	for _, source := range instances {
+		if deferredRuntimeTestInstance(x.config, source) {
+			continue
+		}
 		if !strings.HasPrefix(source.Workspace, ownedRoot+"/") {
 			return install.ErrInstall
 		}

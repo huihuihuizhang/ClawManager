@@ -250,17 +250,38 @@ class OperatorDownstreamTests(OperatorEntryTests):
             t,password,binding=self.downstream_fixture(Path(temp));t.require_adopted=lambda:None
             self.recorded(t,"composition",{"status":"disabled_config_initialized"})
             ca=t.run/"actual-web-ca.pem";m.create(ca,b"INDEPENDENT_CA");t.a.web_ca_file=ca
-            calls=[]
+            calls=[];order=[]
+            production,bridge,native=object(),object(),object()
+            def capacity_start(operator,actual_production,actual_bridge,actual_native):
+                self.assertIs(operator,t)
+                self.assertIs(actual_production,production);self.assertIs(actual_bridge,bridge);self.assertIs(actual_native,native)
+                order.append("capacity-start")
+                # Model only the new dependency's durable start marker so
+                # the second enable observes it rather than dispatching again.
+                directory=t.run/"production-adoption";directory.mkdir(mode=0o700)
+                m.save(directory/"capacity-collector-start-intent.json",{"fixture":"original-capacity-start"})
+            def capacity_query(operator):
+                self.assertIs(operator,t);order.append("capacity-query")
+            capacity=types.SimpleNamespace(start=capacity_start,query=capacity_query)
+            def authenticate(*args):
+                order.append("authenticate");return object(),"actual-original-installation"
             def enable(api,installation,journal,check,prompt,verify_readiness=True):
+                order.append("enable")
                 self.assertFalse(verify_readiness)
                 check();calls.append((installation,journal,prompt("Existing local admin password (hidden): "),prompt("Current enrolled TOTP code (hidden): ")))
                 return {"status":"ENABLED_AND_API_READBACK_VERIFIED"}
             t.web_modules=lambda:(types.SimpleNamespace(enable=enable),None)
-            t.authenticated_api=lambda *a:(object(),"actual-original-installation")
-            with patch.object(m,"PASSWORD",password),patch.object(m.getpass,"getpass",lambda msg:"123456"):
+            t.authenticated_api=authenticate
+            with (patch.object(m,"PASSWORD",password),
+                  patch.object(m.getpass,"getpass",lambda msg:"123456"),
+                  patch.object(m,"live_capacity_module",return_value=capacity),
+                  patch.object(m,"production_adoption_module",return_value=production),
+                  patch.object(m,"c1_mysql_bridge_module",return_value=bridge),
+                  patch.object(m,"c1_native_module",return_value=native)):
                 t.normal_api("enable")
                 with self.assertRaises(FileExistsError):t.normal_api("enable")
             self.assertEqual(len(calls),1);self.assertEqual(calls[0][2],password.read_text());self.assertEqual(calls[0][3],"123456")
+            self.assertEqual(order,["capacity-start","authenticate","enable","capacity-query"])
             for file in t.run.glob("*.json"):self.assertNotIn(password.read_text(),file.read_text())
 
     def test_enable_unknown_resolution_only_invokes_original_get_resolver(self):

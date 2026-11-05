@@ -65,6 +65,16 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 	}
 	bindings, pods := map[int]observedSourceRuntimeBinding{}, map[int]observedSourceRuntimePod{}
 	for _, row := range sqlFacts.bindings {
+		deferred := false
+		for _, source := range sqlFacts.inventory.Instances {
+			if source.ID == row.Instance && deferredRuntimeTestInstance(x.config, source) {
+				deferred = true
+			}
+		}
+		if deferred {
+			bindings[row.Instance] = row
+			continue
+		}
 		if row.State != "running" {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
@@ -80,7 +90,7 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 	var capabilities services.RuntimeAgentBackupClient
 	lite := false
 	for _, instance := range sqlFacts.inventory.Instances {
-		lite = lite || instance.Mode == "lite"
+		lite = lite || instance.Mode == "lite" && !deferredRuntimeTestInstance(x.config, instance)
 	}
 	if lite {
 		a := x.association.Source.RuntimeAgent
@@ -114,6 +124,12 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 	out := []bootstrapSourceNativeWriter{}
 	seen := map[int]bool{}
 	for _, instance := range sqlFacts.inventory.Instances {
+		if deferredRuntimeTestInstance(x.config, instance) {
+			copy := instance
+			out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, State: "runtime_capture_deferred_by_original_test_scope", RuntimeCaptureDeferred: &copy})
+			seen[instance.ID] = true
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			m, err := observeCurrentStoppedPro(x.physical, clients.API, x.config, instance, sqlFacts.metadata.CurrentStoppedProStorage[instance.ID])
 			if err != nil {

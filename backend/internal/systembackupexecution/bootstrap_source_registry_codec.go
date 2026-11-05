@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	root "clawreef/internal/systembackup"
+	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/worker"
 	"clawreef/internal/systembackupinstallationowner/install"
@@ -24,6 +25,7 @@ type bootstrapSourcePartsRegistry struct {
 	Deployment, Secrets                  worker.ResourceCaptureSpec
 }
 type bootstrapSourceNativeWriter struct {
+	RuntimeCaptureDeferred                                                   *domain.SourceInstance `json:",omitempty"`
 	RecoveryScope, AgentRestartPolicy                                        string
 	DurableReservation, AgentRestartReconciliation                           bool
 	CurrentStoppedPro                                                        *CurrentStoppedProSourceMaterial `json:",omitempty"`
@@ -32,6 +34,7 @@ type bootstrapSourceNativeWriter struct {
 	DeploymentUID, ReplicaSetUID, ServiceAccount, ServiceAccountUID, NodeUID string
 }
 type bootstrapSourceWritersRegistry struct {
+	RuntimeTestScope                                       *domain.RuntimeTestScope   `json:",omitempty"`
 	ProviderDependencies                                   []formalVaultProviderFacts `json:",omitempty"`
 	SchemaVersion, Installation, Version, ApplicationScope string
 	Participants                                           []string
@@ -86,7 +89,7 @@ func (x *bootstrapSourceRegistryReader) matchSourceRegistries(f *bootstrapSource
 		previous = key
 	}
 	// Compare EVERY native row/identity field, not a digest or caller-set bit.
-	if !reflect.DeepEqual(parts.Parts, f.parts) || !reflect.DeepEqual(parts.Source, f.lastSQL.inventory) || !reflect.DeepEqual(parts.SQL, f.lastSQL.metadata) || !reflect.DeepEqual(parts.Redis, f.redis) || !reflect.DeepEqual(parts.Skills, f.skills) || !reflect.DeepEqual(parts.Deployment, f.deployment) || !reflect.DeepEqual(parts.Secrets, f.secrets) || !reflect.DeepEqual(writers.Participants, f.participants) || !reflect.DeepEqual(writers.API, f.lastAPI.objects) || !reflect.DeepEqual(writers.Bindings, f.lastSQL.bindings) || !reflect.DeepEqual(writers.Pods, f.lastSQL.pods) || !reflect.DeepEqual(writers.Native, f.native) || !reflect.DeepEqual(writers.ProviderDependencies, f.dependencies) {
+	if !reflect.DeepEqual(writers.RuntimeTestScope, configuredRuntimeTestScope(x.config)) || !reflect.DeepEqual(parts.Parts, f.parts) || !reflect.DeepEqual(parts.Source, f.lastSQL.inventory) || !reflect.DeepEqual(parts.SQL, f.lastSQL.metadata) || !reflect.DeepEqual(parts.Redis, f.redis) || !reflect.DeepEqual(parts.Skills, f.skills) || !reflect.DeepEqual(parts.Deployment, f.deployment) || !reflect.DeepEqual(parts.Secrets, f.secrets) || !reflect.DeepEqual(writers.Participants, f.participants) || !reflect.DeepEqual(writers.API, f.lastAPI.objects) || !reflect.DeepEqual(writers.Bindings, f.lastSQL.bindings) || !reflect.DeepEqual(writers.Pods, f.lastSQL.pods) || !reflect.DeepEqual(writers.Native, f.native) || !reflect.DeepEqual(writers.ProviderDependencies, f.dependencies) {
 		return install.ErrInstall
 	}
 	if bootstrapNativeNeedsAgent(f.native) && x.association.Source.RuntimeAgent == nil {

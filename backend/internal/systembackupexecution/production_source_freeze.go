@@ -17,6 +17,9 @@ import (
 )
 
 func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *PublicJobOwner, in d.Input, source b.SourceInventory, writers []b.FrozenWriter, saved *productionCaptureMetadata) (teamsOut *team.Inventory, metadataOut json.RawMessage, failure error) {
+	if bindRuntimeTestScope(s.Config, &source) != nil {
+		return nil, nil, d.ErrNotReady
+	}
 	stage := "source_inventory"
 	defer func() {
 		if failure != nil {
@@ -188,6 +191,11 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 	metadata.PublicationFacts, err = observePublicationSourceFacts(sqlMetadata.Schema, sqlMetadata.Census, metadata.ControlEvidence.Expected.SchemaRegistry)
 	if err != nil {
 		return nil, nil, err
+	}
+	metadata.PublicationFacts.RuntimeTestScope = configuredRuntimeTestScope(s.Config).Clone()
+	if metadata.PublicationFacts.RuntimeTestScope != nil {
+		no := false
+		metadata.PublicationFacts.FullRuntimeCoverage = &no
 	}
 	metadata.PublicationFacts.PublicationPolicy = publicationPolicy
 	if s.captureMaterials.ControlEvidence == nil || s.captureMaterials.ControlEvidence.SchemaRegistrySHA256 != metadata.PublicationFacts.SchemaRegistry.SHA256 {

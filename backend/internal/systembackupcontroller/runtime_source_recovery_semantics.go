@@ -42,7 +42,13 @@ func (p *PreparedSourceRecovery) validateProducerLeaves() error {
 		return ErrSourceRecoveryProofRequired
 	}
 	instances := map[int]b.InstanceIdentity{}
+	if source.RuntimeTestScope != nil && source.RuntimeTestScope.Validate(source.Instances) != nil {
+		return ErrSourceRecoveryProofRequired
+	}
 	for _, instance := range source.Instances {
+		if source.RuntimeTestScope.IsDeferred(instance) {
+			continue
+		}
 		if instances[instance.ID].ID != 0 {
 			return ErrSourceRecoveryProofRequired
 		}

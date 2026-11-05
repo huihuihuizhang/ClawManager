@@ -46,13 +46,13 @@ COPY_QUALIFIER = "scripts/system-backup-upgrade199-copy-qualification.py"
 COPY_QUALIFIER_SHA = "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308"
 
 SQL = "scripts/system-backup-original-sql-accounts.py"
-DEPLOYMENT_MODULE_SHA = "7c55efc86b43496eaafb1ae1112905ccd2b6788264f9c1bcdca8e8e6f121cea4"
-BUSINESS_RUNTIME_SHA = "d1b3d1514576a9cf41a724a0acd54f3127938fce7ddb3b566e257c3d85997596"
-RECORD_EXPORT_SHA = "0cb16133ca0f176706b8ac917447fc2b7d413ff9d00f7f05169c0955c813ae7a"
-INITIAL_RUNTIME_SHA = "b5b1e9b19b06d61801e011471a3d46bbd8eee6e22764079fbb9b1320bfc7a580"
-RUNTIME_ISSUER_SHA = "c702d106cf476a3e4dbd9e81515d7f3294b6316c71256df66fc4300dc0ea9f47"
-OWNER_ASSEMBLY_SHA = "e1bd9437d12efd43d2d97579fe4d7e7c13577777bc107a044a0dd42dbaa81585"
-WORKSPACE_SHA = "3876f68222254735713f4179c4792eebf3cb77c030d2e3c933a3fe6de0750a93"
+DEPLOYMENT_MODULE_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+BUSINESS_RUNTIME_SHA = "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
+RECORD_EXPORT_SHA = "868c66ae0dddd7e5b25dd503a7b6309699ddc7831f8f1f74b5f53b5f940a0af4"
+INITIAL_RUNTIME_SHA = "f44c248a803679b0706101836afb1136ae496aab460a32bca4291899c396afbc"
+RUNTIME_ISSUER_SHA = "6e3fe96bf1bb2cc4bd2b8383763f440d775b6b867dfcfe7549249fbdd71629d2"
+OWNER_ASSEMBLY_SHA = "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
+WORKSPACE_SHA = "5a00aef54b47bf67b6e7a654c9d6cd223aaefca112503c7e8bb2319b8706f6d1"
 EARLY_PREFLIGHT_SHA = "39a51caba7b646b1f4bf1ccd9ba643099bf91abb2eb0a6a251dc342cbdfaf8e1"
 WORKSPACE_ACTIONS = ("workspace-source-preflight", "workspace-source-preflight-cleanup", "workspace-localization-probe", "workspace-localize", "workspace-query", "workspace-abort-probe", "workspace-restore-nfs")
 DB_ACTIONS = ("prepare", "backup", "apply", "query", "recover", "recover-controller",
@@ -125,6 +125,7 @@ REQUIRED_BUILT_BINARIES = (
     "system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-first-adoption-production", "system-backup-original-archive-reader", "system-backup-source-registries", "system-backup-bootstrap-enrolled",
     "system-backup-first-install-materials", "system-backup-original-observer-pki", "system-backup-observer-deployment-materials",
     "backup-node-observer", "backup-gateway-node-observer", "backup-stopped-pro-node-observer",
+    "system-backup-original-maintenance", "system-backup-c1-native-inputs",
 )
 
 
@@ -154,6 +155,8 @@ def seal_release(a):
              "scripts/system-backup-first-page-inputs.py", "scripts/system-backup-d-first-install-inputs.py",
              "build-receipt.json", COPY_NAME, PROOF_NAME, "scripts/system-backup-d-enable.py",
              "scripts/system-backup-d-enable-readback.py", "scripts/system-backup-d-enable-resolve.py", "scripts/system-backup-operator-deployment.py"]
+    names += ["scripts/system-backup-initial-provider-topology.py"]
+    names += ["scripts/system-backup-initial-input-assembly.py", "scripts/system-backup-initial-source-data.py", "scripts/system-backup-initial-redis-sources.py", "scripts/system-backup-initial-complete-inputs.py", "scripts/system-backup-initial-provider-fragments.py", "scripts/system-backup-initial-provider-lifecycle.py", "scripts/system-backup-minio-first-hop-tls.py", "scripts/system-backup-minio-app-tls-cutover.py", "scripts/system-backup-first-page-tls-only.py"]
     names += ["scripts/system-backup-publication-owner-assembly.py", "scripts/system-backup-runtime-issuers.py", "scripts/system-backup-runtime-record-keys.py", "scripts/system-backup-initial-runtime.py", "scripts/system-backup-business-runtime.py", "scripts/system-backup-workspace-localization.py", "scripts/system-backup-workspace-native.py", "scripts/system-backup-workspace-source-preflight.py", "scripts/system-backup-agent-runtime-layer/agent_runtime_layer.py", "scripts/system-backup-runtime-startup-inputs.py", "agent-prebuilt-shared-native-236d56d85fea-linux-amd64.tar.gz"]
     names += ["scripts/system-backup-operator-nonce.py", "scripts/system-backup-operator-c1-mysql-bridge.py", "scripts/system-backup-c1-host-mysql-bridge.py", "scripts/system-backup-operator-first-adoption-production.py"]
     names += ["scripts/system-backup-operator-adoption-locations.py", "tools/mc"]
@@ -162,6 +165,7 @@ def seal_release(a):
     names += ["scripts/system-backup-initial-source-data.py", "scripts/system-backup-initial-redis-sources.py"]
     names += ["scripts/system-backup-operator-c1-inputs.py", "scripts/system-backup-original-c1-pending-input.py", "scripts/system-backup-operator-c1-native.py", "scripts/system-backup-operator-c1-authors.py", "scripts/system-backup-operator-relay-bootstrap.py", "scripts/system-backup-operator-live-capacity.py", "scripts/system-backup-capacity-report-transport.py"]
     names += ["scripts/system-backup-operator-minio-consent.py", "scripts/system-backup-operator-enabled-publication.py"]
+    names += ["scripts/system-backup-operator-capture-mapping.py", "contracts/system-backup/v12/schema-registry.json"]
     names += ["scripts/system-backup-operator-archive-inputs.py", "scripts/system-backup-minio-hostpath-cold-source.py"]
     for name in names:
         files[name] = sha(regular(root / name))
@@ -182,7 +186,7 @@ def seal_release(a):
         os.chmod(proof, 0o700)
     files["bin/system-backup-legacy-upgrade177-proof"] = PROOF_SHA
     require(all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,100}", name) for name in receipt["binaries"]), "finite_actual_release_binary_roster_required")
-    require({"system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-first-adoption-production", "system-backup-original-archive-reader", "system-backup-source-registries", "system-backup-bootstrap-enrolled", "system-backup-original-nonce-material", "system-backup-c1-native-inputs", "system-backup-c1-s3-materials", "system-backup-minio-catalog-initial", "system-backup-enabled-provider-materials"} <= set(receipt["binaries"]), "final_installation_binary_roster_incomplete")
+    require({"system-backup-source-tls-bootstrap", "system-backup-original-enroll", "system-backup-first-adoption", "system-backup-first-adoption-production", "system-backup-original-archive-reader", "system-backup-source-registries", "system-backup-bootstrap-enrolled", "system-backup-original-nonce-material", "system-backup-c1-native-inputs", "system-backup-c1-s3-materials", "system-backup-minio-catalog-initial", "system-backup-enabled-provider-materials", "system-backup-control-evidence-source-grant"} <= set(receipt["binaries"]), "final_installation_binary_roster_incomplete")
     for name in sorted(receipt["binaries"]):
         binary = regular(root / "bin" / name)
         require(sha(binary) == receipt["binaries"][name], "built_binary_pin_changed")
@@ -328,6 +332,18 @@ class Operator:
 
     def minio_recovery_module(self):
         return minio_recovery_module()
+
+    def relay_bootstrap_module(self):
+        return relay_bootstrap_module()
+
+    def live_capacity_module(self):
+        return live_capacity_module()
+
+    def capture_mapping_module(self):
+        return capture_mapping_module()
+
+    def production_adoption_module(self):
+        return production_adoption_module()
 
     def c1_authors_module(self):
         return c1_authors_module()
@@ -721,7 +737,11 @@ class Operator:
         self.bind_sql_role_arguments("publication-materials")
         if action == "initial-runtime" and (self.run / "adopt.readback.json").exists():
             production_adoption_module().runtime_continuation(self, module)
+        if action == "initial-runtime":
+            capture_mapping_module().prepare_inputs(self, production_adoption_module(), module)
         value = module.dispatch(self)
+        if action == "initial-runtime":
+            value["actual_capture_mapping"] = capture_mapping_module().finalize_mappings(self, production_adoption_module(), module, value)
         require(value.get("backup_ready") is False, "initial_material_action_cannot_claim_backup_ready")
         return value
 
@@ -935,6 +955,10 @@ class Operator:
         if action == "enable":
             self.require_adopted(); self.require_configuration()
             binding = self.final_binding(); self.check_final_identity(binding)
+            if (self.run/"production-adoption/capacity-collector-start-intent.json").exists():
+                live_capacity_module().query(self)
+            else:
+                live_capacity_module().start(self, production_adoption_module(), c1_mysql_bridge_module(), c1_native_module())
             ca_path = self.a.web_ca_file or self.run / "web-ca.pem"
             require(ca_path.is_file(), "independently_delivered_web_ca_missing_input")
             ca = regular(ca_path)
@@ -1081,11 +1105,11 @@ def live_capacity_module():
 
 
 def c1_authors_module():
-    return exact_module("system-backup-operator-c1-authors.py", "ebe1da8bf925120a217618bb34379619dcbc334911793eb7e95710812808f3cc")
+    return exact_module("system-backup-operator-c1-authors.py", "20512097e2e24011389694fc2c2b51a92b24f5bf8682dc5b1e251bd116ab6460")
 
 
 def relay_bootstrap_module():
-    return exact_module("system-backup-operator-relay-bootstrap.py", "ce7dcd3117507ce75a1856cf746cce846e8d0712fc47ddac60204e4fc87ae316")
+    return exact_module("system-backup-operator-relay-bootstrap.py", "0f94b8b520756df24fdc5722209708259a8b4d436c38fb26412f38ea88976247")
 
 
 def production_adoption_module():
@@ -1112,8 +1136,12 @@ def minio_consent_module():
     return exact_module("system-backup-operator-minio-consent.py", "2285d0a5c31adf8ed3a774c39b2302c6e87d61b449431fe4a8e4d645475f2a97")
 
 
+def capture_mapping_module():
+    return exact_module("system-backup-operator-capture-mapping.py", "16a95b3ac090bfdcc4164d94c2bdcde2505ae6a2e74c75522ae75fe6e79a5986")
+
+
 def enabled_publication_module():
-    return exact_module("system-backup-operator-enabled-publication.py", "d24af741706a1c063c00c2cd60567c811c37a1be19ab4aa83b561671c171cc46")
+    return exact_module("system-backup-operator-enabled-publication.py", "36547ca5ac5c3a0a5499f9494037dda5054a0f2e2d86e55afcb2d8071d73576a")
 
 
 def main(argv=None):
@@ -1128,7 +1156,10 @@ def main(argv=None):
     choices += list(archive_inputs_module().ACTIONS)
     choices += list(minio_consent_module().ACTIONS)
     choices += list(enabled_publication_module().ACTIONS)
+    choices += ["initial-runtime-test-scope", "initial-runtime-test-scope-query"]
+    choices += ["initial-source-inputs", "initial-providers-prepare", "initial-providers-apply", "initial-providers-query", "initial-providers-finalize"]
     choices += ["initial-source-coordinates", "initial-source-api-inputs", "initial-source-api-finalize", "initial-redis-source", "initial-redis-query", "initial-redis-recover", "initial-redis-recover-finalize"]
+    choices += list(capture_mapping_module().ACTIONS)
     parser.add_argument("action", choices=choices)
     parser.add_argument("--release-directory", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--run-directory", type=Path, default=Path("/root/.clawmanager-backup-install/zhanghui08-original199-20261105"))
@@ -1200,6 +1231,7 @@ def main(argv=None):
                             business_runtime_module().verify_current(tool)
                         if a.action == "materials":
                             tool.prepare_relay_runtime_trust()
+                            initial_runtime_module().bind_complete_source_arguments(tool)
                             tool.bind_writer_selection_argument()
                         if a.action in ("host-observer", "materials", "materials-signing"):
                             tool.require_current_runtime_qualification()
@@ -1208,6 +1240,14 @@ def main(argv=None):
                         result = deployment.dispatch(tool, a.action)
                         if a.action == "materials" and (tool.run / "deployment/initial-source-api-inputs.result.json").exists():
                             result = initial_runtime_module().prepare_source_api_successor_arguments(tool)
+                    elif a.action in ("initial-runtime-test-scope", "initial-runtime-test-scope-query"):
+                        result = initial_runtime_module().prepare_runtime_test_scope_arguments(tool, query_only=a.action.endswith("-query"))
+                    elif a.action == "initial-source-inputs":
+                        tool.require_current_runtime_qualification()
+                        pin = initial_runtime_module().prepare_complete_source_arguments(tool)
+                        result = load(tool.pin_value(pin))
+                    elif a.action.startswith("initial-providers-"):
+                        result = initial_runtime_module().prepare_complete_source_arguments(tool, a.action.removeprefix("initial-providers-"))
                     elif a.action in ("initial-redis-source", "initial-redis-query", "initial-redis-recover", "initial-redis-recover-finalize"):
                         if a.action == "initial-redis-source":
                             tool.require_current_runtime_qualification()
@@ -1241,6 +1281,7 @@ def main(argv=None):
                     elif a.action in c1_inputs_module().ACTIONS: result = c1_inputs_module().prepare(tool, production_adoption_module(), query=a.action == "adopt-query-c1-evidence-material")
                     elif a.action in archive_inputs_module().ACTIONS: result = archive_inputs_module().prepare(tool, production_adoption_module(), query=a.action == "adopt-query-archive-materials")
                     elif a.action in minio_consent_module().ACTIONS: result = minio_consent_module().prepare(tool, production_adoption_module(), initial_runtime_module(), query=a.action == "minio-runtime-consent-query")
+                    elif a.action in capture_mapping_module().ACTIONS: result = capture_mapping_module().dispatch(tool, production_adoption_module(), initial_runtime_module())
                     elif a.action in enabled_publication_module().ACTIONS: result = enabled_publication_module().dispatch(tool, production_adoption_module(), initial_runtime_module())
                     elif a.action in ("adopt-prepare-issuers", "adopt", "adopt-query"): result = tool.adoption(a.action)
                     elif a.action == "composition-assemble": result = tool.assemble_composition()

@@ -1,0 +1,41 @@
+{
+  "schema_version": "supervisor-reviewed-field-image-debug-source.v1",
+  "parent_commit": "14c4b4e7269e0850e9e26b8991c9ae9a1c71dff8",
+  "code_targets": 77,
+  "linux_regressions": {
+    "r12": {
+      "report_sha256": "1436abdcd34e01978255fadcfe8319c27a3ea17003304cfd47a139d41d655a36",
+      "log_sha256": "7ee5c8f8e67d45662daf3f18e1eab7f1b07b4486f8a12133465a7fab43004d14",
+      "roots": 27,
+      "subs": 82,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    },
+    "r14": {
+      "report_sha256": "dd3cee91b79ddb0fe2a8da0f15d1964d9fcf64edbf44506a9b02f711f62e677d",
+      "log_sha256": "3caeb870a1a106cfc04b6cc2bf78ddf7e964477e3926489a846b936b03f1541c",
+      "roots": 34,
+      "subs": 95,
+      "scope": "Linux actual compilation and selected protocol/crypto models. No native Kubernetes/Vault/physical sources/page acceptance."
+    }
+  },
+  "python_operator_models": {
+    "report_sha256": "5ca973ea9030df61de8a853cf839333c5654e8eb25f4ef06ef2fa09cf73f929e",
+    "tests": 19,
+    "exit": 0
+  },
+  "actual_native_s3_helper_receipt_sha256": "5d9add8006dff37a1a16ecee050daa6f07779613e1a99b2924666ec8df7b56ae",
+  "selection_snapshot_sha256": "dc6ea823c804e6d995c379984aefda5a5d8e2affcb9233b20eefc3fdc132fd13",
+  "actual_native_s3_blocker_receipt_sha256": "f8fb2fc70fab2df76757aff76725d8986501d5e617f4f28bbff25ace65053d0c",
+  "fixed_minio_version_delete_qualified": false,
+  "working_tree_existing_files_overwritten": false,
+  "test_build_products": "temporary test ELF and owned fixture containers/networks/volumes removed; production inputs retained",
+  "remaining": [
+    "Native fixed September MinIO evidence-delete qualification returns AccessDenied. R14 conditional policy bypasses were rejected; C1 is not accepted.",
+    "Teams static source grant wiring remains unavailable; the original factory stops before partial issuance.",
+    "Exact two known error Lite Runtime rows are deferred only under the signed original scope; all business SQL rows and original state remain. Field scope validation remains unproven.",
+    "Original database upgrade, real image rollout and full page backup publication/readback remain field-unverified."
+  ],
+  "page_ready": false,
+  "full_acceptance": false,
+  "dr_qualified": false
+}

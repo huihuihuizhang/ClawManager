@@ -39,6 +39,9 @@ func (x *originalSourceMetadataAuthority) runtimeMetadata(ctx context.Context, s
 	}
 	instances := map[int]b.InstanceIdentity{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(x.service.Config, instance) {
+			continue
+		}
 		instances[instance.ID] = instance
 	}
 	originals := map[string]b.FrozenWriter{}
@@ -162,6 +165,9 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 	mounts := []productionInstanceMount{}
 	identities := map[string]kube.MountIdentity{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(x.service.Config, instance) {
+			continue
+		}
 		record, exists := byInstance[instance.ID]
 		if !exists {
 			return fail()

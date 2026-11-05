@@ -101,6 +101,7 @@ RUN set -eu; mkdir -p /installation; for tool in \
       system-backup-c1-native-inputs \
       system-backup-c1-s3-materials \
       system-backup-enabled-provider-materials \
+      system-backup-control-evidence-source-grant \
       system-backup-database-source-grant \
       system-backup-kek-window-owner \
       system-backup-kek-authority \

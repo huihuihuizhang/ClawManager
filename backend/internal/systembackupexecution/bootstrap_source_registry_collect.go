@@ -143,6 +143,9 @@ func (x *bootstrapSourceRegistryReader) deriveParts(f *bootstrapSourceSQLFacts, 
 		parts = append(parts, bootstrapSourceRegistryPart{cd.Part, cd.Part, cd.Operation})
 	}
 	for _, instance := range f.inventory.Instances {
+		if deferredRuntimeTestInstance(x.config, instance) {
+			continue
+		}
 		parts = append(parts, bootstrapSourceRegistryPart{"users_instances", "instance_" + strconv.Itoa(instance.ID) + "_workspace", "capture-workspace"})
 	}
 	var scope *productionPersistentMountScope

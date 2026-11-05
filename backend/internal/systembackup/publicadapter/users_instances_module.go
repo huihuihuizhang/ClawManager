@@ -3,6 +3,7 @@ package publicadapter
 import (
 	"encoding/json"
 	"path"
+	"reflect"
 	"slices"
 	"strconv"
 	"time"
@@ -70,6 +71,9 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 	if cfg.Source.Database == "" || cfg.Source.ServerUUID == "" || len(cfg.Source.Users) == 0 || len(cfg.Source.Users) > 100000 || len(cfg.Source.Instances) > 9998 {
 		return zero, d.ErrNotReady
 	}
+	if cfg.Source.RuntimeTestScope != nil && cfg.Source.RuntimeTestScope.Validate(cfg.Source.Instances) != nil {
+		return zero, d.ErrNotReady
+	}
 	users, instances := map[int]bool{}, map[int]InstanceIdentity{}
 	for _, id := range cfg.Source.Users {
 		if id <= 0 || users[id] {
@@ -78,6 +82,12 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 		users[id] = true
 	}
 	for _, i := range cfg.Source.Instances {
+		if cfg.Source.RuntimeTestScope.IsDeferred(i) {
+			if i.ID <= 0 || !users[i.UserID] {
+				return zero, d.ErrNotReady
+			}
+			continue
+		}
 		if i.ID <= 0 || !users[i.UserID] || i.Generation <= 0 || instances[i.ID].ID != 0 || (i.Status != "running" && i.Status != "stopped") || !path.IsAbs(i.Workspace) || path.Clean(i.Workspace) != i.Workspace || i.Workspace == "/" {
 			return zero, d.ErrNotReady
 		}
@@ -147,7 +157,7 @@ func newUsersInstancesModule(cfg UsersInstancesModuleConfig) (CaptureModuleRegis
 	}
 	registration := CaptureModuleRegistration{Descriptor: CaptureModuleDescriptor{ID: "users_instances", Owner: "B", Revision: cfg.Revision, Parts: parts}}
 	registration.Build = func(input CaptureModuleInput) ([]CapturePartRequest, error) {
-		if input.Source.Database != cfg.Source.Database || input.Source.ServerUUID != cfg.Source.ServerUUID || !slices.Equal(input.Source.Users, cfg.Source.Users) || !slices.Equal(input.Source.Instances, cfg.Source.Instances) || len(input.Parts) == 0 {
+		if !reflect.DeepEqual(input.Source.RuntimeTestScope, cfg.Source.RuntimeTestScope) || input.Source.Database != cfg.Source.Database || input.Source.ServerUUID != cfg.Source.ServerUUID || !slices.Equal(input.Source.Users, cfg.Source.Users) || !slices.Equal(input.Source.Instances, cfg.Source.Instances) || len(input.Parts) == 0 {
 			return nil, d.ErrNotReady
 		}
 		out := make([]CapturePartRequest, 0, len(input.Parts))

@@ -121,7 +121,17 @@ func (x *bootstrapSourceRegistryReader) readSourceSQL() (*bootstrapSourceSQLFact
 	for _, kind := range x.config.RuntimeSources.Supported {
 		supported[kind] = true
 	}
+	if bindRuntimeTestScope(x.config, &out.inventory) != nil {
+		return nil, install.ErrInstall
+	}
 	for n, instance := range out.inventory.Instances {
+		if deferredRuntimeTestInstance(x.config, instance) {
+			if !users[instance.UserID] || owners[instance.ID] != 0 {
+				return nil, ErrSourceWriterObservationIncomplete
+			}
+			owners[instance.ID] = instance.UserID
+			continue
+		}
 		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return nil, mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
@@ -146,14 +156,8 @@ func (x *bootstrapSourceRegistryReader) readSourceSQL() (*bootstrapSourceSQLFact
 	if err != nil {
 		return nil, install.ErrInstall
 	}
-	for _, instance := range out.inventory.Instances {
-		matched := false
-		for _, policy := range x.materials.Discovery.RuntimePolicies {
-			matched = matched || productionImageMatches(out.metadata.Images[instance.ID], policy, x.materials.Discovery.RuntimeImageReferences)
-		}
-		if !matched {
-			return nil, install.ErrInstall
-		}
+	if x.checkRuntimeImagePolicies(out) != nil {
+		return nil, install.ErrInstall
 	}
 	if x.readSourceRuntimeRows(tx, out) != nil || x.checkSQLIdentity(x.physical, tx, binding, verified, &floor) != nil || tx.Commit() != nil || x.access.Check(x.ctx) != nil {
 		return nil, install.ErrInstall
@@ -199,4 +203,26 @@ func (x *bootstrapSourceRegistryReader) readSourceRuntimeRows(tx *sql.Tx, out *b
 func sameBootstrapSourceSQL(a, b *bootstrapSourceSQLFacts) bool {
 	// Different observation timestamps are expected; source DATA must be exact.
 	return a != nil && b != nil && !b.clock.Before(a.clock) && reflect.DeepEqual(a.inventory, b.inventory) && reflect.DeepEqual(a.metadata, b.metadata) && reflect.DeepEqual(a.bindings, b.bindings) && reflect.DeepEqual(a.pods, b.pods)
+}
+
+// Policy selection is a runtime requirement. The whole original SQL projection
+// and every image/owner fact remain intact. Only the original explicitly signed
+// two-source test scope may defer these runtime policy matches.
+func (x *bootstrapSourceRegistryReader) checkRuntimeImagePolicies(out *bootstrapSourceSQLFacts) error {
+	if x == nil || out == nil || x.materials.Discovery == nil || bindRuntimeTestScope(x.config, &out.inventory) != nil {
+		return install.ErrInstall
+	}
+	for _, instance := range out.inventory.Instances {
+		if deferredRuntimeTestInstance(x.config, instance) {
+			continue
+		}
+		matched := false
+		for _, policy := range x.materials.Discovery.RuntimePolicies {
+			matched = matched || productionImageMatches(out.metadata.Images[instance.ID], policy, x.materials.Discovery.RuntimeImageReferences)
+		}
+		if !matched {
+			return install.ErrInstall
+		}
+	}
+	return nil
 }

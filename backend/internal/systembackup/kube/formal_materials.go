@@ -14,17 +14,23 @@ import (
 type FormalInputMount struct {
 	Volume, Kind, Name, Directory string
 	Items                         []corev1.KeyToPath
+	DataPaths                     map[string]string `json:",omitempty"`
 }
 
 type FormalJobMaterials struct {
-	ConfigMap string
-	Inputs    []FormalInputMount
+	ProjectionProtocol string `json:",omitempty"`
+	ConfigMap          string
+	Inputs             []FormalInputMount
 }
 
 func attachFormalMaterials(job *batchv1.Job, materials *FormalJobMaterials) error {
 	if job == nil || materials == nil || len(job.Spec.Template.Spec.Containers) != 1 || len(validation.IsDNS1123Subdomain(materials.ConfigMap)) != 0 || len(materials.Inputs) < 1 || len(materials.Inputs) > 32 {
 		return ErrResource
 	}
+	if materials.ProjectionProtocol != "" && materials.ProjectionProtocol != OriginalFormalDataPathsV1 {
+		return ErrResource
+	}
+	dataPaths := []string{}
 	mode := int32(0400)
 	volumes := map[string]bool{"formal-mapping": true}
 	dirs := map[string]bool{}
@@ -35,6 +41,24 @@ func attachFormalMaterials(job *batchv1.Job, materials *FormalJobMaterials) erro
 		volumes[x.Volume], dirs[x.Directory] = true, true
 		seen := map[string]bool{}
 		for _, item := range x.Items {
+			destination, err := FormalInputDataPath(materials, x, item)
+			if err != nil {
+				return ErrResource
+			}
+			if materials.ProjectionProtocol != "" {
+				for _, existing := range dataPaths {
+					if formalDataPathsOverlap(existing, destination) {
+						return ErrResource
+					}
+				}
+				for _, existing := range job.Spec.Template.Spec.Containers[0].VolumeMounts {
+					if formalDataPathsOverlap(existing.MountPath, destination) {
+						return ErrResource
+					}
+				}
+				dataPaths = append(dataPaths, destination)
+				job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: x.Volume, MountPath: destination, SubPath: item.Path, ReadOnly: true})
+			}
 			if len(validation.IsConfigMapKey(item.Key)) != 0 || item.Path == "" || path.Base(item.Path) != item.Path || item.Path == "." || item.Path == ".." || strings.ContainsAny(item.Path, "\\\x00\r\n:") || seen[item.Path] || item.Mode != nil {
 				return ErrResource
 			}

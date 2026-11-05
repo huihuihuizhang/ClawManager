@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"path/filepath"
+	"reflect"
 
 	c "clawreef/internal/systembackupcontroller"
 	"clawreef/internal/systembackupinstallationowner/install"
@@ -20,6 +21,7 @@ const OriginalCaptureInstallationTemplateVersion = "original-capture-installatio
 // already exist and remain exact original selected inputs.
 type OriginalCaptureInstallationInputs struct {
 	DefinitionFile, DefinitionSHA256, IssuerPrivateFile string
+	DatabaseIssueDefinition                             install.BootstrapSourceFilePin
 	TemplateFile, TemplateSHA256                        string
 	ResolvedComponentsFile, IntermediateFile            string
 }
@@ -70,7 +72,26 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 	}
 	// Template placeholders must name ONLY the two original grant paths, once
 	// each. Do not repair caller-provided hashes or silently add undeclared files.
-	for _, original := range []string{material.Redis.GrantFile, material.Objects.GrantFile} {
+	pendingDatabase := input.DatabaseIssueDefinition != (install.BootstrapSourceFilePin{})
+	if pendingDatabase && (input.DatabaseIssueDefinition.File == "" || input.DatabaseIssueDefinition.SHA256 == "" || template.DatabaseSource.GrantSHA256 != "") {
+		return zero, c.ErrExecutionAuthority
+	}
+	pendingGrants := []string{material.Redis.GrantFile, material.Objects.GrantFile}
+	if pendingDatabase {
+		pendingGrants = append(pendingGrants, template.DatabaseSource.GrantFile)
+	}
+	pendingControl := material.ControlEvidenceSource != nil && material.ControlEvidenceSource.GrantSHA256 == ""
+	if pendingControl {
+		pendingGrants = append(pendingGrants, material.ControlEvidenceSource.GrantFile)
+	}
+	pending := map[string]bool{}
+	for _, file := range pendingGrants {
+		if file == "" || pending[file] {
+			return zero, c.ErrExecutionAuthority
+		}
+		pending[file] = true
+	}
+	for _, original := range pendingGrants {
 		found := false
 		for _, file := range template.Files {
 			if file.WorkerPath == original {
@@ -79,7 +100,7 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 				}
 				found = true
 			} else if file.File == "" || file.SHA256 == "" {
-				if file.WorkerPath != material.Redis.GrantFile && file.WorkerPath != material.Objects.GrantFile {
+				if !pending[file.WorkerPath] {
 					return zero, c.ErrExecutionAuthority
 				}
 			}
@@ -92,11 +113,39 @@ func InstallOriginalCaptureMappings(ctx context.Context, owner *install.Installe
 	if err != nil {
 		return zero, err
 	}
+	var controlResult install.ControlEvidenceSourceIssueResult
+	if pendingControl {
+		// SAME actual original SourceMaterialIssuer/context; not an external
+		// signer handle, JSON approval or renewed definition/window.
+		controlResult, err = sequence.IssueControlEvidenceSourceGrant(ctx)
+		if err != nil {
+			return zero, err
+		}
+	}
+	var databaseResult install.DatabaseSourceIssueResult
+	if pendingDatabase {
+		databaseResult, err = sequence.IssueDatabaseSourceGrant(ctx, input.DatabaseIssueDefinition.File, input.DatabaseIssueDefinition.SHA256)
+		if err != nil {
+			return zero, err
+		}
+		expected := template.DatabaseSource
+		expected.GrantSHA256 = databaseResult.Source.GrantSHA256
+		if !reflect.DeepEqual(expected, databaseResult.Source) {
+			return zero, c.ErrExecutionAuthority
+		}
+		template.DatabaseSource = databaseResult.Source
+	}
 	redis, objects, err := sequence.WorkerSourceMounts(ctx)
 	if err != nil {
 		return zero, err
 	}
 	for index, file := range template.Files {
+		if pendingDatabase && file.WorkerPath == databaseResult.Source.GrantFile {
+			template.Files[index].File, template.Files[index].SHA256 = databaseResult.Source.GrantFile, databaseResult.Source.GrantSHA256
+		}
+		if pendingControl && file.WorkerPath == controlResult.Source.GrantFile {
+			template.Files[index].File, template.Files[index].SHA256 = controlResult.Grant.File, controlResult.Grant.SHA256
+		}
 		for _, grant := range []struct{ file, sha string }{{redis.GrantFile, redis.GrantSHA256}, {objects.GrantFile, objects.GrantSHA256}} {
 			if file.WorkerPath == grant.file {
 				template.Files[index].File, template.Files[index].SHA256 = grant.file, grant.sha
