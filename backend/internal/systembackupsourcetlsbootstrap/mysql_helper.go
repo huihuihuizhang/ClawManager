@@ -92,14 +92,14 @@ func contained(data, file string) (string, error) {
 }
 func certificate(raw []byte) (*x509.Certificate, error) {
 	block, rest := pem.Decode(raw)
-	if block == nil || len(bytes.TrimSpace(rest)) != 0 {
+	if block == nil || !mysqlPEMEnd(rest) {
 		return nil, ErrBootstrap
 	}
 	return x509.ParseCertificate(block.Bytes)
 }
 func signer(raw []byte) (crypto.Signer, error) {
 	block, rest := pem.Decode(raw)
-	if block == nil || len(bytes.TrimSpace(rest)) != 0 {
+	if block == nil || !mysqlPEMEnd(rest) {
 		return nil, ErrBootstrap
 	}
 	if value, e := x509.ParsePKCS8PrivateKey(block.Bytes); e == nil {
@@ -115,6 +115,15 @@ func signer(raw []byte) (crypto.Signer, error) {
 	}
 	return nil, ErrBootstrap
 }
+
+// MySQL 8.4's generated PEM files include the terminator written by its BIO
+// conversion. Accept that single NUL at parse time and retain the raw bytes
+// for source identity, custody, and rollback.
+func mysqlPEMEnd(rest []byte) bool {
+	rest = bytes.TrimSpace(rest)
+	return len(rest) == 0 || len(rest) == 1 && rest[0] == 0
+}
+
 func helperSocket(requested string) (string, error) {
 	choices := []string{requested}
 	if requested == "" {

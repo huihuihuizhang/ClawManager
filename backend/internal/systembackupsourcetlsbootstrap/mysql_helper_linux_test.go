@@ -28,12 +28,18 @@ func TestMySQLBootstrapSignsSANWithExistingCAAndPreservesIssuer(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	ca := append(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0)
 	rawKey, e := x509.MarshalPKCS8PrivateKey(root)
 	if e != nil {
 		t.Fatal(e)
 	}
-	key := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: rawKey})
+	key := append(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: rawKey}), 0)
+	if _, e := certificate(append(bytes.Clone(ca), 'x')); e == nil {
+		t.Fatal("unexpected certificate suffix accepted")
+	}
+	if _, e := signer(append(bytes.Clone(key), 0)); e == nil {
+		t.Fatal("multiple private key terminators accepted")
+	}
 	dir := t.TempDir()
 	caFile := filepath.Join(dir, "ca.pem")
 	keyFile := filepath.Join(dir, "ca-key.pem")
@@ -46,7 +52,8 @@ func TestMySQLBootstrapSignsSANWithExistingCAAndPreservesIssuer(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	leaf, private, e := signedServer(MySQLNativeTLS{CA: ca, CAFile: caFile, Certificate: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: oldDER}), IssuerKeyAvailable: true}, MySQLHelperRequest{DNSNames: []string{"mysql.original.svc"}, IPAddresses: []string{"10.1.2.3"}})
+	oldCertificate := append(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: oldDER}), 0)
+	leaf, private, e := signedServer(MySQLNativeTLS{CA: ca, CAFile: caFile, Certificate: oldCertificate, IssuerKeyAvailable: true}, MySQLHelperRequest{DNSNames: []string{"mysql.original.svc"}, IPAddresses: []string{"10.1.2.3"}})
 	if e != nil {
 		t.Fatal(e)
 	}
