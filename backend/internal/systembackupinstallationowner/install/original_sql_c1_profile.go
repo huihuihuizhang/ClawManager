@@ -3,6 +3,7 @@ package install
 import (
 	appdb "clawreef/internal/db"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -140,6 +141,17 @@ func originalSQLC1ExpectedLedger() ([]string, error) {
 func originalSQLC1LedgerMatches(actual []string) bool {
 	expected, err := originalSQLC1ExpectedLedger()
 	return err == nil && reflect.DeepEqual(actual, expected)
+}
+
+func (in originalSQLInputs) ledgerMatches(actual []string) bool {
+	if in.freshInstallation {
+		catalog, err := appdb.EmbeddedMigrationCatalog()
+		return err == nil && slices.Contains(catalog.Filenames, "137_backup_producer_authority.sql") && slices.Equal(actual, catalog.Filenames)
+	}
+	if originalSQLC1Selected(in.runtimeProfile) {
+		return originalSQLC1LedgerMatches(actual)
+	}
+	return len(actual) == 198
 }
 
 var originalSQLC1Tables = []string{

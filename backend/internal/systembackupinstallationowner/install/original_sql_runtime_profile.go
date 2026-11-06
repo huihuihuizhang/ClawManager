@@ -28,6 +28,16 @@ func originalSQLProfileOperationVersion(profile string) string {
 	}
 }
 
+func (in originalSQLInputs) operationVersion() string {
+	if !in.freshInstallation {
+		return originalSQLProfileOperationVersion(in.runtimeProfile)
+	}
+	if in.runtimeProfile != originalSQLMinIOMetadataProfile {
+		return ""
+	}
+	return "fresh-c1-minio-metadata-sql-accounts-operation.v1"
+}
+
 func originalSQLProfileName(profile string) string {
 	if profile == "" {
 		return originalSQLHistoricalRuntimeProfile

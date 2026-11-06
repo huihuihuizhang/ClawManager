@@ -66,16 +66,38 @@ def main():
     p.add_argument("--account-host")
     p.add_argument("--allow-wildcard-host", action="store_true")
     p.add_argument("--runtime-profile", choices=("controller-historical14.v1", "public-runtime-publication-permits-control-evidence.v1", "public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1"), default="controller-historical14.v1")
+    p.add_argument("--fresh-installation", action="store_true")
+    p.add_argument("--app-deployment")
+    p.add_argument("--app-deployment-uid")
+    p.add_argument("--tls-inspect-receipt-file")
+    p.add_argument("--tls-inspect-receipt-sha256")
     p.add_argument("--pre-enroll-query-receipt-file")
     p.add_argument("--enrollment-output-directory")
     a = p.parse_args()
-    state_prefix = "original_c1_sql_accounts" if a.runtime_profile in ("public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1") else "original198_sql_accounts"
+    minio_profile = "public-runtime-c1-minio-metadata-read.v1"
+    c1 = a.runtime_profile in ("public-runtime-c1-installer-bootstrap.v1", minio_profile)
+    require(not a.fresh_installation or a.runtime_profile == minio_profile)
+    fresh_apply = a.fresh_installation and a.action == "apply"
+    if fresh_apply:
+        require(a.app_deployment and a.app_deployment_uid)
+    else:
+        require(a.app_deployment is None and a.app_deployment_uid is None)
+    state_prefix = "original_c1_sql_accounts" if c1 else "original198_sql_accounts"
     # A same-release existing binary; this is NOT a new build target.
     read_file(a.tool_file, a.tool_sha256, 256 << 20, private=False)
     read_file(a.kubeconfig_file, a.kubeconfig_sha256)
     tls = json_file(a.tls_receipt_file, a.tls_receipt_sha256)
     require(tls.get("Version") == "original-source-tls-bootstrap-receipt.v1"
             and tls.get("OperatorSQLTLSVerified") is True)
+    if a.fresh_installation:
+        require(a.tls_inspect_receipt_file and a.tls_inspect_receipt_sha256)
+        inspected = json_file(a.tls_inspect_receipt_file, a.tls_inspect_receipt_sha256)
+        require(inspected.get("Version") == tls["Version"]
+                and inspected.get("State") == "actual_kube_and_local_admin_inspected_no_tls_change"
+                and inspected["Operation"] == tls["Operation"] and inspected["ServerUUID"] == tls["ServerUUID"])
+        plan = json_file(inspected["PlanFile"], inspected["PlanSHA256"])
+        require((plan["Namespace"], plan["NamespaceUID"], plan["ClusterUID"], plan["Operation"])
+                == (a.namespace, a.namespace_uid, a.cluster_uid, tls["Operation"]))
     for file_key, pin_key in (("DSNFile", "DSNSHA256"), ("SourceTLSFile", "SourceTLSSHA256")):
         read_file(tls[file_key], tls[pin_key])
     material = json_file(tls["SourceTLSFile"], tls["SourceTLSSHA256"])
@@ -90,12 +112,23 @@ def main():
         common += ["--local-admin-username", a.local_admin_username]
     if a.allow_wildcard_host:
         common += ["--allow-wildcard-host"]
+    if a.fresh_installation:
+        common += ["--fresh-installation"]
     if a.action == "inspect":
         args = common + ["--mode", "inspect", "--output-directory", a.inventory_directory]
     else:
         require(a.inventory_sha256)
         inventory = json_file(Path(a.inventory_directory) / "inventory.json", a.inventory_sha256)
-        require(inventory["server_uuid"] == tls["ServerUUID"] and (inventory["ledger_rows"] == 198 if a.runtime_profile not in ("public-runtime-c1-installer-bootstrap.v1", "public-runtime-c1-minio-metadata-read.v1") else isinstance(inventory["ledger_rows"], int) and inventory["ledger_rows"] > 198 and "137_backup_producer_authority.sql" in inventory["ledger"]))
+        require(inventory["server_uuid"] == tls["ServerUUID"])
+        if a.fresh_installation:
+            require(inventory["state"] == state_prefix + "_inventory_no_mutation"
+                    and len(inventory["ledger"]) == inventory["ledger_rows"]
+                    and "137_backup_producer_authority.sql" in inventory["ledger"])
+        elif c1:
+            require(isinstance(inventory["ledger_rows"], int) and inventory["ledger_rows"] > 198
+                    and "137_backup_producer_authority.sql" in inventory["ledger"])
+        else:
+            require(inventory["ledger_rows"] == 198)
         args = common + ["--expected-ledger-sha256", inventory["ledger_sha256"],
                          "--output-directory", a.operation_directory]
         if a.action == "prepare":
@@ -109,6 +142,8 @@ def main():
             args += ["--operation-file", prepared["operation_file"],
                      "--operation-sha256", prepared["operation_sha256"],
                      "--mode", "query" if a.action == "enroll" else a.action]
+    if fresh_apply:
+        args += ["--app-deployment", a.app_deployment, "--app-deployment-uid", a.app_deployment_uid]
     if a.action == "enroll":
         require(a.pre_enroll_query_receipt_file and a.enrollment_output_directory)
         checked = invoke(args, a.pre_enroll_query_receipt_file)

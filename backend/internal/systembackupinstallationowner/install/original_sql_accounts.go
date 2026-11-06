@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -66,8 +67,10 @@ type originalSQLPlan struct {
 	TLS                                                                               mysqltls.Material
 }
 type originalSQLInputs struct {
+	appDeployment, appDeploymentUID                                                                                                                                      string
 	dsn, dsnSHA, tls, tlsSHA, kube, kubeSHA, namespace, nsUID, clusterUID, server, database, ledgerSHA, password, username, host, directory, operationFile, operationSHA string
 	allowAny                                                                                                                                                             bool
+	freshInstallation                                                                                                                                                    bool
 	runtimeProfile                                                                                                                                                       string
 }
 type originalSQLSession struct {
@@ -321,7 +324,7 @@ func (s *originalSQLSession) ledger(ctx context.Context) ([]string, string, erro
 		}
 		names = append(names, n)
 	}
-	if errors.Join(rows.Err(), rows.Close()) != nil || (!originalSQLC1Selected(s.input.runtimeProfile) && len(names) != 198) || (originalSQLC1Selected(s.input.runtimeProfile) && !originalSQLC1LedgerMatches(names)) {
+	if errors.Join(rows.Err(), rows.Close()) != nil || !s.input.ledgerMatches(names) {
 		return nil, "", errOriginalSQLAccounts
 	}
 	raw, _ := json.Marshal(names)
@@ -377,9 +380,13 @@ func (s *originalSQLSession) tables(ctx context.Context) ([]string, error) {
 		return nil, errOriginalSQLAccounts
 	}
 	var names []string
+	var forbidden []string
+	if s.input.freshInstallation {
+		forbidden = schemaobjects.RetainedOriginalLegacyControlTables()
+	}
 	for rows.Next() {
 		var name, kind, engine string
-		if rows.Scan(&name, &kind, &engine) != nil || kind != "BASE TABLE" || engine != "InnoDB" || !originalSQLName.MatchString(name) || len(names) > 1000 {
+		if rows.Scan(&name, &kind, &engine) != nil || kind != "BASE TABLE" || engine != "InnoDB" || !originalSQLName.MatchString(name) || len(names) > 1000 || slices.Contains(forbidden, name) {
 			rows.Close()
 			return nil, errOriginalSQLAccounts
 		}
@@ -440,7 +447,7 @@ func (s *originalSQLSession) prepare(ctx context.Context) (originalSQLPlan, erro
 	if e != nil {
 		return p, e
 	}
-	p = originalSQLPlan{Version: originalSQLProfileOperationVersion(s.input.runtimeProfile), Operation: operation, ServerUUID: s.input.server, Database: s.input.database, Address: s.cfg.Addr, LedgerSHA256: ledger, KubeconfigSHA256: s.input.kubeSHA, AdminID: id, AdminUsername: name, Identity: s.identity, Secure: secure, PersistedSecure: persisted, OriginalUsers: users, Tables: tables, PartialRevokes: partial, TLS: s.material}
+	p = originalSQLPlan{Version: s.input.operationVersion(), Operation: operation, ServerUUID: s.input.server, Database: s.input.database, Address: s.cfg.Addr, LedgerSHA256: ledger, KubeconfigSHA256: s.input.kubeSHA, AdminID: id, AdminUsername: name, Identity: s.identity, Secure: secure, PersistedSecure: persisted, OriginalUsers: users, Tables: tables, PartialRevokes: partial, TLS: s.material}
 	present := map[string]bool{}
 	for _, t := range tables {
 		present[t] = true
@@ -595,7 +602,7 @@ func originalSQLRolePrivilegesForProfile(role, database string, a originalSQLAcc
 }
 
 func (s *originalSQLSession) checkPlan(ctx context.Context, p originalSQLPlan, unused bool) error {
-	if originalSQLProfileOperationVersion(s.input.runtimeProfile) == "" || p.Version != originalSQLProfileOperationVersion(s.input.runtimeProfile) || !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(p.Operation) || p.ServerUUID != s.input.server || p.Database != s.input.database || p.Address != s.cfg.Addr || p.LedgerSHA256 != s.input.ledgerSHA || p.KubeconfigSHA256 != s.input.kubeSHA || !reflect.DeepEqual(p.Identity, s.identity) || p.TLS != s.material || len(p.Accounts) != 6 || p.Census.Validate() != nil {
+	if version := s.input.operationVersion(); version == "" || p.Version != version || !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(p.Operation) || p.ServerUUID != s.input.server || p.Database != s.input.database || p.Address != s.cfg.Addr || p.LedgerSHA256 != s.input.ledgerSHA || p.KubeconfigSHA256 != s.input.kubeSHA || !reflect.DeepEqual(p.Identity, s.identity) || p.TLS != s.material || len(p.Accounts) != 6 || p.Census.Validate() != nil {
 		return errOriginalSQLAccounts
 	}
 	if s.identityCheck(ctx) != nil {
@@ -715,9 +722,36 @@ func (s *originalSQLSession) send(ctx context.Context, directory, label, stateme
 	}
 	return nil
 }
+
+// The root connection is already TLS verified and holds the account operation lock.
+func (s *originalSQLSession) freshApplyTarget(ctx context.Context) (freshAppDatabase, error) {
+	target, err := observeFreshAppDatabase(ctx, s.kube, FreshInstallationIdentityInputs{
+		OriginalEnrollmentInputs: OriginalEnrollmentInputs{
+			Namespace:             s.input.namespace,
+			DatabaseTLSServerName: s.material.ServerName,
+			DatabaseCA:            BootstrapSourceFilePin{SHA256: s.material.CASHA256},
+		},
+		AppDeployment:    s.input.appDeployment,
+		AppDeploymentUID: s.input.appDeploymentUID,
+		ExpectedDatabase: s.input.database,
+	})
+	if err != nil || target.Address != s.cfg.Addr || checkFreshDatabaseHostname(ctx, s.conn, target) != nil {
+		return freshAppDatabase{}, errOriginalSQLAccounts
+	}
+	return target, nil
+}
+
 func (s *originalSQLSession) apply(ctx context.Context, p originalSQLPlan, directory string) error {
 	if s.checkPlan(ctx, p, true) != nil {
 		return errOriginalSQLAccounts
+	}
+	var appTarget freshAppDatabase
+	if s.input.freshInstallation {
+		var err error
+		appTarget, err = s.freshApplyTarget(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	if originalSQLWrite(directory, "apply.sent.json", map[string]string{"operation": p.Operation, "state": "dispatch_intent_no_resend"}) != nil {
 		return errOriginalSQLAccounts
@@ -759,6 +793,12 @@ func (s *originalSQLSession) apply(ctx context.Context, p originalSQLPlan, direc
 					return errOriginalSQLAccounts
 				}
 			}
+		}
+	}
+	if s.input.freshInstallation {
+		current, err := s.freshApplyTarget(ctx)
+		if err != nil || current != appTarget {
+			return errOriginalSQLAccounts
 		}
 	}
 	if s.send(ctx, directory, "persist_require_secure_transport_on", "SET PERSIST require_secure_transport=ON") != nil {
@@ -1157,7 +1197,17 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	}
 	f.StringVar(&in.runtimeProfile, "runtime-profile", originalSQLHistoricalRuntimeProfile, "frozen controller profile; old operations retain original profile")
 	f.BoolVar(&in.allowAny, "allow-wildcard-host", false, "")
-	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || originalSQLProfileOperationVersion(in.runtimeProfile) == "" || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || (*mode != "inspect" && *mode != "prepare" && *mode != "apply" && *mode != "query" && *mode != "rollback") {
+	f.BoolVar(&in.freshInstallation, "fresh-installation", false, "require the exact current embedded migration ledger and no retained legacy tables")
+	f.StringVar(&in.appDeployment, "app-deployment", "", "actual App Deployment for fresh apply")
+	f.StringVar(&in.appDeploymentUID, "app-deployment-uid", "", "independently selected App Deployment UID for fresh apply")
+	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || in.operationVersion() == "" || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || (*mode != "inspect" && *mode != "prepare" && *mode != "apply" && *mode != "query" && *mode != "rollback") {
+		return 2
+	}
+	if in.freshInstallation && *mode == "apply" {
+		if in.appDeployment == "" || in.appDeploymentUID == "" {
+			return 2
+		}
+	} else if in.appDeployment != "" || in.appDeploymentUID != "" {
 		return 2
 	}
 	if *mode != "inspect" && len(in.ledgerSHA) != 64 {
@@ -1316,6 +1366,10 @@ func (s *originalSQLSession) clearCreatorRoutinePrivileges(ctx context.Context, 
 }
 
 func (s *originalSQLSession) retainedLegacyEmpty(ctx context.Context) error {
+	if s.input.freshInstallation {
+		// The table census rejects retained aliases outright for a fresh ledger.
+		return nil
+	}
 	aliases := schemaobjects.RetainedOriginalLegacyControlTables()
 	if len(aliases) != 35 {
 		return errOriginalSQLAccounts
@@ -1332,27 +1386,34 @@ func (s *originalSQLSession) retainedLegacyEmpty(ctx context.Context) error {
 // Only the native original producer uses this second-session reservation.
 // General Installer callers keep their existing connection/transaction model.
 func lockOriginalSQLAccountScope(ctx context.Context, db *sql.DB, server, database string) (func(), error) {
+	_, release, err := lockOriginalSQLAccountSession(ctx, db, server, database)
+	return release, err
+}
+
+// A fresh bootstrap runs the transaction on this exact session, so a later
+// query cannot obtain the lock before the previous SQL session has ended.
+func lockOriginalSQLAccountSession(ctx context.Context, db *sql.DB, server, database string) (*sql.Conn, func(), error) {
 	if db == nil || server == "" || database == "" {
-		return nil, errOriginalSQLAccounts
+		return nil, nil, errOriginalSQLAccounts
 	}
 	db.SetMaxOpenConns(2)
 	conn, e := db.Conn(ctx)
 	if e != nil {
-		return nil, errOriginalSQLAccounts
+		return nil, nil, errOriginalSQLAccounts
 	}
 	release := func() { conn.Raw(func(any) error { return driver.ErrBadConn }); conn.Close() }
 	var actualServer, actualDatabase string
 	if conn.QueryRowContext(ctx, "SELECT @@server_uuid,DATABASE()").Scan(&actualServer, &actualDatabase) != nil || actualServer != server || actualDatabase != database {
 		release()
-		return nil, errOriginalSQLAccounts
+		return nil, nil, errOriginalSQLAccounts
 	}
 	var held int
 	lock := "sbk-sql-accounts-" + hash([]byte(server + "/" + database))[:40]
 	if conn.QueryRowContext(ctx, "SELECT GET_LOCK(?,0)", lock).Scan(&held) != nil || held != 1 {
 		release()
-		return nil, errOriginalSQLAccounts
+		return nil, nil, errOriginalSQLAccounts
 	}
-	return release, nil
+	return conn, release, nil
 }
 
 // Query emits actual partial native state, not just a success boolean. It can

@@ -3,6 +3,8 @@ package install
 import (
 	"reflect"
 	"testing"
+
+	appdb "clawreef/internal/db"
 )
 
 func TestOriginalSQLC1ProfileKeepsSourceAndRuntimeIndependent(t *testing.T) {
@@ -66,5 +68,30 @@ func TestOriginalSQLC1LedgerIsExactUnionWithRealEmbeddedCatalog(t *testing.T) {
 	}
 	if originalSQLC1LedgerMatches(append(append([]string(nil), expected...), "unreviewed.sql")) || originalSQLC1LedgerMatches(expected[1:]) {
 		t.Fatal("foreign/partial ledger accepted")
+	}
+}
+
+func TestOriginalSQLFreshLedgerCannotReinterpretHistoricalOperation(t *testing.T) {
+	current := originalSQLInputs{runtimeProfile: originalSQLMinIOMetadataProfile, freshInstallation: true}
+	historical := originalSQLInputs{runtimeProfile: current.runtimeProfile}
+	catalog, err := appdb.EmbeddedMigrationCatalog()
+	if err != nil || len(catalog.Filenames) < 2 {
+		t.Fatal("current embedded catalog unavailable", err)
+	}
+	old, err := originalSQLC1ExpectedLedger()
+	if err != nil || !historical.ledgerMatches(old) || !current.ledgerMatches(catalog.Filenames) {
+		t.Fatal("expected ledger refused", err)
+	}
+	if current.ledgerMatches(old) || historical.ledgerMatches(catalog.Filenames) || current.ledgerMatches(catalog.Filenames[1:]) {
+		t.Fatal("accepted foreign or partial ledger")
+	}
+	foreign := append([]string(nil), catalog.Filenames...)
+	foreign[len(foreign)-1] = "999_unreviewed.sql"
+	if current.ledgerMatches(foreign) || current.operationVersion() == "" || current.operationVersion() == historical.operationVersion() {
+		t.Fatal("accepted altered ledger or reused historical operation version")
+	}
+	current.runtimeProfile = originalSQLC1Profile
+	if current.operationVersion() != "" {
+		t.Fatal("accepted unsupported fresh runtime profile")
 	}
 }

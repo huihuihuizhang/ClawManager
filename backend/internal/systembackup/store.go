@@ -20,19 +20,37 @@ type Store struct {
 var publicIDPattern = regexp.MustCompile(`^(sbk|sdr|spf|sav)_[a-f0-9]{32}$`)
 var idemPattern = regexp.MustCompile(`^[a-zA-Z0-9_.:-]{8,128}$`)
 
+type bootstrapSQL interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
 func (s Store) Bootstrap(ctx context.Context) error {
+	return s.bootstrap(ctx, s.DB)
+}
+
+// BootstrapTx uses the same installation identity and engine creation as
+// Bootstrap inside the caller's authenticated, guarded transaction.
+func (s Store) BootstrapTx(ctx context.Context, tx *sql.Tx) error {
+	if tx == nil {
+		return errors.New("installation bootstrap requires a transaction")
+	}
+	return s.bootstrap(ctx, tx)
+}
+
+func (s Store) bootstrap(ctx context.Context, db bootstrapSQL) error {
 	if !refPattern.MatchString(s.InstallationID) {
 		return errors.New("invalid installation identity")
 	}
-	_, err := s.DB.ExecContext(ctx, "INSERT IGNORE INTO system_backup_installation_state(singleton_id,origin_installation_id) VALUES(1,?)", s.InstallationID)
+	_, err := db.ExecContext(ctx, "INSERT IGNORE INTO system_backup_installation_state(singleton_id,origin_installation_id) VALUES(1,?)", s.InstallationID)
 	if err != nil {
 		return err
 	}
-	if _, err := s.DB.ExecContext(ctx, "INSERT IGNORE INTO system_backup_v2_engine_bindings(scope) VALUES(?)", engineSelectionScope); err != nil {
+	if _, err := db.ExecContext(ctx, "INSERT IGNORE INTO system_backup_v2_engine_bindings(scope) VALUES(?)", engineSelectionScope); err != nil {
 		return err
 	}
 	var actual string
-	if err = s.DB.QueryRowContext(ctx, "SELECT origin_installation_id FROM system_backup_installation_state WHERE singleton_id=1").Scan(&actual); err != nil {
+	if err = db.QueryRowContext(ctx, "SELECT origin_installation_id FROM system_backup_installation_state WHERE singleton_id=1").Scan(&actual); err != nil {
 		return err
 	}
 	if actual != s.InstallationID {
