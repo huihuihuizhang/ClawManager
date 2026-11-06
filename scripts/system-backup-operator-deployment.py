@@ -1122,7 +1122,7 @@ exec /usr/local/bin/system-backup-v2-controller
         need(observed and observed[0] == selected["SHA256"], "actual_producer_runtime_bytes_changed")
         self.check_host(identity)
 
-    def business_rollout(self, images):
+    def business_rollout(self, images, verify_only=False):
         app_plan = decode(read(self.directory / "new-image.plan.json"))
         app = self.get("deployment", "clawmanager-app")
         operation = decode(read(self.run / "operation.json"))
@@ -1130,6 +1130,7 @@ exec /usr/local/bin/system-backup-v2-controller
         need(isinstance(replicas, int) and 1 <= replicas <= 16 and app["metadata"]["uid"] == app_plan["original_uid"], "actual_original_business_replica_policy_required")
         expected = copy.deepcopy(app_plan["desired_spec"])
         if app["spec"].get("replicas", 1) == 0:
+            need(not verify_only, "original_business_app_stopped_no_readonly_restart")
             need(app["spec"] == expected, "complete_business_tls_template_required_before_start")
             patch = [{"op": "test", "path": "/metadata/uid", "value": app["metadata"]["uid"]},
                      {"op": "test", "path": "/metadata/resourceVersion", "value": app["metadata"]["resourceVersion"]},
@@ -1165,6 +1166,7 @@ exec /usr/local/bin/system-backup-v2-controller
                     need(current["metadata"]["uid"] == pod["metadata"]["uid"] and current["status"]["containerStatuses"][0]["containerID"] == state[0]["containerID"], "business_actor_changed_during_readback")
                     actual_pods.append({"Pod": pod["metadata"]["name"], "PodUID": pod["metadata"]["uid"], "ReplicaSetUID": rs["metadata"]["uid"], "ContainerID": state[0]["containerID"], "ImageID": state[0]["imageID"], "CAFileSHA256": expected_ca})
                 break
+            need(not verify_only, "original_business_app_not_ready_no_readonly_wait_or_restart")
             time.sleep(2)
         need(actual_pods is not None, "business_rollout_unconfirmed_use_deployment_query")
         return app, actual_pods

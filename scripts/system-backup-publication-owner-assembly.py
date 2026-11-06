@@ -9,7 +9,7 @@ import importlib.util
 from pathlib import Path
 import re
 
-DEPLOYMENT_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
+DEPLOYMENT_SHA = "d6a53c6a804fc56afc697ee84a1f38673c0d67b6ce65436bdbdc204dbfc8cfd3"
 COMPOSITION_FILES = ("config", "bootstrap-grant", "consumption", "facts-receipt", "functional-receipt", "minio-input", "nonce-binding", "artifact-ca-binding", "evidence-ca-binding", "catalog-location", "kek-config", "evidence", "installer-dsn", "signing-consumer", "signing-consumer-pin")
 COMPOSITION_DIRECTORIES = ("mapping-directory", "source-registry-directory", "status-relay-directory", "six-reference-directory", "kek-window-directory", "registry-directory", "nonce-directory")
 

@@ -46,13 +46,13 @@ COPY_QUALIFIER = "scripts/system-backup-upgrade199-copy-qualification.py"
 COPY_QUALIFIER_SHA = "186d0cd78181b4a5390b69e2b61e41397f7b95e19505414c1eeeaac08b56e308"
 
 SQL = "scripts/system-backup-original-sql-accounts.py"
-DEPLOYMENT_MODULE_SHA = "b69327c689f6fa15d08ee5d07eed266a79c2166e55a584b96523d0c1fcf235be"
-BUSINESS_RUNTIME_SHA = "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
-RECORD_EXPORT_SHA = "868c66ae0dddd7e5b25dd503a7b6309699ddc7831f8f1f74b5f53b5f940a0af4"
-INITIAL_RUNTIME_SHA = "db7ef179c984bb4911bbce90f4c8b603d2756ecc5a063fc82db47882735fc6f8"
-RUNTIME_ISSUER_SHA = "6e3fe96bf1bb2cc4bd2b8383763f440d775b6b867dfcfe7549249fbdd71629d2"
-OWNER_ASSEMBLY_SHA = "cbe8cc6be2fbd4192224a7758433bbc706659dc5c3388d42e2cfa080e1f17839"
-WORKSPACE_SHA = "bd7149e99b15db2fedadc062b1cf1d559ad441bf4fa1f067874647147c7d85a6"
+DEPLOYMENT_MODULE_SHA = "d6a53c6a804fc56afc697ee84a1f38673c0d67b6ce65436bdbdc204dbfc8cfd3"
+BUSINESS_RUNTIME_SHA = "28cf34ee4121648551b05c5aa5c452cc1be9d755f26a9fa7fde26fde071ab5ae"
+RECORD_EXPORT_SHA = "b5328513644d2434eef73e066467b3fb413c6e94f721a41c1c161dcda230ef68"
+INITIAL_RUNTIME_SHA = "2e059ff0e638cf76fa64e8234cc5059652c42ae07c672b165d2e49342b2a81ec"
+RUNTIME_ISSUER_SHA = "38e7d06ebc3882f2c0269855986a39e6e0ea1474e765789d6a20a9a88200beb8"
+OWNER_ASSEMBLY_SHA = "4e25e279782afcd493beb424abdd5a91f738756b3cb565df54711e7e0885396b"
+WORKSPACE_SHA = "1798506a535a704150ba7903402ad3248b5f3117150d096215e80557775dcc02"
 EARLY_PREFLIGHT_SHA = "39a51caba7b646b1f4bf1ccd9ba643099bf91abb2eb0a6a251dc342cbdfaf8e1"
 WORKSPACE_ACTIONS = ("workspace-source-preflight", "workspace-source-preflight-cleanup", "workspace-localization-probe", "workspace-localize", "workspace-query", "workspace-abort-probe", "workspace-restore-nfs")
 DB_ACTIONS = ("prepare", "backup", "apply", "query", "recover", "recover-controller",
@@ -788,6 +788,40 @@ class Operator:
         return {"provider_cli_receipt": native_pin, "provider_committed_record": {"File": str(committed_file), "SHA256": sha(committed_file)},
                 "metadata": metadata_pin}
 
+    def require_initial_runtime_qualification(self):
+        # First-install DATA/material stages cannot consume the future final
+        # binding they produce. Verify ONLY already completed real rollouts;
+        # the final Core/provider/native acquisition gates remain unchanged.
+        require(self.a.action in ("host-observer", "materials", "initial-source-inputs", "initial-redis-source"),
+                "initial_runtime_guard_not_a_final_qualification")
+        if any((self.run / name).exists() for name in ("post-adoption-source-binding.json", "final-rollout-binding.json")):
+            return self.require_current_runtime_qualification()
+        scope = self.open()
+        deployment = deployment_module()
+        stages = self.deployment_stages()
+        result = load(regular(stages.directory / "new-image.result.json", private=True))
+        require(result.get("version") == "operator-new-image-result.v1" and
+                result.get("state") == "actual_full_business_mysql_tls_template_and_same_release_rollout_verified" and
+                result.get("configuration_enabled") is False, "actual_disabled_original_app_rollout_required")
+        plan_file = stages.directory / "new-image.plan.json"
+        require(result["plan"]["File"] == str(plan_file), "same_original_new_image_plan_required")
+        plan = load(self.pin_value(result["plan"]))
+        operation = load(self.run / "operation.json")
+        require(plan["version"] == "original-app-complete-tls-template.v1" and plan["operation"] == operation["operation"] and
+                plan["configuration_enabled"] is False and plan["images"] == result["images"] and
+                result["app"]["Name"] == "clawmanager-app" and
+                result["app"]["UID"] == plan["original_uid"] == scope["app_deployment_uid"],
+                "same_original_disabled_app_plan_and_images_required")
+        # verify_only refuses app0 instead of starting it. Existing rollout
+        # checks exact desired spec, original replicas, owner chain, actual
+        # immutable image/ContainerID, Ready state and native CA-file EOF hash.
+        app, pods = stages.business_rollout(result["images"], verify_only=True)
+        require(stages.op is self and app["metadata"]["uid"] == result["app"]["UID"] and
+                deployment.digest(deployment.encoded(app["spec"])) == result["app"]["SpecSHA256"] and pods and
+                sorted(pods, key=lambda item: item["PodUID"]) == sorted(result["business_pods"], key=lambda item: item["PodUID"]),
+                "original_app_actor_changed_after_disabled_rollout")
+        return business_runtime_module().verify_current(self)
+
     def require_current_runtime_qualification(self):
         # Deployment/runtime readback only. Genuine source ownership, native
         # physical writer proof and prepare/hold remain the original factory's
@@ -1250,14 +1284,14 @@ def main(argv=None):
                     elif a.action in ("runtime-images", "runtime-rollout", "runtime-query"):
                         result = tool.business_runtime(a.action)
                     elif a.action in ("new-image", "host-observer", "materials", "materials-signing", "deployment-query"):
-                        if a.action in ("host-observer", "materials", "materials-signing"):
-                            business_runtime_module().verify_current(tool)
+                        if a.action in ("host-observer", "materials"):
+                            tool.require_initial_runtime_qualification()
+                        elif a.action == "materials-signing":
+                            tool.require_current_runtime_qualification()
                         if a.action == "materials":
                             tool.prepare_relay_runtime_trust()
                             initial_runtime_module().bind_complete_source_arguments(tool)
                             tool.bind_writer_selection_argument()
-                        if a.action in ("host-observer", "materials", "materials-signing"):
-                            tool.require_current_runtime_qualification()
                         if a.action == "materials":
                             initial_runtime_module().prepare_minio_options_arguments(tool)
                         result = deployment.dispatch(tool, a.action)
@@ -1266,14 +1300,14 @@ def main(argv=None):
                     elif a.action in ("initial-runtime-test-scope", "initial-runtime-test-scope-query"):
                         result = initial_runtime_module().prepare_runtime_test_scope_arguments(tool, query_only=a.action.endswith("-query"))
                     elif a.action == "initial-source-inputs":
-                        tool.require_current_runtime_qualification()
+                        tool.require_initial_runtime_qualification()
                         pin = initial_runtime_module().prepare_complete_source_arguments(tool)
                         result = load(tool.pin_value(pin))
                     elif a.action.startswith("initial-providers-"):
                         result = initial_runtime_module().prepare_complete_source_arguments(tool, a.action.removeprefix("initial-providers-"))
                     elif a.action in ("initial-redis-source", "initial-redis-query", "initial-redis-recover", "initial-redis-recover-finalize"):
                         if a.action == "initial-redis-source":
-                            tool.require_current_runtime_qualification()
+                            tool.require_initial_runtime_qualification()
                         mode = "prepare" if a.action == "initial-redis-source" else a.action.removeprefix("initial-redis-")
                         result = initial_runtime_module().prepare_redis_source_arguments(tool, mode)
                     elif a.action == "initial-source-api-inputs":

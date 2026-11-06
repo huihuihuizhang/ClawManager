@@ -21,7 +21,7 @@ import urllib.parse
 import urllib.request
 
 NATIVE_SHA = "fa5aff4df941e9854937b3ea41ad2c46afd38cf1e1019a64f0d618a099209e9d"
-BUSINESS_SHA = "76e02dbae75008015dbe5080f0b8fc55a6069e2f4948e06c2ce0704f6e019ef7"
+BUSINESS_SHA = "28cf34ee4121648551b05c5aa5c452cc1be9d755f26a9fa7fde26fde071ab5ae"
 PROFILE = "backup.clawreef.io/shared-runtime-source-profile"
 CLAIM = "clawmanager-workspaces"
 ROOT = "/data/clawmanager-zhanghui08/system/workspaces"
