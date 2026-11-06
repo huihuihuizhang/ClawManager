@@ -38,6 +38,9 @@ var originalSQLName = regexp.MustCompile(`^[A-Za-z0-9_]{1,64}$`)
 var originalSQLHost = regexp.MustCompile(`^[A-Za-z0-9.:-]{1,253}$`)
 
 type originalSQLPrivilege struct{ Kind, Database, Object, Column, Verb string }
+
+var originalCensusExecute = originalSQLPrivilege{Kind: "routine", Object: domain.SchemaCensusRoutine, Verb: "EXECUTE"}
+
 type originalSQLAccount struct {
 	Role, User, Host, Password string
 	Locked                     bool
@@ -589,6 +592,7 @@ func originalSQLRolePrivilegesForProfile(role, database string, a originalSQLAcc
 			a.Privileges = append(a.Privileges, originalSQLPrivilege{Kind: "schema", Verb: verb})
 		}
 		a.Privileges = append(a.Privileges, originalSQLPrivilege{Kind: "global", Verb: "SHOW_ROUTINE"}, originalSQLPrivilege{Kind: "table", Database: "mysql", Object: "global_grants", Verb: "SELECT"}, originalSQLPrivilege{Kind: "table", Database: "mysql", Object: "role_edges", Verb: "SELECT"})
+		a.Privileges = append(a.Privileges, originalCensusExecute)
 	}
 	if originalSQLC1Selected(profile) {
 		var err error
@@ -633,7 +637,7 @@ func (s *originalSQLSession) checkPlan(ctx context.Context, p originalSQLPlan, u
 			return errOriginalSQLAccounts
 		}
 		want, err := originalSQLRolePrivilegesForProfile(a.Role, p.Database, a, present, s.input.allowAny, s.input.runtimeProfile)
-		if err != nil || !reflect.DeepEqual(want, a.Privileges) {
+		if err != nil || !reflect.DeepEqual(originalSQLWithCensusExecute(a), want) {
 			return errOriginalSQLAccounts
 		}
 		excluded[a.User+"@"+a.Host] = true
@@ -787,9 +791,13 @@ func (s *originalSQLSession) apply(ctx context.Context, p originalSQLPlan, direc
 		return errOriginalSQLAccounts
 	}
 	for _, a := range p.Accounts {
-		for _, v := range a.Privileges {
+		for _, v := range originalSQLWithCensusExecute(a) {
 			if v.Kind == "routine" {
-				if s.send(ctx, directory, "grant_exact_source_census", originalSQLGrant(p, a, v)) != nil {
+				label := "grant_exact_source_census"
+				if a.Role == "census" {
+					label = "grant_exact_census_definer_execute"
+				}
+				if s.send(ctx, directory, label, originalSQLGrant(p, a, v)) != nil {
 					return errOriginalSQLAccounts
 				}
 			}
@@ -901,6 +909,96 @@ func (s *originalSQLSession) routineMatches(ctx context.Context, p originalSQLPl
 	return true, nil
 }
 
+// Historical plans stay byte-pinned. Only the locked census definition role
+// can omit its own exact EXECUTE privilege in a previously prepared plan.
+func originalSQLWithCensusExecute(a originalSQLAccount) []originalSQLPrivilege {
+	if a.Role != "census" || slices.Contains(a.Privileges, originalCensusExecute) {
+		return a.Privileges
+	}
+	rights := append(slices.Clone(a.Privileges), originalCensusExecute)
+	originalSQLSortPrivileges(rights)
+	return rights
+}
+
+func originalSQLExpectedPrivileges(p originalSQLPlan, rights []originalSQLPrivilege) []originalSQLPrivilege {
+	expected := append([]originalSQLPrivilege{}, rights...)
+	for j := range expected {
+		if expected[j].Kind != "global" && expected[j].Database == "" {
+			expected[j].Database = p.Database
+		}
+		if expected[j].Kind == "schema" && !p.PartialRevokes {
+			expected[j].Database = strings.ReplaceAll(expected[j].Database, "_", `\_`)
+		}
+	}
+	originalSQLSortPrivileges(expected)
+	return expected
+}
+
+// Reconcile a legacy fresh operation that reached account creation. Reuse its
+// pinned plan and prove the full original state before issuing the one missing
+// grant. A dispatched repair may only be read back on a repeated invocation.
+func (s *originalSQLSession) repairCensusExecute(ctx context.Context, p originalSQLPlan, directory string) error {
+	if !s.input.freshInstallation || s.checkPlan(ctx, p, false) != nil {
+		return errOriginalSQLAccounts
+	}
+	definer := p.Accounts[len(p.Accounts)-1]
+	if slices.Contains(definer.Privileges, originalCensusExecute) {
+		return errOriginalSQLAccounts
+	}
+	var sent struct{ Operation, State string }
+	raw, e := ReadPrivateFile(filepath.Join(directory, "apply.sent.json"), 4096)
+	if e != nil || originalSQLJSON(raw, &sent) != nil || sent.Operation != p.Operation || sent.State != "dispatch_intent_no_resend" {
+		return errOriginalSQLAccounts
+	}
+	if _, e = s.freshApplyTarget(ctx); e != nil {
+		return e
+	}
+	var secure bool
+	var persisted string
+	if s.conn.QueryRowContext(ctx, "SELECT @@require_secure_transport").Scan(&secure) != nil || !secure ||
+		s.conn.QueryRowContext(ctx, "SELECT VARIABLE_VALUE FROM performance_schema.persisted_variables WHERE VARIABLE_NAME='require_secure_transport'").Scan(&persisted) != nil ||
+		(persisted != "ON" && persisted != "1") {
+		return errOriginalSQLAccounts
+	}
+	if exact, e := s.routineMatches(ctx, p); e != nil || !exact {
+		return errOriginalSQLAccounts
+	}
+	excluded := map[string]bool{}
+	missing := false
+	for _, a := range p.Accounts {
+		excluded[a.User+"@"+a.Host] = true
+		if owned, e := s.owned(ctx, p, a); e != nil || !owned {
+			return errOriginalSQLAccounts
+		}
+		var ssl, locked string
+		if s.conn.QueryRowContext(ctx, "SELECT ssl_type,account_locked FROM mysql.user WHERE User=? AND Host=?", a.User, a.Host).Scan(&ssl, &locked) != nil || ssl != "ANY" || (locked == "Y") != a.Locked {
+			return errOriginalSQLAccounts
+		}
+		actual, e := s.actualPrivileges(ctx, a)
+		if e != nil {
+			return e
+		}
+		if !reflect.DeepEqual(actual, originalSQLExpectedPrivileges(p, originalSQLWithCensusExecute(a))) {
+			if a.Role != "census" || !reflect.DeepEqual(actual, originalSQLExpectedPrivileges(p, a.Privileges)) {
+				return errOriginalSQLAccounts
+			}
+			missing = true
+		}
+	}
+	if original, e := s.originalUsers(ctx, excluded); e != nil || !reflect.DeepEqual(original, p.OriginalUsers) {
+		return errOriginalSQLAccounts
+	}
+	if missing {
+		if e := originalSQLWrite(directory, "census-execute-repair.sent.json", map[string]string{"operation": p.Operation, "state": "dispatch_intent_no_resend"}); e != nil {
+			return e
+		}
+		if e := s.send(ctx, directory, "repair_exact_census_definer_execute", originalSQLGrant(p, definer, originalCensusExecute)); e != nil {
+			return e
+		}
+	}
+	return s.verify(ctx, p, directory)
+}
+
 type originalSQLVerifyError struct {
 	Stage, Role string
 	MySQLNumber uint16
@@ -967,16 +1065,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 		if e != nil {
 			return e
 		}
-		expected := append([]originalSQLPrivilege{}, a.Privileges...)
-		for j := range expected {
-			if expected[j].Kind != "global" && expected[j].Database == "" {
-				expected[j].Database = p.Database
-			}
-			if expected[j].Kind == "schema" && !p.PartialRevokes {
-				expected[j].Database = strings.ReplaceAll(expected[j].Database, "_", `\_`)
-			}
-		}
-		originalSQLSortPrivileges(expected)
+		expected := originalSQLExpectedPrivileges(p, originalSQLWithCensusExecute(a))
 		if !reflect.DeepEqual(actual, expected) {
 			return errOriginalSQLAccounts
 		}
@@ -1232,7 +1321,7 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	f := flag.NewFlagSet("system-backup-original-enroll sql-accounts", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	var in originalSQLInputs
-	mode := f.String("mode", "", "inspect, prepare, apply, query or rollback")
+	mode := f.String("mode", "", "inspect, prepare, apply, query, rollback or repair-census-execute")
 	for _, entry := range []struct {
 		name   string
 		target *string
@@ -1244,10 +1333,13 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	f.BoolVar(&in.freshInstallation, "fresh-installation", false, "require the exact current embedded migration ledger and no retained legacy tables")
 	f.StringVar(&in.appDeployment, "app-deployment", "", "actual App Deployment for fresh apply")
 	f.StringVar(&in.appDeploymentUID, "app-deployment-uid", "", "independently selected App Deployment UID for fresh apply")
-	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || in.operationVersion() == "" || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || (*mode != "inspect" && *mode != "prepare" && *mode != "apply" && *mode != "query" && *mode != "rollback") {
+	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || in.operationVersion() == "" || in.dsn == "" || len(in.dsnSHA) != 64 || in.tls == "" || len(in.tlsSHA) != 64 || in.kube == "" || len(in.kubeSHA) != 64 || in.password == "" || in.directory == "" || !slices.Contains([]string{"inspect", "prepare", "apply", "query", "rollback", "repair-census-execute"}, *mode) {
 		return 2
 	}
-	if in.freshInstallation && *mode == "apply" {
+	if *mode == "repair-census-execute" && !in.freshInstallation {
+		return 2
+	}
+	if in.freshInstallation && (*mode == "apply" || *mode == "repair-census-execute") {
 		if in.appDeployment == "" || in.appDeploymentUID == "" {
 			return 2
 		}
@@ -1348,6 +1440,8 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 	switch *mode {
 	case "apply":
 		e = session.apply(bounded, p, in.directory)
+	case "repair-census-execute":
+		e = session.repairCensusExecute(bounded, p, in.directory)
 	case "query":
 		var restored bool
 		restored, e = session.observeQuery(bounded, p, in.directory)

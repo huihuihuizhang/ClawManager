@@ -53,7 +53,7 @@ def invoke(argv, receipt):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("action", choices=("inspect", "prepare", "apply", "query", "rollback", "enroll"))
+    p.add_argument("action", choices=("inspect", "prepare", "apply", "query", "rollback", "enroll", "repair-census-execute"))
     for name in ("tool-file", "tool-sha256", "tls-receipt-file", "tls-receipt-sha256",
                  "kubeconfig-file", "kubeconfig-sha256", "namespace", "namespace-uid",
                  "cluster-uid", "inventory-directory", "operation-directory", "receipt-file"):
@@ -77,7 +77,8 @@ def main():
     minio_profile = "public-runtime-c1-minio-metadata-read.v1"
     c1 = a.runtime_profile in ("public-runtime-c1-installer-bootstrap.v1", minio_profile)
     require(not a.fresh_installation or a.runtime_profile == minio_profile)
-    fresh_apply = a.fresh_installation and a.action == "apply"
+    require(a.action != "repair-census-execute" or a.fresh_installation)
+    fresh_apply = a.fresh_installation and a.action in ("apply", "repair-census-execute")
     if fresh_apply:
         require(a.app_deployment and a.app_deployment_uid)
     else:
