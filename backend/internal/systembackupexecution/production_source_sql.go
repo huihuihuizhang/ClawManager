@@ -154,7 +154,7 @@ func readProductionSQLMetadata(ctx context.Context, s *DeploymentService, tx *sq
 			}
 		}
 	}
-	metadata.CurrentStoppedProStorage, err = readCurrentStoppedProSQLStorage(ctx, tx, instances)
+	metadata.CurrentStoppedProStorage, err = readCurrentStoppedProSQLStorage(ctx, tx, instances, configuredRuntimeTestScope(s.Config))
 	if err != nil {
 		return zero, err
 	}

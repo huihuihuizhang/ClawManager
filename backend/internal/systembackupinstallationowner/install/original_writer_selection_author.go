@@ -59,6 +59,7 @@ type OriginalInitialSourceCoordinates struct {
 	SharedRuntime                                                      originalSharedRuntimeSQL
 	Layouts                                                            []OriginalInitialSourceLayout     `json:",omitempty"`
 	Dependencies                                                       []OriginalInitialSourceDependency `json:",omitempty"`
+	RuntimeTestScope                                                   *domain.RuntimeTestScope          `json:",omitempty"`
 }
 
 // This finite projection is ordinary SOURCE configuration, not a final Forward
@@ -75,6 +76,7 @@ type originalWriterSourceConfig struct {
 		AgentCAFile              string                        `json:"agent_ca_file"`
 		AgentCASHA256            string                        `json:"agent_ca_sha256"`
 		CurrentStoppedProLayouts []OriginalStoppedProSelection `json:"current_stopped_pro_layouts"`
+		RuntimeTestScope         *domain.RuntimeTestScope      `json:"runtime_test_scope,omitempty"`
 	} `json:"runtime_sources"`
 }
 
@@ -204,6 +206,12 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		return zero, census, nil, OriginalWriterSourceFailure{Dependency: "complete_non_deployment_reconciler_gate_required"}
 	}
 	s := OriginalWriterSetSelection{RuntimeStartupImages: append([]OriginalRuntimeStartupImageInput{}, options.runtimeStartupInputs...), Version: OriginalWriterSetSelectionVersion, Policy: options.Policy, ApplicationScope: config.ApplicationScope, JournalDirectory: options.JournalDirectory, Deployments: []OriginalDeploymentSelection{}, Gateways: []OriginalGatewaySelection{}, RunningPro: []OriginalProPodSelection{}, StoppedPro: []OriginalStoppedProSelection{}, Participants: []OriginalMaintenanceParticipant{}}
+	if config.RuntimeSources != nil {
+		s.RuntimeTestScope = config.RuntimeSources.RuntimeTestScope.Clone()
+	}
+	if p.checkSelectionRuntimeTestScope(s.RuntimeTestScope) != nil {
+		return zero, census, nil, ErrInstall
+	}
 	if err = p.originalSelectionObservers(ctx, options, &s); err != nil {
 		return zero, census, nil, err
 	}
@@ -251,6 +259,9 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		agentPinsRead = true
 	}
 	for _, source := range p.instances {
+		if s.RuntimeTestScope.IsDeferred(source) {
+			continue
+		}
 		// Complete original lite rows are retained by p.instances and rechecked
 		// by the actual shared factory; no per-instance slot custody is authored.
 		if s.SharedRuntimeProtocol != "" && source.Mode == "lite" {

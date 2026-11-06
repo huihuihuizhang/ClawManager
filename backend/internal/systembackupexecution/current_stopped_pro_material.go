@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/flow"
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
@@ -106,10 +107,17 @@ func currentStoppedProConfigSHA(i b.InstanceIdentity, l CurrentStoppedProLayout,
 	}{currentStoppedProMaterialVersion, i, l, storage})
 	return hash(raw)
 }
-func readCurrentStoppedProSQLStorage(ctx context.Context, tx *sql.Tx, instances []b.InstanceIdentity) (map[int]currentStoppedProSQLStorage, error) {
+func readCurrentStoppedProSQLStorage(ctx context.Context, tx *sql.Tx, instances []b.InstanceIdentity, scopes ...*domain.RuntimeTestScope) (map[int]currentStoppedProSQLStorage, error) {
+	var testScope *domain.RuntimeTestScope
+	if len(scopes) > 0 {
+		testScope = scopes[0]
+	}
+	if testScope != nil && testScope.Validate(instances) != nil {
+		return nil, d.ErrNotReady
+	}
 	var out map[int]currentStoppedProSQLStorage
 	for _, i := range instances {
-		if !isCurrentStoppedPro(i) {
+		if testScope.IsDeferred(i) || !isCurrentStoppedPro(i) {
 			continue
 		}
 		var s currentStoppedProSQLStorage
@@ -476,7 +484,7 @@ func hasRunningSourceInstances(instances []b.InstanceIdentity) bool {
 func checkCurrentStoppedProScopes(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig, scope *productionPersistentMountScope, instances []b.InstanceIdentity) error {
 	count := 0
 	for _, i := range instances {
-		if !isCurrentStoppedPro(i) {
+		if deferredRuntimeTestInstance(cfg, i) || !isCurrentStoppedPro(i) {
 			continue
 		}
 		count++
@@ -509,7 +517,7 @@ func currentStoppedProConfiguredStorage(cfg DeploymentConfig, id int) (currentSt
 func checkCurrentStoppedProSQL(scope *productionPersistentMountScope, metadata productionSQLSourceMetadata, instances []b.InstanceIdentity) error {
 	count := 0
 	for _, i := range instances {
-		if !isCurrentStoppedPro(i) {
+		if scope != nil && scope.RuntimeTestScope.IsDeferred(i) || !isCurrentStoppedPro(i) {
 			continue
 		}
 		count++
@@ -530,7 +538,7 @@ func checkCurrentStoppedProSQL(scope *productionPersistentMountScope, metadata p
 func currentStoppedProGraphRoots(cfg DeploymentConfig, source b.SourceInventory, api *observedWriterAPI, want map[string]string) (map[string]bool, error) {
 	stopped := map[string]bool{}
 	for _, i := range source.Instances {
-		if !isCurrentStoppedPro(i) {
+		if deferredRuntimeTestInstance(cfg, i) || !isCurrentStoppedPro(i) {
 			continue
 		}
 		l, err := currentStoppedProLayoutFor(cfg, i.ID)

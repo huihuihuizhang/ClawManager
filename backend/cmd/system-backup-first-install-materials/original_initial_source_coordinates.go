@@ -13,6 +13,7 @@ import (
 func runOriginalInitialSourceCoordinates(ctx context.Context, args []string, out io.Writer) int {
 	f := flag.NewFlagSet("author-initial-source-coordinates", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
+	runningOnly := f.String("running-only-runtime-test", "", "approved running IDs:deferred IDs in SQL order")
 	v := map[string]*string{}
 	for _, name := range []string{"plan-file", "plan-sha256", "issuer-public-file", "issuer-public-sha256", "kubeconfig-file", "kubeconfig-sha256", "dsn-file", "database-ca-file", "local-admin-password-file", "enrollment-pin-file", "enrollment-pin-sha256", "output-directory"} {
 		v[name] = f.String(name, "", "actual original enrolled installer source location")
@@ -62,7 +63,7 @@ func runOriginalInitialSourceCoordinates(ctx context.Context, args []string, out
 	}
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	receipt, err := owner.ProduceOriginalInitialSourceCoordinates(active, password, enrollment, get("output-directory"))
+	receipt, err := owner.ProduceOriginalInitialSourceCoordinates(active, password, enrollment, get("output-directory"), *runningOnly)
 	if err != nil {
 		return 1
 	}

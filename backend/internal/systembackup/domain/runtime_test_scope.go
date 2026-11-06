@@ -13,6 +13,7 @@ import (
 var ErrRuntimeTestScope = errors.New("explicit runtime test scope missing, invalid or changed")
 
 const RuntimeTestScopeVersion = "explicit-known-error-lite-runtime-test-scope.v1"
+const RunningOnlyRuntimeTestScopeVersion = "explicit-running-only-runtime-test-scope.v2"
 
 // DATA, not authority. The original administrator must bind these exact bytes
 // through the deployment core and existing signed source-writers registry/ref.
@@ -39,8 +40,24 @@ func RuntimeInstancesSHA(instances []SourceInstance) (string, error) {
 // Called once by the real original owner, never on each task to reselect IDs.
 // The returned scope is unsigned until the existing admin issuance binds it.
 func NewKnownErrorLiteRuntimeTestScope(installation, server, database, namespaceUID string, instances []SourceInstance) (*RuntimeTestScope, error) {
-	s := &RuntimeTestScope{Version: RuntimeTestScopeVersion, InstallationID: installation, ServerUUID: server, Database: database, NamespaceUID: namespaceUID, Deferred: []SourceInstance{}}
+	return newRuntimeTestScope(RuntimeTestScopeVersion, installation, server, database, namespaceUID, instances)
+}
+
+func NewRunningOnlyRuntimeTestScope(installation, server, database, namespaceUID string, instances []SourceInstance) (*RuntimeTestScope, error) {
+	return newRuntimeTestScope(RunningOnlyRuntimeTestScopeVersion, installation, server, database, namespaceUID, instances)
+}
+
+func stoppedOpenClawRuntimeTestRow(i SourceInstance) bool {
+	return i.Type == "openclaw" && i.Mode == "pro" && i.Status == "stopped" && i.OS == "linux" && i.Generation > 0
+}
+
+func newRuntimeTestScope(version, installation, server, database, namespaceUID string, instances []SourceInstance) (*RuntimeTestScope, error) {
+	s := &RuntimeTestScope{Version: version, InstallationID: installation, ServerUUID: server, Database: database, NamespaceUID: namespaceUID, Deferred: []SourceInstance{}}
 	for _, i := range instances {
+		if version == RunningOnlyRuntimeTestScopeVersion && stoppedOpenClawRuntimeTestRow(i) {
+			s.Deferred = append(s.Deferred, i)
+			continue
+		}
 		if i.Status != "error" {
 			continue
 		}
@@ -58,7 +75,7 @@ func NewKnownErrorLiteRuntimeTestScope(installation, server, database, namespace
 }
 
 func (s *RuntimeTestScope) ShapeValid() bool {
-	if s == nil || s.Version != RuntimeTestScopeVersion || s.InstallationID == "" || s.ServerUUID == "" || s.Database == "" || s.NamespaceUID == "" || len(s.OriginalInstancesSHA256) != 64 || len(s.Deferred) != 2 {
+	if s == nil || s.Version != RuntimeTestScopeVersion && s.Version != RunningOnlyRuntimeTestScopeVersion || s.InstallationID == "" || s.ServerUUID == "" || s.Database == "" || s.NamespaceUID == "" || len(s.OriginalInstancesSHA256) != 64 || (s.Version == RuntimeTestScopeVersion && len(s.Deferred) != 2) || (s.Version == RunningOnlyRuntimeTestScopeVersion && len(s.Deferred) != 3) {
 		return false
 	}
 	decoded, e := hex.DecodeString(s.OriginalInstancesSHA256)
@@ -66,13 +83,21 @@ func (s *RuntimeTestScope) ShapeValid() bool {
 		return false
 	}
 	kinds := map[string]bool{}
+	stopped := 0
 	for n, i := range s.Deferred {
-		if i.ID <= 0 || i.UserID <= 0 || i.Generation < 0 || i.Mode != "lite" || i.Status != "error" || (i.Type != "opencode" && i.Type != "deepseek-harness") || kinds[i.Type] || n > 0 && s.Deferred[n-1].ID >= i.ID {
+		if i.ID <= 0 || i.UserID <= 0 || i.Generation < 0 || n > 0 && s.Deferred[n-1].ID >= i.ID {
+			return false
+		}
+		if s.Version == RunningOnlyRuntimeTestScopeVersion && stoppedOpenClawRuntimeTestRow(i) {
+			stopped++
+			continue
+		}
+		if i.Mode != "lite" || i.Status != "error" || (i.Type != "opencode" && i.Type != "deepseek-harness") || kinds[i.Type] || s.Version == RunningOnlyRuntimeTestScopeVersion && i.OS != "linux" {
 			return false
 		}
 		kinds[i.Type] = true
 	}
-	return len(kinds) == 2
+	return len(kinds) == 2 && (s.Version == RuntimeTestScopeVersion || stopped == 1)
 }
 
 func (s *RuntimeTestScope) Validate(instances []SourceInstance) error {
@@ -94,11 +119,11 @@ func (s *RuntimeTestScope) Validate(instances []SourceInstance) error {
 		}
 		// No wildcard error rule. A new/changed error fails even if an upstream
 		// caller incorrectly kept the same signed scope object.
-		if i.Status == "error" {
+		if i.Status == "error" || s.Version == RunningOnlyRuntimeTestScopeVersion && (i.Status != "running" || i.Mode != "lite" || i.OS != "linux" || i.Generation <= 0) {
 			return ErrRuntimeTestScope
 		}
 	}
-	if found != 2 {
+	if found != len(s.Deferred) || s.Version == RunningOnlyRuntimeTestScopeVersion && len(instances) != 6 {
 		return ErrRuntimeTestScope
 	}
 	return nil

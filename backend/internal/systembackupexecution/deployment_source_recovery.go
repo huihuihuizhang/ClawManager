@@ -173,8 +173,12 @@ func (x *productionSourceBinding) observeSourceRecovery(ctx context.Context, in 
 	if dependencyErr != nil || !reflect.DeepEqual(dependencies, metadata.ProviderDependencies) {
 		return nil, c.ErrSourceRecoveryProofRequired
 	}
+	runtimeSource, err := runtimeTestProjection(s.Config, source)
+	if err != nil {
+		return nil, c.ErrSourceRecoveryProofRequired
+	}
 	instances := map[int]b.InstanceIdentity{}
-	for _, instance := range source.Instances {
+	for _, instance := range runtimeSource.Instances {
 		if instance.ID <= 0 || instances[instance.ID].ID != 0 {
 			return nil, c.ErrSourceRecoveryProofRequired
 		}

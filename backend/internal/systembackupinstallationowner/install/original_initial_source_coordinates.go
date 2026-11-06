@@ -190,7 +190,7 @@ func initialStoppedLayouts(instances []domain.SourceInstance, storage []Original
 // full DeploymentConfig, native observer certificate, grant or selection is
 // needed to read the original complete SQL/Kube coordinates. The original
 // prepare-selection/facts owners independently authenticate them later.
-func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context, password []byte, enrollment EnrollmentPin, directory string) (OriginalInitialSourceDataReceipt, error) {
+func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context, password []byte, enrollment EnrollmentPin, directory string, runningOnly ...string) (OriginalInitialSourceDataReceipt, error) {
 	var zero OriginalInitialSourceDataReceipt
 	if i == nil || privateDirectory(directory) != nil {
 		return zero, ErrInstall
@@ -202,6 +202,17 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	first, pods, deployments, claims, err := p.readKubernetesCensus(ctx)
 	if err != nil {
 		return zero, err
+	}
+	var testScope *domain.RuntimeTestScope
+	if len(runningOnly) > 1 {
+		return zero, ErrInstall
+	}
+	if len(runningOnly) == 1 && runningOnly[0] != "" {
+		target := i.plan.Target
+		testScope, err = domain.NewRunningOnlyRuntimeTestScope(target.InstallationID, target.ServerUUID, target.Database, target.NamespaceUID, p.instances)
+		if err != nil || p.checkSelectionRuntimeTestScope(testScope) != nil || !matchesRunningOnlyRoster(testScope, p.instances, runningOnly[0]) {
+			return zero, ErrInstall
+		}
 	}
 	storage, err := p.initialInstanceStorage(ctx)
 	if err != nil {
@@ -301,7 +312,11 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 				}
 			}
 		}
-		if source.Status == "stopped" {
+		if testScope.IsDeferred(source) {
+			// The complete SQL, pod census and physical volume pins are retained.
+			// Only runtime-specific layout and dependency selection is deferred.
+			layout.Dependency = "explicit_running_only_runtime_test_scope_deferred"
+		} else if source.Status == "stopped" {
 			one, e := initialStoppedLayouts([]domain.SourceInstance{source}, storage, deployments, i.plan.Target.Namespace)
 			if e != nil {
 				layout.Dependency = "current_stopped_source_layout_requires_native_resolution"
@@ -314,7 +329,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		if source.Status == "running" && layout.CurrentPodUID == "" {
 			layout.Dependency = "running_source_current_pod_or_binding_missing"
 		}
-		if source.Status != "running" && source.Status != "stopped" {
+		if !testScope.IsDeferred(source) && source.Status != "running" && source.Status != "stopped" {
 			layout.Dependency = "original_state_requires_native_nonrunning_source_owner:" + source.Status
 		}
 		if layout.Dependency != "" {
@@ -379,7 +394,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	}
 	result := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID, Namespace: i.plan.Target.Namespace,
 		NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: applicationScope, ApplicationScopes: scopes, Instances: append([]domain.SourceInstance(nil), p.instances...),
-		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes, Layouts: allLayouts, Dependencies: dependencies}
+		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes, Layouts: allLayouts, Dependencies: dependencies, RuntimeTestScope: testScope}
 	coordinatesRaw, err := canonical(result)
 	if err != nil || len(coordinatesRaw) > 8<<20 {
 		return zero, ErrInstall

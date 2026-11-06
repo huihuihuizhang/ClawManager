@@ -21,6 +21,7 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	RuntimeTestScope                                         *domain.RuntimeTestScope              `json:",omitempty"`
 	SharedRuntimeEndpoints                                   map[string]q.ProofEndpoint            `json:",omitempty"`
 	SharedRuntimeAgents                                      []OriginalSharedRuntimeAgentSelection `json:",omitempty"`
 	SharedRuntimeProtocol                                    string                                `json:",omitempty"`
@@ -108,6 +109,9 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, selection.Policy)
 	if err != nil {
 		return nil, err
+	}
+	if p.checkSelectionRuntimeTestScope(selection.RuntimeTestScope) != nil {
+		return nil, ErrInstall
 	}
 	if len(selection.Gateways) > 0 && selection.GatewayRecoveryMode != OriginalGatewaySameIncarnationRecovery {
 		return nil, ErrInstall
@@ -278,6 +282,9 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 		agentUses[shared.row.Deployment] = true
 	}
 	for _, source := range p.instances {
+		if selection.RuntimeTestScope.IsDeferred(source) {
+			continue
+		}
 		// The shared factory has retained every lite source, including unbound errors.
 		// Physical absence and complete writer proof remain mandatory at acquisition.
 		if selection.SharedRuntimeProtocol != "" && source.Mode == "lite" {

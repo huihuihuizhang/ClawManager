@@ -270,6 +270,9 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(s.Config, instance) {
+			continue
+		}
 		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete

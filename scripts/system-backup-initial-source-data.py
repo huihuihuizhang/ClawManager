@@ -7,12 +7,44 @@ import time
 from urllib.parse import urlsplit
 
 
-def coordinates(m, stages):
+def retained_coordinate_readback(m, stages, stage, argv):
+    intent_file = stages.directory / (stage + ".send-unknown.json")
+    receipt_file = stages.directory / (stage + ".readback.json")
+    m.need(intent_file.is_file() and receipt_file.is_file(), "original_coordinate_intent_and_readback_required_for_query")
+    expected = {"stage": stage, "argv": [str(x) for x in argv], "input": None, "operation": stages.operation}
+    m.need(m.decode(m.read(intent_file)) == expected, "original_coordinate_query_intent_changed")
+    receipt = m.decode(m.read(receipt_file))
+    stdout = receipt["stdout"]
+    m.need(receipt.get("stage") == stage and type(receipt.get("exit_code")) is int and receipt["exit_code"] == 0 and
+           stdout["File"] == str(stages.directory / (stage + ".stdout.private")), "original_coordinate_query_readback_changed")
+    stages.op.pin_value({"File": str(stages.directory / (stage + ".stderr.private")), "SHA256": receipt["stderr_sha256"]})
+    return m.decode(m.pinned(stdout, limit=64 << 20)), stdout
+
+
+def coordinates(m, stages, query_only=False):
     common, _, plan, _ = stages.common()
-    directory = stages.runtime_mirror() / "initial-source-coordinates"
-    directory.mkdir(mode=0o700, exist_ok=True)
-    native, receipt_pin = stages.call("initial-source-coordinates", [stages.binary("system-backup-first-install-materials"),
-        "author-initial-source-coordinates", *common, "--output-directory", directory])
+    running_only = getattr(stages.a, "running_only_runtime_test", False)
+    stage = "initial-source-coordinates"
+    if query_only:
+        m.need(running_only, "explicit_running_only_runtime_test_option_required")
+        mirror = Path(m.RUNTIME)
+        m.need(m.decode(m.read(mirror / "operator-owner.json")) == {"operation": stages.operation, "run": str(stages.run)},
+               "existing_runtime_directory_not_this_operation")
+    else:
+        mirror = stages.runtime_mirror()
+    directory = mirror / stage
+    if not query_only:
+        directory.mkdir(mode=0o700, exist_ok=True)
+    options = ["--running-only-runtime-test", running_only] if running_only else []
+    argv = [stages.binary("system-backup-first-install-materials"), "author-initial-source-coordinates", *common,
+            "--output-directory", directory, *options]
+    if query_only:
+        native, receipt_pin = retained_coordinate_readback(m, stages, stage, argv)
+        m.need(native["Coordinates"]["File"] == str(directory / "initial-source-coordinates.json") and
+               native["KubernetesSnapshot"]["File"] == str(directory / "initial-source-kubernetes.private.json"),
+               "original_coordinate_query_native_output_paths_changed")
+    else:
+        native, receipt_pin = stages.call(stage, argv)
     m.need(native["Version"] == "original-initial-source-data-authored.v1" and native["WriterQualified"] is False and native["BackupReady"] is False,
            "actual_original_authenticated_source_data_author_required")
     result = m.decode(m.pinned(native["Coordinates"], limit=8 << 20))
@@ -22,8 +54,28 @@ def coordinates(m, stages):
            result["InstallationID"] == target["InstallationID"] and result["Namespace"] == target["Namespace"] and
            result["NamespaceUID"] == target["NamespaceUID"] and len(result["Instances"]) == native["InstanceCount"],
            "same_complete_original_source_coordinates_required")
-    stages.retain("initial-source-coordinates.result.json", {"version": "operator-original-source-data.v1", "coordinates": native["Coordinates"],
-        "kubernetes_snapshot": native["KubernetesSnapshot"], "native_receipt": receipt_pin, "writer_qualified": False, "backup_ready": False})
+    scope = result.get("RuntimeTestScope")
+    if running_only:
+        m.need(scope is not None and scope["Version"] == "explicit-running-only-runtime-test-scope.v2" and
+               scope["InstallationID"] == target["InstallationID"] and scope["ServerUUID"] == target["ServerUUID"] and
+               scope["Database"] == target["Database"] and scope["NamespaceUID"] == target["NamespaceUID"] and
+               scope["OriginalInstancesSHA256"] == m.digest(m.encoded(result["Instances"])),
+               "actual_running_only_scope_from_same_original_SQL_snapshot_required")
+        deferred = {row["ID"] for row in scope["Deferred"]}
+        active_ids = ",".join(str(row["ID"]) for row in result["Instances"] if row["ID"] not in deferred)
+        deferred_ids = ",".join(str(row["ID"]) for row in scope["Deferred"])
+        m.need(running_only == active_ids + ":" + deferred_ids, "same_explicit_approved_runtime_test_roster_required")
+    else:
+        m.need(scope is None, "explicit_running_only_runtime_test_option_required")
+    result_name = "initial-source-coordinates.result.json"
+    retained = {"version": "operator-original-source-data.v1", "coordinates": native["Coordinates"],
+        "kubernetes_snapshot": native["KubernetesSnapshot"], "native_receipt": receipt_pin, "writer_qualified": False, "backup_ready": False}
+    if query_only:
+        path = stages.directory / result_name
+        if path.exists() or path.is_symlink():
+            m.need(m.decode(m.read(path)) == retained, "original_coordinate_query_retained_result_changed")
+    else:
+        stages.retain(result_name, retained)
     return result, native["Coordinates"], receipt_pin
 
 
@@ -45,7 +97,8 @@ def writer_source_inputs(m, stages, assembly):
     existing = assembly.optional_pin(m, stages.a, "writer_source_config")
     if existing is not None:
         value = m.decode(m.pinned(existing))
-        m.need(value["application_scope"] == scope, "writer_source_config_must_use_actual_original_app_gate_scope")
+        m.need(value["application_scope"] == scope and value.get("runtime_sources", {}).get("runtime_test_scope") == data.get("RuntimeTestScope"),
+               "writer_source_config_must_use_actual_original_app_gate_and_runtime_scope")
         return existing
     token = assembly.original_app_environment(m, stages, app, "RUNTIME_AGENT_CONTROL_TOKEN")
     m.need(32 <= len(token) <= 8192 and not any(chr(v).isspace() for v in token), "actual_original_agent_token_required")
@@ -66,6 +119,8 @@ def writer_source_inputs(m, stages, assembly):
         "runtime_sources": {"shared_runtime_protocol": "shared-container-freeze.v1", "workspace_root": workspace,
             "agent_token_file": credential["File"], "agent_ca_file": material["CA"]["File"], "agent_ca_sha256": material["CA"]["SHA256"],
             "current_stopped_pro_layouts": data.get("StoppedProLayouts", [])}}
+    if data.get("RuntimeTestScope") is not None:
+        config["runtime_sources"]["runtime_test_scope"] = data["RuntimeTestScope"]
     selected = stages.retain("initial-writer-source-config.v2.json", config)
     assembly.bind(m, stages.a, "writer_source_config", selected)
     stages.retain("initial-writer-source-config.v2.lineage.json", {"version": "operator-actual-writer-source-config.v2", "source_coordinates": data_pin,

@@ -123,7 +123,7 @@ func (x *bootstrapSourceRegistryReader) readSourceSQLMetadata(ctx context.Contex
 	if x.checkSQLIdentity(ctx, tx, binding, verified, floor) != nil || ctx.Err() != nil {
 		return zero, install.ErrInstall
 	}
-	metadata.CurrentStoppedProStorage, err = readCurrentStoppedProSQLStorage(ctx, tx, instances)
+	metadata.CurrentStoppedProStorage, err = readCurrentStoppedProSQLStorage(ctx, tx, instances, configuredRuntimeTestScope(x.config))
 	if err != nil {
 		return zero, err
 	}

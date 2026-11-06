@@ -514,7 +514,40 @@ def original_runtime_test_scope(m, stages, data, data_pin, query_only=False):
     return binding
 
 
+def running_only_scope_binding(m, stages, data, data_pin, query_only=False):
+    scope = data["RuntimeTestScope"]
+    rows = data["Instances"]
+    deferred = scope["Deferred"]
+    by_id = {row["ID"]: row for row in rows}
+    deferred_ids = {row["ID"] for row in deferred}
+    active = [row for row in rows if row["ID"] not in deferred_ids]
+    stopped = [row for row in deferred if (row["Type"], row["Mode"], row["Status"], row["OS"]) == ("openclaw", "pro", "stopped", "linux")]
+    errors = [row for row in deferred if (row["Mode"], row["Status"], row["OS"]) == ("lite", "error", "linux")]
+    m.need(scope["Version"] == "explicit-running-only-runtime-test-scope.v2" and len(rows) == len(by_id) == 6 and
+           len(deferred) == len(deferred_ids) == 3 and len(stopped) == 1 and len(errors) == 2 and
+           {row["Type"] for row in errors} == {"opencode", "deepseek-harness"} and
+           all(by_id.get(row["ID"]) == row for row in deferred) and len(active) == 3 and
+           all((row["Mode"], row["Status"], row["OS"]) == ("lite", "running", "linux") for row in active) and
+           scope["OriginalInstancesSHA256"] == m.digest(m.encoded(rows)), "exact_original_running_only_scope_required")
+    binding = {"version": "operator-original-runtime-test-scope.v2", "RuntimeTestScope": scope,
+        "OriginalSourceCoordinates": data_pin, "OriginalInstancesSHA256": scope["OriginalInstancesSHA256"],
+        "Deferred": deferred, "SQLInstanceCount": len(rows), "PlannedRuntimeInstanceCount": len(active),
+        "FullRuntimeCoverage": False, "SQLRowsPreserved": True, "OriginalTaskPurpose": "functional_test",
+        "ScopeSignedOrAdmitted": False, "backup_ready": False}
+    name = "initial-runtime-test-scope.binding-data.json"
+    if query_only:
+        path = stages.directory / name
+        if path.exists() or path.is_symlink():
+            m.need(m.decode(m.read(path)) == binding, "original_runtime_test_scope_binding_changed_no_replacement")
+    else:
+        stages.retain(name, binding)
+    return binding
+
+
 def runtime_test_scope_action(m, stages, sources, query_only=False):
+    if getattr(stages.a, "running_only_runtime_test", False):
+        data, data_pin, _ = sources.coordinates(m, stages, query_only=query_only)
+        return running_only_scope_binding(m, stages, data, data_pin, query_only=query_only)
     data, data_pin, _ = sources.coordinates(m, stages)
     m.need(query_only or getattr(stages.a, "defer_known_error_runtime", False), "explicit_user_runtime_test_scope_opt_in_required")
     return original_runtime_test_scope(m, stages, data, data_pin, query_only)
@@ -542,7 +575,11 @@ def prepare(m, stages, assembly):
     data, data_pin, coordinate_receipt = sources.coordinates(m, stages)
     m.need(len(data.get("Layouts", [])) == len(data["Instances"]), "every_original_source_layout_required_including_nonrunning")
     scope_binding = None
-    if getattr(stages.a, "defer_known_error_runtime", False):
+    if getattr(stages.a, "running_only_runtime_test", False):
+        m.need(profile["target_class"] == "same-cluster-copy" and profile_result["ClassificationData"]["TaskPurpose"] == "functional_test" and
+               writer.get("RuntimeTestScope") == data["RuntimeTestScope"], "same_original_running_only_scope_writer_and_functional_test_profile_required")
+        scope_binding = running_only_scope_binding(m, stages, data, data_pin)
+    elif getattr(stages.a, "defer_known_error_runtime", False):
         m.need(profile["target_class"] == "same-cluster-copy" and profile_result["ClassificationData"]["TaskPurpose"] == "functional_test",
             "explicit_runtime_deferral_only_for_original_functional_test_profile")
         scope_binding = original_runtime_test_scope(m, stages, data, data_pin)

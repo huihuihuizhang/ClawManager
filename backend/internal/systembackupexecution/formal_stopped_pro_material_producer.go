@@ -151,7 +151,7 @@ func ProduceFormalStoppedProObserverMaterials(ctx context.Context, installer *in
 	nodes := map[string]string{}
 	materials := map[int]CurrentStoppedProSourceMaterial{}
 	for _, instance := range firstSQL.inventory.Instances {
-		if !isCurrentStoppedPro(instance) {
+		if deferredRuntimeTestInstance(x.config, instance) || !isCurrentStoppedPro(instance) {
 			continue
 		}
 		m, e := observeCurrentStoppedPro(x.physical, clients.API, x.config, instance, firstSQL.metadata.CurrentStoppedProStorage[instance.ID])
@@ -269,7 +269,7 @@ func ProduceFormalStoppedProObserverMaterials(ctx context.Context, installer *in
 		return zero, install.ErrInstall
 	}
 	for _, instance := range lastSQL.inventory.Instances {
-		if !isCurrentStoppedPro(instance) {
+		if deferredRuntimeTestInstance(x.config, instance) || !isCurrentStoppedPro(instance) {
 			continue
 		}
 		m, e := observeCurrentStoppedPro(x.physical, clients.API, x.config, instance, lastSQL.metadata.CurrentStoppedProStorage[instance.ID])

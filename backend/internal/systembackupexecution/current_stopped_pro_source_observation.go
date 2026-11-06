@@ -37,7 +37,7 @@ func (s *DeploymentService) ObserveCurrentStoppedProSourceMaterials(ctx context.
 	read := func() ([]CurrentStoppedProSourceMaterial, error) {
 		out := []CurrentStoppedProSourceMaterial{}
 		for _, instance := range first.source.Instances {
-			if !isCurrentStoppedPro(instance) {
+			if deferredRuntimeTestInstance(s.Config, instance) || !isCurrentStoppedPro(instance) {
 				continue
 			}
 			m, err := currentStoppedProMaterialFor(scope, instance)

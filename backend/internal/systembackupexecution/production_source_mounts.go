@@ -54,7 +54,7 @@ func (s *productionPersistentMountScope) validate() error {
 	currentSeen := map[int]bool{}
 	var currentRoots []CurrentStoppedProMount
 	for _, m := range s.CurrentStoppedPro {
-		if currentSeen[m.Source.ID] || m.validate() != nil {
+		if s.RuntimeTestScope.IsDeferred(m.Source) || currentSeen[m.Source.ID] || m.validate() != nil {
 			return d.ErrNotReady
 		}
 		for _, mount := range m.Mounts {

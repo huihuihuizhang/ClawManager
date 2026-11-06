@@ -46,6 +46,9 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
+		if deferredRuntimeTestInstance(x.config, instance) {
+			continue
+		}
 		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete

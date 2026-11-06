@@ -8,8 +8,8 @@ import re
 DEPLOYMENT_SHA = "1634456a58697d23eb999eb31618ec4d77667b02e91260d814e2fe7351f515bb"
 OWNER_ASSEMBLY_SHA = "05140777a87dbd8f7098a0e9aa9b02b6c1464e50d52eb55267fce7b240fe4083"
 REDIS_SOURCE_SHA = "6642a08eb7a78b64413b1864584d2fbd3f6cf950ee3378c476b219833b53b248"
-COMPLETE_INPUTS_SHA = "064763abdd4ebbe84fe361b9285b0916510e2b680ce02be774cb43054a7d1d65"
-SOURCE_DATA_SHA = "210db9cdb4d054ddc21d6bdabfd34e765a011ce9856ee498de86f10646aed9bb"
+COMPLETE_INPUTS_SHA = "721e17163636e0506cb49846016f4f3718305eff899ff2cdd3ae052a1e7bb824"
+SOURCE_DATA_SHA = "6535315c5cd34d74891f7ec8f5122b486c2f131f03febb694eaf794bbf3b40cf"
 DEPLOYMENT_SHA = "d6a53c6a804fc56afc697ee84a1f38673c0d67b6ce65436bdbdc204dbfc8cfd3"
 OWNER_ASSEMBLY_SHA = "4e25e279782afcd493beb424abdd5a91f738756b3cb565df54711e7e0885396b"
 INPUT_ASSEMBLY_SHA = "956d8d4cde985fe10f62dc2d7c10b6cbfa1153e08b6d03fa634b10c1eba07bd1"
@@ -29,7 +29,9 @@ def register_arguments(parser):
     parser.add_argument("--initial-provider-file", type=Path)
     parser.add_argument("--initial-provider-sha256")
     parser.add_argument("--initial-worker-jwt-identity-file")
-    parser.add_argument("--defer-known-error-runtime", action="store_true", help="Explicit functional test scope for exact original two error Lite runtime rows; preserve all business SQL")
+    scope_options = parser.add_mutually_exclusive_group()
+    scope_options.add_argument("--running-only-runtime-test", metavar="RUNNING_IDS:DEFERRED_IDS", help="Approved running and deferred instance IDs in SQL order for the original functional test")
+    scope_options.add_argument("--defer-known-error-runtime", action="store_true", help="Explicit functional test scope for exact original two error Lite runtime rows; preserve all business SQL")
 
 
 def prepare_core_arguments(operator):
@@ -95,6 +97,8 @@ def prepare_runtime_test_scope_arguments(operator, query_only=False):
     m = load("system-backup-operator-deployment.py", DEPLOYMENT_SHA)
     complete = load("system-backup-initial-complete-inputs.py", COMPLETE_INPUTS_SHA)
     sources = load("system-backup-initial-source-data.py", SOURCE_DATA_SHA)
+    if query_only and getattr(operator.a, "running_only_runtime_test", False):
+        m.need((operator.run / "deployment").is_dir(), "original_coordinate_intent_and_readback_required_for_query")
     return complete.runtime_test_scope_action(m, m.DeploymentStages(operator), sources, query_only)
 
 
