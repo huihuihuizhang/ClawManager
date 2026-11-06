@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/go-sql-driver/mysql"
 	"reflect"
+	"strings"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 // Runs on the newly produced actual TLS principal, after exact root-side
@@ -17,7 +19,7 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 	}
 	conn, err := db.Conn(ctx)
 	if err != nil {
-		return errOriginalSQLAccounts
+		return originalSQLVerifyFailure("verify_c1_connect", a.Role, err)
 	}
 	defer conn.Close()
 	var actual []originalSQLPrivilege
@@ -29,7 +31,7 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 	} {
 		rows, err := conn.QueryContext(ctx, q.sql, originalSQLAccountName(a))
 		if err != nil {
-			return errOriginalSQLAccounts
+			return originalSQLVerifyFailure("verify_c1_grant_metadata", a.Role, err)
 		}
 		for rows.Next() {
 			var v originalSQLPrivilege
@@ -57,9 +59,10 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 	originalSQLSortPrivileges(actual)
 	originalSQLSortPrivileges(expected)
 	if !reflect.DeepEqual(actual, expected) {
-		return errOriginalSQLAccounts
+		return originalSQLVerifyFailure("verify_c1_own_grants_mismatch", a.Role, nil)
 	}
 	explain := func(statement string, want bool) error {
+		stage := "verify_c1_explain_" + strings.ToLower(strings.Fields(statement)[1])
 		rows, err := conn.QueryContext(ctx, statement)
 		if !want {
 			if rows != nil {
@@ -67,38 +70,38 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 			}
 			var denied *mysql.MySQLError
 			if !errors.As(err, &denied) || denied.Number != 1142 {
-				return errOriginalSQLAccounts
+				return originalSQLVerifyFailure(stage+"_denial", a.Role, err)
 			}
 			return nil
 		}
 		if err != nil {
-			return errOriginalSQLAccounts
+			return originalSQLVerifyFailure(stage+"_access", a.Role, err)
 		}
 		for rows.Next() {
 		}
-		if errors.Join(rows.Err(), rows.Close()) != nil {
-			return errOriginalSQLAccounts
+		if err = errors.Join(rows.Err(), rows.Close()); err != nil {
+			return originalSQLVerifyFailure(stage+"_readback", a.Role, err)
 		}
 		return nil
 	}
 	for _, table := range originalSQLC1Tables {
 		if a.Role == "business" && table == "system_backup_producer_command_receipts" {
-			if explain("EXPLAIN SELECT * FROM `"+table+"` WHERE FALSE", false) != nil {
-				return errOriginalSQLAccounts
+			if err := explain("EXPLAIN SELECT * FROM `"+table+"` WHERE FALSE", false); err != nil {
+				return err
 			}
 			continue
 		}
-		if explain("EXPLAIN SELECT * FROM `"+table+"` WHERE FALSE", true) != nil {
-			return errOriginalSQLAccounts
+		if err := explain("EXPLAIN SELECT * FROM `"+table+"` WHERE FALSE", true); err != nil {
+			return err
 		}
-		if explain("EXPLAIN DELETE FROM `"+table+"` WHERE FALSE", false) != nil {
-			return errOriginalSQLAccounts
+		if err := explain("EXPLAIN DELETE FROM `"+table+"` WHERE FALSE", false); err != nil {
+			return err
 		}
-		if explain("EXPLAIN UPDATE `"+table+"` SET scope_key=scope_key WHERE FALSE", a.Role == "installer" || table == "system_backup_producer_domains") != nil {
-			return errOriginalSQLAccounts
+		if err := explain("EXPLAIN UPDATE `"+table+"` SET scope_key=scope_key WHERE FALSE", a.Role == "installer" || table == "system_backup_producer_domains"); err != nil {
+			return err
 		}
-		if explain("EXPLAIN INSERT INTO `"+table+"` SELECT * FROM `"+table+"` WHERE FALSE", a.Role == "installer") != nil {
-			return errOriginalSQLAccounts
+		if err := explain("EXPLAIN INSERT INTO `"+table+"` SELECT * FROM `"+table+"` WHERE FALSE", a.Role == "installer"); err != nil {
+			return err
 		}
 	}
 	if a.Role == "business" {
@@ -108,8 +111,8 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 			"EXPLAIN SELECT id,username,role,is_active,auth_provider FROM users WHERE FALSE FOR SHARE",
 			"EXPLAIN SELECT * FROM system_backup_v2_evidence_chunks WHERE FALSE FOR SHARE",
 		} {
-			if explain(statement, true) != nil {
-				return errOriginalSQLAccounts
+			if err := explain(statement, true); err != nil {
+				return err
 			}
 		}
 		for _, statement := range []string{
@@ -118,8 +121,8 @@ func originalSQLC1OwnGrantProbe(ctx context.Context, db *sql.DB, p originalSQLPl
 			"EXPLAIN UPDATE users SET username=username WHERE FALSE",
 			"EXPLAIN DELETE FROM system_backup_v2_evidence_chunks WHERE FALSE",
 		} {
-			if explain(statement, false) != nil {
-				return errOriginalSQLAccounts
+			if err := explain(statement, false); err != nil {
+				return err
 			}
 		}
 	}

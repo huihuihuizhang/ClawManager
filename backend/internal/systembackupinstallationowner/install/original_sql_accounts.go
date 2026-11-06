@@ -900,7 +900,34 @@ func (s *originalSQLSession) routineMatches(ctx context.Context, p originalSQLPl
 	}
 	return true, nil
 }
-func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, directory string) error {
+
+type originalSQLVerifyError struct {
+	Stage, Role string
+	MySQLNumber uint16
+}
+
+func (e *originalSQLVerifyError) Error() string { return errOriginalSQLAccounts.Error() }
+func (e *originalSQLVerifyError) Unwrap() error { return errOriginalSQLAccounts }
+
+func originalSQLVerifyFailure(stage, role string, cause error) *originalSQLVerifyError {
+	out := &originalSQLVerifyError{Stage: stage, Role: role}
+	var mysqlError *mysql.MySQLError
+	if errors.As(cause, &mysqlError) {
+		out.MySQLNumber = mysqlError.Number
+	}
+	return out
+}
+
+func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, directory string) (err error) {
+	stage, role := "verify_operation", ""
+	defer func() {
+		if err != nil {
+			var detail *originalSQLVerifyError
+			if !errors.As(err, &detail) {
+				err = originalSQLVerifyFailure(stage, role, err)
+			}
+		}
+	}()
 	if s.checkPlan(ctx, p, false) != nil {
 		return errOriginalSQLAccounts
 	}
@@ -908,21 +935,25 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 	for _, a := range p.Accounts {
 		excluded[a.User+"@"+a.Host] = true
 	}
+	stage = "verify_original_users"
 	originals, originalErr := s.originalUsers(ctx, excluded)
 	if originalErr != nil || !reflect.DeepEqual(originals, p.OriginalUsers) {
 		return errOriginalSQLAccounts
 	}
 
+	stage = "verify_secure_transport"
 	var secure bool
 	var persisted string
 	if s.conn.QueryRowContext(ctx, "SELECT @@require_secure_transport").Scan(&secure) != nil || !secure || s.conn.QueryRowContext(ctx, "SELECT VARIABLE_VALUE FROM performance_schema.persisted_variables WHERE VARIABLE_NAME='require_secure_transport'").Scan(&persisted) != nil || (persisted != "ON" && persisted != "1") {
 		return errOriginalSQLAccounts
 	}
+	stage = "verify_census_definition"
 	matched, e := s.routineMatches(ctx, p)
 	if e != nil || !matched {
 		return errOriginalSQLAccounts
 	}
 	for _, a := range p.Accounts {
+		stage, role = "verify_account_attributes", a.Role
 		exists, e := s.owned(ctx, p, a)
 		if e != nil || !exists {
 			return errOriginalSQLAccounts
@@ -931,6 +962,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 		if s.conn.QueryRowContext(ctx, "SELECT ssl_type,account_locked FROM mysql.user WHERE User=? AND Host=?", a.User, a.Host).Scan(&ssl, &locked) != nil || ssl != "ANY" || (locked == "Y") != a.Locked {
 			return errOriginalSQLAccounts
 		}
+		stage = "verify_account_privileges"
 		actual, e := s.actualPrivileges(ctx, a)
 		if e != nil {
 			return e
@@ -951,6 +983,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 		if a.Locked {
 			continue
 		}
+		stage = "verify_account_login"
 		cfg := s.cfg.Clone()
 		cfg.User = a.User
 		cfg.Passwd = a.Password
@@ -963,18 +996,24 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 		e = func() error {
 			defer db.Close()
 			var user, uuid, name, version, role string
-			if db.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,CURRENT_ROLE()").Scan(&user, &uuid, &role) != nil || user != a.User+"@"+a.Host || uuid != p.ServerUUID || role != "NONE" {
+			if loginErr := db.QueryRowContext(ctx, "SELECT CURRENT_USER(),@@server_uuid,CURRENT_ROLE()").Scan(&user, &uuid, &role); loginErr != nil {
+				return loginErr
+			}
+			if user != a.User+"@"+a.Host || uuid != p.ServerUUID || role != "NONE" {
 				return errOriginalSQLAccounts
 			}
+			stage = "verify_account_tls"
 			if db.QueryRowContext(ctx, "SHOW SESSION STATUS LIKE 'Ssl_version'").Scan(&name, &version) != nil || version != "TLSv1.3" {
 				return errOriginalSQLAccounts
 			}
 			if originalSQLC1Selected(s.input.runtimeProfile) {
+				stage = "verify_c1_account_grants"
 				if err := originalSQLC1OwnGrantProbe(ctx, db, p, a); err != nil {
 					return err
 				}
 			}
 			if a.Role == "runtime" {
+				stage = "verify_runtime_grants"
 				if s.input.runtimeProfile == originalSQLMinIOMetadataProfile {
 					return (controller.SQLMinIOMetadataReadGrantProbe{DB: db, Schema: p.Database, User: a.User, Runtime: true, ProviderPermits: true, Publication: true}).Check(ctx)
 				}
@@ -984,6 +1023,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 				return (controller.SQLControllerGrantProbe{DB: db, Schema: p.Database, User: a.User}).Check(ctx)
 			}
 			if a.Role == "source" {
+				stage = "verify_source_grants"
 				conn, e := db.Conn(ctx)
 				if e != nil {
 					return e
@@ -1005,9 +1045,11 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 				if errors.Join(r.Err(), r.Close()) != nil || domain.ValidateBusinessSourceGrants(p.Database, grants) != nil {
 					return errOriginalSQLAccounts
 				}
+				stage = "verify_source_census"
 				return domain.CheckBusinessSchemaCensus(ctx, conn, p.Census)
 			}
 			if a.Role == "installer" {
+				stage = "verify_installer_read"
 				var heads int
 				var username, stored string
 				if db.QueryRowContext(ctx, "SELECT username,password_hash FROM users WHERE id=?", p.AdminID).Scan(&username, &stored) != nil || username != p.AdminUsername || db.QueryRowContext(ctx, "SELECT COUNT(*) FROM system_backup_installation_owner_heads").Scan(&heads) != nil {
@@ -1016,6 +1058,7 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 				stored = ""
 			}
 			if a.Role == "business" {
+				stage = "verify_business_read"
 				var username string
 				if db.QueryRowContext(ctx, "SELECT username FROM users WHERE id=?", p.AdminID).Scan(&username) != nil || username != p.AdminUsername {
 					return errOriginalSQLAccounts
@@ -1024,11 +1067,12 @@ func (s *originalSQLSession) verify(ctx context.Context, p originalSQLPlan, dire
 			return nil
 		}()
 		if e != nil {
-			return errOriginalSQLAccounts
+			return e
 		}
 	}
 	// Output failures remain unknown. Query may finish missing create-only
 	// deliveries with the SAME stored passwords; it never dispatches SQL writes.
+	stage, role = "verify_deliver_materials", ""
 	for _, a := range p.Accounts {
 		if a.Locked {
 			continue
@@ -1317,7 +1361,18 @@ func RunOriginalSQLAccounts(ctx context.Context, args []string, out io.Writer) i
 		e = session.rollback(bounded, p, in.directory)
 	}
 	if e != nil {
-		_ = originalSQLMark(in.directory, "not-confirmed", map[string]string{"mode": *mode, "operation": p.Operation})
+		failure := map[string]any{"mode": *mode, "operation": p.Operation}
+		var detail *originalSQLVerifyError
+		if errors.As(e, &detail) {
+			failure["stage"] = detail.Stage
+			if detail.Role != "" {
+				failure["role"] = detail.Role
+			}
+			if detail.MySQLNumber != 0 {
+				failure["mysql_number"] = detail.MySQLNumber
+			}
+		}
+		_ = originalSQLMark(in.directory, "not-confirmed", failure)
 		return 3
 	}
 	state := originalSQLStatePrefix(in.runtimeProfile) + "_" + *mode + "_verified"
