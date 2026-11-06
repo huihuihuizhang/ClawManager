@@ -188,10 +188,10 @@ func main() {
 	dataRequest := flag.String("data-request", "", "frozen isolated data execution identity (base64url)")
 	cursor := flag.String("cursor", "", "bounded Team data discovery cursor")
 	pageSize := flag.Int("page-size", 20, "Team data discovery page size (1..100)")
-	operation := flag.String("operation", "verify", "verify, capture, restore or verify-restored (data-only)")
+	operation := flag.String("operation", "verify", "verify, verify-v2-publication, capture, restore or verify-restored (data-only)")
 	operationConfig := flag.String("operation-config", "", "source or isolated target configuration file")
 	maxItems := flag.Int("max-items", 1000000, "maximum records/files per data source")
-	config := flag.String("bootstrap", "", "disaster-side bootstrap JSON file")
+	config := flag.String("bootstrap", "", "operation bootstrap JSON file")
 	origin := flag.String("origin", "", "origin installation identity")
 	id := flag.String("backup", "", "public backup identity")
 	max := flag.Int64("max-bytes", 16<<30, "maximum verified ciphertext bytes")
@@ -229,7 +229,7 @@ func main() {
 	var report bytes.Buffer
 	var output io.Writer = os.Stdout
 	if *reportFile != "" {
-		if *operation != "verify" && *operation != "verify-snapshot" && *operation != "capture-phase" && *operation != "upload-parts" && !((*operation == "restore" || *operation == "verify-restored") && *dataRequest != "") {
+		if *operation != "verify" && *operation != "verify-v2-publication" && *operation != "verify-snapshot" && *operation != "capture-phase" && *operation != "upload-parts" && !((*operation == "restore" || *operation == "verify-restored") && *dataRequest != "") {
 			fmt.Fprintln(os.Stderr, "report file is unsupported for this operation")
 			os.Exit(2)
 		}
@@ -242,6 +242,8 @@ func main() {
 		e = recoverTeamData(ctx, *operation, *config, *operationConfig, *origin, *id, output)
 	case "verify":
 		e = verify(ctx, *config, *origin, *id, *max, output)
+	case "verify-v2-publication":
+		e = verifyPublicationV2(ctx, *config, *origin, *id, *max, output)
 	case "verify-snapshot":
 		e = verifySnapshot(ctx, *config, *origin, *id, systembackup.CaptureBudget{MaxBytes: *max, MaxItems: *maxItems}, output)
 	case "upload-parts":
