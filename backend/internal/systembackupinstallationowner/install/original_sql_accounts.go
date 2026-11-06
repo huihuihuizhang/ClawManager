@@ -638,7 +638,7 @@ func (s *originalSQLSession) checkPlan(ctx context.Context, p originalSQLPlan, u
 		}
 		want, err := originalSQLRolePrivilegesForProfile(a.Role, p.Database, a, present, s.input.allowAny, s.input.runtimeProfile)
 		if err != nil || !reflect.DeepEqual(originalSQLWithCensusExecute(a), want) {
-			return errOriginalSQLAccounts
+			return originalSQLVerifyFailure("sql_plan_privileges", a.Role, err)
 		}
 		excluded[a.User+"@"+a.Host] = true
 	}
@@ -937,22 +937,38 @@ func originalSQLExpectedPrivileges(p originalSQLPlan, rights []originalSQLPrivil
 // Reconcile a legacy fresh operation that reached account creation. Reuse its
 // pinned plan and prove the full original state before issuing the one missing
 // grant. A dispatched repair may only be read back on a repeated invocation.
-func (s *originalSQLSession) repairCensusExecute(ctx context.Context, p originalSQLPlan, directory string) error {
-	if !s.input.freshInstallation || s.checkPlan(ctx, p, false) != nil {
+func (s *originalSQLSession) repairCensusExecute(ctx context.Context, p originalSQLPlan, directory string) (err error) {
+	stage, role := "repair_plan", ""
+	defer func() {
+		if err != nil {
+			var detail *originalSQLVerifyError
+			if !errors.As(err, &detail) {
+				err = originalSQLVerifyFailure(stage, role, err)
+			}
+		}
+	}()
+	if !s.input.freshInstallation {
 		return errOriginalSQLAccounts
 	}
+	if err = s.checkPlan(ctx, p, false); err != nil {
+		return err
+	}
+	stage = "repair_legacy_census_plan"
 	definer := p.Accounts[len(p.Accounts)-1]
 	if slices.Contains(definer.Privileges, originalCensusExecute) {
 		return errOriginalSQLAccounts
 	}
+	stage = "repair_dispatch_receipt"
 	var sent struct{ Operation, State string }
 	raw, e := ReadPrivateFile(filepath.Join(directory, "apply.sent.json"), 4096)
 	if e != nil || originalSQLJSON(raw, &sent) != nil || sent.Operation != p.Operation || sent.State != "dispatch_intent_no_resend" {
 		return errOriginalSQLAccounts
 	}
+	stage = "repair_app_database_identity"
 	if _, e = s.freshApplyTarget(ctx); e != nil {
 		return e
 	}
+	stage = "repair_secure_transport"
 	var secure bool
 	var persisted string
 	if s.conn.QueryRowContext(ctx, "SELECT @@require_secure_transport").Scan(&secure) != nil || !secure ||
@@ -960,20 +976,24 @@ func (s *originalSQLSession) repairCensusExecute(ctx context.Context, p original
 		(persisted != "ON" && persisted != "1") {
 		return errOriginalSQLAccounts
 	}
+	stage = "repair_census_definition"
 	if exact, e := s.routineMatches(ctx, p); e != nil || !exact {
 		return errOriginalSQLAccounts
 	}
 	excluded := map[string]bool{}
 	missing := false
 	for _, a := range p.Accounts {
+		stage, role = "repair_account_owner", a.Role
 		excluded[a.User+"@"+a.Host] = true
 		if owned, e := s.owned(ctx, p, a); e != nil || !owned {
 			return errOriginalSQLAccounts
 		}
+		stage = "repair_account_attributes"
 		var ssl, locked string
 		if s.conn.QueryRowContext(ctx, "SELECT ssl_type,account_locked FROM mysql.user WHERE User=? AND Host=?", a.User, a.Host).Scan(&ssl, &locked) != nil || ssl != "ANY" || (locked == "Y") != a.Locked {
 			return errOriginalSQLAccounts
 		}
+		stage = "repair_account_privileges"
 		actual, e := s.actualPrivileges(ctx, a)
 		if e != nil {
 			return e
@@ -985,10 +1005,12 @@ func (s *originalSQLSession) repairCensusExecute(ctx context.Context, p original
 			missing = true
 		}
 	}
+	stage, role = "repair_original_users", ""
 	if original, e := s.originalUsers(ctx, excluded); e != nil || !reflect.DeepEqual(original, p.OriginalUsers) {
 		return errOriginalSQLAccounts
 	}
 	if missing {
+		stage = "repair_dispatch_exact_grant"
 		if e := originalSQLWrite(directory, "census-execute-repair.sent.json", map[string]string{"operation": p.Operation, "state": "dispatch_intent_no_resend"}); e != nil {
 			return e
 		}
