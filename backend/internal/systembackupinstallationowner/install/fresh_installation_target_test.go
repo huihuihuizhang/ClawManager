@@ -38,6 +38,7 @@ func TestFreshAppDatabaseBindsActualWorkloadAndRefusesRetarget(t *testing.T) {
 	app, appRS, appPod := newWorkload("app", []corev1.EnvVar{
 		{Name: "DB_HOST", Value: "db"}, {Name: "DB_PORT", Value: "3306"}, {Name: "DB_NAME", Value: "appdb"}, {Name: "DB_USER", Value: "business"},
 		{Name: "DB_TLS_CA_FILE", Value: "/mysql-ca/ca.pem"}, {Name: "DB_TLS_CA_SHA256", Value: "ca-pin"}, {Name: "DB_TLS_SERVER_NAME", Value: "db.isolated.svc"},
+		{Name: "DB_PASSWORD", ValueFrom: &corev1.EnvVarSource{SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "business"}, Key: "password"}}},
 	})
 	db, dbRS, dbPod := newWorkload("db", []corev1.EnvVar{{Name: "MYSQL_DATABASE", Value: "appdb"}, {Name: "MYSQL_USER", Value: "business"}})
 	dbPod.Status.PodIP = "10.2.0.17"
@@ -46,12 +47,33 @@ func TestFreshAppDatabaseBindsActualWorkloadAndRefusesRetarget(t *testing.T) {
 	slice := &discoveryv1.EndpointSlice{ObjectMeta: metav1.ObjectMeta{Name: "db-slice", Namespace: ns, UID: "db-slice-uid", Labels: map[string]string{"kubernetes.io/service-name": "db"},
 		OwnerReferences: []metav1.OwnerReference{{APIVersion: "v1", Kind: "Service", Name: "db", UID: service.UID}}}, Ports: []discoveryv1.EndpointPort{{Name: &portName, Protocol: &tcp, Port: &port}},
 		Endpoints: []discoveryv1.Endpoint{{Addresses: []string{dbPod.Status.PodIP}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}, TargetRef: &corev1.ObjectReference{Kind: "Pod", Namespace: ns, Name: dbPod.Name, UID: dbPod.UID}}}}
-	client := fake.NewSimpleClientset(app, appRS, appPod, db, dbRS, dbPod, service, slice)
+	secret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "business", Namespace: ns, UID: "secret-uid", ResourceVersion: "1"}, Data: map[string][]byte{"password": []byte("fixture-secret")}}
+	client := fake.NewSimpleClientset(app, appRS, appPod, db, dbRS, dbPod, service, slice, secret)
 	input := FreshInstallationIdentityInputs{OriginalEnrollmentInputs: OriginalEnrollmentInputs{Namespace: ns, DatabaseTLSServerName: "db.isolated.svc", DatabaseCA: BootstrapSourceFilePin{SHA256: "ca-pin"}},
-		AppDeployment: app.Name, AppDeploymentUID: string(app.UID), ExpectedDatabase: "appdb"}
+		AppDeployment: app.Name, AppDeploymentUID: string(app.UID), ExpectedDatabase: "appdb", UseAppDatabaseSecret: true}
 	target, err := observeFreshAppDatabase(ctx, client, input)
 	if err != nil || target.Address != "10.3.0.17:3306" || target.DBPodUID != string(dbPod.UID) {
 		t.Fatal("exact App/MySQL target did not bind", err)
+	}
+	secretPin, password, err := readFreshAppDatabaseSecret(ctx, client, ns, target)
+	if err != nil || string(password) != "fixture-secret" || !sameFreshAppDatabaseSecret(ctx, client, input, target, secretPin) {
+		t.Fatal("exact App password Secret did not bind", err)
+	}
+	clear(password)
+	secret.Data["password"] = []byte("rotated-fixture")
+	if _, err := client.CoreV1().Secrets(ns).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if sameFreshAppDatabaseSecret(ctx, client, input, target, secretPin) {
+		t.Fatal("rotated App password was accepted")
+	}
+	changedRef := appPod.DeepCopy()
+	changedRef.Spec.Containers[0].Env[7].ValueFrom.SecretKeyRef.Key = "other-key"
+	if _, err := client.CoreV1().Pods(ns).Update(ctx, changedRef, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := observeFreshAppDatabase(ctx, client, input); err == nil {
+		t.Fatal("different App Pod password reference was accepted")
 	}
 	other := appPod.DeepCopy()
 	other.Spec.Containers[0].Env[0].Value = "db.other.svc"

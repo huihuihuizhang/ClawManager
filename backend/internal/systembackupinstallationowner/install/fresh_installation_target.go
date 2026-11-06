@@ -23,11 +23,15 @@ type freshAppDatabase struct {
 	AppUID, AppSpec, AppPods, ServiceUID, ServiceSpec, EndpointUID, EndpointSpec string
 	DBUID, DBSpec, DBPodUID, DBPodSpec, DBContainer, DBPod, DBHostname           string
 	Address, Database, User                                                      string
+	PasswordSecret, PasswordKey                                                  string
 }
 
-type freshAppDBEnv struct{ Host, Port, Database, User, CAFile, CASHA, TLSName string }
+type freshAppDBEnv struct {
+	Host, Port, Database, User, CAFile, CASHA, TLSName string
+	PasswordSecret, PasswordKey                        string
+}
 
-func readFreshAppDBEnv(spec corev1.PodSpec) (freshAppDBEnv, error) {
+func readFreshAppDBEnv(spec corev1.PodSpec, useSecret bool) (freshAppDBEnv, error) {
 	var out freshAppDBEnv
 	if len(spec.Containers) != 1 || len(spec.Containers[0].EnvFrom) != 0 || len(spec.Containers[0].Command) != 0 || len(spec.Containers[0].Args) != 0 ||
 		spec.HostNetwork || len(spec.HostAliases) != 0 || spec.DNSPolicy != "" && spec.DNSPolicy != corev1.DNSClusterFirst ||
@@ -37,6 +41,17 @@ func readFreshAppDBEnv(spec corev1.PodSpec) (freshAppDBEnv, error) {
 	selected := map[string]*string{"DB_HOST": &out.Host, "DB_PORT": &out.Port, "DB_NAME": &out.Database,
 		"DB_USER": &out.User, "DB_TLS_CA_FILE": &out.CAFile, "DB_TLS_CA_SHA256": &out.CASHA, "DB_TLS_SERVER_NAME": &out.TLSName}
 	for _, env := range spec.Containers[0].Env {
+		if useSecret && env.Name == "DB_PASSWORD" {
+			source := env.ValueFrom
+			if out.PasswordSecret != "" || env.Value != "" || source == nil || source.SecretKeyRef == nil || source.FieldRef != nil || source.ResourceFieldRef != nil || source.ConfigMapKeyRef != nil {
+				return freshAppDBEnv{}, ErrInstall
+			}
+			ref := source.SecretKeyRef
+			if len(validation.IsDNS1123Subdomain(ref.Name)) != 0 || len(validation.IsConfigMapKey(ref.Key)) != 0 || ref.Optional != nil && *ref.Optional {
+				return freshAppDBEnv{}, ErrInstall
+			}
+			out.PasswordSecret, out.PasswordKey = ref.Name, ref.Key
+		}
 		if target := selected[env.Name]; target != nil {
 			if *target != "" || env.ValueFrom != nil || env.Value == "" || strings.TrimSpace(env.Value) != env.Value || strings.Contains(env.Value, "$(") {
 				return freshAppDBEnv{}, ErrInstall
@@ -49,7 +64,7 @@ func readFreshAppDBEnv(spec corev1.PodSpec) (freshAppDBEnv, error) {
 			return freshAppDBEnv{}, ErrInstall
 		}
 	}
-	if !path.IsAbs(out.CAFile) || path.Clean(out.CAFile) != out.CAFile {
+	if !path.IsAbs(out.CAFile) || path.Clean(out.CAFile) != out.CAFile || useSecret && out.PasswordSecret == "" {
 		return freshAppDBEnv{}, ErrInstall
 	}
 	return out, nil
@@ -113,7 +128,7 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 	if err != nil || string(app.UID) != input.AppDeploymentUID || !freshReadyDeployment(app) || app.Spec.Selector == nil || len(app.Spec.Selector.MatchLabels) == 0 || len(app.Spec.Selector.MatchExpressions) != 0 {
 		return zero, ErrInstall
 	}
-	env, err := readFreshAppDBEnv(app.Spec.Template.Spec)
+	env, err := readFreshAppDBEnv(app.Spec.Template.Spec, input.UseAppDatabaseSecret)
 	if err != nil || env.Database != input.ExpectedDatabase || env.CASHA != input.DatabaseCA.SHA256 || env.TLSName != input.DatabaseTLSServerName {
 		return zero, ErrInstall
 	}
@@ -125,7 +140,7 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 	for n := range appPods.Items {
 		pod := &appPods.Items[n]
 		dep, err := freshPodDeployment(ctx, client, pod)
-		podEnv, envErr := readFreshAppDBEnv(pod.Spec)
+		podEnv, envErr := readFreshAppDBEnv(pod.Spec, input.UseAppDatabaseSecret)
 		container := freshReadyContainer(pod)
 		if err != nil || dep.UID != app.UID || envErr != nil || podEnv != env || container == "" {
 			return zero, ErrInstall
@@ -179,7 +194,28 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 	}
 	return freshAppDatabase{AppUID: string(app.UID), AppSpec: originalObjectSHA(app.Spec), AppPods: originalObjectSHA(appPins), ServiceUID: string(service.UID), ServiceSpec: originalObjectSHA(service.Spec),
 		EndpointUID: string(slice.UID), EndpointSpec: originalObjectSHA(slice), DBUID: string(deployment.UID), DBSpec: originalObjectSHA(deployment.Spec), DBPodUID: string(db.UID), DBPodSpec: originalObjectSHA(db.Spec), DBContainer: container,
-		DBPod: db.Name, DBHostname: db.Spec.Hostname, Address: net.JoinHostPort(service.Spec.ClusterIP, env.Port), Database: env.Database, User: env.User}, nil
+		DBPod: db.Name, DBHostname: db.Spec.Hostname, Address: net.JoinHostPort(service.Spec.ClusterIP, env.Port), Database: env.Database, User: env.User,
+		PasswordSecret: env.PasswordSecret, PasswordKey: env.PasswordKey}, nil
+}
+
+type freshAppDatabaseSecret struct{ UID, ResourceVersion, Digest string }
+
+func readFreshAppDatabaseSecret(ctx context.Context, client kubernetes.Interface, namespace string, target freshAppDatabase) (freshAppDatabaseSecret, []byte, error) {
+	var zero freshAppDatabaseSecret
+	secret, err := client.CoreV1().Secrets(namespace).Get(ctx, target.PasswordSecret, metav1.GetOptions{})
+	if err != nil || secret.Name != target.PasswordSecret || secret.Namespace != namespace || secret.UID == "" || secret.ResourceVersion == "" || secret.DeletionTimestamp != nil {
+		return zero, nil, ErrInstall
+	}
+	defer func() {
+		for _, value := range secret.Data {
+			clear(value)
+		}
+	}()
+	password := secret.Data[target.PasswordKey]
+	if len(password) == 0 || len(password) > 1024 {
+		return zero, nil, ErrInstall
+	}
+	return freshAppDatabaseSecret{string(secret.UID), secret.ResourceVersion, hash(password)}, append([]byte(nil), password...), nil
 }
 
 func freshMySQLDatabaseEnv(spec corev1.PodSpec, database, user string) bool {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	backup "clawreef/internal/systembackup"
+	"github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
 	authenticationv1 "k8s.io/api/authentication/v1"
 	authorizationv1 "k8s.io/api/authorization/v1"
@@ -22,6 +23,7 @@ type FreshInstallationIdentityInputs struct {
 	AppDeployment, AppDeploymentUID                               string
 	Operation, NamespaceUID, ExpectedServerUUID, ExpectedDatabase string
 	Apply                                                         bool
+	UseAppDatabaseSecret                                          bool
 }
 
 type FreshInstallationIdentityReceipt struct {
@@ -172,6 +174,9 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 	if deadline, ok := ctx.Deadline(); !ok || time.Until(deadline) > 2*time.Minute {
 		return zero, ErrInstall
 	}
+	if input.UseAppDatabaseSecret == (input.BusinessDSN != (BootstrapSourceFilePin{})) {
+		return zero, ErrInstall
+	}
 	k, _, _, err := openOriginalEnrollmentKubernetes(input.Kubeconfig)
 	if err != nil {
 		return zero, ErrInstall
@@ -181,7 +186,7 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 		return zero, ErrInstall
 	}
 	target, err := observeFreshAppDatabase(ctx, k, input)
-	if err != nil || checkFreshAppDatabaseDSN(input.InstallerDSN, target, false) != nil || checkFreshAppDatabaseDSN(input.BusinessDSN, target, true) != nil {
+	if err != nil || checkFreshAppDatabaseDSN(input.InstallerDSN, target, false) != nil {
 		return zero, ErrInstall
 	}
 	db, identity, err := openOriginalEnrollmentDatabase(ctx, input.InstallerDSN, input.DatabaseCA, input.DatabaseTLSServerName)
@@ -192,7 +197,7 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 	if identity.ServerUUID != input.ExpectedServerUUID || identity.Database != input.ExpectedDatabase {
 		return zero, ErrInstall
 	}
-	business, businessID, err := openOriginalEnrollmentDatabase(ctx, input.BusinessDSN, input.DatabaseCA, input.DatabaseTLSServerName)
+	business, businessID, secret, err := openFreshBusinessDatabase(ctx, k, input, target)
 	if err != nil {
 		return zero, ErrInstall
 	}
@@ -230,7 +235,7 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 		return zero, ErrInstall
 	}
 	currentTarget, err := observeFreshAppDatabase(ctx, k, input)
-	if err != nil || currentTarget != target {
+	if err != nil || currentTarget != target || !sameFreshAppDatabaseSecret(ctx, k, input, target, secret) {
 		return zero, ErrInstall
 	}
 	write := input.Apply && state == freshIdentityAbsent
@@ -258,7 +263,7 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 			return zero, ErrCommitUnknown
 		}
 		currentTarget, err = observeFreshAppDatabase(ctx, k, input)
-		if err != nil || currentTarget != target {
+		if err != nil || currentTarget != target || !sameFreshAppDatabaseSecret(ctx, k, input, target, secret) {
 			return zero, ErrCommitUnknown
 		}
 	}
@@ -270,6 +275,35 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 		receipt.Engine = backup.LegacyEngine
 	}
 	return receipt, nil
+}
+
+func openFreshBusinessDatabase(ctx context.Context, client kubernetes.Interface, input FreshInstallationIdentityInputs, target freshAppDatabase) (*sql.DB, originalEnrollmentDatabaseIdentity, freshAppDatabaseSecret, error) {
+	if !input.UseAppDatabaseSecret {
+		if err := checkFreshAppDatabaseDSN(input.BusinessDSN, target, true); err != nil {
+			return nil, originalEnrollmentDatabaseIdentity{}, freshAppDatabaseSecret{}, err
+		}
+		db, identity, err := openOriginalEnrollmentDatabase(ctx, input.BusinessDSN, input.DatabaseCA, input.DatabaseTLSServerName)
+		return db, identity, freshAppDatabaseSecret{}, err
+	}
+	secret, password, err := readFreshAppDatabaseSecret(ctx, client, input.Namespace, target)
+	if err != nil {
+		return nil, originalEnrollmentDatabaseIdentity{}, freshAppDatabaseSecret{}, err
+	}
+	defer clear(password)
+	cfg := mysql.NewConfig()
+	cfg.User, cfg.Passwd = target.User, string(password)
+	cfg.Net, cfg.Addr, cfg.DBName = "tcp", target.Address, target.Database
+	db, identity, err := openOriginalEnrollmentDatabaseConfig(ctx, cfg, input.DatabaseCA, input.DatabaseTLSServerName)
+	return db, identity, secret, err
+}
+
+func sameFreshAppDatabaseSecret(ctx context.Context, client kubernetes.Interface, input FreshInstallationIdentityInputs, target freshAppDatabase, expected freshAppDatabaseSecret) bool {
+	if !input.UseAppDatabaseSecret {
+		return true
+	}
+	actual, password, err := readFreshAppDatabaseSecret(ctx, client, input.Namespace, target)
+	clear(password)
+	return err == nil && actual == expected
 }
 
 func observeFreshInstallationCommit(ctx context.Context, conn *sql.Conn, identity originalEnrollmentDatabaseIdentity, input FreshInstallationIdentityInputs, target freshAppDatabase, password []byte, admin int64, id string) error {

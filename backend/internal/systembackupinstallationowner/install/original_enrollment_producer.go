@@ -237,15 +237,24 @@ func openOriginalEnrollmentDatabase(ctx context.Context, dsnPin, caPin Bootstrap
 		return nil, zero, ErrInstall
 	}
 	defer clear(raw)
+	cfg, err := mysql.ParseDSN(strings.TrimSpace(string(raw)))
+	if err != nil {
+		return nil, zero, ErrInstall
+	}
+	return openOriginalEnrollmentDatabaseConfig(ctx, cfg, caPin, serverName)
+}
+
+func openOriginalEnrollmentDatabaseConfig(ctx context.Context, cfg *mysql.Config, caPin BootstrapSourceFilePin, serverName string) (*sql.DB, originalEnrollmentDatabaseIdentity, error) {
+	var zero originalEnrollmentDatabaseIdentity
+	if cfg.Net != "tcp" || cfg.DBName == "" || cfg.MultiStatements || cfg.AllowAllFiles || cfg.AllowCleartextPasswords || cfg.AllowOldPasswords || cfg.AllowFallbackToPlaintext {
+		return nil, zero, ErrInstall
+	}
+	defer func() { cfg.Passwd = "" }()
 	ca, err := readBootstrapSourcePin(caPin, 65536)
 	if err != nil {
 		return nil, zero, ErrInstall
 	}
 	clear(ca)
-	cfg, err := mysql.ParseDSN(strings.TrimSpace(string(raw)))
-	if err != nil || cfg.Net != "tcp" || cfg.DBName == "" || cfg.MultiStatements || cfg.AllowAllFiles || cfg.AllowCleartextPasswords || cfg.AllowOldPasswords || cfg.AllowFallbackToPlaintext {
-		return nil, zero, ErrInstall
-	}
 	material := mysqltls.Material{CAFile: caPin.File, CASHA256: caPin.SHA256, ServerName: serverName}
 	if !material.Selected() || material.Apply(cfg) != nil {
 		return nil, zero, ErrInstall
@@ -260,7 +269,6 @@ func openOriginalEnrollmentDatabase(ctx context.Context, dsnPin, caPin Bootstrap
 	}
 	cfg.Params["time_zone"] = "'+00:00'"
 	connector, err := mysql.NewConnector(cfg)
-	cfg.Passwd = ""
 	if err != nil {
 		return nil, zero, ErrInstall
 	}

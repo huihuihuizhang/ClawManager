@@ -30,12 +30,16 @@ func runFreshInstallationIdentity(ctx context.Context, args []string, out io.Wri
 	kubeSHA := f.String("kubeconfig-sha256", "", "independently selected kubeconfig bytes")
 	installerFile := f.String("installer-dsn-file", "", "private installer DSN")
 	businessFile := f.String("business-dsn-file", "", "private App business DSN")
+	useAppSecret := f.Bool("use-app-database-secret", false, "authenticate using the selected App database Secret")
 	caFile := f.String("database-ca-file", "", "private selected MySQL CA")
 	passwordFile := f.String("local-admin-password-file", "", "private App local admin password")
 	if ctx == nil || out == nil || f.Parse(args) != nil || f.NArg() != 0 || (*mode != "query" && *mode != "apply") {
 		return 2
 	}
-	for _, value := range []*string{operation, namespace, namespaceUID, app, appUID, server, database, admin, serverName, kubeFile, kubeSHA, installerFile, businessFile, caFile, passwordFile} {
+	if *useAppSecret == (*businessFile != "") {
+		return 2
+	}
+	for _, value := range []*string{operation, namespace, namespaceUID, app, appUID, server, database, admin, serverName, kubeFile, kubeSHA, installerFile, caFile, passwordFile} {
 		if *value == "" {
 			return 2
 		}
@@ -53,9 +57,12 @@ func runFreshInstallationIdentity(ctx context.Context, args []string, out io.Wri
 	if err != nil {
 		return 1
 	}
-	business, err := pin(*businessFile, 16384)
-	if err != nil {
-		return 1
+	var business install.BootstrapSourceFilePin
+	if !*useAppSecret {
+		business, err = pin(*businessFile, 16384)
+		if err != nil {
+			return 1
+		}
 	}
 	ca, err := pin(*caFile, 65536)
 	if err != nil {
@@ -71,7 +78,7 @@ func runFreshInstallationIdentity(ctx context.Context, args []string, out io.Wri
 	receipt, err := install.InitializeFreshInstallationIdentity(active, password, install.FreshInstallationIdentityInputs{
 		OriginalEnrollmentInputs: install.OriginalEnrollmentInputs{Namespace: *namespace, LocalAdminUsername: *admin, DatabaseTLSServerName: *serverName,
 			Kubeconfig: install.BootstrapSourceFilePin{File: *kubeFile, SHA256: *kubeSHA}, InstallerDSN: installer, BusinessDSN: business, DatabaseCA: ca},
-		Operation: *operation, NamespaceUID: *namespaceUID, AppDeployment: *app, AppDeploymentUID: *appUID, ExpectedServerUUID: *server, ExpectedDatabase: *database, Apply: *mode == "apply",
+		Operation: *operation, NamespaceUID: *namespaceUID, AppDeployment: *app, AppDeploymentUID: *appUID, ExpectedServerUUID: *server, ExpectedDatabase: *database, Apply: *mode == "apply", UseAppDatabaseSecret: *useAppSecret,
 	})
 	if errors.Is(err, install.ErrCommitUnknown) {
 		return 3
