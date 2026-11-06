@@ -110,7 +110,7 @@ func observeFivePass(ctx context.Context, p OriginalFiveProfile, creds []nativeP
 		return "", err
 	}
 	defer r.close()
-	server, err := r.serverSeptember(ctx)
+	server, err := r.serverOriginalBackupTarget(ctx)
 	if err != nil {
 		return "", err
 	}

@@ -24,8 +24,8 @@ func (r *minioPermissionHTTP) collectNativeProfile(ctx context.Context, cfg mini
 	switch permission {
 	case ma.PermissionProfile:
 		return r.collectV2(ctx, cfg, uses)
-	case ma.SeptemberPermissionProfile:
-		return r.collectSeptember(ctx, cfg, uses)
+	case ma.SeptemberPermissionProfile, ma.DeleteCompatPermissionProfile:
+		return r.collectBuiltinFlat(ctx, cfg, uses, permission)
 	}
 	return "", minioPermissionFailure("unsupported-native-profile")
 }
@@ -33,15 +33,15 @@ func (r *minioPermissionHTTP) collectNativeProfile(ctx context.Context, cfg mini
 // Explicit September opt-in API for the composition owner. The April v2
 // constructor and main wiring retain their existing accepted source version.
 func NewMinIOSeptemberEffectivePublicationPermissionReader(input MinIOPublicationPermissionInput) (*MinIOPublicationPermissionReader, error) {
-	return newMinIOSeptemberPermissionReader(input)
+	return newMinIOBuiltinFlatPermissionReader(input, ma.SeptemberPermissionProfile)
 }
 
 func newMinIOProfilePermissionReader(input MinIOPublicationPermissionInput, permission string) (*MinIOPublicationPermissionReader, error) {
 	switch permission {
 	case ma.PermissionProfile:
 		return NewMinIOEffectivePublicationPermissionV2Reader(input)
-	case ma.SeptemberPermissionProfile:
-		return newMinIOSeptemberPermissionReader(input)
+	case ma.SeptemberPermissionProfile, ma.DeleteCompatPermissionProfile:
+		return newMinIOBuiltinFlatPermissionReader(input, permission)
 	}
 	return nil, minioPermissionFailure("unsupported-native-source-profile")
 }
@@ -57,7 +57,7 @@ func minioCurrentProfileOwner(r *MinIOPublicationPermissionReader, permission st
 	if permission == ma.PermissionProfile {
 		return r.effectiveOwnerV2(ctx, k, now)
 	}
-	return r.effectiveOwnerSeptember(ctx, k, now)
+	return r.effectiveOwnerBuiltinFlat(ctx, k, now, permission)
 }
 
 // Separate closed September Admin response contract. Only bounded usage/stats
@@ -65,6 +65,13 @@ func minioCurrentProfileOwner(r *MinIOPublicationPermissionReader, permission st
 // Actual TLS, owner/config state, six policies and protocol checks are still
 // mandatory: this predicate alone never creates a fresh source observation.
 func (r *minioPermissionHTTP) serverSeptember(ctx context.Context) (string, error) {
+	return r.serverBuiltinFlat(ctx, ma.SeptemberPermissionProfile)
+}
+
+func (r *minioPermissionHTTP) serverBuiltinFlat(ctx context.Context, permission string) (string, error) {
+	if !ma.MatchesBuiltinFlatImage(permission, r.provider.ImageID) {
+		return "", minioPermissionFailure("builtin-flat-provider-image")
+	}
 	raw, status, err := r.get(ctx, "/minio/admin/v3/info", url.Values{"metrics": {"false"}})
 	if err != nil || status != http.StatusOK || minioPermissionUniqueJSON(raw) != nil {
 		return "", minioPermissionFailure("september-native-server-info")
@@ -78,12 +85,11 @@ func (r *minioPermissionHTTP) serverSeptember(ctx context.Context) (string, erro
 			Commit  string `json:"commitID"`
 		} `json:"servers"`
 	}
-	profile, _ := minioNativeProfile(ma.SeptemberPermissionProfile)
 	if json.Unmarshal(raw, &info) != nil || info.DeploymentID != r.provider.DeploymentID || info.Region != r.provider.Region || len(info.Servers) != 1 {
 		return "", minioPermissionFailure("september-native-server-identity")
 	}
 	s := info.Servers[0]
-	if s.State != "online" || s.Version != profile.ServerVersion || s.Commit != profile.ServerCommit {
+	if s.State != "online" || !ma.MatchesNativeServer(permission, s.Version, s.Commit) {
 		return "", minioPermissionFailure("september-native-release-contract")
 	}
 	stable, err := ce.Canonical(info)

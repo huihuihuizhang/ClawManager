@@ -1,6 +1,7 @@
 package install
 
 import (
+	ma "clawreef/internal/systembackupminioauthority"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -107,7 +108,7 @@ func (i *Installer) PrepareOriginalAdoptionArchiveProvider(ctx context.Context, 
 	}
 	minioRaw, err := ReadSourceMaterialFile(d.MinIODefinitionFile)
 	m, decodeErr := DecodeMinIOPermissionDefinition(minioRaw, d.MinIODefinitionSHA256)
-	if err != nil || decodeErr != nil || m.Grant.Profile != "minio-2025-09-07-builtin-flat.v1" ||
+	if err != nil || decodeErr != nil || !ma.MatchesBuiltinFlatImage(m.Grant.Profile, m.Grant.Provider.ImageID) ||
 		m.Grant.Installation != i.plan.Target.InstallationID ||
 		m.Grant.Namespace != i.plan.Target.Namespace || m.Grant.NamespaceUID != i.plan.Target.NamespaceUID {
 		return nil, ErrInstall

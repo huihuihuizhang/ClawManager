@@ -172,7 +172,7 @@ func generateOriginalMinIONativeMaterials(templateFile, templateSHA, directory s
 	}
 	raw, e := pinnedDeploymentFile(templateFile, templateSHA, 262144)
 	var d install.MinIOPermissionDefinition
-	if e != nil || decodePublicationCanonical(raw, &d) != nil || d.Grant.Profile != ma.SeptemberPermissionProfile {
+	if e != nil || decodePublicationCanonical(raw, &d) != nil || !ma.MatchesBuiltinFlatImage(d.Grant.Profile, d.Grant.Provider.ImageID) {
 		return zero, install.ErrInstall
 	}
 	profile, _ := ma.NativeProfile(d.Grant.Profile)
@@ -277,7 +277,7 @@ func generateOriginalMinIONativeMaterials(templateFile, templateSHA, directory s
 		} else {
 			for _, u := range uses {
 				if u.principal.Purpose == r.Purpose {
-					rules, e = minioPermissionObjectRulesV2(r.Purpose, u.bucket, u.root, u.staging)
+					rules, e = minioPermissionObjectRulesForProfile(d.Grant.Profile, r.Purpose, u.bucket, u.root, u.staging)
 				}
 			}
 		}

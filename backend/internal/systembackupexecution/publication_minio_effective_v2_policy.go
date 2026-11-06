@@ -17,6 +17,20 @@ import (
 // sorting. v2 pins normalized ORIGINAL policy content, never response order.
 // Every field is retained and validated by the closed profile after sorting.
 func minioPermissionNormalizedPolicyV2(raw []byte, pin string, rules []minioPermissionRule) ([]byte, error) {
+	normalized, err := minioPermissionCanonicalPolicyOrder(raw, false)
+	if err != nil {
+		return nil, err
+	}
+	if minioPermissionPolicy(normalized, pin, rules) != nil {
+		return nil, minioPermissionFailure("v2-original-normalized-policy")
+	}
+	return normalized, nil
+}
+
+// generatedOnly limits the readback comparison to the native installer's
+// exact array-based Allow document. Preserve each statement and reject
+// fields or representations the generator does not produce.
+func minioPermissionCanonicalPolicyOrder(raw []byte, generatedOnly bool) ([]byte, error) {
 	if minioPermissionUniqueJSON(raw) != nil {
 		return nil, minioPermissionFailure("v2-policy-json")
 	}
@@ -28,9 +42,18 @@ func minioPermissionNormalizedPolicyV2(raw []byte, pin string, rules []minioPerm
 	if json.Unmarshal(doc["Statement"], &statements) != nil {
 		return nil, minioPermissionFailure("v2-policy-statements")
 	}
+	if generatedOnly && (len(doc) != 2 || !bytes.Equal(bytes.TrimSpace(doc["Version"]), []byte(`"2012-10-17"`)) || len(statements) == 0 || len(statements) > 8) {
+		return nil, minioPermissionFailure("native-generated-policy-shape")
+	}
 	canonicalStatements := []json.RawMessage{}
 	for _, st := range statements {
+		if generatedOnly && (len(st) != 3 || !bytes.Equal(bytes.TrimSpace(st["Effect"]), []byte(`"Allow"`))) {
+			return nil, minioPermissionFailure("native-generated-statement-shape")
+		}
 		for _, key := range []string{"Action", "Resource"} {
+			if generatedOnly && !bytes.HasPrefix(bytes.TrimSpace(st[key]), []byte("[")) {
+				return nil, minioPermissionFailure("native-generated-policy-set")
+			}
 			values, err := minioPermissionStrings(st[key])
 			if err != nil {
 				return nil, err
@@ -54,7 +77,7 @@ func minioPermissionNormalizedPolicyV2(raw []byte, pin string, rules []minioPerm
 		return nil, err
 	}
 	normalized, err := ce.Canonical(doc)
-	if err != nil || minioPermissionPolicy(normalized, pin, rules) != nil {
+	if err != nil {
 		return nil, minioPermissionFailure("v2-original-normalized-policy")
 	}
 	return normalized, nil
@@ -78,7 +101,7 @@ func (r *minioPermissionHTTP) effectiveSelfPolicyV2(ctx context.Context, account
 	if json.Unmarshal(raw, &fields) != nil || len(fields) != 4 || fields["AccountName"] == nil || fields["Server"] == nil || fields["Policy"] == nil || fields["Buckets"] == nil || minioPermissionDecode(raw, &reply) != nil || reply.AccountName != account || len(reply.Server) == 0 {
 		return "", minioPermissionFailure("effective-original-current-policy")
 	}
-	normalized, err := minioPermissionNormalizedPolicyV2(reply.Policy, policySHA, rules)
+	normalized, err := r.normalizedBuiltinFlatPolicy(ctx, reply.Policy, policySHA, rules)
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +151,7 @@ func (r *minioPermissionHTTP) userAndPolicyV2(ctx context.Context, account, poli
 	if minioPermissionDecode(policyRaw, &policy) != nil || policy.PolicyName != policyName || policy.UpdateDate.IsZero() {
 		return "", minioPermissionFailure("native-exact-policy")
 	}
-	normalized, err := minioPermissionNormalizedPolicyV2(policy.Policy, policySHA, rules)
+	normalized, err := r.normalizedBuiltinFlatPolicy(ctx, policy.Policy, policySHA, rules)
 	if err != nil {
 		return "", err
 	}

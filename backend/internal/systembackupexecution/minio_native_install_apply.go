@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"clawreef/internal/systembackupinstallationowner/install"
+	ma "clawreef/internal/systembackupminioauthority"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -76,7 +77,7 @@ func InspectOriginalMinIONativeProvider(ctx context.Context, templateFile, templ
 		} `json:"servers"`
 	}
 	profile, ok := minioNativeProfile(d.Grant.Profile)
-	if !ok || profile.ServerVersion != "2025-09-07T16:13:09Z" || d.Version != profile.Definition || e != nil || status != 200 || minioPermissionUniqueJSON(raw) != nil || json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || info.Servers[0].Version != profile.ServerVersion || info.Servers[0].Commit != profile.ServerCommit || provider.DeploymentID != "" && provider.DeploymentID != info.DeploymentID {
+	if !ok || !ma.MatchesBuiltinFlatImage(d.Grant.Profile, provider.ImageID) || d.Version != profile.Definition || e != nil || status != 200 || minioPermissionUniqueJSON(raw) != nil || json.Unmarshal(raw, &info) != nil || info.DeploymentID == "" || info.Region != provider.Region || len(info.Servers) != 1 || info.Servers[0].State != "online" || !ma.MatchesNativeServer(d.Grant.Profile, info.Servers[0].Version, info.Servers[0].Commit) || provider.DeploymentID != "" && provider.DeploymentID != info.DeploymentID {
 		return nil, install.ErrInstall
 	}
 	return map[string]string{"Version": "original-minio-authenticated-provider-observation.v1", "TemplateSHA256": templateSHA, "Endpoint": provider.Endpoint, "CASHA256": provider.CASHA256, "SPKISHA256": provider.SPKISHA256, "DeploymentID": info.DeploymentID, "ServerVersion": profile.ServerVersion, "ServerCommit": profile.ServerCommit}, nil
@@ -218,7 +219,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 		b, e = pinnedDeploymentFile(r.PolicyFile, r.PolicySHA256, 16384)
 		rules := minioPermissionObserverRulesV2(p.uses)
 		if r.Purpose != "observer" {
-			rules, e = minioPermissionObjectRulesV2(r.Purpose, u.bucket, u.root, u.staging)
+			rules, e = minioPermissionObjectRulesForProfile(p.grant.Profile, r.Purpose, u.bucket, u.root, u.staging)
 		}
 		if e != nil {
 			return receipt, e
@@ -366,7 +367,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 		}
 		rules := minioPermissionObserverRulesV2(p.uses)
 		if r.Purpose != "observer" {
-			rules, e = minioPermissionObjectRulesV2(r.Purpose, u.bucket, u.root, u.staging)
+			rules, e = minioPermissionObjectRulesForProfile(p.grant.Profile, r.Purpose, u.bucket, u.root, u.staging)
 		}
 		if e != nil {
 			return receipt, e
@@ -385,7 +386,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 			if status != 200 || minioPermissionDecode(raw, &policy) != nil || policy.PolicyName != r.PolicyName {
 				return receipt, install.ErrInstall
 			}
-			if _, e = minioPermissionNormalizedPolicyV2(policy.Policy, r.PolicySHA256, rules); e != nil {
+			if _, e = n.normalizedBuiltinFlatPolicy(ctx, policy.Policy, r.PolicySHA256, rules); e != nil {
 				return receipt, e
 			}
 		}
@@ -429,11 +430,7 @@ func ApplyOriginalMinIONativeMaterials(ctx context.Context, owner *install.Insta
 }
 
 func (n *minioPermissionHTTP) collectNativeInstallServer(ctx context.Context, profile string) (string, error) {
-	p, ok := minioNativeProfile(profile)
-	if !ok || p.ServerVersion != "2025-09-07T16:13:09Z" {
-		return "", install.ErrInstall
-	}
-	return n.serverSeptember(ctx)
+	return n.serverBuiltinFlat(ctx, profile)
 }
 func minioPermissionKubernetesCheck(ctx context.Context, kube kubernetes.Interface, p *minioPermissionProductionInputs) error {
 	_, e := minioPermissionKubernetes(ctx, kube, p.configuration, p.grant.Provider)

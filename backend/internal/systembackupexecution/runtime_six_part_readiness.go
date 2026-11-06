@@ -185,8 +185,8 @@ func newRuntimeReadinessPermissionReader(input RuntimeReadinessInput) (*MinIOPub
 	switch input.Profile {
 	case ma.PermissionProfile:
 		return NewMinIOEffectivePublicationPermissionV2Reader(input.Source)
-	case ma.SeptemberPermissionProfile:
-		return NewMinIOSeptemberEffectivePublicationPermissionReader(input.Source)
+	case ma.SeptemberPermissionProfile, ma.DeleteCompatPermissionProfile:
+		return newMinIOBuiltinFlatPermissionReader(input.Source, input.Profile)
 	default:
 		return nil, d.ErrNotReady
 	}

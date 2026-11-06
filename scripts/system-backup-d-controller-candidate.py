@@ -28,6 +28,7 @@ READINESS_PROFILE_ENV = "SYSTEM_BACKUP_READINESS_MINIO_PROFILE"
 READINESS_SOURCES = {
     "minio-2025-04-22-builtin-flat.v1": "minio-publication-effective-permission-source.v2",
     "minio-2025-09-07-builtin-flat.v1": "minio-publication-september-effective-permission-source.v1",
+    "minio-2026-11-05-delete-compat-builtin-flat.v1": "minio-publication-delete-compat-effective-permission-source.v1",
 }
 PUBLICATION_POLICY_PROTOCOL = "system-backup-original-publication-policy.v1"
 

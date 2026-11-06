@@ -4,7 +4,7 @@ import importlib.util
 import secrets
 from pathlib import Path
 
-DEPLOYMENT_SHA = "d6a53c6a804fc56afc697ee84a1f38673c0d67b6ce65436bdbdc204dbfc8cfd3"
+DEPLOYMENT_SHA = "adb21932f8df6d6503630d93674083f73c0b0faadf215292363916631f354eb0"
 
 
 def prepare(operator, query=False):

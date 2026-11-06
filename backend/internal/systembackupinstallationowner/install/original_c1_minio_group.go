@@ -70,7 +70,7 @@ func (p *OriginalC1Production) newMinIOReferenceObservation(ctx context.Context,
 		return nil, ErrInstall
 	}
 	d, err := DecodeMinIOPermissionDefinition(raw, pin.SHA256)
-	if err != nil || d.Grant.Profile != ma.SeptemberPermissionProfile || d.ConfigSHA256 != p.request.config.SHA256() || d.Grant.Installation != string(p.domain.Scope.Installation) || d.Grant.Namespace != n.actor.Namespace || d.Grant.NamespaceUID != n.actor.NamespaceUID || time.Now().Before(d.Grant.NotBefore) {
+	if err != nil || !ma.MatchesBuiltinFlatImage(d.Grant.Profile, d.Grant.Provider.ImageID) || d.ConfigSHA256 != p.request.config.SHA256() || d.Grant.Installation != string(p.domain.Scope.Installation) || d.Grant.Namespace != n.actor.Namespace || d.Grant.NamespaceUID != n.actor.NamespaceUID || time.Now().Before(d.Grant.NotBefore) {
 		return nil, ErrInstall
 	}
 	targetPin := BootstrapSourceFilePin{File: d.TargetFile, SHA256: d.TargetSHA256}

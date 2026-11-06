@@ -153,7 +153,7 @@ func validProvider(p Provider) bool {
 	return true
 }
 func validPermissionSource(p PermissionSource) bool {
-	return (p.Profile == PermissionProfile || p.Profile == SeptemberPermissionProfile) && validObject(p.Grant) && validObject(p.Head) && p.Grant.Name != p.Head.Name && validDigest(p.GrantSHA256) && validDigest(p.InitialHeadSHA256) && validDigest(p.ObserverAccountSHA256) && validDigest(p.ObserverCredentialFileSHA256) && validDigest(p.ObserverLocatorSHA256) && idSyntax.MatchString(p.ObserverPolicyName) && validDigest(p.ObserverNormalizedPolicySHA256)
+	return (p.Profile == PermissionProfile || p.Profile == SeptemberPermissionProfile || p.Profile == DeleteCompatPermissionProfile) && validObject(p.Grant) && validObject(p.Head) && p.Grant.Name != p.Head.Name && validDigest(p.GrantSHA256) && validDigest(p.InitialHeadSHA256) && validDigest(p.ObserverAccountSHA256) && validDigest(p.ObserverCredentialFileSHA256) && validDigest(p.ObserverLocatorSHA256) && idSyntax.MatchString(p.ObserverPolicyName) && validDigest(p.ObserverNormalizedPolicySHA256)
 }
 func validPrefix(v string) bool {
 	return v != "" && len(v) <= 512 && strings.HasSuffix(v, "/") && !strings.HasPrefix(v, "/") && !strings.ContainsAny(v, "*?[]\\\x00\r\n") && !strings.Contains(v, "../") && !strings.Contains(v, "//")

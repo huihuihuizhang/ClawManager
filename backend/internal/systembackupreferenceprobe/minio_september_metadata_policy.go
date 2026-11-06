@@ -17,7 +17,7 @@ func (r *minioPermissionHTTP) normalizedSeptemberMetadataPolicy(ctx context.Cont
 	if !exactSeptemberMetadataRules(rules) {
 		return minioPermissionNormalizedPolicyV2(raw, pin, rules)
 	}
-	if _, e := r.serverSeptember(ctx); e != nil {
+	if _, e := r.serverOriginalBackupTarget(ctx); e != nil {
 		return nil, e
 	}
 	normalized, e := mn.NormalizeSeptemberMetadataObserverReadback(raw)

@@ -1003,7 +1003,7 @@ exec /usr/local/bin/system-backup-v2-controller
                   "SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_FILE", "SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_SHA256"}
         need(needed.issubset(environment) and all(environment[n] for n in needed), "complete_public_controller_environment_required")
         need(environment["SYSTEM_BACKUP_ENABLED"] == "true" and environment["SYSTEM_BACKUP_READINESS_MINIO_PROFILE"] in
-             ("minio-2025-04-22-builtin-flat.v1", "minio-2025-09-07-builtin-flat.v1"), "exact_controller_and_readiness_profile_required")
+             ("minio-2025-04-22-builtin-flat.v1", "minio-2025-09-07-builtin-flat.v1", "minio-2026-11-05-delete-compat-builtin-flat.v1"), "exact_controller_and_readiness_profile_required")
         files = {p["File"]: p for p in producer_pins}
         need(len(files) == len(producer_pins), "duplicate_controller_producer_file")
         for value in producer_pins:

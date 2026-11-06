@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	ma "clawreef/internal/systembackupminioauthority"
 	"context"
 	"strings"
 
@@ -34,6 +35,19 @@ func minioPermissionKubernetes(ctx context.Context, k kubernetes.Interface, cfg 
 	}
 	if p.Container == "" || p.ImageID == "" || p.NodeUID == "" {
 		return fail()
+	}
+	if ma.MatchesDeleteCompatImageID(p.ImageID) {
+		for _, containers := range [][]corev1.Container{d.Spec.Template.Spec.Containers, pod.Spec.Containers} {
+			matched := false
+			for _, container := range containers {
+				if container.Name == p.Container {
+					matched = ma.MatchesDeleteCompatImageReference(container.Image)
+				}
+			}
+			if !matched {
+				return fail()
+			}
+		}
 	}
 	found := 0
 	for _, status := range pod.Status.ContainerStatuses {

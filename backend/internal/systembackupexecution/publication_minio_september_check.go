@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	ma "clawreef/internal/systembackupminioauthority"
 	"context"
 	"errors"
 	"time"
@@ -11,6 +12,10 @@ import (
 // a prerequisite. This returns only a private bounded source observation, not
 // permission to publish a task or a guarantee of future S3 operation success.
 func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx context.Context, s *DeploymentService) (MinIOPublicationPermissionObservation, error) {
+	return r.checkCurrentEffectiveBuiltinFlat(ctx, s, ma.SeptemberPermissionProfile)
+}
+
+func (r *MinIOPublicationPermissionReader) checkCurrentEffectiveBuiltinFlat(ctx context.Context, s *DeploymentService, permission string) (MinIOPublicationPermissionObservation, error) {
 	var zero MinIOPublicationPermissionObservation
 	if ctx == nil || ctx.Err() != nil || r == nil || s == nil || s.Runtime == nil || s.Runtime.Owner == nil || s.Forward == nil || s.publisherVerifierDB == nil || r.configuration.Installation != s.Config.InstallationID || r.configuration.Namespace != s.Config.Namespace || r.configuration.NamespaceUID != s.Config.NamespaceUID {
 		return zero, minioPermissionFailure("effective-current-composition")
@@ -36,7 +41,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if err != nil {
 		return zero, err
 	}
-	owner, err := r.effectiveOwnerSeptember(ctx, s.Runtime.Owner.Client, current.now)
+	owner, err := r.effectiveOwnerBuiltinFlat(ctx, s.Runtime.Owner.Client, current.now, permission)
 	if err != nil {
 		return zero, err
 	}
@@ -90,20 +95,20 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	// Each full pass brackets actual self policy with original observer source
 	// reads. These bind enabled regular-user status, exact original mappings,
 	// named policy hash, bucket policy/versioning and exact upstream version.
-	first, err := native.collectSeptember(ctx, r.configuration, uses)
+	first, err := native.collectBuiltinFlat(ctx, r.configuration, uses, permission)
 	if err != nil {
 		return zero, err
 	}
 	// Paired native self-policy and forbidden-help GETs cover ALL six accounts.
-	selfFirst, err := minioEffectiveGuardAllV2(ctx, p, r.configuration, uses, native.credential)
+	selfFirst, err := minioEffectiveGuardAllForProfile(ctx, p, r.configuration, uses, native.credential, owner.grant.Profile)
 	if err != nil {
 		return zero, err
 	}
-	selfLast, err := minioEffectiveGuardAllV2(ctx, p, r.configuration, uses, native.credential)
+	selfLast, err := minioEffectiveGuardAllForProfile(ctx, p, r.configuration, uses, native.credential, owner.grant.Profile)
 	if err != nil || selfLast != selfFirst {
 		return zero, minioPermissionFailure("v2-effective-owner-guard-tail-drift")
 	}
-	last, err := native.collectSeptember(ctx, r.configuration, uses)
+	last, err := native.collectBuiltinFlat(ctx, r.configuration, uses, permission)
 	if err != nil || last != first {
 		return zero, minioPermissionFailure("effective-native-tail-drift")
 	}
@@ -118,7 +123,7 @@ func (r *MinIOPublicationPermissionReader) CheckCurrentEffectiveSeptember(ctx co
 	if tail.identity != current.identity || tail.now.Before(current.now) {
 		return zero, minioPermissionFailure("effective-sql-tail-drift")
 	}
-	lastOwner, err := r.effectiveOwnerSeptember(ctx, s.Runtime.Owner.Client, tail.now)
+	lastOwner, err := r.effectiveOwnerBuiltinFlat(ctx, s.Runtime.Owner.Client, tail.now, permission)
 	if err != nil || lastOwner.stamp != owner.stamp {
 		return zero, minioPermissionFailure("effective-owner-tail-drift")
 	}

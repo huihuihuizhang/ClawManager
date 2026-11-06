@@ -1,6 +1,7 @@
 package install
 
 import (
+	ma "clawreef/internal/systembackupminioauthority"
 	"context"
 	"path"
 	"reflect"
@@ -24,13 +25,18 @@ func classifyOriginalBackupNativePeer(ctx context.Context, p *PreparedOriginalAd
 		return zero, ErrInstall
 	}
 	profile := ""
-	switch status.ImageID {
-	case originalPeerMinIOImage:
+	switch {
+	case ma.MatchesDeleteCompatImageID(status.ImageID):
+		if !ma.MatchesDeleteCompatImageReference(c.Image) || !originalPeerMinIOEntry(spec, c) {
+			return zero, errOriginalBackupConsumerUnclassified
+		}
+		profile = "original-held-native-minio-delete-compat-server-startup.v1"
+	case status.ImageID == originalPeerMinIOImage:
 		if !originalPeerMinIOEntry(spec, c) {
 			return zero, errOriginalBackupConsumerUnclassified
 		}
 		profile = "original-held-native-minio-server-startup.v1"
-	case originalPeerVaultImage:
+	case status.ImageID == originalPeerVaultImage:
 		if !originalPeerVaultEntry(spec, c) {
 			return zero, errOriginalBackupConsumerUnclassified
 		}

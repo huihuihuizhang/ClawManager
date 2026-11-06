@@ -137,7 +137,7 @@ func PlanOriginalMinIOPermissionPolicies(file, sha string) ([]MinIOPermissionPol
 		return nil
 	}
 	for _, u := range p.uses {
-		rules, e := minioPermissionObjectRulesV2(u.principal.Purpose, u.bucket, u.root, u.staging)
+		rules, e := minioPermissionObjectRulesForProfile(p.grant.Profile, u.principal.Purpose, u.bucket, u.root, u.staging)
 		if e != nil {
 			return nil, e
 		}
@@ -191,11 +191,11 @@ func observeOriginalMinIOPermissionsWithRecovery(ctx context.Context, kube kuber
 	if err != nil {
 		return zero, err
 	}
-	guard, err := minioEffectiveGuardAllV2(ctx, p.grant.Provider, p.configuration, p.uses, p.observer)
+	guard, err := minioEffectiveGuardAllForProfile(ctx, p.grant.Provider, p.configuration, p.uses, p.observer, p.grant.Profile)
 	if err != nil {
 		return zero, err
 	}
-	tailGuard, err := minioEffectiveGuardAllV2(ctx, p.grant.Provider, p.configuration, p.uses, p.observer)
+	tailGuard, err := minioEffectiveGuardAllForProfile(ctx, p.grant.Provider, p.configuration, p.uses, p.observer, p.grant.Profile)
 	if err != nil || tailGuard != guard {
 		return zero, minioPermissionFailure("producer-effective-tail-drift")
 	}

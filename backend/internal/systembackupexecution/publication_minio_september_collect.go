@@ -6,9 +6,9 @@ import (
 	"sort"
 )
 
-func (r *minioPermissionHTTP) collectSeptember(ctx context.Context, cfg minioPermissionConfiguration, uses []minioPermissionUse) (string, error) {
+func (r *minioPermissionHTTP) collectBuiltinFlat(ctx context.Context, cfg minioPermissionConfiguration, uses []minioPermissionUse, permission string) (string, error) {
 	stamps := []string{}
-	server, err := r.serverSeptember(ctx)
+	server, err := r.serverBuiltinFlat(ctx, permission)
 	if err != nil {
 		return "", err
 	}
@@ -36,7 +36,7 @@ func (r *minioPermissionHTTP) collectSeptember(ctx context.Context, cfg minioPer
 		if hash([]byte(use.credential.AccessKey)) != use.principal.AccountSHA256 || use.credential.SessionToken != "" || use.credential.AccessKey == r.credential.AccessKey {
 			return "", minioPermissionFailure("original-principal-account")
 		}
-		rules, err := minioPermissionObjectRulesV2(use.principal.Purpose, use.bucket, use.root, use.staging)
+		rules, err := minioPermissionObjectRulesForProfile(permission, use.principal.Purpose, use.bucket, use.root, use.staging)
 		if err != nil {
 			return "", err
 		}

@@ -33,8 +33,8 @@ func (s *DeploymentService) observeRuntimePublicationSources(ctx context.Context
 	switch input.Profile {
 	case ma.PermissionProfile:
 		provider, err = reader.CheckCurrentEffectiveV2(ctx, s)
-	case ma.SeptemberPermissionProfile:
-		provider, err = reader.CheckCurrentEffectiveSeptember(ctx, s)
+	case ma.SeptemberPermissionProfile, ma.DeleteCompatPermissionProfile:
+		provider, err = reader.checkCurrentEffectiveBuiltinFlat(ctx, s, input.Profile)
 	default:
 		return zero, "", d.ErrNotReady
 	}
@@ -55,7 +55,7 @@ func (s *DeploymentService) observeRuntimePublicationSources(ctx context.Context
 // Identity projection DATA, not a constructor of permission. Observation time
 // may advance; its original source/native identities may not change mid-attempt.
 func runtimePublicationSourceStamp(provider MinIOPublicationPermissionObservation, profile string) (string, error) {
-	if profile != ma.PermissionProfile && profile != ma.SeptemberPermissionProfile {
+	if profile != ma.PermissionProfile && profile != ma.SeptemberPermissionProfile && profile != ma.DeleteCompatPermissionProfile {
 		return "", d.ErrNotReady
 	}
 	for _, value := range []string{provider.configuration, provider.owner, provider.resources, provider.native} {

@@ -259,7 +259,7 @@ func observeS3Pass(ctx context.Context, c S3Profile, creds []nativePublicationCr
 		return "", e
 	}
 	defer r.close()
-	server, e := r.serverSeptember(ctx)
+	server, e := r.serverOriginalBackupTarget(ctx)
 	if e != nil {
 		return "", e
 	}

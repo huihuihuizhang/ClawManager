@@ -12,10 +12,14 @@ import (
 )
 
 // September has a separate original source version and signed permission profile.
-func newMinIOSeptemberPermissionReader(input MinIOPublicationPermissionInput) (*MinIOPublicationPermissionReader, error) {
+func newMinIOBuiltinFlatPermissionReader(input MinIOPublicationPermissionInput, permission string) (*MinIOPublicationPermissionReader, error) {
+	profile, ok := minioNativeProfile(permission)
+	if !ok || permission != ma.SeptemberPermissionProfile && permission != ma.DeleteCompatPermissionProfile {
+		return nil, minioPermissionFailure("effective-builtin-flat-profile")
+	}
 	raw, err := pinnedDeploymentFile(input.File, input.SHA256, 65536)
 	var cfg minioEffectivePermissionConfiguration
-	if err != nil || decodePublicationCanonical(raw, &cfg) != nil || cfg.Version != "minio-publication-september-effective-permission-source.v1" || cfg.Installation == "" || cfg.Namespace == "" || cfg.NamespaceUID == "" || len(cfg.Issuer) != ed25519.PublicKeySize || cfg.MinimumEpoch == 0 || !formalCandidateDigest(cfg.GrantSHA256) || !formalCandidateDigest(cfg.ObserverCredentialSHA256) || !formalCandidateDigest(cfg.ObserverAccountSHA256) || !formalCandidateDigest(cfg.ObserverPolicySHA256) || !minioPermissionName(cfg.ObserverPolicyName) || !minioPermissionName(cfg.Grant.Name) || !minioPermissionName(cfg.Head.Name) || cfg.Grant.UID == "" || cfg.Head.UID == "" || cfg.Grant.Name == cfg.Head.Name {
+	if err != nil || decodePublicationCanonical(raw, &cfg) != nil || cfg.Version != profile.Source || cfg.Installation == "" || cfg.Namespace == "" || cfg.NamespaceUID == "" || len(cfg.Issuer) != ed25519.PublicKeySize || cfg.MinimumEpoch == 0 || !formalCandidateDigest(cfg.GrantSHA256) || !formalCandidateDigest(cfg.ObserverCredentialSHA256) || !formalCandidateDigest(cfg.ObserverAccountSHA256) || !formalCandidateDigest(cfg.ObserverPolicySHA256) || !minioPermissionName(cfg.ObserverPolicyName) || !minioPermissionName(cfg.Grant.Name) || !minioPermissionName(cfg.Head.Name) || cfg.Grant.UID == "" || cfg.Head.UID == "" || cfg.Grant.Name == cfg.Head.Name {
 		return nil, minioPermissionFailure("effective-independent-source-pin")
 	}
 	shared := minioPermissionConfiguration{Version: cfg.Version, Installation: cfg.Installation, Namespace: cfg.Namespace, NamespaceUID: cfg.NamespaceUID, Issuer: cfg.Issuer, MinimumEpoch: cfg.MinimumEpoch, Grant: cfg.Grant, Head: cfg.Head, GrantSHA256: cfg.GrantSHA256, ObserverCredentialFile: cfg.ObserverCredentialFile, ObserverCredentialSHA256: cfg.ObserverCredentialSHA256, ObserverAccountSHA256: cfg.ObserverAccountSHA256, ObserverPolicyName: cfg.ObserverPolicyName, ObserverPolicySHA256: cfg.ObserverPolicySHA256}
@@ -26,12 +30,12 @@ func newMinIOSeptemberPermissionReader(input MinIOPublicationPermissionInput) (*
 // head. EngineSHA256 is intentionally not used as a permission assertion in
 // this source: current effective policy comes from actual native self reads.
 // This method neither creates a source nor signs/enrolls a grant or head.
-func (r *MinIOPublicationPermissionReader) effectiveOwnerSeptember(ctx context.Context, k kubernetes.Interface, now time.Time) (minioPermissionOwnerState, error) {
+func (r *MinIOPublicationPermissionReader) effectiveOwnerBuiltinFlat(ctx context.Context, k kubernetes.Interface, now time.Time, permission string) (minioPermissionOwnerState, error) {
 	var out minioPermissionOwnerState
 	if ctx == nil || ctx.Err() != nil || r == nil || k == nil {
 		return out, minioPermissionFailure("effective-owner-source")
 	}
-	current, err := newMinIOSeptemberPermissionReader(r.input)
+	current, err := newMinIOBuiltinFlatPermissionReader(r.input, permission)
 	if err != nil {
 		return out, err
 	}
@@ -63,7 +67,7 @@ func (r *MinIOPublicationPermissionReader) effectiveOwnerSeptember(ctx context.C
 	}
 	var head minioPermissionHead
 	h, hv, err := read(cfg.Head, minioPermissionHeadDomain, &head)
-	if err != nil || head.Version != "minio-permission-head.v1" || head.Installation != cfg.Installation || head.State != "active" || head.GrantSHA256 != cfg.GrantSHA256 || head.Epoch < cfg.MinimumEpoch || out.grant.Version != "minio-permission-grant.v1" || out.grant.Installation != cfg.Installation || out.grant.Namespace != cfg.Namespace || out.grant.NamespaceUID != cfg.NamespaceUID || out.grant.Epoch != head.Epoch || out.grant.Profile != ma.SeptemberPermissionProfile || out.window.include(now, out.grant.NotBefore, out.grant.Until) != nil || out.window.include(now, head.NotBefore, head.Until) != nil {
+	if err != nil || head.Version != "minio-permission-head.v1" || head.Installation != cfg.Installation || head.State != "active" || head.GrantSHA256 != cfg.GrantSHA256 || head.Epoch < cfg.MinimumEpoch || out.grant.Version != "minio-permission-grant.v1" || out.grant.Installation != cfg.Installation || out.grant.Namespace != cfg.Namespace || out.grant.NamespaceUID != cfg.NamespaceUID || out.grant.Epoch != head.Epoch || out.grant.Profile != permission || !ma.MatchesBuiltinFlatImage(permission, out.grant.Provider.ImageID) || out.window.include(now, out.grant.NotBefore, out.grant.Until) != nil || out.window.include(now, head.NotBefore, head.Until) != nil {
 		return out, minioPermissionFailure("effective-current-owner-head")
 	}
 	stamp, _ := ce.Canonical([]string{cfg.NamespaceUID, cfg.Grant.UID, cfg.Head.UID, hash(g), hash(h), gv, hv})

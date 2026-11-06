@@ -46,7 +46,7 @@ func ObserveOriginalS3OwnerTarget(ctx context.Context, kube kubernetes.Interface
 		return ErrObservation
 	}
 	defer r.close()
-	a, err := r.serverSeptember(ctx)
+	a, err := r.serverOriginalBackupTarget(ctx)
 	if err != nil {
 		return ErrObservation
 	}
@@ -54,7 +54,7 @@ func ObserveOriginalS3OwnerTarget(ctx context.Context, kube kubernetes.Interface
 	if err != nil || status != http.StatusOK {
 		return ErrObservation
 	}
-	b, err := r.serverSeptember(ctx)
+	b, err := r.serverOriginalBackupTarget(ctx)
 	if err != nil || a != b {
 		return ErrObservation
 	}

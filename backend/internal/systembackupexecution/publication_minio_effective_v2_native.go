@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	ce "clawreef/internal/systembackupcontrolevidence"
+	ma "clawreef/internal/systembackupminioauthority"
 )
 
 // v2 adds the exact native DeleteObject action on staging only. The
@@ -20,6 +21,19 @@ func minioPermissionObjectRulesV2(purpose, bucket, root, staging string) ([]mini
 		rules[0].Actions = []string{"s3:DeleteObject", "s3:DeleteObjectVersion"}
 	}
 	return rules, nil
+}
+
+// The patched provider authorizes explicit versions directly. Its artifact
+// delete role uses the original staging-only version rule.
+func minioPermissionObjectRulesForProfile(permission, purpose, bucket, root, staging string) ([]minioPermissionRule, error) {
+	switch permission {
+	case ma.DeleteCompatPermissionProfile:
+		return minioPermissionObjectRules(purpose, bucket, root, staging)
+	case ma.PermissionProfile, ma.SeptemberPermissionProfile:
+		return minioPermissionObjectRulesV2(purpose, bucket, root, staging)
+	default:
+		return nil, minioPermissionFailure("original-policy-profile")
+	}
 }
 
 func (r *minioPermissionHTTP) collectV2(ctx context.Context, cfg minioPermissionConfiguration, uses []minioPermissionUse) (string, error) {
@@ -74,12 +88,16 @@ func (r *minioPermissionHTTP) collectV2(ctx context.Context, cfg minioPermission
 }
 
 func minioEffectiveGuardAllV2(ctx context.Context, p minioPermissionProvider, cfg minioPermissionConfiguration, uses []minioPermissionUse, observer nativePublicationCredential) (string, error) {
+	return minioEffectiveGuardAllForProfile(ctx, p, cfg, uses, observer, ma.PermissionProfile)
+}
+
+func minioEffectiveGuardAllForProfile(ctx context.Context, p minioPermissionProvider, cfg minioPermissionConfiguration, uses []minioPermissionUse, observer nativePublicationCredential, permission string) (string, error) {
 	if len(uses) != 5 {
 		return "", minioPermissionFailure("effective-discriminator-complete-principals")
 	}
 	stamps := []string{}
 	for _, use := range uses {
-		rules, err := minioPermissionObjectRulesV2(use.principal.Purpose, use.bucket, use.root, use.staging)
+		rules, err := minioPermissionObjectRulesForProfile(permission, use.principal.Purpose, use.bucket, use.root, use.staging)
 		if err != nil {
 			return "", err
 		}
