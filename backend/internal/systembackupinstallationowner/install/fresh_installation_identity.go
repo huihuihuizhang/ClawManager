@@ -39,6 +39,12 @@ var freshServerUUID = regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[
 const freshIdentityAbsent = "authenticated_fresh_installation_identity_absent"
 const freshIdentityInitialized = "actual_fresh_installation_identity_initialized_unconfigured"
 
+// FreshIdentityStage reports a fixed checkpoint without exposing native errors.
+type FreshIdentityStage string
+
+func (s FreshIdentityStage) Error() string { return string(s) }
+func (s FreshIdentityStage) Unwrap() error { return ErrInstall }
+
 type freshKubeIdentity struct{ ClusterUID, Username, UID, GroupsSHA256 string }
 
 func readFreshKubeIdentity(ctx context.Context, client kubernetes.Interface, input FreshInstallationIdentityInputs) (freshKubeIdentity, error) {
@@ -179,48 +185,51 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 	}
 	k, _, _, err := openOriginalEnrollmentKubernetes(input.Kubeconfig)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("open_kubernetes")
 	}
 	kube, err := readFreshKubeIdentity(ctx, k, input)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_kubernetes_operator_and_enrollment_absence")
 	}
 	target, err := observeFreshAppDatabase(ctx, k, input)
-	if err != nil || checkFreshAppDatabaseDSN(input.InstallerDSN, target, false) != nil {
-		return zero, ErrInstall
+	if err != nil {
+		return zero, err
+	}
+	if checkFreshAppDatabaseDSN(input.InstallerDSN, target, false) != nil {
+		return zero, FreshIdentityStage("bind_installer_dsn_to_app_service")
 	}
 	db, identity, err := openOriginalEnrollmentDatabase(ctx, input.InstallerDSN, input.DatabaseCA, input.DatabaseTLSServerName)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("open_installer_database")
 	}
 	defer db.Close()
 	if identity.ServerUUID != input.ExpectedServerUUID || identity.Database != input.ExpectedDatabase {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_installer_database_identity")
 	}
 	business, businessID, secret, err := openFreshBusinessDatabase(ctx, k, input, target)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("open_app_business_database")
 	}
 	defer business.Close()
 	if businessID.ServerUUID != identity.ServerUUID || businessID.Database != identity.Database || !strings.HasPrefix(businessID.Account, target.User+"@") {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_app_business_database_identity")
 	}
 	conn, release, err := lockOriginalSQLAccountSession(ctx, db, identity.ServerUUID, identity.Database)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("lock_installation_scope")
 	}
 	defer release()
 	tx, err := conn.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable, ReadOnly: !input.Apply})
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("begin_identity_transaction")
 	}
 	defer tx.Rollback()
 	admin, err := readFreshSQLAdmin(ctx, tx, identity, input.LocalAdminUsername, password)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_tls_and_local_admin")
 	}
 	if checkFreshDatabaseHostname(ctx, tx, target) != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("bind_mysql_hostname_to_endpoint")
 	}
 	id, err := freshInstallationID(input, kube, target, admin)
 	if err != nil {
@@ -228,15 +237,15 @@ func InitializeFreshInstallationIdentity(ctx context.Context, password []byte, i
 	}
 	state, err := readFreshSQLInstallation(ctx, tx, id)
 	if err != nil {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_unconfigured_sql_state")
 	}
 	current, err := readFreshKubeIdentity(ctx, k, input)
 	if err != nil || current != kube {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("recheck_kubernetes_operator")
 	}
 	currentTarget, err := observeFreshAppDatabase(ctx, k, input)
 	if err != nil || currentTarget != target || !sameFreshAppDatabaseSecret(ctx, k, input, target, secret) {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("recheck_app_database_and_secret")
 	}
 	write := input.Apply && state == freshIdentityAbsent
 	if write {

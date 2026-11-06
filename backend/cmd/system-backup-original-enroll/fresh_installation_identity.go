@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"clawreef/internal/systembackupinstallationowner/install"
@@ -53,24 +55,28 @@ func runFreshInstallationIdentity(ctx context.Context, args []string, out io.Wri
 		sum := sha256.Sum256(raw)
 		return install.BootstrapSourceFilePin{File: file, SHA256: hex.EncodeToString(sum[:])}, nil
 	}
+	refuse := func(stage install.FreshIdentityStage) int {
+		fmt.Fprintln(os.Stderr, "fresh_identity_check_failed="+string(stage))
+		return 1
+	}
 	installer, err := pin(*installerFile, 16384)
 	if err != nil {
-		return 1
+		return refuse("read_installer_dsn")
 	}
 	var business install.BootstrapSourceFilePin
 	if !*useAppSecret {
 		business, err = pin(*businessFile, 16384)
 		if err != nil {
-			return 1
+			return refuse("read_business_dsn")
 		}
 	}
 	ca, err := pin(*caFile, 65536)
 	if err != nil {
-		return 1
+		return refuse("read_database_ca")
 	}
 	password, err := install.ReadPrivateFile(*passwordFile, 1024)
 	if err != nil {
-		return 1
+		return refuse("read_local_admin_password_file")
 	}
 	defer clear(password)
 	active, cancel := context.WithTimeout(ctx, 2*time.Minute)
@@ -84,7 +90,9 @@ func runFreshInstallationIdentity(ctx context.Context, args []string, out io.Wri
 		return 3
 	}
 	if err != nil {
-		return 1
+		stage := install.FreshIdentityStage("unclassified")
+		errors.As(err, &stage)
+		return refuse(stage)
 	}
 	if json.NewEncoder(out).Encode(receipt) != nil {
 		return 3

@@ -126,15 +126,15 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 	var zero freshAppDatabase
 	app, err := client.AppsV1().Deployments(input.Namespace).Get(ctx, input.AppDeployment, metav1.GetOptions{})
 	if err != nil || string(app.UID) != input.AppDeploymentUID || !freshReadyDeployment(app) || app.Spec.Selector == nil || len(app.Spec.Selector.MatchLabels) == 0 || len(app.Spec.Selector.MatchExpressions) != 0 {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_ready_app_deployment")
 	}
 	env, err := readFreshAppDBEnv(app.Spec.Template.Spec, input.UseAppDatabaseSecret)
 	if err != nil || env.Database != input.ExpectedDatabase || env.CASHA != input.DatabaseCA.SHA256 || env.TLSName != input.DatabaseTLSServerName {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_app_database_environment")
 	}
 	appPods, err := client.CoreV1().Pods(input.Namespace).List(ctx, metav1.ListOptions{LabelSelector: labels.Set(app.Spec.Selector.MatchLabels).String(), Limit: 17})
 	if err != nil || appPods.Continue != "" || len(appPods.Items) != int(*app.Spec.Replicas) {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("list_exact_app_pods")
 	}
 	var appPins []string
 	for n := range appPods.Items {
@@ -143,7 +143,7 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 		podEnv, envErr := readFreshAppDBEnv(pod.Spec, input.UseAppDatabaseSecret)
 		container := freshReadyContainer(pod)
 		if err != nil || dep.UID != app.UID || envErr != nil || podEnv != env || container == "" {
-			return zero, ErrInstall
+			return zero, FreshIdentityStage("verify_app_pod_owner_and_environment")
 		}
 		appPins = append(appPins, originalObjectSHA([]string{string(pod.UID), container, originalObjectSHA(pod.Spec)}))
 	}
@@ -151,46 +151,46 @@ func observeFreshAppDatabase(ctx context.Context, client kubernetes.Interface, i
 	serviceName := freshAppServiceName(env.Host, input.Namespace)
 	port, err := strconv.Atoi(env.Port)
 	if err != nil || port < 1 || port > 65535 || strconv.Itoa(port) != env.Port || serviceName == "" {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("resolve_app_database_service_name")
 	}
 	service, err := client.CoreV1().Services(input.Namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil || service.UID == "" || service.DeletionTimestamp != nil || service.Spec.Type != corev1.ServiceTypeClusterIP || net.ParseIP(service.Spec.ClusterIP) == nil || len(service.Spec.Selector) == 0 || len(service.Spec.Ports) != 1 {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_service")
 	}
 	servicePort := service.Spec.Ports[0]
 	if servicePort.Port != int32(port) || servicePort.Protocol != corev1.ProtocolTCP || servicePort.TargetPort.IntVal != int32(port) {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_service_port")
 	}
 	slices, err := client.DiscoveryV1().EndpointSlices(input.Namespace).List(ctx, metav1.ListOptions{LabelSelector: labels.Set{"kubernetes.io/service-name": service.Name}.String(), Limit: 2})
 	if err != nil || slices.Continue != "" || len(slices.Items) != 1 {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("list_exact_mysql_endpoint_slice")
 	}
 	slice := slices.Items[0]
 	if slice.UID == "" || slice.DeletionTimestamp != nil || len(slice.OwnerReferences) != 1 || len(slice.Endpoints) != 1 || len(slice.Ports) != 1 {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_endpoint_slice_shape")
 	}
 	owner := slice.OwnerReferences[0]
 	if owner.APIVersion != "v1" || owner.Kind != "Service" || owner.Name != service.Name || owner.UID != service.UID {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_endpoint_slice_owner")
 	}
 	endpoint, endpointPort := slice.Endpoints[0], slice.Ports[0]
 	if endpointPort.Port == nil || *endpointPort.Port != int32(port) || endpointPort.Protocol == nil || *endpointPort.Protocol != corev1.ProtocolTCP || endpointPort.Name == nil || *endpointPort.Name != servicePort.Name ||
 		endpoint.Conditions.Ready == nil || !*endpoint.Conditions.Ready || endpoint.Conditions.Terminating != nil && *endpoint.Conditions.Terminating || endpoint.Conditions.Serving != nil && !*endpoint.Conditions.Serving || len(endpoint.Addresses) != 1 ||
 		endpoint.TargetRef == nil || endpoint.TargetRef.Kind != "Pod" || endpoint.TargetRef.Namespace != input.Namespace || endpoint.TargetRef.UID == "" {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_ready_endpoint")
 	}
 	db, err := client.CoreV1().Pods(input.Namespace).Get(ctx, endpoint.TargetRef.Name, metav1.GetOptions{})
 	if err != nil || db.UID != endpoint.TargetRef.UID || db.Status.PodIP != endpoint.Addresses[0] || net.ParseIP(db.Status.PodIP) == nil || !labels.Set(service.Spec.Selector).AsSelector().Matches(labels.Set(db.Labels)) {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("bind_mysql_endpoint_to_pod")
 	}
 	peers, err := client.CoreV1().Pods(input.Namespace).List(ctx, metav1.ListOptions{LabelSelector: labels.Set(service.Spec.Selector).String(), Limit: 2})
 	if err != nil || peers.Continue != "" || len(peers.Items) != 1 || peers.Items[0].UID != db.UID {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("list_exact_mysql_pods")
 	}
 	deployment, err := freshPodDeployment(ctx, client, db)
 	container := freshReadyContainer(db)
 	if err != nil || *deployment.Spec.Replicas != 1 || deployment.UID == app.UID || container == "" || !freshMySQLDatabaseEnv(db.Spec, env.Database, env.User) {
-		return zero, ErrInstall
+		return zero, FreshIdentityStage("verify_mysql_pod_owner_and_environment")
 	}
 	return freshAppDatabase{AppUID: string(app.UID), AppSpec: originalObjectSHA(app.Spec), AppPods: originalObjectSHA(appPins), ServiceUID: string(service.UID), ServiceSpec: originalObjectSHA(service.Spec),
 		EndpointUID: string(slice.UID), EndpointSpec: originalObjectSHA(slice), DBUID: string(deployment.UID), DBSpec: originalObjectSHA(deployment.Spec), DBPodUID: string(db.UID), DBPodSpec: originalObjectSHA(db.Spec), DBContainer: container,
