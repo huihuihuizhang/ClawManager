@@ -1,9 +1,11 @@
 package mysqltls
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
@@ -39,6 +41,24 @@ func (c Material) Validate() error {
 }
 
 var ErrConfiguration = errors.New("database TLS configuration rejected")
+
+var keyUsageExtension = asn1.ObjectIdentifier{2, 5, 29, 15}
+
+func signingCA(cert *x509.Certificate) bool {
+	if !cert.IsCA || !cert.BasicConstraintsValid {
+		return false
+	}
+	if cert.KeyUsage&x509.KeyUsageCertSign != 0 {
+		return true
+	}
+	for _, extension := range cert.Extensions {
+		if extension.Id.Equal(keyUsageExtension) {
+			return false
+		}
+	}
+	// MySQL's generated root has CA basic constraints but omits KeyUsage.
+	return bytes.Equal(cert.RawIssuer, cert.RawSubject) && cert.CheckSignatureFrom(cert) == nil
+}
 
 func (c Material) Selected() bool {
 	return c.CAFile != "" || c.CASHA256 != "" || c.ServerName != ""
@@ -79,20 +99,25 @@ func (c Material) TLSConfig() (*tls.Config, error) {
 		return nil, ErrConfiguration
 	}
 	roots := x509.NewCertPool()
-	remaining := raw
+	remaining := bytes.TrimSpace(raw)
 	count := 0
-	for len(strings.TrimSpace(string(remaining))) > 0 {
+	for len(remaining) > 0 {
 		block, rest := pem.Decode(remaining)
 		if block == nil || block.Type != "CERTIFICATE" || len(block.Headers) != 0 {
 			return nil, ErrConfiguration
 		}
 		cert, err := x509.ParseCertificate(block.Bytes)
-		if err != nil || !cert.IsCA || !cert.BasicConstraintsValid || cert.KeyUsage&x509.KeyUsageCertSign == 0 {
+		if err != nil || !signingCA(cert) {
 			return nil, ErrConfiguration
 		}
 		roots.AddCert(cert)
 		count++
-		remaining = rest
+		remaining = bytes.TrimSpace(rest)
+		// MySQL's generated single PEM file ends with one NUL. The pin
+		// continues to cover the exact stored bytes, including that byte.
+		if count == 1 && len(remaining) == 1 && remaining[0] == 0 {
+			break
+		}
 	}
 	after, err := os.Lstat(c.CAFile)
 	if err != nil || !os.SameFile(actual, after) || after.Size() != actual.Size() || !after.ModTime().Equal(actual.ModTime()) || count == 0 {

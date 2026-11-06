@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"clawreef/internal/mysqltls"
+
 	apps "k8s.io/api/apps/v1"
 	authentication "k8s.io/api/authentication/v1"
 	authorization "k8s.io/api/authorization/v1"
@@ -434,6 +436,14 @@ func (c *Client) Apply(ctx context.Context, planFile, planSHA, operation string,
 	}
 	if !rollback {
 		if current.Deployment.ResourceVersion != plan.Deployment.ResourceVersion || current.Pod.ResourceVersion != plan.Pod.ResourceVersion {
+			return zero, ErrBootstrap
+		}
+		if !plan.Native.IssuerKeyAvailable || len(plan.DNSNames) == 0 {
+			return zero, ErrBootstrap
+		}
+		trust := mysqltls.Material{CAFile: filepath.Join(c.options.OutputDirectory, "mysql-source-ca.pem"),
+			CASHA256: digest(plan.Native.CA), ServerName: plan.DNSNames[0]}
+		if _, e = trust.TLSConfig(); e != nil {
 			return zero, ErrBootstrap
 		}
 		for _, target := range []struct {

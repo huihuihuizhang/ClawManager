@@ -25,12 +25,16 @@ import (
 )
 
 func mysqlBusinessTLSFixture(t *testing.T) (Material, tls.Certificate) {
+	return mysqlBusinessTLSFixtureCA(t, x509.KeyUsageCertSign|x509.KeyUsageDigitalSignature, nil)
+}
+
+func mysqlBusinessTLSFixtureCA(t *testing.T, usage x509.KeyUsage, trailer []byte) (Material, tls.Certificate) {
 	t.Helper()
 	pub, key, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ca := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "owned protocol fixture CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), BasicConstraintsValid: true, IsCA: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature}
+	ca := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "owned protocol fixture CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), BasicConstraintsValid: true, IsCA: true, KeyUsage: usage}
 	caDER, err := x509.CreateCertificate(rand.Reader, ca, ca, pub, key)
 	if err != nil {
 		t.Fatal(err)
@@ -44,13 +48,29 @@ func mysqlBusinessTLSFixture(t *testing.T) (Material, tls.Certificate) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	raw := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER})
+	raw := append(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER}), trailer...)
 	file := filepath.Join(t.TempDir(), "original-ca.pem")
 	if os.WriteFile(file, raw, 0600) != nil {
 		t.Fatal("CA fixture write")
 	}
 	sum := sha256.Sum256(raw)
 	return Material{CAFile: file, CASHA256: hex.EncodeToString(sum[:]), ServerName: "mysql.original.invalid"}, tls.Certificate{Certificate: [][]byte{der}, PrivateKey: serverKey}
+}
+
+func TestMySQLTLSRejectsUnrelatedPEMTrailerAndExplicitWrongKeyUsage(t *testing.T) {
+	for _, tc := range []struct {
+		usage   x509.KeyUsage
+		trailer []byte
+	}{
+		{usage: x509.KeyUsageDigitalSignature},
+		{trailer: []byte{0, 0}},
+		{trailer: []byte("unrelated contents")},
+	} {
+		material, _ := mysqlBusinessTLSFixtureCA(t, tc.usage, tc.trailer)
+		if _, err := material.TLSConfig(); err == nil {
+			t.Fatal("invalid CA material accepted")
+		}
+	}
 }
 func TestBusinessMySQLTLSSelectionPinsAndIsolation(t *testing.T) {
 	if tlsConfig, err := (Material{}).TLSConfig(); err != nil || tlsConfig != nil {
@@ -121,9 +141,12 @@ func mysqlFixtureRead(r io.Reader) ([]byte, error) {
 // -> auth response -> OK. The peer is an explicit local protocol fixture,
 // not a real MySQL installation or a field certificate/require_secure_transport proof.
 func TestBusinessMySQLTLSActualDriverHandshake(t *testing.T) {
-	for _, mode := range []string{"tls13", "wrong-name", "wrong-ca", "tls12-only", "no-server-tls"} {
+	for _, mode := range []string{"tls13", "mysql-generated-ca", "wrong-name", "wrong-ca", "tls12-only", "no-server-tls"} {
 		t.Run(mode, func(t *testing.T) {
 			cfg, certificate := mysqlBusinessTLSFixture(t)
+			if mode == "mysql-generated-ca" {
+				cfg, certificate = mysqlBusinessTLSFixtureCA(t, 0, []byte{0})
+			}
 			if mode == "wrong-name" {
 				cfg.ServerName = "different.original.invalid"
 			}
@@ -201,7 +224,8 @@ func TestBusinessMySQLTLSActualDriverHandshake(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 			conn, err := connector.Connect(ctx)
-			if mode == "tls13" {
+			success := mode == "tls13" || mode == "mysql-generated-ca"
+			if success {
 				if err != nil {
 					t.Fatal("actual mysql TLS13 connector rejected", err)
 				}
@@ -219,7 +243,7 @@ func TestBusinessMySQLTLSActualDriverHandshake(t *testing.T) {
 			if plaintextAuth.Load() {
 				t.Fatal("connector sent plaintext authentication")
 			}
-			if mode == "tls13" && tlsVersion.Load() != tls.VersionTLS13 {
+			if success && tlsVersion.Load() != tls.VersionTLS13 {
 				t.Fatal("did not negotiate TLS13")
 			}
 		})
