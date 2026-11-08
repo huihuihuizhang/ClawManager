@@ -1,6 +1,6 @@
 # 唯一远测方案：先验证存储原语，再决定是否恢复完整任务开发
 
-状态：**准备完成，未执行远测**。本方案只操作新建的 `sbk-storage-probe-<32位随机值>` namespace 和对应测试卷。不要在业务 PVC、业务 share-manager 或真实备份 task 上运行。两轮必须依次执行；任一步失败即停止，不扩大授权、不改超时、不改成功判据。
+状态：**R2 验收边界修订，未执行远测**。旧冻结源码包保持不变；远测应使用本修订说明，旧版通过标准按本修订收紧。本方案只操作新建的 `sbk-storage-probe-<32位随机值>` namespace 和对应测试卷。不要在业务 PVC、业务 share-manager 或真实备份 task 上运行。两轮必须依次执行；任一步失败即停止，不扩大授权、不改超时、不改成功判据。
 
 需要 Linux 6.8.x x86_64 验证节点、可用的 root SSH、kubectl、jq、Python 3、节点上的 crictl / fsfreeze / sha256sum / GNU stat / sync。工具镜像由现场提供实际不可变 digest，须已有 `sh`、`sleep`、`sync`、`sha256sum`；不临时安装依赖。StorageClass 和本地 `snap` VolumeSnapshotClass 须已经安装。执行前记录 Longhorn/CSI/engine 的实际镜像 digest；本候选按 Longhorn v1.12.0 检查过源码，其他版本先停止核对。
 
@@ -27,11 +27,49 @@ mkdir -m 700 -- "$OUT"       # 已存在则停止，不复用旧执行
 k() { kubectl --context "$CTX" "$@"; }
 node() { ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -i "$SSH_KEY" "$NODE_SSH" "$@"; }
 [[ $TOOL_IMAGE =~ @sha256:[0-9a-f]{64}$ ]]
-k get storageclass "$SC_RWO" "$SC_RWX" -o json > "$OUT/storageclasses.json"
-jq -e 'all(.items[]; .provisioner=="driver.longhorn.io" and .reclaimPolicy=="Delete")' "$OUT/storageclasses.json"
-k get volumesnapshotclass "$SNAP_CLASS" -o json > "$OUT/snapshotclass.json"
-jq -e '.driver=="driver.longhorn.io" and .parameters.type=="snap" and .deletionPolicy=="Delete"' "$OUT/snapshotclass.json"
+
 ```
+
+### 0.1 现场前提缺口：先只读核查，缺失即停止
+
+此前现场记录是缺少相关 Snapshot API；本次没有连接现场，**没有证据说明 API、CRD、控制器或 VolumeSnapshotClass 已补齐**。“须已安装”是待核查前提，不是已完成事实。连接恢复后，先执行以下只读请求；在全部前提确认前，不复制/运行节点探针，也不创建测试 namespace、PVC 或 Pod。
+
+```bash
+if ! k get --raw /apis/snapshot.storage.k8s.io/v1 > "$OUT/snapshot-api.json" 2> "$OUT/snapshot-api.err"; then
+  printf '%s\n' 'UNVERIFIED: Snapshot API request failed; classify as NOT_RUN only after confirming absence; stop' > "$OUT/preflight-result.txt"
+  exit 3
+fi
+if ! jq -e '(.groupVersion=="snapshot.storage.k8s.io/v1") and ((["volumesnapshots","volumesnapshotcontents","volumesnapshotclasses"] - [.resources[].name])|length==0)' "$OUT/snapshot-api.json"; then
+  printf '%s\n' 'UNVERIFIED: required v1 resources unconfirmed; stop' > "$OUT/preflight-result.txt"
+  exit 3
+fi
+for resource in volumesnapshots volumesnapshotcontents volumesnapshotclasses; do
+  if ! k get customresourcedefinition "$resource.snapshot.storage.k8s.io" -o json > "$OUT/$resource-crd.json" 2> "$OUT/$resource-crd.err"; then
+    printf '%s\n' 'UNVERIFIED: Snapshot CRD request failed; classify as NOT_RUN only after confirming absence; stop' > "$OUT/preflight-result.txt"
+    exit 3
+  fi
+  if ! jq -e '(.metadata.deletionTimestamp==null) and any(.status.conditions[]?; .type=="Established" and .status=="True") and any(.spec.versions[]?; .name=="v1" and .served==true)' "$OUT/$resource-crd.json"; then
+    printf '%s\n' 'NOT_RUN: Snapshot CRD not established/served' > "$OUT/preflight-result.txt"
+    exit 3
+  fi
+done
+if ! k get storageclass "$SC_RWO" "$SC_RWX" -o json > "$OUT/storageclasses.json" 2> "$OUT/storageclasses.err"; then
+  printf '%s\n' 'UNVERIFIED: StorageClass request failed; classify as NOT_RUN only after confirming absence; stop' > "$OUT/preflight-result.txt"; exit 3
+fi
+if ! jq -e '(.items|length==2) and all(.items[]; .provisioner=="driver.longhorn.io" and .reclaimPolicy=="Delete")' "$OUT/storageclasses.json"; then
+  printf '%s\n' 'NOT_RUN: required StorageClass configuration not satisfied; stop' > "$OUT/preflight-result.txt"; exit 3
+fi
+if ! k get volumesnapshotclass "$SNAP_CLASS" -o json > "$OUT/snapshotclass.json" 2> "$OUT/snapshotclass.err"; then
+  printf '%s\n' 'UNVERIFIED: SnapshotClass request failed; classify as NOT_RUN only after confirming absence; stop' > "$OUT/preflight-result.txt"; exit 3
+fi
+if ! jq -e '.driver=="driver.longhorn.io" and .parameters.type=="snap" and .deletionPolicy=="Delete"' "$OUT/snapshotclass.json"; then
+  printf '%s\n' 'NOT_RUN: required SnapshotClass configuration not satisfied; stop' > "$OUT/preflight-result.txt"; exit 3
+fi
+```
+
+API 404/CRD 缺失/Class 缺失标为“前提缺失、本轮未运行”；Forbidden、连接超时、只读权限不足或返回结构不明标为“前提未确认、本轮未验证”。两者都立即停止。本轮**不安装 CRD、snapshot-controller、CSI sidecar 或工具，不新建 SnapshotClass/StorageClass，不扩大 RBAC，不升级或重配集群**；缺项仅记录，另行确认处理范围。即使 discovery 通过，也须只读核对现场实际具名 snapshot-controller/CSI snapshotter 的运行状态和镜像版本，不能把 API 存在等同于数据面可用。
+
+还须在此确认第 3.1 节所需的现有观测能力、覆盖范围和取证方式。缺少时只读核查后停止，标“未验证”；不先创建测试资源来弥补取证缺口。具体测试卷的 device、进程和请求关联在第 2 节创建后再次核对，任何关联无法建立则按清理步骤结束，不进入冻结。
 
 保存 `kubectl config current-context`、节点 UID/bootID/kernelVersion、Longhorn 与 CSI 的版本及镜像 digest。仅记录选定对象的元数据和镜像，**不要导出 Secret、kubeconfig、share-manager 环境变量或所有 Pod 完整 YAML**。
 
@@ -118,6 +156,21 @@ export SEED_SHA=$(printf '%s' "$NONCE" | sha256sum | cut -d ' ' -f 1)
 
 在各 PID 的 `/proc/<PID>/mountinfo` 中，用 `/dev/longhorn/<HANDLE>` 的实际 major:minor 找到 ext4 挂载点，根必须为 `/`，唯一且与 seed 一致。RWO 目标为 keeper 的完整 PVC 挂载；RWX 目标为 share-manager 的后端 ext4，**不能对 NFS 客户端目录执行 fsfreeze**。组成实际路径 `MOUNT_RWO=/proc/<PID>/root/<挂载点>`、`MOUNT_RWX=...`，核对 PID starttime、mount namespace、Node UID/bootID。
 
+### 3.1 冻结连续性证据门槛（缺失则不进入冻结）
+
+当前 lease 脚本只记录本进程的 freeze ACK、`held` 文件和自己的 thaw 结果，**没有覆盖存储组件或其他进程提前解冻的观测能力**。第 1 节 loopback 通过也不能补足这一缺口。现场必须按第 0.1 节先确认已有、已审定的观测方式能提供以下证据；没有则停在只读核查，结论为“未验证”，不为求通过临时安装监测代理、启用全节点审计或改造 CSI。
+
+须特别检查 Longhorn 自身的 freeze/unfreeze 路径：候选所检查的 [engine v1.12.0 Snapshot 源码](https://github.com/longhorn/longhorn-engine/blob/v1.12.0/pkg/controller/control.go) 包含条件冻结及 defer 解冻。它提示了潜在干扰路径，不能据此认定现场一定执行或一定不会执行。取证要把这些组件的实际 thaw 返回与本轮原设备关联，不能只检索脚本日志。
+
+- 观测必须在首个 FIFREEZE 前开始、在两个预定解除完成后结束，覆盖这两个原 device/superblock 的**所有进程**的 freeze/thaw 状态变化，包括 Longhorn engine/manager/share-manager 和内核相关路径；只跟踪 lease 的 PID 不足。记录调用进入与实际返回结果、目标 device/diskseq/挂载身份、Node bootID、调用者 PID/starttime/cgroup/容器身份及可关联的请求，不能只记录“发起了 ioctl”。必须确认事件无丢失、无采集重启或覆盖空档。
+- 在本轮明确 `release` 之前，任何存储组件/其他进程成功解除这两个目标中的任一冻结，或观察到冻结保护提前消失，均为“提前解冻、FAIL”。之后再冻结、最后 checksum 相同或自己的 FITHAW 成功，都不能把该轮改为通过。看到 thaw 尝试但结果或目标不明，判“未验证”，不能推断未解除。
+- 同目标的受控写探针若在 freeze ACK 之后发起，并在预定冻结区间完成写入及同步，也能识别保护已失效，判 FAIL。写探针未完成、超时、没调度到，或设备写计数前后相同，都不能单独证明全程冻结；这些只是辅助证据。本修订不新增写探针或监测实现。
+- 用同一可关联时间轴建立保护区间的保守边界：`T0=max(两卷成功 freeze ACK)`；`T1` 取任一冻结可能最早失效的时刻，包括成功 thaw 的调用进入、目标/owner 身份变化、watchdog 介入或观测失效，取最早者。成功 thaw 的返回发生在保护消失之后，不能用返回时间扩大保护区间；有已证明的内核实际状态转换证据时才可用该时刻代替调用进入。两份 backend 快照的实际请求开始至完成区间都必须完整落在 `[T0,T1)` 内。不能仅比较 API 对象的 `metadata.creationTimestamp` 或 `held` 文件时间。跨节点/不同时间源须有已量化的时钟误差上界，比较时取 freeze ACK 最晚可能时刻、backend 开始最早及完成最晚可能时刻、T1 最早可能时刻；误差、整秒时间戳舍入或缺少关联使边界无法确定时，标“未验证”。
+
+普通日志里“未搜到 thaw”、间隔轮询、`mountinfo/statfs` 的 rw 标志、watchdog 没触发和最终读回相同均不能代替上述连续性证据。不能证明覆盖时，不允许把后续成功的创建/读回结果写成“冻结期间快照通过”。
+
+### 3.2 执行受控冻结与快照
+
 使用第 1 节已核对并复制的 `system-backup-storage-probe-lease.sh`；节点目录必须属于这次 RUN_ID，root:700，禁止复用其他执行。此脚本只用于本测试；它以原 FD、seed 摘要和 Longhorn device 核对目标，最长约 20 秒后尝试解除已确认的冻结。watchdog 介入会判本轮失败，不是生产恢复能力证明。
 
 在节点的独立 SSH 终端启动两份 lease（填入已观察的路径，**不要直接复制占位值执行**）：
@@ -164,7 +217,32 @@ k -n "$NS" wait --for=jsonpath='{.status.readyToUse}'=true volumesnapshot/cut-rw
 touch -- "$DIR/rwo/release" "$DIR/rwx/release"
 ```
 
-要求两个 lease 的 `exit-code` 均为 0，有 `thaw-acknowledged`、没有 `unknown/timed-out`，实际 Snapshot/Content 的创建时间位于两个 held 的共同窗口。保存 Snapshot UID、bound Content UID、`snapshotHandle`；必须分别为 `snap://<本轮原HANDLE>/<后端快照名>`。若超时、快照回复丢失、identity 漂移、解除未确认，按失败步骤停止；禁止扩大 10/20 秒预算求通过。
+要求两个 lease 的 `exit-code` 均为 0，有 `thaw-acknowledged`、没有 `unknown/timed-out`，并且第 3.1 节的冻结连续性证据完整。它们只是必要条件，不能单独判通过。若超时、快照回复丢失、identity 漂移、解除未确认，按失败步骤停止；禁止扩大 10/20 秒预算求通过。
+
+### 3.3 实际快照完成证据（每卷一份，同一轮关联）
+
+必须保存并核对以下完整链，不能拼接不同请求或只用控制面对象时间：
+
+1. 本轮源 PVC UID → PV UID/claimRef → Longhorn 原 Volume UID/handle/engine incarnation → 新建 VolumeSnapshot UID → bound Content UID 和 `spec.volumeSnapshotRef` 的原 UID/namespace/name；CSI driver、源 handle、状态 error 均正确，无对象替换。
+2. 实际 CSI CreateSnapshot 请求与 Longhorn backend snapshot 名称/操作的关联；Content 的 `status.snapshotHandle` 必须为 `snap://<本轮原HANDLE>/<该次后端快照名>`。同时核对 Snapshot/Content 的 readyToUse、无 error 及实际 creationTime 字段，但不把它们单独当切点证据。
+3. 该后端快照已经实际完成的证据：对应 Longhorn Snapshot CR UID、`spec.volume`、`status.readyToUse=true`、`status.markRemoved=false`、空 error，并与同一 engine 读回的具名 snapshot 元数据一致；还需可关联的实际 backend snapshot 操作开始和成功完成/返回记录。请求进入队列、CR 创建、CSI 对象 Ready 或一次 API 返回，均不能单独替代 backend 完成和冻结覆盖证明。后端记录拿不到、无法关联或仅有低精度/延迟投影时间时，标“未验证”。
+4. 将两个 backend 操作的完整区间与第 3.1 节的真实保护区间比较，确认均在区间内，且其间没有提前 thaw、身份变化、trace 丢失或观测空档；最后再用第 4 节独立 clone 的 lineage 和内容验证结果补强。
+
+可以在解除后只读保存控制面记录（它们不能补造缺失的过程证据）：
+
+```bash
+for v in rwo rwx; do
+  k -n "$NS" get volumesnapshot "cut-$v" -o json > "$OUT/$v-snapshot.json"
+  content=$(jq -er '.status.boundVolumeSnapshotContentName' "$OUT/$v-snapshot.json")
+  k get volumesnapshotcontent "$content" -o json > "$OUT/$v-content.json"
+  handle=$(jq -er '.status.snapshotHandle' "$OUT/$v-content.json")
+  backend=${handle##*/}
+  [[ -n $backend && $backend != "$handle" ]]
+  k -n "$LH_NS" get snapshots.longhorn.io "$backend" -o json > "$OUT/$v-backend-snapshot.json"
+done
+```
+
+候选所检查的 Longhorn v1.12.0 源码中，Snapshot status 是控制器处理的状态投影，仍需上述实际操作及连续观测的关联；[对应源码](https://github.com/longhorn/longhorn-manager/blob/v1.12.0/controller/snapshot_controller.go)。本轮不新增 backend 调用器或追踪采集器；若现有能力无法提供完整证据，就保持“未验证”。
 
 ## 4. 恢复读写、从快照独立读回
 
@@ -184,7 +262,14 @@ done
 
 克隆 PVC Bound 不足以通过：再核对 clone PV 的独立 UID/handle，Longhorn clone Volume 的 `status.cloneStatus.state=completed`、`sourceVolume` 和 `snapshot` 分别等于本轮原 HANDLE 和 Content 中的后端快照名。两份 clone seed 必须等于冻结前摘要，冻结后新增文件不能出现在 clone 中。
 
-**唯一通过标准**：内核前置检查通过；两个冻结均确认；真实 CSI 快照在共同 held 窗口完成；两个解除均正常确认且原卷写读恢复；RWO 删除原 writer 后 keeper 保持同原卷；两份独立 clone 内容和 lineage 正确；清理完成。缺任一证据标为 FAIL/UNKNOWN。通过本轮也只允许进入完整任务联调，不能宣称正式备份、Node 认证交接或重启恢复已验证。
+**唯一通过标准**：只读前提核查全部确认；内核检查通过；第 3.1 节无空档、可关联的连续冻结证据成立；第 3.3 节两个实际 backend 操作完整位于共同保护区间；两个解除正常确认且原卷写读恢复；RWO keeper 保持原卷；独立 clone 内容/lineage 正确；清理完成。仅对象时间、held 文件、Ready 状态和最终解冻/读回成功不足以通过。
+
+结果必须分开记录：
+
+- `NOT_RUN`：API/CRD/Class 等前提缺失；在只读核查后停止。
+- `未验证 / UNVERIFIED`：前提读取失败或不确定、缺少过程观测、事件丢失、时间关联不充分、无法证明 backend 完成或连续冻结。即使所有可见结果正常也不能 PASS，不能推进完整任务。
+- `FAIL`：观测到提前解冻、保护期间写入完成、错误 lineage/内容、watchdog、身份漂移等实际违反。恢复后也保留失败结论。
+- `PASS`：上述唯一通过标准全部有实际证据。仅此时才允许另行恢复完整任务联调，仍不宣称正式备份、Node 认证交接或重启恢复已验证。
 
 ## 失败恢复与清理（成功、失败都必须执行）
 
@@ -194,6 +279,6 @@ done
 4. 两卷写读恢复后，核对 namespace 当前 UID 等于 `$NS_UID`，以及清单中每个 PVC/Snapshot 的 UID 仍属于本轮；只删除这个独占测试 namespace：`k delete namespace "$NS" --wait=true --timeout=180s`。不删除 StorageClass、SnapshotClass、共享 RBAC、其他 namespace 或任何业务数据。
 5. 等待本轮 PVC 对应 PV、Content 和 Longhorn source/clone Volume 自动回收，逐个按已记录 UID/handle 查验。未回收则记录“清理未完成”，不直接删除未知 Longhorn CR。节点只删除本轮已结束 lease 的明确文件，再 `rmdir` 已核对的测试目录；不递归删除父目录。第 1 轮 loopback 文件由 canary 自己核对并清理。
 
-回传：退出码、完整 probe 日志、时间窗口、选定 Node/PVC/PV/Pod/Snapshot/Content/clone 的 UID/handle、写读摘要及清理结果。不回传任何凭据正文。
+回传：只读前提核查及停止原因、NOT_RUN/UNVERIFIED/FAIL/PASS 结论、退出码、完整 probe 日志、freeze/thaw 过程观测及无丢失/时间关联说明、实际 backend 请求与完成记录、时间窗口、选定 Node/PVC/PV/Pod/Snapshot/Content/clone 的 UID/handle、写读摘要及清理结果。不回传任何凭据正文。
 
 源码参考：[Longhorn engine v1.12.0 快照路径](https://github.com/longhorn/longhorn-engine/blob/v1.12.0/pkg/controller/control.go)、[CSI snapshot 路径](https://github.com/longhorn/longhorn-manager/blob/v1.12.0/csi/controller_server.go)。这些源码检查不能替代上述真实执行。

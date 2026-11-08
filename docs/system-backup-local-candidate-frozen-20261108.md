@@ -2,6 +2,8 @@
 
 本阶段按用户 2026-11-08 的最新范围收口：整理现有代码、完成可独立验证的修复和必要验证、保存不可变源码候选，准备唯一存储远测方案。**本阶段结束后等待远测条件恢复，不继续实现依赖未验证存储能力的配套功能。** 完整页面备份尚未完成。
 
+**R2 文档修订**：远测的现场前提和通过标准以当前[唯一远测步骤](system-backup-storage-remote-acceptance-20261108.md)为准。原冻结源码 ZIP 及其 MANIFEST、历史验证收据保持不变；R2 补充包仅更新远测准备材料，不替换源码候选、不增加实现或声称新增现场验证。
+
 ## 已完成、已验证的部分
 
 - `ca3cc7f5`：修复 quiesce 的历史测试循环导入。原有 Deployment 暂停、原 checkpoint 随实际暂停内容归档、读回和恢复断言均保留；测试改为外部集成测试，复用 test-only 原夹具，不修改生产权限或成功条件。独立 `1a689892` 基线加此补丁的回归通过。
@@ -45,7 +47,9 @@ go build -p 4 ./cmd/backup-shared-runtime-node-owner ./cmd/backup-worker
 | 能力 | 当前标记 | 进入下一阶段需要的证据 |
 |---|---|---|
 | FIFREEZE/FITHAW、保留可写 FD、sync 行为 | 待真实验证 | 实际 Linux 6.8 节点执行专用 canary、正常解除及写读恢复，无 watchdog/unknown |
-| Longhorn 两卷快照及独立 clone | 待真实验证 | 同一轮真实 Snapshot/Content/clone UID、lineage、共同 held 窗口和内容读回 |
+| 现场 Snapshot API/CRD/Class 和控制器前提 | 未确认；旧现场记录缺失 API | 连接恢复后先只读核查；缺项即停止，本轮不安装或扩大集群改动 |
+| 连续冻结观测能力 | 未确认；当前 lease 自身记录不足 | 已有取证能力覆盖同目标所有进程/内核 freeze/thaw、成功返回、身份及无丢失时间轴；无法证明则未验证，不新增采集实现 |
+| Longhorn 两卷快照及独立 clone | 待真实验证 | 同轮 UID/lineage、两份实际 backend 开始至完成区间均在连续冻结保护内、无提前解冻，原卷恢复和 clone 内容读回；对象时间/held/Ready 不足 |
 | RWO keeper 保持挂载 | 待真实验证 | 原 writer 删除后，keeper 保持同 Node、同 PVC/PV/handle，原卷和 clone 可读回 |
 | freeze-stable 设备计数证明 | 待真实验证 | 真实 whole-device、iostats=1、diskseq、write/discard/inflight 数据及实际 provider IO 路径；不依据模型放行 |
 | Node 认证 keeper 交接、完整恢复顺序 | 未接通，停止扩展 | 先通过存储远测，再沿原 task 日志接通；目前没有 BindKeeper 实现，不允许完整任务试跑 |
@@ -56,9 +60,11 @@ go build -p 4 ./cmd/backup-shared-runtime-node-owner ./cmd/backup-worker
 
 ## 唯一远测入口与停止条件
 
-仅使用 [存储远测步骤](system-backup-storage-remote-acceptance-20261108.md)：专用 loopback 前置检查 → 新建专用 RWX/RWO 测试卷 → 保持挂载 → 两卷冻结与真实 CSI 快照 → 原 FD 解除 → 实际写读与独立 clone 读回 → 核对并清理本轮资源。
+仅使用 [存储远测步骤](system-backup-storage-remote-acceptance-20261108.md)：只读核查 API/CRD/Class、控制器及已有取证能力 → 专用 loopback 前置检查 → 新建专用 RWX/RWO 测试卷 → 保持挂载 → 两卷冻结与真实 CSI 快照 → 原 FD 解除 → 实际写读与独立 clone 读回 → 核对并清理本轮资源。
 
 步骤中的 Bash/Python 已做本地语法检查，四种 fixture JSON 已构造并校验；退出保护的远程变量转义也已验证。未执行 SSH、kubectl、挂载、冻结、镜像构建或现场操作。现场仍须提供实际连接、工具镜像 digest、StorageClass、SnapshotClass 和对应工具；缺项即停止，不临时放宽配置。
+
+此前现场记录缺少 Snapshot API，当前未连接，不能假定已补齐。API/CRD/Class 仍缺失则标 `NOT_RUN`，只读结果不确定或连续冻结/实际 backend 完成证据不足则标 `UNVERIFIED`，均停止本轮。观测到任一组件提前解冻即 `FAIL`，后续再冻结、正常解冻或读回不能抹去失败；只有所有过程证据及恢复、读回、清理均满足才可 `PASS`。
 
 任意失败先尝试本轮原 FD 的明确解除并确认实际写读；未确认时保留测试卷、keeper、原 UID/handle 和日志，不先删除资源或重启节点。watchdog 恢复也判该轮失败。完整命令、输入、通过标准、失败恢复和仅清理本轮资源的步骤均在上述唯一远测文档中。
 

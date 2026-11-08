@@ -1,0 +1,79 @@
+{
+  "schema": "system-backup-remote-preparation-amendment.v1",
+  "revision": "R2",
+  "supersedes_remote_acceptance_document_at_commit": "d37bb040ce6c885eeda9dc6432d8b5fc77ab3ec8",
+  "implementation_changed": false,
+  "original_source_zip_unchanged": true,
+  "original_source_zip_sha256": "318771d3e199b0331838914ebb1ed2b96ee39219f6b88ad62fd31ec031309a37",
+  "original_source_manifest_sha256": "1d9e4c726464c29116a4b3c3da7e2823b89d8660a1c950cb4f01e24a4d6f0a6f",
+  "supplement_archive": "artifacts/sbk-remote-preparation-r2-20261108.zip",
+  "supplement_archive_sha256": "8c141993dc265255e12f0bd8cc047f33848dcbd800909acd2333053c353abd67",
+  "supplement_manifest_sha256": "ed6d183e4471ae2681b962a59d7dc0ca3e9902bc641a66a15742b074f5e61eba",
+  "zip_payload_verified": true,
+  "runtime_scripts_identical_to_original": true,
+  "local_validation": {
+    "shell_blocks": 11,
+    "python_blocks": 2,
+    "fixture_resources": {
+      "rwx": 2,
+      "rwo": 3,
+      "resume": 1,
+      "readback": 4
+    },
+    "native_or_cluster_actions_executed": false,
+    "temporary_inputs_removed": true,
+    "runbook_sha256": "8fe58ced8c8c810c269b21e1c63dbcc85162dafa3638889fbac17648bbbcc8e5"
+  },
+  "doc_only_no_build_outputs_created": true,
+  "stage": "LOCAL_CANDIDATE_FROZEN_WAITING_FOR_REMOTE",
+  "remote_execution": "NOT_EXECUTED",
+  "snapshot_api_crd_class": "PREVIOUSLY_MISSING_NOT_RECHECKED",
+  "freeze_continuity_observability": "UNVERIFIED_CURRENT_LEASE_INSUFFICIENT",
+  "actual_backend_completion_within_freeze": "UNVERIFIED",
+  "complete_backup_permitted": false,
+  "boundaries": [
+    "readonly_preflight_before_node_probe_or_test_resource_creation",
+    "missing_snapshot_prerequisites_stop_without_install_or_cluster_scope_expansion",
+    "existing_all_actor_freeze_thaw_observation_required_no_new_collector",
+    "actual_backend_operation_intervals_and_identity_must_be_proven_within_conservative_freeze_window",
+    "early_thaw_FAIL_missing_or_ambiguous_evidence_UNVERIFIED",
+    "no_runtime_changes_no_deployment_no_full_backup"
+  ],
+  "files": [
+    {
+      "path": "docs/system-backup-local-candidate-frozen-20261108.md",
+      "bytes": 8814,
+      "sha256": "323a44111d0a9f112b5918b316c1589084ec1e0ed80454010612c72b975fdd30"
+    },
+    {
+      "path": "docs/system-backup-storage-remote-acceptance-20261108.md",
+      "bytes": 26775,
+      "sha256": "8fe58ced8c8c810c269b21e1c63dbcc85162dafa3638889fbac17648bbbcc8e5"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1052,
+      "sha256": "1e6c14da0f1b1a223e57bf304129a36fa0316b3f50618042e7ddad8c11230edd"
+    },
+    {
+      "path": "scripts/system-backup-ext4-freeze-canary.py",
+      "bytes": 18287,
+      "sha256": "3c28fa86c0956b37d8215cd6e77abbf1aab226a4b5a21c608e383027b76f1494"
+    },
+    {
+      "path": "scripts/system-backup-storage-probe-lease.sh",
+      "bytes": 3079,
+      "sha256": "683b5145612013df9138627a5f37104002e2ba011f905a756cf2e193441f9501"
+    },
+    {
+      "path": "verification/remote-plan-validation.json",
+      "bytes": 324,
+      "sha256": "09c8e873d7e9823f43276a743439687a29c68a503f86366627f4c6be02e5d5ba"
+    },
+    {
+      "path": "verification/validate-remote-plan.py",
+      "bytes": 3724,
+      "sha256": "d2468d88ebc15beb29863cf0c842a6a37ea24d0f85b4bd9fb7369772fd797a9a"
+    }
+  ]
+}
