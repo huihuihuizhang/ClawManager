@@ -52,7 +52,9 @@ type RuntimeControlConfig struct {
 	ParticipantChecks      map[string]ReadinessProbe
 	// Reconciler/HPA fencing proofs keyed by namespace/deployment name.
 	DeploymentChecks map[string]ReadinessProbe
-	PollInterval     time.Duration
+	// Called only for the original locked runtime journal inside Recovery.
+	RecoveryDeploymentCheck func(context.Context, d.Authority, b.RuntimeWriterSpec) error
+	PollInterval            time.Duration
 }
 type SQLRuntimeControl struct{ cfg RuntimeControlConfig }
 
@@ -500,8 +502,7 @@ func (o *SQLRuntimeControl) Guard(ctx context.Context, a d.Authority, id, point 
 			}
 		}
 		if r.Spec.Kind == "deployment" {
-			probe := o.cfg.DeploymentChecks[r.Spec.Source.Namespace+"/"+r.Spec.Name]
-			if absentExecutionDependency(probe) || probe.Check(ctx) != nil {
+			if o.checkJournaledDeployment(ctx, a, r.Spec, recovery) != nil {
 				return ErrExecutionRecord
 			}
 		}

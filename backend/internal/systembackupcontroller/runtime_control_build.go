@@ -155,8 +155,7 @@ type deploymentResume struct{ PodName, PodUID string }
 
 func (o *SQLRuntimeControl) confirmDeployment(ctx context.Context, tx *sql.Tx, a d.Authority, id string, r runtimeControlRow) error {
 	spec := r.Spec
-	probe := o.cfg.DeploymentChecks[spec.Source.Namespace+"/"+spec.Name]
-	if absentExecutionDependency(probe) || probe.Check(ctx) != nil {
+	if o.checkJournaledDeployment(ctx, a, spec, true) != nil {
 		return ErrExecutionRecord
 	}
 	dep, e := o.cfg.Client.AppsV1().Deployments(spec.Source.Namespace).Get(ctx, spec.Name, metav1.GetOptions{})
