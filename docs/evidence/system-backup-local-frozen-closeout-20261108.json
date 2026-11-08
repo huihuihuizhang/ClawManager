@@ -1,0 +1,683 @@
+{
+  "schema_version": "system-backup-local-freeze-closeout.v1",
+  "stage": "local_candidate_freeze_and_storage_remote_preparation",
+  "stage_complete": true,
+  "complete_backup_achieved": false,
+  "source_base_commit": "1a68989222dcb9d738199aa079edb7e23448c20c",
+  "reviewed_commits": [
+    "ca3cc7f5",
+    "82c72cb7"
+  ],
+  "source_artifact": "artifacts/sbk-local-frozen-20261108-source.zip",
+  "source_artifact_sha256": "318771d3e199b0331838914ebb1ed2b96ee39219f6b88ad62fd31ec031309a37",
+  "source_manifest_sha256": "1d9e4c726464c29116a4b3c3da7e2823b89d8660a1c950cb4f01e24a4d6f0a6f",
+  "source_file_count": 113,
+  "zip_payload_verified": true,
+  "validation": {
+    "schema": "local-backup-phase-validation.v1",
+    "windows_targeted_regressions": "PASS",
+    "independent_checkpoint_regression": "PASS",
+    "linux_production_entry_builds": "PASS",
+    "linux_quiesce_tests": "COMPILED_NOT_EXECUTED",
+    "independent_keeper_cli_and_worker_builds": "PASS",
+    "remote_plan_static_validation": {
+      "shell_blocks": 9,
+      "python_blocks": 2,
+      "fixture_resources": {
+        "rwx": 2,
+        "rwo": 3,
+        "resume": 1,
+        "readback": 4
+      },
+      "native_or_cluster_actions_executed": false,
+      "temporary_inputs_removed": true,
+      "runbook_sha256": "fe54e7859bbf8e8903eefc065fc9ea4643d4e5fd3d59fbb575a1c29671ad75b5"
+    },
+    "native_kernel_or_longhorn_execution": "NOT_EXECUTED",
+    "container_image_build": "NOT_EXECUTED",
+    "full_backup_task": "NOT_EXECUTED",
+    "test_build_outputs_removed": true,
+    "candidate_scope": "SOURCE_ONLY_NOT_DEPLOYABLE"
+  },
+  "remote_runbook": "docs/system-backup-storage-remote-acceptance-20261108.md",
+  "handoff": "docs/system-backup-local-candidate-frozen-20261108.md",
+  "next_action": "wait_for_remote_conditions_then_run_only_storage_probe_suite",
+  "do_not_run_complete_backup": true,
+  "source_payload": [
+    {
+      "path": "docs/system-backup-ext4-freeze-canary.md",
+      "sha256": "610fa2f11400d1ebbd250aa75a60d28c3fccb18468576bdb3afee3683242f6d7",
+      "bytes": 2153
+    },
+    {
+      "path": "docs/system-backup-local-candidate-frozen-20261108.md",
+      "sha256": "31dc857f86c75171ce95c9acc81a74a4718866fe180388587667406de748f111",
+      "bytes": 7482
+    },
+    {
+      "path": "docs/system-backup-storage-remote-acceptance-20261108.md",
+      "sha256": "fe54e7859bbf8e8903eefc065fc9ea4643d4e5fd3d59fbb575a1c29671ad75b5",
+      "bytes": 16481
+    },
+    {
+      "path": "README.md",
+      "sha256": "5d31a3bf1737540c313ee1399588a4c3a404f413758b05c4f4e542ed8f41c9ce",
+      "bytes": 1241
+    },
+    {
+      "path": "scripts/system-backup-ext4-freeze-canary.py",
+      "sha256": "3c28fa86c0956b37d8215cd6e77abbf1aab226a4b5a21c608e383027b76f1494",
+      "bytes": 18287
+    },
+    {
+      "path": "scripts/system-backup-storage-probe-lease.sh",
+      "sha256": "683b5145612013df9138627a5f37104002e2ba011f905a756cf2e193441f9501",
+      "bytes": 3079
+    },
+    {
+      "path": "source/backend/cmd/backup-shared-runtime-node-owner/attachment_keeper_linux.go",
+      "sha256": "424ba75878ec9023f463c8febd0c9a0a77605ad7e91c12f6c1d4b168c3c1f52e",
+      "bytes": 560
+    },
+    {
+      "path": "source/backend/cmd/backup-shared-runtime-node-owner/attachment_keeper_other.go",
+      "sha256": "315f5abb2ec49c476e09f6539fecf4579682839af332adf0f09db8c7ec06f866",
+      "bytes": 195
+    },
+    {
+      "path": "source/backend/cmd/backup-shared-runtime-node-owner/longhorn_linux.go",
+      "sha256": "f22753ab2b012a558f0e52727533b2508c4f12314d5dc3c510f71bc3b9576479",
+      "bytes": 417
+    },
+    {
+      "path": "source/backend/cmd/backup-shared-runtime-node-owner/longhorn_other.go",
+      "sha256": "071347b5ffdce28d4058ad9558c4fe1a64f85194938cc6d0c23f14a0b0c20f2a",
+      "bytes": 243
+    },
+    {
+      "path": "source/backend/cmd/backup-shared-runtime-node-owner/main.go",
+      "sha256": "3ee26c7358dd905e8e149939ff8a5e59af269c55c4ae63409b3e8275c9ca9ddd",
+      "bytes": 3884
+    },
+    {
+      "path": "source/backend/cmd/system-backup-controller-grants/main.go",
+      "sha256": "e8936e141369d9e02824b29b78b4fa71cb3a6afd96834eac9e69db5392fd351e",
+      "bytes": 6968
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_attachment_keeper.go",
+      "sha256": "8fac3022c966e96c6bac249b734c66fc83f0563a860a02dd2b1211831545fbbc",
+      "bytes": 3945
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_capture_clone.go",
+      "sha256": "7d4fc10d2fab8d59a0781eda2cce337e4a44d16b47ecf9dc030186dd500a5158",
+      "bytes": 8476
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_capture_clone_test.go",
+      "sha256": "91a422c6dbe12729fdc784984c3515965cb68364660ad7431a9bf7a37e8b09a7",
+      "bytes": 11542
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_capture_cut.go",
+      "sha256": "1546ecfc912ddc452eca9453e7af6fef9e1cf10eef9dbfceefa816119c7f6ed5",
+      "bytes": 7249
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_provider_clone_test.go",
+      "sha256": "d196de968be99a90677f44a11e4a04f32d1d15e7f92b493e9b73459645becd78",
+      "bytes": 2466
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_rwx_snapshot_binding.go",
+      "sha256": "28f489ef185128d226625fdd8dc8135de2dd91f7d1875450c524f61aab58524d",
+      "bytes": 14568
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_snapshot_alias.go",
+      "sha256": "0d2f461919d64d97b84f98ef522721400255a6b8b3aeaa6f7519f2ace1c81890",
+      "bytes": 7408
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/longhorn_snapshot_alias_test.go",
+      "sha256": "cf1ed3b0c6bd90bbe82fd679a2c0ce4a74f99b420393e0420459ff76f472a8a9",
+      "bytes": 5561
+    },
+    {
+      "path": "source/backend/internal/systembackup/kube/runner.go",
+      "sha256": "8359aada74c2554b2fe4864ae53441290c345caac1a78ee3c5e8e54dcd767fe0",
+      "bytes": 14882
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/deployment_capture_fixture_test.go",
+      "sha256": "4861e15d7c539f4e1d3e21d1082e98a15d162a5b4726c9b0c4d60535b5d202b6",
+      "bytes": 480
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/deployment_capture_test.go",
+      "sha256": "c49d8fdf87fc28b92f9960de7963dd6f6af582e7798d7d35e102835e7e3ce47d",
+      "bytes": 3163
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_actions_linux.go",
+      "sha256": "e13ebea8d4510748024c5b054421e262f0bb5121b70eeb2c3def61b39c188b0a",
+      "bytes": 19202
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_client.go",
+      "sha256": "1395b5c1ddfd3328f2cce5b1238997bde29e9b25cb996dd626b01d7c0808837b",
+      "bytes": 5776
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_contract.go",
+      "sha256": "6a1adaf160bc0a2333e856a61af8e6642042916b48364e6ad5e0fe915a24dbac",
+      "bytes": 4410
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_freeze.go",
+      "sha256": "b029eeb2ce09aa63797bf49504fba8657ed8f931263bbb2d888f90de5042593c",
+      "bytes": 6557
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_freeze_linux.go",
+      "sha256": "408cec423679e0d035d312451cf5d6778921dda89f7b6a5daa2dabb3c83e02d0",
+      "bytes": 2376
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_freeze_other.go",
+      "sha256": "d73944886bbed84656997f5b5eec606850fa9981e794d686298c2d24f4eb9431",
+      "bytes": 723
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_freeze_test.go",
+      "sha256": "b110c9a0d075eee857181738a6442beb9657a51410868e37adb6b79d63dcd12c",
+      "bytes": 4322
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_hold_linux.go",
+      "sha256": "68bd3c32b77d83c5fbf23616feb78ddde4c57ef41924678708a886964e901f42",
+      "bytes": 9744
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_journal_linux_test.go",
+      "sha256": "cd48c42366bc9c8e87769ff1fdfa59303ee6f6a1ea363740d1758626930a0b1d",
+      "bytes": 5725
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_materials_linux.go",
+      "sha256": "73ea03000bdadaf1d3fb9fac2ad07eeb79529cd1821aec9062a32b7183f1abca",
+      "bytes": 8823
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_registration_linux.go",
+      "sha256": "56d2bb67fc8723beab888f2f3d49db5284371bc8975be02e5b82f14b8bffe6ad",
+      "bytes": 1746
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_ext4_registration_linux_test.go",
+      "sha256": "ce43a50d6932ae7cc645c5dd54179ae316176d76c67117b51166d209fc867cdc",
+      "bytes": 2936
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_rwx_client_actions_linux.go",
+      "sha256": "d127143cb94a685c11c981d04a3aa4759bdad11a56aceeede98bd0d26a626834",
+      "bytes": 8119
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/longhorn_rwx_client_sync_linux.go",
+      "sha256": "e565625490e5ce707ff322073e016ed390c2bd637aa5b8de30670991a1a122bc",
+      "bytes": 3186
+    },
+    {
+      "path": "source/backend/internal/systembackup/quiesce/shared_runtime_owner_transport_linux.go",
+      "sha256": "8965d2f1e768af6d3a468b026bc45434b320fa762e074a1ce628e6038f450b0c",
+      "bytes": 4167
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/execution_job_ports.go",
+      "sha256": "a5495e694f7f6c0147be11a81f3b7fc976d1beee643e230e481b05aff121f8d3",
+      "bytes": 7444
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/execution_source_stop.go",
+      "sha256": "7015ed838446260a094bacf057a2f8ba5ff7e204c6dc6529a21b724959cfd799",
+      "bytes": 3887
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/execution_source_stop_test.go",
+      "sha256": "db36ea55ae97b30c2d1a7c7971aa2311e3f624bb1f58f37478167f20be023bef",
+      "bytes": 2007
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/execution_storage_resume_test.go",
+      "sha256": "cf85b4201e01bf77abd177615fd1d3c443d0d7f4ee26cfae0e61fc45ed326533",
+      "bytes": 1470
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_control.go",
+      "sha256": "1228efdf30e4fc07778eace34d92a71bec3d7a92d2ac865680f645baeb276f80",
+      "bytes": 35242
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_control_build.go",
+      "sha256": "61f39bfd4368deaea13efbb21abc9125ed427bd1c7cd1ff3b493fbefc23acd6c",
+      "bytes": 9241
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_deployment_recovery_probe.go",
+      "sha256": "c38ed5322ae2bbe17bb422935d0ea48838e9979c1c0c450cb3175e6d5119dcdb",
+      "bytes": 1216
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_deployment_recovery_probe_test.go",
+      "sha256": "31e1aab5d0905be681f80d1083a2a157e5bccf1d4f2e6839a787f69f724a58b9",
+      "bytes": 2476
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_tenant_source.go",
+      "sha256": "398bcc1f710b5854191a227d65b61acf2b596eadf27eb64e78deaea045f6f05e",
+      "bytes": 647
+    },
+    {
+      "path": "source/backend/internal/systembackupcontroller/runtime_tenant_source_test.go",
+      "sha256": "b4b93c232d7c642ad388b21176df3c6c9c96a14ca71df87b34ec001187ea3a60",
+      "bytes": 1973
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_longhorn.go",
+      "sha256": "8950ea25dec0945ace6f4f10da9cf86e87c6fb140275c08fb80cfd8bffbcdc06",
+      "bytes": 7742
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_longhorn_test.go",
+      "sha256": "8d0bca1906a7a03f2848148a66e26dc8b237577ad0797dedf3a81d5464417a24",
+      "bytes": 5103
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_clients.go",
+      "sha256": "2e26c3800a159edfd2347acab634c77452be29f5bc2b807315faf1a35f3b6afb",
+      "bytes": 7900
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_codec.go",
+      "sha256": "c490915661a91d565560a8429e4035b02536110ec8e4f6302bd4ece37eb3e7ca",
+      "bytes": 6304
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_collect.go",
+      "sha256": "92713e0d7d9ad00837e6b2048538aab0f41f356c4fc86225414baf5c7fc84578",
+      "bytes": 9961
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_mount_author.go",
+      "sha256": "084fcc0a3ec896411b2f5de48e61268343e7c4b0c1c3f6682d42ed158e3e718d",
+      "bytes": 13750
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_native.go",
+      "sha256": "b1f69d720029bc82a1d9f0680080360e43978cca8a07ccb3fcc73a9e68b482ce",
+      "bytes": 13160
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_sql_snapshot.go",
+      "sha256": "d90b46527d37c86395e432f7750fa273f3a98295022abf6965538da99bba7523",
+      "bytes": 9678
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_workspace.go",
+      "sha256": "80b1df6362896126b8819c7ead8e3b54afe692ac6e015317d9867843f61697c5",
+      "bytes": 9059
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_writer_api.go",
+      "sha256": "a54fda13d3f5b3c4f4b0b8034a9bbeafc6365394e2d375ee9145c6273f0653c7",
+      "bytes": 5109
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/bootstrap_source_registry_writer_graph.go",
+      "sha256": "2bd5c52f6c277a2fa24165dd2447732f8ee96af9019c25a0d44715c87a63b43d",
+      "bytes": 4715
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_database_admission.go",
+      "sha256": "909b6f34193f7008bfcb034f3188dcff60d9533efea4265e1f8fef721b5af59c",
+      "bytes": 3984
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_database_admission_test.go",
+      "sha256": "7bc10d47f1a97d402c6bbc6983059a2786fda1394ec91914fc438c5183d660e2",
+      "bytes": 6432
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_longhorn_hold.go",
+      "sha256": "7e3f38ad0880455391de460c0eadd2e2b8e7c01d72884c518745cd464975757c",
+      "bytes": 3893
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_runtime_sources.go",
+      "sha256": "e19fa2e5c7cc2d5fa7d6e07415473b933f19bb1c8ea23d028a85593581d7033f",
+      "bytes": 26174
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_service.go",
+      "sha256": "cf9b0ec6855b3556e2eb51aa5b602b0170f23555b7f96a4f35fa80f277d726ba",
+      "bytes": 28170
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_shared_runtime.go",
+      "sha256": "3b55d71d33b1a1a25b0d0752fc511170a740d65dfeef2e113b7ee48240f4d036",
+      "bytes": 4605
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_signed_source_kubernetes_access.go",
+      "sha256": "7e3cd40cb0f8b3fe6aea699a123313d9425c5e90d6f837cff575b330354a3a05",
+      "bytes": 7836
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_tenant_pro_runtime.go",
+      "sha256": "847ea37dde047095a9b170a30beb2ea1de282d6aea6bad6eb4cc0d9d83438341",
+      "bytes": 2835
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/deployment_tenant_recovery_probe_test.go",
+      "sha256": "3c1ecdfd967f436e095ace254ff7b47b5cf76b6c8f31b6b6e1147984ff88d4d0",
+      "bytes": 3221
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/kubernetes_access.go",
+      "sha256": "e6fbfebcff6dd276c6db3e674aeba107a0f7c1278fdb4762ea6c2b73512e60fc",
+      "bytes": 12128
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_capture_modules.go",
+      "sha256": "fe9ee593608a47fad67ba112a74c7f90d623fd16d0563ae868144ed6d507c10f",
+      "bytes": 23038
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_held_longhorn.go",
+      "sha256": "b5a890306fe119c9e1a81423d9a5ab7fe875b3789217e3951d4150e747675327",
+      "bytes": 6337
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_held_longhorn_test.go",
+      "sha256": "c1119733419086dd792795576d1c6a84e917ae36b2fb5ad6b7681db72ef86753",
+      "bytes": 2521
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_cut_set.go",
+      "sha256": "ddffba2a7aca7bdc443fbfd3093a00dbae366bfc14517b118d31aa3f7552af17",
+      "bytes": 7508
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_cut_set_test.go",
+      "sha256": "c43dc70f7503c7428bf350c1ff57dfa868236c54608704d32c95082d8e3bfcc7",
+      "bytes": 2933
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_execution.go",
+      "sha256": "e92552b7753b34f1a7a8524632a6ebfef5bf0c2db87a5693c48864acd062c764",
+      "bytes": 17089
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_execution_test.go",
+      "sha256": "c8564b78acc196d034d89de078c0999526a54e5857f1f1d0186dcb9a4ddf745e",
+      "bytes": 3298
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_keeper.go",
+      "sha256": "f4492acdbba7eca4339712811d9cccdb0c07df55dffbf43db3d336274c1b5e63",
+      "bytes": 14521
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_native.go",
+      "sha256": "0c1bab8fdee853f5320c92bd50bc7d6437745911d288ee57a7e16c6f7afd8f96",
+      "bytes": 9204
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_native_journal.go",
+      "sha256": "c9696189c9b52e6a4fecc096e6436067e490a8d61c2707f2907d98d0b0ccc049",
+      "bytes": 8214
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_native_test.go",
+      "sha256": "495e5b3f6d58a74732256a30c15f66a5004662f522e8078c51609c46190909c3",
+      "bytes": 3673
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_recovery.go",
+      "sha256": "cc51468a050f11b3b1f431131097a663c123e2c267e1a883de02758efa66c0ae",
+      "bytes": 1075
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_recovery_factory_test.go",
+      "sha256": "afa57f0cb4d97343b0ab5cdd2dcdc397673d826cb982c38547ec3eef4f2ec3e7",
+      "bytes": 2087
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_longhorn_source.go",
+      "sha256": "04146b048a07172b9f132957d6610a523739fdf4a5c672ef60c8a238297a50ed",
+      "bytes": 3110
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_mount_inputs.go",
+      "sha256": "35bf2ea00f7397658656f1f510855e5a3550a35563f4e5e2ad4bfa74cb885092",
+      "bytes": 16112
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_authority.go",
+      "sha256": "9eb51f5f5cfc12ff815b2ecfcd0a4a55a214f2613b126bf83b745393b87fecee",
+      "bytes": 16157
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_clients.go",
+      "sha256": "ebf1e7a3264206ae919132d3c0f83c6e5184719158ca20f45250b9337031d822",
+      "bytes": 8423
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_freeze.go",
+      "sha256": "917c0899ed0af9d3cdb3bc43f2f26e235ba00339491d0052af6afc9bb9b36cc3",
+      "bytes": 11585
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_mounts.go",
+      "sha256": "5a964df224f5b69005a252d9747c74d2cb21e8b0fdb976769847ceb9e7dc8314",
+      "bytes": 18486
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_runtime.go",
+      "sha256": "5b1f86cf927d007758293b26cc5d1baf5e6eb6b320e22b3fc71b7aff337957f0",
+      "bytes": 11583
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_security.go",
+      "sha256": "d773e593fe71abe86e5a94840252eedceea07acacc188938f95e0a224dfb92d4",
+      "bytes": 6374
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_writer_api.go",
+      "sha256": "b3ecdd2224d59c3500963de972518d1e85603dcf2771aa3c556925bce7b7109c",
+      "bytes": 8639
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_source_writer_observation.go",
+      "sha256": "8a259d2c462ad2bf411409db89affda5e921594e45e0b7067c09a1c3e767b07a",
+      "bytes": 15595
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_tenant_pro_census.go",
+      "sha256": "a381818d8b0e91c2c2e77c197afaee3bf2460947adeb0080df9ea64670f18dd5",
+      "bytes": 9030
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_tenant_pro_mount.go",
+      "sha256": "626a411d702e12a8c4f4e9768280431d9142fcae593ce564003a3716c3ae496c",
+      "bytes": 9906
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_tenant_pro_mount_test.go",
+      "sha256": "d4ca38744aae45dab90addd4a2af00b8bc12b2310b85773dd905cde65d1b30a9",
+      "bytes": 13840
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_tenant_source_node.go",
+      "sha256": "565052b78d3042166125547d153abc93572154a3f66e6e40b2ee61b84222897e",
+      "bytes": 1662
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/production_tenant_source_node_test.go",
+      "sha256": "d6b19e4beb19d6977bd65d404253a95ba646ca9bb5f407e6ed64222eb09c4e0f",
+      "bytes": 3343
+    },
+    {
+      "path": "source/backend/internal/systembackupexecution/public_jobs.go",
+      "sha256": "8a5352a47b9223fb69bb60ee8b44f12abc7f09a21a9e9b9419320483cde061aa",
+      "bytes": 42967
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_initial_source_coordinates.go",
+      "sha256": "4dc42a5c7512912633e8b08f599fe8e4e3267e106173570a7ae13c402a554e9a",
+      "bytes": 21352
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_initial_tenant_pro.go",
+      "sha256": "85896efa94a4da60429111b18a7fd61ed4f4338cb70db9a7e347617e34310148",
+      "bytes": 4144
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_initial_tenant_pro_access.go",
+      "sha256": "f675f048c646a04d1fc39c7f8ce2b5513383aa71fd8568093e51bcad08e7e668",
+      "bytes": 4045
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_observer_host_materials.go",
+      "sha256": "1e22f71500dbccfd1909cd9080e0eb51c5f7eeee47c10a3327a8de1c7519ce4a",
+      "bytes": 23418
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_observer_longhorn_host.go",
+      "sha256": "bf7339cc5fe805e10603b380283caab47840d42aba49e77c18321aff54e64acb",
+      "bytes": 10390
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_observer_longhorn_host_test.go",
+      "sha256": "aa34305301e2684dd33fa7dfbe313a41fd1db321d5927aac83ea348f69ac7ec4",
+      "bytes": 6775
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_observer_longhorn_source.go",
+      "sha256": "f63f78f6a2c6c0256b10c83352dbcd84ece67ed71456cf11aab00a3016f0dfed",
+      "bytes": 8601
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_observer_longhorn_source_test.go",
+      "sha256": "6b07f3da2404b8c782bf23b35880d270d980747365e95cf0da05411c6525b9d8",
+      "bytes": 6858
+    },
+    {
+      "path": "source/backend/internal/systembackupinstallationowner/install/original_writer_selection_author.go",
+      "sha256": "9036d5d062d03ee486650750283100d53e2fb0fd662cec8840867768f9ab78b0",
+      "bytes": 24845
+    },
+    {
+      "path": "source/Dockerfile",
+      "sha256": "c0d86ea77bf0886deaeae7ac4391faf6aed0fd6a29365eda49100f718aaf7dca",
+      "bytes": 10540
+    },
+    {
+      "path": "source/scripts/system-backup-business-runtime.py",
+      "sha256": "c00de0cb8387faee42fd5a3014a07752e9c34d12c84e5e67c92d126bb4ccd040",
+      "bytes": 41134
+    },
+    {
+      "path": "source/scripts/system-backup-initial-complete-inputs.py",
+      "sha256": "9b561fe9c25a3a569e0e884d5bae2487e19a1c26fa8070aa9fa739fd518b18b0",
+      "bytes": 55011
+    },
+    {
+      "path": "source/scripts/system-backup-initial-runtime.py",
+      "sha256": "5050152f9f9cc1c37d422f56db8d51af1e2c99cfa6af3d791b15b3b78a7d0c63",
+      "bytes": 31223
+    },
+    {
+      "path": "source/scripts/system-backup-initial-source-data.py",
+      "sha256": "f07ec9b3d103a7962a7aa527f486d3bc6f84b35327331e488f56b1f97f55fbca",
+      "bytes": 32343
+    },
+    {
+      "path": "source/scripts/system-backup-operator-deployment.py",
+      "sha256": "80d93560e0dad7ae5427841635594566f7a19db99acadfecece737ecf15fc464",
+      "bytes": 95932
+    },
+    {
+      "path": "source/scripts/system-backup-operator-deployment.test.py",
+      "sha256": "bd4fb995797319381390ddb15dddc6caee619b4aad082b71dbf62a3eef2c9770",
+      "bytes": 18044
+    },
+    {
+      "path": "source/scripts/system-backup-publication-owner-assembly.py",
+      "sha256": "31f28aff08a3676376c205113d5a1dd54064f24510d63de499be9e43cf4e88f3",
+      "bytes": 14352
+    },
+    {
+      "path": "source/scripts/system-backup-runtime-issuers.py",
+      "sha256": "93bc7eb2fb4c07cc116ae3e399e6bdae6e86eba9b813b48328a833f627b22925",
+      "bytes": 2535
+    },
+    {
+      "path": "source/scripts/system-backup-runtime-record-keys.py",
+      "sha256": "6473b6f0d72f39793f8c99a3a5cf5e67e0e3046a611edfb37c4f8477ee0f05a8",
+      "bytes": 2503
+    },
+    {
+      "path": "source/scripts/system-backup-workspace-localization.py",
+      "sha256": "f0e34790d7aa81a53e0b7889db082d8b2f6a2eb7db21d7454b657fa18f2edf87",
+      "bytes": 65485
+    },
+    {
+      "path": "source/scripts/system-backup-zhanghui08-operator.py",
+      "sha256": "e81f0816326644dd0c9b33e6204ca460c94858dcbc8dabcd23f4127920c20008",
+      "bytes": 92550
+    },
+    {
+      "path": "VALIDATION.json",
+      "sha256": "6b6fb3e1b95397455c32ec4c617e0d756150877d0a8e91679106c0281d075d3a",
+      "bytes": 910
+    },
+    {
+      "path": "verification/base-cycle-regression.log",
+      "sha256": "863d814d8a53669447116eb83f81141a0e65bca877b38b04f1c2d53fe4f38010",
+      "bytes": 52
+    },
+    {
+      "path": "verification/focused-test.log",
+      "sha256": "6c976822f5b51abbca4530e77a4542347cea6e53cc5b9407fff9a9a4ffc4682f",
+      "bytes": 277
+    },
+    {
+      "path": "verification/linux-final-result.json",
+      "sha256": "e89150fcabcc08f4a3f1e65823920926c40066274de36b016cf69b722d5d2b23",
+      "bytes": 59
+    },
+    {
+      "path": "verification/remote-plan-validation.json",
+      "sha256": "f6eeaf9821ae438f9ac7a4e289ca1de9d4197c8e9dcf3b7f8b59625eecca4132",
+      "bytes": 323
+    },
+    {
+      "path": "verification/run-linux-final.ps1",
+      "sha256": "d06098010005c98300073257d16cb5db5c6694111f5f5fde55d7ddbfebcf08da",
+      "bytes": 4057
+    },
+    {
+      "path": "verification/run-validation-r2.ps1",
+      "sha256": "ace9086f32da5d2d00c6c41f2a34c0138b2397db6a9345aaea0eb44e7d9c53da",
+      "bytes": 4960
+    },
+    {
+      "path": "verification/validate-remote-plan.py",
+      "sha256": "2c8941984fbb8ca215d5b8ce5860f28111c7fd3e5e4917c5d4d92210bb475412",
+      "bytes": 3640
+    }
+  ]
+}
