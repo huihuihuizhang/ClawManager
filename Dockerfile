@@ -64,6 +64,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-controller-grants ./cmd/system-backup-controller-grants \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid= -X clawreef/internal/buildinfo.Version=${VERSION} -X clawreef/internal/buildinfo.Commit=${VCS_REF} -X clawreef/internal/buildinfo.BuildTime=${BUILD_DATE}" -o /out/system-backup-v2-controller ./cmd/system-backup-v2-controller \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/backup-worker ./cmd/backup-worker \
+    && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/backup-shared-runtime-node-owner ./cmd/backup-shared-runtime-node-owner \
     && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/system-backup-audit-collect ./cmd/system-backup-audit-collect
 
 FROM backend-builder AS installation-builder
@@ -120,6 +121,7 @@ RUN set -eu; mkdir -p /installation; for tool in \
 FROM scratch AS backup-worker
 COPY --from=backend-builder --chmod=0555 /out/backup-worker /backup-worker
 COPY --from=backend-builder --chmod=0555 /out/system-backup-seal-custody /system-backup-seal-custody
+COPY --from=backend-builder --chmod=0555 /out/backup-shared-runtime-node-owner /backup-shared-runtime-node-owner
 USER 65532:65532
 ENTRYPOINT ["/backup-worker"]
 

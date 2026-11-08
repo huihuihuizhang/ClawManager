@@ -44,7 +44,15 @@ func run(ctx context.Context, args []string) error {
 	cgroup := f.String("cgroup-mount", "/sys/fs/cgroup", "native host cgroup v2 mount")
 	openclawELF := f.String("openclaw-agent-elf-sha256", "", "release-approved running shared Agent executable")
 	hermesELF := f.String("hermes-agent-elf-sha256", "", "release-approved running shared Agent executable")
-	if f.Parse(args) != nil || f.NArg() != 0 || runtime.GOOS != "linux" || *anchorKey == "" || *store == "" || *ca == "" || *cert == "" || *key == "" || *controller == "" || *openclawELF == "" || *hermesELF == "" {
+	keeper := f.Bool("attachment-keeper", false, "retain an authorized read-only PVC attachment")
+	keeperRoot := f.String("keeper-root", "/source", "read-only keeper volume mount")
+	if f.Parse(args) != nil || f.NArg() != 0 || runtime.GOOS != "linux" {
+		return quiesce.ErrNodeObservation
+	}
+	if *keeper {
+		return keepLonghornAttachment(ctx, *keeperRoot)
+	}
+	if *anchorKey == "" || *store == "" || *ca == "" || *cert == "" || *key == "" || *controller == "" || *openclawELF == "" || *hermesELF == "" {
 		return quiesce.ErrNodeObservation
 	}
 	secret, err := quiesce.ReadNodeObservationKey(*anchorKey)
