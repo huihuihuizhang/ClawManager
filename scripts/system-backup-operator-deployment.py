@@ -433,7 +433,6 @@ class DeploymentStages:
             return result
         self.op.upgraded_released()
         self.common()
-        inputs_pvc = self.prepare_inputs_pvc()
         tls = self.completed("tls-apply")
         need(tls["OperatorSQLTLSVerified"] is True, "actual_tls_producer_required")
         tls_plan = decode(read(tls["PlanFile"], tls["PlanSHA256"]))
@@ -445,6 +444,8 @@ class DeploymentStages:
         images = {"app": registry_image(self.a.deployment_app_image, build["images"]["app"], build["commit"]),
                   "worker": registry_image(self.a.deployment_worker_image, build["images"]["worker"], build["commit"])}
         self.retain("images.actual.json", images)
+        # Qualify both release images before creating any Kubernetes object.
+        inputs_pvc = self.prepare_inputs_pvc()
         original = self.get("deployment", "clawmanager-app")
         need(original["metadata"]["uid"] == self.scope["app_deployment_uid"] and original["spec"].get("replicas", 1) == 0, "original_app_stopped_required")
         desired = copy.deepcopy(original["spec"])

@@ -176,18 +176,34 @@ class NewImageTests(unittest.TestCase):
         self.tool = m.DeploymentStages.__new__(m.DeploymentStages)
         self.tool.directory, self.tool.root = root, root
         self.tool.operation, self.tool.prefix = "a" * 32, "sbk-model"
-        self.tool.a = types.SimpleNamespace(deployment_app_image="actual-app-reference", deployment_worker_image="actual-worker-reference")
-        self.tool.op = types.SimpleNamespace(upgraded_released=lambda: None)
+        self.tool.a = types.SimpleNamespace(deployment_app_image="actual-app-reference", deployment_worker_image="actual-worker-reference", deployment_inputs_storage_class="longhorn-inputs")
+        self.storage = {"metadata": {"name": "longhorn-inputs", "uid": "original-storage-class"}, "provisioner": "driver.longhorn.io", "volumeBindingMode": "WaitForFirstConsumer"}
+        self.tool.op = types.SimpleNamespace(upgraded_released=lambda: None, k=lambda *args: m.encoded(self.storage))
         self.tool.common = lambda: ([], {}, {}, {})
         self.tool.scope = {"app_deployment_uid": "app-deployment"}
         self.original = {"metadata": {"uid": "app-deployment", "resourceVersion": "17"}, "spec": {"replicas": 0, "template": {"spec": {"containers": [{"name": "app", "image": "old-image", "env": [{"name": "DB_USER", "value": "original-primary-app-user"}, {"name": "DB_PASSWORD", "valueFrom": {"secretKeyRef": {"name": "original-app-secret", "key": "db-password"}}}], "envFrom": [{"configMapRef": {"name": "original-business-config"}}], "volumeMounts": [{"name": "original-config", "mountPath": "/app/config.yaml", "subPath": "config.yaml"}]}], "volumes": [{"name": "original-config", "configMap": {"name": "original-business-config"}}]}}}}
-        self.tool.get = lambda resource, name: copy.deepcopy(self.original)
+        self.pvc = None
+        def get(resource, name):
+            if resource == "pvc":
+                self.assertEqual(name, "sbk-model-inputs")
+                return copy.deepcopy(self.pvc)
+            self.assertEqual((resource, name), ("deployment", "clawmanager-app"))
+            return copy.deepcopy(self.original)
+        self.tool.get = get
         self.events, self.sent_patch = [], None
         def create_object(stage, obj):
             self.events.append("ca-create")
             return {**obj, "metadata": {**obj["metadata"], "uid": "created-ca"}}
         self.tool.create_object = create_object
         def kubectl(stage, args, patch):
+            if stage == "host-pvc-inputs":
+                self.assertEqual(args, ["create", "-f", "-", "-o", "json"])
+                self.assertEqual(patch["kind"], "PersistentVolumeClaim")
+                self.events.append("inputs-pvc-create")
+                self.pvc = copy.deepcopy(patch)
+                self.pvc["metadata"]["uid"] = "original-inputs-pvc"
+                self.pvc["status"] = {"phase": "Pending"}
+                return copy.deepcopy(self.pvc), {}
             self.events.append("app-patch")
             self.sent_patch = patch
             return {"metadata": {"uid": "app-deployment"}, "spec": copy.deepcopy(patch[-1]["value"])}, {}
@@ -222,22 +238,49 @@ class NewImageTests(unittest.TestCase):
         self.assertEqual(container["envFrom"], [{"configMapRef": {"name": "original-business-config"}}])
         self.assertEqual(desired["replicas"], 0)
         self.assertFalse(desired["template"]["spec"].get("initContainers"))
-        self.assertEqual(container["volumeMounts"][-1]["subPath"], "ca.crt")
+        ca_mount = next(v for v in container["volumeMounts"] if v["name"] == "sbk-business-mysql-ca")
+        self.assertEqual(ca_mount["subPath"], "ca.crt")
+        self.assertEqual(container["volumeMounts"][-1], {"name": "sbk-original-runtime-inputs", "mountPath": m.RUNTIME_MOUNT, "readOnly": True})
+        self.assertEqual(desired["template"]["spec"]["volumes"][-1]["persistentVolumeClaim"], {"claimName": "sbk-model-inputs", "readOnly": True})
+        self.assertEqual(result["inputs_pvc"], {"Name": "sbk-model-inputs", "UID": "original-inputs-pvc"})
+        self.assertEqual(self.pvc["spec"]["accessModes"], ["ReadWriteMany"])
         self.assertEqual(env["SYSTEM_BACKUP_CONFIG_MUTATION_ENABLED"]["value"], "false")
         self.assertFalse(result["configuration_enabled"])
-        self.assertEqual(self.events, ["registry-actual-app-reference", "registry-actual-worker-reference", "ca-create", "app-patch", "business-rollout"])
+        self.assertEqual(self.events, ["registry-actual-app-reference", "registry-actual-worker-reference", "inputs-pvc-create", "ca-create", "app-patch", "business-rollout"])
 
     def test_registry_rejection_precedes_any_kubernetes_mutation(self):
         with patch.object(m, "registry_image", side_effect=m.Refused("different-release")), self.assertRaises(m.Refused):
             self.tool.new_image()
         self.assertEqual(self.events, [])
 
+    def test_worker_registry_rejection_precedes_any_kubernetes_mutation(self):
+        def image(reference, built, commit):
+            if reference == "actual-worker-reference":
+                raise m.Refused("different-worker-release")
+            return self.image(reference, built, commit)
+        with patch.object(m, "registry_image", side_effect=image), self.assertRaises(m.Refused):
+            self.tool.new_image()
+        self.assertEqual(self.events, ["registry-actual-app-reference"])
+
+    def test_inputs_pvc_readback_drift_prevents_app_patch_and_start(self):
+        get = self.tool.get
+        def changed(resource, name):
+            actual = get(resource, name)
+            if resource == "pvc":
+                actual["metadata"]["uid"] = "replacement-inputs-pvc"
+            return actual
+        self.tool.get = changed
+        with patch.object(m, "registry_image", side_effect=self.image), self.assertRaises(m.Refused):
+            self.tool.new_image()
+        self.assertEqual(self.events, ["registry-actual-app-reference", "registry-actual-worker-reference", "inputs-pvc-create"])
+
     def test_patch_readback_drift_prevents_business_start(self):
         def changed(stage, args, patch):
             value = copy.deepcopy(patch[-1]["value"])
             value["replicas"] = 4
             return {"metadata": {"uid": "app-deployment"}, "spec": value}, {}
-        self.tool.kubectl = changed
+        original_kubectl = self.tool.kubectl
+        self.tool.kubectl = lambda stage, args, patch: original_kubectl(stage, args, patch) if stage == "host-pvc-inputs" else changed(stage, args, patch)
         with patch.object(m, "registry_image", side_effect=self.image), self.assertRaises(m.Refused):
             self.tool.new_image()
         self.assertNotIn("business-rollout", self.events)
