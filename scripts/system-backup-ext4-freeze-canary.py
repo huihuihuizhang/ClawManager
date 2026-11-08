@@ -26,8 +26,16 @@ def require(ok, reason):
         raise RuntimeError(reason)
 
 
+output_failed = False
+
+
 def emit(**record):
-    print(json.dumps(record, sort_keys=True), flush=True)
+    global output_failed
+    try:
+        print(json.dumps(record, sort_keys=True), flush=True)
+    except OSError:
+        # A closed log pipe must not interrupt thaw or owned-device cleanup.
+        output_failed = True
 
 
 def run(*args):
@@ -378,6 +386,7 @@ def main():
             emit(phase="cleanup", complete=False, directory=str(base), loop=loop,
                  mounted=mounted, failure=str(exc))
             raise
+    require(not output_failed, "canary log output failed")
     return 0
 
 
