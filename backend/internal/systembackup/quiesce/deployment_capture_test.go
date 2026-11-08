@@ -1,12 +1,15 @@
-package quiesce
+package quiesce_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	c "clawreef/internal/systembackup"
 	"clawreef/internal/systembackup/flow"
+	q "clawreef/internal/systembackup/quiesce"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -14,17 +17,18 @@ import (
 )
 
 func TestDeploymentCapturePreservesOriginalCheckpointAlongsidePausedObject(t *testing.T) {
-	f := newDeploymentFixture(t, 1)
-	ctx := testDeadline(t)
-	original, err := f.writer.Observe(ctx)
+	writer, api := q.NewCaptureDeploymentFixtureForTest(t, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	original, err := writer.Observe(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ack, err := f.writer.Pause(ctx, original)
-	if err != nil || !ack.Stopped || f.writer.CheckPaused(ctx, original) != nil {
+	ack, err := writer.Pause(ctx, original)
+	if err != nil || !ack.Stopped || writer.CheckPaused(ctx, original) != nil {
 		t.Fatal("actual writer did not quiesce", err)
 	}
-	paused, err := f.client.AppsV1().Deployments("fixture").Get(ctx, "agent", metav1.GetOptions{})
+	paused, err := api.AppsV1().Deployments("fixture").Get(ctx, "agent", metav1.GetOptions{})
 	if err != nil || *paused.Spec.Replicas != 0 {
 		t.Fatal("capture view must be paused", err)
 	}
@@ -55,7 +59,7 @@ func TestDeploymentCapturePreservesOriginalCheckpointAlongsidePausedObject(t *te
 	if json.Unmarshal(raw, &restored) != nil || restored.Original != original {
 		t.Fatal("checkpoint bytes changed")
 	}
-	count, err := DeploymentOriginalReplicas("fixture", "agent", restored.Original)
+	count, err := q.DeploymentOriginalReplicas("fixture", "agent", restored.Original)
 	if err != nil || count != 1 {
 		t.Fatal("archive lost pre-pause desired replicas", err)
 	}
@@ -72,10 +76,10 @@ func TestDeploymentCapturePreservesOriginalCheckpointAlongsidePausedObject(t *te
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err = f.writer.Resume(ctx, original); err != nil {
+	if err = writer.Resume(ctx, original); err != nil {
 		t.Fatal(err)
 	}
-	current, _ := f.client.AppsV1().Deployments("fixture").Get(ctx, "agent", metav1.GetOptions{})
+	current, _ := api.AppsV1().Deployments("fixture").Get(ctx, "agent", metav1.GetOptions{})
 	if *current.Spec.Replicas != count {
 		t.Fatal("original desired state was not restored")
 	}
