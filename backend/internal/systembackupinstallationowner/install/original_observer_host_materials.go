@@ -14,6 +14,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -135,6 +136,7 @@ func observerHostInstallScript(ep OriginalObserverPKIEndpoint, def OriginalObser
 	script.WriteString("[[ ${1:-} == --apply ]] || { echo 'local preflight only; no installation or source proof'; exit 0; }\n")
 	script.WriteString("if [[ ! -d " + observerShellArg(material) + " ]]; then install -d -o 0 -g 0 -m 0700 -- " + observerShellArg(material) + "; fi\nexec 9>" + observerShellArg(path.Join(material, ".install.lock")) + "\nflock -n 9 || exit 27\n")
 	script.WriteString("if [[ ! -d " + observerShellArg(def.BinaryDirectory) + " ]]; then install -d -o 0 -g 0 -m 0755 -- " + observerShellArg(def.BinaryDirectory) + "; fi\n")
+	sharedObserverUpdateScript(&script, def.BinaryDirectory, kinds)
 	script.WriteString("copy_exact() { local source=$1 target=$2 mode=$3; if [[ -e $target || -L $target ]]; then [[ -f $target && ! -L $target && $(stat -c %u -- \"$target\") == 0 && $(stat -c %a -- \"$target\") == $mode && $(sha256sum -- \"$source\" | cut -d ' ' -f 1) == $(sha256sum -- \"$target\" | cut -d ' ' -f 1) ]] || exit 28; else install -o 0 -g 0 -m \"$mode\" -- \"$source\" \"$target\"; fi; }\n")
 	if cri.ReleaseBinary.File != "" {
 		script.WriteString("if [[ ! -d " + observerShellArg(path.Dir(cri.Binary)) + " ]]; then install -d -o 0 -g 0 -m 0755 -- " + observerShellArg(path.Dir(cri.Binary)) + "; fi\ncopy_exact " + observerHostCRIBundleName + " " + observerShellArg(cri.Binary) + " 755\ncheck_crictl " + observerShellArg(cri.Binary) + "\n")
@@ -158,8 +160,22 @@ func observerHostInstallScript(ep OriginalObserverPKIEndpoint, def OriginalObser
 		binary := originalObserverBinary[kind]
 		unit := "clawreef-" + binary + ".service"
 		units = append(units, observerShellArg(unit))
+		if kind == "shared" {
+			script.WriteString("if (( shared_update == 0 )); then\n")
+		}
 		script.WriteString("copy_exact " + observerShellArg(binary) + " " + observerShellArg(path.Join(def.BinaryDirectory, binary)) + " 755\n")
 		script.WriteString("copy_exact " + observerShellArg(unit) + " " + observerShellArg(path.Join("/etc/systemd/system", unit)) + " 644\n")
+		if kind == "shared" {
+			script.WriteString("fi\n")
+		}
+	}
+	if slices.Contains(kinds, "shared") {
+		script.WriteString(`if (( shared_update )); then
+    shared_stopped || exit 30
+    replace_update_target backup-shared-runtime-node-owner "$shared_binary" 755 "$3"
+    replace_update_target clawreef-backup-shared-runtime-node-owner.service "$shared_unit" 644 "$4"
+fi
+`)
 	}
 	script.WriteString("systemctl daemon-reload\nsystemctl enable --now " + strings.Join(units, " ") + "\nsystemctl is-active --quiet " + strings.Join(units, " ") + "\necho 'host observer services active; TLS connectivity and native source proof still require independent validation'\n")
 	return []byte(script.String())

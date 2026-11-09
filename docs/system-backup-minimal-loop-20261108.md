@@ -10,6 +10,8 @@
 
 任务控制器新增了两个调用点。交接调用位于原停写意图落库之后、物理停写之前。存储恢复调用位于原恢复屏障之后、writer 恢复之前。`go test -p 4 ./internal/systembackupcontroller -run '^TestExecutionJobs' -count=1 -v` 通过，覆盖同一任务身份传递、正常顺序及任一步失败后的拦截。具体 Longhorn 交接和恢复还须由正式 Job owner 实现。
 
+Node 安装包新增 `install.sh --apply --update-shared <旧二进制SHA256> <旧unitSHA256>`。两个旧摘要从上次已审核的节点安装包取得。运行前先暂停备份接单并确认原任务的冻结及恢复义务全部清零，再由操作者停用、停止 `clawreef-backup-shared-runtime-node-owner.service`。安装器校验该 unit 已停用、无 PID 且无 drop-in，只替换 shared Node owner 二进制和 unit。中途退出且服务仍停用时，可使用原参数重试。原证书和恢复目录继续使用。该流程已做本地验证，现场更新待实际部署。
+
 正式验收还须接通同一 task/attempt 的 Node 认证交接、快照与采集调用、失败时的解冻和原 writer 恢复，以及原有 Node 安装材料和 unit 更新。keeper 必须保留至冻结已解除、原 writer 恢复并确认原卷可用。最终在验证环境从页面提交一次，核对同一任务的非空备份、源恢复、正式发布及独立读回。此前的专用卷结果作为存储基线保留。
 
 ## 已通过的存储验证
