@@ -95,6 +95,9 @@ def pod(name, readonly=False):
                     "claimName": "source-" + kind, "readOnly": readonly})])
     if kind == "rwo":
         spec["nodeName"] = e["NODE"]
+    if name == "writer-rwo":
+        # Keep the disposable writer's shutdown grace inside the API wait.
+        spec["terminationGracePeriodSeconds"] = 5
     return dict(apiVersion="v1", kind="Pod", metadata=meta(name), spec=spec)
 
 pvc = dict(apiVersion="v1", kind="PersistentVolumeClaim", metadata=meta("source-" + kind),
@@ -175,7 +178,16 @@ WRITER_UID=$(k -n "$NS" get pod writer-rwo -o json | jq -er --arg run "$RUN_ID" 
 [[ $(k get ns "$NS" -o jsonpath='{.metadata.uid}') == "$NS_UID" &&
    $(k -n "$NS" get pod writer-rwo -o jsonpath='{.metadata.uid}') == "$WRITER_UID" ]] ||
   stop '删除前身份核对失败'
-k -n "$NS" delete pod writer-rwo --wait=true --timeout=30s
+if ! k -n "$NS" delete pod writer-rwo --wait=true --timeout=30s; then
+  k -n "$NS" get pod writer-rwo -o json | jq '{
+    uid:.metadata.uid, deletionTimestamp:.metadata.deletionTimestamp,
+    deletionGracePeriodSeconds:.metadata.deletionGracePeriodSeconds,
+    terminationGracePeriodSeconds:.spec.terminationGracePeriodSeconds,
+    finalizers:.metadata.finalizers, phase:.status.phase,
+    containers:[.status.containerStatuses[]? | {name,ready,state}]
+  }' | tee "$OUT/writer-termination.json" >&2 || true
+  stop '未确认测试 writer 已完成删除'
+fi
 volume_identity "$RWO_HANDLE" > "$OUT/rwo-after.json"
 keeper_identity > "$OUT/keeper-after.json"
 cmp "$OUT/rwo-before.json" "$OUT/rwo-after.json"
