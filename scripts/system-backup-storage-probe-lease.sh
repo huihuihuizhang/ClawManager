@@ -26,6 +26,11 @@ trap 'lease_exit=$?; if [[ $BASHPID == $lease_parent ]]; then printf "%s\n" "$le
 [[ $(stat -L -c %d /proc/self/fd/9) != $(stat -c %d "$lease_dir") ]] || exit 2
 printf '%s\n' "$$" > "$lease_dir/parent.pid"
 sync -f /proc/self/fd/9
+freeze_call() (
+  # exec keeps this exact TID for correlation. Evidence I/O must not block thaw.
+  printf '%s\n' "$BASHPID" > "$lease_dir/$1.pid" || true
+  exec fsfreeze "--$1" /proc/self/fd/9
+)
 (
   # Inherit FD 9; a parent/SSH loss does not change the target of this thaw.
   explicit=0
@@ -38,7 +43,7 @@ sync -f /proc/self/fd/9
     printf '%s\n' 'freeze result unknown; no inverse mutation sent' > "$lease_dir/unknown"
     exit 5
   fi
-  if fsfreeze --unfreeze /proc/self/fd/9; then
+  if freeze_call unfreeze; then
     date -u +%FT%T.%NZ > "$lease_dir/thaw-acknowledged"
     if [[ $explicit == 1 ]]; then exit 0; fi
     printf '%s\n' 'watchdog used; experiment invalid' > "$lease_dir/timed-out"
@@ -49,7 +54,7 @@ sync -f /proc/self/fd/9
 ) 9<&9 &
 watchdog=$!
 printf '%s\n' "$watchdog" > "$lease_dir/watchdog.pid"
-if ! fsfreeze --freeze /proc/self/fd/9; then
+if ! freeze_call freeze; then
   printf '%s\n' 'freeze failed/unconfirmed; do not infer success from EBUSY' > "$lease_dir/unknown"
   wait "$watchdog" || true
   exit 5
@@ -61,7 +66,7 @@ else
   # The watchdog may have expired just before FIFREEZE acknowledged. Only its
   # explicit non-dispatch record permits this same-parent, same-FD cleanup.
   if [[ -f $lease_dir/no-thaw-dispatched ]]; then
-    if fsfreeze --unfreeze /proc/self/fd/9; then
+    if freeze_call unfreeze; then
       date -u +%FT%T.%NZ > "$lease_dir/thaw-acknowledged"
     fi
   fi

@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import runpy
 import select
 import shutil
 import signal
@@ -95,10 +96,11 @@ def same_loop(loop, image):
     return os.path.realpath(backing.read_text().strip()) == str(image)
 
 
-def freeze_exercise(directory, writer, mapping):
+def freeze_exercise(directory, writer, mapping, inject_thaw=False):
     """Test ordinary open writers, shared faults and both sync forms frozen."""
     actors = {}
-    frozen = False
+    freeze_attempted = False
+    injected_tid = None
     cancel_read, cancel_write = os.pipe()
     watchdog = os.fork()
     if watchdog == 0:
@@ -167,8 +169,8 @@ def freeze_exercise(directory, writer, mapping):
 
         # Open FD and MAP_SHARED are already retained. No repeated FIFREEZE
         # is used to query state. This successful ioctl is the freeze event.
+        freeze_attempted = True
         fcntl.ioctl(directory, 0xC0045877, 0)
-        frozen = True
         emit(phase="freeze_acquired", writable_fd_retained=True, shared_mapping_retained=True)
         for actor in actors.values():
             os.write(actor["go"], b"G")
@@ -189,20 +191,40 @@ def freeze_exercise(directory, writer, mapping):
         during = {name: actor["completion"] for name, actor in actors.items()}
         emit(phase="while_frozen", observation_seconds=3, completions=during,
              systemwide_sync_scope="all host superblocks; not limited by mount namespace")
+        if inject_thaw:
+            # Ground truth for trace calibration: a different process thaws the
+            # pinned disposable mount before the parent's planned thaw.
+            with subprocess.Popen(
+                [sys.executable, "-I", "-B", "-c",
+                 "import fcntl,sys; fcntl.ioctl(int(sys.argv[1]), 0xC0045878, 0)", str(directory)],
+                pass_fds=(directory,),
+            ) as helper:
+                try:
+                    require(helper.wait(timeout=5) == 0, "independent calibration thaw failed")
+                except subprocess.TimeoutExpired:
+                    helper.kill()
+                    raise
+                injected_tid = helper.pid
+                emit(phase="calibration_foreign_thaw", tid=injected_tid)
     finally:
         thaw_error = None
-        thaw_confirmed = not frozen
-        if frozen:
+        # An interruption between kernel return and Python acknowledgement can
+        # leave the owned loop frozen. Retain recovery once ioctl is attempted.
+        thaw_confirmed = not freeze_attempted
+        if freeze_attempted:
             try:
                 fcntl.ioctl(directory, 0xC0045878, 0)
                 thaw_confirmed = True
                 emit(phase="thaw_acknowledged")
             except OSError as exc:
                 thaw_error = exc
-                # EINVAL on this already-frozen exact ext4 FD means a helper
-                # thawed it first. Timing is invalid, but cleanup can proceed.
+                # On this private exact ext4 FD, EINVAL indicates no freeze
+                # remains. Only the deliberate independent thaw expects it.
                 thaw_confirmed = exc.errno == errno.EINVAL
-                emit(phase="parent_thaw_failed", errno=exc.errno, test_invalid=True)
+                if injected_tid is not None and exc.errno == errno.EINVAL:
+                    emit(phase="calibration_parent_thaw_already_released", errno=exc.errno)
+                else:
+                    emit(phase="parent_thaw_failed", errno=exc.errno, test_invalid=True)
         if thaw_confirmed:
             os.write(cancel_write, b"C")
         os.close(cancel_write)
@@ -240,7 +262,11 @@ def freeze_exercise(directory, writer, mapping):
             os.close(actor["go"])
             os.close(actor["result"])
 
-    require(thaw_error is None, "parent thaw did not complete normally")
+    if inject_thaw:
+        require(injected_tid is not None and thaw_error is not None and thaw_error.errno == errno.EINVAL,
+                "independent thaw did not precede the parent's thaw")
+    else:
+        require(thaw_error is None, "parent thaw did not complete normally")
     require(watchdog_status == 0, "watchdog thawed the filesystem; timing result invalid")
     require(during["direct_writer"] is None and during["mmap_writer"] is None,
             "a writer completed while frozen")
@@ -255,9 +281,10 @@ def freeze_exercise(directory, writer, mapping):
          snapshot_deadlock_canary_passed=bool(during["systemwide_sync"] and during["systemwide_sync"].get("ok")))
     require(all(during[name] and during[name].get("ok") for name in ("syncfs", "systemwide_sync")),
             "sync did not complete within the frozen observation window")
+    return injected_tid
 
 
-def exercise(target, loop):
+def exercise(target, loop, trace=False):
     directory = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
     filename = target / "writer.bin"
     writer = -1
@@ -300,7 +327,11 @@ def exercise(target, loop):
         require(mapping != ctypes.c_void_p(-1).value, "MAP_SHARED failed")
         ctypes.memmove(mapping, b"map-alive", 9)
         attempt("writable_fd_and_shared_mapping_after_syncfs", errno.EBUSY)
-        freeze_exercise(directory, writer, mapping)
+        if trace:
+            module = runpy.run_path(str(Path(__file__).with_name("system-backup-ext4-freeze-trace.py")))
+            module["trace_freeze"](directory, lambda: freeze_exercise(directory, writer, mapping, inject_thaw=True), emit)
+        else:
+            freeze_exercise(directory, writer, mapping)
         os.close(writer)
         writer = -1
         attempt("shared_mapping_after_original_fd_closed", errno.EBUSY)
@@ -325,10 +356,17 @@ def exercise(target, loop):
 
 
 def main():
-    require(len(sys.argv) == 1, "no target/device/mount arguments are accepted")
+    require(sys.argv[1:] in ([], ["--trace-freeze"]), "no target/device/mount arguments are accepted")
+    trace = sys.argv[1:] == ["--trace-freeze"]
     require(os.geteuid() == 0 and platform.system() == "Linux" and
             platform.machine() == "x86_64" and platform.release().startswith("6.8."),
             "root Linux 6.8.x x86_64 required")
+    if trace:
+        def interrupted(signum, _frame):
+            raise RuntimeError(f"calibration interrupted by signal {signum}")
+
+        for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+            signal.signal(sig, interrupted)
     for binary in ("mkfs.ext4", "losetup", "mount", "umount"):
         require(shutil.which(binary) is not None, binary + " must already be installed")
     before = os.readlink("/proc/self/ns/mnt")
@@ -361,7 +399,7 @@ def main():
         mounted = True
         require(mount_state(target, loop) == "rw", "fresh ext4 is not RW")
         emit(phase="mounted_owned_loop", loop=loop, image=str(image), mount=str(target))
-        exercise(target, loop)
+        exercise(target, loop, trace=trace)
         complete = True
     finally:
         # No forced/lazy unmount and no recursive deletion. A failed identity
@@ -394,5 +432,6 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        emit(phase="failure", failure=str(exc), tested=False)
+        result = {"status": "UNVERIFIED"} if sys.argv[1:] == ["--trace-freeze"] else {}
+        emit(phase="failure", failure=str(exc), tested=False, **result)
         raise SystemExit(3)
