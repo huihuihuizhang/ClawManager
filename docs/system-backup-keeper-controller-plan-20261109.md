@@ -19,6 +19,17 @@
 3. 暂停备份接单，确认没有冻结和未完成的恢复义务。按节点停用并停止原 Node owner，使用审核过的旧二进制和 unit 摘要执行安装包的 `install.sh --apply --update-shared`。更新后校验 unit 参数、节点服务、卷授权摘要及控制器 mTLS 连接，再更新控制器和 worker。以实际镜像 digest 和配置回读为准。
 4. 核对页面已有的 `创建完整备份` 入口、六域提交体及实时数据来源。现有页面用 `functional_test`。若旧 e2e 脚本仍断言 `acceptance`，这次用现有页面和同任务证据验收，脚本对齐另行处理。
 
+### 部署交接与验收
+
+| 顺序 | 输入与动作 | 达成目标与通过条件 |
+| --- | --- | --- |
+| 1. 固定镜像 | 从 `fb8e70c0718c1f6118c6ef7b7423e1e537a3ae17` 的独立源码构建 `app`、`backup-worker`。验证标签为 `sbk-validation-fb8e70c0-20261109`，仓库为 `10.130.14.23:5000`，镜像仓库名为 `clawmanager` 和 `clawmanager-backup-worker` | 推送后回读两份 `repository@sha256:…`。确认 Linux amd64、同一提交和仓库回读的配置摘要与本地镜像 ID 一致。部署清单固定两个摘要 |
+| 2. 签名源与 Node 材料 | 复用验证环境的 `fresh-backup-enrollment-r2/enrollment.json` 和 `original-runtime-issuers/original-runtime-issuers.json`。按现有 owner 流程观测实际源并生成签名 SourceRegistry，依据签名源生成 `LonghornVolumes`，在 Node host definition 绑定 `LonghornVolumes` 与 `LonghornSourceRegistry` | enrollment 的安装身份及 namespace UID 必须对应 `clawmanager-sbk-validation-system`。校验真实 PVC/PV/handle、writer 与 Node UID、SnapshotClass、原卷健康、RWO 同节点恢复条件。生成可审核的签名源、卷授权和每节点安装包摘要 |
+| 3. 安装 Node owner | 按 Node UID 下发同源卷授权。首次安装用已审核包的 `install.sh --apply`。已有 owner 时先排空恢复义务，按计划停用服务，再用原二进制和 unit 摘要执行 `--update-shared` | Node owner 服务 active。unit 指向正确的授权文件和 SHA256。Node 与控制器卷授权、mTLS 证书身份和端点一致。任一节点失败时保持接单暂停 |
+| 4. 安装并启用控制器 | 使用验证 namespace 的安装身份生成 controller SA、限定源 namespace 的 RBAC、输入和 staging PVC、控制器 Deployment/Service。按安装流程生成并下发绑定该 Deployment 的 controller config、授权和 worker 镜像摘要，校验前置条件后启用接单 | 实际控制器 Pod 使用步骤 1 的 app digest，worker 配置使用配对 digest，控制器 Ready 并持有验证环境的领导租约。用实际身份通过 Kubernetes 权限、SQL 连接、mTLS 和运行时 readiness 检查。应用登录和页面读取仍正常 |
+
+2026-11-09 的现场回执显示两个 Linux keeper 用例已通过。验证 namespace 的 Deployment、StatefulSet、DaemonSet 和 Pod 查询没有匹配到现有备份控制器。验证 enrollment 和 runtime issuer 回执存在，现场盘点未发现签名源注册表。使用验证 namespace 的安装输入，旧的 `zhanghui08` operator 入口不能直接用于该环境。
+
 ## 3. 执行一次页面验收
 
 1. 在页面提交一单，保存 HTTP 202、实时数据来源、任务 ID、幂等键及最终使用的 attempt。提交响应不明时使用原幂等键查询或重试。
