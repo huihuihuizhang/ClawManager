@@ -136,6 +136,8 @@ node "cat '$REMOTE_DIR/trace.jsonl'" > "$OUT/trace.jsonl"
 
 ## 4. 取得结论并清理
 
+上一节脚本成功保存 `cut-attempt/` 后，可在 `k8s-master` 运行 `system-backup-storage-probe-readback.sh /absolute/path/to/run.env`。它核对窗口、后端日志、绑定及引擎元数据，然后逐个创建克隆并只读验证 seed 一致、恢复后的标记缺失。只在两份读回均通过后按本轮 UID 清理并核对集群及节点回收。最终 `STORAGE_PROBE_PASS` 只用于本轮专用存储验收。
+
 解冻后执行 R2 第 3.3 节的 Snapshot、Content、Longhorn Snapshot 只读取证。对照解冻前后的 engine 身份，并从已选 instance-manager 读取仅匹配本卷及本轮快照名的开始和完成记录。下面给出容器日志入口。日志源没有引擎操作记录、输出被轮换或无法关联时，按 `UNVERIFIED` 处理。取证命令失败后仍须完成原卷恢复和本轮清理。
 
 ```bash
