@@ -8,13 +8,15 @@
 
 `e938a045` 给 Linux keeper 增加 `/source` 独立只读挂载校验，拒绝把容器只读根文件系统上的目录当成持卷。该变更通过基于提交基线的 Linux amd64 交叉编译，临时产物已清理。Node 仍须将 keeper 的 CRI 进程和实际设备绑定到原任务的 PVC/PV/handle，才能允许原 writer 停止。
 
-任务控制器新增了两个调用点。交接调用位于原停写意图落库之后、物理停写之前。存储恢复调用位于原恢复屏障之后、writer 恢复之前。`go test -p 4 ./internal/systembackupcontroller -run '^TestExecutionJobs' -count=1 -v` 通过，覆盖同一任务身份传递、正常顺序及任一步失败后的拦截。具体 Longhorn 交接和恢复还须由正式 Job owner 实现。
+任务控制器新增了两个调用点。交接调用位于原停写意图落库之后、物理停写之前。存储恢复调用位于原恢复屏障之后、writer 恢复之前。`go test -p 4 ./internal/systembackupcontroller -run '^TestExecutionJobs' -count=1 -v` 通过，覆盖同一任务身份传递、正常顺序及任一步失败后的拦截。`fb8e70c0` 将具体 Longhorn 交接和恢复接入正式 Job owner。控制器在停写前持久化 keeper 注册请求，快照与恢复复用该请求，原 writer 恢复后回收对应 keeper。四个相关 Go 包定向回归及 Linux amd64 控制器、Node owner、安装工具编译通过，本地测试构建目录已清理。
 
 Node 安装包新增 `install.sh --apply --update-shared <旧二进制SHA256> <旧unitSHA256>`。两个旧摘要从上次已审核的节点安装包取得。运行前先暂停备份接单并确认原任务的冻结及恢复义务全部清零，再由操作者停用、停止 `clawreef-backup-shared-runtime-node-owner.service`。安装器校验该 unit 已停用、无 PID 且无 drop-in，只替换 shared Node owner 二进制和 unit。中途退出且服务仍停用时，可使用原参数重试。原证书和恢复目录继续使用。该流程已做本地验证，现场更新待实际部署。
 
-Node owner 接入冻结候选的 Longhorn 原生路由，只在启动时提供校验通过的卷授权文件和摘要时启用。RWO keeper 注册通过原控制器 mTLS 身份进入。Node 在原 writer 仍可观测时，通过 CRI 验证 keeper 并核对只读 `/source` 的 ext4 设备、boot、diskseq、根 inode 和独立挂载 ID。原任务的后续调用必须沿用同一 keeper。原生解冻持久记录后，Node 关闭自己的 keeper 描述符，Pod 仍由控制器保留至源恢复。这个入口只使用冻结和解冻。最终版 Linux amd64 Node owner 及 Linux 回归测试二进制交叉编译通过，Linux 新增用例待执行。节点现场运行、控制器对 keeper 注册回执的持久接续、失败时的预注册回收以及安装材料下发仍待完成。
+Node owner 接入冻结候选的 Longhorn 原生路由，只在启动时提供校验通过的卷授权文件和摘要时启用。RWO keeper 注册通过原控制器 mTLS 身份进入。Node 在原 writer 仍可观测时，通过 CRI 验证 keeper 并核对只读 `/source` 的 ext4 设备、boot、diskseq、根 inode 和独立挂载 ID。原任务的后续调用必须沿用同一 keeper。原生解冻持久记录后，Node 关闭自己的 keeper 描述符，Pod 仍由控制器保留至源恢复。这个入口只使用冻结和解冻。
 
-正式验收还须接通同一 task/attempt 的 Node 认证交接、快照与采集调用、失败时的解冻和原 writer 恢复，以及原有 Node 安装材料和 unit 更新。keeper 必须保留至冻结已解除、原 writer 恢复并确认原卷可用。最终在验证环境从页面提交一次，核对同一任务的非空备份、源恢复、正式发布及独立读回。此前的专用卷结果作为存储基线保留。
+2026-11-09，远测主机校验 `fb8e70c0` 的 Linux amd64 测试包和二进制摘要。`TestLonghornKeeperRegistrationCannotReplaceOrSkipKeeper` 与 `TestLonghornKeeperDeviceRequiresSameIncarnationAndDistinctMount` 均通过，回执为 `REMOTE_KEEPER_TESTS_OK`。同一轮在 `clawmanager-sbk-validation-system` 查询 Deployment、StatefulSet、DaemonSet 和 Pod，控制器筛选结果为空。远测主机无 Go，因此使用本机交叉编译的测试二进制。现场正式任务仍待安装材料下发、控制器部署和页面验收。
+
+部署使用验证 namespace 的签名源及卷授权。旧 operator 默认指向 `clawmanager-zhanghui08-system`，不能直接作为验证环境的安装入口。部署后从页面提交一次，核对同一 task/attempt 的快照完成、原卷解冻及恢复写读、keeper 回收、非空备份发布、独立读回和目录登记。此前的专用卷结果作为存储基线保留。部署顺序见 [最小闭环计划](system-backup-keeper-controller-plan-20261109.md)。
 
 ## 已通过的存储验证
 
