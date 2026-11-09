@@ -8,7 +8,7 @@
 
 R2 在只读预检结束。此后 R3 加入了一次性取证探针。操作者在 `k8s-master`（`6.8.0-71-generic`）以 `acffa127` 复跑，原生校准退出 `0`。同一设备 `7:8` 的记录依次显示父进程冻结成功、独立子进程提前解冻成功、父进程计划解冻收到 `EINVAL`。冻结期间直接写和共享映射写均阻塞，两个同步调用成功，解除后写读恢复，临时卷清理完成。校准证明本节点本次启动能捕获受控提前解冻。
 
-下一步是专用 Longhorn RWO/RWX 卷验证。如果实际 share-manager 在 `node1`，先在该节点完成同样的校准。Longhorn 实际快照、连续冻结、keeper、克隆和恢复仍为 `UNVERIFIED`。见 [R3 一次性验证](system-backup-storage-probe-r3-20261109.md)。
+专用 RWX 测试源已创建，写入 Pod 达到 Ready，实际 share-manager 在 `node1`。操作者校验三个脚本摘要后，在 `node1`（`6.8.0-124-generic`）完成原生校准，退出 `0`。同一 loop 设备 `7:0` 记录到独立进程提前解冻成功和父进程随后返回 `EINVAL`。临时卷清理完成。下一步在 `node1` 准备本轮 RWO 源和 keeper。Longhorn 实际快照、连续冻结、keeper、克隆和恢复仍为 `UNVERIFIED`。见 [R3 一次性验证](system-backup-storage-probe-r3-20261109.md)。
 
 以下为此前推进记录。
 

@@ -1,6 +1,6 @@
 # 一次性存储验证 R3
 
-先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。`k8s-master` 已完成校准，Longhorn 结果待采集。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
+先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。`k8s-master` 和 `node1` 已通过校准，本轮 RWX share-manager 在 `node1`，Longhorn 冻结快照结果待采集。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
 
 ## 1. 校准提前解冻探针
 
