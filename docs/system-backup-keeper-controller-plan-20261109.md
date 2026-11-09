@@ -223,6 +223,80 @@ ssh root@10.130.14.23
 
 owner 确认签发材料齐备后，按已有的 `system-backup-source-registries issue-v2` 流程签发，并用 `system-backup-observer-deployment-materials --mode host-materials` 生成各节点安装材料。两个工具都由同一提交的 app 镜像提供。控制器、Node owner 和页面试跑保持待部署。
 
+#### 已有源坐标目录时的只读回读
+
+现场上传的三份文件已通过摘要校验。`PRIOR_SOURCE_COORDINATES_PRESENT` 表示既有目录触发保护，是否完成过源坐标采集仍待回读。直接在远端执行以下命令即可，无需重新上传或输入密码。命令只输出摘要、身份匹配结果和依赖标记。
+
+```bash
+python3 -I -B - <<'PY'
+import hashlib
+import json
+from pathlib import Path
+import stat
+
+root = Path("/root/sbk-validation-tls-inspect.7LVU7vpE/fresh-sql-prepare.faa4osWr/fresh-backup-enrollment-r2/initial-source-coordinates")
+names = ("initial-source-coordinates.json", "initial-source-kubernetes.private.json")
+
+def report(state, **fields):
+    print(json.dumps({"state": state, **fields}, separators=(",", ":")))
+
+def is_private(meta):
+    return meta.st_uid == 0 and not meta.st_mode & 0o077
+
+try:
+    directory = root.lstat()
+    if not stat.S_ISDIR(directory.st_mode) or not is_private(directory):
+        raise ValueError()
+    missing = [name for name in names if not (root / name).exists()]
+    if missing:
+        report("PRIOR_SOURCE_COORDINATES_INCOMPLETE", missing=missing)
+        raise SystemExit(3)
+    documents, digests = [], []
+    for name in names:
+        path = root / name
+        meta = path.lstat()
+        if not stat.S_ISREG(meta.st_mode) or not is_private(meta) or not 0 < meta.st_size <= 8 << 20:
+            raise ValueError()
+        raw = path.read_bytes()
+        documents.append(json.loads(raw))
+        digests.append(hashlib.sha256(raw).hexdigest())
+    source, snapshot = documents
+    if (source["Version"], source["InstallationID"], source["Namespace"],
+        source["NamespaceUID"], source["ApplicationScope"]) != (
+        "original-initial-source-coordinates.v1", "installation_95392e58fafe1345dc1e4c029ac3674c",
+        "clawmanager-sbk-validation-system", "0d1aebbb-fdd6-4b14-b9c5-0da456f8e65f", "installation"
+    ):
+        raise ValueError()
+    pods = snapshot["Pods"] or []
+    claims = snapshot["Claims"] or []
+    if not isinstance(snapshot["Deployments"], list):
+        raise ValueError()
+    report(
+        "PRIOR_SOURCE_COORDINATES_READBACK",
+        coordinates_sha256=digests[0],
+        kubernetes_snapshot_sha256=digests[1],
+        instances=len(source["Instances"] or []),
+        volumes=len(source["Volumes"] or []),
+        tenant_rwo_pod_uid_matches_last_inventory=any(
+            pod["metadata"]["uid"] == "9eee51a5-54e2-40c9-8b0d-904304322ebd" for pod in pods
+        ),
+        tenant_rwo_pvc_uid_matches_last_inventory=any(
+            claim["metadata"]["uid"] == "a1af1c62-2b32-412c-8acb-7c954929e547" for claim in claims
+        ),
+        blocked_shared_storage=len(source.get("BlockedSharedStorage") or []),
+        dependencies=sorted(
+            {row["Dependency"] for row in source.get("Dependencies") or []}
+            | {row["Reason"] for row in source.get("BlockedSharedStorage") or []}
+        ),
+    )
+except (OSError, ValueError, TypeError, KeyError):
+    report("PRIOR_SOURCE_COORDINATES_UNCONFIRMED")
+    raise SystemExit(3)
+PY
+```
+
+`PRIOR_SOURCE_COORDINATES_READBACK` 只表示回读文件格式和安装身份通过。旧回执、当前源身份及新鲜度仍由原 owner 核对。若文件缺失或回读不匹配，保留原目录，后续采集使用新的私有输出目录。
+
 下列命令用于已有审核安装包的节点。在对应节点以 root 进入安装包目录，先暂停接单、确认恢复义务全部结清。只执行与你的安装情况对应的一段。
 
 首次安装执行这段。
