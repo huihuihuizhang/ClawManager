@@ -14,7 +14,7 @@
 
 ## 2. 准备并更新验证环境
 
-1. 在已有可用凭据的验证主机上只读核查 context `kubernetes-admin@kubernetes`、验证环境 `clawmanager-sbk-validation-system`、实际租户 namespace、签名源的 PVC/PV/Node UID、Snapshot API 和 `sbk-validation-longhorn-local`。检查 Pod 配额和 Longhorn 双副本调度余量。缺 API、权限或容量时停在预检，保留缺项。
+1. 在已有可用凭据的验证主机上只读核查 context `kubernetes-admin@kubernetes`、验证环境 `clawmanager-sbk-validation-system`、实际租户 namespace、签名源的 PVC/PV/Node UID、Snapshot API 和 `sbk-validation-longhorn-local`。检查 Pod 配额、Longhorn 双副本调度余量，以及 RWO writer 恢复时能否与 keeper 在同一节点挂载原卷。任何一项缺失时停在预检并记录缺项。
 2. 从同一提交构建控制器、worker 和 Node owner，记录镜像及二进制摘要。用同一份签名 SourceRegistry 生成 LonghornVolumes，核对每个 Node 和控制器消费的材料摘要、mTLS 身份及授权范围。控制器在签名 RWO 租户中需要 Job 的 get/create/delete 与 Pod 的 get/list，以及对 `default` ServiceAccount 的具名读取。keeper 计划与回执 ConfigMap 在控制器 namespace。
 3. 暂停备份接单，确认没有冻结和未完成的恢复义务。按节点停用并停止原 Node owner，使用审核过的旧二进制和 unit 摘要执行安装包的 `install.sh --apply --update-shared`。更新后校验 unit 参数、节点服务、卷授权摘要及控制器 mTLS 连接，再更新控制器和 worker。以实际镜像 digest 和配置回读为准。
 4. 核对页面已有的 `创建完整备份` 入口、六域提交体及实时数据来源。现有页面用 `functional_test`。若旧 e2e 脚本仍断言 `acceptance`，这次用现有页面和同任务证据验收，脚本对齐另行处理。
