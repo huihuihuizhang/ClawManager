@@ -148,24 +148,25 @@ ssh root@10.130.14.23
 
 现场回读确认租户 RWO `clawreef-2-pvc` 的候选 writer 是 `clawreef-2-deployment` 的 desktop，挂载在 node1 的 `/config`。`clawreef-team-1-shared` 为 RWX，现场没有挂载者，Longhorn 返回 `detached/unknown`。保留此状态供 owner 判定。计划仍按完整源集合执行。
 
-签发前先由原安装 owner 生成初始源坐标。使用已有验证 enrollment 的两个校验脚本和从本轮 app 镜像提取的 Linux 工具。采集读取现有 SQL 与 Kubernetes，输出保留在原安装的私有目录。只有收到 `VALIDATION_SOURCE_COORDINATES_VERIFIED` 才计为初始源坐标完成。该回执仍需由 owner 复核为 writer/source selection，再生成 V2 签发请求、消费定义及正式签名。
+旧源坐标回读有 8 个实例、5 个卷，且未包含上轮现场观测的租户 RWO Pod UID 和 PVC UID。保留旧文件作为历史回执。本轮先由原安装 owner 重新生成初始源坐标，再据此确认仍存在的 writer 和共享存储依赖。
+
+采集使用已有验证 enrollment 校验脚本和从本轮 app 镜像提取的 Linux 工具。它读取现有 SQL 与 Kubernetes，输出保存在新的私有目录。收到 `VALIDATION_SOURCE_COORDINATES_VERIFIED` 后，仍需核对新结果中的租户 RWO 身份，再由 owner 形成 writer/source selection、V2 签发请求和消费定义。
 
 #### 第一步，在本地 PowerShell 提取并上传
 
-在工作区根目录粘贴执行。两份 Python 脚本来自本地既有的 `artifacts/sbk-validation-fresh-identity-r2-20261106`。本地临时二进制和提取容器在结束后清理。
+在工作区根目录粘贴执行。Python 校验脚本来自本地既有的 `artifacts/sbk-validation-fresh-identity-r2-20261106`。本地临时二进制和提取容器在结束后清理。
 
 ```powershell
 & {
     $ErrorActionPreference = 'Stop'
     $target = 'root@10.130.14.23'
-    $remoteDir = '/var/tmp/sbk-source-coordinates-fb8e70c0'
+    $remoteDir = '/var/tmp/sbk-source-coordinates-refresh-fb8e70c0'
     $tag = '10.130.14.23:5000/clawmanager:sbk-validation-fb8e70c0-20261109'
     $id = docker image inspect $tag --format '{{.Id}}'
     if ($LASTEXITCODE -ne 0 -or $id -ne 'sha256:f96a504ca0d10a03816b7c1281218b311d9069c7976b1cce81b3e745ca33c250') {
         throw '本机 app 镜像摘要不匹配'
     }
     $artifacts = Join-Path (Get-Location) 'artifacts\sbk-validation-fresh-identity-r2-20261106'
-    $observe = Join-Path $artifacts 'observe-validation-source-coordinates.py'
     $verify = Join-Path $artifacts 'prepare-validation-runtime-issuers.py'
     $tempDir = Join-Path (Get-Location) ('.tmp-sbk-source-' + [guid]::NewGuid().ToString('N'))
     $null = New-Item -ItemType Directory -Path $tempDir
@@ -181,7 +182,7 @@ ssh root@10.130.14.23
         }
         ssh $target "umask 077; mkdir -m 700 -- '$remoteDir'"
         if ($LASTEXITCODE -ne 0) { throw '创建远端目录失败' }
-        scp $binary $observe $verify "${target}:${remoteDir}/"
+        scp $binary $verify "${target}:${remoteDir}/"
         if ($LASTEXITCODE -ne 0) { throw "上传失败，检查远端 $remoteDir" }
     } finally {
         if ($container -match '^[0-9a-f]{64}$') { docker rm $container | Out-Null }
@@ -191,33 +192,103 @@ ssh root@10.130.14.23
 }
 ```
 
-#### 第二步，在远端生成初始源坐标
+#### 第二步，在远端刷新初始源坐标
 
-在远端 root Bash 粘贴执行。提示输入时使用验证页面本地 admin 密码，命令会隐藏输入。只回传最后的状态行。如果已经存在源坐标目录，保留原有回执并回传 `PRIOR_SOURCE_COORDINATES_PRESENT`。命令结束时清理上传文件。
+在远端 root Bash 粘贴执行。提示输入时使用验证页面本地 admin 密码。命令会隐藏输入并在结束时清理上传文件。采集结果保存在新目录，旧回执保留。只回传最后一行 JSON。
 
 ```bash
 (
   set -euo pipefail
-  work=/var/tmp/sbk-source-coordinates-fb8e70c0
-  enrollment=/root/sbk-validation-tls-inspect.7LVU7vpE/fresh-sql-prepare.faa4osWr/fresh-backup-enrollment-r2
+  work=/var/tmp/sbk-source-coordinates-refresh-fb8e70c0
   cd -- "$work"
-  trap 'rm -f -- "$work/system-backup-first-install-materials" "$work/observe-validation-source-coordinates.py" "$work/prepare-validation-runtime-issuers.py"; rmdir -- "$work"' EXIT
+  trap 'rm -f -- "$work/system-backup-first-install-materials" "$work/prepare-validation-runtime-issuers.py"; rmdir -- "$work"' EXIT
   binary_sha=0fd70788ef93635709df1bf3d3ace04dff4844b4df42df11c52e66b7c7fb6d6b
   printf '%s  %s\n' \
     "$binary_sha" system-backup-first-install-materials \
-    9ac0602c19f99c594a81ef8ae785b489ea246ea61d19a1631b2d7c3b2bff817b observe-validation-source-coordinates.py \
     fed01a00fb552767b30a1d495fb60cc0f03dfa7762aabe190cf9e43db90fbdf4 prepare-validation-runtime-issuers.py |
     sha256sum --strict -c -
-  if [[ -e $enrollment/initial-source-coordinates || -L $enrollment/initial-source-coordinates ]]; then
-    printf '%s\n' PRIOR_SOURCE_COORDINATES_PRESENT
-    exit 3
-  fi
   chmod 700 ./system-backup-first-install-materials
-  IFS= read -rs -p '验证页面本地 admin 密码: ' password
-  printf '\n' >&2
-  printf '%s' "$password" |
-    python3 -I -B ./observe-validation-source-coordinates.py "$work/system-backup-first-install-materials" "$binary_sha"
-  unset password
+  python3 -I -B - "$work" <<'PY'
+import getpass
+import json
+import os
+from pathlib import Path
+import runpy
+import subprocess
+import sys
+import tempfile
+import warnings
+
+os.umask(0o077)
+work = Path(sys.argv[1])
+phase = "enrollment"
+try:
+    owner = runpy.run_path(str(work / "prepare-validation-runtime-issuers.py"), run_name="checked_enrollment")
+    argv = [str(work / "system-backup-first-install-materials"), "author-initial-source-coordinates"]
+    native = owner["command"]()[2:]
+    flags = dict(zip(native[::2], native[1::2], strict=True))
+    del flags["--dsn-sha256"]
+    owner["read"](owner["MANIFEST"], "dc940e7d80ed69e13488c0d6667e6b184e3e9c7c2fecb400374656b185a62abb")
+    phase = "credential"
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", getpass.GetPassWarning)
+        password = getpass.getpass("验证页面本地 admin 密码: ").encode("utf-8")
+    if not 0 < len(password) <= 1024:
+        raise ValueError()
+    phase = "source-census"
+    out = Path(tempfile.mkdtemp(prefix="initial-source-coordinates-refresh-", dir=owner["ENROLL"]))
+    with tempfile.NamedTemporaryFile(dir=out, prefix="admin-password-") as private:
+        private.write(password)
+        private.flush()
+        del password
+        flags["--output-directory"] = str(out)
+        flags["--local-admin-password-file"] = private.name
+        for flag, value in flags.items():
+            argv.extend((flag, value))
+        proc = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, timeout=135, check=False)
+    if proc.returncode != 0:
+        print(json.dumps({"state":"VALIDATION_SOURCE_INVENTORY_UNCONFIRMED", "exit":proc.returncode,
+                          "private_receipts":str(out)}, separators=(",", ":")))
+        raise SystemExit(3)
+    phase = "readback"
+    receipt = json.loads(proc.stdout)
+    if (receipt["Version"], receipt["WriterQualified"], receipt["BackupReady"]) != (
+        "original-initial-source-data-authored.v1", False, False
+    ):
+        raise ValueError()
+    source = json.loads(owner["pinned"](receipt["Coordinates"], out / "initial-source-coordinates.json", 8 << 20))
+    snapshot = json.loads(owner["pinned"](receipt["KubernetesSnapshot"], out / "initial-source-kubernetes.private.json", 8 << 20))
+    if (source["InstallationID"], source["Namespace"], source["NamespaceUID"], source["ApplicationScope"]) != (
+        owner["INSTALLATION"], owner["NAMESPACE"], owner["NAMESPACE_UID"], "installation"
+    ) or len(source["Instances"] or []) != receipt["InstanceCount"]:
+        raise ValueError()
+    tenant = "clawmanager-sbk-validation-user-1"
+    claim = "clawreef-2-pvc"
+    claims = [row["metadata"]["uid"] for row in snapshot["Claims"] or []
+              if row["metadata"]["namespace"] == tenant and row["metadata"]["name"] == claim]
+    pods = [{"uid":row["metadata"]["uid"], "node":row["spec"].get("nodeName")}
+            for row in snapshot["Pods"] or [] if row["metadata"]["namespace"] == tenant
+            and row.get("status", {}).get("phase") == "Running"
+            and any(vol.get("persistentVolumeClaim", {}).get("claimName") == claim
+                    for vol in row["spec"].get("volumes", []))]
+    blocked = source.get("BlockedSharedStorage") or []
+    with (out / "native-source-coordinates.receipt.json").open("xb") as saved:
+        saved.write(proc.stdout)
+    print(json.dumps({
+        "state":"VALIDATION_SOURCE_COORDINATES_VERIFIED",
+        "instances":receipt["InstanceCount"], "volumes":len(source["Volumes"] or []),
+        "tenant_rwo_pvc_uids":claims, "tenant_rwo_pods":pods,
+        "blocked_shared_storage":len(blocked),
+        "dependencies":sorted({row["Dependency"] for row in source.get("Dependencies") or []}
+                              | {row["Reason"] for row in blocked}),
+        "coordinates":receipt["Coordinates"], "kubernetes_snapshot_sha256":receipt["KubernetesSnapshot"]["SHA256"],
+        "backup_ready":False,
+    }, separators=(",", ":")))
+except (OSError, ValueError, TypeError, KeyError, EOFError, getpass.GetPassWarning, subprocess.TimeoutExpired):
+    print(json.dumps({"state":"VALIDATION_SOURCE_COORDINATES_INPUT_OR_READBACK_UNCONFIRMED",
+                      "phase":phase}, separators=(",", ":")))
+    raise SystemExit(3)
+PY
 )
 ```
 
@@ -225,7 +296,7 @@ owner 确认签发材料齐备后，按已有的 `system-backup-source-registrie
 
 #### 已有源坐标目录时的只读回读
 
-现场上传的三份文件已通过摘要校验。`PRIOR_SOURCE_COORDINATES_PRESENT` 表示既有目录触发保护，是否完成过源坐标采集仍待回读。直接在远端执行以下命令即可，无需重新上传或输入密码。命令只输出摘要、身份匹配结果和依赖标记。
+旧版采集返回 `PRIOR_SOURCE_COORDINATES_PRESENT` 时，可以用下列命令回读固定路径的历史结果。当前已完成这次回读，下一步执行上方刷新。命令只输出摘要、身份匹配结果和依赖标记。
 
 ```bash
 python3 -I -B - <<'PY'
