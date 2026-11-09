@@ -128,6 +128,20 @@ def kernel_device(dev):
     return (os.major(dev) << 20) | os.minor(dev)
 
 
+def write_tracefs(path, command):
+    # tracefs accepts one command per write. Python append mode seeks to EOF,
+    # which kprobe_events rejects. O_TRUNC would remove existing host probes.
+    payload = (command + "\n").encode("ascii")
+    try:
+        fd = os.open(path, os.O_WRONLY)
+        try:
+            require(os.write(fd, payload) == len(payload), f"short tracefs write to {path}: {command!r}")
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        raise RuntimeError(f"tracefs write to {path}: {command!r}: {exc}") from exc
+
+
 @contextmanager
 def capture_calls(announce):
     """Enable only our four probes in a fresh tracefs instance."""
@@ -138,23 +152,28 @@ def capture_calls(announce):
     control = root / "kprobe_events"
     probes = {}
 
-    def put(path, value):
-        path.write_text(value + "\n", encoding="ascii")
-
     def probe(command):
-        # Opening this global file with O_TRUNC removes other users' probes.
-        with control.open("a", encoding="ascii") as file:
-            file.write(command + "\n")
+        try:
+            write_tracefs(control, command)
+        except RuntimeError as exc:
+            try:
+                lines = (root / "error_log").read_text(errors="replace").splitlines()
+            except OSError:
+                raise exc
+            for i in range(len(lines) - 1, 0, -1):
+                if lines[i].strip() == "Command: " + command:
+                    raise RuntimeError(f"{exc} ({lines[i - 1].strip()})") from exc
+            raise
 
     announce(group)
     with ExitStack() as cleanup:
         instance.mkdir()
         cleanup.callback(instance.rmdir)
         tracing = instance / "tracing_on"
-        put(tracing, "0")
-        put(instance / "buffer_size_kb", "32")
+        write_tracefs(tracing, "0")
+        write_tracefs(instance / "buffer_size_kb", "32")
         clock = instance / "trace_clock"
-        put(clock, "mono")
+        write_tracefs(clock, "mono")
         require("[mono]" in clock.read_text(), "monotonic trace clock unavailable")
         # thaw_super_locked also covers the VFS emergency thaw path.
         for op, symbol in (("freeze", "freeze_super"), ("thaw", "thaw_super_locked")):
@@ -167,14 +186,14 @@ def capture_calls(announce):
                 probes[event] = op, field
 
         enable = instance / "events" / group / "enable"
-        cleanup.callback(put, enable, "0")
-        cleanup.callback(put, tracing, "0")
-        put(enable, "1")
-        put(tracing, "1")
+        cleanup.callback(write_tracefs, enable, "0")
+        cleanup.callback(write_tracefs, tracing, "0")
+        write_tracefs(enable, "1")
+        write_tracefs(tracing, "1")
 
         def collect():
-            put(tracing, "0")
-            put(enable, "0")
+            write_tracefs(tracing, "0")
+            write_tracefs(enable, "0")
             return trace_calls((instance / "trace").read_text(), probes,
                                (root / "kprobe_profile").read_text(),
                                [p.read_text() for p in instance.glob("per_cpu/cpu*/stats")])

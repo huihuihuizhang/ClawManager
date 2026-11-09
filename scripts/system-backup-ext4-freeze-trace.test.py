@@ -1,9 +1,12 @@
 """Offline regressions for the one-time freeze trace evidence gate."""
 
+import errno
+import os
 from pathlib import Path
 import runpy
 import struct
 import unittest
+from unittest.mock import patch
 
 
 probe = runpy.run_path(str(Path(__file__).with_name("system-backup-ext4-freeze-trace.py")))
@@ -22,6 +25,24 @@ def call(operation, device, tid, start, end, rc=0):
 
 
 class FreezeTraceTest(unittest.TestCase):
+    def test_kprobe_command_uses_a_single_non_truncating_write_without_seek(self):
+        control = Path("/sys/kernel/tracing/kprobe_events")
+        command = "p:sbk_test/freeze_dev freeze_super dev=+24(%di):u32"
+        payload = (command + "\n").encode("ascii")
+        with (patch.object(os, "open", return_value=99) as opened,
+              patch.object(os, "write", return_value=len(payload)) as write,
+              patch.object(os, "close") as close,
+              patch.object(os, "lseek", side_effect=OSError(errno.EINVAL, "no SEEK_END")) as seek):
+            probe["write_tracefs"](control, command)
+            opened.assert_called_once_with(control, os.O_WRONLY)
+            write.assert_called_once_with(99, payload)
+            close.assert_called_once_with(99)
+            seek.assert_not_called()
+            write.side_effect = OSError(errno.EINVAL, "invalid probe")
+            with self.assertRaisesRegex(RuntimeError, r"kprobe_events.*freeze_super.*invalid probe"):
+                probe["write_tracefs"](control, command)
+            self.assertEqual(close.call_count, 2)
+
     def test_superblock_offset_comes_from_btf_layout(self):
         names = b"\0super_block\0s_dev\0"
         types = struct.pack("<6I", 1, (4 << 24) | 1, 256, 13, 1, 192)
