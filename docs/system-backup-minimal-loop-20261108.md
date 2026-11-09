@@ -12,6 +12,8 @@
 
 Node 安装包新增 `install.sh --apply --update-shared <旧二进制SHA256> <旧unitSHA256>`。两个旧摘要从上次已审核的节点安装包取得。运行前先暂停备份接单并确认原任务的冻结及恢复义务全部清零，再由操作者停用、停止 `clawreef-backup-shared-runtime-node-owner.service`。安装器校验该 unit 已停用、无 PID 且无 drop-in，只替换 shared Node owner 二进制和 unit。中途退出且服务仍停用时，可使用原参数重试。原证书和恢复目录继续使用。该流程已做本地验证，现场更新待实际部署。
 
+Node owner 接入冻结候选的 Longhorn 原生路由，只在启动时提供校验通过的卷授权文件和摘要时启用。RWO keeper 注册通过原控制器 mTLS 身份进入。Node 在原 writer 仍可观测时，通过 CRI 验证 keeper 并核对只读 `/source` 的 ext4 设备、boot、diskseq、根 inode 和独立挂载 ID。原任务的后续调用必须沿用同一 keeper。原生解冻持久记录后，Node 关闭自己的 keeper 描述符，Pod 仍由控制器保留至源恢复。这个入口只使用冻结和解冻。最终版 Linux amd64 Node owner 及 Linux 回归测试二进制交叉编译通过，Linux 新增用例待执行。节点现场运行、控制器对 keeper 注册回执的持久接续、失败时的预注册回收以及安装材料下发仍待完成。
+
 正式验收还须接通同一 task/attempt 的 Node 认证交接、快照与采集调用、失败时的解冻和原 writer 恢复，以及原有 Node 安装材料和 unit 更新。keeper 必须保留至冻结已解除、原 writer 恢复并确认原卷可用。最终在验证环境从页面提交一次，核对同一任务的非空备份、源恢复、正式发布及独立读回。此前的专用卷结果作为存储基线保留。
 
 ## 已通过的存储验证

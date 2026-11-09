@@ -18,6 +18,7 @@ import (
 type SharedRuntimeNodeHandler struct {
 	owner         *sharedRuntimeNodeOwner
 	controllerURI string
+	longhorn      *longhornExt4Actions
 }
 
 func NewSharedRuntimeNodeHandler(o *NodeObserver, c SharedRuntimeNodeOwnerConfig) (*SharedRuntimeNodeHandler, error) {
@@ -45,6 +46,10 @@ func (h *SharedRuntimeNodeHandler) Close() {
 	if h != nil && h.owner != nil {
 		h.owner.mu.Lock()
 		defer h.owner.mu.Unlock()
+		if h.longhorn != nil {
+			h.longhorn.close()
+			h.longhorn = nil
+		}
 		h.owner.close()
 	}
 }
@@ -93,6 +98,9 @@ func ServeSharedRuntimeNodeLifecycle(ctx context.Context, listener net.Listener,
 	}
 	mux := http.NewServeMux()
 	mux.Handle(SharedRuntimeNodeRoute, h)
+	if h.longhorn != nil {
+		mux.Handle(LonghornExt4Route, h.longhorn)
+	}
 	server := &http.Server{Handler: mux, ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 15 * time.Second, MaxHeaderBytes: 8192, BaseContext: func(net.Listener) context.Context { return ctx }}
 	done := make(chan struct{})
 	defer close(done)
