@@ -1,6 +1,6 @@
 # 一次性存储验证 R3
 
-先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。现场结果待采集。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
+先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。`k8s-master` 已完成校准，Longhorn 结果待采集。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
 
 ## 1. 校准提前解冻探针
 
@@ -16,7 +16,30 @@ python3 -I -B scripts/system-backup-ext4-freeze-canary.py --trace-freeze \
 
 ## 2. 准备专用 Longhorn 卷
 
-在 R2 第 0 节填 `CTX=kubernetes-admin@kubernetes`、`LH_NS=longhorn-system`、`SNAP_CLASS=sbk-validation-longhorn-local`，从现场只读结果选定 RWO/RWX StorageClass 和已存在的工具镜像 digest。`clawmanager-sbk-validation-system` 是应用部署记录里的 namespace。资源创建限定本轮独占 `sbk-storage-probe-*`。依次执行 R2 第 0.1 节控制面预检、第 2 节专用源卷和 keeper、第 3 节起始两段挂载身份核对。第 0.1 节的取证能力由本轮校准判定。如果 RWX share-manager 最终落在另一台节点，先在那台节点重新校准。只接受本轮同一 Node 上的两个 ext4 后端挂载。任何身份不一致，按 R2 清理并停止。
+在已能使用 `kubernetes-admin@kubernetes` 的 Bash 终端设置本轮参数。以下沿用部署记录中的 `longhorn`、`longhorn-rwx` 及先前隔离 RWX 探针的镜像摘要。现场 StorageClass 校验失败即停止。探针 Pod 只使用该镜像里的 shell 工具，由清单覆盖启动命令。`clawmanager-sbk-validation-system` 是应用部署记录里的 namespace。本轮资源放在独占的 `sbk-storage-probe-*`。
+
+```bash
+set -euo pipefail
+umask 077
+export CTX=kubernetes-admin@kubernetes LH_NS=longhorn-system
+export SNAP_CLASS=sbk-validation-longhorn-local SC_RWO=longhorn SC_RWX=longhorn-rwx
+export TOOL_IMAGE=10.130.14.23:5000/mysql@sha256:5ea882b1859d3a61814e527215563d809a9f2bf70ffa24c9280f2ff6798f1977
+k() { kubectl --context "$CTX" "$@"; }
+k get storageclass "$SC_RWO" "$SC_RWX" -o json | jq -e '
+  (.items|length==2) and all(.items[];
+    .provisioner=="driver.longhorn.io" and .reclaimPolicy=="Delete" and
+    .volumeBindingMode=="Immediate" and
+    (.parameters.dataEngine // "v1")=="v1" and
+    (.parameters.fsType // "ext4")=="ext4" and
+    (.parameters.encrypted // "false")=="false" and
+    (.parameters.fromBackup // "")=="" and (.parameters.backingImage // "")=="")'
+export RUN_ID=$(python3 -I -B -c 'import uuid; print(uuid.uuid4().hex)')
+export NS=sbk-storage-probe-$RUN_ID NONCE=$RUN_ID
+export OUT=$PWD/$NS
+mkdir -m 700 -- "$OUT"
+```
+
+依次执行 R2 第 0.1 节控制面预检和第 2 节的 RWX 源卷部分，取得 `$OUT/share-pod.json` 的 `.node`。若实际节点为 `node1`，先在那台节点重新校准。然后按 R2 第 2 节剩余步骤在该节点准备 RWO 源卷和 keeper，再完成第 3 节起始两段的挂载身份核对。第 0.1 节的取证能力由本轮校准判定。只接受本轮同一 Node 上的两个 ext4 后端挂载。任何身份不一致，按 R2 清理并停止。
 
 用 R2 定义的 `node` 函数访问已核对的实际节点。以下复制三个脚本到本轮新建的 root:0700 节点目录并校验 SHA256。若管理终端就在已核对的实际节点上，可定义 `node() { bash -c "$1"; }`，把 `scp` 替换成将同样四个文件复制到 `"$REMOTE_DIR/"` 的本地 `cp`。
 
