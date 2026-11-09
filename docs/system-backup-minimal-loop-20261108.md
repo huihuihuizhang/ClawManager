@@ -4,7 +4,9 @@
 
 2026-11-09，操作者在 `kubernetes-admin@kubernetes` 回传只读结果。Snapshot v1 API 已提供三个所需资源，对应 CRD 均存在。`sbk-validation-longhorn-local` 的驱动为 `driver.longhorn.io`，类型为 `snap`，删除策略为 `Delete`。回执中的 snapshot-controller 2/2、CSI snapshotter 3/3、Longhorn manager 2/2 均为 Ready。
 
-本轮停在只读预检，冻结快照仍为 `UNVERIFIED`。现场尚未确认已有取证手段能够覆盖测试卷的实际冻结和解冻，并把它们与同一后端快照的开始和完成时间关联。确认取证能力后，先完成其余只读检查，再决定是否进入专用测试卷验证。冻结、快照、keeper 和恢复仍待真实验证。见 [R2 远测步骤](system-backup-storage-remote-acceptance-20261108.md)。
+节点清单确认 `k8s-master` 为 `6.8.0-71-generic`、`node1` 为 `6.8.0-124-generic`，两者均为 amd64。操作者在两台宿主机上只读检查 tracefs，均返回 `tracing_on=1`，匹配冻结、解冻及 ioctl 的已启用事件均无输出。`node1` 对已挂接的冻结或解冻函数的额外查询也无输出。盘点结果仅覆盖这些查询，其他取证来源仍待确认。
+
+本轮在只读预检结束，冻结快照仍为 `UNVERIFIED`。恢复条件是确认已有取证手段能覆盖测试卷的实际冻结和解冻，并把它们与同一后端快照的开始和完成时间关联。确认取证能力后，先完成其余只读检查，再决定是否进入专用测试卷验证。冻结、快照、keeper 和恢复仍待真实验证。见 [R2 远测步骤](system-backup-storage-remote-acceptance-20261108.md)。
 
 以下为此前推进记录。
 
