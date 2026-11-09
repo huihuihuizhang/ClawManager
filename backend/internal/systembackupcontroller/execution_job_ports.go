@@ -36,12 +36,41 @@ type ExecutionJobPorts struct {
 	Jobs ExecutionJobOwner
 }
 
+func (p ExecutionJobPorts) PauseIntent(ctx context.Context, a d.Authority, id string, original d.WriterState) error {
+	if absentExecutionDependency(p.Ports) || absentExecutionDependency(p.Jobs) {
+		return d.ErrNotReady
+	}
+	// Commit the original writer's recovery obligation before allowing the
+	// attachment handoff. An uncertain handoff must prevent the physical stop.
+	if err := p.Ports.PauseIntent(ctx, a, id, original); err != nil {
+		return err
+	}
+	if owner, ok := p.Jobs.(interface {
+		BeforeSourceStop(context.Context, d.Authority, string, d.WriterState) error
+	}); ok {
+		return owner.BeforeSourceStop(ctx, a, id, original)
+	}
+	return nil
+}
+
 func (p ExecutionJobPorts) BeforeResume(ctx context.Context, a d.Authority) error {
+	if absentExecutionDependency(p.Ports) || absentExecutionDependency(p.Jobs) {
+		return d.ErrNotReady
+	}
 	b, ok := p.Ports.(d.ResumeBarrier)
 	if !ok {
 		return d.ErrNotReady
 	}
-	return b.BeforeResume(ctx, a)
+	if err := b.BeforeResume(ctx, a); err != nil {
+		return err
+	}
+	// A hold may have been taken even if the collector Job was never created.
+	if owner, ok := p.Jobs.(interface {
+		BeforeSourceResume(context.Context, d.Authority) error
+	}); ok {
+		return owner.BeforeSourceResume(ctx, a)
+	}
+	return nil
 }
 
 func NewExecutionJobPorts(writers d.Ports, jobs ExecutionJobOwner) (*ExecutionJobPorts, error) {

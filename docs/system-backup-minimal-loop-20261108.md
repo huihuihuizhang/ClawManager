@@ -1,6 +1,18 @@
 # 备份最小闭环：2026-11-08 接续记录
 
-当前阶段已按用户最新要求收口为“本地候选冻结与远测准备”，范围、证据和停止条件以 [阶段交付](system-backup-local-candidate-frozen-20261108.md) 为准。
+本页记录“本地候选冻结与远测准备”及后续接入正式任务的进展。冻结交付的范围、证据和停止条件见 [阶段交付](system-backup-local-candidate-frozen-20261108.md)。
+
+## 正式页面备份接续
+
+专用卷远测通过后，正式任务复用本轮验证过的 RWO keeper、RWX provider、冻结、Longhorn 本地 CSI 快照、解冻和克隆读回路径。验证环境为 `clawmanager-sbk-validation-system`，现场 context 为 `kubernetes-admin@kubernetes`。页面已有提交入口，当前待完成正式执行和部署验收。
+
+`e938a045` 给 Linux keeper 增加 `/source` 独立只读挂载校验，拒绝把容器只读根文件系统上的目录当成持卷。该变更通过基于提交基线的 Linux amd64 交叉编译，临时产物已清理。Node 仍须将 keeper 的 CRI 进程和实际设备绑定到原任务的 PVC/PV/handle，才能允许原 writer 停止。
+
+任务控制器新增了两个调用点。交接调用位于原停写意图落库之后、物理停写之前。存储恢复调用位于原恢复屏障之后、writer 恢复之前。`go test -p 4 ./internal/systembackupcontroller -run '^TestExecutionJobs' -count=1 -v` 通过，覆盖同一任务身份传递、正常顺序及任一步失败后的拦截。具体 Longhorn 交接和恢复还须由正式 Job owner 实现。
+
+正式验收还须接通同一 task/attempt 的 Node 认证交接、快照与采集调用、失败时的解冻和原 writer 恢复，以及原有 Node 安装材料和 unit 更新。keeper 必须保留至冻结已解除、原 writer 恢复并确认原卷可用。最终在验证环境从页面提交一次，核对同一任务的非空备份、源恢复、正式发布及独立读回。此前的专用卷结果作为存储基线保留。
+
+## 已通过的存储验证
 
 2026-11-09，操作者在 `kubernetes-admin@kubernetes` 回传只读结果。Snapshot v1 API 已提供三个所需资源，对应 CRD 均存在。`sbk-validation-longhorn-local` 的驱动为 `driver.longhorn.io`，类型为 `snap`，删除策略为 `Delete`。回执中的 snapshot-controller 2/2、CSI snapshotter 3/3、Longhorn manager 2/2 均为 Ready。
 

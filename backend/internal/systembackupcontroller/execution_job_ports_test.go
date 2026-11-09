@@ -3,12 +3,95 @@ package systembackupcontroller
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
 	"clawreef/internal/systembackup/kube"
 	d "clawreef/internal/systembackupdispatch"
 )
+
+type sourceLifecycleWriterTest struct {
+	d.Ports
+	steps *[]string
+	err   error
+}
+
+func (w sourceLifecycleWriterTest) PauseIntent(context.Context, d.Authority, string, d.WriterState) error {
+	*w.steps = append(*w.steps, "pause intent")
+	return w.err
+}
+
+func (w sourceLifecycleWriterTest) BeforeResume(context.Context, d.Authority) error {
+	*w.steps = append(*w.steps, "recovery fence")
+	return w.err
+}
+
+type sourceLifecycleOwnerTest struct {
+	ExecutionJobOwner
+	steps     *[]string
+	authority d.Authority
+	original  d.WriterState
+	err       error
+}
+
+func (o sourceLifecycleOwnerTest) BeforeSourceStop(_ context.Context, a d.Authority, id string, s d.WriterState) error {
+	if a != o.authority || id != "deployment/tenant/source" || s != o.original {
+		return ErrExecutionRecord
+	}
+	*o.steps = append(*o.steps, "attachment handoff")
+	return o.err
+}
+
+func (o sourceLifecycleOwnerTest) BeforeSourceResume(_ context.Context, a d.Authority) error {
+	if a != o.authority {
+		return ErrExecutionRecord
+	}
+	*o.steps = append(*o.steps, "storage recovery")
+	return o.err
+}
+
+func TestExecutionJobsGateSourceStopAndResume(t *testing.T) {
+	ctx := context.Background()
+	a := d.Authority{TaskPublicID: "original-task", AttemptNo: 3}
+	original := d.WriterState{UID: "original-deployment", Generation: 7, Running: true}
+	failure := errors.New("step unconfirmed")
+	for _, tt := range []struct {
+		name, first, second string
+		run                 func(*ExecutionJobPorts) error
+	}{
+		{"stop", "pause intent", "attachment handoff", func(p *ExecutionJobPorts) error {
+			return p.PauseIntent(ctx, a, "deployment/tenant/source", original)
+		}},
+		{"resume", "recovery fence", "storage recovery", func(p *ExecutionJobPorts) error {
+			return p.BeforeResume(ctx, a)
+		}},
+	} {
+		for _, stage := range []string{"success", "fence fails", "storage fails"} {
+			t.Run(tt.name+"/"+stage, func(t *testing.T) {
+				var steps []string
+				writer := sourceLifecycleWriterTest{steps: &steps}
+				owner := sourceLifecycleOwnerTest{steps: &steps, authority: a, original: original}
+				want := []string{tt.first, tt.second}
+				if stage == "fence fails" {
+					writer.err = failure
+					want = want[:1]
+				}
+				if stage == "storage fails" {
+					owner.err = failure
+				}
+				ports, err := NewExecutionJobPorts(writer, owner)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = tt.run(ports)
+				if !reflect.DeepEqual(steps, want) || (stage == "success" && err != nil) || (stage != "success" && !errors.Is(err, failure)) {
+					t.Fatalf("steps = %v, want %v, error = %v", steps, want, err)
+				}
+			})
+		}
+	}
+}
 
 type executionJobOwnerTest struct {
 	ExecutionJobOwner
