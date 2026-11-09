@@ -20,7 +20,9 @@ R2 在只读预检结束。此后 R3 加入了一次性取证探针。操作者�
 
 操作者以 `fa23dd46` 在同一轮执行一次双卷冻结快照。内核回执为 `WINDOW_OBSERVED`，共同保护窗口约 8.020 秒，请求前到双快照 Ready 后约 7.750 秒，整个区间在共同保护窗口内。两份租约退出 `0` 并确认解冻，挂载身份前后相同，原卷恢复实际写读，tracefs 探点和实例已清理。回执显示每卷均保存两条匹配的引擎日志。完整验收仍须核对开始与成功完成记录及后端身份，并完成两个独立克隆的内容读回和资源回收。
 
-操作者随后以 `60f30fdf` 完成同轮取证和读回。两份 `BACKEND_COMPLETION_OK` 各有同一 engine、原卷和后端快照对应的开始、成功完成日志，且绑定和引擎快照元数据校验通过。RWO 和 RWX 都从各自快照创建了独立健康双副本克隆，两份 `CLONE_READBACK_OK` 确认 seed 一致且原卷解冻后写入的标记未进入克隆。回执 `CLUSTER_CLEANUP_OK` 确认本轮 namespace、PV、SnapshotContent、Longhorn Volume 和后端 Snapshot 已回收。存储行为验证通过，最后的 `node1` SSH 登录超时，节点私有目录清理待补，尚未记录 `STORAGE_PROBE_PASS`。
+操作者随后以 `60f30fdf` 完成同轮取证和读回。两份 `BACKEND_COMPLETION_OK` 各有同一 engine、原卷和后端快照对应的开始、成功完成日志，且绑定和引擎快照元数据校验通过。RWO 和 RWX 都从各自快照创建了独立健康双副本克隆，两份 `CLONE_READBACK_OK` 确认 seed 一致且原卷解冻后写入的标记未进入克隆。回执 `CLUSTER_CLEANUP_OK` 确认本轮 namespace、PV、SnapshotContent、Longhorn Volume 和后端 Snapshot 已回收。最后的 `node1` SSH 登录超时后，操作者单独执行节点清理并回传 `NODE1_CLEANUP_OK`。
+
+依据同轮完整回执，最终验收判定为 `STORAGE_PROBE_PASS`。本次在 `node1` 的 Linux `6.8.0-124-generic` 和 Longhorn v1.12.0 上验证了两个 1 GiB 双副本 ext4 测试源（RWO 与 RWX）的 keeper、共同冻结、CSI 本地快照、解冻、原卷写读、独立克隆和清理。验收覆盖本轮存储方案，完整页面备份及生产接线待独立验证。
 
 以下为此前推进记录。
 
