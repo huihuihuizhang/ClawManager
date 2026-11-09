@@ -73,14 +73,15 @@ ssh root@10.130.14.23
            {name:.metadata.name, driver, type:.parameters.type, deletionPolicy}'
   k get nodes -o 'custom-columns=NAME:.metadata.name,UID:.metadata.uid,KERNEL:.status.nodeInfo.kernelVersion,ARCH:.status.nodeInfo.architecture,ALLOCATABLE_PODS:.status.allocatable.pods'
   for node in $(k get nodes -o 'jsonpath={.items[*].metadata.name}'); do
-    printf '%s active_pods=' "$node"
-    k get pods -A --field-selector="spec.nodeName=$node,status.phase!=Succeeded,status.phase!=Failed" --no-headers | wc -l
+    allocatable=$(k get node "$node" -o 'jsonpath={.status.allocatable.pods}')
+    active=$(k get pods -A --field-selector="spec.nodeName=$node,status.phase!=Succeeded,status.phase!=Failed" -o json | jq '.items | length')
+    printf '%s active_pods=%s allocatable=%s free_pods=%s\n' "$node" "$active" "$allocatable" "$((allocatable - active))"
   done
   k -n "$LH_NS" get nodes.longhorn.io -o json |
     jq -r '.items[] | .metadata.name as $node | .status.diskStatus | to_entries[] |
            [$node, .key, ([.value.conditions[] | select(.type=="Schedulable") | .status] | first),
             .value.storageMaximum, .value.storageAvailable, .value.storageScheduled] | @tsv'
-  k -n "$NS" get deploy,sts,ds,pod +    -o 'custom-columns=KIND:.kind,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image,POD_IMAGES:.spec.containers[*].image'
+  k -n "$NS" get deploy,sts,ds,pod -o 'custom-columns=KIND:.kind,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image,POD_IMAGES:.spec.containers[*].image'
   k -n "$NS" get configmap system-backup-owner -o name
   k -n "$NS" get resourcequota
   k get pvc -A -o 'custom-columns=NAMESPACE:.metadata.namespace,PVC:.metadata.name,UID:.metadata.uid,PV:.spec.volumeName,CLASS:.spec.storageClassName,STATUS:.status.phase'
@@ -88,11 +89,13 @@ ssh root@10.130.14.23
     test -s "$ENROLL_DIR/$file"
     printf '%s=PRESENT\n' "$file"
   done
-  printf '%s\n' READ_ONLY_PREFLIGHT_OK
+  printf '%s\n' READ_ONLY_INVENTORY_COMPLETE
 )
 ```
 
-若 Snapshot API 或指定 class 缺失，本轮停在预检。若 Pod 配额或 Longhorn 双副本调度余量不足，先记录现状。PVC 输出用于定位候选，签发前仍须按 enrollment 核对实际租户、writer、PVC/PV/handle、Node UID 和恢复调度位置。
+若 Snapshot API 或指定 class 缺失，本轮停在预检。PVC 输出用于定位候选，签发前仍须按 enrollment 核对实际租户、writer、PVC/PV/handle、Node UID 和恢复调度位置。
+
+本轮现场回执确认两块 Longhorn 磁盘均为 `Schedulable=True`。Pod 名额当时为 `k8s-master 110/110`、`node1 109/110`，全场合计只剩 1 个。新控制器会占用一个名额，正式任务还会创建 keeper 和 worker。RWO keeper 在源 writer 停止前就要就绪，并绑定 writer 所在节点。保持部署和试跑暂停，继续只读盘点和准备签名材料。确认真实 writer 和 worker 的调度位置后，按控制器、并发 Job、keeper 与 writer 恢复重叠的峰值核对各节点余量，再部署。节点容量、namespace 的 ResourceQuota 和 Longhorn 副本调度分别核查。
 
 ### 2.2 签名材料和部署停点
 
