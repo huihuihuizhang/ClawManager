@@ -12,7 +12,7 @@ R2 在只读预检结束。此后 R3 加入了一次性取证探针。操作者�
 
 随后创建 RWO 源、writer 和 keeper。两个 Pod 均 Ready，但 RWO 等待 `healthy` 超时。现场只读结果显示 `longhorn` 和 `longhorn-rwx` 都请求两个副本，两卷均附着在 `node1` 且 `degraded`，`Scheduled=False`、`ReplicaSchedulingFailure`、`disks are unavailable`。RWO 一个副本在 `k8s-master` 运行，另一个副本未获分配。原 writer 尚未进入删除测试，本轮 Longhorn 冻结快照 `NOT_RUN`，keeper、冻结连续性、克隆和恢复仍为 `UNVERIFIED`。操作者回传 namespace 已删除、`CLUSTER_CLEANUP_OK` 和 `NODE1_CLEANUP_OK`，本轮资源清理完成。新一轮须先确认两节点仍可调度，并为两源卷和两个克隆卷留出双副本额度。见 [R3 一次性验证](system-backup-storage-probe-r3-20261109.md)。
 
-清理后的只读复核确认 `node1` 的 `default-disk-d21bf823c181132b` 因调度额度不足处于 `DiskPressure`。100% 超配下，已调度 `2341042388992` 字节比额度 `2326010003456` 字节多 14 GiB。其物理可用空间仍高于 25% 下限约 1064 GiB，`k8s-master` 调度余量约 384 GiB。按两源卷和两克隆各 1 GiB、每节点留 4 GiB 额外余量计算，候选方案只把 `node1` 此盘的 `storageReserved` 由 `819989307392` 降至 `796366987264` 字节，释放 22 GiB 调度额度。现场写入及结果待回执。
+清理后的只读复核确认 `node1` 的 `default-disk-d21bf823c181132b` 因调度额度不足处于 `DiskPressure`。100% 超配下，已调度 `2341042388992` 字节比额度 `2326010003456` 字节多 14 GiB。其物理可用空间仍高于 25% 下限约 1064 GiB，`k8s-master` 调度余量约 384 GiB。按两源卷和两克隆各 1 GiB、每节点留 4 GiB 额外余量计算，操作者将此盘 `storageReserved` 由 `819989307392` 降至 `796366987264` 字节。回执 `NODE1_DISK_SCHEDULABLE` 确认 `schedulable=true`、实际调度余量 `8589934592` 字节。下轮须重新创建测试卷并检查双副本健康，磁盘结果只证明调度前提恢复。
 
 以下为此前推进记录。
 

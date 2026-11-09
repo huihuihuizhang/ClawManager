@@ -1,6 +1,6 @@
 # 一次性存储验证 R3
 
-先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。`k8s-master` 和 `node1` 已通过校准。当前两副本 Longhorn 测试卷因磁盘调度失败而降级，冻结快照未执行。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
+先在自建 ext4 loop 卷上证明探针能捕获另一个进程提前解冻，再在本轮新建的 Longhorn RWO/RWX 卷上运行一次。`k8s-master` 和 `node1` 已通过校准。上一轮降级的测试卷已清理，`node1` 磁盘恢复可调度，冻结快照待新一轮实测。R3 替换 R2 第 3.1 节要求使用现成追踪的部分，沿用 R2 的隔离、身份核对、10 秒快照等待、约 20 秒租约、独立读回和失败恢复。[R2 完整资源和恢复步骤](system-backup-storage-remote-acceptance-20261108.md)
 
 ## 1. 校准提前解冻探针
 
@@ -15,6 +15,8 @@ python3 -I -B scripts/system-backup-ext4-freeze-canary.py --trace-freeze \
 校准通过需退出 0，同时出现 `calibration_foreign_thaw`、`freeze_trace_canary` 的 `FOREIGN_THAW_OBSERVED` 和 `cleanup.complete=true, test_completed=true`。独立子进程的成功解冻必须发生在父进程的冻结成功之后、父进程的预定解冻进入之前，且 TID 和设备完全匹配。探点丢失、缓冲区丢失、返回缺项、权限拒绝均判 `UNVERIFIED`。如果原生写阻塞、同步或恢复断言得到明确反例，记录实际失败项并停止。该校准仅验证探针和本节点自建卷。
 
 ## 2. 准备专用 Longhorn 卷
+
+已有两台节点同次启动的校准回执时，可在 `k8s-master` 运行 `system-backup-storage-probe-prepare.sh CALIBRATION_DIR PRIOR_RUN_EVIDENCE_DIR` 合并本节的建卷及 keeper 检查。第一个目录保存 `k8s-master` 的 `trace-calibration.jsonl`，第二个保存此前转回的 `node1-calibration.jsonl`。脚本复核容量及身份，输出 `BOTH_HEALTHY_KEEPER_OK` 和本轮 `out`，供后续挂载身份核对及快照使用。
 
 在已能使用 `kubernetes-admin@kubernetes` 的 Bash 终端设置本轮参数。以下沿用部署记录中的 `longhorn`、`longhorn-rwx` 及先前隔离 RWX 探针的镜像摘要。现场 StorageClass 校验失败即停止。探针 Pod 只使用该镜像里的 shell 工具，由清单覆盖启动命令。`clawmanager-sbk-validation-system` 是应用部署记录里的 namespace。本轮资源放在独占的 `sbk-storage-probe-*`。
 
@@ -41,7 +43,7 @@ mkdir -m 700 -- "$OUT"
 
 依次执行 R2 第 0.1 节控制面预检和第 2 节的 RWX 源卷部分，取得 `$OUT/share-pod.json` 的 `.node`。若实际节点为 `node1`，先在那台节点重新校准。然后按 R2 第 2 节剩余步骤在该节点准备 RWO 源卷和 keeper，再完成第 3 节起始两段的挂载身份核对。第 0.1 节的取证能力由本轮校准判定。只接受本轮同一 Node 上的两个 ext4 后端挂载。任何身份不一致，按 R2 清理并停止。
 
-删除原 RWO writer 或启动冻结前，核对两份测试卷都 `attached`、`healthy` 且 `Scheduled=True`。Pod Ready 只用于检查 Pod 状态。两卷在当前两副本配置中均为 `degraded`，回执显示 `ReplicaSchedulingFailure`。本轮在此前提处停止并按本轮 UID 清理，实际冻结快照记 `NOT_RUN`。后续重跑须保持原副本配置和健康门槛。
+删除原 RWO writer 或启动冻结前，核对两份测试卷都 `attached`、`healthy` 且 `Scheduled=True`。Pod Ready 只用于检查 Pod 状态。上一轮两卷因 `ReplicaSchedulingFailure` 降级并清理，实际冻结快照记 `NOT_RUN`。`node1` 恢复可调度后，重跑保持原副本配置和健康门槛。
 
 用 R2 定义的 `node` 函数访问已核对的实际节点。以下复制三个脚本到本轮新建的 root:0700 节点目录并校验 SHA256。若管理终端就在已核对的实际节点上，可定义 `node() { bash -c "$1"; }`，把 `scp` 替换成将同样四个文件复制到 `"$REMOTE_DIR/"` 的本地 `cp`。
 
