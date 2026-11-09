@@ -63,7 +63,7 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil {
 		return nil, err
 	}
-	f.firstAPI, err = x.readWriterAPI(x.physical, clients)
+	f.firstAPI, err = x.readWriterAPI(x.physical, clients, f.firstSQL.inventory.Instances)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,8 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil {
 		return nil, err
 	}
-	if x.checkRuntimeWorkspace(x.physical, clients.API, f.firstSQL.inventory.Instances, native) != nil {
+	if x.checkRuntimeWorkspace(x.physical, clients.API, f.firstSQL.inventory.Instances, native) != nil ||
+		x.checkOriginalLonghornSources(x.physical, clients, f.firstSQL.inventory) != nil {
 		return nil, install.ErrInstall
 	}
 	firstParts, err := x.deriveParts(f.firstSQL, clients)
@@ -110,7 +111,7 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 	if err != nil || !reflect.DeepEqual(redis, lastRedis) {
 		return nil, install.ErrInstall
 	}
-	f.lastAPI, err = x.readWriterAPI(x.physical, clients)
+	f.lastAPI, err = x.readWriterAPI(x.physical, clients, f.lastSQL.inventory.Instances)
 	if err != nil || !reflect.DeepEqual(f.firstAPI.objects, f.lastAPI.objects) {
 		return nil, install.ErrInstall
 	}
@@ -128,7 +129,8 @@ func (x *bootstrapSourceRegistryReader) collectBootstrapSourceFacts() (*bootstra
 		return nil, install.ErrInstall
 	}
 	lastParts, err := x.deriveParts(f.lastSQL, clients)
-	if err != nil || !reflect.DeepEqual(firstParts, lastParts) || x.checkRuntimeWorkspace(x.physical, clients.API, f.lastSQL.inventory.Instances, lastNative) != nil {
+	if err != nil || !reflect.DeepEqual(firstParts, lastParts) || x.checkRuntimeWorkspace(x.physical, clients.API, f.lastSQL.inventory.Instances, lastNative) != nil ||
+		x.checkOriginalLonghornSources(x.physical, clients, f.lastSQL.inventory) != nil {
 		return nil, install.ErrInstall
 	}
 	wantParticipants := append([]string{}, x.config.RuntimeSources.LeaseParticipants...)

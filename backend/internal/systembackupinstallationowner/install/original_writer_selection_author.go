@@ -51,11 +51,14 @@ type OriginalInitialSourceCoordinates struct {
 	RuntimeStartupImages                                               []OriginalRuntimeStartupImageInput
 	Volumes                                                            []originalPhysicalVolumePin
 	Census                                                             originalMaintenanceKubernetesCensus
-	Storage                                                            []OriginalInitialInstanceStorage `json:",omitempty"`
-	StoppedProLayouts                                                  []OriginalStoppedProSelection    `json:",omitempty"`
-	NodeUIDs                                                           map[string]string                `json:",omitempty"`
-	ApplicationScopes                                                  []string                         `json:",omitempty"`
-	SharedNodes                                                        []c.RuntimeSharedNodeSources     `json:",omitempty"`
+	Storage                                                            []OriginalInitialInstanceStorage         `json:",omitempty"`
+	StoppedProLayouts                                                  []OriginalStoppedProSelection            `json:",omitempty"`
+	NodeUIDs                                                           map[string]string                        `json:",omitempty"`
+	ApplicationScopes                                                  []string                                 `json:",omitempty"`
+	SharedNodes                                                        []c.RuntimeSharedNodeSources             `json:",omitempty"`
+	BlockedSharedStorage                                               []OriginalInitialSharedStorageDependency `json:",omitempty"`
+	TenantProSources                                                   []OriginalInitialTenantProCoordinates    `json:",omitempty"`
+	TenantProAccess                                                    []originalInitialTenantProAccess         `json:",omitempty"`
 	SharedRuntime                                                      originalSharedRuntimeSQL
 	Layouts                                                            []OriginalInitialSourceLayout     `json:",omitempty"`
 	Dependencies                                                       []OriginalInitialSourceDependency `json:",omitempty"`

@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	b "clawreef/internal/systembackup/publicadapter"
 	"context"
 	"encoding/json"
 	"sort"
@@ -31,8 +32,8 @@ type observedWriterAPI struct {
 
 // Fixed namespace/resource set from the original source scope. This enumerates
 // unknown controllers too; the later graph check cannot silently drop them.
-func (x *sourceSQLObservation) observeWriterAPI(ctx context.Context) (*observedWriterAPI, error) {
-	if x.recheck(ctx) != nil {
+func (x *sourceSQLObservation) observeWriterAPI(ctx context.Context, inventories ...[]b.InstanceIdentity) (*observedWriterAPI, error) {
+	if x.recheck(ctx) != nil || len(inventories) > 1 {
 		return nil, ErrSourceWriterObservationIncomplete
 	}
 	out := &observedWriterAPI{objects: []observedWriterAPIObject{}}
@@ -102,6 +103,18 @@ func (x *sourceSQLObservation) observeWriterAPI(ctx context.Context) (*observedW
 	}
 	if x.recheck(ctx) != nil {
 		return nil, ErrSourceWriterObservationIncomplete
+	}
+	if len(inventories) == 1 {
+		var scope *productionPersistentMountScope
+		service := x.delegation.service
+		if service.captureMaterials != nil && service.captureMaterials.Discovery != nil {
+			scope = service.captureMaterials.Discovery.PersistentMounts
+		}
+		tenant, err := observeTenantProWriterAPI(ctx, x.delegation.owner.Client, service.Config, inventories[0], scope, x.recheck)
+		if err != nil || len(out.objects)+len(tenant) > 10000 {
+			return nil, ErrSourceWriterObservationIncomplete
+		}
+		out.objects = append(out.objects, tenant...)
 	}
 	sort.Slice(out.objects, func(i, j int) bool {
 		a, b := out.objects[i], out.objects[j]

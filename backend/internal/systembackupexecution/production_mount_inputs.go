@@ -74,6 +74,14 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 	}
 	owners := map[int]b.InstanceIdentity{}
 	for _, instance := range instances {
+		if isRunningTenantPro(instance) && !deferredRuntimeTestInstance(cfg, instance) {
+			spec := byID[instance.ID]
+			if owners[instance.ID].ID != 0 || spec.Source != instance || (spec.Kind != "pod" && spec.Kind != "deployment") {
+				return nil, mountInputError("tenant_pro_writer_mismatch", instance.ID, "workspace")
+			}
+			owners[instance.ID] = instance
+			continue
+		}
 		if deferredRuntimeTestInstance(cfg, instance) {
 			spec := byID[instance.ID]
 			if owners[instance.ID].ID != 0 || spec.Source != instance || spec.Kind != "runtime-test-deferred" {
@@ -103,7 +111,7 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 		owners[instance.ID] = instance
 	}
 	for _, layout := range layouts {
-		if owners[layout.InstanceID].ID == 0 || deferredRuntimeTestInstance(cfg, owners[layout.InstanceID]) || isCurrentStoppedPro(owners[layout.InstanceID]) {
+		if owners[layout.InstanceID].ID == 0 || deferredRuntimeTestInstance(cfg, owners[layout.InstanceID]) || isCurrentStoppedPro(owners[layout.InstanceID]) || isRunningTenantPro(owners[layout.InstanceID]) {
 			return nil, mountInputError("foreign_instance_layout", layout.InstanceID, layout.MountID)
 		}
 	}
@@ -120,6 +128,15 @@ func BuildOriginalInstanceMountScope(ctx context.Context, client kubernetes.Inte
 				continue
 			}
 			spec := byID[instance.ID]
+			if isRunningTenantPro(instance) {
+				material, err := observeRunningTenantProMount(ctx, client, cfg, instance, spec)
+				if err != nil {
+					return nil, err
+				}
+				scope.RunningTenantPro = append(scope.RunningTenantPro, material)
+				observedPods[instance.ID] = material.PodUID + "/" + material.PodSpecSHA256
+				continue
+			}
 			if isCurrentStoppedPro(instance) {
 				storage, err := currentStoppedProConfiguredStorage(cfg, instance.ID)
 				if err != nil {
@@ -244,6 +261,11 @@ func checkOriginalPersistentMountPins(ctx context.Context, client kubernetes.Int
 			return mountInputError("current_stopped_pro_baseline_changed", material.Source.ID, "")
 		}
 	}
+	for _, material := range scope.RunningTenantPro {
+		if material.check(ctx, client, cfg.Namespace) != nil {
+			return mountInputError("running_tenant_pro_mount_changed", material.Source.ID, "workspace")
+		}
+	}
 	var resolved []productionInstanceMount
 	for _, mapping := range scope.Mounts {
 		pod, err := client.CoreV1().Pods(cfg.Namespace).Get(ctx, mapping.Pod, metav1.GetOptions{})
@@ -301,12 +323,17 @@ func persistentMountsForInstances(scope *productionPersistentMountScope, instanc
 		if instance.Status == "stopped" {
 			return nil, mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
-		if instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running" {
+		if (instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running") && runningTenantProMountFor(scope, instance) == nil {
 			return nil, mountInputError("unsupported_instance", instance.ID, "")
 		}
 		owners[instance.ID] = instance
 	}
 	for _, material := range scope.CurrentStoppedPro {
+		if owners[material.Source.ID] != material.Source {
+			return nil, d.ErrNotReady
+		}
+	}
+	for _, material := range scope.RunningTenantPro {
 		if owners[material.Source.ID] != material.Source {
 			return nil, d.ErrNotReady
 		}

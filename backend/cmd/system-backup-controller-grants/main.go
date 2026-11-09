@@ -10,6 +10,7 @@ import (
 
 	"clawreef/internal/systembackupcontroller"
 	execution "clawreef/internal/systembackupexecution"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 	verifierMaterialsSHA := flag.String("verifier-materials-sha256", "", "independently deployed formal verifier materials SHA256 for exact read-only actor/owner RBAC")
 	controllerSA := flag.String("controller-service-account", "", "pre-created dedicated capture controller ServiceAccount")
 	publisherMaterialsSHA := flag.String("publisher-verifier-materials-sha256", "", "independent publisher verifier materials SHA256 for exact named GET roles")
+	captureMaterialsSHA := flag.String("capture-materials-sha256", "", "final original capture materials SHA256 for owner-signed source access")
+	signedSourceOnly := flag.Bool("signed-source-only", false, "render the additive signed source roles for the installation owner")
 	flag.Parse()
 	if *runtimeControl && *publicCapture {
 		fmt.Fprintln(os.Stderr, "SQL grant modes are exclusive")
@@ -79,7 +82,23 @@ func main() {
 			}
 			inputs.PublisherVerifier = append(inputs.PublisherVerifier, execution.PublisherVerifierInput{File: cfg.PublisherVerifier.Path, SHA256: *publisherMaterialsSHA})
 		}
-		objects, err := execution.CaptureKubernetesGrantsWithInputs(cfg, *controllerSA, inputs)
+		if *captureMaterialsSHA != "" {
+			if cfg.CaptureModules == nil {
+				fmt.Fprintln(os.Stderr, "capture materials reference required")
+				os.Exit(2)
+			}
+			inputs.CaptureModules = []execution.ProductionCaptureInput{{File: cfg.CaptureModules.Path, SHA256: *captureMaterialsSHA}}
+		}
+		var objects []runtime.Object
+		if *signedSourceOnly {
+			if *captureMaterialsSHA == "" || *verifierMaterialsSHA != "" || *publisherMaterialsSHA != "" {
+				fmt.Fprintln(os.Stderr, "signed source only requires the final capture materials pin")
+				os.Exit(2)
+			}
+			objects, err = execution.SignedSourceKubernetesGrants(cfg, *kubeDigest, *controllerSA, inputs.CaptureModules)
+		} else {
+			objects, err = execution.CaptureKubernetesGrantsWithInputs(cfg, *controllerSA, inputs, *kubeDigest)
+		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "public Kubernetes access inventory invalid")
 			os.Exit(2)
@@ -89,7 +108,7 @@ func main() {
 		}
 		return
 	}
-	if *kubeDigest != "" || *controllerSA != "" || *verifierMaterialsSHA != "" || *publisherMaterialsSHA != "" {
+	if *kubeDigest != "" || *controllerSA != "" || *verifierMaterialsSHA != "" || *publisherMaterialsSHA != "" || *captureMaterialsSHA != "" || *signedSourceOnly {
 		fmt.Fprintln(os.Stderr, "Kubernetes configuration required")
 		os.Exit(2)
 	}

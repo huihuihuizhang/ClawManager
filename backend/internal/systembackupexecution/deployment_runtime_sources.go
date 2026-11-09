@@ -35,6 +35,7 @@ type RuntimeSourceConfig struct {
 	RuntimeTestScope         *domain.RuntimeTestScope           `json:"runtime_test_scope,omitempty"`
 	SharedRuntimeProtocol    string                             `json:"shared_runtime_protocol,omitempty"`
 	SharedObserver           *FormalSharedRuntimeObserverConfig `json:"shared_runtime_observer,omitempty"`
+	LonghornHold             *FormalLonghornHoldConfig          `json:"longhorn_hold,omitempty"`
 	StoppedProObserver       *FormalStoppedProObserverConfig    `json:"stopped_pro_observer,omitempty"`
 	CurrentStoppedProLayouts []CurrentStoppedProLayout          `json:"current_stopped_pro_layouts,omitempty"`
 	Supported                []b.AgentKind                      `json:"supported"`
@@ -241,6 +242,9 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 		controls.Shared = shared
 	}
 	controls.RuntimeTestScope = cfg.RuntimeTestScope.Clone()
+	if err := s.attachTenantProRuntimeControls(&controls); err != nil {
+		return profile, err
+	}
 	runtime, e := c.NewSQLRuntimeControl(controls)
 	if e != nil {
 		return profile, e
@@ -306,6 +310,13 @@ func (s *DeploymentService) validateRuntimeInventory(inv b.SourceInventory) erro
 	}
 	for _, source := range inv.Instances {
 		if inv.RuntimeTestScope.IsDeferred(source) {
+			continue
+		}
+		if isRunningTenantPro(source) && source.Namespace != s.Config.Namespace {
+			pin := s.signedTenantProMount(source)
+			if pin == nil || !pin.valid() || !validTenantProNamespace(s.Config.Namespace, source) || !kinds[b.AgentKind{Type: source.Type, Mode: source.Mode, Variant: source.Variant, OS: source.OS}] {
+				return d.ErrNotReady
+			}
 			continue
 		}
 		if cfg.SharedRuntimeProtocol != "" && source.Mode == "lite" {
@@ -444,6 +455,20 @@ func (s *DeploymentService) checkRuntimeWorkspace(ctx context.Context, client ku
 	if s.captureMaterials != nil && s.captureMaterials.Discovery != nil {
 		if err := checkCurrentStoppedProScopes(ctx, client, s.Config, s.captureMaterials.Discovery.PersistentMounts, instances); err != nil {
 			return err
+		}
+		scope := s.captureMaterials.Discovery.PersistentMounts
+		if scope != nil && len(scope.RunningTenantPro) != 0 {
+			shared := make([]b.InstanceIdentity, 0, len(instances))
+			for _, instance := range instances {
+				if tenant := runningTenantProMountFor(scope, instance); tenant != nil {
+					if err := tenant.check(ctx, client, s.Config.Namespace); err != nil {
+						return err
+					}
+					continue
+				}
+				shared = append(shared, instance)
+			}
+			instances = shared
 		}
 	}
 	if s.Config.Workspace.NFS != nil {

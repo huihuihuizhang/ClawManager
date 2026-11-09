@@ -42,6 +42,20 @@ func (x *bootstrapSourceRegistryReader) checkRuntimeWorkspace(ctx context.Contex
 	if checkCurrentStoppedProScopes(ctx, client, x.config, scope, instances) != nil {
 		return install.ErrInstall
 	}
+	if scope != nil && len(scope.RunningTenantPro) != 0 {
+		shared := make([]b.InstanceIdentity, 0, len(instances))
+		for _, instance := range instances {
+			if tenant := runningTenantProMountFor(scope, instance); tenant != nil {
+				actual, err := x.verifiedNativeWriter(instance.ID, native)
+				if err != nil || actual.RunningTenantPro == nil || *actual.RunningTenantPro != *tenant || tenant.check(ctx, client, x.config.Namespace) != nil {
+					return install.ErrInstall
+				}
+				continue
+			}
+			shared = append(shared, instance)
+		}
+		instances = shared
+	}
 	if !hasRunningSourceInstances(instances) {
 		return x.checkPhysical(ctx)
 	}

@@ -40,11 +40,14 @@ type OriginalObserverHostDefinition struct {
 	BinaryDirectory, MaterialDirectory string
 	CRI                                []OriginalObserverHostCRI
 	SharedRuntime                      *OriginalObserverSharedRuntimeHostConfig `json:",omitempty"`
+	LonghornVolumes                    BootstrapSourceFilePin                   `json:",omitempty"`
+	LonghornSourceRegistry             *OriginalObserverLonghornSourceRegistry  `json:",omitempty"`
 }
 type OriginalObserverHostMaterialsReceipt struct {
 	Version, Status, PlanSHA256, DefinitionSHA256, PKIReceiptSHA256 string
 	NodeBundles                                                     map[string]BootstrapSourceFilePin
 	AuthorityHead                                                   HeadCAS
+	LonghornHold                                                    *OriginalObserverLonghornHoldConfig `json:",omitempty"`
 }
 
 var originalObserverBinary = map[string]string{"whole": "backup-node-observer", "gateway": "backup-gateway-node-observer", "stopped-pro": "backup-stopped-pro-node-observer", "shared": "backup-shared-runtime-node-owner"}
@@ -98,6 +101,14 @@ func observerHostUnit(pki GeneratedOriginalObserverPKI, ep OriginalObserverPKIEn
 	if e != nil {
 		return nil, e
 	}
+	longhornNode, e := originalLonghornObserverNodeSelected(def.LonghornVolumes, ep.Node, ep.NodeUID)
+	if e != nil {
+		return nil, e
+	}
+	if ep.Kind == "shared" && longhornNode {
+		args = append(args, "--longhorn-materials-file", path.Join(material, "longhorn-grants.json"),
+			"--longhorn-materials-sha256", def.LonghornVolumes.SHA256)
+	}
 	quoted := make([]string, len(args))
 	for n, arg := range args {
 		quoted[n] = observerUnitArg(arg)
@@ -148,6 +159,9 @@ func observerHostInstallScript(ep OriginalObserverPKIEndpoint, def OriginalObser
 		script.WriteString("sync -f -- " + store + "\n")
 	}
 	script.WriteString("copy_exact observer-ca.pem " + observerShellArg(path.Join(material, "observer-ca.pem")) + " 600\n")
+	if def.LonghornVolumes != (BootstrapSourceFilePin{}) {
+		script.WriteString("copy_exact longhorn-grants.json " + observerShellArg(path.Join(material, "longhorn-grants.json")) + " 600\n")
+	}
 	units := []string{}
 	for _, kind := range kinds {
 		names := []string{kind + "-server.pem", kind + "-server-key.pem"}
@@ -241,6 +255,17 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 			if e != nil {
 				return ErrInstall
 			}
+		}
+		if def.LonghornVolumes != (BootstrapSourceFilePin{}) {
+			tenant, e := i.originalObserverLonghornTenantCheck(ctx, password, pin, def.LonghornSourceRegistry)
+			if e != nil {
+				return e
+			}
+			if e := i.validateOriginalLonghornObserverVolumesWithTenant(ctx, def.LonghornVolumes, tenant); e != nil {
+				return e
+			}
+		} else if def.LonghornSourceRegistry != nil {
+			return ErrInstall
 		}
 		for _, cri := range def.CRI {
 			if cri.ReleaseBinary.File == "" {
@@ -339,6 +364,10 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 		return zero, ErrInstall
 	}
 	receipt := OriginalObserverHostMaterialsReceipt{Version: "original-observer-host-materials.v1", Status: "materialized_uninstalled_no_native_source_proof", PlanSHA256: i.planHash, DefinitionSHA256: digest, PKIReceiptSHA256: def.PKIReceipt.SHA256, NodeBundles: map[string]BootstrapSourceFilePin{}, AuthorityHead: before.cas}
+	receipt.LonghornHold, e = originalObserverLonghornControllerConfig(def, pki)
+	if e != nil {
+		return zero, e
+	}
 	for node, endpoints := range grouped {
 		cri := criByNode[node]
 		if cri.NodeUID != endpoints[0].NodeUID {
@@ -349,6 +378,13 @@ func (i *Installer) ProduceOriginalObserverHostMaterials(ctx context.Context, pa
 			return zero, ErrInstall
 		}
 		files := map[string][]byte{"observer-ca.pem": ca}
+		if def.LonghornVolumes != (BootstrapSourceFilePin{}) {
+			grants, e := readObserverHostFile(def.LonghornVolumes, 1<<20)
+			if e != nil {
+				return zero, e
+			}
+			files["longhorn-grants.json"] = grants
+		}
 		if cri.ReleaseBinary.File != "" {
 			binary, e := readObserverHostFile(cri.ReleaseBinary, 64<<20)
 			if e != nil {

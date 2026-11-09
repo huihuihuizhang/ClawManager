@@ -163,6 +163,11 @@ func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *P
 		return nil, nil, d.ErrNotReady
 	}
 	metadata := productionCaptureMetadata{TeamObjects: teamCensus, MinIOReadKeepers: s.Config.MinIOReadKeepers, Version: productionCaptureMetadataVersion, SQLSchema: sqlMetadata.Schema, Mounts: mounts, MountIdentities: mountIdentities, Skills: skills, Redis: s.captureMaterials.Discovery.Redis, Deployment: deployment, Secrets: secrets}
+	stage = "longhorn_sources"
+	metadata.LonghornClones, err = authority.freezeLonghornSources(ctx, mountIdentities)
+	if err != nil || (saved != nil && !reflect.DeepEqual(metadata.LonghornClones, saved.LonghornClones)) {
+		return nil, nil, d.ErrNotReady
+	}
 	stage = "platform_mounts"
 	if saved == nil {
 		metadata.PlatformMounts, err = s.freezePlatformSourceRecoveryMounts(ctx, owner, writers)

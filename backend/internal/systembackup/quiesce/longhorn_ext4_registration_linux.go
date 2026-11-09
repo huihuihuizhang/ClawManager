@@ -50,7 +50,10 @@ func (a *longhornExt4Actions) sourceForRequest(ctx context.Context, r LonghornEx
 		return "", ErrNodeObservation
 	}
 	if r.Keeper != nil {
-		if r.Action != "register" || len(a.sources) >= 1024 {
+		// A recovery request can reopen the exact keeper to reconcile a
+		// lost register reply. The normal device and journal checks still
+		// apply, and reopening never restores ownership of a freeze.
+		if (r.Action != "register" && r.Action != "release") || len(a.sources) >= 1024 {
 			return "", ErrNodeObservation
 		}
 		return a.registerKeeperSource(ctx, r, template, volume)

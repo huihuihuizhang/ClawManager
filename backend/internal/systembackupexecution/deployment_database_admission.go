@@ -63,31 +63,46 @@ func (s *DeploymentService) loadDeploymentIdentities(ctx context.Context, db *sq
 	if len(selected) > 1 {
 		return c.ErrExecutionAuthority
 	}
+	if !s.ForwardEnabled {
+		s.useIndependentRecovery()
+		return nil
+	}
 	forwardReference := cfg.ForwardGrant
 	if len(selected) == 1 && selected[0] != nil {
-		if !s.ForwardEnabled || selected[0].OriginalForward.File != cfg.ForwardGrant.Path || selected[0].Forward.SHA256 != forwardDigest {
+		if selected[0].OriginalForward.File != cfg.ForwardGrant.Path || selected[0].Forward.SHA256 != forwardDigest {
 			return c.ErrExecutionAuthority
 		}
 		forwardReference.Path = selected[0].Forward.File
 	}
 	s.Forward, err = deploymentIdentity(forwardReference, forwardDigest, cfg.KeyDirectory)
 	if err != nil {
-		if len(selected) == 1 && selected[0] != nil {
-			return err
-		}
-		s.Forward = s.Recovery
-		s.ForwardEnabled = false
+		s.useIndependentRecovery()
+		return nil
+	}
+	if err = s.Forward.CheckDeployment(ctx, db); err != nil || !forwardCaptureActions(s.Forward.DeploymentBinding()) {
+		s.useIndependentRecovery()
 		return nil
 	}
 	if len(selected) == 1 && selected[0] != nil {
 		if err = s.bindOriginalEnabledPublicationSources(ctx, db, *selected[0]); err != nil {
+			if s.Forward.CheckDeployment(ctx, db) != nil {
+				s.useIndependentRecovery()
+				return nil
+			}
 			return err
 		}
 	}
-	if err = s.Forward.CheckDeployment(ctx, db); err != nil || !forwardCaptureActions(s.Forward.DeploymentBinding()) || !s.ForwardEnabled {
-		s.ForwardEnabled = false
-		// Recovery must not retain stale forward profile, issuer or key metadata.
-		s.Forward = s.Recovery
+	// Recheck after the predecessor's SQL/file reads before selecting forward
+	// startup. A loss of forward authority leaves only independent recovery.
+	if err = s.Forward.CheckDeployment(ctx, db); err != nil {
+		s.useIndependentRecovery()
 	}
 	return nil
+}
+
+func (s *DeploymentService) useIndependentRecovery() {
+	s.Forward = s.Recovery
+	s.ForwardEnabled = false
+	s.originalSourceForward = nil
+	s.enabledPublicationFiles = nil
 }

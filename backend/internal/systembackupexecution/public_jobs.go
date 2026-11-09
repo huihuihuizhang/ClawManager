@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"clawreef/internal/systembackup/control"
@@ -57,6 +58,9 @@ type PublicJobOwner struct {
 	FormalKeys       FormalCandidateKeyFactory
 	providerPermits  *deploymentProviderPermitIssuer
 	productionSource *productionSourceBinding
+	longhornCutOwner heldLonghornCutOwner
+	longhornExecutor *originalLonghornExecutionClient
+	longhornCutMu    sync.Mutex
 }
 
 func hash(v []byte) string { s := sha256.Sum256(v); return hex.EncodeToString(s[:]) }
@@ -202,6 +206,9 @@ func (o *PublicJobOwner) Admit(ctx context.Context, a d.Authority, intent d.JobI
 	}
 	for _, part := range desc.Parts {
 		if part.Intent.JobUnitKey == intent.JobUnitKey {
+			if e = o.prepareHeldLonghornMount(ctx, in, desc, part); e != nil {
+				return in, p, kube.Runner{}, e
+			}
 			if e = o.prepareControlEvidenceDispatch(ctx, in, part); e != nil {
 				return in, p, kube.Runner{}, e
 			}
@@ -657,7 +664,7 @@ func (o *PublicJobOwner) authorizeOriginalControl(ctx context.Context, peer stri
 	}
 	descriptionStage = "controller-control-original-mounts"
 	mountCost := startOriginalControlStage(ctx, req, originalControlWorkerMounts)
-	mounts, production, e := o.productionMountsFromOriginal(in, desc, *part)
+	mounts, production, e := o.productionMountsWithContext(ctx, in, desc, *part)
 	mountCost.finish(e != nil)
 	if e != nil {
 		return lease, worker.ErrExecution

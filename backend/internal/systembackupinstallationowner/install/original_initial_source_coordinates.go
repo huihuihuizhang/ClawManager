@@ -3,6 +3,7 @@ package install
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -30,6 +31,9 @@ type OriginalInitialAdditionalMount struct {
 type OriginalInitialSourceDependency struct {
 	InstanceID               int
 	Mode, Status, Dependency string
+}
+type OriginalInitialSharedStorageDependency struct {
+	Namespace, Pod, PodUID, Reason string
 }
 type OriginalInitialMountCoordinates struct {
 	Volume   core.Volume
@@ -222,6 +226,52 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	if err != nil {
 		return zero, err
 	}
+	tenantObserved := map[int]OriginalInitialTenantProCoordinates{}
+	var tenantSources []OriginalInitialTenantProCoordinates
+	claimKeys := map[string]bool{}
+	for _, claim := range claims {
+		claimKeys[claim.Namespace+"/"+claim.Name] = true
+	}
+	for _, source := range p.instances {
+		if originalInitialTenantNamespace(i.plan.Target.Namespace, source) == "" {
+			continue
+		}
+		tenant, pod, deployment, tenantClaims, err := p.readInitialTenantPro(ctx, source)
+		if err != nil {
+			return zero, err
+		}
+		tenantObserved[source.ID] = tenant
+		if pod == nil {
+			continue
+		}
+		pods = append(pods, *pod)
+		deployments = append(deployments, *deployment)
+		tenantSources = append(tenantSources, tenant)
+		for _, claim := range tenantClaims {
+			key := claim.Namespace + "/" + claim.Name
+			if !claimKeys[key] {
+				claims = append(claims, claim)
+				claimKeys[key] = true
+			}
+		}
+	}
+	recheckTenants := func() error {
+		for _, source := range p.instances {
+			if want, ok := tenantObserved[source.ID]; ok {
+				actual, _, _, _, err := p.readInitialTenantPro(ctx, source)
+				if err != nil || actual != want {
+					return ErrInstall
+				}
+			}
+		}
+		return nil
+	}
+	// Keep the original per-instance controller chain above. Access authoring
+	// also needs every PVC in each selected tenant, including unmounted claims.
+	tenantAccess, err := p.initialTenantProAccess(ctx, testScope)
+	if err != nil {
+		return zero, err
+	}
 	rows, err := i.db.QueryContext(ctx, `SELECT DISTINCT scope FROM system_backup_gate ORDER BY scope`)
 	if err != nil {
 		return zero, err
@@ -328,6 +378,8 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		}
 		if source.Status == "running" && layout.CurrentPodUID == "" {
 			layout.Dependency = "running_source_current_pod_or_binding_missing"
+		} else if tenantObserved[source.ID].PodUID != "" && layout.Dependency == "" {
+			layout.Dependency = "tenant_pro_native_writer_owner_required"
 		}
 		if !testScope.IsDeferred(source) && source.Status != "running" && source.Status != "stopped" {
 			layout.Dependency = "original_state_requires_native_nonrunning_source_owner:" + source.Status
@@ -357,6 +409,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	// still a concrete dependency; no guessed kubelet path is exported.
 	physical := &PreparedOriginalWriterSet{owner: p}
 	sharedRoots := map[string][]string{}
+	var blockedShared []OriginalInitialSharedStorageDependency
 	for _, runtime := range shared.Pods {
 		for n := range pods {
 			pod := &pods[n]
@@ -368,33 +421,49 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 			}
 			roots, e := physical.actualPodPersistentRoots(ctx, pod)
 			if e != nil {
-				return zero, e
+				var unsupported OriginalWriterSourceFailure
+				if !errors.As(e, &unsupported) || unsupported.Dependency != "persistent_volume_native_fence_required" {
+					return zero, e
+				}
+				blockedShared = append(blockedShared, OriginalInitialSharedStorageDependency{
+					Namespace: pod.Namespace, Pod: pod.Name, PodUID: string(pod.UID), Reason: unsupported.Dependency,
+				})
+				continue
 			}
 			sharedRoots[pod.Spec.NodeName] = append(sharedRoots[pod.Spec.NodeName], roots...)
 		}
 	}
 	sharedNodes := []c.RuntimeSharedNodeSources{}
-	for node, roots := range sharedRoots {
-		if node == "" || nodes[node] == "" {
-			return zero, ErrInstall
+	if len(blockedShared) == 0 {
+		for node, roots := range sharedRoots {
+			if node == "" || nodes[node] == "" {
+				return zero, ErrInstall
+			}
+			sharedNodes = append(sharedNodes, c.RuntimeSharedNodeSources{Name: node, UID: nodes[node], Paths: originalNonOverlappingRoots(roots)})
 		}
-		sharedNodes = append(sharedNodes, c.RuntimeSharedNodeSources{Name: node, UID: nodes[node], Paths: originalNonOverlappingRoots(roots)})
 	}
 	sort.Slice(sharedNodes, func(i, j int) bool { return sharedNodes[i].Name < sharedNodes[j].Name })
+	sort.Slice(blockedShared, func(i, j int) bool {
+		return blockedShared[i].Namespace+"/"+blockedShared[i].Pod < blockedShared[j].Namespace+"/"+blockedShared[j].Pod
+	})
 	volumes := []originalPhysicalVolumePin{}
 	for _, claim := range claims {
-		if claim.Spec.VolumeName == "" || claim.DeletionTimestamp != nil {
+		if claim.UID == "" || claim.Status.Phase != core.ClaimBound || claim.Spec.VolumeName == "" || claim.DeletionTimestamp != nil {
 			return zero, ErrInstall
 		}
 		pv, e := i.kube.CoreV1().PersistentVolumes().Get(ctx, claim.Spec.VolumeName, metav1.GetOptions{})
-		if e != nil || pv.UID == "" || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID {
+		if e != nil || pv.UID == "" || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID ||
+			pv.Spec.ClaimRef.Name != claim.Name || pv.Spec.ClaimRef.Namespace != claim.Namespace {
 			return zero, ErrInstall
 		}
 		volumes = append(volumes, originalPhysicalVolumePin{Namespace: claim.Namespace, ClaimName: claim.Name, ClaimUID: string(claim.UID), ClaimSpecSHA256: originalObjectSHA(claim.Spec), PVName: pv.Name, PVUID: string(pv.UID), PVSpecSHA256: originalObjectSHA(pv.Spec)})
 	}
+	physical.volumes = append(physical.volumes, volumes...)
 	result := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID, Namespace: i.plan.Target.Namespace,
 		NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: applicationScope, ApplicationScopes: scopes, Instances: append([]domain.SourceInstance(nil), p.instances...),
-		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes, Layouts: allLayouts, Dependencies: dependencies, RuntimeTestScope: testScope}
+		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes,
+		BlockedSharedStorage: blockedShared, TenantProSources: tenantSources, Layouts: allLayouts, Dependencies: dependencies, RuntimeTestScope: testScope,
+		TenantProAccess: tenantAccess}
 	coordinatesRaw, err := canonical(result)
 	if err != nil || len(coordinatesRaw) > 8<<20 {
 		return zero, ErrInstall
@@ -410,7 +479,8 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	second, _, _, _, err := p.readKubernetesCensus(ctx)
 	again, e := p.initialInstanceStorage(ctx)
 	sharedAgain, sharedErr := p.readSharedRuntimeSQL(ctx)
-	if err != nil || e != nil || sharedErr != nil || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || physical.recheckVolumePins(ctx) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+	tenantAccessAgain, accessErr := p.initialTenantProAccess(ctx, testScope)
+	if err != nil || e != nil || sharedErr != nil || accessErr != nil || !reflect.DeepEqual(tenantAccess, tenantAccessAgain) || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || physical.recheckVolumePins(ctx) != nil || recheckTenants() != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
 	files := map[string][]byte{"initial-source-coordinates.json": coordinatesRaw, "initial-source-kubernetes.private.json": snapshotRaw}
@@ -426,7 +496,8 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		clear(actual)
 	}
 	final, _, _, _, err := p.readKubernetesCensus(ctx)
-	if err != nil || !reflect.DeepEqual(first, final) || physical.recheckVolumePins(ctx) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+	tenantAccessFinal, accessErr := p.initialTenantProAccess(ctx, testScope)
+	if err != nil || accessErr != nil || !reflect.DeepEqual(tenantAccess, tenantAccessFinal) || !reflect.DeepEqual(first, final) || physical.recheckVolumePins(ctx) != nil || recheckTenants() != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
 	return OriginalInitialSourceDataReceipt{Version: "original-initial-source-data-authored.v1", Coordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "initial-source-coordinates.json"), SHA256: hash(coordinatesRaw)},

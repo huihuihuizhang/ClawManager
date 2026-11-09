@@ -91,6 +91,12 @@ func (s *DeploymentService) checkSharedRuntimeWorkspace(ctx context.Context, ins
 		return err
 	}
 	for _, source := range instances {
+		if tenant := runningTenantProMountFor(s.captureMaterials.Discovery.PersistentMounts, source); tenant != nil {
+			if err := tenant.check(ctx, s.Runtime.Owner.Client, s.Config.Namespace); err != nil {
+				return err
+			}
+			continue
+		}
 		if source.Mode != "lite" || source.Status != "running" {
 			continue
 		}

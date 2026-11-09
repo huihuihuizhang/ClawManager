@@ -26,6 +26,7 @@ type bootstrapSourcePartsRegistry struct {
 	Deployment, Secrets                  worker.ResourceCaptureSpec
 }
 type bootstrapSourceNativeWriter struct {
+	RunningTenantPro                                                         *runningTenantProMount `json:",omitempty"`
 	RuntimeCaptureDeferred                                                   *domain.SourceInstance `json:",omitempty"`
 	RecoveryScope, AgentRestartPolicy                                        string
 	DurableReservation, AgentRestartReconciliation                           bool

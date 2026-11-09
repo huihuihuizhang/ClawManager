@@ -23,10 +23,12 @@ import (
 // never public task parameters or a caller-supplied completeness/stop boolean.
 // A nil scope does not prove that a nonempty installation has no extra mounts.
 type productionPersistentMountScope struct {
-	RuntimeTestScope  *domain.RuntimeTestScope          `json:",omitempty"`
-	CurrentStoppedPro []CurrentStoppedProSourceMaterial `json:",omitempty"`
-	Version           string
-	Mounts            []productionPersistentMountBinding
+	RuntimeTestScope   *domain.RuntimeTestScope          `json:",omitempty"`
+	CurrentStoppedPro  []CurrentStoppedProSourceMaterial `json:",omitempty"`
+	RunningTenantPro   []runningTenantProMount           `json:",omitempty"`
+	TenantProCensusPVs map[string][]string               `json:",omitempty"`
+	Version            string
+	Mounts             []productionPersistentMountBinding
 }
 
 const persistentMountScopeVersion = "original-instance-persistent-mounts.v1"
@@ -48,7 +50,7 @@ func (s *productionPersistentMountScope) validate() error {
 	if s != nil && s.RuntimeTestScope != nil && !s.RuntimeTestScope.ShapeValid() {
 		return d.ErrNotReady
 	}
-	if s == nil || s.Version != persistentMountScopeVersion || len(s.Mounts) > 9998 || len(s.CurrentStoppedPro) > 9998 {
+	if s == nil || s.Version != persistentMountScopeVersion || len(s.Mounts) > 9998 || len(s.CurrentStoppedPro) > 9998 || len(s.RunningTenantPro) > 9998 {
 		return d.ErrNotReady
 	}
 	currentSeen := map[int]bool{}
@@ -64,6 +66,12 @@ func (s *productionPersistentMountScope) validate() error {
 				}
 			}
 			currentRoots = append(currentRoots, mount)
+		}
+		currentSeen[m.Source.ID] = true
+	}
+	for _, m := range s.RunningTenantPro {
+		if !m.valid() || s.RuntimeTestScope.IsDeferred(m.Source) || currentSeen[m.Source.ID] {
+			return d.ErrNotReady
 		}
 		currentSeen[m.Source.ID] = true
 	}
@@ -191,6 +199,12 @@ func (x *originalSourceMetadataAuthority) additionalInstanceMounts(ctx context.C
 			continue
 		}
 		record := byInstance[instance.ID]
+		if tenant := runningTenantProMountFor(scope, instance); tenant != nil {
+			if !tenant.matchesWriter(record.Spec) || base[instance.ID].Source.PersistentVolumeClaim == nil || base[instance.ID].Source.PersistentVolumeClaim.ClaimName != tenant.Identity.Name {
+				return nil, nil, d.ErrNotReady
+			}
+			continue
+		}
 		if isCurrentStoppedPro(instance) {
 			material, err := currentStoppedProMaterialFor(scope, instance)
 			if err != nil || record.Spec.Kind != "stopped" || record.Spec.Stopped != material.OriginalState() || !record.Stopped || recheckCurrentStoppedProMaterial(ctx, x.owner.Client, x.service.Config, *material) != nil {

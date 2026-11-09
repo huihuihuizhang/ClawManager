@@ -447,7 +447,10 @@ func (a *longhornExt4Actions) run(r LonghornExt4Request) (LonghornExt4Response, 
 		return response, physicalErr
 	}
 	if !found {
-		if r.Action != "register" {
+		// The controller journals its request before dispatch. Recovery may
+		// reach the Node first. Close that same request without freezing and
+		// record the closure so a delayed register cannot reopen it.
+		if r.Action != "register" && (r.Action != "release" || s.Keeper == nil) {
 			return response, observationFailure("longhorn_ext4_original_record_required")
 		}
 		if err := v.qualify(ctx); err != nil {

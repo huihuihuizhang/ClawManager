@@ -152,7 +152,10 @@ func sortedUnique(values []string) []string {
 func CaptureKubernetesGrants(cfg DeploymentConfig, controllerSA string, verifierInputs ...FormalVerifierInput) ([]runtime.Object, error) {
 	return CaptureKubernetesGrantsWithInputs(cfg, controllerSA, DeploymentStartupInputs{FormalVerifier: verifierInputs})
 }
-func CaptureKubernetesGrantsWithInputs(cfg DeploymentConfig, controllerSA string, inputs DeploymentStartupInputs) ([]runtime.Object, error) {
+func CaptureKubernetesGrantsWithInputs(cfg DeploymentConfig, controllerSA string, inputs DeploymentStartupInputs, configDigest ...string) ([]runtime.Object, error) {
+	if len(configDigest) > 1 || len(inputs.CaptureModules) != 0 && len(configDigest) != 1 {
+		return nil, c.ErrExecutionAuthority
+	}
 	verifier, err := loadVerifierKubernetesGrantInputs(cfg, inputs.FormalVerifier)
 	if err != nil {
 		return nil, err
@@ -167,6 +170,34 @@ func CaptureKubernetesGrantsWithInputs(cfg DeploymentConfig, controllerSA string
 	}
 	name := "cm-public-capture-" + hash([]byte(cfg.Namespace + "/" + controllerSA))[:12]
 	subjects := []rbacv1.Subject{{Kind: "ServiceAccount", Name: controllerSA, Namespace: cfg.Namespace}}
+	objects := renderCaptureKubernetesGrants(name, subjects, access)
+	if len(inputs.CaptureModules) != 0 {
+		signed, err := SignedSourceKubernetesGrants(cfg, configDigest[0], controllerSA, inputs.CaptureModules)
+		if err != nil {
+			return nil, err
+		}
+		objects = append(objects, signed...)
+	}
+	return objects, nil
+}
+
+// SignedSourceKubernetesGrants renders the additive owner-signed permissions
+// independently of the preinstalled controller and verifier role objects.
+func SignedSourceKubernetesGrants(cfg DeploymentConfig, configDigest, controllerSA string, inputs []ProductionCaptureInput) ([]runtime.Object, error) {
+	if cfg.Validate() != nil || len(inputs) != 1 || len(validation.IsDNS1123Subdomain(controllerSA)) != 0 ||
+		controllerSA == cfg.Security.ServiceAccountName {
+		return nil, c.ErrExecutionAuthority
+	}
+	access, err := loadSignedSourceAccess(cfg, configDigest, controllerSA, inputs)
+	if err != nil || len(access) == 0 {
+		return nil, err
+	}
+	name := "cm-public-capture-" + hash([]byte(cfg.Namespace + "/" + controllerSA))[:12] + "-signed-source"
+	subjects := []rbacv1.Subject{{Kind: "ServiceAccount", Name: controllerSA, Namespace: cfg.Namespace}}
+	return renderCaptureKubernetesGrants(name, subjects, access), nil
+}
+
+func renderCaptureKubernetesGrants(name string, subjects []rbacv1.Subject, access []CaptureAccess) []runtime.Object {
 	namespaced := map[string][]rbacv1.PolicyRule{}
 	var cluster []rbacv1.PolicyRule
 	for _, item := range access {
@@ -183,10 +214,12 @@ func CaptureKubernetesGrantsWithInputs(cfg DeploymentConfig, controllerSA string
 			&rbacv1.Role{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "Role"}, ObjectMeta: meta, Rules: namespaced[ns]},
 			&rbacv1.RoleBinding{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "RoleBinding"}, ObjectMeta: meta, Subjects: subjects, RoleRef: rbacv1.RoleRef{APIGroup: rbacv1.GroupName, Kind: "Role", Name: name}})
 	}
-	objects = append(objects,
-		&rbacv1.ClusterRole{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "ClusterRole"}, ObjectMeta: metav1.ObjectMeta{Name: name}, Rules: cluster},
-		&rbacv1.ClusterRoleBinding{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "ClusterRoleBinding"}, ObjectMeta: metav1.ObjectMeta{Name: name}, Subjects: subjects, RoleRef: rbacv1.RoleRef{APIGroup: rbacv1.GroupName, Kind: "ClusterRole", Name: name}})
-	return objects, nil
+	if len(cluster) != 0 {
+		objects = append(objects,
+			&rbacv1.ClusterRole{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "ClusterRole"}, ObjectMeta: metav1.ObjectMeta{Name: name}, Rules: cluster},
+			&rbacv1.ClusterRoleBinding{TypeMeta: metav1.TypeMeta{APIVersion: rbacv1.SchemeGroupVersion.String(), Kind: "ClusterRoleBinding"}, ObjectMeta: metav1.ObjectMeta{Name: name}, Subjects: subjects, RoleRef: rbacv1.RoleRef{APIGroup: rbacv1.GroupName, Kind: "ClusterRole", Name: name}})
+	}
+	return objects
 }
 
 // This probe tests the current Kubernetes principal, not the configured name.

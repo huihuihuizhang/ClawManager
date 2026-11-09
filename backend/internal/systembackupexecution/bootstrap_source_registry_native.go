@@ -139,6 +139,13 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 			continue
 		}
 		if instance.Mode != "lite" {
+			if isRunningTenantPro(instance) && instance.Namespace != x.config.Namespace {
+				mount, err := observeTenantProMountFromCensus(x.physical, clients.API, x.config, instance, api)
+				if err != nil {
+					return nil, err
+				}
+				out = append(out, bootstrapSourceNativeWriter{InstanceID: instance.ID, UserID: instance.UserID, Generation: instance.Generation, State: "running", Namespace: instance.Namespace, Pod: instance.Pod, PodUID: mount.PodUID, Deployment: mount.Deployment, DeploymentUID: mount.DeploymentUID, ReplicaSetUID: mount.ReplicaSetUID, RunningTenantPro: &mount})
+			}
 			continue
 		}
 		binding := bindings[instance.ID]

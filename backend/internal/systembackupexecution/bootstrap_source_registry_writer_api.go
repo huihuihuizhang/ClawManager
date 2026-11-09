@@ -1,6 +1,7 @@
 package systembackupexecution
 
 import (
+	b "clawreef/internal/systembackup/publicadapter"
 	"context"
 	"encoding/json"
 	"sort"
@@ -10,8 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clients *productionMetadataClients) (*observedWriterAPI, error) {
-	if x.checkPhysical(ctx) != nil {
+func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clients *productionMetadataClients, inventories ...[]b.InstanceIdentity) (*observedWriterAPI, error) {
+	if x.checkPhysical(ctx) != nil || len(inventories) > 1 {
 		return nil, ErrSourceWriterObservationIncomplete
 	}
 	out := &observedWriterAPI{objects: []observedWriterAPIObject{}}
@@ -81,6 +82,13 @@ func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clien
 	}
 	if x.checkPhysical(ctx) != nil {
 		return nil, ErrSourceWriterObservationIncomplete
+	}
+	if len(inventories) == 1 {
+		tenant, err := observeTenantProWriterAPI(ctx, clients.API, x.config, inventories[0], nil, x.checkPhysical)
+		if err != nil || len(out.objects)+len(tenant) > 10000 {
+			return nil, ErrSourceWriterObservationIncomplete
+		}
+		out.objects = append(out.objects, tenant...)
 	}
 	sort.Slice(out.objects, func(i, j int) bool {
 		a, b := out.objects[i], out.objects[j]

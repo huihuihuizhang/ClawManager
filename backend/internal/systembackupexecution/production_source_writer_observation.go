@@ -50,7 +50,7 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 	if err != nil {
 		return zero, err
 	}
-	api, err := x.observeWriterAPI(ctx)
+	api, err := x.observeWriterAPI(ctx, metadata.inventory.source.Instances)
 	if err != nil {
 		return zero, err
 	}
@@ -58,7 +58,7 @@ func (s *DeploymentService) ObserveSourceDependencies(ctx context.Context) (Sour
 	if err != nil {
 		return zero, err
 	}
-	lastAPI, err := x.observeWriterAPI(ctx)
+	lastAPI, err := x.observeWriterAPI(ctx, metadata.inventory.source.Instances)
 	if err != nil || lastAPI.sha256 != api.sha256 {
 		return zero, ErrSourceWriterObservationIncomplete
 	}
@@ -155,6 +155,14 @@ func (x *sourceSQLObservation) observeNativeWriters(ctx context.Context, source 
 			continue
 		}
 		if instance.Mode != "lite" {
+			if isRunningTenantPro(instance) && instance.Namespace != s.Config.Namespace {
+				pin := s.signedTenantProMount(instance)
+				mount, err := observeTenantProMountFromCensus(ctx, x.delegation.owner.Client, s.Config, instance, api)
+				if err != nil || pin == nil || *pin != mount {
+					return "", ErrSourceWriterObservationIncomplete
+				}
+				actual = append(actual, b.RuntimeWriterSpec{Source: instance, Kind: "deployment", Name: mount.Deployment, UID: mount.DeploymentUID})
+			}
 			continue
 		}
 		if x.recheck(ctx) != nil {
@@ -268,12 +276,19 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 	if err != nil {
 		return err
 	}
+	tenantNamespaces, err := appendTenantProGraphRoots(s.Config, source, api, want, p.PersistentMounts)
+	if err != nil {
+		return err
+	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
 		if deferredRuntimeTestInstance(s.Config, instance) {
 			continue
 		}
 		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
+			if isRunningTenantPro(instance) && instance.Namespace != ns {
+				continue
+			}
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete
 			}
@@ -303,6 +318,10 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 	}
 	for key, object := range objects {
 		switch object.Kind {
+		case "Namespace":
+			if object.Namespace != "" || tenantNamespaces[object.Name] != object.UID || object.UID == "" {
+				return ErrSourceWriterObservationIncomplete
+			}
 		case "PersistentVolume", "PersistentVolumeClaim":
 			continue
 		case "Deployment":
@@ -334,7 +353,7 @@ func checkObservedWriterGraph(s *DeploymentService, source b.SourceInventory, ap
 				}
 				podCounts[root]++
 				for _, claim := range object.Claims {
-					if objects["PersistentVolumeClaim/"+ns+"/"+claim].UID == "" {
+					if objects["PersistentVolumeClaim/"+object.Namespace+"/"+claim].UID == "" {
 						return ErrSourceWriterObservationIncomplete
 					}
 				}

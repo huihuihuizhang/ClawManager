@@ -16,6 +16,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	authnv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -202,6 +203,10 @@ func (x *bootstrapSourceRegistryReader) openMetadataClients() (_ *productionMeta
 		return nil, install.ErrInstall
 	}
 	clients.Metadata, err = metadata.NewForConfigAndClient(cfg, httpClient)
+	if err != nil {
+		return nil, install.ErrInstall
+	}
+	clients.Dynamic, err = dynamic.NewForConfigAndClient(cfg, httpClient)
 	if err != nil {
 		return nil, install.ErrInstall
 	}

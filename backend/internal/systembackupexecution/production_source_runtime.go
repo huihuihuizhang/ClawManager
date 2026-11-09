@@ -135,8 +135,12 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 	}
 	var volume corev1.Volume
 	var identity *kube.MountIdentity
-	if hasRunningSourceInstances(source.Instances) {
-		volume, identity, err = x.workspaceVolume(ctx)
+	scope := x.service.captureMaterials.Discovery.PersistentMounts
+	for _, instance := range source.Instances {
+		if instance.Status == "running" && runningTenantProMountFor(scope, instance) == nil {
+			volume, identity, err = x.workspaceVolume(ctx)
+			break
+		}
 	}
 	if err != nil {
 		return fail()
@@ -177,7 +181,16 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 		}
 		var subPath string
 		var current *CurrentStoppedProSourceMaterial
-		if isCurrentStoppedPro(instance) {
+		tenant := runningTenantProMountFor(scope, instance)
+		if tenant != nil {
+			part := "instance_" + strconv.Itoa(instance.ID) + "_workspace"
+			installed, ok := x.service.captureMaterials.Discovery.LonghornSources[part]
+			if !ok || installed.Namespace != instance.Namespace || installed.NamespaceUID != tenant.NamespaceUID || installed.Source != tenant.Identity ||
+				installed.AccessMode != corev1.ReadWriteOnce || !tenant.matchesWriter(record.Spec) {
+				return fail()
+			}
+			subPath = tenant.SubPath
+		} else if isCurrentStoppedPro(instance) {
 			current, err = currentStoppedProMaterialFor(x.service.captureMaterials.Discovery.PersistentMounts, instance)
 		} else {
 			subPath, err = productionInstanceSubPath(x.service, instance)
@@ -238,6 +251,22 @@ func (x *originalSourceMetadataAuthority) instanceMountMetadata(ctx context.Cont
 			mount.Skills = workspace
 		}
 		instanceIdentity := identity
+		if tenant != nil {
+			mount.Source = corev1.Volume{Name: "source", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: tenant.Identity.Name, ReadOnly: true}}}
+			var previous *productionInstanceMount
+			if saved != nil {
+				copy, ok := old[instance.ID]
+				if !ok {
+					return fail()
+				}
+				previous = &copy
+			}
+			mount.NodeName, err = tenantSourceMountNode(ctx, x.owner.Client, x.service.Config, *tenant, previous)
+			if err != nil {
+				return fail()
+			}
+			instanceIdentity = &tenant.Identity
+		}
 		if current != nil {
 			for _, decl := range current.Mounts {
 				if decl.Layout.MountID == "workspace" {

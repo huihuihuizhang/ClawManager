@@ -35,9 +35,12 @@ type RuntimeArmedStopProof interface {
 // it before returning a writer spec. It must never be populated from HTTP input.
 // Each non-runtime registered participant requires its actual drain/health probe.
 type RuntimeControlConfig struct {
-	RuntimeTestScope       *domain.RuntimeTestScope
-	Shared                 *RuntimeSharedTaskConfig
-	Namespace              string // pinned installation namespace; no discovery expansion
+	RuntimeTestScope *domain.RuntimeTestScope
+	Shared           *RuntimeSharedTaskConfig
+	Namespace        string // pinned installation namespace; no discovery expansion
+	// A deployment-owned read-only check for an exact signed tenant Pro source.
+	// It does not authorize other modes or an entire additional namespace.
+	TenantProSourceCheck   func(context.Context, b.InstanceIdentity) error
 	Gate                   SQLCaptureGate
 	Keys                   ExecutionRecordKeys
 	Client                 kubernetes.Interface
@@ -52,7 +55,8 @@ type RuntimeControlConfig struct {
 	ParticipantChecks      map[string]ReadinessProbe
 	// Reconciler/HPA fencing proofs keyed by namespace/deployment name.
 	DeploymentChecks map[string]ReadinessProbe
-	// Called only for the original locked runtime journal inside Recovery.
+	// Only called within an independently authorized recovery transaction, with
+	// the original task/attempt's locked runtime-control spec. Never discovery.
 	RecoveryDeploymentCheck func(context.Context, d.Authority, b.RuntimeWriterSpec) error
 	PollInterval            time.Duration
 }
@@ -134,7 +138,7 @@ func (o *SQLRuntimeControl) prepareSources(ctx context.Context, a d.Authority, s
 	var e error
 	specs := make([]b.RuntimeWriterSpec, 0, len(sources))
 	for _, source := range sources {
-		if source.Namespace != "" && source.Namespace != o.cfg.Namespace {
+		if err := o.checkSourceLocation(ctx, source); err != nil {
 			return nil, ErrExecutionRecord
 		}
 		spec := b.RuntimeWriterSpec{Source: source, Name: source.Pod, RestartRef: a.TaskPublicID + "/" + strconv.FormatUint(a.AttemptNo, 10) + "/" + strconv.Itoa(source.ID)}

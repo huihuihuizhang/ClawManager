@@ -49,10 +49,14 @@ func (o *PublicJobOwner) originalProductionMounts(ctx context.Context, a d.Autho
 	if err != nil {
 		return nil, false, err
 	}
-	return o.productionMountsFromOriginal(in, discovery, part)
+	return o.productionMountsWithContext(ctx, in, discovery, part)
 }
 
 func (o *PublicJobOwner) productionMountsFromOriginal(in d.Input, discovery b.Discovery, part b.JobPart) ([]kube.MountIdentity, bool, error) {
+	return o.productionMountsWithContext(nil, in, discovery, part)
+}
+
+func (o *PublicJobOwner) productionMountsWithContext(ctx context.Context, in d.Input, discovery b.Discovery, part b.JobPart) ([]kube.MountIdentity, bool, error) {
 	if o.productionSource == nil {
 		if completeProductionCaptureInput(in) {
 			return nil, false, d.ErrNotReady
@@ -73,6 +77,16 @@ func (o *PublicJobOwner) productionMountsFromOriginal(in d.Input, discovery b.Di
 	original, err := partFor(discovery, part.Intent.JobUnitKey)
 	if err != nil || !reflect.DeepEqual(original, part) || hash(part.InvocationJSON) != part.InvocationSHA256 || hash(part.Intent.SpecJSON) != part.Intent.SpecSHA256 {
 		return nil, false, d.ErrNotReady
+	}
+	if selection, ok := metadata.LonghornClones[part.Part]; ok {
+		mount, err := o.readHeldLonghornMount(ctx, in.Authority, discovery, part, selection)
+		if err != nil {
+			return nil, false, err
+		}
+		if metadata.MountIdentities == nil {
+			metadata.MountIdentities = map[string]kube.MountIdentity{}
+		}
+		metadata.MountIdentities[part.Part] = mount
 	}
 	refs, err := productionPartMounts(metadata, part)
 	return refs, err == nil, err

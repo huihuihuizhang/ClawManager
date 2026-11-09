@@ -124,15 +124,25 @@ func TestDeploymentDatabaseAdmissionUsesSignedRecoveryWithoutCapturePrivileges(t
 			defer db.Close()
 			// Even requested forward mode must fall back when its file is absent.
 			for _, enabled := range []bool{false, true} {
-				err = CheckDeploymentDatabase(context.Background(), db, cfg.ProfileFile, configHash, forwardHash, hash(envelope), enabled)
-				allowed := fault == "" || fault == "expired-forward" || (fault == "valid-forward" && !enabled)
-				if (err == nil) != allowed {
-					t.Fatalf("enabled=%v fault=%s: %v", enabled, fault, err)
-				}
-				if allowed {
-					s := &DeploymentService{Config: cfg, ConfigDigest: configHash, ForwardEnabled: enabled}
-					if err := s.loadDeploymentIdentities(context.Background(), db, forwardHash, hash(envelope)); err != nil || s.ForwardEnabled || s.Forward != s.Recovery {
-						t.Fatal("recovery retained stale forward metadata", err)
+				// Enabled-publication locators survive an ordinary restart.
+				// Recovery must not need their source/signing files to exist.
+				for _, selected := range []*EnabledPublicationStartupFiles{nil, {
+					Forward:         OriginalEnabledSourcePin{File: cfg.ForwardGrant.Path, SHA256: forwardHash},
+					OriginalForward: OriginalEnabledSourcePin{File: cfg.ForwardGrant.Path, SHA256: forwardHash},
+				}} {
+					err = CheckDeploymentDatabaseWithInputs(context.Background(), db, cfg.ProfileFile, configHash, forwardHash, hash(envelope),
+						enabled, DeploymentStartupInputs{EnabledPublication: selected})
+					allowed := fault == "" || fault == "expired-forward" || (fault == "valid-forward" && !enabled)
+					if (err == nil) != allowed {
+						t.Fatalf("enabled=%v selected=%v fault=%s: %v", enabled, selected != nil, fault, err)
+					}
+					if allowed {
+						s := &DeploymentService{Config: cfg, ConfigDigest: configHash, ForwardEnabled: enabled,
+							originalSourceForward: &c.PinnedExecutionIdentity{}, enabledPublicationFiles: &EnabledPublicationStartupFiles{}}
+						if err := s.loadDeploymentIdentities(context.Background(), db, forwardHash, hash(envelope), selected); err != nil ||
+							s.ForwardEnabled || s.Forward != s.Recovery || s.originalSourceForward != nil || s.enabledPublicationFiles != nil {
+							t.Fatal("recovery retained stale forward metadata", err)
+						}
 					}
 				}
 			}

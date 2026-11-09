@@ -146,7 +146,7 @@ func (o WorkerObserver) observe(ctx context.Context, record ResourceRecord, secu
 			err = observationFailure{stage: stage, cause: err}
 		}
 	}()
-	if o.Client == nil || record.Intent.Kind != "Job" || record.UID == "" || record.Deleted || record.Deleting || !record.CreateDispatched || len(security.NodeUIDs) == 0 {
+	if o.Client == nil || (record.Intent.Kind != "Job" && record.Intent.Kind != LonghornKeeperResource) || record.UID == "" || record.Deleted || record.Deleting || !record.CreateDispatched || len(security.NodeUIDs) == 0 {
 		return WorkerProcess{}, ErrResource
 	}
 	i := record.Intent.Identity

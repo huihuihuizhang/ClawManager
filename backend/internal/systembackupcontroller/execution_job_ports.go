@@ -73,6 +73,17 @@ func (p ExecutionJobPorts) BeforeResume(ctx context.Context, a d.Authority) erro
 	return nil
 }
 
+func (p ExecutionJobPorts) Resumed(ctx context.Context, a d.Authority, id string) error {
+	if owner, ok := p.Jobs.(interface {
+		AfterSourceResume(context.Context, d.Authority, string) error
+	}); ok {
+		if err := owner.AfterSourceResume(ctx, a, id); err != nil {
+			return err
+		}
+	}
+	return p.Ports.Resumed(ctx, a, id)
+}
+
 func NewExecutionJobPorts(writers d.Ports, jobs ExecutionJobOwner) (*ExecutionJobPorts, error) {
 	if absentExecutionDependency(writers) || absentExecutionDependency(jobs) {
 		return nil, d.ErrNotReady

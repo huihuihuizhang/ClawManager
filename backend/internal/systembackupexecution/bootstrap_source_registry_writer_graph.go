@@ -44,12 +44,19 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 	if err != nil {
 		return err
 	}
+	tenantNamespaces, err := appendTenantProGraphRoots(x.config, source, api, want, nil)
+	if err != nil {
+		return err
+	}
 	objects, rawPods, podCounts := map[string]observedWriterAPIObject{}, map[string]bool{}, map[string]int32{}
 	for _, instance := range source.Instances {
 		if deferredRuntimeTestInstance(x.config, instance) {
 			continue
 		}
 		if instance.Mode == "pro" && !isCurrentStoppedPro(instance) {
+			if isRunningTenantPro(instance) && instance.Namespace != ns {
+				continue
+			}
 			if instance.Namespace != ns || instance.Pod == "" {
 				return ErrSourceWriterObservationIncomplete
 			}
@@ -79,6 +86,10 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 	}
 	for key, object := range objects {
 		switch object.Kind {
+		case "Namespace":
+			if object.Namespace != "" || tenantNamespaces[object.Name] != object.UID || object.UID == "" {
+				return ErrSourceWriterObservationIncomplete
+			}
 		case "PersistentVolume", "PersistentVolumeClaim":
 			continue
 		case "Deployment":
@@ -110,7 +121,7 @@ func (x *bootstrapSourceRegistryReader) checkWriterGraph(source b.SourceInventor
 				}
 				podCounts[root]++
 				for _, claim := range object.Claims {
-					if objects["PersistentVolumeClaim/"+ns+"/"+claim].UID == "" {
+					if objects["PersistentVolumeClaim/"+object.Namespace+"/"+claim].UID == "" {
 						return ErrSourceWriterObservationIncomplete
 					}
 				}

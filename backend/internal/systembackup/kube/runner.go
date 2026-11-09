@@ -57,6 +57,24 @@ type Runner struct {
 	Client     dynamic.Interface
 	Journal    ResourceJournal
 	CheckFence func(context.Context) error
+	// AuthorizeRetainedContent is supplied only by the cluster content owner.
+	// It verifies the exact task and frozen alias request, including on recovery.
+	AuthorizeRetainedContent func(context.Context, ResourceIntent) error
+}
+
+func (r Runner) authorizeResource(ctx context.Context, intent ResourceIntent) error {
+	if intent.Kind == "VolumeSnapshotContent" && (r.AuthorizeRetainedContent == nil || r.AuthorizeRetainedContent(ctx, intent) != nil) {
+		return ErrOwnership
+	}
+	return nil
+}
+
+func (r Runner) resourceAPI(gvr schema.GroupVersionResource, intent ResourceIntent) dynamic.ResourceInterface {
+	resource := r.Client.Resource(gvr)
+	if intent.Kind == "VolumeSnapshotContent" {
+		return resource
+	}
+	return resource.Namespace(intent.Identity.Namespace)
 }
 
 func (r Runner) ready(ctx context.Context) error {
@@ -67,12 +85,14 @@ func (r Runner) ready(ctx context.Context) error {
 }
 func resourceType(kind string) (schema.GroupVersionResource, string, error) {
 	switch kind {
-	case "Job":
+	case "Job", LonghornKeeperResource:
 		return schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}, "batch/v1", nil
 	case "PersistentVolumeClaim":
 		return schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}, "v1", nil
 	case "VolumeSnapshot":
 		return schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}, "snapshot.storage.k8s.io/v1", nil
+	case "VolumeSnapshotContent":
+		return longhornSnapshotResource("volumesnapshotcontents"), longhornSnapshotGroup + "/v1", nil
 	case "NetworkPolicy":
 		return schema.GroupVersionResource{Group: "networking.k8s.io", Version: "v1", Resource: "networkpolicies"}, "networking.k8s.io/v1", nil
 	case "ConfigMap":
@@ -96,11 +116,23 @@ func freeze(kind string, obj any) (ResourceIntent, *unstructured.Unstructured, e
 		return ResourceIntent{}, nil, ErrResource
 	}
 	i := Identity{Namespace: u.GetNamespace(), Name: u.GetName(), Owner: u.GetLabels()[OwnerLabel]}
+	if kind == "VolumeSnapshotContent" {
+		// The reference namespace partitions the journal key, not the API path.
+		var ok bool
+		i.Namespace, ok = retainedContentNamespace(u)
+		if !ok {
+			return ResourceIntent{}, nil, ErrResource
+		}
+	}
 	if !i.valid() || u.GetUID() != "" || u.GetResourceVersion() != "" || u.GetGenerateName() != "" || u.GetDeletionTimestamp() != nil || len(u.GetOwnerReferences()) > 0 {
 		return ResourceIntent{}, nil, ErrResource
 	}
 	u.SetAPIVersion(version)
-	u.SetKind(kind)
+	if kind == LonghornKeeperResource {
+		u.SetKind("Job")
+	} else {
+		u.SetKind(kind)
+	}
 	delete(u.Object, "status")
 	a := u.GetAnnotations()
 	if a == nil {
@@ -145,6 +177,9 @@ func (r Runner) Ensure(ctx context.Context, kind string, obj any) (ResourceRecor
 	if e != nil {
 		return ResourceRecord{}, e
 	}
+	if e = r.authorizeResource(ctx, intent); e != nil {
+		return ResourceRecord{}, e
+	}
 	record, e := r.Journal.Prepare(ctx, intent)
 	if e != nil || !sameIntent(record.Intent, intent) {
 		return ResourceRecord{}, ErrJournal
@@ -153,7 +188,7 @@ func (r Runner) Ensure(ctx context.Context, kind string, obj any) (ResourceRecor
 		return record, ErrOwnership
 	}
 	gvr, _, _ := resourceType(kind)
-	api := r.Client.Resource(gvr).Namespace(intent.Identity.Namespace)
+	api := r.resourceAPI(gvr, intent)
 	observed, e := api.Get(ctx, intent.Identity.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(e) {
 		if record.UID != "" {
@@ -170,6 +205,9 @@ func (r Runner) Ensure(ctx context.Context, kind string, obj any) (ResourceRecor
 			return record, ErrJournal
 		}
 		if e = r.ready(ctx); e != nil {
+			return record, e
+		}
+		if e = r.authorizeResource(ctx, intent); e != nil {
 			return record, e
 		}
 		observed, e = api.Create(ctx, wanted, metav1.CreateOptions{})
@@ -203,7 +241,18 @@ func owned(record ResourceRecord, obj *unstructured.Unstructured) bool {
 		return false
 	}
 	i := record.Intent.Identity
-	if obj == nil || obj.GetUID() == "" || obj.GetResourceVersion() == "" || obj.GetName() != i.Name || obj.GetNamespace() != i.Namespace || obj.GetLabels()[OwnerLabel] != i.Owner || obj.GetAnnotations()[RequestHashAnnotation] != record.Intent.RequestSHA256 {
+	if obj == nil || obj.GetUID() == "" || obj.GetResourceVersion() == "" || obj.GetName() != i.Name || obj.GetLabels()[OwnerLabel] != i.Owner || obj.GetAnnotations()[RequestHashAnnotation] != record.Intent.RequestSHA256 {
+		return false
+	}
+	observedNamespace := obj.GetNamespace()
+	if record.Intent.Kind == "VolumeSnapshotContent" {
+		var ok bool
+		observedNamespace, ok = retainedContentNamespace(obj)
+		if !ok {
+			return false
+		}
+	}
+	if observedNamespace != i.Namespace {
 		return false
 	}
 	if record.UID != "" && record.UID != string(obj.GetUID()) {
@@ -217,6 +266,10 @@ func owned(record ResourceRecord, obj *unstructured.Unstructured) bool {
 	if !subset(desired["spec"], obj.Object["spec"]) {
 		return false
 	}
+	if record.Intent.Kind == "VolumeSnapshotContent" {
+		origin, _, _ := unstructured.NestedString(desired, "metadata", "annotations", longhornAliasOriginAnnotation)
+		return origin != "" && origin == obj.GetAnnotations()[longhornAliasOriginAnnotation] && reflect.DeepEqual(desired["spec"], obj.Object["spec"])
+	}
 	if record.Intent.Kind == "ConfigMap" {
 		for _, key := range []string{"data", "binaryData", "immutable"} {
 			if !reflect.DeepEqual(desired[key], obj.Object[key]) {
@@ -224,7 +277,7 @@ func owned(record ResourceRecord, obj *unstructured.Unstructured) bool {
 			}
 		}
 	}
-	if record.Intent.Kind == "Job" {
+	if record.Intent.Kind == "Job" || record.Intent.Kind == LonghornKeeperResource {
 		expected, _, _ := unstructured.NestedMap(desired, "spec", "template", "spec")
 		actual, _, _ := unstructured.NestedMap(obj.Object, "spec", "template", "spec")
 		if !podSpecMatches(expected, actual, false) {
@@ -330,6 +383,9 @@ func (r Runner) Cleanup(ctx context.Context, record ResourceRecord) (bool, error
 	if e != nil {
 		return false, e
 	}
+	if e = r.authorizeResource(ctx, record.Intent); e != nil {
+		return false, e
+	}
 	// Re-read the journal authority instead of trusting a supplied stale record.
 	current, e := r.Journal.Prepare(ctx, record.Intent)
 	if e != nil || !sameIntent(current.Intent, record.Intent) {
@@ -339,7 +395,7 @@ func (r Runner) Cleanup(ctx context.Context, record ResourceRecord) (bool, error
 	if record.Deleted {
 		return true, nil
 	}
-	api := r.Client.Resource(gvr).Namespace(record.Intent.Identity.Namespace)
+	api := r.resourceAPI(gvr, record.Intent)
 	o, e := api.Get(ctx, record.Intent.Identity.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(e) {
 		// A timed-out CREATE can still complete after this GET. Without an
@@ -358,6 +414,16 @@ func (r Runner) Cleanup(ctx context.Context, record ResourceRecord) (bool, error
 	if !owned(record, o) {
 		return false, ErrOwnership
 	}
+	if record.Intent.Kind == "VolumeSnapshotContent" {
+		ref := longhornSnapshotString(o, "spec", "volumeSnapshotRef", "name")
+		alias, err := r.Client.Resource(longhornSnapshotResource("volumesnapshots")).Namespace(record.Intent.Identity.Namespace).Get(ctx, ref, metav1.GetOptions{})
+		if err == nil && string(alias.GetUID()) != longhornSnapshotString(o, "spec", "volumeSnapshotRef", "uid") {
+			return false, ErrOwnership
+		}
+		if !apierrors.IsNotFound(err) {
+			return false, ErrPending
+		}
+	}
 	if record.UID == "" {
 		record, e = r.Journal.Observe(ctx, record, string(o.GetUID()), o.GetResourceVersion())
 		if e != nil {
@@ -370,6 +436,9 @@ func (r Runner) Cleanup(ctx context.Context, record ResourceRecord) (bool, error
 			return false, ErrJournal
 		}
 		if e = r.ready(ctx); e != nil {
+			return false, e
+		}
+		if e = r.authorizeResource(ctx, record.Intent); e != nil {
 			return false, e
 		}
 		uid := types.UID(record.UID)

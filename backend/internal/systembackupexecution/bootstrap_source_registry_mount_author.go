@@ -16,8 +16,9 @@ import (
 // This selection contains owner-selected directories, never observed identities
 // or authority. The original authenticated reader derives all identity fields.
 type OriginalInstanceMountLayoutSelection struct {
-	Version string
-	Layouts []InstancePersistentMountLayout
+	Version  string
+	Layouts  []InstancePersistentMountLayout
+	Longhorn *OriginalLonghornStorageSelection `json:",omitempty"`
 }
 
 const OriginalInstanceMountLayoutSelectionVersion = "original-instance-mount-layout-selection.v1"
@@ -27,13 +28,13 @@ type OriginalInstanceMountMaterialsReceipt struct {
 	MaterialsTemplate, SourceSelection                                install.BootstrapSourceFilePin
 }
 
-func readOriginalMountLayouts(file, digest string) ([]InstancePersistentMountLayout, error) {
+func readOriginalMountLayouts(file, digest string) (OriginalInstanceMountLayoutSelection, error) {
 	raw, err := install.ReadPrivateFile(file, 262144)
 	var selection OriginalInstanceMountLayoutSelection
 	if err != nil || hash(raw) != digest || strictBootstrapSourceJSON(raw, &selection) != nil || selection.Version != OriginalInstanceMountLayoutSelectionVersion || selection.Layouts == nil || len(selection.Layouts) > 9998 {
-		return nil, install.ErrInstall
+		return OriginalInstanceMountLayoutSelection{}, install.ErrInstall
 	}
-	return selection.Layouts, nil
+	return selection, nil
 }
 
 func originalMountRunningInventory(instances []b.InstanceIdentity, scopes ...*domain.RuntimeTestScope) error {
@@ -59,7 +60,7 @@ func originalMountRunningInventory(instances []b.InstanceIdentity, scopes ...*do
 		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
-		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || seen[instance.ID] || !isCurrentStoppedPro(instance) && (instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running") {
+		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || seen[instance.ID] || !isCurrentStoppedPro(instance) && !isRunningTenantPro(instance) && (instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running") {
 			return mountInputError("unsupported_or_ambiguous_instance", instance.ID, "")
 		}
 		seen[instance.ID] = true
@@ -107,7 +108,15 @@ func originalMountNativeSpecs(instances []b.InstanceIdentity, native []bootstrap
 			out = append(out, b.RuntimeWriterSpec{Source: instance, Kind: "stopped", Stopped: n.CurrentStoppedPro.OriginalState()})
 			continue
 		}
-		if n.UserID != instance.UserID || n.Generation != instance.Generation || n.State != "running" || n.PodUID == "" || n.Namespace == "" || n.Pod == "" || n.Deployment == "" || n.DeploymentUID == "" || n.ReplicaSetUID == "" || n.ServiceAccountUID == "" || n.NodeUID == "" || n.Endpoint == "" || n.AgentEpoch == "" || n.Gateway == "" || n.RuntimePodID <= 0 || n.PID <= 0 || n.Port <= 0 || n.Port > 65535 {
+		if isRunningTenantPro(instance) {
+			pin := n.RunningTenantPro
+			if pin == nil || !pin.valid() || pin.Source != instance || n.UserID != instance.UserID || n.Generation != instance.Generation || n.State != "running" || n.Namespace != instance.Namespace || n.Pod != instance.Pod || n.PodUID != pin.PodUID || n.Deployment != pin.Deployment || n.DeploymentUID != pin.DeploymentUID || n.ReplicaSetUID != pin.ReplicaSetUID {
+				return nil, mountInputError("tenant_pro_native_mapping_mismatch", instance.ID, "workspace")
+			}
+			out = append(out, b.RuntimeWriterSpec{Source: instance, Kind: "deployment", Name: pin.Deployment, UID: pin.DeploymentUID})
+			continue
+		}
+		if n.RunningTenantPro != nil || n.UserID != instance.UserID || n.Generation != instance.Generation || n.State != "running" || n.PodUID == "" || n.Namespace == "" || n.Pod == "" || n.Deployment == "" || n.DeploymentUID == "" || n.ReplicaSetUID == "" || n.ServiceAccountUID == "" || n.NodeUID == "" || n.Endpoint == "" || n.AgentEpoch == "" || n.Gateway == "" || n.RuntimePodID <= 0 || n.PID <= 0 || n.Port <= 0 || n.Port > 65535 {
 			return nil, mountInputError("sql_runtime_binding_mismatch", instance.ID, "")
 		}
 		out = append(out, b.RuntimeWriterSpec{Source: instance, Kind: "gateway", UID: n.PodUID, Name: n.Gateway, Endpoint: n.Endpoint, Port: n.Port, Runtime: b.RuntimeLocator{Version: "runtime-locator.v2", Namespace: n.Namespace, Pod: n.Pod, RegisteredPodUID: n.PodUID, Deployment: n.Deployment, AgentEpoch: n.AgentEpoch, RuntimePodID: n.RuntimePodID, GatewayPID: n.PID}})
@@ -186,7 +195,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		return zero, err
 	}
 	defer clients.Close()
-	firstAPI, err := x.readWriterAPI(x.physical, clients)
+	firstAPI, err := x.readWriterAPI(x.physical, clients, firstSQL.inventory.Instances)
 	if err != nil {
 		return zero, err
 	}
@@ -198,7 +207,15 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, err
 	}
-	scopeRaw, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, firstSQL.inventory.Instances, specs, layouts)
+	scopeRaw, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, firstSQL.inventory.Instances, specs, layouts.Layouts)
+	if err != nil {
+		return zero, err
+	}
+	var scope productionPersistentMountScope
+	if json.Unmarshal(scopeRaw, &scope) != nil || scope.validate() != nil {
+		return zero, install.ErrInstall
+	}
+	longhorn, err := observeOriginalLonghornSources(x.physical, clients, x.config, firstSQL.inventory, &scope, layouts.Longhorn)
 	if err != nil {
 		return zero, err
 	}
@@ -209,7 +226,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil || !sameBootstrapSourceSQL(firstSQL, lastSQL) {
 		return zero, install.ErrInstall
 	}
-	lastAPI, err := x.readWriterAPI(x.physical, clients)
+	lastAPI, err := x.readWriterAPI(x.physical, clients, lastSQL.inventory.Instances)
 	if err != nil || !reflect.DeepEqual(firstAPI.objects, lastAPI.objects) {
 		return zero, install.ErrInstall
 	}
@@ -217,15 +234,36 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil || !reflect.DeepEqual(firstNative, lastNative) {
 		return zero, install.ErrInstall
 	}
-	lastScope, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, lastSQL.inventory.Instances, specs, layouts)
+	lastScope, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, lastSQL.inventory.Instances, specs, layouts.Layouts)
 	if err != nil || !bytes.Equal(scopeRaw, lastScope) {
 		return zero, install.ErrInstall
 	}
-	var scope productionPersistentMountScope
-	if json.Unmarshal(scopeRaw, &scope) != nil || scope.validate() != nil {
+	currentLonghorn, err := observeOriginalLonghornSources(x.physical, clients, x.config, lastSQL.inventory, &scope, layouts.Longhorn)
+	if err != nil || !reflect.DeepEqual(longhorn, currentLonghorn) {
 		return zero, install.ErrInstall
 	}
+	if len(scope.RunningTenantPro) != 0 {
+		scope.TenantProCensusPVs = make(map[string][]string)
+		for _, mount := range scope.RunningTenantPro {
+			scope.TenantProCensusPVs[mount.Source.Namespace] = nil
+		}
+		for _, observed := range firstAPI.objects {
+			if _, selected := scope.TenantProCensusPVs[observed.Namespace]; selected && observed.Kind == "PersistentVolumeClaim" {
+				scope.TenantProCensusPVs[observed.Namespace] = append(scope.TenantProCensusPVs[observed.Namespace], observed.Volume)
+			}
+		}
+		for namespace, names := range scope.TenantProCensusPVs {
+			scope.TenantProCensusPVs[namespace] = sortedUnique(names)
+		}
+		scopeRaw, err = json.Marshal(scope)
+		if err != nil {
+			return zero, install.ErrInstall
+		}
+	}
 	x.materials.Discovery.PersistentMounts = &scope
+	if layouts.Longhorn != nil {
+		x.materials.Discovery.LonghornSources = longhorn
+	}
 	materialsRaw, err := ce.Canonical(x.materials)
 	if err != nil || len(materialsRaw) > 8<<20 {
 		return zero, install.ErrInstall

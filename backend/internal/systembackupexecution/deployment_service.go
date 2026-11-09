@@ -273,6 +273,16 @@ func (s *DeploymentService) composeCaptureRuntime(db *sql.DB, owner *PublicJobOw
 	if e != nil {
 		return stage, e
 	}
+	stage = "longhorn-execution-owner"
+	if e = s.attachOriginalLonghornExecution(owner); e != nil {
+		return stage, e
+	}
+	if owner.longhornExecutor != nil || cfg.RuntimeSources != nil && cfg.RuntimeSources.LonghornHold != nil {
+		stage = "longhorn-hold-owner"
+		if e = s.attachLonghornHold(owner); e != nil {
+			return stage, e
+		}
+	}
 	queue := c.SQLExecutionQueue{DB: db, InstallationID: cfg.InstallationID, Owner: cfg.ControllerOwner, Policy: c.LeasePolicy{TTL: 30 * time.Second, HeartbeatInterval: 5 * time.Second, ReconcileInterval: time.Second}, Authorization: deploymentAuthorization{Service: s}, ApplicationScope: cfg.ApplicationScope, Recovery: &owner.Gate.Recovery}
 	stage = "composition"
 	s.Runtime, e = NewPublicCapture(PublicCaptureConfig{Owner: owner, Queue: queue, Source: source, ModuleFactory: moduleFactory, Profile: b.ProfileKey{ID: s.profile.Profile, Revision: s.profile.Revision}, Guard: deploymentBaseProbe{Service: s}, Admission: s.admit, RecoveryAdmission: s.recoveryAdmit, Inventory: s.inventory, RecoveryTimeout: 2 * time.Minute})
@@ -317,7 +327,7 @@ func (s *DeploymentService) admit(ctx context.Context, in d.Input) error {
 	if s.Config.PublisherVerifier != nil && s.CheckPublisherVerifierReadiness(ctx) != nil {
 		return c.ErrExecutionAuthority
 	}
-	return CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier)
+	return s.checkDeploymentCaptureAccess(ctx)
 }
 func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	if s.Runtime == nil || s.Runtime.Owner == nil || s.Runtime.Owner.supportsCapture(in) != nil || in.ProfileID != s.profile.Profile || in.ProfileRevision != s.profile.Revision || in.Authority.InstallationID != s.Config.InstallationID {
@@ -536,7 +546,7 @@ func (s *DeploymentService) PublishReadiness(ctx context.Context) (resultErr err
 	if s.Config.PublisherVerifier != nil && s.CheckPublisherVerifierReadiness(ctx) != nil {
 		return c.ErrExecutionAuthority
 	}
-	if e := CheckDeploymentCaptureKubernetesAccess(ctx, s.Runtime.Owner.Client, s.Config, s.controllerActor.ServiceAccountName, s.formalVerifier, s.publisherVerifier); e != nil {
+	if e := s.checkDeploymentCaptureAccess(ctx); e != nil {
 		return e
 	}
 	stage = "recovery-grant"

@@ -18,6 +18,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	authnv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -28,6 +29,7 @@ type productionMetadataClients struct {
 	Objects    *minio.Client
 	Metadata   metadata.Interface
 	API        kubernetes.Interface
+	Dynamic    dynamic.Interface
 	transports []*http.Client
 }
 

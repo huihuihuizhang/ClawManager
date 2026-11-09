@@ -36,6 +36,7 @@ type productionCaptureMetadata struct {
 	SQLSchema             domain.BusinessCaptureSchema
 	ControlEvidence       ce.CaptureLocator
 	MountIdentities       map[string]kube.MountIdentity   `json:",omitempty"`
+	LonghornClones        map[string]plannedLonghornClone `json:",omitempty"`
 	FormalMountIdentities map[string][]kube.MountIdentity `json:",omitempty"`
 	Mounts                []productionInstanceMount
 	PlatformMounts        []sourceRecoveryPlatformMount `json:",omitempty"`
@@ -110,6 +111,7 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 		return nil, err
 	}
 	var drafts []productionPartDraft
+	selectedClones := 0
 	add := func(module, part, category, operation string, prepare func(*b.CapturePartRequest) error) error {
 		template, exists := operations[operation]
 		if !exists {
@@ -135,6 +137,17 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 		}
 		if err := prepare(&r); err != nil {
 			return err
+		}
+		if selection, exists := metadata.LonghornClones[part]; exists {
+			claim := r.Workload.Source.PersistentVolumeClaim
+			target := selection.Target.Claim
+			if operation != "capture-workspace" || claim == nil || claim.ClaimName != selection.Original.Source.Name ||
+				metadata.MountIdentities[part] != selection.Original.Source || target.Namespace != r.Workload.Identity.Namespace ||
+				target.Owner != in.Authority.TaskPublicID || target.Name == "" || target.Name == claim.ClaimName {
+				return d.ErrNotReady
+			}
+			r.Workload.Source.PersistentVolumeClaim = &corev1.PersistentVolumeClaimVolumeSource{ClaimName: target.Name, ReadOnly: true}
+			selectedClones++
 		}
 		drafts = append(drafts, productionPartDraft{module, part, category, operation, r})
 		return nil
@@ -273,6 +286,9 @@ func buildOriginalProductionCaptureModules(in d.Input, source b.SourceInventory,
 	}
 	// Same canonical module/part order as B's original catalog; every provider
 	// context is bound to its actual GLOBAL part index before constructors freeze.
+	if selectedClones != len(metadata.LonghornClones) {
+		return nil, d.ErrNotReady
+	}
 	sort.Slice(drafts, func(i, j int) bool {
 		if drafts[i].module != drafts[j].module {
 			return drafts[i].module < drafts[j].module

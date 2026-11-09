@@ -25,6 +25,7 @@ const sourceMetadataGrantDomain = "system-backup-controller-source-metadata.v1\x
 // An independently source-owner-signed controller delegation. It has no
 // Invocation, future Job, key-use nonce or permission to Generate/Unwrap.
 type productionSourceDiscovery struct {
+	LonghornSources                                       map[string]originalLonghornSource   `json:",omitempty"`
 	PersistentMounts                                      *productionPersistentMountScope     `json:",omitempty"`
 	PublicationPolicy                                     *originalPublicationPolicyReference `json:",omitempty"`
 	GrantFile, GrantSHA256                                string
@@ -83,6 +84,9 @@ func sourceMetadataScope(materials productionCaptureMaterials) (string, error) {
 }
 
 func (x productionSourceDiscovery) validate() error {
+	if len(x.LonghornSources) > 9996 {
+		return d.ErrNotReady
+	}
 	if x.PersistentMounts != nil && x.PersistentMounts.validate() != nil {
 		return d.ErrNotReady
 	}
