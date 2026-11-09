@@ -10,7 +10,7 @@ R2 在只读预检结束。此后 R3 加入了一次性取证探针。操作者�
 
 专用 RWX 测试源已创建，写入 Pod 达到 Ready，实际 share-manager 在 `node1`。操作者校验三个脚本摘要后，在 `node1`（`6.8.0-124-generic`）完成原生校准，退出 `0`。同一 loop 设备 `7:0` 记录到独立进程提前解冻成功和父进程随后返回 `EINVAL`。临时卷清理完成。
 
-随后创建 RWO 源、writer 和 keeper。两个 Pod 均 Ready，但 RWO 等待 `healthy` 超时。现场只读结果显示 `longhorn` 和 `longhorn-rwx` 都请求两个副本，两卷均附着在 `node1` 且 `degraded`，`Scheduled=False`、`ReplicaSchedulingFailure`、`disks are unavailable`。RWO 一个副本在 `k8s-master` 运行，另一个副本未获分配。当前两副本配置未达到存储探针的开始条件。原 writer 尚未删除，本轮 Longhorn 冻结快照 `NOT_RUN`，keeper、冻结连续性、克隆和恢复仍为 `UNVERIFIED`。清理待操作者回执，等两卷均可调度并达到 `healthy` 后再重跑。见 [R3 一次性验证](system-backup-storage-probe-r3-20261109.md)。
+随后创建 RWO 源、writer 和 keeper。两个 Pod 均 Ready，但 RWO 等待 `healthy` 超时。现场只读结果显示 `longhorn` 和 `longhorn-rwx` 都请求两个副本，两卷均附着在 `node1` 且 `degraded`，`Scheduled=False`、`ReplicaSchedulingFailure`、`disks are unavailable`。RWO 一个副本在 `k8s-master` 运行，另一个副本未获分配。原 writer 尚未进入删除测试，本轮 Longhorn 冻结快照 `NOT_RUN`，keeper、冻结连续性、克隆和恢复仍为 `UNVERIFIED`。操作者回传 namespace 已删除、`CLUSTER_CLEANUP_OK` 和 `NODE1_CLEANUP_OK`，本轮资源清理完成。新一轮须先确认两节点仍可调度，并为两源卷和两个克隆卷留出双副本额度。见 [R3 一次性验证](system-backup-storage-probe-r3-20261109.md)。
 
 以下为此前推进记录。
 
