@@ -1,6 +1,12 @@
 # 备份最小闭环：2026-11-08 接续记录
 
-当前阶段已按用户最新要求收口为“本地候选冻结与远测准备”，范围、证据和停止条件以 [阶段交付](system-backup-local-candidate-frozen-20261108.md) 为准。以下保留此前推进记录。
+当前阶段已按用户最新要求收口为“本地候选冻结与远测准备”，范围、证据和停止条件以 [阶段交付](system-backup-local-candidate-frozen-20261108.md) 为准。
+
+2026-11-09，操作者在 `kubernetes-admin@kubernetes` 回传只读结果。Snapshot v1 API 已提供三个所需资源，对应 CRD 均存在。`sbk-validation-longhorn-local` 的驱动为 `driver.longhorn.io`，类型为 `snap`，删除策略为 `Delete`。回执中的 snapshot-controller 2/2、CSI snapshotter 3/3、Longhorn manager 2/2 均为 Ready。
+
+本轮停在只读预检，冻结快照仍为 `UNVERIFIED`。现场尚未确认已有取证手段能够覆盖测试卷的实际冻结和解冻，并把它们与同一后端快照的开始和完成时间关联。确认取证能力后，先完成其余只读检查，再决定是否进入专用测试卷验证。冻结、快照、keeper 和恢复仍待真实验证。见 [R2 远测步骤](system-backup-storage-remote-acceptance-20261108.md)。
+
+以下为此前推进记录。
 
 目标仍是从真实页面产生同一 task/attempt 的非空完整备份，完成源恢复、正式发布、独立读回和目录登记。当前没有这条现场成功证据。用户本次要求先做本地验证，并在每个独立项目完成后提交到远程 `backup`。
 
