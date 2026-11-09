@@ -97,6 +97,52 @@ ssh root@10.130.14.23
 
 本轮现场回执确认两块 Longhorn 磁盘均为 `Schedulable=True`。Pod 名额当时为 `k8s-master 110/110`、`node1 109/110`，全场合计只剩 1 个。新控制器会占用一个名额，正式任务还会创建 keeper 和 worker。RWO keeper 在源 writer 停止前就要就绪，并绑定 writer 所在节点。保持部署和试跑暂停，继续只读盘点和准备签名材料。确认真实 writer 和 worker 的调度位置后，按控制器、并发 Job、keeper 与 writer 恢复重叠的峰值核对各节点余量，再部署。节点容量、namespace 的 ResourceQuota 和 Longhorn 副本调度分别核查。
 
+旧环境的 `clawmanager-app` 停用后，现场回读 `k8s-master 110/110`、`node1 108/110`。两席余量留给正式部署和任务规划，先核对验证源的节点归属。以下命令只读取这套验证环境的候选源及其挂载。挂载记录用于定位候选 writer，正式签发仍由已登记的 owner 复核。
+
+```bash
+(
+  set -euo pipefail
+  SYS=clawmanager-sbk-validation-system
+  TEN=clawmanager-sbk-validation-user-1
+  k() { kubectl --context kubernetes-admin@kubernetes "$@"; }
+  k get ns "$SYS" "$TEN" -o 'custom-columns=NAME:.metadata.name,UID:.metadata.uid'
+
+  for ns in "$SYS" "$TEN"; do
+    if [[ $ns == "$SYS" ]]; then
+      claims=(clawmanager-workspaces mysql-data minio-data redis-data)
+    else
+      claims=(clawreef-2-pvc clawreef-team-1-shared)
+    fi
+    for claim in "${claims[@]}"; do
+      pvc=$(k -n "$ns" get pvc "$claim" -o json)
+      pv=$(jq -er 'select(.status.phase == "Bound") | .spec.volumeName | select(length > 0)' <<< "$pvc")
+      printf '\n%s/%s\n' "$ns" "$claim"
+      jq -c '{pvcUID:.metadata.uid, accessModes:.spec.accessModes, pv:.spec.volumeName}' <<< "$pvc"
+      pv_json=$(k get pv "$pv" -o json)
+      jq -c '{pvUID:.metadata.uid, driver:.spec.csi.driver, handle:.spec.csi.volumeHandle,
+             claimRef:.spec.claimRef}' <<< "$pv_json"
+      handle=$(jq -er 'select(.spec.csi.driver == "driver.longhorn.io") |
+                       .spec.csi.volumeHandle | select(length > 0)' <<< "$pv_json")
+      k -n longhorn-system get volumes.longhorn.io "$handle" -o json |
+        jq -c '{handle:.metadata.name, replicas:.spec.numberOfReplicas, robustness:.status.robustness,
+                state:.status.state, currentNode:.status.currentNodeID}'
+    done
+    k -n "$ns" get pods -o json |
+      jq -c --args '
+        $ARGS.positional as $claims | .items[] as $pod |
+        $pod.spec.volumes[]? | select(.persistentVolumeClaim) as $vol |
+        select($claims | index($vol.persistentVolumeClaim.claimName)) |
+        $pod.spec.containers[] as $container |
+        $container.volumeMounts[]? | select(.name == $vol.name) |
+        {namespace:$pod.metadata.namespace, claim:$vol.persistentVolumeClaim.claimName,
+         pod:$pod.metadata.name, podUID:$pod.metadata.uid, phase:$pod.status.phase,
+         node:$pod.spec.nodeName, container:$container.name, mountPath,
+         readOnly:(.readOnly == true or $vol.persistentVolumeClaim.readOnly == true)}' "${claims[@]}"
+  done
+  printf '%s\n' VALIDATION_SOURCE_INVENTORY_COMPLETE
+)
+```
+
 ### 2.2 签名材料和部署停点
 
 现场已找到两个 enrollment 相关回执。签发前还需要由同一安装身份提供已审核的安装 plan 与 pin、实际源和 writer 的选择文件、owner 访问材料、V2 签发请求、消费定义及受控的签发入口。现有回执和只读盘点不足以推导这些文件。**目前可执行到 2.1。** 等该组材料齐备后，按提交中已有的 `system-backup-source-registries` 的 `issue-v2` 流程签发，并用 `system-backup-observer-deployment-materials --mode host-materials` 生成各节点的已签名安装材料。现场无 Go，这两个工具由同一提交的 app 镜像提供。
