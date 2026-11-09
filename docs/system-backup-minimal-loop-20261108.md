@@ -16,6 +16,8 @@ R2 在只读预检结束。此后 R3 加入了一次性取证探针。操作者�
 
 复跑时，RWO 与 RWX 两卷都通过 `healthy` 检查，writer 和 keeper 均已 Ready。删除本轮 RWO writer 的 30 秒等待超时，超时后 Pod 仍显示 `Terminating`。准备脚本随后删除了本轮 namespace，PV 和 Longhorn Volume 回收待复核。旧测试 writer 使用 Kubernetes 默认 30 秒退出宽限，和删除等待同长。本地修订仅给该一次性 writer 显式配置 5 秒宽限，保留 30 秒删除等待和原卷读回标准，并在再次超时后记录 Pod 终止状态。等待现场复跑，keeper 和冻结快照仍未验收。
 
+操作者以 `33ef53e4` 再跑，确认上一轮 namespace、PV 和 Longhorn 卷已回收。新一轮两源卷均通过双副本健康及调度检查，RWO writer 删除完成，同一 keeper 和原卷身份保持，seed 读回一致。实际节点为 `node1`。Pod 清单在建卷前记录 `node1` 104/110、`k8s-master` 110/110。实际冻结快照和克隆读回待测。
+
 以下为此前推进记录。
 
 目标仍是从真实页面产生同一 task/attempt 的非空完整备份，完成源恢复、正式发布、独立读回和目录登记。当前没有这条现场成功证据。用户本次要求先做本地验证，并在每个独立项目完成后提交到远程 `backup`。

@@ -82,6 +82,8 @@ engine_identity "$RWX_HANDLE" > "$OUT/rwx-engine-before.json"
 
 ## 3. 在共同冻结窗口尝试一次快照
 
+本轮实际节点为 `node1` 时，可在 `k8s-master` 运行 `system-backup-storage-probe-cut.sh /absolute/path/to/run.env`，代替本节手工切换终端的命令。脚本用一次 SSH 认证复用连接，核对实际 ext4 挂载后启动两个租约，尝试一批快照并发送释放。两份解除均确认时，它会验证原卷写读，并把挂载、trace、快照及后端记录写入本轮 `cut-attempt/`。`CUT_EVIDENCE_READY` 只表示证据已收集，仍按第 4 节评定后端完成、克隆及清理。回执 `THAW_UNCONFIRMED_OR_ABNORMAL` 时保留原卷和 keeper，按 R2 恢复。节点本轮额外留下的 `locate.py` 和 `rwo-mount.json`、`rwx-mount.json` 在确认恢复后随本轮明确文件清理。
+
 先在节点终端启动采集器，再按 R2 第 3.2 节启动两个租约。`DIR`、`RWO_HANDLE`、`RWX_HANDLE`、`MOUNT_RWO`、`MOUNT_RWX`、`SEED_SHA` 均为本轮已核对值。采集器最多运行 90 秒，租约仍按原预算解冻。
 
 ```bash
