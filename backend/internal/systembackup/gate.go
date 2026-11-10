@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"clawreef/internal/backupgate"
 	"clawreef/internal/migrationcoord"
 
 	"github.com/go-sql-driver/mysql"
@@ -193,7 +194,7 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 	if err := g.closeAdmission(ctx, scope, owner, engine, acquire); err != nil {
 		return GateOwnership{}, err
 	}
-	tx, err := g.DB.BeginTx(ctx, nil)
+	tx, err := g.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return GateOwnership{}, err
 	}
@@ -203,10 +204,8 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 	}
 	var phase string
 	var generation, token uint64
-	// Never queue an exclusive lock behind the complete-request shared lock.
-	// Its admitted handler can still need another SQL transaction on this row;
-	// queuing FOR UPDATE would block that SQL and prevent the handler draining.
-	// The controller retries a busy gate within its absolute acquisition budget.
+	// A business transaction or an older app replica can still hold this row.
+	// Retry a busy gate within the controller's absolute acquisition budget.
 	if err = tx.QueryRowContext(ctx, "SELECT phase,generation,fencing_token FROM system_backup_gate WHERE scope=? FOR UPDATE NOWAIT", scope).Scan(&phase, &generation, &token); err != nil {
 		var busy *mysql.MySQLError
 		if errors.As(err, &busy) && busy.Number == 3572 {
@@ -217,6 +216,14 @@ func (g Gate) beginForEngineJournal(ctx context.Context, engine, scope, owner, r
 	}
 	if phase != "idle" {
 		logGateAcquisitionBusy("gate-not-idle", nil)
+		return GateOwnership{}, ErrMaintenance
+	}
+	active, err := backupgate.ActiveRequests(ctx, tx, scope)
+	if err != nil {
+		return GateOwnership{}, err
+	}
+	if active {
+		logGateAcquisitionBusy("request-leases-active", nil)
 		return GateOwnership{}, ErrMaintenance
 	}
 	if admission != nil {

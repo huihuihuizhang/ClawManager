@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-// HoldRequest fences the complete synchronous handler, including non-SQL
-// side effects. Its transaction deliberately outlives request cancellation:
-// cancellation is not proof that a handler ignoring its context has stopped.
-// Release must be deferred until that handler actually returns. Detached work,
-// reverse proxies and background workers need separate registered participants.
+const requestLeasePrefix = "smlr_"
+
+// HoldRequest fences the complete synchronous handler with a durable lease.
+// No SQL connection is held after admission. Cancellation and lease expiration
+// do not prove the handler stopped, so release must wait for its actual return.
 func HoldRequest(acquire context.Context, pool *sql.DB, scope string) (func(), error) {
 	if pool == nil || !scopePattern.MatchString(scope) {
 		return nil, errors.New("backup boundary unavailable")
@@ -27,7 +27,7 @@ func HoldRequest(acquire context.Context, pool *sql.DB, scope string) (func(), e
 			if lease == "" {
 				return
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			if _, err := pool.ExecContext(ctx, "UPDATE system_backup_mutation_leases SET released_at=COALESCE(released_at,UTC_TIMESTAMP(6)) WHERE public_id=? AND scope=? AND generation=?", lease, scope, generation); err != nil {
 				log.Print("backup request drain evidence release deferred")
@@ -38,29 +38,18 @@ func HoldRequest(acquire context.Context, pool *sql.DB, scope string) (func(), e
 		releaseLease()
 		return nil, e
 	}
-	conn, e := pool.Conn(acquire)
-	if e != nil {
-		releaseLease()
-		return nil, e
-	}
-	tx, e := conn.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelReadCommitted})
-	if e != nil {
-		conn.Close()
-		releaseLease()
-		return nil, e
-	}
-	var once sync.Once
-	release := func() { once.Do(func() { _ = tx.Rollback(); _ = conn.Close(); releaseLease() }) }
-	var phase string
-	if e = tx.QueryRowContext(acquire, "SELECT phase FROM system_backup_gate WHERE scope=? LOCK IN SHARE MODE", scope).Scan(&phase); e != nil {
-		release()
-		return nil, e
-	}
-	if phase != "idle" {
-		release()
-		return nil, ErrMaintenance
-	}
-	return release, nil
+	return releaseLease, nil
+}
+
+// ActiveRequests is read after locking the gate row, so an admission grant
+// cannot commit between the read and a phase change. Request leases need an
+// idle gate to finish nested application SQL. Explicit mutation leases can
+// instead finish through WriteWithLease while the gate is acquiring.
+func ActiveRequests(ctx context.Context, tx *sql.Tx, scope string) (bool, error) {
+	var active bool
+	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM system_backup_mutation_leases
+		WHERE scope=? AND released_at IS NULL AND LEFT(public_id,5)=?)`, scope, requestLeasePrefix).Scan(&active)
+	return active, err
 }
 
 // A physical SQL connection can die while its handler keeps writing files.
@@ -73,7 +62,7 @@ func grantRequestLease(ctx context.Context, pool *sql.DB, scope string) (string,
 	if _, err := rand.Read(random[:]); err != nil {
 		return "", 0, err
 	}
-	id := "sml_" + hex.EncodeToString(random[:])
+	id := requestLeasePrefix + hex.EncodeToString(random[:])
 	tx, err := pool.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return "", 0, err

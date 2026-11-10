@@ -4,13 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"clawreef/internal/backupgate"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 )
+
+var backupAdmissionLog = rate.NewLimiter(rate.Every(30*time.Second), 1)
 
 // BackupRequestBoundary includes GET because some existing read endpoints
 // create workspace directories or audit records. Only registered backup control
@@ -32,6 +36,15 @@ func backupRequestBoundary(scope string, acquire func(context.Context) (func(), 
 			code := "backup_coordination_unavailable"
 			if errors.Is(e, backupgate.ErrMaintenance) {
 				code = "backup_maintenance"
+			} else if backupAdmissionLog.Allow() {
+				reason := "control_database"
+				switch {
+				case errors.Is(e, context.DeadlineExceeded):
+					reason = "deadline"
+				case errors.Is(e, context.Canceled):
+					reason = "canceled"
+				}
+				log.Printf("[system-backup-gate] stage=request-admission-failed reason=%s", reason)
 			}
 			c.Header("Retry-After", "15")
 			c.Header("Cache-Control", "no-store")

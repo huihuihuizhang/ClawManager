@@ -79,7 +79,6 @@ func main() {
 		if err != nil {
 			log.Fatal("backup HTTP boundary requires the same installation control database")
 		}
-		backupHTTPPool.SetMaxOpenConns(64)
 		defer backupHTTPPool.Close()
 	}
 	router := gin.New()

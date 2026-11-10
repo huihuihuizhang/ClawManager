@@ -9,8 +9,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-// Close only the short admission row before waiting for complete-request
-// locks. Existing units keep an idle gate and can finish their nested SQL;
+// Close only the short admission row before waiting for admitted work to
+// drain. Existing units keep an idle gate and can finish their nested SQL;
 // newly arriving units cannot keep extending the drain indefinitely.
 func (g Gate) closeAdmission(ctx context.Context, scope, owner, engine string, acquire time.Duration) error {
 	tx, err := g.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})

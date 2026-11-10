@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"clawreef/internal/backupgate"
 	legacy "clawreef/internal/systembackup"
 	c "clawreef/internal/systembackupcontroller"
 )
@@ -61,6 +62,9 @@ func (s *PreparedOriginalWriterSet) beginApplicationGate(ctx context.Context) er
 	var phase string
 	var generation, token uint64
 	if tx.QueryRowContext(ctx, `SELECT phase,generation,fencing_token FROM system_backup_gate WHERE scope=? FOR UPDATE NOWAIT`, scope).Scan(&phase, &generation, &token) != nil || phase != "idle" || generation == ^uint64(0) {
+		return ErrInstall
+	}
+	if active, err := backupgate.ActiveRequests(ctx, tx, scope); err != nil || active {
 		return ErrInstall
 	}
 	locked, err := (c.SQLCoordinationTransaction{Tx: tx}).LockGate(ctx, p.token.Key)

@@ -520,8 +520,6 @@ func main() {
 		if openErr != nil {
 			log.Fatal("backup HTTP boundary requires an available independent control credential")
 		}
-		// Do not consume the business SQL pool while a handler is awaiting I/O.
-		backupHTTPPool.SetMaxOpenConns(64)
 		defer backupHTTPPool.Close()
 		restoreBoundary := backupgate.ConfigureWorkBoundary(func(ctx context.Context) (func(), error) {
 			return backupgate.HoldRequest(ctx, backupHTTPPool, db.SQLGateScope())

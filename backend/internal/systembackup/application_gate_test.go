@@ -76,13 +76,22 @@ func TestRequestBoundaryDrainsExternalWritesDespiteClientCancellation(t *testing
 	if e := gate.EnsureScope(ctx, "requests"); e != nil {
 		t.Fatal(e)
 	}
+	raw.SetMaxOpenConns(1)
 	requestCtx, cancel := context.WithCancel(ctx)
 	release, e := backupgate.HoldRequest(requestCtx, raw, "requests")
 	if e != nil {
 		t.Fatal(e)
 	}
 	defer release()
-	cancel() // The handler can still be writing despite its client disconnecting.
+	acquire, finish := context.WithTimeout(ctx, time.Second)
+	defer finish()
+	other, e := backupgate.HoldRequest(acquire, raw, "requests")
+	if e != nil {
+		t.Fatal("an unfinished handler consumed the only control connection", e)
+	}
+	other()
+	raw.SetMaxOpenConns(4) // Gate.Begin also needs its migration lock connection.
+	cancel()               // The handler can still be writing despite its client disconnecting.
 	wait, stop := context.WithTimeout(ctx, 150*time.Millisecond)
 	if _, e = gate.Begin(wait, "requests", "capture", RegistryHash(), time.Second, 5*time.Second); e == nil {
 		stop()
@@ -145,14 +154,14 @@ func TestDisconnectedBoundaryConnectionDoesNotProveExternalWriterStopped(t *test
 	if _, err = admin.Exec("KILL CONNECTION " + strconv.FormatUint(connection, 10)); err != nil {
 		t.Fatal(err)
 	}
-	own, err := g.Begin(ctx, "lost-boundary", "backup", RegistryHash(), 5*time.Second, 30*time.Second)
-	if err != nil {
-		t.Fatal("dead connection retained its physical lock", err)
-	}
-	if _, err = g.Hold(ctx, own); !errors.Is(err, ErrMaintenance) {
+	if _, err = g.Begin(ctx, "lost-boundary", "backup", RegistryHash(), 5*time.Second, 30*time.Second); !errors.Is(err, ErrMaintenance) {
 		t.Fatal("SQL disconnection falsely certified an unfinished file writer", err)
 	}
 	release()
+	own, err := g.Begin(ctx, "lost-boundary", "backup", RegistryHash(), 5*time.Second, 30*time.Second)
+	if err != nil {
+		t.Fatal("completed writer did not release its durable blocker", err)
+	}
 	own, err = g.Hold(ctx, own)
 	if err != nil {
 		t.Fatal("completed writer did not release its durable blocker", err)
