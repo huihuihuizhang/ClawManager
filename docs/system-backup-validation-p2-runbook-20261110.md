@@ -27,22 +27,15 @@ test -z "$(git status --porcelain --untracked-files=no)"
 
 本地验证通过 11 项引导预检、6 项 OpenClaw 和私有目录层模型，以及 14 项卷分类、共享卷身份、租户挂载和 writer 参数定向用例。三份 CLI 包均已编译，`first-install-materials` 与 `source-registries` 在本轮选择器下没有匹配用例。真实 OCI 文件、现场凭据、五条连接和签发材料在恢复远测后验收。
 
-## 恢复连接后先核对前置状态
+## 恢复连接后从 P2 镜像核验继续
 
-1. 在同一个验证 enrollment 下复查 `controller.env.ready` 仍未交付、接单仍暂停。用已有引导定义重读 namespace、SA、Deployment、ReplicaSet、Running Pod、三份 PVC 的 UID 链，和原引导回执核对。UID 变化时重做绑定材料。
-2. 复查 sources SA 的 TokenReview、两条独立 MySQL 角色的 TLS 和 `server_uuid`、两节点 observer mTLS。旧 app SQL 回读计划曾因 rollout 漂移失败。使用当前计划或两角色的 TLS 直连证据。
-3. 从源码目录按固定摘要采集 OCI 文件。`$RUN` 为本轮独占私有目录。脚本新建输出子目录。
+P1 引导和 P1.3 已通过。沿用已有控制器 UID 链、sources SA TokenReview、两条独立 MySQL 角色的 TLS 和 `server_uuid` 回执，以及两节点 observer mTLS 回执。控制器继续等待 `controller.env.ready`，接单保持暂停。只有引导对象被替换、身份与回执不符或原回执不可用时，才重跑 `system-backup-validation-bootstrap-preflight.py --mode observe` 并重新绑定受影响的材料。SQL 或 observer 连接拒绝时，仅复查对应的凭据和连接。
+
+从源码目录按固定摘要采集 OCI 文件。`$RUN` 为本轮独占私有目录。脚本新建输出子目录。
 
 ```bash
 set -euo pipefail
 umask 077
-python3 -B scripts/system-backup-validation-bootstrap-preflight.py --mode observe \
-  --plan-file "$PLAN" --plan-sha256 "$PLAN_SHA" \
-  --issuer-public-file "$PUB" --issuer-public-sha256 "$PUB_SHA" \
-  --enrollment-pin-file "$PIN" --enrollment-pin-sha256 "$PIN_SHA" \
-  --kubeconfig-file "$KUBE" --kubeconfig-sha256 "$KUBE_SHA" \
-  --definition-file "$BOOT_DEF" --definition-sha256 "$BOOT_DEF_SHA" \
-  --output-directory "$RUN"
 python3 -B scripts/system-backup-runtime-startup-inputs.py \
   --image openclaw=10.130.14.23:5000/openclaw-lite@sha256:5d5f735bc8c0155d51841b574c98c6c02ca399085add0e3dc98b3d7e0ead3140 \
   --image hermes=10.130.14.23:5000/hermes-lite@sha256:a2473da0cf375ed128116af3083eccd3276665adac4ae2722edcbff6cc277353 \
