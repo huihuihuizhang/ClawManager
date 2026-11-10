@@ -189,86 +189,18 @@ func originalNonOverlappingRoots(roots []string) []string {
 	return out
 }
 
-// Derive host paths from the exact original Pod's persistent volumes. Unknown
-// CSI/NFS/provider storage is a real unsupported source, not an empty scope.
+// Derive host paths from the exact original Pod's persistent volumes. A
+// Longhorn CSI volume has no host root: its fence is the signed engine hold, so
+// this whole-node path still refuses it and the caller reports the dependency.
 func (s *PreparedOriginalWriterSet) actualPodPersistentRoots(ctx context.Context, pod *corev1.Pod) ([]string, error) {
-	if pod == nil || pod.Spec.NodeName == "" {
-		return nil, ErrInstall
+	roots, longhorn, err := s.classifyPodPersistentVolumes(ctx, pod)
+	if err != nil {
+		return nil, err
 	}
-	k := s.owner.operator.installer.kube
-	var roots []string
-	for _, v := range pod.Spec.Volumes {
-		if v.HostPath != nil {
-			roots = append(roots, v.HostPath.Path)
-			continue
-		}
-		if v.PersistentVolumeClaim != nil {
-			claim, err := k.CoreV1().PersistentVolumeClaims(pod.Namespace).Get(ctx, v.PersistentVolumeClaim.ClaimName, metav1.GetOptions{})
-			if err != nil || claim.Status.Phase != corev1.ClaimBound || claim.DeletionTimestamp != nil {
-				return nil, ErrInstall
-			}
-			pv, err := k.CoreV1().PersistentVolumes().Get(ctx, claim.Spec.VolumeName, metav1.GetOptions{})
-			if err != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.UID != claim.UID || pv.Spec.ClaimRef.Namespace != pod.Namespace || pv.Spec.ClaimRef.Name != claim.Name || pv.DeletionTimestamp != nil {
-				return nil, ErrInstall
-			}
-			root := ""
-			if pv.Spec.HostPath != nil {
-				root = pv.Spec.HostPath.Path
-			}
-			if pv.Spec.Local != nil {
-				if root != "" {
-					return nil, ErrInstall
-				}
-				root = pv.Spec.Local.Path
-			}
-			if root == "" {
-				return nil, OriginalWriterSourceFailure{Dependency: "persistent_volume_native_fence_required"}
-			}
-			if pv.Spec.NodeAffinity == nil || pv.Spec.NodeAffinity.Required == nil {
-				return nil, OriginalWriterSourceFailure{Dependency: "hostpath_data_node_affinity_required"}
-			}
-			nodes, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-			if err != nil {
-				return nil, ErrInstall
-			}
-			matched := 0
-			for n := range nodes.Items {
-				yes, e := originalPVMatchesNode(pv.Spec.NodeAffinity.Required, &nodes.Items[n])
-				if e != nil {
-					return nil, ErrInstall
-				}
-				if yes {
-					matched++
-					if nodes.Items[n].Name != pod.Spec.NodeName {
-						return nil, ErrInstall
-					}
-				}
-			}
-			if matched != 1 {
-				return nil, ErrInstall
-			}
-			pin := originalPhysicalVolumePin{pod.Namespace, claim.Name, string(claim.UID), originalObjectSHA(claim.Spec), pv.Name, string(pv.UID), originalObjectSHA(pv.Spec), pod.Spec.NodeName}
-			found := false
-			for _, old := range s.volumes {
-				if old.ClaimUID == pin.ClaimUID {
-					if old != pin {
-						return nil, ErrInstall
-					}
-					found = true
-				}
-			}
-			if !found {
-				s.volumes = append(s.volumes, pin)
-			}
-			roots = append(roots, root)
-			continue
-		}
-		if v.EmptyDir != nil || v.Secret != nil || v.ConfigMap != nil || v.Projected != nil || v.DownwardAPI != nil {
-			continue
-		}
-		return nil, OriginalWriterSourceFailure{Dependency: "unmapped_persistent_volume_source"}
+	if len(longhorn) > 0 {
+		return nil, OriginalWriterSourceFailure{Dependency: "persistent_volume_native_fence_required"}
 	}
-	return originalNonOverlappingRoots(roots), nil
+	return roots, nil
 }
 
 func (s *PreparedOriginalWriterSet) recheckVolumePins(ctx context.Context) error {
