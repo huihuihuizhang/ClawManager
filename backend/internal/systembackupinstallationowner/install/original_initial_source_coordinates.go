@@ -190,23 +190,40 @@ func initialStoppedLayouts(instances []domain.SourceInstance, storage []Original
 	return out, nil
 }
 
+type initialSourceCoordinatesError struct {
+	stage string
+	cause error
+}
+
+func (e initialSourceCoordinatesError) Error() string { return e.stage }
+func (e initialSourceCoordinatesError) Unwrap() error { return e.cause }
+
 // This is the earliest authenticated DATA author: no writer source config,
 // full DeploymentConfig, native observer certificate, grant or selection is
 // needed to read the original complete SQL/Kube coordinates. The original
 // prepare-selection/facts owners independently authenticate them later.
-func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context, password []byte, enrollment EnrollmentPin, directory string, runningOnly ...string) (OriginalInitialSourceDataReceipt, error) {
+func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context, password []byte, enrollment EnrollmentPin, directory string, runningOnly ...string) (_ OriginalInitialSourceDataReceipt, resultErr error) {
 	var zero OriginalInitialSourceDataReceipt
+	stage := "output_directory"
+	defer func() {
+		if resultErr != nil {
+			resultErr = initialSourceCoordinatesError{stage: stage, cause: resultErr}
+		}
+	}()
 	if i == nil || privateDirectory(directory) != nil {
 		return zero, ErrInstall
 	}
+	stage = "operator_enrollment"
 	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, c.GatePolicy{LockTTL: c.DefaultMaintenanceLockTTL, AcquisitionTimeout: c.DefaultGateAcquisitionTime, MaxHold: c.DefaultQuiesceMaxHold})
 	if err != nil {
 		return zero, err
 	}
+	stage = "system_census"
 	first, pods, deployments, claims, err := p.readKubernetesCensus(ctx)
 	if err != nil {
 		return zero, err
 	}
+	stage = "runtime_scope"
 	var testScope *domain.RuntimeTestScope
 	if len(runningOnly) > 1 {
 		return zero, ErrInstall
@@ -218,14 +235,17 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 			return zero, ErrInstall
 		}
 	}
+	stage = "instance_storage"
 	storage, err := p.initialInstanceStorage(ctx)
 	if err != nil {
 		return zero, err
 	}
+	stage = "shared_runtime_sql"
 	shared, err := p.readSharedRuntimeSQL(ctx)
 	if err != nil {
 		return zero, err
 	}
+	stage = "tenant_writer_chain"
 	tenantObserved := map[int]OriginalInitialTenantProCoordinates{}
 	var tenantSources []OriginalInitialTenantProCoordinates
 	claimKeys := map[string]bool{}
@@ -268,10 +288,12 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	}
 	// Keep the original per-instance controller chain above. Access authoring
 	// also needs every PVC in each selected tenant, including unmounted claims.
+	stage = "tenant_access"
 	tenantAccess, err := p.initialTenantProAccess(ctx, testScope)
 	if err != nil {
 		return zero, err
 	}
+	stage = "application_scope"
 	rows, err := i.db.QueryContext(ctx, `SELECT DISTINCT scope FROM system_backup_gate ORDER BY scope`)
 	if err != nil {
 		return zero, err
@@ -389,6 +411,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		}
 		allLayouts = append(allLayouts, layout)
 	}
+	stage = "node_pins"
 	nodes := map[string]string{}
 	for _, pod := range pods {
 		if pod.Spec.NodeName == "" {
@@ -407,6 +430,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	// relationship. It performs no gate/hold or observer mutation, exactly as
 	// collectOriginalWriterSelection's preflight. CSI without a native fence is
 	// still a concrete dependency; no guessed kubelet path is exported.
+	stage = "shared_runtime_storage"
 	physical := &PreparedOriginalWriterSet{owner: p}
 	sharedRoots := map[string][]string{}
 	var blockedShared []OriginalInitialSharedStorageDependency
@@ -446,6 +470,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	sort.Slice(blockedShared, func(i, j int) bool {
 		return blockedShared[i].Namespace+"/"+blockedShared[i].Pod < blockedShared[j].Namespace+"/"+blockedShared[j].Pod
 	})
+	stage = "volume_pins"
 	volumes := []originalPhysicalVolumePin{}
 	for _, claim := range claims {
 		if claim.UID == "" || claim.Status.Phase != core.ClaimBound || claim.Spec.VolumeName == "" || claim.DeletionTimestamp != nil {
@@ -464,6 +489,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes,
 		BlockedSharedStorage: blockedShared, TenantProSources: tenantSources, Layouts: allLayouts, Dependencies: dependencies, RuntimeTestScope: testScope,
 		TenantProAccess: tenantAccess}
+	stage = "encode_coordinates"
 	coordinatesRaw, err := canonical(result)
 	if err != nil || len(coordinatesRaw) > 8<<20 {
 		return zero, ErrInstall
@@ -476,13 +502,39 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	if err != nil || len(snapshotRaw) > 8<<20 {
 		return zero, ErrInstall
 	}
+	stage = "system_census_recheck"
 	second, _, _, _, err := p.readKubernetesCensus(ctx)
-	again, e := p.initialInstanceStorage(ctx)
-	sharedAgain, sharedErr := p.readSharedRuntimeSQL(ctx)
-	tenantAccessAgain, accessErr := p.initialTenantProAccess(ctx, testScope)
-	if err != nil || e != nil || sharedErr != nil || accessErr != nil || !reflect.DeepEqual(tenantAccess, tenantAccessAgain) || !reflect.DeepEqual(shared, sharedAgain) || !reflect.DeepEqual(first, second) || !reflect.DeepEqual(storage, again) || physical.recheckVolumePins(ctx) != nil || recheckTenants() != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+	if err != nil || !reflect.DeepEqual(first, second) {
 		return zero, ErrInstall
 	}
+	stage = "instance_storage_recheck"
+	again, e := p.initialInstanceStorage(ctx)
+	if e != nil || !reflect.DeepEqual(storage, again) {
+		return zero, ErrInstall
+	}
+	stage = "shared_runtime_sql_recheck"
+	sharedAgain, sharedErr := p.readSharedRuntimeSQL(ctx)
+	if sharedErr != nil || !reflect.DeepEqual(shared, sharedAgain) {
+		return zero, ErrInstall
+	}
+	stage = "tenant_access_recheck"
+	tenantAccessAgain, accessErr := p.initialTenantProAccess(ctx, testScope)
+	if accessErr != nil || !reflect.DeepEqual(tenantAccess, tenantAccessAgain) {
+		return zero, ErrInstall
+	}
+	stage = "volume_pins_recheck"
+	if physical.recheckVolumePins(ctx) != nil {
+		return zero, ErrInstall
+	}
+	stage = "tenant_writer_chain_recheck"
+	if recheckTenants() != nil {
+		return zero, ErrInstall
+	}
+	stage = "operator_and_instances_recheck"
+	if p.checkInstances(ctx) != nil || p.check(ctx) != nil {
+		return zero, ErrInstall
+	}
+	stage = "write_readback"
 	files := map[string][]byte{"initial-source-coordinates.json": coordinatesRaw, "initial-source-kubernetes.private.json": snapshotRaw}
 	if writeNewFiles(directory, files) != nil {
 		return zero, ErrInstall
@@ -495,6 +547,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 		}
 		clear(actual)
 	}
+	stage = "final_recheck"
 	final, _, _, _, err := p.readKubernetesCensus(ctx)
 	tenantAccessFinal, accessErr := p.initialTenantProAccess(ctx, testScope)
 	if err != nil || accessErr != nil || !reflect.DeepEqual(tenantAccess, tenantAccessFinal) || !reflect.DeepEqual(first, final) || physical.recheckVolumePins(ctx) != nil || recheckTenants() != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
