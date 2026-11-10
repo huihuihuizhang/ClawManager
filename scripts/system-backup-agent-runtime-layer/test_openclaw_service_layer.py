@@ -66,7 +66,8 @@ def fixture(case, fault=None):
     f = t.LocalRegistry(case)
     # Controlled fixture uses synthetic ELF and explicit patched profile pins.
     # Production constants remain immutable; the real bundle is not read here.
-    f.agent = t.elf() + b"\x00" * (9994402 - len(t.elf()))
+    elf = t.elf()
+    f.agent = elf + b"\x00" * (m.PROFILES["openclaw"]["agent_size"] - len(elf))
     plains = [base_tar(fault)]
     if fault in ("whiteout_service", "opaque_parent"):
         plains = [base_tar()]
