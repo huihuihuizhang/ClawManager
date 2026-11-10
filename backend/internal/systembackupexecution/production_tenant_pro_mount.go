@@ -33,7 +33,7 @@ func validTenantProNamespace(systemNamespace string, source b.InstanceIdentity) 
 
 func (m runningTenantProMount) valid() bool {
 	s := m.Source
-	return isRunningTenantPro(s) && s.ID > 0 && s.UserID > 0 && s.Generation > 0 && s.Namespace != "" && s.Pod != "" && cleanMountRoot(s.Workspace) &&
+	return isRunningTenantPro(s) && s.ID > 0 && s.UserID > 0 && s.ValidRuntimeGeneration() && s.Namespace != "" && s.Pod != "" && cleanMountRoot(s.Workspace) &&
 		m.NamespaceUID != "" && m.PodUID != "" && formalCandidateDigest(m.PodSpecSHA256) && m.ReplicaSetUID != "" && m.Deployment != "" && m.DeploymentUID != "" &&
 		m.Identity.Volume == "workspace" && m.Identity.Kind == "PersistentVolumeClaim" && m.Identity.Name != "" && m.Identity.UID != "" &&
 		m.Identity.PVName != "" && m.Identity.PVUID != "" && formalCandidateDigest(m.Identity.SHA256) && validTenantMountSubPath(m.SubPath)
