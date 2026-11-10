@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 
-	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/kube"
 	b "clawreef/internal/systembackup/publicadapter"
 	"clawreef/internal/systembackup/team"
@@ -18,7 +17,7 @@ import (
 )
 
 func (s *DeploymentService) freezeProductionSource(ctx context.Context, owner *PublicJobOwner, in d.Input, source b.SourceInventory, writers []b.FrozenWriter, saved *productionCaptureMetadata) (teamsOut *team.Inventory, metadataOut json.RawMessage, failure error) {
-	if bindRuntimeTestScope(s.Config, &source) != nil || source.RuntimeTestScope != nil && source.RuntimeTestScope.Version == domain.RunningOnlyRuntimeTestScopeVersion && (in.Backup == nil || in.Backup.TaskPurpose != "functional_test") {
+	if bindRuntimeTestScope(s.Config, &source) != nil || source.RuntimeTestScope.RunningOnly() && (in.Backup == nil || in.Backup.TaskPurpose != "functional_test") {
 		return nil, nil, d.ErrNotReady
 	}
 	stage := "source_inventory"

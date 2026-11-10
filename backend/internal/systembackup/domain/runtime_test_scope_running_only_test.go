@@ -33,3 +33,28 @@ func TestRunningOnlyRuntimeTestScopeRetainsCompleteSQL(t *testing.T) {
 		t.Fatal("extra stopped source accepted")
 	}
 }
+
+func TestRunningTenantRuntimeTestScope(t *testing.T) {
+	rows := []SourceInstance{
+		{ID: 1, UserID: 1, Generation: 1, Type: "openclaw", Mode: "lite", Backend: "gateway", Status: "running", OS: "linux"},
+		{ID: 2, UserID: 1, Generation: 1, Type: "openclaw", Mode: "pro", Backend: "desktop", Pod: "tenant-pod", Namespace: "tenant", Status: "running", OS: "linux"},
+		{ID: 3, UserID: 1, Generation: 1, Type: "hermes", Mode: "lite", Backend: "gateway", Status: "running", OS: "linux"},
+		{ID: 4, UserID: 1, Type: "deepseek-harness", Mode: "lite", Backend: "gateway", Status: "error", OS: "linux"},
+		{ID: 5, UserID: 1, Generation: 1, Type: "openclaw", Mode: "lite", Backend: "gateway", Status: "stopped", OS: "linux"},
+		{ID: 6, UserID: 1, Type: "opencode", Mode: "lite", Backend: "gateway", Status: "error", OS: "linux"},
+		{ID: 7, UserID: 1, Generation: 1, Type: "openclaw", Mode: "lite", Backend: "gateway", Status: "running", OS: "linux"},
+		{ID: 8, UserID: 1, Generation: 1, Type: "openclaw", Mode: "lite", Backend: "gateway", Status: "running", OS: "linux"},
+	}
+	scope, err := NewRunningOnlyRuntimeTestScope("installation", "server", "db", "namespace-uid", rows)
+	if err != nil || scope.Version != RunningTenantRuntimeTestScopeVersion || !scope.RunningOnly() {
+		t.Fatal("running tenant scope rejected", err)
+	}
+	active, err := scope.RuntimeInstances(rows)
+	if err != nil || len(active) != 5 || active[1] != rows[1] || !scope.IsDeferred(rows[3]) || !scope.IsDeferred(rows[4]) || !scope.IsDeferred(rows[5]) {
+		t.Fatal("wrong runtime roster", active, err)
+	}
+	rows[3].Pod = "unresolved-writer"
+	if _, err := NewRunningOnlyRuntimeTestScope("installation", "server", "db", "namespace-uid", rows); err == nil {
+		t.Fatal("an error instance with a Pod was deferred")
+	}
+}

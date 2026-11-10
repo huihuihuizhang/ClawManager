@@ -1,7 +1,6 @@
 package systembackupcontroller
 
 import (
-	"clawreef/internal/systembackup/domain"
 	"clawreef/internal/systembackup/flow"
 	b "clawreef/internal/systembackup/publicadapter"
 	d "clawreef/internal/systembackupdispatch"
@@ -67,7 +66,7 @@ func runtimeStateMatches(spec b.RuntimeWriterSpec, s flow.State, point string) b
 // loads custody only; it cannot rediscover sources or mint fresh reservations.
 func (o *SQLRuntimeControl) BuildWriters(ctx context.Context, in d.Input, inv b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
 	if o != nil {
-		if o.cfg.RuntimeTestScope != nil && o.cfg.RuntimeTestScope.Version == domain.RunningOnlyRuntimeTestScopeVersion && (in.Backup == nil || in.Backup.TaskPurpose != "functional_test") {
+		if o.cfg.RuntimeTestScope.RunningOnly() && (in.Backup == nil || in.Backup.TaskPurpose != "functional_test") {
 			return nil, ErrExecutionRecord
 		}
 		if !reflect.DeepEqual(inv.RuntimeTestScope, o.cfg.RuntimeTestScope) {

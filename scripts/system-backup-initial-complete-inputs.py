@@ -521,13 +521,18 @@ def running_only_scope_binding(m, stages, data, data_pin, query_only=False):
     by_id = {row["ID"]: row for row in rows}
     deferred_ids = {row["ID"] for row in deferred}
     active = [row for row in rows if row["ID"] not in deferred_ids]
-    stopped = [row for row in deferred if (row["Type"], row["Mode"], row["Status"], row["OS"]) == ("openclaw", "pro", "stopped", "linux")]
+    tenant = scope["Version"] == "explicit-running-tenant-runtime-test-scope.v3"
+    stopped_mode = "lite" if tenant else "pro"
+    stopped = [row for row in deferred if (row["Type"], row["Mode"], row["Status"], row["OS"]) == ("openclaw", stopped_mode, "stopped", "linux")]
     errors = [row for row in deferred if (row["Mode"], row["Status"], row["OS"]) == ("lite", "error", "linux")]
-    m.need(scope["Version"] == "explicit-running-only-runtime-test-scope.v2" and len(rows) == len(by_id) == 6 and
+    m.need(len(rows) == len(by_id) and (tenant or scope["Version"] == "explicit-running-only-runtime-test-scope.v2" and len(rows) == 6) and
            len(deferred) == len(deferred_ids) == 3 and len(stopped) == 1 and len(errors) == 2 and
            {row["Type"] for row in errors} == {"opencode", "deepseek-harness"} and
-           all(by_id.get(row["ID"]) == row for row in deferred) and len(active) == 3 and
-           all((row["Mode"], row["Status"], row["OS"]) == ("lite", "running", "linux") for row in active) and
+           all(by_id.get(row["ID"]) == row for row in deferred) and
+           (bool(active) and all(row["Backend"] == "gateway" and not row["Pod"] and not row["Namespace"] for row in deferred) if tenant else len(active) == 3) and
+           all((row["Status"], row["OS"]) == ("running", "linux") and
+               (row["Mode"] == "lite" or tenant and row["Mode"] == "pro" and row["Backend"] == "desktop" and row["Pod"] and row["Namespace"])
+               for row in active) and
            scope["OriginalInstancesSHA256"] == m.digest(m.encoded(rows)), "exact_original_running_only_scope_required")
     binding = {"version": "operator-original-runtime-test-scope.v2", "RuntimeTestScope": scope,
         "OriginalSourceCoordinates": data_pin, "OriginalInstancesSHA256": scope["OriginalInstancesSHA256"],

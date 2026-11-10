@@ -12,7 +12,7 @@ func (p *OriginalWriterMaintenance) checkSelectionRuntimeTestScope(s *domain.Run
 		return nil
 	}
 	t := p.operator.installer.plan.Target
-	if s.Version != domain.RunningOnlyRuntimeTestScopeVersion || s.InstallationID != t.InstallationID || s.ServerUUID != t.ServerUUID || s.Database != t.Database || s.NamespaceUID != t.NamespaceUID || s.Validate(p.instances) != nil {
+	if !s.RunningOnly() || s.InstallationID != t.InstallationID || s.ServerUUID != t.ServerUUID || s.Database != t.Database || s.NamespaceUID != t.NamespaceUID || s.Validate(p.instances) != nil {
 		return ErrInstall
 	}
 	return nil

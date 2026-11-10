@@ -14,6 +14,7 @@ var ErrRuntimeTestScope = errors.New("explicit runtime test scope missing, inval
 
 const RuntimeTestScopeVersion = "explicit-known-error-lite-runtime-test-scope.v1"
 const RunningOnlyRuntimeTestScopeVersion = "explicit-running-only-runtime-test-scope.v2"
+const RunningTenantRuntimeTestScopeVersion = "explicit-running-tenant-runtime-test-scope.v3"
 
 // DATA, not authority. The original administrator must bind these exact bytes
 // through the deployment core and existing signed source-writers registry/ref.
@@ -44,17 +45,29 @@ func NewKnownErrorLiteRuntimeTestScope(installation, server, database, namespace
 }
 
 func NewRunningOnlyRuntimeTestScope(installation, server, database, namespaceUID string, instances []SourceInstance) (*RuntimeTestScope, error) {
-	return newRuntimeTestScope(RunningOnlyRuntimeTestScopeVersion, installation, server, database, namespaceUID, instances)
+	s, err := newRuntimeTestScope(RunningOnlyRuntimeTestScopeVersion, installation, server, database, namespaceUID, instances)
+	if err == nil {
+		return s, nil
+	}
+	return newRuntimeTestScope(RunningTenantRuntimeTestScopeVersion, installation, server, database, namespaceUID, instances)
 }
 
-func stoppedOpenClawRuntimeTestRow(i SourceInstance) bool {
-	return i.Type == "openclaw" && i.Mode == "pro" && i.Status == "stopped" && i.OS == "linux" && i.Generation > 0
+func (s *RuntimeTestScope) RunningOnly() bool {
+	return s != nil && (s.Version == RunningOnlyRuntimeTestScopeVersion || s.Version == RunningTenantRuntimeTestScopeVersion)
+}
+
+func (s *RuntimeTestScope) stoppedRuntimeTestRow(i SourceInstance) bool {
+	if i.Type != "openclaw" || i.Status != "stopped" || i.OS != "linux" || i.Generation <= 0 {
+		return false
+	}
+	return s.Version == RunningOnlyRuntimeTestScopeVersion && i.Mode == "pro" ||
+		s.Version == RunningTenantRuntimeTestScopeVersion && i.Mode == "lite" && i.Backend == "gateway" && i.Pod == "" && i.Namespace == ""
 }
 
 func newRuntimeTestScope(version, installation, server, database, namespaceUID string, instances []SourceInstance) (*RuntimeTestScope, error) {
 	s := &RuntimeTestScope{Version: version, InstallationID: installation, ServerUUID: server, Database: database, NamespaceUID: namespaceUID, Deferred: []SourceInstance{}}
 	for _, i := range instances {
-		if version == RunningOnlyRuntimeTestScopeVersion && stoppedOpenClawRuntimeTestRow(i) {
+		if s.stoppedRuntimeTestRow(i) {
 			s.Deferred = append(s.Deferred, i)
 			continue
 		}
@@ -75,7 +88,7 @@ func newRuntimeTestScope(version, installation, server, database, namespaceUID s
 }
 
 func (s *RuntimeTestScope) ShapeValid() bool {
-	if s == nil || s.Version != RuntimeTestScopeVersion && s.Version != RunningOnlyRuntimeTestScopeVersion || s.InstallationID == "" || s.ServerUUID == "" || s.Database == "" || s.NamespaceUID == "" || len(s.OriginalInstancesSHA256) != 64 || (s.Version == RuntimeTestScopeVersion && len(s.Deferred) != 2) || (s.Version == RunningOnlyRuntimeTestScopeVersion && len(s.Deferred) != 3) {
+	if s == nil || s.Version != RuntimeTestScopeVersion && !s.RunningOnly() || s.InstallationID == "" || s.ServerUUID == "" || s.Database == "" || s.NamespaceUID == "" || len(s.OriginalInstancesSHA256) != 64 || (s.Version == RuntimeTestScopeVersion && len(s.Deferred) != 2) || (s.RunningOnly() && len(s.Deferred) != 3) {
 		return false
 	}
 	decoded, e := hex.DecodeString(s.OriginalInstancesSHA256)
@@ -88,11 +101,12 @@ func (s *RuntimeTestScope) ShapeValid() bool {
 		if i.ID <= 0 || i.UserID <= 0 || i.Generation < 0 || n > 0 && s.Deferred[n-1].ID >= i.ID {
 			return false
 		}
-		if s.Version == RunningOnlyRuntimeTestScopeVersion && stoppedOpenClawRuntimeTestRow(i) {
+		if s.stoppedRuntimeTestRow(i) {
 			stopped++
 			continue
 		}
-		if i.Mode != "lite" || i.Status != "error" || (i.Type != "opencode" && i.Type != "deepseek-harness") || kinds[i.Type] || s.Version == RunningOnlyRuntimeTestScopeVersion && i.OS != "linux" {
+		if i.Mode != "lite" || i.Status != "error" || (i.Type != "opencode" && i.Type != "deepseek-harness") || kinds[i.Type] || s.RunningOnly() && i.OS != "linux" ||
+			s.Version == RunningTenantRuntimeTestScopeVersion && (i.Backend != "gateway" || i.Pod != "" || i.Namespace != "") {
 			return false
 		}
 		kinds[i.Type] = true
@@ -119,11 +133,13 @@ func (s *RuntimeTestScope) Validate(instances []SourceInstance) error {
 		}
 		// No wildcard error rule. A new/changed error fails even if an upstream
 		// caller incorrectly kept the same signed scope object.
-		if i.Status == "error" || s.Version == RunningOnlyRuntimeTestScopeVersion && (i.Status != "running" || i.Mode != "lite" || i.OS != "linux" || i.Generation <= 0) {
+		tenantPro := s.Version == RunningTenantRuntimeTestScopeVersion && i.Mode == "pro" && i.Backend == "desktop" && i.Pod != "" && i.Namespace != ""
+		if i.Status == "error" || s.RunningOnly() && (i.Status != "running" || i.Mode != "lite" && !tenantPro || i.OS != "linux" || i.Generation <= 0) {
 			return ErrRuntimeTestScope
 		}
 	}
-	if found != len(s.Deferred) || s.Version == RunningOnlyRuntimeTestScopeVersion && len(instances) != 6 {
+	if found != len(s.Deferred) || s.Version == RunningOnlyRuntimeTestScopeVersion && len(instances) != 6 ||
+		s.Version == RunningTenantRuntimeTestScopeVersion && len(instances) <= found {
 		return ErrRuntimeTestScope
 	}
 	return nil

@@ -56,7 +56,8 @@ def coordinates(m, stages, query_only=False):
            "same_complete_original_source_coordinates_required")
     scope = result.get("RuntimeTestScope")
     if running_only:
-        m.need(scope is not None and scope["Version"] == "explicit-running-only-runtime-test-scope.v2" and
+        m.need(scope is not None and scope["Version"] in ("explicit-running-only-runtime-test-scope.v2",
+                   "explicit-running-tenant-runtime-test-scope.v3") and
                scope["InstallationID"] == target["InstallationID"] and scope["ServerUUID"] == target["ServerUUID"] and
                scope["Database"] == target["Database"] and scope["NamespaceUID"] == target["NamespaceUID"] and
                scope["OriginalInstancesSHA256"] == m.digest(m.encoded(result["Instances"])),

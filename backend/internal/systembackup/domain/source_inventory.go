@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"database/sql"
+
+	"clawreef/internal/systembackup/scope"
 )
 
 // SourceInstance is the credential-free discovery projection shared by the
@@ -28,6 +30,13 @@ func ReadSourceInstances(ctx context.Context, tx *sql.Tx) ([]SourceInstance, err
 		var i SourceInstance
 		if err := rows.Scan(&i.ID, &i.UserID, &i.Mode, &i.Type, &i.Backend, &i.Variant, &i.OS, &i.Status, &i.Generation, &i.Pod, &i.Namespace, &i.Workspace); err != nil {
 			return nil, err
+		}
+		// The UI also stores the runtime name as os_type. Use the existing
+		// Linux scope policy before projecting it to the backup platform.
+		if i.OS == i.Type {
+			if _, err := scope.PlanRuntime(scope.Runtime{Type: i.Type, Mode: i.Mode, Backend: i.Backend, Variant: i.Variant, OS: i.OS}); err == nil {
+				i.OS = "linux"
+			}
 		}
 		out = append(out, i)
 		if len(out) > 9998 {
