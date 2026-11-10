@@ -50,6 +50,7 @@ type OriginalInitialSourceCoordinates struct {
 	Participants                                                       []OriginalMaintenanceParticipant
 	RuntimeStartupImages                                               []OriginalRuntimeStartupImageInput
 	Volumes                                                            []originalPhysicalVolumePin
+	SharedRuntimeVolumes                                               []OriginalSharedRuntimeVolume `json:",omitempty"`
 	Census                                                             originalMaintenanceKubernetesCensus
 	Storage                                                            []OriginalInitialInstanceStorage         `json:",omitempty"`
 	StoppedProLayouts                                                  []OriginalStoppedProSelection            `json:",omitempty"`
@@ -156,7 +157,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 		Namespace: i.plan.Target.Namespace, NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: last.ApplicationScope,
 		WriterSelection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)},
 		Instances:       append([]domain.SourceInstance(nil), p.instances...), Deployments: last.Deployments, Participants: last.Participants,
-		RuntimeStartupImages: options.runtimeStartupInputs, Volumes: lastVolumes, Census: lastCensus}
+		RuntimeStartupImages: options.runtimeStartupInputs, Volumes: lastVolumes, SharedRuntimeVolumes: last.SharedRuntimeVolumes, Census: lastCensus}
 	coordinateRaw, err := canonical(coordinates)
 	if err != nil || len(coordinateRaw) > 8<<20 {
 		return zero, ErrInstall

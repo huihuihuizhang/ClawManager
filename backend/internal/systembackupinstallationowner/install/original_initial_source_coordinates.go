@@ -434,6 +434,8 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	physical := &PreparedOriginalWriterSet{owner: p}
 	sharedRoots := map[string][]string{}
 	var blockedShared []OriginalInitialSharedStorageDependency
+	var sharedVolumes []OriginalSharedRuntimeVolume
+	var sharedPins []originalPhysicalVolumePin
 	for _, runtime := range shared.Pods {
 		for n := range pods {
 			pod := &pods[n]
@@ -443,7 +445,10 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 			if runtime.UID != "" && runtime.UID != string(pod.UID) {
 				return zero, ErrInstall
 			}
-			roots, e := physical.actualPodPersistentRoots(ctx, pod)
+			// Longhorn CSI volumes have no host root, so the whole-node native
+			// scope still cannot cover them. Their actual identity is recorded
+			// here for review; the stop path keeps requiring execution evidence.
+			roots, longhorn, e := classifyPodPersistentVolumes(ctx, i.kube, pod, &sharedPins)
 			if e != nil {
 				var unsupported OriginalWriterSourceFailure
 				if !errors.As(e, &unsupported) || unsupported.Dependency != "persistent_volume_native_fence_required" {
@@ -454,9 +459,31 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 				})
 				continue
 			}
-			sharedRoots[pod.Spec.NodeName] = append(sharedRoots[pod.Spec.NodeName], roots...)
+			if len(longhorn) > 0 {
+				records, e := physical.originalSharedRuntimeVolumeRecords(ctx, pod, longhorn)
+				if e != nil {
+					return zero, ErrInstall
+				}
+				sharedVolumes = append(sharedVolumes, records...)
+			}
+			if len(roots) == 0 && len(longhorn) == 0 {
+				blockedShared = append(blockedShared, OriginalInitialSharedStorageDependency{
+					Namespace: pod.Namespace, Pod: pod.Name, PodUID: string(pod.UID), Reason: "actual_shared_data_volume_required",
+				})
+				continue
+			}
+			if len(roots) > 0 {
+				sharedRoots[pod.Spec.NodeName] = append(sharedRoots[pod.Spec.NodeName], roots...)
+			}
 		}
 	}
+	physical.volumes = append(physical.volumes, sharedPins...)
+	sort.Slice(sharedVolumes, func(i, j int) bool {
+		if sharedVolumes[i].PodUID != sharedVolumes[j].PodUID {
+			return sharedVolumes[i].PodUID < sharedVolumes[j].PodUID
+		}
+		return sharedVolumes[i].VolumeName < sharedVolumes[j].VolumeName
+	})
 	sharedNodes := []c.RuntimeSharedNodeSources{}
 	if len(blockedShared) == 0 {
 		for node, roots := range sharedRoots {
@@ -486,7 +513,7 @@ func (i *Installer) ProduceOriginalInitialSourceCoordinates(ctx context.Context,
 	physical.volumes = append(physical.volumes, volumes...)
 	result := OriginalInitialSourceCoordinates{Version: "original-initial-source-coordinates.v1", InstallationID: i.plan.Target.InstallationID, Namespace: i.plan.Target.Namespace,
 		NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: applicationScope, ApplicationScopes: scopes, Instances: append([]domain.SourceInstance(nil), p.instances...),
-		Volumes: volumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes,
+		Volumes: volumes, SharedRuntimeVolumes: sharedVolumes, Census: first, Storage: storage, StoppedProLayouts: layouts, NodeUIDs: nodes, SharedRuntime: shared, SharedNodes: sharedNodes,
 		BlockedSharedStorage: blockedShared, TenantProSources: tenantSources, Layouts: allLayouts, Dependencies: dependencies, RuntimeTestScope: testScope,
 		TenantProAccess: tenantAccess}
 	stage = "encode_coordinates"

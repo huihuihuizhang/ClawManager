@@ -202,7 +202,7 @@ func (s *PreparedOriginalWriterSet) prepareSharedRuntimeCallbacks(ctx context.Co
 		return ErrInstall
 	}
 	sort.Slice(s.sharedRuntimes, func(i, j int) bool { return s.sharedRuntimes[i].ID() < s.sharedRuntimes[j].ID() })
-	if s.validateOriginalSharedAgentSelection() != nil {
+	if s.validateOriginalSharedAgentSelection(ctx) != nil {
 		return ErrInstall
 	}
 	return s.recheckSharedRuntimeCallbacks(ctx)
@@ -219,6 +219,9 @@ func (s *PreparedOriginalWriterSet) recheckSharedRuntimeCallbacks(ctx context.Co
 	for _, r := range s.sharedRuntimes {
 		pod, err := s.owner.operator.installer.kube.CoreV1().Pods(r.pod.Namespace).Get(ctx, r.pod.Name, metav1.GetOptions{})
 		if err != nil || pod.UID != r.pod.UID || originalObjectSHA(pod.Spec) != originalObjectSHA(r.pod.Spec) || !reflect.DeepEqual(pod.OwnerReferences, r.pod.OwnerReferences) || !reflect.DeepEqual(pod.Status.ContainerStatuses, r.pod.Status.ContainerStatuses) || pod.DeletionTimestamp != nil || pod.Status.Phase != corev1.PodRunning {
+			return ErrInstall
+		}
+		if s.checkOriginalSharedRuntimeVolumes(ctx, pod) != nil {
 			return ErrInstall
 		}
 	}

@@ -24,6 +24,7 @@ type OriginalWriterSetSelection struct {
 	RuntimeTestScope                                         *domain.RuntimeTestScope              `json:",omitempty"`
 	SharedRuntimeEndpoints                                   map[string]q.ProofEndpoint            `json:",omitempty"`
 	SharedRuntimeAgents                                      []OriginalSharedRuntimeAgentSelection `json:",omitempty"`
+	SharedRuntimeVolumes                                     []OriginalSharedRuntimeVolume         `json:",omitempty"`
 	SharedRuntimeProtocol                                    string                                `json:",omitempty"`
 	RuntimeStartupImages                                     []OriginalRuntimeStartupImageInput    `json:",omitempty"`
 	MinIOReadKeepers                                         []OriginalMinIOReadKeeperSelection    `json:",omitempty"`
