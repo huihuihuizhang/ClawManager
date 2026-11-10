@@ -60,7 +60,7 @@ func originalMountRunningInventory(instances []b.InstanceIdentity, scopes ...*do
 		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
-		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || seen[instance.ID] || !isCurrentStoppedPro(instance) && !isRunningTenantPro(instance) && (instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running") {
+		if instance.ID <= 0 || instance.UserID <= 0 || !instance.ValidRuntimeGeneration() || seen[instance.ID] || !isCurrentStoppedPro(instance) && !isRunningTenantPro(instance) && (instance.Mode != "lite" || instance.OS != "linux" || instance.Status != "running") {
 			return mountInputError("unsupported_or_ambiguous_instance", instance.ID, "")
 		}
 		seen[instance.ID] = true

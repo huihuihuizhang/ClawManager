@@ -167,7 +167,7 @@ func (x *sourceSQLObservation) observe(ctx context.Context) (*observedSourceSQL,
 		if deferredRuntimeTestInstance(s.Config, instance) {
 			continue
 		}
-		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || (index > 0 && instances[index-1].ID >= instance.ID) || (instance.Status != "running" && instance.Status != "stopped") {
+		if instance.ID <= 0 || instance.UserID <= 0 || !instance.ValidRuntimeGeneration() || (index > 0 && instances[index-1].ID >= instance.ID) || (instance.Status != "running" && instance.Status != "stopped") {
 			return nil, sourceObservationDetailRejected(sourceSQLInstancesShape)
 		}
 	}

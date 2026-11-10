@@ -14,6 +14,14 @@ type SourceInstance struct {
 	Mode, Type, Backend, Variant, OS, Status, Pod, Namespace, Workspace string
 }
 
+// Desktop Pro rows can predate gateway generation tracking. Their original
+// generation is preserved and the tenant Deployment/Pod UID chain supplies
+// the writer identity. Gateway and stopped writers still require a generation.
+func (i SourceInstance) ValidRuntimeGeneration() bool {
+	return i.Generation > 0 || i.Generation == 0 && i.Mode == "pro" && i.Backend == "desktop" &&
+		i.Status == "running" && i.OS == "linux" && i.Pod != "" && i.Namespace != ""
+}
+
 // ReadSourceInstances performs only a bounded SELECT in the caller's existing
 // read-only snapshot. It cannot create/claim tasks or commit the transaction.
 func ReadSourceInstances(ctx context.Context, tx *sql.Tx) ([]SourceInstance, error) {

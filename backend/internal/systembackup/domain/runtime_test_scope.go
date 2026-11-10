@@ -134,7 +134,7 @@ func (s *RuntimeTestScope) Validate(instances []SourceInstance) error {
 		// No wildcard error rule. A new/changed error fails even if an upstream
 		// caller incorrectly kept the same signed scope object.
 		tenantPro := s.Version == RunningTenantRuntimeTestScopeVersion && i.Mode == "pro" && i.Backend == "desktop" && i.Pod != "" && i.Namespace != ""
-		if i.Status == "error" || s.RunningOnly() && (i.Status != "running" || i.Mode != "lite" && !tenantPro || i.OS != "linux" || i.Generation <= 0) {
+		if i.Status == "error" || s.RunningOnly() && (i.Status != "running" || i.Mode != "lite" && !tenantPro || i.OS != "linux" || !i.ValidRuntimeGeneration()) {
 			return ErrRuntimeTestScope
 		}
 	}

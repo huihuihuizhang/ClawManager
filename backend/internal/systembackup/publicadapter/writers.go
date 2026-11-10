@@ -178,7 +178,7 @@ func validParticipant(p ParticipantSpec) bool {
 func validateWriterSpec(s RuntimeWriterSpec, deps RuntimeWriterDependencies) error {
 	runtime := scope.Runtime{Type: s.Source.Type, Mode: s.Source.Mode, Backend: s.Source.Backend, Variant: s.Source.Variant, OS: s.Source.OS}
 	plan, err := scope.PlanRuntime(runtime)
-	if err != nil || s.Source.UserID <= 0 || s.Source.Generation <= 0 {
+	if err != nil || s.Source.UserID <= 0 || !s.Source.ValidRuntimeGeneration() || s.Source.Generation == 0 && s.Kind != "deployment" {
 		return d.ErrNotReady
 	}
 	c := deps.Callbacks

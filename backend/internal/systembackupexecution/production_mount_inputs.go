@@ -317,7 +317,7 @@ func persistentMountsForInstances(scope *productionPersistentMountScope, instanc
 			out[instance.ID] = []productionPersistentMountBinding{}
 			continue
 		}
-		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || owners[instance.ID].ID != 0 {
+		if instance.ID <= 0 || instance.UserID <= 0 || !instance.ValidRuntimeGeneration() || owners[instance.ID].ID != 0 {
 			return nil, mountInputError("invalid_original_inventory", instance.ID, "")
 		}
 		if instance.Status == "stopped" {

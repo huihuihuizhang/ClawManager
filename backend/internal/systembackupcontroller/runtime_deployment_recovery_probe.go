@@ -16,7 +16,7 @@ func (o *SQLRuntimeControl) checkJournaledDeployment(ctx context.Context, a d.Au
 	}
 	if !recovery || o.cfg.RecoveryDeploymentCheck == nil || a.TaskPublicID == "" || a.AttemptNo == 0 ||
 		spec.Kind != "deployment" || spec.Name == "" || spec.UID == "" || spec.Source.Namespace == "" || spec.Source.Namespace == o.cfg.Namespace ||
-		spec.Source.ID <= 0 || spec.Source.UserID <= 0 || spec.Source.Generation <= 0 || spec.Source.Mode != "pro" || spec.Source.OS != "linux" || spec.Source.Status != "running" ||
+		spec.Source.ID <= 0 || spec.Source.UserID <= 0 || !spec.Source.ValidRuntimeGeneration() || spec.Source.Mode != "pro" || spec.Source.OS != "linux" || spec.Source.Status != "running" ||
 		spec.RestartRef != a.TaskPublicID+"/"+strconv.FormatUint(a.AttemptNo, 10)+"/"+strconv.Itoa(spec.Source.ID) {
 		return ErrExecutionRecord
 	}

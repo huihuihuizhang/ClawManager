@@ -135,7 +135,7 @@ func (x *bootstrapSourceRegistryReader) readSourceSQL() (*bootstrapSourceSQLFact
 		if instance.Status == "stopped" && !isCurrentStoppedPro(instance) {
 			return nil, mountInputError("stopped_original_snapshot_and_witness_required", instance.ID, "")
 		}
-		if instance.ID <= 0 || instance.UserID <= 0 || instance.Generation <= 0 || !users[instance.UserID] || owners[instance.ID] != 0 || n > 0 && out.inventory.Instances[n-1].ID >= instance.ID || instance.Status != "running" && !isCurrentStoppedPro(instance) {
+		if instance.ID <= 0 || instance.UserID <= 0 || !instance.ValidRuntimeGeneration() || !users[instance.UserID] || owners[instance.ID] != 0 || n > 0 && out.inventory.Instances[n-1].ID >= instance.ID || instance.Status != "running" && !isCurrentStoppedPro(instance) {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
 		if !supported[b.AgentKind{Type: instance.Type, Mode: instance.Mode, Variant: instance.Variant, OS: instance.OS}] || instance.Namespace != x.config.Namespace && !((instance.Mode == "lite" || isCurrentStoppedPro(instance)) && instance.Namespace == "") && !(isRunningTenantPro(instance) && validTenantProNamespace(x.config.Namespace, instance)) {
