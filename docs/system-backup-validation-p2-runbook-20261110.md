@@ -91,6 +91,8 @@ Redis owner 错误输出新增 `original-redis-native-material-failure.v1` 的�
 
 `8bbf4c61` 的 native 入口/身份拒绝/错误脱敏定向用例及 Linux 构建通过，现场已越过 `original_redis_pod` 和只读原生检查，第二次在 `capture_policy` 拒绝。原因是旧脚本模板把 `recovery.Reference` 写为大写字段，而原 Go 类型显式使用 `id/version/sha256`；严格 canonical roundtrip 因此拒绝。修复仅改接续脚本输入，不放宽 `decodeExact`，不重编或替换已经通过的 native owner：保留 `redis-source.policy.json`，生成同值同作用域的 `redis-source.policy.wire-v1.json`。只有原 `capture_policy` 拒绝回执、同 native 二进制摘要和空 native 输出目录同时匹配时，才为原 records 建立 binding-policy successor 后继续 prepare。执行修正脚本时 `--tool-directory` 继续指向 `/root/sbk/p2-redis-8bbf4c61`。
 
+策略 wire 修复后，现场 `prepare` 和 `apply` 已被原 owner 确认；rollout 因单副本 RWO 的默认 RollingUpdate 卡住，尚未 finalize：旧 Pod `9101cf2d-f1bd-4536-aff1-d85b1ba44269` 在 node1、准备后 readiness=false；新 Pod `32e2a8a4-aa74-4857-a9d2-fdaafb928cee` 在 k8s-master，Pending/FailedAttachVolume。`settle-p2-redis-rwo-rollout.py` 为这份已发送的 intent 做有限补偿：验证 prepare/apply 原记录、Deployment UID/完整 desired spec、原 Bound RWO PVC/PV UID；用原 CAS/journal helper 临时切 Recreate，让控制器正常终止旧 Pod 并交接原卷。新 Pod ready 后恢复原 desired strategy，完整规格重新匹配原 intent，再由原 native query/finalize 结束。原 intent、PVC、数据路径、账号和 ACL 材料不改写；任何外来规格/卷身份变化或未知 CAS 都拒绝并保留恢复义务。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
