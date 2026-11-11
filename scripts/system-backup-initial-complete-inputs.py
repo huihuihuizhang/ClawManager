@@ -329,7 +329,7 @@ def runtime_policies(m, stages, data):
             m.need(len(layouts) == 1, "one_actual_Pro_source_layout_required")
             layout = layouts[0]
             if layout["CurrentPod"]:
-                pod = stages.get("pod", layout["CurrentPod"])
+                pod = m.decode(stages.op.k("-n", layout["CurrentNamespace"], "get", "pod", layout["CurrentPod"], "-o", "json"))
                 m.need(pod["metadata"]["uid"] == layout["CurrentPodUID"] and pod["metadata"]["namespace"] == layout["CurrentNamespace"], "same_actual_Pro_source_Pod_required")
                 containers = pod["spec"]["containers"]
             else:
@@ -339,8 +339,23 @@ def runtime_policies(m, stages, data):
                 pin = [x for x in data["Census"]["Deployments"] if x["Name"] == deployment["metadata"]["name"]]
                 m.need(len(pin) == 1 and pin[0]["UID"] == deployment["metadata"]["uid"] and deployment["spec"].get("replicas", 1) == 0, "same_actual_current_stopped_Pro_controller_required")
                 containers = deployment["spec"]["template"]["spec"]["containers"]
-            m.need(len(containers) == 1 and re.fullmatch(r"[^\s@]+@sha256:[a-f0-9]{64}", containers[0]["image"]), "actual_Pro_image_manifest_producer_required_no_shared_image_substitution")
+            m.need(len(containers) == 1, "one_actual_Pro_image_required")
             image = containers[0]["image"]
+            if not re.fullmatch(r"[^\s@]+@sha256:[a-f0-9]{64}", image) and layout["CurrentPod"]:
+                # Preserve the original tagged Pod spec. Select only its exact
+                # running CRI imageID, never today's registry tag resolution or
+                # the Lite image. Native authors still recheck original UIDs,
+                # full Pod spec and source metadata at the execution boundary.
+                states = [s for s in pod.get("status", {}).get("containerStatuses", []) if s["name"] == containers[0]["name"]]
+                m.need(len(states) == 1 and states[0].get("ready") and states[0].get("containerID") and
+                       "running" in states[0].get("state", {}), "actual_running_Pro_CRI_image_required")
+                loaded = states[0].get("imageID", "").removeprefix("docker-pullable://")
+                repository = image.rsplit("/", 1)
+                repository[-1] = repository[-1].split(":", 1)[0]
+                m.need(re.fullmatch(r"[^\s@]+@sha256:[a-f0-9]{64}", loaded) and
+                       loaded.split("@", 1)[0] == "/".join(repository), "actual_Pro_image_repository_mismatch")
+                image = loaded
+            m.need(re.fullmatch(r"[^\s@]+@sha256:[a-f0-9]{64}", image), "actual_Pro_image_manifest_producer_required_no_shared_image_substitution")
         # The actual original owner deliberately selects the already published,
         # immutable and startup-authenticated release. Native readers must still
         # match this explicit SQL descriptor and actual loaded source image.
@@ -431,14 +446,29 @@ def team_writer_images(m, stages, app, namespace):
         "ConfigDigest": image["config_digest"], "BuildCommit": image["commit"]}]}
 
 
-def material_template(m, stages, assembly, core, directory, host, app, data, redis, minio, source_api, source_public, sql_operation):
+def material_template(m, stages, assembly, core, directory, host, app, data, redis, minio, source_api, source_public, sql_operation, selected_data=None):
     policies, image_references = runtime_policies(m, stages, data)
-    bucket, prefix = object_scope(m, stages, assembly, app)
+    if selected_data is None:
+        bucket, prefix = object_scope(m, stages, assembly, app)
+        actors = {part: actor(m, stages, part) for part in ("deployment_resources", "secret_bundle")}
+        business_images = team_writer_images(m, stages, app, data["Namespace"])
+    else:
+        # Recorded, pinned producer DATA only. The later original native owner
+        # still authenticates the complete live source; no cached API response
+        # is presented as a new read, observed fact or successful native call.
+        effective = selected_data["EffectiveAppConfig"]
+        m.need(effective["Version"] == "original-application-config-coordinates.v1" and
+               effective["RuntimeQualified"] is False and effective["BackupReady"] is False,
+               "actual_original_effective_config_DATA_required")
+        bucket, prefix = effective["ObjectBucket"], effective["ObjectPrefix"].strip("/")
+        m.need(re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", bucket) and prefix and
+               str(PurePosixPath(prefix)) == prefix and ".." not in PurePosixPath(prefix).parts,
+               "finite_original_object_scope_required")
+        actors, business_images = selected_data["ResourceActors"], selected_data["TeamWriterImages"]
     objects = {"GrantFile": str(directory / "objects-source.grant.json"), "GrantSHA256": "", "Issuer": source_public,
         **minio["MaterialsObjectsData"], "ObjectPrefixes": [{"Bucket": bucket, "Prefix": prefix + "/"}]}
     redis_mount = dict(redis["source_mount"]); redis_mount["GrantFile"] = str(directory / "redis-source.grant.json")
     api = source_api["connection"]
-    actors = {part: actor(m, stages, part) for part in ("deployment_resources", "secret_bundle")}
     m.need(len({x["UID"] for x in actors.values()} | {api["Account"]}) == 3, "independent_actual_original_source_actors_required")
     team_units = ["team.pending_deletions", "team.event_projection", "team.maintenance_sweep", "northbound.operation", "northbound.lifecycle_action", "team.workspace_http"]
     discovery = {"GrantFile": str(directory / "source-metadata.grant.json"), "GrantSHA256": "", "Issuer": source_public,
@@ -447,7 +477,7 @@ def material_template(m, stages, assembly, core, directory, host, app, data, red
         "SourceAPITokenSHA256": api["Credential"]["SHA256"], "SourceAPIServiceAccount": source_api["scope"]["ServiceAccount"], "SourceAPIServiceAccountUID": api["Account"],
         "Redis": redis["capture_policy"], "RuntimePolicies": policies, "RuntimeImageReferences": image_references, "ResourceActors": actors,
         "TeamPlatformUnits": {"deployment/" + data["Namespace"] + "/" + app["metadata"]["name"]: team_units},
-        "TeamWriterImages": team_writer_images(m, stages, app, data["Namespace"])}
+        "TeamWriterImages": business_images}
     operations = {}
     names = ("capture-database", "capture-workspace", "capture-source-redis", "capture-team-objects", "capture-skill-objects", "capture-deployment-resources", "capture-secret-bundle")
     for name in names:

@@ -186,6 +186,15 @@ def longhorn_successor(previous_pin, receipt_pin, host_definition_pin, observer_
             'HostDefinition': definition, 'FieldVerified': False, 'BackupReady': False}
 
 
+def base_observer_definition(original_pin,definition_pin,receipt_pin):
+    original=obj(original_pin);obj(definition_pin);receipt=obj(receipt_pin)
+    need(original['Version']=='original-observer-host-deployment.v1' and
+         original.get('LonghornVolumes',{'File':'','SHA256':''})=={'File':'','SHA256':''} and
+         not original.get('LonghornSourceRegistry'),'only original pre-hold host definition can load the new base PKI')
+    for key in ['CA','ClientCertificate','ClientKey']:read(receipt[key])
+    return dict(original,PKIDefinition=definition_pin,PKIReceipt=receipt_pin)
+
+
 def audit_snapshot(raw):
     need(sha(raw) == SNAPSHOT_SHA, 'approved offline snapshot bytes changed')
     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as archive:
@@ -205,12 +214,16 @@ def freeze(snapshot, directory):
         'InstallationNamespace': NS, 'TenantNamespace': TENANT, 'Controller': CONTROLLER, 'ControllerUID': CONTROLLER_UID,
         'Connections': PURPOSES, 'RetainedProducers': KNOWN,
         'RemotePrivateInputs': files['capture-index.json']['remote_private_inputs'],
-        'Order': ['actual-identity-and-token-review', 'verify-or-install-existing-vault-owner', 'renew-observer-create-only',
+        'Order': ['actual-identity-and-token-review', 'exact-additive-provider-read-access', 'verify-or-install-existing-vault-owner', 'renew-observer-create-only',
+                  'native-base-host-materials-and-Node-PKI-loading',
                   'assemble-complete-initial-source-data', 'native-author-initial-source-inputs', 'native-prepare-mount-materials-AuthorLonghornHold',
                   'select-successor-Core-template-source-and-hold-together', 'native-source-facts-and-signing',
                   'native-host-materials-with-successor-and-new-PKI', 'install-Node-bundles-and-check-mTLS',
                   'native-disabled-config-and-controller-consumption', 'field-admission-and-whole-backup'],
-        'ObserverRenewalRequired': True,
+        'ObserverRenewalRequired': True, 'CompleteExecutionReady': False,
+        'MissingRealExecutionInputs': ['qualified-worker-release-selection', 'renewed-private-PKI-and-loaded-Node-identities',
+            'actual-C1-native-capture-consumption-functional-and-evidence-outputs',
+            'actual-disabled-registration-enable-and-normal-handover-outputs', 'this-installation-publication-owner-context'],
         'Vault': {'Repository': 'clawmanager-backup-vault', 'ObservedTags': files['registry-clawmanager-backup-vault-tags.json'], 'InstalledOrUsableVerified': False},
         'FieldVerified': False, 'ControllerEnabled': False, 'BackupReady': False})
 
@@ -257,7 +270,10 @@ def main():
     c = sub.add_parser('controller-waiting-patch')
     c.add_argument('--deployment-file',required=True); c.add_argument('--deployment-sha256',required=True)
     c.add_argument('--binary-sha256',required=True)
-    for command in [f, a, h, c]: command.add_argument('--output-directory', type=Path, required=True)
+    b=sub.add_parser('base-observer-definition')
+    for name in ['host-definition','observer-definition','observer-receipt']:
+        b.add_argument('--'+name+'-file',required=True);b.add_argument('--'+name+'-sha256',required=True)
+    for command in [f, a, h, c, b]: command.add_argument('--output-directory', type=Path, required=True)
     args = p.parse_args()
     os.umask(0o077)
     directory = args.output_directory
@@ -271,6 +287,9 @@ def main():
     elif args.action == 'longhorn-handoff':
         pins = [{'File': getattr(args, k+'_file'), 'SHA256': getattr(args, k+'_sha256')} for k in ['previous_selection','mount_receipt','host_definition','observer_definition','observer_receipt']]
         result = retain(directory / 'longhorn-successor-handoff.json', longhorn_successor(*pins))
+    elif args.action=='base-observer-definition':
+        pins=[{'File':getattr(args,k+'_file'),'SHA256':getattr(args,k+'_sha256')} for k in ['host_definition','observer_definition','observer_receipt']]
+        result=retain(directory/'base-observer-host.definition.json',base_observer_definition(*pins))
     else:
         live=obj({'File':args.deployment_file,'SHA256':args.deployment_sha256})
         patch=waiting_controller_patch(live,{'File':'/run/system-backup/bin/system-backup-v2-controller','SHA256':args.binary_sha256})

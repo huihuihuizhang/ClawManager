@@ -1,0 +1,155 @@
+# 本次安装最后一轮接续命令与依赖
+
+本文件是离线核对结果，不是现场已完成记录。本轮没有连接远测，也不要求现在执行下面的现场命令。所有 `*_F / *_H` 都必须从指定的真实回执或原始文件 pin 取得；它们不是允许手写签名、配置或“通过”状态的占位符。未知发送只读回原操作，不能重新 issue/apply。
+
+## 1. ConfigurationData 的生成入口已分离
+
+真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
+
+本次入口是 `prepare-p2-configuration-data.py`：
+
+1. `--prepare-index` 从保留的真实产物建立 `ready-producers.json`，不现场手拼 Core 或捕获模板；新签发/刷新产物必须显式传入，不找“最新目录”。
+2. 编译模式复用既有 `source_core`、`material_template`、`runtime_policies` 和 typed provider topology，生成 `configuration-data.json` 与 `assembly-inputs.json`。不调用 provider、Redis 或原生作者。记录内 API 对象仅表示采集时数据，不能冒充新 API 读回。
+3. `assemble-p2-installation-candidate.py assemble` 校验五连接、真实账户、密钥用途与窗口，输出 `initial-source-inputs.json`。
+4. `continue-p2-native-candidate.py --stage initial-source --execute-native` 才调用实际 Go 作者；退出 0 且真实回执为 `original-initial-source-inputs-authored.v1`、四个原始输出 pin 读回匹配，才完成此阶段。
+
+依赖没有环：索引/编译均不消费初始作者的输出。原生作者只在最后一步发送一次。输出目录必须与定义内 `profile_file`/`capture_modules.path` 对应；部分输出不改写，不换目录绕过未知原生发送。
+
+### 输入来源
+
+| 输入 | 真实来源/取得方式 | 缺失或过期时 |
+|---|---|---|
+| Plan / Enrollment / IssuerPublic | P1 `fresh-backup-enrollment-r2/native`，索引固定读取 | 停止，不重做引导 |
+| SQLMaterials / SQLOperation | `fresh-sql-prepare.faa4osWr/sql-operation` 的原始文件 | 查原 SQL owner journal；不从 DSN 猜 User@Host |
+| Coordinates / StartupInputs | 已通过的 `p2-materials-1dd1ae71.lVSEBfl2` | 源范围变化才用实际 `author-initial-source-coordinates --running-only-runtime-test 1,2,3,7,8:4,5,6` 生成新回执，并用 `--coordinates-receipt-file/sha256` 显式接续 |
+| WriterSelection | 原 Redis native finalize 的 writer selection | 有真实 Vault 等后继时用 `--writer-receipt-file/sha256` 选择该回执的 WriterSelection；不改旧文件 |
+| MinIO / Redis fragments | 已通过的两个连接产物，代码内固定原 pin | 原操作 query/finalize；禁止重新 apply |
+| SourceAPI / RuntimeIssuers | 已通过产物，允许明确选择真实刷新输出 | token 到期必须原 TokenRequest/身份核验；issuer 用原 owner query/prepare，不用 enrollment key 代替 purpose key |
+| Raw Kubernetes index | 既有 collector `export/capture-index.json` 对应的 `remote_private_inputs` | 使用远侧完整私有记录；脱敏包作为运行输入会被拒绝。actor/Pod/卷变化后采集新的只读记录，明确选择新 index |
+| WorkerDefinition | P1 `fresh-backup-bootstrap/worker-sa.definition.json` | 真实 SA UID 读回不符即停止 |
+| EffectiveAppConfig | MinIO continuation 的 `effective-app-config.json`，由真实 App CLI 导出 | 配置发生变化时仅重新读取 `/usr/local/bin/clawreef-server --system-backup-source-config-data`，各 App Pod 结果须一致；不重跑 cutover |
+| MinIOTLSReceipt | continuation 的 `minio.latest.receipt.json`，实际 `actual_tls_verified` 结果 | 准备态不能代替读回；必要时原 query，不能 apply |
+| ExecutionProfile | 可消费既有真实 profile DATA；没有时按实际 TLS receipt/完整记录生成已有 same-cluster-copy 功能测试配置 | 保留七类风险，`attestation_missing` 不消除；不执行或声称隔离还原/灾备认证 |
+| RelayPKI / ObserverReceipt | 实际 owner 签发到最终 runtime mirror 的新回执 | 旧 observer 已过期，必须真续签。签名 manifest 不搬路径、不改字节 |
+| AppImage / WorkerImage | 下述 OCI 原始 manifest/config DATA | App 必须对应实际部署的固定 digest；worker 必须来自已选定的实际合格发布，不从品牌或当前 App 猜。缺合格 worker 发布输入即停止 |
+
+运行中的 Pro 保留原 Pod spec 的 `:latest`。仅取该原 Pod UID 对应的就绪运行容器 `imageID`，要求同仓库、完整 `@sha256`；不解析当前 tag，不 rollout，不替换成 Lite。停机 Pro 没有运行 imageID 时仍要求既有不可变发布来源。
+
+### DATA 编译命令
+
+以下变量取自真实 producer 输出，`TOOL` 是本次冻结包，`DATA` 是新私有 DATA 目录，`MIRROR` 是实际 `/run/system-backup/runtime/...` 镜像目录；PKI 的真实签发输出必须已位于该 mirror 内。
+
+```bash
+python3 -B "$TOOL/prepare-p2-configuration-data.py" --prepare-index \
+  --raw-index-file "$RAW_INDEX_F" --raw-index-sha256 "$RAW_INDEX_H" \
+  --relay-receipt-file "$RELAY_F" --relay-receipt-sha256 "$RELAY_H" \
+  --observer-receipt-file "$OBSERVER_F" --observer-receipt-sha256 "$OBSERVER_H" \
+  --app-image-data-file "$APP_IMAGE_F" --app-image-data-sha256 "$APP_IMAGE_H" \
+  --worker-image-data-file "$WORKER_IMAGE_F" --worker-image-data-sha256 "$WORKER_IMAGE_H" \
+  --output-directory "$DATA"
+# 如刷新过 API、issuer、coordinates、writer，追加对应的显式 *-file / *-sha256。
+python3 -B "$TOOL/prepare-p2-configuration-data.py" \
+  --inputs-file "$DATA/ready-producers.json" \
+  --inputs-sha256 "$(sha256sum "$DATA/ready-producers.json" | cut -d ' ' -f 1)" \
+  --output-directory "$DATA" --runtime-mirror "$MIRROR"
+python3 -B "$TOOL/assemble-p2-installation-candidate.py" assemble \
+  --inputs-file "$DATA/assembly-inputs.json" \
+  --inputs-sha256 "$(sha256sum "$DATA/assembly-inputs.json" | cut -d ' ' -f 1)" \
+  --output-directory "$DATA"
+```
+
+索引接续沿用第一次 NotBefore/Until；已过期即保留并停止，不覆盖窗口。生成的 `NativeOutputDirectory` 是初始作者的输出目录，应在首次 native 发送前创建空的 0700 目录；不能把 DATA 文件也放进这个要求为空的 native 目录。
+
+OCI DATA 的准确形状是 `{Reference,Manifest:{File,SHA256},Config:{File,SHA256}}`。manifest/config 必须是 registry 实际原始字节；Reference 的 manifest digest、config descriptor 的 digest/size、linux/amd64 和真实 `org.opencontainers.image.revision` 全部校验。读取命令为固定 registry 的 `/v2/<repository>/manifests/sha256:<digest>`，再读取该 manifest 内 `/blobs/<config.digest>`；用既有 `system-backup-operator-deployment.registry_image(reference, actual_build_image, actual_build_commit)` 可做包含全部层的原发布资格核验。不能只根据 tag 输出上述对象。没有原发布期望值时先向原发布 owner 取得 build receipt，不把当前观察当作合格发布。
+
+元数据读取已有本次实际入口，不需要手写上述 descriptor：
+
+```bash
+python3 -B "$TOOL/prepare-p2-configuration-data.py" --read-image-data \
+  --image-reference "$APP_APPROVED_IMMUTABLE_REF" --output-directory "$APP_IMAGE_DATA"
+python3 -B "$TOOL/prepare-p2-configuration-data.py" --read-image-data \
+  --image-reference "$WORKER_APPROVED_IMMUTABLE_REF" --output-directory "$WORKER_IMAGE_DATA"
+```
+
+输出 `image-data.json` 的原始 pin 供索引使用；`NativeReleaseQualified=false` 是刻意保留的边界。这两次只读元数据请求不会验证 ELF/全部层，不代替原发布资格或实际 worker 启动验证；没有已选合格 worker ref 时不能用当前 App ref 自动填充。
+
+## 2. 精确权限、证书加载和 Longhorn 后继
+
+`prepare-p2-metadata-read-access.py` 从 plan、真实 SourceAPI fragment、完整 provider Namespace 对象生成独立 Role、RoleBinding、两个无自动 token 挂载的 actor SA 和 `access-guards.json`。它不调用 API，不更改原绑定。Role 仅 `longhorn-system` 中 `pods,services` 的 `get,list`；不添加 exec、写入、watch 或通配权限。
+
+```bash
+python3 -B "$TOOL/prepare-p2-metadata-read-access.py" \
+  --plan-file "$PLAN_F" --plan-sha256 "$PLAN_H" \
+  --source-api-file "$API_F" --source-api-sha256 "$API_H" \
+  --provider-namespace-file "$PROVIDER_NS_F" --provider-namespace-sha256 "$PROVIDER_NS_H" \
+  --output-directory "$ACCESS"
+```
+
+未来创建前，使用原 kubeconfig 分别 `get namespace <system/provider> -o json`、`-n <system> get serviceaccount <SourceAccount> -o json`，UID 必须等于 guards；已有 Role/Binding/actor 必须逐字段等于声明，不能覆盖。缺失才使用 `kubectl create --raw /apis/rbac.authorization.k8s.io/v1/namespaces/longhorn-system/roles -f longhorn-read.role.json`、同路径 `rolebindings` 创建绑定；actor 使用 `/api/v1/namespaces/clawmanager-sbk-validation-system/serviceaccounts`。任何 create 未知时先 GET 原名称核对，不重发。之后用已认证 sources kubeconfig 执行 `get --raw /api/v1/namespaces/longhorn-system/pods` 和 `/services`，以及其 SelfSubjectReview；读回 SA UID、两个集合成功才完成接线。
+
+证书正确顺序为：真实 `observer-issue` → `base-observer-definition` → `base-host-materials` → 原 NodeBundles 安装和 mTLS → 原生 initial/mount 读取 → 最终 signed source registry → 最终 `host-materials`。不能等 Longhorn 作者完成后才首次加载新 CA，否则 mount/native 读取会仍遇到旧 CA。
+
+`base-observer-definition` 输入 P1 的无 Longhorn host definition、新 observer definition/receipt，保持原二进制/CRI/目录，不能从已有 final hold 定义降级。`base-host-materials` 与 final host 调同一原生 CLI，但明确没有 LonghornVolumes/SourceRegistry，不声称物理停写。Node bundle 是原作者输出的精确 flat tar，先校验 pin，再运行其 `install.sh --apply`。发送未知时检查原 bundle/安装记录，不换 CA 或删除原记录。
+
+原生 material delivery（Redis、provider、MinIO 及 source API 后继）可能同时产生新 Deployment/Core、template、selection 和 controller patch。先完成本次确有需要的 delivery、保留每份真实回执，最后才执行 `prepare-mount-materials` / `AuthorLonghornHold=true`，然后冻结新 Core；之后任何再改变 Core 的操作都必须重新走真实后继及签发，不混旧 Core。
+
+## 3. 从真实签发到配置登记的命令账本
+
+所有 `OWNER` 参数使用既有 `retry-p2-writer-selection.py.owner_arguments()` 的本次 P1 plan/public/enrollment/kubeconfig/installer DSN/CA/admin-password 文件；路径及哈希只用于定位，真实身份仍由 Go owner 验证。下面的 `pinflags(X)` 表示精确的 `--x-file <真实输出.File> --x-sha256 <真实输出.SHA256>`，每个输出来源列于表中，不允许编造文件。不要把旧 operator 的另一个 namespace/run 目录伪装成本次 run。
+
+| 顺序/产生者 → 消费者 | 实际入口及必需追加参数 | 成功判据；失败接续 |
+|---|---|---|
+| relay PKI → 新 Core / Node / handover | `system-backup-c1-native-inputs relay-pki --mode issue $OWNER --inputs-file/sha256 <original-relay-pki-inputs.v1> --issuer-private-file/sha256 <原 enrollment signer>` | `original_relay_pki_material_issued_service_tls_not_yet_verified`；发送未知用同 inputs 的 `--mode query`，不 issue。inputs 由原 `operator-relay-bootstrap.prepare_pki` 选择实际 controller Pod、Service、最终 OutputDirectory、Until |
+| runtime issuer → forward/mapping/verifier | `system-backup-original-enroll runtime-issuers --mode export-record-keys $OWNER --dsn-sha256 <installer原字节> --source-issuer-private-file/sha256 <原signer> --material-file/sha256 <真实runtime issuer> --output-directory <Core.key_directory>` | RecordKey/CaptureKey/Export 三份原始 pin；不是 runtime grant，不重发未知 export |
+| Vault signing → config/request/source V2 | `system-backup-first-install-materials issue-signing-material $OWNER --source-issuer-private-file <原signer> --controller-deployment <同一controller> --controller-pod-name <最终Pod> --output-directory <私有目录> --vault-endpoint/cluster-id/jwt-mount <真实report> --capture-key/acceptance-key/catalog-key <真实三键> --vault-ca-file/sha256 <真实CA> --vault-owner-material-file/sha256 <真实owner> --vault-owner-material-is-init-json=true --until <原窗口>` | `original-publication-signing-material-result.v1`，Material/RecordPin/ResourceObserver/CaptureObserver；未知保留原 signer 输出，不造回执 |
+| delivery 最终 selection → source facts | `system-backup-source-registries produce-facts $OWNER --source-selection-file/sha256 <当前后继>` | `original-source-registry-facts-receipt.v1`，SelectionSHA256 必须等于当前后继；Parts/SourceWriters/NativeRegistries 原 pin 读回 |
+| 真实 9 registry /20 refs → disabled config DATA | `system-backup-first-install-materials author-disabled-config --definition-file/sha256 <original-disabled-config-selections.v1> --output-file <新config文件>` | `original-disabled-config-authored.v1`；定义由既有 `initial-input-assembly.prepare_disabled_config` 从确切 owner 输出目录识别实际唯一引用，staging size 来自实际 PVC；缺项或歧义停止，不填空引用 |
+| config DATA + signing → request/BootstrapGrant | `system-backup-first-install-materials prepare-initial-request $OWNER --config-file/sha256 <Config> --signing-material-file/sha256 <Material> --matrix-key k8s-cluster --change-reason <本次原管理员安装请求> --until <原窗口> --output-directory <新私有目录>` | `original-initial-request-authored.v1`；RequestFiles 指向同 Config/Grant/原 CaptureObserver，不修改配置、不安装 grant |
+| 新 Core + request + record export → first Forward | `system-backup-first-install-materials issue-initial-forward $OWNER --runtime-dsn-file <专用runtime> --runtime-issuers-file/sha256 <真实material> --request-files-file/sha256 <RequestFiles> --core-file/sha256 <最终Core> --controller-deployment/pod-name <最终身份> --until <原窗口> --profile-file/sha256 <Core.profile_file> --record-export-file/sha256 <Export> --output-directory <Core.forward_grant.path的父目录>` | `original-runtime-execution-result.v1`，Grant 路径与 Core 相同。SQL profile 是 `public-runtime-c1-minio-metadata-read.v1` 时必须选实际 `issue-initial-forward-minio-metadata` 入口，不用 bool 跳过 SQL 验证 |
+| first Forward + config + signing → publication authorization | `system-backup-first-install-materials issue-publication-authorization $OWNER --source-issuer-private-file <原signer> --controller-deployment/pod-name <同身份> --runtime-dsn-file <runtime> --core-file/sha256 <新Core> --request-files-file/sha256 <RequestFiles> --config-file/sha256 <Config> --forward-grant-sha256 <Forward> --signing-material-file/sha256 <Material> --output-directory <新目录>` | RuntimeOwnerInputs 实际 pin；上述 SQL profile 对应 `issue-initial-publication-authorization-minio-metadata`。不把 signing 权限当 runtime SQL 权限 |
+| provider observer + publication → 原生 KMS/grants | `system-backup-first-install-materials issue-initial-provider-authorities $OWNER --runtime-dsn-file <runtime> --runtime-issuers-file/sha256 <material> --request-files-file/sha256 <request> --core-file/sha256 <新Core> --controller-deployment/pod-name <最终身份> --until <原窗口> --forward-grant-file/sha256 <Forward> --provider-file/sha256 <真实observer source> --worker-jwt-identity-file <实际projected路径> --runtime-owner-inputs-file/sha256 <RuntimeOwnerInputs> --output-directory <新目录>` | 三种独立 capability、formal/permit grant、SQL metadata 真正 commit/readback；未知使用既有 `initial-provider-query`/原 owner query 读回同 material，不重 issue |
+| metadata definition + consumption/request/bundle → signed V2 | `system-backup-source-registries issue-v2 $OWNER --definition-file/sha256 <真实V2 definition> --consumption-file/sha256 <实际consumption> --request-files-file/sha256 <RequestFiles> --bundle-file/sha256 <实际bundle> --issuer-private-file <原signer> --output-directory <新目录>` | 原签名消费通过，V2 Source.Deployment 等于最终 Core；还需真实 CaptureConsumer/CaptureConsumerPin，才可送 final host-materials |
+| 实际数据库 credential + provider result + final source → capture 输入 | `system-backup-first-install-materials runtime-database-environment --worker-source-credential --plan-file/sha256 <P1 plan> --runtime-dsn-file/sha256 <source DSN> --tls-file/sha256 <source TLS DATA> --output-file <新私有credential>`；再 `author-capture-operational-inputs --inputs-file/sha256 <原始typed输入>` | 输入由既有 `operator-capture-mapping.prepare_inputs` 组装 Core/Forward/RequestFiles/SourceSelection/ProviderResult/ProviderObserver/真实credential/固定v12 schema/PartsRegistry/DatabaseAccount/Service；结果是 SourceDefinition/ComponentsTemplate/DatabaseIssueDefinition，不是已签 grant |
+| 真实 runtime sources + capture输入 → runtime材料 | `system-backup-first-install-materials issue-runtime-materials $OWNER --runtime-dsn-file <runtime> --source-definition-file/sha256 <SourceDefinition> --components-template-file/sha256 <Components> --runtime-sources-file/sha256 <原typed sources> --runtime-owner-inputs-file/sha256 <publication> --output-definition-file <新文件> --output-components-file <新文件>` | 原生 SourceDefinition/ComponentsTemplate；sources 来自真实 provider/generate/unwrap/publisher JWT 等原 producer，不能手拼 capability |
+| 最终 capture definition → signed mapping/material | 先 `bind-published-capture-database-inputs --inputs-file/sha256 <原+新definition/database issue/publication回执>`；再 first-install-materials 原默认入口，见下一段 | `original-six-part-source-material-result.v1`；结果须等于 Core.capture_modules.path，所有实际任务/源关系由原 owner 验证 |
+
+capture 最终默认入口的完整参数：
+
+```bash
+"$BIN/system-backup-first-install-materials" "${OWNER[@]}" \
+ --runtime-dsn-file "$RUNTIME_DSN_F" \
+ --definition-file "$CAPTURE_DEF_F" --definition-sha256 "$CAPTURE_DEF_H" \
+ --source-issuer-private-file "$ENROLLMENT_SIGNER_F" \
+ --components-template-file "$COMPONENTS_F" --components-template-sha256 "$COMPONENTS_H" \
+ --database-source-definition-file "$DB_ISSUE_F" --database-source-definition-sha256 "$DB_ISSUE_H" \
+ --resolved-components-file "$CAPTURE_DIR/capture-components.resolved.json" \
+ --intermediate-file "$CAPTURE_DIR/capture-materials.intermediate.json"
+# 仅实际 SQL profile 为 public-runtime-c1-minio-metadata-read.v1 时追加 --minio-metadata-profile。
+```
+
+最后 compose 的真实入口是 `system-backup-bootstrap-enrolled prepare-composition`。必须给以下 15 个各自的 `--<name>-file/sha256`：`config,bootstrap-grant,consumption,facts-receipt,functional-receipt,minio-input,nonce-binding,artifact-ca-binding,evidence-ca-binding,catalog-location,kek-config,evidence,installer-dsn,signing-consumer,signing-consumer-pin`；并给 8 个真实目录：`mapping-directory,source-registry-directory,status-relay-directory,six-reference-directory,kek-window-directory,registry-directory,nonce-directory,output-directory`。这些是相应真实 owner 的输出，不能从本地 snapshot/零行计数产生。`facts-receipt/functional-receipt/evidence/consumption` 缺失时，执行已有 C1 native owner 的真实 capture/验证步骤取得；不能用一般 source-facts receipt 冒充 C1 完成回执。
+
+prepare-composition 的 Deployment/Composition 输出读回后，调用：
+
+```bash
+"$BIN/system-backup-bootstrap-enrolled" --check \
+ --deployment-file "$BOOT_DEP_F" --deployment-sha256 "$BOOT_DEP_H" \
+ --composition-file "$COMPOSITION_F" --composition-sha256 "$COMPOSITION_H"
+"$BIN/system-backup-bootstrap-enrolled" --apply \
+ --deployment-file "$BOOT_DEP_F" --deployment-sha256 "$BOOT_DEP_H" \
+ --composition-file "$COMPOSITION_F" --composition-sha256 "$COMPOSITION_H"
+```
+
+`--apply` 是实际创建 disabled config 的原子事务，不是 DATA check。只在所有原 owner 完成、同一 target/idempotency key 已明确时发送一次。失败/断线走 `query-original` 与实际原 journal；不直接 SQL 插行，不删已有 producer 表，不把旧 `PrepareOriginalWriterSet` 的 TenantPro 拒绝 guard 移除，不拿虚构 task 通过旧冷接管分支。若真实 C1 owner 在所选 tenant 范围拒绝，就停在其真实 Phase；没有合法 producer 输出不能跨到 compose。
+
+## 4. 环境、ready、启用与当前不能跨过的边界
+
+注册 disabled 配置不是 enabled 接单。正常启用仍须原页面 strong-auth 的配置操作取得真实 `operation-response.raw.json`、确认 config version 2，然后依次调用原 native：`reissue-enabled-forward`、`issue-enabled-publication-authorization`、`system-backup-enabled-provider-materials issue/query` 和原 enabled runtime-materials 作者。准确参数组装来源为 `system-backup-operator-enabled-publication.py` 的 `prepare/provider_materials/runtime_materials`；全部沿用最终 Core/同一 Pod/原 RequestFiles，不能把 version 1 的材料直接改 JSON 变成 version 2。
+
+真实接管前先由 `relay-handover --mode issue/query` 等原 owner 停止/读回同一个只读 relay，并形成原生 normal handover；环境里的 `SYSTEM_BACKUP_ORIGINAL_RELAY_HANDOVER_FILE/SHA256` 必须引用该实际输出。没有原 Stop/签名/PKI/hand-over 就停止，不能写一个“已停止”布尔值。
+
+环境组装来源为同模块 `database_environment`（调用实际 `runtime-database-environment` 输出私有 DB 环境）和 `activation_environment`（选实际 Config/Forward2/capture/formal/signers/publisher/target/MinIO readiness/recovery/metadata consent/handover）。发布方法是 `DeploymentStages.publish_controller_environment`，先传输并逐一核对 producer 原始字节，写 65532:600 的 `/run/system-backup/runtime/controller.env`，最后才写其 SHA256 到 `.ready`；实际 launcher 在读回这个摘要后启动 `system-backup-v2-controller`。
+
+**现有大 operator 的发布方法还硬性读取其旧 `production-adoption`、MinIO 原 history projection 和 enabled selections；这些记录目前没有本次真实产物。它不是可以直接在本现场复制运行的启用快捷方式。** 本次包不伪造这些前置，也不发布 ready。需要先由本次原 owner 完成上表真实 C1/注册/enable/MinIO consent/handover 输出，再将其实际绑定接回对应原发布上下文；只通过离线 DATA 编译或 mTLS 不能跨过此边界。此处是明确未获得的真实执行依赖，不应对外声称“已可一键整单”。
+
+现场成功判据是：实际 controller Pod/SA/可执行文件 SHA 与新 Core 一致，原生 normal handover 读回确认，实际 config version 2 与 Forward2/签名源一致，真实 readiness 通过后才提交整单；整单需同原 task/attempt 完成停写、所有捕获、恢复和原源读回。任何阶段未知发送或恢复未确认，保留原 journal/义务，优先恢复源，不创建新任务掩盖旧任务。

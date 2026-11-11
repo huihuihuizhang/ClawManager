@@ -1,0 +1,43 @@
+{
+  "version": "p2-last-offline-continuation-validation.v1",
+  "date": "2026-11-11",
+  "base_candidate": "8788cd1bbbb259610faf939a65a96b6aa9afb889",
+  "snapshot_sha256": "dfaf71f6b78b0dc852578c57a052a7bbc5329d442db219062be48b131a52fcb1",
+  "source_blob_lf_sha256": {
+    "scripts/system-backup-initial-complete-inputs.py": "c3c26a71f18dddff3315045b0c8e1849302e641bee49374759010b37d79f8d06",
+    "scripts/system-backup-initial-runtime.py": "02330efd27946c8bd01247dc6880ff902e88462d8f930b7a280a6546b241b175",
+    "scripts/system-backup-field-tools/assemble-p2-installation-candidate.py": "694b9d2bde47ae562e042c2a865b2fde2fd9046cf9e267f168bcff653179a6b7",
+    "scripts/system-backup-field-tools/continue-p2-native-candidate.py": "71223afd9103b8c0ab7319f9deeb4266192a9c828a42164fe79a4e9cfffdc4eb",
+    "scripts/system-backup-field-tools/prepare-p2-configuration-data.py": "53d5d408917fbe67b160f8c5d875bf3a9860aa0b54a8c89d422227b6a4cc5e12",
+    "scripts/system-backup-field-tools/prepare-p2-metadata-read-access.py": "455b18684c98336d21db4e38ace89a8b9910aaa89dda9061611eed2f6b074689"
+  },
+  "continuation_tests_passed": 14,
+  "original_business_release_tests_passed": 3,
+  "go_sources_changed": false,
+  "native_binaries_rebuilt": false,
+  "native_binaries_source_revision": "8788cd1bbbb259610faf939a65a96b6aa9afb889",
+  "raw_git_byte_export_required": true,
+  "verified_offline": [
+    "named-original-producers-to-ConfigurationData-to-initial-definition",
+    "fixed-purpose-five-connection-bindings",
+    "native-CLI-entry-flags",
+    "original-Pro-namespace-and-same-repository-loaded-imageID",
+    "base-PKI-loading-before-mount-reading",
+    "no-final-hold-definition-downgrade",
+    "task-specific-additive-read-role-and-actor-manifests",
+    "raw-record-requires-no-redacted-runtime-inputs",
+    "OCI-metadata-reader-no-release-qualified-claim",
+    "original-release-exact-pins-and-drift-refusal",
+    "create-only-and-unknown-send-preservation"
+  ],
+  "remote_operations_performed": false,
+  "real_certificate_issuance_or_loading_verified": false,
+  "vault_usable_verified": false,
+  "controller_ready_published": false,
+  "real_C1_enable_and_handover_outputs_available": false,
+  "complete_execution_ready": false,
+  "whole_backup_completed": false,
+  "publication_boundary": "Existing large operator requires original production-adoption/history/enable/handover context. No substitute records generated.",
+  "temporary_root": "D:/dsh-work/sbk-p2-last-offline-check",
+  "temporary_cleanup_after_delivery_required": true
+}

@@ -118,6 +118,10 @@ class CandidateIntegration(unittest.TestCase):
 
     def test_longhorn_successor_is_one_core_template_source_and_node_generation(self):
         args=self.successor(); handoff=A.longhorn_successor(*args)
+        base=A.base_observer_definition(args[2],args[3],args[4])
+        self.assertEqual(base['PKIReceipt'],args[4])
+        final_host=self.save('final-host.json',handoff['HostDefinition'])
+        with self.assertRaisesRegex(ValueError,'pre-hold'):A.base_observer_definition(final_host,args[3],args[4])
         self.assertEqual(handoff['HostDefinition']['LonghornVolumes'],handoff['LonghornHoldMaterials'])
         self.assertEqual(A.obj(handoff['SourceSelection'])['Deployment'],handoff['Deployment'])
         registry=self.save('v2-record.json',dict(SchemaVersion='system-backup-original-bootstrap-source-registries.v2',Source=dict(Deployment=handoff['Deployment'],Materials=handoff['MaterialsTemplate'])))

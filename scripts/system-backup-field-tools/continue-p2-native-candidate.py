@@ -26,6 +26,7 @@ def assembly():
 A = assembly()
 STAGES = {
     'observer-issue': ('system-backup-original-observer-pki', [], 'ObserverDefinition'),
+    'base-host-materials': ('system-backup-observer-deployment-materials', ['--mode', 'host-materials'], 'BaseHostDefinition'),
     'initial-source': ('system-backup-first-install-materials', ['author-initial-source-inputs'], 'InitialDefinition'),
     'mount': ('system-backup-source-registries', ['prepare-mount-materials'], 'MountLayouts'),
     'facts': ('system-backup-source-registries', ['produce-facts'], None),
@@ -76,6 +77,11 @@ def stage_argv(bundle, stage):
         argv += ['--'+flag+'-file', pin['File'], '--'+flag+'-sha256', pin['SHA256']]
         if stage == 'mount':
             A.need(value.get('AuthorLonghornHold') is True and value.get('Longhorn'), 'existing Longhorn author opt-in required')
+        if stage == 'base-host-materials':
+            A.need(value['Version']=='original-observer-host-deployment.v1' and not value.get('LonghornSourceRegistry') and
+                   value.get('LonghornVolumes',{'File':'','SHA256':''})=={'File':'','SHA256':''},
+                   'base certificate loading must not claim a Longhorn hold or downgrade final materials')
+            A.read(value['PKIDefinition']);A.read(value['PKIReceipt'])
         if stage == 'host-materials':
             handoff = A.obj(selected['Handoff'])
             A.need({k:v for k,v in value.items() if k != 'LonghornSourceRegistry'} ==
