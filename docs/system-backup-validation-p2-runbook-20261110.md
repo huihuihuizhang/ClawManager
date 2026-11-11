@@ -64,6 +64,17 @@ python3 -B scripts/system-backup-runtime-startup-inputs.py \
 
 owner 错误回执新增有限的 `Failure.SelectionPhase`（如 `first_collection/observer_materials`、`first_collection/tenant_pro_controllers`），保留原有具体 source dependency，并隐藏原始 SQL、API 和凭据错误。重试使用新的私有 selection/journal 目录，沿用上述 source config 和 OCI 材料；不重跑已通过的引导、镜像发布与实例恢复。
 
+### Writer selection 现场已通过
+
+工具源码 `95b274c8084e7b600d198376813d0b044aff93dc`，远侧目录 `/root/sbk/p2-selection-95b274c8`，交付摘要均通过。成功记录 `/root/sbk/p2-writer-selection-retry.hmq_j5mb`：
+
+- `selection/original-writer-selection.json`：`9d114d1ba974fa7997e695b385038dd43d8d7fdb30af6a61fd1477bed44f6c03`。
+- `selection/original-source-coordinates.json`：`bf15eccc05781b45299c35ed8d92dd1b862b745c2338a6e8d55662773997dd60`。
+- `SourceCount=8`、`DeploymentCount=10`、`ParticipantCount=0`。最后一项来自对当前 application scope 的真实 SQL 参与者查询，不表示实例被排除，也不证明后续 SQL gate 接线完整。
+- 租户 Pro 实例 `2` 绑定 namespace `clawmanager-sbk-validation-user-1`、Deployment `clawreef-2-deployment`、UID `ae62057d-36bb-46d3-897b-bcbd40cde1b3`。
+
+状态为 `actual_original_complete_base_selection_materialized_no_hold`，仅完成选源数据；未停写、未持有源、未完成 P2 挂载材料验收。下一步复用本批工具与现有凭据，准备 `original-initial-source-author-inputs.v1` 定义，再执行 `author-initial-source-inputs` 和 `prepare-mount-materials`。无需重新采集这批 writer selection。运行时控制器或源身份发生变化时才刷新受影响材料。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
