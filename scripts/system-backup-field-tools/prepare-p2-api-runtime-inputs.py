@@ -224,11 +224,19 @@ def main(helpers, records):
         users=[dict(name='source', user=dict(tokenFile=str(token_file)))], contexts=[dict(name='source', context=dict(cluster='source', user='source', namespace=ns))], **{'current-context': 'source'})
     source_config_file = records / 'source-api.kubeconfig.private.json'
     c.retain(source_config_file, c.encode(source_config))
-    identity = call(['create', '-f', '-', '-o', 'json'], dict(apiVersion='authentication.k8s.io/v1', kind='SelfSubjectReview'), config=source_config_file)
+    # Match production's typed REST calls. kubectl's generic -f validation
+    # downloads OpenAPI schemas, a separate non-resource permission that this
+    # source reader does not need. Keep RBAC unchanged and test the actual API.
+    identity = call(['create', '--raw', '/apis/authentication.k8s.io/v1/selfsubjectreviews', '-f', '-'],
+                    dict(apiVersion='authentication.k8s.io/v1', kind='SelfSubjectReview'), config=source_config_file)
     check_review(identity['status'], ns, account['metadata']['name'], uid)
     for selected_ns in namespaces[:2]:
-        call(['-n', selected_ns, 'get', 'deployments,pods,pvc', '-o', 'json'], config=source_config_file)
-    call(['-n', provider_namespace, 'get', 'volumes.longhorn.io', '-o', 'json'], config=source_config_file)
+        for group, resource in [('apis/apps/v1', 'deployments'), ('api/v1', 'pods'), ('api/v1', 'persistentvolumeclaims')]:
+            call(['get', '--raw', '/' + group + '/namespaces/' + selected_ns + '/' + resource], config=source_config_file)
+    provider_versions = {v['apiVersion'] for v in volumes['items'] if v['metadata']['namespace'] == provider_namespace}
+    need(len(provider_versions) == 1 and next(iter(provider_versions)) in ('longhorn.io/v1beta1', 'longhorn.io/v1beta2'),
+         'actual Longhorn API version required')
+    call(['get', '--raw', '/apis/' + provider_versions.pop() + '/namespaces/' + provider_namespace + '/volumes'], config=source_config_file)
     need(call(['get', 'serviceaccount', account['metadata']['name'], '-o', 'json'])['metadata']['uid'] == uid, 'source account changed during reads')
     fragment = dict(version='p2-original-source-api-connection.v1', connection=dict(Purpose='source_api', Endpoint=endpoint, Account=uid,
         ServerUUID='', Database='', CA=ca_pin, Credential=dict(File=str(token_file), SHA256=c.digest(token)), IdentitySHA256='', ScopeSHA256=''),
