@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-11",
+  "scope": "original Longhorn pre-grant input author and successor Core wiring",
+  "command": "go test -p=2 -mod=readonly -count=1 -v -run '^(TestOriginalLonghornHoldAuthor|TestOriginalLonghornRecoveryPeer|TestOriginalLonghornStorageAuthor|TestOriginalMount|TestRunningTenantPro|TestKeeperCleanupRequiresOriginalRecoveredLonghornVolume)' ./internal/systembackupexecution",
+  "goos": "windows",
+  "goarch": "amd64",
+  "cgo_enabled": false,
+  "exit_code": 0,
+  "top_level_tests_passed": 15,
+  "subtests_passed": 34,
+  "source_sha256": {
+    "backend/internal/systembackupexecution/bootstrap_source_longhorn_materials.go": "109fd72631f4545b040b1ad403d61aefeb95d1fa4575c603c85da00b1a415f6e",
+    "backend/internal/systembackupexecution/bootstrap_source_longhorn_materials_test.go": "1d565fa7320b550607a4241973f44725c1d4471b580cfa50d5c1c125fce81f66",
+    "backend/internal/systembackupexecution/bootstrap_source_registry_mount_author.go": "ec94e80e689c79dd3fc42009c2fa22a3ba2b8135a13a589bcf6ca4d72e40dc48"
+  },
+  "test_log_sha256": "26b11018f65454702cdbe9f81cc6d5c2b05444eea57208575606af8dcce1eb49",
+  "scratch_directory": "D:\\dsh-work\\sbk-longhorn-material-author-01a1c5a1",
+  "field_validated": false,
+  "native_fd_verified": false,
+  "backup_ready": false
+}

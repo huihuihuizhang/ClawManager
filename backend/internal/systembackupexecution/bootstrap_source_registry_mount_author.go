@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	"clawreef/internal/systembackup/domain"
 	b "clawreef/internal/systembackup/publicadapter"
+	q "clawreef/internal/systembackup/quiesce"
 	ce "clawreef/internal/systembackupcontrolevidence"
 	"clawreef/internal/systembackupinstallationowner/install"
 )
@@ -16,9 +18,10 @@ import (
 // This selection contains owner-selected directories, never observed identities
 // or authority. The original authenticated reader derives all identity fields.
 type OriginalInstanceMountLayoutSelection struct {
-	Version  string
-	Layouts  []InstancePersistentMountLayout
-	Longhorn *OriginalLonghornStorageSelection `json:",omitempty"`
+	Version            string
+	Layouts            []InstancePersistentMountLayout
+	Longhorn           *OriginalLonghornStorageSelection `json:",omitempty"`
+	AuthorLonghornHold bool                              `json:",omitempty"`
 }
 
 const OriginalInstanceMountLayoutSelectionVersion = "original-instance-mount-layout-selection.v1"
@@ -26,6 +29,7 @@ const OriginalInstanceMountLayoutSelectionVersion = "original-instance-mount-lay
 type OriginalInstanceMountMaterialsReceipt struct {
 	Version, SelectionSHA256, LayoutSelectionSHA256, MountScopeSHA256 string
 	MaterialsTemplate, SourceSelection                                install.BootstrapSourceFilePin
+	LonghornHoldMaterials, Deployment                                 *install.BootstrapSourceFilePin `json:",omitempty"`
 }
 
 func readOriginalMountLayouts(file, digest string) (OriginalInstanceMountLayoutSelection, error) {
@@ -164,7 +168,11 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	}
 	materialsFile := filepath.Join(outputDirectory, "mount-materials-template.json")
 	nextSelectionFile := filepath.Join(outputDirectory, "mount-source-selection.json")
+	longhornFile, coreFile := filepath.Join(outputDirectory, "longhorn-hold-materials.json"), filepath.Join(outputDirectory, "longhorn-deployment-core.json")
 	if checkBootstrapSourceFactOutputs(materialsFile, nextSelectionFile) != nil {
+		return zero, install.ErrInstall
+	}
+	if layouts.AuthorLonghornHold && (layouts.Longhorn == nil || checkBootstrapSourceFactOutputs(longhornFile, coreFile) != nil) {
 		return zero, install.ErrInstall
 	}
 	authority, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, selectionFile, selectionSHA)
@@ -181,6 +189,9 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		return zero, install.ErrInstall
 	}
 	if checkOriginalMountAuthoringAliases(materialsFile, nextSelectionFile, selectionFile, layoutsFile, selection, x.config, x.materials) != nil {
+		return zero, install.ErrInstall
+	}
+	if layouts.AuthorLonghornHold && checkOriginalMountAuthoringAliases(longhornFile, coreFile, selectionFile, layoutsFile, selection, x.config, x.materials) != nil {
 		return zero, install.ErrInstall
 	}
 	firstSQL, err := x.readSourceSQL()
@@ -219,6 +230,18 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, err
 	}
+	var longhornMaterial q.LonghornExt4Materials
+	recoveryURI := ""
+	if layouts.AuthorLonghornHold {
+		recoveryURI, err = originalLonghornRecoveryURI(x.config, x.materials, time.Now().UTC())
+		if err != nil {
+			return zero, err
+		}
+		longhornMaterial, err = observeOriginalLonghornHoldMaterials(x.physical, clients, x.config, &scope, longhorn, recoveryURI)
+		if err != nil {
+			return zero, err
+		}
+	}
 	if authority.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
@@ -242,6 +265,16 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil || !reflect.DeepEqual(longhorn, currentLonghorn) {
 		return zero, install.ErrInstall
 	}
+	if layouts.AuthorLonghornHold {
+		uri, err := originalLonghornRecoveryURI(x.config, x.materials, time.Now().UTC())
+		if err != nil || uri != recoveryURI {
+			return zero, install.ErrInstall
+		}
+		current, err := observeOriginalLonghornHoldMaterials(x.physical, clients, x.config, &scope, currentLonghorn, uri)
+		if err != nil || !reflect.DeepEqual(longhornMaterial, current) {
+			return zero, install.ErrInstall
+		}
+	}
 	if len(scope.RunningTenantPro) != 0 {
 		scope.TenantProCensusPVs = make(map[string][]string)
 		for _, mount := range scope.RunningTenantPro {
@@ -264,6 +297,42 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if layouts.Longhorn != nil {
 		x.materials.Discovery.LonghornSources = longhorn
 	}
+	outputs := []struct {
+		file string
+		raw  []byte
+	}{}
+	var holdPin, corePin *install.BootstrapSourceFilePin
+	if layouts.AuthorLonghornHold {
+		raw, err := ce.Canonical(longhornMaterial)
+		if err != nil || len(raw) > 1<<20 {
+			return zero, install.ErrInstall
+		}
+		holdPin = &install.BootstrapSourceFilePin{File: longhornFile, SHA256: hash(raw)}
+		cfg := x.config
+		runtimeSources := *cfg.RuntimeSources
+		cfg.RuntimeSources = &runtimeSources
+		o := runtimeSources.SharedObserver
+		runtimeSources.LonghornHold = &FormalLonghornHoldConfig{Observer: FormalSharedRuntimeObserverConfig{
+			CAFile: o.CAFile, CASHA256: o.CASHA256, CertificateFile: o.CertificateFile, CertificateSHA256: o.CertificateSHA256,
+			KeyFile: o.KeyFile, KeySHA256: o.KeySHA256, Endpoints: o.Endpoints}, Materials: []ProductionCaptureInput{{File: holdPin.File, SHA256: holdPin.SHA256}}}
+		if cfg.Validate() != nil {
+			return zero, install.ErrInstall
+		}
+		coreRaw, err := json.Marshal(cfg)
+		if err != nil || len(coreRaw) > 262144 {
+			return zero, install.ErrInstall
+		}
+		corePin = &install.BootstrapSourceFilePin{File: coreFile, SHA256: hash(coreRaw)}
+		selection.Deployment = *corePin
+		x.materials.DeploymentConfigSHA256 = corePin.SHA256
+		outputs = append(outputs, struct {
+			file string
+			raw  []byte
+		}{longhornFile, raw}, struct {
+			file string
+			raw  []byte
+		}{coreFile, coreRaw})
+	}
 	materialsRaw, err := ce.Canonical(x.materials)
 	if err != nil || len(materialsRaw) > 8<<20 {
 		return zero, install.ErrInstall
@@ -273,10 +342,11 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil || len(selectionRaw) > 262144 {
 		return zero, install.ErrInstall
 	}
-	for _, output := range []struct {
+	outputs = append(outputs, []struct {
 		file string
 		raw  []byte
-	}{{materialsFile, materialsRaw}, {nextSelectionFile, selectionRaw}} {
+	}{{materialsFile, materialsRaw}, {nextSelectionFile, selectionRaw}}...)
+	for _, output := range outputs {
 		currentLayouts, err := readOriginalMountLayouts(layoutsFile, layoutsSHA)
 		if err != nil || !reflect.DeepEqual(layouts, currentLayouts) || authority.RecheckAuthority(ctx) != nil {
 			return zero, install.ErrInstall
@@ -292,5 +362,18 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if _, err := readOriginalMountLayouts(layoutsFile, layoutsSHA); err != nil || authority.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
-	return OriginalInstanceMountMaterialsReceipt{Version: "original-instance-mount-materials-receipt.v1", SelectionSHA256: selectionSHA, LayoutSelectionSHA256: layoutsSHA, MountScopeSHA256: hash(scopeRaw), MaterialsTemplate: selection.MaterialsTemplate, SourceSelection: install.BootstrapSourceFilePin{File: nextSelectionFile, SHA256: hash(selectionRaw)}}, nil
+	if layouts.AuthorLonghornHold {
+		// The successor changes the Core digest as well as the template. Have
+		// the original installer/reader validate that new pairing before it
+		// can be selected by the later signing/facts owners.
+		next, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, nextSelectionFile, hash(selectionRaw))
+		if err != nil {
+			return zero, install.ErrInstall
+		}
+		defer next.Close()
+		if _, err := newBootstrapSourceAuthoringReader(ctx, next); err != nil || next.RecheckAuthority(ctx) != nil || authority.RecheckAuthority(ctx) != nil {
+			return zero, install.ErrInstall
+		}
+	}
+	return OriginalInstanceMountMaterialsReceipt{Version: "original-instance-mount-materials-receipt.v1", SelectionSHA256: selectionSHA, LayoutSelectionSHA256: layoutsSHA, MountScopeSHA256: hash(scopeRaw), MaterialsTemplate: selection.MaterialsTemplate, SourceSelection: install.BootstrapSourceFilePin{File: nextSelectionFile, SHA256: hash(selectionRaw)}, LonghornHoldMaterials: holdPin, Deployment: corePin}, nil
 }
