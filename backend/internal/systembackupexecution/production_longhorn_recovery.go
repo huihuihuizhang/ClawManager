@@ -12,7 +12,9 @@ import (
 	b "clawreef/internal/systembackup/publicadapter"
 	d "clawreef/internal/systembackupdispatch"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Called by the existing resume barrier after all collectors are proven
@@ -132,5 +134,38 @@ AND resource_name LIKE 'sbk-kplan-%' FOR SHARE`, a.TaskPublicID, a.TaskType, a.A
 	if err != nil || !sameLonghornExecutionIntent(record.Intent, intent) {
 		return zero, false, errors.Join(err, kube.ErrOwnership)
 	}
-	return record, true, o.Gate.Recovery.CheckTx(ctx, tx, a)
+	if err := tx.Rollback(); err != nil {
+		return zero, false, err
+	}
+	// ConfirmResumed has proved the original workload and SQL source CAS. Before
+	// deleting its attachment keeper, also re-read the original physical volume.
+	if err := checkRecoveredLonghornVolume(ctx, o.Client, selected.Source); err != nil {
+		return zero, false, err
+	}
+	return record, true, o.Gate.Recovery.Check(ctx, a)
+}
+
+// Uses the original task's saved physical source, never current discovery. A
+// replacement claim/PV must not inherit the old keeper's recovery completion.
+func checkRecoveredLonghornVolume(ctx context.Context, client kubernetes.Interface, source originalLonghornSource) error {
+	if client == nil || source.Namespace == "" || source.NamespaceUID == "" || source.ProviderNamespace == "" || source.ProviderUID == "" || source.Source.UID == "" || source.Source.PVUID == "" || !formalCandidateDigest(source.Source.SHA256) || source.Handle == "" {
+		return kube.ErrOwnership
+	}
+	ns, err := client.CoreV1().Namespaces().Get(ctx, source.Namespace, metav1.GetOptions{})
+	if err != nil || ns.DeletionTimestamp != nil || string(ns.UID) != source.NamespaceUID {
+		return kube.ErrOwnership
+	}
+	provider, err := client.CoreV1().Namespaces().Get(ctx, source.ProviderNamespace, metav1.GetOptions{})
+	if err != nil || provider.DeletionTimestamp != nil || string(provider.UID) != source.ProviderUID {
+		return kube.ErrOwnership
+	}
+	claim, err := client.CoreV1().PersistentVolumeClaims(source.Namespace).Get(ctx, source.Source.Name, metav1.GetOptions{})
+	if err != nil || claim.DeletionTimestamp != nil || string(claim.UID) != source.Source.UID || claim.Status.Phase != corev1.ClaimBound || claim.Spec.VolumeName != source.Source.PVName || len(claim.Spec.AccessModes) != 1 || claim.Spec.AccessModes[0] != source.AccessMode {
+		return kube.ErrOwnership
+	}
+	pv, err := client.CoreV1().PersistentVolumes().Get(ctx, source.Source.PVName, metav1.GetOptions{})
+	if err != nil || pv.DeletionTimestamp != nil || string(pv.UID) != source.Source.PVUID || kube.ContentHash(pv.Spec) != source.Source.SHA256 || pv.Spec.CSI == nil || pv.Spec.CSI.Driver != "driver.longhorn.io" || pv.Spec.CSI.VolumeHandle != source.Handle || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.Namespace != source.Namespace || pv.Spec.ClaimRef.Name != claim.Name || pv.Spec.ClaimRef.UID != claim.UID {
+		return kube.ErrOwnership
+	}
+	return ctx.Err()
 }

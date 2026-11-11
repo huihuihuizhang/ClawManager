@@ -259,8 +259,8 @@ func (s *DeploymentService) attachRuntimeSources(o *PublicJobOwner, profile b.Li
 		profile.Supported[kind] = true
 	}
 	profile.BuildWriters = func(ctx context.Context, in d.Input, inv b.SourceInventory, frozen []b.FrozenWriter) ([]flow.Writer, error) {
-		if s.validateRuntimeInventory(inv) != nil {
-			return nil, d.ErrNotReady
+		if err := s.validateRuntimeWriterInventory(ctx, o, in, inv, frozen); err != nil {
+			return nil, err
 		}
 		if frozen == nil {
 			if e := s.checkRuntimeWorkspace(ctx, o.Client, inv.Instances); e != nil {
@@ -345,8 +345,11 @@ func (s *DeploymentService) validateRuntimeInventory(inv b.SourceInventory) erro
 }
 func (s *DeploymentService) runtimeInventory(ctx context.Context, in d.Input, x b.Discovery, platform map[string]bool) error {
 	var inv b.SourceInventory
-	if json.Unmarshal(x.Source, &inv) != nil || hash(x.Source) != x.SourceSHA256 || s.validateRuntimeInventory(inv) != nil || s.RuntimeControl == nil {
+	if json.Unmarshal(x.Source, &inv) != nil || hash(x.Source) != x.SourceSHA256 || s.RuntimeControl == nil {
 		return d.ErrNotReady
+	}
+	if err := s.validateRuntimeWriterInventory(ctx, s.Runtime.Owner, in, inv, x.Writers); err != nil {
+		return err
 	}
 	var frozen []b.FrozenWriter
 	seen := map[string]bool{}

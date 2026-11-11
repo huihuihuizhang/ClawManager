@@ -3,6 +3,7 @@ package systembackupexecution
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -13,20 +14,24 @@ import (
 )
 
 type failingLonghornCutOwner struct {
-	cuts         []kube.LonghornCaptureCut
-	releases     int
-	contentCalls int
-	releaseErr   error
+	cuts          []kube.LonghornCaptureCut
+	releases      int
+	contentCalls  int
+	releaseErr    error
+	holdErr       error
+	releasedInput d.Input
+	releasedPlans []plannedLonghornClone
 }
 
 func (o *failingLonghornCutOwner) Hold(context.Context, d.Input, []plannedLonghornClone) ([]kube.LonghornCaptureCut, error) {
-	return o.cuts, nil
+	return o.cuts, o.holdErr
 }
-func (o *failingLonghornCutOwner) Release(ctx context.Context, _ d.Input, _ []plannedLonghornClone) error {
+func (o *failingLonghornCutOwner) Release(ctx context.Context, in d.Input, plans []plannedLonghornClone) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 	o.releases++
+	o.releasedInput, o.releasedPlans = in, plans
 	return o.releaseErr
 }
 func (o *failingLonghornCutOwner) ContentRunner(context.Context, d.Input, plannedLonghornClone, kube.LonghornSnapshotPin) (kube.Runner, error) {
@@ -70,5 +75,22 @@ func TestLonghornCutSetLossReleasesOriginalCohortBeforeClone(t *testing.T) {
 					err, checks, owner.releases, owner.contentCalls, client.Actions())
 			}
 		})
+	}
+}
+
+func TestLonghornInterruptedAcquireReleasesSameTaskWithIndependentContext(t *testing.T) {
+	interrupted := errors.New("acquire response lost")
+	releaseUnknown := errors.New("release response lost")
+	in := d.Input{Authority: d.Authority{TaskPublicID: "original-task", AttemptNo: 2, MaintenanceFencingToken: 9}}
+	plans := []plannedLonghornClone{{Original: originalLonghornSource{Handle: "original-volume", ProviderUID: "original-provider"}}}
+	for _, failure := range []error{nil, releaseUnknown} {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		storage := &failingLonghornCutOwner{holdErr: interrupted, releaseErr: failure}
+		public := &PublicJobOwner{longhornCutOwner: storage}
+		_, err := public.captureLonghornCutSet(ctx, in, b.Discovery{}, plans, kube.Runner{})
+		if !errors.Is(err, interrupted) || errors.Is(err, releaseUnknown) != (failure != nil) || storage.releases != 1 || storage.releasedInput.Authority != in.Authority || !reflect.DeepEqual(storage.releasedPlans, plans) {
+			t.Fatalf("interrupted acquire lost original recovery identity/error: %v, %+v", err, storage)
+		}
 	}
 }

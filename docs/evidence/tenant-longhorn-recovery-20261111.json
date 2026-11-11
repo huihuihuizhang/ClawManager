@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-11",
+  "base": "4ec7a14a830d99ea816c4a598249faf76c2bc8fa",
+  "branch": "codex/pro-longhorn-recovery-20261111",
+  "go": "go1.26.1 windows/amd64",
+  "cgo_enabled": false,
+  "command": "go test -p=2 -mod=readonly -count=1 -v -run '^(TestTenantRecoveryInventory|TestRecoveryInventoryGuard|TestRunningTenantPro|TestTenantRecoveryProbe|TestLonghornCutSetLoss|TestLonghornInterrupted|TestLonghornRecoveryFactory|TestLonghornNativeGrant|TestKeeper|TestRuntimeSourceStopWaits|TestRuntimeStorageRecovery|TestExecutionJobsGateSource|TestDeploymentWriter|TestOwnedUnscheduledResume|TestIndependentRecoveryAdmission|TestRecoveryUsesPersistedOriginalStates)' ./internal/systembackupexecution ./internal/systembackupcontroller ./internal/systembackup/quiesce ./internal/systembackup/publicadapter",
+  "exit_code": 0,
+  "packages_passed": 4,
+  "top_level_tests_passed": 24,
+  "subtests_passed": 42,
+  "source_hashes_unchanged_during_tests": true,
+  "source_sha256": {
+    "backend/internal/systembackupexecution/deployment_runtime_sources.go": "2c2f44b21478aa0acbb1fc3cccb81a8d6de74fc7fe84fafda284598f9a380f16",
+    "backend/internal/systembackupexecution/deployment_service.go": "346574f75484fc011a4e082584eeafeaef188f08cbc6615dc58876692cfd4f1c",
+    "backend/internal/systembackupexecution/deployment_runtime_recovery_inventory.go": "a12e32313c79d31d3c31f711b88cf31ad1c484f54b7c73277481cc0fc818f59b",
+    "backend/internal/systembackupexecution/deployment_runtime_recovery_inventory_test.go": "d2d66b2077afbffb25d45f92ebb0a63cc63747deca3c0d174b1f29aa51a9a544",
+    "backend/internal/systembackupexecution/production_longhorn_recovery.go": "46ad78f6fcce23978db6b6b07feb227ac3c32c9716167fe64d6ec1e01520426a",
+    "backend/internal/systembackupexecution/production_longhorn_recovery_volume_test.go": "5a6fc9091b99be37294baab2cc534cea1b058283f1979cb9f66df183fc3ebb20",
+    "backend/internal/systembackupexecution/production_longhorn_cut_set_test.go": "8c2c88ceddc880e02799906ac8c19d6c47e161a2b0355b523daac8991c500e70",
+    "backend/internal/systembackupcontroller/execution_source_resume_cleanup_test.go": "6c33db1317652aa149b9ed2aa1959e58690d8be570937e73f9f097ff2b8f918a"
+  },
+  "local_log": "D:\\codex-worktrees\\pro-longhorn-20261111\\pro-longhorn-final-tests.log",
+  "local_log_sha256": "1c580c78cf8c6a5a72d4c6b65f5ab9c3542f6e1a1601ea81117b4af1117c4fa3",
+  "scratch_removed": [
+    "D:\\dsh-work\\sbk-pro-longhorn-tests-01a1c976",
+    "D:\\dsh-work\\sbk-pro-longhorn-final-01a1c976"
+  ],
+  "field_validated": false,
+  "limits": [
+    "Local API/protocol fixtures; no remote environment operations.",
+    "No live SQL recovery + Node/CSI integration or Linux native runtime verification.",
+    "No full backup upload/readback/catalog acceptance.",
+    "Taskless offline tenant Pro adoption remains refused."
+  ]
+}

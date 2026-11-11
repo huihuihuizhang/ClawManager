@@ -336,6 +336,11 @@ func (s *DeploymentService) recoveryAdmit(_ context.Context, in d.Input) error {
 	return nil // Original journal reads/effects still require SQLRecoveryAuthority.
 }
 func (s *DeploymentService) inventory(ctx context.Context, in d.Input, x b.Discovery) error {
+	// Recover runs the same inventory callback before binding writers. On a
+	// recovery-only restart there are deliberately no current capture materials.
+	if !s.ForwardEnabled {
+		return s.originalRecoveryInventory(ctx, in, x)
+	}
 	if s.Config.CaptureScope == "six-part" && s.Runtime != nil && s.Runtime.Owner != nil && s.Runtime.Owner.productionSource != nil {
 		return s.productionInventory(ctx, in, x)
 	}
