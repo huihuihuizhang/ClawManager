@@ -48,6 +48,16 @@ python3 -B scripts/system-backup-runtime-startup-inputs.py \
 
 收尾脚本源码保存在 `scripts/system-backup-field-tools/`。它按 Kubernetes 空字符串序列化规则比较 Env，并精确识别标准只读 ServiceAccount 投射卷；API 身份使用 `type=hermes`、`runtime_type=gateway`、`instance_mode=lite`。实际持有源的分类仍要求原有 native Node 证明；本次镜像兼容不会把 Secret 元数据当作已加载环境证明。
 
+### 已通过的新材料回执
+
+2026-11-11，`1dd1ae7179520223c944401a2cc38fb738e09540` 的三份 CLI 已上传至 `/root/sbk/p2-hermes-1dd1ae71`。现场真实 OCI 验收 `TestOriginalRuntimeImageActualInputs` 通过，一次性验收程序随后删除。正式材料目录为 `/root/sbk/p2-materials-1dd1ae71.lVSEBfl2`：
+
+- `runtime-startup-images/runtime-startup-images.json`：`28e979483e004141f3452f13609057fc0cde5bb82e4ca1d34e299cb536087068`。
+- `coordinates/initial-source-coordinates.json`：`4fe0083a3546c7a41c302861c65b805eea9ef981f9862e86f4bae043724b7980`。
+- `coordinates/initial-source-kubernetes.private.json`：`2dc4ce78540b2194c6c94679908fadd83340cee95e4e8e5afd472fed75b0577a`。
+
+源坐标回执版本为 `original-initial-source-data-authored.v1`，保留全部 8 个实例；`WriterQualified=false`、`BackupReady=false` 是该数据作者的固定语义。接着使用 `scripts/system-backup-field-tools/prepare-p2-writer-selection.py` 读取这些固定输入和真实 App/Runtime 环境，生成私有 source config，再调用同批工具的 `prepare-selection`。该脚本不重新采集已有坐标、不运行引导、不滚动部署，也不调用停写或 adopt。只有新 writer selection 回执读回通过后，才进入下面的 source-inputs 和 mount-materials。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
