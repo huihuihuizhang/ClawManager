@@ -205,24 +205,40 @@ def workspace(m, stages, assembly, app, host, coordinates):
     m.need(selector.get("matchLabels") and not selector.get("matchExpressions"), "finite_original_app_selector_required")
     pods = m.decode(stages.op.k("-n", coordinates["Namespace"], "get", "pods", "-l", ",".join(k+"="+v for k,v in sorted(selector["matchLabels"].items())), "-o", "json"))["items"]
     pods = [p for p in pods if not p["metadata"].get("deletionTimestamp")]
-    m.need(len(pods) == 1 and pods[0]["spec"]["nodeName"] in coordinates["NodeUIDs"], "actual_original_app_workspace_node_required")
+    m.need(pods and len(pods) == app["spec"].get("replicas", 1) and
+           all(p["spec"].get("nodeName") in coordinates["NodeUIDs"] and
+               p.get("status", {}).get("phase") == "Running" and
+               p.get("status", {}).get("containerStatuses") and
+               all(c.get("ready") for c in p["status"]["containerStatuses"]) for p in pods),
+           "complete_ready_original_app_workspace_roster_required")
+    for pod in pods:
+        actual_containers = [c for c in pod["spec"]["containers"] if c["name"] == container["name"]]
+        m.need(len(actual_containers) == 1 and
+               [x for x in actual_containers[0].get("volumeMounts", []) if x["name"] == mount["name"]] == [mount] and
+               [v for v in pod["spec"].get("volumes", []) if v["name"] == mount["name"]] == volumes,
+               "all_original_app_workspace_mounts_must_match")
+    host_pod = stages.get("pod", host["Pod"])
+    m.need(host_pod["metadata"]["uid"] == host["PodUID"] and
+           host_pod["spec"].get("nodeName") in coordinates["NodeUIDs"],
+           "same_original_staging_controller_Pod_UID_required")
+    worker_node = host_pod["spec"]["nodeName"]
     suffix = root[len(mount["mountPath"]):].lstrip("/")
     subpath = "/".join(x for x in (mount.get("subPath", ""), suffix) if x)
     m.need(not subpath or not subpath.startswith("/") and ".." not in PurePosixPath(subpath).parts, "finite_original_workspace_subpath_required")
     if "nfs" in volumes[0]:
         # Worker placement is the original signed staging node; the actual
         # runtime Pod may be elsewhere when reading a shared NFS source.
-        host_pod = stages.get("pod", host["Pod"])
-        m.need(host_pod["metadata"]["uid"] == host["PodUID"], "same_original_staging_controller_Pod_UID_required")
-        worker_node = host_pod["spec"]["nodeName"]
-        m.need(worker_node in coordinates["NodeUIDs"], "original_staging_node_UID_required")
         return root, inline_nfs_workspace(m, stages, coordinates, root, subpath, volumes[0]["nfs"], worker_node), None
     m.need("persistentVolumeClaim" in volumes[0], "unsupported_original_workspace_source_requires_actual_adapter")
     claim_name = volumes[0]["persistentVolumeClaim"]["claimName"]
     actual = stages.get("pvc", claim_name)
     pins = [v for v in coordinates["Volumes"] if v["ClaimName"] == claim_name and v["ClaimUID"] == actual["metadata"]["uid"]]
     m.need(len(pins) == 1 and actual["status"]["phase"] == "Bound", "same_original_workspace_PVC_identity_required")
-    return root, {"claim": claim_name, "sub_path": subpath, "node": pods[0]["spec"]["nodeName"],
+    modes = actual["spec"].get("accessModes", [])
+    m.need("ReadWriteMany" in modes or modes == ["ReadWriteOnce"] and
+           all(p["spec"]["nodeName"] == worker_node for p in pods),
+           "original_workspace_and_staging_nodes_must_support_claim_access_mode")
+    return root, {"claim": claim_name, "sub_path": subpath, "node": worker_node,
         "max_files": 1000000, "max_file_bytes": 1 << 30, "max_archive_bytes": 8 << 30, "max_compressed_bytes": 8 << 30}, pins[0]
 
 
@@ -270,7 +286,8 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
         key = tuple(source_row[k] for k in ("Type", "Mode", "Variant", "OS"))
         if key not in seen:
             seen.add(key); runtime["supported"].append(dict(zip(("Type", "Mode", "Variant", "OS"), key)))
-    m.need(runtime["lease_participants"] and runtime["shared_runtime_observer"]["Nodes"], "actual_original_participants_and_shared_native_paths_required")
+    m.need(isinstance(writer["Participants"], list) and runtime["shared_runtime_protocol"] == "shared-container-freeze.v1" and
+           runtime["shared_runtime_observer"]["Nodes"], "actual_original_participant_census_and_shared_native_paths_required")
     config = {"schema_version": "system-backup-public-deployment.v1", "capture_scope": "six-part", "installation_id": target["InstallationID"], "controller_owner": host["DeploymentUID"],
         "application_scope": writer["ApplicationScope"], "namespace": target["Namespace"], "namespace_uid": target["NamespaceUID"], "trust_domain": "clawmanager.invalid",
         "forward_grant": {"path": str(directory / "forward.grant.json"), "public_key_base64": public}, "recovery_grant": {"path": str(directory / "recovery.grant.json"), "public_key_base64": public},

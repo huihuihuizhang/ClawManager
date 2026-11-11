@@ -67,7 +67,7 @@ func NewSQLRuntimeControl(c RuntimeControlConfig) (*SQLRuntimeControl, error) {
 		return nil, d.ErrNotReady
 	}
 	c.RuntimeTestScope = c.RuntimeTestScope.Clone()
-	if c.Namespace == "" || !c.Gate.ready() || absentExecutionDependency(c.Keys) || absentExecutionDependency(c.Client) || (absentExecutionDependency(c.StopProof) && c.StopProofForTask == nil) || len(c.ParticipantChecks) == 0 || c.PollInterval <= 0 || c.PollInterval > time.Second {
+	if c.Namespace == "" || !c.Gate.ready() || absentExecutionDependency(c.Keys) || absentExecutionDependency(c.Client) || (absentExecutionDependency(c.StopProof) && c.StopProofForTask == nil) || !runtimeParticipantRosterPresent(c) || c.PollInterval <= 0 || c.PollInterval > time.Second {
 		return nil, d.ErrNotReady
 	}
 	probes := map[string]ReadinessProbe{}
@@ -88,6 +88,20 @@ func NewSQLRuntimeControl(c RuntimeControlConfig) (*SQLRuntimeControl, error) {
 	c.DeploymentChecks = deployments
 	c.AdditionalWriterIDs = append([]string(nil), c.AdditionalWriterIDs...)
 	return &SQLRuntimeControl{c}, nil
+}
+
+func runtimeParticipantRosterPresent(c RuntimeControlConfig) bool {
+	if c.ParticipantChecks == nil {
+		return false
+	}
+	if len(c.ParticipantChecks) > 0 {
+		return true
+	}
+	// Empty SQL participant sets do not replace physical writer fencing.
+	// Require the deployment's concrete native owners; their live discovery,
+	// TLS and exact participant checks remain mandatory at task execution.
+	s := c.Shared
+	return s != nil && s.Protocol == services.RuntimeSharedBackupProtocol && s.NamespaceUID != "" && s.WorkspaceRoot != "" && !absentExecutionDependency(s.Agent) && s.Native != nil && s.WholeNode != nil && len(s.Agents) > 0 && len(s.Nodes) > 0
 }
 func runtimeWriterID(s b.RuntimeWriterSpec) string {
 	switch s.Kind {

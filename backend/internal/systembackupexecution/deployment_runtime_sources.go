@@ -59,7 +59,10 @@ func (r RuntimeSourceConfig) validate() error {
 	if validateCurrentStoppedProLayouts(r.CurrentStoppedProLayouts) != nil {
 		return d.ErrNotReady
 	}
-	if len(r.Supported) == 0 || len(r.Namespaces) != 1 || len(r.LeaseParticipants) == 0 || !path.IsAbs(r.WorkspaceRoot) || path.Clean(r.WorkspaceRoot) != r.WorkspaceRoot || r.WorkspaceRoot == "/" {
+	// An explicit [] is a complete empty census, not a missing census. Only
+	// the native shared protocol can fence writers without legacy lease rows.
+	// The source owner still compares this exact set with SQL through EOF.
+	if len(r.Supported) == 0 || len(r.Namespaces) != 1 || r.LeaseParticipants == nil || len(r.LeaseParticipants) == 0 && r.SharedRuntimeProtocol != "shared-container-freeze.v1" || !path.IsAbs(r.WorkspaceRoot) || path.Clean(r.WorkspaceRoot) != r.WorkspaceRoot || r.WorkspaceRoot == "/" {
 		return d.ErrNotReady
 	}
 	namespaces := map[string]bool{}

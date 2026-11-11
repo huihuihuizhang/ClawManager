@@ -21,6 +21,30 @@ func runtimeDeploymentFixture(t *testing.T) DeploymentConfig {
 	return cfg
 }
 
+func TestRuntimeParticipantCensusEmptyRequiresExplicitNativeProtocol(t *testing.T) {
+	r := runtimeDeploymentFixture(t).RuntimeSources
+	r.LeaseParticipants = []string{}
+	if r.validate() == nil {
+		t.Fatal("legacy runtime accepted no participant fence")
+	}
+	r.SharedRuntimeProtocol = "shared-container-freeze.v1"
+	if r.validate() == nil {
+		t.Fatal("native observer missing")
+	}
+	r.SharedObserver = &FormalSharedRuntimeObserverConfig{}
+	if err := r.validate(); err != nil {
+		t.Fatal("explicit empty census refused before native observer qualification", err)
+	}
+	r.LeaseParticipants = nil
+	if r.validate() == nil {
+		t.Fatal("missing census accepted as empty")
+	}
+	r.LeaseParticipants = []string{"new-participant", "new-participant"}
+	if r.validate() == nil {
+		t.Fatal("duplicate census accepted")
+	}
+}
+
 func TestNativeRuntimeRequiresPinnedAgentCA(t *testing.T) {
 	cfg := runtimeDeploymentFixture(t)
 	cfg.RuntimeSources.Supported = []b.AgentKind{{Type: "openclaw", Mode: "lite", Variant: "linux", OS: "linux"}}

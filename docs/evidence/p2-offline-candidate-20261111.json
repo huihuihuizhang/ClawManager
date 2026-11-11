@@ -1,0 +1,75 @@
+{
+  "version": "p2-offline-candidate-validation.v1",
+  "date": "2026-11-11",
+  "snapshot_sha256": "dfaf71f6b78b0dc852578c57a052a7bbc5329d442db219062be48b131a52fcb1",
+  "snapshot_json_count": 25,
+  "snapshot_errors": [],
+  "source_blobs_lf_sha256": {
+    "backend/internal/systembackupexecution/deployment_runtime_sources.go": "8c1e3a1f46d02cd1ae6280f1ea3777397f71159a8e7469bb19cd816fc0e83e5f",
+    "backend/internal/systembackupcontroller/runtime_control.go": "01652812b01565ff98defa90fe8f2039616dc65142613f4d1dcb841d832260eb",
+    "scripts/system-backup-initial-complete-inputs.py": "1d13b9cdef25febbd10c8f0fc6576c9ba9c86b6c1c5f3674b88665b30f574306",
+    "scripts/system-backup-initial-runtime.py": "8bb573f4ceb77183d6d408c89e3eebd21c535b2b2ace025c1532ff199198c494",
+    "scripts/system-backup-field-tools/assemble-p2-installation-candidate.py": "ef4a0e36cb1d40e49a140455a10e5aaf8e6943a733dd16610bac08078db0e3ec",
+    "scripts/system-backup-field-tools/continue-p2-native-candidate.py": "63ea8aaadb679cac14586ee3ff301539c249663f96a851bc00984cd29c6efa0f",
+    "scripts/system-backup-field-tools/prepare-p2-vault-owner.py": "ee0cc2e1d0ab0876f46614fbe5519ec1f1d3a45d1e13c066cdcfc9df8cb93f9e"
+  },
+  "python": {
+    "command": "py -3 -B scripts/system-backup-field-tools/test_p2_installation_candidate.py -v",
+    "tests": 9,
+    "passed": true,
+    "uses_actual_redacted_snapshot": true,
+    "fixture_data_not_authority": true
+  },
+  "go": {
+    "packages": [
+      "./internal/systembackupexecution",
+      "./internal/systembackupcontroller"
+    ],
+    "tests": [
+      "TestRuntimeParticipantCensusEmptyRequiresExplicitNativeProtocol",
+      "TestDeploymentRuntimeScopeAndRBACAreExplicit",
+      "TestRuntimeEmptyParticipantCensusRetainsPhysicalNativeOwners",
+      "TestRuntimeControlStateAndRecoveryBoundary"
+    ],
+    "subtests_passed": 9,
+    "passed": true,
+    "goos": "windows",
+    "goarch": "amd64",
+    "cgo_enabled": false
+  },
+  "linux_native_builds": [
+    {
+      "name": "system-backup-first-install-materials",
+      "bytes": 69488802,
+      "sha256": "bb9d36f1f9c2abaff4d311e9580787aa9b9b832f0aff5133b732467ffc734b0c"
+    },
+    {
+      "name": "system-backup-observer-deployment-materials",
+      "bytes": 56287394,
+      "sha256": "86077b8ba7b75b18977366ebef23044a4783f95b07a5a3d9f07305c812e054ac"
+    },
+    {
+      "name": "system-backup-original-observer-pki",
+      "bytes": 55320738,
+      "sha256": "d2a7b6fdc7906dbf4ed36de181cbd9b6772a014c3640af19fbf8af88c3ad0b66"
+    },
+    {
+      "name": "system-backup-source-registries",
+      "bytes": 69705890,
+      "sha256": "c055a709428631d7abdf07c1ad932a1b6b31898775509d5c4036869e3a64e714"
+    },
+    {
+      "name": "system-backup-v2-controller",
+      "bytes": 69017762,
+      "sha256": "35b3f33658847eb5d46192cb6f268da1583312458e543c274b28bcf24b1b6d3a"
+    }
+  ],
+  "remote_operations_performed": false,
+  "real_issuer_authentication_verified": false,
+  "node_native_fd_or_hold_verified": false,
+  "vault_installed_or_usable_verified": false,
+  "controller_enabled": false,
+  "whole_backup_completed": false,
+  "temporary_root": "D:/dsh-work/sbk-p2-offline-candidate-build",
+  "cleanup_required_after_delivery": true
+}

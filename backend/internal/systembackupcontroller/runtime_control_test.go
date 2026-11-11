@@ -1,8 +1,10 @@
 package systembackupcontroller
 
 import (
+	"clawreef/internal/services"
 	"clawreef/internal/systembackup/flow"
 	b "clawreef/internal/systembackup/publicadapter"
+	q "clawreef/internal/systembackup/quiesce"
 	d "clawreef/internal/systembackupdispatch"
 	"context"
 	"database/sql"
@@ -10,6 +12,39 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestRuntimeEmptyParticipantCensusRetainsPhysicalNativeOwners(t *testing.T) {
+	shared := &RuntimeSharedTaskConfig{Protocol: services.RuntimeSharedBackupProtocol, NamespaceUID: "namespace-uid", WorkspaceRoot: "/workspaces", Agent: services.NewRuntimeAgentClient("test-only"), Native: &q.SharedRuntimeNodeClient{}, WholeNode: &q.NodeObservationClient{}, Agents: []RuntimeSharedAgentDeployment{{Name: "agent", UID: "agent-uid"}}, Nodes: []RuntimeSharedNodeSources{{Name: "node", UID: "node-uid", Paths: []string{"/workspaces"}}}}
+	if runtimeParticipantRosterPresent(RuntimeControlConfig{Shared: shared}) {
+		t.Fatal("missing participant census accepted")
+	}
+	for _, fault := range []string{"", "protocol", "namespace", "workspace", "agent", "native", "whole-node", "agents", "nodes"} {
+		t.Run(fault, func(t *testing.T) {
+			s := *shared
+			switch fault {
+			case "protocol":
+				s.Protocol = "legacy"
+			case "namespace":
+				s.NamespaceUID = ""
+			case "workspace":
+				s.WorkspaceRoot = ""
+			case "agent":
+				s.Agent = nil
+			case "native":
+				s.Native = nil
+			case "whole-node":
+				s.WholeNode = nil
+			case "agents":
+				s.Agents = nil
+			case "nodes":
+				s.Nodes = nil
+			}
+			if runtimeParticipantRosterPresent(RuntimeControlConfig{Shared: &s, ParticipantChecks: map[string]ReadinessProbe{}}) != (fault == "") {
+				t.Fatal("empty census bypassed physical writer requirements")
+			}
+		})
+	}
+}
 
 func TestRuntimeControlTransactionFinalAuthority(t *testing.T) {
 	for _, fault := range []string{"", "callback", "revoked", "version", "clock"} {
