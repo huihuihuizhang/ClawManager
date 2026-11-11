@@ -4,14 +4,13 @@
 
 ## 固定源码与工具
 
-现场源码固定为 `a11b1d24d5fb9b067e302219f7db54c96a2b080c`。使用该提交的独立检出或 Git 源码导出。`a11b1d24` 包含 SQL 准入与验证名单、零代次 Pro 挂载、Longhorn keeper 接线、共享 Longhorn 卷的作者侧身份记录、验证引导预检和 OpenClaw 测试修复。原主工作区的镜像工具改动会移除当前私有 Agent 目录选项，Go 解码器改动会移除共享原生 TLS 候选支持，旧装配改动会删减源坐标和 provider 流程。现场使用本提交中的实现。
+原现场工具来自 `a11b1d24d5fb9b067e302219f7db54c96a2b080c`，包含 SQL 准入与验证名单、零代次 Pro 挂载、Longhorn keeper 接线、共享 Longhorn 卷作者侧身份记录、验证引导预检和 OpenClaw 测试修复。2026-11-11 Hermes 修复后，使用包含本次精确 Lite 镜像识别的 `backup` 提交；完整提交号随交付写入 `SOURCE_REVISION`。旧 `a11b1d24` 工具不识别新的 Hermes 底座，不再用于本轮 P2。原主工作区的大量未提交改动继续保留，现场从 `backup` 的独立源码导出构建。
 
 在有 Go 工具链的构建机使用仓库根目录和独占交付目录。构建产物是 Linux amd64。Windows 构建机的 `GOTMPDIR`、`GOCACHE`、`TEMP`、`TMP` 和交付目录使用 D 盘。保留交付文件和摘要，清理独占构建缓存。
 
 ```bash
 set -euo pipefail
-REV=a11b1d24d5fb9b067e302219f7db54c96a2b080c
-test "$(git rev-parse HEAD)" = "$REV"
+REV=$(git rev-parse HEAD)
 test -z "$(git status --porcelain --untracked-files=no)"
 : "${BIN:?现有独占交付目录的绝对路径}"
 (
@@ -20,7 +19,8 @@ test -z "$(git status --porcelain --untracked-files=no)"
     GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o "$BIN/$name" "./cmd/$name" || exit
   done
 )
-(cd "$BIN" && sha256sum system-backup-first-adoption system-backup-first-install-materials system-backup-source-registries > SHA256SUMS)
+printf '%s\n' "$REV" > "$BIN/SOURCE_REVISION"
+(cd "$BIN" && sha256sum system-backup-first-adoption system-backup-first-install-materials system-backup-source-registries SOURCE_REVISION > SHA256SUMS)
 ```
 
 现场把三份工具放入一个新目录，在该目录执行 `sha256sum -c SHA256SUMS`。`/root/sbk/bin` 现存工具属于上次交接批次。以下用 `$BIN` 指向本次交付目录。旧 `system-backup-zhanghui08-operator.py` 固定另一 namespace，模块摘要也落后于当前源码。本清单使用验证预检和具名 owner CLI 入口。
@@ -38,15 +38,19 @@ set -euo pipefail
 umask 077
 python3 -B scripts/system-backup-runtime-startup-inputs.py \
   --image openclaw=10.130.14.23:5000/openclaw-lite@sha256:5d5f735bc8c0155d51841b574c98c6c02ca399085add0e3dc98b3d7e0ead3140 \
-  --image hermes=10.130.14.23:5000/hermes-lite@sha256:a2473da0cf375ed128116af3083eccd3276665adac4ae2722edcbff6cc277353 \
+  --image hermes=10.130.14.23:5000/hermes-lite@sha256:279fa5b365f875de1fad93b0f58cda20599d2339fa067bf062e08ef80d770254 \
   --output-directory "$RUN/runtime-startup-images" > "$RUN/runtime-startup-images.receipt.json"
 ```
 
 从回执取 `file` 和 `sha256`，设为 `$STARTUP`、`$STARTUP_SHA`。对照验证 Pod 的 `spec.containers[].image` 和 `status.containerStatuses[].imageID` 核验实际 manifest/config，并读回同 Pod 的 Agent mTLS。上次观测为基础镜像。如果候选缺失或 Pod 仍使用基础镜像，停在镜像步骤，先核对发布候选和验证环境 rollout。rollout 后刷新源坐标、Pod 和挂载身份，再重跑本节。
 
+2026-11-11 已完成 Hermes 恢复：底座 manifest `47729188347a01d249d5a929e474b3bb9959a138c138031a84ec39a7c6412cc7`、底座 config `e946aefc144302ff072039ff52f0ddeb749f8155a6a017bc4b5edc7a9f58c7b4`、当前镜像 `279fa5b365f875de1fad93b0f58cda20599d2339fa067bf062e08ef80d770254`、Agent `be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102`、更新后的发布清单 `bde2200cd129798edc17fbf6cd90f3e4e65aa9aa5c748f1e852faeb53566cf9c`。清单中的 `desktop_web_accepted=false` 保持不变；启动和备份能力通过不等于完整 Desktop Web 发布验收。实际 Pod 为 `hermes-runtime-5544b97c6d-bsxk8`，UID `d995ae33-ff70-4a95-bf2b-37bdbf9937f3`，实例 3 为 running、generation 8；TLS、控制鉴权、`shared-container-freeze.v1` 及 durable reservation 均通过。恢复回执为 `/root/sbk/p2-hermes-resume.hkysh2nm`。原发布及修复记录为 `/root/sbk/p2-hermes-repair.mezljmrw`。本次从更新 OCI 输入和源坐标开始，复用已通过的引导、TLS 与恢复结果。
+
+收尾脚本源码保存在 `scripts/system-backup-field-tools/`。它按 Kubernetes 空字符串序列化规则比较 Env，并精确识别标准只读 ServiceAccount 投射卷；API 身份使用 `type=hermes`、`runtime_type=gateway`、`instance_mode=lite`。实际持有源的分类仍要求原有 native Node 证明；本次镜像兼容不会把 Secret 元数据当作已加载环境证明。
+
 ## 签发前材料闭环
 
-在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。`CUSTODY_DIR`、`CUSTODY_KEY` 和摘要来自原 gateway custody。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
+在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
 
 ```bash
 OWNER=(--plan-file "$PLAN" --plan-sha256 "$PLAN_SHA"
@@ -69,8 +73,6 @@ mkdir -m 700 "$RUN/writer-selection" "$RUN/journal" "$RUN/source-inputs" "$RUN/m
   --runtime-startup-images-file "$STARTUP" --runtime-startup-images-sha256 "$STARTUP_SHA" \
   --observer-definition-file "$OBS_DEF" --observer-definition-sha256 "$OBS_DEF_SHA" \
   --observer-receipt-file "$OBS_REC" --observer-receipt-sha256 "$OBS_REC_SHA" \
-  --gateway-original-directory "$CUSTODY_DIR" \
-  --gateway-original-key-file "$CUSTODY_KEY" --gateway-original-key-sha256 "$CUSTODY_KEY_SHA" \
   --selection-output-directory "$RUN/writer-selection" --journal-directory "$RUN/journal" \
   "${PARTICIPANT_ARGS[@]}" > "$RUN/writer-selection.receipt.json"
 ```
@@ -109,4 +111,4 @@ mkdir -m 700 "$RUN/writer-selection" "$RUN/journal" "$RUN/source-inputs" "$RUN/m
 | 命令退出 `1`、部分输出或回执丢失 | 保留原私有目录和 stderr，读回已落盘文件，确认阶段和是否产生副作用；确认可重试后使用新的输出目录 |
 | 停写、快照或恢复结果不明 | 保留原任务、attempt、恢复义务和 keeper，按原资源日志对账 |
 
-页面验收需同一 task/attempt 的 keeper 注册、停写、快照完成、解冻、原源恢复写读、keeper 回收、六域正式发布、独立读回和目录登记全部齐备。本轮远测不可用，现场执行从 OCI 和实际 Pod 核验继续。
+页面验收需同一 task/attempt 的 keeper 注册、停写、快照完成、解冻、原源恢复写读、keeper 回收、六域正式发布、独立读回和目录登记全部齐备。当前远测已恢复，Hermes 已恢复运行，现场从更新的 OCI 材料及源坐标继续。

@@ -82,8 +82,18 @@ func decodeOriginalRuntimeStartup(image *originalRuntimeStartupImage, spec *core
 		launch = "direct-fixed-shared-agent"
 	} else if len(c.Command) == 0 && len(c.Args) == 0 && reflect.DeepEqual(image.entrypoint, []string{"/init"}) && len(image.command) == 0 {
 		launch = "fixed-s6-shared-no-configured-mods"
+	} else if image.hermesLite && image.runtime == "hermes" && image.manifest == originalHermesLiteNativeManifest && len(c.Command) == 0 && len(c.Args) == 0 && len(image.command) == 0 && reflect.DeepEqual(image.entrypoint, []string{"/usr/bin/tini", "--", "/usr/local/bin/hermes-lite-entrypoint"}) {
+		launch = "fixed-hermes-lite-shared-entrypoint"
 	} else {
 		return "", nil, OriginalWriterSourceFailure{Dependency: "runtime_fixed_original_startup_override_unsupported"}
+	}
+	if image.hermesLite {
+		// This is the exact pinned Lite entrypoint, not the old Webtop/s6
+		// profile. It must dispatch the standalone shared Agent, never a slot
+		// coordinator or Pro instance service. Native ownership remains required.
+		if env["RUNTIME_AGENT_ROLE"] != "" || strings.EqualFold(strings.Join(strings.Fields(env["CLAWMANAGER_AGENT_ENABLED"]), ""), "true") || env["CLAWMANAGER_HERMES_DESKTOP_WEB_ENABLED"] != "true" || env["CLAWMANAGER_HERMES_BACKEND_MODE"] != "serve" || env["RUNTIME_GATEWAY_COMMAND"] != "start-hermes-lite-runtime" {
+			return "", nil, ErrInstall
+		}
 	}
 	if launch == "fixed-s6-shared-no-configured-mods" {
 		if _, defined := env["DOCKER_MODS"]; defined {
@@ -112,6 +122,15 @@ func decodeOriginalRuntimeStartup(image *originalRuntimeStartupImage, spec *core
 		}
 	}
 	controls := []string{"/init", "/command", "/package", "/etc/services.d", "/etc/s6-overlay", "/etc/cont-init.d", "/etc/cont-finish.d", "/custom-cont-init.d", "/custom-services.d", "/run/s6", "/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin", "/usr/local/sbin", "/lib", "/usr/lib", "/etc/ld.so.preload", "/etc/ld.so.conf", "/etc/ld.so.conf.d"}
+	if image.hermesLite {
+		controls = append(controls, "/opt/hermes-agent", "/usr/local/lib", "/usr/local/share/hermes-lite")
+		for _, directory := range strings.Split(image.defaults["PATH"], ":") {
+			if !originalStoppedCleanRoot(directory) || directory == "/" {
+				return "", nil, ErrInstall
+			}
+			controls = append(controls, directory)
+		}
+	}
 	if launch == "fixed-s6-shared-no-configured-mods" {
 		controls = append(controls, "/config", "/root", "/home", "/docker-mods")
 		// The fixed hook invokes interpreters through the original image PATH.

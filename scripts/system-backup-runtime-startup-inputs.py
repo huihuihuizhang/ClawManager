@@ -15,6 +15,8 @@ BASE = {
     "openclaw": ("730758ed3025b5a1c7fd91b14214eea1d5a50950ef3fd56012a5efb48f345769", "c9798a575acf6d1c832a268fa53a057c3d1bb42ce7bdb06f887cddf7d00fb90a"),
     "hermes": ("5fe79507129002540c2fbc25fc49bbd10326cb65dbc752885cfc845b2860731d", "4a36a2cda56406be6c4183eca5c58ac91dcceb36cb3342b7520b315c564a6c92"),
 }
+HERMES_LITE_MANIFEST = "279fa5b365f875de1fad93b0f58cda20599d2339fa067bf062e08ef80d770254"
+HERMES_LITE_BASE = ("47729188347a01d249d5a929e474b3bb9959a138c138031a84ec39a7c6412cc7", "e946aefc144302ff072039ff52f0ddeb749f8155a6a017bc4b5edc7a9f58c7b4")
 
 
 def require(ok):
@@ -97,7 +99,7 @@ def main():
         match = re.fullmatch(r"10\.130\.14\.23:5000/([a-z0-9][a-z0-9._/-]{0,200})@sha256:([a-f0-9]{64})", reference)
         require(match and all(part not in ("", ".", "..") for part in match.group(1).split("/")))
         repository, candidate = match.groups()
-        original_manifest, original_config = BASE[kind]
+        original_manifest, original_config = HERMES_LITE_BASE if kind == "hermes" and candidate == HERMES_LITE_MANIFEST else BASE[kind]
         bm = fetch(repository, "manifests", original_manifest, kind + "-base-manifest.json", 262144)
         base = unique_json(Path(bm["File"]).read_bytes())
         require(base["config"]["digest"] == "sha256:" + original_config)

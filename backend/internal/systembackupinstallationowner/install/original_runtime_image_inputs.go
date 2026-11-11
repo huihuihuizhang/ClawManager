@@ -33,6 +33,7 @@ type originalRuntimeStartupImage struct {
 	runtime, manifest, config, source string
 	defaults                          map[string]string
 	entrypoint, command               []string
+	hermesLite                        bool
 }
 
 func (*originalRuntimeStartupImage) MarshalJSON() ([]byte, error) { return nil, ErrInstall }
@@ -43,6 +44,11 @@ const originalOpenclawSelectedManifest = "730758ed3025b5a1c7fd91b14214eea1d5a509
 const originalOpenclawBaseConfig = "c9798a575acf6d1c832a268fa53a057c3d1bb42ce7bdb06f887cddf7d00fb90a"
 const originalHermesSelectedManifest = "5fe79507129002540c2fbc25fc49bbd10326cb65dbc752885cfc845b2860731d"
 const originalHermesBaseConfig = "4a36a2cda56406be6c4183eca5c58ac91dcceb36cb3342b7520b315c564a6c92"
+const originalHermesLiteSelectedManifest = "47729188347a01d249d5a929e474b3bb9959a138c138031a84ec39a7c6412cc7"
+const originalHermesLiteBaseConfig = "e946aefc144302ff072039ff52f0ddeb749f8155a6a017bc4b5edc7a9f58c7b4"
+const originalHermesLiteNativeManifest = "279fa5b365f875de1fad93b0f58cda20599d2339fa067bf062e08ef80d770254"
+const originalHermesLiteReleaseSHA = "bde2200cd129798edc17fbf6cd90f3e4e65aa9aa5c748f1e852faeb53566cf9c"
+const originalHermesLiteNativeAgentSHA = "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102"
 const originalOpenclawGatedServiceSHA = "3649b6362025304a52897c042a3d6dc73361ee85929982d496176ce2fb424abb"
 const originalOpenclawGatedManifest = "749f578ff4799789aa301e2a11e1b5bf93639121031172231c823ef5c82646e7"
 const originalOpenclawSharedNativeTLSManifest = "5d5f735bc8c0155d51841b574c98c6c02ca399085add0e3dc98b3d7e0ead3140"
@@ -126,6 +132,13 @@ func originalRuntimeAgentSHA(kind, value string, size int64) bool {
 }
 
 func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, kind string, size int64) (diff, agent, wrapper string, err error) {
+	return readOriginalRuntimeLayerProfile(ctx, pin, kind, size, false)
+}
+
+func readOriginalRuntimeLayerProfile(ctx context.Context, pin BootstrapSourceFilePin, kind string, size int64, hermesLite bool) (diff, agent, wrapper string, err error) {
+	if hermesLite && kind != "hermes" {
+		return "", "", "", ErrInstall
+	}
 	if ctx == nil || ctx.Err() != nil || !filepath.IsAbs(pin.File) || filepath.Clean(pin.File) != pin.File || size < 1 || size > 128<<20 {
 		return "", "", "", ErrInstall
 	}
@@ -186,6 +199,11 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 		expectedMode := int64(0555)
 		switch h.Name {
 		case "usr/local/bin/clawmanager-agent":
+		case "usr/local/share/hermes-lite/release.json":
+			if !hermesLite || h.Size > 4<<20 {
+				return "", "", "", ErrInstall
+			}
+			expectedMode = 0444
 		case "etc/services.d/openclaw-agent/run":
 			if kind != "openclaw" {
 				return "", "", "", ErrInstall
@@ -194,7 +212,7 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 		default:
 			return "", "", "", ErrInstall
 		}
-		if h.Mode != expectedMode {
+		if h.Mode != expectedMode || hermesLite && (h.ModTime.Unix() != 0 || h.Uname != "" || h.Gname != "") {
 			return "", "", "", ErrInstall
 		}
 		sum := sha256.New()
@@ -204,10 +222,15 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 		}
 		value := hex.EncodeToString(sum.Sum(nil))
 		if h.Name == "usr/local/bin/clawmanager-agent" {
-			if !originalRuntimeAgentSHA(kind, value, h.Size) {
+			if !originalRuntimeAgentSHA(kind, value, h.Size) || hermesLite && value != originalHermesLiteNativeAgentSHA {
 				return "", "", "", ErrInstall
 			}
 			agent = value
+		} else if h.Name == "usr/local/share/hermes-lite/release.json" {
+			if value != originalHermesLiteReleaseSHA {
+				return "", "", "", ErrInstall
+			}
+			wrapper = value
 		} else {
 			if value != originalOpenclawGatedServiceSHA {
 				return "", "", "", ErrInstall
@@ -231,7 +254,7 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 			return "", "", "", ErrInstall
 		}
 	}
-	if limited.N <= 0 || agent == "" || kind == "openclaw" && (wrapper == "" || len(seen) != 2) || kind == "hermes" && len(seen) != 1 {
+	if limited.N <= 0 || agent == "" || kind == "openclaw" && (wrapper == "" || len(seen) != 2) || kind == "hermes" && !hermesLite && len(seen) != 1 || hermesLite && (len(seen) != 2 || wrapper != originalHermesLiteReleaseSHA || !privateDirectorySeen) {
 		return "", "", "", ErrInstall
 	}
 	if _, e := br.Peek(1); !errors.Is(e, io.EOF) {
@@ -246,6 +269,7 @@ func readOriginalRuntimeLayer(ctx context.Context, pin BootstrapSourceFilePin, k
 
 func readOriginalRuntimeImage(ctx context.Context, in OriginalRuntimeStartupImageInput) (*originalRuntimeStartupImage, error) {
 	kind := ""
+	hermesLite := false
 	switch in.BaseManifest.SHA256 {
 	case originalOpenclawSelectedManifest:
 		if in.BaseConfig.SHA256 != originalOpenclawBaseConfig {
@@ -257,6 +281,11 @@ func readOriginalRuntimeImage(ctx context.Context, in OriginalRuntimeStartupImag
 			return nil, ErrInstall
 		}
 		kind = "hermes"
+	case originalHermesLiteSelectedManifest:
+		if in.BaseConfig.SHA256 != originalHermesLiteBaseConfig || in.Manifest.SHA256 != originalHermesLiteNativeManifest {
+			return nil, ErrInstall
+		}
+		kind, hermesLite = "hermes", true
 	default:
 		return nil, ErrInstall
 	}
@@ -303,7 +332,7 @@ func readOriginalRuntimeImage(ctx context.Context, in OriginalRuntimeStartupImag
 	if media != "application/vnd.oci.image.layer.v1.tar+gzip" && media != "application/vnd.docker.image.rootfs.diff.tar.gzip" {
 		return nil, ErrInstall
 	}
-	diff, agent, wrapper, e := readOriginalRuntimeLayer(ctx, in.Layer, kind, layerSize)
+	diff, agent, wrapper, e := readOriginalRuntimeLayerProfile(ctx, in.Layer, kind, layerSize, hermesLite)
 	if e != nil {
 		return nil, e
 	}
@@ -375,7 +404,7 @@ func readOriginalRuntimeImage(ctx context.Context, in OriginalRuntimeStartupImag
 		}
 		defaults[k] = v
 	}
-	return &originalRuntimeStartupImage{runtime: kind, manifest: in.Manifest.SHA256, config: in.Config.SHA256, defaults: defaults, entrypoint: entry, command: command, source: originalObjectSHA(struct{ BaseManifest, BaseConfig, Manifest, Config, Layer, Diff, Agent, Wrapper string }{in.BaseManifest.SHA256, in.BaseConfig.SHA256, in.Manifest.SHA256, in.Config.SHA256, in.Layer.SHA256, diff, agent, wrapper})}, nil
+	return &originalRuntimeStartupImage{runtime: kind, manifest: in.Manifest.SHA256, config: in.Config.SHA256, defaults: defaults, entrypoint: entry, command: command, hermesLite: hermesLite, source: originalObjectSHA(struct{ BaseManifest, BaseConfig, Manifest, Config, Layer, Diff, Agent, Wrapper string }{in.BaseManifest.SHA256, in.BaseConfig.SHA256, in.Manifest.SHA256, in.Config.SHA256, in.Layer.SHA256, diff, agent, wrapper})}, nil
 }
 
 func readOriginalRuntimeImageSet(ctx context.Context, inputs []OriginalRuntimeStartupImageInput) (map[string]*originalRuntimeStartupImage, error) {
