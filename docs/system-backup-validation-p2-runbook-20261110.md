@@ -81,6 +81,10 @@ MinIO 已准备计划 `/root/sbk/p2-minio-prepare.9vnemhVi/minio-tls/plan.json`�
 
 `scripts/system-backup-field-tools/continue-p2-minio-connection.py` 固定消费该计划：先准备 App 根证书配置，原 owner apply MinIO，再原 owner apply App；重入时查询同一操作。完整读取所有 App 副本的已加载连接与原 config DATA，核对实际 MinIO 进程身份，进行带认证和固定 CA 的有限 S3 列表读取，输出私有 `minio-source-fragment.json`。没有归档 Skills 时只记录业务归档为空，不声称执行过 SDK 下载；S3 读取仍必须真实返回 200。材料包含 source_objects 连接和原模板片段，不产生 grant、停写证明或整单成功标志。脚本同时保留本次 source-inputs 作者需要的实际平台、节点、StorageClass 和 VolumeSnapshotClass 数据。后续正式停写仍需完成原租户 Pro 和 Longhorn native owner 接线，不能绕开现有拒绝或删减实例名单。
 
+该 MinIO 批次现场已通过：`minio actual_tls_verified`、App 业务归档为空、两个副本已加载配置一致、认证 S3 列表返回 200。`/root/sbk/p2-minio-prepare.9vnemhVi/connection-continuation/minio-source-fragment.json` 摘要为 `c3b4eae48b3d78c12872742be55e6bc95f11bc9e594c83b8697728edc020ede8`。平台共 9 个 Deployment，既有控制器为 `sbk-d4f51b83b57e-controller`，UID `e4e27f27-8f02-40ab-8c62-09f2ffa3fafa`；App UID `8ebd4d4c-57b6-4a82-b310-fae596681a4e`，两者镜像均为 `10.130.14.23:5000/clawmanager@sha256:322ba63b49d21c4030be2760c88ae03457fbe9454ee138906066b29bc68541ca`。
+
+下一个必要连接由 `continue-p2-redis-connection.py` 复用原 `system-backup-original-maintenance --mode redis-materials` 完成 prepare/apply/query/finalize，既有 Redis 为 `clawmanager-team-redis`，Deployment UID `dd724dc4-ad59-4a78-b5bb-50aba907e036`，镜像 `docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf`。脚本按全部 App 副本实际加载的 URL 选择唯一 Service 和数据库，保留完整选源名单，作用域使用原 Teams key family `claw:team:`。它使用一个明确的私有 records 目录接续：apply 失联只查询原操作；finalize 失联通过 query-finalize 读回原 native 发送记录，不重新 finish。成功后的 reader/keeper 凭据、CA、真实 run ID 和 writer selection successor 都来自既有 native owner，脚本只导出 source_redis DATA。该 TLS 连接不会被写成整单已验收。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
