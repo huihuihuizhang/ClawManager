@@ -77,6 +77,10 @@ owner 错误回执新增有限的 `Failure.SelectionPhase`（如 `first_collecti
 
 现场后续盘点确认 `complete_inputs`、`deployment_core`、`capture_template`、`execution_profile`、`mount_layouts` 均为 0；7 份连接候选全部是 SQL DSN，没有现成的完整 source-inputs 定义。不能直接执行依赖这些定义的挂载命令。接续使用现有 `system-backup-minio-first-hop-tls.py prepare`，通过原 enrollment plan 绑定实际 namespace、Kubernetes 身份、Service/Pod/ReplicaSet/Deployment 和固定 MinIO 镜像，先输出私有 TLS 计划；该阶段只读集群并在本地生成材料，不切换服务。若已有 TLS、镜像或启动参数不符，保留拒绝输出，复用真实原 CA 或补对应镜像接线，不能改成任意镜像或忽略校验。后续 apply/query/business cutover 处理同一份计划；真实 rollout 后刷新受影响的 writer 数据。交付脚本按 Git blob 的原始字节导出，不能将 Windows CRLF 工作副本直接复制到现场后改写依赖摘要。first-hop 的原 Git 摘要为 `e1659e3553a7672f9624422f6a678ae824ad0a63a16a8066a1889034463376ad`；App cutover 继续绑定该原始实现。
 
+MinIO 已准备计划 `/root/sbk/p2-minio-prepare.9vnemhVi/minio-tls/plan.json`，摘要 `5f0c664f2a694ff997011aa8aa2b9c697dfdea1179438775ecad8a1837c27da3`，operation `a10011353367ae32b9b7dacb3bfb6a17`，CA 摘要 `1ee23762b1a38a93b709641a79191466e45f8b2bda208e0c1901d25018054450`，目前只有 `prepared_local_only`。用户已授权完成本次任务必要的配置与执行接线并推进整单验收，无需逐次请求切换确认，范围不扩展为通用安装改造。
+
+`scripts/system-backup-field-tools/continue-p2-minio-connection.py` 固定消费该计划：先准备 App 根证书配置，原 owner apply MinIO，再原 owner apply App；重入时查询同一操作。完整读取所有 App 副本的已加载连接与原 config DATA，核对实际 MinIO 进程身份，进行带认证和固定 CA 的有限 S3 列表读取，输出私有 `minio-source-fragment.json`。没有归档 Skills 时只记录业务归档为空，不声称执行过 SDK 下载；S3 读取仍必须真实返回 200。材料包含 source_objects 连接和原模板片段，不产生 grant、停写证明或整单成功标志。脚本同时保留本次 source-inputs 作者需要的实际平台、节点、StorageClass 和 VolumeSnapshotClass 数据。后续正式停写仍需完成原租户 Pro 和 Longhorn native owner 接线，不能绕开现有拒绝或删减实例名单。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
