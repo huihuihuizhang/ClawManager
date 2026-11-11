@@ -59,6 +59,7 @@ type OriginalInitialSourceCoordinates struct {
 	SharedNodes                                                        []c.RuntimeSharedNodeSources             `json:",omitempty"`
 	BlockedSharedStorage                                               []OriginalInitialSharedStorageDependency `json:",omitempty"`
 	TenantProSources                                                   []OriginalInitialTenantProCoordinates    `json:",omitempty"`
+	TenantProSelections                                                []OriginalTenantProSelection             `json:",omitempty"`
 	TenantProAccess                                                    []originalInitialTenantProAccess         `json:",omitempty"`
 	SharedRuntime                                                      originalSharedRuntimeSQL
 	Layouts                                                            []OriginalInitialSourceLayout     `json:",omitempty"`
@@ -90,7 +91,9 @@ type originalWriterSourceConfig struct {
 // The real PrepareOriginalWriterSet consumer repeats its unfiltered census and
 // native preflight. Native Redis/MinIO keeper and kept-Vault material producers
 // must augment this base through their real producer actions before adoption.
-func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password []byte, enrollment EnrollmentPin, options OriginalWriterSelectionOptions, directory string) (OriginalWriterSelectionReceipt, error) {
+func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password []byte, enrollment EnrollmentPin, options OriginalWriterSelectionOptions, directory string) (_ OriginalWriterSelectionReceipt, resultErr error) {
+	stage := "output_directories"
+	defer func() { resultErr = originalSelectionStageFailure(stage, resultErr) }()
 	var zero OriginalWriterSelectionReceipt
 	if i == nil || ctx == nil || ctx.Err() != nil || options.Policy.Validate() != nil || privateDirectory(directory) != nil || privateDirectory(options.JournalDirectory) != nil || filepath.Clean(directory) == filepath.Clean(options.JournalDirectory) {
 		return zero, ErrInstall
@@ -104,27 +107,33 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 			return zero, ErrInstall
 		}
 	}
+	stage = "operator_enrollment"
 	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, options.Policy)
 	if err != nil {
 		return zero, err
 	}
+	stage = "source_configuration"
 	configRaw, err := readBootstrapSourcePin(options.DeploymentConfig, 262144)
 	var config originalWriterSourceConfig
 	if err != nil || json.Unmarshal(configRaw, &config) != nil || config.InstallationID != i.plan.Target.InstallationID || config.Namespace != i.plan.Target.Namespace || config.NamespaceUID != i.plan.Target.NamespaceUID || config.ApplicationScope == "" || len(config.ApplicationScope) > 128 {
 		return zero, ErrInstall
 	}
+	stage = "runtime_image_definition"
 	options.runtimeStartupInputs, err = loadOriginalRuntimeImageInputs(ctx, options.RuntimeStartupImages)
 	if err != nil {
 		return zero, OriginalWriterSourceFailure{Dependency: "runtime_authenticated_startup_image_inputs_required"}
 	}
+	stage = "runtime_image_content"
 	options.runtimeStartupProfiles, err = readOriginalRuntimeImageSet(ctx, options.runtimeStartupInputs)
 	if err != nil {
 		return zero, err
 	}
+	stage = "first_collection"
 	first, firstCensus, firstVolumes, err := p.collectOriginalWriterSelection(ctx, options, config)
 	if err != nil {
 		return zero, err
 	}
+	stage = "second_collection"
 	last, lastCensus, lastVolumes, err := p.collectOriginalWriterSelection(ctx, options, config)
 	if err != nil || !reflect.DeepEqual(first, last) || !reflect.DeepEqual(firstCensus, lastCensus) || !reflect.DeepEqual(firstVolumes, lastVolumes) || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
@@ -138,6 +147,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 			clear(raw)
 		}
 	}()
+	stage = "recovery_key_materials"
 	for n := range last.RunningPro {
 		key := make([]byte, 32)
 		if _, err = rand.Read(key); err != nil {
@@ -148,6 +158,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 		files[name] = key
 		last.RunningPro[n].RecoveryKey = BootstrapSourceFilePin{File: filepath.Join(directory, name), SHA256: hash(key)}
 	}
+	stage = "encode_selection"
 	raw, err := canonical(last)
 	if err != nil || len(raw) > 262144 {
 		return zero, ErrInstall
@@ -157,7 +168,8 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 		Namespace: i.plan.Target.Namespace, NamespaceUID: i.plan.Target.NamespaceUID, ApplicationScope: last.ApplicationScope,
 		WriterSelection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)},
 		Instances:       append([]domain.SourceInstance(nil), p.instances...), Deployments: last.Deployments, Participants: last.Participants,
-		RuntimeStartupImages: options.runtimeStartupInputs, Volumes: lastVolumes, SharedRuntimeVolumes: last.SharedRuntimeVolumes, Census: lastCensus}
+		RuntimeStartupImages: options.runtimeStartupInputs, Volumes: lastVolumes, SharedRuntimeVolumes: last.SharedRuntimeVolumes, Census: lastCensus,
+		TenantProSelections: append([]OriginalTenantProSelection(nil), last.TenantPro...)}
 	coordinateRaw, err := canonical(coordinates)
 	if err != nil || len(coordinateRaw) > 8<<20 {
 		return zero, ErrInstall
@@ -165,6 +177,7 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 	files["original-source-coordinates.json"] = coordinateRaw
 	// Re-read all externally selected bytes immediately before writing. The
 	// receipt itself is DATA; it cannot extend this original authority/window.
+	stage = "export_readback"
 	if originalRuntimeInputDefinitionStill(options.RuntimeStartupImages, options.runtimeStartupInputs) != nil || originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.check(ctx) != nil || p.checkInstances(ctx) != nil || writeNewFiles(directory, files) != nil {
 		return zero, ErrInstall
 	}
@@ -184,11 +197,12 @@ func (i *Installer) ProduceOriginalWriterSelection(ctx context.Context, password
 	}
 	// A final fresh full read follows export. Generated Pro keys are normalized
 	// away only for comparison; the consumer independently checks the real pins.
+	stage = "final_collection"
 	after, afterCensus, afterVolumes, err := p.collectOriginalWriterSelection(ctx, options, config)
 	if err != nil || !reflect.DeepEqual(first, after) || !reflect.DeepEqual(firstCensus, afterCensus) || !reflect.DeepEqual(firstVolumes, afterVolumes) || originalSelectionPinStill(options.DeploymentConfig, configRaw) != nil || p.checkInstances(ctx) != nil || p.check(ctx) != nil {
 		return zero, ErrInstall
 	}
-	return OriginalWriterSelectionReceipt{Version: "original-writer-selection-materials.v1", State: "actual_original_complete_base_selection_materialized_no_hold", Selection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)}, SourceCoordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "original-source-coordinates.json"), SHA256: hash(coordinateRaw)}, SourceCount: len(p.instances), DeploymentCount: len(last.Deployments), ParticipantCount: len(last.Participants)}, nil
+	return OriginalWriterSelectionReceipt{Version: "original-writer-selection-materials.v1", State: "actual_original_complete_base_selection_materialized_no_hold", Selection: BootstrapSourceFilePin{File: filepath.Join(directory, "original-writer-selection.json"), SHA256: hash(raw)}, SourceCoordinates: BootstrapSourceFilePin{File: filepath.Join(directory, "original-source-coordinates.json"), SHA256: hash(coordinateRaw)}, SourceCount: len(p.instances), DeploymentCount: len(last.Deployments) + len(last.TenantPro), ParticipantCount: len(last.Participants)}, nil
 }
 
 func originalSelectionPinStill(pin BootstrapSourceFilePin, expected []byte) error {
@@ -200,12 +214,15 @@ func originalSelectionPinStill(pin BootstrapSourceFilePin, expected []byte) erro
 	return nil
 }
 
-func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.Context, options OriginalWriterSelectionOptions, config originalWriterSourceConfig) (OriginalWriterSetSelection, originalMaintenanceKubernetesCensus, []originalPhysicalVolumePin, error) {
+func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.Context, options OriginalWriterSelectionOptions, config originalWriterSourceConfig) (_ OriginalWriterSetSelection, _ originalMaintenanceKubernetesCensus, _ []originalPhysicalVolumePin, resultErr error) {
+	stage := "kubernetes_census"
+	defer func() { resultErr = originalSelectionStageFailure(stage, resultErr) }()
 	var zero OriginalWriterSetSelection
 	census, pods, deployments, _, err := p.readKubernetesCensus(ctx)
 	if err != nil {
 		return zero, census, nil, err
 	}
+	stage = "controller_kinds"
 	if len(census.StatefulSets)+len(census.DaemonSets)+len(census.Jobs)+len(census.CronJobs)+len(census.Autoscalers) != 0 {
 		return zero, census, nil, OriginalWriterSourceFailure{Dependency: "complete_non_deployment_reconciler_gate_required"}
 	}
@@ -213,12 +230,15 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	if config.RuntimeSources != nil {
 		s.RuntimeTestScope = config.RuntimeSources.RuntimeTestScope.Clone()
 	}
+	stage = "runtime_scope"
 	if p.checkSelectionRuntimeTestScope(s.RuntimeTestScope) != nil {
 		return zero, census, nil, ErrInstall
 	}
+	stage = "observer_materials"
 	if err = p.originalSelectionObservers(ctx, options, &s); err != nil {
 		return zero, census, nil, err
 	}
+	stage = "deployment_inventory"
 	i := p.operator.installer
 	roles := map[string]OriginalDeploymentSelection{}
 	for _, d := range deployments {
@@ -227,6 +247,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		}
 		roles[d.Name] = OriginalDeploymentSelection{Name: d.Name, UID: string(d.UID), Role: "writer"}
 	}
+	stage = "database_identity"
 	var hostname string
 	if i.db.QueryRowContext(ctx, "SELECT @@hostname").Scan(&hostname) != nil || hostname == "" {
 		return zero, census, nil, ErrInstall
@@ -254,6 +275,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	usedLayouts := map[int]bool{}
 	agentPinsRead := false
 	sharedAliases := map[string]string{}
+	stage = "shared_runtime_agents"
 	if config.RuntimeSources != nil && config.RuntimeSources.SharedRuntimeProtocol != "" {
 		var sharedErr error
 		sharedAliases, sharedErr = p.collectOriginalSharedAgentSelection(ctx, options, config, &s, pods, roles, physical, database)
@@ -262,6 +284,18 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		}
 		agentPinsRead = true
 	}
+	stage = "tenant_pro_controllers"
+	tenantSources, tenantAliases, err := p.collectOriginalTenantProSelections(ctx, &s, physical)
+	if err != nil {
+		return zero, census, nil, err
+	}
+	for key, value := range tenantAliases {
+		if sharedAliases[key] != "" && sharedAliases[key] != value {
+			return zero, census, nil, ErrInstall
+		}
+		sharedAliases[key] = value
+	}
+	stage = "instance_writer_materials"
 	for _, source := range p.instances {
 		if s.RuntimeTestScope.IsDeferred(source) {
 			continue
@@ -269,6 +303,9 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 		// Complete original lite rows are retained by p.instances and rechecked
 		// by the actual shared factory; no per-instance slot custody is authored.
 		if s.SharedRuntimeProtocol != "" && source.Mode == "lite" {
+			continue
+		}
+		if tenantSources[source.ID] {
 			continue
 		}
 		plan, e := scope.PlanRuntime(scope.Runtime{Type: source.Type, Mode: source.Mode, Backend: source.Backend, Variant: source.Variant, OS: source.OS})
@@ -373,6 +410,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 			}
 		}
 	}
+	stage = "pod_controller_membership"
 	for n := range pods {
 		pod := &pods[n]
 		if len(pod.OwnerReferences) > 0 {
@@ -403,6 +441,7 @@ func (p *OriginalWriterMaintenance) collectOriginalWriterSelection(ctx context.C
 	// Resolve every SQL participant against a physically stoppable ACTUAL writer.
 	// Arbitrary missing mappings are a concrete prerequisite, never guessed from
 	// participant naming, controller labels or a successful lease-only check.
+	stage = "sql_participant_mapping"
 	if err = p.originalSelectionParticipants(ctx, options.ParticipantWriters, &s, sharedAliases); err != nil {
 		return zero, census, nil, err
 	}
@@ -433,6 +472,9 @@ func (p *OriginalWriterMaintenance) originalSelectionPodDeployment(ctx context.C
 
 func (p *OriginalWriterMaintenance) originalSelectionParticipants(ctx context.Context, mappings map[string]string, s *OriginalWriterSetSelection, sharedAliases ...map[string]string) error {
 	known := map[string]bool{}
+	for _, tenant := range s.TenantPro {
+		known["deployment/"+tenant.Identity.Namespace+"/"+tenant.Deployment] = true
+	}
 	for _, agent := range s.SharedRuntimeAgents {
 		known["shared-runtime/"+agent.PodUID] = true
 	}

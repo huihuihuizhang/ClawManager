@@ -23,6 +23,19 @@ func TestFirstAdoptionSourceFailureDiagnostic(t *testing.T) {
 	}
 }
 
+func TestFirstAdoptionSelectionPhaseIsFiniteAndRedacted(t *testing.T) {
+	for _, phase := range []string{"first_collection/observer_materials", "first_collection/tenant_pro_controllers", "RAW_SECRET=private\nbody"} {
+		got := classifiedAdoptionFailure("selection_materials", install.OriginalWriterSelectionFailure{Stage: phase})
+		if strings.Contains(phase, "RAW_SECRET") {
+			if got.SelectionPhase != "" {
+				t.Fatal("untrusted phase escaped")
+			}
+		} else if got.SelectionPhase != phase {
+			t.Fatal("selection phase was lost")
+		}
+	}
+}
+
 func TestFirstAdoptionDiagnosticsNeverPrintRawErrors(t *testing.T) {
 	for _, tc := range []struct {
 		name string

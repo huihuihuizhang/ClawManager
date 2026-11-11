@@ -45,14 +45,20 @@ func originalObjectSHA(v any) string { raw, _ := json.Marshal(v); return hash(ra
 
 // Enumerate the entire namespace. No label selector may hide another writer.
 func (p *OriginalWriterMaintenance) readKubernetesCensus(ctx context.Context) (originalMaintenanceKubernetesCensus, []corev1.Pod, []appsv1.Deployment, []corev1.PersistentVolumeClaim, error) {
+	if p == nil || p.operator == nil || p.operator.installer == nil {
+		return originalMaintenanceKubernetesCensus{}, nil, nil, nil, ErrInstall
+	}
+	return p.readKubernetesNamespaceCensus(ctx, p.operator.installer.plan.Target.Namespace, p.operator.installer.plan.Target.NamespaceUID)
+}
+
+func (p *OriginalWriterMaintenance) readKubernetesNamespaceCensus(ctx context.Context, ns, namespaceUID string) (originalMaintenanceKubernetesCensus, []corev1.Pod, []appsv1.Deployment, []corev1.PersistentVolumeClaim, error) {
 	var out originalMaintenanceKubernetesCensus
 	if p.check(ctx) != nil {
 		return out, nil, nil, nil, ErrInstall
 	}
 	k := p.operator.installer.kube
-	ns := p.operator.installer.plan.Target.Namespace
 	namespace, err := k.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
-	if err != nil || string(namespace.UID) != p.operator.installer.plan.Target.NamespaceUID || namespace.DeletionTimestamp != nil {
+	if err != nil || namespaceUID == "" || string(namespace.UID) != namespaceUID || namespace.DeletionTimestamp != nil {
 		return out, nil, nil, nil, ErrInstall
 	}
 	out.Namespace = ns

@@ -58,6 +58,12 @@ python3 -B scripts/system-backup-runtime-startup-inputs.py \
 
 源坐标回执版本为 `original-initial-source-data-authored.v1`，保留全部 8 个实例；`WriterQualified=false`、`BackupReady=false` 是该数据作者的固定语义。接着使用 `scripts/system-backup-field-tools/prepare-p2-writer-selection.py` 读取这些固定输入和真实 App/Runtime 环境，生成私有 source config，再调用同批工具的 `prepare-selection`。该脚本不重新采集已有坐标、不运行引导、不滚动部署，也不调用停写或 adopt。只有新 writer selection 回执读回通过后，才进入下面的 source-inputs 和 mount-materials。
 
+第一次 writer selection 记录为 `/root/sbk/p2-writer-selection.4nqkam_7`，source config 摘要为 `281bef3b57ea2d63f9e626e9185b51e91efe6b85ccc58165407a6efed926dda1`，实际 App scope 为 `installation`。owner 拒绝，selection 与 journal 目录均为空，未停写。2026-11-11 05:29 UTC 的只读报告确认 observer 回执在有效期内、namespace/UID 匹配，source config 的 scope 和 RuntimeTestScope 与坐标一致；这不替代完整的 observer authority/endpoint 校验。
+
+已确认的代码缺口是旧 selection 作者将运行中 Pro 限定为 system namespace 的 ownerless Pod，而实例 2 是 `clawmanager-sbk-validation-user-1` 中由 ReplicaSet/Deployment 管理的 Pro。新的 P2 作者把这类源记为 `TenantPro`，绑定原 SQL 身份、完整 API UID 链、实际持久卷和整租户控制器清单；源坐标同时输出 `TenantProSelections`。它仍只生成数据，旧 original native 停写/恢复消费者会明确拒绝未接入的租户控制器生命周期，不把 selection 数据当作已持有源的证明。正式停写支持需在后续 native owner 验收中接通，不能仅因 P2 材料生成成功就开放接单。
+
+owner 错误回执新增有限的 `Failure.SelectionPhase`（如 `first_collection/observer_materials`、`first_collection/tenant_pro_controllers`），保留原有具体 source dependency，并隐藏原始 SQL、API 和凭据错误。重试使用新的私有 selection/journal 目录，沿用上述 source config 和 OCI 材料；不重跑已通过的引导、镜像发布与实例恢复。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。

@@ -21,6 +21,8 @@ const OriginalWriterSetSelectionVersion = "original-writer-set-selection.v1"
 // Independently selected actual INPUTS. Roles and filenames are not proofs.
 // No task, final config, grant, observed response or readiness bool is accepted.
 type OriginalWriterSetSelection struct {
+	TenantPro                                                []OriginalTenantProSelection          `json:",omitempty"`
+	TenantNamespaces                                         []originalMaintenanceKubernetesCensus `json:",omitempty"`
 	RuntimeTestScope                                         *domain.RuntimeTestScope              `json:",omitempty"`
 	SharedRuntimeEndpoints                                   map[string]q.ProofEndpoint            `json:",omitempty"`
 	SharedRuntimeAgents                                      []OriginalSharedRuntimeAgentSelection `json:",omitempty"`
@@ -106,6 +108,12 @@ func (i *Installer) PrepareOriginalWriterSet(ctx context.Context, password []byt
 	var selection OriginalWriterSetSelection
 	if decodeExact(raw, &selection) != nil || selection.Version != OriginalWriterSetSelectionVersion || selection.Policy.Validate() != nil {
 		return nil, ErrInstall
+	}
+	// Authoring current controller coordinates is not a native stop/recovery
+	// implementation. Keep the old all-source native factory closed until its
+	// tenant controller lifecycle is explicitly constructed and qualified.
+	if len(selection.TenantPro) != 0 || len(selection.TenantNamespaces) != 0 {
+		return nil, OriginalWriterSourceFailure{Dependency: "tenant_pro_original_native_stop_recovery_owner_required"}
 	}
 	p, err := i.PrepareOriginalWriterMaintenance(ctx, password, enrollment, selection.Policy)
 	if err != nil {

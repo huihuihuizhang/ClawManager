@@ -256,6 +256,7 @@ func reportFailure(out io.Writer, state string, code int) int {
 // never raw SQL/native errors, credentials or private object bodies.
 type adoptionFailure struct {
 	Stage                    string
+	SelectionPhase           string `json:",omitempty"`
 	InstanceID               int    `json:",omitempty"`
 	Mode, Status, Dependency string `json:",omitempty"`
 }
@@ -264,6 +265,10 @@ var adoptionDiagnosticCode = regexp.MustCompile(`^[A-Za-z0-9_./:-]+$`)
 
 func classifiedAdoptionFailure(stage string, err error) *adoptionFailure {
 	f := &adoptionFailure{Stage: stage}
+	var selection install.OriginalWriterSelectionFailure
+	if errors.As(err, &selection) && len(selection.Stage) <= 1024 && adoptionDiagnosticCode.MatchString(selection.Stage) {
+		f.SelectionPhase = selection.Stage
+	}
 	var source install.OriginalWriterSourceFailure
 	if errors.As(err, &source) {
 		f.InstanceID = source.InstanceID
