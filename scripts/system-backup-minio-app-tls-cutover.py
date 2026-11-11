@@ -16,7 +16,7 @@ import sys
 import time
 
 sys.dont_write_bytecode = True
-FIRST_HOP_SHA = "e1659e3553a7672f9624422f6a678ae824ad0a63a16a8066a1889034463376ad"  # exact frozen first-hop source
+FIRST_HOP_SHA = "04dde0494f5af89df363929b86a661a555a6a57696eb7bd25f132bdf7f479714"  # exact frozen first-hop source
 MOUNT = "/run/system-backup-business-minio-ca"
 
 

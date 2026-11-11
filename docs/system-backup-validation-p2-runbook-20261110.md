@@ -75,6 +75,8 @@ owner 错误回执新增有限的 `Failure.SelectionPhase`（如 `first_collecti
 
 状态为 `actual_original_complete_base_selection_materialized_no_hold`，仅完成选源数据；未停写、未持有源、未完成 P2 挂载材料验收。下一步复用本批工具与现有凭据，准备 `original-initial-source-author-inputs.v1` 定义，再执行 `author-initial-source-inputs` 和 `prepare-mount-materials`。无需重新采集这批 writer selection。运行时控制器或源身份发生变化时才刷新受影响材料。
 
+现场后续盘点确认 `complete_inputs`、`deployment_core`、`capture_template`、`execution_profile`、`mount_layouts` 均为 0；7 份连接候选全部是 SQL DSN，没有现成的完整 source-inputs 定义。不能直接执行依赖这些定义的挂载命令。接续使用现有 `system-backup-minio-first-hop-tls.py prepare`，通过原 enrollment plan 绑定实际 namespace、Kubernetes 身份、Service/Pod/ReplicaSet/Deployment 和固定 MinIO 镜像，先输出私有 TLS 计划；该阶段只读集群并在本地生成材料，不切换服务。若已有 TLS、镜像或启动参数不符，保留拒绝输出，复用真实原 CA 或补对应镜像接线，不能改成任意镜像或忽略校验。后续 apply/query/business cutover 处理同一份计划；真实 rollout 后刷新受影响的 writer 数据。App cutover 工具的 helper 摘要同步到本分支已有的 first-hop 实现，避免在加载原工具时因旧摘要拒绝。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
