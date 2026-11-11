@@ -75,6 +75,20 @@ def check_cluster(cluster, plan):
     return endpoint, ca
 
 
+def ensure_object(call, kind, namespace, value):
+    name = value['metadata']['name']
+    args = [] if namespace is None else ['-n', namespace]
+    found = call(args + ['get', kind, name, '--ignore-not-found', '-o', 'json'], empty=True)
+    if found is None:
+        # kubectl validates -f metadata against its effective --namespace.
+        # Override the helper's system namespace for tenant/provider objects.
+        found = call(args + ['create', '-f', '-', '-o', 'json'], value)
+    need(all(found.get(k) == v for k, v in value.items() if k != 'metadata')
+         and found['metadata']['name'] == name
+         and (namespace is None or found['metadata']['namespace'] == namespace), 'existing source read binding drift')
+    return found['metadata']['uid']
+
+
 def app_owner_chain(pod, replica_set, app):
     def controlled(value, kind):
         refs = [r for r in value['metadata'].get('ownerReferences', []) if r.get('controller')]
@@ -120,7 +134,10 @@ def main(helpers, records):
         # Raw objects/reviews may include tokens and Secrets; never print them.
         c.retain(records / ('api-read-%03d.stdout.private' % sequence), p.stdout or b'\n')
         c.retain(records / ('api-read-%03d.stderr.private' % sequence), p.stderr or b'\n')
-        need(p.returncode == 0 and len(p.stdout) <= 64 << 20, 'API operation refused at private record %03d' % sequence)
+        operation = (' '.join(args[:2]) if body is None else
+                     str(body.get('kind', 'request')) + ' ' + str(body.get('metadata', {}).get('namespace', '')))
+        need(p.returncode == 0 and len(p.stdout) <= 64 << 20,
+             'API operation refused at private record %03d (%s)' % (sequence, operation))
         if not p.stdout.strip() and empty:
             return None
         return json.loads(p.stdout)
@@ -138,19 +155,6 @@ def main(helpers, records):
     need(account['metadata']['name'] not in ('default', 'kubernetes-admin'), 'dedicated original sources account required')
     c.retain(records / 'source-account.binding.json', c.encode(dict(namespace=ns,
         namespace_uid=namespace['metadata']['uid'], account=account['metadata']['name'], account_uid=uid)))
-
-    def ensure(kind, namespace_name, value):
-        name = value['metadata']['name']
-        args = ([] if namespace_name is None else ['-n', namespace_name])
-        found = call(args + ['get', kind, name, '--ignore-not-found', '-o', 'json'], empty=True)
-        if found is None:
-            # The create response is retained. On an unknown response, next run
-            # reads this exact named object and compares its rules/subjects.
-            found = call(['create', '-f', '-', '-o', 'json'], value)
-        need(all(found.get(k) == v for k, v in value.items() if k != 'metadata')
-             and found['metadata']['name'] == name
-             and (namespace_name is None or found['metadata']['namespace'] == namespace_name), 'existing source read binding drift')
-        return found['metadata']['uid']
 
     coordinates = json.loads(c.private(Path('/root/sbk/p2-materials-1dd1ae71.lVSEBfl2/coordinates/initial-source-coordinates.json'),
         '4fe0083a3546c7a41c302861c65b805eea9ef981f9862e86f4bae043724b7980'))
@@ -185,16 +189,16 @@ def main(helpers, records):
     for selected_ns in namespaces:
         role = dict(apiVersion='rbac.authorization.k8s.io/v1', kind='Role',
                     metadata=dict(name=name, namespace=selected_ns), rules=readonly_rules(selected_ns == provider_namespace))
-        bindings.append(ensure('role', selected_ns, role))
-        bindings.append(ensure('rolebinding', selected_ns, dict(apiVersion=role['apiVersion'], kind='RoleBinding',
+        bindings.append(ensure_object(call, 'role', selected_ns, role))
+        bindings.append(ensure_object(call, 'rolebinding', selected_ns, dict(apiVersion=role['apiVersion'], kind='RoleBinding',
             metadata=role['metadata'], subjects=subjects, roleRef=dict(apiGroup='rbac.authorization.k8s.io', kind='Role', name=name))))
     rules = [dict(apiGroups=[''], resources=[resource], resourceNames=names, verbs=['get'])
              for resource, names in [('namespaces', sorted(namespaces)), ('nodes', sorted(node_names)), ('persistentvolumes', sorted(pvs))]]
     rules.append(dict(apiGroups=['storage.k8s.io'], resources=['storageclasses'], verbs=['get', 'list']))
     rules.append(dict(apiGroups=['snapshot.storage.k8s.io'], resources=['volumesnapshotclasses', 'volumesnapshotcontents'], verbs=['get', 'list']))
     cr = dict(apiVersion='rbac.authorization.k8s.io/v1', kind='ClusterRole', metadata=dict(name=name), rules=rules)
-    bindings.append(ensure('clusterrole', None, cr))
-    bindings.append(ensure('clusterrolebinding', None, dict(apiVersion=cr['apiVersion'], kind='ClusterRoleBinding',
+    bindings.append(ensure_object(call, 'clusterrole', None, cr))
+    bindings.append(ensure_object(call, 'clusterrolebinding', None, dict(apiVersion=cr['apiVersion'], kind='ClusterRoleBinding',
         metadata=dict(name=name), subjects=subjects, roleRef=dict(apiGroup='rbac.authorization.k8s.io', kind='ClusterRole', name=name))))
     config = call(['config', 'view', '--minify', '--flatten', '--raw', '-o', 'json'])
     need(len(config['clusters']) == 1, 'one original API cluster required')

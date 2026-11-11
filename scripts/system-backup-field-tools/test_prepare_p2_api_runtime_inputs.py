@@ -11,6 +11,29 @@ spec.loader.exec_module(m)
 
 
 class ActualAPIAndInstalledOwner(unittest.TestCase):
+    def test_tenant_and_provider_creation_use_explicit_namespace_and_resume_reads(self):
+        objects, sends = {}, []
+        def kubectl(args, body=None, empty=False):
+            effective = args[1] if args[:1] == ['-n'] else 'system-default'
+            command = args[2:] if args[:1] == ['-n'] else args
+            if command[0] == 'get':
+                return copy.deepcopy(objects.get((effective, command[2])))
+            self.assertEqual(effective, body['metadata']['namespace'], 'kubectl rejects namespace mismatch before sending')
+            sends.append(effective)
+            key = effective, body['metadata']['name']
+            self.assertNotIn(key, objects, 'do not repeat a create after an unknown response')
+            objects[key] = copy.deepcopy(body)
+            objects[key]['metadata']['uid'] = effective + '-uid'
+            return copy.deepcopy(objects[key])
+        for ns in ['tenant', 'provider']:
+            value = dict(apiVersion='rbac.authorization.k8s.io/v1', kind='Role', metadata=dict(name='source-read', namespace=ns), rules=m.readonly_rules())
+            for _ in range(2):
+                self.assertEqual(m.ensure_object(kubectl, 'role', ns, value), ns + '-uid')
+            objects[(ns, 'source-read')]['rules'][0]['verbs'].append('delete')
+            with self.assertRaises(RuntimeError):
+                m.ensure_object(kubectl, 'role', ns, value)
+        self.assertEqual(sends, ['tenant', 'provider'])
+
     def test_source_account_cannot_borrow_other_identity(self):
         user = dict(username='system:serviceaccount:system:source', uid='original-uid')
         m.check_review(dict(authenticated=True, user=user), 'system', 'source', 'original-uid')
