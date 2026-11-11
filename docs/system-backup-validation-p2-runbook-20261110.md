@@ -85,6 +85,10 @@ MinIO 已准备计划 `/root/sbk/p2-minio-prepare.9vnemhVi/minio-tls/plan.json`�
 
 下一个必要连接由 `continue-p2-redis-connection.py` 复用原 `system-backup-original-maintenance --mode redis-materials` 完成 prepare/apply/query/finalize，既有 Redis 为 `clawmanager-team-redis`，Deployment UID `dd724dc4-ad59-4a78-b5bb-50aba907e036`，镜像 `docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf`。脚本按全部 App 副本实际加载的 URL 选择唯一 Service 和数据库，保留完整选源名单，作用域使用原 Teams key family `claw:team:`。它使用一个明确的私有 records 目录接续：apply 失联只查询原操作；finalize 失联通过 query-finalize 读回原 native 发送记录，不重新 finish。成功后的 reader/keeper 凭据、CA、真实 run ID 和 writer selection successor 都来自既有 native owner，脚本只导出 source_redis DATA。该 TLS 连接不会被写成整单已验收。
 
+首次 Redis 记录 `/root/sbk/p2-redis-connection.b5dQ12Lt` 在 `0-prepare` 被拒绝；只读报告确认 native 输出目录为空、两个私有日志只有保留用的换行，安装账号 identity/extra 正常，Redis Deployment 的 `command` 为空、参数数量为 3。旧原生工具在读取/验证原生 Redis 之前强制要求 `Command=[redis-server]`，未进入 helper。修复只识别固定原镜像的两种明确原生入口：显式 `Command=[redis-server]`，或默认入口配 `Args=[redis-server,...]`；prepare 仍要求有效服务参数恰为 `--appendonly yes`。Pod/Deployment 参数、固定 imageID、UID 链、主进程 PID、原生版本/ACL 和持久卷核验保持不变，也不把未知脚本或 config 文件作为原生入口。
+
+Redis owner 错误输出新增 `original-redis-native-material-failure.v1` 的固定 `Phase`，原 SQL/API/凭据错误只留在私有 cause。接续脚本仅对这次有固定旧二进制摘要、原启动形态及空 native 目录的“在 helper 前拒绝”建立私有 binding successor；保留原 binding、options 与日志，用同一 records 目录运行修复后的原 owner。任何已有 native intent、不同原镜像/启动形态或未知 prepare 状态仍拒绝，不重放。TLS/ACL 正式切换依旧只由原 owner 完成。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。

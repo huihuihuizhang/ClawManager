@@ -52,6 +52,22 @@ type redisNativeIntent struct {
 func redisMaterialPin(directory, name string, raw []byte) BootstrapSourceFilePin {
 	return BootstrapSourceFilePin{File: filepath.Join(directory, name), SHA256: hash(raw)}
 }
+
+// This is only startup DATA for the separately pinned Redis image. Both the
+// actual Pod and its selected Deployment must match; the native helper still
+// independently requires INFO process_id=1 and the exact Redis server profile.
+func originalRedisEffectiveServerArgs(c *core.Container) ([]string, error) {
+	if c == nil {
+		return nil, ErrInstall
+	}
+	if reflect.DeepEqual(c.Command, []string{"redis-server"}) {
+		return c.Args, nil
+	}
+	if len(c.Command) == 0 && len(c.Args) > 0 && c.Args[0] == "redis-server" {
+		return c.Args[1:], nil
+	}
+	return nil, ErrInstall
+}
 func redisMaterialTLS(server string) ([]byte, []byte, []byte, error) {
 	caKey, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if e != nil {
@@ -120,7 +136,8 @@ func (i *Installer) redisNativePod(ctx context.Context, name, uid string) (*apps
 		return nil, nil, ErrInstall
 	}
 	status := p.Status.ContainerStatuses[0]
-	if !status.Ready || status.State.Running == nil || status.ImageID != originalPeerRedisImage || status.ContainerID == "" || !reflect.DeepEqual(d.Spec.Template.Spec.Containers[0].Command, []string{"redis-server"}) || !originalPeerNativeEntry(&p.Spec, &p.Spec.Containers[0], "redis-server") {
+	_, startupErr := originalRedisEffectiveServerArgs(&desiredContainer)
+	if !status.Ready || status.State.Running == nil || status.ImageID != originalPeerRedisImage || status.ContainerID == "" || startupErr != nil || !originalPeerNativeEntry(&p.Spec, &p.Spec.Containers[0], "redis-server") {
 		return nil, nil, ErrInstall
 	}
 	return d, p, nil
@@ -130,19 +147,28 @@ func (i *Installer) redisNativePod(ctx context.Context, name, uid string) (*apps
 // writes durable intent before native changes; apply sends at most once;
 // query only reads. Recovery advances object RVs and cancels the old native
 // connection before restoring original specs. No mode asserts a backup hold.
-func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, writerPin, kubePin BootstrapSourceFilePin, opt RedisNativeMaterialOptions) (RedisNativeMaterialReceipt, error) {
+func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, writerPin, kubePin BootstrapSourceFilePin, opt RedisNativeMaterialOptions) (_ RedisNativeMaterialReceipt, resultErr error) {
 	var zero RedisNativeMaterialReceipt
+	phase := "input_validation"
+	defer func() {
+		if resultErr != nil {
+			resultErr = OriginalRedisMaterialFailure{phase: phase, cause: resultErr}
+		}
+	}()
 	if runtime.GOOS != "linux" || i == nil || ctx == nil || ctx.Err() != nil || opt.Version != "original-redis-native-material-options.v1" || privateDirectory(opt.OutputDirectory) != nil {
 		return zero, ErrInstall
 	}
+	phase = "owner_authentication"
 	operator, e := i.authenticate(ctx, password)
 	if e != nil || operator.authority(ctx, enrollment) != nil {
 		return zero, ErrInstall
 	}
+	phase = "kubernetes_transport"
 	cfg, e := i.originalRedisRESTConfig(ctx, kubePin)
 	if e != nil {
 		return zero, ErrInstall
 	}
+	phase = "writer_selection"
 	raw, e := readBootstrapSourcePin(writerPin, 262144)
 	var selection OriginalWriterSetSelection
 	if e != nil || decodeExact(raw, &selection) != nil || selection.Version != OriginalWriterSetSelectionVersion {
@@ -177,9 +203,11 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		}
 		return nil
 	}
+	phase = "platform_roster"
 	if guard() != nil {
 		return zero, ErrInstall
 	}
+	phase = "retained_native_intent"
 	intentFile := filepath.Join(opt.OutputDirectory, "redis-native-intent.private.json")
 	var intent redisNativeIntent
 	if opt.Mode != "prepare" {
@@ -216,16 +244,20 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 	if role[opt.Deployment] != "writer" {
 		return zero, ErrInstall
 	}
+	phase = "original_redis_pod"
 	d, p, e := i.redisNativePod(ctx, opt.Deployment, roster[opt.Deployment])
 	if e != nil {
 		return zero, ErrInstall
 	}
+	phase = "original_redis_service"
 	service, e := i.kube.CoreV1().Services(d.Namespace).Get(ctx, opt.Service, metav1.GetOptions{})
 	if e != nil || service.DeletionTimestamp != nil || service.Spec.Type != core.ServiceTypeClusterIP || service.UID == "" || !labels.SelectorFromSet(service.Spec.Selector).Matches(labels.Set(p.Labels)) {
 		return zero, ErrInstall
 	}
 	if opt.Mode == "prepare" {
-		if len(selection.RedisReadKeepers) != 0 || len(d.Spec.Template.Spec.Containers[0].Args) != 2 || !reflect.DeepEqual(d.Spec.Template.Spec.Containers[0].Args, []string{"--appendonly", "yes"}) {
+		phase = "original_plain_redis_launch"
+		args, startupErr := originalRedisEffectiveServerArgs(&d.Spec.Template.Spec.Containers[0])
+		if len(selection.RedisReadKeepers) != 0 || startupErr != nil || !reflect.DeepEqual(args, []string{"--appendonly", "yes"}) {
 			return zero, ErrInstall
 		}
 		nonce := make([]byte, 16)
@@ -233,10 +265,12 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 			return zero, ErrInstall
 		}
 		operation := hex.EncodeToString(nonce)
+		phase = "original_redis_native_inspection"
 		before, e := i.originalRedisHelper(ctx, cfg, p.Name, p.Spec.Containers[0].Name, opt.Helper, sb.RedisBootstrapNativeRequest{Mode: "inspect", Operation: operation})
 		if e != nil || before.ACLFile != "" || before.TLSport != "0" {
 			return zero, ErrInstall
 		}
+		phase = "persistent_data_volume"
 		persistent := false
 		var dataClaim *core.PersistentVolumeClaim
 		var dataPV *core.PersistentVolume
@@ -266,6 +300,7 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		if !persistent {
 			return zero, ErrInstall
 		}
+		phase = "capture_policy"
 		policyRaw, e := readBootstrapSourcePin(opt.Policy, 65536)
 		var policy sb.RedisCapturePolicy
 		if e != nil || decodeExact(policyRaw, &policy) != nil {
@@ -275,6 +310,7 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		if policy.Validate() != nil {
 			return zero, ErrInstall
 		}
+		phase = "source_tls_and_credentials"
 		server := service.Name + "." + d.Namespace + ".svc"
 		ca, cert, key, e := redisMaterialTLS(server)
 		if e != nil {
@@ -334,18 +370,21 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		if e != nil {
 			return zero, ErrInstall
 		}
+		phase = "private_material_outputs"
 		if guard() != nil || writeNewFiles(opt.OutputDirectory, map[string][]byte{"redis-native-intent.private.json": intentRaw, "redis-ca.pem": ca, "redis-server.pem": cert, "redis-server-key.pem": key, "redis-keeper.private.json": keeperRaw, "redis-reader.private.json": readerRaw, "redis-custody.key": custody}) != nil {
 			return zero, ErrInstall
 		}
 		if guard() != nil {
 			return zero, ErrInstall
 		}
+		phase = "original_redis_native_prepare"
 		result, e := i.originalRedisHelper(ctx, cfg, p.Name, intent.Container, intent.Helper, sb.RedisBootstrapNativeRequest{Mode: "prepare", Operation: operation, ExpectedRunID: before.RunID, DataDirectory: before.DataDirectory, Keeper: keeper, Reader: reader, KeeperPassword: keeperPassword, ReaderPassword: readerPassword, CA: ca, Certificate: cert, Key: key, Prefixes: policy.Policy.Prefixes})
 		if e != nil || result.RunID != before.RunID || guard() != nil {
 			return zero, ErrOriginalObserverPKIUnconfirmed
 		}
 		return RedisNativeMaterialReceipt{Version: "original-redis-native-materials.v1", State: "native_prepared_loopback_isolated_requires_apply", Operation: operation, Intent: redisMaterialPin(opt.OutputDirectory, "redis-native-intent.private.json", intentRaw), ServerVersion: before.ServerVersion, RunID: before.RunID}, nil
 	}
+	phase = "native_transition_readback"
 	if string(service.UID) != intent.ServiceUID {
 		return zero, ErrInstall
 	}
@@ -511,7 +550,9 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		finishMode := "finish"
 		if _, e := os.Lstat(filepath.Join(opt.OutputDirectory, "finalize.sent")); e == nil {
 			sent, readErr := ReadPrivateFile(filepath.Join(opt.OutputDirectory, "finalize.sent"), 32)
-			if readErr != nil || string(sent) != intent.Operation { return zero, ErrInstall }
+			if readErr != nil || string(sent) != intent.Operation {
+				return zero, ErrInstall
+			}
 			finishMode = "verify-finished"
 		} else if opt.Mode == "query-finalize" || !os.IsNotExist(e) {
 			return zero, ErrInstall
@@ -520,7 +561,9 @@ func (i *Installer) ProduceOriginalRedisNativeMaterials(ctx context.Context, pas
 		}
 		// query-finalize is a new authenticated READ of the same original send.
 		// It cannot create finalize.sent, call finish, apply, cancel or rollback.
-		if opt.Mode == "query-finalize" && finishMode != "verify-finished" { return zero, ErrInstall }
+		if opt.Mode == "query-finalize" && finishMode != "verify-finished" {
+			return zero, ErrInstall
+		}
 		result, e := i.originalRedisHelper(ctx, cfg, p.Name, intent.Container, intent.Helper, sb.RedisBootstrapNativeRequest{Mode: finishMode, Operation: intent.Operation, ExpectedRunID: intent.Before.RunID, DataDirectory: intent.Before.DataDirectory})
 		if e != nil || result.RunID != runID || result.RunID == intent.Before.RunID || guard() != nil {
 			return zero, ErrOriginalObserverPKIUnconfirmed

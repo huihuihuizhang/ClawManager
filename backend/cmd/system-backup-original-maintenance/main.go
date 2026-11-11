@@ -137,6 +137,12 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		}
 		receipt, e := installer.ProduceOriginalRedisNativeMaterials(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA}, install.BootstrapSourceFilePin{File: *kubeFile, SHA256: *kubeSHA}, options)
 		if e != nil {
+			var failure install.OriginalRedisMaterialFailure
+			if errors.As(e, &failure) {
+				_ = json.NewEncoder(out).Encode(struct {
+					Version, State, Mode, Phase string
+				}{"original-redis-native-material-failure.v1", "unconfirmed_preserve_original_materials", options.Mode, failure.Phase()})
+			}
 			return 1
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {

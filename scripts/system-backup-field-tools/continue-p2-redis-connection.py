@@ -103,7 +103,42 @@ def main(directory, records):
         output.mkdir(mode=0o700)
     base = {'Version': 'original-redis-native-material-options.v1', 'Deployment': redis['metadata']['name'],
         'Service': service['metadata']['name'], 'OutputDirectory': str(output), 'Policy': policy_pin, 'Helper': helper}
-    c.retain(records / 'binding.json', c.encode({'writer': writer, 'options': base, 'loaded_redis_url_sha256': c.digest(urls[0])}))
+    binding = {'writer': writer, 'options': base, 'loaded_redis_url_sha256': c.digest(urls[0])}
+    binding_file = records / 'binding.json'
+    safe_startup_refusal = False
+    if binding_file.exists():
+        old_raw = c.private(binding_file)
+        old = json.loads(old_raw)
+        previous = old['options']['Helper']
+        original_shape = redis['spec']['template']['spec']['containers'][0]
+        successor_file = records / 'binding-successor.json'
+        if old != binding and successor_file.exists():
+            successor_binding = json.loads(c.private(successor_file))
+            need(successor_binding == {'ParentSHA256': c.digest(old_raw), 'Binding': binding,
+                'Reason': 'fixed_old_command_guard_refused_before_original_redis_helper'}, 'retained binding successor changed')
+        elif old != binding:
+            old_options = json.loads(c.private(records / '0-prepare.options.json'))
+            # The old fixed executable checked Command==[redis-server] BEFORE
+            # originalRedisHelper or any native prepare. This exact observed
+            # default-entry startup therefore could not have dispatched one.
+            comparable = json.loads(c.encode(binding))
+            comparable['options']['Helper'] = previous
+            need(old == comparable and previous['SHA256'] == 'f78d0443a33c7debc9dea2e8d0921ba1de6da2f6cc9d9a25412a34e61b10865b'
+                 and c.digest(c.private(Path(previous['File']), maximum=128 << 20)) == previous['SHA256']
+                 and not list(output.iterdir()) and not (records / 'prepare.receipt.json').exists()
+                 and c.private(records / '0-prepare.stdout.private') == b'\n'
+                 and c.private(records / '0-prepare.stderr.private') == b'\n'
+                 and old_options == dict(old['options'], Mode='prepare', Intent={'File': '', 'SHA256': ''})
+                 and redis['metadata']['uid'] == 'dd724dc4-ad59-4a78-b5bb-50aba907e036'
+                 and not original_shape.get('command') and original_shape.get('args') == ['redis-server', '--appendonly', 'yes']
+                 and original_shape['image'] == 'docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf',
+                 'prior native preparation is not the known pre-inspection startup refusal; preserve and query')
+            c.retain(records / 'binding-successor.json', c.encode({'ParentSHA256': c.digest(old_raw), 'Binding': binding,
+                'Reason': 'fixed_old_command_guard_refused_before_original_redis_helper'}))
+            safe_startup_refusal = True
+            print('P2_REDIS_KNOWN_PRE_INSPECTION_REFUSAL_RESUMED', flush=True)
+    else:
+        c.retain(binding_file, c.encode(binding))
 
     def call(mode, prepared=None, optional=False):
         sequence = len(list(records.glob('*.options.json')))
@@ -117,6 +152,13 @@ def main(directory, records):
         result = subprocess.run(argv, capture_output=True, timeout=145)
         c.retain(records / (label + '.stdout.private'), result.stdout or b'\n')
         c.retain(records / (label + '.stderr.private'), result.stderr or b'\n')
+        if result.returncode != 0 and result.stdout:
+            try:
+                failure = json.loads(result.stdout)
+                if failure.get('Version') == 'original-redis-native-material-failure.v1':
+                    print('P2_REDIS_REFUSAL_PHASE', failure.get('Mode'), failure.get('Phase'), flush=True)
+            except (ValueError, AttributeError):
+                pass
         if optional and result.returncode == 1:
             return None
         need(result.returncode == 0, 'original Redis owner refused at ' + label + '; retain private logs')
@@ -129,7 +171,7 @@ def main(directory, records):
     if prepared_file.exists():
         prepared = json.loads(c.private(prepared_file))
     else:
-        need(not list(records.glob('*-prepare.send-unknown.json')) and not list(output.iterdir()),
+        need((not list(records.glob('*-prepare.send-unknown.json')) or safe_startup_refusal) and not list(output.iterdir()),
              'partial original Redis preparation retained; do not prepare again')
         prepared = call('prepare')
         need(prepared['State'] == 'native_prepared_loopback_isolated_requires_apply', 'native Redis preparation unconfirmed')
