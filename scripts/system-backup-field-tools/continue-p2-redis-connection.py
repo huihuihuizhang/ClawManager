@@ -48,7 +48,7 @@ def main(directory, records):
     need(os.name == 'posix' and directory.is_absolute() and directory.resolve(strict=True) == directory
          and records.is_absolute() and records.resolve() == records and not records.is_symlink(), 'Linux absolute input/output directories required')
     c = load(directory, 'continue-p2-minio-connection.py', '13da446e37fd45fd1344a04fe433e6e2306740cc5ede4fffa29745393d1a1b25')
-    owner = load(directory, 'retry-p2-writer-selection.py', 'a8532be647ed1f8d678ae269ea2722e17eba206432e072cf4271f2b2afcb4618')
+    owner = load(directory, 'retry-p2-writer-selection.py', 'be22ac5d9f5c21c5900a51ee6f17345f282145edb2cdd19c7a2bcc3f15b720b6')
     sums = {}
     for line in (directory / 'SHA256SUMS').read_text().splitlines():
         sha, name = line.split()
