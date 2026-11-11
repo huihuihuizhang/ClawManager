@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+from urllib.parse import quote
 
 BIN = Path('/root/sbk/p2-redis-8bbf4c61')
 RECORDS = Path('/root/sbk/p2-redis-connection.b5dQ12Lt')
@@ -25,6 +26,17 @@ def selected_recreate(spec, expected):
     result = copy.deepcopy(spec)
     result['strategy'] = {'type': 'Recreate'}
     return result
+
+
+def go_api_spec_sha(spec):
+    # originalObjectSHA uses json.Marshal of the typed Kubernetes struct, NOT
+    # RFC8785. A raw apiserver typed response retains that struct field order;
+    # kubectl's unstructured -o json printer alphabetically sorts it instead.
+    raw = json.dumps(spec, ensure_ascii=False, separators=(',', ':'))
+    for character, escape in [('&', r'\u0026'), ('<', r'\u003c'), ('>', r'\u003e'),
+        ('\u2028', r'\u2028'), ('\u2029', r'\u2029')]:
+        raw = raw.replace(character, escape)
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 def main():
@@ -66,14 +78,17 @@ def main():
     c.retain(location / 'plan.json', c.encode({'Version': 'validation-p2-original-redis-rwo-rollout-settle.v1',
         'OriginalIntent': intent_pin, 'Operation': intent['Operation'], 'UID': UID, 'FinalSpec': final, 'TemporarySpec': temporary}))
     # Recheck the original persistent source, never force-detach/delete it.
-    claim = source.get('persistentvolumeclaim', intent['DataClaim'])
-    volume = source.get('persistentvolume', intent['DataPV'])
-    need(claim['metadata']['uid'] == intent['DataClaimUID'] and claim['spec']['volumeName'] == intent['DataPV']
-         and volume['metadata']['uid'] == intent['DataPVUID'] and volume['spec']['claimRef']['uid'] == intent['DataClaimUID']
-         and c.digest(m.raw(claim['spec'])) == intent['DataClaimSpecSHA256']
-         and c.digest(m.raw(volume['spec'])) == intent['DataPVSpecSHA256']
-         and claim.get('status', {}).get('phase') == 'Bound' and claim['spec'].get('accessModes') == ['ReadWriteOnce'],
-         'original RWO source volume identity changed')
+    claim = json.loads(source.kube('get', '--raw', '/api/v1/namespaces/' + quote(source.ns, safe='')
+        + '/persistentvolumeclaims/' + quote(intent['DataClaim'], safe='')))
+    volume = json.loads(source.kube('get', '--raw', '/api/v1/persistentvolumes/' + quote(intent['DataPV'], safe='')))
+    checks = {'claim_uid': claim['metadata']['uid'] == intent['DataClaimUID'],
+        'pv_name': claim['spec']['volumeName'] == intent['DataPV'], 'pv_uid': volume['metadata']['uid'] == intent['DataPVUID'],
+        'claim_ref_uid': volume['spec']['claimRef']['uid'] == intent['DataClaimUID'],
+        'claim_spec_sha': go_api_spec_sha(claim['spec']) == intent['DataClaimSpecSHA256'],
+        'pv_spec_sha': go_api_spec_sha(volume['spec']) == intent['DataPVSpecSHA256'],
+        'bound': claim.get('status', {}).get('phase') == 'Bound', 'rwo': claim['spec'].get('accessModes') == ['ReadWriteOnce']}
+    print('REDIS_RWO_SOURCE_CHECKS', json.dumps(checks), flush=True)
+    need(all(checks.values()), 'original RWO source volume identity/hash not confirmed')
     def observe(target):
         value = current()
         if value['spec'] == target:

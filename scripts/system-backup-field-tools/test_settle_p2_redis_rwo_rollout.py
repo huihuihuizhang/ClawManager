@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import importlib.util
 from pathlib import Path
 import unittest
@@ -23,6 +24,12 @@ class OriginalRWORollout(unittest.TestCase):
         self.assertEqual(selected['strategy'], {'type': 'Recreate'})
         self.assertEqual(selected['template'], before['template'])
         self.assertEqual(self.original, before)
+
+    def test_native_spec_hash_preserves_typed_field_order_and_go_escaping(self):
+        value = {'volumeName': 'original<&>', 'accessModes': ['ReadWriteOnce']}
+        raw = b'{"volumeName":"original\\u003c\\u0026\\u003e","accessModes":["ReadWriteOnce"]}'
+        self.assertEqual(m.go_api_spec_sha(value), hashlib.sha256(raw).hexdigest())
+        self.assertNotEqual(m.go_api_spec_sha(value), m.go_api_spec_sha(dict(reversed(list(value.items())))))
 
     def test_foreign_image_args_or_volume_refuses_compensation(self):
         for mode in ['image', 'args', 'claim']:
