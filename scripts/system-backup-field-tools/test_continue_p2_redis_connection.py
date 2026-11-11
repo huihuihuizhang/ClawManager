@@ -20,6 +20,13 @@ class ActualRedisSourceSelection(unittest.TestCase):
         self.assertIs(service, self.service)
         self.assertEqual(database, 7)
 
+    def test_policy_reference_uses_actual_recovery_reference_json_tags(self):
+        # The strict owner re-encodes recovery.Reference with these JSON tags;
+        # uppercase aliases accepted by encoding/json are not canonical input.
+        value = m.policy_reference('actual-service-uid', 'a' * 64)
+        self.assertEqual(value, {'id': 'redis-actual-service-uid',
+            'version': 'validation-p2-original.v1', 'sha256': 'a' * 64})
+
     def test_missing_service_does_not_select_any_available_redis(self):
         with self.assertRaisesRegex(RuntimeError, 'one actual original Redis Service'):
             m.redis_service([self.service], 'redis://different-service:6379/0', self.ns)

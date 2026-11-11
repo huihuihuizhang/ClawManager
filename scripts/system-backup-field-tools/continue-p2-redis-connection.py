@@ -43,6 +43,12 @@ def redis_service(services, url, namespace):
     return selected[0], int(db)
 
 
+def policy_reference(service_uid, descriptor_sha):
+    # recovery.Reference has explicit lowercase JSON field tags. Its parent
+    # RedisPolicy deliberately retains the original exported Go field names.
+    return {'id': 'redis-' + service_uid, 'version': 'validation-p2-original.v1', 'sha256': descriptor_sha}
+
+
 def main(directory, records):
     os.umask(0o077)
     need(os.name == 'posix' and directory.is_absolute() and directory.resolve(strict=True) == directory
@@ -93,11 +99,20 @@ def main(directory, records):
         'Deployment': redis['metadata']['name'], 'DeploymentUID': redis['metadata']['uid'],
         'Database': db, 'BusinessPrefixes': ['claw:team:']}
     descriptor_pin = c.retain(records / 'redis-source.description.json', c.encode(descriptor))
-    policy = {'Policy': {'Source': {'ID': 'redis-' + service['metadata']['uid'], 'Version': 'validation-p2-original.v1',
-        'SHA256': descriptor_pin['SHA256']}, 'Topology': 'shared_keyspace', 'CaptureMode': 'scan_dump',
+    policy = {'Policy': {'Source': policy_reference(service['metadata']['uid'], descriptor_pin['SHA256']), 'Topology': 'shared_keyspace', 'CaptureMode': 'scan_dump',
         'TTLPolicy': 'preserve_absolute', 'Purpose': 'functional_test', 'DB': db, 'Prefixes': ['claw:team:'],
         'MaxItems': 10000, 'MaxBytes': 32 << 20, 'MaxClockSkew': 5000}, 'ServerID': '', 'ExcludePrefixes': ['cm:restore-history:']}
-    policy_pin = c.retain(records / 'redis-source.policy.json', c.encode(policy))
+    policy_file = records / 'redis-source.policy.json'
+    prior_policy_pin = None
+    if policy_file.exists() and c.private(policy_file) != c.encode(policy):
+        prior_policy = json.loads(c.private(policy_file))
+        expected_prior = json.loads(c.encode(policy))
+        expected_prior['Policy']['Source'] = {'ID': policy['Policy']['Source']['id'],
+            'Version': policy['Policy']['Source']['version'], 'SHA256': policy['Policy']['Source']['sha256']}
+        need(prior_policy == expected_prior, 'retained Redis policy scope changed; no wire-only continuation')
+        prior_policy_pin = {'File': str(policy_file), 'SHA256': c.digest(c.private(policy_file))}
+        policy_file = records / 'redis-source.policy.wire-v1.json'
+    policy_pin = c.retain(policy_file, c.encode(policy))
     output = records / 'native'
     if not output.exists():
         output.mkdir(mode=0o700)
@@ -114,8 +129,33 @@ def main(directory, records):
         successor_file = records / 'binding-successor.json'
         if old != binding and successor_file.exists():
             successor_binding = json.loads(c.private(successor_file))
-            need(successor_binding == {'ParentSHA256': c.digest(old_raw), 'Binding': binding,
-                'Reason': 'fixed_old_command_guard_refused_before_original_redis_helper'}, 'retained binding successor changed')
+            need(successor_binding['ParentSHA256'] == c.digest(old_raw) and
+                 successor_binding['Reason'] == 'fixed_old_command_guard_refused_before_original_redis_helper',
+                 'retained binding successor changed')
+            if successor_binding['Binding'] != binding:
+                policy_successor_file = records / 'binding-policy-successor.json'
+                policy_successor = {'ParentSHA256': c.digest(c.private(successor_file)), 'Binding': binding,
+                    'Reason': 'original_capture_policy_refusal_before_native_outputs_lowercase_reference_wire_only'}
+                if policy_successor_file.exists():
+                    need(json.loads(c.private(policy_successor_file)) == policy_successor, 'retained policy successor changed')
+                else:
+                    need(prior_policy_pin is not None, 'no original wire-only policy transition')
+                    expected_binding = json.loads(c.encode(binding))
+                    previous_helper = successor_binding['Binding']['options']['Helper']
+                    expected_binding['options']['Helper'] = previous_helper
+                    expected_binding['options']['Policy'] = prior_policy_pin
+                    need(successor_binding['Binding'] == expected_binding and not list(output.iterdir())
+                         and helper['SHA256'] == previous_helper['SHA256'] == 'a947551a16fae050a00975ada5421b453baefd3340bcd1dffd8fa24bd861d20e',
+                         'native state or non-policy binding changed; preserve original operation')
+                    failures = sorted(records.glob('*-prepare.stdout.private'), key=lambda p: int(p.name.split('-')[0]))
+                    need(failures, 'original structured policy refusal absent')
+                    refusal = json.loads(c.private(failures[-1]))
+                    need(refusal == {'Version': 'original-redis-native-material-failure.v1',
+                        'State': 'unconfirmed_preserve_original_materials', 'Mode': 'prepare', 'Phase': 'capture_policy'},
+                        'original refusal is not the known read-only policy phase')
+                    c.retain(policy_successor_file, c.encode(policy_successor))
+                    safe_startup_refusal = True
+                    print('P2_REDIS_POLICY_WIRE_ONLY_REFUSAL_RESUMED', flush=True)
         elif old != binding:
             old_options = json.loads(c.private(records / '0-prepare.options.json'))
             # The old fixed executable checked Command==[redis-server] BEFORE

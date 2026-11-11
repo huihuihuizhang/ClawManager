@@ -89,6 +89,8 @@ MinIO 已准备计划 `/root/sbk/p2-minio-prepare.9vnemhVi/minio-tls/plan.json`�
 
 Redis owner 错误输出新增 `original-redis-native-material-failure.v1` 的固定 `Phase`，原 SQL/API/凭据错误只留在私有 cause。接续脚本仅对这次有固定旧二进制摘要、原启动形态及空 native 目录的“在 helper 前拒绝”建立私有 binding successor；保留原 binding、options 与日志，用同一 records 目录运行修复后的原 owner。任何已有 native intent、不同原镜像/启动形态或未知 prepare 状态仍拒绝，不重放。TLS/ACL 正式切换依旧只由原 owner 完成。
 
+`8bbf4c61` 的 native 入口/身份拒绝/错误脱敏定向用例及 Linux 构建通过，现场已越过 `original_redis_pod` 和只读原生检查，第二次在 `capture_policy` 拒绝。原因是旧脚本模板把 `recovery.Reference` 写为大写字段，而原 Go 类型显式使用 `id/version/sha256`；严格 canonical roundtrip 因此拒绝。修复仅改接续脚本输入，不放宽 `decodeExact`，不重编或替换已经通过的 native owner：保留 `redis-source.policy.json`，生成同值同作用域的 `redis-source.policy.wire-v1.json`。只有原 `capture_policy` 拒绝回执、同 native 二进制摘要和空 native 输出目录同时匹配时，才为原 records 建立 binding-policy successor 后继续 prepare。执行修正脚本时 `--tool-directory` 继续指向 `/root/sbk/p2-redis-8bbf4c61`。
+
 ## 签发前材料闭环
 
 在同一个 Bash 会话准备独立 pin、实际凭据文件和真实 owner 定义。`DSN` 指向同一 enrollment 的 `mysql-installer.dsn`，`CA` 使用该数据库实际验证过的 CA。本轮 `shared-container-freeze.v1` 由共享 Runtime 作者处理 Lite 实例。`PARTICIPANT_ARGS` 默认为空数组，必要时按 SQL 注册参与者与物理 writer 的真实映射追加 `--participant-writer ID=writer` 参数对。凭据保存在现场私有目录。先处理已知的 provider TLS rollout，再采 writer 坐标。
