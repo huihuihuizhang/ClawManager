@@ -154,7 +154,13 @@ func checkOriginalMountAuthoringAliases(materialsFile, nextSelectionFile, select
 // Only the real Installer creates the bounded native-read capability. Neither
 // supplied observations nor enabled Forward are accepted. Outputs are unsigned
 // DATA for the unchanged final A producer, never stop/adoption authorization.
-func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, layoutsFile, layoutsSHA, outputDirectory string) (OriginalInstanceMountMaterialsReceipt, error) {
+func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, layoutsFile, layoutsSHA, outputDirectory string) (result OriginalInstanceMountMaterialsReceipt, resultErr error) {
+	phase := "inputs"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &OriginalMountAuthorFailure{Phase: phase, cause: resultErr}
+		}
+	}()
 	var zero OriginalInstanceMountMaterialsReceipt
 	if ctx == nil || ctx.Err() != nil || installer == nil {
 		return zero, install.ErrInstall
@@ -162,6 +168,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if _, bounded := ctx.Deadline(); !bounded {
 		return zero, install.ErrInstall
 	}
+	phase = "layouts"
 	layouts, err := readOriginalMountLayouts(layoutsFile, layoutsSHA)
 	if err != nil {
 		return zero, err
@@ -175,11 +182,13 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if layouts.AuthorLonghornHold && (layouts.Longhorn == nil || checkBootstrapSourceFactOutputs(longhornFile, coreFile) != nil) {
 		return zero, install.ErrInstall
 	}
+	phase = "owner_authority"
 	authority, err := installer.PrepareBootstrapSourceRegistryAuthoring(ctx, password, enrollment, selectionFile, selectionSHA)
 	if err != nil {
 		return zero, install.ErrInstall
 	}
 	defer authority.Close()
+	phase = "source_reader"
 	x, err := newBootstrapSourceAuthoringReader(ctx, authority)
 	if err != nil {
 		return zero, install.ErrInstall
@@ -194,30 +203,37 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if layouts.AuthorLonghornHold && checkOriginalMountAuthoringAliases(longhornFile, coreFile, selectionFile, layoutsFile, selection, x.config, x.materials) != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "source_sql"
 	firstSQL, err := x.readSourceSQL()
 	if err != nil {
 		return zero, err
 	}
+	phase = "running_inventory"
 	if err = originalMountRunningInventory(firstSQL.inventory.Instances, configuredRuntimeTestScope(x.config)); err != nil {
 		return zero, err
 	}
+	phase = "metadata_clients"
 	clients, err := x.openMetadataClients()
 	if err != nil {
 		return zero, err
 	}
 	defer clients.Close()
+	phase = "writer_api"
 	firstAPI, err := x.readWriterAPI(x.physical, clients, firstSQL.inventory.Instances)
 	if err != nil {
 		return zero, err
 	}
+	phase = "native_writers"
 	firstNative, err := x.readNativeWriters(firstSQL, firstAPI, clients)
 	if err != nil {
 		return zero, err
 	}
+	phase = "native_specs"
 	specs, err := originalMountNativeSpecs(firstSQL.inventory.Instances, firstNative, configuredRuntimeTestScope(x.config))
 	if err != nil {
 		return zero, err
 	}
+	phase = "mount_scope"
 	scopeRaw, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, firstSQL.inventory.Instances, specs, layouts.Layouts)
 	if err != nil {
 		return zero, err
@@ -226,6 +242,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if json.Unmarshal(scopeRaw, &scope) != nil || scope.validate() != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "longhorn_sources"
 	longhorn, err := observeOriginalLonghornSources(x.physical, clients, x.config, firstSQL.inventory, &scope, layouts.Longhorn)
 	if err != nil {
 		return zero, err
@@ -233,10 +250,12 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	var longhornMaterial q.LonghornExt4Materials
 	recoveryURI := ""
 	if layouts.AuthorLonghornHold {
+		phase = "recovery_identity"
 		recoveryURI, err = originalLonghornRecoveryURI(x.config, x.materials, time.Now().UTC())
 		if err != nil {
 			return zero, err
 		}
+		phase = "longhorn_hold_materials"
 		longhornMaterial, err = observeOriginalLonghornHoldMaterials(x.physical, clients, x.config, &scope, longhorn, recoveryURI)
 		if err != nil {
 			return zero, err
@@ -245,27 +264,33 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if authority.RecheckAuthority(ctx) != nil {
 		return zero, install.ErrInstall
 	}
+	phase = "source_sql_recheck"
 	lastSQL, err := x.readSourceSQL()
 	if err != nil || !sameBootstrapSourceSQL(firstSQL, lastSQL) {
 		return zero, install.ErrInstall
 	}
+	phase = "writer_api_recheck"
 	lastAPI, err := x.readWriterAPI(x.physical, clients, lastSQL.inventory.Instances)
 	if err != nil || !reflect.DeepEqual(firstAPI.objects, lastAPI.objects) {
 		return zero, install.ErrInstall
 	}
+	phase = "native_writers_recheck"
 	lastNative, err := x.readNativeWriters(lastSQL, lastAPI, clients)
 	if err != nil || !reflect.DeepEqual(firstNative, lastNative) {
 		return zero, install.ErrInstall
 	}
+	phase = "mount_scope_recheck"
 	lastScope, err := BuildOriginalInstanceMountScope(x.physical, clients.API, x.config, lastSQL.inventory.Instances, specs, layouts.Layouts)
 	if err != nil || !bytes.Equal(scopeRaw, lastScope) {
 		return zero, install.ErrInstall
 	}
+	phase = "longhorn_sources_recheck"
 	currentLonghorn, err := observeOriginalLonghornSources(x.physical, clients, x.config, lastSQL.inventory, &scope, layouts.Longhorn)
 	if err != nil || !reflect.DeepEqual(longhorn, currentLonghorn) {
 		return zero, install.ErrInstall
 	}
 	if layouts.AuthorLonghornHold {
+		phase = "hold_materials_recheck"
 		uri, err := originalLonghornRecoveryURI(x.config, x.materials, time.Now().UTC())
 		if err != nil || uri != recoveryURI {
 			return zero, install.ErrInstall
@@ -293,6 +318,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 			return zero, install.ErrInstall
 		}
 	}
+	phase = "assemble_outputs"
 	x.materials.Discovery.PersistentMounts = &scope
 	if layouts.Longhorn != nil {
 		x.materials.Discovery.LonghornSources = longhorn
@@ -346,6 +372,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 		file string
 		raw  []byte
 	}{{materialsFile, materialsRaw}, {nextSelectionFile, selectionRaw}}...)
+	phase = "write_outputs"
 	for _, output := range outputs {
 		currentLayouts, err := readOriginalMountLayouts(layoutsFile, layoutsSHA)
 		if err != nil || !reflect.DeepEqual(layouts, currentLayouts) || authority.RecheckAuthority(ctx) != nil {

@@ -304,14 +304,20 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if action == "prepare-mount-materials" {
 		receipt, err := execution.ProduceOriginalInstanceMountMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("mount-layouts-file"), get("mount-layouts-sha256"), get("output-directory"))
 		if err != nil {
+			var failure *execution.OriginalMountAuthorFailure
 			var missing *execution.InstanceMountInputError
-			if errors.As(err, &missing) {
-				_ = json.NewEncoder(out).Encode(struct {
-					Status, Code string
-					InstanceID   int
-					MountID      string
-				}{"original_mount_materials_blocked", missing.Code, missing.InstanceID, missing.MountID})
+			v := struct {
+				Status, Phase, Code string
+				InstanceID          int
+				MountID             string
+			}{Status: "original_mount_author_refused"}
+			if errors.As(err, &failure) {
+				v.Phase = failure.Phase
 			}
+			if errors.As(err, &missing) {
+				v.Status, v.Code, v.InstanceID, v.MountID = "original_mount_materials_blocked", missing.Code, missing.InstanceID, missing.MountID
+			}
+			_ = json.NewEncoder(out).Encode(v)
 			return 1
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {

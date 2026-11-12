@@ -49,12 +49,26 @@ def validate_successor(parent, selected, receipt, material):
          {k:v for k,v in parent.items() if k not in ['Deployment','MaterialsTemplate']},
          'native successor changed unrelated selection or mixed core/material identities')
 
-def main(redis_renewed=False):
+def main(redis_renewed=False, phase_readback=False):
     os.umask(0o077); need(os.name == 'posix','Linux operator required')
     directory = Path(__file__).resolve().parent
     A = load('longhorn_assembly',directory/'assemble-p2-installation-candidate.py')
     source_name = 'source-preparation-redis-renew7d' if redis_renewed else 'source-preparation-renew8h'
     output_name = 'longhorn-source-redis-renew7d' if redis_renewed else 'longhorn-source-renew8h'
+    native, native_sha = BIN, BIN_SHA
+    if phase_readback:
+        need(redis_renewed, 'phase readback requires observed Redis source successor')
+        prior = ROOT/output_name
+        need(json.loads((prior/'native.exit.json').read_bytes()) == {'ExitCode':1} and
+             not (prior/'completed.json').exists(), 'prior failure must be confirmed')
+        old = json.loads((prior/'native.sent.private.json').read_bytes())['Argv']
+        old_out = Path(old[old.index('--output-directory')+1])
+        need(old_out.is_dir() and not list(old_out.iterdir()), 'partial native outputs require reconciliation')
+        build = json.loads((directory/'BUILD_RECEIPT.json').read_bytes())
+        native = directory/'system-backup-source-registries'
+        native_sha = build['NativeSHA256']
+        need(build['Diagnostic'] == 'original-mount-author-phase.v1', 'reviewed diagnostic build required')
+        output_name += '-phase-readback'
     r = ROOT/output_name; r.mkdir(mode=0o700,exist_ok=True)
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0,'private journal required')
     renewed = json.loads((ROOT/source_name/'completed.json').read_bytes())
@@ -82,7 +96,7 @@ def main(redis_renewed=False):
          'source preparation window expired or too short')
     for key in ['PartsFile','SourceWritersFile','RedisSourcesFile']:
         need(not parent.get(key) or not Path(parent[key]).exists(),'source facts already exist; reconcile before successor')
-    A.read({'File':str(BIN),'SHA256':BIN_SHA},128<<20)
+    A.read({'File':str(native),'SHA256':native_sha},128<<20)
     need(hashlib.sha256(HELPER.read_bytes()).hexdigest() == HELPER_SHA,'retained API helper changed')
     site = load('longhorn_site',HELPER).Site(r)
     snapshot = json.loads(site.call(['get','volumesnapshotclass','sbk-validation-longhorn-local','-o','json']))
@@ -100,7 +114,7 @@ def main(redis_renewed=False):
     old = json.loads((ROOT/source_name/'author.sent.private.json').read_bytes())['Argv']
     need(old[1] == 'author-initial-source-inputs','original source author invocation required')
     common = old[2:old.index('--definition-file')]
-    argv = [str(BIN),'prepare-mount-materials',*common,'--source-selection-file',pin['File'],
+    argv = [str(native),'prepare-mount-materials',*common,'--source-selection-file',pin['File'],
         '--source-selection-sha256',pin['SHA256'],'--mount-layouts-file',layout['File'],
         '--mount-layouts-sha256',layout['SHA256'],'--output-directory',str(out)]
     A.retain(r/'native.sent.private.json',{'Argv':argv,'SourceSelection':pin,'Layouts':layout,'VaultWriterSelection':renewed['VaultWriterSelection']})
@@ -111,8 +125,8 @@ def main(redis_renewed=False):
     if result.returncode:
         try:
             error = json.loads(raw)
-            if error.get('Status') == 'original_mount_materials_blocked':
-                print('P2_LONGHORN_NATIVE_REFUSAL',json.dumps({k:error.get(k) for k in ['Code','InstanceID','MountID']}),flush=True)
+            if error.get('Status') in ['original_mount_materials_blocked', 'original_mount_author_refused']:
+                print('P2_LONGHORN_NATIVE_REFUSAL',json.dumps({k:error.get(k) for k in ['Phase','Code','InstanceID','MountID']}),flush=True)
         except ValueError: pass
         raise ValueError('native mount author refused; retain journal and partial outputs')
     value = json.loads(raw)
@@ -129,6 +143,8 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--redis-renewed-source', action='store_true')
-        main(parser.parse_args().redis_renewed_source)
+        parser.add_argument('--phase-readback', action='store_true')
+        args = parser.parse_args()
+        main(args.redis_renewed_source, args.phase_readback)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_LONGHORN_SOURCE_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
