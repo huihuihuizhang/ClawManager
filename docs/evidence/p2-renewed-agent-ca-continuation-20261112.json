@@ -59,14 +59,18 @@
     "node_installation_verified": false
   },
   "app_candidate_rollout_local_validation": {
-    "tests": 4,
+    "tests": 7,
     "result": "passed",
     "fixtures_memory_only": true,
     "app_deployed": false,
     "worker_probe_is_only_missing_grant_refusal": true,
     "original_binary_pvc_overlay_removal_reviewed": true,
     "original_pvc_objects_and_data_preserved": true,
-    "first_entry_refusal_created_no_plan_probe_or_patch": true
+    "first_entry_refusal_created_no_plan_probe_or_patch": true,
+    "second_probe_observed_pending_in_broker_init": true,
+    "second_probe_deleted_and_app_patch_not_sent": true,
+    "local_config_probe_omits_dependency_init_only": true,
+    "production_broker_wait_and_network_policy_preserved": true
   },
   "hold_verified": false,
   "backup_ready": false,

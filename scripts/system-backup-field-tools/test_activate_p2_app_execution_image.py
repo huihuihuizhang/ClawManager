@@ -46,4 +46,28 @@ class AppImageGuards(unittest.TestCase):
   with self.assertRaises(ValueError):P.config_data(b'unexpected log\n'+raw)
   data['BackupReady']=True
   with self.assertRaises(ValueError):P.config_data(json.dumps(data).encode())
+ def test_local_config_probe_omits_dependency_init_but_production_keeps_it(self):
+  wanted=P.desired(self.fixture());saved=copy.deepcopy(wanted)
+  probe=P.app_local_probe_spec(wanted)
+  self.assertEqual(wanted,saved)
+  self.assertEqual([c['name'] for c in wanted['template']['spec']['initContainers']],['wait-secret-broker'])
+  self.assertNotIn('initContainers',probe)
+  self.assertTrue(all(m['readOnly'] for m in probe['containers'][0]['volumeMounts']))
+  self.assertIn('--system-backup-source-config-data',probe['containers'][0]['command'][-1])
+  self.assertIn(P.APP_ELF,probe['containers'][0]['command'][-1])
+ def test_unstarted_probe_is_not_reported_as_wrong_image(self):
+  p={'status':{'phase':'Pending','containerStatuses':[{'imageID':'','state':{'waiting':{'reason':'PodInitializing'}}}]}}
+  with self.assertRaisesRegex(ValueError,'startup incomplete'):P.completed_probe_state(p,P.APP)
+  p['status']={'phase':'Succeeded','containerStatuses':[{'imageID':'other','state':{'terminated':{'exitCode':0}}}]}
+  with self.assertRaisesRegex(ValueError,'different image'):P.completed_probe_state(p,P.APP)
+  p['status']['containerStatuses'][0]['imageID']=P.APP
+  self.assertEqual(P.completed_probe_state(p,P.APP)['state']['terminated']['exitCode'],0)
+ def test_only_retained_known_broker_wait_attempt_can_continue(self):
+  old={'metadata':{'uid':'original-probe','name':'sbk-p2-execution-app-eca964d4'},'spec':{'containers':[{'image':P.APP}]},
+       'status':{'phase':'Pending','initContainerStatuses':[{'name':'wait-secret-broker','state':{'running':{}}}],
+                 'containerStatuses':[{'imageID':'','state':{'waiting':{'reason':'PodInitializing'}}}]}}
+  P.known_pre_entry_probe(old,{'metadata':{'uid':'original-probe'}})
+  with self.assertRaises(ValueError):P.known_pre_entry_probe(old,{'metadata':{'uid':'replaced'}})
+  old['status']['phase']='Running'
+  with self.assertRaises(ValueError):P.known_pre_entry_probe(old,{'metadata':{'uid':'original-probe'}})
 if __name__=='__main__':unittest.main()

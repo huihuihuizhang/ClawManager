@@ -22,6 +22,8 @@
 
 下一步 `activate-p2-app-execution-image.py` 先创建有 UID journal 的两个短暂探测 Pod，App 仅调用无 DB/监听器的实际配置导出入口并比较原配置，worker 不带任何凭据或控制授权，必须实际启动后拒绝缺失请求。原部署有两个 init，且 `sbk-app-backend-release` PVC 的文件遮住 `/usr/local/bin/clawreef-server`；第一次只镜像入口检查已在创建 plan/Pod/patch 前拒绝。修复版逐一匹配这两个原 init 的命令/参数 SHA 与只读挂载，仅解除旧程序文件挂载、其 `verify-sbk-app-backend` 校验 init 及未使用的 Pod volume 引用，保留 PVC 对象和文件、`wait-secret-broker`、全部业务卷/配置/凭据。探测从该精确后继 spec 创建，确保实际使用镜像内新 ELF。探测 Pod 删除读回后，对完整未变原 spec 作 CAS 更新；要求原两副本 RollingUpdate、现有 SQL gate 为 installation、续签 CA 保留，不执行自动迁移。最终读回每个 App 的 ELF、CA、SQL scope、实际启动版本、配置及运行实例。它不启用 controller 或提交任务，worker 的拒绝探测不能充当正式 capture 验证。
 
+第二次探测已删除，但停在 `wait-secret-broker`，主容器为 `PodInitializing` / 空 imageID，尚未发送 App patch；该状态不应报作镜像摘要不符。已有 broker ingress 仅允许 `app=clawmanager-app`，独立探测刻意不使用生产 Service 标签。当前接续仅为无网络需求的本地配置导出探测省去依赖 init，生产 spec 仍保留原 broker wait，不修改任何网络策略；发送前先从现有 App 做限时、验证 CA/hostname 的实际 broker TLS 握手。原失败 Pod UID/终态与发送记录保留，只有确认旧 Pod 已删除、原 App spec 未变且无 patch intent，才建立独立的 `app-local` 只读探测记录。探测必须先真实终止，再核对 imageID 与结果，避免再次把未启动误判为镜像不符。
+
 ## 1. ConfigurationData 的生成入口已分离
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
