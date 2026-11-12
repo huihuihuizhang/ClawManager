@@ -52,6 +52,10 @@ def prepare(inputs):
     return plan,argv
 
 
+def run_original(original):
+    A.need(original.main()==0,'original persistent Vault owner refused; retain its original state and report')
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--inputs-file',required=True); p.add_argument('--inputs-sha256',required=True)
@@ -77,7 +81,7 @@ def main():
             A.need(not any(c.get('name')=='vault' or 'clawmanager-backup-vault' in c.get('image','')
                            for d in existing for c in d['spec']['template']['spec'].get('containers',[])),
                    'existing Vault deployment requires its original private owner state; do not install a second provider')
-        original.main()
+        run_original(original)
     finally:
         sys.argv=old_argv
         if previous is None: os.environ.pop('KUBECONFIG',None)

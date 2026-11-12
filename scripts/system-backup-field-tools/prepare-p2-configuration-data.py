@@ -76,7 +76,7 @@ def read_image_data(reference,directory,opener=None):
     value={'Reference':reference,'Manifest':A.retain(directory/'image-manifest.json',manifest_raw),
            'Config':A.retain(directory/'image-config.json',config_raw),'NativeQualified':False}
     pin=A.retain(directory/'image-data.json',value)
-    immutable_image(pin)
+    immutable_image(pin,require_revision=False)
     return {'ImageData':pin,'ActualMetadataBytesRead':True,'NativeReleaseQualified':False,'BackupReady':False}
 
 
@@ -112,6 +112,9 @@ def prepare_index(args):
         if getattr(args,name+'_file'):
             pin=supplied(name);values[key]=A.obj(pin)[field] if field else pin
     for key in ['MinIO','Redis','SourceAPI','RuntimeIssuers','Coordinates','WriterSelection']:A.read(values[key])
+    if args.runtime_agent_tls_file or args.runtime_agent_rotation_file:
+        values['RuntimeAgentTLS']=supplied('runtime_agent_tls')
+        values['RuntimeAgentRotation']=supplied('runtime_agent_rotation')
     now=datetime.datetime.now(datetime.timezone.utc)
     observer=A.obj(values['ObserverReceipt']);api=A.obj(values['SourceAPI'])
     end=min(now+datetime.timedelta(hours=1),datetime.datetime.fromisoformat(observer['NotAfter'].replace('Z','+00:00')),
@@ -183,7 +186,7 @@ def current_host(objects,plan,worker_definition):
     return host,worker,staging
 
 
-def immutable_image(pin):
+def immutable_image(pin,require_revision=True):
     """Actual OCI bytes supply config digest and source label, never a tag."""
     selected=A.obj(pin)
     reference=selected['Reference'];A.need(re.fullmatch(r'10\.130\.14\.23:5000/[^\s@]+@sha256:[a-f0-9]{64}',reference),'explicit immutable release image required')
@@ -191,9 +194,56 @@ def immutable_image(pin):
     config_raw=A.read(selected['Config']); config=A.decode(config_raw)
     commit=config.get('config',{}).get('Labels',{}).get('org.opencontainers.image.revision','')
     A.need(reference.endswith('@sha256:'+A.sha(manifest_raw)) and manifest['config']['digest']=='sha256:'+A.sha(config_raw) and
-           manifest['config']['size']==len(config_raw) and config['os']=='linux' and config['architecture']=='amd64' and
-           re.fullmatch('[a-f0-9]{40}',commit),'actual source-labelled linux/amd64 OCI bytes required')
+           manifest['config']['size']==len(config_raw) and config['os']=='linux' and config['architecture']=='amd64',
+           'actual linux/amd64 OCI bytes required')
+    A.need(not require_revision or re.fullmatch('[a-f0-9]{40}',commit),
+           'actual source-labelled linux/amd64 OCI bytes required')
     return dict(reference=reference,manifest_sha256=A.sha(manifest_raw),config_digest='sha256:'+A.sha(config_raw),commit=commit)
+
+
+def runtime_agent_ca(inputs,objects,writer,plan):
+    """Select retained CA DATA only after matching the completed rotation graph.
+
+    This does not verify a live TLS session or authenticate an issuance. The
+    original native author still reads the current runtime and its authority.
+    """
+    app=objects.get('deployment','clawmanager-app')
+    spec=app['spec']['template']['spec'];containers=spec['containers']
+    A.need(len(containers)==1,'one original App container required')
+    env=[e for e in containers[0].get('env',[]) if e['name']=='RUNTIME_AGENT_CA_SHA256']
+    A.need(len(env)==1 and 'value' in env[0],'recorded App CA pin required')
+    selected=writer['AgentCA'];A.read(selected)
+    if inputs.get('RuntimeAgentTLS') or inputs.get('RuntimeAgentRotation'):
+        A.need(inputs.get('RuntimeAgentTLS') and inputs.get('RuntimeAgentRotation'),
+               'genuine TLS receipt and completed rotation DATA required together')
+        receipt=A.obj(inputs['RuntimeAgentTLS']);rotation=A.obj(inputs['RuntimeAgentRotation'])
+        A.need(receipt['Version']=='original-shared-agent-tls-materials.v1' and
+               receipt['Namespace']==A.NS and receipt['NamespaceUID']==plan['Target']['NamespaceUID'] and
+               rotation['Version']=='p2-runtime-certificate-rotation.v1' and
+               rotation['CA']==receipt['CA'] and rotation['NotAfter']==receipt['NotAfter'] and
+               rotation['ImagesPreserved'] is True,'same completed runtime CA rotation required')
+        moment=lambda s:datetime.datetime.fromisoformat(s.replace('Z','+00:00'))
+        A.need(moment(receipt['NotBefore'])<=moment(inputs['NotBefore'])<moment(inputs['Until'])<=moment(receipt['NotAfter']),
+               'runtime certificate must cover the selected execution window')
+        selected=receipt['CA'];raw=A.read(selected)
+        mounts=[m for m in containers[0].get('volumeMounts',[]) if m['mountPath']=='/run/clawmanager-agent-ca' and m.get('readOnly') is True]
+        A.need(len(mounts)==1,'recorded App CA mount changed')
+        volumes=[v for v in spec.get('volumes',[]) if v['name']==mounts[0]['name']]
+        A.need(len(volumes)==1 and 'configMap' in volumes[0],'recorded App CA ConfigMap required')
+        cm=objects.get('configmap',volumes[0]['configMap']['name'])
+        A.need(cm.get('immutable') is True and cm.get('data',{}).get('ca.pem','').encode()==raw,
+               'recorded App CA bytes do not match the completed rotation')
+        targets=receipt['Targets']
+        A.need(len(targets)==2 and {t['Deployment'] for t in targets}=={'hermes-runtime','openclaw-runtime'},
+               'both original runtime TLS targets required')
+        for target in targets:
+            d=objects.get('deployment',target['Deployment']);pod=d['spec']['template']['spec']
+            A.need(d['metadata']['uid']==target['DeploymentUID'] and
+                   any(v.get('secret',{}).get('secretName')==target['SecretName'] for v in pod.get('volumes',[])),
+                   'recorded runtime has not selected the renewed TLS Secret')
+    A.need(env[0]['value']==selected['SHA256'],
+           'App CA differs from retained writer; supply completed runtime rotation pins')
+    return selected
 
 
 def configured_profile(inputs,objects,plan,directory):
@@ -276,7 +326,8 @@ def compile_data(inputs,directory,mirror):
     for key,kind in [('SharedRuntimeEndpoints','shared'),('WholePodEndpoints','whole'),('StoppedProEndpoints','stopped-pro')]:
         observed_writer[key]={e['Node']:e['Endpoint'] for e in observer['Endpoints'] if e['Kind']==kind}
     agent=A.retain(mirror/'original-agent-control-token',A.read(writer['AgentCredential']))
-    agent_ca=A.retain(mirror/'original-agent-ca.pem',A.read(writer['AgentCA']))
+    selected_agent_ca=runtime_agent_ca(inputs,objects,writer,plan)
+    agent_ca=A.retain(mirror/'original-agent-ca.pem',A.read(selected_agent_ca))
     observed_writer.update(AgentCredential=agent,AgentCA=agent_ca)
     app_image=immutable_image(inputs['AppImage']);worker_image=immutable_image(inputs['WorkerImage'])
     container=app['spec']['template']['spec']['containers']
@@ -358,7 +409,7 @@ def main():
     p.add_argument('--inputs-file');p.add_argument('--inputs-sha256')
     p.add_argument('--prepare-index',action='store_true')
     p.add_argument('--read-image-data',action='store_true');p.add_argument('--image-reference')
-    for key in ['raw-index','relay-receipt','observer-receipt','app-image-data','worker-image-data','source-api','runtime-issuers','coordinates-receipt','writer-receipt']:
+    for key in ['raw-index','relay-receipt','observer-receipt','app-image-data','worker-image-data','source-api','runtime-issuers','coordinates-receipt','writer-receipt','runtime-agent-tls','runtime-agent-rotation']:
         p.add_argument('--'+key+'-file');p.add_argument('--'+key+'-sha256')
     p.add_argument('--output-directory',type=Path,required=True);p.add_argument('--runtime-mirror',type=Path)
     args=p.parse_args()

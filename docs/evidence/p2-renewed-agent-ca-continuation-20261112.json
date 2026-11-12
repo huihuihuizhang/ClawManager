@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-12",
+  "scope": "Consume completed runtime TLS rotation in configuration DATA; propagate original Vault owner refusal",
+  "local_validation": {
+    "command": "py -3 -B -m unittest test_p2_configuration_continuation test_p2_installation_candidate",
+    "tests": 17,
+    "result": "passed",
+    "scratch": "D:/dsh-work/sbk-p2-renewed-ca-tests",
+    "scratch_removed": true,
+    "go_built": false
+  },
+  "operator_reported_field": {
+    "runtime_rotation": "RUNTIME_TLS_AND_INSTANCE_RECOVERY_PASSED",
+    "running_instance_ids": [1, 2, 3, 7, 8],
+    "runtime_ca_sha256": "4d6ffb92650f28a7148a536b60cfab6a0b025856a4b30dba3b6059905c128478",
+    "vault": "P2_VAULT_CONNECTION_READY",
+    "vault_report_sha256": "81f3158b175b13ad8eb1ce645c7c5d9214fb55c058d9f55a628b495ab190161f",
+    "vault_jwt_smoke_passed": true,
+    "vault_persistence_restart_verified": true,
+    "vault_production_owner_mapping_registered": false,
+    "node_observer_new_pki_loaded": false,
+    "app_binary_sha256": "4e4c205c283a0486af6608bd9376ee7bf30d35ad689716f55c3bf2a5dbdc50cf",
+    "app_source_revision_proven": false
+  },
+  "hold_verified": false,
+  "backup_ready": false,
+  "whole_task_acceptance_passed": false
+}

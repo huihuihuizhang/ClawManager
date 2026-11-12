@@ -1,6 +1,14 @@
 # 本次安装最后一轮接续命令与依赖
 
-本文件是离线核对结果，不是现场已完成记录。本轮没有连接远测，也不要求现在执行下面的现场命令。所有 `*_F / *_H` 都必须从指定的真实回执或原始文件 pin 取得；它们不是允许手写签名、配置或“通过”状态的占位符。未知发送只读回原操作，不能重新 issue/apply。
+本文件保留 2026-11-11 离线核对的命令账本，并在开头追加次日操作员回传的现场结果；账本中的未执行步骤不能视为完成。所有 `*_F / *_H` 都必须从指定的真实回执或原始文件 pin 取得；它们不是允许手写签名、配置或“通过”状态的占位符。未知发送只读回原操作，不能重新 issue/apply。
+
+2026-11-12 接续记录：现场已完成 runtime TLS 轮换和实例恢复，以及 Vault 固定镜像版本验证、持久化安装、JWT 加解密检查与重启读回。Vault owner 为 `/root/sbk/p2-cert-renewal.1KyqMtsd/vault-owner`，原报告 SHA256 为 `81f3158b175b13ad8eb1ce645c7c5d9214fb55c058d9f55a628b495ab190161f`；`production_owner_mapping_registered=false` 仍未消除。Node observer 新 PKI 尚未加载，配置登记和整单验收尚未执行。
+
+续签后的配置生成必须显式追加 `--runtime-agent-tls-file /root/sbk/p2-cert-renewal.1KyqMtsd/runtime-agent.receipt.private.json` 和 `--runtime-agent-rotation-file /root/sbk/p2-cert-renewal.1KyqMtsd/runtime-rotation/completed.json`，并分别给出原始文件 SHA256。生成器检查两份真实材料的 CA、窗口、Namespace UID，并与所选完整记录中的 App CA ConfigMap、环境 pin 和两份 runtime Secret 挂载比较；这些记录比较不代替原作者的实时核验。它不改旧 writer selection，也不再静默复制其中的旧 CA。
+
+上传后先校验原始 SHA，再把作为输入读取的 Python/JSON 文件设为 `0600`、ELF 设为 `0700`，目录设为 `0700`。本轮 Vault 第一次入口仅因安装器 `0644` 被拒绝，确认 owner 尚不存在后仅调整该文件权限并接续原输入；原失败日志和 intent 均保留。原 owner 返回非零时，修复后的 wrapper 同样非零退出；不能根据 wrapper 的进程退出码单独判定 Vault 完成，仍读回原报告及实际持久化/JWT 结果。
+
+当前 App `322ba63b…` 与 worker `f125b3ee…` 的 OCI config 都没有 revision 标签，App 实际 ELF 也未读到关联提交。只读 OCI DATA 导出可保留这些真实字节，完整配置编译仍拒绝从中猜 BuildCommit。不得用 tag、文件名或另一旧镜像的 label 补填。本地固定提交的新构建及其发布仍待完成。
 
 ## 1. ConfigurationData 的生成入口已分离
 

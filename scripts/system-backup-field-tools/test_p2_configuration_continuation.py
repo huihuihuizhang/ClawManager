@@ -70,6 +70,9 @@ class ConfigurationContinuation(unittest.TestCase):
             'ApplicationScope':'installation','AgentCredential':initial['ControlDSN'],'AgentCA':ca,'RedisReadKeepers':[keeper],
             'Deployments':[{'Name':x['metadata']['name'],'UID':x['metadata']['uid'],'Role':'writer' if x['metadata']['name']=='clawmanager-app' else 'agent'} for x in deps],
             'Policy':{'AcquisitionTimeout':60000000000,'MaxHold':600000000000}})
+        app_env=app['spec']['template']['spec']['containers'][0]['env']
+        app_env[:]=[e for e in app_env if e['name']!='RUNTIME_AGENT_CA_SHA256']
+        app_env.append({'name':'RUNTIME_AGENT_CA_SHA256','value':ca['SHA256']})
         volumes=[]
         for x in items:
             if x['kind']=='PersistentVolumeClaim':volumes.append({'ClaimName':x['metadata']['name'],'ClaimUID':x['metadata']['uid'],'PVName':x['spec'].get('volumeName','fixture-pv'),'PVUID':'fixture-pv-uid','PVSpecSHA256':'a'*64})
@@ -167,6 +170,60 @@ class ConfigurationContinuation(unittest.TestCase):
         self.assertEqual(len(client.calls),2);self.assertFalse(result['NativeReleaseQualified'])
         self.assertEqual(A.read(A.obj(result['ImageData'])['Manifest']),manifest)
         with self.assertRaises(ValueError):G.read_image_data('10.130.14.23:5000/fixture:latest',directory,client)
+
+    def test_unlabelled_image_metadata_can_be_retained_but_cannot_supply_build_commit(self):
+        import io
+        config=A.encode({'os':'linux','architecture':'amd64','config':{}})
+        manifest=A.encode({'schemaVersion':2,'config':{'digest':'sha256:'+A.sha(config),'size':len(config)}})
+        class Response(io.BytesIO): status=200
+        class Client:
+            def open(self,request,timeout):return Response(manifest if '/manifests/' in request.full_url else config)
+        directory=self.root/'unlabelled';directory.mkdir()
+        result=G.read_image_data('10.130.14.23:5000/fixture@sha256:'+A.sha(manifest),directory,Client())
+        self.assertFalse(result['NativeReleaseQualified'])
+        with self.assertRaisesRegex(ValueError,'source-labelled'):G.immutable_image(result['ImageData'])
+
+    def test_completed_rotation_selects_new_ca_without_rewriting_original_writer(self):
+        ready=self.ready();writer=A.obj(ready['WriterSelection']);original=A.read(ready['WriterSelection'])
+        new=self.save('renewed-agent-ca.fixture.pem',b'new fixture CA\n')
+        graph=A.obj(ready['KubernetesObjects'][0]);items=graph['items']
+        app=next(x for x in items if x['kind']=='Deployment' and x['metadata']['name']=='clawmanager-app')
+        spec=app['spec']['template']['spec'];c=spec['containers'][0]
+        for e in c['env']:
+            if e['name']=='RUNTIME_AGENT_CA_SHA256':e['value']=new['SHA256']
+        c['volumeMounts']=[m for m in c.get('volumeMounts',[]) if m['mountPath']!='/run/clawmanager-agent-ca']
+        c['volumeMounts'].append({'name':'renewed-ca','mountPath':'/run/clawmanager-agent-ca','readOnly':True})
+        spec.setdefault('volumes',[]).append({'name':'renewed-ca','configMap':{'name':'fixture-renewed-ca'}})
+        items.append({'kind':'ConfigMap','metadata':{'namespace':A.NS,'name':'fixture-renewed-ca'},'immutable':True,'data':{'ca.pem':A.read(new).decode()}})
+        targets=[]
+        for name in ['hermes-runtime','openclaw-runtime']:
+            d=next(x for x in items if x['kind']=='Deployment' and x['metadata']['name']==name)
+            secret='renewed-'+name
+            d['spec']['template']['spec'].setdefault('volumes',[]).append({'name':'renewed-tls','secret':{'secretName':secret}})
+            targets.append({'Deployment':name,'DeploymentUID':d['metadata']['uid'],'SecretName':secret})
+        ready['KubernetesObjects']=[self.save('renewed-graph.fixture.json',graph)]
+        objects=G.RecordedObjects(ready['KubernetesObjects']);plan=A.obj(ready['Plan'])
+        with self.assertRaisesRegex(ValueError,'App CA differs'):G.runtime_agent_ca(ready,objects,writer,plan)
+        receipt={'Version':'original-shared-agent-tls-materials.v1','Namespace':A.NS,'NamespaceUID':plan['Target']['NamespaceUID'],
+                 'NotBefore':'2026-11-11T09:00:00Z','NotAfter':'2026-11-11T12:00:00Z','CA':new,'Targets':targets}
+        ready['RuntimeAgentTLS']=self.save('renewed-runtime-tls.fixture.json',receipt)
+        completed={'Version':'p2-runtime-certificate-rotation.v1','CA':new,'NotAfter':receipt['NotAfter'],'ImagesPreserved':True,'BackupReady':False}
+        ready['RuntimeAgentRotation']=self.save('completed-rotation.fixture.json',completed)
+        self.assertEqual(G.runtime_agent_ca(ready,objects,writer,plan),new)
+        out=self.root/'renewed-configuration';out.mkdir()
+        result=G.compile_data(ready,out,self.root)
+        data=A.obj(result['ConfigurationData'])
+        self.assertEqual(data['RuntimeAgent']['CA']['SHA256'],new['SHA256'])
+        self.assertEqual(A.read(ready['WriterSelection']),original)
+        completed['CA']=writer['AgentCA']
+        bad=dict(ready,RuntimeAgentRotation=self.save('mismatched-completion.fixture.json',completed))
+        with self.assertRaisesRegex(ValueError,'same completed'):G.runtime_agent_ca(bad,objects,writer,plan)
+        bad=dict(ready,Until='2026-11-11T13:00:00Z')
+        with self.assertRaisesRegex(ValueError,'execution window'):G.runtime_agent_ca(bad,objects,writer,plan)
+        badgraph=copy.deepcopy(graph)
+        next(x for x in badgraph['items'] if x['kind']=='ConfigMap' and x['metadata']['name']=='fixture-renewed-ca')['data']['ca.pem']='wrong CA'
+        with self.assertRaisesRegex(ValueError,'App CA bytes'):
+            G.runtime_agent_ca(ready,G.RecordedObjects([self.save('wrong-ca-graph.fixture.json',badgraph)]),writer,plan)
 
     def test_longhorn_read_access_is_exact_additive_and_separate_from_actor_permissions(self):
         plan={'Target':{'Namespace':A.NS,'NamespaceUID':'original-system'}}

@@ -232,5 +232,10 @@ class CandidateIntegration(unittest.TestCase):
             inputs['ImageInput']=self.save('vault-tag.json',bad)
             with self.assertRaisesRegex(ValueError,'tag is insufficient'): V.prepare(inputs)
 
+    def test_vault_original_refusal_is_a_nonzero_wrapper_outcome(self):
+        V.run_original(types.SimpleNamespace(main=lambda:0))
+        with self.assertRaisesRegex(ValueError,'original persistent Vault owner refused'):
+            V.run_original(types.SimpleNamespace(main=lambda:1))
+
 
 if __name__=='__main__': unittest.main()
