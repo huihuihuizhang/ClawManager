@@ -13,6 +13,8 @@ OLD_AUTHOR = '/root/sbk/p2-redis-8bbf4c61/system-backup-original-maintenance'
 OLD_SHA = 'a947551a16fae050a00975ada5421b453baefd3340bcd1dffd8fa24bd861d20e'
 HELPER = Path('/root/sbk/p2-runtime-cert-rotation-fcc26a0a/rotate-p2-runtime-certificates.py')
 HELPER_SHA = 'ab1539c5e06c8c237e8516d9985b162fbec3216570abb5ebec1902df47f7052c'
+PROFILE_AUTHOR = '/root/sbk/p2-vault-profile-3a253cc4/system-backup-original-maintenance'
+PROFILE_SHA = '960b0e3a1f04b367076785b075310a4bf6965e41e7eb1f67283f9c8ca7632ba9'
 
 
 def load(name, path):
@@ -39,7 +41,16 @@ def refused_observation(argv, exit_value, stdout, stderr, output_names):
     return dict(zip(argv[1::2], argv[2::2]))
 
 
-def main(directory):
+def jwt_trust_refusal(argv, expected_argv, exit_value, stdout, stderr, output_names):
+    require(argv == expected_argv and isinstance(exit_value, dict) and type(exit_value.get('ExitCode')) is int and
+            exit_value == {'ExitCode': 1} and stderr == b'' and not output_names,
+            'exact prior JWT-trust refusal with no material outputs required')
+    require(json.loads(stdout) == {'Version': 'original-vault-dependency-material-failure.v1',
+                                  'State': 'unconfirmed_preserve_original_materials', 'Phase': 'kubernetes_jwt_trust'},
+            'previous native refusal was not the Kubernetes JWT trust stage')
+
+
+def main(directory, resume_jwt_api_address=False):
     os.umask(0o077)
     require(os.name == 'posix', 'Linux operator required')
     A = load('vault_resume_assembly', directory / 'assemble-p2-installation-candidate.py')
@@ -71,12 +82,32 @@ def main(directory):
     raw = A.read({'File': str(binary), 'SHA256': tool['SHA256']}, 128 << 20)
     require(len(raw) == tool['Bytes'] and raw[:6] == b'\x7fELF\x02\x01' and raw[18:20] == b'\x3e\x00',
             'actual Linux amd64 native executable required')
-    r = old / 'installer-profile-readback'
+    previous = old / 'installer-profile-readback'
+    r = previous
+    output_name = 'initial-vault-provider-installer-profile'
+    refused_intent = old / 'apply.sent.private.json'
+    if resume_jwt_api_address:
+        prior_output = out.parent / output_name
+        expected_argv = list(argv)
+        expected_argv[0] = PROFILE_AUTHOR
+        expected_argv[expected_argv.index('--output-directory') + 1] = str(prior_output)
+        prior_sent = json.loads((previous / 'provider.sent.private.json').read_bytes())
+        require(prior_output.is_dir() and not prior_output.is_symlink() and
+                hashlib.sha256(Path(PROFILE_AUTHOR).read_bytes()).hexdigest() == PROFILE_SHA and
+                not (previous / 'provider.receipt.private.json').exists() and not (previous / 'completed.json').exists(),
+                'original profile readback or its retained tool changed')
+        jwt_trust_refusal(prior_sent['Argv'], expected_argv,
+                          json.loads((previous / 'provider.exit.json').read_bytes()),
+                          (previous / 'provider.stdout.private').read_bytes(),
+                          (previous / 'provider.stderr.private').read_bytes(), list(prior_output.iterdir()))
+        refused_intent = previous / 'provider.sent.private.json'
+        r = previous / 'jwt-api-address-readback'
+        output_name = 'initial-vault-provider-jwt-api-address'
     r.mkdir(mode=0o700, exist_ok=True)
     require(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0, 'private readback directory required')
     A.retain(r / 'original-refusal.json', {'Version': 'p2-retained-empty-provider-observation.v1',
-                                         'OriginalIntent': {'File': str(old / 'apply.sent.private.json'),
-                                                            'SHA256': hashlib.sha256((old / 'apply.sent.private.json').read_bytes()).hexdigest()},
+                                         'OriginalIntent': {'File': str(refused_intent),
+                                                            'SHA256': hashlib.sha256(refused_intent.read_bytes()).hexdigest()},
                                          'OriginalOutputsEmpty': True, 'OldIntentReplayed': False})
     print('P2_VAULT_EXISTING_INSTALLATION_PROFILE_READBACK', r, flush=True)
     m = load('vault_resume_transport', HELPER)
@@ -95,14 +126,14 @@ def main(directory):
         value = json.loads(receipt.read_bytes())
     else:
         require(not (r / 'provider.sent.private.json').exists(), 'readback already sent; retain and inspect its outcome')
-        target = out.parent / 'initial-vault-provider-installer-profile'
+        target = out.parent / output_name
         target.mkdir(mode=0o700, exist_ok=True)
         require(not list(target.iterdir()), 'partial new provider outputs retained')
         selected = list(argv)
         selected[0] = str(binary)
         selected[selected.index('--output-directory') + 1] = str(target)
         A.retain(r / 'provider.sent.private.json', {'Argv': selected, 'SourceRevision': build['SourceRevision'],
-                                                 'OriginalIntentRetained': str(old / 'apply.sent.private.json')})
+                                                 'OriginalIntentRetained': str(refused_intent)})
         with (r / 'provider.stdout.private').open('xb') as stdout, (r / 'provider.stderr.private').open('xb') as stderr:
             result = dns.run(selected, stdout=stdout, stderr=stderr, timeout=180)
         A.retain(r / 'provider.exit.json', {'ExitCode': result.returncode})
@@ -133,8 +164,9 @@ def main(directory):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--tool-directory', type=Path, required=True)
+    parser.add_argument('--resume-jwt-api-address', action='store_true')
     args = parser.parse_args()
     try:
-        main(args.tool_directory)
+        main(args.tool_directory, args.resume_jwt_api_address)
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as error:
         raise SystemExit('P2_VAULT_DEPENDENCY_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

@@ -165,11 +165,11 @@ func (o *InstalledVaultDependencyObserver) kubernetesTrust(ctx context.Context) 
 	if e != nil || len(raw) > 65536 || json.Unmarshal(raw, &discovery) != nil || discovery.Issuer != o.cfg.Trust.Issuer {
 		return ErrOwner
 	}
-	uri, e := url.Parse(discovery.JWKS)
-	if e != nil || uri.Scheme != "https" || uri.Path != "/openid/v1/jwks" || uri.User != nil || uri.RawQuery != "" || uri.Fragment != "" {
+	keysRequest := client.Get().AbsPath("/openid/v1/jwks")
+	if !installedVaultDiscoveryURL(discovery.Issuer, discovery.JWKS, keysRequest.URL()) {
 		return ErrOwner
 	}
-	raw, e = client.Get().AbsPath("/openid/v1/jwks").Do(ctx).Raw()
+	raw, e = keysRequest.Do(ctx).Raw()
 	var jwks struct {
 		Keys []struct{ Kty, N, E, Use, Alg string }
 	}

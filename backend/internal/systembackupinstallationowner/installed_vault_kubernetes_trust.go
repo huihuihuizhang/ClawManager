@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"math/big"
-	"net/url"
 	"sort"
 
 	a "clawreef/internal/systembackupkekadapter"
@@ -31,12 +30,11 @@ func ReadInstalledVaultKubernetesTrust(ctx context.Context, kube kubernetes.Inte
 	if e != nil || len(raw) > 65536 || json.Unmarshal(raw, &doc) != nil {
 		return out, ErrOwner
 	}
-	issuer, e := url.Parse(doc.Issuer)
-	keys, e2 := url.Parse(doc.JWKS)
-	if e != nil || e2 != nil || issuer.Scheme != "https" || issuer.Hostname() == "" || issuer.User != nil || keys.Scheme != "https" || keys.Hostname() != issuer.Hostname() || keys.Path != "/openid/v1/jwks" || keys.User != nil || keys.RawQuery != "" || keys.Fragment != "" {
+	keysRequest := client.Get().AbsPath("/openid/v1/jwks")
+	if !installedVaultDiscoveryURL(doc.Issuer, doc.JWKS, keysRequest.URL()) {
 		return out, ErrOwner
 	}
-	raw, e = client.Get().AbsPath("/openid/v1/jwks").Do(ctx).Raw()
+	raw, e = keysRequest.Do(ctx).Raw()
 	var set struct {
 		Keys []struct{ Kty, N, E, Use, Alg string }
 	}

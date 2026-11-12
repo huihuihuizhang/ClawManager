@@ -221,3 +221,7 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 `resume-p2-vault-dependency.py` 保留原 intent/log/output，必须先证明原工具/selection 未变、失败退出且日志和输出目录均为空，再在 `vault-dependency/installer-profile-readback` 中做一次真实原生观察。其输入与输出摘要由 native owner 实际读回；不重复安装、创建账户或修改 IAM。任何未知发送或部分输出都会停在原目录。此接续成功仍只表示 provider 依赖读取完成，不是整单验收。
 
 后续发布前仍需接好材料 init 所需的真实 `system-backup-source-registries` 可执行文件、CSI/Longhorn 的运行期物理 owner、签名与配置登记。不得仅去掉 SharedNodes 正数要求来把 CSI 伪装成主机路径，也不得用 DATA/连接成功代替原生停写与恢复结果。
+
+随后现场 profile readback 在 `kubernetes_jwt_trust` 拒绝，尚未进入物理 scope。用户实际 API 读回确认 issuer 为 `https://kubernetes.default.svc.cluster.local`，JWKS URI 为 `https://10.130.14.23:6443/openid/v1/jwks`；RSA2048、RS256、sig、65537 与两个 API 读取均正常。此前 consumer 将 issuer 身份地址与 JWKS 网络地址强制为相同主机，错误拒绝该既有集群形态。新匹配仅允许 issuer 自身地址或当前已认证 REST client 的精确 HTTPS authority（包括端口）；实际 JWKS 仍只经该 client 固定 `/openid/v1/jwks` 路径读取，不跟随发现文档中的 URL。公钥内容、算法、证书和后续 Vault 配置一致性检查保留，首次读取和持续 observer 使用同一匹配规则。
+
+下一次仅以 `--resume-jwt-api-address` 接续。脚本核对上轮固定 ELF、原 argv、退出码 1、准确的 `kubernetes_jwt_trust` 原生失败 JSON，以及无部分材料输出后，在原 profile readback 下新增 `jwt-api-address-readback`。前两轮记录和原目录完整保留。成功只计为真实 Vault 依赖读回，整单状态仍未通过。

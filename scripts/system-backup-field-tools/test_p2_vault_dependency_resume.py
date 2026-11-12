@@ -1,5 +1,6 @@
 """Fail closed on an unknown or partially written original observation."""
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -34,6 +35,22 @@ class RefusedObservationChecks(unittest.TestCase):
                      [*self.args(), '--unknown']]:
             with self.assertRaises(ValueError):
                 R.refused_observation(argv, {'ExitCode': 1}, b'', b'', [])
+
+    def test_jwt_continuation_requires_exact_prior_stage_and_empty_outputs(self):
+        argv = ['/fixture/profile-author', '--mode', 'provider-materials']
+        failure = {'Version': 'original-vault-dependency-material-failure.v1',
+                   'State': 'unconfirmed_preserve_original_materials', 'Phase': 'kubernetes_jwt_trust'}
+        R.jwt_trust_refusal(argv, list(argv), {'ExitCode': 1}, json.dumps(failure).encode(), b'', [])
+        for value in [dict(failure, Phase='provider_native_metadata'), dict(failure, State='unknown'), {}]:
+            with self.assertRaises(ValueError):
+                R.jwt_trust_refusal(argv, list(argv), {'ExitCode': 1}, json.dumps(value).encode(), b'', [])
+        for selected, exit_value, stderr, files in [(argv + ['--other'], {'ExitCode': 1}, b'', []),
+                                                  (argv, {'ExitCode': 0}, b'', []),
+                                                  (argv, {'ExitCode': True}, b'', []),
+                                                  (argv, {'ExitCode': 1}, b'unknown', []),
+                                                  (argv, {'ExitCode': 1}, b'', ['partial.json'])]:
+            with self.assertRaises(ValueError):
+                R.jwt_trust_refusal(selected, list(argv), exit_value, json.dumps(failure).encode(), stderr, files)
 
 
 if __name__ == '__main__':
