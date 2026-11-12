@@ -46,18 +46,19 @@ def controller_desired(dep,binary,A):
   if c['name']=='controller':c['command']=patch[-1]['value']
  return wanted
 
-def main(directory):
+def main(directory,native_directory=None):
  os.umask(0o077);need(os.name=='posix','Linux operator required')
  records=ROOT/'controller-relay';records.mkdir(mode=0o700,exist_ok=True)
  need(records.resolve(strict=True)==records and records.stat().st_mode&0o077==0,'original private controller records required')
  A=load('p2_controller_assembly',directory/'assemble-p2-installation-candidate.py')
  h=Path('/root/sbk/p2-runtime-cert-rotation-fcc26a0a/rotate-p2-runtime-certificates.py')
  need(sha(h.read_bytes())==HELPER_SHA,'original CAS transport helper changed');m=load('original_cas_transport',h);site=m.Site(records)
- receipt=json.loads((directory/'BUILD_RECEIPT.json').read_bytes())
+ native_directory=native_directory or directory
+ receipt=json.loads((native_directory/'BUILD_RECEIPT.json').read_bytes())
  need(receipt['SourceRevision']==REV and receipt['BackendTree']=='6361d0c8377039d86de7725fadda968464411e73' and receipt['VersionName']=='p2-eca964d4','same fixed-source native tool build required')
  tools={}
  for name,v in receipt['Binaries'].items():
-  p=directory/name;raw=p.read_bytes()
+  p=native_directory/name;raw=p.read_bytes()
   need(sha(raw)==v['SHA256'] and len(raw)==v['Bytes'] and raw[:6]==b'\x7fELF\x02\x01' and raw[18:20]==b'\x3e\x00','actual native ELF bytes changed')
   tools[name]=pin(p)
  app=json.loads((ROOT/'execution-app-rollout/completed.json').read_bytes())
@@ -73,14 +74,19 @@ def main(directory):
   plan={'Original':current['spec'],'Desired':wanted,'Binary':target_pin,'SourceRevision':REV,'Tool':tools[binary_name]}
   retain(plan_file,encode(plan))
  need(plan['Binary']==target_pin and plan['SourceRevision']==REV,'controller executable selection changed')
+ desired=plan['Desired']
+ permission_recovery=records/'owner-directory-permissions/completed.json'
+ if permission_recovery.exists():
+  settled=load('controller_owner_permission_successor',directory/'settle-p2-controller-owner-permissions.py')
+  desired=settled.reconciled_spec(plan,json.loads(permission_recovery.read_bytes()),pin(plan_file))
  site.call(['exec','deployment/'+CONTROLLER,'-c','controller','--','sh','-ec','test ! -e /run/system-backup/runtime/controller.env.ready'])
  dep=site.get('deployment',CONTROLLER)
- need(dep['metadata']['uid']==UID and m.semantic(dep['spec']) in [m.semantic(plan['Original']),m.semantic(plan['Desired'])],'controller spec drift')
+ need(dep['metadata']['uid']==UID and m.semantic(dep['spec']) in [m.semantic(plan['Original']),m.semantic(desired)],'controller spec drift')
  selector=','.join(k+'='+v for k,v in sorted(dep['spec']['selector']['matchLabels'].items()))
  pods=[p for p in json.loads(site.call(['get','pods','-l',selector,'-o','json']))['items'] if not p['metadata'].get('deletionTimestamp')]
  need(len(pods)==1,'one actual controller Pod required');pod=pods[0]
  def stage(name):
-  dest='/run/system-backup/bin/'+name;digest=tools[name]['SHA256'];local=directory/name
+  dest='/run/system-backup/bin/'+name;digest=tools[name]['SHA256'];local=native_directory/name
   inspect='test "$(id -u)" = 65532; if test -e "$1"; then test -f "$1"; test ! -L "$1"; sha256sum "$1"; else printf "ABSENT\\n"; fi'
   got=site.call(['exec',pod['metadata']['name'],'-c','installation-owner','--','sh','-ec',inspect,'p2-stage-check',dest]).split()
   if got==[b'ABSENT']:
@@ -99,7 +105,7 @@ def main(directory):
   need(actual and actual[0].decode()==digest,'controller-side executable readback mismatch')
   print('CONTROLLER_NATIVE_EXECUTABLE_STAGED',name,digest,flush=True)
  for name in ['system-backup-v2-controller','system-backup-c1-native-inputs']:stage(name)
- pods=site.patch('controller-pinned-executable',CONTROLLER,plan['Original'],plan['Desired'],UID)
+ pods=site.patch('controller-pinned-executable',CONTROLLER,plan['Original'],desired,UID)
  need(len(pods)==1,'controller roster not settled');pod=pods[0]
  need(all(s['imageID']==APP for s in pod['status']['containerStatuses']),'controller/owner loaded a different base image')
  checked=site.call(['exec',pod['metadata']['name'],'-c','controller','--','sh','-ec','test ! -e /run/system-backup/runtime/controller.env.ready; sha256sum /run/system-backup/bin/system-backup-v2-controller']).split()
@@ -142,6 +148,6 @@ def main(directory):
  retain(records/'completed.json',encode({'Version':'p2-controller-relay-preparation.v1','ControllerPodUID':pod['metadata']['uid'],'ControllerImage':APP,'SourceRevision':REV,'RelayReceipt':pin(records/'relay-pki.receipt.private.json'),'RecordExportReceipt':pin(records/'record-key-export.receipt.private.json'),'ControllerEnabled':False,'RelayStarted':False,'BackupReady':False}))
  print('P2_CONTROLLER_RELAY_INPUTS_PREPARED_NOT_ACTIVATED',records,flush=True)
 if __name__=='__main__':
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);a=p.parse_args()
- try:main(a.tool_directory)
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);p.add_argument('--native-directory',type=Path);a=p.parse_args()
+ try:main(a.tool_directory,a.native_directory)
  except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as e:raise SystemExit('P2_CONTROLLER_RELAY_UNCONFIRMED '+(str(e) if type(e) is ValueError else type(e).__name__))

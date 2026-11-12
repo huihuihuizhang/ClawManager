@@ -30,6 +30,10 @@
 
 ## 1. ConfigurationData 的生成入口已分离
 
+控制器首次镜像 patch 已现场生效，`read-00011` 停在 rollout 等待；新 controller 容器正常，installation-owner 以退出码 1 重启、日志为空。现场原命令 SHA 为 `3f6e6fb2e0728492f3372d4f879cbcfe0812dc279d485e769a897c69fd05b273`，要求目录 `65532:700`；node1 实测原 private PVC 中 `installer` 为 UID/GID 65532、mode `2770`，而 inputs 中 runtime 仍为 `700`。此时 relay PKI 未发送，三个 PVC UID 与绑定保持原值。
+
+`settle-p2-controller-owner-permissions.py` 只接受这份已发送 desired spec、精确原 owner 命令及三个原 PVC，补入 `fsGroupChangePolicy=OnRootMismatch`；owner 仅在原 installer 目录非 symlink、UID/GID 均为 65532 且权限恰为 `2770` 时非递归恢复 `700`，其他未知状态拒绝。原 runtime 权限检查保持严格，不遍历或修改子文件。脚本 CAS 更新，等待实际两容器 Ready、读回目录权限与 disabled marker，并将后继记录置于 `controller-relay/owner-directory-permissions`。原 controller-plan 与原 patch intent 不改写；接续工具须验证这个完成记录绑定的原 plan pin 和派生 spec，才继续原 relay/record-key 作者。该修复的本地检查已通过；现场修复成功仍以真实回传为准。
+
 控制器等待程序固定完成后，`refresh-p2-source-inputs.py` 在独立的 `p2-cert-renewal.1KyqMtsd/current-source-inputs` 保留新一轮只读材料：调用实际 `author-initial-source-coordinates`，核对当前两个 App、两个 runtime 的加载凭据、工作目录与续签 CA，再复用已校验的原 selection 工具执行 `prepare-selection`。新 base selection 必须保留八行 SQL 源及租户 Pro #2；不执行 stop/adopt，不覆盖 Redis/MinIO 的原完成回执。随后记录当前五组完整私有 Kubernetes API 对象；`capture-index.json` 类型为 `p2-current-kubernetes-inputs.v1`，不作为可分享的脱敏包。原操作 intent、失败输出或部分文件一律保留，未知发送不能自动重试。
 
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
