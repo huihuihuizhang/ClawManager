@@ -60,14 +60,6 @@ func sourceMetadataTLS(mapping worker.SourceTLSMapping) (*tls.Config, error) {
 	return &tls.Config{RootCAs: roots, ServerName: mapping.ServerName, MinVersion: tls.VersionTLS12}, nil
 }
 
-type metadataSourceCredential struct {
-	Username     string `json:"username,omitempty"`
-	Password     []byte `json:"password,omitempty"`
-	AccessKey    string `json:"access_key,omitempty"`
-	SecretKey    []byte `json:"secret_key,omitempty"`
-	SessionToken []byte `json:"session_token,omitempty"`
-}
-
 func readMetadataSourceCredential(m worker.FormalSourceMount) (metadataSourceCredential, error) {
 	var credential metadataSourceCredential
 	raw, err := readPrivate(m.CredentialFile, 64<<10)
@@ -75,7 +67,7 @@ func readMetadataSourceCredential(m worker.FormalSourceMount) (metadataSourceCre
 		return credential, d.ErrNotReady
 	}
 	defer clear(raw)
-	if hash(raw) != m.CredentialSHA256 || decodeMetadataCanonical(raw, &credential) != nil {
+	if hash(raw) != m.CredentialSHA256 || decodeMetadataSourceCredential(raw, &credential) != nil {
 		clear(credential.Password)
 		clear(credential.SecretKey)
 		clear(credential.SessionToken)

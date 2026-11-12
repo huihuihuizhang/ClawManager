@@ -108,7 +108,7 @@ func (x *bootstrapSourceRegistryReader) sourceCredential(c install.BootstrapSour
 		return credential, install.ErrInstall
 	}
 	defer clear(raw)
-	if len(raw) > 65536 || decodeMetadataCanonical(raw, &credential) != nil {
+	if len(raw) > 65536 || decodeMetadataSourceCredential(raw, &credential) != nil {
 		return credential, install.ErrInstall
 	}
 	return credential, nil
