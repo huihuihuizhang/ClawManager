@@ -24,6 +24,10 @@
 
 第二次探测已删除，但停在 `wait-secret-broker`，主容器为 `PodInitializing` / 空 imageID，尚未发送 App patch；该状态不应报作镜像摘要不符。已有 broker ingress 仅允许 `app=clawmanager-app`，独立探测刻意不使用生产 Service 标签。当前接续仅为无网络需求的本地配置导出探测省去依赖 init，生产 spec 仍保留原 broker wait，不修改任何网络策略；发送前先从现有 App 做限时、验证 CA/hostname 的实际 broker TLS 握手。原失败 Pod UID/终态与发送记录保留，只有确认旧 Pod 已删除、原 App spec 未变且无 patch intent，才建立独立的 `app-local` 只读探测记录。探测必须先真实终止，再核对 imageID 与结果，避免再次把未启动误判为镜像不符。
 
+上述 App 接续已现场通过：原 App 的 broker TLS、两个入口探测、两个实际副本的 ELF/CA/SQL scope/有效配置/启动版本均读回一致，运行实例仍为 `[1,2,3,7,8]`。完成记录为 `execution-app-rollout/completed.json`，两个新 Pod UID 为 `62d61dc2-f8b1-4ffd-945a-1b539149b5ae`、`7a7e7e7f-dffa-451d-969b-67f335acb44f`；不再重做 App 切换。
+
+后继 `prepare-p2-controller-relay.py` 复用原输入 PVC、两容器和原等待 shell，先 create-only 传输固定 SHA 的 v2 controller/C1 CLI 并在控制器侧读回，再以完整旧 spec CAS 固定两容器的已发布 App 基础镜像与等待程序。始终要求 `SYSTEM_BACKUP_ENABLED=false`、无 ready marker，不传 `controller.env`，不启动控制器或 relay。然后调用原 `relay-pki --mode issue` 与 `runtime-issuers --mode export-record-keys`；只有真实回执及文件 pin 读回才完成。六个必要原生工具均从与 App 相同的 `eca964d4` / backend tree `6361d0c8…` 构建；v2 controller 显式链接 `p2-eca964d4` 和真实提交，避免默认 unknown 版本被后续 publication source facts 拒绝。六种 purpose signer 不搬出原目录，只按原作者导出两份 random32。此阶段不声称 relay 已服务、配置已登记、controller 已启用或整单已通过。
+
 ## 1. ConfigurationData 的生成入口已分离
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
