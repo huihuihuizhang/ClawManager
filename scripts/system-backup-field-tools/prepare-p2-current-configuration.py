@@ -16,7 +16,7 @@ NATIVE=Path('/root/sbk/p2-native-execution-eca964d4')
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
 
-def main(directory):
+def main(directory,resume_csi_data=False):
  os.umask(0o077)
  A=load('current_configuration_assembly',directory/'assemble-p2-installation-candidate.py')
  G=load('current_configuration_data',directory/'prepare-p2-configuration-data.py')
@@ -52,7 +52,28 @@ def main(directory):
   'runtime_agent_tls','runtime_agent_rotation','source_api','runtime_issuers']:
   value=pairs.get(name,{})
   setattr(args,name+'_file',value.get('File'));setattr(args,name+'_sha256',value.get('SHA256'))
- ready=G.prepare_index(args)
+ if resume_csi_data:
+  old_pin=G.local_pin(compiled_dir/'ready-producers.json');old=A.obj(old_pin)
+  A.need(old['CompleteInputsHelper']['SHA256']=='c3c26a71f18dddff3315045b0c8e1849302e641bee49374759010b37d79f8d06' and
+   not (compiled_dir/'configuration-data.json').exists() and not (compiled_dir/'assembly-inputs.json').exists() and
+   not (r/'initial-source.inputs.json').exists(),'known pre-author CSI DATA refusal required')
+  native_out=mirror/'initial-source-inputs'
+  A.need(not native_out.exists() or list(native_out.iterdir())==[],'native partial outputs prevent DATA continuation')
+  A.need(old['Coordinates']==A.obj(completed['CoordinatesReceipt'])['Coordinates'] and
+   old['WriterSelection']==A.obj(completed['WriterReceipt'])['Selection'],'same original current coordinate/selection pins required')
+  for key,name in [('RelayPKI','relay_receipt'),('ObserverReceipt','observer_receipt'),('AppImage','app_image_data'),
+   ('WorkerImage','worker_image_data'),('RuntimeAgentTLS','runtime_agent_tls'),('RuntimeAgentRotation','runtime_agent_rotation')]:
+   A.need(old[key]==pairs[name],'original selected DATA producer changed')
+  updated=dict(old)
+  for key,name in [('CompleteInputsHelper','system-backup-initial-complete-inputs.py'),('ProviderTopologyHelper','system-backup-initial-provider-topology.py')]:
+   selected_helper=G.local_pin(directory/name)
+   A.need(selected_helper['SHA256']==G.ORIGINAL_HELPERS[name],'reviewed DATA helper bytes required')
+   updated[key]=selected_helper
+  ready=A.retain(compiled_dir/'ready-producers.csi-successor.json',updated)
+  A.retain(r/'csi-data-continuation.json',{'Version':'p2-pre-author-csi-data-continuation.v1','Original':old_pin,'Successor':ready,
+   'NativeAuthorPreviouslySent':False,'ExecutionWindowPreserved':True,'BackupReady':False})
+  print('P2_CSI_DATA_CONTINUATION_NO_NATIVE_REPLAY',flush=True)
+ else:ready=G.prepare_index(args)
  result=G.compile_data(A.obj(ready),compiled_dir,mirror)
  definition=A.assemble(A.obj(result['AssemblyInputs']),datetime.datetime.now(datetime.timezone.utc))
  selected=A.retain(r/'initial-source.inputs.json',definition)
@@ -75,6 +96,6 @@ def main(directory):
  print('P2_INITIAL_SOURCE_INPUTS_AUTHORED_NO_HOLD',json.dumps(value),flush=True)
 
 if __name__=='__main__':
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);a=p.parse_args()
- try:main(a.tool_directory)
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);p.add_argument('--resume-csi-data',action='store_true');a=p.parse_args()
+ try:main(a.tool_directory,a.resume_csi_data)
  except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as e:raise SystemExit('P2_CURRENT_CONFIGURATION_UNCONFIRMED '+(str(e) if type(e) is ValueError else type(e).__name__))

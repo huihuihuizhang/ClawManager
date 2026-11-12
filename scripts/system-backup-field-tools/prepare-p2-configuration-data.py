@@ -31,7 +31,7 @@ def load(name):
 
 A=load('assemble-p2-installation-candidate.py')
 ORIGINAL_HELPERS={
-    'system-backup-initial-complete-inputs.py':'c3c26a71f18dddff3315045b0c8e1849302e641bee49374759010b37d79f8d06',
+    'system-backup-initial-complete-inputs.py':'b21de2413d4136b949571836c5f665112b935c74595b408dd1f18f036c1d7810',
     'system-backup-initial-provider-topology.py':'62767abc3844e123383cde955b36a1ef0d4c6020f12f5a01bfe417bd75bb2cd7',
 }
 

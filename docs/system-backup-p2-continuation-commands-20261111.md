@@ -40,6 +40,10 @@
 
 该刷新已现场通过 `P2_CURRENT_SOURCE_INPUTS_READY_NO_HOLD`，坐标 pin 为 `bb211d05ceb4350f7321979b086e1a0c094958abc16dd40d92b5fbbde77ee403`，base writer pin 为 `e257df405483a0d6f7f86b94c55c1de335b6e16432d9e655a3f48a132307d8fc`。下一步 `prepare-p2-current-configuration.py` 只选择这份完成记录、实际 relay/observer/runtime PKI 和固定 App/worker 原始 OCI 元数据，编译配置 DATA 并调用原 `author-initial-source-inputs`。Core 的 Redis keeper 从独立原 Redis 完成回执及其 writer/keeper pin 交叉核对后投影，不修改新 base 或原 Redis writer。原作者发送前写 intent；未知发送与部分 native 输出停止，不能自动再发。四个真实输出 pin 全部读回且版本正确才完成初始材料阶段；此阶段仍不启用控制器或提交任务。
 
+首轮配置 DATA 在旧 `source_core` 的宿主机路径前置停止，现场确认 native author intent 不存在。实际参与者是完整空列表，协议正确；`SharedNodes=null`，两个 Agent 的 `SharedRuntimeVolumes` 则完整指向同一 Longhorn ext4 工作卷。新 DATA helper 对这条分支要求坐标与原 writer 的完整 CSI 列表相等、覆盖全部 Agent，并逐个对照原始 Pod/Node/PVC/PV/driver/handle/container mount；返回空主机路径，不将 CSI handle 或容器路径捏造为宿主机 SourcePaths。此修改只允许初始 DATA 投影，正式执行仍必须提供后继 Longhorn 材料及真实停写证明；现有 runtime 执行检查不放宽。
+
+`--resume-csi-data` 仅接受这次已确认的 pre-author DATA 情况：原 helper pin、原 ready-producers、当前原坐标/selection/PKI/镜像 pin 均匹配，配置文件、native intent 及部分 native 输出均不存在。接续只另存 DATA helper 后继 pin，保留原 execution window 和旧文件，不重发未知原生操作。后续若执行构造仍要求 host-path whole-node 范围，必须先补齐 CSI 与 runtime owner 的真实接线，不能用本 DATA 修复充当执行资格。
+
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。

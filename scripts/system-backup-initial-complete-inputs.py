@@ -249,6 +249,51 @@ def actor(m, stages, part):
     return {"Name": name, "UID": value["metadata"]["uid"]}
 
 
+def shared_storage_coordinates(m, stages, data, writer):
+    """Initial DATA only: host roots OR exact independently observed CSI rows.
+
+    CSI coordinates never become host SourcePaths or native hold evidence.
+    The mount author and final execution owners must still authenticate them.
+    """
+    nodes = data.get("SharedNodes") or []
+    if nodes:
+        return nodes
+    volumes = data.get("SharedRuntimeVolumes") or []
+    selected = writer.get("SharedRuntimeVolumes") or []
+    order = lambda rows: sorted(rows, key=lambda v: (v["PodUID"], v["VolumeName"]))
+    m.need(volumes and order(volumes) == order(selected) and not data.get("BlockedSharedStorage"),
+           "actual_shared_host_roots_or_complete_original_CSI_coordinates_required")
+    agents = {(a["Namespace"], a["Pod"], a["PodUID"]) for a in writer.get("SharedRuntimeAgents", [])}
+    m.need(agents and agents == {(v["Namespace"], v["Pod"], v["PodUID"]) for v in volumes},
+           "complete_shared_CSI_agent_coverage_required")
+    seen = set()
+    for v in volumes:
+        identity = (v["PodUID"], v["VolumeName"])
+        m.need(identity not in seen and v["Namespace"] == data["Namespace"] and
+               data["NodeUIDs"].get(v["Node"]) == v["NodeUID"], "same_original_shared_CSI_node_required")
+        seen.add(identity)
+        pod = stages.get("pod", v["Pod"])
+        claim = stages.get("pvc", v["ClaimName"])
+        pv = stages.get("pv", v["PVName"])
+        node = stages.get("node", v["Node"])
+        m.need(pod["metadata"]["uid"] == v["PodUID"] and pod["metadata"]["namespace"] == v["Namespace"] and
+               pod["spec"]["nodeName"] == v["Node"] and node["metadata"]["uid"] == v["NodeUID"] and claim["metadata"]["uid"] == v["ClaimUID"] and
+               claim["spec"]["volumeName"] == v["PVName"] and pv["metadata"]["uid"] == v["PVUID"] and
+               pv["spec"]["claimRef"]["uid"] == v["ClaimUID"] and
+               pv["spec"].get("csi", {}).get("driver") == "driver.longhorn.io" and
+               pv["spec"]["csi"].get("fsType") == "ext4" and
+               pv["spec"]["csi"]["volumeHandle"] == v["Handle"], "original_shared_CSI_claim_PV_handle_binding_required")
+        matching = [x for x in pod["spec"]["volumes"] if x["name"] == v["VolumeName"]]
+        m.need(len(matching) == 1 and matching[0].get("persistentVolumeClaim", {}).get("claimName") == v["ClaimName"] and v["Mounts"],
+               "actual_shared_CSI_volume_mount_required")
+        for mount in v["Mounts"]:
+            containers = [c for c in pod["spec"]["containers"] if c["name"] == mount["Container"]]
+            matches = [x for c in containers for x in c.get("volumeMounts", []) if x["name"] == v["VolumeName"] and
+                       x["mountPath"] == mount["MountPath"] and x.get("subPath", "") == mount["SubPath"] and not x.get("subPathExpr")]
+            m.need(len(containers) == len(matches) == 1, "same_original_shared_CSI_container_mount_required")
+    return []
+
+
 def source_core(m, stages, assembly, data, writer, profile, relay, public):
     common, _, plan, sql = stages.common()
     target = plan["Target"]
@@ -270,7 +315,8 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
     observers = {"CAFile": writer["ObserverCA"]["File"], "CASHA256": writer["ObserverCA"]["SHA256"], "CertificateFile": writer["ObserverCertificate"]["File"], "CertificateSHA256": writer["ObserverCertificate"]["SHA256"], "KeyFile": writer["ObserverKey"]["File"], "KeySHA256": writer["ObserverKey"]["SHA256"]}
     source_dsn = host_result["runtime_input_pins"]["mysql-source.dsn"]
     m.need(source_dsn["SHA256"] == source["dsn"]["SHA256"], "same_original_readonly_source_dsn_required")
-    runtime = {"shared_runtime_protocol": writer["SharedRuntimeProtocol"], "shared_runtime_observer": {**observers, "Endpoints": writer["SharedRuntimeEndpoints"], "WholeNodeEndpoints": writer["WholePodEndpoints"], "Nodes": data.get("SharedNodes", [])},
+    shared_nodes = shared_storage_coordinates(m, stages, data, writer)
+    runtime = {"shared_runtime_protocol": writer["SharedRuntimeProtocol"], "shared_runtime_observer": {**observers, "Endpoints": writer["SharedRuntimeEndpoints"], "WholeNodeEndpoints": writer["WholePodEndpoints"], "Nodes": shared_nodes},
         "stopped_pro_observer": {**observers, "Endpoints": writer["StoppedProEndpoints"], "NodeUIDs": {k: data["NodeUIDs"][k] for k in writer["StoppedProEndpoints"]}},
         "current_stopped_pro_layouts": [{k:r[k] for k in ("InstanceID", "ControllerName", "Mounts")} for r in data.get("StoppedProLayouts", [])], "supported": [], "namespaces": [target["Namespace"]],
         "agent_token_file": writer["AgentCredential"]["File"], "agent_ca_file": writer["AgentCA"]["File"], "agent_ca_sha256": writer["AgentCA"]["SHA256"], "gateway_originals": [],
@@ -286,8 +332,8 @@ def source_core(m, stages, assembly, data, writer, profile, relay, public):
         key = tuple(source_row[k] for k in ("Type", "Mode", "Variant", "OS"))
         if key not in seen:
             seen.add(key); runtime["supported"].append(dict(zip(("Type", "Mode", "Variant", "OS"), key)))
-    m.need(isinstance(writer["Participants"], list) and runtime["shared_runtime_protocol"] == "shared-container-freeze.v1" and
-           runtime["shared_runtime_observer"]["Nodes"], "actual_original_participant_census_and_shared_native_paths_required")
+    m.need(isinstance(writer["Participants"], list) and runtime["shared_runtime_protocol"] == "shared-container-freeze.v1",
+           "actual_original_participant_census_and_shared_protocol_required")
     config = {"schema_version": "system-backup-public-deployment.v1", "capture_scope": "six-part", "installation_id": target["InstallationID"], "controller_owner": host["DeploymentUID"],
         "application_scope": writer["ApplicationScope"], "namespace": target["Namespace"], "namespace_uid": target["NamespaceUID"], "trust_domain": "clawmanager.invalid",
         "forward_grant": {"path": str(directory / "forward.grant.json"), "public_key_base64": public}, "recovery_grant": {"path": str(directory / "recovery.grant.json"), "public_key_base64": public},
