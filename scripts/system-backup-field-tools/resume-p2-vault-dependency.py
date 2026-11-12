@@ -60,7 +60,16 @@ def native_metadata_refusal(argv, expected, exit_value, stdout, stderr, files):
             'known native-metadata refusal without partial material required')
 
 
-def main(directory, resume_jwt_api_address=False, resume_local_forward=False):
+def retained_local_address(value):
+    require(isinstance(value, str) and value.startswith('127.0.0.1:'), 'original loopback forward required')
+    port = value[len('127.0.0.1:'):]
+    require(port.isascii() and port.isdecimal() and 1 <= int(port) <= 65535 and str(int(port)) == port,
+            'original loopback port required')
+    return value
+
+
+def main(directory, resume_jwt_api_address=False, resume_local_forward=False, resume_public_key_encoding=False):
+    resume_local_forward = resume_local_forward or resume_public_key_encoding
     resume_jwt_api_address = resume_jwt_api_address or resume_local_forward
     os.umask(0o077)
     require(os.name == 'posix', 'Linux operator required')
@@ -133,6 +142,28 @@ def main(directory, resume_jwt_api_address=False, resume_local_forward=False):
         refused_intent = r / 'provider.sent.private.json'
         r = r / 'local-forward-readback'
         output_name = 'initial-vault-provider-local-forward'
+    if resume_public_key_encoding:
+        prior = json.loads((r / 'provider.sent.private.json').read_bytes())
+        local = json.loads((r / 'local-forward.json').read_bytes())
+        require(local.get('EndpointUnchanged') is True and local.get('TLSVerificationUnchanged') is True,
+                'original identity-preserving forward record required')
+        expected_argv = list(argv)
+        expected_argv[0] = '/root/sbk/p2-vault-forward-ddb50bd2/system-backup-original-maintenance'
+        expected_argv[expected_argv.index('--output-directory') + 1] = str(out.parent / output_name)
+        expected_argv += ['--provider-local-forward', retained_local_address(local['LocalAddress'])]
+        require(hashlib.sha256(Path(expected_argv[0]).read_bytes()).hexdigest() ==
+                'cbb279ad39351c12a6daf8f60273a2ce6523d48904cfe20b579cea807a89c369' and
+                not (r / 'provider.receipt.private.json').exists() and not (r / 'completed.json').exists(),
+                'exact retained local-forward tool and failed readback required')
+        prior_output = out.parent / output_name
+        require(prior_output.is_dir() and not prior_output.is_symlink(), 'retained output directory required')
+        native_metadata_refusal(prior['Argv'], expected_argv,
+            json.loads((r / 'provider.exit.json').read_bytes()),
+            (r / 'provider.stdout.private').read_bytes(), (r / 'provider.stderr.private').read_bytes(),
+            list(prior_output.iterdir()))
+        refused_intent = r / 'provider.sent.private.json'
+        r = r / 'public-key-encoding-readback'
+        output_name = 'initial-vault-provider-public-key-encoding'
     r.mkdir(mode=0o700, exist_ok=True)
     require(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0, 'private readback directory required')
     A.retain(r / 'original-refusal.json', {'Version': 'p2-retained-empty-provider-observation.v1',
@@ -203,8 +234,9 @@ if __name__ == '__main__':
     parser.add_argument('--tool-directory', type=Path, required=True)
     parser.add_argument('--resume-jwt-api-address', action='store_true')
     parser.add_argument('--resume-local-forward', action='store_true')
+    parser.add_argument('--resume-public-key-encoding', action='store_true')
     args = parser.parse_args()
     try:
-        main(args.tool_directory, args.resume_jwt_api_address, args.resume_local_forward)
+        main(args.tool_directory, args.resume_jwt_api_address, args.resume_local_forward, args.resume_public_key_encoding)
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as error:
         raise SystemExit('P2_VAULT_DEPENDENCY_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

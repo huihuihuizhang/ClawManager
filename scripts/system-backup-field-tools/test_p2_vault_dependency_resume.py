@@ -36,6 +36,13 @@ class RefusedObservationChecks(unittest.TestCase):
             with self.assertRaises(ValueError):
                 R.refused_observation(argv, {'ExitCode': 1}, b'', b'', [])
 
+    def test_retained_forward_is_only_a_canonical_loopback_port(self):
+        self.assertEqual(R.retained_local_address('127.0.0.1:18200'), '127.0.0.1:18200')
+        for address in [None, '10.0.0.1:8200', 'localhost:8200', '127.0.0.1:0',
+                        '127.0.0.1:65536', '127.0.0.1:08200', '127.0.0.1:8200/extra']:
+            with self.assertRaises(ValueError):
+                R.retained_local_address(address)
+
     def test_native_metadata_resume_rejects_unknown_or_partial_outcomes(self):
         argv = ['/fixture/native', '--mode', 'provider-materials']
         failure = json.dumps({'Version': 'original-vault-dependency-material-failure.v1',

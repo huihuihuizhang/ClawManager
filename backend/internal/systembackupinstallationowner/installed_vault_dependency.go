@@ -298,15 +298,55 @@ func (o *InstalledVaultDependencyObserver) listMetadata(ctx context.Context, pat
 	return installedVaultNames(data)
 }
 
-func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byte) (InstalledVaultDependencyData, error) {
+// Normalize only an independently verified public-key set. All other JWT
+// configuration fields retain the original exact JSON checks.
+func installedVaultJWTConfigMatches(actual, expected []byte) bool {
+	if !utf8JSON(actual) || !utf8JSON(expected) {
+		return false
+	}
+	var got, want map[string]json.RawMessage
+	if json.Unmarshal(actual, &got) != nil || json.Unmarshal(expected, &want) != nil {
+		return false
+	}
+	var actualKeys, expectedKeys []string
+	if json.Unmarshal(got["jwt_validation_pubkeys"], &actualKeys) != nil ||
+		json.Unmarshal(want["jwt_validation_pubkeys"], &expectedKeys) != nil ||
+		!installedVaultPublicKeysEqual(actualKeys, expectedKeys) {
+		return false
+	}
+	got["jwt_validation_pubkeys"] = want["jwt_validation_pubkeys"]
+	normalized, err := json.Marshal(got)
+	return err == nil && jsonSubset(normalized, expected)
+}
+
+type installedVaultNativeFailure struct {
+	stage string
+	cause error
+}
+
+func (e *installedVaultNativeFailure) Error() string {
+	return "installed Vault native metadata unconfirmed"
+}
+func (e *installedVaultNativeFailure) Unwrap() error { return e.cause }
+func (e *installedVaultNativeFailure) Phase() string { return e.stage }
+
+func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byte) (_ InstalledVaultDependencyData, resultErr error) {
+	stage := "kubernetes_trust"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &installedVaultNativeFailure{stage: stage, cause: resultErr}
+		}
+	}()
 	var zero InstalledVaultDependencyData
 	if o.kubernetesTrust(ctx) != nil {
 		return zero, ErrOwner
 	}
+	stage = "health"
 	version, e := o.health(ctx)
 	if e != nil {
 		return zero, e
 	}
+	stage = "token_identity"
 	self, e := o.transport.read(ctx, "/v1/auth/token/lookup-self", token)
 	var identity struct {
 		Policies         []string `json:"policies"`
@@ -331,9 +371,10 @@ func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byt
 			return zero, ErrOwner
 		}
 	}
+	stage = "jwt_config"
 	jwt, e := o.transport.read(ctx, "/v1/auth/"+o.cfg.JWTMount+"/config", token)
 	expected, e2 := a.VaultJWTAuthConfig(o.cfg.Trust)
-	if e != nil || e2 != nil || !jsonSubset(jwt, expected) {
+	if e != nil || e2 != nil || !installedVaultJWTConfigMatches(jwt, expected) {
 		return zero, ErrOwner
 	}
 	var extra struct {
@@ -346,6 +387,7 @@ func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byt
 	if json.Unmarshal(jwt, &extra) != nil || extra.OIDC != "" || extra.JWKSURL != "" || extra.JWKSCA != "" || extra.DefaultRole != "" || len(extra.JWKSPairs) != 0 {
 		return zero, ErrOwner
 	}
+	stage = "transit_key_list"
 	names, e := o.listMetadata(ctx, "/v1/"+o.cfg.TransitMount+"/keys", token, false)
 	if e != nil || len(names) == 0 {
 		return zero, ErrOwner
@@ -354,6 +396,7 @@ func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byt
 	stamps := []string{digest(jwt)}
 	pinned := false
 	keyVersions := map[string][]string{}
+	stage = "transit_key_metadata"
 	for _, name := range names {
 		raw, e := o.transport.read(ctx, "/v1/"+o.cfg.TransitMount+"/keys/"+name, token)
 		var key struct {
@@ -410,13 +453,16 @@ func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byt
 		}
 		stamps = append(stamps, digest(canonical))
 	}
+	stage = "pinned_key"
 	if !pinned {
 		return zero, ErrOwner
 	}
+	stage = "role_list"
 	roles, e := o.listMetadata(ctx, "/v1/auth/"+o.cfg.JWTMount+"/role", token, true)
 	if e != nil {
 		return zero, ErrOwner
 	}
+	stage = "role_metadata"
 	for _, name := range roles {
 		role, e := o.installedRole(ctx, name, token, out.Keys, keyVersions)
 		if e != nil {
@@ -425,6 +471,7 @@ func (o *InstalledVaultDependencyObserver) pass(ctx context.Context, token []byt
 		out.Roles = append(out.Roles, role)
 		stamps = append(stamps, role.RoleSHA256, role.PolicySHA256)
 	}
+	stage = "health_recheck"
 	if _, e = o.health(ctx); e != nil {
 		return zero, ErrOwner
 	}

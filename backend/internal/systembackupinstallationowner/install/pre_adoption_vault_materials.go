@@ -2,6 +2,7 @@ package install
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"time"
@@ -162,6 +163,10 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 	stage = "provider_native_metadata"
 	proof, e := observer.Observe(ctx)
 	if e != nil {
+		var failure interface{ Phase() string }
+		if errors.As(e, &failure) {
+			stage += "." + failure.Phase()
+		}
 		return zero, ErrInstall
 	}
 	native, _, e := proof.Data(ctx)
