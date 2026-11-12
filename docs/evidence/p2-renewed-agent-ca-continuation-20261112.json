@@ -20,7 +20,25 @@
     "vault_production_owner_mapping_registered": false,
     "node_observer_new_pki_loaded": false,
     "app_binary_sha256": "4e4c205c283a0486af6608bd9376ee7bf30d35ad689716f55c3bf2a5dbdc50cf",
-    "app_source_revision_proven": false
+    "app_elf_build_flags_hidden_by_trimpath": true,
+    "app_startup_reported_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
+    "app_version_environment_overrides": false,
+    "app_new_fixed_source_release_published": false
+  },
+  "execution_candidate_local": {
+    "source_revision": "eca964d42b96c31cb381531889a39c23a366ffab",
+    "backend_tree": "6361d0c8377039d86de7725fadda968464411e73",
+    "compiler": "go1.26.1",
+    "platform": "linux/amd64",
+    "app_binary_sha256": "7983c1643dd4d20db904354d62f5f2477e418d4a1a4e8219ef2716e222b2a25b",
+    "worker_binary_sha256": "5d13647a80720f4b7cd81b99fdf841524d255eeeb7c998958e545b54831557c1",
+    "source_export": "4450 committed raw Git blobs; excludes worktree modifications",
+    "tests": 21,
+    "test_result": "passed",
+    "scratch_directories_removed": true,
+    "delivery": "D:/dsh-work/sbk-p2-execution-eca964d4-upload",
+    "published": false,
+    "deployed": false
   },
   "hold_verified": false,
   "backup_ready": false,

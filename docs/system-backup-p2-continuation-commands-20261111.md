@@ -8,7 +8,9 @@
 
 上传后先校验原始 SHA，再把作为输入读取的 Python/JSON 文件设为 `0600`、ELF 设为 `0700`，目录设为 `0700`。本轮 Vault 第一次入口仅因安装器 `0644` 被拒绝，确认 owner 尚不存在后仅调整该文件权限并接续原输入；原失败日志和 intent 均保留。原 owner 返回非零时，修复后的 wrapper 同样非零退出；不能根据 wrapper 的进程退出码单独判定 Vault 完成，仍读回原报告及实际持久化/JWT 结果。
 
-当前 App `322ba63b…` 与 worker `f125b3ee…` 的 OCI config 都没有 revision 标签，App 实际 ELF 也未读到关联提交。只读 OCI DATA 导出可保留这些真实字节，完整配置编译仍拒绝从中猜 BuildCommit。不得用 tag、文件名或另一旧镜像的 label 补填。本地固定提交的新构建及其发布仍待完成。
+当前 App `322ba63b…` 与 worker `f125b3ee…` 的 OCI config 都没有 revision 标签。Go `-trimpath` 省略构建参数，不能从 ELF buildinfo 中缺少 `-ldflags` 推断内部版本为空。后续实际两个 App 启动日志均为 `page-20261105-03fa0a461930-tls-80628842` / `03fa0a461930642f1f0561ab872f35be0402468d`，三个版本覆盖环境变量均不存在。该现场读回保留为原 App 基线，不冒充新固定源码发布。只读 OCI DATA 导出可保留无标签的真实字节，完整配置编译仍拒绝据 tag 猜 BuildCommit。
+
+`publish-p2-execution-candidates.py` 仅接受 `eca964d42b96c31cb381531889a39c23a366ffab` 的实际二进制构建回执，以原 App `322ba63b…` 和原 worker `f125b3ee…` 为固定底图，各增加一层，仅替换对应 ELF。原命令、环境、用户、工作目录、既有层不改。新增真实源码、二进制摘要及 backend tree 标签，只按不可变 digest 发布，不改 tag、不部署。随后复用固定哈希的原 `registry_image` 逐层校验压缩/解压摘要。发布及 OCI 字节通过仍不代表候选已经启动、已获原生任务权限或整单验收完成。
 
 ## 1. ConfigurationData 的生成入口已分离
 

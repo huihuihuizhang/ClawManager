@@ -192,7 +192,7 @@ def immutable_image(pin,require_revision=True):
     reference=selected['Reference'];A.need(re.fullmatch(r'10\.130\.14\.23:5000/[^\s@]+@sha256:[a-f0-9]{64}',reference),'explicit immutable release image required')
     manifest_raw=A.read(selected['Manifest']); manifest=A.decode(manifest_raw)
     config_raw=A.read(selected['Config']); config=A.decode(config_raw)
-    commit=config.get('config',{}).get('Labels',{}).get('org.opencontainers.image.revision','')
+    commit=(config.get('config',{}).get('Labels') or {}).get('org.opencontainers.image.revision','')
     A.need(reference.endswith('@sha256:'+A.sha(manifest_raw)) and manifest['config']['digest']=='sha256:'+A.sha(config_raw) and
            manifest['config']['size']==len(config_raw) and config['os']=='linux' and config['architecture']=='amd64',
            'actual linux/amd64 OCI bytes required')
