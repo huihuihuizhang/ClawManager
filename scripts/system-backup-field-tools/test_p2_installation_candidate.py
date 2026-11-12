@@ -70,7 +70,7 @@ class CandidateIntegration(unittest.TestCase):
         materials = dict(DeploymentConfigSHA256='',CaptureGrantSHA256='',Objects=objects,
             Redis=dict(CredentialFile=creds[3]['File'],CredentialSHA256=creds[3]['SHA256']),
             Discovery=dict(Redis=policy,SourceAPITokenSHA256=creds[1]['SHA256'],SourceAPIServiceAccountUID='test-account',
-                SourceAPI=dict(TokenFile=creds[1]['File']),Issuer=__import__('base64').b64encode(b'S'*32).decode()))
+                SourceAPI=dict(token_file=creds[1]['File']),Issuer=__import__('base64').b64encode(b'S'*32).decode()))
         config = self.save('configuration.json',dict(Version='original-initial-source-author-inputs.v1',Deployment=core,Materials=materials,Profile={},
             Controller=dict(Deployment=A.CONTROLLER,DeploymentUID=A.CONTROLLER_UID),Until='2026-11-11T11:00:00Z'))
         return dict(Version='p2-installation-assembly-inputs.v1',ConfigurationData=config,MinIO=minio,Redis=redis,SourceAPI=api,

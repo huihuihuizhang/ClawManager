@@ -50,6 +50,10 @@ Redis DATA 修复后，现场已组装 `initial-source.inputs.json`，pin 为 `8
 
 `system-backup-initial-source-inspect` 是独立只读诊断：按原始 definition pin 读文件，使用相同 Go 输入类型和现有 Core/profile 校验函数，检查输出坐标与原材料模板形态。该命令不接收连接/管理员/签发参数，不调用原生作者、不创建输出目录、不连接 SQL/Kubernetes，也不授予资格；结果只含阶段、布尔值和经过白名单约束的字段名，不包含解码错误里的输入值。诊断结果不能替代原材料作者回执。
 
+该原生诊断已现场读回：DefinitionDecoded、DeploymentValid、ProfileValid、OutputPathsMatch 均为 true；Stage 为 `materials_decode`、Field 为 `CAFile`、MaterialsDecoded/MaterialsValid 为 false。原因是 `worker.ResourceSourceMount` 的 JSON tag 为 `server/ca_file/ca_sha256/token_file`，旧 DATA 模板却使用 Go 字段名。源的 CA、token 和端点本身不改动，原始失败定义 pin 保留。
+
+`repair-p2-initial-source-wire.py` 只接受上述固定原定义、原 intent、空日志及空输出目录，并用固定 SHA 的同一只读原生工具复核失败。TLS 旧映射必须逐值等于实际 SourceAPI fragment，才可生成独立 wire-correction 候选；原 Core 和连接原样保留，四个 API 字段名改为真实 tag。新的未签名准备窗口取当前时间、API token 和两份实际证书期限的交集，不修改或延长已有 grant。新候选须先通过同一原生工具的全部六项检查，随后才写独立 intent 并调用原作者；退出码、所有原始输出均保留，未知发送禁止重试。后续消费者选择真实作者 receipt 中的四份文件 pin，不能继续消费旧失败模板或旧输入。
+
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。

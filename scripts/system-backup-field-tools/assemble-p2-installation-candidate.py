@@ -138,7 +138,7 @@ def assemble(inputs, now):
     discovery = materials['Discovery']
     need(discovery['SourceAPITokenSHA256'] == api['connection']['Credential']['SHA256'] and
          discovery['SourceAPIServiceAccountUID'] == api['connection']['Account'] and
-         discovery['SourceAPI']['TokenFile'] == api['connection']['Credential']['File'], 'source API capture binding mismatch')
+         discovery['SourceAPI']['token_file'] == api['connection']['Credential']['File'], 'source API capture binding mismatch')
     envelope = obj(inputs['RuntimeIssuers'])
     record = decode(base64.b64decode(envelope['Record'], validate=True))
     forward = read(record['Issuers']['forward_execution']['PublicKey'])

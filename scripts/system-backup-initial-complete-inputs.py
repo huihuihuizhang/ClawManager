@@ -519,7 +519,7 @@ def material_template(m, stages, assembly, core, directory, host, app, data, red
     team_units = ["team.pending_deletions", "team.event_projection", "team.maintenance_sweep", "northbound.operation", "northbound.lifecycle_action", "team.workspace_http"]
     discovery = {"GrantFile": str(directory / "source-metadata.grant.json"), "GrantSHA256": "", "Issuer": source_public,
         "ControllerDeployment": host["Deployment"], "ControllerDeploymentUID": host["DeploymentUID"], "ControllerServiceAccount": host["ServiceAccount"], "ControllerServiceAccountUID": host["ServiceAccountUID"],
-        "SourceAPI": {"Server": api["Endpoint"], "CAFile": api["CA"]["File"], "CASHA256": api["CA"]["SHA256"], "TokenFile": api["Credential"]["File"]},
+        "SourceAPI": {"server": api["Endpoint"], "ca_file": api["CA"]["File"], "ca_sha256": api["CA"]["SHA256"], "token_file": api["Credential"]["File"]},
         "SourceAPITokenSHA256": api["Credential"]["SHA256"], "SourceAPIServiceAccount": source_api["scope"]["ServiceAccount"], "SourceAPIServiceAccountUID": api["Account"],
         "Redis": redis["capture_policy"], "RuntimePolicies": policies, "RuntimeImageReferences": image_references, "ResourceActors": actors,
         "TeamPlatformUnits": {"deployment/" + data["Namespace"] + "/" + app["metadata"]["name"]: team_units},
