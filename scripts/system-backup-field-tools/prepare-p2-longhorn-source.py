@@ -49,32 +49,38 @@ def validate_successor(parent, selected, receipt, material):
          {k:v for k,v in parent.items() if k not in ['Deployment','MaterialsTemplate']},
          'native successor changed unrelated selection or mixed core/material identities')
 
-def main(redis_renewed=False, phase_readback=False, credential_encoding=False):
+def main(redis_renewed=False, phase_readback=False, credential_encoding=False, pv_read_repaired=False):
     os.umask(0o077); need(os.name == 'posix','Linux operator required')
     directory = Path(__file__).resolve().parent
     A = load('longhorn_assembly',directory/'assemble-p2-installation-candidate.py')
     source_name = 'source-preparation-redis-renew7d' if redis_renewed else 'source-preparation-renew8h'
     output_name = 'longhorn-source-redis-renew7d' if redis_renewed else 'longhorn-source-renew8h'
     native, native_sha = BIN, BIN_SHA
-    need(not (phase_readback and credential_encoding), 'select one successor mode')
-    if phase_readback or credential_encoding:
+    need(sum([phase_readback, credential_encoding, pv_read_repaired]) <= 1, 'select one successor mode')
+    if phase_readback or credential_encoding or pv_read_repaired:
         need(redis_renewed, 'phase readback requires observed Redis source successor')
-        prior = ROOT/(output_name+'-phase-readback' if credential_encoding else output_name)
+        suffix = '-credential-encoding' if pv_read_repaired else '-phase-readback' if credential_encoding else ''
+        prior = ROOT/(output_name+suffix)
         need(json.loads((prior/'native.exit.json').read_bytes()) == {'ExitCode':1} and
              not (prior/'completed.json').exists(), 'prior failure must be confirmed')
         old = json.loads((prior/'native.sent.private.json').read_bytes())['Argv']
         old_out = Path(old[old.index('--output-directory')+1])
         need(old_out.is_dir() and not list(old_out.iterdir()), 'partial native outputs require reconciliation')
-        if credential_encoding:
+        if credential_encoding or pv_read_repaired:
             refusal = json.loads((prior/'native.stdout.private').read_bytes())
-            need(refusal['Status'] == 'original_mount_author_refused' and refusal['Phase'] == 'metadata_clients',
-                 'observed metadata client refusal required')
+            expected_phase = 'writer_api' if pv_read_repaired else 'metadata_clients'
+            need(refusal['Status'] == 'original_mount_author_refused' and refusal['Phase'] == expected_phase,
+                 'observed predecessor refusal required')
+        if pv_read_repaired:
+            repair = json.loads((ROOT/'source-pv-read-repair/completed.json').read_bytes())
+            need(repair['Version'] == 'p2-source-pv-read-repaired.v1' and repair['SourceReadVerified'] is True and
+                 repair['PV'] == 'pvc-cd9cbe86-f701-4869-b9ed-0adae5baa427', 'source PV read repair required')
         build = json.loads((directory/'BUILD_RECEIPT.json').read_bytes())
         native = directory/'system-backup-source-registries'
         native_sha = build['NativeSHA256']
-        expected = 'source-credential-encoding.v1' if credential_encoding else 'original-mount-author-phase.v1'
+        expected = 'source-credential-encoding.v1' if credential_encoding or pv_read_repaired else 'original-mount-author-phase.v1'
         need(build['Diagnostic'] == expected, 'reviewed successor build required')
-        output_name += '-credential-encoding' if credential_encoding else '-phase-readback'
+        output_name += '-pv-read-repaired' if pv_read_repaired else '-credential-encoding' if credential_encoding else '-phase-readback'
     r = ROOT/output_name; r.mkdir(mode=0o700,exist_ok=True)
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0,'private journal required')
     renewed = json.loads((ROOT/source_name/'completed.json').read_bytes())
@@ -151,7 +157,8 @@ if __name__ == '__main__':
         parser.add_argument('--redis-renewed-source', action='store_true')
         parser.add_argument('--phase-readback', action='store_true')
         parser.add_argument('--credential-encoding', action='store_true')
+        parser.add_argument('--pv-read-repaired', action='store_true')
         args = parser.parse_args()
-        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding)
+        main(args.redis_renewed_source, args.phase_readback, args.credential_encoding, args.pv_read_repaired)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_LONGHORN_SOURCE_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
