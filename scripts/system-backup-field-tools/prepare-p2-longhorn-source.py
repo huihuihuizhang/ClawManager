@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read and author Longhorn source DATA using the existing native owner; no hold."""
 import datetime as dt
+import argparse
 import hashlib
 import importlib.util
 import json
@@ -48,14 +49,28 @@ def validate_successor(parent, selected, receipt, material):
          {k:v for k,v in parent.items() if k not in ['Deployment','MaterialsTemplate']},
          'native successor changed unrelated selection or mixed core/material identities')
 
-def main():
+def main(redis_renewed=False):
     os.umask(0o077); need(os.name == 'posix','Linux operator required')
     directory = Path(__file__).resolve().parent
     A = load('longhorn_assembly',directory/'assemble-p2-installation-candidate.py')
-    r = ROOT/'longhorn-source-renew8h'; r.mkdir(mode=0o700,exist_ok=True)
+    source_name = 'source-preparation-redis-renew7d' if redis_renewed else 'source-preparation-renew8h'
+    output_name = 'longhorn-source-redis-renew7d' if redis_renewed else 'longhorn-source-renew8h'
+    r = ROOT/output_name; r.mkdir(mode=0o700,exist_ok=True)
     need(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0,'private journal required')
-    renewed = json.loads((ROOT/'source-preparation-renew8h/completed.json').read_bytes())
-    pin = renewed['SourceSelection']; need(pin['SHA256'] == SELECTION_SHA,'exact renewed source selection required')
+    renewed = json.loads((ROOT/source_name/'completed.json').read_bytes())
+    pin = renewed['SourceSelection']
+    if redis_renewed:
+        need(renewed['Version'] == 'p2-redis-source-reauthored.v1', 'Redis successor receipt required')
+        receipt = A.obj(renewed['Receipt'])
+        need(receipt['SourceSelection'] == pin and receipt['GrantsIssued'] is False, 'native Redis successor differs')
+        prior = ROOT/'longhorn-source-renew8h'
+        need(json.loads((prior/'native.exit.json').read_bytes()) == {'ExitCode':1} and
+             not (prior/'completed.json').exists(), 'original mount failure not confirmed')
+        old = json.loads((prior/'native.sent.private.json').read_bytes())['Argv']
+        old_out = Path(old[old.index('--output-directory')+1])
+        need(old_out.is_dir() and not list(old_out.iterdir()), 'original mount outputs exist; reconcile first')
+    else:
+        need(pin['SHA256'] == SELECTION_SHA,'exact renewed source selection required')
     parent = A.obj(pin); A.read(renewed['Receipt']); A.read(renewed['VaultWriterSelection'])
     if (r/'completed.json').exists():
         done = json.loads((r/'completed.json').read_bytes()); A.read(done['Receipt'])
@@ -80,9 +95,9 @@ def main():
         if (urlsplit(c['Endpoint']).hostname or '').endswith('.'+A.NS+'.svc')]
     dns = load('longhorn_dns',directory/'p2-source-dns.py').SourceDNS(site,r,pod,endpoints,A.retain)
     dns.probe()
-    out = Path(pin['File']).parent.parent/'longhorn-source-renew8h'; out.mkdir(mode=0o700,exist_ok=True)
+    out = Path(pin['File']).parent.parent/output_name; out.mkdir(mode=0o700,exist_ok=True)
     need(out.resolve(strict=True) == out and out.stat().st_mode & 0o077 == 0 and not list(out.iterdir()),'new empty native output directory required')
-    old = json.loads((ROOT/'source-preparation-renew8h/author.sent.private.json').read_bytes())['Argv']
+    old = json.loads((ROOT/source_name/'author.sent.private.json').read_bytes())['Argv']
     need(old[1] == 'author-initial-source-inputs','original source author invocation required')
     common = old[2:old.index('--definition-file')]
     argv = [str(BIN),'prepare-mount-materials',*common,'--source-selection-file',pin['File'],
@@ -111,6 +126,9 @@ def main():
     print('P2_LONGHORN_SOURCE_MATERIALS_AUTHORED_NO_HOLD',json.dumps(done),flush=True)
 
 if __name__ == '__main__':
-    try: main()
+    try:
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--redis-renewed-source', action='store_true')
+        main(parser.parse_args().redis_renewed_source)
     except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
         raise SystemExit('P2_LONGHORN_SOURCE_UNCONFIRMED '+(str(error) if type(error) is ValueError else type(error).__name__))
