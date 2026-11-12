@@ -155,6 +155,12 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		get := func(name string) string { return *providerValues[name] }
 		receipt, e := installer.ProducePreAdoptionVaultMaterials(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA}, install.PreAdoptionVaultMaterialOptions{Deployment: get("provider-deployment"), Service: get("provider-service"), Claim: get("provider-claim"), DataMountPath: get("provider-data-mount"), Endpoint: get("provider-endpoint"), ClusterID: get("provider-cluster-id"), TransitMount: get("provider-transit-mount"), KeyName: get("provider-key-name"), KeyVersion: get("provider-key-version"), JWTMount: get("provider-jwt-mount"), CA: install.BootstrapSourceFilePin{File: get("provider-ca-file"), SHA256: get("provider-ca-sha256")}, OwnerToken: install.BootstrapSourceFilePin{File: get("provider-owner-token-file"), SHA256: get("provider-owner-token-sha256")}}, get("output-directory"))
 		if e != nil {
+			var failure *install.VaultDependencyMaterialFailure
+			if errors.As(e, &failure) {
+				_ = json.NewEncoder(out).Encode(struct {
+					Version, State, Phase string
+				}{"original-vault-dependency-material-failure.v1", "unconfirmed_preserve_original_materials", failure.Phase()})
+			}
 			return 1
 		}
 		if json.NewEncoder(out).Encode(receipt) != nil {

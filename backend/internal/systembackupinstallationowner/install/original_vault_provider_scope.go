@@ -8,11 +8,13 @@ import (
 	"net"
 	"net/url"
 	"path"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -33,7 +35,14 @@ const originalProviderVaultImage = "10.130.14.23:5000/clawmanager-backup-vault@s
 // Vault image. An alternate shell, init program, injected preload or mounted
 // executable is an additional writer, never covered by provider availability.
 func originalVaultNativeEntry(spec corev1.PodSpec, c corev1.Container) bool {
-	if c.Lifecycle != nil || len(c.EnvFrom) != 0 || len(c.Command) > 1 || len(c.Command) == 1 && c.Command[0] != "/bin/vault" {
+	command, args := c.Command, c.Args
+	// The persistent original installer writes the native argv entirely in
+	// Command. Accept that exact spelling without changing the observed spec
+	// or admitting a shell, dev mode, extra flags or an alternate executable.
+	if reflect.DeepEqual(command, []string{"/bin/vault", "server", "-config=/config/server.json"}) && len(args) == 0 {
+		command, args = []string{"/bin/vault"}, []string{"server", "-config=/config/server.json"}
+	}
+	if c.Lifecycle != nil || len(c.EnvFrom) != 0 || len(command) > 1 || len(command) == 1 && command[0] != "/bin/vault" {
 		return false
 	}
 	for _, env := range c.Env {
@@ -49,8 +58,7 @@ func originalVaultNativeEntry(spec corev1.PodSpec, c corev1.Container) bool {
 			}
 		}
 	}
-	args := c.Args
-	if len(c.Command) == 0 && len(args) == 0 {
+	if len(command) == 0 && len(args) == 0 {
 		args = []string{"server", "-config=/vault/config/vault.hcl"}
 	}
 	if len(args) < 2 || args[0] != "server" {
@@ -79,8 +87,44 @@ func originalVaultNativeEntry(spec corev1.PodSpec, c corev1.Container) bool {
 	return false
 }
 
+// This is the exact finite initializer from the original persistent installer,
+// not permission to run arbitrary init writers. The private claim's independent
+// alias/attachment/business-use census below remains mandatory.
+func originalVaultInstallerInit(spec corev1.PodSpec, input VaultProviderWorkloadSelection) bool {
+	if len(spec.InitContainers) == 0 {
+		return true
+	}
+	if len(spec.InitContainers) != 1 || input.DataMountPath != "/data" || spec.SecurityContext == nil {
+		return false
+	}
+	pod := spec.SecurityContext
+	if pod.RunAsUser == nil || *pod.RunAsUser != 65532 || pod.RunAsGroup == nil || *pod.RunAsGroup != 65532 || pod.RunAsNonRoot == nil || !*pod.RunAsNonRoot || pod.FSGroup == nil || *pod.FSGroup != 65532 {
+		return false
+	}
+	volume := ""
+	for _, v := range spec.Volumes {
+		if v.PersistentVolumeClaim != nil && v.PersistentVolumeClaim.ClaimName == input.Claim && !v.PersistentVolumeClaim.ReadOnly {
+			if volume != "" {
+				return false
+			}
+			volume = v.Name
+		}
+	}
+	if volume == "" {
+		return false
+	}
+	no, yes := false, true
+	want := corev1.Container{Name: "prepare-raft-directory", Image: originalProviderVaultImage, ImagePullPolicy: corev1.PullNever,
+		Command:                []string{"/bin/sh", "-ec", "umask 077; mkdir -p /data/raft; test -d /data/raft; test -w /data/raft"},
+		TerminationMessagePath: "/dev/termination-log", TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+		SecurityContext: &corev1.SecurityContext{AllowPrivilegeEscalation: &no, ReadOnlyRootFilesystem: &yes, Capabilities: &corev1.Capabilities{Drop: []corev1.Capability{"ALL"}}},
+		Resources:       corev1.ResourceRequirements{Requests: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("25m"), corev1.ResourceMemory: resource.MustParse("16Mi")}, Limits: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m"), corev1.ResourceMemory: resource.MustParse("64Mi")}},
+		VolumeMounts:    []corev1.VolumeMount{{Name: volume, MountPath: "/data"}}}
+	return reflect.DeepEqual(spec.InitContainers[0], want)
+}
+
 func originalVaultMountSpec(spec corev1.PodSpec, input VaultProviderWorkloadSelection) bool {
-	if input.Container == "" || !path.IsAbs(input.DataMountPath) || path.Clean(input.DataMountPath) != input.DataMountPath || strings.ContainsAny(input.DataMountPath, "\\\x00\r\n") || input.DataMountPath == "/" || len(spec.Containers) != 1 || len(spec.InitContainers) != 0 || len(spec.EphemeralContainers) != 0 || spec.HostPID || spec.HostIPC || spec.HostNetwork || spec.ShareProcessNamespace != nil && *spec.ShareProcessNamespace {
+	if input.Container == "" || !path.IsAbs(input.DataMountPath) || path.Clean(input.DataMountPath) != input.DataMountPath || strings.ContainsAny(input.DataMountPath, "\\\x00\r\n") || input.DataMountPath == "/" || len(spec.Containers) != 1 || !originalVaultInstallerInit(spec, input) || len(spec.EphemeralContainers) != 0 || spec.HostPID || spec.HostIPC || spec.HostNetwork || spec.ShareProcessNamespace != nil && *spec.ShareProcessNamespace {
 		return false
 	}
 	container := spec.Containers[0]

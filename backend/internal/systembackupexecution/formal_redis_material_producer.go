@@ -25,6 +25,10 @@ type FormalRedisMaterialsReceipt struct {
 	Deployment, MaterialsTemplate, SourceSelection, SecretManifest, DeploymentPatch install.BootstrapSourceFilePin
 }
 
+func formalRedisKeeperDeliveryMatches(existing []install.OriginalRedisReadKeeperSelection, selected install.OriginalRedisReadKeeperSelection) bool {
+	return len(existing) == 0 || len(existing) == 1 && reflect.DeepEqual(existing[0], selected)
+}
+
 // The genuine pre-signing source authoring action consumes the actual native
 // installer output; it preserves the complete source roster and attaches the
 // EXISTING original/formal Redis keeper factories through real config fields.
@@ -44,10 +48,16 @@ func ProduceFormalRedisReadMaterials(ctx context.Context, installer *install.Ins
 		return zero, install.ErrInstall
 	}
 	selection, _, e := authority.Selection(ctx)
-	if e != nil || selection.ApplicationScope != selected.ApplicationScope || len(x.config.RedisReadKeepers) != 0 {
+	if e != nil || selection.ApplicationScope != selected.ApplicationScope {
 		return zero, install.ErrInstall
 	}
 	keeper := selected.RedisReadKeepers[0]
+	// The complete initial source author already records this exact native
+	// keeper. Delivery may relocate its pinned bytes, but must never replace
+	// a different keeper, source identity, policy or custody key.
+	if !formalRedisKeeperDeliveryMatches(x.config.RedisReadKeepers, keeper) {
+		return zero, install.ErrInstall
+	}
 	if keeper.Native.Operation != "" || keeper.Native.InventorySHA256 != "" || keeper.Native.Policy.Validate() != nil {
 		return zero, install.ErrInstall
 	}

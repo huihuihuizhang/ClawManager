@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // Finite source-profile tests only; no Kubernetes, SQL, CSI, Vault or TLS proof.
@@ -39,6 +40,47 @@ func TestOriginalVaultDependencyRejectsAdditionalWriterEntrypointsAndVolumes(t *
 			mutate(spec)
 			if originalVaultMountSpec(*spec, input) {
 				t.Fatal("additional writer/source accepted")
+			}
+		})
+	}
+}
+
+func TestOriginalVaultPersistentInstallerEntrypointAndFiniteInitializer(t *testing.T) {
+	input := VaultProviderWorkloadSelection{Container: "vault", Claim: "private-provider-data", DataMountPath: "/data"}
+	uid, no, yes := int64(65532), false, true
+	base := corev1.PodSpec{
+		SecurityContext: &corev1.PodSecurityContext{RunAsUser: &uid, RunAsGroup: &uid, RunAsNonRoot: &yes, FSGroup: &uid},
+		Containers:      []corev1.Container{{Name: "vault", Command: []string{"/bin/vault", "server", "-config=/config/server.json"}, VolumeMounts: []corev1.VolumeMount{{Name: "data", MountPath: "/data"}, {Name: "config", MountPath: "/config", ReadOnly: true}}}},
+		Volumes:         []corev1.Volume{{Name: "data", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: input.Claim}}}, {Name: "config", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "original-provider-config"}}}}},
+		InitContainers: []corev1.Container{{Name: "prepare-raft-directory", Image: originalProviderVaultImage, ImagePullPolicy: corev1.PullNever,
+			Command:                []string{"/bin/sh", "-ec", "umask 077; mkdir -p /data/raft; test -d /data/raft; test -w /data/raft"},
+			TerminationMessagePath: "/dev/termination-log", TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+			SecurityContext: &corev1.SecurityContext{AllowPrivilegeEscalation: &no, ReadOnlyRootFilesystem: &yes, Capabilities: &corev1.Capabilities{Drop: []corev1.Capability{"ALL"}}},
+			Resources:       corev1.ResourceRequirements{Requests: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("25m"), corev1.ResourceMemory: resource.MustParse("16Mi")}, Limits: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m"), corev1.ResourceMemory: resource.MustParse("64Mi")}},
+			VolumeMounts:    []corev1.VolumeMount{{Name: "data", MountPath: "/data"}}}},
+	}
+	if !originalVaultMountSpec(base, input) {
+		t.Fatal("original persistent installer profile rejected")
+	}
+	for name, mutate := range map[string]func(*corev1.PodSpec){
+		"extra-server-argument":  func(s *corev1.PodSpec) { s.Containers[0].Command = append(s.Containers[0].Command, "-dev") },
+		"extra-init":             func(s *corev1.PodSpec) { s.InitContainers = append(s.InitContainers, s.InitContainers[0]) },
+		"different-init-program": func(s *corev1.PodSpec) { s.InitContainers[0].Command[2] += "; echo unexpected" },
+		"different-init-image":   func(s *corev1.PodSpec) { s.InitContainers[0].Image = "unreviewed/image" },
+		"injected-init-environment": func(s *corev1.PodSpec) {
+			s.InitContainers[0].Env = []corev1.EnvVar{{Name: "BASH_ENV", Value: "/data/custom"}}
+		},
+		"another-init-mount": func(s *corev1.PodSpec) { s.InitContainers[0].VolumeMounts[0].MountPath = "/other" },
+		"init-capability": func(s *corev1.PodSpec) {
+			s.InitContainers[0].SecurityContext.Capabilities.Add = []corev1.Capability{"SYS_ADMIN"}
+		},
+		"root-owner": func(s *corev1.PodSpec) { zero := int64(0); s.SecurityContext.RunAsUser = &zero },
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := base.DeepCopy()
+			mutate(s)
+			if originalVaultMountSpec(*s, input) {
+				t.Fatal("different initializer or source accepted")
 			}
 		})
 	}

@@ -211,3 +211,13 @@ prepare-composition 的 Deployment/Composition 输出读回后，调用：
 **现有大 operator 的发布方法还硬性读取其旧 `production-adoption`、MinIO 原 history projection 和 enabled selections；这些记录目前没有本次真实产物。它不是可以直接在本现场复制运行的启用快捷方式。** 本次包不伪造这些前置，也不发布 ready。需要先由本次原 owner 完成上表真实 C1/注册/enable/MinIO consent/handover 输出，再将其实际绑定接回对应原发布上下文；只通过离线 DATA 编译或 mTLS 不能跨过此边界。此处是明确未获得的真实执行依赖，不应对外声称“已可一键整单”。
 
 现场成功判据是：实际 controller Pod/SA/可执行文件 SHA 与新 Core 一致，原生 normal handover 读回确认，实际 config version 2 与 Forward2/签名源一致，真实 readiness 通过后才提交整单；整单需同原 task/attempt 完成停写、所有捕获、恢复和原源读回。任何阶段未知发送或恢复未确认，保留原 journal/义务，优先恢复源，不创建新任务掩盖旧任务。
+
+## 2026-11-12 Vault 既有安装形态接续
+
+现场 `vault-dependency` 的隔离 DNS 已实际解析 Vault、MinIO、Redis 三个 endpoint；原 provider 观察在 apply 标签下拒绝，尚无依赖完成回执。原持久安装器将 `/bin/vault server -config=/config/server.json` 全部写入 Command，并使用唯一的 `prepare-raft-directory` init。此前 native consumer 只接受单段 Command 且一律拒绝 init，无法接受安装器自己的输出。
+
+本次 consumer 仅增加该固定镜像、固定命令、固定资源/安全上下文和原 PVC 挂载的有限形态；额外命令、环境注入、镜像、挂载或 root UID 仍拒绝，原 PVC/附件/业务使用排查保持。失败输出增加安全 Phase，不输出底层凭据或错误正文。Redis 材料交付也允许初始 Core 已携带完全相同的原 keeper，继续拒绝不同身份、凭据、策略或 custody。
+
+`resume-p2-vault-dependency.py` 保留原 intent/log/output，必须先证明原工具/selection 未变、失败退出且日志和输出目录均为空，再在 `vault-dependency/installer-profile-readback` 中做一次真实原生观察。其输入与输出摘要由 native owner 实际读回；不重复安装、创建账户或修改 IAM。任何未知发送或部分输出都会停在原目录。此接续成功仍只表示 provider 依赖读取完成，不是整单验收。
+
+后续发布前仍需接好材料 init 所需的真实 `system-backup-source-registries` 可执行文件、CSI/Longhorn 的运行期物理 owner、签名与配置登记。不得仅去掉 SharedNodes 正数要求来把 CSI 伪装成主机路径，也不得用 DATA/连接成功代替原生停写与恢复结果。

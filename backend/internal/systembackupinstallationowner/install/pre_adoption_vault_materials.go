@@ -22,11 +22,29 @@ type PreAdoptionVaultMaterialReceipt struct {
 	Native                             owner.InstalledVaultDependencyData
 }
 
+// Safe stage diagnostics contain no provider/token/SQL input values.
+type VaultDependencyMaterialFailure struct {
+	stage string
+	cause error
+}
+
+func (e *VaultDependencyMaterialFailure) Error() string {
+	return "original Vault dependency material unconfirmed"
+}
+func (e *VaultDependencyMaterialFailure) Unwrap() error { return e.cause }
+func (e *VaultDependencyMaterialFailure) Phase() string { return e.stage }
+
 // ProducePreAdoptionVaultMaterials is an actual original installer action,
 // before A1. It reads the original provider, real Kube/JWKS and existing key;
 // it does not issue a key/token, register a future reference, create a role,
 // activate configuration or acquire/claim a business-source hold.
-func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, selectionPin BootstrapSourceFilePin, options PreAdoptionVaultMaterialOptions, directory string) (PreAdoptionVaultMaterialReceipt, error) {
+func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, password []byte, enrollment EnrollmentPin, selectionPin BootstrapSourceFilePin, options PreAdoptionVaultMaterialOptions, directory string) (_ PreAdoptionVaultMaterialReceipt, resultErr error) {
+	stage := "inputs"
+	defer func() {
+		if resultErr != nil {
+			resultErr = &VaultDependencyMaterialFailure{stage: stage, cause: resultErr}
+		}
+	}()
 	var zero PreAdoptionVaultMaterialReceipt
 	if i == nil || ctx == nil || ctx.Err() != nil || privateDirectory(directory) != nil {
 		return zero, ErrInstall
@@ -34,19 +52,23 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 	if _, bounded := ctx.Deadline(); !bounded {
 		return zero, ErrInstall
 	}
+	stage = "installer_authority"
 	s, e := i.authenticate(ctx, password)
 	if e != nil || s.authority(ctx, enrollment) != nil {
 		return zero, ErrInstall
 	}
+	stage = "original_owner_head"
 	before, _, e := originalAdoptionAuthoritySnapshot(ctx, s)
 	if e != nil || before.cas != (HeadCAS{}) || len(before.recordRaw) != 0 {
 		return zero, ErrInstall
 	}
+	stage = "writer_selection"
 	raw, e := readBootstrapSourcePin(selectionPin, 262144)
 	var selection OriginalWriterSetSelection
 	if e != nil || decodeExact(raw, &selection) != nil || selection.Version != OriginalWriterSetSelectionVersion || len(selection.VaultProviderDependencies) != 0 || len(selection.PreAdoptionVaultDependencies) != 0 {
 		return zero, ErrInstall
 	}
+	stage = "provider_objects"
 	ns := i.plan.Target.Namespace
 	deployment, e := i.kube.AppsV1().Deployments(ns).Get(ctx, options.Deployment, metav1.GetOptions{})
 	if e != nil || deployment.UID == "" || deployment.DeletionTimestamp != nil {
@@ -60,6 +82,7 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 	if e != nil || claim.UID == "" || claim.DeletionTimestamp != nil {
 		return zero, ErrInstall
 	}
+	stage = "complete_platform_roster"
 	actual, e := i.kube.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
 	if e != nil || len(actual.Items) != len(selection.Deployments) {
 		return zero, ErrInstall
@@ -90,15 +113,18 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 	if !matched {
 		return zero, ErrInstall
 	}
+	stage = "provider_ca"
 	ca, e := readObserverHostFile(options.CA, 65536)
 	if e != nil {
 		return zero, ErrInstall
 	}
+	stage = "kubernetes_jwt_trust"
 	trust, e := owner.ReadInstalledVaultKubernetesTrust(ctx, i.kube)
 	if e != nil {
 		return zero, ErrInstall
 	}
 	cfg := owner.InstalledVaultDependencyConfig{Version: "installed-vault-dependency-input.v1", Endpoint: options.Endpoint, CAPEM: ca, CASHA256: options.CA.SHA256, ClusterID: options.ClusterID, TransitMount: options.TransitMount, PinnedKeyName: options.KeyName, PinnedKeyVersion: options.KeyVersion, JWTMount: options.JWTMount, Trust: trust, TokenFile: options.OwnerToken.File, TokenSHA256: options.OwnerToken.SHA256, IdentityMode: "original-owner-readonly"}
+	stage = "provider_observer_configuration"
 	observer, e := owner.NewInstalledVaultDependencyObserver(cfg, i.kube, ns, i.plan.Target.NamespaceUID)
 	if e != nil {
 		return zero, ErrInstall
@@ -126,11 +152,13 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 			}
 		}
 	}
+	stage = "provider_physical_scope"
 	workload := VaultProviderWorkloadSelection{Deployment: deployment.Name, DeploymentUID: string(deployment.UID), Container: deployment.Spec.Template.Spec.Containers[0].Name, ImageID: originalProviderVaultImage, Service: service.Name, ServiceUID: string(service.UID), Claim: claim.Name, ClaimUID: string(claim.UID), DataMountPath: options.DataMountPath}
 	scope, e := ObserveInstalledVaultProviderScope(ctx, i.db, i.kube, i.plan.Target, workload, cfg.Endpoint)
 	if e != nil {
 		return zero, ErrInstall
 	}
+	stage = "provider_native_metadata"
 	proof, e := observer.Observe(ctx)
 	if e != nil {
 		return zero, ErrInstall
@@ -168,6 +196,7 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 		}
 		return nil
 	}
+	stage = "output_encoding"
 	configRaw, e := canonical(cfg)
 	if e != nil {
 		return zero, ErrInstall
@@ -185,6 +214,7 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 		return zero, ErrInstall
 	}
 	for name, body := range map[string][]byte{"pre-adoption-vault-observer.private.json": configRaw, "pre-adoption-vault-writer-selection.json": selectionRaw, "pre-adoption-vault-materials.receipt.json": receiptRaw} {
+		stage = "native_recheck_and_output_write"
 		if check() != nil || writeNewFiles(directory, map[string][]byte{name: body}) != nil {
 			return zero, ErrInstall
 		}
@@ -195,6 +225,7 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 			return zero, ErrOriginalObserverPKIUnconfirmed
 		}
 	}
+	stage = "owner_deadline"
 	if !time.Now().Before(s.until) {
 		return zero, ErrInstall
 	}
