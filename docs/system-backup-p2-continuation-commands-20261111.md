@@ -18,6 +18,10 @@
 
 本次专用 `rotate-p2-node-observer-certificates.py` 从上述完整原 NodeBundles 提取小型私有载荷；准备前读回 controller 未启用、ready marker 不存在。节点执行时核对原 unit SHA、运行中 ELF/argv、Node machine/boot、原证书与 anchor 摘要及未变的服务路径；只允许两种 Agent 摘要参数变化。四个 observer 停止后取得原 `.owner.guard` 的锁，并再次确认原目录没有任何 durable 操作记录，才原位替换证书/anchor 和必要 unit 参数。保留每份原文件作 CAS 补偿，保留持久目录及 guard inode，逐服务检查启动成功。任何已有恢复记录、未知发送或漂移都停止，不能删记录绕过。完成后还需从管理端按新 receipt 验证全部八个 mTLS endpoint；此轮不提供 Longhorn 停写或整单成功声明。
 
+该节点轮换已现场通过：两台节点分别输出 `NODE_OBSERVER_CERTIFICATES_ROTATED`，管理端输出 `NODE_OBSERVER_RENEWAL_ALL_TLS_PASSED`，精确覆盖两节点四种 endpoint；结果保留在 `node-cert-rotation/node-mtls-readback.json`。不再重做证书签发或节点轮换。
+
+下一步 `activate-p2-app-execution-image.py` 先创建有 UID journal 的两个短暂探测 Pod，App 仅调用无 DB/监听器的实际配置导出入口并比较原配置，worker 不带任何凭据或控制授权，必须实际启动后拒绝缺失请求。探测 Pod 删除读回后，仅对原 App spec 的 image 作 CAS 更新；要求原两副本 RollingUpdate、现有 SQL gate 为 installation、续签 CA 保留，不执行自动迁移。最终读回每个 App 的 ELF、CA、SQL scope、实际启动版本、配置及运行实例。它不启用 controller 或提交任务，worker 的拒绝探测不能充当正式 capture 验证。
+
 ## 1. ConfigurationData 的生成入口已分离
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
