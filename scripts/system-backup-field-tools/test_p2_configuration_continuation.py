@@ -60,7 +60,7 @@ class ConfigurationContinuation(unittest.TestCase):
         for kind in ['shared','whole','stopped-pro']:
             observer['Endpoints'].append({'Kind':kind,'Node':'node1','Endpoint':{'URL':'https://node.fixture:9444/proof','ServerURI':'spiffe://fixture.invalid/'+kind}})
         observer_pin=self.save('fresh-observer.fixture.json',observer)
-        redis=A.obj(initial['Redis']);keeper=A.obj(redis['KeeperSelection']);policy={'Policy':{'Source':{'ID':'fixture-redis'},'DB':0,'Prefixes':['fixture:']},'ServerID':'fixture-redis-server','ExcludePrefixes':[]}
+        redis=A.obj(initial['Redis']);keeper=A.obj(redis['KeeperSelection']);policy={'Policy':{'Source':{'id':'fixture-redis','version':'fixture-v1','sha256':'a'*64},'DB':0,'Prefixes':['fixture:']},'ServerID':'fixture-redis-server','ExcludePrefixes':[]}
         keeper['Native']['Policy']=policy;keeper.update(ServerName='redis.fixture',Port=6380,CA=ca)
         redis.update(KeeperSelection=self.save('actual-keeper.fixture.json',keeper),Policy=self.save('actual-policy.fixture.json',policy))
         redis['WriterSelection']=self.save('redis-native-writer.fixture.json',{'RedisReadKeepers':[keeper]})
@@ -240,6 +240,12 @@ class ConfigurationContinuation(unittest.TestCase):
         redis['NativeReceipt']['WriterSelection']={'File':'/fixture-only/foreign','SHA256':'a'*64}
         ready['Redis']=self.save('mismatched-redis-receipt.fixture.json',redis)
         with self.assertRaisesRegex(ValueError,'Redis keeper successor'):G.compile_data(ready,out,mirror)
+
+    def test_redis_source_reference_uses_original_lowercase_wire_fields(self):
+        policy={'Policy':{'Source':{'id':'actual-fixture-source','version':'fixture-v1','sha256':'a'*64},'DB':3},'ServerID':'b'*40}
+        self.assertEqual(G.redis_source_scope(policy),{'ID':'actual-fixture-source','ServerID':'b'*40,'Database':3,'KeyPrefix':''})
+        policy['Policy']['Source']={'ID':'wrong-case','Version':'fixture-v1','SHA256':'a'*64}
+        with self.assertRaisesRegex(ValueError,'original native Redis source reference'):G.redis_source_scope(policy)
 
     def test_longhorn_read_access_is_exact_additive_and_separate_from_actor_permissions(self):
         plan={'Target':{'Namespace':A.NS,'NamespaceUID':'original-system'}}

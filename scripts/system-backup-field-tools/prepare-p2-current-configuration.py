@@ -7,7 +7,9 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
+import traceback
 from types import SimpleNamespace
 
 ROOT=Path('/root/sbk/p2-cert-renewal.1KyqMtsd')
@@ -64,12 +66,20 @@ def main(directory,resume_csi_data=False):
   for key,name in [('RelayPKI','relay_receipt'),('ObserverReceipt','observer_receipt'),('AppImage','app_image_data'),
    ('WorkerImage','worker_image_data'),('RuntimeAgentTLS','runtime_agent_tls'),('RuntimeAgentRotation','runtime_agent_rotation')]:
    A.need(old[key]==pairs[name],'original selected DATA producer changed')
-  updated=dict(old)
-  for key,name in [('CompleteInputsHelper','system-backup-initial-complete-inputs.py'),('ProviderTopologyHelper','system-backup-initial-provider-topology.py')]:
-   selected_helper=G.local_pin(directory/name)
-   A.need(selected_helper['SHA256']==G.ORIGINAL_HELPERS[name],'reviewed DATA helper bytes required')
-   updated[key]=selected_helper
-  ready=A.retain(compiled_dir/'ready-producers.csi-successor.json',updated)
+  successor=compiled_dir/'ready-producers.csi-successor.json'
+  if successor.exists():
+   ready=G.local_pin(successor);updated=A.obj(ready)
+   A.need({k:v for k,v in updated.items() if k not in ['CompleteInputsHelper','ProviderTopologyHelper']}==
+    {k:v for k,v in old.items() if k not in ['CompleteInputsHelper','ProviderTopologyHelper']},'retained CSI DATA producer selection changed')
+   for key,name in [('CompleteInputsHelper','system-backup-initial-complete-inputs.py'),('ProviderTopologyHelper','system-backup-initial-provider-topology.py')]:
+    A.read(updated[key]);A.need(updated[key]['SHA256']==G.ORIGINAL_HELPERS[name],'retained reviewed DATA helper changed')
+  else:
+   updated=dict(old)
+   for key,name in [('CompleteInputsHelper','system-backup-initial-complete-inputs.py'),('ProviderTopologyHelper','system-backup-initial-provider-topology.py')]:
+    selected_helper=G.local_pin(directory/name)
+    A.need(selected_helper['SHA256']==G.ORIGINAL_HELPERS[name],'reviewed DATA helper bytes required')
+    updated[key]=selected_helper
+   ready=A.retain(successor,updated)
   A.retain(r/'csi-data-continuation.json',{'Version':'p2-pre-author-csi-data-continuation.v1','Original':old_pin,'Successor':ready,
    'NativeAuthorPreviouslySent':False,'ExecutionWindowPreserved':True,'BackupReady':False})
   print('P2_CSI_DATA_CONTINUATION_NO_NATIVE_REPLAY',flush=True)
@@ -98,4 +108,10 @@ def main(directory,resume_csi_data=False):
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--tool-directory',type=Path,required=True);p.add_argument('--resume-csi-data',action='store_true');a=p.parse_args()
  try:main(a.tool_directory,a.resume_csi_data)
- except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as e:raise SystemExit('P2_CURRENT_CONFIGURATION_UNCONFIRMED '+(str(e) if type(e) is ValueError else type(e).__name__))
+ except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as e:
+  if isinstance(e,KeyError):
+   key=e.args[0] if e.args else None
+   if isinstance(key,str) and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_./-]{0,100}',key):print('P2_CONFIGURATION_MISSING_FIELD',key,flush=True)
+  for frame in traceback.extract_tb(e.__traceback__):
+   print('P2_CONFIGURATION_ERROR_LOCATION',Path(frame.filename).name,frame.lineno,frame.name,flush=True)
+  raise SystemExit('P2_CURRENT_CONFIGURATION_UNCONFIRMED '+(str(e) if type(e) is ValueError else type(e).__name__))

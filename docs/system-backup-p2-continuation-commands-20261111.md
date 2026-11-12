@@ -44,6 +44,8 @@
 
 `--resume-csi-data` 仅接受这次已确认的 pre-author DATA 情况：原 helper pin、原 ready-producers、当前原坐标/selection/PKI/镜像 pin 均匹配，配置文件、native intent 及部分 native 输出均不存在。接续只另存 DATA helper 后继 pin，保留原 execution window 和旧文件，不重发未知原生操作。后续若执行构造仍要求 host-path whole-node 范围，必须先补齐 CSI 与 runtime owner 的真实接线，不能用本 DATA 修复充当执行资格。
 
+CSI DATA 接续随后已越过该检查，停在 Redis 源引用的 `ID` KeyError，仍无 native author intent。真实 `recovery.Reference` 使用小写 `id/version/sha256`，外层 RedisPolicy 保持 Go 导出字段名；配置投影按这份原始 wire 结构构造 Formal RedisScope，不接受大写替代字段。测试夹具同步采用真实字段名。后继 DATA 修复继续使用已保留的 `ready-producers.csi-successor.json` 与原窗口，不改变已有 helper pin 路径；CLI 错误只输出安全字段名和代码位置，避免再为同类缺项单独盘点，原配置和凭据正文不输出。
+
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。

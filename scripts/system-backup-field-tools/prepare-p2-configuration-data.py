@@ -90,6 +90,14 @@ def writer_selection_pin(receipt):
     return receipt['WriterSelection']
 
 
+def redis_source_scope(policy):
+    source=policy['Policy']['Source']
+    A.need(set(source)=={'id','version','sha256'} and isinstance(source['id'],str) and source['id'] and
+           isinstance(source['version'],str) and source['version'] and re.fullmatch(r'[a-f0-9]{64}',source['sha256']),
+           'original native Redis source reference id/version/sha256 required')
+    return {'ID':source['id'],'ServerID':policy['ServerID'],'Database':policy['Policy']['DB'],'KeyPrefix':''}
+
+
 def prepare_index(args):
     """Locate retained field producers; never asks the operator to handwrite Core."""
     work=Path('/root/sbk-validation-tls-inspect.7LVU7vpE')
@@ -404,7 +412,7 @@ def compile_data(inputs,directory,mirror):
     redis_selection={'source_mount':{'GrantFile':str(out/'redis-source.grant.json'),'GrantSHA256':'','Issuer':source_public,
         'CredentialFile':keeper['ReaderCredential']['File'],'CredentialSHA256':keeper['ReaderCredential']['SHA256'],
         'Redis':{'Address':keeper['ServerName']+':'+str(keeper['Port']),'ServerName':keeper['ServerName'],'CAFile':keeper['CA']['File'],'CASHA256':keeper['CA']['SHA256']},
-        'Objects':None,'RedisScope':{'ID':policy['Policy']['Source']['ID'],'ServerID':policy['ServerID'],'Database':policy['Policy']['DB'],'KeyPrefix':''},
+        'Objects':None,'RedisScope':redis_source_scope(policy),
         'ObjectPrefixes':None,'RedisPrefixes':policy['Policy']['Prefixes'],'RedisExcludedPrefixes':policy['ExcludePrefixes']},'capture_policy':policy}
     actors={}
     for part,suffix in [('deployment_resources','resources'),('secret_bundle','secrets')]:
