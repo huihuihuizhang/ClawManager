@@ -33,7 +33,20 @@
     "canonical_existing_observer_receipt_accepted_by_original_owner": true,
     "current_runtime_agents_host_materials_authored": true,
     "current_openclaw_agent_sha256": "bc1ef9abb276594f938cb27374b0ee05c50b6d9da1424b8fe87fb64940bd0158",
-    "current_hermes_agent_sha256": "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102"
+    "current_hermes_agent_sha256": "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102",
+    "controller_owner_remount_permission_failure_confirmed": true,
+    "controller_owner_private_directory_mode_readback": "700",
+    "controller_waiting_rollout_settled": true,
+    "controller_current_pod_uid": "4aed9e71-693e-4440-b81e-f66cb55c351e",
+    "controller_relay_inputs_prepared": true,
+    "relay_pki_issued": true,
+    "relay_started": false,
+    "record_keys_exported_by_original_owner": true,
+    "record_export_sha256": "24f53cf980bd1a7898b80879a8089bad1f221704cf2737f270be5b5876b74fef",
+    "controller_enabled": false,
+    "current_source_inputs_ready_no_hold": true,
+    "current_coordinates_sha256": "bb211d05ceb4350f7321979b086e1a0c094958abc16dd40d92b5fbbde77ee403",
+    "current_base_writer_selection_sha256": "e257df405483a0d6f7f86b94c55c1de335b6e16432d9e655a3f48a132307d8fc"
   },
   "execution_candidate_local": {
     "source_revision": "eca964d42b96c31cb381531889a39c23a366ffab",

@@ -63,6 +63,8 @@ class ConfigurationContinuation(unittest.TestCase):
         redis=A.obj(initial['Redis']);keeper=A.obj(redis['KeeperSelection']);policy={'Policy':{'Source':{'ID':'fixture-redis'},'DB':0,'Prefixes':['fixture:']},'ServerID':'fixture-redis-server','ExcludePrefixes':[]}
         keeper['Native']['Policy']=policy;keeper.update(ServerName='redis.fixture',Port=6380,CA=ca)
         redis.update(KeeperSelection=self.save('actual-keeper.fixture.json',keeper),Policy=self.save('actual-policy.fixture.json',policy))
+        redis['WriterSelection']=self.save('redis-native-writer.fixture.json',{'RedisReadKeepers':[keeper]})
+        redis['NativeReceipt']['WriterSelection']=redis['WriterSelection']
         redis_pin=self.save('redis-fragment.fixture.json',redis)
         dep_names=['clawmanager-app','openclaw-runtime','hermes-runtime']
         deps=[x for x in items if x['kind']=='Deployment' and x['metadata']['name'] in dep_names]
@@ -224,6 +226,20 @@ class ConfigurationContinuation(unittest.TestCase):
         next(x for x in badgraph['items'] if x['kind']=='ConfigMap' and x['metadata']['name']=='fixture-renewed-ca')['data']['ca.pem']='wrong CA'
         with self.assertRaisesRegex(ValueError,'App CA bytes'):
             G.runtime_agent_ca(ready,G.RecordedObjects([self.save('wrong-ca-graph.fixture.json',badgraph)]),writer,plan)
+
+    def test_new_base_consumes_independent_completed_redis_keeper_without_editing_receipts(self):
+        ready=self.ready();base=A.obj(ready['WriterSelection']);base.pop('RedisReadKeepers')
+        selected=self.save('fresh-base-without-keeper.fixture.json',base);ready['WriterSelection']=selected
+        original=A.read(selected)
+        out=self.root/'fresh-base-data';out.mkdir()
+        mirror=self.root
+        result=G.compile_data(ready,out,mirror)
+        value=A.obj(result['ConfigurationData']);redis=A.obj(ready['Redis'])
+        self.assertEqual(value['Deployment']['redis_read_keepers'],[A.obj(redis['KeeperSelection'])])
+        self.assertEqual(A.read(selected),original)
+        redis['NativeReceipt']['WriterSelection']={'File':'/fixture-only/foreign','SHA256':'a'*64}
+        ready['Redis']=self.save('mismatched-redis-receipt.fixture.json',redis)
+        with self.assertRaisesRegex(ValueError,'Redis keeper successor'):G.compile_data(ready,out,mirror)
 
     def test_longhorn_read_access_is_exact_additive_and_separate_from_actor_permissions(self):
         plan={'Target':{'Namespace':A.NS,'NamespaceUID':'original-system'}}

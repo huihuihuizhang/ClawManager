@@ -333,6 +333,15 @@ def compile_data(inputs,directory,mirror):
     # Only the Core comparison DATA uses refreshed observer pins. The retained
     # native writer selection is never overwritten or re-labelled as renewed.
     observed_writer=copy.deepcopy(writer)
+    # A newly collected base selection predates keeper enrichment. Consume
+    # the independently completed Redis owner's exact keeper for Core DATA;
+    # do not edit or relabel either native writer selection as refreshed.
+    redis=A.obj(inputs['Redis']);keeper=A.obj(redis['KeeperSelection'])
+    A.need(redis['NativeReceipt']['State']=='native_tls_and_accounts_read_back_not_a_hold' and
+           redis['NativeReceipt']['WriterSelection']==redis['WriterSelection'] and
+           A.obj(redis['WriterSelection']).get('RedisReadKeepers')==[keeper],
+           'actual original Redis keeper successor required for refreshed base DATA')
+    observed_writer['RedisReadKeepers']=[keeper]
     for key,source_key in [('ObserverCA','CA'),('ObserverCertificate','ClientCertificate'),('ObserverKey','ClientKey')]:observed_writer[key]=observer[source_key]
     for key,kind in [('SharedRuntimeEndpoints','shared'),('WholePodEndpoints','whole'),('StoppedProEndpoints','stopped-pro')]:
         observed_writer[key]={e['Node']:e['Endpoint'] for e in observer['Endpoints'] if e['Kind']==kind}
