@@ -14,6 +14,10 @@ func TestInstalledVaultDiscoveryAllowsIssuerIdentityAndAuthenticatedAPIAddress(t
 			t.Fatal("issuer identity or exact authenticated API address rejected")
 		}
 	}
+	boundedRequest, _ := url.Parse(api.String() + "?timeout=10s")
+	if !installedVaultDiscoveryURL(issuer, api.String(), boundedRequest) || boundedRequest.RawQuery != "timeout=10s" {
+		t.Fatal("client-go transport timeout rejected or original request changed")
+	}
 }
 
 func TestInstalledVaultDiscoveryRejectsUnboundAuthorityAndURLConfusion(t *testing.T) {

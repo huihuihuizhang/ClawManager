@@ -13,7 +13,15 @@ func installedVaultDiscoveryURL(issuerText, jwksText string, authenticatedKeysUR
 		return u != nil && u.Scheme == "https" && u.Hostname() != "" && u.User == nil && u.Opaque == "" &&
 			u.RawQuery == "" && !u.ForceQuery && u.Fragment == "" && u.RawFragment == "" && u.RawPath == ""
 	}
-	if err != nil || keysErr != nil || !ordinary(issuer) || !ordinary(keys) || !ordinary(authenticatedKeysURL) ||
+	if authenticatedKeysURL == nil {
+		return false
+	}
+	// client-go appends its HTTP timeout as a query parameter. That transport
+	// option is not part of the authenticated server authority. Do not change
+	// the real request, and continue rejecting query strings in discovery DATA.
+	api := *authenticatedKeysURL
+	api.RawQuery, api.ForceQuery = "", false
+	if err != nil || keysErr != nil || !ordinary(issuer) || !ordinary(keys) || !ordinary(&api) ||
 		keys.Path != "/openid/v1/jwks" || authenticatedKeysURL.Path != "/openid/v1/jwks" {
 		return false
 	}
@@ -24,5 +32,5 @@ func installedVaultDiscoveryURL(issuerText, jwksText string, authenticatedKeysUR
 		}
 		return u.Hostname() + ":" + port
 	}
-	return authority(keys) == authority(issuer) || authority(keys) == authority(authenticatedKeysURL)
+	return authority(keys) == authority(issuer) || authority(keys) == authority(&api)
 }
