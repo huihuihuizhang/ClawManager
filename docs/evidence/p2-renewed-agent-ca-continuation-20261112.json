@@ -46,7 +46,13 @@
     "controller_enabled": false,
     "current_source_inputs_ready_no_hold": true,
     "current_coordinates_sha256": "bb211d05ceb4350f7321979b086e1a0c094958abc16dd40d92b5fbbde77ee403",
-    "current_base_writer_selection_sha256": "e257df405483a0d6f7f86b94c55c1de335b6e16432d9e655a3f48a132307d8fc"
+    "current_base_writer_selection_sha256": "e257df405483a0d6f7f86b94c55c1de335b6e16432d9e655a3f48a132307d8fc",
+    "initial_source_inputs_authored_no_hold": true,
+    "initial_core_sha256": "ef5afef0580ab23e1abbadb66dd00fb90f1443656364880670db7c6e20908dc9",
+    "initial_template_sha256": "70a03b0badecca5e38989b7cd645cfc75eb571c7e9a90f12ed6190336a9c3108",
+    "initial_profile_sha256": "26dd7eff36f92c872cb339ffb051d853db4f9c848bed06472912f00c34455d17",
+    "initial_source_selection_sha256": "2bc613fa44cb80632f75a5189c8242a935c57cfea6e6ea46b5688e650a889577",
+    "host_cluster_source_dns_unresolved": true
   },
   "execution_candidate_local": {
     "source_revision": "eca964d42b96c31cb381531889a39c23a366ffab",

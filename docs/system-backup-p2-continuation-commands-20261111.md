@@ -54,6 +54,12 @@ Redis DATA 修复后，现场已组装 `initial-source.inputs.json`，pin 为 `8
 
 `repair-p2-initial-source-wire.py` 只接受上述固定原定义、原 intent、空日志及空输出目录，并用固定 SHA 的同一只读原生工具复核失败。TLS 旧映射必须逐值等于实际 SourceAPI fragment，才可生成独立 wire-correction 候选；原 Core 和连接原样保留，四个 API 字段名改为真实 tag。新的未签名准备窗口取当前时间、API token 和两份实际证书期限的交集，不修改或延长已有 grant。新候选须先通过同一原生工具的全部六项检查，随后才写独立 intent 并调用原作者；退出码、所有原始输出均保留，未知发送禁止重试。后续消费者选择真实作者 receipt 中的四份文件 pin，不能继续消费旧失败模板或旧输入。
 
+该初始作者接续已现场通过：Core `ef5afef0580ab23e1abbadb66dd00fb90f1443656364880670db7c6e20908dc9`、template `70a03b0badecca5e38989b7cd645cfc75eb571c7e9a90f12ed6190336a9c3108`、profile `26dd7eff36f92c872cb339ffb051d853db4f9c848bed06472912f00c34455d17`、source-selection `2bc613fa44cb80632f75a5189c8242a935c57cfea6e6ea46b5688e650a889577`。真实回执明确 NativeSourceQualified/GrantsIssued/BackupReady 均为 false，不重发本批。
+
+后续源读取所需的三个 `.svc` 主机名在现场主机均解析失败。`p2-source-dns.py` 读取当前 controller/owner Pod 的实际 resolver，核对其 nameserver 等于真实 kube-system/kube-dns Service，逐个核对 Vault、MinIO、Redis 的实际 Service UID/IP/端口。仅在 `unshare --mount --propagation private` 的短暂子进程内 bind 实际 resolver 并设只读；子进程真实解析结果必须等于原 Service IP，前后主机 resolver 字节和 inode 必须不变。它不写 `/etc/hosts`、不改主机 DNS、不替换 TLS 名称或 CA。失败先输出有限错误类别，原 owner 未发送。
+
+`prepare-p2-vault-dependency.py` 复用与当前源码相关文件无差异的已验证原 maintenance ELF、实际 Vault owner state/report/CA/init 材料以及当前 base writer，使用原 provider fragment 投影部分 options。root token 只留在主机原 owner 私有目录，不作为 controller/task 凭据挂载。它通过原 `provider-materials` 依次完成既有 apply/query/finalize 观察，每次独立 intent 和目录，读取真实 Vault/Kube/SQL 并保留原生 receipt；不安装第二个 Vault、不修改 IAM、不停写。只有实际 InstalledObserver/WriterSelection pin 读回才完成依赖阶段。
+
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
