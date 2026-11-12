@@ -12,6 +12,7 @@ import (
 
 type PreAdoptionVaultMaterialOptions struct {
 	Deployment, Service, Claim, DataMountPath                        string
+	LocalForward                                                     string
 	Endpoint, ClusterID, TransitMount, KeyName, KeyVersion, JWTMount string
 	CA, OwnerToken                                                   BootstrapSourceFilePin
 }
@@ -125,7 +126,7 @@ func (i *Installer) ProducePreAdoptionVaultMaterials(ctx context.Context, passwo
 	}
 	cfg := owner.InstalledVaultDependencyConfig{Version: "installed-vault-dependency-input.v1", Endpoint: options.Endpoint, CAPEM: ca, CASHA256: options.CA.SHA256, ClusterID: options.ClusterID, TransitMount: options.TransitMount, PinnedKeyName: options.KeyName, PinnedKeyVersion: options.KeyVersion, JWTMount: options.JWTMount, Trust: trust, TokenFile: options.OwnerToken.File, TokenSHA256: options.OwnerToken.SHA256, IdentityMode: "original-owner-readonly"}
 	stage = "provider_observer_configuration"
-	observer, e := owner.NewInstalledVaultDependencyObserver(cfg, i.kube, ns, i.plan.Target.NamespaceUID)
+	observer, e := owner.NewInstalledVaultDependencyObserverWithLocalForward(cfg, i.kube, ns, i.plan.Target.NamespaceUID, options.LocalForward)
 	if e != nil {
 		return zero, ErrInstall
 	}

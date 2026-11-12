@@ -36,6 +36,19 @@ class RefusedObservationChecks(unittest.TestCase):
             with self.assertRaises(ValueError):
                 R.refused_observation(argv, {'ExitCode': 1}, b'', b'', [])
 
+    def test_native_metadata_resume_rejects_unknown_or_partial_outcomes(self):
+        argv = ['/fixture/native', '--mode', 'provider-materials']
+        failure = json.dumps({'Version': 'original-vault-dependency-material-failure.v1',
+            'State': 'unconfirmed_preserve_original_materials', 'Phase': 'provider_native_metadata'}).encode()
+        R.native_metadata_refusal(argv, argv, {'ExitCode': 1}, failure, b'', [])
+        for actual, code, body, stderr, files in [
+            (argv + ['--changed'], 1, failure, b'', []),
+            (argv, True, failure, b'', []), (argv, 0, failure, b'', []),
+            (argv, 1, b'{}', b'', []), (argv, 1, failure, b'unknown', []),
+            (argv, 1, failure, b'', ['partial'])]:
+            with self.assertRaises(ValueError):
+                R.native_metadata_refusal(actual, argv, {'ExitCode': code}, body, stderr, files)
+
     def test_jwt_continuation_requires_exact_prior_stage_and_empty_outputs(self):
         argv = ['/fixture/profile-author', '--mode', 'provider-materials']
         failure = {'Version': 'original-vault-dependency-material-failure.v1',

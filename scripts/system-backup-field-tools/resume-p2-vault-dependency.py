@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+from contextlib import nullcontext
 
 ROOT = Path('/root/sbk/p2-cert-renewal.1KyqMtsd')
 OLD_AUTHOR = '/root/sbk/p2-redis-8bbf4c61/system-backup-original-maintenance'
@@ -50,7 +51,17 @@ def jwt_trust_refusal(argv, expected_argv, exit_value, stdout, stderr, output_na
             'previous native refusal was not the Kubernetes JWT trust stage')
 
 
-def main(directory, resume_jwt_api_address=False):
+def native_metadata_refusal(argv, expected, exit_value, stdout, stderr, files):
+    require(argv == expected and isinstance(exit_value, dict) and
+            type(exit_value.get('ExitCode')) is int and exit_value == {'ExitCode': 1} and
+            stderr == b'' and not files and json.loads(stdout) == {
+                'Version': 'original-vault-dependency-material-failure.v1',
+                'State': 'unconfirmed_preserve_original_materials', 'Phase': 'provider_native_metadata'},
+            'known native-metadata refusal without partial material required')
+
+
+def main(directory, resume_jwt_api_address=False, resume_local_forward=False):
+    resume_jwt_api_address = resume_jwt_api_address or resume_local_forward
     os.umask(0o077)
     require(os.name == 'posix', 'Linux operator required')
     A = load('vault_resume_assembly', directory / 'assemble-p2-installation-candidate.py')
@@ -103,6 +114,25 @@ def main(directory, resume_jwt_api_address=False):
         refused_intent = previous / 'provider.sent.private.json'
         r = previous / 'jwt-api-address-readback'
         output_name = 'initial-vault-provider-jwt-api-address'
+    if resume_local_forward:
+        expected_argv = list(argv)
+        expected_argv[0] = '/root/sbk/p2-jwt-api-c888315f/system-backup-original-maintenance'
+        expected_argv[expected_argv.index('--output-directory') + 1] = str(out.parent / output_name)
+        prior = json.loads((r / 'provider.sent.private.json').read_bytes())
+        require(prior['Argv'] == expected_argv and
+                hashlib.sha256(Path(expected_argv[0]).read_bytes()).hexdigest() ==
+                'be60d8aa167c517bf3da751a392752c3f9364d0d8ae03a59c6002517f45fbb78' and
+                not (r / 'provider.receipt.private.json').exists() and not (r / 'completed.json').exists(),
+                'exact retained JWT-address readback required')
+        prior_output = out.parent / output_name
+        require(prior_output.is_dir() and not prior_output.is_symlink(), 'retained output directory required')
+        native_metadata_refusal(prior['Argv'], expected_argv,
+            json.loads((r / 'provider.exit.json').read_bytes()),
+            (r / 'provider.stdout.private').read_bytes(), (r / 'provider.stderr.private').read_bytes(),
+            list(prior_output.iterdir()))
+        refused_intent = r / 'provider.sent.private.json'
+        r = r / 'local-forward-readback'
+        output_name = 'initial-vault-provider-local-forward'
     r.mkdir(mode=0o700, exist_ok=True)
     require(r.resolve(strict=True) == r and r.stat().st_mode & 0o077 == 0, 'private readback directory required')
     A.retain(r / 'original-refusal.json', {'Version': 'p2-retained-empty-provider-observation.v1',
@@ -132,10 +162,17 @@ def main(directory, resume_jwt_api_address=False):
         selected = list(argv)
         selected[0] = str(binary)
         selected[selected.index('--output-directory') + 1] = str(target)
-        A.retain(r / 'provider.sent.private.json', {'Argv': selected, 'SourceRevision': build['SourceRevision'],
-                                                 'OriginalIntentRetained': str(refused_intent)})
-        with (r / 'provider.stdout.private').open('xb') as stdout, (r / 'provider.stderr.private').open('xb') as stderr:
-            result = dns.run(selected, stdout=stdout, stderr=stderr, timeout=180)
+        forward = load('vault_local_forward', directory / 'p2-vault-local-forward.py') if resume_local_forward else None
+        context = forward.LocalForward(site, flags, r, A.retain) if forward else nullcontext(None)
+        with context as address:
+            if address:
+                selected += ['--provider-local-forward', address]
+            A.retain(r / 'provider.sent.private.json', {'Argv': selected, 'SourceRevision': build['SourceRevision'],
+                                                     'OriginalIntentRetained': str(refused_intent)})
+            with (r / 'provider.stdout.private').open('xb') as stdout, (r / 'provider.stderr.private').open('xb') as stderr:
+                result = dns.run(selected, stdout=stdout, stderr=stderr, timeout=180)
+            if forward:
+                context.check()
         A.retain(r / 'provider.exit.json', {'ExitCode': result.returncode})
         if result.returncode:
             try:
@@ -165,8 +202,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--tool-directory', type=Path, required=True)
     parser.add_argument('--resume-jwt-api-address', action='store_true')
+    parser.add_argument('--resume-local-forward', action='store_true')
     args = parser.parse_args()
     try:
-        main(args.tool_directory, args.resume_jwt_api_address)
+        main(args.tool_directory, args.resume_jwt_api_address, args.resume_local_forward)
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as error:
         raise SystemExit('P2_VAULT_DEPENDENCY_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

@@ -51,7 +51,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	selectionFile := flags.String("selection-file", "", "original complete writer/source selection")
 	selectionSHA := flags.String("selection-sha256", "", "original complete selection pin")
 	providerValues := map[string]*string{}
-	for _, name := range []string{"provider-deployment", "provider-service", "provider-claim", "provider-data-mount", "provider-endpoint", "provider-cluster-id", "provider-transit-mount", "provider-key-name", "provider-key-version", "provider-jwt-mount", "provider-ca-file", "provider-ca-sha256", "provider-owner-token-file", "provider-owner-token-sha256", "output-directory"} {
+	for _, name := range []string{"provider-local-forward", "provider-deployment", "provider-service", "provider-claim", "provider-data-mount", "provider-endpoint", "provider-cluster-id", "provider-transit-mount", "provider-key-name", "provider-key-version", "provider-jwt-mount", "provider-ca-file", "provider-ca-sha256", "provider-owner-token-file", "provider-owner-token-sha256", "output-directory"} {
 		providerValues[name] = flags.String(name, "", "actual existing provider installation input; no future binding")
 	}
 	recoveryPasswordFile := flags.String("recovery-admin-password-file", "", "existing private fresh recovery password; defaults to original selected file")
@@ -67,7 +67,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	}
 	if *mode == "provider-materials" {
 		for name, value := range providerValues {
-			if name != "provider-data-mount" && *value == "" {
+			if name != "provider-data-mount" && name != "provider-local-forward" && *value == "" {
 				return 2
 			}
 		}
@@ -153,7 +153,7 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 	if *mode == "provider-materials" {
 		defer cancel()
 		get := func(name string) string { return *providerValues[name] }
-		receipt, e := installer.ProducePreAdoptionVaultMaterials(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA}, install.PreAdoptionVaultMaterialOptions{Deployment: get("provider-deployment"), Service: get("provider-service"), Claim: get("provider-claim"), DataMountPath: get("provider-data-mount"), Endpoint: get("provider-endpoint"), ClusterID: get("provider-cluster-id"), TransitMount: get("provider-transit-mount"), KeyName: get("provider-key-name"), KeyVersion: get("provider-key-version"), JWTMount: get("provider-jwt-mount"), CA: install.BootstrapSourceFilePin{File: get("provider-ca-file"), SHA256: get("provider-ca-sha256")}, OwnerToken: install.BootstrapSourceFilePin{File: get("provider-owner-token-file"), SHA256: get("provider-owner-token-sha256")}}, get("output-directory"))
+		receipt, e := installer.ProducePreAdoptionVaultMaterials(active, password, enrollment, install.BootstrapSourceFilePin{File: *selectionFile, SHA256: *selectionSHA}, install.PreAdoptionVaultMaterialOptions{LocalForward: get("provider-local-forward"), Deployment: get("provider-deployment"), Service: get("provider-service"), Claim: get("provider-claim"), DataMountPath: get("provider-data-mount"), Endpoint: get("provider-endpoint"), ClusterID: get("provider-cluster-id"), TransitMount: get("provider-transit-mount"), KeyName: get("provider-key-name"), KeyVersion: get("provider-key-version"), JWTMount: get("provider-jwt-mount"), CA: install.BootstrapSourceFilePin{File: get("provider-ca-file"), SHA256: get("provider-ca-sha256")}, OwnerToken: install.BootstrapSourceFilePin{File: get("provider-owner-token-file"), SHA256: get("provider-owner-token-sha256")}}, get("output-directory"))
 		if e != nil {
 			var failure *install.VaultDependencyMaterialFailure
 			if errors.As(e, &failure) {
