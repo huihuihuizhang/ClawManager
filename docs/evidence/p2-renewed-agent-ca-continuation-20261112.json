@@ -59,11 +59,14 @@
     "node_installation_verified": false
   },
   "app_candidate_rollout_local_validation": {
-    "tests": 3,
+    "tests": 4,
     "result": "passed",
     "fixtures_memory_only": true,
     "app_deployed": false,
-    "worker_probe_is_only_missing_grant_refusal": true
+    "worker_probe_is_only_missing_grant_refusal": true,
+    "original_binary_pvc_overlay_removal_reviewed": true,
+    "original_pvc_objects_and_data_preserved": true,
+    "first_entry_refusal_created_no_plan_probe_or_patch": true
   },
   "hold_verified": false,
   "backup_ready": false,

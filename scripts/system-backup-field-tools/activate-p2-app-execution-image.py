@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the fixed-source candidate entrypoints, then change only App image.
+"""Use the fixed-source App image executable instead of its old PVC overlay.
 
 No migrations, controller activation, source stop, owner reinitialization or
 backup submission. The existing App SQL gate must remain installation-scoped.
@@ -24,6 +24,9 @@ UID='8ebd4d4c-57b6-4a82-b310-fae596681a4e'
 CA='4d6ffb92650f28a7148a536b60cfab6a0b025856a4b30dba3b6059905c128478'
 NS='clawmanager-sbk-validation-system'
 HELPER_SHA='ab1539c5e06c8c237e8516d9985b162fbec3216570abb5ebec1902df47f7052c'
+INIT_IMAGE='10.130.14.23:5000/clawmanager@sha256:ae64fd8a1c0fd825c44722107894a0d60ce428e0daf5a66e9b2064d5b3c4335e'
+INIT_PINS={'wait-secret-broker':('feb809f2b9f63f3974f52043d79a9077c54095ffca395b23090625079a379a4b','cb86445b6e4b45e1d287d5e06dc8e84bee2ac173ea8591d613c1405f5f580776'),
+ 'verify-sbk-app-backend':('60811998f5c31afa50fea37b31917e5dd99710747843c4eeeb4efdbd03e2b972','4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945')}
 def need(ok,why):
  if not ok:raise ValueError(why)
 def desired(dep):
@@ -32,7 +35,21 @@ def desired(dep):
  need(spec.get('replicas')==2 and spec.get('strategy',{}).get('type')=='RollingUpdate','original two-replica App rollout required')
  cs=spec['template']['spec']['containers'];need(len(cs)==1 and cs[0]['name']=='clawmanager-app' and cs[0]['image']==OLD,'original App image required')
  env={e['name']:e.get('value') for e in cs[0].get('env',[])}
- need(env.get('RUNTIME_AGENT_CA_SHA256')==CA and not spec['template']['spec'].get('initContainers'),'completed App CA and unchanged startup required')
+ need(env.get('RUNTIME_AGENT_CA_SHA256')==CA,'completed App CA required')
+ pod=spec['template']['spec'];inits=pod.get('initContainers',[])
+ need(len(inits)==2 and {c['name'] for c in inits}==set(INIT_PINS),'only original two initializers allowed')
+ for c in inits:
+  hashes=tuple(hashlib.sha256(json.dumps(c.get(k,[]),separators=(',',':')).encode()).hexdigest() for k in ['command','args'])
+  need(c['image']==INIT_IMAGE and hashes==INIT_PINS[c['name']] and not c.get('env') and not c.get('envFrom'),'original initializer bytes changed')
+  wanted=[{'name':'secret-broker-ca','mountPath':'/var/run/secrets/clawmanager-secret-broker-ca','readOnly':True}] if c['name']=='wait-secret-broker' else [{'name':'sbk-app-backend-release','mountPath':'/release','readOnly':True}]
+  need(c.get('volumeMounts')==wanted,'original initializer mount changed')
+ overlays=[v for v in cs[0].get('volumeMounts',[]) if v['name']=='sbk-app-backend-release' or v['mountPath']=='/usr/local/bin/clawreef-server']
+ need(overlays==[{'name':'sbk-app-backend-release','mountPath':'/usr/local/bin/clawreef-server','readOnly':True,'subPath':'clawreef-server'}] and not cs[0].get('command') and not cs[0].get('args'),'exact original backend file overlay required')
+ volumes=[v for v in pod.get('volumes',[]) if v['name']=='sbk-app-backend-release']
+ need(len(volumes)==1 and set(volumes[0])=={'name','persistentVolumeClaim'} and volumes[0]['persistentVolumeClaim'].get('claimName'),'original retained release PVC required')
+ cs[0]['volumeMounts']=[m for m in cs[0]['volumeMounts'] if m not in overlays]
+ pod['initContainers']=[c for c in inits if c['name']=='wait-secret-broker']
+ pod['volumes']=[v for v in pod['volumes'] if v['name']!='sbk-app-backend-release']
  cs[0]['image']=APP
  return spec
 def config_data(raw):
@@ -70,7 +87,7 @@ def main():
   marker=records/(kind+'-probe.sent.json')
   need(not marker.exists(),'probe send unknown; reconcile the same Pod and records')
   if kind=='app':
-   spec=copy.deepcopy(plan['Original']['template']['spec']);c=spec['containers'][0];c['image']=APP
+   spec=copy.deepcopy(plan['Desired']['template']['spec']);c=spec['containers'][0]
    c['command']=['/bin/sh','-ec','test "$(sha256sum /usr/local/bin/clawreef-server | cut -d " " -f 1)" = '+APP_ELF+'; exec /usr/local/bin/clawreef-server --system-backup-source-config-data']
    for key in ['args','livenessProbe','readinessProbe','startupProbe','ports']:c.pop(key,None)
    for mount in c.get('volumeMounts',[]):mount['readOnly']=True

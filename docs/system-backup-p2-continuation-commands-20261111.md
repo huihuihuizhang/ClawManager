@@ -20,7 +20,7 @@
 
 该节点轮换已现场通过：两台节点分别输出 `NODE_OBSERVER_CERTIFICATES_ROTATED`，管理端输出 `NODE_OBSERVER_RENEWAL_ALL_TLS_PASSED`，精确覆盖两节点四种 endpoint；结果保留在 `node-cert-rotation/node-mtls-readback.json`。不再重做证书签发或节点轮换。
 
-下一步 `activate-p2-app-execution-image.py` 先创建有 UID journal 的两个短暂探测 Pod，App 仅调用无 DB/监听器的实际配置导出入口并比较原配置，worker 不带任何凭据或控制授权，必须实际启动后拒绝缺失请求。探测 Pod 删除读回后，仅对原 App spec 的 image 作 CAS 更新；要求原两副本 RollingUpdate、现有 SQL gate 为 installation、续签 CA 保留，不执行自动迁移。最终读回每个 App 的 ELF、CA、SQL scope、实际启动版本、配置及运行实例。它不启用 controller 或提交任务，worker 的拒绝探测不能充当正式 capture 验证。
+下一步 `activate-p2-app-execution-image.py` 先创建有 UID journal 的两个短暂探测 Pod，App 仅调用无 DB/监听器的实际配置导出入口并比较原配置，worker 不带任何凭据或控制授权，必须实际启动后拒绝缺失请求。原部署有两个 init，且 `sbk-app-backend-release` PVC 的文件遮住 `/usr/local/bin/clawreef-server`；第一次只镜像入口检查已在创建 plan/Pod/patch 前拒绝。修复版逐一匹配这两个原 init 的命令/参数 SHA 与只读挂载，仅解除旧程序文件挂载、其 `verify-sbk-app-backend` 校验 init 及未使用的 Pod volume 引用，保留 PVC 对象和文件、`wait-secret-broker`、全部业务卷/配置/凭据。探测从该精确后继 spec 创建，确保实际使用镜像内新 ELF。探测 Pod 删除读回后，对完整未变原 spec 作 CAS 更新；要求原两副本 RollingUpdate、现有 SQL gate 为 installation、续签 CA 保留，不执行自动迁移。最终读回每个 App 的 ELF、CA、SQL scope、实际启动版本、配置及运行实例。它不启用 controller 或提交任务，worker 的拒绝探测不能充当正式 capture 验证。
 
 ## 1. ConfigurationData 的生成入口已分离
 
