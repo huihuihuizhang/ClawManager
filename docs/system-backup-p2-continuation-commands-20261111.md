@@ -30,6 +30,10 @@
 
 ## 1. ConfigurationData 的生成入口已分离
 
+控制器等待程序固定完成后，`refresh-p2-source-inputs.py` 在独立的 `p2-cert-renewal.1KyqMtsd/current-source-inputs` 保留新一轮只读材料：调用实际 `author-initial-source-coordinates`，核对当前两个 App、两个 runtime 的加载凭据、工作目录与续签 CA，再复用已校验的原 selection 工具执行 `prepare-selection`。新 base selection 必须保留八行 SQL 源及租户 Pro #2；不执行 stop/adopt，不覆盖 Redis/MinIO 的原完成回执。随后记录当前五组完整私有 Kubernetes API 对象；`capture-index.json` 类型为 `p2-current-kubernetes-inputs.v1`，不作为可分享的脱敏包。原操作 intent、失败输出或部分文件一律保留，未知发送不能自动重试。
+
+`prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
+
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
 
 本次入口是 `prepare-p2-configuration-data.py`：

@@ -80,6 +80,16 @@ def read_image_data(reference,directory,opener=None):
     return {'ImageData':pin,'ActualMetadataBytesRead':True,'NativeReleaseQualified':False,'BackupReady':False}
 
 
+def writer_selection_pin(receipt):
+    # prepare-selection returns Selection; native delivery successors return
+    # WriterSelection. Consume their real pin without inventing a new receipt.
+    if receipt.get('Version')=='original-writer-selection-materials.v1':
+        A.need(receipt.get('State')=='actual_original_complete_base_selection_materialized_no_hold' and
+               receipt.get('SourceCount')==8,'complete original base selection receipt required')
+        return receipt['Selection']
+    return receipt['WriterSelection']
+
+
 def prepare_index(args):
     """Locate retained field producers; never asks the operator to handwrite Core."""
     work=Path('/root/sbk-validation-tls-inspect.7LVU7vpE')
@@ -90,7 +100,7 @@ def prepare_index(args):
         A.need(file and digest,'actual producer file/pin required: '+name)
         pin={'File':file,'SHA256':digest};A.read(pin);return pin
     raw_index=A.obj(supplied('raw_index'))
-    A.need(raw_index['version']=='p2-redacted-offline-inventory.v1' and raw_index['errors']==[], 'complete original raw-input index required')
+    A.need(raw_index['version'] in ['p2-redacted-offline-inventory.v1','p2-current-kubernetes-inputs.v1'] and raw_index['errors']==[], 'complete original raw-input index required')
     by_label={p['label']:{'File':p['File'],'SHA256':p['SHA256']} for p in raw_index['remote_private_inputs']}
     values={'Version':'p2-ready-initial-producers.v1','Plan':local_pin(native/'original-enrollment-plan.json'),
         'Enrollment':local_pin(native/'original-enrollment-pin.json'),'SourceIssuerPublic':local_pin(native/'issuer.public'),
@@ -110,7 +120,8 @@ def prepare_index(args):
     # Refreshes are explicit producer outputs, never newest-directory selection.
     for name,key,field in [('source_api','SourceAPI',None),('runtime_issuers','RuntimeIssuers',None),('coordinates_receipt','Coordinates','Coordinates'),('writer_receipt','WriterSelection','WriterSelection')]:
         if getattr(args,name+'_file'):
-            pin=supplied(name);values[key]=A.obj(pin)[field] if field else pin
+            pin=supplied(name)
+            values[key]=writer_selection_pin(A.obj(pin)) if key=='WriterSelection' else A.obj(pin)[field] if field else pin
     for key in ['MinIO','Redis','SourceAPI','RuntimeIssuers','Coordinates','WriterSelection']:A.read(values[key])
     if args.runtime_agent_tls_file or args.runtime_agent_rotation_file:
         values['RuntimeAgentTLS']=supplied('runtime_agent_tls')
