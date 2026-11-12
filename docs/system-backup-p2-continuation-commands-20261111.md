@@ -46,6 +46,10 @@
 
 CSI DATA 接续随后已越过该检查，停在 Redis 源引用的 `ID` KeyError，仍无 native author intent。真实 `recovery.Reference` 使用小写 `id/version/sha256`，外层 RedisPolicy 保持 Go 导出字段名；配置投影按这份原始 wire 结构构造 Formal RedisScope，不接受大写替代字段。测试夹具同步采用真实字段名。后继 DATA 修复继续使用已保留的 `ready-producers.csi-successor.json` 与原窗口，不改变已有 helper pin 路径；CLI 错误只输出安全字段名和代码位置，避免再为同类缺项单独盘点，原配置和凭据正文不输出。
 
+Redis DATA 修复后，现场已组装 `initial-source.inputs.json`，pin 为 `8394d48a963862bb0693cdc96b4884b06c8b5d9d1eccd0d4b4a14aef7c68cc55`，并首次发送原生 `author-initial-source-inputs`。该次返回非零，两份日志均空，四个输出文件均不存在；原 intent 和输入必须保留，不自动重发。原窗口 Until 为 `2026-11-12T06:56:20.550309Z`。
+
+`system-backup-initial-source-inspect` 是独立只读诊断：按原始 definition pin 读文件，使用相同 Go 输入类型和现有 Core/profile 校验函数，检查输出坐标与原材料模板形态。该命令不接收连接/管理员/签发参数，不调用原生作者、不创建输出目录、不连接 SQL/Kubernetes，也不授予资格；结果只含阶段、布尔值和经过白名单约束的字段名，不包含解码错误里的输入值。诊断结果不能替代原材料作者回执。
+
 `prepare-p2-configuration-data.py --writer-receipt-file/sha256` 可直接消费真实 `original-writer-selection-materials.v1` 的 `Selection` 字段，也继续支持原生 material delivery 后继的 `WriterSelection` 字段；只选其真实 pin，不新造或改写 receipt。新脚本已通过加载凭据/CA/源数量拒绝检查及配置 DATA 回归；现场结果须等待实际命令回传，不能把本地测试记作 native selection、停写或整单验收成功。
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。
