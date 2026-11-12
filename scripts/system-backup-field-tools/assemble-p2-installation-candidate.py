@@ -195,6 +195,30 @@ def base_observer_definition(original_pin,definition_pin,receipt_pin):
     return dict(original,PKIDefinition=definition_pin,PKIReceipt=receipt_pin)
 
 
+def canonical_observer_receipt_data(original_pin,directory):
+    """Lossless closed ASCII projection of the original CLI stdout receipt.
+
+    Keep the original bytes and their pin. Certificate/key files and signed
+    payload strings stay unchanged; this does not issue or authenticate PKI.
+    """
+    value=obj(original_pin)
+    need(value.get('Version')=='original-observer-pki-materials.v1','original observer receipt required')
+    def closed(v):
+        if isinstance(v,dict):
+            for k,item in v.items():need(k.isascii(),'ASCII observer receipt required');closed(item)
+        elif isinstance(v,list):
+            for item in v:closed(item)
+        elif isinstance(v,str):need(v.isascii(),'ASCII observer receipt required')
+        else:need(v is None or type(v) is bool or type(v) is int and abs(v)<2**53,'lossless observer receipt numbers required')
+    closed(value)
+    raw=json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()
+    need(decode(raw)==value,'observer receipt fields changed')
+    projected=retain(directory/'observer-receipt.canonical.private.json',raw)
+    retain(directory/'observer-receipt-projection.json',{'Version':'p2-existing-receipt-canonical-projection.v1',
+           'Original':original_pin,'Projection':projected,'FieldValuesUnchanged':True,'NewIssuance':False})
+    return projected
+
+
 def audit_snapshot(raw):
     need(sha(raw) == SNAPSHOT_SHA, 'approved offline snapshot bytes changed')
     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as archive:
@@ -289,7 +313,9 @@ def main():
         result = retain(directory / 'longhorn-successor-handoff.json', longhorn_successor(*pins))
     elif args.action=='base-observer-definition':
         pins=[{'File':getattr(args,k+'_file'),'SHA256':getattr(args,k+'_sha256')} for k in ['host_definition','observer_definition','observer_receipt']]
-        result=retain(directory/'base-observer-host.definition.json',base_observer_definition(*pins))
+        pins[2]=canonical_observer_receipt_data(pins[2],directory)
+        definition=base_observer_definition(*pins)
+        result=retain(directory/'base-observer-host.definition.json',json.dumps(definition,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode())
     else:
         live=obj({'File':args.deployment_file,'SHA256':args.deployment_sha256})
         patch=waiting_controller_patch(live,{'File':'/run/system-backup/bin/system-backup-v2-controller','SHA256':args.binary_sha256})

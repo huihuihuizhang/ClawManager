@@ -12,6 +12,12 @@
 
 `publish-p2-execution-candidates.py` 仅接受 `eca964d42b96c31cb381531889a39c23a366ffab` 的实际二进制构建回执，以原 App `322ba63b…` 和原 worker `f125b3ee…` 为固定底图，各增加一层，仅替换对应 ELF。原命令、环境、用户、工作目录、既有层不改。新增真实源码、二进制摘要及 backend tree 标签，只按不可变 digest 发布，不改 tag、不部署。随后复用固定哈希的原 `registry_image` 逐层校验压缩/解压摘要。发布及 OCI 字节通过仍不代表候选已经启动、已获原生任务权限或整单验收完成。
 
+该发布已在现场通过：App `10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780`；worker `10.130.14.23:5000/clawmanager-backup-worker@sha256:754cfd2cd57357d148daf131ead46ec715db9e34d6cd5a5a5d03c59c52e22218`。两份 `registry-byte-verification.json` 保留在 `execution-image-candidates/{app,worker}`；尚未部署。
+
+原 `GenerateOriginalObserverPKI` CLI 的 stdout 不是 host-materials `decodeExact` 所要求的 canonical JSON。`base-observer-definition` 现在把实际 stdout 另存为字段不变的 canonical ASCII 投影，并保留原 pin 和投影来源记录；不改证书、密钥文件或签名 payload，不重新 issue。现场已用同样规则通过原 host-materials 作者。随后从原运行 Pod 读回 Agent ELF：Hermes `be46bb05…`、OpenClaw `bc1ef9ab…`，均与 P1 的旧 Agent pin 不同；原作者已据此产生 `observer-host-current-agent` 的新 NodeBundles，尚未安装。
+
+本次专用 `rotate-p2-node-observer-certificates.py` 从上述完整原 NodeBundles 提取小型私有载荷；准备前读回 controller 未启用、ready marker 不存在。节点执行时核对原 unit SHA、运行中 ELF/argv、Node machine/boot、原证书与 anchor 摘要及未变的服务路径；只允许两种 Agent 摘要参数变化。四个 observer 停止后取得原 `.owner.guard` 的锁，并再次确认原目录没有任何 durable 操作记录，才原位替换证书/anchor 和必要 unit 参数。保留每份原文件作 CAS 补偿，保留持久目录及 guard inode，逐服务检查启动成功。任何已有恢复记录、未知发送或漂移都停止，不能删记录绕过。完成后还需从管理端按新 receipt 验证全部八个 mTLS endpoint；此轮不提供 Longhorn 停写或整单成功声明。
+
 ## 1. ConfigurationData 的生成入口已分离
 
 真实旧链：`system-backup-zhanghui08-operator.py --action initial-source-inputs` → `initial-runtime.prepare_complete_source_arguments` → `initial-complete-inputs.prepare`。该入口先处理 provider/Redis，再生成 `initial-complete-source.inputs.json`，随后立即调用 Go 初始作者。它不是独立 DATA 导出器，且外层 operator 绑定另一个命名空间/目录；本次不直接调用它，不重跑 MinIO/Redis。

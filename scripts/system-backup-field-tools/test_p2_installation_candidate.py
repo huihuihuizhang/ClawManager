@@ -237,5 +237,15 @@ class CandidateIntegration(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'original persistent Vault owner refused'):
             V.run_original(types.SimpleNamespace(main=lambda:1))
 
+    def test_original_observer_stdout_is_losslessly_projected_without_reissuing(self):
+        value={'Version':'original-observer-pki-materials.v1','Signature':'original-base64','Epoch':3,'CA':{'File':'/fixture/ca.pem','SHA256':'a'*64}}
+        original=self.save('original-observer.stdout',json.dumps(value,indent=2).encode()+b'\n')
+        raw=A.read(original);projected=A.canonical_observer_receipt_data(original,self.root)
+        self.assertEqual(A.obj(projected),value);self.assertEqual(A.read(original),raw)
+        self.assertEqual(A.read(projected),json.dumps(value,sort_keys=True,separators=(',',':')).encode())
+        self.assertFalse(A.decode((self.root/'observer-receipt-projection.json').read_bytes())['NewIssuance'])
+        value['Epoch']=0.5
+        with self.assertRaisesRegex(ValueError,'lossless'):A.canonical_observer_receipt_data(self.save('float-receipt',value),self.root)
+
 
 if __name__=='__main__': unittest.main()

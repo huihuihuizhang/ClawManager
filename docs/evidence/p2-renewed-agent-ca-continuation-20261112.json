@@ -23,7 +23,14 @@
     "app_elf_build_flags_hidden_by_trimpath": true,
     "app_startup_reported_commit": "03fa0a461930642f1f0561ab872f35be0402468d",
     "app_version_environment_overrides": false,
-    "app_new_fixed_source_release_published": false
+    "app_new_fixed_source_release_published": true,
+    "app_new_fixed_source_image": "10.130.14.23:5000/clawmanager@sha256:8287aa71bcfc9e1596d761a9b46891575f3708323300839c98e075a22875e780",
+    "worker_new_fixed_source_image": "10.130.14.23:5000/clawmanager-backup-worker@sha256:754cfd2cd57357d148daf131ead46ec715db9e34d6cd5a5a5d03c59c52e22218",
+    "all_candidate_oci_layers_verified": true,
+    "canonical_existing_observer_receipt_accepted_by_original_owner": true,
+    "current_runtime_agents_host_materials_authored": true,
+    "current_openclaw_agent_sha256": "bc1ef9abb276594f938cb27374b0ee05c50b6d9da1424b8fe87fb64940bd0158",
+    "current_hermes_agent_sha256": "be46bb0525623bb9fb7f1393a6b668d7c8f705a998c90517915751c2be9d0102"
   },
   "execution_candidate_local": {
     "source_revision": "eca964d42b96c31cb381531889a39c23a366ffab",
@@ -39,6 +46,16 @@
     "delivery": "D:/dsh-work/sbk-p2-execution-eca964d4-upload",
     "published": false,
     "deployed": false
+  },
+  "node_renewal_local_validation": {
+    "tests": 26,
+    "result": "passed",
+    "scratch": "D:/dsh-work/sbk-p2-node-renewal-tests",
+    "scratch_removed": true,
+    "no_native_owner_or_hold_simulated": true,
+    "observer_binary_replacement_allowed": false,
+    "durable_records_deletion_allowed": false,
+    "node_installation_verified": false
   },
   "hold_verified": false,
   "backup_ready": false,
