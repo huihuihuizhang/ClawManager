@@ -109,12 +109,11 @@ func (x *bootstrapSourceRegistryReader) readNativeWriters(sqlFacts *bootstrapSou
 		}
 		bindings[row.Instance] = row
 	}
-	step, kind, observed = "native_runtime_pool_state", "RuntimePod", nil
+	// Keep the complete SQL census, including historical pool rows. As in the
+	// enrolled reader, readiness is required for each current instance binding
+	// below; every ready pool row must also match the live API census at the end.
+	// An unused unhealthy/draining history row is not a live runtime writer.
 	for _, row := range sqlFacts.pods {
-		instanceID = 0
-		if row.State != "ready" || row.Draining {
-			return nil, ErrSourceWriterObservationIncomplete
-		}
 		pods[row.ID] = row
 	}
 	var agent services.BackupGatewayAgent

@@ -24,6 +24,15 @@ class LoadedProviderLonghornTests(unittest.TestCase):
                 if case == 'source': args[3] = 'other-source'
                 with self.assertRaises(ValueError): P.confirmed_native_failure(exit_record, error, args)
 
+    def test_pool_history_repair_requires_exact_observed_step(self):
+        argv = ['/native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
+        failure = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers', 'Step': 'native_runtime_pool_state',
+                   'Kind': 'RuntimePod', 'Reason': 'validation'}
+        P.confirmed_native_failure({'ExitCode': 1}, failure, argv, True)
+        for field in ('Step', 'Kind', 'Reason'):
+            with self.subTest(field=field):
+                with self.assertRaises(ValueError): P.confirmed_native_failure({'ExitCode': 1}, {**failure, field: 'different'}, argv, True)
+
     def fixture(self):
         ref = {'Namespace': 'ns', 'Deployment': 'controller', 'DeploymentUID': 'e4e27f27-8f02-40ab-8c62-09f2ffa3fafa',
                'Pod': 'new-pod', 'PodUID': P.POD_UID, 'ReplicaSet': 'new-rs', 'ReplicaSetUID': P.RS_UID,
