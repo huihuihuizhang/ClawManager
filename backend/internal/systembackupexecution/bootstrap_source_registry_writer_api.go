@@ -11,23 +11,31 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clients *productionMetadataClients, inventories ...[]b.InstanceIdentity) (*observedWriterAPI, error) {
+func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clients *productionMetadataClients, inventories ...[]b.InstanceIdentity) (_ *observedWriterAPI, resultErr error) {
+	step, resource := "system_start", ""
+	var observed error
+	defer func() { resultErr = writerAPIReadFailure(resultErr, ctx, step, resource, observed) }()
+
 	if x.checkPhysical(ctx) != nil || len(inventories) > 1 {
 		return nil, ErrSourceWriterObservationIncomplete
 	}
 	out := &observedWriterAPI{objects: []observedWriterAPIObject{}}
 	seen := map[string]bool{}
 	for _, kind := range []string{"Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "HorizontalPodAutoscaler", "Pod", "PersistentVolumeClaim"} {
+		step, resource = "system_list", kind
 		continuation, version := "", ""
 		tokens := map[string]bool{}
 		for page := 0; ; page++ {
+			step = "system_list"
 			if page >= 100 || x.checkPhysical(ctx) != nil {
 				return nil, ErrSourceWriterObservationIncomplete
 			}
 			list, err := x.candidateWriterAPIPage(ctx, clients, kind, metav1.ListOptions{Limit: 1000, Continue: continuation})
+			observed = err
 			if err != nil {
 				return nil, ErrSourceWriterObservationIncomplete
 			}
+			step = "system_list_metadata"
 			m, err := meta.ListAccessor(list)
 			if err != nil || m.GetResourceVersion() == "" {
 				return nil, ErrSourceWriterObservationIncomplete
@@ -41,6 +49,7 @@ func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clien
 			if err != nil || len(items) > 1000 {
 				return nil, ErrSourceWriterObservationIncomplete
 			}
+			step = "system_projection"
 			for _, item := range items {
 				value, err := projectWriterAPIObject(kind, item)
 				key := value.Kind + "/" + value.Namespace + "/" + value.Name
@@ -67,10 +76,12 @@ func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clien
 		if claim.Kind != "PersistentVolumeClaim" {
 			continue
 		}
+		step, resource = "system_pv", "PersistentVolume"
 		if claim.Volume == "" || x.checkPhysical(ctx) != nil {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
 		pv, err := clients.API.CoreV1().PersistentVolumes().Get(ctx, claim.Volume, metav1.GetOptions{})
+		observed = err
 		if err != nil || pv.UID == "" || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.Namespace != claim.Namespace || pv.Spec.ClaimRef.Name != claim.Name || string(pv.Spec.ClaimRef.UID) != claim.UID {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
@@ -83,13 +94,18 @@ func (x *bootstrapSourceRegistryReader) readWriterAPI(ctx context.Context, clien
 	if x.checkPhysical(ctx) != nil {
 		return nil, ErrSourceWriterObservationIncomplete
 	}
+	step, resource = "tenant_census", ""
 	if len(inventories) == 1 {
 		tenant, err := observeTenantProWriterAPI(ctx, clients.API, x.config, inventories[0], nil, x.checkPhysical)
-		if err != nil || len(out.objects)+len(tenant) > 10000 {
+		if err != nil {
+			return nil, err
+		}
+		if len(out.objects)+len(tenant) > 10000 {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
 		out.objects = append(out.objects, tenant...)
 	}
+	step, resource = "writer_encode", ""
 	sort.Slice(out.objects, func(i, j int) bool {
 		a, b := out.objects[i], out.objects[j]
 		return a.Kind+"/"+a.Namespace+"/"+a.Name < b.Kind+"/"+b.Namespace+"/"+b.Name

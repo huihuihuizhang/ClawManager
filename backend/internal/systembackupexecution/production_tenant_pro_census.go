@@ -15,11 +15,16 @@ import (
 
 // Tenant names come from original SQL owners, never an HTTP namespace list.
 // Every controller in each selected tenant is observed, including unknown ones.
-func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig, sources []b.InstanceIdentity, scope *productionPersistentMountScope, check func(context.Context) error) ([]observedWriterAPIObject, error) {
+func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface, cfg DeploymentConfig, sources []b.InstanceIdentity, scope *productionPersistentMountScope, check func(context.Context) error) (_ []observedWriterAPIObject, resultErr error) {
+	step, resource := "tenant_start", ""
+	var observed error
+	defer func() { resultErr = writerAPIReadFailure(resultErr, ctx, step, resource, observed) }()
+
 	if client == nil || check == nil || len(sources) > 9998 || check(ctx) != nil {
 		return nil, ErrSourceWriterObservationIncomplete
 	}
 	users := map[string]int{}
+	step = "tenant_source_identity"
 	for _, source := range sources {
 		if deferredRuntimeTestInstance(cfg, source) || !isRunningTenantPro(source) || source.Namespace == cfg.Namespace {
 			continue
@@ -46,7 +51,9 @@ func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface,
 		if check(ctx) != nil {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
+		step, resource = "tenant_namespace", "Namespace"
 		ns, err := client.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+		observed = err
 		if err != nil || ns.UID == "" || ns.DeletionTimestamp != nil || ns.Labels["app"] != "clawreef" || ns.Labels["managed-by"] != "clawreef" || ns.Labels["user-id"] != strconv.Itoa(users[namespace]) {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
@@ -59,13 +66,16 @@ func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface,
 			continuation, version := "", ""
 			tokens := map[string]bool{}
 			for page := 0; ; page++ {
+				step, resource = "tenant_list", kind
 				if page >= 100 || check(ctx) != nil {
 					return nil, ErrSourceWriterObservationIncomplete
 				}
 				list, err := tenantWriterAPIPage(ctx, client, namespace, kind, metav1.ListOptions{Limit: 1000, Continue: continuation})
+				observed = err
 				if err != nil {
 					return nil, ErrSourceWriterObservationIncomplete
 				}
+				step = "tenant_list_metadata"
 				accessor, err := meta.ListAccessor(list)
 				if err != nil || accessor.GetResourceVersion() == "" || page > 0 && accessor.GetResourceVersion() != version {
 					return nil, ErrSourceWriterObservationIncomplete
@@ -75,6 +85,7 @@ func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface,
 				if err != nil || len(items) > 1000 {
 					return nil, ErrSourceWriterObservationIncomplete
 				}
+				step = "tenant_projection"
 				for _, item := range items {
 					value, err := projectWriterAPIObject(kind, item)
 					key := value.Kind + "/" + value.Namespace + "/" + value.Name
@@ -99,10 +110,12 @@ func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface,
 		if claim.Kind != "PersistentVolumeClaim" {
 			continue
 		}
+		step, resource = "tenant_pv", "PersistentVolume"
 		if claim.Volume == "" || check(ctx) != nil || len(out) >= 10000 {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
 		pv, err := client.CoreV1().PersistentVolumes().Get(ctx, claim.Volume, metav1.GetOptions{})
+		observed = err
 		if err != nil || pv.UID == "" || pv.DeletionTimestamp != nil || pv.Spec.ClaimRef == nil || pv.Spec.ClaimRef.Namespace != claim.Namespace || pv.Spec.ClaimRef.Name != claim.Name || string(pv.Spec.ClaimRef.UID) != claim.UID {
 			return nil, ErrSourceWriterObservationIncomplete
 		}
@@ -112,6 +125,7 @@ func observeTenantProWriterAPI(ctx context.Context, client kubernetes.Interface,
 		}
 		out = append(out, observedWriterAPIObject{Kind: "PersistentVolume", Name: pv.Name, UID: string(pv.UID), ResourceVersion: pv.ResourceVersion, SpecSHA256: hash(raw), Owners: []metav1.OwnerReference{}, Claims: []string{claim.Name}})
 	}
+	step, resource = "tenant_final_check", ""
 	return out, check(ctx)
 }
 

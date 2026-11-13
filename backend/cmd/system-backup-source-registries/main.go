@@ -305,14 +305,19 @@ func run(ctx context.Context, args []string, out io.Writer) int {
 		receipt, err := execution.ProduceOriginalInstanceMountMaterials(active, installer, password, enrollment, get("source-selection-file"), get("source-selection-sha256"), get("mount-layouts-file"), get("mount-layouts-sha256"), get("output-directory"))
 		if err != nil {
 			var failure *execution.OriginalMountAuthorFailure
+			var apiFailure *execution.WriterAPIReadFailure
 			var missing *execution.InstanceMountInputError
 			v := struct {
 				Status, Phase, Code string
+				Step, Kind, Reason  string
 				InstanceID          int
 				MountID             string
 			}{Status: "original_mount_author_refused"}
 			if errors.As(err, &failure) {
 				v.Phase = failure.Phase
+			}
+			if errors.As(err, &apiFailure) {
+				v.Step, v.Kind, v.Reason = apiFailure.Step, apiFailure.Kind, apiFailure.Reason
 			}
 			if errors.As(err, &missing) {
 				v.Status, v.Code, v.InstanceID, v.MountID = "original_mount_materials_blocked", missing.Code, missing.InstanceID, missing.MountID
