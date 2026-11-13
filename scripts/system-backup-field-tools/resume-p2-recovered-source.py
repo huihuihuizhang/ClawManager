@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reauthor the recovered runtime scope, then continue native Longhorn authoring."""
 import datetime as dt
+import argparse
 import importlib.util
 import json
 import os
@@ -181,6 +182,9 @@ def prepare(A, L, parent, parent_receipt, selected, core):
 if __name__ == '__main__':
     try:
         os.umask(0o077)
-        load('prepare-p2-longhorn-provider-loaded').main(recovered=True)
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--census-window-repair', action='store_true')
+        repair = parser.parse_args().census_window_repair
+        load('prepare-p2-longhorn-provider-loaded').main(recovered=not repair, recovered_window=repair)
     except Exception as error:
         raise SystemExit('P2_RECOVERED_SOURCE_UNCONFIRMED ' + (str(error) if type(error) is ValueError else type(error).__name__))

@@ -144,7 +144,12 @@ func (i *Installer) PrepareBootstrapSourceRegistryAuthoring(ctx context.Context,
 		return nil, ErrInstall
 	}
 	start := time.Now().UTC().Truncate(time.Microsecond)
-	until := start.Add(30 * time.Second)
+	// One authoring operation performs the complete SQL/API/runtime/storage
+	// census and its independent final readback. A per-request-sized 30-second
+	// cap can expire between these stages on an otherwise healthy cluster.
+	// Keep one non-renewable operation window, bounded by the original caller
+	// and selected source validity; every pin/authentication check still runs.
+	until := start.Add(2 * time.Minute)
 	for _, end := range []time.Time{selection.Until, parentDeadline} {
 		if end.Before(until) {
 			until = end

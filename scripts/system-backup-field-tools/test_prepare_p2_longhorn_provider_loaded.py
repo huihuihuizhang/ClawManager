@@ -10,6 +10,16 @@ P = importlib.util.module_from_spec(spec); spec.loader.exec_module(P)
 
 
 class LoadedProviderLonghornTests(unittest.TestCase):
+    def test_census_window_successor_requires_observed_recovered_source_failure(self):
+        argv = ['native', 'prepare-mount-materials', '--source-selection-sha256', 'new-source', '--output-directory', '/fresh/out']
+        failure = {'Status': 'original_mount_author_refused', 'Phase': 'mount_scope', 'Code': '', 'Step': ''}
+        self.assertEqual(P.confirmed_mount_window_failure({'ExitCode': 1}, failure, argv, 'new-source'), Path('/fresh/out'))
+        for key, value in [('Phase','native_writers'), ('Status','original_mount_materials_blocked'), ('Code','missing'), ('Step','other')]:
+            with self.assertRaises(ValueError):
+                P.confirmed_mount_window_failure({'ExitCode': 1}, dict(failure, **{key:value}), argv, 'new-source')
+        with self.assertRaises(ValueError): P.confirmed_mount_window_failure({'ExitCode': 0}, failure, argv, 'new-source')
+        with self.assertRaises(ValueError): P.confirmed_mount_window_failure({'ExitCode': 1}, failure, argv, 'old-source')
+
     def test_tenant_workspace_successor_requires_exact_instance_refusal(self):
         argv = ['native', 'prepare-mount-materials', '--source-selection-sha256', P.SELECTION_SHA, '--output-directory', '/original/out']
         failure = {'Status': 'original_mount_author_refused', 'Phase': 'native_writers', 'Step': 'native_tenant_pro', 'Kind': 'Instance', 'Reason': 'read_error', 'InstanceID': 2}

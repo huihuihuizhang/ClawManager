@@ -105,6 +105,60 @@ func TestBootstrapSourceRegistryAuthoringUsesActualEnrollmentWithoutFinalDigests
 	}
 }
 
+func TestBootstrapSourceAuthoringFullCensusWindowKeepsOriginalBounds(t *testing.T) {
+	for _, mode := range []string{"operation-cap", "source-expiry", "caller-deadline"} {
+		t.Run(mode, func(t *testing.T) {
+			f, _, selection, file, _ := sourceRegistryAuthoringFixture(t)
+			now := time.Now().UTC().Truncate(time.Microsecond)
+			selection.Until = now.Add(5 * time.Minute)
+			callerUntil := now.Add(3 * time.Minute)
+			if mode == "source-expiry" {
+				selection.Until = now.Add(45 * time.Second)
+			}
+			if mode == "caller-deadline" {
+				callerUntil = now.Add(40 * time.Second)
+			}
+			raw, err := canonical(selection)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = os.WriteFile(file, raw, 0600); err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithDeadline(context.Background(), callerUntil)
+			defer cancel()
+			p, err := f.i.PrepareBootstrapSourceRegistryAuthoring(ctx, f.password, f.enrollment, file, hash(raw))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer p.Close()
+			start, until, err := p.Bounds(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := start.Add(2 * time.Minute)
+			if mode == "source-expiry" {
+				want = selection.Until
+			}
+			if mode == "caller-deadline" {
+				want = callerUntil
+			}
+			physical, err := p.NativeContext(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			deadline, bounded := physical.Deadline()
+			if !bounded || !until.Equal(want) || !deadline.Equal(want) || f.s.writes != 0 || f.signs.Load() != 0 {
+				t.Fatal("read-only census window lost operation/source/caller bound", until, deadline, want)
+			}
+			cancel()
+			if p.Check(ctx) == nil || p.RecheckAuthority(ctx) == nil || physical.Err() == nil {
+				t.Fatal("canceled original authority remained usable")
+			}
+		})
+	}
+}
+
 func TestBootstrapSourceRegistryAuthoringRefusalsAreSticky(t *testing.T) {
 	for _, mode := range []string{"foreign-context", "changed-file", "copied-handle", "revoked-permission", "wrong-password", "wrong-enrollment", "selected-final-scope", "expired"} {
 		t.Run(mode, func(t *testing.T) {

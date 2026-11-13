@@ -107,9 +107,17 @@ def confirmed_native_failure(exit_record, refusal, argv, pool_history=False, ser
     return Path(argv[argv.index('--output-directory') + 1])
 
 
-def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False):
+def confirmed_mount_window_failure(exit_record, refusal, argv, selection_sha):
+    need(exit_record == {'ExitCode': 1} and refusal.get('Status') == 'original_mount_author_refused' and
+         refusal.get('Phase') == 'mount_scope' and not refusal.get('Code') and not refusal.get('Step') and
+         argv[1] == 'prepare-mount-materials' and argv[argv.index('--source-selection-sha256') + 1] == selection_sha,
+         'observed recovered mount-scope refusal required')
+    return Path(argv[argv.index('--output-directory') + 1])
+
+
+def main(native_readback=False, pool_history=False, service_account=False, shared_protocol=False, tenant_workspace=False, recovered=False, recovered_window=False):
     os.umask(0o077); need(os.name == 'posix', 'Linux operator required')
-    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered)) <= 1, 'select one successor mode')
+    need(sum((native_readback, pool_history, service_account, shared_protocol, tenant_workspace, recovered, recovered_window)) <= 1, 'select one successor mode')
     A, L, H, D, F = [load(name) for name in ('assemble-p2-installation-candidate', 'load-p2-formal-vault',
                                            'prepare-p2-longhorn-source', 'p2-source-dns', 'p2-vault-local-forward')]
     done = A.decode((PARENT / 'completed.json').read_bytes())
@@ -119,7 +127,7 @@ def main(native_readback=False, pool_history=False, service_account=False, share
     source_author = PARENT / 'source-author/native.sent.private.json'
     definition_sha, selection_sha = DEFINITION_SHA, SELECTION_SHA
     recovery_native = None
-    if recovered:
+    if recovered or recovered_window:
         refresh = load('resume-p2-recovered-source')
         done, source_author, recovery_native = refresh.prepare(A, L, done, receipt, selected, core)
         receipt, selected = A.obj(done['Receipt']), A.obj(done['SourceSelection'])
@@ -135,9 +143,24 @@ def main(native_readback=False, pool_history=False, service_account=False, share
         need(not selected.get(key) or not Path(selected[key]).exists(), 'source facts already exist')
     native, native_sha = BIN, BIN_SHA
     journal = ROOT / 'longhorn-source-20261113-provider-loaded'
-    if recovered:
+    if recovered or recovered_window:
         native, native_sha = Path(recovery_native['File']), recovery_native['SHA256']
         journal = ROOT / 'longhorn-source-20261113-runtime-recovered'
+    if recovered_window:
+        need(selection_sha == '99e192900ec2428c38554cfdc5348329d108b7dc8ff0a8935b240f34e3a24b1e' and
+             done['Receipt']['SHA256'] == 'a57883aa0ff3403cdd529120b9f7ec7146f755fc3cc6cb183a449e051a38749d',
+             'observed recovered source receipt required')
+        previous = A.decode((journal / 'native.sent.private.json').read_bytes())['Argv']
+        prior_out = confirmed_mount_window_failure(A.decode((journal / 'native.exit.json').read_bytes()),
+            A.decode((journal / 'native.stdout.private').read_bytes()), previous, selection_sha)
+        need(not (journal / 'completed.json').exists() and prior_out == Path(done['SourceSelection']['File']).parent.parent / journal.name and
+             prior_out.resolve(strict=True) == prior_out and not list(prior_out.iterdir()), 'partial mount outputs require reconciliation')
+        package = Path(__file__).resolve().parent
+        build = A.decode((package / 'BUILD_RECEIPT.json').read_bytes())
+        need(build['Diagnostic'] == 'source-author-full-census-window.v1' and
+             build['SourceRevision'] == (package / 'SOURCE_REVISION').read_text().strip(), 'reviewed census-window build required')
+        native, native_sha = package / 'system-backup-source-registries', build['NativeSHA256']
+        journal = ROOT / 'longhorn-source-20261113-runtime-recovered-census-window'
     if native_readback or pool_history or service_account or shared_protocol or tenant_workspace:
         if tenant_workspace:
             journal = ROOT / (journal.name + '-shared-protocol-repair')

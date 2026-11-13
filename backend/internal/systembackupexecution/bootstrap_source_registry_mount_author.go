@@ -163,9 +163,10 @@ func checkOriginalMountAuthoringAliases(materialsFile, nextSelectionFile, select
 // DATA for the unchanged final A producer, never stop/adoption authorization.
 func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *install.Installer, password []byte, enrollment install.EnrollmentPin, selectionFile, selectionSHA, layoutsFile, layoutsSHA, outputDirectory string) (result OriginalInstanceMountMaterialsReceipt, resultErr error) {
 	phase := "inputs"
+	diagnosticContext := ctx
 	defer func() {
 		if resultErr != nil {
-			resultErr = &OriginalMountAuthorFailure{Phase: phase, cause: resultErr}
+			resultErr = &OriginalMountAuthorFailure{Phase: phase, cause: writerAPIReadFailure(resultErr, diagnosticContext, phase, "MountMaterials", resultErr)}
 		}
 	}()
 	var zero OriginalInstanceMountMaterialsReceipt
@@ -200,6 +201,7 @@ func ProduceOriginalInstanceMountMaterials(ctx context.Context, installer *insta
 	if err != nil {
 		return zero, install.ErrInstall
 	}
+	diagnosticContext = x.physical
 	selection, _, err := authority.Selection(ctx)
 	if err != nil {
 		return zero, install.ErrInstall
